@@ -5,10 +5,25 @@ require('dotenv').config();
 
 const app = express();
 
-// Middleware
+// Middleware - CORS configuration
+const allowedOrigins = process.env.CORS_ORIGIN 
+  ? process.env.CORS_ORIGIN.split(',').map(origin => origin.trim())
+  : ['http://localhost:3000'];
+
 app.use(cors({
-  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-  credentials: true
+  origin: function (origin, callback) {
+    // Allow requests with no origin (like mobile apps or curl requests)
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1 || process.env.NODE_ENV !== 'production') {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 app.use(express.json());
 
@@ -24,7 +39,8 @@ const connectDB = async () => {
     const conn = await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
+      serverSelectionTimeoutMS: 10000, // 10 seconds for Render
+      socketTimeoutMS: 45000, // Close sockets after 45s of inactivity
     });
     console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
@@ -75,15 +91,32 @@ app.get('/', (req, res) => {
 
 // Health check route
 app.get('/api/health', (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const dbStates = {
+    0: 'Disconnected',
+    1: 'Connected',
+    2: 'Connecting',
+    3: 'Disconnecting'
+  };
+  
   res.json({ 
     status: 'OK', 
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-    timestamp: new Date().toISOString()
+    database: dbStates[dbState] || 'Unknown',
+    databaseState: dbState,
+    environment: process.env.NODE_ENV || 'development',
+    timestamp: new Date().toISOString(),
+    uptime: Math.floor(process.uptime())
   });
 });
 
 const PORT = process.env.PORT || 5001;
-app.listen(PORT, () => {
-  console.log(`Server running on port ${PORT}`);
-  console.log(`Health check available at http://localhost:${PORT}/api/health`);
+app.listen(PORT, '0.0.0.0', () => {
+  console.log(`🚀 Server running on port ${PORT}`);
+  console.log(`📊 Health check: http://localhost:${PORT}/api/health`);
+  console.log(`🌍 Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔗 CORS Origins: ${allowedOrigins.join(', ')}`);
+  
+  if (!process.env.MONGODB_URI && process.env.NODE_ENV === 'production') {
+    console.warn('⚠️  WARNING: MONGODB_URI not set in production!');
+  }
 });
