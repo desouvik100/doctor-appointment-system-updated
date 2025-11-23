@@ -89,6 +89,46 @@ app.get('/', (req, res) => {
   res.json({ message: 'Doctor Appointment System API - MongoDB Version' });
 });
 
+// Temporary: Create admin endpoint (REMOVE AFTER CREATING ADMIN)
+// GET or POST /api/create-admin
+// Visit: https://your-backend.onrender.com/api/create-admin
+app.get('/api/create-admin', async (req, res) => {
+  try {
+    const bcrypt = require('bcryptjs');
+    const User = require('./models/User');
+    const adminEmail = 'admin@hospital.com';
+    const adminPassword = 'Admin@123';
+
+    let admin = await User.findOne({ email: adminEmail });
+    if (admin) {
+      return res.json({ success: true, message: 'Admin already exists', email: adminEmail });
+    }
+
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+    admin = await User.create({
+      name: 'Super Admin',
+      email: adminEmail,
+      password: hashedPassword,
+      role: 'admin',
+      approvalStatus: 'approved',
+      isActive: true
+    });
+
+    res.json({ 
+      success: true, 
+      message: 'Admin created successfully',
+      email: adminEmail,
+      password: adminPassword
+    });
+  } catch (err) {
+    if (err.code === 11000) {
+      res.json({ success: false, message: 'Admin already exists' });
+    } else {
+      res.status(500).json({ success: false, error: err.message });
+    }
+  }
+});
+
 // Health check route
 app.get('/api/health', (req, res) => {
   const dbState = mongoose.connection.readyState;
