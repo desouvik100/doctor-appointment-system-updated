@@ -1,0 +1,15 @@
+backend/
+  server.js
+  config/
+    db.js
+  models/
+    User.js
+    Clinic.js
+    Doctor.js
+    Appointment.js
+  routes/
+    authRoutes.js
+    clinicRoutes.js
+    doctorRoutes.js
+    appointmentRoutes.js
+  .env
