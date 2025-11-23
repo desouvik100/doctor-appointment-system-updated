@@ -1,5 +1,5 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState, useEffect, useCallback } from "react";
+import axios from "../api/config";
 
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
@@ -73,9 +73,36 @@ function AdminDashboard() {
     fetchDashboardData();
   }, []);
 
+  const filterAppointments = useCallback(() => {
+    let filtered = [...appointments];
+
+    if (appointmentFilters.search) {
+      const searchLower = appointmentFilters.search.toLowerCase();
+      filtered = filtered.filter(apt =>
+        apt.userId?.name?.toLowerCase().includes(searchLower) ||
+        apt.doctorId?.name?.toLowerCase().includes(searchLower) ||
+        apt.reason?.toLowerCase().includes(searchLower) ||
+        apt.userId?.email?.toLowerCase().includes(searchLower)
+      );
+    }
+
+    if (appointmentFilters.status) {
+      filtered = filtered.filter(apt => apt.status === appointmentFilters.status);
+    }
+
+    if (appointmentFilters.dateFrom) {
+      filtered = filtered.filter(apt => new Date(apt.date) >= new Date(appointmentFilters.dateFrom));
+    }
+    if (appointmentFilters.dateTo) {
+      filtered = filtered.filter(apt => new Date(apt.date) <= new Date(appointmentFilters.dateTo));
+    }
+
+    setFilteredAppointments(filtered);
+  }, [appointments, appointmentFilters]);
+
   useEffect(() => {
     filterAppointments();
-  }, [appointments, appointmentFilters]);
+  }, [filterAppointments]);
 
   const fetchDashboardData = async () => {
     try {
@@ -311,35 +338,7 @@ function AdminDashboard() {
     setShowDoctorModal(true);
   };
 
-  const filterAppointments = () => {
-    let filtered = [...appointments];
-
-    // Search filter
-    if (appointmentFilters.search) {
-      const searchLower = appointmentFilters.search.toLowerCase();
-      filtered = filtered.filter(apt =>
-        apt.userId?.name?.toLowerCase().includes(searchLower) ||
-        apt.doctorId?.name?.toLowerCase().includes(searchLower) ||
-        apt.reason?.toLowerCase().includes(searchLower) ||
-        apt.userId?.email?.toLowerCase().includes(searchLower)
-      );
-    }
-
-    // Status filter
-    if (appointmentFilters.status) {
-      filtered = filtered.filter(apt => apt.status === appointmentFilters.status);
-    }
-
-    // Date range filter
-    if (appointmentFilters.dateFrom) {
-      filtered = filtered.filter(apt => new Date(apt.date) >= new Date(appointmentFilters.dateFrom));
-    }
-    if (appointmentFilters.dateTo) {
-      filtered = filtered.filter(apt => new Date(apt.date) <= new Date(appointmentFilters.dateTo));
-    }
-
-    setFilteredAppointments(filtered);
-  };
+  
 
   const openClinicModal = (clinic = null) => {
     if (clinic) {

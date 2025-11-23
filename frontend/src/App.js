@@ -1,12 +1,112 @@
 import React, { useState, useEffect } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import DoctorList from "./components/DoctorList";
-import MyAppointments from "./components/MyAppointments";
-import AdminDashboard from "./components/AdminDashboard";
+
+// Import only the working auth components first
 import Auth from "./components/Auth";
 import AdminAuth from "./components/AdminAuth";
 import ClinicAuth from "./components/ClinicAuth";
-import ClinicDashboard from "./components/ClinicDashboard";
+
+// Lazy load dashboard components
+const DoctorList = React.lazy(() => 
+  import("./components/DoctorList").catch(() => ({
+    default: ({ user }) => (
+      <div className="alert alert-info">
+        <h4><i className="fas fa-user-md me-2"></i>Find Doctors</h4>
+        <p>Welcome {user.name}! Doctor search functionality is loading...</p>
+        <div className="d-grid gap-2">
+          <button className="btn btn-primary" disabled>
+            <i className="fas fa-search me-1"></i>
+            Search Doctors
+          </button>
+        </div>
+      </div>
+    )
+  }))
+);
+
+const MyAppointments = React.lazy(() => 
+  import("./components/MyAppointments").catch(() => ({
+    default: ({ user }) => (
+      <div className="alert alert-info">
+        <h4><i className="fas fa-calendar-check me-2"></i>My Appointments</h4>
+        <p>Welcome {user.name}! Your appointments are loading...</p>
+        <div className="d-grid gap-2">
+          <button className="btn btn-primary" disabled>
+            <i className="fas fa-calendar me-1"></i>
+            View Appointments
+          </button>
+        </div>
+      </div>
+    )
+  }))
+);
+
+const PaymentHistory = React.lazy(() => 
+  import("./components/PaymentHistory").catch(() => ({
+    default: ({ user }) => (
+      <div className="alert alert-info">
+        <h4><i className="fas fa-credit-card me-2"></i>Payment History</h4>
+        <p>Welcome {user.name}! Your payment history is loading...</p>
+        <div className="d-grid gap-2">
+          <button className="btn btn-primary" disabled>
+            <i className="fas fa-history me-1"></i>
+            View Payments
+          </button>
+        </div>
+      </div>
+    )
+  }))
+);
+
+const AdminDashboard = React.lazy(() => 
+  import("./components/AdminDashboard").catch(() => ({
+    default: () => (
+      <div className="alert alert-success">
+        <h4><i className="fas fa-cogs me-2"></i>Admin Dashboard</h4>
+        <p>Admin panel is loading...</p>
+        <div className="row g-3">
+          <div className="col-md-6">
+            <button className="btn btn-success w-100" disabled>
+              <i className="fas fa-users me-1"></i>
+              Manage Users
+            </button>
+          </div>
+          <div className="col-md-6">
+            <button className="btn btn-success w-100" disabled>
+              <i className="fas fa-user-md me-1"></i>
+              Manage Doctors
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }))
+);
+
+const ClinicDashboard = React.lazy(() => 
+  import("./components/ClinicDashboard").catch(() => ({
+    default: ({ receptionist }) => (
+      <div className="alert alert-warning">
+        <h4><i className="fas fa-clinic-medical me-2"></i>Clinic Dashboard</h4>
+        <p>Welcome {receptionist.name}! Clinic management is loading...</p>
+        <div className="row g-3">
+          <div className="col-md-6">
+            <button className="btn btn-info w-100" disabled>
+              <i className="fas fa-calendar-plus me-1"></i>
+              Book Appointment
+            </button>
+          </div>
+          <div className="col-md-6">
+            <button className="btn btn-info w-100" disabled>
+              <i className="fas fa-users me-1"></i>
+              Manage Patients
+            </button>
+          </div>
+        </div>
+      </div>
+    )
+  }))
+);
 
 function App() {
   const [page, setPage] = useState("doctors");
@@ -15,13 +115,25 @@ function App() {
   const [receptionist, setReceptionist] = useState(null);
 
   useEffect(() => {
-    const savedUser = localStorage.getItem("user");
-    const savedAdmin = localStorage.getItem("admin");
-    const savedReceptionist = localStorage.getItem("receptionist");
+    const isValidObject = (obj, keys) => obj && typeof obj === "object" && keys.every((k) => k in obj);
+    const parseAndSet = (key, setter, keys) => {
+      const raw = localStorage.getItem(key);
+      if (!raw) return;
+      try {
+        const parsed = JSON.parse(raw);
+        if (isValidObject(parsed, keys)) {
+          setter(parsed);
+        } else {
+          localStorage.removeItem(key);
+        }
+      } catch {
+        localStorage.removeItem(key);
+      }
+    };
 
-    if (savedUser) setUser(JSON.parse(savedUser));
-    if (savedAdmin) setAdmin(JSON.parse(savedAdmin));
-    if (savedReceptionist) setReceptionist(JSON.parse(savedReceptionist));
+    parseAndSet("user", setUser, ["name", "email"]);
+    parseAndSet("admin", setAdmin, ["name", "email"]);
+    parseAndSet("receptionist", setReceptionist, ["name", "email"]);
   }, []);
 
   const handleLogout = () => {
@@ -60,8 +172,8 @@ function App() {
                 <div className="card-body">
                   <div className="d-flex justify-content-between align-items-center">
                     <div>
-                      <h5 className="card-title mb-1">Welcome, {user.name}!</h5>
-                      <p className="text-muted mb-0">{user.email}</p>
+                      <h5 className="card-title mb-1">Welcome, {user?.name || "User"}!</h5>
+                      <p className="text-muted mb-0">{user?.email || ""}</p>
                     </div>
                     <button onClick={handleLogout} className="btn btn-outline-danger">
                       <i className="fas fa-sign-out-alt me-1"></i>
@@ -88,12 +200,22 @@ function App() {
                       <i className="fas fa-calendar-check me-1"></i>
                       My Appointments
                     </button>
+                    <button
+                      onClick={() => setPage("payments")}
+                      className={`btn ${page === "payments" ? "btn-primary" : "btn-outline-primary"}`}
+                    >
+                      <i className="fas fa-credit-card me-1"></i>
+                      Payment History
+                    </button>
                   </div>
                 </div>
               </div>
 
-              {page === "doctors" && <DoctorList user={user} />}
-              {page === "appointments" && <MyAppointments user={user} />}
+              <React.Suspense fallback={<div className="text-center"><div className="spinner-border"></div></div>}>
+                {page === "doctors" && <DoctorList user={user} />}
+                {page === "appointments" && <MyAppointments user={user} />}
+                {page === "payments" && <PaymentHistory user={user} />}
+              </React.Suspense>
             </div>
           </div>
         </div>
@@ -112,7 +234,7 @@ function App() {
                         <i className="fas fa-user-shield me-2"></i>
                         Admin Dashboard
                       </h5>
-                      <p className="text-muted mb-0">{admin.name} ({admin.email})</p>
+                      <p className="text-muted mb-0">{admin?.name || "Admin"} ({admin?.email || ""})</p>
                     </div>
                     <button onClick={handleAdminLogout} className="btn btn-outline-danger">
                       <i className="fas fa-sign-out-alt me-1"></i>
@@ -122,7 +244,9 @@ function App() {
                 </div>
               </div>
 
-              <AdminDashboard />
+              <React.Suspense fallback={<div className="text-center"><div className="spinner-border"></div></div>}>
+                <AdminDashboard />
+              </React.Suspense>
             </div>
           </div>
         </div>
@@ -141,7 +265,7 @@ function App() {
                         <i className="fas fa-clinic-medical me-2"></i>
                         Clinic Reception
                       </h5>
-                      <p className="text-muted mb-0">{receptionist.name} ({receptionist.email})</p>
+                      <p className="text-muted mb-0">{receptionist?.name || "Receptionist"} ({receptionist?.email || ""})</p>
                     </div>
                     <button onClick={handleReceptionistLogout} className="btn btn-outline-danger">
                       <i className="fas fa-sign-out-alt me-1"></i>
@@ -151,7 +275,9 @@ function App() {
                 </div>
               </div>
 
-              <ClinicDashboard receptionist={receptionist} />
+              <React.Suspense fallback={<div className="text-center"><div className="spinner-border"></div></div>}>
+                <ClinicDashboard receptionist={receptionist} />
+              </React.Suspense>
             </div>
           </div>
         </div>

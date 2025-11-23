@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axios from "../api/config";
 import ReceptionistSignup from "./ReceptionistSignup";
 
 function ClinicAuth({ onLogin }) {
@@ -37,7 +37,7 @@ function ClinicAuth({ onLogin }) {
   if (showSignup) {
     return (
       <div>
-        <ReceptionistSignup 
+        <ReceptionistSignup
           onSignupSuccess={() => {
             setShowSignup(false);
             setError("");
@@ -75,7 +75,7 @@ function ClinicAuth({ onLogin }) {
             required
           />
         </div>
-        
+
         <div className="mb-3">
           <label className="form-label">Password</label>
           <input
@@ -95,8 +95,8 @@ function ClinicAuth({ onLogin }) {
           </div>
         )}
 
-        <button 
-          type="submit" 
+        <button
+          type="submit"
           className="btn btn-info w-100"
           disabled={loading}
         >

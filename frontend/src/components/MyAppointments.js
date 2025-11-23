@@ -1,24 +1,26 @@
-import React, { useState, useEffect } from "react";
-import axios from "axios";
+import React, { useState, useEffect, useCallback } from "react";
+import axios from "../api/config";
 
 function MyAppointments({ user }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  useEffect(() => {
-    fetchAppointments();
-  }, [user]);
-
-  const fetchAppointments = async () => {
+  const fetchAppointments = useCallback(async () => {
     try {
-      const response = await axios.get(`/api/appointments/user/${user.id}`);
+      const response = await axios.get(`http://localhost:5002/api/appointments/user/${user.id}`);
       setAppointments(response.data);
     } catch (error) {
       console.error("Error fetching appointments:", error);
     } finally {
       setLoading(false);
     }
-  };
+  }, [user]);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  
 
   const handleCancelAppointment = async (appointmentId) => {
     if (!window.confirm("Are you sure you want to cancel this appointment?")) {
@@ -26,7 +28,7 @@ function MyAppointments({ user }) {
     }
 
     try {
-      await axios.put(`/api/appointments/${appointmentId}`, { status: "cancelled" });
+      await axios.put(`http://localhost:5002/api/appointments/${appointmentId}`, { status: "cancelled" });
       fetchAppointments(); // Refresh the list
       alert("Appointment cancelled successfully");
     } catch (error) {
@@ -45,6 +47,21 @@ function MyAppointments({ user }) {
     return (
       <span className={`badge ${statusClasses[status] || "bg-secondary"}`}>
         {status.charAt(0).toUpperCase() + status.slice(1)}
+      </span>
+    );
+  };
+
+  const getPaymentStatusBadge = (paymentStatus) => {
+    const statusClasses = {
+      pending: "bg-warning text-dark",
+      completed: "bg-success",
+      failed: "bg-danger",
+      refunded: "bg-secondary"
+    };
+
+    return (
+      <span className={`badge ${statusClasses[paymentStatus] || "bg-secondary"} ms-2`}>
+        Payment: {paymentStatus?.charAt(0).toUpperCase() + paymentStatus?.slice(1)}
       </span>
     );
   };
@@ -135,11 +152,24 @@ function MyAppointments({ user }) {
                             <strong>Reason:</strong> {appointment.reason}
                           </p>
                         )}
+
+                        {appointment.payment && (
+                          <div className="mb-2">
+                            <small className="text-muted d-block">
+                              <i className="fas fa-rupee-sign me-1"></i>
+                              <strong>Total Amount:</strong> ₹{appointment.payment.totalAmount}
+                            </small>
+                            <small className="text-muted">
+                              (Consultation: ₹{appointment.payment.consultationFee} + GST: ₹{appointment.payment.gst} + Platform Fee: ₹{appointment.payment.platformFee})
+                            </small>
+                          </div>
+                        )}
                       </div>
                       
                       <div className="col-md-4 text-md-end">
                         <div className="mb-2">
                           {getStatusBadge(appointment.status)}
+                          {appointment.payment && getPaymentStatusBadge(appointment.payment.paymentStatus)}
                         </div>
                         
                         {appointment.status === "pending" && (

@@ -1,5 +1,6 @@
 import React, { useState } from "react";
-import axios from "axios";
+import axios from "../api/config";
+import PaymentGateway from "./PaymentGateway";
 
 function BookAppointment({ doctor, user, onClose, onSuccess }) {
   const [formData, setFormData] = useState({
@@ -9,6 +10,8 @@ function BookAppointment({ doctor, user, onClose, onSuccess }) {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
+  const [showPayment, setShowPayment] = useState(false);
+  const [appointmentId, setAppointmentId] = useState(null);
 
   const handleChange = (e) => {
     setFormData({
@@ -32,18 +35,48 @@ function BookAppointment({ doctor, user, onClose, onSuccess }) {
         clinicId: doctor.clinicId
       };
 
-      await axios.post("/api/appointments", appointmentData);
-      onSuccess();
-      alert("Appointment booked successfully!");
+      const response = await axios.post("http://localhost:5002/api/appointments", appointmentData);
+      
+      if (response.data.requiresPayment) {
+        setAppointmentId(response.data._id);
+        setShowPayment(true);
+      } else {
+        onSuccess();
+        alert("Appointment booked successfully!");
+      }
     } catch (error) {
-      setError(error.response?.data?.message || "Failed to book appointment");
+      console.error("Booking error:", error);
+      setError(error.response?.data?.message || error.message || "Failed to book appointment");
     } finally {
       setLoading(false);
     }
   };
 
+  const handlePaymentSuccess = (paymentData) => {
+    setShowPayment(false);
+    onSuccess();
+    alert(`Payment successful! Transaction ID: ${paymentData.transactionId}`);
+  };
+
+  const handlePaymentCancel = () => {
+    setShowPayment(false);
+    // Optionally delete the appointment if payment is cancelled
+  };
+
   // Get today's date for min date input
   const today = new Date().toISOString().split('T')[0];
+
+  // Show payment gateway if payment is required
+  if (showPayment) {
+    return (
+      <PaymentGateway
+        appointmentId={appointmentId}
+        user={user}
+        onPaymentSuccess={handlePaymentSuccess}
+        onPaymentCancel={handlePaymentCancel}
+      />
+    );
+  }
 
   return (
     <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
@@ -71,10 +104,24 @@ function BookAppointment({ doctor, user, onClose, onSuccess }) {
                 <i className="fas fa-stethoscope me-1"></i>
                 {doctor.specialization}
               </p>
-              <p className="mb-0 small text-muted">
+              <p className="mb-1 small text-muted">
                 <i className="fas fa-envelope me-1"></i>
                 {doctor.email}
               </p>
+              <p className="mb-0 small">
+                <i className="fas fa-rupee-sign me-1 text-success"></i>
+                <strong className="text-success">Consultation Fee: ₹{doctor.consultationFee}</strong>
+              </p>
+            </div>
+
+            {/* Payment Info Alert */}
+            <div className="alert alert-info" role="alert">
+              <i className="fas fa-info-circle me-2"></i>
+              <strong>Payment Required:</strong> After booking, you'll be redirected to secure payment gateway.
+              <br />
+              <small>
+                Total: ₹{doctor.consultationFee} + GST (22%) + Platform Fee (7%)
+              </small>
             </div>
 
             <form onSubmit={handleSubmit}>
