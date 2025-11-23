@@ -6,25 +6,43 @@ require('dotenv').config();
 const app = express();
 
 // Middleware
-app.use(cors());
-app.use((req, res, next) => {
-  if (req.originalUrl === '/api/payments/webhook') {
-    return next();
-  }
-  return express.json()(req, res, next);
-});
+app.use(cors({
+  origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+  credentials: true
+}));
+app.use(express.json());
 
 // MongoDB connection
 const connectDB = async () => {
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/doctor_appointment', {
+    const mongoUri = process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/doctor_appointment';
+    
+    // Log connection attempt (hide password)
+    const safeUri = mongoUri.replace(/:[^:@]+@/, ':****@');
+    console.log(`Attempting to connect to MongoDB: ${safeUri}`);
+    
+    const conn = await mongoose.connect(mongoUri, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 5000, // Timeout after 5s instead of 30s
     });
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
   } catch (error) {
-    console.error('MongoDB connection error:', error);
-    process.exit(1);
+    console.error('❌ MongoDB connection error:', error.message);
+    
+    // Don't exit - allow server to start and show health check status
+    // This helps with debugging on Render
+    if (error.message.includes('authentication')) {
+      console.error('💡 Authentication failed - check username/password in MONGODB_URI');
+    } else if (error.message.includes('IP') || error.message.includes('whitelist')) {
+      console.error('💡 IP not whitelisted - check MongoDB Atlas Network Access settings');
+    } else if (error.message.includes('timeout')) {
+      console.error('💡 Connection timeout - check network access and connection string');
+    }
+    
+    // Retry connection every 10 seconds
+    console.log('Retrying connection in 10 seconds...');
+    setTimeout(connectDB, 10000);
   }
 };
 

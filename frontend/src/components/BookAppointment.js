@@ -35,7 +35,7 @@ function BookAppointment({ doctor, user, onClose, onSuccess }) {
         clinicId: doctor.clinicId
       };
 
-      const response = await axios.post("http://localhost:5002/api/appointments", appointmentData);
+      const response = await axios.post("/api/appointments", appointmentData);
       
       if (response.data.requiresPayment) {
         setAppointmentId(response.data._id);

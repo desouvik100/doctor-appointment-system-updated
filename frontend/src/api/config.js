@@ -1,11 +1,21 @@
 import axios from 'axios';
 
+// Get API URL from environment variable or use localhost for development
+const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5001';
+
+// Create axios instance with base URL
+const axiosInstance = axios.create({
+  baseURL: API_URL,
+  headers: {
+    'Content-Type': 'application/json'
+  }
+});
+
 // Configure axios defaults
-// Note: Using proxy in package.json, so no need for full URL
-axios.defaults.headers.common['Content-Type'] = 'application/json';
+axiosInstance.defaults.headers.common['Content-Type'] = 'application/json';
 
 // Add request interceptor to include auth token
-axios.interceptors.request.use(
+axiosInstance.interceptors.request.use(
   (config) => {
     const user = JSON.parse(localStorage.getItem('user') || '{}');
     const admin = JSON.parse(localStorage.getItem('admin') || '{}');
@@ -24,7 +34,7 @@ axios.interceptors.request.use(
 );
 
 // Add response interceptor to handle errors
-axios.interceptors.response.use(
+axiosInstance.interceptors.response.use(
   (response) => response,
   (error) => {
     if (error.response?.status === 401) {
@@ -38,4 +48,4 @@ axios.interceptors.response.use(
   }
 );
 
-export default axios;
+export default axiosInstance;
