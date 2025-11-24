@@ -35,6 +35,16 @@ const connectDB = async () => {
 
 connectDB();
 
+// ========== HEALTH CHECK ==========
+app.get('/api/health', (req, res) => {
+  res.status(200).json({
+    status: 'OK',
+    message: 'Server is running',
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
+  });
+});
+
 // ========== ROUTES ==========
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/auth', require('./routes/otpRoutes')); // OTP routes

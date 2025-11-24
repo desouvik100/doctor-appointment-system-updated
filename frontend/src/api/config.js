@@ -3,7 +3,7 @@ import axios from 'axios';
 // Configure axios defaults
 const API_BASE_URL = process.env.REACT_APP_API_URL || (
   process.env.NODE_ENV === 'production' 
-    ? process.env.REACT_APP_BACKEND_URL || 'https://your-actual-backend-url.vercel.app' // Replace with your actual backend URL
+    ? process.env.REACT_APP_BACKEND_URL || 'https://doctor-appointment-backend.onrender.com' // Render backend URL
     : '' // Use proxy in development
 );
 
