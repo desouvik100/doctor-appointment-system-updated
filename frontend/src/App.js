@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
-import './styles/medical-theme.css';
+import './styles/medical-theme-clean.css';
 
 // Import only the working auth components first
 import Auth from "./components/Auth";
