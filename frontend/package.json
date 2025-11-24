@@ -14,8 +14,8 @@
     "web-vitals": "^3.5.0"
   },
   "optionalDependencies": {
-    "@stripe/stripe-js": "^2.1.0",
-    "@stripe/react-stripe-js": "^2.3.0"
+    "@stripe/react-stripe-js": "^2.9.0",
+    "@stripe/stripe-js": "^2.4.0"
   },
   "scripts": {
     "start": "react-scripts start",
