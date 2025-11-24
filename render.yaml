@@ -1,9 +1,19 @@
-# Render deployment configuration
 services:
   - type: web
     name: doctor-appointment-backend
     env: node
+    region: oregon
     plan: free
+    rootDir: backend
     buildCommand: npm install
     startCommand: npm start
-    rootDir: backend
+    healthCheckPath: /api/health
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: EMAIL_USER
+        value: desouvik0000@gmail.com
+      - key: EMAIL_PASS
+        value: vlbabtmdlopfdtzr
+      - key: CORS_ORIGIN
+        value: https://doctor-appointment-system-updated.vercel.app
