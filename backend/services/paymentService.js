@@ -81,7 +81,7 @@ class PaymentService {
         automatic_payment_methods: {
           enabled: true,
         },
-      }, { idempotencyKey: `appointment_${appointmentId}_${userId}` });
+      });
 
       // Update appointment with payment intent
       appointment.paymentIntentId = paymentIntent.id;

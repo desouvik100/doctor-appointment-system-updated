@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../api/config";
 import BookAppointment from "./BookAppointment";
 
@@ -18,39 +18,13 @@ function DoctorList({ user }) {
     fetchClinics();
   }, []);
 
-  const filterDoctors = useCallback(() => {
-    let filtered = [...doctors];
-
-    if (searchTerm) {
-      filtered = filtered.filter(doctor =>
-        doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doctor.specialization.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doctor.email.toLowerCase().includes(searchTerm.toLowerCase())
-      );
-    }
-
-    if (filterSpecialization) {
-      filtered = filtered.filter(doctor =>
-        doctor.specialization.toLowerCase() === filterSpecialization.toLowerCase()
-      );
-    }
-
-    if (filterClinic) {
-      filtered = filtered.filter(doctor =>
-        doctor.clinicId?._id === filterClinic || doctor.clinicId === filterClinic
-      );
-    }
-
-    setFilteredDoctors(filtered);
-  }, [doctors, searchTerm, filterSpecialization, filterClinic]);
-
   useEffect(() => {
     filterDoctors();
-  }, [filterDoctors]);
+  }, [doctors, searchTerm, filterSpecialization, filterClinic]);
 
   const fetchDoctors = async () => {
     try {
-      const response = await axios.get("/api/doctors");
+      const response = await axios.get("http://localhost:5002/api/doctors");
       setDoctors(response.data);
       setFilteredDoctors(response.data);
     } catch (error) {
@@ -62,14 +36,41 @@ function DoctorList({ user }) {
 
   const fetchClinics = async () => {
     try {
-      const response = await axios.get("/api/clinics");
+      const response = await axios.get("http://localhost:5002/api/clinics");
       setClinics(response.data);
     } catch (error) {
       console.error("Error fetching clinics:", error);
     }
   };
 
-  
+  const filterDoctors = () => {
+    let filtered = [...doctors];
+
+    // Search filter
+    if (searchTerm) {
+      filtered = filtered.filter(doctor =>
+        doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doctor.specialization.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doctor.email.toLowerCase().includes(searchTerm.toLowerCase())
+      );
+    }
+
+    // Specialization filter
+    if (filterSpecialization) {
+      filtered = filtered.filter(doctor =>
+        doctor.specialization.toLowerCase() === filterSpecialization.toLowerCase()
+      );
+    }
+
+    // Clinic filter
+    if (filterClinic) {
+      filtered = filtered.filter(doctor =>
+        doctor.clinicId?._id === filterClinic || doctor.clinicId === filterClinic
+      );
+    }
+
+    setFilteredDoctors(filtered);
+  };
 
   const getUniqueSpecializations = () => {
     const specializations = [...new Set(doctors.map(doctor => doctor.specialization))];

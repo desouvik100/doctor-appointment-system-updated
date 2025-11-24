@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from '../api/config';
 
 const PaymentHistory = ({ user }) => {
@@ -6,7 +6,11 @@ const PaymentHistory = ({ user }) => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchPaymentHistory = useCallback(async () => {
+  useEffect(() => {
+    fetchPaymentHistory();
+  }, [user]);
+
+  const fetchPaymentHistory = async () => {
     try {
       const response = await axios.get(`/api/payments/history/${user.id}`);
       setPayments(response.data.payments);
@@ -16,13 +20,7 @@ const PaymentHistory = ({ user }) => {
       setError('Failed to fetch payment history');
       setLoading(false);
     }
-  }, [user]);
-
-  useEffect(() => {
-    fetchPaymentHistory();
-  }, [fetchPaymentHistory]);
-
-  
+  };
 
   const getPaymentStatusBadge = (status) => {
     const statusClasses = {

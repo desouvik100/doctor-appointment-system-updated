@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import { loadStripe } from '@stripe/stripe-js';
 import {
   Elements,
@@ -8,6 +8,8 @@ import {
 } from '@stripe/react-stripe-js';
 import axios from '../api/config';
 
+// Stripe configuration
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder');
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -35,7 +37,11 @@ const CheckoutForm = ({ appointmentId, user, onPaymentSuccess, onPaymentError })
   const [paymentIntent, setPaymentIntent] = useState(null);
   const [paymentBreakdown, setPaymentBreakdown] = useState(null);
 
-  const createPaymentIntent = useCallback(async () => {
+  useEffect(() => {
+    createPaymentIntent();
+  }, [appointmentId]);
+
+  const createPaymentIntent = async () => {
     try {
       const response = await axios.post('/api/payments/create-payment-intent', {
         appointmentId,
@@ -52,13 +58,7 @@ const CheckoutForm = ({ appointmentId, user, onPaymentSuccess, onPaymentError })
       console.error('Payment intent creation failed:', error);
       setError(error.response?.data?.message || 'Failed to initialize payment');
     }
-  }, [appointmentId, user]);
-
-  useEffect(() => {
-    createPaymentIntent();
-  }, [createPaymentIntent]);
-
-  
+  };
 
   const handleSubmit = async (event) => {
     event.preventDefault();
@@ -203,7 +203,11 @@ const CheckoutForm = ({ appointmentId, user, onPaymentSuccess, onPaymentError })
 const StripePayment = ({ appointmentId, user, onPaymentSuccess, onPaymentError, onCancel }) => {
   const [stripeKey, setStripeKey] = useState(null);
 
-  const fetchStripeConfig = useCallback(async () => {
+  useEffect(() => {
+    fetchStripeConfig();
+  }, []);
+
+  const fetchStripeConfig = async () => {
     try {
       const response = await axios.get('/api/payments/config');
       setStripeKey(response.data.publishableKey);
@@ -211,13 +215,7 @@ const StripePayment = ({ appointmentId, user, onPaymentSuccess, onPaymentError, 
       console.error('Failed to fetch Stripe config:', error);
       onPaymentError(error);
     }
-  }, [onPaymentError]);
-
-  useEffect(() => {
-    fetchStripeConfig();
-  }, [fetchStripeConfig]);
-
-  
+  };
 
   if (!stripeKey) {
     return (

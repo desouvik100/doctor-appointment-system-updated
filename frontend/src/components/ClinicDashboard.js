@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../api/config";
 
 function ClinicDashboard({ receptionist }) {
@@ -8,7 +8,11 @@ function ClinicDashboard({ receptionist }) {
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
 
-  const fetchAppointments = useCallback(async () => {
+  useEffect(() => {
+    fetchAppointments();
+  }, [receptionist]);
+
+  const fetchAppointments = async () => {
     try {
       const response = await axios.get(`/api/receptionists/appointments/${receptionist.clinicId}`);
       setAppointments(response.data);
@@ -18,21 +22,21 @@ function ClinicDashboard({ receptionist }) {
     } finally {
       setLoading(false);
     }
-  }, [receptionist]);
+  };
 
   useEffect(() => {
-    fetchAppointments();
-  }, [fetchAppointments]);
+    filterAppointments();
+  }, [appointments, filter, searchTerm]);
 
-  
-
-  const filterAppointments = useCallback(() => {
+  const filterAppointments = () => {
     let filtered = [...appointments];
 
+    // Status filter
     if (filter !== "all") {
       filtered = filtered.filter(appointment => appointment.status === filter);
     }
 
+    // Search filter
     if (searchTerm) {
       const searchLower = searchTerm.toLowerCase();
       filtered = filtered.filter(appointment =>
@@ -44,13 +48,7 @@ function ClinicDashboard({ receptionist }) {
     }
 
     setFilteredAppointments(filtered);
-  }, [appointments, filter, searchTerm]);
-
-  useEffect(() => {
-    filterAppointments();
-  }, [filterAppointments]);
-
-  
+  };
 
   const updateAppointmentStatus = async (appointmentId, newStatus) => {
     try {

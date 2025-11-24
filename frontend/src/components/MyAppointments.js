@@ -1,26 +1,24 @@
-import React, { useState, useEffect, useCallback } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../api/config";
 
 function MyAppointments({ user }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
 
-  const fetchAppointments = useCallback(async () => {
+  useEffect(() => {
+    fetchAppointments();
+  }, [user]);
+
+  const fetchAppointments = async () => {
     try {
-      const response = await axios.get(`/api/appointments/user/${user.id}`);
+      const response = await axios.get(`http://localhost:5002/api/appointments/user/${user.id}`);
       setAppointments(response.data);
     } catch (error) {
       console.error("Error fetching appointments:", error);
     } finally {
       setLoading(false);
     }
-  }, [user]);
-
-  useEffect(() => {
-    fetchAppointments();
-  }, [fetchAppointments]);
-
-  
+  };
 
   const handleCancelAppointment = async (appointmentId) => {
     if (!window.confirm("Are you sure you want to cancel this appointment?")) {
@@ -28,7 +26,7 @@ function MyAppointments({ user }) {
     }
 
     try {
-      await axios.put(`/api/appointments/${appointmentId}`, { status: "cancelled" });
+      await axios.put(`http://localhost:5002/api/appointments/${appointmentId}`, { status: "cancelled" });
       fetchAppointments(); // Refresh the list
       alert("Appointment cancelled successfully");
     } catch (error) {

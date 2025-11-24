@@ -6,6 +6,16 @@ import Auth from "./components/Auth";
 import AdminAuth from "./components/AdminAuth";
 import ClinicAuth from "./components/ClinicAuth";
 
+// Create safe component wrappers
+const SafeComponent = ({ component: Component, fallback, ...props }) => {
+  try {
+    return <Component {...props} />;
+  } catch (error) {
+    console.error('Component error:', error);
+    return fallback || <div className="alert alert-warning">Component loading...</div>;
+  }
+};
+
 // Lazy load dashboard components
 const DoctorList = React.lazy(() => 
   import("./components/DoctorList").catch(() => ({

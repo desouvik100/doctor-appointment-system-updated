@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from '../api/config';
 import StripePayment from './StripePayment';
 
@@ -8,7 +8,11 @@ const PaymentGateway = ({ appointmentId, user, onPaymentSuccess, onPaymentCancel
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
 
-  const fetchPaymentDetails = useCallback(async () => {
+  useEffect(() => {
+    fetchPaymentDetails();
+  }, [appointmentId]);
+
+  const fetchPaymentDetails = async () => {
     try {
       const response = await axios.get(`/api/payments/calculate/${appointmentId}`);
       setPaymentDetails(response.data);
@@ -17,13 +21,7 @@ const PaymentGateway = ({ appointmentId, user, onPaymentSuccess, onPaymentCancel
       setError('Failed to fetch payment details');
       setLoading(false);
     }
-  }, [appointmentId]);
-
-  useEffect(() => {
-    fetchPaymentDetails();
-  }, [fetchPaymentDetails]);
-
-  
+  };
 
   const handlePaymentSuccess = (paymentData) => {
     onPaymentSuccess({

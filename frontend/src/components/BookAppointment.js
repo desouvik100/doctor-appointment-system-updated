@@ -12,6 +12,7 @@ function BookAppointment({ doctor, user, onClose, onSuccess }) {
   const [error, setError] = useState("");
   const [showPayment, setShowPayment] = useState(false);
   const [appointmentId, setAppointmentId] = useState(null);
+  const [paymentBreakdown, setPaymentBreakdown] = useState(null);
 
   const handleChange = (e) => {
     setFormData({
@@ -35,10 +36,11 @@ function BookAppointment({ doctor, user, onClose, onSuccess }) {
         clinicId: doctor.clinicId
       };
 
-      const response = await axios.post("/api/appointments", appointmentData);
+      const response = await axios.post("http://localhost:5002/api/appointments", appointmentData);
       
       if (response.data.requiresPayment) {
         setAppointmentId(response.data._id);
+        setPaymentBreakdown(response.data.paymentBreakdown);
         setShowPayment(true);
       } else {
         onSuccess();

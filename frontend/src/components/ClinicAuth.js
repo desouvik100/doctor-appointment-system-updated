@@ -1,9 +1,7 @@
 import React, { useState } from "react";
-import axios from "../api/config";
-import ReceptionistSignup from "./ReceptionistSignup";
+import axios from "axios";
 
 function ClinicAuth({ onLogin }) {
-  const [showSignup, setShowSignup] = useState(false);
   const [formData, setFormData] = useState({
     email: "",
     password: ""
@@ -34,32 +32,6 @@ function ClinicAuth({ onLogin }) {
     }
   };
 
-  if (showSignup) {
-    return (
-      <div>
-        <ReceptionistSignup
-          onSignupSuccess={() => {
-            setShowSignup(false);
-            setError("");
-          }}
-        />
-        <div className="mt-3 text-center">
-          <button
-            type="button"
-            className="btn btn-link btn-sm"
-            onClick={() => {
-              setShowSignup(false);
-              setError("");
-            }}
-          >
-            <i className="fas fa-arrow-left me-1"></i>
-            Back to Login
-          </button>
-        </div>
-      </div>
-    );
-  }
-
   return (
     <div>
       <form onSubmit={handleSubmit}>
@@ -75,7 +47,7 @@ function ClinicAuth({ onLogin }) {
             required
           />
         </div>
-
+        
         <div className="mb-3">
           <label className="form-label">Password</label>
           <input
@@ -90,45 +62,23 @@ function ClinicAuth({ onLogin }) {
 
         {error && (
           <div className="alert alert-danger" role="alert">
-            <i className="fas fa-exclamation-triangle me-1"></i>
             {error}
           </div>
         )}
 
-        <button
-          type="submit"
+        <button 
+          type="submit" 
           className="btn btn-info w-100"
           disabled={loading}
         >
-          {loading ? (
-            <>
-              <span className="spinner-border spinner-border-sm me-1"></span>
-              Logging in...
-            </>
-          ) : (
-            <>
-              <i className="fas fa-sign-in-alt me-1"></i>
-              Reception Login
-            </>
-          )}
+          {loading ? "Logging in..." : "Reception Login"}
         </button>
       </form>
 
-      <div className="mt-3 text-center">
-        <button
-          type="button"
-          className="btn btn-link btn-sm"
-          onClick={() => setShowSignup(true)}
-        >
-          <i className="fas fa-user-plus me-1"></i>
-          New Receptionist? Sign Up
-        </button>
-      </div>
-
-      <div className="mt-2">
+      <div className="mt-3">
         <small className="text-muted">
           <i className="fas fa-info-circle me-1"></i>
-          Clinic staff access - Approved accounts only
+          Clinic staff access
         </small>
       </div>
     </div>

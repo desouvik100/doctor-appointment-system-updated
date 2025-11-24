@@ -27,9 +27,9 @@ function Auth({ onLogin }) {
     try {
       const endpoint = isLogin ? "/api/auth/login" : "/api/auth/register";
       const response = await axios.post(endpoint, formData);
-      
-      localStorage.setItem("user", JSON.stringify(response.data.user));
-      onLogin(response.data.user);
+      const { token, user } = response.data;
+      localStorage.setItem("user", JSON.stringify({ token, ...user }));
+      onLogin(user);
     } catch (error) {
       setError(error.response?.data?.message || "An error occurred");
     } finally {

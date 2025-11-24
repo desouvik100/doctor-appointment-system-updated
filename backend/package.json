@@ -16,8 +16,7 @@
     "create:admin": "node scripts/migrateUserData.js admin",
     "migrate:clinics": "node scripts/migrateClinicData.js migrate",
     "migrate:clinics:force": "node scripts/migrateClinicData.js migrate --force",
-    "create:sample-clinics": "node scripts/migrateClinicData.js sample",
-    "seed:admin": "node seedAdmin.js"
+    "create:sample-clinics": "node scripts/migrateClinicData.js sample"
   },
   "keywords": [],
   "author": "",
