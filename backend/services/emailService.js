@@ -4,6 +4,7 @@ const { Resend } = require('resend');
 // In-memory OTP store: { "email|type" : { otp, expiresAt } }
 const otpStore = new Map();
 
+// Generate a 6-digit OTP
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
@@ -22,7 +23,7 @@ async function sendEmail({ to, subject, html, text }) {
   }
 
   try {
-    const result = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: FROM_EMAIL,
       to,
       subject,
@@ -30,10 +31,18 @@ async function sendEmail({ to, subject, html, text }) {
       text,
     });
 
-    console.log('✅ Resend email sent:', result?.id || '');
-    return result;
+    console.log('Resend data:', data);
+    console.log('Resend error:', error);
+
+    if (error) {
+      console.error('❌ Resend email error:', error);
+      throw new Error(error.message || 'Resend email error');
+    }
+
+    console.log('✅ Resend email sent, id:', data?.id);
+    return data;
   } catch (err) {
-    console.error('❌ Resend email error:', err);
+    console.error('❌ Resend email exception:', err);
     throw err;
   }
 }
@@ -44,11 +53,15 @@ async function sendOTP(email, type = 'register') {
     throw new Error('Email is required for OTP');
   }
 
+  console.log('🔔 sendOTP called for:', email, 'type:', type);
+
   const otp = generateOTP();
   const key = `${email}|${type}`;
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
   otpStore.set(key, { otp, expiresAt });
+
+  console.log('Generated OTP:', otp, 'for key:', key);
 
   const subject = 'Your OTP Code';
   const text = `Your OTP code is: ${otp}. It is valid for 10 minutes.`;
@@ -103,6 +116,7 @@ function verifyOTP(email, otp, type = 'register') {
     message: 'OTP verified successfully.',
   };
 }
+
 // ---- Optional: test email helper ----
 async function sendTestEmail(to) {
   const subject = 'Test email from Doctor Appointment System (Resend)';
@@ -111,6 +125,7 @@ async function sendTestEmail(to) {
   await sendEmail({ to, subject, html, text });
   return { success: true };
 }
+
 module.exports = {
   sendOTP,
   verifyOTP,
