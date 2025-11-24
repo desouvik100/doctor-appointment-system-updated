@@ -1,5 +1,5 @@
 // backend/services/emailService.js
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 
 // In-memory OTP store: { "email|type" : { otp, expiresAt } }
 const otpStore = new Map();
@@ -9,41 +9,45 @@ function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ---- Resend client ----
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
+// ---- Nodemailer transporter ----
+let transporter = null;
 
-// Small helper to send any email via Resend
+function getTransporter() {
+  if (!transporter) {
+    if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+      throw new Error('EMAIL_USER and EMAIL_PASS must be set in environment');
+    }
+
+    transporter = nodemailer.createTransport({
+      service: 'gmail',
+      auth: {
+        user: process.env.EMAIL_USER,
+        pass: process.env.EMAIL_PASS,
+      },
+    });
+  }
+  return transporter;
+}
+
+// Small helper to send any email via Nodemailer
 async function sendEmail({ to, subject, html, text }) {
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error('RESEND_API_KEY is not set in environment');
-  }
-  if (!FROM_EMAIL) {
-    throw new Error('RESEND_FROM_EMAIL is not set in environment');
-  }
+  const emailTransporter = getTransporter();
+  const fromEmail = process.env.EMAIL_USER;
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+    const info = await emailTransporter.sendMail({
+      from: `"Doctor Appointment System" <${fromEmail}>`,
       to,
       subject,
       html,
       text,
     });
 
-    console.log('Resend data:', data);
-    console.log('Resend error:', error);
-
-    if (error) {
-      console.error('❌ Resend email error:', error);
-      throw new Error(error.message || 'Resend email error');
-    }
-
-    console.log('✅ Resend email sent, id:', data?.id);
-    return data;
+    console.log('✅ Email sent successfully, messageId:', info.messageId);
+    return info;
   } catch (err) {
-    console.error('❌ Resend email exception:', err);
-    throw err;
+    console.error('❌ Email sending error:', err);
+    throw new Error(err.message || 'Failed to send email');
   }
 }
 
@@ -119,8 +123,8 @@ function verifyOTP(email, otp, type = 'register') {
 
 // ---- Optional: test email helper ----
 async function sendTestEmail(to) {
-  const subject = 'Test email from Doctor Appointment System (Resend)';
-  const text = 'If you see this, Resend is working from Render 👍';
+  const subject = 'Test email from Doctor Appointment System';
+  const text = 'If you see this, email service is working 👍';
   const html = `<p>${text}</p>`;
   await sendEmail({ to, subject, html, text });
   return { success: true };
