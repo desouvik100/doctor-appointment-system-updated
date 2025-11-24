@@ -158,3 +158,4 @@ medicalHistorySchema.index({ userId: 1 });
 
 module.exports = mongoose.model('MedicalHistory', medicalHistorySchema);
 
+

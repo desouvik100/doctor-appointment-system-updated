@@ -63,3 +63,4 @@ doctorScheduleSchema.index({ doctorId: 1, day: 1 }, { unique: true });
 
 module.exports = mongoose.model('DoctorSchedule', doctorScheduleSchema);
 
+
