@@ -11,16 +11,30 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 10000
       - key: EMAIL_USER
         value: desouvik0000@gmail.com
       - key: EMAIL_PASS
         value: vlbabtmdlopfdtzr
+      - key: CORS_ORIGIN
+        value: https://doctor-appointment-system-updated.vercel.app
+      - key: CURRENCY
+        value: inr
+      - key: PLATFORM_FEE_PERCENTAGE
+        value: 7
+      - key: GST_PERCENTAGE
+        value: 22
       - key: MONGODB_URI
-        sync: false # You'll need to add this manually in Render dashboard
+        sync: false # Add this manually in Render dashboard for security
       - key: JWT_SECRET
-        sync: false # You'll need to add this manually in Render dashboard
-      - key: PORT
-        value: 10000
+        sync: false # Add this manually in Render dashboard for security
+      - key: STRIPE_SECRET_KEY
+        sync: false # Add this manually in Render dashboard for security
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false # Add this manually in Render dashboard for security
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false # Add this manually in Render dashboard for security
 
   # Frontend Static Site
   - type: static
