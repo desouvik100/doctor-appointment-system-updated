@@ -1,10 +1,8 @@
 import axios from 'axios';
 
+// Configure axios defaults
+// Note: Using proxy in package.json, so no need for full URL
 axios.defaults.headers.common['Content-Type'] = 'application/json';
-
-const isDev = process.env.NODE_ENV === 'development';
-const baseURL = isDev ? '' : process.env.REACT_APP_API_URL || '';
-axios.defaults.baseURL = baseURL;
 
 // Add request interceptor to include auth token
 axios.interceptors.request.use(

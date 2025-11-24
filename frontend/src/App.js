@@ -5,6 +5,7 @@ import 'bootstrap/dist/css/bootstrap.min.css';
 import Auth from "./components/Auth";
 import AdminAuth from "./components/AdminAuth";
 import ClinicAuth from "./components/ClinicAuth";
+import AIAssistant from "./components/AIAssistant";
 
 // Create safe component wrappers
 const SafeComponent = ({ component: Component, fallback, ...props }) => {
@@ -211,6 +212,13 @@ function App() {
                       My Appointments
                     </button>
                     <button
+                      onClick={() => setPage("ai-assistant")}
+                      className={`btn ${page === "ai-assistant" ? "btn-primary" : "btn-outline-primary"}`}
+                    >
+                      <i className="fas fa-robot me-1"></i>
+                      AI Assistant
+                    </button>
+                    <button
                       onClick={() => setPage("payments")}
                       className={`btn ${page === "payments" ? "btn-primary" : "btn-outline-primary"}`}
                     >
@@ -224,6 +232,7 @@ function App() {
               <React.Suspense fallback={<div className="text-center"><div className="spinner-border"></div></div>}>
                 {page === "doctors" && <DoctorList user={user} />}
                 {page === "appointments" && <MyAppointments user={user} />}
+                {page === "ai-assistant" && <AIAssistant user={user} />}
                 {page === "payments" && <PaymentHistory user={user} />}
               </React.Suspense>
             </div>

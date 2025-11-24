@@ -24,7 +24,7 @@ function DoctorList({ user }) {
 
   const fetchDoctors = async () => {
     try {
-      const response = await axios.get("http://localhost:5002/api/doctors");
+      const response = await axios.get("/api/doctors");
       setDoctors(response.data);
       setFilteredDoctors(response.data);
     } catch (error) {
@@ -36,7 +36,7 @@ function DoctorList({ user }) {
 
   const fetchClinics = async () => {
     try {
-      const response = await axios.get("http://localhost:5002/api/clinics");
+      const response = await axios.get("/api/clinics");
       setClinics(response.data);
     } catch (error) {
       console.error("Error fetching clinics:", error);

@@ -23,9 +23,8 @@ function AdminAuth({ onLogin }) {
 
     try {
       const response = await axios.post("/api/auth/admin/login", formData);
-      const { token, user } = response.data;
-      localStorage.setItem("admin", JSON.stringify({ token, ...user }));
-      onLogin(user);
+      localStorage.setItem("admin", JSON.stringify(response.data.user));
+      onLogin(response.data.user);
     } catch (error) {
       setError(error.response?.data?.message || "Invalid admin credentials");
     } finally {
