@@ -11,8 +11,7 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: PORT
-        value: 10000
+      # PORT is automatically provided by Render - don't override it
       - key: EMAIL_USER
         value: desouvik0000@gmail.com
       - key: EMAIL_PASS
