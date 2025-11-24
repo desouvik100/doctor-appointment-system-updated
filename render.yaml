@@ -1,49 +1,9 @@
+# Render deployment configuration
 services:
-  # Backend API Service
   - type: web
     name: doctor-appointment-backend
     env: node
-    region: oregon
     plan: free
-    rootDir: backend
     buildCommand: npm install
     startCommand: npm start
-    healthCheckPath: /api/health
-    envVars:
-      - key: NODE_ENV
-        value: production
-      # PORT is automatically provided by Render - don't override it
-      - key: EMAIL_USER
-        value: desouvik0000@gmail.com
-      - key: EMAIL_PASS
-        value: vlbabtmdlopfdtzr
-      - key: CORS_ORIGIN
-        value: https://doctor-appointment-system-updated.vercel.app
-      - key: CURRENCY
-        value: inr
-      - key: PLATFORM_FEE_PERCENTAGE
-        value: 7
-      - key: GST_PERCENTAGE
-        value: 22
-      - key: MONGODB_URI
-        sync: false # Add this manually in Render dashboard for security
-      - key: JWT_SECRET
-        sync: false # Add this manually in Render dashboard for security
-      - key: STRIPE_SECRET_KEY
-        sync: false # Add this manually in Render dashboard for security
-      - key: STRIPE_PUBLISHABLE_KEY
-        sync: false # Add this manually in Render dashboard for security
-      - key: STRIPE_WEBHOOK_SECRET
-        sync: false # Add this manually in Render dashboard for security
-
-  # Frontend Static Site
-  - type: static
-    name: doctor-appointment-frontend
-    env: static
-    region: oregon
-    plan: free
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/build
-    envVars:
-      - key: REACT_APP_BACKEND_URL
-        value: https://doctor-appointment-backend.onrender.com
+    rootDir: backend
