@@ -6,13 +6,14 @@ const AIAssistant = ({ user }) => {
         {
             id: 1,
             type: 'ai',
-            content: `Hello ${user?.name || 'there'}! I'm your AI Health Assistant. I can help you with:
+            content: `Hello ${user?.name || 'there'}! 👋 I'm your AI Health Assistant. I can help you with:
       
-• General health information and tips
-• Understanding medical symptoms (not a diagnosis)
-• Medication reminders and information
-• Healthy lifestyle recommendations
-• Preparation for doctor visits
+🩺 General health information and tips
+🔍 Understanding medical symptoms (not a diagnosis)
+💊 Medication reminders and information
+🏃‍♀️ Healthy lifestyle recommendations
+📋 Preparation for doctor visits
+🚨 Emergency guidance and contacts
 
 How can I assist you today?`,
             timestamp: new Date()
@@ -21,6 +22,8 @@ How can I assist you today?`,
 
     const [inputMessage, setInputMessage] = useState('');
     const [isTyping, setIsTyping] = useState(false);
+    const [isOnline, setIsOnline] = useState(true);
+    const [messageCount, setMessageCount] = useState(1);
     const chatContainerRef = useRef(null);
 
     // Auto-scroll to bottom when new messages arrive
@@ -157,7 +160,7 @@ Is there a specific health topic you'd like general information about? I can hel
     };
 
     const handleSendMessage = async () => {
-        if (!inputMessage.trim()) return;
+        if (!inputMessage.trim() || !isOnline) return;
 
         const userMessage = {
             id: Date.now(),
@@ -169,19 +172,22 @@ Is there a specific health topic you'd like general information about? I can hel
         setMessages(prev => [...prev, userMessage]);
         setInputMessage('');
         setIsTyping(true);
+        setMessageCount(prev => prev + 1);
 
-        // Simulate AI thinking time
+        // Simulate AI thinking time with variable delay
+        const thinkingTime = Math.random() * 1000 + 1000; // 1-2 seconds
         setTimeout(() => {
             const aiResponse = {
                 id: Date.now() + 1,
                 type: 'ai',
-                content: getAIResponse(inputMessage),
+                content: getAIResponse(userMessage.content),
                 timestamp: new Date()
             };
 
             setMessages(prev => [...prev, aiResponse]);
+            setMessageCount(prev => prev + 1);
             setIsTyping(false);
-        }, 1500);
+        }, thinkingTime);
     };
 
     const handleKeyDown = (e) => {
@@ -231,13 +237,26 @@ Is there a specific health topic you'd like general information about? I can hel
     };
 
     return (
-        <div className="card shadow-sm">
-            <div className="card-header ai-header-gradient">
-                <h4 className="mb-0 text-white">
-                    <i className="fas fa-robot me-2"></i>
-                    AI Health Assistant
-                </h4>
-                <small className="text-white-50">Get instant health information and guidance</small>
+        <div className="card shadow-sm ai-assistant-card">
+            <div className="card-header ai-header-gradient position-relative">
+                <div className="d-flex justify-content-between align-items-center">
+                    <div>
+                        <h4 className="mb-0 text-white">
+                            <i className="fas fa-robot me-2"></i>
+                            AI Health Assistant
+                            <span className={`status-indicator ms-2 ${isOnline ? 'online' : 'offline'}`}></span>
+                        </h4>
+                        <small className="text-white-50">
+                            {isOnline ? 'Online • Ready to help' : 'Offline • Reconnecting...'}
+                        </small>
+                    </div>
+                    <div className="ai-stats text-white-50">
+                        <small>
+                            <i className="fas fa-comments me-1"></i>
+                            {messageCount} messages
+                        </small>
+                    </div>
+                </div>
             </div>
 
             <div className="card-body p-0">
@@ -301,33 +320,54 @@ Is there a specific health topic you'd like general information about? I can hel
                 </div>
 
                 {/* Input Area */}
-                <div className="border-top p-3">
+                <div className="border-top p-3 ai-input-area">
                     <div className="input-group">
+                        <div className="input-group-text bg-light border-end-0">
+                            <i className="fas fa-user text-muted"></i>
+                        </div>
                         <textarea
-                            className="form-control ai-input"
+                            className="form-control ai-input border-start-0"
                             placeholder="Ask me about health tips, symptoms, or how to use this system..."
                             value={inputMessage}
                             onChange={(e) => setInputMessage(e.target.value)}
                             onKeyDown={handleKeyDown}
                             rows="2"
                             style={{ resize: 'none' }}
+                            disabled={!isOnline}
                         />
                         <button
-                            className="btn btn-primary send-btn"
+                            className="btn btn-primary send-btn position-relative"
                             onClick={handleSendMessage}
-                            disabled={!inputMessage.trim() || isTyping}
+                            disabled={!inputMessage.trim() || isTyping || !isOnline}
                         >
-                            <i className="fas fa-paper-plane"></i>
+                            {isTyping ? (
+                                <div className="spinner-border spinner-border-sm" role="status">
+                                    <span className="visually-hidden">Loading...</span>
+                                </div>
+                            ) : (
+                                <i className="fas fa-paper-plane"></i>
+                            )}
                         </button>
                     </div>
-                    <div className="mt-2">
-                        <small className="text-muted d-block">
-                            <i className="fas fa-info-circle me-1"></i>
-                            This AI provides general information only. For medical emergencies, call emergency services.
+                    
+                    {/* Character Counter */}
+                    <div className="d-flex justify-content-between align-items-center mt-2">
+                        <div className="disclaimer-text">
+                            <small className="text-muted">
+                                <i className="fas fa-info-circle me-1"></i>
+                                General information only • Not medical diagnosis
+                            </small>
+                        </div>
+                        <small className="text-muted">
+                            {inputMessage.length}/500
                         </small>
-                        <small className="text-muted d-block mt-1">
-                            <i className="fas fa-shield-alt me-1"></i>
-                            Always consult healthcare professionals for personalized medical advice.
+                    </div>
+                    
+                    {/* Emergency Banner */}
+                    <div className="emergency-banner mt-2 p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded">
+                        <small className="text-danger">
+                            <i className="fas fa-exclamation-triangle me-1"></i>
+                            <strong>Emergency?</strong> Call 911 or go to your nearest emergency room
                         </small>
                     </div>
                 </div>

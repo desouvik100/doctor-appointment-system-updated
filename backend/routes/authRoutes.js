@@ -148,6 +148,60 @@ router.post('/admin/login', async (req, res) => {
   }
 });
 
+// Clinic/Receptionist login
+router.post('/clinic/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    // Validate required fields
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    // Find receptionist user
+    const user = await User.findOne({ 
+      email, 
+      role: 'receptionist', 
+      isActive: true,
+      approvalStatus: 'approved' // Only approved receptionists can login
+    });
+    
+    if (!user) {
+      return res.status(400).json({ message: 'Invalid receptionist credentials or account not approved' });
+    }
+
+    // Check password
+    const isMatch = await bcrypt.compare(password, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid receptionist credentials' });
+    }
+
+    // Create token
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      token,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        clinicId: user.clinicId,
+        clinicName: user.clinicName,
+        approvalStatus: user.approvalStatus
+      }
+    });
+  } catch (error) {
+    console.error('Receptionist login error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Test route to verify receptionist routes are accessible
 router.get('/receptionist/test', (req, res) => {
   res.json({ message: 'Receptionist routes are working' });
