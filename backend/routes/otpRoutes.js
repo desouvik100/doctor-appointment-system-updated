@@ -5,6 +5,25 @@ const { sendOTP, verifyOTP } = require('../services/emailService');
 
 
 // ===============================
+// CHECK EMAIL CONFIG ROUTE (for debugging)
+// ===============================
+router.get('/check-config', (req, res) => {
+  const config = {
+    emailUser: process.env.EMAIL_USER ? 'configured' : 'missing',
+    emailPass: process.env.EMAIL_PASS ? 'configured' : 'missing',
+    nodeEnv: process.env.NODE_ENV || 'not set'
+  };
+  
+  console.log('📧 Email config check:', config);
+  
+  res.json({
+    success: true,
+    config: config,
+    message: 'Configuration check complete'
+  });
+});
+
+// ===============================
 // SEND OTP ROUTE
 // ===============================
 router.post('/send-otp', async (req, res) => {

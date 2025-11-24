@@ -35,8 +35,14 @@ function generateOTP() {
 // ===============================
 async function sendOTP(email, type = "register") {
 
+  console.log('🔧 Checking email configuration...');
+  console.log('EMAIL_USER:', process.env.EMAIL_USER ? 'configured' : 'missing');
+  console.log('EMAIL_PASS:', process.env.EMAIL_PASS ? 'configured' : 'missing');
+
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    throw new Error("EMAIL_USER or EMAIL_PASS not found in .env file");
+    const error = new Error("Email configuration missing. Please check EMAIL_USER and EMAIL_PASS environment variables.");
+    console.error('❌ Email config error:', error.message);
+    throw error;
   }
 
   const otp = generateOTP();
@@ -62,8 +68,9 @@ async function sendOTP(email, type = "register") {
   };
 
   try {
+    console.log('📤 Attempting to send OTP email to:', email);
     const result = await transporter.sendMail(mailOptions);
-    console.log("✅ OTP email sent:", result.messageId);
+    console.log("✅ OTP email sent successfully:", result.messageId);
 
     return {
       success: true,
@@ -72,7 +79,16 @@ async function sendOTP(email, type = "register") {
 
   } catch (error) {
     console.error("❌ Error sending OTP:", error.message);
-    throw error;
+    console.error("❌ Error details:", error);
+    
+    // Provide more specific error messages
+    if (error.code === 'EAUTH') {
+      throw new Error("Email authentication failed. Please check your Gmail app password.");
+    } else if (error.code === 'ECONNECTION') {
+      throw new Error("Cannot connect to email server. Please check your internet connection.");
+    } else {
+      throw new Error(`Email sending failed: ${error.message}`);
+    }
   }
 }
 
