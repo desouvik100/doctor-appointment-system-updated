@@ -31,23 +31,25 @@ function getTransporter() {
 
 // Small helper to send any email via Nodemailer
 async function sendEmail({ to, subject, html, text }) {
-  const emailTransporter = getTransporter();
-  const fromEmail = process.env.EMAIL_USER;
-
   try {
-    const info = await emailTransporter.sendMail({
-      from: `"Doctor Appointment System" <${fromEmail}>`,
+    const { data, error } = await resend.emails.send({
+      from: process.env.RESEND_FROM_EMAIL,   // ✅ YOUR DOMAIN
       to,
       subject,
       html,
-      text,
+      text
     });
 
-    console.log('✅ Email sent successfully, messageId:', info.messageId);
-    return info;
+    if (error) {
+      console.error("❌ Resend error:", error);
+      throw error;
+    }
+
+    console.log("✅ Email sent:", data.id);
+    return data;
   } catch (err) {
-    console.error('❌ Email sending error:', err);
-    throw new Error(err.message || 'Failed to send email');
+    console.error("❌ Send email failed:", err);
+    throw err;
   }
 }
 
