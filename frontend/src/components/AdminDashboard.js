@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/config";
-import "../styles/admin-dashboard-professional.css";
+import "../styles/admin-dashboard-clean.css";
 
 function AdminDashboard() {
   const [activeTab, setActiveTab] = useState("overview");
