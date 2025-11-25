@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/config";
+import AdminChatbot from "./AdminChatbot";
 import "../styles/admin-dashboard-clean.css";
 
 function AdminDashboard() {
@@ -1739,6 +1740,12 @@ function AdminDashboard() {
             </div>
           </div>
         )}
+      
+      {/* AI Chatbot Assistant */}
+      <AdminChatbot 
+        systemStats={stats}
+        currentContext={activeTab}
+      />
     </div>
   );
 }

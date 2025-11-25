@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
+import axios from 'axios';
 import './AIAssistant.css';
 
 const AIAssistant = ({ user }) => {
@@ -176,17 +177,29 @@ Is there a specific health topic you'd like general information about? I can hel
 
         // Simulate AI thinking time with variable delay
         const thinkingTime = Math.random() * 1000 + 1000; // 1-2 seconds
-        setTimeout(() => {
-            const aiResponse = {
-                id: Date.now() + 1,
-                type: 'ai',
-                content: getAIResponse(userMessage.content),
-                timestamp: new Date()
-            };
-
-            setMessages(prev => [...prev, aiResponse]);
-            setMessageCount(prev => prev + 1);
-            setIsTyping(false);
+        setTimeout(async () => {
+            try {
+                const resp = await axios.post('/api/ai/chat', { prompt: userMessage.content });
+                const aiResponse = {
+                    id: Date.now() + 1,
+                    type: 'ai',
+                    content: resp.data?.message || getAIResponse(userMessage.content),
+                    timestamp: new Date()
+                };
+                setMessages(prev => [...prev, aiResponse]);
+                setMessageCount(prev => prev + 1);
+                setIsTyping(false);
+            } catch (e) {
+                const aiResponse = {
+                    id: Date.now() + 1,
+                    type: 'ai',
+                    content: getAIResponse(userMessage.content),
+                    timestamp: new Date()
+                };
+                setMessages(prev => [...prev, aiResponse]);
+                setMessageCount(prev => prev + 1);
+                setIsTyping(false);
+            }
         }, thinkingTime);
     };
 

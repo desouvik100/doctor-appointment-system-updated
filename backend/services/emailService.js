@@ -1,53 +1,53 @@
 // backend/services/emailService.js
-
 const { Resend } = require('resend');
-
-// 🔑 Create Resend client once, using your API key
-const resend = new Resend(process.env.RESEND_API_KEY);
 
 // In-memory OTP store: { "email|type" : { otp, expiresAt } }
 const otpStore = new Map();
 
+// Generate a 6-digit OTP
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ----------------------------------------------------
-//  Generic email sender via Resend
-// ----------------------------------------------------
+// ---- Resend client ----
+const resend = new Resend(process.env.RESEND_API_KEY);
+const FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
+
+// Small helper to send any email via Resend
 async function sendEmail({ to, subject, html, text }) {
   if (!process.env.RESEND_API_KEY) {
     throw new Error('RESEND_API_KEY is not set in environment');
   }
-  if (!process.env.RESEND_FROM_EMAIL) {
+  if (!FROM_EMAIL) {
     throw new Error('RESEND_FROM_EMAIL is not set in environment');
   }
 
   try {
     const { data, error } = await resend.emails.send({
-      from: process.env.RESEND_FROM_EMAIL, // e.g. "Doctor Appointment <no-reply@healthsyncpro.in>"
+      from: FROM_EMAIL,
       to,
       subject,
       html,
       text,
     });
 
+    console.log('Resend data:', data);
+    console.log('Resend error:', error);
+
     if (error) {
-      console.error('❌ Resend error:', error);
-      throw error;
+      console.error('❌ Resend email error:', error);
+      throw new Error(error.message || 'Resend email error');
     }
 
-    console.log('✅ Email sent, id:', data.id);
+    console.log('✅ Resend email sent, id:', data?.id);
     return data;
   } catch (err) {
-    console.error('❌ Send email failed:', err);
+    console.error('❌ Resend email exception:', err);
     throw err;
   }
 }
 
-// ----------------------------------------------------
-//  Public: send OTP
-// ----------------------------------------------------
+// ---- PUBLIC: send OTP ----
 async function sendOTP(email, type = 'register') {
   if (!email) {
     throw new Error('Email is required for OTP');
@@ -60,6 +60,7 @@ async function sendOTP(email, type = 'register') {
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
   otpStore.set(key, { otp, expiresAt });
+
   console.log('Generated OTP:', otp, 'for key:', key);
 
   const subject = 'Your OTP Code';
@@ -80,9 +81,7 @@ async function sendOTP(email, type = 'register') {
   };
 }
 
-// ----------------------------------------------------
-//  Public: verify OTP
-// ----------------------------------------------------
+// ---- PUBLIC: verify OTP ----
 function verifyOTP(email, otp, type = 'register') {
   const key = `${email}|${type}`;
   const record = otpStore.get(key);
@@ -118,7 +117,7 @@ function verifyOTP(email, otp, type = 'register') {
   };
 }
 
-// Optional: test-email helper
+// ---- Optional: test email helper ----
 async function sendTestEmail(to) {
   const subject = 'Test email from Doctor Appointment System (Resend)';
   const text = 'If you see this, Resend is working from Render 👍';

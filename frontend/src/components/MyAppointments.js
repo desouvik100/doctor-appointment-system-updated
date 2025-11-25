@@ -11,7 +11,7 @@ function MyAppointments({ user }) {
 
   const fetchAppointments = async () => {
     try {
-      const response = await axios.get(`/api/appointments/user/${user.id}`);
+      const response = await axios.get(`http://localhost:5002/api/appointments/user/${user.id}`);
       setAppointments(response.data);
     } catch (error) {
       console.error("Error fetching appointments:", error);
@@ -26,7 +26,7 @@ function MyAppointments({ user }) {
     }
 
     try {
-      await axios.put(`/api/appointments/${appointmentId}`, { status: "cancelled" });
+      await axios.put(`http://localhost:5002/api/appointments/${appointmentId}`, { status: "cancelled" });
       fetchAppointments(); // Refresh the list
       alert("Appointment cancelled successfully");
     } catch (error) {

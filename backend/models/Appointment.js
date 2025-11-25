@@ -32,35 +32,12 @@ const appointmentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "in-progress", "completed", "cancelled", "no-show"],
+      enum: ["pending", "confirmed", "completed", "cancelled"],
       default: "pending"
     },
-    // Status history with timestamps
-    statusHistory: [{
-      status: {
-        type: String,
-        required: true
-      },
-      changedAt: {
-        type: Date,
-        default: Date.now
-      },
-      changedBy: {
-        type: String,
-        trim: true
-      },
-      notes: {
-        type: String,
-        trim: true
-      }
-    }],
     tokenNumber: {
-      type: String,
-      default: null
-    },
-    roomNumber: {
-      type: String,
-      trim: true
+      type: Number,
+      default: 1
     },
     notes: {
       type: String,

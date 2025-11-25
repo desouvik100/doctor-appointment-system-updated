@@ -1,4 +1,13 @@
 {
+  "name": "healthsync-pro",
+  "version": "1.0.0",
+  "description": "Healthcare Management System with AI Assistant",
+  "scripts": {
+    "setup-ai": "node setup-ai-chatbot.js",
+    "test-chatbot": "node backend/test-chatbot.js",
+    "start": "npm run start --prefix backend",
+    "dev": "npm run dev --prefix backend"
+  },
   "dependencies": {
     "axios": "^1.13.2"
   }

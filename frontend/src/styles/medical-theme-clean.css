@@ -1,7 +1,9 @@
 /* Medical Theme Styles - Clean Version */
 
-/* Premium Medical Background with Healthcare Images */
+/* Enhanced Smooth Scrolling for Medical Theme */
 .medical-bg {
+  scroll-behavior: smooth;
+  transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
   background: 
     linear-gradient(135deg, rgba(248, 250, 252, 0.95) 0%, rgba(226, 232, 240, 0.9) 20%, rgba(241, 245, 249, 0.95) 40%, rgba(255, 255, 255, 0.9) 60%, rgba(248, 250, 252, 0.95) 80%, rgba(226, 232, 240, 0.9) 100%),
     url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="medical-pattern" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse"><circle cx="10" cy="10" r="1" fill="%23667eea" opacity="0.1"/><path d="M8,10 L12,10 M10,8 L10,12" stroke="%23667eea" stroke-width="0.5" opacity="0.15"/></pattern></defs><rect width="100" height="100" fill="url(%23medical-pattern)"/></svg>');
@@ -4686,4 +4688,261 @@ body:not(.dark-theme) .medical-card * {
 
 body:not(.dark-theme) .medical-card {
   background: #ffffff !important;
+}
+/* Enhanced Medical Theme Smooth Scrolling */
+
+/* Professional Medical Card Animations */
+.medical-card, .auth-card, .hero-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    scroll-margin-top: 80px;
+}
+
+.medical-card:hover, .auth-card:hover, .hero-card:hover {
+    transform: translateY(-8px) scale(1.02);
+    box-shadow: 0 20px 40px rgba(102, 126, 234, 0.15);
+}
+
+/* Smooth Medical Form Interactions */
+.medical-form .form-control,
+.medical-form .form-select,
+.auth-form .form-control,
+.auth-form .form-select {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    scroll-margin-top: 60px;
+}
+
+.medical-form .form-control:focus,
+.medical-form .form-select:focus,
+.auth-form .form-control:focus,
+.auth-form .form-select:focus {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 30px rgba(102, 126, 234, 0.2);
+}
+
+/* Enhanced Medical Button Animations */
+.medical-btn, .auth-btn, .hero-btn {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    scroll-margin-top: 40px;
+}
+
+.medical-btn:hover, .auth-btn:hover, .hero-btn:hover {
+    transform: translateY(-3px) scale(1.05);
+    box-shadow: 0 12px 35px rgba(102, 126, 234, 0.25);
+}
+
+.medical-btn:active, .auth-btn:active, .hero-btn:active {
+    transform: translateY(-1px) scale(1.02);
+    transition: all 0.1s ease;
+}
+
+/* Smooth Medical Navigation */
+.medical-nav, .auth-nav {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    scroll-behavior: smooth;
+}
+
+.medical-nav-link, .auth-nav-link {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.medical-nav-link:hover, .auth-nav-link:hover {
+    transform: translateY(-2px);
+    text-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Professional Medical Hero Animations */
+.medical-hero, .auth-hero {
+    animation: heroFadeIn 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+    scroll-behavior: smooth;
+}
+
+@keyframes heroFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(50px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Enhanced Medical Content Scrolling */
+.medical-content, .auth-content {
+    scroll-behavior: smooth;
+    scroll-margin-top: 100px;
+}
+
+.medical-section, .auth-section {
+    scroll-margin-top: 120px;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth Medical Modal Animations */
+.medical-modal .modal-dialog,
+.auth-modal .modal-dialog {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.medical-modal.show .modal-dialog,
+.auth-modal.show .modal-dialog {
+    transform: translateY(0) scale(1);
+    animation: modalSlideIn 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes modalSlideIn {
+    from {
+        opacity: 0;
+        transform: translateY(-30px) scale(0.95);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0) scale(1);
+    }
+}
+
+/* Professional Medical Loading States */
+.medical-loading, .auth-loading {
+    animation: medicalPulse 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes medicalPulse {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+        box-shadow: 0 0 0 0 rgba(102, 126, 234, 0.4);
+    }
+    50% {
+        opacity: 0.8;
+        transform: scale(1.05);
+        box-shadow: 0 0 0 10px rgba(102, 126, 234, 0);
+    }
+}
+
+/* Enhanced Medical Table Scrolling */
+.medical-table-container {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: rgba(102, 126, 234, 0.3) rgba(248, 250, 252, 0.8);
+}
+
+.medical-table-container::-webkit-scrollbar {
+    height: 8px;
+    width: 8px;
+}
+
+.medical-table-container::-webkit-scrollbar-track {
+    background: rgba(248, 250, 252, 0.8);
+    border-radius: 4px;
+}
+
+.medical-table-container::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.3) 0%, rgba(102, 126, 234, 0.6) 100%);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+.medical-table-container::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, rgba(102, 126, 234, 0.6) 0%, rgba(102, 126, 234, 0.8) 100%);
+}
+
+/* Smooth Medical Alert Animations */
+.medical-alert, .auth-alert {
+    animation: alertSlideIn 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+    scroll-margin-top: 80px;
+}
+
+@keyframes alertSlideIn {
+    from {
+        opacity: 0;
+        transform: translateX(-30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Professional Medical Badge Animations */
+.medical-badge, .auth-badge {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.medical-badge:hover, .auth-badge:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+/* Enhanced Medical Mobile Scrolling */
+@media (max-width: 768px) {
+    .medical-bg {
+        scroll-snap-type: y proximity;
+        scroll-padding: 60px;
+    }
+    
+    .medical-section, .auth-section {
+        scroll-snap-align: start;
+        scroll-margin-top: 80px;
+    }
+    
+    .medical-card, .auth-card {
+        scroll-margin-top: 60px;
+    }
+}
+
+/* Accessibility Enhancements for Medical Theme */
+@media (prefers-reduced-motion: reduce) {
+    .medical-bg,
+    .medical-card,
+    .medical-btn,
+    .medical-nav,
+    .medical-hero,
+    .auth-card,
+    .auth-btn,
+    .auth-nav,
+    .auth-hero {
+        animation: none !important;
+        transition: none !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* High Contrast Medical Theme */
+@media (prefers-contrast: high) {
+    .medical-card, .auth-card {
+        border: 2px solid #000000;
+        background: #ffffff;
+    }
+    
+    .medical-btn, .auth-btn {
+        border: 2px solid #000000;
+        background: #ffffff;
+        color: #000000;
+    }
+}
+
+/* Professional Medical Focus States */
+.medical-card:focus-visible,
+.medical-btn:focus-visible,
+.auth-card:focus-visible,
+.auth-btn:focus-visible {
+    outline: 3px solid rgba(102, 126, 234, 0.6);
+    outline-offset: 3px;
+    transition: outline-offset 0.2s ease;
+}
+
+/* Enhanced Medical Typography Scrolling */
+.medical-title, .medical-subtitle, .auth-title, .auth-subtitle {
+    scroll-margin-top: 100px;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Smooth Medical Icon Animations */
+.medical-icon, .auth-icon {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.medical-icon:hover, .auth-icon:hover {
+    transform: scale(1.2) rotate(5deg);
+    filter: drop-shadow(0 4px 15px rgba(102, 126, 234, 0.3));
 }

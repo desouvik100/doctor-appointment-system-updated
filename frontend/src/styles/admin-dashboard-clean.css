@@ -1,5 +1,47 @@
 /* Clean Admin Dashboard Styles - Build Safe */
 
+/* Professional Smooth Scrolling */
+* {
+    scroll-behavior: smooth;
+}
+
+html {
+    scroll-behavior: smooth;
+    scroll-padding-top: 80px;
+}
+
+body {
+    scroll-behavior: smooth;
+    overflow-x: hidden;
+}
+
+/* Custom Scrollbar Styling */
+::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+}
+
+::-webkit-scrollbar-track {
+    background: #f1f5f9;
+    border-radius: 4px;
+}
+
+::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+    border-radius: 4px;
+    transition: all 0.3s ease;
+}
+
+::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #94a3b8 0%, #64748b 100%);
+}
+
+/* Firefox Scrollbar */
+* {
+    scrollbar-width: thin;
+    scrollbar-color: #cbd5e1 #f1f5f9;
+}
+
 .admin-dashboard-container {
     min-height: 100vh;
     background: linear-gradient(135deg, #ffffff 0%, #f8fafc 100%);
@@ -352,6 +394,13 @@
 .nav-tabs-professional {
     display: flex;
     overflow-x: auto;
+    scroll-behavior: smooth;
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+}
+
+.nav-tabs-professional::-webkit-scrollbar {
+    display: none;
 }
 
 .nav-tab {
@@ -1032,4 +1081,194 @@ anced Micro-interactions */
 /* Enhanced Dark Mode Transitions */
 .dark-theme * {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+}/* Enh
+anced Smooth Scrolling for Tables and Content */
+.table-responsive {
+    scroll-behavior: smooth;
+    scrollbar-width: thin;
+    scrollbar-color: #e2e8f0 #f8fafc;
+}
+
+.table-responsive::-webkit-scrollbar {
+    height: 6px;
+    width: 6px;
+}
+
+.table-responsive::-webkit-scrollbar-track {
+    background: #f8fafc;
+    border-radius: 3px;
+}
+
+.table-responsive::-webkit-scrollbar-thumb {
+    background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+    border-radius: 3px;
+    transition: all 0.3s ease;
+}
+
+.table-responsive::-webkit-scrollbar-thumb:hover {
+    background: linear-gradient(135deg, #cbd5e1 0%, #94a3b8 100%);
+}
+
+/* Smooth Content Transitions */
+.dashboard-content {
+    scroll-behavior: smooth;
+}
+
+.section-content {
+    scroll-behavior: smooth;
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced Tab Transitions */
+.nav-tab {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+    scroll-margin-top: 20px;
+}
+
+.nav-tab:hover {
+    transform: translateY(-2px);
+}
+
+.nav-tab.active {
+    transform: translateY(-1px);
+}
+
+/* Smooth Modal Animations */
+.modal {
+    scroll-behavior: smooth;
+}
+
+.modal-dialog {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.modal.show .modal-dialog {
+    transform: translateY(0) scale(1);
+}
+
+.modal .modal-dialog {
+    transform: translateY(-50px) scale(0.95);
+}
+
+/* Professional Page Transitions */
+.fade-in {
+    animation: fadeInUp 0.6s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+@keyframes fadeInUp {
+    from {
+        opacity: 0;
+        transform: translateY(30px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Smooth Stats Card Animations */
+.stat-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    scroll-margin-top: 100px;
+}
+
+.stat-card:hover {
+    transform: translateY(-8px) scale(1.02);
+}
+
+/* Enhanced Button Interactions */
+.btn, .action-btn, .nav-tab {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.btn:hover, .action-btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active, .action-btn:active {
+    transform: translateY(0);
+    transition: all 0.1s ease;
+}
+
+/* Smooth Form Interactions */
+.form-control, .form-select {
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.form-control:focus, .form-select:focus {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+}
+
+/* Professional Loading States */
+.loading-smooth {
+    animation: pulseSmooth 2s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes pulseSmooth {
+    0%, 100% {
+        opacity: 1;
+        transform: scale(1);
+    }
+    50% {
+        opacity: 0.7;
+        transform: scale(1.02);
+    }
+}
+
+/* Enhanced Overview Cards */
+.overview-card {
+    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+    scroll-margin-top: 120px;
+}
+
+.overview-card:hover {
+    transform: translateY(-6px);
+    box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+}
+
+/* Smooth Navigation Scrolling */
+.dashboard-navigation {
+    scroll-behavior: smooth;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* Enhanced Mobile Scrolling */
+@media (max-width: 768px) {
+    .nav-tabs-professional {
+        scroll-snap-type: x mandatory;
+        scroll-padding: 20px;
+    }
+    
+    .nav-tab {
+        scroll-snap-align: start;
+        flex-shrink: 0;
+    }
+    
+    .table-responsive {
+        scroll-snap-type: x proximity;
+    }
+}
+
+/* Accessibility Enhancements */
+@media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+}
+
+/* Focus Indicators with Smooth Transitions */
+.nav-tab:focus-visible,
+.btn:focus-visible,
+.form-control:focus-visible {
+    outline: 2px solid #3b82f6;
+    outline-offset: 2px;
+    transition: outline-offset 0.2s ease;
 }

@@ -23,6 +23,7 @@
   "license": "ISC",
   "description": "",
   "dependencies": {
+    "@google/generative-ai": "^0.2.1",
     "axios": "^1.13.2",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
@@ -31,6 +32,7 @@
     "jsonwebtoken": "^9.0.2",
     "mongoose": "^7.6.3",
     "nodemailer": "^6.10.1",
+    "openai": "^4.104.0",
     "pg": "^8.16.3",
     "pg-pool": "^3.10.1",
     "resend": "^6.5.2",
