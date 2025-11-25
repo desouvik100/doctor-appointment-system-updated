@@ -1,0 +1,135 @@
+/* Simple Admin Dashboard Fix */
+
+/* Light mode - force all text to be dark */
+body:not(.dark-theme) {
+  color: #212529 !important;
+}
+
+body:not(.dark-theme) * {
+  color: inherit !important;
+}
+
+/* Light mode cards */
+body:not(.dark-theme) .card {
+  background: #ffffff !important;
+  color: #212529 !important;
+  border: 1px solid #dee2e6 !important;
+}
+
+body:not(.dark-theme) .card * {
+  color: #212529 !important;
+}
+
+/* Light mode tables */
+body:not(.dark-theme) .table {
+  background: #ffffff !important;
+  color: #212529 !important;
+}
+
+body:not(.dark-theme) .table th {
+  background: #f8f9fa !important;
+  color: #212529 !important;
+}
+
+body:not(.dark-theme) .table td {
+  background: #ffffff !important;
+  color: #212529 !important;
+}
+
+body:not(.dark-theme) .table * {
+  color: #212529 !important;
+}
+
+/* Keep colored elements colored */
+body:not(.dark-theme) .bg-primary,
+body:not(.dark-theme) .bg-primary * {
+  background-color: #0d6efd !important;
+  color: #ffffff !important;
+}
+
+body:not(.dark-theme) .bg-success,
+body:not(.dark-theme) .bg-success * {
+  background-color: #198754 !important;
+  color: #ffffff !important;
+}
+
+body:not(.dark-theme) .bg-info,
+body:not(.dark-theme) .bg-info * {
+  background-color: #0dcaf0 !important;
+  color: #000000 !important;
+}
+
+body:not(.dark-theme) .bg-warning,
+body:not(.dark-theme) .bg-warning * {
+  background-color: #ffc107 !important;
+  color: #000000 !important;
+}
+
+body:not(.dark-theme) .bg-danger,
+body:not(.dark-theme) .bg-danger * {
+  background-color: #dc3545 !important;
+  color: #ffffff !important;
+}
+
+/* Badges */
+body:not(.dark-theme) .badge.bg-primary {
+  background-color: #0d6efd !important;
+  color: #ffffff !important;
+}
+
+body:not(.dark-theme) .badge.bg-success {
+  background-color: #198754 !important;
+  color: #ffffff !important;
+}
+
+body:not(.dark-theme) .badge.bg-warning {
+  background-color: #ffc107 !important;
+  color: #000000 !important;
+}
+
+body:not(.dark-theme) .badge.bg-danger {
+  background-color: #dc3545 !important;
+  color: #ffffff !important;
+}
+
+body:not(.dark-theme) .badge.bg-info {
+  background-color: #0dcaf0 !important;
+  color: #000000 !important;
+}
+
+/* Navigation */
+body:not(.dark-theme) .nav-tabs .nav-link {
+  color: #495057 !important;
+}
+
+body:not(.dark-theme) .nav-tabs .nav-link.active {
+  color: #212529 !important;
+  background: #ffffff !important;
+}
+
+/* Forms */
+body:not(.dark-theme) .form-control {
+  background: #ffffff !important;
+  color: #212529 !important;
+  border: 1px solid #ced4da !important;
+}
+
+body:not(.dark-theme) .form-label {
+  color: #212529 !important;
+}
+
+/* Buttons */
+body:not(.dark-theme) .btn-outline-primary {
+  color: #0d6efd !important;
+  border-color: #0d6efd !important;
+}
+
+body:not(.dark-theme) .btn-outline-danger {
+  color: #dc3545 !important;
+  border-color: #dc3545 !important;
+}
+
+body:not(.dark-theme) .btn-outline-success {
+  color: #198754 !important;
+  border-color: #198754 !important;
+}

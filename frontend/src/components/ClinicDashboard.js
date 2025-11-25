@@ -114,15 +114,51 @@ function ClinicDashboard({ receptionist }) {
 
   return (
     <div>
+      {/* Receptionist Header */}
+      <div className="row mb-4">
+        <div className="col-12">
+          <div className="card bg-gradient-info text-white">
+            <div className="card-body">
+              <div className="d-flex align-items-center">
+                <div className="flex-grow-1">
+                  <h4 className="mb-1">
+                    <i className="fas fa-clinic-medical me-2"></i>
+                    Clinic Management Dashboard
+                  </h4>
+                  <p className="mb-0 opacity-75">
+                    <i className="fas fa-user me-1"></i>
+                    Welcome, {receptionist.name} | {receptionist.clinicId?.name || 'Clinic'}
+                  </p>
+                </div>
+                <div className="text-end">
+                  <div className="badge bg-light text-dark mb-2">
+                    <i className="fas fa-calendar me-1"></i>
+                    {new Date().toLocaleDateString()}
+                  </div>
+                  <br />
+                  <small className="opacity-75">
+                    {todayAppointments.length} appointments today
+                  </small>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       {/* Stats Cards */}
       <div className="row g-3 mb-4">
         <div className="col-md-3 col-sm-6">
-          <div className="card bg-primary text-white">
+          <div className="card bg-primary text-white h-100">
             <div className="card-body">
               <div className="d-flex align-items-center">
                 <div className="flex-grow-1">
                   <h4 className="mb-0">{todayAppointments.length}</h4>
-                  <p className="mb-0">Today's Appointments</p>
+                  <p className="mb-0 small">Today's Appointments</p>
+                  <small className="opacity-75">
+                    <i className="fas fa-clock me-1"></i>
+                    {todayAppointments.filter(a => a.status === 'pending').length} pending
+                  </small>
                 </div>
                 <i className="fas fa-calendar-day fa-2x opacity-75"></i>
               </div>
@@ -131,12 +167,16 @@ function ClinicDashboard({ receptionist }) {
         </div>
         
         <div className="col-md-3 col-sm-6">
-          <div className="card bg-warning text-dark">
+          <div className="card bg-warning text-dark h-100">
             <div className="card-body">
               <div className="d-flex align-items-center">
                 <div className="flex-grow-1">
                   <h4 className="mb-0">{appointments.filter(a => a.status === "pending").length}</h4>
-                  <p className="mb-0">Pending</p>
+                  <p className="mb-0 small">Pending</p>
+                  <small className="opacity-75">
+                    <i className="fas fa-exclamation-triangle me-1"></i>
+                    Needs attention
+                  </small>
                 </div>
                 <i className="fas fa-clock fa-2x opacity-75"></i>
               </div>
@@ -145,12 +185,16 @@ function ClinicDashboard({ receptionist }) {
         </div>
         
         <div className="col-md-3 col-sm-6">
-          <div className="card bg-success text-white">
+          <div className="card bg-success text-white h-100">
             <div className="card-body">
               <div className="d-flex align-items-center">
                 <div className="flex-grow-1">
                   <h4 className="mb-0">{appointments.filter(a => a.status === "confirmed").length}</h4>
-                  <p className="mb-0">Confirmed</p>
+                  <p className="mb-0 small">Confirmed</p>
+                  <small className="opacity-75">
+                    <i className="fas fa-check me-1"></i>
+                    Ready to go
+                  </small>
                 </div>
                 <i className="fas fa-check-circle fa-2x opacity-75"></i>
               </div>
@@ -159,12 +203,16 @@ function ClinicDashboard({ receptionist }) {
         </div>
         
         <div className="col-md-3 col-sm-6">
-          <div className="card bg-info text-white">
+          <div className="card bg-info text-white h-100">
             <div className="card-body">
               <div className="d-flex align-items-center">
                 <div className="flex-grow-1">
                   <h4 className="mb-0">{appointments.filter(a => a.status === "completed").length}</h4>
-                  <p className="mb-0">Completed</p>
+                  <p className="mb-0 small">Completed</p>
+                  <small className="opacity-75">
+                    <i className="fas fa-thumbs-up me-1"></i>
+                    All done
+                  </small>
                 </div>
                 <i className="fas fa-check-double fa-2x opacity-75"></i>
               </div>

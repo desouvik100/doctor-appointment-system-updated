@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from "react";
 import 'bootstrap/dist/css/bootstrap.min.css';
 import './styles/medical-theme-clean.css';
-import './styles/admin-fix.css';
+// import './styles/dashboard-enhancements.css';
 
-// Import auth components
+// Import only the working auth components first
 import Auth from "./components/Auth";
 import AdminAuth from "./components/AdminAuth";
 import ClinicAuth from "./components/ClinicAuth";
 import AIAssistant from "./components/AIAssistant";
+// import PatientDashboard from "./components/PatientDashboard";
 
 // Lazy load dashboard components
 const DoctorList = React.lazy(() =>
@@ -18,7 +19,9 @@ const DoctorList = React.lazy(() =>
         <p>Welcome {user.name}! Doctor search functionality is loading...</p>
         <div className="d-grid gap-2">
           <button className="btn btn-primary" disabled>
-            <i className="fas fa-search me-1"></i>Search Doctors</button>
+            <i className="fas fa-search me-1"></i>
+            Search Doctors
+          </button>
         </div>
       </div>
     )
@@ -33,7 +36,9 @@ const MyAppointments = React.lazy(() =>
         <p>Welcome {user.name}! Your appointments are loading...</p>
         <div className="d-grid gap-2">
           <button className="btn btn-primary" disabled>
-            <i className="fas fa-calendar me-1"></i>View Appointments</button>
+            <i className="fas fa-calendar me-1"></i>
+            View Appointments
+          </button>
         </div>
       </div>
     )
@@ -48,7 +53,9 @@ const PaymentHistory = React.lazy(() =>
         <p>Welcome {user.name}! Your payment history is loading...</p>
         <div className="d-grid gap-2">
           <button className="btn btn-primary" disabled>
-            <i className="fas fa-history me-1"></i>View Payments</button>
+            <i className="fas fa-history me-1"></i>
+            View Payments
+          </button>
         </div>
       </div>
     )
@@ -64,11 +71,15 @@ const AdminDashboard = React.lazy(() =>
         <div className="row g-3">
           <div className="col-md-6">
             <button className="btn btn-success w-100" disabled>
-              <i className="fas fa-users me-1"></i>Manage Users</button>
+              <i className="fas fa-users me-1"></i>
+              Manage Users
+            </button>
           </div>
           <div className="col-md-6">
             <button className="btn btn-success w-100" disabled>
-              <i className="fas fa-user-md me-1"></i>Manage Doctors</button>
+              <i className="fas fa-user-md me-1"></i>
+              Manage Doctors
+            </button>
           </div>
         </div>
       </div>
@@ -85,11 +96,15 @@ const ClinicDashboard = React.lazy(() =>
         <div className="row g-3">
           <div className="col-md-6">
             <button className="btn btn-info w-100" disabled>
-              <i className="fas fa-calendar-plus me-1"></i>Book Appointment</button>
+              <i className="fas fa-calendar-plus me-1"></i>
+              Book Appointment
+            </button>
           </div>
           <div className="col-md-6">
             <button className="btn btn-info w-100" disabled>
-              <i className="fas fa-users me-1"></i>Manage Patients</button>
+              <i className="fas fa-users me-1"></i>
+              Manage Patients
+            </button>
           </div>
         </div>
       </div>
@@ -98,14 +113,14 @@ const ClinicDashboard = React.lazy(() =>
 );
 
 function App() {
-  const [currentView, setCurrentView] = useState("landing");
+  const [currentView, setCurrentView] = useState("landing"); // "landing", "auth", "dashboard"
   const [page, setPage] = useState("doctors");
   const [user, setUser] = useState(null);
   const [admin, setAdmin] = useState(null);
   const [receptionist, setReceptionist] = useState(null);
-  const [loginType, setLoginType] = useState("patient");
+  const [loginType, setLoginType] = useState("patient"); // "patient", "admin", "receptionist"
   const [notifications, setNotifications] = useState([]);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(true);
   const [activeSection, setActiveSection] = useState("home");
 
   useEffect(() => {
@@ -130,6 +145,25 @@ function App() {
     parseAndSet("receptionist", setReceptionist, ["name", "email"]);
   }, []);
 
+  const handleLogout = () => {
+    setUser(null);
+    localStorage.removeItem("user");
+  };
+
+  const handleAdminLogout = () => {
+    setAdmin(null);
+    localStorage.removeItem("admin");
+  };
+
+  const handleReceptionistLogout = () => {
+    setReceptionist(null);
+    localStorage.removeItem("receptionist");
+  };
+
+  const resetToPatientLogin = () => {
+    setLoginType("patient");
+  };
+
   const addNotification = (message, type = 'info') => {
     const id = Date.now();
     setNotifications(prev => [...prev, { id, message, type }]);
@@ -145,17 +179,23 @@ function App() {
   };
 
   const scrollToTop = () => {
-    window.scrollTo({ top: 0, behavior: 'smooth' });
+    window.scrollTo({
+      top: 0,
+      behavior: 'smooth'
+    });
   };
 
   useEffect(() => {
     const savedDarkMode = localStorage.getItem('darkMode');
-    setDarkMode(savedDarkMode === 'true');
+    // Default to dark mode if no preference is saved
+    setDarkMode(savedDarkMode === null ? true : savedDarkMode === 'true');
 
+    // Check if user is already logged in
     if (user || admin || receptionist) {
       setCurrentView("dashboard");
     }
 
+    // Keyboard shortcuts
     const handleKeyPress = (e) => {
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
@@ -210,10 +250,10 @@ function App() {
     addNotification('Logged out successfully', 'info');
   };
 
-  // Medical Landing Page Component
-  const MedicalLandingPage = () => (
+  // Landing Page Component
+  const LandingPage = () => (
     <div className={`min-vh-100 ${darkMode ? 'dark-theme' : 'medical-bg'}`}>
-      {/* Medical Navigation */}
+      {/* Landing Navigation */}
       <nav className={`navbar navbar-expand-lg navbar-dark ${darkMode ? 'bg-dark' : 'medical-nav'} fixed-top`}>
         <div className="container">
           <span className="navbar-brand mb-0 h1">
@@ -221,6 +261,7 @@ function App() {
             HealthSync Pro
           </span>
 
+          {/* Navigation Menu */}
           <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
             <span className="navbar-toggler-icon"></span>
           </button>
@@ -264,7 +305,7 @@ function App() {
         </div>
       </nav>
 
-      {/* Medical Hero Section */}
+      {/* Hero Section */}
       <section id="home" className="hero-section pt-5 mt-5">
         <div className="container">
           <div className="row align-items-center min-vh-100">
@@ -316,91 +357,38 @@ function App() {
                     Watch Demo
                   </button>
                 </div>
-
-                {/* Trust Indicators */}
-                <div className="trust-indicators mt-4 fade-in-up" style={{ animationDelay: '0.8s' }}>
-                  <div className="row g-2 align-items-center">
-                    <div className="col-auto">
-                      <small className="text-muted">Trusted by:</small>
-                    </div>
-                    <div className="col-auto">
-                      <div className="trust-badge">
-                        <i className="fas fa-shield-alt text-success me-1"></i>
-                        <small>HIPAA Compliant</small>
-                      </div>
-                    </div>
-                    <div className="col-auto">
-                      <div className="trust-badge">
-                        <i className="fas fa-certificate text-primary me-1"></i>
-                        <small>ISO 27001</small>
-                      </div>
-                    </div>
-                    <div className="col-auto">
-                      <div className="trust-badge">
-                        <i className="fas fa-lock text-warning me-1"></i>
-                        <small>SOC 2 Type II</small>
-                      </div>
-                    </div>
-                  </div>
-                </div>
               </div>
             </div>
 
             <div className="col-lg-6">
               <div className="hero-image text-center">
-                {/* Medical Dashboard Preview */}
-                <div className="dashboard-preview medical-card p-4 position-relative">
-                  <div className="medical-pattern-overlay"></div>
-
+                <div className="dashboard-preview medical-card p-4">
                   <div className="preview-header mb-3">
-                    <div className="d-flex align-items-center justify-content-between">
-                      <div className="preview-dots d-flex">
-                        <span className="dot bg-danger me-1"></span>
-                        <span className="dot bg-warning me-1"></span>
+                    <div className="d-flex align-items-center">
+                      <div className="preview-dots">
+                        <span className="dot bg-danger"></span>
+                        <span className="dot bg-warning"></span>
                         <span className="dot bg-success"></span>
                       </div>
-                      <small className="text-muted">HealthSync Pro Dashboard</small>
-                      <div className="medical-indicator">
-                        <i className="fas fa-heartbeat text-danger"></i>
-                      </div>
+                      <small className="text-muted ms-3">HealthSync Pro Dashboard</small>
                     </div>
                   </div>
-
                   <div className="preview-content">
                     <div className="row g-2 mb-3">
                       <div className="col-6">
-                        <div className="mini-card bg-primary bg-opacity-10 p-3 rounded position-relative">
-                          <div className="d-flex align-items-center">
-                            <i className="fas fa-calendar-check text-primary fa-lg me-2"></i>
-                            <div>
-                              <small className="d-block fw-bold">Appointments</small>
-                              <small className="text-muted">Today: 24</small>
-                            </div>
-                          </div>
-                          <div className="mini-pulse"></div>
+                        <div className="mini-card bg-primary bg-opacity-10 p-2 rounded">
+                          <i className="fas fa-calendar-check text-primary"></i>
+                          <small className="d-block">Appointments</small>
                         </div>
                       </div>
                       <div className="col-6">
-                        <div className="mini-card bg-success bg-opacity-10 p-3 rounded position-relative">
-                          <div className="d-flex align-items-center">
-                            <i className="fas fa-user-md text-success fa-lg me-2"></i>
-                            <div>
-                              <small className="d-block fw-bold">Doctors</small>
-                              <small className="text-muted">Online: 12</small>
-                            </div>
-                          </div>
-                          <div className="mini-pulse success"></div>
+                        <div className="mini-card bg-success bg-opacity-10 p-2 rounded">
+                          <i className="fas fa-user-md text-success"></i>
+                          <small className="d-block">Doctors</small>
                         </div>
                       </div>
                     </div>
-
-                    <div className="preview-chart bg-light rounded p-3 position-relative">
-                      <div className="d-flex justify-content-between align-items-center mb-2">
-                        <small className="fw-bold">Patient Flow</small>
-                        <small className="text-success">
-                          <i className="fas fa-arrow-up me-1"></i>+12%
-                        </small>
-                      </div>
+                    <div className="preview-chart bg-light rounded p-3">
                       <div className="chart-bars d-flex align-items-end justify-content-between" style={{ height: '60px' }}>
                         <div className="bar bg-primary" style={{ height: '40%', width: '8px' }}></div>
                         <div className="bar bg-primary" style={{ height: '60%', width: '8px' }}></div>
@@ -410,42 +398,6 @@ function App() {
                         <div className="bar bg-primary" style={{ height: '90%', width: '8px' }}></div>
                         <div className="bar bg-primary" style={{ height: '55%', width: '8px' }}></div>
                       </div>
-                    </div>
-
-                    <div className="quick-actions mt-3">
-                      <div className="row g-2">
-                        <div className="col-4">
-                          <button className="btn btn-sm btn-outline-primary w-100">
-                            <i className="fas fa-plus-circle mb-1"></i>
-                            <small className="d-block">Book</small>
-                          </button>
-                        </div>
-                        <div className="col-4">
-                          <button className="btn btn-sm btn-outline-success w-100">
-                            <i className="fas fa-video mb-1"></i>
-                            <small className="d-block">Consult</small>
-                          </button>
-                        </div>
-                        <div className="col-4">
-                          <button className="btn btn-sm btn-outline-info w-100">
-                            <i className="fas fa-robot mb-1"></i>
-                            <small className="d-block">AI Help</small>
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-
-                  {/* Floating Medical Icons */}
-                  <div className="floating-medical-icons">
-                    <div className="floating-icon icon-1">
-                      <i className="fas fa-stethoscope"></i>
-                    </div>
-                    <div className="floating-icon icon-2">
-                      <i className="fas fa-heartbeat"></i>
-                    </div>
-                    <div className="floating-icon icon-3">
-                      <i className="fas fa-pills"></i>
                     </div>
                   </div>
                 </div>
@@ -754,64 +706,44 @@ function App() {
             </div>
 
             <div className="col-lg-6">
-              <div className="about-image">
-                <div className="medical-card p-4">
+              <div className="about-image text-center">
+                <div className="team-showcase medical-card p-4">
+                  <h5 className="mb-4">Meet Our Leadership Team</h5>
                   <div className="row g-3">
                     <div className="col-6">
-                      <div className="stats-card text-center p-3">
-                        <i className="fas fa-hospital fa-2x text-primary mb-2"></i>
-                        <h4 className="stats-number">200+</h4>
-                        <small className="stats-label">Hospitals</small>
-                      </div>
-                    </div>
-                    <div className="col-6">
-                      <div className="stats-card text-center p-3">
-                        <i className="fas fa-user-md fa-2x text-success mb-2"></i>
-                        <h4 className="stats-number">5,000+</h4>
-                        <small className="stats-label">Doctors</small>
-                      </div>
-                    </div>
-                    <div className="col-6">
-                      <div className="stats-card text-center p-3">
-                        <i className="fas fa-users fa-2x text-info mb-2"></i>
-                        <h4 className="stats-number">1M+</h4>
-                        <small className="stats-label">Patients</small>
-                      </div>
-                    </div>
-                    <div className="col-6">
-                      <div className="stats-card text-center p-3">
-                        <i className="fas fa-calendar-check fa-2x text-warning mb-2"></i>
-                        <h4 className="stats-number">10M+</h4>
-                        <small className="stats-label">Appointments</small>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="medical-card p-4 mt-4">
-                  <h5 className="fw-bold mb-3">
-                    <i className="fas fa-award text-primary me-2"></i>
-                    Awards & Recognition
-                  </h5>
-                  <div className="row g-2">
-                    <div className="col-12">
-                      <div className="award-item d-flex align-items-center p-2">
-                        <i className="fas fa-trophy text-warning me-3"></i>
-                        <div>
-                          <small className="fw-bold">Best Healthcare Innovation 2024</small>
-                          <br />
-                          <small className="text-muted">Healthcare Technology Awards</small>
+                      <div className="team-member text-center">
+                        <div className="member-avatar mb-2">
+                          <i className="fas fa-user-circle fa-3x text-primary"></i>
                         </div>
+                        <h6 className="mb-1">Dr. Sarah Johnson</h6>
+                        <small className="text-muted">Chief Medical Officer</small>
                       </div>
                     </div>
-                    <div className="col-12">
-                      <div className="award-item d-flex align-items-center p-2">
-                        <i className="fas fa-medal text-success me-3"></i>
-                        <div>
-                          <small className="fw-bold">Top 10 Health Tech Startups</small>
-                          <br />
-                          <small className="text-muted">TechCrunch Disrupt 2024</small>
+                    <div className="col-6">
+                      <div className="team-member text-center">
+                        <div className="member-avatar mb-2">
+                          <i className="fas fa-user-circle fa-3x text-success"></i>
                         </div>
+                        <h6 className="mb-1">Michael Chen</h6>
+                        <small className="text-muted">CTO & Co-Founder</small>
+                      </div>
+                    </div>
+                    <div className="col-6">
+                      <div className="team-member text-center">
+                        <div className="member-avatar mb-2">
+                          <i className="fas fa-user-circle fa-3x text-info"></i>
+                        </div>
+                        <h6 className="mb-1">Emily Rodriguez</h6>
+                        <small className="text-muted">Head of Product</small>
+                      </div>
+                    </div>
+                    <div className="col-6">
+                      <div className="team-member text-center">
+                        <div className="member-avatar mb-2">
+                          <i className="fas fa-user-circle fa-3x text-warning"></i>
+                        </div>
+                        <h6 className="mb-1">David Kim</h6>
+                        <small className="text-muted">VP of Engineering</small>
                       </div>
                     </div>
                   </div>
@@ -843,9 +775,8 @@ function App() {
                   <div>
                     <h6 className="mb-1">Address</h6>
                     <p className="text-muted mb-0">
-                      123 Healthcare Boulevard<br />
-                      Medical District, MD 12345<br />
-                      United States
+                      123 Healthcare Innovation Blvd<br />
+                      Medical District, CA 90210
                     </p>
                   </div>
                 </div>
@@ -858,8 +789,7 @@ function App() {
                     <h6 className="mb-1">Phone</h6>
                     <p className="text-muted mb-0">
                       Sales: +1 (555) 123-4567<br />
-                      Support: +1 (555) 987-6543<br />
-                      Emergency: 911
+                      Support: +1 (555) 987-6543
                     </p>
                   </div>
                 </div>
@@ -871,9 +801,8 @@ function App() {
                   <div>
                     <h6 className="mb-1">Email</h6>
                     <p className="text-muted mb-0">
-                      General: info@healthsyncpro.com<br />
-                      Sales: sales@healthsyncpro.com<br />
-                      Support: support@healthsyncpro.com
+                      hello@healthsyncpro.com<br />
+                      support@healthsyncpro.com
                     </p>
                   </div>
                 </div>
@@ -885,9 +814,8 @@ function App() {
                   <div>
                     <h6 className="mb-1">Business Hours</h6>
                     <p className="text-muted mb-0">
-                      Monday - Friday: 8:00 AM - 6:00 PM<br />
-                      Saturday: 9:00 AM - 4:00 PM<br />
-                      Sunday: Emergency Support Only
+                      Mon - Fri: 8:00 AM - 6:00 PM PST<br />
+                      24/7 Emergency Support Available
                     </p>
                   </div>
                 </div>
@@ -895,17 +823,17 @@ function App() {
                 <div className="social-links">
                   <h6 className="fw-bold mb-3">Follow Us</h6>
                   <div className="d-flex gap-3">
-                    <a href="#" className="text-primary" title="LinkedIn">
-                      <i className="fab fa-linkedin fa-2x"></i>
+                    <a href="#" className="social-link">
+                      <i className="fab fa-linkedin fa-lg text-primary"></i>
                     </a>
-                    <a href="#" className="text-info" title="Twitter">
-                      <i className="fab fa-twitter fa-2x"></i>
+                    <a href="#" className="social-link">
+                      <i className="fab fa-twitter fa-lg text-info"></i>
                     </a>
-                    <a href="#" className="text-primary" title="Facebook">
-                      <i className="fab fa-facebook fa-2x"></i>
+                    <a href="#" className="social-link">
+                      <i className="fab fa-facebook fa-lg text-primary"></i>
                     </a>
-                    <a href="#" className="text-danger" title="YouTube">
-                      <i className="fab fa-youtube fa-2x"></i>
+                    <a href="#" className="social-link">
+                      <i className="fab fa-youtube fa-lg text-danger"></i>
                     </a>
                   </div>
                 </div>
@@ -942,16 +870,21 @@ function App() {
                       <label className="form-label">Subject *</label>
                       <select className="form-select" required>
                         <option value="">Select a subject</option>
-                        <option value="sales">Sales Inquiry</option>
+                        <option value="demo">Request a Demo</option>
+                        <option value="pricing">Pricing Information</option>
                         <option value="support">Technical Support</option>
-                        <option value="demo">Request Demo</option>
-                        <option value="partnership">Partnership</option>
+                        <option value="partnership">Partnership Opportunities</option>
                         <option value="other">Other</option>
                       </select>
                     </div>
                     <div className="col-12">
                       <label className="form-label">Message *</label>
-                      <textarea className="form-control" rows="5" placeholder="Tell us how we can help you..." required></textarea>
+                      <textarea
+                        className="form-control"
+                        rows="5"
+                        placeholder="Tell us about your healthcare needs and how we can help..."
+                        required
+                      ></textarea>
                     </div>
                     <div className="col-12">
                       <div className="form-check">
@@ -962,7 +895,14 @@ function App() {
                       </div>
                     </div>
                     <div className="col-12">
-                      <button type="submit" className="btn btn-medical btn-lg">
+                      <button
+                        type="submit"
+                        className="btn btn-primary btn-lg"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          addNotification('Thank you! Your message has been sent successfully.', 'success');
+                        }}
+                      >
                         <i className="fas fa-paper-plane me-2"></i>
                         Send Message
                       </button>
@@ -980,12 +920,12 @@ function App() {
                 <div className="contact-card-icon mb-3">
                   <i className="fas fa-calendar-check fa-2x text-primary"></i>
                 </div>
-                <h5 className="fw-bold mb-3">Schedule a Demo</h5>
-                <p className="text-muted mb-3">
-                  See HealthSync Pro in action with a personalized demo tailored to your needs.
-                </p>
-                <button className="btn btn-primary">
-                  <i className="fas fa-video me-1"></i>
+                <h6 className="fw-bold mb-2">Schedule a Demo</h6>
+                <p className="text-muted mb-3">See HealthSync Pro in action with a personalized demo</p>
+                <button
+                  className="btn btn-primary btn-sm"
+                  onClick={() => addNotification('Demo scheduling form opened!', 'info')}
+                >
                   Book Demo
                 </button>
               </div>
@@ -995,13 +935,13 @@ function App() {
                 <div className="contact-card-icon mb-3">
                   <i className="fas fa-headset fa-2x text-success"></i>
                 </div>
-                <h5 className="fw-bold mb-3">24/7 Support</h5>
-                <p className="text-muted mb-3">
-                  Get immediate help from our healthcare technology experts anytime, anywhere.
-                </p>
-                <button className="btn btn-success">
-                  <i className="fas fa-comments me-1"></i>
-                  Live Chat
+                <h6 className="fw-bold mb-2">24/7 Support</h6>
+                <p className="text-muted mb-3">Get immediate help from our healthcare technology experts</p>
+                <button
+                  className="btn btn-success btn-sm"
+                  onClick={() => addNotification('Support chat initiated!', 'success')}
+                >
+                  Start Chat
                 </button>
               </div>
             </div>
@@ -1010,12 +950,12 @@ function App() {
                 <div className="contact-card-icon mb-3">
                   <i className="fas fa-download fa-2x text-info"></i>
                 </div>
-                <h5 className="fw-bold mb-3">Resources</h5>
-                <p className="text-muted mb-3">
-                  Download whitepapers, case studies, and implementation guides.
-                </p>
-                <button className="btn btn-info">
-                  <i className="fas fa-file-pdf me-1"></i>
+                <h6 className="fw-bold mb-2">Download Resources</h6>
+                <p className="text-muted mb-3">Access whitepapers, case studies, and implementation guides</p>
+                <button
+                  className="btn btn-info btn-sm"
+                  onClick={() => addNotification('Resource download started!', 'info')}
+                >
                   Download
                 </button>
               </div>
@@ -1025,95 +965,110 @@ function App() {
       </section>
 
       {/* Footer */}
-      <footer className="footer py-5">
+      <footer className="footer-section bg-dark text-light py-5">
         <div className="container">
           <div className="row g-4">
             <div className="col-lg-4">
-              <div className="footer-brand mb-4">
-                <h5 className="navbar-brand mb-3">
+              <div className="footer-brand">
+                <h5 className="fw-bold mb-3">
                   <i className="fas fa-heartbeat me-2"></i>
                   HealthSync Pro
                 </h5>
-                <p className="mb-4">
-                  Connecting patients with healthcare professionals through intelligent scheduling,
-                  seamless communication, and comprehensive health management solutions.
+                <p className="text-muted mb-3">
+                  Transforming healthcare through innovative technology solutions that connect
+                  patients, providers, and administrators in one seamless ecosystem.
                 </p>
-                <div className="emergency-contact">
-                  <h6>Emergency Contact</h6>
-                  <p>
-                    <i className="fas fa-phone"></i> Emergency: 911<br />
-                    <i className="fas fa-headset"></i> Support: 1-800-HEALTHSYNC
-                  </p>
+                <div className="footer-social d-flex gap-3">
+                  <a href="#" className="text-light">
+                    <i className="fab fa-linkedin fa-lg"></i>
+                  </a>
+                  <a href="#" className="text-light">
+                    <i className="fab fa-twitter fa-lg"></i>
+                  </a>
+                  <a href="#" className="text-light">
+                    <i className="fab fa-facebook fa-lg"></i>
+                  </a>
+                  <a href="#" className="text-light">
+                    <i className="fab fa-youtube fa-lg"></i>
+                  </a>
                 </div>
               </div>
             </div>
-
             <div className="col-lg-2 col-md-6">
-              <h5>Product</h5>
+              <h6 className="fw-bold mb-3">Product</h6>
               <ul className="list-unstyled">
-                <li><a href="#features">Features</a></li>
-                <li><a href="#">Pricing</a></li>
-                <li><a href="#">Security</a></li>
-                <li><a href="#">Integrations</a></li>
-                <li><a href="#">API</a></li>
+                <li><a href="#features" className="text-muted text-decoration-none">Features</a></li>
+                <li><a href="#" className="text-muted text-decoration-none">Pricing</a></li>
+                <li><a href="#" className="text-muted text-decoration-none">Security</a></li>
+                <li><a href="#" className="text-muted text-decoration-none">Integrations</a></li>
               </ul>
             </div>
-
             <div className="col-lg-2 col-md-6">
-              <h5>Company</h5>
+              <h6 className="fw-bold mb-3">Company</h6>
               <ul className="list-unstyled">
-                <li><a href="#about">About Us</a></li>
-                <li><a href="#">Careers</a></li>
-                <li><a href="#">Press</a></li>
-                <li><a href="#contact">Contact</a></li>
-                <li><a href="#">Blog</a></li>
+                <li><a href="#about" className="text-muted text-decoration-none">About Us</a></li>
+                <li><a href="#" className="text-muted text-decoration-none">Careers</a></li>
+                <li><a href="#" className="text-muted text-decoration-none">Press</a></li>
+                <li><a href="#contact" className="text-muted text-decoration-none">Contact</a></li>
               </ul>
             </div>
-
             <div className="col-lg-2 col-md-6">
-              <h5>Resources</h5>
+              <h6 className="fw-bold mb-3">Resources</h6>
               <ul className="list-unstyled">
-                <li><a href="#">Documentation</a></li>
-                <li><a href="#">Help Center</a></li>
-                <li><a href="#">Webinars</a></li>
-                <li><a href="#">Case Studies</a></li>
-                <li><a href="#">Community</a></li>
+                <li><a href="#" className="text-muted text-decoration-none">Documentation</a></li>
+                <li><a href="#" className="text-muted text-decoration-none">API Reference</a></li>
+                <li><a href="#" className="text-muted text-decoration-none">Case Studies</a></li>
+                <li><a href="#" className="text-muted text-decoration-none">Blog</a></li>
               </ul>
             </div>
-
             <div className="col-lg-2 col-md-6">
-              <h5>Legal</h5>
+              <h6 className="fw-bold mb-3">Support</h6>
               <ul className="list-unstyled">
-                <li><a href="#">Privacy Policy</a></li>
-                <li><a href="#">Terms of Service</a></li>
-                <li><a href="#">HIPAA Compliance</a></li>
-                <li><a href="#">Security</a></li>
-                <li><a href="#">Cookies</a></li>
+                <li><a href="#" className="text-muted text-decoration-none">Help Center</a></li>
+                <li><a href="#" className="text-muted text-decoration-none">Community</a></li>
+                <li><a href="#" className="text-muted text-decoration-none">Status</a></li>
+                <li><a href="#" className="text-muted text-decoration-none">Training</a></li>
               </ul>
             </div>
           </div>
-
-          <div className="footer-bottom">
-            <div className="row align-items-center">
-              <div className="col-md-6">
-                <p>© 2024 HealthSync Pro. All rights reserved.</p>
-              </div>
-              <div className="col-md-6 text-md-end">
-                <div className="social-links">
-                  <a href="#"><i className="fab fa-linkedin"></i></a>
-                  <a href="#"><i className="fab fa-twitter"></i></a>
-                  <a href="#"><i className="fab fa-facebook"></i></a>
-                  <a href="#"><i className="fab fa-youtube"></i></a>
-                </div>
-                <small>
-                  <i className="fas fa-shield-alt me-1"></i>HIPAA Compliant •
-                  <i className="fas fa-lock ms-2 me-1"></i>SSL Secured
-                </small>
+          <hr className="my-4" />
+          <div className="row align-items-center">
+            <div className="col-md-6">
+              <p className="text-muted mb-0">
+                © 2024 HealthSync Pro. All rights reserved.
+              </p>
+            </div>
+            <div className="col-md-6 text-md-end">
+              <div className="footer-links">
+                <a href="#" className="text-muted text-decoration-none me-3">Privacy Policy</a>
+                <a href="#" className="text-muted text-decoration-none me-3">Terms of Service</a>
+                <a href="#" className="text-muted text-decoration-none">HIPAA Compliance</a>
               </div>
             </div>
           </div>
         </div>
       </footer>
+
+      {/* Scroll to Top Button */}
+      <button
+        className="scroll-to-top btn btn-primary"
+        onClick={scrollToTop}
+        style={{
+          position: 'fixed',
+          bottom: '20px',
+          right: '20px',
+          borderRadius: '50%',
+          width: '50px',
+          height: '50px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          boxShadow: '0 4px 12px rgba(0,0,0,0.15)'
+        }}
+      >
+        <i className="fas fa-arrow-up"></i>
+      </button>
     </div>
   );
 
@@ -1134,10 +1089,11 @@ function App() {
       </div>
 
       {/* Render based on current view */}
-      {currentView === "landing" && <MedicalLandingPage />}
+      {currentView === "landing" && <LandingPage />}
 
       {currentView === "auth" && (
         <div className={`min-vh-100 ${darkMode ? 'dark-theme' : 'medical-bg'}`}>
+          {/* Auth Navigation */}
           <nav className={`navbar navbar-expand-lg navbar-dark ${darkMode ? 'bg-dark' : 'medical-nav'}`}>
             <div className="container">
               <span className="navbar-brand mb-0 h1">
@@ -1162,6 +1118,7 @@ function App() {
             </div>
           </nav>
 
+          {/* Auth Content */}
           <div className="container mt-5 pt-4">
             <div className="row justify-content-center">
               <div className="col-lg-6 col-md-8">
@@ -1220,13 +1177,36 @@ function App() {
 
       {currentView === "dashboard" && (
         <div className={`min-vh-100 ${darkMode ? 'dark-theme' : 'medical-bg'}`}>
+          {/* Dashboard Navigation */}
           <nav className={`navbar navbar-expand-lg navbar-dark ${darkMode ? 'bg-dark' : 'medical-nav'}`}>
             <div className="container">
               <span className="navbar-brand mb-0 h1">
                 <i className="fas fa-heartbeat me-2"></i>
                 HealthSync Pro
               </span>
+
               <div className="navbar-nav ms-auto d-flex flex-row gap-2">
+                {(user || admin || receptionist) && (
+                  <div className="dropdown">
+                    <button
+                      className="btn btn-outline-light btn-sm dropdown-toggle"
+                      type="button"
+                      data-bs-toggle="dropdown"
+                      title="Help & Shortcuts"
+                    >
+                      <i className="fas fa-question-circle"></i>
+                    </button>
+                    <ul className="dropdown-menu dropdown-menu-end">
+                      <li><h6 className="dropdown-header">Keyboard Shortcuts</h6></li>
+                      <li><span className="dropdown-item-text small">Ctrl+1: Find Doctors</span></li>
+                      <li><span className="dropdown-item-text small">Ctrl+2: Appointments</span></li>
+                      <li><span className="dropdown-item-text small">Ctrl+3: AI Assistant</span></li>
+                      <li><span className="dropdown-item-text small">Ctrl+4: Payments</span></li>
+                      <li><hr className="dropdown-divider" /></li>
+                      <li><span className="dropdown-item-text small">Ctrl+D: Toggle Theme</span></li>
+                    </ul>
+                  </div>
+                )}
                 <button
                   className="btn btn-outline-light btn-sm"
                   onClick={toggleDarkMode}
@@ -1238,7 +1218,7 @@ function App() {
             </div>
           </nav>
 
-          {/* USER MODE */}
+          {/* ========== USER MODE ========== */}
           {user && !admin && !receptionist && (
             <div className="container mt-4">
               <div className="row">
@@ -1262,10 +1242,19 @@ function App() {
                             </small>
                           </div>
                         </div>
-                        <button onClick={handleLogoutAll} className="btn btn-outline-danger">
-                          <i className="fas fa-sign-out-alt me-1"></i>
-                          Logout
-                        </button>
+                        <div className="d-flex gap-2">
+                          <button
+                            className="btn btn-outline-primary btn-sm"
+                            onClick={() => addNotification('Profile updated successfully!', 'success')}
+                            title="Edit Profile"
+                          >
+                            <i className="fas fa-edit"></i>
+                          </button>
+                          <button onClick={handleLogoutAll} className="btn btn-outline-danger">
+                            <i className="fas fa-sign-out-alt me-1"></i>
+                            Logout
+                          </button>
+                        </div>
                       </div>
                     </div>
                   </div>
@@ -1278,36 +1267,43 @@ function App() {
                             onClick={() => {
                               setPage("doctors");
                               scrollToTop();
+                              addNotification('Navigated to Find Doctors', 'info');
                             }}
                             className={`nav-link ${page === "doctors" ? "active" : ""}`}
                           >
                             <i className="fas fa-user-md me-2"></i>
                             Find Doctors
+                            {page === "doctors" && <span className="badge bg-light text-dark ms-2">Active</span>}
                           </button>
                           <button
                             onClick={() => {
                               setPage("appointments");
                               scrollToTop();
+                              addNotification('Navigated to My Appointments', 'info');
                             }}
                             className={`nav-link ${page === "appointments" ? "active" : ""}`}
                           >
                             <i className="fas fa-calendar-check me-2"></i>
                             My Appointments
+                            <span className="badge bg-danger ms-2">3</span>
                           </button>
                           <button
                             onClick={() => {
                               setPage("ai-assistant");
                               scrollToTop();
+                              addNotification('AI Assistant ready to help!', 'success');
                             }}
                             className={`nav-link ${page === "ai-assistant" ? "active" : ""}`}
                           >
                             <i className="fas fa-robot me-2"></i>
                             AI Assistant
+                            <span className="pulse-dot ms-2"></span>
                           </button>
                           <button
                             onClick={() => {
                               setPage("payments");
                               scrollToTop();
+                              addNotification('Navigated to Payment History', 'info');
                             }}
                             className={`nav-link ${page === "payments" ? "active" : ""}`}
                           >
@@ -1337,24 +1333,20 @@ function App() {
             </div>
           )}
 
-          {/* ADMIN MODE */}
+          {/* ========== ADMIN MODE ========== */}
           {admin && !user && !receptionist && (
-            <div className="container mt-4" style={{ color: darkMode ? '#ffffff' : '#000000' }}>
+            <div className="container mt-4">
               <div className="row">
                 <div className="col-12">
-                  <div className="medical-card shadow-sm mb-4" style={{ 
-                    background: darkMode ? 'rgba(255, 255, 255, 0.08)' : '#ffffff',
-                    color: darkMode ? '#ffffff' : '#000000',
-                    border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.15)' : '#dee2e6'}`
-                  }}>
-                    <div className="card-body" style={{ color: darkMode ? '#ffffff' : '#000000' }}>
+                  <div className="medical-card shadow-sm mb-4">
+                    <div className="card-body">
                       <div className="d-flex justify-content-between align-items-center">
                         <div>
-                          <h5 className="card-title mb-1 medical-title" style={{ color: darkMode ? '#ffffff' : '#000000' }}>
+                          <h5 className="card-title mb-1 medical-title">
                             <i className="fas fa-user-shield me-2"></i>
                             Admin Dashboard
                           </h5>
-                          <p className="text-muted mb-0" style={{ color: darkMode ? 'rgba(255, 255, 255, 0.7)' : '#6c757d' }}>
+                          <p className="text-muted mb-0">
                             <i className="fas fa-user me-1"></i>
                             {admin?.name || "Admin"}
                             <span className="ms-2">
@@ -1371,24 +1363,20 @@ function App() {
                     </div>
                   </div>
 
-                  <div style={{ color: darkMode ? '#ffffff' : '#000000' }}>
-                    <React.Suspense fallback={
-                      <div className="text-center py-5">
-                        <div className="loading-spinner mx-auto mb-3"></div>
-                        <p className="text-muted" style={{ color: darkMode ? 'rgba(255, 255, 255, 0.7)' : '#6c757d' }}>
-                          Loading admin dashboard...
-                        </p>
-                      </div>
-                    }>
-                      <AdminDashboard />
-                    </React.Suspense>
-                  </div>
+                  <React.Suspense fallback={
+                    <div className="text-center py-5">
+                      <div className="loading-spinner mx-auto mb-3"></div>
+                      <p className="text-muted">Loading admin dashboard...</p>
+                    </div>
+                  }>
+                    <AdminDashboard />
+                  </React.Suspense>
                 </div>
               </div>
             </div>
           )}
 
-          {/* RECEPTIONIST MODE */}
+          {/* ========== RECEPTIONIST MODE ========== */}
           {receptionist && !user && !admin && (
             <div className="container mt-4">
               <div className="row">
@@ -1433,6 +1421,7 @@ function App() {
         </div>
       )}
 
+
       {/* Scroll to Top Button */}
       {(user || admin || receptionist) && (
         <button
@@ -1443,6 +1432,60 @@ function App() {
           <i className="fas fa-chevron-up"></i>
         </button>
       )}
+
+      {/* Footer */}
+      <footer className={`mt-5 py-4 ${darkMode ? 'bg-dark text-white' : 'bg-light'}`}>
+        <div className="container">
+          <div className="row">
+            <div className="col-md-6">
+              <h6 className="mb-3">
+                <i className="fas fa-heartbeat me-2"></i>
+                HealthSync Pro
+              </h6>
+              <p className="text-muted small mb-0">
+                Connecting patients with healthcare professionals through intelligent scheduling,
+                seamless communication, and comprehensive health management solutions.
+              </p>
+            </div>
+            <div className="col-md-3">
+              <h6 className="mb-3">Quick Links</h6>
+              <ul className="list-unstyled small">
+                <li><a href="#" className="text-decoration-none text-muted">Privacy Policy</a></li>
+                <li><a href="#" className="text-decoration-none text-muted">Terms of Service</a></li>
+                <li><a href="#" className="text-decoration-none text-muted">Help Center</a></li>
+                <li><a href="#" className="text-decoration-none text-muted">Contact Support</a></li>
+              </ul>
+            </div>
+            <div className="col-md-3">
+              <h6 className="mb-3">Emergency</h6>
+              <p className="small text-muted mb-2">
+                <i className="fas fa-phone text-danger me-2"></i>
+                Emergency: 911
+              </p>
+              <p className="small text-muted mb-0">
+                <i className="fas fa-headset text-info me-2"></i>
+                Support: 1-800-HEALTHSYNC
+              </p>
+            </div>
+          </div>
+          <hr className="my-4" />
+          <div className="row align-items-center">
+            <div className="col-md-6">
+              <small className="text-muted">
+                © 2024 HealthSync Pro. All rights reserved.
+              </small>
+            </div>
+            <div className="col-md-6 text-md-end">
+              <small className="text-muted">
+                <i className="fas fa-shield-alt me-1"></i>
+                HIPAA Compliant •
+                <i className="fas fa-lock ms-2 me-1"></i>
+                SSL Secured
+              </small>
+            </div>
+          </div>
+        </div>
+      </footer>
     </div>
   );
 }

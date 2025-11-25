@@ -1,0 +1,226 @@
+/* Professional Dashboard Enhancements */
+
+/* Gradient backgrounds for headers */
+.bg-gradient-primary {
+  background: linear-gradient(135deg, #007bff 0%, #0056b3 100%) !important;
+}
+
+.bg-gradient-dark {
+  background: linear-gradient(135deg, #343a40 0%, #212529 100%) !important;
+}
+
+.bg-gradient-info {
+  background: linear-gradient(135deg, #17a2b8 0%, #138496 100%) !important;
+}
+
+/* Enhanced card styles */
+.card {
+  border: none;
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075);
+  transition: all 0.3s ease;
+}
+
+.card:hover {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+}
+
+/* Stats cards with better spacing */
+.card.h-100 {
+  height: 100% !important;
+}
+
+.card-body {
+  padding: 1.5rem;
+}
+
+/* Professional table styles */
+.table {
+  border-collapse: separate;
+  border-spacing: 0;
+}
+
+.table thead th {
+  background-color: #f8f9fa;
+  border-bottom: 2px solid #dee2e6;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.875rem;
+  letter-spacing: 0.5px;
+}
+
+.table tbody tr {
+  transition: all 0.2s ease;
+}
+
+.table tbody tr:hover {
+  background-color: #f8f9fa;
+  transform: scale(1.01);
+}
+
+/* Enhanced navigation tabs */
+.nav-tabs .nav-link {
+  border: none;
+  border-radius: 0.5rem;
+  margin: 0 0.25rem;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.nav-tabs .nav-link:hover {
+  background-color: #e9ecef;
+  transform: translateY(-2px);
+}
+
+.nav-tabs .nav-link.active {
+  background-color: #007bff;
+  color: white;
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 123, 255, 0.3);
+}
+
+/* Button enhancements */
+.btn {
+  border-radius: 0.5rem;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 0.25rem 0.5rem rgba(0, 0, 0, 0.15);
+}
+
+/* Badge improvements */
+.badge {
+  font-weight: 500;
+  padding: 0.5em 0.75em;
+  border-radius: 0.375rem;
+}
+
+/* Loading states */
+.spinner-border {
+  width: 3rem;
+  height: 3rem;
+}
+
+/* Professional spacing */
+.mb-4 {
+  margin-bottom: 2rem !important;
+}
+
+.mb-3 {
+  margin-bottom: 1.5rem !important;
+}
+
+/* Icon enhancements */
+.fas, .far {
+  transition: all 0.3s ease;
+}
+
+.card:hover .fas,
+.card:hover .far {
+  transform: scale(1.1);
+}
+
+/* Responsive improvements */
+@media (max-width: 768px) {
+  .card-body {
+    padding: 1rem;
+  }
+  
+  .table-responsive {
+    border-radius: 0.5rem;
+  }
+  
+  .btn-group-sm .btn {
+    padding: 0.25rem 0.5rem;
+    font-size: 0.875rem;
+  }
+}
+
+/* Professional color scheme */
+:root {
+  --primary-color: #007bff;
+  --success-color: #28a745;
+  --info-color: #17a2b8;
+  --warning-color: #ffc107;
+  --danger-color: #dc3545;
+  --dark-color: #343a40;
+  --light-color: #f8f9fa;
+}
+
+/* Enhanced shadows */
+.shadow-sm {
+  box-shadow: 0 0.125rem 0.25rem rgba(0, 0, 0, 0.075) !important;
+}
+
+.shadow {
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Professional text styles */
+.text-muted {
+  color: #6c757d !important;
+}
+
+.fw-bold {
+  font-weight: 700 !important;
+}
+
+/* Enhanced form controls */
+.form-control {
+  border-radius: 0.5rem;
+  border: 1px solid #ced4da;
+  transition: all 0.3s ease;
+}
+
+.form-control:focus {
+  border-color: #007bff;
+  box-shadow: 0 0 0 0.2rem rgba(0, 123, 255, 0.25);
+  transform: translateY(-1px);
+}
+
+/* Professional animations */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.fade-in-up {
+  animation: fadeInUp 0.6s ease-out;
+}
+
+/* Status indicators */
+.status-online {
+  color: #28a745;
+}
+
+.status-offline {
+  color: #6c757d;
+}
+
+.status-busy {
+  color: #ffc107;
+}
+
+/* Professional dropdown */
+.dropdown-menu {
+  border: none;
+  box-shadow: 0 0.5rem 1rem rgba(0, 0, 0, 0.15);
+  border-radius: 0.5rem;
+}
+
+.dropdown-item {
+  transition: all 0.2s ease;
+}
+
+.dropdown-item:hover {
+  background-color: #f8f9fa;
+  transform: translateX(5px);
+}

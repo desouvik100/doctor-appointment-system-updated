@@ -9,7 +9,12 @@ const app = express();
 // ========== MIDDLEWARE ==========
 app.use(
   cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
+    origin: [
+      'http://localhost:3000',
+      'http://localhost:3001',
+      'http://localhost:3002',
+      process.env.CORS_ORIGIN
+    ].filter(Boolean),
     credentials: true,
   })
 );
@@ -20,7 +25,7 @@ const connectDB = async () => {
   try {
     const conn = await mongoose.connect(
       process.env.MONGODB_URI ||
-        'mongodb://127.0.0.1:27017/doctor_appointment',
+      'mongodb://127.0.0.1:27017/doctor_appointment',
       {
         useNewUrlParser: true,
         useUnifiedTopology: true,
