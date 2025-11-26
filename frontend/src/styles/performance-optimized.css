@@ -1,0 +1,192 @@
+/* Performance Optimized CSS - Fast & Smooth */
+
+/* Disable heavy animations on scroll for better performance */
+@media (prefers-reduced-motion: no-preference) {
+    html {
+        scroll-behavior: smooth;
+    }
+}
+
+/* Optimized transitions - only animate what's necessary */
+.btn,
+.card,
+.nav-link,
+.form-control {
+    transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
+}
+
+/* Light shadows for better performance */
+.card {
+    box-shadow: 0 2px 4px rgba(0, 0, 0, 0.06);
+}
+
+.card:hover {
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+/* Remove heavy backdrop filters */
+.navbar {
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    /* No backdrop-filter for performance */
+}
+
+/* Optimized button animations */
+.btn:hover {
+    transform: translateY(-1px);
+}
+
+.btn:active {
+    transform: translateY(0);
+}
+
+/* Fast form interactions */
+.form-control:focus {
+    border-color: #667eea;
+    box-shadow: 0 0 0 2px rgba(102, 126, 234, 0.1);
+}
+
+/* Minimal modal shadows */
+.modal-content {
+    box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+}
+
+/* Performance-friendly loading states */
+.loading-spinner {
+    width: 20px;
+    height: 20px;
+    border: 2px solid #f3f3f3;
+    border-top: 2px solid #667eea;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% {
+        transform: rotate(0deg);
+    }
+
+    100% {
+        transform: rotate(360deg);
+    }
+}
+
+/* Optimized pulse animation - only for small elements */
+.pulse-dot {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+
+    0%,
+    100% {
+        opacity: 1;
+    }
+
+    50% {
+        opacity: 0.5;
+    }
+}
+
+/* Fast fade animations */
+.fade-in {
+    animation: fadeIn 0.3s ease-out;
+}
+
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+/* Disable expensive animations on large elements */
+.no-animate {
+    animation: none !important;
+    transition: none !important;
+}
+
+/* Performance-friendly hover states */
+.hover-lift:hover {
+    transform: translateY(-2px);
+}
+
+/* Optimized table styles */
+.table tbody tr:hover {
+    background-color: rgba(102, 126, 234, 0.02);
+}
+
+/* Fast dropdown animations */
+.dropdown-menu {
+    animation: dropdownFadeIn 0.15s ease-out;
+}
+
+@keyframes dropdownFadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Optimized notification animations */
+.notification-slide {
+    animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+/* Performance-friendly responsive design */
+@media (max-width: 768px) {
+
+    /* Disable animations on mobile for better performance */
+    .btn:hover,
+    .card:hover,
+    .hover-lift:hover {
+        transform: none;
+    }
+
+    /* Reduce shadows on mobile */
+    .card {
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+    }
+}
+
+/* Optimize for touch devices */
+@media (hover: none) and (pointer: coarse) {
+
+    .btn:hover,
+    .card:hover,
+    .hover-lift:hover {
+        transform: none;
+    }
+}
+
+/* GPU acceleration for smooth animations */
+.btn,
+.card,
+.modal-content {
+    will-change: transform;
+}
+
+/* Remove will-change after animation */
+.btn:not(:hover),
+.card:not(:hover) {
+    will-change: auto;
+}

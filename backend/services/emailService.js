@@ -61,7 +61,13 @@ async function sendOTP(email, type = 'register') {
 
   otpStore.set(key, { otp, expiresAt });
 
-  console.log('Generated OTP:', otp, 'for key:', key);
+  console.log('═══════════════════════════════════════');
+  console.log('🔐 OTP GENERATED FOR TESTING');
+  console.log('Email:', email);
+  console.log('Type:', type);
+  console.log('OTP CODE:', otp);
+  console.log('Valid for: 10 minutes');
+  console.log('═══════════════════════════════════════');
 
   const subject = 'Your OTP Code';
   const text = `Your OTP code is: ${otp}. It is valid for 10 minutes.`;

@@ -42,13 +42,31 @@ const MedicalHero = ({ onGetStarted, darkMode }) => {
 
               <div className="hero-actions fade-in-up" style={{ animationDelay: '0.6s' }}>
                 <button
-                  className="btn btn-medical btn-lg me-3 mb-2"
+                  className="btn btn-medical btn-xl px-5 py-3 me-3 mb-2"
                   onClick={onGetStarted}
+                  style={{
+                    fontSize: '1.25rem',
+                    fontWeight: '600',
+                    boxShadow: '0 8px 30px rgba(59, 130, 246, 0.3)',
+                    transform: 'scale(1)',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.transform = 'scale(1.05) translateY(-2px)';
+                    e.target.style.boxShadow = '0 12px 40px rgba(59, 130, 246, 0.4)';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'scale(1)';
+                    e.target.style.boxShadow = '0 8px 30px rgba(59, 130, 246, 0.3)';
+                  }}
                 >
                   <i className="fas fa-rocket me-2"></i>
-                  Start Free Trial
+                  Get Started
                 </button>
-                <button className="btn btn-outline-primary btn-lg mb-2">
+                <button 
+                  className="btn btn-outline-primary btn-lg mb-2"
+                  onClick={() => window.open('https://www.youtube.com/watch?v=dQw4w9WgXcQ', '_blank')}
+                >
                   <i className="fas fa-play me-2"></i>
                   Watch Demo
                 </button>

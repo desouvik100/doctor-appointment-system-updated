@@ -1,8 +1,15 @@
 import React, { useState } from "react";
 import axios from "../api/config";
+import "../styles/theme-system.css";
 
 function Auth({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
+  
+  // Simple notification fallback
+  const addNotification = (message, type) => {
+    console.log(`[${type.toUpperCase()}] ${message}`);
+    // You can add a toast notification library here if needed
+  };
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -31,6 +38,16 @@ function Auth({ onLogin }) {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
   const [canResendOtp, setCanResendOtp] = useState(true);
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetLoading, setResetLoading] = useState(false);
+  const [resetSuccess, setResetSuccess] = useState(false);
+  const [resetStep, setResetStep] = useState(1); // 1: Email, 2: OTP, 3: New Password
+  const [resetOtp, setResetOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [showNewPassword, setShowNewPassword] = useState(false);
+  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
 
   // Email validation
   const validateEmail = (email) => {
@@ -765,10 +782,360 @@ function Auth({ onLogin }) {
 
       {isLogin && (
         <div className="text-center mt-2">
-          <button type="button" className="btn btn-link btn-sm text-muted">
+          <button 
+            type="button" 
+            className="btn btn-link btn-sm text-muted"
+            onClick={() => setShowForgotPassword(true)}
+          >
             <i className="fas fa-key me-1"></i>
             Forgot Password?
           </button>
+        </div>
+      )}
+
+      {/* Forgot Password Modal - 3 Step Process */}
+      {showForgotPassword && (
+        <div className="modal show d-block" style={{background: 'rgba(0,0,0,0.5)'}} onClick={(e) => {
+          if (e.target === e.currentTarget) {
+            setShowForgotPassword(false);
+            setResetStep(1);
+            setResetEmail("");
+            setResetOtp("");
+            setNewPassword("");
+            setConfirmNewPassword("");
+            setError("");
+          }
+        }}>
+          <div className="modal-dialog modal-dialog-centered">
+            <div className="modal-content" style={{borderRadius: '20px', border: 'none'}}>
+              <div className="modal-header" style={{borderBottom: '1px solid #e2e8f0'}}>
+                <h5 className="modal-title fw-bold">
+                  <i className="fas fa-key text-primary me-2"></i>
+                  Reset Password {resetStep > 1 && `- Step ${resetStep} of 3`}
+                </h5>
+                <button 
+                  type="button" 
+                  className="btn-close" 
+                  onClick={() => {
+                    setShowForgotPassword(false);
+                    setResetStep(1);
+                    setResetEmail("");
+                    setResetOtp("");
+                    setNewPassword("");
+                    setConfirmNewPassword("");
+                    setError("");
+                  }}
+                ></button>
+              </div>
+              <div className="modal-body p-4">
+                {/* Step 1: Enter Email */}
+                {resetStep === 1 && (
+                  <>
+                    <p className="text-muted mb-4">
+                      Enter your email address and we'll send you a 6-digit OTP to reset your password.
+                    </p>
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">Email Address</label>
+                      <input
+                        type="email"
+                        className="form-control form-control-lg"
+                        placeholder="Enter your email"
+                        value={resetEmail}
+                        onChange={(e) => setResetEmail(e.target.value)}
+                        style={{borderRadius: '12px'}}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && resetEmail && !resetLoading) {
+                            document.getElementById('send-otp-btn').click();
+                          }
+                        }}
+                      />
+                    </div>
+                    <button
+                      id="send-otp-btn"
+                      className="btn btn-primary w-100 py-3"
+                      style={{borderRadius: '12px', fontWeight: '600'}}
+                      onClick={async () => {
+                        if (!validateEmail(resetEmail)) {
+                          setError("Please enter a valid email address");
+                          return;
+                        }
+                        setResetLoading(true);
+                        setError("");
+                        try {
+                          const response = await axios.post('/api/otp/send-otp', {
+                            email: resetEmail,
+                            type: 'password-reset'
+                          });
+                          
+                          if (response.data.success) {
+                            setResetStep(2);
+                            addNotification('OTP sent to your email!', 'success');
+                          } else {
+                            setError(response.data.message || "Failed to send OTP");
+                          }
+                        } catch (err) {
+                          console.error("Send OTP error:", err);
+                          const errorMessage = err.response?.data?.message || 
+                                             err.response?.data?.error ||
+                                             "Failed to send OTP. Please try again.";
+                          setError(errorMessage);
+                        } finally {
+                          setResetLoading(false);
+                        }
+                      }}
+                      disabled={resetLoading || !resetEmail}
+                    >
+                      {resetLoading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2"></span>
+                          Sending OTP...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-paper-plane me-2"></i>
+                          Send OTP
+                        </>
+                      )}
+                    </button>
+                    {error && (
+                      <div className="alert alert-danger mt-3 mb-0" role="alert">
+                        <i className="fas fa-exclamation-circle me-2"></i>
+                        {error}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Step 2: Verify OTP */}
+                {resetStep === 2 && (
+                  <>
+                    <div className="text-center mb-4">
+                      <i className="fas fa-envelope-open-text text-primary" style={{fontSize: '3rem'}}></i>
+                      <p className="text-muted mt-3 mb-2">
+                        We've sent a 6-digit OTP to<br/>
+                        <strong>{resetEmail}</strong>
+                      </p>
+                      <small className="text-muted">Check your inbox and spam folder</small>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">Enter OTP</label>
+                      <input
+                        type="text"
+                        className="form-control form-control-lg text-center"
+                        placeholder="000000"
+                        value={resetOtp}
+                        onChange={(e) => {
+                          const value = e.target.value.replace(/\D/g, '').slice(0, 6);
+                          setResetOtp(value);
+                        }}
+                        style={{borderRadius: '12px', fontSize: '1.5rem', letterSpacing: '0.5rem'}}
+                        maxLength={6}
+                        onKeyPress={(e) => {
+                          if (e.key === 'Enter' && resetOtp.length === 6 && !resetLoading) {
+                            document.getElementById('verify-otp-btn').click();
+                          }
+                        }}
+                      />
+                      <small className="text-muted">OTP is valid for 10 minutes</small>
+                    </div>
+                    <button
+                      id="verify-otp-btn"
+                      className="btn btn-primary w-100 py-3 mb-2"
+                      style={{borderRadius: '12px', fontWeight: '600'}}
+                      onClick={async () => {
+                        if (resetOtp.length !== 6) {
+                          setError("Please enter a valid 6-digit OTP");
+                          return;
+                        }
+                        setResetLoading(true);
+                        setError("");
+                        try {
+                          const response = await axios.post('/api/otp/verify-otp', {
+                            email: resetEmail,
+                            otp: resetOtp,
+                            type: 'password-reset'
+                          });
+                          
+                          if (response.data.success && response.data.verified) {
+                            setResetStep(3);
+                            addNotification('OTP verified successfully!', 'success');
+                          } else {
+                            setError(response.data.message || "Invalid OTP");
+                          }
+                        } catch (err) {
+                          console.error("Verify OTP error:", err);
+                          setError(err.response?.data?.message || "Invalid or expired OTP");
+                        } finally {
+                          setResetLoading(false);
+                        }
+                      }}
+                      disabled={resetLoading || resetOtp.length !== 6}
+                    >
+                      {resetLoading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2"></span>
+                          Verifying...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-check-circle me-2"></i>
+                          Verify OTP
+                        </>
+                      )}
+                    </button>
+                    <button
+                      className="btn btn-outline-secondary w-100"
+                      onClick={async () => {
+                        setResetLoading(true);
+                        setError("");
+                        try {
+                          await axios.post('/api/otp/send-otp', {
+                            email: resetEmail,
+                            type: 'password-reset'
+                          });
+                          setResetOtp("");
+                          addNotification('New OTP sent!', 'info');
+                        } catch (err) {
+                          setError("Failed to resend OTP");
+                        } finally {
+                          setResetLoading(false);
+                        }
+                      }}
+                      disabled={resetLoading}
+                    >
+                      <i className="fas fa-redo me-2"></i>
+                      Resend OTP
+                    </button>
+                    {error && (
+                      <div className="alert alert-danger mt-3 mb-0" role="alert">
+                        <i className="fas fa-exclamation-circle me-2"></i>
+                        {error}
+                      </div>
+                    )}
+                  </>
+                )}
+
+                {/* Step 3: Set New Password */}
+                {resetStep === 3 && (
+                  <>
+                    <div className="text-center mb-4">
+                      <i className="fas fa-lock text-success" style={{fontSize: '3rem'}}></i>
+                      <p className="text-muted mt-3">
+                        Create a strong new password for your account
+                      </p>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">New Password</label>
+                      <div className="input-group">
+                        <input
+                          type={showNewPassword ? "text" : "password"}
+                          className="form-control form-control-lg"
+                          placeholder="Enter new password"
+                          value={newPassword}
+                          onChange={(e) => setNewPassword(e.target.value)}
+                          style={{borderRadius: '12px 0 0 12px'}}
+                        />
+                        <button
+                          className="btn btn-outline-secondary"
+                          type="button"
+                          onClick={() => setShowNewPassword(!showNewPassword)}
+                          style={{borderRadius: '0 12px 12px 0'}}
+                        >
+                          <i className={`fas fa-eye${showNewPassword ? '-slash' : ''}`}></i>
+                        </button>
+                      </div>
+                      <small className="text-muted">Minimum 6 characters</small>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label fw-semibold">Confirm New Password</label>
+                      <div className="input-group">
+                        <input
+                          type={showConfirmNewPassword ? "text" : "password"}
+                          className="form-control form-control-lg"
+                          placeholder="Confirm new password"
+                          value={confirmNewPassword}
+                          onChange={(e) => setConfirmNewPassword(e.target.value)}
+                          style={{borderRadius: '12px 0 0 12px'}}
+                          onKeyPress={(e) => {
+                            if (e.key === 'Enter' && newPassword && confirmNewPassword && !resetLoading) {
+                              document.getElementById('reset-password-btn').click();
+                            }
+                          }}
+                        />
+                        <button
+                          className="btn btn-outline-secondary"
+                          type="button"
+                          onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
+                          style={{borderRadius: '0 12px 12px 0'}}
+                        >
+                          <i className={`fas fa-eye${showConfirmNewPassword ? '-slash' : ''}`}></i>
+                        </button>
+                      </div>
+                    </div>
+                    <button
+                      id="reset-password-btn"
+                      className="btn btn-success w-100 py-3"
+                      style={{borderRadius: '12px', fontWeight: '600'}}
+                      onClick={async () => {
+                        if (newPassword.length < 6) {
+                          setError("Password must be at least 6 characters");
+                          return;
+                        }
+                        if (newPassword !== confirmNewPassword) {
+                          setError("Passwords do not match");
+                          return;
+                        }
+                        setResetLoading(true);
+                        setError("");
+                        try {
+                          const response = await axios.post('/api/auth/reset-password', {
+                            email: resetEmail,
+                            newPassword: newPassword
+                          });
+                          
+                          if (response.data.success) {
+                            addNotification('Password reset successfully! Please login.', 'success');
+                            setShowForgotPassword(false);
+                            setResetStep(1);
+                            setResetEmail("");
+                            setResetOtp("");
+                            setNewPassword("");
+                            setConfirmNewPassword("");
+                          } else {
+                            setError(response.data.message || "Failed to reset password");
+                          }
+                        } catch (err) {
+                          console.error("Reset password error:", err);
+                          setError(err.response?.data?.message || "Failed to reset password");
+                        } finally {
+                          setResetLoading(false);
+                        }
+                      }}
+                      disabled={resetLoading || !newPassword || !confirmNewPassword}
+                    >
+                      {resetLoading ? (
+                        <>
+                          <span className="spinner-border spinner-border-sm me-2"></span>
+                          Resetting Password...
+                        </>
+                      ) : (
+                        <>
+                          <i className="fas fa-check me-2"></i>
+                          Reset Password
+                        </>
+                      )}
+                    </button>
+                    {error && (
+                      <div className="alert alert-danger mt-3 mb-0" role="alert">
+                        <i className="fas fa-exclamation-circle me-2"></i>
+                        {error}
+                      </div>
+                    )}
+                  </>
+                )}
+              </div>
+            </div>
+          </div>
         </div>
       )}
 

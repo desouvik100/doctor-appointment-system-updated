@@ -40,6 +40,7 @@ app.use('/api/clinics', require('./routes/clinicRoutes'));
 app.use('/api/receptionists', require('./routes/receptionistRoutes'));
 app.use('/api/chatbot', require('./routes/aiRoutes'));
 app.use('/api/payments', require('./routes/paymentRoutes'));
+app.use('/api/otp', require('./routes/otpRoutes')); // OTP routes for password reset
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');
@@ -49,6 +50,10 @@ console.log('  POST /api/auth/login');
 console.log('  POST /api/auth/admin/login');
 console.log('  POST /api/auth/receptionist/register');
 console.log('  GET  /api/auth/receptionist/test');
+console.log('\nOTP Routes:');
+console.log('  POST /api/otp/send-otp');
+console.log('  POST /api/otp/verify-otp');
+console.log('  GET  /api/otp/check-config');
 console.log('========================\n');
 
 // Basic route

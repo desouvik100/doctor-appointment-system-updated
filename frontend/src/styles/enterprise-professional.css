@@ -1,0 +1,314 @@
+/* Enterprise Professional Styling for HealthSync Pro */
+
+/* Professional Brand Colors */
+:root {
+  --primary-gradient: linear-gradient(135deg, #2563eb 0%, #1d4ed8 100%);
+  --success-gradient: linear-gradient(135deg, #059669 0%, #047857 100%);
+  --premium-shadow: 0 20px 40px rgba(37, 99, 235, 0.15);
+  --enterprise-bg: linear-gradient(135deg, #f8fafc 0%, #ffffff 100%);
+  --text-primary: #1e293b;
+  --text-secondary: #64748b;
+  --border-premium: rgba(37, 99, 235, 0.1);
+}
+
+/* Professional Typography */
+.premium-title {
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+  background: linear-gradient(135deg, #1e293b 0%, #2563eb 50%, #1d4ed8 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  line-height: 1.1;
+}
+
+.premium-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-weight: 400;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  font-size: 1.25rem;
+}
+
+/* Professional Buttons */
+.btn-medical {
+  background: var(--primary-gradient);
+  border: none;
+  color: white;
+  font-weight: 600;
+  padding: 1rem 2rem;
+  border-radius: 12px;
+  box-shadow: var(--premium-shadow);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  font-family: 'Inter', sans-serif;
+  letter-spacing: 0.025em;
+}
+
+.btn-medical:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 25px 50px rgba(37, 99, 235, 0.25);
+  color: white;
+}
+
+/* Professional Stats */
+.stat-number {
+  font-family: 'Inter', sans-serif;
+  font-weight: 800;
+  font-size: 2.5rem;
+  background: var(--primary-gradient);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-bottom: 0.5rem;
+}
+
+/* Trust Badges */
+.trust-badge {
+  background: rgba(255, 255, 255, 0.9);
+  padding: 0.5rem 1rem;
+  border-radius: 20px;
+  border: 1px solid var(--border-premium);
+  backdrop-filter: blur(10px);
+  font-weight: 500;
+  transition: all 0.2s ease;
+}
+
+.trust-badge:hover {
+  background: rgba(255, 255, 255, 1);
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Professional Dashboard Preview */
+.dashboard-preview {
+  background: rgba(255, 255, 255, 0.95);
+  border: 1px solid var(--border-premium);
+  border-radius: 20px;
+  box-shadow: var(--premium-shadow);
+  backdrop-filter: blur(20px);
+  overflow: hidden;
+}
+
+.medical-card {
+  position: relative;
+  overflow: hidden;
+}
+
+.medical-pattern-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 20px,
+    rgba(37, 99, 235, 0.02) 20px,
+    rgba(37, 99, 235, 0.02) 21px
+  );
+  pointer-events: none;
+}
+
+/* Professional Mini Cards */
+.mini-card {
+  border: 1px solid var(--border-premium);
+  transition: all 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.mini-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.mini-pulse {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  width: 8px;
+  height: 8px;
+  background: #3b82f6;
+  border-radius: 50%;
+  animation: pulse 2s infinite;
+}
+
+.mini-pulse.success {
+  background: #10b981;
+}
+
+@keyframes pulse {
+  0% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.5; transform: scale(1.2); }
+  100% { opacity: 1; transform: scale(1); }
+}
+
+/* Professional Chart Bars */
+.chart-bars .bar {
+  border-radius: 4px 4px 0 0;
+  transition: all 0.3s ease;
+  background: var(--primary-gradient) !important;
+}
+
+.chart-bars .bar:hover {
+  transform: scaleY(1.1);
+}
+
+/* Floating Medical Icons */
+.floating-medical-icons {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+}
+
+.floating-icon {
+  position: absolute;
+  width: 40px;
+  height: 40px;
+  background: rgba(37, 99, 235, 0.1);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #2563eb;
+  animation: float 6s ease-in-out infinite;
+}
+
+.floating-icon.icon-1 {
+  top: 20%;
+  right: 10%;
+  animation-delay: 0s;
+}
+
+.floating-icon.icon-2 {
+  top: 60%;
+  right: 20%;
+  animation-delay: 2s;
+}
+
+.floating-icon.icon-3 {
+  top: 40%;
+  left: 5%;
+  animation-delay: 4s;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0px) rotate(0deg); }
+  33% { transform: translateY(-10px) rotate(5deg); }
+  66% { transform: translateY(5px) rotate(-3deg); }
+}
+
+/* Professional Feature Highlights */
+.feature-highlight {
+  transition: all 0.2s ease;
+}
+
+.feature-highlight:hover {
+  transform: translateY(-2px);
+}
+
+.feature-icon-small {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+}
+
+.feature-icon-small:hover {
+  transform: scale(1.1);
+}
+
+/* Professional Animations */
+.fade-in-up {
+  animation: fadeInUp 0.8s ease-out forwards;
+  opacity: 0;
+  transform: translateY(30px);
+}
+
+@keyframes fadeInUp {
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Professional Responsive Design */
+@media (max-width: 768px) {
+  .premium-title {
+    font-size: 2.5rem;
+  }
+  
+  .premium-subtitle {
+    font-size: 1.1rem;
+  }
+  
+  .stat-number {
+    font-size: 2rem;
+  }
+  
+  .btn-medical {
+    padding: 0.875rem 1.5rem;
+    font-size: 0.95rem;
+  }
+}
+
+/* Professional Dark Mode Support */
+@media (prefers-color-scheme: dark) {
+  :root {
+    --text-primary: #f1f5f9;
+    --text-secondary: #94a3b8;
+    --enterprise-bg: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+  }
+  
+  .dashboard-preview {
+    background: rgba(30, 41, 59, 0.95);
+    border-color: rgba(148, 163, 184, 0.2);
+  }
+  
+  .trust-badge {
+    background: rgba(30, 41, 59, 0.9);
+    border-color: rgba(148, 163, 184, 0.2);
+    color: #f1f5f9;
+  }
+}
+
+/* Professional Loading States */
+.loading-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+/* Professional Focus States */
+.btn-medical:focus,
+.btn-outline-primary:focus {
+  outline: none;
+  box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.2);
+}
+
+/* Professional Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .floating-icon,
+  .mini-pulse,
+  .fade-in-up {
+    animation: none;
+  }
+  
+  .btn-medical:hover,
+  .mini-card:hover,
+  .feature-highlight:hover {
+    transform: none;
+  }
+}

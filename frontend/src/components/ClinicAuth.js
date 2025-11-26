@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "../api/config";
+import "../styles/theme-system.css";
 
 function ClinicAuth({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);

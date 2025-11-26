@@ -19,6 +19,9 @@
     "start": "react-scripts start",
     "build": "react-scripts build",
     "test": "react-scripts test",
+    "test:performance": "react-scripts test --testPathPattern=performance.test.js --watchAll=false",
+    "test:performance:watch": "react-scripts test --testPathPattern=performance.test.js",
+    "benchmark": "node ../performance-benchmark.js",
     "eject": "react-scripts eject"
   },
   "eslintConfig": {

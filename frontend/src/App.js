@@ -1,11 +1,22 @@
-import React, { useState, useEffect, useCallback } from "react";
-import './styles/safe-minimal.css';
+import React, { useState, useEffect, useCallback, Suspense } from "react";
+import 'bootstrap/dist/css/bootstrap.min.css';
+import './styles/professional-design-system.css';
+import './styles/enhanced-navigation.css';
+import './styles/modern-cards.css';
+import './styles/medical-theme-clean.css';
+import './styles/enhanced-layout-fix.css';
+import './styles/low-end-optimized.css';
+import './styles/theme-system.css';
+import PerformanceMonitor from './components/PerformanceMonitor';
+import OptimizedLoader from './components/OptimizedLoader';
+import ThemeToggle from './components/ThemeToggle';
 
 // Import auth components
 import Auth from "./components/Auth";
 import AdminAuth from "./components/AdminAuth";
 import ClinicAuth from "./components/ClinicAuth";
 import AIAssistant from "./components/AIAssistant";
+import MedicalHero from "./components/MedicalHero";
 
 // Lazy load dashboard components
 const DoctorList = React.lazy(() =>
@@ -103,7 +114,11 @@ function App() {
   const [receptionist, setReceptionist] = useState(null);
   const [loginType, setLoginType] = useState("patient");
   const [notifications, setNotifications] = useState([]);
-  const [darkMode, setDarkMode] = useState(false);
+  const [darkMode, setDarkMode] = useState(() => {
+    // Initialize from localStorage to prevent flash
+    const saved = localStorage.getItem('darkMode');
+    return saved === 'true';
+  });
   const [activeSection, setActiveSection] = useState("home");
 
   useEffect(() => {
@@ -150,9 +165,6 @@ function App() {
   };
 
   useEffect(() => {
-    const savedDarkMode = localStorage.getItem('darkMode');
-    setDarkMode(savedDarkMode === 'true');
-
     if (user || admin || receptionist) {
       setCurrentView("dashboard");
     }
@@ -214,54 +226,151 @@ function App() {
     addNotification('Logged out successfully', 'info');
   };
 
+  // Smooth scroll to section
+  const scrollToSection = (sectionId) => {
+    const element = document.getElementById(sectionId);
+    if (element) {
+      const navbarHeight = 80;
+      const elementPosition = element.getBoundingClientRect().top + window.pageYOffset;
+      const offsetPosition = elementPosition - navbarHeight;
+      
+      window.scrollTo({
+        top: offsetPosition,
+        behavior: 'smooth'
+      });
+      
+      setActiveSection(sectionId);
+      
+      // Close mobile menu after clicking
+      const navbarCollapse = document.getElementById('navbarNav');
+      if (navbarCollapse && navbarCollapse.classList.contains('show')) {
+        const bsCollapse = new window.bootstrap.Collapse(navbarCollapse, {
+          toggle: false
+        });
+        bsCollapse.hide();
+      }
+    }
+  };
+
   // Medical Landing Page Component
   const MedicalLandingPage = () => (
     <div className={`min-vh-100 ${darkMode ? 'dark-theme' : 'medical-bg'}`}>
-      {/* Medical Navigation */}
-      <nav className={`navbar navbar-expand-lg navbar-dark ${darkMode ? 'bg-dark' : 'medical-nav'} fixed-top`}>
+      {/* Beautiful Glassmorphism Navigation */}
+      <nav className="navbar navbar-expand-lg navbar-dark medical-nav fixed-top"
+        style={{
+          backdropFilter: 'blur(30px) saturate(180%)',
+          WebkitBackdropFilter: 'blur(30px) saturate(180%)',
+          backgroundColor: 'rgba(255, 255, 255, 0.15)',
+          borderBottom: '1px solid rgba(255, 255, 255, 0.2)',
+          transition: 'all 0.3s ease',
+          boxShadow: '0 8px 32px rgba(0, 0, 0, 0.1)'
+        }}>
         <div className="container">
-          <span className="navbar-brand mb-0 h1">
-            <i className="fas fa-heartbeat me-2"></i>
-            HealthSync Pro
+          <span className="navbar-brand mb-0 h1" 
+            style={{ cursor: 'pointer', transition: 'all 0.3s ease' }} 
+            onClick={() => scrollToSection('home')}
+            onMouseEnter={(e) => e.currentTarget.style.transform = 'scale(1.05)'}
+            onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
+            <i className="fas fa-heartbeat me-2" style={{ 
+              color: '#fbbf24',
+              animation: 'pulse 2s infinite',
+              filter: 'drop-shadow(0 2px 8px rgba(251, 191, 36, 0.5))'
+            }}></i>
+            <span style={{ 
+              fontWeight: '700', 
+              letterSpacing: '-0.02em',
+              color: '#ffffff',
+              fontSize: '1.4rem',
+              textShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
+            }}>HealthSync</span>
           </span>
 
-          <button className="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNav">
+          <button 
+            className="navbar-toggler" 
+            type="button" 
+            data-bs-toggle="collapse" 
+            data-bs-target="#navbarNav"
+            aria-controls="navbarNav"
+            aria-expanded="false"
+            aria-label="Toggle navigation"
+            style={{
+              border: '2px solid rgba(255, 255, 255, 0.5)',
+              borderRadius: '8px',
+              padding: '0.5rem 0.75rem'
+            }}>
             <span className="navbar-toggler-icon"></span>
           </button>
 
           <div className="collapse navbar-collapse" id="navbarNav">
-            <ul className="navbar-nav me-auto">
-              <li className="nav-item">
-                <a className={`nav-link ${activeSection === 'home' ? 'active' : ''}`}
-                  href="#home" onClick={() => setActiveSection('home')}>Home</a>
-              </li>
-              <li className="nav-item">
-                <a className={`nav-link ${activeSection === 'features' ? 'active' : ''}`}
-                  href="#features" onClick={() => setActiveSection('features')}>Features</a>
-              </li>
-              <li className="nav-item">
-                <a className={`nav-link ${activeSection === 'about' ? 'active' : ''}`}
-                  href="#about" onClick={() => setActiveSection('about')}>About Us</a>
-              </li>
-              <li className="nav-item">
-                <a className={`nav-link ${activeSection === 'contact' ? 'active' : ''}`}
-                  href="#contact" onClick={() => setActiveSection('contact')}>Contact</a>
-              </li>
+            <ul className="navbar-nav me-auto ms-lg-4">
+              {['home', 'features', 'about', 'contact'].map((section) => (
+                <li className="nav-item" key={section}>
+                  <a className={`nav-link ${activeSection === section ? 'active' : ''}`}
+                    href={`#${section}`} 
+                    onClick={(e) => { 
+                      e.preventDefault(); 
+                      scrollToSection(section);
+                    }}
+                    style={{ 
+                      transition: 'all 0.3s cubic-bezier(0.4, 0, 0.2, 1)',
+                      color: 'rgba(255, 255, 255, 0.9)',
+                      background: activeSection === section ? 'rgba(255, 255, 255, 0.25)' : 'transparent',
+                      borderRadius: '12px',
+                      padding: '10px 20px',
+                      fontSize: '1rem',
+                      fontWeight: activeSection === section ? '600' : '500',
+                      boxShadow: activeSection === section ? '0 4px 20px rgba(255, 255, 255, 0.3)' : 'none',
+                      position: 'relative',
+                      cursor: 'pointer'
+                    }}
+                    onMouseEnter={(e) => {
+                      if (activeSection !== section) {
+                        e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                        e.target.style.transform = 'translateY(-2px)';
+                        e.target.style.boxShadow = '0 4px 15px rgba(255, 255, 255, 0.2)';
+                      }
+                    }}
+                    onMouseLeave={(e) => {
+                      if (activeSection !== section) {
+                        e.target.style.background = 'transparent';
+                        e.target.style.transform = 'translateY(0)';
+                        e.target.style.boxShadow = 'none';
+                      }
+                    }}>
+                    {section.charAt(0).toUpperCase() + section.slice(1)}
+                  </a>
+                </li>
+              ))}
             </ul>
 
-            <div className="navbar-nav d-flex flex-row gap-2">
+            <div className="navbar-nav d-flex flex-column flex-lg-row gap-2 align-items-stretch align-items-lg-center mt-3 mt-lg-0">
               <button
-                className="btn btn-outline-light btn-sm"
-                onClick={toggleDarkMode}
-                title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
-              >
-                <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
-              </button>
-              <button
-                className="btn btn-primary btn-sm ms-2"
+                className="btn px-4 py-2"
                 onClick={() => setCurrentView("auth")}
+                style={{
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)',
+                  color: '#667eea',
+                  border: 'none',
+                  fontWeight: '700',
+                  fontSize: '1rem',
+                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
+                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
+                  position: 'relative',
+                  overflow: 'hidden'
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'linear-gradient(135deg, #ffffff 0%, #ffffff 100%)';
+                  e.target.style.transform = 'translateY(-4px) scale(1.02)';
+                  e.target.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.3)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)';
+                  e.target.style.transform = 'translateY(0) scale(1)';
+                  e.target.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.2)';
+                }}
               >
-                Get Started
+                Get Started →
               </button>
             </div>
           </div>
@@ -309,13 +418,34 @@ function App() {
 
                 <div className="hero-actions fade-in-up" style={{ animationDelay: '0.6s' }}>
                   <button
-                    className="btn btn-medical btn-lg me-3 mb-2"
+                    className="btn btn-medical btn-xl px-5 py-3 me-3 mb-2"
                     onClick={() => setCurrentView("auth")}
+                    style={{
+                      fontSize: '1.25rem',
+                      fontWeight: '600',
+                      boxShadow: '0 8px 30px rgba(59, 130, 246, 0.3)',
+                      transform: 'scale(1)',
+                      transition: 'all 0.3s ease'
+                    }}
+                    onMouseEnter={(e) => {
+                      e.target.style.transform = 'scale(1.05) translateY(-2px)';
+                      e.target.style.boxShadow = '0 12px 40px rgba(59, 130, 246, 0.4)';
+                    }}
+                    onMouseLeave={(e) => {
+                      e.target.style.transform = 'scale(1)';
+                      e.target.style.boxShadow = '0 8px 30px rgba(59, 130, 246, 0.3)';
+                    }}
                   >
                     <i className="fas fa-rocket me-2"></i>
-                    Start Free Trial
+                    Get Started
                   </button>
-                  <button className="btn btn-outline-primary btn-lg mb-2">
+                  <button 
+                    className="btn btn-outline-primary btn-lg mb-2"
+                    onClick={() => {
+                      addNotification('Demo video coming soon!', 'info');
+                      window.scrollTo({ top: document.getElementById('features')?.offsetTop || 0, behavior: 'smooth' });
+                    }}
+                  >
                     <i className="fas fa-play me-2"></i>
                     Watch Demo
                   </button>
@@ -459,99 +589,117 @@ function App() {
         </div>
       </section>
 
-      {/* Login Panels Section */}
-      <section className="login-panels-section py-5 bg-light">
+      {/* Patient Portal Section - Main Focus */}
+      <section className="patient-portal-section py-5">
         <div className="container">
-          <div className="text-center mb-5">
-            <h2 className="fw-bold">Choose Your Access Portal</h2>
-            <p className="lead text-muted">Select the appropriate login based on your role</p>
-          </div>
-
-          <div className="row g-4">
-            {/* Patient Portal */}
-            <div className="col-lg-4 col-md-6">
-              <div className="login-panel-card medical-card h-100 text-center p-4">
-                <div className="panel-icon mb-3">
-                  <i className="fas fa-user-injured fa-3x text-primary"></i>
+          <div className="row align-items-center">
+            {/* Main Patient Portal Card - Large & Prominent */}
+            <div className="col-lg-8 mx-auto">
+              <div className="patient-portal-main medical-card text-center p-5 shadow-lg">
+                <div className="portal-icon mb-4">
+                  <i className="fas fa-user-injured fa-4x text-primary"></i>
                 </div>
-                <h4 className="fw-bold mb-3">Patient Portal</h4>
-                <p className="text-muted mb-4">
-                  Book appointments, manage your health records, and connect with healthcare providers.
+                <h2 className="fw-bold mb-3" style={{color: '#1e293b'}}>Welcome to Patient Portal</h2>
+                <p className="lead text-muted mb-4">
+                  Your complete healthcare management solution. Book appointments, access medical records, and connect with healthcare providers.
                 </p>
-                <ul className="list-unstyled text-start mb-4">
-                  <li><i className="fas fa-check text-success me-2"></i>Schedule appointments</li>
-                  <li><i className="fas fa-check text-success me-2"></i>View medical history</li>
-                  <li><i className="fas fa-check text-success me-2"></i>AI health assistant</li>
-                  <li><i className="fas fa-check text-success me-2"></i>Secure messaging</li>
-                </ul>
-                <div className="d-grid gap-2">
+                
+                <div className="row g-3 mb-4">
+                  <div className="col-md-6">
+                    <div className="feature-item p-3 rounded" style={{background: 'rgba(59, 130, 246, 0.05)'}}>
+                      <i className="fas fa-calendar-check text-primary fa-2x mb-2"></i>
+                      <h6 className="fw-bold mb-1" style={{color: '#1e293b'}}>Easy Scheduling</h6>
+                      <small className="text-muted">Book appointments 24/7</small>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="feature-item p-3 rounded" style={{background: 'rgba(16, 185, 129, 0.05)'}}>
+                      <i className="fas fa-file-medical text-success fa-2x mb-2"></i>
+                      <h6 className="fw-bold mb-1" style={{color: '#1e293b'}}>Medical Records</h6>
+                      <small className="text-muted">Access your health history</small>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="feature-item p-3 rounded" style={{background: 'rgba(168, 85, 247, 0.05)'}}>
+                      <i className="fas fa-robot text-secondary fa-2x mb-2"></i>
+                      <h6 className="fw-bold mb-1" style={{color: '#1e293b'}}>AI Assistant</h6>
+                      <small className="text-muted">24/7 health guidance</small>
+                    </div>
+                  </div>
+                  <div className="col-md-6">
+                    <div className="feature-item p-3 rounded" style={{background: 'rgba(245, 158, 11, 0.05)'}}>
+                      <i className="fas fa-comments text-warning fa-2x mb-2"></i>
+                      <h6 className="fw-bold mb-1" style={{color: '#1e293b'}}>Secure Messaging</h6>
+                      <small className="text-muted">Chat with your doctor</small>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="d-grid gap-3">
                   <button
-                    className="btn btn-primary"
+                    className="btn btn-primary btn-lg py-3"
+                    style={{
+                      fontSize: '1.25rem',
+                      fontWeight: '700',
+                      borderRadius: '15px',
+                      boxShadow: '0 8px 24px rgba(59, 130, 246, 0.3)'
+                    }}
                     onClick={() => {
                       setLoginType("patient");
                       setCurrentView("auth");
                     }}
                   >
-                    Sign In / Sign Up
+                    <i className="fas fa-sign-in-alt me-2"></i>
+                    Sign In / Create Account
                   </button>
+                  <p className="text-muted mb-0 small">
+                    <i className="fas fa-shield-alt me-1"></i>
+                    HIPAA Compliant • Secure • Private
+                  </p>
                 </div>
               </div>
-            </div>
 
-            {/* Admin Portal */}
-            <div className="col-lg-4 col-md-6">
-              <div className="login-panel-card medical-card h-100 text-center p-4">
-                <div className="panel-icon mb-3">
-                  <i className="fas fa-user-shield fa-3x text-success"></i>
-                </div>
-                <h4 className="fw-bold mb-3">Administrator</h4>
-                <p className="text-muted mb-4">
-                  Comprehensive system management and healthcare operations oversight.
+              {/* Small Staff Access Links */}
+              <div className="staff-access-links mt-4 text-center">
+                <p className="text-white mb-2 small">
+                  <i className="fas fa-user-lock me-1"></i>
+                  Staff Access:
                 </p>
-                <ul className="list-unstyled text-start mb-4">
-                  <li><i className="fas fa-check text-success me-2"></i>User management</li>
-                  <li><i className="fas fa-check text-success me-2"></i>System analytics</li>
-                  <li><i className="fas fa-check text-success me-2"></i>Security controls</li>
-                  <li><i className="fas fa-check text-success me-2"></i>Compliance monitoring</li>
-                </ul>
-                <div className="d-grid gap-2">
+                <div className="d-flex justify-content-center gap-3">
                   <button
-                    className="btn btn-success"
+                    className="btn btn-sm btn-outline-light"
+                    style={{
+                      borderRadius: '8px',
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.875rem',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.3)'
+                    }}
                     onClick={() => {
                       setLoginType("admin");
                       setCurrentView("auth");
                     }}
                   >
+                    <i className="fas fa-user-shield me-1"></i>
                     Admin Login
                   </button>
-                </div>
-              </div>
-            </div>
-
-            {/* Receptionist Portal */}
-            <div className="col-lg-4 col-md-6 mx-auto">
-              <div className="login-panel-card medical-card h-100 text-center p-4">
-                <div className="panel-icon mb-3">
-                  <i className="fas fa-clinic-medical fa-3x text-info"></i>
-                </div>
-                <h4 className="fw-bold mb-3">Receptionist</h4>
-                <p className="text-muted mb-4">
-                  Efficient patient coordination and clinic management tools.
-                </p>
-                <ul className="list-unstyled text-start mb-4">
-                  <li><i className="fas fa-check text-success me-2"></i>Patient check-in</li>
-                  <li><i className="fas fa-check text-success me-2"></i>Appointment scheduling</li>
-                  <li><i className="fas fa-check text-success me-2"></i>Insurance verification</li>
-                  <li><i className="fas fa-check text-success me-2"></i>Payment processing</li>
-                </ul>
-                <div className="d-grid gap-2">
                   <button
-                    className="btn btn-info"
+                    className="btn btn-sm btn-outline-light"
+                    style={{
+                      borderRadius: '8px',
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.875rem',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.3)'
+                    }}
                     onClick={() => {
                       setLoginType("receptionist");
                       setCurrentView("auth");
                     }}
                   >
+                    <i className="fas fa-clinic-medical me-1"></i>
                     Staff Login
                   </button>
                 </div>
@@ -1097,22 +1245,92 @@ function App() {
             </div>
           </div>
 
-          <div className="footer-bottom">
+          <div className="footer-bottom" style={{ 
+            borderTop: '1px solid rgba(255, 255, 255, 0.1)', 
+            paddingTop: '2rem',
+            marginTop: '3rem'
+          }}>
             <div className="row align-items-center">
               <div className="col-md-6">
-                <p>© 2024 HealthSync Pro. All rights reserved.</p>
+                <div className="d-flex align-items-center mb-2">
+                  <div className="me-3" style={{
+                    width: '32px',
+                    height: '32px',
+                    background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)',
+                    borderRadius: '8px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fas fa-heartbeat" style={{ color: 'white', fontSize: '14px' }}></i>
+                  </div>
+                  <span style={{ fontWeight: '600', fontSize: '1.1rem' }}>HealthSync Pro</span>
+                </div>
+                <p className="mb-1">© 2024 HealthSync Pro, Inc. All rights reserved.</p>
+                <small className="text-muted">
+                  Transforming healthcare through intelligent technology solutions.
+                </small>
               </div>
               <div className="col-md-6 text-md-end">
-                <div className="social-links">
-                  <a href="#"><i className="fab fa-linkedin"></i></a>
-                  <a href="#"><i className="fab fa-twitter"></i></a>
-                  <a href="#"><i className="fab fa-facebook"></i></a>
-                  <a href="#"><i className="fab fa-youtube"></i></a>
+                <div className="social-links mb-3">
+                  <a href="#" className="me-3" style={{ 
+                    color: 'rgba(255, 255, 255, 0.8)', 
+                    fontSize: '1.2rem',
+                    transition: 'color 0.2s ease'
+                  }}>
+                    <i className="fab fa-linkedin"></i>
+                  </a>
+                  <a href="#" className="me-3" style={{ 
+                    color: 'rgba(255, 255, 255, 0.8)', 
+                    fontSize: '1.2rem',
+                    transition: 'color 0.2s ease'
+                  }}>
+                    <i className="fab fa-twitter"></i>
+                  </a>
+                  <a href="#" className="me-3" style={{ 
+                    color: 'rgba(255, 255, 255, 0.8)', 
+                    fontSize: '1.2rem',
+                    transition: 'color 0.2s ease'
+                  }}>
+                    <i className="fab fa-github"></i>
+                  </a>
+                  <a href="#" style={{ 
+                    color: 'rgba(255, 255, 255, 0.8)', 
+                    fontSize: '1.2rem',
+                    transition: 'color 0.2s ease'
+                  }}>
+                    <i className="fab fa-youtube"></i>
+                  </a>
                 </div>
-                <small>
-                  <i className="fas fa-shield-alt me-1"></i>HIPAA Compliant •
-                  <i className="fas fa-lock ms-2 me-1"></i>SSL Secured
-                </small>
+                <div className="compliance-badges">
+                  <span className="badge me-2" style={{ 
+                    background: 'rgba(16, 185, 129, 0.2)', 
+                    color: '#10b981',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '6px',
+                    fontWeight: '500'
+                  }}>
+                    <i className="fas fa-shield-alt me-1"></i>HIPAA Compliant
+                  </span>
+                  <span className="badge me-2" style={{ 
+                    background: 'rgba(59, 130, 246, 0.2)', 
+                    color: '#3b82f6',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '6px',
+                    fontWeight: '500'
+                  }}>
+                    <i className="fas fa-certificate me-1"></i>ISO 27001
+                  </span>
+                  <span className="badge" style={{ 
+                    background: 'rgba(245, 158, 11, 0.2)', 
+                    color: '#f59e0b',
+                    padding: '0.5rem 0.75rem',
+                    borderRadius: '6px',
+                    fontWeight: '500'
+                  }}>
+                    <i className="fas fa-lock me-1"></i>SOC 2 Type II
+                  </span>
+                </div>
               </div>
             </div>
           </div>
@@ -1123,6 +1341,12 @@ function App() {
 
   return (
     <div>
+      {/* Theme Toggle */}
+      <ThemeToggle />
+      
+      {/* Performance Monitor */}
+      <PerformanceMonitor />
+      
       {/* Notifications */}
       <div className="notification-container position-fixed top-0 end-0 p-3" style={{ zIndex: 1050 }}>
         {notifications.map(notification => (
