@@ -14,6 +14,7 @@ import './styles/auth-visibility-fix.css'; // Ensures all text is visible
 import './styles/professional-navbar.css'; // Professional sticky navbar - MUST BE AFTER OTHER NAVBAR STYLES
 import './styles/mobile-responsive-complete.css'; // COMPLETE MOBILE RESPONSIVE - MUST BE NEAR END
 import './styles/mobile-fix-urgent.css'; // URGENT MOBILE FIX - OVERRIDES ALL MOBILE ISSUES
+import './styles/mobile-app-style.css'; // MOBILE APP STYLE - Clean & Simple like ChatGPT
 import './styles/growth-features-visibility.css'; // MUST BE LAST - Ensures new features are visible
 import PerformanceMonitor from './components/PerformanceMonitor';
 import OptimizedLoader from './components/OptimizedLoader';
