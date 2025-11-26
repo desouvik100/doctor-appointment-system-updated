@@ -1,584 +1,575 @@
-import React, { useState, useEffect } from "react";
-import axios from "../api/config";
+import React, { useState, useEffect, useMemo, useRef } from 'react';
+import UserAvatar from './UserAvatar';
+import axios from '../api/config';
+import toast from 'react-hot-toast';
+import './PatientDashboard.css';
 
-function PatientDashboard({ user }) {
-  const [activeTab, setActiveTab] = useState("overview");
-  const [appointments, setAppointments] = useState([]);
+const PatientDashboard = ({ user, onLogout }) => {
+  const [currentUser, setCurrentUser] = useState(user);
+  const [activeTab, setActiveTab] = useState('overview');
+  
+  // Doctor list state
   const [doctors, setDoctors] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [stats, setStats] = useState({
-    totalAppointments: 0,
-    upcomingAppointments: 0,
-    completedAppointments: 0,
-    cancelledAppointments: 0
-  });
+  const [doctorSummary, setDoctorSummary] = useState(null);
+  const [appointments, setAppointments] = useState([]);
+  const [clinics, setClinics] = useState([]);
+  const [loading, setLoading] = useState(false);
+  const [searchLoading, setSearchLoading] = useState(false);
+  
+  // Filter state
+  const [searchTerm, setSearchTerm] = useState('');
+  const [selectedSpecialization, setSelectedSpecialization] = useState('');
+  const [selectedClinic, setSelectedClinic] = useState('');
+  
+  // Debounce ref
+  const searchTimeoutRef = useRef(null);
 
+  // Fetch data on mount
   useEffect(() => {
-    fetchPatientData();
+    fetchDoctors();
+    fetchDoctorSummary();
+    fetchAppointments();
+    fetchClinics();
   }, []);
 
-  const fetchPatientData = async () => {
+  const fetchDoctors = async () => {
     try {
-      const [appointmentsRes, doctorsRes] = await Promise.allSettled([
-        axios.get("/api/appointments/my"),
-        axios.get("/api/doctors")
-      ]);
-
-      const appointmentsData = appointmentsRes.status === 'fulfilled' ? appointmentsRes.value.data : [];
-      const doctorsData = doctorsRes.status === 'fulfilled' ? doctorsRes.value.data : [];
-
-      setAppointments(appointmentsData);
-      setDoctors(doctorsData);
-
-      // Calculate stats
-      const now = new Date();
-      const upcoming = appointmentsData.filter(apt => 
-        new Date(apt.date) >= now && apt.status !== 'cancelled'
-      );
-      const completed = appointmentsData.filter(apt => apt.status === 'completed');
-      const cancelled = appointmentsData.filter(apt => apt.status === 'cancelled');
-
-      setStats({
-        totalAppointments: appointmentsData.length,
-        upcomingAppointments: upcoming.length,
-        completedAppointments: completed.length,
-        cancelledAppointments: cancelled.length
-      });
+      setLoading(true);
+      const response = await axios.get('/api/doctors');
+      setDoctors(response.data);
     } catch (error) {
-      console.error("Error fetching patient data:", error);
+      console.error('Error fetching doctors:', error);
     } finally {
       setLoading(false);
     }
   };
 
-  const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'short',
-      month: 'short',
-      day: 'numeric',
-      year: 'numeric'
+  const fetchDoctorSummary = async () => {
+    try {
+      const response = await axios.get('/api/doctors/summary');
+      setDoctorSummary(response.data);
+    } catch (error) {
+      console.error('Error fetching doctor summary:', error);
+    }
+  };
+
+  const fetchAppointments = async () => {
+    try {
+      const response = await axios.get(`/api/appointments/user/${currentUser.id}`);
+      setAppointments(response.data);
+    } catch (error) {
+      console.error('Error fetching appointments:', error);
+    }
+  };
+
+  const fetchClinics = async () => {
+    try {
+      const response = await axios.get('/api/clinics');
+      setClinics(response.data);
+    } catch (error) {
+      console.error('Error fetching clinics:', error);
+    }
+  };
+
+  // Debounced search handler
+  const handleSearchChange = (value) => {
+    setSearchTerm(value);
+    setSearchLoading(true);
+    
+    if (searchTimeoutRef.current) {
+      clearTimeout(searchTimeoutRef.current);
+    }
+    
+    searchTimeoutRef.current = setTimeout(() => {
+      setSearchLoading(false);
+    }, 300);
+  };
+
+  // Memoized filtered doctors
+  const filteredDoctors = useMemo(() => {
+    return doctors.filter(doctor => {
+      const matchesSearch = !searchTerm || 
+        doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doctor.specialization.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        doctor.email.toLowerCase().includes(searchTerm.toLowerCase());
+      
+      const matchesSpecialization = !selectedSpecialization || 
+        doctor.specialization === selectedSpecialization;
+      
+      const matchesClinic = !selectedClinic || 
+        doctor.clinicId?._id === selectedClinic;
+      
+      return matchesSearch && matchesSpecialization && matchesClinic;
     });
+  }, [doctors, searchTerm, selectedSpecialization, selectedClinic]);
+
+  // Get next upcoming appointment
+  const nextAppointment = useMemo(() => {
+    const now = new Date();
+    const upcoming = appointments
+      .filter(apt => {
+        const aptDate = new Date(apt.date);
+        return aptDate >= now && (apt.status === 'pending' || apt.status === 'confirmed');
+      })
+      .sort((a, b) => new Date(a.date) - new Date(b.date));
+    
+    return upcoming[0] || null;
+  }, [appointments]);
+
+  // Get unique specializations
+  const specializations = useMemo(() => {
+    const specs = [...new Set(doctors.map(d => d.specialization))];
+    return specs.sort();
+  }, [doctors]);
+
+  // Reset filters
+  const resetFilters = () => {
+    setSearchTerm('');
+    setSelectedSpecialization('');
+    setSelectedClinic('');
+    toast.success('Filters cleared successfully');
   };
 
-  const formatTime = (timeString) => {
-    const [hours, minutes] = timeString.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const displayHour = hour % 12 || 12;
-    return `${displayHour}:${minutes} ${ampm}`;
+  // Scroll to doctors section
+  const scrollToDoctors = () => {
+    setActiveTab('doctors');
+    setTimeout(() => {
+      document.getElementById('doctors-section')?.scrollIntoView({ behavior: 'smooth' });
+    }, 100);
   };
 
-  const getStatusBadge = (status) => {
-    const statusClasses = {
-      pending: "bg-warning text-dark",
-      confirmed: "bg-success",
-      cancelled: "bg-danger",
-      completed: "bg-info"
-    };
+  // Handle profile photo upload
+  const handlePhotoUpload = async (photoData) => {
+    try {
+      const response = await axios.post('/api/profile/update-photo', {
+        userId: currentUser.id,
+        profilePhoto: photoData
+      });
 
-    return (
-      <span className={`badge ${statusClasses[status] || "bg-secondary"}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
-      </span>
-    );
+      if (response.data.success) {
+        const updatedUser = response.data.user;
+        setCurrentUser(updatedUser);
+        localStorage.setItem('user', JSON.stringify(updatedUser));
+        toast.success('Profile photo updated successfully!');
+      }
+    } catch (error) {
+      console.error('Photo upload error:', error);
+      toast.error('Failed to upload photo. Please try again.');
+    }
   };
-
-  if (loading) {
-    return (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="mt-2">Loading your dashboard...</p>
-      </div>
-    );
-  }
 
   return (
-    <div>
-      {/* Welcome Header */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="card bg-gradient-primary text-white">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
+    <div className="patient-dashboard">
+      {/* Enhanced Header with Next Appointment */}
+      <div className="dashboard-header">
+        <div className="container">
+          <div className="row align-items-center">
+            <div className="col-md-8">
+              <div className="d-flex align-items-center gap-3">
+                <UserAvatar 
+                  user={currentUser}
+                  size="large"
+                  editable={true}
+                  onUpload={handlePhotoUpload}
+                />
+                
                 <div className="flex-grow-1">
-                  <h4 className="mb-1">Welcome back, {user.name}!</h4>
-                  <p className="mb-0 opacity-75">
-                    <i className="fas fa-calendar me-1"></i>
-                    {new Date().toLocaleDateString('en-US', { 
-                      weekday: 'long', 
-                      year: 'numeric', 
-                      month: 'long', 
-                      day: 'numeric' 
-                    })}
+                  <h2 className="mb-1">Welcome back, {currentUser.name}!</h2>
+                  <p className="text-muted mb-0">
+                    <i className="fas fa-envelope me-2"></i>
+                    {currentUser.email}
                   </p>
-                </div>
-                <div className="text-end">
-                  <i className="fas fa-user-circle fa-3x opacity-75"></i>
+                  
+                  {/* Next Appointment Info */}
+                  {nextAppointment ? (
+                    <div className="next-appointment-badge mt-2">
+                      <i className="fas fa-calendar-check me-2"></i>
+                      <strong>Next:</strong> Dr. {nextAppointment.doctorId?.name} on{' '}
+                      {new Date(nextAppointment.date).toLocaleDateString('en-US', { 
+                        month: 'short', day: 'numeric' 
+                      })}, {nextAppointment.time}
+                      <button className="btn btn-sm btn-link ms-2" onClick={() => setActiveTab('appointments')}>
+                        Details
+                      </button>
+                    </div>
+                  ) : (
+                    <div className="no-appointment-badge mt-2">
+                      <i className="fas fa-info-circle me-2"></i>
+                      No upcoming appointments
+                      <button className="btn btn-sm btn-link ms-2" onClick={scrollToDoctors}>
+                        Book now
+                      </button>
+                    </div>
+                  )}
                 </div>
               </div>
+            </div>
+            
+            <div className="col-md-4 text-end">
+              <button className="btn btn-outline-danger" onClick={onLogout}>
+                <i className="fas fa-sign-out-alt me-2"></i>
+                Logout
+              </button>
             </div>
           </div>
         </div>
       </div>
 
-      {/* Stats Cards */}
-      <div className="row g-3 mb-4">
-        <div className="col-md-3 col-sm-6">
-          <div className="card bg-primary text-white h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h4 className="mb-0">{stats.totalAppointments}</h4>
-                  <p className="mb-0 small">Total Appointments</p>
-                </div>
-                <i className="fas fa-calendar-check fa-2x opacity-75"></i>
+      {/* Quick Actions - Enhanced Pills */}
+      <div className="container mt-4">
+        <div className="quick-actions-card">
+          <h5 className="mb-3">Quick Actions</h5>
+          <div className="quick-actions-pills">
+            <button 
+              className="action-pill"
+              onClick={() => setActiveTab('appointments')}
+              title="View your upcoming appointments"
+            >
+              <div className="pill-icon bg-primary">
+                <i className="fas fa-calendar-check"></i>
               </div>
-            </div>
+              <div className="pill-content">
+                <span className="pill-label">My Appointments</span>
+                <span className="pill-count">{appointments.length}</span>
+              </div>
+            </button>
+            
+            <button 
+              className="action-pill"
+              onClick={() => setActiveTab('ai-assistant')}
+              title="Get health advice from AI assistant"
+            >
+              <div className="pill-icon bg-success">
+                <i className="fas fa-robot"></i>
+              </div>
+              <div className="pill-content">
+                <span className="pill-label">AI Assistant</span>
+                <span className="pill-badge">New</span>
+              </div>
+            </button>
+            
+            <button 
+              className="action-pill"
+              onClick={() => setActiveTab('payments')}
+              title="View payment history and pending bills"
+            >
+              <div className="pill-icon bg-warning">
+                <i className="fas fa-credit-card"></i>
+              </div>
+              <div className="pill-content">
+                <span className="pill-label">Payments</span>
+                <span className="pill-status">Up to date</span>
+              </div>
+            </button>
           </div>
         </div>
-        
-        <div className="col-md-3 col-sm-6">
-          <div className="card bg-success text-white h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h4 className="mb-0">{stats.upcomingAppointments}</h4>
-                  <p className="mb-0 small">Upcoming</p>
-                </div>
-                <i className="fas fa-clock fa-2x opacity-75"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="col-md-3 col-sm-6">
-          <div className="card bg-info text-white h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h4 className="mb-0">{stats.completedAppointments}</h4>
-                  <p className="mb-0 small">Completed</p>
-                </div>
-                <i className="fas fa-check-circle fa-2x opacity-75"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-        
-        <div className="col-md-3 col-sm-6">
-          <div className="card bg-warning text-dark h-100">
-            <div className="card-body">
-              <div className="d-flex align-items-center">
-                <div className="flex-grow-1">
-                  <h4 className="mb-0">{doctors.length}</h4>
-                  <p className="mb-0 small">Available Doctors</p>
-                </div>
-                <i className="fas fa-user-md fa-2x opacity-75"></i>
-              </div>
-            </div>
-          </div>
-        </div>
-      </div>
 
-      {/* Navigation Tabs */}
-      <div className="card shadow-sm">
-        <div className="card-header">
-          <ul className="nav nav-tabs card-header-tabs">
+        {/* Tabs */}
+        <div className="dashboard-tabs mt-4">
+          <ul className="nav nav-tabs">
             <li className="nav-item">
-              <button
-                className={`nav-link ${activeTab === "overview" ? "active" : ""}`}
-                onClick={() => setActiveTab("overview")}
+              <button 
+                className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
+                onClick={() => setActiveTab('overview')}
               >
-                <i className="fas fa-tachometer-alt me-1"></i>
+                <i className="fas fa-home me-2"></i>
                 Overview
               </button>
             </li>
             <li className="nav-item">
-              <button
-                className={`nav-link ${activeTab === "appointments" ? "active" : ""}`}
-                onClick={() => setActiveTab("appointments")}
+              <button 
+                className={`nav-link ${activeTab === 'appointments' ? 'active' : ''}`}
+                onClick={() => setActiveTab('appointments')}
               >
-                <i className="fas fa-calendar-alt me-1"></i>
-                My Appointments
+                <i className="fas fa-calendar me-2"></i>
+                Appointments
               </button>
             </li>
             <li className="nav-item">
-              <button
-                className={`nav-link ${activeTab === "doctors" ? "active" : ""}`}
-                onClick={() => setActiveTab("doctors")}
+              <button 
+                className={`nav-link ${activeTab === 'doctors' ? 'active' : ''}`}
+                onClick={() => setActiveTab('doctors')}
               >
-                <i className="fas fa-user-md me-1"></i>
+                <i className="fas fa-user-md me-2"></i>
                 Find Doctors
               </button>
             </li>
             <li className="nav-item">
-              <button
-                className={`nav-link ${activeTab === "health" ? "active" : ""}`}
-                onClick={() => setActiveTab("health")}
+              <button 
+                className={`nav-link ${activeTab === 'profile' ? 'active' : ''}`}
+                onClick={() => setActiveTab('profile')}
               >
-                <i className="fas fa-heartbeat me-1"></i>
-                Health Records
-              </button>
-            </li>
-            <li className="nav-item">
-              <button
-                className={`nav-link ${activeTab === "profile" ? "active" : ""}`}
-                onClick={() => setActiveTab("profile")}
-              >
-                <i className="fas fa-user me-1"></i>
+                <i className="fas fa-user me-2"></i>
                 Profile
               </button>
             </li>
           </ul>
-        </div>
-        
-        <div className="card-body">
-          {activeTab === "overview" && (
-            <div>
-              <div className="row g-4">
-                {/* Quick Actions */}
-                <div className="col-md-6">
-                  <div className="card border-0 bg-light h-100">
-                    <div className="card-body">
-                      <h5 className="card-title">
-                        <i className="fas fa-bolt text-primary me-2"></i>
-                        Quick Actions
-                      </h5>
-                      <div className="d-grid gap-2">
-                        <button 
-                          className="btn btn-primary"
-                          onClick={() => setActiveTab("doctors")}
-                        >
-                          <i className="fas fa-plus me-1"></i>
-                          Book New Appointment
-                        </button>
-                        <button 
-                          className="btn btn-outline-primary"
-                          onClick={() => setActiveTab("appointments")}
-                        >
-                          <i className="fas fa-calendar me-1"></i>
-                          View My Appointments
-                        </button>
-                        <button className="btn btn-outline-info">
-                          <i className="fas fa-download me-1"></i>
-                          Download Health Report
-                        </button>
+
+          <div className="tab-content mt-4">
+            {activeTab === 'overview' && (
+              <div className="tab-pane-content">
+                <h4>Dashboard Overview</h4>
+                <p>Your health management at a glance</p>
+              </div>
+            )}
+            
+            {activeTab === 'appointments' && (
+              <div className="tab-pane-content">
+                <h4>My Appointments</h4>
+                <p>View and manage your appointments</p>
+              </div>
+            )}
+            
+            {activeTab === 'doctors' && (
+              <div className="tab-pane-content" id="doctors-section">
+                {/* Doctor Summary Stats */}
+                {doctorSummary && (
+                  <div className="doctor-stats-chips mb-4">
+                    <span className="stat-chip">
+                      <i className="fas fa-user-md me-1"></i>
+                      {doctorSummary.totalDoctors} doctors
+                    </span>
+                    <span className="stat-chip stat-chip-success">
+                      <i className="fas fa-check-circle me-1"></i>
+                      {doctorSummary.availableDoctors} available
+                    </span>
+                    <span className="stat-chip">
+                      <i className="fas fa-stethoscope me-1"></i>
+                      {doctorSummary.bySpecialization?.length || 0} specializations
+                    </span>
+                  </div>
+                )}
+
+                {/* Filters Card */}
+                <div className="filters-card mb-4">
+                  <div className="row g-3">
+                    <div className="col-md-4">
+                      <label className="form-label">
+                        <i className="fas fa-search me-2"></i>
+                        Search Doctors
+                      </label>
+                      <div className="search-input-wrapper">
+                        <input
+                          type="text"
+                          className="form-control"
+                          placeholder="Search by name, specialization, or email (e.g., 'Cardiologist')"
+                          value={searchTerm}
+                          onChange={(e) => handleSearchChange(e.target.value)}
+                        />
+                        {searchLoading && (
+                          <div className="search-spinner">
+                            <i className="fas fa-spinner fa-spin"></i>
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                </div>
-
-                {/* Recent Activity */}
-                <div className="col-md-6">
-                  <div className="card border-0 bg-light h-100">
-                    <div className="card-body">
-                      <h5 className="card-title">
-                        <i className="fas fa-history text-success me-2"></i>
-                        Recent Activity
-                      </h5>
-                      {appointments.slice(0, 3).map((appointment, index) => (
-                        <div key={index} className="d-flex align-items-center mb-2 p-2 bg-white rounded">
-                          <div className="flex-grow-1">
-                            <small className="fw-bold">Dr. {appointment.doctorId?.name}</small>
-                            <br />
-                            <small className="text-muted">
-                              {formatDate(appointment.date)} at {formatTime(appointment.time)}
-                            </small>
-                          </div>
-                          {getStatusBadge(appointment.status)}
-                        </div>
-                      ))}
-                      {appointments.length === 0 && (
-                        <p className="text-muted text-center py-3">
-                          <i className="fas fa-calendar-times fa-2x mb-2 d-block"></i>
-                          No appointments yet. Book your first appointment!
-                        </p>
-                      )}
+                    
+                    <div className="col-md-3">
+                      <label className="form-label">
+                        <i className="fas fa-stethoscope me-2"></i>
+                        Specialization
+                      </label>
+                      <select
+                        className="form-select"
+                        value={selectedSpecialization}
+                        onChange={(e) => setSelectedSpecialization(e.target.value)}
+                      >
+                        <option value="">All Specializations</option>
+                        {specializations.map(spec => (
+                          <option key={spec} value={spec}>{spec}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="col-md-3">
+                      <label className="form-label">
+                        <i className="fas fa-hospital me-2"></i>
+                        Clinic
+                      </label>
+                      <select
+                        className="form-select"
+                        value={selectedClinic}
+                        onChange={(e) => setSelectedClinic(e.target.value)}
+                      >
+                        <option value="">All Clinics</option>
+                        {clinics.map(clinic => (
+                          <option key={clinic._id} value={clinic._id}>{clinic.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    
+                    <div className="col-md-2 d-flex align-items-end">
+                      <button 
+                        className="btn btn-outline-secondary w-100"
+                        onClick={resetFilters}
+                        disabled={!searchTerm && !selectedSpecialization && !selectedClinic}
+                      >
+                        <i className="fas fa-redo me-2"></i>
+                        Reset
+                      </button>
                     </div>
                   </div>
-                </div>
-
-                {/* Health Tips */}
-                <div className="col-12">
-                  <div className="card border-0 bg-gradient-info text-white">
-                    <div className="card-body">
-                      <h5 className="card-title">
-                        <i className="fas fa-lightbulb me-2"></i>
-                        Daily Health Tip
-                      </h5>
-                      <p className="mb-0">
-                        "Stay hydrated! Drinking 8 glasses of water daily helps maintain optimal body function and supports your immune system."
-                      </p>
+                  
+                  {searchLoading && (
+                    <div className="filter-status mt-2">
+                      <i className="fas fa-spinner fa-spin me-2"></i>
+                      Updating results...
                     </div>
-                  </div>
+                  )}
                 </div>
-              </div>
-            </div>
-          )}
 
-          {activeTab === "appointments" && (
-            <div>
-              <div className="d-flex justify-content-between align-items-center mb-3">
-                <h5>My Appointments</h5>
-                <button 
-                  className="btn btn-primary"
-                  onClick={() => setActiveTab("doctors")}
-                >
-                  <i className="fas fa-plus me-1"></i>
-                  Book New Appointment
-                </button>
-              </div>
-              
-              {appointments.length === 0 ? (
-                <div className="text-center py-5">
-                  <i className="fas fa-calendar-times fa-4x text-muted mb-3"></i>
-                  <h5 className="text-muted">No appointments yet</h5>
-                  <p className="text-muted">Book your first appointment to get started</p>
-                  <button 
-                    className="btn btn-primary"
-                    onClick={() => setActiveTab("doctors")}
-                  >
-                    Find Doctors
-                  </button>
+                {/* Available Doctors Header with Count */}
+                <div className="d-flex justify-content-between align-items-center mb-3">
+                  <h4 className="mb-0">
+                    Available Doctors ({filteredDoctors.length})
+                  </h4>
+                  {(searchTerm || selectedSpecialization || selectedClinic) && (
+                    <span className="text-muted">
+                      <i className="fas fa-filter me-1"></i>
+                      Filters active
+                    </span>
+                  )}
                 </div>
-              ) : (
-                <div className="table-responsive">
-                  <table className="table table-hover">
-                    <thead>
-                      <tr>
-                        <th>Doctor</th>
-                        <th>Date & Time</th>
-                        <th>Clinic</th>
-                        <th>Reason</th>
-                        <th>Status</th>
-                        <th>Actions</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {appointments.map((appointment) => (
-                        <tr key={appointment._id}>
-                          <td>
-                            <div className="d-flex align-items-center">
-                              <div className="bg-primary rounded-circle p-2 me-2">
-                                <i className="fas fa-user-md text-white small"></i>
-                              </div>
-                              <div>
-                                <strong>Dr. {appointment.doctorId?.name}</strong>
-                                <br />
-                                <small className="text-muted">{appointment.doctorId?.specialization}</small>
-                              </div>
+
+                {/* Doctors List or Empty State */}
+                {loading ? (
+                  <div className="text-center py-5">
+                    <div className="spinner-border text-primary" role="status">
+                      <span className="visually-hidden">Loading...</span>
+                    </div>
+                    <p className="mt-3 text-muted">Loading doctors...</p>
+                  </div>
+                ) : filteredDoctors.length === 0 ? (
+                  <div className="empty-state-card">
+                    <div className="empty-state-icon">
+                      <i className="fas fa-user-md"></i>
+                    </div>
+                    <h4>No doctors match your search</h4>
+                    <p className="text-muted mb-4">
+                      We couldn't find any doctors matching your criteria.
+                      <br />
+                      Try adjusting your filters or search terms.
+                    </p>
+                    <div className="empty-state-suggestions">
+                      <p className="mb-2"><strong>Suggestions:</strong></p>
+                      <ul className="list-unstyled">
+                        <li><i className="fas fa-check-circle text-success me-2"></i>Clear your search filters</li>
+                        <li><i className="fas fa-check-circle text-success me-2"></i>Try a different specialization</li>
+                        <li><i className="fas fa-check-circle text-success me-2"></i>Select another clinic</li>
+                      </ul>
+                    </div>
+                    <button 
+                      className="btn btn-primary mt-3"
+                      onClick={resetFilters}
+                    >
+                      <i className="fas fa-redo me-2"></i>
+                      Clear All Filters
+                    </button>
+                  </div>
+                ) : (
+                  <div className="row g-3">
+                    {filteredDoctors.map(doctor => (
+                      <div key={doctor._id} className="col-md-6 col-lg-4">
+                        <div className="doctor-card">
+                          <div className="doctor-card-header">
+                            <div className="doctor-avatar">
+                              <i className="fas fa-user-md"></i>
                             </div>
-                          </td>
-                          <td>
-                            <strong>{formatDate(appointment.date)}</strong>
-                            <br />
-                            <small className="text-muted">{formatTime(appointment.time)}</small>
-                          </td>
-                          <td>{appointment.clinicId?.name || 'N/A'}</td>
-                          <td>
-                            <span className="text-truncate d-inline-block" style={{maxWidth: "150px"}}>
-                              {appointment.reason}
-                            </span>
-                          </td>
-                          <td>{getStatusBadge(appointment.status)}</td>
-                          <td>
-                            <div className="btn-group-sm">
-                              {appointment.status === "pending" && (
-                                <button className="btn btn-sm btn-outline-danger">
-                                  <i className="fas fa-times"></i>
-                                </button>
-                              )}
-                              <button className="btn btn-sm btn-outline-primary">
-                                <i className="fas fa-eye"></i>
-                              </button>
+                            <div className="doctor-info">
+                              <h5>{doctor.name}</h5>
+                              <p className="specialization">{doctor.specialization}</p>
                             </div>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === "doctors" && (
-            <div>
-              <h5 className="mb-3">Find & Book Doctors</h5>
-              <div className="row g-3">
-                {doctors.slice(0, 6).map((doctor) => (
-                  <div key={doctor._id} className="col-md-6 col-lg-4">
-                    <div className="card h-100">
-                      <div className="card-body">
-                        <div className="d-flex align-items-center mb-3">
-                          <div className="bg-primary rounded-circle p-2 me-3">
-                            <i className="fas fa-user-md text-white"></i>
+                            {doctor.availability === 'Available' && (
+                              <span className="availability-badge available">
+                                <i className="fas fa-circle"></i> Available
+                              </span>
+                            )}
                           </div>
-                          <div>
-                            <h6 className="mb-0">Dr. {doctor.name}</h6>
-                            <small className="text-muted">{doctor.specialization}</small>
+                          
+                          <div className="doctor-card-body">
+                            <div className="info-row">
+                              <i className="fas fa-hospital"></i>
+                              <span>{doctor.clinicId?.name || 'N/A'}</span>
+                            </div>
+                            <div className="info-row">
+                              <i className="fas fa-map-marker-alt"></i>
+                              <span>{doctor.clinicId?.city || 'N/A'}</span>
+                            </div>
+                            <div className="info-row">
+                              <i className="fas fa-graduation-cap"></i>
+                              <span>{doctor.qualification}</span>
+                            </div>
+                            <div className="info-row">
+                              <i className="fas fa-briefcase"></i>
+                              <span>{doctor.experience} years experience</span>
+                            </div>
+                            <div className="info-row">
+                              <i className="fas fa-rupee-sign"></i>
+                              <span className="fee">₹{doctor.consultationFee}</span>
+                            </div>
                           </div>
-                        </div>
-                        <p className="small text-muted mb-2">
-                          <i className="fas fa-clinic-medical me-1"></i>
-                          {doctor.clinicId?.name}
-                        </p>
-                        <p className="small text-muted mb-3">
-                          <i className="fas fa-rupee-sign me-1"></i>
-                          ₹{doctor.consultationFee} consultation fee
-                        </p>
-                        <div className="d-grid">
-                          <button className="btn btn-primary btn-sm">
-                            <i className="fas fa-calendar-plus me-1"></i>
-                            Book Appointment
-                          </button>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                ))}
-              </div>
-              {doctors.length === 0 && (
-                <div className="text-center py-5">
-                  <i className="fas fa-user-md fa-4x text-muted mb-3"></i>
-                  <h5 className="text-muted">No doctors available</h5>
-                  <p className="text-muted">Please check back later</p>
-                </div>
-              )}
-            </div>
-          )}
-
-          {activeTab === "health" && (
-            <div>
-              <h5 className="mb-3">Health Records</h5>
-              <div className="row g-3">
-                <div className="col-md-6">
-                  <div className="card">
-                    <div className="card-body text-center">
-                      <i className="fas fa-file-medical fa-3x text-primary mb-3"></i>
-                      <h6>Medical History</h6>
-                      <p className="text-muted small">View your complete medical history and reports</p>
-                      <button className="btn btn-outline-primary btn-sm">
-                        View Records
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="card">
-                    <div className="card-body text-center">
-                      <i className="fas fa-pills fa-3x text-success mb-3"></i>
-                      <h6>Prescriptions</h6>
-                      <p className="text-muted small">Track your current and past prescriptions</p>
-                      <button className="btn btn-outline-success btn-sm">
-                        View Prescriptions
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="card">
-                    <div className="card-body text-center">
-                      <i className="fas fa-vial fa-3x text-info mb-3"></i>
-                      <h6>Lab Reports</h6>
-                      <p className="text-muted small">Access your laboratory test results</p>
-                      <button className="btn btn-outline-info btn-sm">
-                        View Reports
-                      </button>
-                    </div>
-                  </div>
-                </div>
-                <div className="col-md-6">
-                  <div className="card">
-                    <div className="card-body text-center">
-                      <i className="fas fa-syringe fa-3x text-warning mb-3"></i>
-                      <h6>Vaccinations</h6>
-                      <p className="text-muted small">Keep track of your vaccination history</p>
-                      <button className="btn btn-outline-warning btn-sm">
-                        View Vaccines
-                      </button>
-                    </div>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {activeTab === "profile" && (
-            <div>
-              <h5 className="mb-3">Profile Settings</h5>
-              <div className="row g-4">
-                <div className="col-md-8">
-                  <div className="card">
-                    <div className="card-body">
-                      <h6 className="card-title">Personal Information</h6>
-                      <form>
-                        <div className="row g-3">
-                          <div className="col-md-6">
-                            <label className="form-label">Full Name</label>
-                            <input 
-                              type="text" 
-                              className="form-control" 
-                              value={user.name} 
-                              readOnly 
-                            />
-                          </div>
-                          <div className="col-md-6">
-                            <label className="form-label">Email</label>
-                            <input 
-                              type="email" 
-                              className="form-control" 
-                              value={user.email} 
-                              readOnly 
-                            />
-                          </div>
-                          <div className="col-md-6">
-                            <label className="form-label">Phone</label>
-                            <input 
-                              type="tel" 
-                              className="form-control" 
-                              value={user.phone || ''} 
-                              placeholder="Enter phone number"
-                            />
-                          </div>
-                          <div className="col-md-6">
-                            <label className="form-label">Date of Birth</label>
-                            <input 
-                              type="date" 
-                              className="form-control" 
-                            />
-                          </div>
-                          <div className="col-12">
-                            <button type="submit" className="btn btn-primary">
-                              Update Profile
+                          
+                          <div className="doctor-card-footer">
+                            <button className="btn btn-primary w-100">
+                              <i className="fas fa-calendar-plus me-2"></i>
+                              Book Appointment
                             </button>
                           </div>
                         </div>
-                      </form>
-                    </div>
+                      </div>
+                    ))}
                   </div>
-                </div>
-                <div className="col-md-4">
-                  <div className="card">
-                    <div className="card-body text-center">
-                      <i className="fas fa-user-circle fa-4x text-muted mb-3"></i>
-                      <h6>{user.name}</h6>
-                      <p className="text-muted small">{user.email}</p>
-                      <button className="btn btn-outline-primary btn-sm">
-                        Change Avatar
-                      </button>
+                )}
+              </div>
+            )}
+            
+            {activeTab === 'profile' && (
+              <div className="tab-pane-content">
+                <h4>My Profile</h4>
+                <div className="profile-section">
+                  <div className="row">
+                    <div className="col-md-4 text-center">
+                      <UserAvatar 
+                        user={currentUser}
+                        size="xlarge"
+                        editable={true}
+                        onUpload={handlePhotoUpload}
+                      />
+                      <p className="mt-3 text-muted">
+                        <small>Click camera icon to change photo</small>
+                      </p>
+                    </div>
+                    <div className="col-md-8">
+                      <div className="profile-info">
+                        <div className="info-item">
+                          <label>Name:</label>
+                          <span>{currentUser.name}</span>
+                        </div>
+                        <div className="info-item">
+                          <label>Email:</label>
+                          <span>{currentUser.email}</span>
+                        </div>
+                        {currentUser.phone && (
+                          <div className="info-item">
+                            <label>Phone:</label>
+                            <span>{currentUser.phone}</span>
+                          </div>
+                        )}
+                        <div className="info-item">
+                          <label>Role:</label>
+                          <span className="badge bg-primary">{currentUser.role}</span>
+                        </div>
+                      </div>
                     </div>
                   </div>
                 </div>
               </div>
-            </div>
-          )}
+            )}
+          </div>
         </div>
       </div>
     </div>
   );
-}
+};
 
 export default PatientDashboard;

@@ -1,0 +1,314 @@
+/* Auth Form Visibility Fix - Make all text clearly visible */
+
+/* Welcome Back / Create Account heading - Make it prominent */
+.medical-card h2,
+.medical-card .text-center h2,
+.card h2,
+.card .text-center h2 {
+  color: #1e293b !important;
+  font-weight: 800 !important;
+  font-size: 2rem !important;
+  text-shadow: none !important;
+  margin-bottom: 1.5rem !important;
+}
+
+/* Icon in heading */
+.medical-card h2 i,
+.card h2 i {
+  color: #667eea !important;
+  font-size: 1.8rem !important;
+}
+
+/* All headings in auth forms */
+.medical-card h1,
+.medical-card h3,
+.medical-card h4,
+.medical-card h5,
+.medical-card h6,
+.card h1,
+.card h3,
+.card h4,
+.card h5,
+.card h6 {
+  color: #1e293b !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+/* Section headings (Personal Information, etc.) */
+.medical-card h6,
+.card h6 {
+  color: #667eea !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+}
+
+/* Form labels - Make them clearly visible */
+.medical-card label,
+.medical-card .form-label,
+.card label,
+.card .form-label {
+  color: #334155 !important;
+  font-weight: 600 !important;
+  font-size: 0.95rem !important;
+  margin-bottom: 0.5rem !important;
+  text-shadow: none !important;
+}
+
+/* Required asterisk */
+.medical-card label::after,
+.medical-card .form-label::after,
+.card label::after,
+.card .form-label::after {
+  color: #ef4444 !important;
+}
+
+/* All paragraph text */
+.medical-card p,
+.card p {
+  color: #475569 !important;
+  font-weight: 500 !important;
+  text-shadow: none !important;
+}
+
+/* Small text and descriptions */
+.medical-card small,
+.card small {
+  color: #64748b !important;
+  font-weight: 500 !important;
+  text-shadow: none !important;
+}
+
+/* Links */
+.medical-card a,
+.card a {
+  color: #667eea !important;
+  font-weight: 600 !important;
+  text-decoration: none !important;
+  text-shadow: none !important;
+}
+
+.medical-card a:hover,
+.card a:hover {
+  color: #764ba2 !important;
+  text-decoration: underline !important;
+}
+
+/* Button text */
+.medical-card .btn,
+.card .btn {
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+/* Form inputs */
+.medical-card .form-control,
+.medical-card input,
+.medical-card textarea,
+.medical-card select,
+.card .form-control,
+.card input,
+.card textarea,
+.card select {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  background: #ffffff !important;
+  border: 2px solid #e2e8f0 !important;
+  text-shadow: none !important;
+}
+
+/* Placeholder text */
+.medical-card .form-control::placeholder,
+.medical-card input::placeholder,
+.medical-card textarea::placeholder,
+.card .form-control::placeholder,
+.card input::placeholder,
+.card textarea::placeholder {
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+  opacity: 1 !important;
+}
+
+/* Input focus state */
+.medical-card .form-control:focus,
+.medical-card input:focus,
+.medical-card textarea:focus,
+.medical-card select:focus,
+.card .form-control:focus,
+.card input:focus,
+.card textarea:focus,
+.card select:focus {
+  color: #1e293b !important;
+  background: #ffffff !important;
+  border-color: #667eea !important;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1) !important;
+}
+
+/* Checkbox and radio labels */
+.medical-card .form-check-label,
+.card .form-check-label {
+  color: #334155 !important;
+  font-weight: 500 !important;
+  text-shadow: none !important;
+}
+
+/* Alert messages */
+.medical-card .alert,
+.card .alert {
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+/* Error messages */
+.medical-card .text-danger,
+.card .text-danger {
+  color: #ef4444 !important;
+  font-weight: 600 !important;
+}
+
+/* Success messages */
+.medical-card .text-success,
+.card .text-success {
+  color: #10b981 !important;
+  font-weight: 600 !important;
+}
+
+/* Muted text - still readable */
+.medical-card .text-muted,
+.card .text-muted {
+  color: #64748b !important;
+  font-weight: 500 !important;
+  opacity: 1 !important;
+}
+
+/* Primary text color */
+.medical-card .text-primary,
+.card .text-primary {
+  color: #667eea !important;
+  font-weight: 600 !important;
+}
+
+/* Input group text (icons, etc.) */
+.medical-card .input-group-text,
+.card .input-group-text {
+  background: #f8fafc !important;
+  color: #475569 !important;
+  border: 2px solid #e2e8f0 !important;
+  font-weight: 700 !important;
+}
+
+/* Badge text */
+.medical-card .badge,
+.card .badge {
+  font-weight: 700 !important;
+}
+
+/* List items */
+.medical-card li,
+.card li {
+  color: #475569 !important;
+  font-weight: 500 !important;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .medical-card h2,
+[data-theme="dark"] .card h2 {
+  color: #f1f5f9 !important;
+}
+
+[data-theme="dark"] .medical-card label,
+[data-theme="dark"] .medical-card .form-label,
+[data-theme="dark"] .medical-card p,
+[data-theme="dark"] .card label,
+[data-theme="dark"] .card .form-label,
+[data-theme="dark"] .card p {
+  color: #cbd5e1 !important;
+}
+
+[data-theme="dark"] .medical-card .form-control,
+[data-theme="dark"] .medical-card input,
+[data-theme="dark"] .medical-card textarea,
+[data-theme="dark"] .medical-card select,
+[data-theme="dark"] .card .form-control,
+[data-theme="dark"] .card input,
+[data-theme="dark"] .card textarea,
+[data-theme="dark"] .card select {
+  background: rgba(15, 23, 42, 0.8) !important;
+  color: #f1f5f9 !important;
+  border-color: rgba(255, 255, 255, 0.2) !important;
+}
+
+[data-theme="dark"] .medical-card .form-control:focus,
+[data-theme="dark"] .medical-card input:focus,
+[data-theme="dark"] .card .form-control:focus,
+[data-theme="dark"] .card input:focus {
+  background: rgba(15, 23, 42, 0.9) !important;
+  color: #f1f5f9 !important;
+}
+
+/* ========================================
+   PATIENT PORTAL HEADER - ENSURE VISIBILITY
+   ======================================== */
+
+/* Card header text - always white on gradient */
+.medical-card .card-header,
+.card .card-header {
+  color: #ffffff !important;
+}
+
+.medical-card .card-header h1,
+.medical-card .card-header h2,
+.medical-card .card-header h3,
+.medical-card .card-header h4,
+.medical-card .card-header h5,
+.medical-card .card-header h6,
+.card .card-header h1,
+.card .card-header h2,
+.card .card-header h3,
+.card .card-header h4,
+.card .card-header h5,
+.card .card-header h6 {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.2) !important;
+}
+
+.medical-card .card-header p,
+.medical-card .card-header small,
+.medical-card .card-header span,
+.card .card-header p,
+.card .card-header small,
+.card .card-header span {
+  color: #ffffff !important;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.2) !important;
+}
+
+.medical-card .card-header i,
+.card .card-header i {
+  color: #ffffff !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2)) !important;
+}
+
+/* Medical icon in header */
+.medical-icon {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  border-radius: 50% !important;
+}
+
+.medical-icon i {
+  color: #ffffff !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) !important;
+}
+
+/* Card body - ensure white background */
+.medical-card .card-body,
+.card .card-body {
+  background: #ffffff !important;
+}
+
+[data-theme="dark"] .medical-card .card-body,
+[data-theme="dark"] .card .card-body {
+  background: rgba(30, 41, 59, 0.98) !important;
+}

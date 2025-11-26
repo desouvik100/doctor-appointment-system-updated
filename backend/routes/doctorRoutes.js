@@ -3,6 +3,39 @@ const Doctor = require('../models/Doctor');
 const Clinic = require('../models/Clinic');
 const router = express.Router();
 
+// Get doctors summary (statistics)
+router.get('/summary', async (req, res) => {
+  try {
+    const totalDoctors = await Doctor.countDocuments({ isActive: true });
+    const availableDoctors = await Doctor.countDocuments({ 
+      isActive: true, 
+      availability: 'Available' 
+    });
+    
+    // Get doctors grouped by specialization
+    const bySpecialization = await Doctor.aggregate([
+      { $match: { isActive: true } },
+      { $group: { 
+        _id: '$specialization', 
+        count: { $sum: 1 } 
+      }},
+      { $sort: { count: -1 } }
+    ]);
+    
+    res.json({
+      totalDoctors,
+      availableDoctors,
+      bySpecialization: bySpecialization.map(item => ({
+        specialization: item._id,
+        count: item.count
+      }))
+    });
+  } catch (error) {
+    console.error('Error fetching doctor summary:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Get all doctors
 router.get('/', async (req, res) => {
   try {

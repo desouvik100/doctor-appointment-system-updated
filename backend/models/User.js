@@ -28,6 +28,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    profilePhoto: {
+      type: String,
+      default: null // URL or base64 string for profile picture
+    },
     role: {
       type: String,
       enum: ["patient", "admin", "receptionist"],

@@ -1,8 +1,8 @@
 import React, { useState, useEffect, useMemo, useCallback, Suspense, lazy } from "react";
 import axios from "../api/config";
+import toast from 'react-hot-toast';
 import "../styles/low-end-optimized.css";
 import "../styles/theme-system.css";
-import { NavbarThemeToggle } from "./ThemeToggle";
 
 // Lazy load heavy components for performance
 const AdminChatbot = lazy(() => import("./AdminChatbot"));
@@ -212,23 +212,27 @@ function AdminDashboard() {
       setShowUserModal(false);
       resetUserForm();
       fetchDashboardData();
-      alert("User created successfully!");
+      toast.success("User created successfully!");
     } catch (error) {
-      alert(error.response?.data?.message || "Error creating user");
+      toast.error(error.response?.data?.message || "Error creating user");
     }
   };
 
   const handleUpdateUser = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/api/users/${editingUser._id}`, userForm);
+      console.log('Updating user:', editingUser._id, 'with data:', userForm);
+      const response = await axios.put(`/api/users/${editingUser._id}`, userForm);
+      console.log('Update response:', response.data);
       setShowUserModal(false);
       setEditingUser(null);
       resetUserForm();
       fetchDashboardData();
-      alert("User updated successfully!");
+      toast.success("User updated successfully!");
     } catch (error) {
-      alert(error.response?.data?.message || "Error updating user");
+      console.error('Update error:', error);
+      console.error('Error response:', error.response?.data);
+      toast.error(error.response?.data?.message || "Error updating user");
     }
   };
 
@@ -237,9 +241,9 @@ function AdminDashboard() {
       try {
         await axios.delete(`/api/users/${userId}`);
         fetchDashboardData();
-        alert("User deleted successfully!");
+        toast.success("User deleted successfully!");
       } catch (error) {
-        alert("Error deleting user");
+        toast.error("Error deleting user");
       }
     }
   };
@@ -252,23 +256,27 @@ function AdminDashboard() {
       setShowDoctorModal(false);
       resetDoctorForm();
       fetchDashboardData();
-      alert("Doctor created successfully!");
+      toast.success("Doctor created successfully!");
     } catch (error) {
-      alert(error.response?.data?.message || "Error creating doctor");
+      toast.error(error.response?.data?.message || "Error creating doctor");
     }
   };
 
   const handleUpdateDoctor = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/api/doctors/${editingDoctor._id}`, doctorForm);
+      console.log('Updating doctor:', editingDoctor._id, 'with data:', doctorForm);
+      const response = await axios.put(`/api/doctors/${editingDoctor._id}`, doctorForm);
+      console.log('Doctor update response:', response.data);
       setShowDoctorModal(false);
       setEditingDoctor(null);
       resetDoctorForm();
       fetchDashboardData();
-      alert("Doctor updated successfully!");
+      toast.success("Doctor updated successfully!");
     } catch (error) {
-      alert(error.response?.data?.message || "Error updating doctor");
+      console.error('Doctor update error:', error);
+      console.error('Error response:', error.response?.data);
+      toast.error(error.response?.data?.message || "Error updating doctor");
     }
   };
 
@@ -277,9 +285,9 @@ function AdminDashboard() {
       try {
         await axios.delete(`/api/doctors/${doctorId}`);
         fetchDashboardData();
-        alert("Doctor deleted successfully!");
+        toast.success("Doctor deleted successfully!");
       } catch (error) {
-        alert("Error deleting doctor");
+        toast.error("Error deleting doctor");
       }
     }
   };
@@ -292,23 +300,27 @@ function AdminDashboard() {
       setShowClinicModal(false);
       resetClinicForm();
       fetchDashboardData();
-      alert("Clinic created successfully!");
+      toast.success("Clinic created successfully!");
     } catch (error) {
-      alert(error.response?.data?.message || "Error creating clinic");
+      toast.error(error.response?.data?.message || "Error creating clinic");
     }
   };
 
   const handleUpdateClinic = async (e) => {
     e.preventDefault();
     try {
-      await axios.put(`/api/clinics/${editingClinic._id}`, clinicForm);
+      console.log('Updating clinic:', editingClinic._id, 'with data:', clinicForm);
+      const response = await axios.put(`/api/clinics/${editingClinic._id}`, clinicForm);
+      console.log('Clinic update response:', response.data);
       setShowClinicModal(false);
       setEditingClinic(null);
       resetClinicForm();
       fetchDashboardData();
-      alert("Clinic updated successfully!");
+      toast.success("Clinic updated successfully!");
     } catch (error) {
-      alert(error.response?.data?.message || "Error updating clinic");
+      console.error('Clinic update error:', error);
+      console.error('Error response:', error.response?.data);
+      toast.error(error.response?.data?.message || "Error updating clinic");
     }
   };
 
@@ -317,9 +329,9 @@ function AdminDashboard() {
       try {
         await axios.delete(`/api/clinics/${clinicId}`);
         fetchDashboardData();
-        alert("Clinic deleted successfully!");
+        toast.success("Clinic deleted successfully!");
       } catch (error) {
-        alert("Error deleting clinic");
+        toast.error("Error deleting clinic");
       }
     }
   };
@@ -430,9 +442,9 @@ function AdminDashboard() {
       setShowApprovalModal(false);
       setSelectedReceptionist(null);
       fetchDashboardData();
-      alert("Receptionist approved successfully!");
+      toast.success("Receptionist approved successfully!");
     } catch (error) {
-      alert(error.response?.data?.message || "Error approving receptionist");
+      toast.error(error.response?.data?.message || "Error approving receptionist");
     }
   };
 
@@ -443,9 +455,9 @@ function AdminDashboard() {
     try {
       await axios.put(`/api/receptionists/${receptionistId}/reject`);
       fetchDashboardData();
-      alert("Receptionist rejected successfully!");
+      toast.success("Receptionist rejected successfully!");
     } catch (error) {
-      alert(error.response?.data?.message || "Error rejecting receptionist");
+      toast.error(error.response?.data?.message || "Error rejecting receptionist");
     }
   };
 
@@ -512,9 +524,6 @@ function AdminDashboard() {
               <div className="status-indicator online"></div>
               <span className="status-text">System Online</span>
             </div>
-
-            {/* Theme Toggle */}
-            <NavbarThemeToggle />
 
             {/* Refresh Button */}
             <button
@@ -977,9 +986,9 @@ function AdminDashboard() {
 
         {/* Modals */}
         {showUserModal && (
-          <div className="modal show" style={{ display: 'block' }}>
-            <div className="modal-dialog">
-              <div className="modal-content">
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'auto' }}>
+            <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '600px', margin: '1.75rem auto' }}>
+              <div className="modal-content" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
                 <div className="modal-header">
                   <h5 className="modal-title">
                     {editingUser ? 'Edit User' : 'Add User'}
@@ -990,8 +999,8 @@ function AdminDashboard() {
                     onClick={() => setShowUserModal(false)}
                   ></button>
                 </div>
-                <form onSubmit={editingUser ? handleUpdateUser : handleCreateUser}>
-                  <div className="modal-body">
+                <form onSubmit={editingUser ? handleUpdateUser : handleCreateUser} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+                  <div className="modal-body" style={{ overflowY: 'auto', flex: 1 }}>
                     <div className="mb-3">
                       <label className="form-label">Name</label>
                       <input
@@ -1046,7 +1055,7 @@ function AdminDashboard() {
                       </div>
                     )}
                   </div>
-                  <div className="modal-footer">
+                  <div className="modal-footer" style={{ flexShrink: 0, borderTop: '2px solid #e2e8f0', background: '#f8fafc' }}>
                     <button type="button" className="btn btn-secondary" onClick={() => setShowUserModal(false)}>
                       Cancel
                     </button>
@@ -1060,9 +1069,245 @@ function AdminDashboard() {
           </div>
         )}
 
+        {/* Doctor Modal */}
+        {showDoctorModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)', overflow: 'auto' }}>
+            <div className="modal-dialog modal-dialog-centered" style={{ maxWidth: '600px', margin: '1.75rem auto' }}>
+              <div className="modal-content" style={{ maxHeight: '90vh', display: 'flex', flexDirection: 'column' }}>
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    {editingDoctor ? 'Edit Doctor' : 'Add Doctor'}
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowDoctorModal(false)}
+                  ></button>
+                </div>
+                <form onSubmit={editingDoctor ? handleUpdateDoctor : handleCreateDoctor} style={{ display: 'flex', flexDirection: 'column', flex: 1, minHeight: 0 }}>
+                  <div className="modal-body" style={{ overflowY: 'auto', flex: 1 }}>
+                    <div className="mb-3">
+                      <label className="form-label">Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={doctorForm.name}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, name: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Email</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={doctorForm.email}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, email: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Phone</label>
+                      <input
+                        type="tel"
+                        className="form-control"
+                        value={doctorForm.phone}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, phone: e.target.value })}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Specialization</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={doctorForm.specialization}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, specialization: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Clinic</label>
+                      <select
+                        className="form-control"
+                        value={doctorForm.clinicId}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, clinicId: e.target.value })}
+                        required
+                      >
+                        <option value="">Select Clinic</option>
+                        {clinics.map(clinic => (
+                          <option key={clinic._id} value={clinic._id}>{clinic.name}</option>
+                        ))}
+                      </select>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Consultation Fee (₹)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={doctorForm.consultationFee}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, consultationFee: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Experience (years)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={doctorForm.experience}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, experience: e.target.value })}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Qualification</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={doctorForm.qualification}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, qualification: e.target.value })}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Availability</label>
+                      <select
+                        className="form-control"
+                        value={doctorForm.availability}
+                        onChange={(e) => setDoctorForm({ ...doctorForm, availability: e.target.value })}
+                      >
+                        <option value="Available">Available</option>
+                        <option value="Busy">Busy</option>
+                        <option value="On Leave">On Leave</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="modal-footer" style={{ flexShrink: 0, borderTop: '2px solid #e2e8f0', background: '#f8fafc' }}>
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowDoctorModal(false)}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      {editingDoctor ? 'Update' : 'Create'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Clinic Modal */}
+        {showClinicModal && (
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
+              <div className="modal-content">
+                <div className="modal-header">
+                  <h5 className="modal-title">
+                    {editingClinic ? 'Edit Clinic' : 'Add Clinic'}
+                  </h5>
+                  <button
+                    type="button"
+                    className="btn-close"
+                    onClick={() => setShowClinicModal(false)}
+                  ></button>
+                </div>
+                <form onSubmit={editingClinic ? handleUpdateClinic : handleCreateClinic}>
+                  <div className="modal-body">
+                    <div className="mb-3">
+                      <label className="form-label">Name</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={clinicForm.name}
+                        onChange={(e) => setClinicForm({ ...clinicForm, name: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Type</label>
+                      <select
+                        className="form-control"
+                        value={clinicForm.type}
+                        onChange={(e) => setClinicForm({ ...clinicForm, type: e.target.value })}
+                      >
+                        <option value="clinic">Clinic</option>
+                        <option value="hospital">Hospital</option>
+                        <option value="diagnostic">Diagnostic Center</option>
+                      </select>
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Address</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={clinicForm.address}
+                        onChange={(e) => setClinicForm({ ...clinicForm, address: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">City</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={clinicForm.city}
+                        onChange={(e) => setClinicForm({ ...clinicForm, city: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">State</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={clinicForm.state}
+                        onChange={(e) => setClinicForm({ ...clinicForm, state: e.target.value })}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Pincode</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={clinicForm.pincode}
+                        onChange={(e) => setClinicForm({ ...clinicForm, pincode: e.target.value })}
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Phone</label>
+                      <input
+                        type="tel"
+                        className="form-control"
+                        value={clinicForm.phone}
+                        onChange={(e) => setClinicForm({ ...clinicForm, phone: e.target.value })}
+                        required
+                      />
+                    </div>
+                    <div className="mb-3">
+                      <label className="form-label">Email</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={clinicForm.email}
+                        onChange={(e) => setClinicForm({ ...clinicForm, email: e.target.value })}
+                      />
+                    </div>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowClinicModal(false)}>
+                      Cancel
+                    </button>
+                    <button type="submit" className="btn btn-primary">
+                      {editingClinic ? 'Update' : 'Create'}
+                    </button>
+                  </div>
+                </form>
+              </div>
+            </div>
+          </div>
+        )}
+
         {showApprovalModal && selectedReceptionist && (
-          <div className="modal show" style={{ display: 'block' }}>
-            <div className="modal-dialog">
+          <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+            <div className="modal-dialog modal-dialog-centered modal-dialog-scrollable">
               <div className="modal-content">
                 <div className="modal-header">
                   <h5 className="modal-title">Approve Receptionist</h5>

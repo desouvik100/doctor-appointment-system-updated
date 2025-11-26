@@ -2,45 +2,18 @@ import React from 'react';
 import { useTheme } from '../hooks/useTheme';
 
 const ThemeToggle = ({ className = '', showLabel = false, position = 'fixed' }) => {
-  const { theme, currentTheme, toggleTheme } = useTheme();
+  const { theme, toggleTheme } = useTheme();
 
   const getIcon = () => {
-    switch (theme) {
-      case 'light':
-        return 'fas fa-sun';
-      case 'dark':
-        return 'fas fa-moon';
-      case 'auto':
-        return 'fas fa-adjust';
-      default:
-        return 'fas fa-sun';
-    }
+    return theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun';
   };
 
   const getLabel = () => {
-    switch (theme) {
-      case 'light':
-        return 'Light Mode';
-      case 'dark':
-        return 'Dark Mode';
-      case 'auto':
-        return 'Auto Mode';
-      default:
-        return 'Light Mode';
-    }
+    return theme === 'dark' ? 'Dark Mode' : 'Light Mode';
   };
 
   const getTooltip = () => {
-    switch (theme) {
-      case 'light':
-        return 'Switch to Dark Mode';
-      case 'dark':
-        return 'Switch to Auto Mode';
-      case 'auto':
-        return 'Switch to Light Mode';
-      default:
-        return 'Switch Theme';
-    }
+    return theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode';
   };
 
   const baseStyles = {
@@ -100,14 +73,13 @@ const ThemeToggle = ({ className = '', showLabel = false, position = 'fixed' }) 
   );
 };
 
-// Theme selector dropdown component
+// Theme selector dropdown component - Only Light/Dark
 export const ThemeSelector = ({ className = '' }) => {
   const { theme, setTheme } = useTheme();
 
   const themes = [
     { value: 'light', label: 'Light Mode', icon: 'fas fa-sun' },
-    { value: 'dark', label: 'Dark Mode', icon: 'fas fa-moon' },
-    { value: 'auto', label: 'Auto Mode', icon: 'fas fa-adjust' }
+    { value: 'dark', label: 'Dark Mode', icon: 'fas fa-moon' }
   ];
 
   return (
@@ -132,28 +104,15 @@ export const ThemeSelector = ({ className = '' }) => {
   );
 };
 
-// Inline theme toggle for navbar
+// Inline theme toggle for navbar - Only Light/Dark
 export const NavbarThemeToggle = () => {
   const { theme, toggleTheme } = useTheme();
-
-  const getIcon = () => {
-    switch (theme) {
-      case 'light':
-        return 'fas fa-sun';
-      case 'dark':
-        return 'fas fa-moon';
-      case 'auto':
-        return 'fas fa-adjust';
-      default:
-        return 'fas fa-sun';
-    }
-  };
 
   return (
     <button
       className="navbar-theme-toggle"
       onClick={toggleTheme}
-      title="Toggle Theme"
+      title={theme === 'dark' ? 'Switch to Light Mode' : 'Switch to Dark Mode'}
       style={{
         width: '40px',
         height: '40px',
@@ -170,7 +129,7 @@ export const NavbarThemeToggle = () => {
         justifyContent: 'center'
       }}
     >
-      <i className={getIcon()}></i>
+      <i className={theme === 'dark' ? 'fas fa-moon' : 'fas fa-sun'}></i>
     </button>
   );
 };

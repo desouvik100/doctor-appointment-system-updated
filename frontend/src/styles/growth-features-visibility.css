@@ -1,0 +1,228 @@
+/* ========================================
+   GROWTH FEATURES VISIBILITY FIX
+   Ensures all text in new features is visible
+   ======================================== */
+
+/* Symptom Checker - Force text visibility */
+.symptom-checker-container * {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+.symptom-checker-card h3,
+.symptom-checker-card h4,
+.symptom-checker-card h5,
+.symptom-checker-card h6,
+.symptom-checker-card label,
+.symptom-checker-card strong {
+  color: #1e293b !important;
+  opacity: 1 !important;
+}
+
+.symptom-checker-card p,
+.symptom-checker-card small,
+.symptom-checker-card span {
+  color: #475569 !important;
+  opacity: 1 !important;
+}
+
+.symptom-checker-card .text-muted {
+  color: #64748b !important;
+}
+
+/* Live Stats Display - Force text visibility */
+.live-stats-section h2,
+.live-stats-section h3,
+.live-stats-section h4,
+.live-stats-section h5 {
+  color: #1e293b !important;
+  opacity: 1 !important;
+}
+
+.stat-card .stat-label,
+.stat-card .stat-trend {
+  color: #475569 !important;
+  opacity: 1 !important;
+}
+
+.trust-badge-item span {
+  color: #475569 !important;
+  opacity: 1 !important;
+}
+
+/* Reviews Section - Force text visibility */
+.reviews-section h2,
+.reviews-section h3,
+.reviews-section h4 {
+  color: #1e293b !important;
+  opacity: 1 !important;
+}
+
+.reviewer-name {
+  color: #1e293b !important;
+  opacity: 1 !important;
+}
+
+.reviewer-role,
+.review-text {
+  color: #475569 !important;
+  opacity: 1 !important;
+}
+
+.stat-label,
+.stat-value {
+  color: #1e293b !important;
+  opacity: 1 !important;
+}
+
+/* Floating Chat Bubble - Force text visibility */
+.chat-header h4 {
+  color: white !important;
+  opacity: 1 !important;
+}
+
+.message-bubble {
+  opacity: 1 !important;
+}
+
+.chat-message.bot .message-bubble {
+  color: #1e293b !important;
+}
+
+.chat-message.user .message-bubble {
+  color: white !important;
+}
+
+.quick-action-btn {
+  color: #475569 !important;
+}
+
+.quick-action-btn:hover {
+  color: white !important;
+}
+
+.chat-input {
+  color: #1e293b !important;
+}
+
+.chat-input::placeholder {
+  color: #94a3b8 !important;
+}
+
+/* Doctor Recommendation Badges - Force text visibility */
+.doctor-recommendation-badge .badge-title {
+  opacity: 1 !important;
+}
+
+.doctor-recommendation-badge .badge-description {
+  color: #64748b !important;
+  opacity: 1 !important;
+}
+
+/* General text visibility for all new components */
+.symptom-checker-container,
+.live-stats-section,
+.reviews-section,
+.floating-chat-window,
+.doctor-recommendation-badge {
+  text-rendering: optimizeLegibility;
+}
+
+/* Ensure buttons have visible text */
+.symptom-checker-container button,
+.live-stats-section button,
+.reviews-section button,
+.floating-chat-window button {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+/* White text on colored backgrounds */
+.analyze-btn,
+.book-specialist-btn,
+.chat-send-btn,
+.cta-button {
+  color: white !important;
+}
+
+/* Dark text on light backgrounds */
+.secondary-btn,
+.quick-action-btn {
+  color: #667eea !important;
+}
+
+.secondary-btn:hover {
+  color: white !important;
+}
+
+/* Ensure all headings are visible */
+h1, h2, h3, h4, h5, h6 {
+  opacity: 1 !important;
+}
+
+/* Ensure all paragraphs are visible */
+p, span, small, label {
+  opacity: 1 !important;
+}
+
+/* Fix for any potential theme conflicts */
+.symptom-checker-container *:not(.fa):not(.fas):not(.far):not(.fab),
+.live-stats-section *:not(.fa):not(.fas):not(.far):not(.fab),
+.reviews-section *:not(.fa):not(.fas):not(.far):not(.fab),
+.floating-chat-window *:not(.fa):not(.fas):not(.far):not(.fab) {
+  text-shadow: none !important;
+}
+
+/* Ensure input fields are visible */
+.symptom-input,
+.chat-input {
+  color: #1e293b !important;
+  background: white !important;
+}
+
+.symptom-input::placeholder,
+.chat-input::placeholder {
+  color: #94a3b8 !important;
+  opacity: 0.7 !important;
+}
+
+/* Ensure all icons are visible */
+.symptom-checker-container i,
+.live-stats-section i,
+.reviews-section i,
+.floating-chat-window i {
+  opacity: 1 !important;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .symptom-checker-card,
+  .stat-card,
+  .review-card,
+  .floating-chat-window {
+    border: 2px solid #1e293b !important;
+  }
+  
+  .symptom-checker-card *,
+  .stat-card *,
+  .review-card *,
+  .floating-chat-window * {
+    font-weight: 600 !important;
+  }
+}
+
+/* Print styles - ensure visibility when printing */
+@media print {
+  .symptom-checker-container,
+  .live-stats-section,
+  .reviews-section {
+    color: black !important;
+    background: white !important;
+  }
+  
+  .symptom-checker-container *,
+  .live-stats-section *,
+  .reviews-section * {
+    color: black !important;
+  }
+}

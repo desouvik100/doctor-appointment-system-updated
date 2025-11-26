@@ -117,41 +117,39 @@ const PerformanceMonitor = ({ enabled = process.env.NODE_ENV === 'development' }
       position: 'fixed',
       top: '10px',
       left: '10px',
-      background: 'rgba(0, 0, 0, 0.15)',
-      color: 'rgba(255, 255, 255, 0.6)',
-      padding: '0.4rem 0.6rem',
-      borderRadius: '6px',
-      fontSize: '0.7rem',
+      padding: '0.5rem',
+      fontSize: '0.875rem',
       fontFamily: 'monospace',
       zIndex: 9999,
-      minWidth: '100px',
-      backdropFilter: 'blur(4px)',
-      border: '1px solid rgba(255, 255, 255, 0.1)',
-      transition: 'opacity 0.3s ease',
-      opacity: 0.4,
-      pointerEvents: 'none'
+      pointerEvents: 'none',
+      textShadow: '0 0 4px rgba(0, 0, 0, 0.8), 0 0 8px rgba(0, 0, 0, 0.6)'
     }}>
       <div style={{ 
-        color: metrics.fps >= 60 ? 'rgba(34, 197, 94, 0.8)' : 
-               metrics.fps >= 45 ? 'rgba(251, 191, 36, 0.8)' : 
-               'rgba(239, 68, 68, 0.8)'
+        color: metrics.fps >= 60 ? '#22c55e' : 
+               metrics.fps >= 45 ? '#fbbf24' : 
+               '#ef4444',
+        fontWeight: 'bold',
+        fontSize: '1rem'
       }}>
         FPS: {metrics.fps}
       </div>
       {metrics.memory > 0 && (
         <div style={{ 
-          color: metrics.memory > 100 ? 'rgba(239, 68, 68, 0.6)' : 'rgba(255, 255, 255, 0.5)',
-          fontSize: '0.65rem'
+          color: metrics.memory > 100 ? '#ef4444' : '#ffffff',
+          fontSize: '0.75rem',
+          marginTop: '0.25rem'
         }}>
           {metrics.memory}MB
         </div>
       )}
       {metrics.isLowEnd && (
         <div style={{ 
-          color: 'rgba(251, 191, 36, 0.7)',
-          fontSize: '0.6rem'
+          color: '#fbbf24',
+          fontSize: '0.7rem',
+          marginTop: '0.25rem',
+          fontWeight: 'bold'
         }}>
-          Low-End
+          ⚠ Low-End
         </div>
       )}
     </div>

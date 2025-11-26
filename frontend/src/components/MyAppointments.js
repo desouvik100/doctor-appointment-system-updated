@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/config";
+import toast from 'react-hot-toast';
 
 function MyAppointments({ user }) {
   const [appointments, setAppointments] = useState([]);
@@ -28,9 +29,9 @@ function MyAppointments({ user }) {
     try {
       await axios.put(`http://localhost:5002/api/appointments/${appointmentId}`, { status: "cancelled" });
       fetchAppointments(); // Refresh the list
-      alert("Appointment cancelled successfully");
+      toast.success("Appointment cancelled successfully");
     } catch (error) {
-      alert("Failed to cancel appointment");
+      toast.error("Failed to cancel appointment");
     }
   };
 

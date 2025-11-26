@@ -69,14 +69,266 @@ async function sendOTP(email, type = 'register') {
   console.log('Valid for: 10 minutes');
   console.log('═══════════════════════════════════════');
 
-  const subject = 'Your OTP Code';
-  const text = `Your OTP code is: ${otp}. It is valid for 10 minutes.`;
+  // Determine subject and message based on type
+  let subject, purpose, actionText;
+  
+  if (type === 'register' || type === 'registration') {
+    subject = 'HealthSync - Verify Your Registration';
+    purpose = 'You are receiving this email because you requested to create a new account on HealthSync.';
+    actionText = 'Complete your registration by entering this verification code:';
+  } else if (type === 'reset' || type === 'password-reset') {
+    subject = 'HealthSync - Password Reset Request';
+    purpose = 'You are receiving this email because you requested to reset your password on HealthSync.';
+    actionText = 'Reset your password by entering this verification code:';
+  } else {
+    subject = 'HealthSync - Verification Code';
+    purpose = 'You are receiving this verification code from HealthSync.';
+    actionText = 'Enter this verification code to continue:';
+  }
+
+  const text = `${purpose}\n\nYour verification code is: ${otp}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email or contact support if you have concerns.\n\nHealthSync - Your Healthcare Management Platform\nWebsite: https://healthsync.com\nSupport: support@healthsync.com\nPhone: +1 (555) 123-4567`;
+  
   const html = `
-    <h2>Doctor Appointment System</h2>
-    <p>Your OTP code is:</p>
-    <h1>${otp}</h1>
-    <p>This code is valid for <b>10 minutes</b>.</p>
-    <p>If you did not request this, you can ignore this email.</p>
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <meta http-equiv="X-UA-Compatible" content="IE=edge">
+      <title>${subject}</title>
+      <!--[if mso]>
+      <style type="text/css">
+        body, table, td {font-family: Arial, Helvetica, sans-serif !important;}
+      </style>
+      <![endif]-->
+      <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f0f2f5; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
+        .email-wrapper { width: 100%; background-color: #f0f2f5; padding: 20px 0; }
+        .email-container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+        
+        /* Top Bar */
+        .top-bar { background: #ffffff; padding: 12px 30px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
+        .top-bar-text { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+        
+        /* Header with Logo */
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center; position: relative; }
+        .logo-container { margin-bottom: 15px; }
+        .logo { width: 80px; height: 80px; background: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
+        .company-name { color: white; font-size: 32px; font-weight: 700; margin: 10px 0 5px 0; letter-spacing: -0.5px; }
+        .tagline { color: rgba(255,255,255,0.95); font-size: 15px; font-weight: 400; margin: 0; }
+        
+        /* Profile Section */
+        .profile-section { background: linear-gradient(to bottom, #667eea 0%, transparent 100%); padding: 0 30px 30px 30px; text-align: center; }
+        .profile-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-top: -20px; }
+        .greeting { font-size: 20px; font-weight: 600; color: #1f2937; margin-bottom: 10px; }
+        .greeting-subtitle { font-size: 14px; color: #6b7280; margin-bottom: 20px; }
+        
+        /* Content */
+        .content { padding: 30px; }
+        .content-header { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; line-height: 1.5; }
+        .content-text { font-size: 14px; color: #4b5563; margin-bottom: 15px; line-height: 1.7; }
+        
+        /* OTP Box */
+        .otp-container { margin: 30px 0; }
+        .otp-label { font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px; }
+        .otp-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 25px; text-align: center; box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3); }
+        .otp-code { font-size: 42px; font-weight: 800; letter-spacing: 12px; color: white; font-family: 'Courier New', Consolas, monospace; text-shadow: 0 2px 4px rgba(0,0,0,0.2); user-select: all; }
+        
+        /* Info Boxes */
+        .info-box { background: #f9fafb; border-left: 4px solid #667eea; padding: 16px 20px; margin: 20px 0; border-radius: 6px; }
+        .info-box-title { font-weight: 600; color: #667eea; font-size: 14px; margin-bottom: 5px; display: flex; align-items: center; }
+        .info-box-text { font-size: 13px; color: #4b5563; line-height: 1.6; margin: 0; }
+        
+        .warning-box { background: #fffbeb; border: 1px solid #fbbf24; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 20px 0; border-radius: 6px; }
+        .warning-box-title { font-weight: 600; color: #92400e; font-size: 14px; margin-bottom: 5px; display: flex; align-items: center; }
+        .warning-box-text { font-size: 13px; color: #78350f; line-height: 1.6; margin: 0; }
+        
+        /* Features Section */
+        .features { background: #f9fafb; padding: 25px 30px; margin: 20px 0; border-radius: 8px; }
+        .features-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; text-align: center; }
+        .feature-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+        .feature-item { text-align: center; padding: 15px; background: white; border-radius: 8px; }
+        .feature-icon { font-size: 28px; margin-bottom: 8px; }
+        .feature-text { font-size: 12px; color: #4b5563; font-weight: 500; }
+        
+        /* Support Section */
+        .support-section { background: #f9fafb; padding: 25px 30px; text-align: center; }
+        .support-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; }
+        .support-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
+        .support-item { text-align: center; }
+        .support-icon { font-size: 24px; margin-bottom: 5px; }
+        .support-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+        .support-value { font-size: 13px; color: #1f2937; font-weight: 500; word-break: break-all; }
+        
+        /* Social Media */
+        .social-section { padding: 25px 30px; text-align: center; background: white; }
+        .social-title { font-size: 14px; color: #6b7280; margin-bottom: 15px; }
+        .social-links { display: flex; justify-content: center; gap: 15px; }
+        .social-link { display: inline-block; width: 40px; height: 40px; border-radius: 50%; background: #f3f4f6; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: all 0.3s; }
+        .social-link:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
+        
+        /* Footer */
+        .footer { background: #1f2937; color: #9ca3af; padding: 30px; text-align: center; }
+        .footer-logo { font-size: 24px; font-weight: 700; color: white; margin-bottom: 10px; }
+        .footer-text { font-size: 13px; margin: 8px 0; line-height: 1.6; }
+        .footer-links { margin: 15px 0; }
+        .footer-link { color: #9ca3af; text-decoration: none; margin: 0 10px; font-size: 12px; }
+        .footer-link:hover { color: #667eea; }
+        .footer-divider { height: 1px; background: #374151; margin: 20px 0; }
+        .footer-bottom { font-size: 11px; color: #6b7280; }
+        
+        /* Responsive */
+        @media only screen and (max-width: 600px) {
+          .email-container { border-radius: 0; }
+          .content, .header, .profile-section, .support-section, .social-section { padding: 20px !important; }
+          .otp-code { font-size: 36px; letter-spacing: 8px; }
+          .feature-grid, .support-grid { grid-template-columns: 1fr; }
+          .company-name { font-size: 28px; }
+        }
+      </style>
+    </head>
+    <body>
+      <div class="email-wrapper">
+        <table width="100%" cellpadding="0" cellspacing="0" border="0">
+          <tr>
+            <td align="center">
+              <div class="email-container">
+                
+                <!-- Top Bar -->
+                <div class="top-bar">
+                  <div class="top-bar-text">Secure Email</div>
+                  <div class="top-bar-text">${new Date().toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' })}</div>
+                </div>
+                
+                <!-- Header -->
+                <div class="header">
+                  <div class="logo-container">
+                    <div class="logo">🏥</div>
+                  </div>
+                  <h1 class="company-name">HealthSync</h1>
+                  <p class="tagline">Your Healthcare Management Platform</p>
+                </div>
+                
+                <!-- Profile Section -->
+                <div class="profile-section">
+                  <div class="profile-card">
+                    <div class="greeting">Hello! 👋</div>
+                    <div class="greeting-subtitle">We received a request for verification</div>
+                  </div>
+                </div>
+                
+                <!-- Content -->
+                <div class="content">
+                  <div class="content-header">${actionText}</div>
+                  <div class="content-text">${purpose}</div>
+                  
+                  <!-- OTP Box -->
+                  <div class="otp-container">
+                    <div class="otp-label">Your Verification Code</div>
+                    <div class="otp-box">
+                      <div class="otp-code">${otp}</div>
+                    </div>
+                  </div>
+                  
+                  <!-- Validity Info -->
+                  <div class="info-box">
+                    <div class="info-box-title">⏱️ Valid for 10 Minutes</div>
+                    <div class="info-box-text">This verification code will expire after 10 minutes for your security. Please use it promptly to complete your ${type === 'register' || type === 'registration' ? 'registration' : 'password reset'}.</div>
+                  </div>
+                  
+                  <!-- Security Warning -->
+                  <div class="warning-box">
+                    <div class="warning-box-title">🔒 Security Notice</div>
+                    <div class="warning-box-text">If you did not request this verification code, please ignore this email. Your account remains secure. Never share this code with anyone, including HealthSync staff. If you have concerns, please contact our support team immediately.</div>
+                  </div>
+                </div>
+                
+                <!-- Features Section -->
+                <div class="features">
+                  <div class="features-title">Why Choose HealthSync?</div>
+                  <div class="feature-grid">
+                    <div class="feature-item">
+                      <div class="feature-icon">🔐</div>
+                      <div class="feature-text">Bank-Level Security</div>
+                    </div>
+                    <div class="feature-item">
+                      <div class="feature-icon">⚡</div>
+                      <div class="feature-text">Instant Access</div>
+                    </div>
+                    <div class="feature-item">
+                      <div class="feature-icon">👨‍⚕️</div>
+                      <div class="feature-text">Expert Doctors</div>
+                    </div>
+                    <div class="feature-item">
+                      <div class="feature-icon">📱</div>
+                      <div class="feature-text">24/7 Support</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Support Section -->
+                <div class="support-section">
+                  <div class="support-title">Need Help? We're Here for You</div>
+                  <div class="support-grid">
+                    <div class="support-item">
+                      <div class="support-icon">📧</div>
+                      <div class="support-label">Email</div>
+                      <div class="support-value">support@healthsync.com</div>
+                    </div>
+                    <div class="support-item">
+                      <div class="support-icon">📞</div>
+                      <div class="support-label">Phone</div>
+                      <div class="support-value">+1 (555) 123-4567</div>
+                    </div>
+                    <div class="support-item">
+                      <div class="support-icon">🌐</div>
+                      <div class="support-label">Website</div>
+                      <div class="support-value">healthsync.com</div>
+                    </div>
+                  </div>
+                </div>
+                
+                <!-- Social Media -->
+                <div class="social-section">
+                  <div class="social-title">Connect With Us</div>
+                  <div class="social-links">
+                    <a href="https://facebook.com/healthsync" class="social-link" style="background: #1877f2; color: white;">📘</a>
+                    <a href="https://twitter.com/healthsync" class="social-link" style="background: #1da1f2; color: white;">🐦</a>
+                    <a href="https://instagram.com/healthsync" class="social-link" style="background: #e4405f; color: white;">📷</a>
+                    <a href="https://linkedin.com/company/healthsync" class="social-link" style="background: #0077b5; color: white;">💼</a>
+                  </div>
+                </div>
+                
+                <!-- Footer -->
+                <div class="footer">
+                  <div class="footer-logo">HealthSync</div>
+                  <div class="footer-text">Your trusted healthcare management platform</div>
+                  <div class="footer-text">Providing quality healthcare services since 2020</div>
+                  
+                  <div class="footer-links">
+                    <a href="https://healthsync.com/about" class="footer-link">About Us</a>
+                    <a href="https://healthsync.com/privacy" class="footer-link">Privacy Policy</a>
+                    <a href="https://healthsync.com/terms" class="footer-link">Terms of Service</a>
+                    <a href="https://healthsync.com/contact" class="footer-link">Contact</a>
+                  </div>
+                  
+                  <div class="footer-divider"></div>
+                  
+                  <div class="footer-bottom">
+                    <p>© ${new Date().getFullYear()} HealthSync. All rights reserved.</p>
+                    <p>This is an automated message. Please do not reply to this email.</p>
+                    <p style="margin-top: 10px;">123 Healthcare Avenue, Medical District, CA 90210, United States</p>
+                  </div>
+                </div>
+                
+              </div>
+            </td>
+          </tr>
+        </table>
+      </div>
+    </body>
+    </html>
   `;
 
   await sendEmail({ to: email, subject, html, text });
@@ -125,9 +377,32 @@ function verifyOTP(email, otp, type = 'register') {
 
 // ---- Optional: test email helper ----
 async function sendTestEmail(to) {
-  const subject = 'Test email from Doctor Appointment System (Resend)';
-  const text = 'If you see this, Resend is working from Render 👍';
-  const html = `<p>${text}</p>`;
+  const subject = 'HealthSync - Email Service Test';
+  const text = 'If you see this, the HealthSync email service is working correctly! 👍';
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
+        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; }
+        h1 { margin: 0; font-size: 24px; }
+        p { color: #555; line-height: 1.6; }
+      </style>
+    </head>
+    <body>
+      <div class="container">
+        <div class="header">
+          <h1>🏥 HealthSync</h1>
+        </div>
+        <p>✅ <strong>Email Service Test Successful!</strong></p>
+        <p>If you're seeing this email, the HealthSync email service is configured correctly and working as expected.</p>
+        <p style="margin-top: 20px; font-size: 13px; color: #777;">This is an automated test message from HealthSync.</p>
+      </div>
+    </body>
+    </html>
+  `;
   await sendEmail({ to, subject, html, text });
   return { success: true };
 }

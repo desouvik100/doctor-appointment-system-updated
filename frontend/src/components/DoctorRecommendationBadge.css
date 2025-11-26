@@ -1,0 +1,76 @@
+.doctor-recommendation-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.75rem 1rem;
+  border-radius: 12px;
+  border: 2px solid;
+  margin-bottom: 1rem;
+  animation: slideIn 0.4s ease;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateX(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.badge-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.25rem;
+  background: white;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.badge-content {
+  flex: 1;
+}
+
+.badge-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  margin-bottom: 0.125rem;
+}
+
+.badge-description {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.badge-stats {
+  font-size: 1.25rem;
+  font-weight: 800;
+  flex-shrink: 0;
+}
+
+@media (max-width: 768px) {
+  .doctor-recommendation-badge {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .badge-icon {
+    width: 35px;
+    height: 35px;
+    font-size: 1rem;
+  }
+
+  .badge-title {
+    font-size: 0.85rem;
+  }
+
+  .badge-description {
+    font-size: 0.75rem;
+  }
+}

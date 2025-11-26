@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/config";
+import toast from 'react-hot-toast';
 
 function ClinicDashboard({ receptionist }) {
   const [appointments, setAppointments] = useState([]);
@@ -56,9 +57,9 @@ function ClinicDashboard({ receptionist }) {
         status: newStatus
       });
       fetchAppointments(); // Refresh the list
-      alert(`Appointment ${newStatus} successfully`);
+      toast.success(`Appointment ${newStatus} successfully`);
     } catch (error) {
-      alert("Failed to update appointment status");
+      toast.error("Failed to update appointment status");
     }
   };
 

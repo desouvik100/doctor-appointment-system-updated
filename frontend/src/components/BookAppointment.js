@@ -1,5 +1,6 @@
 import React, { useState } from "react";
 import axios from "../api/config";
+import toast from 'react-hot-toast';
 import PaymentGateway from "./PaymentGateway";
 
 function BookAppointment({ doctor, user, onClose, onSuccess }) {
@@ -44,7 +45,7 @@ function BookAppointment({ doctor, user, onClose, onSuccess }) {
         setShowPayment(true);
       } else {
         onSuccess();
-        alert("Appointment booked successfully!");
+        toast.success("Appointment booked successfully!");
       }
     } catch (error) {
       console.error("Booking error:", error);
@@ -57,7 +58,7 @@ function BookAppointment({ doctor, user, onClose, onSuccess }) {
   const handlePaymentSuccess = (paymentData) => {
     setShowPayment(false);
     onSuccess();
-    alert(`Payment successful! Transaction ID: ${paymentData.transactionId}`);
+    toast.success(`Payment successful! Transaction ID: ${paymentData.transactionId}`);
   };
 
   const handlePaymentCancel = () => {

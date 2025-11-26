@@ -1,0 +1,465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>HealthSync Professional Email Preview</title>
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      padding: 20px;
+      margin: 0;
+    }
+    .preview-wrapper {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    .preview-header {
+      text-align: center;
+      color: white;
+      margin-bottom: 30px;
+      padding: 30px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 15px;
+      backdrop-filter: blur(10px);
+    }
+    .preview-header h1 {
+      margin: 0 0 10px 0;
+      font-size: 36px;
+      font-weight: 700;
+    }
+    .preview-header p {
+      margin: 0;
+      font-size: 16px;
+      opacity: 0.9;
+    }
+    .tabs {
+      display: flex;
+      gap: 15px;
+      margin-bottom: 20px;
+      justify-content: center;
+    }
+    .tab-button {
+      padding: 15px 30px;
+      border: none;
+      background: rgba(255,255,255,0.2);
+      color: white;
+      cursor: pointer;
+      border-radius: 10px;
+      font-weight: 600;
+      font-size: 15px;
+      transition: all 0.3s;
+      backdrop-filter: blur(10px);
+    }
+    .tab-button:hover {
+      background: rgba(255,255,255,0.3);
+      transform: translateY(-2px);
+    }
+    .tab-button.active {
+      background: white;
+      color: #667eea;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.2);
+    }
+    .email-preview {
+      background: white;
+      border-radius: 15px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+    }
+    .email-content {
+      display: none;
+    }
+    .email-content.active {
+      display: block;
+    }
+    .features-list {
+      background: rgba(255,255,255,0.1);
+      backdrop-filter: blur(10px);
+      border-radius: 15px;
+      padding: 30px;
+      margin-top: 30px;
+      color: white;
+    }
+    .features-list h2 {
+      margin-top: 0;
+      font-size: 24px;
+    }
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 20px;
+      margin-top: 20px;
+    }
+    .feature-card {
+      background: rgba(255,255,255,0.1);
+      padding: 20px;
+      border-radius: 10px;
+      backdrop-filter: blur(5px);
+    }
+    .feature-card h3 {
+      margin: 0 0 10px 0;
+      font-size: 18px;
+    }
+    .feature-card p {
+      margin: 0;
+      font-size: 14px;
+      opacity: 0.9;
+    }
+    
+    /* Email Styles */
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    .email-body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f0f2f5; margin: 0; padding: 0; }
+    .email-wrapper { width: 100%; background-color: #f0f2f5; padding: 20px 0; }
+    .email-container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
+    .top-bar { background: #ffffff; padding: 12px 30px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; }
+    .top-bar-text { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center; }
+    .logo { width: 80px; height: 80px; background: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); margin-bottom: 15px; }
+    .company-name { color: white; font-size: 32px; font-weight: 700; margin: 10px 0 5px 0; }
+    .tagline { color: rgba(255,255,255,0.95); font-size: 15px; }
+    .profile-section { background: linear-gradient(to bottom, #667eea 0%, transparent 100%); padding: 0 30px 30px 30px; text-align: center; }
+    .profile-card { background: white; border-radius: 12px; padding: 25px; box-shadow: 0 4px 12px rgba(0,0,0,0.08); margin-top: -20px; }
+    .greeting { font-size: 20px; font-weight: 600; color: #1f2937; margin-bottom: 10px; }
+    .content { padding: 30px; }
+    .content-header { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; }
+    .content-text { font-size: 14px; color: #4b5563; margin-bottom: 15px; }
+    .otp-container { margin: 30px 0; }
+    .otp-label { font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px; }
+    .otp-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 25px; text-align: center; box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3); }
+    .otp-code { font-size: 42px; font-weight: 800; letter-spacing: 12px; color: white; font-family: 'Courier New', monospace; }
+    .info-box { background: #f9fafb; border-left: 4px solid #667eea; padding: 16px 20px; margin: 20px 0; border-radius: 6px; }
+    .info-box-title { font-weight: 600; color: #667eea; font-size: 14px; margin-bottom: 5px; }
+    .info-box-text { font-size: 13px; color: #4b5563; }
+    .warning-box { background: #fffbeb; border: 1px solid #fbbf24; border-left: 4px solid #f59e0b; padding: 16px 20px; margin: 20px 0; border-radius: 6px; }
+    .warning-box-title { font-weight: 600; color: #92400e; font-size: 14px; margin-bottom: 5px; }
+    .warning-box-text { font-size: 13px; color: #78350f; }
+    .features { background: #f9fafb; padding: 25px 30px; margin: 20px 0; border-radius: 8px; }
+    .features-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; text-align: center; }
+    .feature-grid { display: grid; grid-template-columns: repeat(2, 1fr); gap: 15px; }
+    .feature-item { text-align: center; padding: 15px; background: white; border-radius: 8px; }
+    .feature-icon { font-size: 28px; margin-bottom: 8px; }
+    .feature-text { font-size: 12px; color: #4b5563; font-weight: 500; }
+    .support-section { background: #f9fafb; padding: 25px 30px; text-align: center; }
+    .support-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; }
+    .support-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
+    .support-item { text-align: center; }
+    .support-icon { font-size: 24px; margin-bottom: 5px; }
+    .support-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
+    .support-value { font-size: 13px; color: #1f2937; font-weight: 500; word-break: break-all; }
+    .social-section { padding: 25px 30px; text-align: center; }
+    .social-title { font-size: 14px; color: #6b7280; margin-bottom: 15px; }
+    .social-links { display: flex; justify-content: center; gap: 15px; flex-wrap: wrap; }
+    .social-link { width: 40px; height: 40px; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 20px; text-decoration: none; }
+    .footer { background: #1f2937; color: #9ca3af; padding: 30px; text-align: center; }
+    .footer-logo { font-size: 24px; font-weight: 700; color: white; margin-bottom: 10px; }
+    .footer-text { font-size: 13px; margin: 8px 0; }
+    .footer-links { margin: 15px 0; }
+    .footer-link { color: #9ca3af; text-decoration: none; margin: 0 10px; font-size: 12px; }
+    .footer-divider { height: 1px; background: #374151; margin: 20px 0; }
+    .footer-bottom { font-size: 11px; color: #6b7280; }
+  </style>
+</head>
+<body>
+  <div class="preview-wrapper">
+    <div class="preview-header">
+      <h1>🏥 HealthSync Professional Email Templates</h1>
+      <p>Premium OTP Email Design with Complete Branding</p>
+    </div>
+
+    <div class="tabs">
+      <button class="tab-button active" onclick="showEmail('registration')">
+        📝 Registration OTP
+      </button>
+      <button class="tab-button" onclick="showEmail('reset')">
+        🔒 Password Reset OTP
+      </button>
+    </div>
+
+    <div class="email-preview">
+      <!-- Registration Email -->
+      <div id="registration" class="email-content active">
+        <div class="email-body">
+          <div class="email-wrapper">
+            <div class="email-container">
+              <div class="top-bar">
+                <div class="top-bar-text">Secure Email</div>
+                <div class="top-bar-text">Nov 27, 2025</div>
+              </div>
+              <div class="header">
+                <div class="logo">🏥</div>
+                <h1 class="company-name">HealthSync</h1>
+                <p class="tagline">Your Healthcare Management Platform</p>
+              </div>
+              <div class="profile-section">
+                <div class="profile-card">
+                  <div class="greeting">Hello! 👋</div>
+                  <div style="font-size: 14px; color: #6b7280;">We received a request for verification</div>
+                </div>
+              </div>
+              <div class="content">
+                <div class="content-header">Complete your registration by entering this verification code:</div>
+                <div class="content-text">You are receiving this email because you requested to create a new account on HealthSync.</div>
+                <div class="otp-container">
+                  <div class="otp-label">Your Verification Code</div>
+                  <div class="otp-box">
+                    <div class="otp-code">123456</div>
+                  </div>
+                </div>
+                <div class="info-box">
+                  <div class="info-box-title">⏱️ Valid for 10 Minutes</div>
+                  <div class="info-box-text">This verification code will expire after 10 minutes for your security. Please use it promptly to complete your registration.</div>
+                </div>
+                <div class="warning-box">
+                  <div class="warning-box-title">🔒 Security Notice</div>
+                  <div class="warning-box-text">If you did not request this verification code, please ignore this email. Your account remains secure. Never share this code with anyone, including HealthSync staff.</div>
+                </div>
+              </div>
+              <div class="features">
+                <div class="features-title">Why Choose HealthSync?</div>
+                <div class="feature-grid">
+                  <div class="feature-item">
+                    <div class="feature-icon">🔐</div>
+                    <div class="feature-text">Bank-Level Security</div>
+                  </div>
+                  <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-text">Instant Access</div>
+                  </div>
+                  <div class="feature-item">
+                    <div class="feature-icon">👨‍⚕️</div>
+                    <div class="feature-text">Expert Doctors</div>
+                  </div>
+                  <div class="feature-item">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-text">24/7 Support</div>
+                  </div>
+                </div>
+              </div>
+              <div class="support-section">
+                <div class="support-title">Need Help? We're Here for You</div>
+                <div class="support-grid">
+                  <div class="support-item">
+                    <div class="support-icon">📧</div>
+                    <div class="support-label">Email</div>
+                    <div class="support-value">support@healthsync.com</div>
+                  </div>
+                  <div class="support-item">
+                    <div class="support-icon">📞</div>
+                    <div class="support-label">Phone</div>
+                    <div class="support-value">+1 (555) 123-4567</div>
+                  </div>
+                  <div class="support-item">
+                    <div class="support-icon">🌐</div>
+                    <div class="support-label">Website</div>
+                    <div class="support-value">healthsync.com</div>
+                  </div>
+                </div>
+              </div>
+              <div class="social-section">
+                <div class="social-title">Connect With Us</div>
+                <div class="social-links">
+                  <a href="#" class="social-link" style="background: #1877f2; color: white;">📘</a>
+                  <a href="#" class="social-link" style="background: #1da1f2; color: white;">🐦</a>
+                  <a href="#" class="social-link" style="background: #e4405f; color: white;">📷</a>
+                  <a href="#" class="social-link" style="background: #0077b5; color: white;">💼</a>
+                </div>
+              </div>
+              <div class="footer">
+                <div class="footer-logo">HealthSync</div>
+                <div class="footer-text">Your trusted healthcare management platform</div>
+                <div class="footer-text">Providing quality healthcare services since 2020</div>
+                <div class="footer-links">
+                  <a href="#" class="footer-link">About Us</a>
+                  <a href="#" class="footer-link">Privacy Policy</a>
+                  <a href="#" class="footer-link">Terms of Service</a>
+                  <a href="#" class="footer-link">Contact</a>
+                </div>
+                <div class="footer-divider"></div>
+                <div class="footer-bottom">
+                  <p>© 2025 HealthSync. All rights reserved.</p>
+                  <p>This is an automated message. Please do not reply to this email.</p>
+                  <p style="margin-top: 10px;">123 Healthcare Avenue, Medical District, CA 90210, United States</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Password Reset Email -->
+      <div id="reset" class="email-content">
+        <div class="email-body">
+          <div class="email-wrapper">
+            <div class="email-container">
+              <div class="top-bar">
+                <div class="top-bar-text">Secure Email</div>
+                <div class="top-bar-text">Nov 27, 2025</div>
+              </div>
+              <div class="header">
+                <div class="logo">🏥</div>
+                <h1 class="company-name">HealthSync</h1>
+                <p class="tagline">Your Healthcare Management Platform</p>
+              </div>
+              <div class="profile-section">
+                <div class="profile-card">
+                  <div class="greeting">Hello! 👋</div>
+                  <div style="font-size: 14px; color: #6b7280;">We received a request for verification</div>
+                </div>
+              </div>
+              <div class="content">
+                <div class="content-header">Reset your password by entering this verification code:</div>
+                <div class="content-text">You are receiving this email because you requested to reset your password on HealthSync.</div>
+                <div class="otp-container">
+                  <div class="otp-label">Your Verification Code</div>
+                  <div class="otp-box">
+                    <div class="otp-code">789012</div>
+                  </div>
+                </div>
+                <div class="info-box">
+                  <div class="info-box-title">⏱️ Valid for 10 Minutes</div>
+                  <div class="info-box-text">This verification code will expire after 10 minutes for your security. Please use it promptly to complete your password reset.</div>
+                </div>
+                <div class="warning-box">
+                  <div class="warning-box-title">🔒 Security Notice</div>
+                  <div class="warning-box-text">If you did not request this verification code, please ignore this email. Your account remains secure. Never share this code with anyone, including HealthSync staff.</div>
+                </div>
+              </div>
+              <div class="features">
+                <div class="features-title">Why Choose HealthSync?</div>
+                <div class="feature-grid">
+                  <div class="feature-item">
+                    <div class="feature-icon">🔐</div>
+                    <div class="feature-text">Bank-Level Security</div>
+                  </div>
+                  <div class="feature-item">
+                    <div class="feature-icon">⚡</div>
+                    <div class="feature-text">Instant Access</div>
+                  </div>
+                  <div class="feature-item">
+                    <div class="feature-icon">👨‍⚕️</div>
+                    <div class="feature-text">Expert Doctors</div>
+                  </div>
+                  <div class="feature-item">
+                    <div class="feature-icon">📱</div>
+                    <div class="feature-text">24/7 Support</div>
+                  </div>
+                </div>
+              </div>
+              <div class="support-section">
+                <div class="support-title">Need Help? We're Here for You</div>
+                <div class="support-grid">
+                  <div class="support-item">
+                    <div class="support-icon">📧</div>
+                    <div class="support-label">Email</div>
+                    <div class="support-value">support@healthsync.com</div>
+                  </div>
+                  <div class="support-item">
+                    <div class="support-icon">📞</div>
+                    <div class="support-label">Phone</div>
+                    <div class="support-value">+1 (555) 123-4567</div>
+                  </div>
+                  <div class="support-item">
+                    <div class="support-icon">🌐</div>
+                    <div class="support-label">Website</div>
+                    <div class="support-value">healthsync.com</div>
+                  </div>
+                </div>
+              </div>
+              <div class="social-section">
+                <div class="social-title">Connect With Us</div>
+                <div class="social-links">
+                  <a href="#" class="social-link" style="background: #1877f2; color: white;">📘</a>
+                  <a href="#" class="social-link" style="background: #1da1f2; color: white;">🐦</a>
+                  <a href="#" class="social-link" style="background: #e4405f; color: white;">📷</a>
+                  <a href="#" class="social-link" style="background: #0077b5; color: white;">💼</a>
+                </div>
+              </div>
+              <div class="footer">
+                <div class="footer-logo">HealthSync</div>
+                <div class="footer-text">Your trusted healthcare management platform</div>
+                <div class="footer-text">Providing quality healthcare services since 2020</div>
+                <div class="footer-links">
+                  <a href="#" class="footer-link">About Us</a>
+                  <a href="#" class="footer-link">Privacy Policy</a>
+                  <a href="#" class="footer-link">Terms of Service</a>
+                  <a href="#" class="footer-link">Contact</a>
+                </div>
+                <div class="footer-divider"></div>
+                <div class="footer-bottom">
+                  <p>© 2025 HealthSync. All rights reserved.</p>
+                  <p>This is an automated message. Please do not reply to this email.</p>
+                  <p style="margin-top: 10px;">123 Healthcare Avenue, Medical District, CA 90210, United States</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="features-list">
+      <h2>✨ Premium Email Features</h2>
+      <div class="features-grid">
+        <div class="feature-card">
+          <h3>🏥 Professional Branding</h3>
+          <p>Company logo, name, and tagline prominently displayed</p>
+        </div>
+        <div class="feature-card">
+          <h3>👤 Profile Section</h3>
+          <p>Personalized greeting card with modern design</p>
+        </div>
+        <div class="feature-card">
+          <h3>🔢 Large OTP Display</h3>
+          <p>42px bold code with letter spacing for easy reading</p>
+        </div>
+        <div class="feature-card">
+          <h3>⏱️ Validity Notice</h3>
+          <p>Clear 10-minute expiration with visual emphasis</p>
+        </div>
+        <div class="feature-card">
+          <h3>🔒 Security Warnings</h3>
+          <p>Highlighted security notices to protect users</p>
+        </div>
+        <div class="feature-card">
+          <h3>✨ Feature Showcase</h3>
+          <p>Grid displaying platform benefits and features</p>
+        </div>
+        <div class="feature-card">
+          <h3>📞 Support Information</h3>
+          <p>Email, phone, and website contact details</p>
+        </div>
+        <div class="feature-card">
+          <h3>🌐 Social Media Links</h3>
+          <p>Facebook, Twitter, Instagram, LinkedIn connections</p>
+        </div>
+        <div class="feature-card">
+          <h3>📱 Responsive Design</h3>
+          <p>Perfect display on all devices and email clients</p>
+        </div>
+        <div class="feature-card">
+          <h3>🎨 Modern UI</h3>
+          <p>Gradient backgrounds, rounded corners, shadows</p>
+        </div>
+        <div class="feature-card">
+          <h3>📄 Footer Links</h3>
+          <p>About, Privacy, Terms, Contact navigation</p>
+        </div>
+        <div class="feature-card">
+          <h3>📍 Company Address</h3>
+          <p>Physical location for trust and legitimacy</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    function showEmail(type) {
+      document.querySelectorAll('.email-content').forEach(el => el.classList.remove('active'));
+      document.querySelectorAll('.tab-button').forEach(btn => btn.classList.remove('active'));
+      document.getElementById(type).classList.add('active');
+      event.target.classList.add('active');
+    }
+  </script>
+</body>
+</html>

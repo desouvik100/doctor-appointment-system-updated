@@ -1,6 +1,7 @@
 import React, { useState } from "react";
 import axios from "../api/config";
 import "../styles/theme-system.css";
+import "./Auth.css";
 
 function Auth({ onLogin }) {
   const [isLogin, setIsLogin] = useState(true);
@@ -151,29 +152,36 @@ function Auth({ onLogin }) {
     setError("");
     
     try {
-      await axios.post("/api/auth/send-otp", { 
+      const response = await axios.post("/api/otp/send-otp", { 
         email: formData.email,
         type: 'registration'
       });
       
-      setOtpSent(true);
-      setCanResendOtp(false);
-      setOtpTimer(60); // 60 seconds countdown
-      
-      // Start countdown timer
-      const timer = setInterval(() => {
-        setOtpTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            setCanResendOtp(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
+      if (response.data.success) {
+        setOtpSent(true);
+        setCanResendOtp(false);
+        setOtpTimer(60); // 60 seconds countdown
+        
+        // Start countdown timer
+        const timer = setInterval(() => {
+          setOtpTimer((prev) => {
+            if (prev <= 1) {
+              clearInterval(timer);
+              setCanResendOtp(true);
+              return 0;
+            }
+            return prev - 1;
+          });
+        }, 1000);
+        
+        // Show success message
+        console.log('✅ OTP sent successfully! Check backend console for OTP code.');
+      }
       
     } catch (error) {
-      setError(error.response?.data?.message || "Failed to send OTP");
+      console.error('Send OTP error:', error);
+      setError(error.response?.data?.message || "Failed to send OTP. Please try again.");
+      throw error; // Re-throw to handle in calling function
     } finally {
       setOtpLoading(false);
     }
@@ -185,21 +193,26 @@ function Auth({ onLogin }) {
     setError("");
     
     try {
-      const response = await axios.post("/api/auth/verify-otp", {
+      // First verify OTP
+      const otpResponse = await axios.post("/api/otp/verify-otp", {
         email: formData.email,
         otp: otp,
         type: 'registration'
       });
       
-      if (response.data.verified) {
+      if (otpResponse.data.success && otpResponse.data.verified) {
         // OTP verified, now complete registration
         const registerResponse = await axios.post("/api/auth/register", {
           ...formData,
           emailVerified: true
         });
         
-        localStorage.setItem("user", JSON.stringify(registerResponse.data.user));
-        onLogin(registerResponse.data.user);
+        if (registerResponse.data.user) {
+          localStorage.setItem("user", JSON.stringify(registerResponse.data.user));
+          onLogin(registerResponse.data.user);
+        }
+      } else {
+        setError(otpResponse.data.message || "Invalid OTP");
       }
     } catch (error) {
       setError(error.response?.data?.message || "Invalid OTP");
@@ -268,7 +281,13 @@ function Auth({ onLogin }) {
       
       // Automatically send OTP
       if (!otpSent) {
-        await sendOtp();
+        try {
+          await sendOtp();
+        } catch (error) {
+          console.error('OTP send error:', error);
+          // Show error but don't block - user can try resend
+          setError('Failed to send OTP. Please click Resend to try again.');
+        }
       }
     }
   };
@@ -286,8 +305,22 @@ function Auth({ onLogin }) {
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
+    <div className="auth-container">
+      <div className="auth-card">
+        <h2 className="text-center mb-4">
+          {isLogin ? (
+            <>
+              <i className="fas fa-sign-in-alt me-2"></i>
+              Welcome Back
+            </>
+          ) : (
+            <>
+              <i className="fas fa-user-plus me-2"></i>
+              Create Your Account
+            </>
+          )}
+        </h2>
+        <form onSubmit={handleSubmit}>
         {/* Personal Information Section */}
         {!isLogin && (
           <>
@@ -1139,11 +1172,12 @@ function Auth({ onLogin }) {
         </div>
       )}
 
-      <div className="mt-3 p-3 bg-light rounded">
-        <small className="text-muted">
-          <i className="fas fa-shield-alt me-1 text-success"></i>
-          <strong>Your privacy is protected:</strong> All medical information is encrypted and HIPAA compliant.
-        </small>
+        <div className="mt-3 p-3 bg-light rounded">
+          <small className="text-muted">
+            <i className="fas fa-shield-alt me-1 text-success"></i>
+            <strong>Your privacy is protected:</strong> All medical information is encrypted and HIPAA compliant.
+          </small>
+        </div>
       </div>
     </div>
   );

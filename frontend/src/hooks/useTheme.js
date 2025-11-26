@@ -1,18 +1,13 @@
 import { useState, useEffect } from 'react';
 
 export const useTheme = () => {
-  // Get initial theme from localStorage or system preference
+  // Get initial theme from localStorage (default to light)
   const getInitialTheme = () => {
     const savedTheme = localStorage.getItem('healthsync-theme');
-    if (savedTheme) {
-      return savedTheme;
-    }
-    
-    // Check system preference
-    if (window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches) {
+    // Only accept 'light' or 'dark'
+    if (savedTheme === 'dark') {
       return 'dark';
     }
-    
     return 'light';
   };
 
@@ -21,68 +16,30 @@ export const useTheme = () => {
   // Apply theme to document
   useEffect(() => {
     const root = document.documentElement;
-    
-    if (theme === 'auto') {
-      // Remove data-theme attribute to use system preference
-      root.removeAttribute('data-theme');
-    } else {
-      root.setAttribute('data-theme', theme);
-    }
+    root.setAttribute('data-theme', theme);
     
     // Save to localStorage
     localStorage.setItem('healthsync-theme', theme);
   }, [theme]);
 
-  // Listen for system theme changes when in auto mode
-  useEffect(() => {
-    if (theme === 'auto') {
-      const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
-      
-      const handleChange = () => {
-        // Force re-render when system theme changes
-        setTheme('auto');
-      };
-      
-      mediaQuery.addEventListener('change', handleChange);
-      return () => mediaQuery.removeEventListener('change', handleChange);
-    }
-  }, [theme]);
-
+  // Simple toggle between light and dark only
   const toggleTheme = () => {
-    setTheme(prevTheme => {
-      switch (prevTheme) {
-        case 'light':
-          return 'dark';
-        case 'dark':
-          return 'auto';
-        case 'auto':
-          return 'light';
-        default:
-          return 'light';
-      }
-    });
+    setTheme(prevTheme => prevTheme === 'light' ? 'dark' : 'light');
   };
 
   const setSpecificTheme = (newTheme) => {
-    if (['light', 'dark', 'auto'].includes(newTheme)) {
+    // Only accept 'light' or 'dark'
+    if (newTheme === 'light' || newTheme === 'dark') {
       setTheme(newTheme);
     }
   };
 
-  const getCurrentTheme = () => {
-    if (theme === 'auto') {
-      return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
-    }
-    return theme;
-  };
-
   return {
     theme,
-    currentTheme: getCurrentTheme(),
+    currentTheme: theme,
     toggleTheme,
     setTheme: setSpecificTheme,
-    isDark: getCurrentTheme() === 'dark',
-    isLight: getCurrentTheme() === 'light',
-    isAuto: theme === 'auto'
+    isDark: theme === 'dark',
+    isLight: theme === 'light'
   };
 };

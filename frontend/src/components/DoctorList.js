@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/config";
 import BookAppointment from "./BookAppointment";
+import DoctorRecommendationBadge from "./DoctorRecommendationBadge";
 
 function DoctorList({ user }) {
   const [doctors, setDoctors] = useState([]);
@@ -69,7 +70,33 @@ function DoctorList({ user }) {
       );
     }
 
+    // AI-powered sorting: recommended doctors first
+    filtered = filtered.sort((a, b) => {
+      const aScore = getDoctorRecommendationScore(a);
+      const bScore = getDoctorRecommendationScore(b);
+      return bScore - aScore;
+    });
+
     setFilteredDoctors(filtered);
+  };
+
+  const getDoctorRecommendationScore = (doctor) => {
+    let score = 0;
+    // Add scoring logic based on various factors
+    if (doctor.experience > 10) score += 30;
+    if (doctor.rating >= 4.5) score += 25;
+    if (doctor.availableToday) score += 20;
+    if (doctor.bookingCount > 100) score += 15;
+    return score;
+  };
+
+  const getDoctorRecommendationType = (doctor, index) => {
+    if (index === 0 && getDoctorRecommendationScore(doctor) > 50) return 'recommended';
+    if (doctor.availableToday) return 'fastest';
+    if (doctor.bookingCount > 100) return 'mostBooked';
+    if (doctor.rating >= 4.8) return 'topRated';
+    if (doctor.experience > 10) return 'experienced';
+    return null;
   };
 
   const getUniqueSpecializations = () => {
@@ -185,10 +212,19 @@ function DoctorList({ user }) {
             </div>
           ) : (
             <div className="row g-3">
-              {filteredDoctors.map((doctor) => (
+              {filteredDoctors.map((doctor, index) => {
+                const recommendationType = getDoctorRecommendationType(doctor, index);
+                return (
                 <div key={doctor._id} className="col-md-6 col-lg-4">
-                  <div className="card h-100 border-0 shadow-sm">
+                  <div className={`card h-100 shadow-sm ${recommendationType ? 'border-2' : 'border-0'}`}
+                    style={recommendationType ? { borderColor: '#667eea' } : {}}>
                     <div className="card-body">
+                      {recommendationType && (
+                        <DoctorRecommendationBadge 
+                          type={recommendationType}
+                          stats={doctor.rating ? `${doctor.rating}⭐` : null}
+                        />
+                      )}
                       <div className="d-flex align-items-center mb-3">
                         <div className="bg-primary rounded-circle p-2 me-3">
                           <i className="fas fa-user-md text-white"></i>
@@ -234,7 +270,8 @@ function DoctorList({ user }) {
                     </div>
                   </div>
                 </div>
-              ))}
+              );
+              })}
             </div>
           )}
         </div>

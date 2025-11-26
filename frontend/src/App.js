@@ -6,10 +6,16 @@ import './styles/modern-cards.css';
 import './styles/medical-theme-clean.css';
 import './styles/enhanced-layout-fix.css';
 import './styles/low-end-optimized.css';
-import './styles/theme-system.css';
+import './styles/optimized-animations.css'; // Optimized GPU-accelerated animations
+import './styles/unified-theme.css'; // Theme system
+import './styles/mobile-navbar-fix.css'; // Mobile navbar fixes
+import './styles/mobile-responsive.css'; // Complete mobile responsive styles
+import './styles/auth-visibility-fix.css'; // Ensures all text is visible
+import './styles/professional-navbar.css'; // Professional sticky navbar - MUST BE AFTER OTHER NAVBAR STYLES
+import './styles/growth-features-visibility.css'; // MUST BE LAST - Ensures new features are visible
 import PerformanceMonitor from './components/PerformanceMonitor';
 import OptimizedLoader from './components/OptimizedLoader';
-import ThemeToggle from './components/ThemeToggle';
+import toast, { Toaster } from 'react-hot-toast';
 
 // Import auth components
 import Auth from "./components/Auth";
@@ -17,6 +23,10 @@ import AdminAuth from "./components/AdminAuth";
 import ClinicAuth from "./components/ClinicAuth";
 import AIAssistant from "./components/AIAssistant";
 import MedicalHero from "./components/MedicalHero";
+import SymptomChecker from "./components/SymptomChecker";
+import FloatingChatBubble from "./components/FloatingChatBubble";
+import LiveStatsDisplay from "./components/LiveStatsDisplay";
+import ReviewsSection from "./components/ReviewsSection";
 
 // Lazy load dashboard components
 const DoctorList = React.lazy(() =>
@@ -121,6 +131,37 @@ function App() {
   });
   const [activeSection, setActiveSection] = useState("home");
 
+  // Prevent FOUC - Add loaded class after initial render and apply theme
+  useEffect(() => {
+    // Apply initial theme to document root
+    document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    
+    // Add loaded class to enable transitions after initial render
+    const timer = setTimeout(() => {
+      document.documentElement.classList.add('loaded');
+      document.body.classList.add('loaded');
+    }, 100);
+    
+    return () => clearTimeout(timer);
+  }, [darkMode]);
+
+  // Navbar scroll effect
+  useEffect(() => {
+    const handleScroll = () => {
+      const navbar = document.querySelector('.medical-nav');
+      if (navbar) {
+        if (window.scrollY > 50) {
+          navbar.classList.add('scrolled');
+        } else {
+          navbar.classList.remove('scrolled');
+        }
+      }
+    };
+
+    window.addEventListener('scroll', handleScroll, { passive: true });
+    return () => window.removeEventListener('scroll', handleScroll);
+  }, []);
+
   useEffect(() => {
     const isValidObject = (obj, keys) => obj && typeof obj === "object" && keys.every((k) => k in obj);
     const parseAndSet = (key, setter, keys) => {
@@ -155,10 +196,12 @@ function App() {
     setDarkMode(prev => {
       const newMode = !prev;
       localStorage.setItem('darkMode', newMode);
-      addNotification(`Switched to ${newMode ? 'Dark' : 'Light'} mode`, 'info');
+      // Apply theme to document root
+      document.documentElement.setAttribute('data-theme', newMode ? 'dark' : 'light');
+      toast.success(`Switched to ${newMode ? 'Dark' : 'Light'} mode`);
       return newMode;
     });
-  }, [addNotification]);
+  }, []);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -223,7 +266,7 @@ function App() {
     localStorage.removeItem("admin");
     localStorage.removeItem("receptionist");
     setCurrentView("landing");
-    addNotification('Logged out successfully', 'info');
+    toast.success('Logged out successfully');
   };
 
   // Smooth scroll to section
@@ -255,8 +298,16 @@ function App() {
   // Medical Landing Page Component
   const MedicalLandingPage = () => (
     <div className={`min-vh-100 ${darkMode ? 'dark-theme' : 'medical-bg'}`}>
+      {/* Skip to main content link for accessibility */}
+      <a href="#main-content" className="skip-to-main">
+        Skip to main content
+      </a>
+      
       {/* Beautiful Glassmorphism Navigation */}
-      <nav className="navbar navbar-expand-lg navbar-dark medical-nav fixed-top"
+      <nav 
+        className="navbar navbar-expand-lg navbar-dark medical-nav fixed-top"
+        role="navigation"
+        aria-label="Main navigation"
         style={{
           backdropFilter: 'blur(30px) saturate(180%)',
           WebkitBackdropFilter: 'blur(30px) saturate(180%)',
@@ -273,35 +324,19 @@ function App() {
             onMouseLeave={(e) => e.currentTarget.style.transform = 'scale(1)'}>
             <i className="fas fa-heartbeat me-2" style={{ 
               color: '#fbbf24',
-              animation: 'pulse 2s infinite',
-              filter: 'drop-shadow(0 2px 8px rgba(251, 191, 36, 0.5))'
+              filter: 'drop-shadow(0 2px 8px rgba(251, 191, 36, 0.5))',
+              fontSize: '2rem'
             }}></i>
             <span style={{ 
               fontWeight: '700', 
               letterSpacing: '-0.02em',
               color: '#ffffff',
-              fontSize: '1.4rem',
+              fontSize: '2rem',
               textShadow: '0 2px 10px rgba(0, 0, 0, 0.1)'
             }}>HealthSync</span>
           </span>
 
-          <button 
-            className="navbar-toggler" 
-            type="button" 
-            data-bs-toggle="collapse" 
-            data-bs-target="#navbarNav"
-            aria-controls="navbarNav"
-            aria-expanded="false"
-            aria-label="Toggle navigation"
-            style={{
-              border: '2px solid rgba(255, 255, 255, 0.5)',
-              borderRadius: '8px',
-              padding: '0.5rem 0.75rem'
-            }}>
-            <span className="navbar-toggler-icon"></span>
-          </button>
-
-          <div className="collapse navbar-collapse" id="navbarNav">
+          <div className="navbar-content-always-visible" id="navbarNav">
             <ul className="navbar-nav me-auto ms-lg-4">
               {['home', 'features', 'about', 'contact'].map((section) => (
                 <li className="nav-item" key={section}>
@@ -343,31 +378,73 @@ function App() {
               ))}
             </ul>
 
-            <div className="navbar-nav d-flex flex-column flex-lg-row gap-2 align-items-stretch align-items-lg-center mt-3 mt-lg-0">
+            <div className="d-flex flex-row gap-3 align-items-center mt-3 mt-lg-0 ms-lg-auto">
+              {/* Theme Toggle Button */}
               <button
-                className="btn px-4 py-2"
-                onClick={() => setCurrentView("auth")}
+                className="btn navbar-theme-toggle flex-shrink-0"
+                onClick={toggleDarkMode}
+                title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode (Ctrl+D)`}
+                aria-label={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
                 style={{
-                  borderRadius: '12px',
-                  background: 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)',
-                  color: '#667eea',
-                  border: 'none',
-                  fontWeight: '700',
-                  fontSize: '1rem',
-                  transition: 'all 0.4s cubic-bezier(0.4, 0, 0.2, 1)',
-                  boxShadow: '0 10px 40px rgba(0, 0, 0, 0.2)',
-                  position: 'relative',
-                  overflow: 'hidden'
+                  width: '50px',
+                  height: '50px',
+                  borderRadius: '50%',
+                  background: 'rgba(255, 255, 255, 0.2)',
+                  border: '2px solid rgba(255, 255, 255, 0.4)',
+                  color: '#ffffff',
+                  fontSize: '1.25rem',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  transition: 'all 0.3s ease',
+                  backdropFilter: 'blur(10px)',
+                  WebkitBackdropFilter: 'blur(10px)',
+                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
                 }}
                 onMouseEnter={(e) => {
-                  e.target.style.background = 'linear-gradient(135deg, #ffffff 0%, #ffffff 100%)';
-                  e.target.style.transform = 'translateY(-4px) scale(1.02)';
-                  e.target.style.boxShadow = '0 20px 60px rgba(0, 0, 0, 0.3)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.transform = 'scale(1.1) rotate(15deg)';
+                  e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.2)';
                 }}
                 onMouseLeave={(e) => {
-                  e.target.style.background = 'linear-gradient(135deg, #ffffff 0%, #f0f0f0 100%)';
+                  e.target.style.background = 'rgba(255, 255, 255, 0.2)';
+                  e.target.style.transform = 'scale(1) rotate(0deg)';
+                  e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
+                }}
+              >
+                <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+              </button>
+
+              {/* Get Started Button */}
+              <button
+                className="btn btn-get-started flex-shrink-0"
+                onClick={() => setCurrentView("auth")}
+                style={{
+                  borderRadius: '16px',
+                  background: '#ffffff',
+                  color: '#667eea',
+                  border: '3px solid #ffffff',
+                  fontWeight: '800',
+                  fontSize: '1.1rem',
+                  padding: '0.75rem 2rem',
+                  transition: 'all 0.3s ease',
+                  boxShadow: '0 8px 32px rgba(255, 255, 255, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3)',
+                  textShadow: 'none',
+                  letterSpacing: '0.5px',
+                  whiteSpace: 'nowrap',
+                  zIndex: 10
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = '#fbbf24';
+                  e.target.style.color = '#1e293b';
+                  e.target.style.transform = 'translateY(-3px) scale(1.05)';
+                  e.target.style.boxShadow = '0 12px 48px rgba(251, 191, 36, 0.6), 0 6px 24px rgba(0, 0, 0, 0.4)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = '#ffffff';
+                  e.target.style.color = '#667eea';
                   e.target.style.transform = 'translateY(0) scale(1)';
-                  e.target.style.boxShadow = '0 10px 40px rgba(0, 0, 0, 0.2)';
+                  e.target.style.boxShadow = '0 8px 32px rgba(255, 255, 255, 0.4), 0 4px 16px rgba(0, 0, 0, 0.3)';
                 }}
               >
                 Get Started →
@@ -378,12 +455,13 @@ function App() {
       </nav>
 
       {/* Medical Hero Section */}
-      <section id="home" className="hero-section pt-5 mt-5">
+      <main id="main-content" role="main">
+      <section id="home" className="hero-section pt-5 mt-5" aria-labelledby="hero-heading">
         <div className="container">
           <div className="row align-items-center min-vh-100">
             <div className="col-lg-6">
               <div className="hero-content">
-                <h1 className="display-3 fw-bold premium-title mb-4 fade-in-up">
+                <h1 id="hero-heading" className="display-3 fw-bold premium-title mb-4 fade-in-up">
                   The Future of
                   <span className="text-gradient"> Healthcare</span>
                   <br />Management
@@ -511,7 +589,7 @@ function App() {
                               <small className="text-muted">Today: 24</small>
                             </div>
                           </div>
-                          <div className="mini-pulse"></div>
+                          <div className="pulse-indicator"></div>
                         </div>
                       </div>
                       <div className="col-6">
@@ -523,7 +601,7 @@ function App() {
                               <small className="text-muted">Online: 12</small>
                             </div>
                           </div>
-                          <div className="mini-pulse success"></div>
+                          <div className="pulse-indicator"></div>
                         </div>
                       </div>
                     </div>
@@ -828,6 +906,18 @@ function App() {
           </div>
         </div>
       </section>
+
+      {/* AI Symptom Checker - HIGH VALUE FEATURE */}
+      <SymptomChecker onBookAppointment={() => {
+        setLoginType("patient");
+        setCurrentView("auth");
+      }} />
+
+      {/* Live Stats Dashboard - Social Proof */}
+      <LiveStatsDisplay />
+
+      {/* Reviews & Success Stories */}
+      <ReviewsSection />
 
       {/* About Us Section */}
       <section id="about" className="about-section py-5 bg-light">
@@ -1176,8 +1266,10 @@ function App() {
         </div>
       </section>
 
+      </main>
+      
       {/* Footer */}
-      <footer className="footer py-5">
+      <footer className="footer py-5" role="contentinfo" aria-label="Site footer">
         <div className="container">
           <div className="row g-4">
             <div className="col-lg-4">
@@ -1336,13 +1428,53 @@ function App() {
           </div>
         </div>
       </footer>
+
+      {/* Floating AI Chat Bubble - Always Visible */}
+      <FloatingChatBubble onOpenChat={() => {
+        setLoginType("patient");
+        setCurrentView("auth");
+      }} />
     </div>
   );
 
   return (
     <div>
-      {/* Theme Toggle */}
-      <ThemeToggle />
+      {/* Global Toast Notifications */}
+      <Toaster
+        position="top-right"
+        reverseOrder={false}
+        toastOptions={{
+          duration: 4000,
+          style: {
+            background: '#fff',
+            color: '#1e293b',
+            padding: '16px',
+            borderRadius: '12px',
+            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
+            fontWeight: '600',
+          },
+          success: {
+            duration: 3000,
+            iconTheme: {
+              primary: '#10b981',
+              secondary: '#fff',
+            },
+            style: {
+              border: '2px solid #10b981',
+            },
+          },
+          error: {
+            duration: 4000,
+            iconTheme: {
+              primary: '#ef4444',
+              secondary: '#fff',
+            },
+            style: {
+              border: '2px solid #ef4444',
+            },
+          },
+        }}
+      />
       
       {/* Performance Monitor */}
       <PerformanceMonitor />
@@ -1372,19 +1504,34 @@ function App() {
                 <i className="fas fa-heartbeat me-2"></i>
                 HealthSync Pro
               </span>
-              <div className="navbar-nav ms-auto d-flex flex-row gap-2">
+              <div className="navbar-nav ms-auto d-flex flex-row gap-2 align-items-center">
+                <button
+                  className="btn navbar-theme-toggle"
+                  onClick={toggleDarkMode}
+                  title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode (Ctrl+D)`}
+                  aria-label={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
+                  style={{
+                    width: '45px',
+                    height: '45px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    border: '2px solid rgba(255, 255, 255, 0.4)',
+                    color: '#ffffff',
+                    fontSize: '1.1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s ease'
+                  }}
+                >
+                  <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+                </button>
                 <button
                   className="btn btn-outline-light btn-sm"
                   onClick={() => setCurrentView("landing")}
                 >
                   <i className="fas fa-arrow-left me-1"></i>
                   Back to Home
-                </button>
-                <button
-                  className="btn btn-outline-light btn-sm"
-                  onClick={toggleDarkMode}
-                >
-                  <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
                 </button>
               </div>
             </div>
@@ -1454,13 +1601,34 @@ function App() {
                 <i className="fas fa-heartbeat me-2"></i>
                 HealthSync Pro
               </span>
-              <div className="navbar-nav ms-auto d-flex flex-row gap-2">
+              <div className="navbar-nav ms-auto d-flex flex-row gap-2 align-items-center">
                 <button
-                  className="btn btn-outline-light btn-sm"
+                  className="btn navbar-theme-toggle"
                   onClick={toggleDarkMode}
                   title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode (Ctrl+D)`}
+                  aria-label={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
+                  style={{
+                    width: '45px',
+                    height: '45px',
+                    borderRadius: '50%',
+                    background: 'rgba(255, 255, 255, 0.2)',
+                    border: '2px solid rgba(255, 255, 255, 0.4)',
+                    color: '#ffffff',
+                    fontSize: '1.1rem',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center',
+                    transition: 'all 0.3s ease'
+                  }}
                 >
                   <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+                </button>
+                <button
+                  className="btn btn-outline-light btn-sm"
+                  onClick={handleLogoutAll}
+                >
+                  <i className="fas fa-sign-out-alt me-1"></i>
+                  Logout
                 </button>
               </div>
             </div>
@@ -1661,12 +1829,71 @@ function App() {
         </div>
       )}
 
+      {/* Floating Theme Toggle Button - Always Visible */}
+      <button
+        className="theme-toggle-btn"
+        onClick={toggleDarkMode}
+        title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode (Ctrl+D)`}
+        aria-label={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
+        style={{
+          position: 'fixed',
+          bottom: '2rem',
+          right: '2rem',
+          width: '60px',
+          height: '60px',
+          borderRadius: '50%',
+          background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+          border: darkMode ? '3px solid rgba(102, 126, 234, 0.5)' : '3px solid rgba(255, 255, 255, 0.5)',
+          color: darkMode ? '#fbbf24' : '#667eea',
+          fontSize: '1.5rem',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          cursor: 'pointer',
+          zIndex: 9999,
+          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1)',
+          backdropFilter: 'blur(5px)',
+          WebkitBackdropFilter: 'blur(5px)',
+          transition: 'all 0.3s ease',
+          border: 'none'
+        }}
+        onMouseEnter={(e) => {
+          e.target.style.transform = 'scale(1.1) rotate(15deg)';
+          e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.2), 0 3px 10px rgba(0, 0, 0, 0.1)';
+        }}
+        onMouseLeave={(e) => {
+          e.target.style.transform = 'scale(1) rotate(0deg)';
+          e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1)';
+        }}
+      >
+        <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
+      </button>
+
       {/* Scroll to Top Button */}
       {(user || admin || receptionist) && (
         <button
           className="scroll-to-top-btn"
           onClick={scrollToTop}
           title="Scroll to top"
+          style={{
+            position: 'fixed',
+            bottom: '2rem',
+            right: '6rem',
+            width: '50px',
+            height: '50px',
+            borderRadius: '50%',
+            background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            border: 'none',
+            color: darkMode ? '#fbbf24' : '#667eea',
+            fontSize: '1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 9999,
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
+            transition: 'all 0.3s ease'
+          }}
         >
           <i className="fas fa-chevron-up"></i>
         </button>

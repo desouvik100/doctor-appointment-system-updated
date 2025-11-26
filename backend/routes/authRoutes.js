@@ -50,7 +50,8 @@ router.post('/register', async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        phone: user.phone
+        phone: user.phone,
+        profilePhoto: user.profilePhoto
       }
     });
   } catch (error) {
@@ -95,7 +96,8 @@ router.post('/login', async (req, res) => {
         name: user.name,
         email: user.email,
         role: user.role,
-        phone: user.phone
+        phone: user.phone,
+        profilePhoto: user.profilePhoto
       }
     });
   } catch (error) {
@@ -139,7 +141,8 @@ router.post('/admin/login', async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role
+        role: user.role,
+        profilePhoto: user.profilePhoto
       }
     });
   } catch (error) {
@@ -193,7 +196,8 @@ router.post('/clinic/login', async (req, res) => {
         phone: user.phone,
         clinicId: user.clinicId,
         clinicName: user.clinicName,
-        approvalStatus: user.approvalStatus
+        approvalStatus: user.approvalStatus,
+        profilePhoto: user.profilePhoto
       }
     });
   } catch (error) {

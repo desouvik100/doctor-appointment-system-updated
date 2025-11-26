@@ -11,66 +11,97 @@
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <title>HealthSync AI - Healthcare Management</title>
 
-  <!-- SINGLE SOURCE OF TRUTH: Blue gradient background v2.0 -->
+  <!-- Critical CSS - OPTIMIZED for Performance -->
   <style>
+    /* OPTIMIZED: Removed background-attachment: fixed - causes expensive repaints */
     html {
       margin: 0;
       padding: 0;
-      /* Blue gradient on html element only - FORCED */
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
-      background-attachment: fixed !important;
       min-height: 100vh;
+      transition: none !important;
     }
     
     body {
       margin: 0;
       padding: 0;
-      /* Transparent body - shows html background */
       background: transparent !important;
       min-height: 100vh;
+      transition: none !important;
     }
     
     #root {
       min-height: 100vh;
-      /* Transparent root - shows html background */
+      background: transparent !important;
+      transition: none !important;
+    }
+    
+    /* Force all containers transparent */
+    .App,
+    .medical-bg,
+    .dark-theme,
+    section,
+    main,
+    div[class*="container"] {
       background: transparent !important;
     }
     
-    /* Force all main containers to be transparent */
-    .App,
-    .medical-bg,
-    .dark-theme {
-      background: transparent !important;
+    /* Dark mode override */
+    html[data-theme="dark"] {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%) !important;
+    }
+    
+    /* OPTIMIZED: Use absolute positioning instead of fixed for better performance */
+    body::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      z-index: -1;
+      pointer-events: none;
+    }
+    
+    html[data-theme="dark"] body::before {
+      background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
     }
   </style>
   
-  <!-- Force clear cache and apply blue gradient -->
+  <!-- Instant theme application - NO FLASH -->
   <script>
-    // Clear service worker cache if exists
-    if ('serviceWorker' in navigator) {
-      navigator.serviceWorker.getRegistrations().then(function(registrations) {
-        for(let registration of registrations) {
-          registration.unregister();
-        }
-      });
-    }
-    
-    // Force blue gradient immediately
     (function() {
+      // Get saved theme immediately
+      var savedTheme = localStorage.getItem('darkMode');
+      var theme = savedTheme === 'true' ? 'dark' : 'light';
+      
+      // Apply theme attribute BEFORE any rendering
+      document.documentElement.setAttribute('data-theme', theme);
+      
+      // Apply gradient immediately
       var applyGradient = function() {
-        document.documentElement.style.cssText = 'background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important; background-attachment: fixed !important; min-height: 100vh;';
-        document.body.style.cssText = 'background: transparent !important; margin: 0; padding: 0; min-height: 100vh;';
+        var currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
+        var gradient = currentTheme === 'dark' 
+          ? 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'
+          : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
+        
+        document.documentElement.style.cssText = 'background: ' + gradient + ' !important; background-attachment: fixed !important; min-height: 100vh; transition: none !important;';
+        document.body.style.cssText = 'background: transparent !important; margin: 0; padding: 0; min-height: 100vh; transition: none !important;';
       };
       
       applyGradient();
       
-      // Reapply after DOM loads
-      if (document.readyState === 'loading') {
-        document.addEventListener('DOMContentLoaded', applyGradient);
-      }
+      // Watch for theme changes
+      var observer = new MutationObserver(function(mutations) {
+        mutations.forEach(function(mutation) {
+          if (mutation.attributeName === 'data-theme') {
+            applyGradient();
+          }
+        });
+      });
       
-      // Reapply after everything loads
-      window.addEventListener('load', applyGradient);
+      observer.observe(document.documentElement, { attributes: true });
     })();
   </script>
 </head>

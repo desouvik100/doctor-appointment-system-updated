@@ -1,0 +1,327 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="light">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Theme Toggle Test</title>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    <style>
+        /* CSS Variables for both themes */
+        :root {
+            --transition-speed: 0.3s;
+        }
+
+        /* Light Theme Variables */
+        [data-theme="light"] {
+            --bg-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            --text-primary: #ffffff;
+            --card-bg: #ffffff;
+            --card-text: #1e293b;
+        }
+
+        /* Dark Theme Variables */
+        [data-theme="dark"] {
+            --bg-gradient: linear-gradient(135deg, #1e293b 0%, #0f172a 100%);
+            --text-primary: #f1f5f9;
+            --card-bg: rgba(30, 41, 59, 0.95);
+            --card-text: #f1f5f9;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            transition: background 0.3s ease, color 0.3s ease;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: var(--bg-gradient);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+
+        .container {
+            max-width: 600px;
+            width: 100%;
+        }
+
+        .card {
+            background: var(--card-bg);
+            color: var(--card-text);
+            padding: 3rem;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15);
+            text-align: center;
+        }
+
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 1rem;
+            color: var(--card-text);
+        }
+
+        p {
+            font-size: 1.1rem;
+            margin-bottom: 2rem;
+            color: var(--card-text);
+            opacity: 0.8;
+        }
+
+        .theme-info {
+            background: rgba(102, 126, 234, 0.1);
+            padding: 1.5rem;
+            border-radius: 12px;
+            margin-bottom: 2rem;
+        }
+
+        .theme-info h2 {
+            font-size: 1.5rem;
+            margin-bottom: 0.5rem;
+            color: var(--card-text);
+        }
+
+        .theme-info .icon {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+
+        [data-theme="light"] .theme-info .icon {
+            color: #667eea;
+        }
+
+        [data-theme="dark"] .theme-info .icon {
+            color: #fbbf24;
+        }
+
+        .toggle-button {
+            background: #667eea;
+            color: white;
+            border: none;
+            padding: 1rem 2rem;
+            font-size: 1.1rem;
+            border-radius: 50px;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        .toggle-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+        }
+
+        .floating-toggle {
+            position: fixed;
+            bottom: 2rem;
+            right: 2rem;
+            width: 60px;
+            height: 60px;
+            border-radius: 50%;
+            background: var(--card-bg);
+            border: 3px solid rgba(102, 126, 234, 0.5);
+            color: var(--card-text);
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+            transition: all 0.3s ease;
+        }
+
+        .floating-toggle:hover {
+            transform: scale(1.1) rotate(15deg);
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.2);
+        }
+
+        .features {
+            text-align: left;
+            margin-top: 2rem;
+            padding-top: 2rem;
+            border-top: 2px solid rgba(102, 126, 234, 0.2);
+        }
+
+        .features h3 {
+            color: var(--card-text);
+            margin-bottom: 1rem;
+        }
+
+        .features ul {
+            list-style: none;
+            padding: 0;
+        }
+
+        .features li {
+            padding: 0.5rem 0;
+            color: var(--card-text);
+            opacity: 0.9;
+        }
+
+        .features li i {
+            color: #10b981;
+            margin-right: 0.5rem;
+        }
+
+        .keyboard-hint {
+            margin-top: 1rem;
+            padding: 1rem;
+            background: rgba(251, 191, 36, 0.1);
+            border-radius: 8px;
+            font-size: 0.9rem;
+            color: var(--card-text);
+        }
+
+        .keyboard-hint code {
+            background: rgba(0, 0, 0, 0.1);
+            padding: 0.2rem 0.5rem;
+            border-radius: 4px;
+            font-family: monospace;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="card">
+            <div class="theme-info">
+                <div class="icon">
+                    <i class="fas fa-moon" id="themeIcon"></i>
+                </div>
+                <h2 id="themeName">Light Mode</h2>
+                <p id="themeDesc">Bright and vibrant interface</p>
+            </div>
+
+            <h1>🌓 Theme Toggle Test</h1>
+            <p>Click the button below or press <code>Ctrl+D</code> to switch themes</p>
+
+            <button class="toggle-button" onclick="toggleTheme()">
+                <i class="fas fa-adjust"></i>
+                Toggle Theme
+            </button>
+
+            <div class="features">
+                <h3>✨ Features Working:</h3>
+                <ul>
+                    <li><i class="fas fa-check-circle"></i> Smooth theme transitions</li>
+                    <li><i class="fas fa-check-circle"></i> CSS custom properties</li>
+                    <li><i class="fas fa-check-circle"></i> Persistent theme preference</li>
+                    <li><i class="fas fa-check-circle"></i> Keyboard shortcut support</li>
+                    <li><i class="fas fa-check-circle"></i> Floating toggle button</li>
+                </ul>
+            </div>
+
+            <div class="keyboard-hint">
+                💡 <strong>Pro Tip:</strong> Press <code>Ctrl+D</code> (or <code>Cmd+D</code> on Mac) to quickly toggle the theme!
+            </div>
+        </div>
+    </div>
+
+    <!-- Floating Toggle Button -->
+    <button class="floating-toggle" onclick="toggleTheme()" title="Toggle Theme">
+        <i class="fas fa-moon" id="floatingIcon"></i>
+    </button>
+
+    <script>
+        // Initialize theme from localStorage
+        const savedTheme = localStorage.getItem('theme') || 'light';
+        document.documentElement.setAttribute('data-theme', savedTheme);
+        updateThemeUI(savedTheme);
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            const newTheme = currentTheme === 'light' ? 'dark' : 'light';
+            
+            // Apply theme
+            document.documentElement.setAttribute('data-theme', newTheme);
+            localStorage.setItem('theme', newTheme);
+            
+            // Update UI
+            updateThemeUI(newTheme);
+            
+            // Show notification
+            showNotification(`Switched to ${newTheme === 'dark' ? 'Dark' : 'Light'} Mode`);
+        }
+
+        function updateThemeUI(theme) {
+            const isDark = theme === 'dark';
+            
+            // Update icons
+            document.getElementById('themeIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            document.getElementById('floatingIcon').className = isDark ? 'fas fa-sun' : 'fas fa-moon';
+            
+            // Update text
+            document.getElementById('themeName').textContent = isDark ? 'Dark Mode' : 'Light Mode';
+            document.getElementById('themeDesc').textContent = isDark 
+                ? 'Easy on the eyes, modern look' 
+                : 'Bright and vibrant interface';
+        }
+
+        function showNotification(message) {
+            // Create notification element
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.cssText = `
+                position: fixed;
+                top: 2rem;
+                right: 2rem;
+                background: #10b981;
+                color: white;
+                padding: 1rem 1.5rem;
+                border-radius: 12px;
+                box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+                z-index: 10000;
+                animation: slideIn 0.3s ease;
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Remove after 3 seconds
+            setTimeout(() => {
+                notification.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => notification.remove(), 300);
+            }, 3000);
+        }
+
+        // Keyboard shortcut
+        document.addEventListener('keydown', (e) => {
+            if ((e.ctrlKey || e.metaKey) && e.key === 'd') {
+                e.preventDefault();
+                toggleTheme();
+            }
+        });
+
+        // Add animations
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+                to {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+            }
+            
+            @keyframes slideOut {
+                from {
+                    transform: translateX(0);
+                    opacity: 1;
+                }
+                to {
+                    transform: translateX(400px);
+                    opacity: 0;
+                }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
