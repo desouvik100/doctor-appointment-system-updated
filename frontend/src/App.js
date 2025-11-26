@@ -380,42 +380,6 @@ function App() {
             </ul>
 
             <div className="d-flex flex-row gap-3 align-items-center mt-3 mt-lg-0 ms-lg-auto">
-              {/* Theme Toggle Button */}
-              <button
-                className="btn navbar-theme-toggle flex-shrink-0"
-                onClick={toggleDarkMode}
-                title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode (Ctrl+D)`}
-                aria-label={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
-                style={{
-                  width: '50px',
-                  height: '50px',
-                  borderRadius: '50%',
-                  background: 'rgba(255, 255, 255, 0.2)',
-                  border: '2px solid rgba(255, 255, 255, 0.4)',
-                  color: '#ffffff',
-                  fontSize: '1.25rem',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  transition: 'all 0.3s ease',
-                  backdropFilter: 'blur(10px)',
-                  WebkitBackdropFilter: 'blur(10px)',
-                  boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)'
-                }}
-                onMouseEnter={(e) => {
-                  e.target.style.background = 'rgba(255, 255, 255, 0.3)';
-                  e.target.style.transform = 'scale(1.1) rotate(15deg)';
-                  e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.2)';
-                }}
-                onMouseLeave={(e) => {
-                  e.target.style.background = 'rgba(255, 255, 255, 0.2)';
-                  e.target.style.transform = 'scale(1) rotate(0deg)';
-                  e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15)';
-                }}
-              >
-                <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
-              </button>
-
               {/* Get Started Button */}
               <button
                 className="btn btn-get-started flex-shrink-0"
