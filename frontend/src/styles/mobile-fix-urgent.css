@@ -1,0 +1,508 @@
+/* ========================================
+   URGENT MOBILE FIX
+   Fixes all mobile view issues immediately
+   ======================================== */
+
+/* ========================================
+   CRITICAL MOBILE FIXES
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Prevent horizontal scroll */
+  html, body {
+    overflow-x: hidden !important;
+    max-width: 100vw !important;
+    width: 100% !important;
+  }
+
+  /* Fix container overflow */
+  .container,
+  .container-fluid,
+  .row,
+  [class*="col-"] {
+    max-width: 100% !important;
+    overflow-x: hidden !important;
+  }
+
+  /* Fix navbar on mobile */
+  .medical-nav,
+  .navbar {
+    width: 100% !important;
+    max-width: 100vw !important;
+    overflow-x: hidden !important;
+  }
+
+  .medical-nav .container {
+    padding-left: 1rem !important;
+    padding-right: 1rem !important;
+  }
+
+  /* Fix navbar brand */
+  .navbar-brand {
+    font-size: 1.5rem !important;
+    white-space: nowrap !important;
+  }
+
+  /* Fix navigation links */
+  .navbar-nav {
+    width: 100% !important;
+    max-width: 100% !important;
+  }
+
+  /* Fix buttons */
+  .btn,
+  button {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0.5rem 0 !important;
+  }
+
+  .btn-get-started {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 1rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* Fix forms */
+  input,
+  textarea,
+  select,
+  .form-control {
+    width: 100% !important;
+    max-width: 100% !important;
+    font-size: 16px !important; /* Prevent zoom on iOS */
+  }
+
+  /* Fix cards */
+  .card,
+  .medical-card {
+    width: 100% !important;
+    max-width: 100% !important;
+    margin: 0.5rem 0 !important;
+  }
+
+  .card-body {
+    padding: 1rem !important;
+  }
+
+  /* Fix images */
+  img {
+    max-width: 100% !important;
+    height: auto !important;
+  }
+
+  /* Fix modals */
+  .modal-dialog {
+    margin: 0.5rem !important;
+    max-width: calc(100% - 1rem) !important;
+  }
+
+  .modal-content {
+    width: 100% !important;
+  }
+
+  /* Fix tables */
+  table {
+    width: 100% !important;
+    display: block !important;
+    overflow-x: auto !important;
+  }
+
+  /* Fix hero sections */
+  .hero,
+  .jumbotron {
+    padding: 2rem 1rem !important;
+  }
+
+  /* Fix spacing */
+  .p-5 {
+    padding: 1.5rem !important;
+  }
+
+  .py-5 {
+    padding-top: 1.5rem !important;
+    padding-bottom: 1.5rem !important;
+  }
+
+  .m-5 {
+    margin: 1rem !important;
+  }
+
+  /* Fix text */
+  h1 {
+    font-size: 1.75rem !important;
+  }
+
+  h2 {
+    font-size: 1.5rem !important;
+  }
+
+  h3 {
+    font-size: 1.25rem !important;
+  }
+
+  p {
+    font-size: 1rem !important;
+  }
+
+  /* Fix flexbox */
+  .d-flex {
+    flex-direction: column !important;
+  }
+
+  /* Fix grid */
+  .row {
+    flex-direction: column !important;
+  }
+
+  [class*="col-"] {
+    width: 100% !important;
+    flex: 0 0 100% !important;
+  }
+}
+
+/* ========================================
+   NAVBAR MOBILE FIX
+   ======================================== */
+
+@media (max-width: 991px) {
+  .medical-nav.fixed-top {
+    position: sticky !important;
+    top: 0 !important;
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+
+  .medical-nav .container {
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+    width: 100% !important;
+  }
+
+  .navbar-brand {
+    width: 100% !important;
+    text-align: center !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  .navbar-content-always-visible {
+    width: 100% !important;
+    display: flex !important;
+    flex-direction: column !important;
+    align-items: center !important;
+  }
+
+  .navbar-nav {
+    display: flex !important;
+    flex-direction: row !important;
+    overflow-x: auto !important;
+    width: 100% !important;
+    padding: 0.5rem 0 !important;
+    gap: 0.5rem !important;
+    -webkit-overflow-scrolling: touch !important;
+    scrollbar-width: none !important;
+  }
+
+  .navbar-nav::-webkit-scrollbar {
+    display: none !important;
+  }
+
+  .nav-item {
+    flex-shrink: 0 !important;
+  }
+
+  .nav-link {
+    white-space: nowrap !important;
+    padding: 0.5rem 1rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  .btn-get-started {
+    width: 100% !important;
+    max-width: 300px !important;
+    margin: 0.5rem auto !important;
+  }
+}
+
+/* ========================================
+   AUTH PAGE MOBILE FIX
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Fix auth container */
+  .auth-container,
+  [class*="auth"] {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 1rem !important;
+  }
+
+  /* Fix login/register forms */
+  .login-form,
+  .register-form,
+  .auth-form {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 1.5rem 1rem !important;
+  }
+
+  /* Fix auth buttons */
+  .auth-button,
+  .login-button,
+  .register-button {
+    width: 100% !important;
+    padding: 1rem !important;
+    font-size: 1rem !important;
+  }
+
+  /* Fix back button */
+  .back-button,
+  [class*="back"] {
+    width: 100% !important;
+    margin-bottom: 1rem !important;
+  }
+}
+
+/* ========================================
+   DASHBOARD MOBILE FIX
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Fix dashboard layout */
+  .dashboard,
+  .patient-dashboard,
+  .admin-dashboard {
+    width: 100% !important;
+    padding: 1rem !important;
+  }
+
+  /* Fix dashboard cards */
+  .dashboard-card,
+  .stat-card,
+  .info-card {
+    width: 100% !important;
+    margin-bottom: 1rem !important;
+  }
+
+  /* Fix dashboard grid */
+  .dashboard-grid {
+    display: flex !important;
+    flex-direction: column !important;
+    gap: 1rem !important;
+  }
+}
+
+/* ========================================
+   FORM MOBILE FIX
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Fix all form elements */
+  .form-group {
+    width: 100% !important;
+    margin-bottom: 1rem !important;
+  }
+
+  label {
+    display: block !important;
+    width: 100% !important;
+    margin-bottom: 0.5rem !important;
+  }
+
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  textarea,
+  select {
+    width: 100% !important;
+    max-width: 100% !important;
+    padding: 0.875rem !important;
+    font-size: 16px !important;
+    border-radius: 8px !important;
+  }
+
+  /* Fix input groups */
+  .input-group {
+    width: 100% !important;
+    flex-direction: column !important;
+  }
+
+  .input-group-text {
+    width: 100% !important;
+    border-radius: 8px 8px 0 0 !important;
+  }
+
+  .input-group input {
+    border-radius: 0 0 8px 8px !important;
+  }
+}
+
+/* ========================================
+   MODAL MOBILE FIX
+   ======================================== */
+
+@media (max-width: 768px) {
+  .modal {
+    padding: 0 !important;
+  }
+
+  .modal-dialog {
+    margin: 0 !important;
+    max-width: 100% !important;
+    height: 100vh !important;
+  }
+
+  .modal-content {
+    height: 100% !important;
+    border-radius: 0 !important;
+  }
+
+  .modal-header {
+    padding: 1rem !important;
+  }
+
+  .modal-body {
+    padding: 1rem !important;
+    overflow-y: auto !important;
+    max-height: calc(100vh - 150px) !important;
+  }
+
+  .modal-footer {
+    padding: 1rem !important;
+  }
+
+  .modal-footer .btn {
+    width: 100% !important;
+    margin: 0.25rem 0 !important;
+  }
+}
+
+/* ========================================
+   TABLE MOBILE FIX
+   ======================================== */
+
+@media (max-width: 768px) {
+  .table-responsive {
+    width: 100% !important;
+    overflow-x: auto !important;
+    -webkit-overflow-scrolling: touch !important;
+  }
+
+  table {
+    min-width: 600px !important;
+  }
+
+  th, td {
+    padding: 0.5rem !important;
+    font-size: 0.875rem !important;
+  }
+}
+
+/* ========================================
+   TOUCH OPTIMIZATION
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Minimum touch target size */
+  a,
+  button,
+  .btn,
+  input,
+  select {
+    min-height: 44px !important;
+    min-width: 44px !important;
+  }
+
+  /* Better tap feedback */
+  button:active,
+  .btn:active,
+  a:active {
+    opacity: 0.7 !important;
+  }
+
+  /* Remove hover effects on touch */
+  @media (hover: none) {
+    *:hover {
+      background: inherit !important;
+      transform: none !important;
+    }
+  }
+}
+
+/* ========================================
+   PREVENT COMMON ISSUES
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Prevent zoom on input focus */
+  input,
+  textarea,
+  select {
+    font-size: 16px !important;
+  }
+
+  /* Fix iOS Safari bottom bar */
+  .min-vh-100 {
+    min-height: -webkit-fill-available !important;
+  }
+
+  /* Prevent text selection issues */
+  * {
+    -webkit-tap-highlight-color: rgba(0, 0, 0, 0.1) !important;
+  }
+
+  /* Fix for fixed elements */
+  .fixed-top,
+  .fixed-bottom {
+    width: 100% !important;
+    max-width: 100vw !important;
+  }
+}
+
+/* ========================================
+   SMALL MOBILE (≤ 576px)
+   ======================================== */
+
+@media (max-width: 576px) {
+  /* Even more compact */
+  .container {
+    padding-left: 0.75rem !important;
+    padding-right: 0.75rem !important;
+  }
+
+  h1 {
+    font-size: 1.5rem !important;
+  }
+
+  h2 {
+    font-size: 1.35rem !important;
+  }
+
+  .btn {
+    padding: 0.75rem !important;
+    font-size: 0.95rem !important;
+  }
+
+  .card-body {
+    padding: 0.875rem !important;
+  }
+}
+
+/* ========================================
+   LANDSCAPE MODE
+   ======================================== */
+
+@media (max-height: 500px) and (orientation: landscape) {
+  .py-5 {
+    padding-top: 1rem !important;
+    padding-bottom: 1rem !important;
+  }
+
+  .modal-body {
+    max-height: 60vh !important;
+  }
+}
