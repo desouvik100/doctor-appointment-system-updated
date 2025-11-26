@@ -12,6 +12,7 @@ import './styles/mobile-navbar-fix.css'; // Mobile navbar fixes
 import './styles/mobile-responsive.css'; // Complete mobile responsive styles
 import './styles/auth-visibility-fix.css'; // Ensures all text is visible
 import './styles/professional-navbar.css'; // Professional sticky navbar - MUST BE AFTER OTHER NAVBAR STYLES
+import './styles/mobile-responsive-complete.css'; // COMPLETE MOBILE RESPONSIVE - MUST BE NEAR END
 import './styles/growth-features-visibility.css'; // MUST BE LAST - Ensures new features are visible
 import PerformanceMonitor from './components/PerformanceMonitor';
 import OptimizedLoader from './components/OptimizedLoader';
