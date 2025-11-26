@@ -1541,7 +1541,8 @@
     border-color: rgba(71, 85, 105, 0.5) !important;
 }
 
-*/ Professional Reports Section Styles */ .reports-stats-grid {
+/* Professional Reports Section Styles */ 
+.reports-stats-grid {
     display: grid;
     grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
     gap: 1.5rem;
