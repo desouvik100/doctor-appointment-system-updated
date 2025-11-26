@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from "react";
-import 'bootstrap/dist/css/bootstrap.min.css';
+import './styles/bootstrap-minimal.css';
 import './styles/smooth-scrolling.css';
 import './styles/medical-theme-clean.css';
 import './styles/admin-fix.css';
