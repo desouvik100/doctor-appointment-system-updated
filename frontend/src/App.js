@@ -1,8 +1,5 @@
 import React, { useState, useEffect } from "react";
-import './styles/bootstrap-minimal.css';
-import './styles/smooth-scrolling.css';
-import './styles/medical-theme-clean.css';
-import './styles/admin-fix.css';
+import './styles/safe-minimal.css';
 
 // Import auth components
 import Auth from "./components/Auth";
