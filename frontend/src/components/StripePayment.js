@@ -1,30 +1,15 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/config';
+import { loadStripe } from '@stripe/stripe-js';
+import {
+  Elements,
+  CardElement,
+  useStripe,
+  useElements
+} from '@stripe/react-stripe-js';
 
-// Conditional Stripe imports to prevent build errors
-let loadStripe, Elements, CardElement, useStripe, useElements;
-
-try {
-  const stripeJs = require('@stripe/stripe-js');
-  const stripeReact = require('@stripe/react-stripe-js');
-  
-  loadStripe = stripeJs.loadStripe;
-  Elements = stripeReact.Elements;
-  CardElement = stripeReact.CardElement;
-  useStripe = stripeReact.useStripe;
-  useElements = stripeReact.useElements;
-} catch (error) {
-  console.warn('Stripe modules not available:', error.message);
-  // Fallback components
-  loadStripe = () => null;
-  Elements = ({ children }) => children;
-  CardElement = () => <div className="alert alert-warning">Stripe payment not available</div>;
-  useStripe = () => null;
-  useElements = () => null;
-}
-
-// Stripe configuration with fallback
-const stripePromise = loadStripe ? loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder') : Promise.resolve(null);
+// Stripe configuration
+const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder');
 
 const CARD_ELEMENT_OPTIONS = {
   style: {

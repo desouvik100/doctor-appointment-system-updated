@@ -1,22 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/config';
-
-// Conditional import for StripePayment
-let StripePayment;
-try {
-  StripePayment = require('./StripePayment').default;
-} catch (error) {
-  console.warn('StripePayment component not available:', error.message);
-  StripePayment = ({ onCancel }) => (
-    <div className="alert alert-warning">
-      <h4>Payment Service Unavailable</h4>
-      <p>Payment processing is temporarily unavailable. Please try again later.</p>
-      <button className="btn btn-secondary" onClick={onCancel}>
-        Go Back
-      </button>
-    </div>
-  );
-}
+import StripePayment from './StripePayment';
 
 const PaymentGateway = ({ appointmentId, user, onPaymentSuccess, onPaymentCancel }) => {
   const [showStripePayment, setShowStripePayment] = useState(false);

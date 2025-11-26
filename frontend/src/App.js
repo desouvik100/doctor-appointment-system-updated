@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useCallback } from "react";
 import './styles/safe-minimal.css';
 
 // Import auth components
@@ -128,19 +128,22 @@ function App() {
     parseAndSet("receptionist", setReceptionist, ["name", "email"]);
   }, []);
 
-  const addNotification = (message, type = 'info') => {
+  const addNotification = useCallback((message, type = 'info') => {
     const id = Date.now();
     setNotifications(prev => [...prev, { id, message, type }]);
     setTimeout(() => {
       setNotifications(prev => prev.filter(n => n.id !== id));
     }, 5000);
-  };
+  }, []);
 
-  const toggleDarkMode = () => {
-    setDarkMode(!darkMode);
-    localStorage.setItem('darkMode', !darkMode);
-    addNotification(`Switched to ${!darkMode ? 'Dark' : 'Light'} mode`, 'info');
-  };
+  const toggleDarkMode = useCallback(() => {
+    setDarkMode(prev => {
+      const newMode = !prev;
+      localStorage.setItem('darkMode', newMode);
+      addNotification(`Switched to ${newMode ? 'Dark' : 'Light'} mode`, 'info');
+      return newMode;
+    });
+  }, [addNotification]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -177,13 +180,16 @@ function App() {
             e.preventDefault();
             toggleDarkMode();
             break;
+          default:
+            // No action for other keys
+            break;
         }
       }
     };
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [user, admin, receptionist, darkMode]);
+  }, [user, admin, receptionist, darkMode, toggleDarkMode]);
 
   const handleLogin = (userData, userType) => {
     if (userType === 'admin') {
