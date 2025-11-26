@@ -1081,8 +1081,9 @@ anced Micro-interactions */
 /* Enhanced Dark Mode Transitions */
 .dark-theme * {
     transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}/* Enh
-anced Smooth Scrolling for Tables and Content */
+}
+
+/* Enhanced Smooth Scrolling for Tables and Content */
 .table-responsive {
     scroll-behavior: smooth;
     scrollbar-width: thin;

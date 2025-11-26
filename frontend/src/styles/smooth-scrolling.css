@@ -283,8 +283,9 @@ input:focus, textarea:focus, select:focus {
 ::-moz-selection {
     background: rgba(59, 130, 246, 0.2);
     color: inherit;
-}/
-* Professional Scroll Reveal Animations */
+}
+
+/* Professional Scroll Reveal Animations */
 .scroll-hidden {
     opacity: 0;
     transform: translateY(30px);
