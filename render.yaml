@@ -11,9 +11,33 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
-      - key: EMAIL_USER
-        value: desouvik0000@gmail.com
-      - key: EMAIL_PASS
-        value: vlbabtmdlopfdtzr
+      - key: PORT
+        value: 10000
+
+      # The following are SECRET values – do NOT put the real values here.
+      # Just define the keys and then set the actual values in Render dashboard.
+
+      - key: MONGODB_URI
+        sync: false
+      - key: JWT_SECRET
+        sync: false
       - key: CORS_ORIGIN
         value: https://doctor-appointment-system-updated.vercel.app
+
+      - key: EMAIL_USER
+        sync: false
+      - key: EMAIL_PASS
+        sync: false
+
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: GEMINI_MODEL
+        value: gemini-2.5-flash
+      - key: AI_PROVIDER
+        value: gemini
+
+      - key: STRIPE_SECRET_KEY
+        sync: false
+
+      - key: RESEND_API_KEY
+        sync: false
