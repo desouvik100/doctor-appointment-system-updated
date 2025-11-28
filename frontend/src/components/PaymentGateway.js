@@ -2,6 +2,9 @@ import React, { useState, useEffect } from 'react';
 import axios from '../api/config';
 import StripePayment from './StripePayment';
 
+// Check if Stripe payments are enabled
+const USE_STRIPE_PAYMENTS = process.env.REACT_APP_USE_STRIPE_PAYMENTS === 'true';
+
 const PaymentGateway = ({ appointmentId, user, onPaymentSuccess, onPaymentCancel }) => {
   const [showStripePayment, setShowStripePayment] = useState(false);
   const [paymentDetails, setPaymentDetails] = useState(null);
@@ -16,6 +19,19 @@ const PaymentGateway = ({ appointmentId, user, onPaymentSuccess, onPaymentCancel
     try {
       const response = await axios.get(`/api/payments/calculate/${appointmentId}`);
       setPaymentDetails(response.data);
+      
+      // If in test mode, skip payment and auto-confirm
+      if (response.data.testMode || !USE_STRIPE_PAYMENTS) {
+        console.log('Test mode detected - skipping payment');
+        // Auto-confirm appointment in test mode
+        setTimeout(() => {
+          onPaymentSuccess({
+            testMode: true,
+            message: 'Test appointment - no payment required'
+          });
+        }, 1000);
+      }
+      
       setLoading(false);
     } catch (error) {
       setError('Failed to fetch payment details');
@@ -42,8 +58,18 @@ const PaymentGateway = ({ appointmentId, user, onPaymentSuccess, onPaymentCancel
         <div className="spinner-border text-primary" role="status">
           <span className="visually-hidden">Loading...</span>
         </div>
+        {(!USE_STRIPE_PAYMENTS || paymentDetails?.testMode) && (
+          <div className="ms-3">
+            <p className="text-success mb-0">Test Mode - No payment required</p>
+          </div>
+        )}
       </div>
     );
+  }
+
+  // Don't show payment UI in test mode
+  if (!USE_STRIPE_PAYMENTS || paymentDetails?.testMode) {
+    return null;
   }
 
   if (showStripePayment) {

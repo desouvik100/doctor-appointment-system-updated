@@ -54,6 +54,28 @@ const userSchema = new mongoose.Schema(
     clinicName: {
       type: String,
       trim: true
+    },
+    loginLocation: {
+      latitude: {
+        type: Number,
+        default: null
+      },
+      longitude: {
+        type: Number,
+        default: null
+      },
+      city: {
+        type: String,
+        default: null
+      },
+      country: {
+        type: String,
+        default: null
+      },
+      lastUpdated: {
+        type: Date,
+        default: null
+      }
     }
   },
   { timestamps: true }

@@ -1,4 +1,5 @@
-import React, { useState, useEffect, useMemo, useCallback } from 'react';
+import React, { useState, useMemo, useCallback, useRef } from 'react';
+import './VirtualizedTable.css';
 
 const VirtualizedTable = ({ 
   data = [], 
@@ -8,15 +9,16 @@ const VirtualizedTable = ({
   onRowClick = null 
 }) => {
   const [scrollTop, setScrollTop] = useState(0);
-  const [containerRef, setContainerRef] = useState(null);
+  const scrollTimeoutRef = useRef(null);
+  const containerRef = useRef(null);
 
-  // Calculate visible items for virtualization
+  // Calculate visible items for virtualization with stable keys
   const visibleItems = useMemo(() => {
     if (!data.length) return { startIndex: 0, endIndex: 0, items: [] };
     
-    const startIndex = Math.floor(scrollTop / rowHeight);
+    const startIndex = Math.max(0, Math.floor(scrollTop / rowHeight) - 1); // Add buffer above
     const visibleCount = Math.ceil(containerHeight / rowHeight);
-    const endIndex = Math.min(startIndex + visibleCount + 2, data.length); // +2 for buffer
+    const endIndex = Math.min(startIndex + visibleCount + 3, data.length); // +3 for buffer
     
     return {
       startIndex,
@@ -25,29 +27,38 @@ const VirtualizedTable = ({
     };
   }, [data, scrollTop, rowHeight, containerHeight]);
 
-  // Handle scroll with throttling for performance
+  // Handle scroll with debouncing to prevent flickering
   const handleScroll = useCallback((e) => {
-    const scrollTop = e.target.scrollTop;
-    setScrollTop(scrollTop);
+    if (scrollTimeoutRef.current) {
+      clearTimeout(scrollTimeoutRef.current);
+    }
+    
+    scrollTimeoutRef.current = setTimeout(() => {
+      const newScrollTop = e.target.scrollTop;
+      setScrollTop(newScrollTop);
+    }, 10); // Small delay to batch updates
   }, []);
 
   // Memoized row renderer to prevent unnecessary re-renders
   const renderRow = useCallback((item, index) => {
     const actualIndex = visibleItems.startIndex + index;
+    // Use _id or id for stable keys to prevent flickering
+    const rowKey = item._id || item.id || `row-${actualIndex}`;
     
     return (
       <tr 
-        key={item.id || actualIndex}
+        key={rowKey}
         className="table-row"
         style={{
           height: `${rowHeight}px`,
-          transform: `translate3d(0, 0, 0)` // GPU acceleration
+          transform: `translate3d(0, 0, 0)`, // GPU acceleration
+          willChange: 'transform' // Optimize for animations
         }}
         onClick={() => onRowClick && onRowClick(item)}
       >
         {columns.map((column, colIndex) => (
           <td 
-            key={colIndex}
+            key={`${rowKey}-${colIndex}`}
             className="table-cell"
             style={{ 
               padding: '0.5rem',
@@ -91,7 +102,7 @@ const VirtualizedTable = ({
         background: 'white'
       }}
       onScroll={handleScroll}
-      ref={setContainerRef}
+      ref={containerRef}
     >
       {/* Header */}
       <table style={{ width: '100%', borderCollapse: 'collapse' }}>

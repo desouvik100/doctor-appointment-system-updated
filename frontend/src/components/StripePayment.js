@@ -8,8 +8,13 @@ import {
   useElements
 } from '@stripe/react-stripe-js';
 
-// Stripe configuration
-const stripePromise = loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder');
+// Check if Stripe payments are enabled
+const USE_STRIPE_PAYMENTS = process.env.REACT_APP_USE_STRIPE_PAYMENTS === 'true';
+
+// Stripe configuration - only load if payments are enabled
+const stripePromise = USE_STRIPE_PAYMENTS 
+  ? loadStripe(process.env.REACT_APP_STRIPE_PUBLISHABLE_KEY || 'pk_test_placeholder')
+  : null;
 
 const CARD_ELEMENT_OPTIONS = {
   style: {
@@ -47,6 +52,13 @@ const CheckoutForm = ({ appointmentId, user, onPaymentSuccess, onPaymentError })
         appointmentId,
         userId: user.id
       });
+
+      // If in test mode, skip payment
+      if (response.data.testMode || !USE_STRIPE_PAYMENTS) {
+        console.log('Test mode - skipping Stripe payment');
+        onPaymentError({ message: 'Test mode - payment not required' });
+        return;
+      }
 
       if (response.data.success) {
         setPaymentIntent(response.data);
@@ -210,12 +222,31 @@ const StripePayment = ({ appointmentId, user, onPaymentSuccess, onPaymentError, 
   const fetchStripeConfig = async () => {
     try {
       const response = await axios.get('/api/payments/config');
+      
+      // Check if in test mode
+      if (response.data.testMode || !response.data.paymentsEnabled || !USE_STRIPE_PAYMENTS) {
+        console.log('Stripe payments disabled - test mode active');
+        // Don't set stripe key in test mode
+        return;
+      }
+      
       setStripeKey(response.data.publishableKey);
     } catch (error) {
       console.error('Failed to fetch Stripe config:', error);
       onPaymentError(error);
     }
   };
+
+  if (!stripeKey && !USE_STRIPE_PAYMENTS) {
+    return (
+      <div className="text-center p-4">
+        <div className="alert alert-success">
+          <i className="fas fa-check-circle me-2"></i>
+          <strong>Test Mode:</strong> Payment not required
+        </div>
+      </div>
+    );
+  }
 
   if (!stripeKey) {
     return (

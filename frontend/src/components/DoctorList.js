@@ -25,11 +25,14 @@ function DoctorList({ user }) {
 
   const fetchDoctors = async () => {
     try {
-      const response = await axios.get("http://localhost:5002/api/doctors");
+      console.log("Fetching doctors...");
+      const response = await axios.get("/api/doctors");
+      console.log("Doctors fetched:", response.data);
       setDoctors(response.data);
       setFilteredDoctors(response.data);
     } catch (error) {
       console.error("Error fetching doctors:", error);
+      console.error("Error details:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
@@ -37,10 +40,13 @@ function DoctorList({ user }) {
 
   const fetchClinics = async () => {
     try {
-      const response = await axios.get("http://localhost:5002/api/clinics");
+      console.log("Fetching clinics...");
+      const response = await axios.get("/api/clinics");
+      console.log("Clinics fetched:", response.data);
       setClinics(response.data);
     } catch (error) {
       console.error("Error fetching clinics:", error);
+      console.error("Error details:", error.response?.data || error.message);
     }
   };
 

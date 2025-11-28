@@ -1,0 +1,111 @@
+/* VirtualizedTable - Anti-Flickering Styles */
+
+.virtualized-table-container {
+  /* Prevent flickering during scroll */
+  -webkit-overflow-scrolling: touch;
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  
+  /* Smooth scrolling */
+  scroll-behavior: smooth;
+  
+  /* Hardware acceleration */
+  will-change: scroll-position;
+}
+
+.virtualized-table-container table {
+  /* Prevent layout shifts */
+  table-layout: fixed;
+  width: 100%;
+}
+
+.table-row {
+  /* Prevent flickering on hover/interaction */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+  
+  /* Smooth transitions */
+  transition: background-color 0.15s ease;
+}
+
+.table-row:hover {
+  background-color: #f8fafc;
+}
+
+.table-cell {
+  /* Prevent text flickering */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  
+  /* Prevent layout shifts */
+  box-sizing: border-box;
+}
+
+/* Loading state */
+.table-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  color: #64748b;
+}
+
+/* Empty state */
+.empty-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  color: #64748b;
+}
+
+.empty-state i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+/* Optimize button rendering in cells */
+.table-cell button {
+  /* Prevent button flickering */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Sticky header optimization */
+thead {
+  /* Prevent header flickering during scroll */
+  backface-visibility: hidden;
+  -webkit-backface-visibility: hidden;
+  transform: translateZ(0);
+  -webkit-transform: translateZ(0);
+}
+
+/* Performance optimizations */
+@media (prefers-reduced-motion: reduce) {
+  .virtualized-table-container {
+    scroll-behavior: auto;
+  }
+  
+  .table-row {
+    transition: none;
+  }
+}
+
+/* Fix for Safari flickering */
+@supports (-webkit-appearance: none) {
+  .virtualized-table-container {
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+  
+  .table-row {
+    -webkit-transform: translate3d(0, 0, 0);
+  }
+}

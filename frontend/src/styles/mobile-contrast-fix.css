@@ -1,0 +1,313 @@
+/* ========================================
+   MOBILE CONTRAST FIX
+   Fix washed out text and improve visibility
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* ===== FIX WASHED OUT TEXT ===== */
+  
+  /* All text should be dark and readable */
+  body,
+  p,
+  span,
+  div,
+  h1, h2, h3, h4, h5, h6,
+  a,
+  label,
+  li {
+    color: #1a1a1a !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+  }
+
+  /* Headings - Strong and visible */
+  h1, h2, h3, h4, h5, h6 {
+    color: #000000 !important;
+    font-weight: 700 !important;
+    opacity: 1 !important;
+  }
+
+  /* Paragraphs - Dark gray for readability */
+  p {
+    color: #333333 !important;
+    opacity: 1 !important;
+  }
+
+  /* Links - Visible blue */
+  a {
+    color: #667eea !important;
+    opacity: 1 !important;
+  }
+
+  /* ===== FIX BACKGROUND ===== */
+  
+  /* Clean white background */
+  body {
+    background: #ffffff !important;
+    background-image: none !important;
+    background-color: #ffffff !important;
+  }
+
+  /* Remove gradient backgrounds */
+  .medical-bg,
+  .hero,
+  .jumbotron,
+  [class*="gradient"],
+  [class*="bg-"] {
+    background: #ffffff !important;
+    background-image: none !important;
+  }
+
+  /* ===== FIX NAVBAR ===== */
+  
+  .medical-nav,
+  .navbar {
+    background: #ffffff !important;
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+
+  .navbar-brand {
+    color: #000000 !important;
+    opacity: 1 !important;
+  }
+
+  .nav-link {
+    color: #333333 !important;
+    opacity: 1 !important;
+  }
+
+  .nav-link:hover,
+  .nav-link.active {
+    color: #667eea !important;
+    opacity: 1 !important;
+  }
+
+  /* ===== FIX BUTTONS ===== */
+  
+  .btn,
+  button {
+    opacity: 1 !important;
+  }
+
+  .btn-primary {
+    background: #667eea !important;
+    color: #ffffff !important;
+    border: none !important;
+  }
+
+  .btn-get-started {
+    background: #667eea !important;
+    color: #ffffff !important;
+    opacity: 1 !important;
+  }
+
+  /* ===== FIX CARDS ===== */
+  
+  .card,
+  .medical-card {
+    background: #ffffff !important;
+    border: 1px solid #e5e7eb !important;
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1) !important;
+  }
+
+  .card-header {
+    background: #f9fafb !important;
+    color: #000000 !important;
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+
+  .card-body {
+    color: #333333 !important;
+  }
+
+  /* ===== FIX FORMS ===== */
+  
+  label {
+    color: #000000 !important;
+    font-weight: 600 !important;
+    opacity: 1 !important;
+  }
+
+  .form-control,
+  input,
+  textarea,
+  select {
+    background: #ffffff !important;
+    color: #000000 !important;
+    border: 2px solid #d1d5db !important;
+    opacity: 1 !important;
+  }
+
+  .form-control::placeholder,
+  input::placeholder,
+  textarea::placeholder {
+    color: #9ca3af !important;
+    opacity: 1 !important;
+  }
+
+  /* ===== FIX HERO SECTION ===== */
+  
+  .hero h1,
+  .jumbotron h1 {
+    color: #000000 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+  }
+
+  .hero p,
+  .jumbotron p {
+    color: #333333 !important;
+    opacity: 1 !important;
+    text-shadow: none !important;
+  }
+
+  /* ===== FIX FEATURE SECTIONS ===== */
+  
+  .feature-card h3,
+  .feature-card h4 {
+    color: #000000 !important;
+    opacity: 1 !important;
+  }
+
+  .feature-card p {
+    color: #333333 !important;
+    opacity: 1 !important;
+  }
+
+  /* ===== FIX TABLES ===== */
+  
+  table {
+    background: #ffffff !important;
+  }
+
+  th {
+    background: #f9fafb !important;
+    color: #000000 !important;
+    font-weight: 600 !important;
+  }
+
+  td {
+    color: #333333 !important;
+  }
+
+  /* ===== FIX BADGES ===== */
+  
+  .badge {
+    opacity: 1 !important;
+  }
+
+  .badge-primary {
+    background: #667eea !important;
+    color: #ffffff !important;
+  }
+
+  .badge-success {
+    background: #10b981 !important;
+    color: #ffffff !important;
+  }
+
+  .badge-danger {
+    background: #ef4444 !important;
+    color: #ffffff !important;
+  }
+
+  /* ===== FIX ALERTS ===== */
+  
+  .alert {
+    opacity: 1 !important;
+  }
+
+  .alert-success {
+    background: #d1fae5 !important;
+    color: #065f46 !important;
+    border-color: #10b981 !important;
+  }
+
+  .alert-danger {
+    background: #fee2e2 !important;
+    color: #991b1b !important;
+    border-color: #ef4444 !important;
+  }
+
+  .alert-info {
+    background: #dbeafe !important;
+    color: #1e40af !important;
+    border-color: #3b82f6 !important;
+  }
+
+  /* ===== FIX MODALS ===== */
+  
+  .modal-content {
+    background: #ffffff !important;
+  }
+
+  .modal-header {
+    background: #f9fafb !important;
+    border-bottom: 1px solid #e5e7eb !important;
+  }
+
+  .modal-title {
+    color: #000000 !important;
+    opacity: 1 !important;
+  }
+
+  .modal-body {
+    color: #333333 !important;
+  }
+
+  /* ===== REMOVE ALL TRANSPARENCY ===== */
+  
+  * {
+    opacity: 1 !important;
+  }
+
+  /* ===== DARK MODE FIX ===== */
+  
+  [data-theme="dark"] body {
+    background: #1a1a1a !important;
+  }
+
+  [data-theme="dark"] h1,
+  [data-theme="dark"] h2,
+  [data-theme="dark"] h3,
+  [data-theme="dark"] h4,
+  [data-theme="dark"] h5,
+  [data-theme="dark"] h6 {
+    color: #ffffff !important;
+  }
+
+  [data-theme="dark"] p,
+  [data-theme="dark"] span,
+  [data-theme="dark"] div {
+    color: #e5e7eb !important;
+  }
+
+  [data-theme="dark"] .card,
+  [data-theme="dark"] .medical-card {
+    background: #2d2d2d !important;
+    border-color: #3d3d3d !important;
+  }
+
+  /* ===== ENSURE HIGH CONTRAST ===== */
+  
+  /* Text must be readable */
+  body {
+    -webkit-font-smoothing: antialiased !important;
+    -moz-osx-font-smoothing: grayscale !important;
+  }
+
+  /* Remove any filters or effects */
+  * {
+    filter: none !important;
+    backdrop-filter: none !important;
+    -webkit-backdrop-filter: none !important;
+  }
+
+  /* Ensure proper z-index */
+  .navbar,
+  .card,
+  .btn,
+  .modal {
+    z-index: auto !important;
+  }
+}

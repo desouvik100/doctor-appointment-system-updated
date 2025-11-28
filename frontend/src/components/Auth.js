@@ -1,16 +1,13 @@
 import React, { useState } from "react";
 import axios from "../api/config";
-import "../styles/theme-system.css";
-import "./Auth.css";
+import LocationPermissionModal from './LocationPermissionModal';
+import { trackUserLocation } from '../utils/locationService';
+import toast from 'react-hot-toast';
+import './Auth.css';
+import './PatientAuth.css';
 
-function Auth({ onLogin }) {
+function Auth({ onLogin, onBack }) {
   const [isLogin, setIsLogin] = useState(true);
-  
-  // Simple notification fallback
-  const addNotification = (message, type) => {
-    console.log(`[${type.toUpperCase()}] ${message}`);
-    // You can add a toast notification library here if needed
-  };
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -19,11 +16,6 @@ function Auth({ onLogin }) {
     phone: "",
     dateOfBirth: "",
     gender: "",
-    emergencyContact: "",
-    emergencyPhone: "",
-    medicalHistory: "",
-    allergies: "",
-    insurance: ""
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -42,13 +34,8 @@ function Auth({ onLogin }) {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
-  const [resetSuccess, setResetSuccess] = useState(false);
-  const [resetStep, setResetStep] = useState(1); // 1: Email, 2: OTP, 3: New Password
-  const [resetOtp, setResetOtp] = useState("");
-  const [newPassword, setNewPassword] = useState("");
-  const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [showNewPassword, setShowNewPassword] = useState(false);
-  const [showConfirmNewPassword, setShowConfirmNewPassword] = useState(false);
+  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [loggedInUserId, setLoggedInUserId] = useState(null);
 
   // Email validation
   const validateEmail = (email) => {
@@ -158,11 +145,16 @@ function Auth({ onLogin }) {
       });
       
       if (response.data.success) {
+        // Auto-fill OTP in development mode
+        if (response.data.otp) {
+          setOtp(response.data.otp);
+          toast.success('OTP received (development mode)');
+        }
+        
         setOtpSent(true);
         setCanResendOtp(false);
-        setOtpTimer(60); // 60 seconds countdown
+        setOtpTimer(60);
         
-        // Start countdown timer
         const timer = setInterval(() => {
           setOtpTimer((prev) => {
             if (prev <= 1) {
@@ -173,15 +165,9 @@ function Auth({ onLogin }) {
             return prev - 1;
           });
         }, 1000);
-        
-        // Show success message
-        console.log('✅ OTP sent successfully! Check backend console for OTP code.');
       }
-      
     } catch (error) {
-      console.error('Send OTP error:', error);
       setError(error.response?.data?.message || "Failed to send OTP. Please try again.");
-      throw error; // Re-throw to handle in calling function
     } finally {
       setOtpLoading(false);
     }
@@ -193,7 +179,6 @@ function Auth({ onLogin }) {
     setError("");
     
     try {
-      // First verify OTP
       const otpResponse = await axios.post("/api/otp/verify-otp", {
         email: formData.email,
         otp: otp,
@@ -201,7 +186,6 @@ function Auth({ onLogin }) {
       });
       
       if (otpResponse.data.success && otpResponse.data.verified) {
-        // OTP verified, now complete registration
         const registerResponse = await axios.post("/api/auth/register", {
           ...formData,
           emailVerified: true
@@ -221,6 +205,33 @@ function Auth({ onLogin }) {
     }
   };
 
+  // Handle location permission allow
+  const handleLocationAllow = async () => {
+    try {
+      const result = await trackUserLocation(loggedInUserId);
+      
+      if (result.success) {
+        toast.success(`Location saved: ${result.location.city || 'Unknown'}`);
+      } else {
+        toast.error(result.error || 'Failed to get location');
+      }
+    } catch (error) {
+      console.error('Location error:', error);
+      // Don't show error toast for location - it's optional
+    } finally {
+      setShowLocationModal(false);
+    }
+  };
+
+  // Handle location permission deny
+  const handleLocationDeny = () => {
+    setShowLocationModal(false);
+    toast('You can enable location later in settings', {
+      icon: 'ℹ️',
+      duration: 3000
+    });
+  };
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
@@ -234,11 +245,25 @@ function Auth({ onLogin }) {
           password: formData.password
         });
         
+        // Store token and user data
+        if (response.data.token) {
+          localStorage.setItem("token", response.data.token);
+          axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
+        }
+        
         localStorage.setItem("user", JSON.stringify(response.data.user));
+        setLoggedInUserId(response.data.user.id);
+        setLoading(false);
+        
+        // Call onLogin immediately to navigate to dashboard
         onLogin(response.data.user);
+        
+        // Show location modal after navigation (optional)
+        setTimeout(() => {
+          setShowLocationModal(true);
+        }, 500);
       } catch (error) {
         setError(error.response?.data?.message || "Invalid credentials");
-      } finally {
         setLoading(false);
       }
     } else {
@@ -268,26 +293,19 @@ function Auth({ onLogin }) {
       if (!agreedToPrivacy) {
         errors.privacy = 'You must agree to the Privacy Policy';
       }
-      
+
       if (Object.keys(errors).length > 0) {
         setValidationErrors(errors);
         setLoading(false);
         return;
       }
 
-      // Show OTP verification step
+      // Show OTP verification
       setShowOtpVerification(true);
       setLoading(false);
       
-      // Automatically send OTP
       if (!otpSent) {
-        try {
-          await sendOtp();
-        } catch (error) {
-          console.error('OTP send error:', error);
-          // Show error but don't block - user can try resend
-          setError('Failed to send OTP. Please click Resend to try again.');
-        }
+        await sendOtp();
       }
     }
   };
@@ -304,881 +322,773 @@ function Auth({ onLogin }) {
     return 'Strong';
   };
 
+  // Handle forgot password - Send OTP
+  const handleForgotPassword = async (e) => {
+    e.preventDefault();
+    setResetLoading(true);
+    setError("");
+
+    try {
+      const response = await axios.post("/api/auth/forgot-password", {
+        email: resetEmail
+      });
+
+      if (response.data.success) {
+        toast.success("Password reset code sent to your email!");
+        // Show OTP verification for password reset
+        setShowOtpVerification(true);
+        setOtpSent(true);
+        setFormData({ ...formData, email: resetEmail });
+        
+        // Auto-fill OTP in development mode
+        if (response.data.otp) {
+          console.log('🔐 Development Mode - OTP:', response.data.otp);
+          setOtp(response.data.otp);
+          toast.success(`Dev Mode: OTP is ${response.data.otp}`, { duration: 5000 });
+        }
+      } else {
+        setError(response.data.message || "Failed to send reset code");
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || "Failed to send reset code. Please try again.");
+    } finally {
+      setResetLoading(false);
+    }
+  };
+
+  // Handle password reset with OTP
+  const handleResetPasswordWithOtp = async (e) => {
+    e.preventDefault();
+    setLoading(true);
+    setError("");
+
+    if (!otp || otp.length !== 6) {
+      setError("Please enter a valid 6-digit OTP");
+      setLoading(false);
+      return;
+    }
+
+    if (!formData.password || formData.password.length < 6) {
+      setError("Password must be at least 6 characters long");
+      setLoading(false);
+      return;
+    }
+
+    if (formData.password !== formData.confirmPassword) {
+      setError("Passwords do not match");
+      setLoading(false);
+      return;
+    }
+
+    try {
+      const response = await axios.post("/api/auth/reset-password", {
+        email: resetEmail || formData.email,
+        otp: otp,
+        newPassword: formData.password
+      });
+
+      if (response.data.success) {
+        toast.success("Password reset successfully! You can now login.");
+        // Reset all states
+        setShowOtpVerification(false);
+        setShowForgotPassword(false);
+        setOtpSent(false);
+        setOtp("");
+        setResetEmail("");
+        setFormData({
+          name: "",
+          email: "",
+          password: "",
+          confirmPassword: "",
+          phone: "",
+          dateOfBirth: "",
+          gender: "",
+        });
+        setIsLogin(true);
+      } else {
+        setError(response.data.message || "Failed to reset password");
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || "Failed to reset password. Please try again.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
   return (
-    <div className="auth-container">
-      <div className="auth-card">
-        <h2 className="text-center mb-4">
-          {isLogin ? (
-            <>
-              <i className="fas fa-sign-in-alt me-2"></i>
-              Welcome Back
-            </>
-          ) : (
-            <>
-              <i className="fas fa-user-plus me-2"></i>
-              Create Your Account
-            </>
-          )}
-        </h2>
-        <form onSubmit={handleSubmit}>
-        {/* Personal Information Section */}
-        {!isLogin && (
-          <>
-            <div className="mb-4">
-              <h6 className="text-primary mb-3">
-                <i className="fas fa-user me-2"></i>Personal Information
-              </h6>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">
-                    Full Name <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className={`form-control ${validationErrors.name ? 'is-invalid' : ''}`}
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Enter your full name"
-                    required
-                  />
-                  {validationErrors.name && (
-                    <div className="invalid-feedback">{validationErrors.name}</div>
-                  )}
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">
-                    Date of Birth <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="date"
-                    className={`form-control ${validationErrors.dateOfBirth ? 'is-invalid' : ''}`}
-                    name="dateOfBirth"
-                    value={formData.dateOfBirth}
-                    onChange={handleChange}
-                    required
-                  />
-                  {validationErrors.dateOfBirth && (
-                    <div className="invalid-feedback">{validationErrors.dateOfBirth}</div>
-                  )}
-                </div>
-              </div>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">
-                    Gender <span className="text-danger">*</span>
-                  </label>
-                  <select
-                    className="form-select"
-                    name="gender"
-                    value={formData.gender}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select Gender</option>
-                    <option value="male">Male</option>
-                    <option value="female">Female</option>
-                    <option value="other">Other</option>
-                    <option value="prefer-not-to-say">Prefer not to say</option>
-                  </select>
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">
-                    Phone Number <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    className={`form-control ${validationErrors.phone ? 'is-invalid' : ''}`}
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="+1 (555) 123-4567"
-                    required
-                  />
-                  {validationErrors.phone && (
-                    <div className="invalid-feedback">{validationErrors.phone}</div>
-                  )}
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Account Information Section */}
-        <div className="mb-4">
-          {!isLogin && (
-            <h6 className="text-primary mb-3">
-              <i className="fas fa-lock me-2"></i>Account Security
-            </h6>
-          )}
-          
-          <div className="mb-3">
-            <label className="form-label">
-              Email Address <span className="text-danger">*</span>
-            </label>
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="fas fa-envelope"></i>
-              </span>
-              <input
-                type="email"
-                className={`form-control ${validationErrors.email ? 'is-invalid' : ''}`}
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder="your.email@example.com"
-                required
-              />
-              {validationErrors.email && (
-                <div className="invalid-feedback">{validationErrors.email}</div>
-              )}
-            </div>
+    <div className="patient-auth-container">
+      {/* Left Side - Branding */}
+      <div className="patient-auth__left">
+        <div className="patient-auth__branding">
+          <div className="patient-auth__logo">
+            <i className="fas fa-heart"></i>
           </div>
-          
-          <div className="mb-3">
-            <label className="form-label">
-              Password <span className="text-danger">*</span>
-            </label>
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="fas fa-lock"></i>
-              </span>
-              <input
-                type={showPassword ? "text" : "password"}
-                className={`form-control ${validationErrors.password ? 'is-invalid' : ''}`}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder={isLogin ? "Enter your password" : "Create a strong password"}
-                required
-              />
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-              </button>
-              {validationErrors.password && (
-                <div className="invalid-feedback">{validationErrors.password}</div>
-              )}
-            </div>
-            
-            {!isLogin && formData.password && (
-              <div className="mt-2">
-                <div className="d-flex justify-content-between align-items-center">
-                  <small className="text-muted">Password Strength:</small>
-                  <small className={`text-${getPasswordStrengthColor()}`}>
-                    {getPasswordStrengthText()}
-                  </small>
-                </div>
-                <div className="progress" style={{ height: '4px' }}>
-                  <div
-                    className={`progress-bar bg-${getPasswordStrengthColor()}`}
-                    style={{ width: `${(passwordStrength / 5) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {!isLogin && (
-            <div className="mb-3">
-              <label className="form-label">
-                Confirm Password <span className="text-danger">*</span>
-              </label>
-              <div className="input-group">
-                <span className="input-group-text">
-                  <i className="fas fa-lock"></i>
-                </span>
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  className={`form-control ${validationErrors.confirmPassword ? 'is-invalid' : ''}`}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirm your password"
-                  required
-                />
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  <i className={`fas ${showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-                </button>
-                {validationErrors.confirmPassword && (
-                  <div className="invalid-feedback">{validationErrors.confirmPassword}</div>
-                )}
-              </div>
-            </div>
-          )}
+          <h1>HealthSync Patient</h1>
+          <p>Your Personal Health Portal</p>
         </div>
 
-        {/* Emergency Contact & Medical Information */}
-        {!isLogin && (
-          <>
-            <div className="mb-4">
-              <h6 className="text-primary mb-3">
-                <i className="fas fa-phone-alt me-2"></i>Emergency Contact
-              </h6>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Emergency Contact Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="emergencyContact"
-                    value={formData.emergencyContact}
-                    onChange={handleChange}
-                    placeholder="Full name of emergency contact"
-                  />
-                </div>
-                
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Emergency Contact Phone</label>
-                  <input
-                    type="tel"
-                    className="form-control"
-                    name="emergencyPhone"
-                    value={formData.emergencyPhone}
-                    onChange={handleChange}
-                    placeholder="+1 (555) 987-6543"
-                  />
-                </div>
-              </div>
+        <div className="patient-auth__benefits">
+          <div className="patient-auth__benefit">
+            <i className="fas fa-calendar-check"></i>
+            <div>
+              <h4>Easy Booking</h4>
+              <p>Schedule appointments with just a few clicks</p>
             </div>
-
-            <div className="mb-4">
-              <h6 className="text-primary mb-3">
-                <i className="fas fa-notes-medical me-2"></i>Medical Information (Optional)
-              </h6>
-              
-              <div className="mb-3">
-                <label className="form-label">Insurance Provider</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="insurance"
-                  value={formData.insurance}
-                  onChange={handleChange}
-                  placeholder="e.g., Blue Cross Blue Shield, Aetna, etc."
-                />
-              </div>
-              
-              <div className="mb-3">
-                <label className="form-label">Known Allergies</label>
-                <textarea
-                  className="form-control"
-                  name="allergies"
-                  value={formData.allergies}
-                  onChange={handleChange}
-                  rows="2"
-                  placeholder="List any known allergies (medications, food, environmental)"
-                ></textarea>
-              </div>
-              
-              <div className="mb-3">
-                <label className="form-label">Medical History</label>
-                <textarea
-                  className="form-control"
-                  name="medicalHistory"
-                  value={formData.medicalHistory}
-                  onChange={handleChange}
-                  rows="3"
-                  placeholder="Brief medical history, current medications, chronic conditions"
-                ></textarea>
-              </div>
-            </div>
-
-            {/* Terms and Privacy */}
-            <div className="mb-4">
-              <div className="form-check mb-2">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="termsCheck"
-                  checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
-                />
-                <label className="form-check-label" htmlFor="termsCheck">
-                  I agree to the <a href="#" className="text-primary">Terms of Service</a> <span className="text-danger">*</span>
-                </label>
-              </div>
-              
-              <div className="form-check mb-3">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="privacyCheck"
-                  checked={agreedToPrivacy}
-                  onChange={(e) => setAgreedToPrivacy(e.target.checked)}
-                />
-                <label className="form-check-label" htmlFor="privacyCheck">
-                  I agree to the <a href="#" className="text-primary">Privacy Policy</a> and HIPAA Notice <span className="text-danger">*</span>
-                </label>
-              </div>
-              
-              {(validationErrors.terms || validationErrors.privacy) && (
-                <div className="alert alert-danger py-2">
-                  {validationErrors.terms && <div>{validationErrors.terms}</div>}
-                  {validationErrors.privacy && <div>{validationErrors.privacy}</div>}
-                </div>
-              )}
-            </div>
-          </>
-        )}
-
-        {error && (
-          <div className="alert alert-danger" role="alert">
-            <i className="fas fa-exclamation-triangle me-2"></i>
-            {error}
           </div>
-        )}
+          <div className="patient-auth__benefit">
+            <i className="fas fa-video"></i>
+            <div>
+              <h4>Online Consultations</h4>
+              <p>Connect with doctors via secure video calls</p>
+            </div>
+          </div>
+          <div className="patient-auth__benefit">
+            <i className="fas fa-file-medical"></i>
+            <div>
+              <h4>Medical Records</h4>
+              <p>Access your health history anytime, anywhere</p>
+            </div>
+          </div>
+        </div>
 
-        {!showOtpVerification && (
-          <button 
-            type="submit" 
-            className="btn btn-primary w-100 mb-3"
-            disabled={loading || (!isLogin && (!agreedToTerms || !agreedToPrivacy))}
-          >
-            {loading ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                {isLogin ? "Signing in..." : "Creating account..."}
-              </>
-            ) : (
-              <>
-                <i className={`fas ${isLogin ? 'fa-sign-in-alt' : 'fa-user-plus'} me-2`}></i>
-                {isLogin ? "Sign In" : "Create Patient Account"}
-              </>
-            )}
-          </button>
-        )}
-      </form>
+        <div className="patient-auth__footer-left">
+          <p>
+            <i className="fas fa-shield-alt"></i>
+            Your health data is encrypted and HIPAA compliant
+          </p>
+        </div>
+      </div>
 
-      {/* OTP Verification Section */}
-      {showOtpVerification && !isLogin && (
-        <div className="mt-4">
-          <div className="alert alert-info">
-            <i className="fas fa-envelope me-2"></i>
-            <strong>Email Verification Required</strong>
-            <p className="mb-0 mt-2">
-              We've sent a 6-digit verification code to <strong>{formData.email}</strong>. 
-              Please check your email and enter the code below.
+      {/* Right Side - Login/Register Form */}
+      <div className="patient-auth__right">
+        <div className="patient-auth__form-container">
+          {/* Header */}
+          <div className="patient-auth__header">
+            <button 
+              className="patient-auth__back-btn"
+              onClick={onBack || (() => window.history.back())}
+              type="button"
+              title="Back to home"
+            >
+              <i className="fas fa-arrow-left"></i>
+              Back
+            </button>
+            <h2>
+              {isLogin ? (
+                <>
+                  <i className="fas fa-sign-in-alt"></i>
+                  Welcome Back
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-user-plus"></i>
+                  Create Your Account
+                </>
+              )}
+            </h2>
+            <p>
+              {isLogin 
+                ? "Sign in to access your health portal" 
+                : "Join thousands of patients managing their health"}
             </p>
           </div>
 
-          <div className="mb-3">
-            <label className="form-label">
-              <i className="fas fa-key me-2"></i>
-              Enter Verification Code
-            </label>
-            <div className="input-group">
-              <input
-                type="text"
-                className="form-control text-center"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                maxLength="6"
-                style={{ fontSize: '1.2rem', letterSpacing: '0.5rem' }}
-              />
+          {/* Form */}
+          {!showOtpVerification ? (
+            <form onSubmit={handleSubmit} className="patient-auth__form">
+              {/* Email Field */}
+              <div className="patient-auth__form-group">
+                <label className="patient-auth__label">
+                  <i className="fas fa-envelope"></i>
+                  Email Address
+                </label>
+                <input
+                  type="email"
+                  className="patient-auth__input"
+                  name="email"
+                  value={formData.email}
+                  onChange={handleChange}
+                  placeholder="your.email@example.com"
+                  required
+                  disabled={loading}
+                />
+                {validationErrors.email && (
+                  <div className="patient-auth__error">
+                    <i className="fas fa-exclamation-circle"></i>
+                    {validationErrors.email}
+                  </div>
+                )}
+              </div>
+
+              {/* Password Field */}
+              <div className="patient-auth__form-group">
+                <label className="patient-auth__label">
+                  <i className="fas fa-lock"></i>
+                  Password
+                </label>
+                <div className="patient-auth__password-wrapper">
+                  <input
+                    type={showPassword ? "text" : "password"}
+                    className="patient-auth__input"
+                    name="password"
+                    value={formData.password}
+                    onChange={handleChange}
+                    placeholder={isLogin ? "Enter your password" : "Create a strong password"}
+                    required
+                    disabled={loading}
+                  />
+                  <button
+                    type="button"
+                    className="patient-auth__password-toggle"
+                    onClick={() => setShowPassword(!showPassword)}
+                    disabled={loading}
+                    title={showPassword ? "Hide password" : "Show password"}
+                  >
+                    <i className={`fas fa-eye${showPassword ? "-slash" : ""}`}></i>
+                  </button>
+                </div>
+                {validationErrors.password && (
+                  <div className="patient-auth__error">
+                    <i className="fas fa-exclamation-circle"></i>
+                    {validationErrors.password}
+                  </div>
+                )}
+              </div>
+
+              {/* Registration Fields */}
+              {!isLogin && (
+                <>
+                  <div className="patient-auth__form-group">
+                    <label className="patient-auth__label">
+                      <i className="fas fa-user"></i>
+                      Full Name
+                    </label>
+                    <input
+                      type="text"
+                      className="patient-auth__input"
+                      name="name"
+                      value={formData.name}
+                      onChange={handleChange}
+                      placeholder="Enter your full name"
+                      required
+                      disabled={loading}
+                    />
+                    {validationErrors.name && (
+                      <div className="patient-auth__error">
+                        <i className="fas fa-exclamation-circle"></i>
+                        {validationErrors.name}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="patient-auth__form-group">
+                    <label className="patient-auth__label">
+                      <i className="fas fa-phone"></i>
+                      Phone Number
+                    </label>
+                    <input
+                      type="tel"
+                      className="patient-auth__input"
+                      name="phone"
+                      value={formData.phone}
+                      onChange={handleChange}
+                      placeholder="+1 (555) 123-4567"
+                      required
+                      disabled={loading}
+                    />
+                    {validationErrors.phone && (
+                      <div className="patient-auth__error">
+                        <i className="fas fa-exclamation-circle"></i>
+                        {validationErrors.phone}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="patient-auth__form-group">
+                    <label className="patient-auth__label">
+                      <i className="fas fa-calendar"></i>
+                      Date of Birth
+                    </label>
+                    <input
+                      type="date"
+                      className="patient-auth__input"
+                      name="dateOfBirth"
+                      value={formData.dateOfBirth}
+                      onChange={handleChange}
+                      required
+                      disabled={loading}
+                    />
+                    {validationErrors.dateOfBirth && (
+                      <div className="patient-auth__error">
+                        <i className="fas fa-exclamation-circle"></i>
+                        {validationErrors.dateOfBirth}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="patient-auth__form-group">
+                    <label className="patient-auth__label">
+                      <i className="fas fa-venus-mars"></i>
+                      Gender
+                    </label>
+                    <select
+                      className="patient-auth__input"
+                      name="gender"
+                      value={formData.gender}
+                      onChange={handleChange}
+                      required
+                      disabled={loading}
+                    >
+                      <option value="">Select Gender</option>
+                      <option value="male">Male</option>
+                      <option value="female">Female</option>
+                      <option value="other">Other</option>
+                      <option value="prefer-not-to-say">Prefer not to say</option>
+                    </select>
+                  </div>
+
+                  <div className="patient-auth__form-group">
+                    <label className="patient-auth__label">
+                      <i className="fas fa-check-circle"></i>
+                      Confirm Password
+                    </label>
+                    <div className="patient-auth__password-wrapper">
+                      <input
+                        type={showConfirmPassword ? "text" : "password"}
+                        className="patient-auth__input"
+                        name="confirmPassword"
+                        value={formData.confirmPassword}
+                        onChange={handleChange}
+                        placeholder="Confirm your password"
+                        required
+                        disabled={loading}
+                      />
+                      <button
+                        type="button"
+                        className="patient-auth__password-toggle"
+                        onClick={() => setShowConfirmPassword(!showConfirmPassword)}
+                        disabled={loading}
+                        title={showConfirmPassword ? "Hide password" : "Show password"}
+                      >
+                        <i className={`fas fa-eye${showConfirmPassword ? "-slash" : ""}`}></i>
+                      </button>
+                    </div>
+                    {validationErrors.confirmPassword && (
+                      <div className="patient-auth__error">
+                        <i className="fas fa-exclamation-circle"></i>
+                        {validationErrors.confirmPassword}
+                      </div>
+                    )}
+                  </div>
+
+                  <div className="patient-auth__form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={agreedToTerms}
+                        onChange={(e) => setAgreedToTerms(e.target.checked)}
+                        disabled={loading}
+                      />
+                      <span style={{ fontSize: '0.9rem', color: '#718096' }}>
+                        I agree to the Terms of Service
+                      </span>
+                    </label>
+                  </div>
+
+                  <div className="patient-auth__form-group">
+                    <label style={{ display: 'flex', alignItems: 'center', gap: '8px', cursor: 'pointer' }}>
+                      <input
+                        type="checkbox"
+                        checked={agreedToPrivacy}
+                        onChange={(e) => setAgreedToPrivacy(e.target.checked)}
+                        disabled={loading}
+                      />
+                      <span style={{ fontSize: '0.9rem', color: '#718096' }}>
+                        I agree to the Privacy Policy
+                      </span>
+                    </label>
+                  </div>
+                </>
+              )}
+
+              {/* Error Message */}
+              {error && (
+                <div className="patient-auth__error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  <span>{error}</span>
+                </div>
+              )}
+
+              {/* Submit Button */}
+              <button
+                type="submit"
+                className="patient-auth__submit-btn"
+                disabled={loading || (!isLogin && (!agreedToTerms || !agreedToPrivacy))}
+              >
+                {loading ? (
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    {isLogin ? "Signing in..." : "Creating account..."}
+                  </>
+                ) : (
+                  <>
+                    <i className={`fas fa-${isLogin ? "sign-in-alt" : "user-plus"}`}></i>
+                    {isLogin ? "Sign In" : "Create Patient Account"}
+                  </>
+                )}
+              </button>
+
+              {/* Security Notice */}
+              <div className="patient-auth__security-notice">
+                <i className="fas fa-lock"></i>
+                <p>Your data is encrypted and HIPAA compliant</p>
+              </div>
+            </form>
+          ) : (
+            // OTP Verification
+            <div style={{ marginTop: '24px' }}>
+              <div style={{ padding: '12px 16px', background: '#dbeafe', borderRadius: '8px', marginBottom: '24px' }}>
+                <p style={{ fontSize: '0.9rem', color: '#1e40af' }}>
+                  <i className="fas fa-envelope"></i> We've sent a verification code to <strong>{formData.email}</strong>
+                </p>
+              </div>
+
+              <div className="patient-auth__form-group">
+                <label className="patient-auth__label">
+                  <i className="fas fa-key"></i>
+                  Enter Verification Code
+                </label>
+                <input
+                  type="text"
+                  className="patient-auth__input"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  maxLength="6"
+                  style={{ fontSize: '1.2rem', letterSpacing: '0.5rem', textAlign: 'center' }}
+                  disabled={loading}
+                />
+              </div>
+
+              {error && (
+                <div className="patient-auth__error">
+                  <i className="fas fa-exclamation-circle"></i>
+                  <span>{error}</span>
+                </div>
+              )}
+
               <button
                 type="button"
-                className="btn btn-outline-primary"
+                className="patient-auth__submit-btn"
                 onClick={verifyOtp}
                 disabled={loading || otp.length !== 6}
               >
                 {loading ? (
-                  <span className="spinner-border spinner-border-sm" role="status"></span>
+                  <>
+                    <i className="fas fa-spinner fa-spin"></i>
+                    Verifying...
+                  </>
                 ) : (
-                  <i className="fas fa-check"></i>
+                  <>
+                    <i className="fas fa-check"></i>
+                    Verify Code
+                  </>
                 )}
               </button>
-            </div>
-            <small className="text-muted">Enter the 6-digit code sent to your email</small>
-          </div>
 
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <button
-              type="button"
-              className="btn btn-link p-0"
-              onClick={() => {
-                setShowOtpVerification(false);
-                setOtp("");
-                setOtpSent(false);
-              }}
-            >
-              <i className="fas fa-arrow-left me-1"></i>
-              Back to Registration
-            </button>
-
-            <div className="text-end">
               {canResendOtp ? (
                 <button
                   type="button"
-                  className="btn btn-link p-0"
+                  style={{
+                    width: '100%',
+                    marginTop: '12px',
+                    padding: '12px',
+                    background: 'transparent',
+                    border: '2px solid #3b82f6',
+                    color: '#3b82f6',
+                    borderRadius: '8px',
+                    cursor: 'pointer',
+                    fontWeight: '600'
+                  }}
                   onClick={sendOtp}
                   disabled={otpLoading}
                 >
-                  {otpLoading ? (
+                  Resend Code
+                </button>
+              ) : (
+                <p style={{ textAlign: 'center', marginTop: '12px', fontSize: '0.9rem', color: '#718096' }}>
+                  Resend code in {otpTimer}s
+                </p>
+              )}
+            </div>
+          )}
+
+          {/* Toggle Mode */}
+          {!showOtpVerification && (
+            <div className="patient-auth__toggle-mode">
+              <p>
+                {isLogin ? "Don't have an account?" : "Already have an account?"}
+              </p>
+              <button
+                type="button"
+                className="patient-auth__toggle-btn"
+                onClick={() => {
+                  setIsLogin(!isLogin);
+                  setError("");
+                  setValidationErrors({});
+                }}
+              >
+                {isLogin ? "Register here" : "Sign in here"}
+              </button>
+            </div>
+          )}
+
+          {/* Forgot Password Link */}
+          {isLogin && !showOtpVerification && (
+            <div className="patient-auth__forgot-password">
+              <button
+                type="button"
+                className="patient-auth__forgot-password-btn"
+                onClick={() => setShowForgotPassword(true)}
+              >
+                Forgot password?
+              </button>
+            </div>
+          )}
+
+          {/* Form Footer */}
+          <div className="patient-auth__form-footer">
+            <p>
+              <i className="fas fa-shield-alt"></i>
+              Secured with enterprise-grade encryption
+            </p>
+          </div>
+        </div>
+      </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          bottom: 0,
+          background: 'rgba(0, 0, 0, 0.5)',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center',
+          zIndex: 1000,
+          padding: '1rem'
+        }}>
+          <div style={{
+            background: 'white',
+            borderRadius: '16px',
+            padding: '2rem',
+            maxWidth: '400px',
+            width: '100%',
+            boxShadow: '0 20px 60px rgba(0, 0, 0, 0.3)'
+          }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem' }}>
+              <h3 style={{ margin: 0, fontSize: '1.5rem', fontWeight: '700', color: '#1a202c' }}>
+                <i className="fas fa-key" style={{ marginRight: '8px' }}></i>
+                Reset Password
+              </h3>
+              <button
+                type="button"
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setResetEmail("");
+                  setError("");
+                }}
+                style={{
+                  background: 'none',
+                  border: 'none',
+                  fontSize: '1.5rem',
+                  cursor: 'pointer',
+                  color: '#718096'
+                }}
+              >
+                ×
+              </button>
+            </div>
+
+            <p style={{ color: '#718096', marginBottom: '1.5rem', fontSize: '0.95rem' }}>
+              {!showOtpVerification 
+                ? "Enter your email address and we'll send you a verification code to reset your password."
+                : "Enter the verification code sent to your email and your new password."
+              }
+            </p>
+
+            <form onSubmit={showOtpVerification ? handleResetPasswordWithOtp : handleForgotPassword}>
+              {!showOtpVerification && (
+                <div className="patient-auth__form-group">
+                  <label className="patient-auth__label">
+                    <i className="fas fa-envelope"></i>
+                    Email Address
+                  </label>
+                  <input
+                    type="email"
+                    className="patient-auth__input"
+                    value={resetEmail}
+                    onChange={(e) => setResetEmail(e.target.value)}
+                    placeholder="your.email@example.com"
+                    required
+                    disabled={resetLoading}
+                  />
+                </div>
+              )}
+
+              {showOtpVerification && (
+                <>
+                  <div className="patient-auth__form-group">
+                    <label className="patient-auth__label">
+                      <i className="fas fa-shield-alt"></i>
+                      Verification Code
+                    </label>
+                    <input
+                      type="text"
+                      className="patient-auth__input"
+                      value={otp}
+                      onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                      placeholder="Enter 6-digit code"
+                      maxLength="6"
+                      required
+                      disabled={loading}
+                      style={{ letterSpacing: '0.5em', fontSize: '1.2rem', textAlign: 'center' }}
+                    />
+                  </div>
+
+                  <div className="patient-auth__form-group">
+                    <label className="patient-auth__label">
+                      <i className="fas fa-lock"></i>
+                      New Password
+                    </label>
+                    <input
+                      type="password"
+                      className="patient-auth__input"
+                      value={formData.password}
+                      onChange={(e) => setFormData({ ...formData, password: e.target.value })}
+                      placeholder="Enter new password"
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+
+                  <div className="patient-auth__form-group">
+                    <label className="patient-auth__label">
+                      <i className="fas fa-lock"></i>
+                      Confirm New Password
+                    </label>
+                    <input
+                      type="password"
+                      className="patient-auth__input"
+                      value={formData.confirmPassword}
+                      onChange={(e) => setFormData({ ...formData, confirmPassword: e.target.value })}
+                      placeholder="Confirm new password"
+                      required
+                      disabled={loading}
+                    />
+                  </div>
+                </>
+              )}
+
+              {error && (
+                <div className="patient-auth__error" style={{ marginBottom: '1rem' }}>
+                  <i className="fas fa-exclamation-circle"></i>
+                  <span>{error}</span>
+                </div>
+              )}
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  type="button"
+                  onClick={() => {
+                    if (showOtpVerification) {
+                      // Go back to email input
+                      setShowOtpVerification(false);
+                      setOtpSent(false);
+                      setOtp("");
+                      setError("");
+                    } else {
+                      // Close modal
+                      setShowForgotPassword(false);
+                      setResetEmail("");
+                      setError("");
+                    }
+                  }}
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem 1.5rem',
+                    background: '#f0f4f8',
+                    border: '2px solid #e5e7eb',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    color: '#718096',
+                    transition: 'all 0.3s ease'
+                  }}
+                  onMouseEnter={(e) => {
+                    e.target.style.background = '#e5e7eb';
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.background = '#f0f4f8';
+                  }}
+                  disabled={resetLoading || loading}
+                >
+                  {showOtpVerification ? 'Back' : 'Cancel'}
+                </button>
+                <button
+                  type="submit"
+                  style={{
+                    flex: 1,
+                    padding: '0.75rem 1.5rem',
+                    background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+                    border: 'none',
+                    borderRadius: '8px',
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    color: 'white',
+                    transition: 'all 0.3s ease',
+                    opacity: resetLoading ? 0.7 : 1
+                  }}
+                  onMouseEnter={(e) => {
+                    if (!resetLoading) {
+                      e.target.style.transform = 'translateY(-2px)';
+                      e.target.style.boxShadow = '0 8px 24px rgba(102, 126, 234, 0.4)';
+                    }
+                  }}
+                  onMouseLeave={(e) => {
+                    e.target.style.transform = 'translateY(0)';
+                    e.target.style.boxShadow = 'none';
+                  }}
+                  disabled={resetLoading || loading}
+                >
+                  {(resetLoading || loading) ? (
                     <>
-                      <span className="spinner-border spinner-border-sm me-1" role="status"></span>
-                      Sending...
+                      <i className="fas fa-spinner fa-spin"></i>
+                      {' '}{showOtpVerification ? 'Resetting...' : 'Sending...'}
                     </>
                   ) : (
                     <>
-                      <i className="fas fa-redo me-1"></i>
-                      Resend Code
+                      <i className={showOtpVerification ? "fas fa-check" : "fas fa-paper-plane"}></i>
+                      {' '}{showOtpVerification ? 'Reset Password' : 'Send Code'}
                     </>
                   )}
                 </button>
-              ) : (
-                <small className="text-muted">
-                  Resend in {otpTimer}s
-                </small>
-              )}
-            </div>
-          </div>
-
-          <button
-            type="button"
-            className="btn btn-success w-100"
-            onClick={verifyOtp}
-            disabled={loading || otp.length !== 6}
-          >
-            {loading ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                Verifying...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-shield-check me-2"></i>
-                Verify & Complete Registration
-              </>
-            )}
-          </button>
-
-          <div className="mt-3 p-3 bg-light rounded">
-            <small className="text-muted">
-              <i className="fas fa-info-circle me-1"></i>
-              <strong>Didn't receive the code?</strong> Check your spam folder or try resending after {otpTimer > 0 ? `${otpTimer} seconds` : 'the timer expires'}.
-            </small>
-          </div>
-        </div>
-      )}
-
-      <div className="text-center">
-        <button
-          type="button"
-          className="btn btn-link"
-          onClick={() => {
-            setIsLogin(!isLogin);
-            setError("");
-            setValidationErrors({});
-            setFormData({
-              name: "",
-              email: "",
-              password: "",
-              confirmPassword: "",
-              phone: "",
-              dateOfBirth: "",
-              gender: "",
-              emergencyContact: "",
-              emergencyPhone: "",
-              medicalHistory: "",
-              allergies: "",
-              insurance: ""
-            });
-          }}
-        >
-          {isLogin ? (
-            <>
-              <i className="fas fa-user-plus me-1"></i>
-              Need an account? Register as Patient
-            </>
-          ) : (
-            <>
-              <i className="fas fa-sign-in-alt me-1"></i>
-              Already have an account? Sign In
-            </>
-          )}
-        </button>
-      </div>
-
-      {isLogin && (
-        <div className="text-center mt-2">
-          <button 
-            type="button" 
-            className="btn btn-link btn-sm text-muted"
-            onClick={() => setShowForgotPassword(true)}
-          >
-            <i className="fas fa-key me-1"></i>
-            Forgot Password?
-          </button>
-        </div>
-      )}
-
-      {/* Forgot Password Modal - 3 Step Process */}
-      {showForgotPassword && (
-        <div className="modal show d-block" style={{background: 'rgba(0,0,0,0.5)'}} onClick={(e) => {
-          if (e.target === e.currentTarget) {
-            setShowForgotPassword(false);
-            setResetStep(1);
-            setResetEmail("");
-            setResetOtp("");
-            setNewPassword("");
-            setConfirmNewPassword("");
-            setError("");
-          }
-        }}>
-          <div className="modal-dialog modal-dialog-centered">
-            <div className="modal-content" style={{borderRadius: '20px', border: 'none'}}>
-              <div className="modal-header" style={{borderBottom: '1px solid #e2e8f0'}}>
-                <h5 className="modal-title fw-bold">
-                  <i className="fas fa-key text-primary me-2"></i>
-                  Reset Password {resetStep > 1 && `- Step ${resetStep} of 3`}
-                </h5>
-                <button 
-                  type="button" 
-                  className="btn-close" 
-                  onClick={() => {
-                    setShowForgotPassword(false);
-                    setResetStep(1);
-                    setResetEmail("");
-                    setResetOtp("");
-                    setNewPassword("");
-                    setConfirmNewPassword("");
-                    setError("");
-                  }}
-                ></button>
               </div>
-              <div className="modal-body p-4">
-                {/* Step 1: Enter Email */}
-                {resetStep === 1 && (
-                  <>
-                    <p className="text-muted mb-4">
-                      Enter your email address and we'll send you a 6-digit OTP to reset your password.
-                    </p>
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold">Email Address</label>
-                      <input
-                        type="email"
-                        className="form-control form-control-lg"
-                        placeholder="Enter your email"
-                        value={resetEmail}
-                        onChange={(e) => setResetEmail(e.target.value)}
-                        style={{borderRadius: '12px'}}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter' && resetEmail && !resetLoading) {
-                            document.getElementById('send-otp-btn').click();
-                          }
-                        }}
-                      />
-                    </div>
-                    <button
-                      id="send-otp-btn"
-                      className="btn btn-primary w-100 py-3"
-                      style={{borderRadius: '12px', fontWeight: '600'}}
-                      onClick={async () => {
-                        if (!validateEmail(resetEmail)) {
-                          setError("Please enter a valid email address");
-                          return;
-                        }
-                        setResetLoading(true);
-                        setError("");
-                        try {
-                          const response = await axios.post('/api/otp/send-otp', {
-                            email: resetEmail,
-                            type: 'password-reset'
-                          });
-                          
-                          if (response.data.success) {
-                            setResetStep(2);
-                            addNotification('OTP sent to your email!', 'success');
-                          } else {
-                            setError(response.data.message || "Failed to send OTP");
-                          }
-                        } catch (err) {
-                          console.error("Send OTP error:", err);
-                          const errorMessage = err.response?.data?.message || 
-                                             err.response?.data?.error ||
-                                             "Failed to send OTP. Please try again.";
-                          setError(errorMessage);
-                        } finally {
-                          setResetLoading(false);
-                        }
-                      }}
-                      disabled={resetLoading || !resetEmail}
-                    >
-                      {resetLoading ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2"></span>
-                          Sending OTP...
-                        </>
-                      ) : (
-                        <>
-                          <i className="fas fa-paper-plane me-2"></i>
-                          Send OTP
-                        </>
-                      )}
-                    </button>
-                    {error && (
-                      <div className="alert alert-danger mt-3 mb-0" role="alert">
-                        <i className="fas fa-exclamation-circle me-2"></i>
-                        {error}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Step 2: Verify OTP */}
-                {resetStep === 2 && (
-                  <>
-                    <div className="text-center mb-4">
-                      <i className="fas fa-envelope-open-text text-primary" style={{fontSize: '3rem'}}></i>
-                      <p className="text-muted mt-3 mb-2">
-                        We've sent a 6-digit OTP to<br/>
-                        <strong>{resetEmail}</strong>
-                      </p>
-                      <small className="text-muted">Check your inbox and spam folder</small>
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold">Enter OTP</label>
-                      <input
-                        type="text"
-                        className="form-control form-control-lg text-center"
-                        placeholder="000000"
-                        value={resetOtp}
-                        onChange={(e) => {
-                          const value = e.target.value.replace(/\D/g, '').slice(0, 6);
-                          setResetOtp(value);
-                        }}
-                        style={{borderRadius: '12px', fontSize: '1.5rem', letterSpacing: '0.5rem'}}
-                        maxLength={6}
-                        onKeyPress={(e) => {
-                          if (e.key === 'Enter' && resetOtp.length === 6 && !resetLoading) {
-                            document.getElementById('verify-otp-btn').click();
-                          }
-                        }}
-                      />
-                      <small className="text-muted">OTP is valid for 10 minutes</small>
-                    </div>
-                    <button
-                      id="verify-otp-btn"
-                      className="btn btn-primary w-100 py-3 mb-2"
-                      style={{borderRadius: '12px', fontWeight: '600'}}
-                      onClick={async () => {
-                        if (resetOtp.length !== 6) {
-                          setError("Please enter a valid 6-digit OTP");
-                          return;
-                        }
-                        setResetLoading(true);
-                        setError("");
-                        try {
-                          const response = await axios.post('/api/otp/verify-otp', {
-                            email: resetEmail,
-                            otp: resetOtp,
-                            type: 'password-reset'
-                          });
-                          
-                          if (response.data.success && response.data.verified) {
-                            setResetStep(3);
-                            addNotification('OTP verified successfully!', 'success');
-                          } else {
-                            setError(response.data.message || "Invalid OTP");
-                          }
-                        } catch (err) {
-                          console.error("Verify OTP error:", err);
-                          setError(err.response?.data?.message || "Invalid or expired OTP");
-                        } finally {
-                          setResetLoading(false);
-                        }
-                      }}
-                      disabled={resetLoading || resetOtp.length !== 6}
-                    >
-                      {resetLoading ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2"></span>
-                          Verifying...
-                        </>
-                      ) : (
-                        <>
-                          <i className="fas fa-check-circle me-2"></i>
-                          Verify OTP
-                        </>
-                      )}
-                    </button>
-                    <button
-                      className="btn btn-outline-secondary w-100"
-                      onClick={async () => {
-                        setResetLoading(true);
-                        setError("");
-                        try {
-                          await axios.post('/api/otp/send-otp', {
-                            email: resetEmail,
-                            type: 'password-reset'
-                          });
-                          setResetOtp("");
-                          addNotification('New OTP sent!', 'info');
-                        } catch (err) {
-                          setError("Failed to resend OTP");
-                        } finally {
-                          setResetLoading(false);
-                        }
-                      }}
-                      disabled={resetLoading}
-                    >
-                      <i className="fas fa-redo me-2"></i>
-                      Resend OTP
-                    </button>
-                    {error && (
-                      <div className="alert alert-danger mt-3 mb-0" role="alert">
-                        <i className="fas fa-exclamation-circle me-2"></i>
-                        {error}
-                      </div>
-                    )}
-                  </>
-                )}
-
-                {/* Step 3: Set New Password */}
-                {resetStep === 3 && (
-                  <>
-                    <div className="text-center mb-4">
-                      <i className="fas fa-lock text-success" style={{fontSize: '3rem'}}></i>
-                      <p className="text-muted mt-3">
-                        Create a strong new password for your account
-                      </p>
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold">New Password</label>
-                      <div className="input-group">
-                        <input
-                          type={showNewPassword ? "text" : "password"}
-                          className="form-control form-control-lg"
-                          placeholder="Enter new password"
-                          value={newPassword}
-                          onChange={(e) => setNewPassword(e.target.value)}
-                          style={{borderRadius: '12px 0 0 12px'}}
-                        />
-                        <button
-                          className="btn btn-outline-secondary"
-                          type="button"
-                          onClick={() => setShowNewPassword(!showNewPassword)}
-                          style={{borderRadius: '0 12px 12px 0'}}
-                        >
-                          <i className={`fas fa-eye${showNewPassword ? '-slash' : ''}`}></i>
-                        </button>
-                      </div>
-                      <small className="text-muted">Minimum 6 characters</small>
-                    </div>
-                    <div className="mb-3">
-                      <label className="form-label fw-semibold">Confirm New Password</label>
-                      <div className="input-group">
-                        <input
-                          type={showConfirmNewPassword ? "text" : "password"}
-                          className="form-control form-control-lg"
-                          placeholder="Confirm new password"
-                          value={confirmNewPassword}
-                          onChange={(e) => setConfirmNewPassword(e.target.value)}
-                          style={{borderRadius: '12px 0 0 12px'}}
-                          onKeyPress={(e) => {
-                            if (e.key === 'Enter' && newPassword && confirmNewPassword && !resetLoading) {
-                              document.getElementById('reset-password-btn').click();
-                            }
-                          }}
-                        />
-                        <button
-                          className="btn btn-outline-secondary"
-                          type="button"
-                          onClick={() => setShowConfirmNewPassword(!showConfirmNewPassword)}
-                          style={{borderRadius: '0 12px 12px 0'}}
-                        >
-                          <i className={`fas fa-eye${showConfirmNewPassword ? '-slash' : ''}`}></i>
-                        </button>
-                      </div>
-                    </div>
-                    <button
-                      id="reset-password-btn"
-                      className="btn btn-success w-100 py-3"
-                      style={{borderRadius: '12px', fontWeight: '600'}}
-                      onClick={async () => {
-                        if (newPassword.length < 6) {
-                          setError("Password must be at least 6 characters");
-                          return;
-                        }
-                        if (newPassword !== confirmNewPassword) {
-                          setError("Passwords do not match");
-                          return;
-                        }
-                        setResetLoading(true);
-                        setError("");
-                        try {
-                          const response = await axios.post('/api/auth/reset-password', {
-                            email: resetEmail,
-                            newPassword: newPassword
-                          });
-                          
-                          if (response.data.success) {
-                            addNotification('Password reset successfully! Please login.', 'success');
-                            setShowForgotPassword(false);
-                            setResetStep(1);
-                            setResetEmail("");
-                            setResetOtp("");
-                            setNewPassword("");
-                            setConfirmNewPassword("");
-                          } else {
-                            setError(response.data.message || "Failed to reset password");
-                          }
-                        } catch (err) {
-                          console.error("Reset password error:", err);
-                          setError(err.response?.data?.message || "Failed to reset password");
-                        } finally {
-                          setResetLoading(false);
-                        }
-                      }}
-                      disabled={resetLoading || !newPassword || !confirmNewPassword}
-                    >
-                      {resetLoading ? (
-                        <>
-                          <span className="spinner-border spinner-border-sm me-2"></span>
-                          Resetting Password...
-                        </>
-                      ) : (
-                        <>
-                          <i className="fas fa-check me-2"></i>
-                          Reset Password
-                        </>
-                      )}
-                    </button>
-                    {error && (
-                      <div className="alert alert-danger mt-3 mb-0" role="alert">
-                        <i className="fas fa-exclamation-circle me-2"></i>
-                        {error}
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-            </div>
+            </form>
           </div>
         </div>
       )}
 
-        <div className="mt-3 p-3 bg-light rounded">
-          <small className="text-muted">
-            <i className="fas fa-shield-alt me-1 text-success"></i>
-            <strong>Your privacy is protected:</strong> All medical information is encrypted and HIPAA compliant.
-          </small>
-        </div>
-      </div>
+      {/* Location Permission Modal */}
+      {showLocationModal && (
+        <LocationPermissionModal
+          onAllow={handleLocationAllow}
+          onDeny={handleLocationDeny}
+        />
+      )}
     </div>
   );
 }

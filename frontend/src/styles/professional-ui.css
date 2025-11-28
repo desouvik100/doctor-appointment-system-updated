@@ -32,22 +32,47 @@
 body {
   font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
   line-height: 1.6;
-  color: #1e293b; /* Dark text for readability */
-  /* REMOVED: background-color - using transparent to show html blue gradient */
-  background: transparent !important;
+  color: var(--text-primary);
+  background-color: #ffffff;
   margin: 0;
   padding: 0;
 }
 
-/* Medical background styles are defined in medical-theme-clean.css.
-   Removed here to prevent overlapping backgrounds. */
+/* Medical Background */
+.medical-bg {
+  background: linear-gradient(135deg, 
+    rgba(248, 250, 252, 0.95) 0%, 
+    rgba(226, 232, 240, 0.9) 20%, 
+    rgba(241, 245, 249, 0.95) 40%, 
+    rgba(255, 255, 255, 0.9) 60%, 
+    rgba(248, 250, 252, 0.95) 80%, 
+    rgba(226, 232, 240, 0.9) 100%);
+  position: relative;
+}
+
+.medical-bg::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: repeating-linear-gradient(
+    45deg,
+    transparent,
+    transparent 20px,
+    rgba(102, 126, 234, 0.02) 20px,
+    rgba(102, 126, 234, 0.02) 21px
+  );
+  pointer-events: none;
+}
 
 /* Navigation Styles */
 .medical-nav {
-  background: rgba(255, 255, 255, 0.1) !important; /* Semi-transparent on blue gradient */
+  background: linear-gradient(135deg, var(--primary-color) 0%, var(--primary-dark) 100%) !important;
   backdrop-filter: blur(20px);
   box-shadow: var(--shadow-lg);
-  border-bottom: 1px solid rgba(255, 255, 255, 0.2);
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
 }
 
 .navbar-brand {
@@ -77,10 +102,6 @@ body {
   z-index: 1;
 }
 
-.hero-content {
-  max-width: 560px;
-}
-
 .premium-title {
   font-size: 3.5rem;
   font-weight: 800;
@@ -90,10 +111,6 @@ body {
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-}
-
-.premium-title .text-gradient {
-  filter: drop-shadow(0 2px 6px rgba(102, 126, 234, 0.25));
 }
 
 .text-gradient {
@@ -117,10 +134,6 @@ body {
 
 .stat-item {
   padding: 1rem;
-  background: rgba(255, 255, 255, 0.9);
-  border: 1px solid var(--border-color);
-  border-radius: 14px;
-  box-shadow: var(--shadow-md);
 }
 
 .stat-number {
@@ -131,11 +144,6 @@ body {
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin-bottom: 0.5rem;
-}
-
-.hero-actions .btn-lg {
-  padding: 0.875rem 2.25rem;
-  border-radius: 12px;
 }
 
 /* Buttons */
@@ -222,10 +230,6 @@ body {
   margin: 0.25rem;
 }
 
-.trust-badge i {
-  font-size: 0.95rem;
-}
-
 .trust-badge:hover {
   background: white;
   transform: translateY(-1px);
@@ -242,15 +246,6 @@ body {
   backdrop-filter: blur(20px);
   position: relative;
   overflow: hidden;
-}
-
-.dashboard-preview::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  border-radius: 20px;
-  pointer-events: none;
-  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
 }
 
 .preview-header {
@@ -443,14 +438,6 @@ body {
   overflow: hidden;
 }
 
-.login-panel-card {
-  border-radius: 16px;
-}
-
-.panel-icon i {
-  filter: drop-shadow(0 6px 10px rgba(102, 126, 234, 0.15));
-}
-
 .medical-card:hover {
   transform: translateY(-4px);
   box-shadow: var(--shadow-xl);
@@ -487,9 +474,9 @@ body {
   margin-bottom: 0.5rem;
 }
 
-/* Dark Theme - Transparent to show html blue gradient */
+/* Dark Theme */
 .dark-theme {
-  background: transparent; /* Shows html blue gradient */
+  background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
   color: #f1f5f9;
 }
 
@@ -538,11 +525,7 @@ body {
   .hero-section {
     padding: 4rem 0;
   }
-
-  .hero-content {
-    max-width: 100%;
-  }
-
+  
   .dashboard-preview {
     padding: 1.5rem;
     margin: 1rem;

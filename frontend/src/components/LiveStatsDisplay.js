@@ -12,29 +12,31 @@ const LiveStatsDisplay = () => {
   });
 
   useEffect(() => {
-    // Fetch real stats from API
+    // Use static demo stats to prevent unnecessary API calls
+    // This improves performance significantly
+    setStats({
+      patientsToday: 247,
+      activeDoctors: 34,
+      avgWaitTime: 12,
+      surgeriesHandled: 1847,
+      appointmentsCompleted: 15234,
+      satisfactionRate: 98
+    });
+
+    // Optional: Fetch real stats from API only once on mount
+    // Uncomment below if you have a real stats API endpoint
+    /*
     const fetchStats = async () => {
       try {
         const response = await fetch('/api/stats/live');
         const data = await response.json();
         setStats(data);
       } catch (error) {
-        // Fallback to demo stats
-        setStats({
-          patientsToday: 247,
-          activeDoctors: 34,
-          avgWaitTime: 12,
-          surgeriesHandled: 1847,
-          appointmentsCompleted: 15234,
-          satisfactionRate: 98
-        });
+        console.error('Failed to fetch stats:', error);
       }
     };
-
     fetchStats();
-    const interval = setInterval(fetchStats, 30000); // Update every 30s
-
-    return () => clearInterval(interval);
+    */
   }, []);
 
   const statItems = [

@@ -1,0 +1,1276 @@
+/* Complete Visibility Fix - Ensures all text and elements are visible */
+
+/* ========================================
+   CRITICAL FIX - Remove opacity and visibility overrides
+   ======================================== */
+
+/* DO NOT set global visibility/opacity - causes conflicts */
+/* Instead, target specific problem areas */
+
+/* ========================================
+   LANDING PAGE TEXT VISIBILITY
+   ======================================== */
+
+/* Hero Section - Ensure proper contrast */
+
+
+/* Hero headings - Strong contrast */
+.hero-section h1,
+.hero-section h2,
+.hero-section h3,
+.hero-section .display-3,
+.premium-title {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5) !important;
+  font-weight: 700 !important;
+}
+
+/* Hero paragraphs and text - Strong contrast */
+.hero-section p,
+.hero-section .lead,
+.premium-subtitle {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+  font-weight: 500 !important;
+}
+
+/* Stats section - Strong contrast */
+.stat-number,
+.hero-stats h3,
+.stat-value {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6) !important;
+  font-weight: 800 !important;
+}
+
+.hero-stats small,
+.stat-label {
+  color: #ffffff !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+  font-weight: 600 !important;
+}
+
+/* ========================================
+   BUTTONS VISIBILITY
+   ======================================== */
+
+/* Buttons - Strong contrast */
+.btn,
+button {
+  font-weight: 700 !important;
+}
+
+/* Get Started button - High contrast */
+.btn-get-started,
+.btn-medical {
+  color: #667eea !important;
+  background: #ffffff !important;
+  font-weight: 800 !important;
+  border: 3px solid #ffffff !important;
+}
+
+/* ========================================
+   CARDS VISIBILITY
+   ======================================== */
+
+/* Card text - High contrast */
+.card h1, .card h2, .card h3, .card h4, .card h5, .card h6,
+.medical-card h1, .medical-card h2, .medical-card h3, .medical-card h4, .medical-card h5, .medical-card h6 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.card p, .card span:not(.badge), .card small,
+.medical-card p, .medical-card span:not(.badge), .medical-card small {
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+.card .text-muted,
+.medical-card .text-muted {
+  color: #475569 !important;
+  font-weight: 500 !important;
+}
+
+/* ========================================
+   FEATURES SECTION VISIBILITY
+   ======================================== */
+
+/* Feature cards - High contrast text */
+.feature-card h3,
+.feature-card h4,
+.feature-card h5 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.feature-card p,
+.feature-card li {
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+/* ========================================
+   PATIENT PORTAL SECTION VISIBILITY
+   ======================================== */
+
+.patient-portal-main h2,
+.patient-portal-main h6 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.patient-portal-main p,
+.patient-portal-main small {
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+/* ========================================
+   STAFF ACCESS SECTION VISIBILITY
+   ======================================== */
+
+.staff-access-links p {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+  font-weight: 600 !important;
+}
+
+/* ========================================
+   NAVBAR VISIBILITY
+   ======================================== */
+
+.navbar-brand,
+.navbar-brand span {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5) !important;
+  font-weight: 700 !important;
+}
+
+.nav-link {
+  color: #ffffff !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  font-weight: 600 !important;
+}
+
+/* ========================================
+   FOOTER VISIBILITY
+   ======================================== */
+
+footer,
+footer * {
+  color: #ffffff !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.4) !important;
+  font-weight: 500 !important;
+}
+
+/* ========================================
+   FORMS VISIBILITY
+   ======================================== */
+
+/* Form labels and inputs - High contrast */
+.form-label,
+label {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+.form-control,
+.form-select,
+input,
+textarea,
+select {
+  color: #0f172a !important;
+  background: #ffffff !important;
+  font-weight: 500 !important;
+}
+
+/* ========================================
+   MODALS VISIBILITY
+   ======================================== */
+
+.modal-content h1,
+.modal-content h2,
+.modal-content h3,
+.modal-content h4,
+.modal-content h5,
+.modal-content h6 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.modal-content p,
+.modal-content span:not(.badge),
+.modal-content small {
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+/* ========================================
+   DASHBOARD VISIBILITY
+   ======================================== */
+
+/* Dashboard - removed global overrides */
+
+/* ========================================
+   LIVE STATS VISIBILITY
+   ======================================== */
+
+/* Live stats - removed global overrides */
+
+/* ========================================
+   REVIEWS SECTION VISIBILITY
+   ======================================== */
+
+/* Reviews section - High contrast */
+.reviews-section h2,
+.reviews-section h3 {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6) !important;
+  font-weight: 700 !important;
+}
+
+.review-card h4,
+.review-card h5 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.review-card p {
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+/* ========================================
+   FLOATING CHAT VISIBILITY
+   ======================================== */
+
+/* Floating chat - High contrast */
+.floating-chat-window h4,
+.floating-chat-window h5 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.floating-chat-window p,
+.chat-message {
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+/* ========================================
+   THEME TOGGLE VISIBILITY
+   ======================================== */
+
+/* Theme toggle - ensure visibility */
+
+
+/* ========================================
+   DARK MODE OVERRIDES
+   ======================================== */
+
+[data-theme="dark"] .hero-section h1,
+[data-theme="dark"] .hero-section h2,
+[data-theme="dark"] .hero-section h3 {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.8) !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="dark"] .hero-section p,
+[data-theme="dark"] .hero-section .lead {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7) !important;
+  font-weight: 500 !important;
+}
+
+[data-theme="dark"] .card h1,
+[data-theme="dark"] .card h2,
+[data-theme="dark"] .card h3,
+[data-theme="dark"] .card h4,
+[data-theme="dark"] .card h5,
+[data-theme="dark"] .card h6,
+[data-theme="dark"] .medical-card h1,
+[data-theme="dark"] .medical-card h2,
+[data-theme="dark"] .medical-card h3,
+[data-theme="dark"] .medical-card h4,
+[data-theme="dark"] .medical-card h5,
+[data-theme="dark"] .medical-card h6 {
+  color: #f1f5f9 !important;
+  font-weight: 700 !important;
+}
+
+[data-theme="dark"] .card p,
+[data-theme="dark"] .card span:not(.badge),
+[data-theme="dark"] .medical-card p,
+[data-theme="dark"] .medical-card span:not(.badge) {
+  color: #e2e8f0 !important;
+  font-weight: 500 !important;
+}
+
+/* ========================================
+   MOBILE RESPONSIVE TEXT
+   ======================================== */
+
+@media (max-width: 768px) {
+  /* Increase font weight on mobile for better visibility */
+  .hero-section h1,
+  .hero-section h2,
+  .hero-section h3 {
+    font-weight: 800 !important;
+  }
+  
+  .hero-section p,
+  .hero-section .lead {
+    font-weight: 600 !important;
+  }
+  
+  .card h1, .card h2, .card h3, .card h4, .card h5, .card h6 {
+    font-weight: 800 !important;
+  }
+  
+  .card p, .card span:not(.badge) {
+    font-weight: 600 !important;
+  }
+}
+
+/* ========================================
+   DASHBOARD SPECIFIC FIXES
+   ======================================== */
+
+/* Dashboard cards - High contrast */
+.dashboard .card h1,
+.dashboard .card h2,
+.dashboard .card h3,
+.dashboard .card h4,
+.dashboard .card h5,
+.dashboard .card h6,
+.patient-dashboard .card h1,
+.patient-dashboard .card h2,
+.patient-dashboard .card h3,
+.patient-dashboard .card h4,
+.patient-dashboard .card h5,
+.patient-dashboard .card h6 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.dashboard .card p,
+.dashboard .card span:not(.badge),
+.dashboard .card small,
+.patient-dashboard .card p,
+.patient-dashboard .card span:not(.badge),
+.patient-dashboard .card small {
+  color: #1e293b !important;
+  font-weight: 500 !important;
+}
+
+/* Dashboard labels and text */
+.dashboard .text-muted,
+.patient-dashboard .text-muted {
+  color: #475569 !important;
+  font-weight: 500 !important;
+}
+
+/* Ensure text is never transparent unless intentional gradient */
+*:not(.text-gradient):not([class*="gradient"]):not(.premium-title) {
+  -webkit-text-fill-color: initial !important;
+}
+
+/* ========================================
+   FINAL CRITICAL FIX
+   ======================================== */
+
+/* Remove any transparent text fills that cause washed out appearance */
+* {
+  -webkit-text-fill-color: inherit !important;
+}
+
+/* Except for intentional gradient text */
+.text-gradient,
+.premium-title,
+[class*="gradient-text"] {
+  -webkit-text-fill-color: transparent !important;
+}
+
+/* ========================================
+   LIVE STATS DASHBOARD FIX
+   ======================================== */
+
+/* Live stats - High contrast */
+.live-stats-section h2,
+.live-stats-section h3,
+.stats-title {
+  color: #ffffff !important;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6) !important;
+  font-weight: 700 !important;
+}
+
+.live-stats-section p,
+.stats-subtitle {
+  color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5) !important;
+  font-weight: 500 !important;
+}
+
+.stat-card .stat-value {
+  font-weight: 800 !important;
+}
+
+.stat-card .stat-label {
+  font-weight: 600 !important;
+  color: #1e293b !important;
+}
+
+/* ========================================
+   PATIENT FLOW CHART FIX
+   ======================================== */
+
+.patient-flow,
+.chart-container {
+  color: #1e293b !important;
+}
+
+.patient-flow h3,
+.patient-flow h4 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+/* ========================================
+   QUICK ACTIONS BUTTONS FIX
+   ======================================== */
+
+.quick-actions button,
+.quick-action-btn {
+  font-weight: 700 !important;
+}
+
+.quick-actions button span,
+.quick-action-btn span {
+  font-weight: 600 !important;
+}
+
+
+/* ========================================
+   PATIENT FLOW CHART - CRITICAL FIX
+   ======================================== */
+
+/* Patient Flow section - High contrast */
+.patient-flow,
+.patient-flow-section,
+.chart-section {
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.patient-flow h3,
+.patient-flow h4,
+.patient-flow-section h3,
+.patient-flow-section h4 {
+  color: #0f172a !important;
+  font-weight: 800 !important;
+  text-shadow: none !important;
+}
+
+.patient-flow p,
+.patient-flow span:not(.badge),
+.patient-flow small {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+}
+
+/* Chart bars and elements */
+.chart-bars,
+.chart-container,
+.preview-chart {
+  background: #f8fafc !important;
+}
+
+.bar,
+.chart-bar {
+  background: #667eea !important;
+  opacity: 1 !important;
+}
+
+/* Chart labels */
+.chart-label,
+.chart-text {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+}
+
+/* ========================================
+   DASHBOARD PREVIEW - CRITICAL FIX
+   ======================================== */
+
+/* Dashboard preview section */
+.dashboard-preview,
+.preview-content,
+.hero-image {
+  opacity: 1 !important;
+}
+
+.dashboard-preview h3,
+.dashboard-preview h4,
+.dashboard-preview h5 {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+  text-shadow: none !important;
+}
+
+.dashboard-preview p,
+.dashboard-preview span:not(.badge),
+.dashboard-preview small {
+  color: #1e293b !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+}
+
+/* Mini cards in preview */
+.mini-card {
+  background: rgba(255, 255, 255, 0.95) !important;
+}
+
+.mini-card small,
+.mini-card .d-block {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+.mini-card .text-muted {
+  color: #475569 !important;
+  font-weight: 600 !important;
+}
+
+/* ========================================
+   STATS CARDS - CRITICAL FIX
+   ======================================== */
+
+/* Stats in hero section */
+.hero-stats .stat-item,
+.stat-card {
+  opacity: 1 !important;
+}
+
+.hero-stats h3,
+.stat-number,
+.stat-value {
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.7) !important;
+  font-size: 2.5rem !important;
+}
+
+.hero-stats small,
+.stat-label,
+.stat-item small {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+}
+
+/* ========================================
+   QUICK ACTIONS - CRITICAL FIX
+   ======================================== */
+
+.quick-actions,
+.quick-action-btn,
+.action-buttons {
+  opacity: 1 !important;
+}
+
+.quick-actions button,
+.quick-action-btn {
+  font-weight: 700 !important;
+  color: #0f172a !important;
+}
+
+.quick-actions button small,
+.quick-action-btn small,
+.quick-actions button .d-block {
+  color: #0f172a !important;
+  font-weight: 700 !important;
+}
+
+/* ========================================
+   PREVIEW HEADER - CRITICAL FIX
+   ======================================== */
+
+.preview-header,
+.preview-dots,
+.medical-indicator {
+  opacity: 1 !important;
+}
+
+.preview-header small {
+  color: #64748b !important;
+  font-weight: 600 !important;
+}
+
+/* ========================================
+   TRUST INDICATORS - CRITICAL FIX
+   ======================================== */
+
+.trust-indicators,
+.trust-badge,
+.trust-badge-item {
+  opacity: 1 !important;
+}
+
+.trust-indicators small,
+.trust-badge small,
+.trust-badge-item small,
+.trust-badge-item span {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  text-shadow: 0 2px 6px rgba(0, 0, 0, 0.5) !important;
+}
+
+/* ========================================
+   HERO ACTIONS - CRITICAL FIX
+   ======================================== */
+
+.hero-actions,
+.hero-actions button {
+  opacity: 1 !important;
+}
+
+.hero-actions .btn {
+  font-weight: 800 !important;
+  font-size: 1.25rem !important;
+}
+
+/* ========================================
+   PORTAL ICONS - CRITICAL FIX
+   ======================================== */
+
+.portal-icon,
+.feature-icon,
+.medical-icon {
+  opacity: 1 !important;
+}
+
+.portal-icon i,
+.feature-icon i,
+.medical-icon i {
+  opacity: 1 !important;
+  filter: none !important;
+}
+
+/* ========================================
+   FLOATING MEDICAL ICONS - CRITICAL FIX
+   ======================================== */
+
+.floating-medical-icons,
+.floating-icon {
+  opacity: 1 !important;
+}
+
+.floating-icon i {
+  opacity: 1 !important;
+  filter: drop-shadow(0 4px 8px rgba(0, 0, 0, 0.3)) !important;
+}
+
+/* ========================================
+   MEDICAL PATTERN OVERLAY - FIX
+   ======================================== */
+
+.medical-pattern-overlay {
+  opacity: 0.05 !important;
+}
+
+/* ========================================
+   PULSE INDICATORS - FIX
+   ======================================== */
+
+.pulse-indicator {
+  opacity: 1 !important;
+}
+
+/* ========================================
+   ALL TEXT MUST BE DARK ON LIGHT BACKGROUNDS
+   ======================================== */
+
+/* Any element with light background needs dark text */
+[class*="bg-light"],
+[class*="bg-white"],
+.card,
+.medical-card,
+.preview-content,
+.dashboard-preview,
+.mini-card {
+  color: #0f172a !important;
+}
+
+[class*="bg-light"] *:not(.btn):not(.badge),
+[class*="bg-white"] *:not(.btn):not(.badge),
+.card *:not(.btn):not(.badge),
+.medical-card *:not(.btn):not(.badge),
+.preview-content *:not(.btn):not(.badge),
+.dashboard-preview *:not(.btn):not(.badge),
+.mini-card *:not(.btn):not(.badge) {
+  color: #0f172a !important;
+  font-weight: 600 !important;
+  text-shadow: none !important;
+}
+
+/* ========================================
+   GRADIENT TEXT - ENSURE VISIBILITY
+   ======================================== */
+
+/* Only specific gradient text elements */
+.text-gradient {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+  font-weight: 800 !important;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.3)) !important;
+}
+
+/* ========================================
+   ENSURE NO WASHED OUT TEXT
+   ======================================== */
+
+/* Remove any opacity that makes text faint */
+h1, h2, h3, h4, h5, h6,
+p, span:not(.badge), small, a, label {
+  opacity: 1 !important;
+}
+
+/* Ensure all headings are bold */
+h1, h2, h3, h4, h5, h6 {
+  font-weight: 700 !important;
+}
+
+/* Ensure all body text has good weight */
+p, span:not(.badge), small {
+  font-weight: 500 !important;
+}
+
+
+/* ========================================
+   HERO TITLE - ABSOLUTE FIX
+   ======================================== */
+
+/* Fix "The Future of Healthcare Management" title */
+.hero-section h1,
+.hero-section .display-3,
+.premium-title,
+.hero-content h1 {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8) !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+
+/* Ensure all parts of the title are visible */
+.hero-section h1 *,
+.hero-section .display-3 *,
+.premium-title *,
+.hero-content h1 * {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8) !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+
+/* Fix any span or text-gradient inside hero title */
+.hero-section h1 span,
+.hero-section .display-3 span,
+.premium-title span,
+.hero-content h1 span {
+  color: #fbbf24 !important;
+  font-weight: 800 !important;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8) !important;
+  -webkit-text-fill-color: #fbbf24 !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+
+/* Override any gradient text in hero */
+.hero-section .text-gradient {
+  color: #fbbf24 !important;
+  font-weight: 800 !important;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8) !important;
+  -webkit-text-fill-color: #fbbf24 !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+
+/* ========================================
+   ALL HERO TEXT - MAXIMUM VISIBILITY
+   ======================================== */
+
+/* Hero subtitle and lead text */
+.hero-section p,
+.hero-section .lead,
+.premium-subtitle,
+.hero-content p {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.7) !important;
+  -webkit-text-fill-color: #ffffff !important;
+  background: none !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+
+/* ========================================
+   REMOVE ALL GRADIENT TEXT EFFECTS
+   ======================================== */
+
+/* Disable gradient text globally - causes visibility issues */
+* {
+  -webkit-text-fill-color: inherit !important;
+  -webkit-background-clip: initial !important;
+  background-clip: initial !important;
+}
+
+/* Only allow gradient on specific safe elements */
+.safe-gradient-text {
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%) !important;
+  -webkit-background-clip: text !important;
+  -webkit-text-fill-color: transparent !important;
+  background-clip: text !important;
+}
+
+/* ========================================
+   SECTION HEADINGS - ALL VISIBLE
+   ======================================== */
+
+/* All section headings must be visible */
+section h1,
+section h2,
+section h3,
+section h4 {
+  color: #ffffff !important;
+  font-weight: 800 !important;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8) !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Section text */
+section p,
+section span:not(.badge),
+section small {
+  color: #ffffff !important;
+  font-weight: 600 !important;
+  text-shadow: 0 3px 12px rgba(0, 0, 0, 0.7) !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* ========================================
+   OVERRIDE ANY PROBLEMATIC STYLES
+   ======================================== */
+
+/* Remove any styles that make text invisible */
+.fade-in-up,
+.fade-in,
+.slide-in-right,
+.scale-in {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* Ensure loaded state */
+html.loaded *,
+body.loaded * {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* ========================================
+   NAVBAR TEXT - MAXIMUM VISIBILITY
+   ======================================== */
+
+.navbar *,
+.medical-nav *,
+.navbar-brand,
+.navbar-brand *,
+.nav-link,
+.nav-link * {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.6) !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* ========================================
+   STATS - MAXIMUM VISIBILITY
+   ======================================== */
+
+.hero-stats *,
+.stat-item *,
+.stat-number,
+.stat-value {
+  color: #ffffff !important;
+  font-weight: 900 !important;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.9) !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* ========================================
+   CRITICAL: DISABLE ANTI-FLICKER
+   ======================================== */
+
+/* Anti-flicker might be hiding content */
+html.loading *,
+html.loading body {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* ========================================
+   FORCE ALL TEXT TO BE VISIBLE
+   ======================================== */
+
+/* Nuclear option - make everything visible */
+h1, h2, h3, h4, h5, h6,
+p, span, small, a, label,
+div, section, article {
+  opacity: 1 !important;
+  visibility: visible !important;
+  -webkit-text-fill-color: inherit !important;
+}
+
+/* On gradient backgrounds, use white text */
+[style*="gradient"] h1,
+[style*="gradient"] h2,
+[style*="gradient"] h3,
+[style*="gradient"] p,
+[class*="gradient"] h1,
+[class*="gradient"] h2,
+[class*="gradient"] h3,
+[class*="gradient"] p {
+  color: #ffffff !important;
+  text-shadow: 0 4px 16px rgba(0, 0, 0, 0.8) !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+
+/* ========================================
+   HERO BUTTONS - MAXIMUM VISIBILITY
+   ======================================== */
+
+/* Get Started button - Maximum contrast */
+.btn-get-started,
+.btn-medical,
+.hero-actions .btn-primary {
+  background: #ffffff !important;
+  color: #667eea !important;
+  border: 4px solid #ffffff !important;
+  font-weight: 900 !important;
+  font-size: 1.3rem !important;
+  text-shadow: none !important;
+  box-shadow: 0 8px 32px rgba(255, 255, 255, 0.6), 0 4px 16px rgba(0, 0, 0, 0.4) !important;
+  -webkit-text-fill-color: #667eea !important;
+}
+
+/* Watch Demo button - Maximum contrast */
+.btn-outline-primary,
+.hero-actions .btn-outline-primary,
+.hero-actions button:not(.btn-primary) {
+  background: rgba(255, 255, 255, 0.25) !important;
+  color: #ffffff !important;
+  border: 3px solid #ffffff !important;
+  font-weight: 800 !important;
+  font-size: 1.1rem !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.3) !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+.btn-outline-primary:hover,
+.hero-actions .btn-outline-primary:hover {
+  background: rgba(255, 255, 255, 0.4) !important;
+  color: #ffffff !important;
+  border-color: #ffffff !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.7) !important;
+}
+
+/* Button icons */
+.hero-actions .btn i,
+.hero-actions button i {
+  color: inherit !important;
+  opacity: 1 !important;
+}
+
+/* ========================================
+   TRUST BADGES - MAXIMUM VISIBILITY
+   ======================================== */
+
+/* "Trusted by:" label */
+.trust-indicators small,
+.trust-indicators p,
+.hero-section small {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 1rem !important;
+  text-shadow: 0 3px 10px rgba(0, 0, 0, 0.7) !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Trust badge containers */
+.trust-badge,
+.trust-badge-item,
+.trust-indicators .trust-badge {
+  background: rgba(255, 255, 255, 0.25) !important;
+  backdrop-filter: blur(10px) !important;
+  -webkit-backdrop-filter: blur(10px) !important;
+  border: 2px solid rgba(255, 255, 255, 0.4) !important;
+  padding: 0.75rem 1.5rem !important;
+  border-radius: 50px !important;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2) !important;
+}
+
+/* Trust badge text */
+.trust-badge small,
+.trust-badge-item small,
+.trust-badge span,
+.trust-badge-item span {
+  color: #ffffff !important;
+  font-weight: 700 !important;
+  font-size: 0.95rem !important;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.6) !important;
+  -webkit-text-fill-color: #ffffff !important;
+}
+
+/* Trust badge icons */
+.trust-badge i,
+.trust-badge-item i,
+.trust-indicators i {
+  color: #fbbf24 !important;
+  font-size: 1.2rem !important;
+  filter: drop-shadow(0 2px 6px rgba(0, 0, 0, 0.5)) !important;
+  opacity: 1 !important;
+}
+
+/* Specific trust badges */
+.trust-badge .fa-shield-alt,
+.trust-badge-item .fa-shield-alt {
+  color: #10b981 !important;
+}
+
+.trust-badge .fa-certificate,
+.trust-badge-item .fa-certificate {
+  color: #3b82f6 !important;
+}
+
+.trust-badge .fa-lock,
+.trust-badge-item .fa-lock {
+  color: #fbbf24 !important;
+}
+
+/* ========================================
+   HERO ACTIONS SECTION - COMPLETE FIX
+   ======================================== */
+
+.hero-actions,
+.hero-actions * {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* All buttons in hero actions */
+.hero-actions button,
+.hero-actions .btn,
+.hero-actions a {
+  opacity: 1 !important;
+  visibility: visible !important;
+  font-weight: 800 !important;
+}
+
+/* Button text */
+.hero-actions button *,
+.hero-actions .btn *,
+.hero-actions a * {
+  opacity: 1 !important;
+  visibility: visible !important;
+  font-weight: 800 !important;
+}
+
+/* ========================================
+   TRUST INDICATORS ROW - COMPLETE FIX
+   ======================================== */
+
+.trust-indicators,
+.trust-indicators .row,
+.trust-indicators .col-auto {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* All elements in trust indicators */
+.trust-indicators * {
+  opacity: 1 !important;
+  visibility: visible !important;
+}
+
+/* ========================================
+   SPECIFIC BADGE FIXES
+   ======================================== */
+
+/* HIPAA Compliant badge */
+.trust-badge:nth-child(1),
+.trust-badge-item:nth-child(1) {
+  background: rgba(16, 185, 129, 0.2) !important;
+  border-color: rgba(16, 185, 129, 0.5) !important;
+}
+
+/* ISO 27001 badge */
+.trust-badge:nth-child(2),
+.trust-badge-item:nth-child(2) {
+  background: rgba(59, 130, 246, 0.2) !important;
+  border-color: rgba(59, 130, 246, 0.5) !important;
+}
+
+/* SOC 2 Type II badge */
+.trust-badge:nth-child(3),
+.trust-badge-item:nth-child(3) {
+  background: rgba(251, 191, 36, 0.2) !important;
+  border-color: rgba(251, 191, 36, 0.5) !important;
+}
+
+/* ========================================
+   BUTTON HOVER STATES - ENHANCED
+   ======================================== */
+
+.btn-get-started:hover,
+.btn-medical:hover,
+.hero-actions .btn-primary:hover {
+  background: #fbbf24 !important;
+  color: #1e293b !important;
+  border-color: #fbbf24 !important;
+  transform: translateY(-3px) scale(1.05) !important;
+  box-shadow: 0 12px 48px rgba(251, 191, 36, 0.6), 0 6px 24px rgba(0, 0, 0, 0.5) !important;
+  -webkit-text-fill-color: #1e293b !important;
+}
+
+/* ========================================
+   ENSURE NO TRANSPARENCY
+   ======================================== */
+
+/* Remove any opacity that makes buttons/badges faint */
+.hero-actions,
+.trust-indicators,
+.trust-badge,
+.trust-badge-item,
+.btn,
+button {
+  opacity: 1 !important;
+}
+
+/* ========================================
+   MOBILE SPECIFIC FIXES
+   ======================================== */
+
+@media (max-width: 768px) {
+  .btn-get-started,
+  .btn-medical {
+    font-size: 1.1rem !important;
+    padding: 0.9rem 2rem !important;
+    font-weight: 900 !important;
+  }
+  
+  .btn-outline-primary {
+    font-size: 1rem !important;
+    font-weight: 800 !important;
+  }
+  
+  .trust-badge,
+  .trust-badge-item {
+    padding: 0.6rem 1.2rem !important;
+  }
+  
+  .trust-badge small,
+  .trust-badge-item small {
+    font-size: 0.85rem !important;
+    font-weight: 800 !important;
+  }
+}
+
+
+/* ========================================
+   STICKY NAVBAR - ALWAYS ON TOP
+   ======================================== */
+
+/* Make navbar sticky */
+.navbar,
+.medical-nav,
+nav.navbar {
+  position: sticky !important;
+  position: -webkit-sticky !important;
+  top: 0 !important;
+  z-index: 1030 !important;
+  width: 100% !important;
+}
+
+/* Ensure navbar stays on top of all content */
+.navbar,
+.medical-nav {
+  z-index: 9999 !important;
+}
+
+/* Smooth transition when scrolling */
+.navbar,
+.medical-nav {
+  transition: all 0.3s ease !important;
+}
+
+/* Add shadow when scrolled */
+.navbar.scrolled,
+.medical-nav.scrolled {
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15) !important;
+}
+
+/* Ensure navbar content is visible */
+.navbar-collapse,
+.navbar-nav,
+.navbar-brand {
+  z-index: 1031 !important;
+}
+
+/* Fix for mobile navbar */
+@media (max-width: 991px) {
+  .navbar,
+  .medical-nav {
+    position: sticky !important;
+    top: 0 !important;
+  }
+  
+  .navbar-collapse {
+    position: relative !important;
+    z-index: 1032 !important;
+  }
+}
+
+/* Ensure navbar doesn't overlap with content */
+body {
+  padding-top: 0 !important;
+}
+
+/* Add space below navbar for content */
+.hero-section,
+main {
+  margin-top: 0 !important;
+  padding-top: 80px !important;
+}
+
+/* Fix for fixed position elements */
+.theme-toggle-btn,
+.floating-chat-button,
+.scroll-to-top-btn {
+  z-index: 9998 !important;
+}

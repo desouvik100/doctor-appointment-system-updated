@@ -670,18 +670,16 @@ body {
 /* Enh
 anced Professional Admin Navbar */
 .admin-navbar {
-    position: fixed;
+    position: sticky;
     top: 0;
     left: 0;
     right: 0;
     height: 70px;
-    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-    backdrop-filter: blur(10px);
-    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-    z-index: 1000;
-    will-change: transform;
-    transform: translate3d(0, 0, 0);
-    box-shadow: 0 4px 20px rgba(0, 0, 0, 0.1);
+    background: #ffffff;
+    border-bottom: 1px solid rgba(226, 232, 240, 0.8);
+    z-index: 2000;
+    box-shadow: 0 2px 8px rgba(15, 23, 42, 0.06);
+    isolation: isolate;
 }
 
 .navbar-container {
@@ -797,7 +795,7 @@ anced Professional Admin Navbar */
 /* Center Stats Section */
 .navbar-stats {
     display: flex;
-    gap: 2rem;
+    gap: 1rem;
     align-items: center;
 }
 
@@ -805,15 +803,10 @@ anced Professional Admin Navbar */
     display: flex;
     flex-direction: column;
     align-items: center;
-    padding: 0.75rem 1.25rem;
-    background: rgba(255, 255, 255, 0.08);
-    border-radius: 16px;
-    backdrop-filter: blur(20px);
-    border: 1px solid rgba(255, 255, 255, 0.12);
-    transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
-    cursor: pointer;
-    position: relative;
-    overflow: hidden;
+    padding: 0.5rem 0.75rem;
+    background: #f8fafc;
+    border-radius: 12px;
+    border: 1px solid #e2e8f0;
 }
 
 .quick-stat::before {
@@ -832,10 +825,7 @@ anced Professional Admin Navbar */
 }
 
 .quick-stat:hover {
-    background: rgba(255, 255, 255, 0.18);
-    transform: translateY(-4px) scale(1.02);
-    box-shadow: 0 12px 40px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(255, 255, 255, 0.2);
-    border-color: rgba(255, 255, 255, 0.25);
+    background: #eef2f7;
 }
 
 .quick-stat:active {
@@ -850,15 +840,15 @@ anced Professional Admin Navbar */
 }
 
 .stat-value {
-    font-size: 1.1rem;
+    font-size: 1rem;
     font-weight: 700;
-    color: #ffffff;
+    color: #0f172a;
     line-height: 1;
 }
 
 .stat-label {
     font-size: 0.7rem;
-    color: rgba(255, 255, 255, 0.8);
+    color: #64748b;
     text-transform: uppercase;
     letter-spacing: 0.5px;
 }
@@ -1219,7 +1209,7 @@ anced Professional Admin Navbar */
 
 /* Main content adjustment for new navbar height */
 .main-content {
-    padding-top: 70px;
+    padding-top: 80px;
 }
 
 @media (max-width: 768px) {

@@ -1,6 +1,5 @@
 import React, { useState, useEffect, useRef } from 'react';
 import axios from '../api/config';
-import './AdminChatbot.css';
 
 const AdminChatbot = ({ systemStats = {}, currentContext = 'general' }) => {
   const [isOpen, setIsOpen] = useState(false);
@@ -27,16 +26,19 @@ const AdminChatbot = ({ systemStats = {}, currentContext = 'general' }) => {
   const initializeChatbot = async () => {
     // Check AI status
     try {
-      const statusResponse = await axios.get('/api/chatbot/status');
+      const statusResponse = await axios.get('/api/chatbot/status', {
+        timeout: 3000 // 3 second timeout
+      });
       const status = statusResponse.data;
       setAiStatus({
         ...status,
-        configured: true, // Always show as configured
+        configured: true,
         fallbackMode: status.fallbackMode || false
       });
     } catch (error) {
-      console.error('Failed to check AI status:', error);
-      setAiStatus({ provider: 'gemini', configured: true, fallbackMode: true });
+      // Silently fail - chatbot will work in fallback mode
+      console.warn('Chatbot API unavailable, using fallback mode');
+      setAiStatus({ provider: 'offline', configured: true, fallbackMode: true });
     }
 
     // Set initial welcome message
@@ -74,13 +76,15 @@ How can I assist you today?`,
 
   const fetchSuggestions = async (context = 'general') => {
     try {
-      const response = await axios.get(`/api/chatbot/suggestions?context=${context}`);
+      const response = await axios.get(`/api/chatbot/suggestions?context=${context}`, {
+        timeout: 3000 // 3 second timeout
+      });
       if (response.data.success) {
         setSuggestions(response.data.suggestions);
       }
     } catch (error) {
-      console.error('Failed to fetch suggestions:', error);
-      // Fallback suggestions
+      // Silently fail and use fallback suggestions
+      console.warn('Using fallback suggestions (chatbot API unavailable)');
       setSuggestions([
         "How can I improve system efficiency?",
         "What are the current system statistics?",
@@ -122,6 +126,8 @@ How can I assist you today?`,
         message: messageText,
         conversationHistory,
         systemContext
+      }, {
+        timeout: 30000 // 30 second timeout for AI responses
       });
 
       if (response.data.success) {
@@ -137,12 +143,14 @@ How can I assist you today?`,
         throw new Error(response.data.error || 'Failed to get response');
       }
     } catch (error) {
-      console.error('Chat error:', error);
+      console.warn('Chat API error:', error.message);
       
-      let errorContent = 'I apologize, but I\'m having trouble processing your request right now. Please try again in a moment.';
+      let errorContent = 'I apologize, but the AI service is currently unavailable. The chatbot requires the backend server to be running on port 5005. Please ensure the backend is started.';
       
-      // Use fallback response if available
-      if (error.response?.data?.response) {
+      // Check if it's a connection error
+      if (error.code === 'ECONNREFUSED' || error.message.includes('Network Error')) {
+        errorContent = '⚠️ Backend server is not running. Please start the backend server (npm start in backend folder) to use the AI chatbot.';
+      } else if (error.response?.data?.response) {
         errorContent = error.response.data.response;
       }
       
@@ -151,7 +159,7 @@ How can I assist you today?`,
         role: 'assistant',
         content: errorContent,
         timestamp: new Date(),
-        isError: !error.response?.data?.response
+        isError: true
       };
       setMessages(prev => [...prev, errorMessage]);
     } finally {
@@ -189,6 +197,20 @@ What would you like to know?`,
     setIsMinimized(!isMinimized);
   };
 
+  const handleClose = () => {
+    console.log('Close button clicked - closing chatbot');
+    setIsOpen(false);
+    setIsMinimized(false);
+  };
+
+  const handleToggle = () => {
+    console.log('Toggle button clicked - current state:', isOpen);
+    setIsOpen(!isOpen);
+    if (isOpen) {
+      setIsMinimized(false);
+    }
+  };
+
   const exportChat = () => {
     const chatContent = messages.map(msg => 
       `[${formatTime(msg.timestamp)}] ${msg.role === 'assistant' ? 'AI Assistant' : 'You'}: ${msg.content}`
@@ -214,74 +236,119 @@ What would you like to know?`,
 
   return (
     <>
+      {/* Backdrop Overlay - Click to close */}
+      {isOpen && (
+        <div 
+          
+          onMouseDown={(e) => {
+            console.log('BACKDROP CLICKED!');
+            handleClose();
+          }}
+          style={{
+            position: 'fixed',
+            top: 0,
+            left: 0,
+            right: 0,
+            bottom: 0,
+            backgroundColor: 'rgba(0, 0, 0, 0.3)',
+            zIndex: 998,
+            cursor: 'pointer',
+            pointerEvents: 'all'
+          }}
+        />
+      )}
+
       {/* Chatbot Toggle Button */}
-      <div className={`chatbot-toggle ${isOpen ? 'active' : ''}`} onClick={() => setIsOpen(!isOpen)}>
-        <div className="toggle-icon">
+      <div  onClick={handleToggle}>
+        <div >
           {isOpen ? (
-            <i className="fas fa-times"></i>
+            <i ></i>
           ) : (
-            <i className="fas fa-robot"></i>
+            <i ></i>
           )}
         </div>
         {!isOpen && (
-          <div className="toggle-tooltip">
-            <div className="tooltip-content">
+          <div >
+            <div >
               <strong>AI Assistant</strong>
-              <div className="tooltip-status">
-                <span className="status-dot online"></span>
+              <div >
+                <span ></span>
                 {aiStatus.provider} {aiStatus.fallbackMode ? 'Intelligent Mode' : 'Ready'}
               </div>
             </div>
           </div>
         )}
         {aiStatus.fallbackMode && (
-          <div className="config-indicator" style={{background: '#10b981'}}>
-            <i className="fas fa-brain"></i>
+          <div  style={{background: '#10b981'}}>
+            <i ></i>
           </div>
         )}
       </div>
 
       {/* Chatbot Window */}
-      <div className={`chatbot-window ${isOpen ? 'open' : ''} ${isMinimized ? 'minimized' : ''}`}>
+      <div 
+        
+        onClick={(e) => e.stopPropagation()}
+      >
         {/* Header */}
-        <div className="chatbot-header">
-          <div className="header-info">
-            <div className="bot-avatar">
-              <i className="fas fa-robot"></i>
+        <div >
+          <div >
+            <div >
+              <i ></i>
             </div>
-            <div className="bot-details">
+            <div >
               <h4>HealthSync AI</h4>
-              <span className="status">
-                <span className="status-dot online"></span>
+              <span >
+                <span ></span>
                 {aiStatus.fallbackMode ? 'Intelligent Assistant' : `${aiStatus.provider} Ready`}
               </span>
             </div>
           </div>
-          <div className="header-actions">
-            <button className="action-btn" onClick={exportChat} title="Export Chat">
-              <i className="fas fa-download"></i>
+          <div >
+            <button  onClick={exportChat} title="Export Chat">
+              <i ></i>
             </button>
-            <button className="action-btn" onClick={clearChat} title="Clear Chat">
-              <i className="fas fa-trash"></i>
+            <button  onClick={clearChat} title="Clear Chat">
+              <i ></i>
             </button>
-            <button className="action-btn" onClick={toggleMinimize} title={isMinimized ? "Expand" : "Minimize"}>
-              <i className={`fas ${isMinimized ? 'fa-expand' : 'fa-minus'}`}></i>
+            <button  onClick={toggleMinimize} title={isMinimized ? "Expand" : "Minimize"}>
+              <i ></i>
             </button>
-            <button className="action-btn" onClick={() => setIsOpen(false)} title="Close">
-              <i className="fas fa-times"></i>
+            <button 
+               
+              onMouseDown={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                console.log('CLOSE BUTTON CLICKED!');
+                handleClose();
+              }}
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+              }}
+              title="Close"
+              type="button"
+              style={{
+                cursor: 'pointer',
+                zIndex: 9999,
+                position: 'relative',
+                pointerEvents: 'all'
+              }}
+            >
+              <i  style={{ pointerEvents: 'none' }}></i>
             </button>
           </div>
         </div>
 
         {/* Messages */}
         {!isMinimized && (
-          <div className="chatbot-messages">
+          <div >
             {aiStatus.fallbackMode && (
-              <div className="setup-notice" style={{background: 'linear-gradient(135deg, #e6f7ff 0%, #f0f9ff 100%)', borderColor: '#10b981'}}>
-                <div className="notice-icon" style={{color: '#10b981'}}>
-                  <i className="fas fa-brain"></i>
+              <div  style={{background: 'linear-gradient(135deg, #e6f7ff 0%, #f0f9ff 100%)', borderColor: '#10b981'}}>
+                <div  style={{color: '#10b981'}}>
+                  <i ></i>
                 </div>
-                <div className="notice-content">
+                <div >
                   <h5 style={{color: '#065f46'}}>Intelligent Assistant Mode</h5>
                   <p style={{color: '#047857'}}>I'm ready to help with any questions or topics you'd like to explore!</p>
                   <small style={{color: '#059669'}}>Using advanced conversational intelligence</small>
@@ -290,22 +357,22 @@ What would you like to know?`,
             )}
             
             {messages.map((message) => (
-              <div key={message.id} className={`message ${message.role}`}>
-                <div className="message-avatar">
+              <div key={message.id} >
+                <div >
                   {message.role === 'assistant' ? (
-                    <i className="fas fa-robot"></i>
+                    <i ></i>
                   ) : (
-                    <i className="fas fa-user"></i>
+                    <i ></i>
                   )}
                 </div>
-                <div className="message-content">
-                  <div className={`message-bubble ${message.isError ? 'error' : ''}`}>
+                <div >
+                  <div >
                     {message.content}
                   </div>
-                  <div className="message-meta">
-                    <span className="message-time">{formatTime(message.timestamp)}</span>
+                  <div >
+                    <span >{formatTime(message.timestamp)}</span>
                     {message.provider && (
-                      <span className="message-provider">{message.provider}</span>
+                      <span >{message.provider}</span>
                     )}
                   </div>
                 </div>
@@ -313,13 +380,13 @@ What would you like to know?`,
             ))}
             
             {isLoading && (
-              <div className="message assistant">
-                <div className="message-avatar">
-                  <i className="fas fa-robot"></i>
+              <div >
+                <div >
+                  <i ></i>
                 </div>
-                <div className="message-content">
-                  <div className="message-bubble typing">
-                    <div className="typing-indicator">
+                <div >
+                  <div >
+                    <div >
                       <span></span>
                       <span></span>
                       <span></span>
@@ -334,29 +401,29 @@ What would you like to know?`,
 
         {/* Suggestions */}
         {!isMinimized && messages.length <= 2 && suggestions.length > 0 && (
-          <div className="chatbot-suggestions">
-            <div className="suggestions-header">
-              <div className="suggestions-title">
-                <i className="fas fa-lightbulb"></i>
+          <div >
+            <div >
+              <div >
+                <i ></i>
                 Try asking about {currentContext}:
               </div>
               <button 
-                className="refresh-suggestions" 
+                 
                 onClick={() => fetchSuggestions(currentContext)}
                 title="Refresh suggestions"
               >
-                <i className="fas fa-sync-alt"></i>
+                <i ></i>
               </button>
             </div>
-            <div className="suggestions-list">
+            <div >
               {suggestions.map((suggestion, index) => (
                 <button
                   key={index}
-                  className="suggestion-btn"
+                  
                   onClick={() => sendMessage(suggestion)}
                   disabled={isLoading}
                 >
-                  <i className="fas fa-comment-dots"></i>
+                  <i ></i>
                   {suggestion}
                 </button>
               ))}
@@ -366,8 +433,8 @@ What would you like to know?`,
 
         {/* Input */}
         {!isMinimized && (
-          <div className="chatbot-input">
-            <div className="input-container">
+          <div >
+            <div >
               <textarea
                 value={inputMessage}
                 onChange={(e) => setInputMessage(e.target.value)}
@@ -377,25 +444,25 @@ What would you like to know?`,
                 disabled={isLoading}
               />
               <button
-                className="send-btn"
+                
                 onClick={() => sendMessage()}
                 disabled={!inputMessage.trim() || isLoading}
               >
                 {isLoading ? (
-                  <i className="fas fa-spinner fa-spin"></i>
+                  <i ></i>
                 ) : (
-                  <i className="fas fa-paper-plane"></i>
+                  <i ></i>
                 )}
               </button>
             </div>
-            <div className="input-footer">
-              <div className="footer-left">
+            <div >
+              <div >
                 <small>
-                  <i className="fas fa-robot"></i>
+                  <i ></i>
                   HealthSync AI • {aiStatus.fallbackMode ? 'Intelligent Assistant' : `Powered by ${aiStatus.provider}`}
                 </small>
               </div>
-              <div className="footer-right">
+              <div >
                 <small>{messages.length - 1} messages</small>
               </div>
             </div>
@@ -407,3 +474,4 @@ What would you like to know?`,
 };
 
 export default AdminChatbot;
+

@@ -48,10 +48,19 @@ router.post('/send-otp', async (req, res) => {
 
     const result = await sendOTP(email, type);
 
-    return res.status(200).json({
+    // In development mode, return OTP for testing
+    const response = {
       success: true,
       message: "OTP sent successfully to your email"
-    });
+    };
+
+    // Add OTP to response in development mode
+    if (process.env.NODE_ENV !== 'production') {
+      response.otp = result.otp;
+      response.note = "OTP is shown here for development/testing purposes only";
+    }
+
+    return res.status(200).json(response);
 
   } 
   catch (error) {

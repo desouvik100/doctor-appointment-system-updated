@@ -298,6 +298,14 @@ router.get('/status', (req, res) => {
   });
 });
 
+router.get('/health', (req, res) => {
+  res.json({
+    status: 'ok',
+    provider: process.env.AI_PROVIDER || 'gemini',
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Health check endpoint
 router.get('/health', (req, res) => {
   const provider = process.env.AI_PROVIDER || 'gemini';

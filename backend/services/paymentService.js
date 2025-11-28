@@ -1,13 +1,23 @@
-const stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
+const { USE_STRIPE_PAYMENTS } = require('../config/paymentConfig');
+
+// Only initialize Stripe if payments are enabled
+let stripe = null;
+if (USE_STRIPE_PAYMENTS) {
+  stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
+  console.log('✅ Stripe payments ENABLED');
+} else {
+  console.log('⚠️  Stripe payments DISABLED - Running in test mode');
+}
 
 class PaymentService {
   constructor() {
     this.currency = process.env.CURRENCY || 'inr';
     this.platformFeePercentage = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE) || 7;
     this.gstPercentage = parseFloat(process.env.GST_PERCENTAGE) || 22;
+    this.useStripePayments = USE_STRIPE_PAYMENTS;
   }
 
   // Calculate payment breakdown
@@ -28,6 +38,15 @@ class PaymentService {
 
   // Create Stripe Payment Intent
   async createPaymentIntent(appointmentId, userId) {
+    // If Stripe is disabled, return test mode response
+    if (!this.useStripePayments) {
+      return {
+        testMode: true,
+        message: 'Stripe disabled - running in test mode',
+        appointmentId: appointmentId
+      };
+    }
+
     try {
       const appointment = await Appointment.findById(appointmentId)
         .populate('doctorId', 'name consultationFee')
@@ -107,6 +126,15 @@ class PaymentService {
 
   // Confirm payment and update appointment
   async confirmPayment(paymentIntentId) {
+    // If Stripe is disabled, return test mode response
+    if (!this.useStripePayments) {
+      return {
+        success: false,
+        testMode: true,
+        message: 'Stripe disabled - no payment confirmation needed in test mode'
+      };
+    }
+
     try {
       const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
       
@@ -144,6 +172,22 @@ class PaymentService {
 
   // Process refund
   async processRefund(appointmentId, reason = 'Appointment cancelled') {
+    // If Stripe is disabled, just cancel the appointment
+    if (!this.useStripePayments) {
+      const appointment = await Appointment.findById(appointmentId);
+      if (appointment) {
+        appointment.status = 'cancelled';
+        await appointment.save();
+        return {
+          success: true,
+          testMode: true,
+          message: 'Appointment cancelled (test mode - no refund needed)',
+          appointment: appointment
+        };
+      }
+      throw new Error('Appointment not found');
+    }
+
     try {
       const appointment = await Appointment.findById(appointmentId);
       
@@ -222,6 +266,11 @@ class PaymentService {
 
   // Handle Stripe webhooks
   async handleWebhook(body, signature) {
+    // If Stripe is disabled, ignore webhooks
+    if (!this.useStripePayments) {
+      return { received: true, testMode: true, message: 'Webhooks disabled in test mode' };
+    }
+
     try {
       const event = stripe.webhooks.constructEvent(
         body,

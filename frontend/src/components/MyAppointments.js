@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/config";
 import toast from 'react-hot-toast';
+import OnlineConsultation from './OnlineConsultation';
 
 function MyAppointments({ user }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [selectedConsultation, setSelectedConsultation] = useState(null);
 
   useEffect(() => {
     fetchAppointments();
@@ -12,10 +14,13 @@ function MyAppointments({ user }) {
 
   const fetchAppointments = async () => {
     try {
-      const response = await axios.get(`http://localhost:5002/api/appointments/user/${user.id}`);
+      console.log("Fetching appointments for user:", user.id);
+      const response = await axios.get(`/api/appointments/user/${user.id}`);
+      console.log("Appointments fetched:", response.data);
       setAppointments(response.data);
     } catch (error) {
       console.error("Error fetching appointments:", error);
+      console.error("Error details:", error.response?.data || error.message);
     } finally {
       setLoading(false);
     }
@@ -27,10 +32,12 @@ function MyAppointments({ user }) {
     }
 
     try {
-      await axios.put(`http://localhost:5002/api/appointments/${appointmentId}`, { status: "cancelled" });
+      console.log("Cancelling appointment:", appointmentId);
+      await axios.put(`/api/appointments/${appointmentId}`, { status: "cancelled" });
       fetchAppointments(); // Refresh the list
       toast.success("Appointment cancelled successfully");
     } catch (error) {
+      console.error("Error cancelling appointment:", error);
       toast.error("Failed to cancel appointment");
     }
   };
@@ -39,15 +46,24 @@ function MyAppointments({ user }) {
     const statusClasses = {
       pending: "bg-warning text-dark",
       confirmed: "bg-success",
+      in_progress: "bg-info",
       cancelled: "bg-danger",
-      completed: "bg-info"
+      completed: "bg-secondary"
+    };
+
+    const statusLabels = {
+      in_progress: "In Progress"
     };
 
     return (
       <span className={`badge ${statusClasses[status] || "bg-secondary"}`}>
-        {status.charAt(0).toUpperCase() + status.slice(1)}
+        {statusLabels[status] || (status.charAt(0).toUpperCase() + status.slice(1))}
       </span>
     );
+  };
+
+  const handleJoinConsultation = (appointmentId) => {
+    setSelectedConsultation(appointmentId);
   };
 
   const getPaymentStatusBadge = (paymentStatus) => {
@@ -81,6 +97,19 @@ function MyAppointments({ user }) {
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
   };
+
+  if (selectedConsultation) {
+    return (
+      <OnlineConsultation
+        appointmentId={selectedConsultation}
+        user={user}
+        onClose={() => {
+          setSelectedConsultation(null);
+          fetchAppointments();
+        }}
+      />
+    );
+  }
 
   if (loading) {
     return (
@@ -145,6 +174,13 @@ function MyAppointments({ user }) {
                           </div>
                         </div>
                         
+                        <div className="mb-2">
+                          <span className={`badge ${appointment.consultationType === 'online' ? 'bg-info' : 'bg-secondary'} me-2`}>
+                            <i className={`fas ${appointment.consultationType === 'online' ? 'fa-video' : 'fa-hospital'} me-1`}></i>
+                            {appointment.consultationType === 'online' ? 'Online' : 'In-Person'}
+                          </span>
+                        </div>
+
                         {appointment.reason && (
                           <p className="mb-2 small">
                             <i className="fas fa-notes-medical me-1"></i>
@@ -171,15 +207,28 @@ function MyAppointments({ user }) {
                           {appointment.payment && getPaymentStatusBadge(appointment.payment.paymentStatus)}
                         </div>
                         
-                        {appointment.status === "pending" && (
-                          <button
-                            onClick={() => handleCancelAppointment(appointment._id)}
-                            className="btn btn-outline-danger btn-sm"
-                          >
-                            <i className="fas fa-times me-1"></i>
-                            Cancel
-                          </button>
-                        )}
+                        <div className="d-flex flex-column gap-2">
+                          {appointment.consultationType === 'online' && 
+                           (appointment.status === 'confirmed' || appointment.status === 'in_progress') && (
+                            <button
+                              onClick={() => handleJoinConsultation(appointment._id)}
+                              className="btn btn-primary btn-sm"
+                            >
+                              <i className="fas fa-video me-1"></i>
+                              Join Consultation
+                            </button>
+                          )}
+                          
+                          {appointment.status === "pending" && (
+                            <button
+                              onClick={() => handleCancelAppointment(appointment._id)}
+                              className="btn btn-outline-danger btn-sm"
+                            >
+                              <i className="fas fa-times me-1"></i>
+                              Cancel
+                            </button>
+                          )}
+                        </div>
                       </div>
                     </div>
                   </div>

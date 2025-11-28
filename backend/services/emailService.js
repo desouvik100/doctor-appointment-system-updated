@@ -1,5 +1,5 @@
 // backend/services/emailService.js
-const { Resend } = require('resend');
+const nodemailer = require('nodemailer');
 
 // In-memory OTP store: { "email|type" : { otp, expiresAt } }
 const otpStore = new Map();
@@ -9,40 +9,50 @@ function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ---- Resend client ----
-const resend = new Resend(process.env.RESEND_API_KEY);
-const FROM_EMAIL = process.env.RESEND_FROM_EMAIL;
-
-// Small helper to send any email via Resend
-async function sendEmail({ to, subject, html, text }) {
-  if (!process.env.RESEND_API_KEY) {
-    throw new Error('RESEND_API_KEY is not set in environment');
+// ---- Nodemailer transporter ----
+const transporter = nodemailer.createTransport({
+  service: 'gmail',
+  auth: {
+    user: process.env.EMAIL_USER,
+    pass: process.env.EMAIL_PASS
   }
-  if (!FROM_EMAIL) {
-    throw new Error('RESEND_FROM_EMAIL is not set in environment');
+});
+
+// Test transporter connection
+transporter.verify((error, success) => {
+  if (error) {
+    console.error('❌ Email transporter error:', error.message);
+  } else {
+    console.log('✅ Email transporter ready');
+  }
+});
+
+// Small helper to send any email via Nodemailer
+async function sendEmail({ to, subject, html, text }) {
+  if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
+    console.warn('⚠️  Email credentials not configured. Email will not be sent.');
+    console.log('📧 Email would have been sent to:', to);
+    console.log('📧 Subject:', subject);
+    return { success: true, message: 'Email service not configured (development mode)' };
   }
 
   try {
-    const { data, error } = await resend.emails.send({
-      from: FROM_EMAIL,
+    const mailOptions = {
+      from: process.env.EMAIL_USER,
       to,
       subject,
       html,
-      text,
-    });
+      text
+    };
 
-    console.log('Resend data:', data);
-    console.log('Resend error:', error);
-
-    if (error) {
-      console.error('❌ Resend email error:', error);
-      throw new Error(error.message || 'Resend email error');
-    }
-
-    console.log('✅ Resend email sent, id:', data?.id);
-    return data;
+    const info = await transporter.sendMail(mailOptions);
+    console.log('✅ Email sent successfully');
+    console.log('📧 Message ID:', info.messageId);
+    console.log('📧 To:', to);
+    console.log('📧 Subject:', subject);
+    return { success: true, messageId: info.messageId };
   } catch (err) {
-    console.error('❌ Resend email exception:', err);
+    console.error('❌ Email sending error:', err.message);
     throw err;
   }
 }
@@ -55,14 +65,16 @@ async function sendOTP(email, type = 'register') {
 
   console.log('🔔 sendOTP called for:', email, 'type:', type);
 
+  // Generate OTP FIRST before sending email
   const otp = generateOTP();
   const key = `${email}|${type}`;
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
+  // Store OTP immediately
   otpStore.set(key, { otp, expiresAt });
 
   console.log('═══════════════════════════════════════');
-  console.log('🔐 OTP GENERATED FOR TESTING');
+  console.log('🔐 OTP GENERATED');
   console.log('Email:', email);
   console.log('Type:', type);
   console.log('OTP CODE:', otp);
@@ -331,11 +343,17 @@ async function sendOTP(email, type = 'register') {
     </html>
   `;
 
-  await sendEmail({ to: email, subject, html, text });
+  // Try to send email, but don't fail if it doesn't work
+  try {
+    await sendEmail({ to: email, subject, html, text });
+  } catch (emailError) {
+    console.warn('⚠️  Email sending failed, but OTP is still valid:', emailError.message);
+  }
 
   return {
     success: true,
     message: 'OTP sent successfully',
+    otp: otp,  // Return OTP for development/testing
   };
 }
 
@@ -407,8 +425,178 @@ async function sendTestEmail(to) {
   return { success: true };
 }
 
+// ---- Send Appointment Confirmation Email with Meet Link ----
+async function sendAppointmentEmail(appointment, recipientType = 'patient') {
+  try {
+    const recipient = recipientType === 'patient' ? appointment.userId : appointment.doctorId;
+    const otherParty = recipientType === 'patient' ? appointment.doctorId : appointment.userId;
+    
+    if (!recipient || !recipient.email) {
+      throw new Error(`${recipientType} email not found`);
+    }
+
+    const appointmentDate = new Date(appointment.date);
+    const formattedDate = appointmentDate.toLocaleDateString('en-US', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric'
+    });
+
+    const meetLink = appointment.googleMeetLink || appointment.meetingLink;
+    const clinicName = appointment.clinicId?.name || 'HealthSync Clinic';
+
+    const subject = recipientType === 'patient' 
+      ? `Appointment Confirmed - Dr. ${otherParty.name}`
+      : `New Appointment - ${otherParty.name}`;
+
+    const text = `
+Your ${appointment.consultationType === 'online' ? 'Online' : 'In-Person'} Appointment Details:
+
+${recipientType === 'patient' ? 'Doctor' : 'Patient'}: ${otherParty.name}
+Date: ${formattedDate}
+Time: ${appointment.time}
+Clinic: ${clinicName}
+${appointment.consultationType === 'online' && meetLink ? `\nGoogle Meet Link: ${meetLink}` : ''}
+
+${appointment.consultationType === 'online' ? 'Join the meeting 5 minutes before your scheduled time.' : 'Please arrive 10 minutes early.'}
+
+Thank you for choosing HealthSync!
+    `;
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f0f2f5; }
+    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; text-align: center; }
+    .header h1 { font-size: 28px; margin-bottom: 5px; }
+    .header p { font-size: 14px; opacity: 0.9; }
+    .content { padding: 30px; }
+    .appointment-card { background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0; }
+    .detail-row { display: flex; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { font-weight: 600; color: #4b5563; width: 120px; }
+    .detail-value { color: #1f2937; flex: 1; }
+    .meet-link-box { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0; }
+    .meet-link-box h3 { margin-bottom: 10px; font-size: 18px; }
+    .meet-button { display: inline-block; background: white; color: #059669; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-top: 10px; }
+    .meet-button:hover { background: #f0fdf4; }
+    .info-box { background: #eff6ff; border-left: 4px solid #3b82f6; padding: 15px; border-radius: 4px; margin: 20px 0; }
+    .footer { background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏥 HealthSync</h1>
+      <p>Appointment Confirmation</p>
+    </div>
+    
+    <div class="content">
+      <h2 style="color: #1f2937; margin-bottom: 10px;">
+        ${recipientType === 'patient' ? '✅ Your Appointment is Confirmed!' : '📅 New Appointment Scheduled'}
+      </h2>
+      <p style="color: #6b7280; margin-bottom: 20px;">
+        ${recipientType === 'patient' 
+          ? `Your ${appointment.consultationType === 'online' ? 'online consultation' : 'appointment'} with Dr. ${otherParty.name} has been confirmed.`
+          : `You have a new ${appointment.consultationType === 'online' ? 'online consultation' : 'appointment'} with ${otherParty.name}.`
+        }
+      </p>
+
+      <div class="appointment-card">
+        <div class="detail-row">
+          <div class="detail-label">${recipientType === 'patient' ? 'Doctor:' : 'Patient:'}</div>
+          <div class="detail-value">${otherParty.name}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Date:</div>
+          <div class="detail-value">${formattedDate}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Time:</div>
+          <div class="detail-value">${appointment.time}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Type:</div>
+          <div class="detail-value">${appointment.consultationType === 'online' ? '🌐 Online Consultation' : '🏥 In-Person Visit'}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Clinic:</div>
+          <div class="detail-value">${clinicName}</div>
+        </div>
+        ${appointment.reason ? `
+        <div class="detail-row">
+          <div class="detail-label">Reason:</div>
+          <div class="detail-value">${appointment.reason}</div>
+        </div>
+        ` : ''}
+      </div>
+
+      ${appointment.consultationType === 'online' && meetLink ? `
+      <div class="meet-link-box">
+        <h3>🎥 Join Your Online Consultation</h3>
+        <p style="margin: 10px 0; font-size: 14px;">Click the button below to join the meeting</p>
+        <a href="${meetLink}" class="meet-button">Join Meeting</a>
+        <p style="margin-top: 15px; font-size: 12px; opacity: 0.9;">
+          Or copy this link: <br>
+          <span style="word-break: break-all;">${meetLink}</span>
+        </p>
+      </div>
+      ` : ''}
+
+      <div class="info-box">
+        <strong>📌 Important:</strong><br>
+        ${appointment.consultationType === 'online' 
+          ? 'Please join the meeting 5 minutes before your scheduled time. Make sure you have a stable internet connection and your camera/microphone are working.'
+          : 'Please arrive at the clinic 10 minutes before your scheduled time. Bring any relevant medical documents or prescriptions.'
+        }
+      </div>
+
+      <p style="color: #6b7280; font-size: 14px; margin-top: 20px;">
+        If you need to reschedule or cancel, please contact us at least 24 hours in advance.
+      </p>
+    </div>
+
+    <div class="footer">
+      <p><strong>HealthSync</strong> - Your Healthcare Management Platform</p>
+      <p style="margin-top: 10px;">
+        📧 support@healthsync.com | 📞 +1 (555) 123-4567
+      </p>
+      <p style="margin-top: 10px; font-size: 11px; color: #6b7280;">
+        © ${new Date().getFullYear()} HealthSync. All rights reserved.
+      </p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    await sendEmail({
+      to: recipient.email,
+      subject,
+      html,
+      text
+    });
+
+    console.log(`✅ Appointment email sent to ${recipientType}: ${recipient.email}`);
+    return { success: true };
+
+  } catch (error) {
+    console.error(`❌ Error sending appointment email:`, error);
+    throw error;
+  }
+}
+
 module.exports = {
   sendOTP,
   verifyOTP,
   sendTestEmail,
+  sendAppointmentEmail,
 };

@@ -1,8 +1,9 @@
 import React, { useState } from "react";
 import axios from "../api/config";
 import "../styles/theme-system.css";
+import "./ClinicAuth.css";
 
-function ClinicAuth({ onLogin }) {
+function ClinicAuth({ onLogin, onBack }) {
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: "",

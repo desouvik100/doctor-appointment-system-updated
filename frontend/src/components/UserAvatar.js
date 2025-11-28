@@ -93,12 +93,12 @@ const UserAvatar = ({
   };
 
   return (
-    <div className={`user-avatar-container ${size}`}>
-      <div className="user-avatar-wrapper">
+    <div >
+      <div >
         <img
           src={getAvatarUrl()}
           alt={user?.name || 'User'}
-          className="user-avatar-image"
+          
           onError={() => setImageError(true)}
           loading="lazy"
           decoding="async"
@@ -109,12 +109,12 @@ const UserAvatar = ({
         />
         
         {editable && (
-          <div className="avatar-upload-overlay">
-            <label htmlFor="avatar-upload" className="avatar-upload-label">
+          <div >
+            <label htmlFor="avatar-upload" >
               {uploading ? (
-                <i className="fas fa-spinner fa-spin"></i>
+                <i ></i>
               ) : (
-                <i className="fas fa-camera"></i>
+                <i ></i>
               )}
             </label>
             <input
@@ -130,12 +130,12 @@ const UserAvatar = ({
       </div>
 
       {(showName || showEmail) && user && (
-        <div className="user-avatar-info">
+        <div >
           {showName && user.name && (
-            <div className="user-avatar-name">{user.name}</div>
+            <div >{user.name}</div>
           )}
           {showEmail && user.email && (
-            <div className="user-avatar-email">{user.email}</div>
+            <div >{user.email}</div>
           )}
         </div>
       )}
@@ -144,3 +144,5 @@ const UserAvatar = ({
 };
 
 export default UserAvatar;
+
+

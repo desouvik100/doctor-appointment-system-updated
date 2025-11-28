@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import axios from 'axios';
 import './AIAssistant.css';
 
 const AIAssistant = ({ user }) => {
@@ -177,29 +176,17 @@ Is there a specific health topic you'd like general information about? I can hel
 
         // Simulate AI thinking time with variable delay
         const thinkingTime = Math.random() * 1000 + 1000; // 1-2 seconds
-        setTimeout(async () => {
-            try {
-                const resp = await axios.post('/api/ai/chat', { prompt: userMessage.content });
-                const aiResponse = {
-                    id: Date.now() + 1,
-                    type: 'ai',
-                    content: resp.data?.message || getAIResponse(userMessage.content),
-                    timestamp: new Date()
-                };
-                setMessages(prev => [...prev, aiResponse]);
-                setMessageCount(prev => prev + 1);
-                setIsTyping(false);
-            } catch (e) {
-                const aiResponse = {
-                    id: Date.now() + 1,
-                    type: 'ai',
-                    content: getAIResponse(userMessage.content),
-                    timestamp: new Date()
-                };
-                setMessages(prev => [...prev, aiResponse]);
-                setMessageCount(prev => prev + 1);
-                setIsTyping(false);
-            }
+        setTimeout(() => {
+            const aiResponse = {
+                id: Date.now() + 1,
+                type: 'ai',
+                content: getAIResponse(userMessage.content),
+                timestamp: new Date()
+            };
+
+            setMessages(prev => [...prev, aiResponse]);
+            setMessageCount(prev => prev + 1);
+            setIsTyping(false);
         }, thinkingTime);
     };
 
@@ -250,46 +237,44 @@ Is there a specific health topic you'd like general information about? I can hel
     };
 
     return (
-        <div className="card shadow-sm ai-assistant-card">
-            <div className="card-header ai-header-gradient position-relative">
-                <div className="d-flex justify-content-between align-items-center">
+        <div >
+            <div >
+                <div >
                     <div>
-                        <h4 className="mb-0 text-white">
-                            <i className="fas fa-robot me-2"></i>
+                        <h4 >
+                            <i ></i>
                             AI Health Assistant
-                            <span className={`status-indicator ms-2 ${isOnline ? 'online' : 'offline'}`}></span>
+                            <span ></span>
                         </h4>
-                        <small className="text-white-50">
+                        <small >
                             {isOnline ? 'Online • Ready to help' : 'Offline • Reconnecting...'}
                         </small>
                     </div>
-                    <div className="ai-stats text-white-50">
+                    <div >
                         <small>
-                            <i className="fas fa-comments me-1"></i>
+                            <i ></i>
                             {messageCount} messages
                         </small>
                     </div>
                 </div>
             </div>
 
-            <div className="card-body p-0">
+            <div >
                 {/* Chat Messages */}
                 <div
                     ref={chatContainerRef}
-                    className="chat-container"
+                    
                     style={{ height: '400px', overflowY: 'auto', padding: '1rem' }}
                 >
                     {messages.map((message) => (
-                        <div key={message.id} className={`mb-3 d-flex message-bubble ${message.type === 'user' ? 'justify-content-end' : 'justify-content-start'}`}>
-                            <div className={`max-width-75 ${message.type === 'user' ? 'text-end' : 'text-start'}`} style={{ maxWidth: '75%' }}>
-                                <div className={`p-3 rounded-3 ${message.type === 'user'
-                                    ? 'bg-primary text-white'
-                                    : 'bg-light border'}`}>
+                        <div key={message.id} >
+                            <div  style={{ maxWidth: '75%' }}>
+                                <div >
                                     <div style={{ whiteSpace: 'pre-line', fontSize: '0.9rem' }}>
                                         {message.content}
                                     </div>
                                 </div>
-                                <small className="text-muted d-block mt-1">
+                                <small >
                                     {message.timestamp.toLocaleTimeString()}
                                 </small>
                             </div>
@@ -297,9 +282,9 @@ Is there a specific health topic you'd like general information about? I can hel
                     ))}
 
                     {isTyping && (
-                        <div className="mb-3 d-flex justify-content-start">
-                            <div className="bg-light border p-3 rounded-3 ai-thinking">
-                                <div className="typing-indicator">
+                        <div >
+                            <div >
+                                <div >
                                     <span></span>
                                     <span></span>
                                     <span></span>
@@ -311,13 +296,13 @@ Is there a specific health topic you'd like general information about? I can hel
                 </div>
 
                 {/* Quick Questions */}
-                <div className="border-top p-3 bg-light">
-                    <small className="text-muted d-block mb-2">Quick questions:</small>
-                    <div className="d-flex flex-wrap gap-2">
+                <div >
+                    <small >Quick questions:</small>
+                    <div >
                         {quickQuestions.map((question, index) => (
                             <button
                                 key={index}
-                                className="btn btn-sm btn-outline-secondary quick-question-btn"
+                                
                                 onClick={() => {
                                     if (question === "Emergency contacts") {
                                         handleEmergencyInfo();
@@ -333,13 +318,13 @@ Is there a specific health topic you'd like general information about? I can hel
                 </div>
 
                 {/* Input Area */}
-                <div className="border-top p-3 ai-input-area">
-                    <div className="input-group">
-                        <div className="input-group-text bg-light border-end-0">
-                            <i className="fas fa-user text-muted"></i>
+                <div >
+                    <div >
+                        <div >
+                            <i ></i>
                         </div>
                         <textarea
-                            className="form-control ai-input border-start-0"
+                            
                             placeholder="Ask me about health tips, symptoms, or how to use this system..."
                             value={inputMessage}
                             onChange={(e) => setInputMessage(e.target.value)}
@@ -349,37 +334,37 @@ Is there a specific health topic you'd like general information about? I can hel
                             disabled={!isOnline}
                         />
                         <button
-                            className="btn btn-primary send-btn position-relative"
+                            
                             onClick={handleSendMessage}
                             disabled={!inputMessage.trim() || isTyping || !isOnline}
                         >
                             {isTyping ? (
-                                <div className="spinner-border spinner-border-sm" role="status">
-                                    <span className="visually-hidden">Loading...</span>
+                                <div  role="status">
+                                    <span >Loading...</span>
                                 </div>
                             ) : (
-                                <i className="fas fa-paper-plane"></i>
+                                <i ></i>
                             )}
                         </button>
                     </div>
                     
                     {/* Character Counter */}
-                    <div className="d-flex justify-content-between align-items-center mt-2">
-                        <div className="disclaimer-text">
-                            <small className="text-muted">
-                                <i className="fas fa-info-circle me-1"></i>
+                    <div >
+                        <div >
+                            <small >
+                                <i ></i>
                                 General information only • Not medical diagnosis
                             </small>
                         </div>
-                        <small className="text-muted">
+                        <small >
                             {inputMessage.length}/500
                         </small>
                     </div>
                     
                     {/* Emergency Banner */}
-                    <div className="emergency-banner mt-2 p-2 bg-danger bg-opacity-10 border border-danger border-opacity-25 rounded">
-                        <small className="text-danger">
-                            <i className="fas fa-exclamation-triangle me-1"></i>
+                    <div >
+                        <small >
+                            <i ></i>
                             <strong>Emergency?</strong> Call 911 or go to your nearest emergency room
                         </small>
                     </div>
@@ -392,3 +377,5 @@ Is there a specific health topic you'd like general information about? I can hel
 };
 
 export default AIAssistant;
+
+

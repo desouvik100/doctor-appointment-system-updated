@@ -288,19 +288,64 @@ router.post('/receptionist/register', async (req, res) => {
   }
 });
 
-module.exports = router;
+// Forgot Password - Send OTP for password reset
+router.post('/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
 
+    // Validate required fields
+    if (!email) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Email is required' 
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email });
+    if (!user) {
+      // Don't reveal if email exists for security
+      return res.status(200).json({ 
+        success: true,
+        message: 'If an account exists with this email, a password reset code has been sent.' 
+      });
+    }
+
+    // Import email service
+    const { sendOTP } = require('../services/emailService');
+
+    // Send OTP for password reset
+    const result = await sendOTP(email, 'password-reset');
+
+    console.log(`✅ Password reset OTP sent to: ${email}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'If an account exists with this email, a password reset code has been sent.',
+      // For development only - remove in production
+      ...(process.env.NODE_ENV === 'development' && { otp: result.otp })
+    });
+
+  } catch (error) {
+    console.error('❌ Forgot password error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Failed to process password reset request',
+      error: error.message 
+    });
+  }
+});
 
 // Reset Password (after OTP verification)
 router.post('/reset-password', async (req, res) => {
   try {
-    const { email, newPassword } = req.body;
+    const { email, otp, newPassword } = req.body;
 
     // Validate required fields
-    if (!email || !newPassword) {
+    if (!email || !otp || !newPassword) {
       return res.status(400).json({ 
         success: false,
-        message: 'Email and new password are required' 
+        message: 'Email, OTP, and new password are required' 
       });
     }
 
@@ -309,6 +354,18 @@ router.post('/reset-password', async (req, res) => {
       return res.status(400).json({ 
         success: false,
         message: 'Password must be at least 6 characters long' 
+      });
+    }
+
+    // Import email service
+    const { verifyOTP } = require('../services/emailService');
+
+    // Verify OTP
+    const otpVerification = verifyOTP(email, otp, 'password-reset');
+    if (!otpVerification.success) {
+      return res.status(400).json({ 
+        success: false,
+        message: otpVerification.message 
       });
     }
 
@@ -344,3 +401,5 @@ router.post('/reset-password', async (req, res) => {
     });
   }
 });
+
+module.exports = router;

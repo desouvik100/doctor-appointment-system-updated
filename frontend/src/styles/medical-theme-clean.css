@@ -585,7 +585,7 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  animation: gradient-shift 3s ease infinite;
+  animation: gradient-shift 8s ease-in-out infinite;
   background-size: 200% 200%;
 }
 
@@ -902,10 +902,23 @@
   }
 }
 
-/* Fade In Animations */
+/* Fade In Animations - ANTI-FLICKER */
 .fade-in-up {
   animation: fadeInUp 0.8s ease-out forwards;
+  /* Start visible to prevent flicker, animation will handle fade */
+  opacity: 1;
+  animation-fill-mode: both;
+}
+
+/* Only hide if page is still loading */
+html.loading .fade-in-up {
   opacity: 0;
+  visibility: hidden;
+}
+
+html.loaded .fade-in-up {
+  opacity: 1;
+  visibility: visible;
 }
 
 @keyframes fadeInUp {

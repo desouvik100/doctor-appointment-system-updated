@@ -3,6 +3,7 @@ const router = express.Router();
 const paymentService = require('../services/paymentService');
 const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
+const { USE_STRIPE_PAYMENTS } = require('../config/paymentConfig');
 
 // Get payment calculation for appointment
 router.get('/calculate/:appointmentId', async (req, res) => {
@@ -18,6 +19,7 @@ router.get('/calculate/:appointmentId', async (req, res) => {
     
     res.json({
       success: true,
+      testMode: !USE_STRIPE_PAYMENTS,
       appointmentId,
       doctorName: appointment.doctorId.name,
       ...breakdown
@@ -35,6 +37,16 @@ router.post('/create-payment-intent', async (req, res) => {
     
     if (!appointmentId || !userId) {
       return res.status(400).json({ message: 'Appointment ID and User ID are required' });
+    }
+
+    // If Stripe is disabled, return test mode response
+    if (!USE_STRIPE_PAYMENTS) {
+      return res.json({
+        success: true,
+        testMode: true,
+        message: 'Stripe disabled - running in test mode (no payment required)',
+        appointmentId
+      });
     }
     
     const paymentData = await paymentService.createPaymentIntent(appointmentId, userId);
@@ -61,6 +73,15 @@ router.post('/confirm', async (req, res) => {
     
     if (!paymentIntentId) {
       return res.status(400).json({ message: 'Payment Intent ID is required' });
+    }
+
+    // If Stripe is disabled, return test mode response
+    if (!USE_STRIPE_PAYMENTS) {
+      return res.json({
+        success: true,
+        testMode: true,
+        message: 'Stripe disabled - no payment confirmation needed in test mode'
+      });
     }
     
     const result = await paymentService.confirmPayment(paymentIntentId);
@@ -144,7 +165,9 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
 // Get Stripe publishable key
 router.get('/config', (req, res) => {
   res.json({
-    publishableKey: process.env.STRIPE_PUBLISHABLE_KEY
+    publishableKey: USE_STRIPE_PAYMENTS ? process.env.STRIPE_PUBLISHABLE_KEY : null,
+    testMode: !USE_STRIPE_PAYMENTS,
+    paymentsEnabled: USE_STRIPE_PAYMENTS
   });
 });
 

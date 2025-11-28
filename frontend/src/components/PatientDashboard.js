@@ -1,20 +1,19 @@
-import React, { useState, useEffect, useMemo, useRef } from 'react';
-import UserAvatar from './UserAvatar';
+import { useState, useEffect, useMemo, useRef } from 'react';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
-import './PatientDashboard.css';
+import BookingModal from './BookingModal';
 
 const PatientDashboard = ({ user, onLogout }) => {
-  const [currentUser, setCurrentUser] = useState(user);
-  const [activeTab, setActiveTab] = useState('overview');
+  const [currentUser] = useState(user);
+  const [activeTab, setActiveTab] = useState('doctors');
+  const [selectedDoctor, setSelectedDoctor] = useState(null);
+  const [showBookingModal, setShowBookingModal] = useState(false);
   
   // Doctor list state
   const [doctors, setDoctors] = useState([]);
-  const [doctorSummary, setDoctorSummary] = useState(null);
   const [appointments, setAppointments] = useState([]);
   const [clinics, setClinics] = useState([]);
   const [loading, setLoading] = useState(false);
-  const [searchLoading, setSearchLoading] = useState(false);
   
   // Filter state
   const [searchTerm, setSearchTerm] = useState('');
@@ -27,7 +26,6 @@ const PatientDashboard = ({ user, onLogout }) => {
   // Fetch data on mount
   useEffect(() => {
     fetchDoctors();
-    fetchDoctorSummary();
     fetchAppointments();
     fetchClinics();
   }, []);
@@ -39,17 +37,9 @@ const PatientDashboard = ({ user, onLogout }) => {
       setDoctors(response.data);
     } catch (error) {
       console.error('Error fetching doctors:', error);
+      toast.error('Failed to load doctors');
     } finally {
       setLoading(false);
-    }
-  };
-
-  const fetchDoctorSummary = async () => {
-    try {
-      const response = await axios.get('/api/doctors/summary');
-      setDoctorSummary(response.data);
-    } catch (error) {
-      console.error('Error fetching doctor summary:', error);
     }
   };
 
@@ -74,15 +64,10 @@ const PatientDashboard = ({ user, onLogout }) => {
   // Debounced search handler
   const handleSearchChange = (value) => {
     setSearchTerm(value);
-    setSearchLoading(true);
-    
     if (searchTimeoutRef.current) {
       clearTimeout(searchTimeoutRef.current);
     }
-    
-    searchTimeoutRef.current = setTimeout(() => {
-      setSearchLoading(false);
-    }, 300);
+    searchTimeoutRef.current = setTimeout(() => {}, 300);
   };
 
   // Memoized filtered doctors
@@ -103,19 +88,6 @@ const PatientDashboard = ({ user, onLogout }) => {
     });
   }, [doctors, searchTerm, selectedSpecialization, selectedClinic]);
 
-  // Get next upcoming appointment
-  const nextAppointment = useMemo(() => {
-    const now = new Date();
-    const upcoming = appointments
-      .filter(apt => {
-        const aptDate = new Date(apt.date);
-        return aptDate >= now && (apt.status === 'pending' || apt.status === 'confirmed');
-      })
-      .sort((a, b) => new Date(a.date) - new Date(b.date));
-    
-    return upcoming[0] || null;
-  }, [appointments]);
-
   // Get unique specializations
   const specializations = useMemo(() => {
     const specs = [...new Set(doctors.map(d => d.specialization))];
@@ -127,446 +99,581 @@ const PatientDashboard = ({ user, onLogout }) => {
     setSearchTerm('');
     setSelectedSpecialization('');
     setSelectedClinic('');
-    toast.success('Filters cleared successfully');
+    toast.success('Filters cleared');
   };
 
-  // Scroll to doctors section
-  const scrollToDoctors = () => {
-    setActiveTab('doctors');
-    setTimeout(() => {
-      document.getElementById('doctors-section')?.scrollIntoView({ behavior: 'smooth' });
-    }, 100);
+  // Get user initials
+  const getUserInitials = () => {
+    return currentUser.name
+      .split(' ')
+      .map(n => n[0])
+      .join('')
+      .toUpperCase()
+      .slice(0, 2);
   };
 
-  // Handle profile photo upload
-  const handlePhotoUpload = async (photoData) => {
-    try {
-      const response = await axios.post('/api/profile/update-photo', {
-        userId: currentUser.id,
-        profilePhoto: photoData
-      });
-
-      if (response.data.success) {
-        const updatedUser = response.data.user;
-        setCurrentUser(updatedUser);
-        localStorage.setItem('user', JSON.stringify(updatedUser));
-        toast.success('Profile photo updated successfully!');
-      }
-    } catch (error) {
-      console.error('Photo upload error:', error);
-      toast.error('Failed to upload photo. Please try again.');
-    }
+  const headerStyles = {
+    card: { background: '#ffffff', border: '1px solid #e6e8ee', borderRadius: 16, padding: '16px 20px', boxShadow: '0 1px 3px rgba(15,23,42,0.06)' },
+    content: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' },
+    userInfo: { display: 'flex', alignItems: 'center', gap: '16px' },
+    avatar: { width: 56, height: 56, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#5b4bff', color: '#ffffff', fontWeight: 700 },
+    details: { display: 'flex', flexDirection: 'column' },
+    title: { fontSize: 20, fontWeight: 700, margin: 0, color: '#0f172a' },
+    email: { display: 'flex', alignItems: 'center', gap: 8, color: '#64748b', fontSize: 14, margin: 0 },
+    status: { display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 8, color: '#10b981', fontWeight: 600 },
+    statusDot: { width: 8, height: 8, borderRadius: '50%', background: '#10b981' },
+    logout: { border: '1px solid #e5e7eb', background: '#ffffff', color: '#dc2626', padding: '8px 12px', borderRadius: 8, fontWeight: 600 }
   };
 
   return (
     <div className="patient-dashboard">
-      {/* Enhanced Header with Next Appointment */}
-      <div className="dashboard-header">
-        <div className="container">
-          <div className="row align-items-center">
-            <div className="col-md-8">
-              <div className="d-flex align-items-center gap-3">
-                <UserAvatar 
-                  user={currentUser}
-                  size="large"
-                  editable={true}
-                  onUpload={handlePhotoUpload}
-                />
-                
-                <div className="flex-grow-1">
-                  <h2 className="mb-1">Welcome back, {currentUser.name}!</h2>
-                  <p className="text-muted mb-0">
-                    <i className="fas fa-envelope me-2"></i>
-                    {currentUser.email}
-                  </p>
-                  
-                  {/* Next Appointment Info */}
-                  {nextAppointment ? (
-                    <div className="next-appointment-badge mt-2">
-                      <i className="fas fa-calendar-check me-2"></i>
-                      <strong>Next:</strong> Dr. {nextAppointment.doctorId?.name} on{' '}
-                      {new Date(nextAppointment.date).toLocaleDateString('en-US', { 
-                        month: 'short', day: 'numeric' 
-                      })}, {nextAppointment.time}
-                      <button className="btn btn-sm btn-link ms-2" onClick={() => setActiveTab('appointments')}>
-                        Details
-                      </button>
-                    </div>
-                  ) : (
-                    <div className="no-appointment-badge mt-2">
-                      <i className="fas fa-info-circle me-2"></i>
-                      No upcoming appointments
-                      <button className="btn btn-sm btn-link ms-2" onClick={scrollToDoctors}>
-                        Book now
-                      </button>
-                    </div>
-                  )}
+      {/* Professional Navbar - Inline Styles */}
+      <nav style={{
+        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+        boxShadow: '0 4px 20px rgba(102, 126, 234, 0.15)',
+        position: 'sticky',
+        top: 0,
+        zIndex: 100,
+        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
+      }}>
+        <div style={{
+          maxWidth: '1400px',
+          margin: '0 auto',
+          padding: '16px 40px',
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'center',
+          width: '100%',
+        }}>
+          {/* Brand */}
+          <div style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
+            color: 'white',
+            fontWeight: 700,
+            fontSize: '1.25rem',
+          }}>
+            <div style={{
+              width: '40px',
+              height: '40px',
+              background: 'rgba(255, 255, 255, 0.2)',
+              borderRadius: '10px',
+              display: 'flex',
+              alignItems: 'center',
+              justifyContent: 'center',
+              fontSize: '20px',
+              border: '2px solid rgba(255, 255, 255, 0.3)',
+            }}>
+              <i className="fas fa-heartbeat"></i>
+            </div>
+            <span style={{
+              background: 'linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%)',
+              WebkitBackgroundClip: 'text',
+              WebkitTextFillColor: 'transparent',
+              backgroundClip: 'text',
+            }}>HealthSync Pro</span>
+          </div>
+
+          {/* Logout Button */}
+          <button onClick={onLogout} style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: '8px',
+            padding: '10px 20px',
+            background: 'rgba(255, 255, 255, 0.15)',
+            border: '2px solid rgba(255, 255, 255, 0.3)',
+            color: 'white',
+            borderRadius: '10px',
+            fontSize: '0.9rem',
+            fontWeight: 600,
+            cursor: 'pointer',
+            transition: 'all 0.3s ease',
+            whiteSpace: 'nowrap',
+            backdropFilter: 'blur(10px)',
+          }}
+          onMouseEnter={(e) => {
+            e.target.style.background = 'rgba(255, 255, 255, 0.25)';
+            e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+            e.target.style.transform = 'translateY(-2px)';
+          }}
+          onMouseLeave={(e) => {
+            e.target.style.background = 'rgba(255, 255, 255, 0.15)';
+            e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+            e.target.style.transform = 'translateY(0)';
+          }}>
+            <i className="fas fa-sign-out-alt"></i>
+            <span>Logout</span>
+          </button>
+        </div>
+      </nav>
+
+      <div className="patient-dashboard__container">
+        
+        {/* Welcome Card */}
+        <div className="patient-dashboard__header-card" style={headerStyles.card}>
+          <div className="patient-dashboard__header-content" style={headerStyles.content}>
+            <div className="patient-dashboard__user-info" style={headerStyles.userInfo}>
+              <div className="patient-dashboard__avatar" style={headerStyles.avatar}>
+                {getUserInitials()}
+              </div>
+              <div className="patient-dashboard__user-details" style={headerStyles.details}>
+                <h1 className="patient-dashboard__welcome-title" style={headerStyles.title}>
+                  Welcome back, {currentUser.name}!
+                </h1>
+                <p className="patient-dashboard__user-email" style={headerStyles.email}>
+                  <i className="fas fa-envelope"></i>
+                  {currentUser.email}
+                </p>
+                <div className="patient-dashboard__status" style={headerStyles.status}>
+                  <span className="patient-dashboard__status-dot" style={headerStyles.statusDot}></span>
+                  Online
                 </div>
               </div>
             </div>
-            
-            <div className="col-md-4 text-end">
-              <button className="btn btn-outline-danger" onClick={onLogout}>
-                <i className="fas fa-sign-out-alt me-2"></i>
-                Logout
-              </button>
-            </div>
+            <button className="patient-dashboard__logout-btn" style={headerStyles.logout} onClick={onLogout}>
+              <i className="fas fa-sign-out-alt"></i>
+              Logout
+            </button>
           </div>
         </div>
-      </div>
 
-      {/* Quick Actions - Enhanced Pills */}
-      <div className="container mt-4">
-        <div className="quick-actions-card">
-          <h5 className="mb-3">Quick Actions</h5>
-          <div className="quick-actions-pills">
+        {/* Quick Actions Tabs */}
+        <div className="patient-dashboard__quick-actions">
+          <div className="patient-dashboard__tabs">
             <button 
-              className="action-pill"
-              onClick={() => setActiveTab('appointments')}
-              title="View your upcoming appointments"
+              className={`patient-dashboard__tab ${activeTab === 'doctors' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('doctors')}
             >
-              <div className="pill-icon bg-primary">
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-user-md"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Find Doctors</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'appointments' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('appointments')}
+            >
+              <div className="patient-dashboard__tab-icon">
                 <i className="fas fa-calendar-check"></i>
               </div>
-              <div className="pill-content">
-                <span className="pill-label">My Appointments</span>
-                <span className="pill-count">{appointments.length}</span>
-              </div>
+              <span className="patient-dashboard__tab-label">My Appointments</span>
             </button>
             
             <button 
-              className="action-pill"
+              className={`patient-dashboard__tab ${activeTab === 'ai-assistant' ? 'patient-dashboard__tab--active' : ''}`}
               onClick={() => setActiveTab('ai-assistant')}
-              title="Get health advice from AI assistant"
             >
-              <div className="pill-icon bg-success">
+              <div className="patient-dashboard__tab-icon">
                 <i className="fas fa-robot"></i>
               </div>
-              <div className="pill-content">
-                <span className="pill-label">AI Assistant</span>
-                <span className="pill-badge">New</span>
-              </div>
+              <span className="patient-dashboard__tab-label">AI Assistant</span>
             </button>
             
             <button 
-              className="action-pill"
+              className={`patient-dashboard__tab ${activeTab === 'payments' ? 'patient-dashboard__tab--active' : ''}`}
               onClick={() => setActiveTab('payments')}
-              title="View payment history and pending bills"
             >
-              <div className="pill-icon bg-warning">
+              <div className="patient-dashboard__tab-icon">
                 <i className="fas fa-credit-card"></i>
               </div>
-              <div className="pill-content">
-                <span className="pill-label">Payments</span>
-                <span className="pill-status">Up to date</span>
-              </div>
+              <span className="patient-dashboard__tab-label">Payments</span>
             </button>
           </div>
         </div>
 
-        {/* Tabs */}
-        <div className="dashboard-tabs mt-4">
-          <ul className="nav nav-tabs">
-            <li className="nav-item">
-              <button 
-                className={`nav-link ${activeTab === 'overview' ? 'active' : ''}`}
-                onClick={() => setActiveTab('overview')}
-              >
-                <i className="fas fa-home me-2"></i>
-                Overview
-              </button>
-            </li>
-            <li className="nav-item">
-              <button 
-                className={`nav-link ${activeTab === 'appointments' ? 'active' : ''}`}
-                onClick={() => setActiveTab('appointments')}
-              >
-                <i className="fas fa-calendar me-2"></i>
-                Appointments
-              </button>
-            </li>
-            <li className="nav-item">
-              <button 
-                className={`nav-link ${activeTab === 'doctors' ? 'active' : ''}`}
-                onClick={() => setActiveTab('doctors')}
-              >
-                <i className="fas fa-user-md me-2"></i>
-                Find Doctors
-              </button>
-            </li>
-            <li className="nav-item">
-              <button 
-                className={`nav-link ${activeTab === 'profile' ? 'active' : ''}`}
-                onClick={() => setActiveTab('profile')}
-              >
-                <i className="fas fa-user me-2"></i>
-                Profile
-              </button>
-            </li>
-          </ul>
+        {/* Doctors Tab Content */}
+        {activeTab === 'doctors' && (
+          <>
+            {/* Search & Filters */}
+            <div className="patient-dashboard__filters">
+              <div className="patient-dashboard__filters-grid">
+                <div className="patient-dashboard__filter-group">
+                  <i className="fas fa-search patient-dashboard__filter-icon"></i>
+                  <input
+                    type="text"
+                    className="patient-dashboard__filter-input"
+                    placeholder="Search by name, specialization..."
+                    value={searchTerm}
+                    onChange={(e) => handleSearchChange(e.target.value)}
+                  />
+                </div>
+                
+                <div className="patient-dashboard__filter-group">
+                  <i className="fas fa-stethoscope patient-dashboard__filter-icon"></i>
+                  <select
+                    className="patient-dashboard__filter-select"
+                    value={selectedSpecialization}
+                    onChange={(e) => setSelectedSpecialization(e.target.value)}
+                  >
+                    <option value="">All Specializations</option>
+                    {specializations.map(spec => (
+                      <option key={spec} value={spec}>{spec}</option>
+                    ))}
+                  </select>
+                </div>
+                
+                <div className="patient-dashboard__filter-group">
+                  <i className="fas fa-hospital patient-dashboard__filter-icon"></i>
+                  <select
+                    className="patient-dashboard__filter-select"
+                    value={selectedClinic}
+                    onChange={(e) => setSelectedClinic(e.target.value)}
+                  >
+                    <option value="">All Clinics</option>
+                    {clinics.map(clinic => (
+                      <option key={clinic._id} value={clinic._id}>{clinic.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              
+              {(searchTerm || selectedSpecialization || selectedClinic) && (
+                <button className="patient-dashboard__clear-filters" onClick={resetFilters}>
+                  <i className="fas fa-times"></i> Clear Filters
+                </button>
+              )}
+            </div>
 
-          <div className="tab-content mt-4">
-            {activeTab === 'overview' && (
-              <div className="tab-pane-content">
-                <h4>Dashboard Overview</h4>
-                <p>Your health management at a glance</p>
-              </div>
-            )}
-            
-            {activeTab === 'appointments' && (
-              <div className="tab-pane-content">
-                <h4>My Appointments</h4>
-                <p>View and manage your appointments</p>
-              </div>
-            )}
-            
-            {activeTab === 'doctors' && (
-              <div className="tab-pane-content" id="doctors-section">
-                {/* Doctor Summary Stats */}
-                {doctorSummary && (
-                  <div className="doctor-stats-chips mb-4">
-                    <span className="stat-chip">
-                      <i className="fas fa-user-md me-1"></i>
-                      {doctorSummary.totalDoctors} doctors
-                    </span>
-                    <span className="stat-chip stat-chip-success">
-                      <i className="fas fa-check-circle me-1"></i>
-                      {doctorSummary.availableDoctors} available
-                    </span>
-                    <span className="stat-chip">
-                      <i className="fas fa-stethoscope me-1"></i>
-                      {doctorSummary.bySpecialization?.length || 0} specializations
-                    </span>
+            {/* Available Doctors Section */}
+            <div className="patient-dashboard__doctors-section">
+              <div className="patient-dashboard__section-header">
+                <h2 className="patient-dashboard__section-title">
+                  <div className="patient-dashboard__section-icon">
+                    <i className="fas fa-user-md"></i>
                   </div>
-                )}
+                  Available Doctors
+                </h2>
+                <span className="patient-dashboard__doctors-count">
+                  {filteredDoctors.length} {filteredDoctors.length === 1 ? 'Doctor' : 'Doctors'}
+                </span>
+              </div>
 
-                {/* Filters Card */}
-                <div className="filters-card mb-4">
-                  <div className="row g-3">
-                    <div className="col-md-4">
-                      <label className="form-label">
-                        <i className="fas fa-search me-2"></i>
-                        Search Doctors
-                      </label>
-                      <div className="search-input-wrapper">
-                        <input
-                          type="text"
-                          className="form-control"
-                          placeholder="Search by name, specialization, or email (e.g., 'Cardiologist')"
-                          value={searchTerm}
-                          onChange={(e) => handleSearchChange(e.target.value)}
-                        />
-                        {searchLoading && (
-                          <div className="search-spinner">
-                            <i className="fas fa-spinner fa-spin"></i>
+              {loading ? (
+                <div className="patient-dashboard__loading">
+                  <div className="patient-dashboard__spinner"></div>
+                </div>
+              ) : filteredDoctors.length === 0 ? (
+                <div className="patient-dashboard__empty-state">
+                  <div className="patient-dashboard__empty-icon">
+                    <i className="fas fa-user-md"></i>
+                  </div>
+                  <h3 className="patient-dashboard__empty-title">
+                    No doctors available at the moment
+                  </h3>
+                  <p className="patient-dashboard__empty-text">
+                    Try adjusting your filters or check back later
+                  </p>
+                </div>
+              ) : (
+                <div className="patient-dashboard__doctors-grid">
+                  {filteredDoctors.map(doctor => (
+                    <div key={doctor._id} className="doctor-card">
+                      {doctor.experience > 10 && (
+                        <span className="doctor-card__badge">Most Experienced</span>
+                      )}
+                      
+                      <h3 className="doctor-card__name">Dr. {doctor.name}</h3>
+                      <p className="doctor-card__specialization">{doctor.specialization}</p>
+                      
+                      <div className="doctor-card__meta">
+                        <div className="doctor-card__meta-item">
+                          <i className="fas fa-hospital doctor-card__meta-icon"></i>
+                          {doctor.clinicId?.name || 'No clinic assigned'}
+                        </div>
+                        <div className="doctor-card__meta-item">
+                          <i className="fas fa-envelope doctor-card__meta-icon"></i>
+                          {doctor.email}
+                        </div>
+                        <div className="doctor-card__meta-item">
+                          <i className="fas fa-phone doctor-card__meta-icon"></i>
+                          {doctor.phone}
+                        </div>
+                        {doctor.experience && (
+                          <div className="doctor-card__meta-item">
+                            <i className="fas fa-award doctor-card__meta-icon"></i>
+                            {doctor.experience} years experience
                           </div>
                         )}
                       </div>
-                    </div>
-                    
-                    <div className="col-md-3">
-                      <label className="form-label">
-                        <i className="fas fa-stethoscope me-2"></i>
-                        Specialization
-                      </label>
-                      <select
-                        className="form-select"
-                        value={selectedSpecialization}
-                        onChange={(e) => setSelectedSpecialization(e.target.value)}
-                      >
-                        <option value="">All Specializations</option>
-                        {specializations.map(spec => (
-                          <option key={spec} value={spec}>{spec}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div className="col-md-3">
-                      <label className="form-label">
-                        <i className="fas fa-hospital me-2"></i>
-                        Clinic
-                      </label>
-                      <select
-                        className="form-select"
-                        value={selectedClinic}
-                        onChange={(e) => setSelectedClinic(e.target.value)}
-                      >
-                        <option value="">All Clinics</option>
-                        {clinics.map(clinic => (
-                          <option key={clinic._id} value={clinic._id}>{clinic.name}</option>
-                        ))}
-                      </select>
-                    </div>
-                    
-                    <div className="col-md-2 d-flex align-items-end">
+                      
+                      <div className="doctor-card__fee">
+                        ₹{doctor.consultationFee}
+                        <span className="doctor-card__fee-label"> / consultation</span>
+                      </div>
+                      
+                      <div className={`doctor-card__availability ${doctor.availability !== 'Available' ? 'doctor-card__availability--unavailable' : ''}`}>
+                        <span className="doctor-card__availability-dot"></span>
+                        {doctor.availability || 'Available'}
+                      </div>
+                      
                       <button 
-                        className="btn btn-outline-secondary w-100"
-                        onClick={resetFilters}
-                        disabled={!searchTerm && !selectedSpecialization && !selectedClinic}
+                        className="doctor-card__book-btn"
+                        disabled={doctor.availability !== 'Available'}
+                        onClick={() => {
+                          setSelectedDoctor(doctor);
+                          setShowBookingModal(true);
+                        }}
                       >
-                        <i className="fas fa-redo me-2"></i>
-                        Reset
+                        <i className="fas fa-calendar-plus"></i> Book Appointment
                       </button>
                     </div>
-                  </div>
+                  ))}
+                </div>
+              )}
+            </div>
+          </>
+        )}
+
+        {/* Booking Modal */}
+        {showBookingModal && selectedDoctor && (
+          <BookingModal
+            doctor={selectedDoctor}
+            user={currentUser}
+            onClose={() => {
+              setShowBookingModal(false);
+              setSelectedDoctor(null);
+            }}
+            onSuccess={(appointment) => {
+              fetchAppointments();
+              setShowBookingModal(false);
+              setSelectedDoctor(null);
+            }}
+          />
+        )}
+
+        {/* Appointments Tab Content */}
+        {activeTab === 'appointments' && (
+          <div className="patient-dashboard__doctors-section">
+            <div className="patient-dashboard__section-header">
+              <h2 className="patient-dashboard__section-title">
+                <div className="patient-dashboard__section-icon">
+                  <i className="fas fa-calendar-check"></i>
+                </div>
+                My Appointments
+              </h2>
+              <span className="patient-dashboard__doctors-count">
+                {appointments.length} {appointments.length === 1 ? 'Appointment' : 'Appointments'}
+              </span>
+            </div>
+            
+            {appointments.length === 0 ? (
+              <div className="patient-dashboard__empty-state">
+                <div className="patient-dashboard__empty-icon">
+                  <i className="fas fa-calendar-times"></i>
+                </div>
+                <h3 className="patient-dashboard__empty-title">
+                  No appointments yet
+                </h3>
+                <p className="patient-dashboard__empty-text">
+                  Book your first appointment with our expert doctors
+                </p>
+                <button 
+                  className="patient-dashboard__empty-btn"
+                  onClick={() => setActiveTab('doctors')}
+                >
+                  <i className="fas fa-user-md"></i> Find Doctors
+                </button>
+              </div>
+            ) : (
+              <div className="patient-dashboard__appointments-list">
+                {appointments.map(apt => {
+                  const meetLink = apt.googleMeetLink || apt.meetingLink;
+                  const isOnline = apt.consultationType === 'online';
+                  const appointmentDate = new Date(apt.date);
+                  const [hours, minutes] = (apt.time || '00:00').split(':');
+                  appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
                   
-                  {searchLoading && (
-                    <div className="filter-status mt-2">
-                      <i className="fas fa-spinner fa-spin me-2"></i>
-                      Updating results...
-                    </div>
-                  )}
-                </div>
+                  const now = new Date();
+                  const fifteenMinutesBefore = new Date(appointmentDate.getTime() - 15 * 60 * 1000);
+                  const sixtyMinutesAfter = new Date(appointmentDate.getTime() + 60 * 60 * 1000);
+                  const canJoin = isOnline && meetLink && now >= fifteenMinutesBefore && now <= sixtyMinutesAfter && apt.status !== 'cancelled' && apt.status !== 'completed';
+                  
+                  const getTimeUntil = () => {
+                    const diff = appointmentDate.getTime() - now.getTime();
+                    if (diff < 0) return 'Past';
+                    const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+                    const hoursLeft = Math.floor((diff % (1000 * 60 * 60 * 24)) / (1000 * 60 * 60));
+                    const minutesLeft = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+                    if (days > 0) return `In ${days}d ${hoursLeft}h`;
+                    if (hoursLeft > 0) return `In ${hoursLeft}h ${minutesLeft}m`;
+                    if (minutesLeft > 0) return `In ${minutesLeft}m`;
+                    return 'Starting soon';
+                  };
 
-                {/* Available Doctors Header with Count */}
-                <div className="d-flex justify-content-between align-items-center mb-3">
-                  <h4 className="mb-0">
-                    Available Doctors ({filteredDoctors.length})
-                  </h4>
-                  {(searchTerm || selectedSpecialization || selectedClinic) && (
-                    <span className="text-muted">
-                      <i className="fas fa-filter me-1"></i>
-                      Filters active
-                    </span>
-                  )}
-                </div>
-
-                {/* Doctors List or Empty State */}
-                {loading ? (
-                  <div className="text-center py-5">
-                    <div className="spinner-border text-primary" role="status">
-                      <span className="visually-hidden">Loading...</span>
-                    </div>
-                    <p className="mt-3 text-muted">Loading doctors...</p>
-                  </div>
-                ) : filteredDoctors.length === 0 ? (
-                  <div className="empty-state-card">
-                    <div className="empty-state-icon">
-                      <i className="fas fa-user-md"></i>
-                    </div>
-                    <h4>No doctors match your search</h4>
-                    <p className="text-muted mb-4">
-                      We couldn't find any doctors matching your criteria.
-                      <br />
-                      Try adjusting your filters or search terms.
-                    </p>
-                    <div className="empty-state-suggestions">
-                      <p className="mb-2"><strong>Suggestions:</strong></p>
-                      <ul className="list-unstyled">
-                        <li><i className="fas fa-check-circle text-success me-2"></i>Clear your search filters</li>
-                        <li><i className="fas fa-check-circle text-success me-2"></i>Try a different specialization</li>
-                        <li><i className="fas fa-check-circle text-success me-2"></i>Select another clinic</li>
-                      </ul>
-                    </div>
-                    <button 
-                      className="btn btn-primary mt-3"
-                      onClick={resetFilters}
-                    >
-                      <i className="fas fa-redo me-2"></i>
-                      Clear All Filters
-                    </button>
-                  </div>
-                ) : (
-                  <div className="row g-3">
-                    {filteredDoctors.map(doctor => (
-                      <div key={doctor._id} className="col-md-6 col-lg-4">
-                        <div className="doctor-card">
-                          <div className="doctor-card-header">
-                            <div className="doctor-avatar">
-                              <i className="fas fa-user-md"></i>
-                            </div>
-                            <div className="doctor-info">
-                              <h5>{doctor.name}</h5>
-                              <p className="specialization">{doctor.specialization}</p>
-                            </div>
-                            {doctor.availability === 'Available' && (
-                              <span className="availability-badge available">
-                                <i className="fas fa-circle"></i> Available
-                              </span>
-                            )}
-                          </div>
-                          
-                          <div className="doctor-card-body">
-                            <div className="info-row">
-                              <i className="fas fa-hospital"></i>
-                              <span>{doctor.clinicId?.name || 'N/A'}</span>
-                            </div>
-                            <div className="info-row">
-                              <i className="fas fa-map-marker-alt"></i>
-                              <span>{doctor.clinicId?.city || 'N/A'}</span>
-                            </div>
-                            <div className="info-row">
-                              <i className="fas fa-graduation-cap"></i>
-                              <span>{doctor.qualification}</span>
-                            </div>
-                            <div className="info-row">
-                              <i className="fas fa-briefcase"></i>
-                              <span>{doctor.experience} years experience</span>
-                            </div>
-                            <div className="info-row">
-                              <i className="fas fa-rupee-sign"></i>
-                              <span className="fee">₹{doctor.consultationFee}</span>
-                            </div>
-                          </div>
-                          
-                          <div className="doctor-card-footer">
-                            <button className="btn btn-primary w-100">
-                              <i className="fas fa-calendar-plus me-2"></i>
-                              Book Appointment
-                            </button>
-                          </div>
+                  return (
+                    <div key={apt._id} className="appointment-card-pro">
+                      <div className="appointment-card-pro__header">
+                        <div className="appointment-card-pro__type">
+                          {isOnline ? (
+                            <><i className="fas fa-video"></i> Online Consultation</>
+                          ) : (
+                            <><i className="fas fa-hospital"></i> In-Person Visit</>
+                          )}
+                        </div>
+                        <div className={`appointment-card-pro__status appointment-card-pro__status--${apt.status}`}>
+                          {apt.status}
                         </div>
                       </div>
-                    ))}
-                  </div>
-                )}
-              </div>
-            )}
-            
-            {activeTab === 'profile' && (
-              <div className="tab-pane-content">
-                <h4>My Profile</h4>
-                <div className="profile-section">
-                  <div className="row">
-                    <div className="col-md-4 text-center">
-                      <UserAvatar 
-                        user={currentUser}
-                        size="xlarge"
-                        editable={true}
-                        onUpload={handlePhotoUpload}
-                      />
-                      <p className="mt-3 text-muted">
-                        <small>Click camera icon to change photo</small>
-                      </p>
-                    </div>
-                    <div className="col-md-8">
-                      <div className="profile-info">
-                        <div className="info-item">
-                          <label>Name:</label>
-                          <span>{currentUser.name}</span>
+
+                      <div className="appointment-card-pro__body">
+                        <div className="appointment-card-pro__doctor">
+                          <div className="appointment-card-pro__avatar">
+                            <i className="fas fa-user-md"></i>
+                          </div>
+                          <div>
+                            <h4>Dr. {apt.doctorId?.name || 'Unknown'}</h4>
+                            <p>{apt.doctorId?.specialization || 'General'}</p>
+                          </div>
                         </div>
-                        <div className="info-item">
-                          <label>Email:</label>
-                          <span>{currentUser.email}</span>
+
+                        <div className="appointment-card-pro__details">
+                          <div className="appointment-card-pro__detail">
+                            <i className="fas fa-calendar"></i>
+                            <span>{new Date(apt.date).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                          </div>
+                          <div className="appointment-card-pro__detail">
+                            <i className="fas fa-clock"></i>
+                            <span>{apt.time}</span>
+                          </div>
+                          <div className="appointment-card-pro__detail">
+                            <i className="fas fa-hospital"></i>
+                            <span>{apt.clinicId?.name || 'HealthSync Clinic'}</span>
+                          </div>
                         </div>
-                        {currentUser.phone && (
-                          <div className="info-item">
-                            <label>Phone:</label>
-                            <span>{currentUser.phone}</span>
+
+                        {apt.reason && (
+                          <div className="appointment-card-pro__reason">
+                            <i className="fas fa-notes-medical"></i>
+                            <span>{apt.reason}</span>
                           </div>
                         )}
-                        <div className="info-item">
-                          <label>Role:</label>
-                          <span className="badge bg-primary">{currentUser.role}</span>
+
+                        {/* Google Meet Section */}
+                        {isOnline && (
+                          <div className="appointment-card-pro__meet">
+                            {meetLink ? (
+                              <>
+                                <div className="appointment-card-pro__meet-header">
+                                  <i className="fas fa-video"></i>
+                                  <span>Video Consultation</span>
+                                  {apt.meetLinkGenerated && (
+                                    <span className="appointment-card-pro__meet-badge">
+                                      <i className="fas fa-check"></i> Ready
+                                    </span>
+                                  )}
+                                </div>
+                                <div className="appointment-card-pro__meet-link">
+                                  <span>{meetLink}</span>
+                                  <button 
+                                    onClick={() => {
+                                      navigator.clipboard.writeText(meetLink);
+                                      toast.success('Link copied!');
+                                    }}
+                                    title="Copy link"
+                                  >
+                                    <i className="fas fa-copy"></i>
+                                  </button>
+                                </div>
+                                {canJoin ? (
+                                  <button 
+                                    className="appointment-card-pro__join-btn"
+                                    onClick={() => window.open(meetLink, '_blank')}
+                                  >
+                                    <i className="fas fa-video"></i> Join Meeting Now
+                                  </button>
+                                ) : (
+                                  <div className="appointment-card-pro__meet-info">
+                                    <i className="fas fa-info-circle"></i>
+                                    <span>
+                                      {apt.status === 'completed' ? 'Meeting ended' : 
+                                       apt.status === 'cancelled' ? 'Cancelled' :
+                                       `Opens 15 min before (${getTimeUntil()})`}
+                                    </span>
+                                  </div>
+                                )}
+                              </>
+                            ) : (
+                              <div className="appointment-card-pro__meet-pending">
+                                <i className="fas fa-clock"></i>
+                                <span>Meeting link will be generated 18 minutes before your appointment</span>
+                              </div>
+                            )}
+                          </div>
+                        )}
+                      </div>
+
+                      <div className="appointment-card-pro__footer">
+                        <div className="appointment-card-pro__countdown">
+                          <i className="fas fa-hourglass-half"></i>
+                          <span>{getTimeUntil()}</span>
                         </div>
+                        {apt.payment?.totalAmount && (
+                          <div className="appointment-card-pro__amount">
+                            ₹{apt.payment.totalAmount}
+                          </div>
+                        )}
                       </div>
                     </div>
-                  </div>
-                </div>
+                  );
+                })}
               </div>
             )}
           </div>
-        </div>
+        )}
+
+        {/* AI Assistant Tab Content */}
+        {activeTab === 'ai-assistant' && (
+          <div className="patient-dashboard__doctors-section">
+            <div className="patient-dashboard__section-header">
+              <h2 className="patient-dashboard__section-title">
+                <div className="patient-dashboard__section-icon">
+                  <i className="fas fa-robot"></i>
+                </div>
+                AI Health Assistant
+              </h2>
+            </div>
+            <div className="patient-dashboard__empty-state">
+              <div className="patient-dashboard__empty-icon">
+                <i className="fas fa-robot"></i>
+              </div>
+              <h3 className="patient-dashboard__empty-title">
+                AI Assistant Coming Soon
+              </h3>
+              <p className="patient-dashboard__empty-text">
+                Get personalized health advice from our AI assistant
+              </p>
+            </div>
+          </div>
+        )}
+
+        {/* Payments Tab Content */}
+        {activeTab === 'payments' && (
+          <div className="patient-dashboard__doctors-section">
+            <div className="patient-dashboard__section-header">
+              <h2 className="patient-dashboard__section-title">
+                <div className="patient-dashboard__section-icon">
+                  <i className="fas fa-credit-card"></i>
+                </div>
+                Payment History
+              </h2>
+            </div>
+            
+            <div className="patient-dashboard__empty-state">
+              <div className="patient-dashboard__empty-icon">
+                <i className="fas fa-receipt"></i>
+              </div>
+              <h3 className="patient-dashboard__empty-title">
+                No payment history
+              </h3>
+              <p className="patient-dashboard__empty-text">
+                Your payment transactions will appear here
+              </p>
+            </div>
+          </div>
+        )}
+
       </div>
     </div>
   );

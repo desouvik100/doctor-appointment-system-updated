@@ -32,7 +32,7 @@ const appointmentSchema = new mongoose.Schema(
     },
     status: {
       type: String,
-      enum: ["pending", "confirmed", "completed", "cancelled"],
+      enum: ["pending", "confirmed", "in_progress", "completed", "cancelled"],
       default: "pending"
     },
     tokenNumber: {
@@ -43,6 +43,67 @@ const appointmentSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    // Online Consultation Fields
+    consultationType: {
+      type: String,
+      enum: ["in_person", "online"],
+      default: "in_person"
+    },
+    meetingLink: {
+      type: String,
+      trim: true
+    },
+    joinCode: {
+      type: String,
+      trim: true,
+      uppercase: true
+    },
+    meetingStartTime: {
+      type: Date
+    },
+    meetingEndTime: {
+      type: Date
+    },
+    // Google Meet Integration
+    googleMeetLink: {
+      type: String,
+      trim: true
+    },
+    googleEventId: {
+      type: String,
+      trim: true
+    },
+    meetLinkGenerated: {
+      type: Boolean,
+      default: false
+    },
+    meetLinkGeneratedAt: {
+      type: Date
+    },
+    meetLinkSentToPatient: {
+      type: Boolean,
+      default: false
+    },
+    meetLinkSentToDoctor: {
+      type: Boolean,
+      default: false
+    },
+    // WebRTC Consultation Fields
+    consultationStatus: {
+      type: String,
+      enum: ["not_started", "in_progress", "completed"],
+      default: "not_started"
+    },
+    consultationStartTime: {
+      type: Date
+    },
+    consultationEndTime: {
+      type: Date
+    },
+    consultationDuration: {
+      type: Number, // Duration in seconds
+      default: 0
+    },
     // Stripe Payment Integration
     paymentIntentId: {
       type: String,
@@ -50,7 +111,7 @@ const appointmentSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "completed", "failed", "refunded"],
+      enum: ["pending", "completed", "failed", "refunded", "not_required"],
       default: "pending"
     },
     paymentDetails: {
@@ -86,7 +147,7 @@ const appointmentSchema = new mongoose.Schema(
       },
       paymentStatus: {
         type: String,
-        enum: ["pending", "completed", "failed", "refunded"],
+        enum: ["pending", "completed", "failed", "refunded", "not_required"],
         default: "pending"
       },
       paymentId: {
@@ -100,11 +161,110 @@ const appointmentSchema = new mongoose.Schema(
       paidAt: {
         type: Date
       }
+    },
+    // Token + Queue Entry System
+    token: {
+      type: String,
+      unique: true,
+      sparse: true,
+      trim: true,
+      uppercase: true
+    },
+    queueStatus: {
+      type: String,
+      enum: ['waiting', 'verified', 'in_queue', 'completed', 'expired', 'no_show'],
+      default: 'waiting'
+    },
+    verifiedAt: {
+      type: Date
+    },
+    queuePosition: {
+      type: Number,
+      default: null
+    },
+    estimatedWaitTime: {
+      type: Number, // in minutes
+      default: null
+    },
+    tokenExpiredAt: {
+      type: Date
     }
   },
   {
     timestamps: true
   }
 );
+
+// Generate a random join code
+appointmentSchema.methods.generateJoinCode = function() {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789'; // Exclude similar looking chars
+  let code = '';
+  for (let i = 0; i < 8; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  this.joinCode = code;
+  return code;
+};
+
+// Generate appointment token
+appointmentSchema.methods.generateToken = function(doctorCode = 'GEN') {
+  // Format: HS-{DOCTORCODE}-{DDMM}-{4-digit-random}
+  const date = new Date(this.date);
+  const day = String(date.getDate()).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
+  
+  this.token = `HS-${doctorCode.toUpperCase()}-${day}${month}-${randomNum}`;
+  this.tokenExpiredAt = new Date(date.getTime() + 2 * 60 * 60 * 1000); // 2 hours after appointment
+  return this.token;
+};
+
+// Check if online consultation is accessible
+appointmentSchema.methods.isConsultationAccessible = function() {
+  // Only for online consultations
+  if (this.consultationType !== 'online') {
+    return { accessible: false, reason: 'Not an online consultation' };
+  }
+
+  // Must be confirmed or in_progress
+  if (this.status !== 'confirmed' && this.status !== 'in_progress') {
+    return { accessible: false, reason: 'Appointment not confirmed' };
+  }
+
+  // Check time window (15 minutes before to 60 minutes after)
+  const appointmentDateTime = new Date(this.date);
+  const [hours, minutes] = this.time.split(':');
+  appointmentDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+
+  const now = new Date();
+  const fifteenMinutesBefore = new Date(appointmentDateTime.getTime() - 15 * 60 * 1000);
+  const sixtyMinutesAfter = new Date(appointmentDateTime.getTime() + 60 * 60 * 1000);
+
+  if (now < fifteenMinutesBefore) {
+    const minutesUntil = Math.ceil((fifteenMinutesBefore - now) / (60 * 1000));
+    return { 
+      accessible: false, 
+      reason: `Consultation opens in ${minutesUntil} minutes`,
+      opensAt: fifteenMinutesBefore
+    };
+  }
+
+  if (now > sixtyMinutesAfter) {
+    return { 
+      accessible: false, 
+      reason: 'Consultation window has closed' 
+    };
+  }
+
+  return { accessible: true, reason: 'Ready to join' };
+};
+
+// Virtual field for formatted appointment time
+appointmentSchema.virtual('appointmentDateTime').get(function() {
+  const appointmentDate = new Date(this.date);
+  const [hours, minutes] = this.time.split(':');
+  appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
+  return appointmentDate;
+});
 
 module.exports = mongoose.model("Appointment", appointmentSchema);

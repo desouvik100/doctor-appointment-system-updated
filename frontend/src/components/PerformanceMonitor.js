@@ -1,6 +1,6 @@
 import React, { useEffect, useState, useRef } from 'react';
 
-const PerformanceMonitor = ({ enabled = process.env.NODE_ENV === 'development' }) => {
+const PerformanceMonitor = ({ enabled = false }) => { // Disabled by default to prevent performance issues
   const [metrics, setMetrics] = useState({
     fps: 0,
     memory: 0,
@@ -48,53 +48,59 @@ const PerformanceMonitor = ({ enabled = process.env.NODE_ENV === 'development' }
       document.head.appendChild(style);
     }
 
+    // Use setInterval instead of requestAnimationFrame to reduce CPU usage
     const measurePerformance = () => {
       const now = performance.now();
-      frameCountRef.current++;
       
-      // Calculate FPS every second
-      if (now - lastTimeRef.current >= 1000) {
-        const fps = Math.round((frameCountRef.current * 1000) / (now - lastTimeRef.current));
-        
-        // Get memory usage if available
-        const memory = performance.memory 
-          ? Math.round(performance.memory.usedJSHeapSize / 1048576) // Convert to MB
-          : 0;
-        
-        const renderTime = now - renderStartRef.current;
-        
-        setMetrics({
-          fps,
-          memory,
-          renderTime: Math.round(renderTime),
-          isLowEnd
-        });
-        
-        // Warn if performance is poor
-        if (fps < 30) {
-          console.warn(`Low FPS detected: ${fps}fps`);
-        }
-        
-        if (memory > 100) {
-          console.warn(`High memory usage: ${memory}MB`);
-        }
-        
-        frameCountRef.current = 0;
-        lastTimeRef.current = now;
+      // Get memory usage if available
+      const memory = performance.memory 
+        ? Math.round(performance.memory.usedJSHeapSize / 1048576) // Convert to MB
+        : 0;
+      
+      const renderTime = now - renderStartRef.current;
+      
+      // Estimate FPS (less accurate but much more efficient)
+      const fps = frameCountRef.current;
+      
+      setMetrics({
+        fps,
+        memory,
+        renderTime: Math.round(renderTime),
+        isLowEnd
+      });
+      
+      // Warn if performance is poor
+      if (fps < 30 && fps > 0) {
+        console.warn(`Low FPS detected: ${fps}fps`);
       }
       
+      if (memory > 100) {
+        console.warn(`High memory usage: ${memory}MB`);
+      }
+      
+      frameCountRef.current = 0;
       renderStartRef.current = performance.now();
-      animationId = requestAnimationFrame(measurePerformance);
     };
 
-    measurePerformance();
-
+    // Measure FPS using a less intensive method
+    const countFrame = () => {
+      frameCountRef.current++;
+      animationId = requestAnimationFrame(countFrame);
+    };
+    
+    countFrame();
+    
+    // Update metrics every 2 seconds instead of every frame
+    const metricsInterval = setInterval(measurePerformance, 2000);
+    
     return () => {
       if (animationId) {
         cancelAnimationFrame(animationId);
       }
+      clearInterval(metricsInterval);
       document.body.classList.remove('low-memory-mode');
     };
+
   }, [enabled]);
 
   // Auto-optimize based on performance
