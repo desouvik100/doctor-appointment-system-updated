@@ -2,8 +2,7 @@ const express = require('express');
 const router = express.Router();
 const paymentService = require('../services/paymentService');
 const Appointment = require('../models/Appointment');
-const Doctor = require('../models/Doctor');
-const { USE_STRIPE_PAYMENTS } = require('../config/paymentConfig');
+const { USE_RAZORPAY_PAYMENTS, RAZORPAY_KEY_ID } = require('../config/paymentConfig');
 
 // Get payment calculation for appointment
 router.get('/calculate/:appointmentId', async (req, res) => {
@@ -19,7 +18,7 @@ router.get('/calculate/:appointmentId', async (req, res) => {
     
     res.json({
       success: true,
-      testMode: !USE_STRIPE_PAYMENTS,
+      testMode: !USE_RAZORPAY_PAYMENTS,
       appointmentId,
       doctorName: appointment.doctorId.name,
       ...breakdown
@@ -30,8 +29,8 @@ router.get('/calculate/:appointmentId', async (req, res) => {
   }
 });
 
-// Create Stripe Payment Intent
-router.post('/create-payment-intent', async (req, res) => {
+// Create Razorpay Order
+router.post('/create-order', async (req, res) => {
   try {
     const { appointmentId, userId } = req.body;
     
@@ -39,63 +38,80 @@ router.post('/create-payment-intent', async (req, res) => {
       return res.status(400).json({ message: 'Appointment ID and User ID are required' });
     }
 
-    // If Stripe is disabled, return test mode response
-    if (!USE_STRIPE_PAYMENTS) {
+    // If Razorpay is disabled, return test mode response
+    if (!USE_RAZORPAY_PAYMENTS) {
+      // In test mode, directly confirm the appointment
+      const appointment = await Appointment.findById(appointmentId);
+      if (appointment) {
+        appointment.paymentStatus = 'completed';
+        appointment.status = 'confirmed';
+        appointment.paymentDetails = {
+          testMode: true,
+          amount: 0,
+          paidAt: new Date()
+        };
+        await appointment.save();
+      }
+      
       return res.json({
         success: true,
         testMode: true,
-        message: 'Stripe disabled - running in test mode (no payment required)',
+        message: 'Razorpay disabled - appointment confirmed in test mode (no payment required)',
         appointmentId
       });
     }
     
-    const paymentData = await paymentService.createPaymentIntent(appointmentId, userId);
+    const orderData = await paymentService.createOrder(appointmentId, userId);
     
     res.json({
       success: true,
-      message: 'Payment intent created successfully',
-      ...paymentData
+      message: 'Order created successfully',
+      ...orderData
     });
   } catch (error) {
-    console.error('Payment intent creation error:', error);
+    console.error('Order creation error:', error);
     res.status(500).json({ 
       success: false,
-      message: 'Failed to create payment intent', 
+      message: 'Failed to create order', 
       error: error.message 
     });
   }
 });
 
-// Confirm payment completion
-router.post('/confirm', async (req, res) => {
+// Verify Razorpay Payment
+router.post('/verify', async (req, res) => {
   try {
-    const { paymentIntentId } = req.body;
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
     
-    if (!paymentIntentId) {
-      return res.status(400).json({ message: 'Payment Intent ID is required' });
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      return res.status(400).json({ message: 'Missing payment verification parameters' });
     }
 
-    // If Stripe is disabled, return test mode response
-    if (!USE_STRIPE_PAYMENTS) {
+    // If Razorpay is disabled, return test mode response
+    if (!USE_RAZORPAY_PAYMENTS) {
       return res.json({
         success: true,
         testMode: true,
-        message: 'Stripe disabled - no payment confirmation needed in test mode'
+        message: 'Razorpay disabled - payment verification skipped in test mode'
       });
     }
     
-    const result = await paymentService.confirmPayment(paymentIntentId);
+    const result = await paymentService.verifyPayment(
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature
+    );
     
     res.json({
       success: true,
-      message: 'Payment confirmed successfully',
+      message: 'Payment verified successfully',
       ...result
     });
   } catch (error) {
-    console.error('Payment confirmation error:', error);
+    console.error('Payment verification error:', error);
     res.status(500).json({ 
       success: false,
-      message: 'Failed to confirm payment', 
+      message: 'Payment verification failed', 
       error: error.message 
     });
   }
@@ -148,10 +164,10 @@ router.post('/refund', async (req, res) => {
   }
 });
 
-// Stripe webhook endpoint
-router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+// Razorpay webhook endpoint
+router.post('/webhook', express.json(), async (req, res) => {
   try {
-    const signature = req.headers['stripe-signature'];
+    const signature = req.headers['x-razorpay-signature'];
     
     await paymentService.handleWebhook(req.body, signature);
     
@@ -162,12 +178,12 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
   }
 });
 
-// Get Stripe publishable key
+// Get Razorpay config (key ID for frontend)
 router.get('/config', (req, res) => {
   res.json({
-    publishableKey: USE_STRIPE_PAYMENTS ? process.env.STRIPE_PUBLISHABLE_KEY : null,
-    testMode: !USE_STRIPE_PAYMENTS,
-    paymentsEnabled: USE_STRIPE_PAYMENTS
+    keyId: USE_RAZORPAY_PAYMENTS ? RAZORPAY_KEY_ID : null,
+    testMode: !USE_RAZORPAY_PAYMENTS,
+    paymentsEnabled: USE_RAZORPAY_PAYMENTS
   });
 });
 

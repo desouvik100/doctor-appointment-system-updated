@@ -1,23 +1,28 @@
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
-const { USE_STRIPE_PAYMENTS } = require('../config/paymentConfig');
+const crypto = require('crypto');
+const { USE_RAZORPAY_PAYMENTS, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = require('../config/paymentConfig');
 
-// Only initialize Stripe if payments are enabled
-let stripe = null;
-if (USE_STRIPE_PAYMENTS) {
-  stripe = require('stripe')(process.env.STRIPE_SECRET_KEY);
-  console.log('✅ Stripe payments ENABLED');
+// Only initialize Razorpay if payments are enabled
+let razorpay = null;
+if (USE_RAZORPAY_PAYMENTS && RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
+  const Razorpay = require('razorpay');
+  razorpay = new Razorpay({
+    key_id: RAZORPAY_KEY_ID,
+    key_secret: RAZORPAY_KEY_SECRET
+  });
+  console.log('✅ Razorpay payments ENABLED');
 } else {
-  console.log('⚠️  Stripe payments DISABLED - Running in test mode');
+  console.log('⚠️  Razorpay payments DISABLED - Running in test mode');
 }
 
 class PaymentService {
   constructor() {
-    this.currency = process.env.CURRENCY || 'inr';
+    this.currency = process.env.CURRENCY || 'INR';
     this.platformFeePercentage = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE) || 7;
-    this.gstPercentage = parseFloat(process.env.GST_PERCENTAGE) || 22;
-    this.useStripePayments = USE_STRIPE_PAYMENTS;
+    this.gstPercentage = parseFloat(process.env.GST_PERCENTAGE) || 18;
+    this.useRazorpayPayments = USE_RAZORPAY_PAYMENTS && razorpay !== null;
   }
 
   // Calculate payment breakdown
@@ -36,13 +41,13 @@ class PaymentService {
     };
   }
 
-  // Create Stripe Payment Intent
-  async createPaymentIntent(appointmentId, userId) {
-    // If Stripe is disabled, return test mode response
-    if (!this.useStripePayments) {
+  // Create Razorpay Order
+  async createOrder(appointmentId, userId) {
+    // If Razorpay is disabled, return test mode response
+    if (!this.useRazorpayPayments) {
       return {
         testMode: true,
-        message: 'Stripe disabled - running in test mode',
+        message: 'Razorpay disabled - running in test mode',
         appointmentId: appointmentId
       };
     }
@@ -50,7 +55,7 @@ class PaymentService {
     try {
       const appointment = await Appointment.findById(appointmentId)
         .populate('doctorId', 'name consultationFee')
-        .populate('userId', 'name email');
+        .populate('userId', 'name email phone');
 
       if (!appointment) {
         throw new Error('Appointment not found');
@@ -62,118 +67,124 @@ class PaymentService {
 
       const paymentBreakdown = this.calculatePaymentBreakdown(appointment.doctorId.consultationFee);
 
-      // Create Stripe customer if not exists
-      let customer;
-      const existingCustomers = await stripe.customers.list({
-        email: appointment.userId.email,
-        limit: 1
-      });
-
-      if (existingCustomers.data.length > 0) {
-        customer = existingCustomers.data[0];
-      } else {
-        customer = await stripe.customers.create({
-          email: appointment.userId.email,
-          name: appointment.userId.name,
-          metadata: {
-            userId: userId,
-            appointmentId: appointmentId
-          }
-        });
-      }
-
-      // Create Payment Intent
-      const paymentIntent = await stripe.paymentIntents.create({
-        amount: paymentBreakdown.total * 100, // Stripe expects amount in smallest currency unit
+      // Create Razorpay Order
+      const orderOptions = {
+        amount: paymentBreakdown.total * 100, // Razorpay expects amount in paise
         currency: this.currency,
-        customer: customer.id,
-        metadata: {
+        receipt: `apt_${appointmentId}`,
+        notes: {
           appointmentId: appointmentId,
           userId: userId,
           doctorId: appointment.doctorId._id.toString(),
+          doctorName: appointment.doctorId.name,
           consultationFee: paymentBreakdown.consultationFee.toString(),
           gst: paymentBreakdown.gst.toString(),
           platformFee: paymentBreakdown.platformFee.toString()
-        },
-        description: `Consultation with ${appointment.doctorId.name}`,
-        receipt_email: appointment.userId.email,
-        automatic_payment_methods: {
-          enabled: true,
-        },
-      });
+        }
+      };
 
-      // Update appointment with payment intent
-      appointment.paymentIntentId = paymentIntent.id;
+      const order = await razorpay.orders.create(orderOptions);
+
+      // Update appointment with order ID
+      appointment.razorpayOrderId = order.id;
       appointment.paymentStatus = 'pending';
       await appointment.save();
 
       return {
-        clientSecret: paymentIntent.client_secret,
-        paymentIntentId: paymentIntent.id,
+        orderId: order.id,
         amount: paymentBreakdown.total,
+        amountInPaise: order.amount,
+        currency: order.currency,
         breakdown: paymentBreakdown,
-        customer: {
-          id: customer.id,
-          email: customer.email
-        }
+        keyId: RAZORPAY_KEY_ID,
+        prefill: {
+          name: appointment.userId.name,
+          email: appointment.userId.email,
+          contact: appointment.userId.phone || ''
+        },
+        notes: order.notes
       };
 
     } catch (error) {
-      console.error('Error creating payment intent:', error);
+      console.error('Error creating Razorpay order:', error);
       throw error;
     }
   }
 
-  // Confirm payment and update appointment
-  async confirmPayment(paymentIntentId) {
-    // If Stripe is disabled, return test mode response
-    if (!this.useStripePayments) {
+  // Verify Razorpay Payment
+  async verifyPayment(razorpayOrderId, razorpayPaymentId, razorpaySignature) {
+    // If Razorpay is disabled, return test mode response
+    if (!this.useRazorpayPayments) {
       return {
-        success: false,
+        success: true,
         testMode: true,
-        message: 'Stripe disabled - no payment confirmation needed in test mode'
+        message: 'Razorpay disabled - payment verification skipped in test mode'
       };
     }
 
     try {
-      const paymentIntent = await stripe.paymentIntents.retrieve(paymentIntentId);
-      
-      if (paymentIntent.status === 'succeeded') {
-        const appointmentId = paymentIntent.metadata.appointmentId;
-        
-        const appointment = await Appointment.findById(appointmentId);
-        if (appointment) {
-          appointment.paymentStatus = 'completed';
-          appointment.status = 'confirmed';
-          appointment.paymentDetails = {
-            paymentIntentId: paymentIntentId,
-            amount: paymentIntent.amount / 100,
-            currency: paymentIntent.currency,
-            paymentMethod: paymentIntent.payment_method,
-            paidAt: new Date()
-          };
-          await appointment.save();
-        }
+      // Verify signature
+      const body = razorpayOrderId + '|' + razorpayPaymentId;
+      const expectedSignature = crypto
+        .createHmac('sha256', RAZORPAY_KEY_SECRET)
+        .update(body.toString())
+        .digest('hex');
 
-        return {
-          success: true,
-          appointment: appointment,
-          paymentDetails: paymentIntent
-        };
-      } else {
-        throw new Error(`Payment not successful. Status: ${paymentIntent.status}`);
+      const isAuthentic = expectedSignature === razorpaySignature;
+
+      if (!isAuthentic) {
+        throw new Error('Payment verification failed - Invalid signature');
       }
 
+      // Find appointment by order ID
+      const appointment = await Appointment.findOne({ razorpayOrderId: razorpayOrderId });
+      
+      if (!appointment) {
+        throw new Error('Appointment not found for this order');
+      }
+
+      // Fetch payment details from Razorpay
+      const payment = await razorpay.payments.fetch(razorpayPaymentId);
+
+      // Update appointment with payment details
+      appointment.paymentStatus = 'completed';
+      appointment.status = 'confirmed';
+      appointment.razorpayPaymentId = razorpayPaymentId;
+      appointment.paymentDetails = {
+        razorpayOrderId: razorpayOrderId,
+        razorpayPaymentId: razorpayPaymentId,
+        amount: payment.amount / 100,
+        currency: payment.currency,
+        method: payment.method,
+        bank: payment.bank,
+        wallet: payment.wallet,
+        vpa: payment.vpa,
+        paidAt: new Date()
+      };
+      await appointment.save();
+
+      return {
+        success: true,
+        verified: true,
+        appointment: appointment,
+        paymentDetails: {
+          orderId: razorpayOrderId,
+          paymentId: razorpayPaymentId,
+          amount: payment.amount / 100,
+          method: payment.method
+        }
+      };
+
     } catch (error) {
-      console.error('Error confirming payment:', error);
+      console.error('Error verifying payment:', error);
       throw error;
     }
   }
 
   // Process refund
   async processRefund(appointmentId, reason = 'Appointment cancelled') {
-    // If Stripe is disabled, just cancel the appointment
-    if (!this.useStripePayments) {
+    // If Razorpay is disabled, just cancel the appointment
+    if (!this.useRazorpayPayments) {
       const appointment = await Appointment.findById(appointmentId);
       if (appointment) {
         appointment.status = 'cancelled';
@@ -191,7 +202,7 @@ class PaymentService {
     try {
       const appointment = await Appointment.findById(appointmentId);
       
-      if (!appointment || !appointment.paymentIntentId) {
+      if (!appointment || !appointment.razorpayPaymentId) {
         throw new Error('No payment found for this appointment');
       }
 
@@ -199,11 +210,11 @@ class PaymentService {
         throw new Error('Cannot refund incomplete payment');
       }
 
-      // Create refund in Stripe
-      const refund = await stripe.refunds.create({
-        payment_intent: appointment.paymentIntentId,
-        reason: 'requested_by_customer',
-        metadata: {
+      // Create refund in Razorpay
+      const refund = await razorpay.payments.refund(appointment.razorpayPaymentId, {
+        amount: appointment.paymentDetails.amount * 100, // Amount in paise
+        speed: 'normal',
+        notes: {
           appointmentId: appointmentId,
           reason: reason
         }
@@ -216,6 +227,7 @@ class PaymentService {
         refundId: refund.id,
         amount: refund.amount / 100,
         reason: reason,
+        status: refund.status,
         refundedAt: new Date()
       };
       await appointment.save();
@@ -245,15 +257,15 @@ class PaymentService {
 
       return appointments.map(appointment => ({
         id: appointment._id,
-        doctor: appointment.doctorId.name,
-        specialization: appointment.doctorId.specialization,
+        doctor: appointment.doctorId?.name || 'Unknown',
+        specialization: appointment.doctorId?.specialization || 'General',
         clinic: appointment.clinicId?.name,
         date: appointment.date,
         time: appointment.time,
         amount: appointment.paymentDetails?.amount || 0,
         currency: appointment.paymentDetails?.currency || this.currency,
         status: appointment.paymentStatus,
-        paymentMethod: appointment.paymentDetails?.paymentMethod,
+        method: appointment.paymentDetails?.method,
         paidAt: appointment.paymentDetails?.paidAt,
         refundDetails: appointment.refundDetails
       }));
@@ -264,35 +276,42 @@ class PaymentService {
     }
   }
 
-  // Handle Stripe webhooks
+  // Handle Razorpay webhooks
   async handleWebhook(body, signature) {
-    // If Stripe is disabled, ignore webhooks
-    if (!this.useStripePayments) {
+    // If Razorpay is disabled, ignore webhooks
+    if (!this.useRazorpayPayments) {
       return { received: true, testMode: true, message: 'Webhooks disabled in test mode' };
     }
 
     try {
-      const event = stripe.webhooks.constructEvent(
-        body,
-        signature,
-        process.env.STRIPE_WEBHOOK_SECRET
-      );
+      // Verify webhook signature
+      const expectedSignature = crypto
+        .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET)
+        .update(JSON.stringify(body))
+        .digest('hex');
 
-      switch (event.type) {
-        case 'payment_intent.succeeded':
-          await this.handlePaymentSuccess(event.data.object);
+      if (expectedSignature !== signature) {
+        throw new Error('Invalid webhook signature');
+      }
+
+      const event = body.event;
+      const payload = body.payload;
+
+      switch (event) {
+        case 'payment.captured':
+          await this.handlePaymentCaptured(payload.payment.entity);
           break;
         
-        case 'payment_intent.payment_failed':
-          await this.handlePaymentFailure(event.data.object);
+        case 'payment.failed':
+          await this.handlePaymentFailed(payload.payment.entity);
           break;
         
-        case 'charge.dispute.created':
-          await this.handleDispute(event.data.object);
+        case 'refund.created':
+          await this.handleRefundCreated(payload.refund.entity);
           break;
         
         default:
-          console.log(`Unhandled event type: ${event.type}`);
+          console.log(`Unhandled Razorpay event: ${event}`);
       }
 
       return { received: true };
@@ -303,45 +322,57 @@ class PaymentService {
     }
   }
 
-  async handlePaymentSuccess(paymentIntent) {
-    const appointmentId = paymentIntent.metadata.appointmentId;
-    const appointment = await Appointment.findById(appointmentId);
+  async handlePaymentCaptured(payment) {
+    const orderId = payment.order_id;
+    const appointment = await Appointment.findOne({ razorpayOrderId: orderId });
     
     if (appointment && appointment.paymentStatus !== 'completed') {
       appointment.paymentStatus = 'completed';
       appointment.status = 'confirmed';
+      appointment.razorpayPaymentId = payment.id;
       appointment.paymentDetails = {
-        paymentIntentId: paymentIntent.id,
-        amount: paymentIntent.amount / 100,
-        currency: paymentIntent.currency,
-        paymentMethod: paymentIntent.payment_method,
+        razorpayOrderId: orderId,
+        razorpayPaymentId: payment.id,
+        amount: payment.amount / 100,
+        currency: payment.currency,
+        method: payment.method,
         paidAt: new Date()
       };
       await appointment.save();
       
-      // Here you could send confirmation email/SMS
-      console.log(`Payment confirmed for appointment ${appointmentId}`);
+      console.log(`Payment captured for appointment with order ${orderId}`);
     }
   }
 
-  async handlePaymentFailure(paymentIntent) {
-    const appointmentId = paymentIntent.metadata.appointmentId;
-    const appointment = await Appointment.findById(appointmentId);
+  async handlePaymentFailed(payment) {
+    const orderId = payment.order_id;
+    const appointment = await Appointment.findOne({ razorpayOrderId: orderId });
     
     if (appointment) {
       appointment.paymentStatus = 'failed';
       appointment.status = 'pending';
       await appointment.save();
       
-      // Here you could send failure notification
-      console.log(`Payment failed for appointment ${appointmentId}`);
+      console.log(`Payment failed for appointment with order ${orderId}`);
     }
   }
 
-  async handleDispute(charge) {
-    // Handle payment disputes/chargebacks
-    console.log(`Dispute created for charge ${charge.id}`);
-    // Implement dispute handling logic
+  async handleRefundCreated(refund) {
+    const paymentId = refund.payment_id;
+    const appointment = await Appointment.findOne({ razorpayPaymentId: paymentId });
+    
+    if (appointment) {
+      appointment.paymentStatus = 'refunded';
+      appointment.refundDetails = {
+        refundId: refund.id,
+        amount: refund.amount / 100,
+        status: refund.status,
+        refundedAt: new Date()
+      };
+      await appointment.save();
+      
+      console.log(`Refund created for payment ${paymentId}`);
+    }
   }
 }
 

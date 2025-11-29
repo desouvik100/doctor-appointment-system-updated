@@ -116,6 +116,7 @@ const LandingPage = ({ onNavigate = () => {} }) => {
           </div>
           <div className="landing-nav__links">
             <a href="#features" className="landing-nav__link">Features</a>
+            <a href="#about" className="landing-nav__link">About</a>
             <a href="#stats" className="landing-nav__link">Stats</a>
             <a href="#testimonials" className="landing-nav__link">Testimonials</a>
             <a href="#contact" className="landing-nav__link">Contact</a>
@@ -421,6 +422,103 @@ const LandingPage = ({ onNavigate = () => {} }) => {
         </div>
       </section>
 
+      {/* About Section */}
+      <section id="about" className="landing-about">
+        <div className="landing-about__container">
+          <div className="landing-about__header">
+            <h2>About HealthSync</h2>
+            <p>Revolutionizing healthcare access through technology</p>
+          </div>
+
+          <div className="landing-about__content">
+            <div className="landing-about__story">
+              <div className="landing-about__story-icon">🏥</div>
+              <h3>Our Story</h3>
+              <p>
+                HealthSync was founded with a simple yet powerful vision: to make quality healthcare 
+                accessible to everyone, anywhere, anytime. We believe that booking a doctor's appointment 
+                should be as easy as ordering food online.
+              </p>
+              <p>
+                Started in 2024, we've grown from a small startup to a trusted healthcare platform 
+                serving thousands of patients and hundreds of doctors across India. Our journey has 
+                been driven by the passion to bridge the gap between patients and healthcare providers.
+              </p>
+            </div>
+
+            <div className="landing-about__mission">
+              <div className="landing-about__card">
+                <div className="landing-about__card-icon">🎯</div>
+                <h4>Our Mission</h4>
+                <p>
+                  To democratize healthcare by providing a seamless platform that connects patients 
+                  with qualified doctors, whether through online video consultations or in-clinic visits.
+                </p>
+              </div>
+
+              <div className="landing-about__card">
+                <div className="landing-about__card-icon">👁️</div>
+                <h4>Our Vision</h4>
+                <p>
+                  To become India's most trusted healthcare appointment platform, making quality 
+                  healthcare accessible to every citizen regardless of their location.
+                </p>
+              </div>
+
+              <div className="landing-about__card">
+                <div className="landing-about__card-icon">💡</div>
+                <h4>Our Values</h4>
+                <p>
+                  Patient-first approach, transparency in healthcare, innovation in technology, 
+                  and commitment to data privacy and security.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <div className="landing-about__team">
+            <h3>Why Choose Us?</h3>
+            <div className="landing-about__features">
+              <div className="landing-about__feature">
+                <div className="landing-about__feature-icon">✅</div>
+                <h4>Verified Doctors</h4>
+                <p>All doctors on our platform are verified with valid medical licenses and credentials.</p>
+              </div>
+              <div className="landing-about__feature">
+                <div className="landing-about__feature-icon">🔒</div>
+                <h4>Secure & Private</h4>
+                <p>Your health data is encrypted and protected with industry-standard security measures.</p>
+              </div>
+              <div className="landing-about__feature">
+                <div className="landing-about__feature-icon">💰</div>
+                <h4>Transparent Pricing</h4>
+                <p>No hidden charges. See consultation fees upfront before booking your appointment.</p>
+              </div>
+              <div className="landing-about__feature">
+                <div className="landing-about__feature-icon">🎧</div>
+                <h4>24/7 Support</h4>
+                <p>Our dedicated support team is always ready to help you with any queries or issues.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="landing-about__contact">
+            <h3>Get in Touch</h3>
+            <p>Have questions about HealthSync? We'd love to hear from you!</p>
+            <div className="landing-about__contact-info">
+              <div className="landing-about__contact-item">
+                <i className="fas fa-envelope"></i>
+                <span>desouvik0000@gmail.com</span>
+              </div>
+              <div className="landing-about__contact-item">
+                <i className="fas fa-phone"></i>
+                <span>+91 7001268485</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* Testimonials Section */}
       <section id="testimonials" className="landing-testimonials">
         <div className="landing-testimonials__container">
@@ -470,7 +568,7 @@ const LandingPage = ({ onNavigate = () => {} }) => {
                 <div className="landing-contact__info-icon">📞</div>
                 <div>
                   <h4>Phone Number</h4>
-                  <p>+91 98765 43210<br />+91 87654 32109</p>
+                  <p>+91 7001268485</p>
                 </div>
               </div>
               
@@ -478,7 +576,7 @@ const LandingPage = ({ onNavigate = () => {} }) => {
                 <div className="landing-contact__info-icon">📧</div>
                 <div>
                   <h4>Email Address</h4>
-                  <p>support@healthsync.com<br />info@healthsync.com</p>
+                  <p>desouvik0000@gmail.com</p>
                 </div>
               </div>
               

@@ -3,7 +3,7 @@ import axios from "../api/config";
 import toast from 'react-hot-toast';
 import './ClinicDashboard.css';
 
-function ClinicDashboard({ receptionist }) {
+function ClinicDashboard({ receptionist, onLogout }) {
   const [appointments, setAppointments] = useState([]);
   const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -168,9 +168,15 @@ function ClinicDashboard({ receptionist }) {
                     {new Date().toLocaleDateString()}
                   </div>
                   <br />
-                  <small className="opacity-75">
+                  <small className="opacity-75 d-block mb-2">
                     {todayAppointments.length} appointments today
                   </small>
+                  {onLogout && (
+                    <button className="btn btn-light btn-sm" onClick={onLogout}>
+                      <i className="fas fa-sign-out-alt me-1"></i>
+                      Logout
+                    </button>
+                  )}
                 </div>
               </div>
             </div>

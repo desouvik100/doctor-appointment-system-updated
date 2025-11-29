@@ -29,7 +29,7 @@ const TabButton = ({ tab, activeTab, onClick, children }) => (
   </button>
 );
 
-function AdminDashboard() {
+function AdminDashboard({ admin, onLogout }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [stats, setStats] = useState({
     totalUsers: 0,
@@ -128,26 +128,115 @@ function AdminDashboard() {
 
   // CRUD Operations
   const handleDeleteUser = async (userId) => {
-    if (window.confirm("Are you sure you want to delete this user?")) {
+    if (window.confirm("Are you sure you want to delete this user? This action cannot be undone.")) {
       try {
-        await axios.delete(`/api/users/${userId}`);
-        fetchDashboardData();
+        const response = await axios.delete(`/api/users/${userId}`);
+        console.log('Delete user response:', response.data);
+        
+        // Immediately update local state to remove the user
+        setUsers(prevUsers => prevUsers.filter(user => user._id !== userId));
+        setStats(prev => ({ ...prev, totalUsers: prev.totalUsers - 1 }));
+        
         toast.success("User deleted successfully!");
       } catch (error) {
-        toast.error("Error deleting user");
+        console.error('Delete user error:', error);
+        toast.error(error.response?.data?.message || "Error deleting user");
       }
     }
   };
 
   const handleDeleteDoctor = async (doctorId) => {
-    if (window.confirm("Are you sure you want to delete this doctor?")) {
+    if (window.confirm("Are you sure you want to delete this doctor? This action cannot be undone.")) {
       try {
-        await axios.delete(`/api/doctors/${doctorId}`);
-        fetchDashboardData();
+        const response = await axios.delete(`/api/doctors/${doctorId}`);
+        console.log('Delete doctor response:', response.data);
+        
+        // Immediately update local state to remove the doctor
+        setDoctors(prevDoctors => prevDoctors.filter(doctor => doctor._id !== doctorId));
+        setStats(prev => ({ ...prev, totalDoctors: prev.totalDoctors - 1 }));
+        
         toast.success("Doctor deleted successfully!");
       } catch (error) {
-        toast.error("Error deleting doctor");
+        console.error('Delete doctor error:', error);
+        toast.error(error.response?.data?.message || "Error deleting doctor");
       }
+    }
+  };
+
+  // User CRUD Operations
+  const handleAddUser = () => {
+    setEditingUser(null);
+    setUserForm({
+      name: "", email: "", password: "", phone: "", role: "patient"
+    });
+    setShowUserModal(true);
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setUserForm({
+      name: user.name || "",
+      email: user.email || "",
+      password: "",
+      phone: user.phone || "",
+      role: user.role || "patient"
+    });
+    setShowUserModal(true);
+  };
+
+  const handleSaveUser = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingUser) {
+        await axios.put(`/api/users/${editingUser._id}`, userForm);
+        toast.success("User updated successfully!");
+      } else {
+        await axios.post("/api/users", userForm);
+        toast.success("User created successfully!");
+      }
+      setShowUserModal(false);
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error saving user");
+    }
+  };
+
+  // Doctor CRUD Operations
+  const handleAddDoctor = () => {
+    setEditingDoctor(null);
+    setDoctorForm({
+      name: "", email: "", phone: "", specialization: "", consultationFee: 500, clinicId: ""
+    });
+    setShowDoctorModal(true);
+  };
+
+  const handleEditDoctor = (doctor) => {
+    setEditingDoctor(doctor);
+    setDoctorForm({
+      name: doctor.name || "",
+      email: doctor.email || "",
+      phone: doctor.phone || "",
+      specialization: doctor.specialization || "",
+      consultationFee: doctor.consultationFee || 500,
+      clinicId: doctor.clinicId?._id || doctor.clinicId || ""
+    });
+    setShowDoctorModal(true);
+  };
+
+  const handleSaveDoctor = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingDoctor) {
+        await axios.put(`/api/doctors/${editingDoctor._id}`, doctorForm);
+        toast.success("Doctor updated successfully!");
+      } else {
+        await axios.post("/api/doctors", doctorForm);
+        toast.success("Doctor created successfully!");
+      }
+      setShowDoctorModal(false);
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error saving doctor");
     }
   };
 
@@ -222,13 +311,24 @@ function AdminDashboard() {
   };
 
   const handleDeleteClinic = async (clinicId) => {
-    if (window.confirm("Are you sure you want to delete this clinic? This will also deactivate all associated doctors.")) {
+    if (window.confirm("Are you sure you want to delete this clinic? This will also deactivate all associated doctors. This action cannot be undone.")) {
       try {
-        await axios.delete(`/api/clinics/${clinicId}`);
-        fetchDashboardData();
+        const response = await axios.delete(`/api/clinics/${clinicId}`);
+        console.log('Delete clinic response:', response.data);
+        
+        // Immediately update local state to remove the clinic
+        setClinics(prevClinics => prevClinics.filter(clinic => clinic._id !== clinicId));
+        setStats(prev => ({ ...prev, totalClinics: prev.totalClinics - 1 }));
+        
+        // Also refresh doctors as some may have been deactivated
+        const doctorsRes = await axios.get("/api/doctors");
+        setDoctors(doctorsRes.data);
+        setStats(prev => ({ ...prev, totalDoctors: doctorsRes.data.length }));
+        
         toast.success("Clinic deleted successfully!");
       } catch (error) {
-        toast.error("Error deleting clinic");
+        console.error('Delete clinic error:', error);
+        toast.error(error.response?.data?.message || "Error deleting clinic");
       }
     }
   };
@@ -307,9 +407,20 @@ function AdminDashboard() {
             </div>
             
             <div className="admin-navbar__actions">
+              {admin && (
+                <span className="admin-navbar__user">
+                  <i className="fas fa-user-shield"></i>
+                  {admin.name || 'Admin'}
+                </span>
+              )}
               <button className="btn btn-primary" onClick={fetchDashboardData}>
                 <i className="fas fa-sync-alt"></i> Refresh
               </button>
+              {onLogout && (
+                <button className="btn btn-outline-light" onClick={onLogout}>
+                  <i className="fas fa-sign-out-alt"></i> Logout
+                </button>
+              )}
             </div>
           </div>
         </nav>
@@ -368,7 +479,7 @@ function AdminDashboard() {
                   </div>
                   User Management
                 </h2>
-                <button className="btn btn-primary" onClick={() => setShowUserModal(true)}>
+                <button className="btn btn-primary" onClick={handleAddUser}>
                   <i className="fas fa-plus"></i> Add User
                 </button>
               </div>
@@ -393,12 +504,17 @@ function AdminDashboard() {
                         <td>{user.phone || 'N/A'}</td>
                         <td>
                           <div className="admin-actions">
-                            <button className="admin-action-btn admin-action-btn--edit">
+                            <button 
+                              className="admin-action-btn admin-action-btn--edit"
+                              onClick={() => handleEditUser(user)}
+                              title="Edit User"
+                            >
                               <i className="fas fa-edit"></i>
                             </button>
                             <button 
                               className="admin-action-btn admin-action-btn--delete"
                               onClick={() => handleDeleteUser(user._id)}
+                              title="Delete User"
                             >
                               <i className="fas fa-trash"></i>
                             </button>
@@ -421,7 +537,7 @@ function AdminDashboard() {
                   </div>
                   Doctor Management
                 </h2>
-                <button className="btn btn-primary" onClick={() => setShowDoctorModal(true)}>
+                <button className="btn btn-primary" onClick={handleAddDoctor}>
                   <i className="fas fa-plus"></i> Add Doctor
                 </button>
               </div>
@@ -446,12 +562,17 @@ function AdminDashboard() {
                         <td>₹{doctor.consultationFee}</td>
                         <td>
                           <div className="admin-actions">
-                            <button className="admin-action-btn admin-action-btn--edit">
+                            <button 
+                              className="admin-action-btn admin-action-btn--edit"
+                              onClick={() => handleEditDoctor(doctor)}
+                              title="Edit Doctor"
+                            >
                               <i className="fas fa-edit"></i>
                             </button>
                             <button 
                               className="admin-action-btn admin-action-btn--delete"
                               onClick={() => handleDeleteDoctor(doctor._id)}
+                              title="Delete Doctor"
                             >
                               <i className="fas fa-trash"></i>
                             </button>
@@ -838,6 +959,180 @@ function AdminDashboard() {
                 </button>
                 <button type="submit" className="btn btn-primary">
                   <i className="fas fa-save"></i> {editingClinic ? 'Update Clinic' : 'Create Clinic'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* User Modal */}
+      {showUserModal && (
+        <div className="modal-overlay" onClick={() => setShowUserModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><i className="fas fa-user"></i> {editingUser ? 'Edit User' : 'Add New User'}</h3>
+              <button className="modal-close" onClick={() => setShowUserModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <form onSubmit={handleSaveUser}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Name *</label>
+                  <input
+                    type="text"
+                    value={userForm.name}
+                    onChange={e => setUserForm({...userForm, name: e.target.value})}
+                    placeholder="Enter full name"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Email *</label>
+                  <input
+                    type="email"
+                    value={userForm.email}
+                    onChange={e => setUserForm({...userForm, email: e.target.value})}
+                    placeholder="Enter email address"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>{editingUser ? 'New Password (leave blank to keep current)' : 'Password *'}</label>
+                  <input
+                    type="password"
+                    value={userForm.password}
+                    onChange={e => setUserForm({...userForm, password: e.target.value})}
+                    placeholder="Enter password"
+                    required={!editingUser}
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Phone</label>
+                  <input
+                    type="tel"
+                    value={userForm.phone}
+                    onChange={e => setUserForm({...userForm, phone: e.target.value})}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Role</label>
+                  <select
+                    value={userForm.role}
+                    onChange={e => setUserForm({...userForm, role: e.target.value})}
+                  >
+                    <option value="patient">Patient</option>
+                    <option value="receptionist">Receptionist</option>
+                    <option value="admin">Admin</option>
+                  </select>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowUserModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  <i className="fas fa-save"></i> {editingUser ? 'Update User' : 'Create User'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
+
+      {/* Doctor Modal */}
+      {showDoctorModal && (
+        <div className="modal-overlay" onClick={() => setShowDoctorModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><i className="fas fa-user-md"></i> {editingDoctor ? 'Edit Doctor' : 'Add New Doctor'}</h3>
+              <button className="modal-close" onClick={() => setShowDoctorModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <form onSubmit={handleSaveDoctor}>
+              <div className="modal-body">
+                <div className="form-group">
+                  <label>Name *</label>
+                  <input
+                    type="text"
+                    value={doctorForm.name}
+                    onChange={e => setDoctorForm({...doctorForm, name: e.target.value})}
+                    placeholder="Enter doctor's name"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Email *</label>
+                  <input
+                    type="email"
+                    value={doctorForm.email}
+                    onChange={e => setDoctorForm({...doctorForm, email: e.target.value})}
+                    placeholder="Enter email address"
+                    required
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Phone</label>
+                  <input
+                    type="tel"
+                    value={doctorForm.phone}
+                    onChange={e => setDoctorForm({...doctorForm, phone: e.target.value})}
+                    placeholder="Enter phone number"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Specialization *</label>
+                  <select
+                    value={doctorForm.specialization}
+                    onChange={e => setDoctorForm({...doctorForm, specialization: e.target.value})}
+                    required
+                  >
+                    <option value="">Select Specialization</option>
+                    <option value="General Physician">General Physician</option>
+                    <option value="Cardiologist">Cardiologist</option>
+                    <option value="Dermatologist">Dermatologist</option>
+                    <option value="Orthopedic">Orthopedic</option>
+                    <option value="Pediatrician">Pediatrician</option>
+                    <option value="Neurologist">Neurologist</option>
+                    <option value="Psychiatrist">Psychiatrist</option>
+                    <option value="Gynecologist">Gynecologist</option>
+                    <option value="ENT Specialist">ENT Specialist</option>
+                    <option value="Ophthalmologist">Ophthalmologist</option>
+                    <option value="Dentist">Dentist</option>
+                  </select>
+                </div>
+                <div className="form-group">
+                  <label>Consultation Fee (₹)</label>
+                  <input
+                    type="number"
+                    value={doctorForm.consultationFee}
+                    onChange={e => setDoctorForm({...doctorForm, consultationFee: parseInt(e.target.value) || 0})}
+                    placeholder="Enter consultation fee"
+                    min="0"
+                  />
+                </div>
+                <div className="form-group">
+                  <label>Clinic</label>
+                  <select
+                    value={doctorForm.clinicId}
+                    onChange={e => setDoctorForm({...doctorForm, clinicId: e.target.value})}
+                  >
+                    <option value="">Select Clinic (Optional)</option>
+                    {clinics.map(clinic => (
+                      <option key={clinic._id} value={clinic._id}>{clinic.name}</option>
+                    ))}
+                  </select>
+                </div>
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowDoctorModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  <i className="fas fa-save"></i> {editingDoctor ? 'Update Doctor' : 'Create Doctor'}
                 </button>
               </div>
             </form>

@@ -1003,9 +1003,8 @@ function App() {
                   <div>
                     <h6 >Phone</h6>
                     <p >
-                      Sales: +1 (555) 123-4567<br />
-                      Support: +1 (555) 987-6543<br />
-                      Emergency: 911
+                      Support: +91 7001268485<br />
+                      Available: Mon-Sat, 9AM-6PM IST
                     </p>
                   </div>
                 </div>
@@ -1017,9 +1016,7 @@ function App() {
                   <div>
                     <h6 >Email</h6>
                     <p >
-                      General: info@healthsyncpro.com<br />
-                      Sales: sales@healthsyncpro.com<br />
-                      Support: support@healthsyncpro.com
+                      Support: desouvik0000@gmail.com
                     </p>
                   </div>
                 </div>
@@ -1187,10 +1184,10 @@ function App() {
                   seamless communication, and comprehensive health management solutions.
                 </p>
                 <div >
-                  <h6>Emergency Contact</h6>
+                  <h6>Contact Us</h6>
                   <p>
-                    <i ></i> Emergency: 911<br />
-                    <i ></i> Support: 1-800-HEALTHSYNC
+                    <i ></i> Phone: +91 7001268485<br />
+                    <i ></i> Email: desouvik0000@gmail.com
                   </p>
                 </div>
               </div>
@@ -1420,258 +1417,68 @@ function App() {
       )}
 
       {currentView === "auth" && (
-        <div >
-          <nav >
-            <div >
-              <span >
-                <i ></i>
-                HealthSync Pro
-              </span>
-              <div >
-                <button
-                  
-                  onClick={toggleDarkMode}
-                  title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode (Ctrl+D)`}
-                  aria-label={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
-                  style={{
-                    width: '45px',
-                    height: '45px',
-                    borderRadius: '50%',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    border: '2px solid rgba(255, 255, 255, 0.4)',
-                    color: '#ffffff',
-                    fontSize: '1.1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
-                  <i ></i>
-                </button>
-                <button
-                  
-                  onClick={() => setCurrentView("landing")}
-                >
-                  <i ></i>
-                  Back to Home
-                </button>
-              </div>
-            </div>
-          </nav>
+        <>
+          {loginType === "patient" && (
+            <Auth 
+              onLogin={(data) => handleLogin(data, 'patient')} 
+              onBack={() => setCurrentView("landing")}
+            />
+          )}
 
-          <div >
-            <div >
-              <div >
-                {loginType === "patient" && (
-                  <div >
-                    <div  style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', borderRadius: '20px 20px 0 0' }}>
-                      <div  style={{ width: '70px', height: '70px', background: 'rgba(255,255,255,0.2)' }}>
-                        <i  style={{ fontSize: '1.8rem' }}></i>
-                      </div>
-                      <h3 >Patient Portal</h3>
-                      <p >
-                        <i ></i>
-                        Smart scheduling & comprehensive health management
-                      </p>
-                    </div>
-                    <div >
-                      <Auth onLogin={(data) => handleLogin(data, 'patient')} />
-                    </div>
-                  </div>
-                )}
+          {loginType === "admin" && (
+            <AdminAuth 
+              onLogin={(data) => handleLogin(data, 'admin')}
+              onBack={() => setCurrentView('landing')}
+            />
+          )}
 
-                {loginType === "admin" && (
-                  <div >
-                    <div >
-                      <h3 >
-                        <i ></i>
-                        Admin Login
-                      </h3>
-                      <p >Advanced healthcare operations management</p>
-                    </div>
-                    <div >
-                      <AdminAuth 
-                        onLogin={(data) => handleLogin(data, 'admin')}
-                        onBack={() => setCurrentView('landing')}
-                      />
-                    </div>
-                  </div>
-                )}
-
-                {loginType === "receptionist" && (
-                  <div >
-                    <div >
-                      <h3 >
-                        <i ></i>
-                        Reception Login
-                      </h3>
-                      <p >Professional patient coordination platform</p>
-                    </div>
-                    <div >
-                      <ClinicAuth 
-                        onLogin={(data) => handleLogin(data, 'receptionist')}
-                        onBack={() => setCurrentView('landing')}
-                      />
-                    </div>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        </div>
+          {loginType === "receptionist" && (
+            <ClinicAuth 
+              onLogin={(data) => handleLogin(data, 'receptionist')}
+              onBack={() => setCurrentView('landing')}
+            />
+          )}
+        </>
       )}
 
       {currentView === "dashboard" && (
-        <div >
-          {/* Top Navbar - Only show for Admin and Receptionist modes */}
-          {(admin || receptionist) && !user && (
-            <nav >
-              <div >
-                <span >
-                  <i ></i>
-                  HealthSync Pro
-                </span>
-                <div >
-                  <button
-                    
-                    onClick={toggleDarkMode}
-                    title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode (Ctrl+D)`}
-                    aria-label={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
-                    style={{
-                      width: '45px',
-                      height: '45px',
-                      borderRadius: '50%',
-                      background: 'rgba(255, 255, 255, 0.2)',
-                      border: '2px solid rgba(255, 255, 255, 0.4)',
-                      color: '#ffffff',
-                      fontSize: '1.1rem',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center',
-                      transition: 'all 0.3s ease'
-                    }}
-                  >
-                    <i ></i>
-                  </button>
-                  <button
-                    
-                    onClick={handleLogoutAll}
-                  >
-                    <i ></i>
-                    Logout
-                  </button>
-                </div>
-              </div>
-            </nav>
-          )}
-
-          {/* USER MODE - Patient Dashboard (has its own header) */}
+        <>
+          {/* USER MODE - Patient Dashboard */}
           {user && !admin && !receptionist && (
-            <React.Suspense fallback={
+            <Suspense fallback={
               <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
                 <div className="spinner-border text-primary mb-3"></div>
                 <p className="text-muted">Loading Patient Dashboard...</p>
               </div>
             }>
               <PatientDashboard user={user} onLogout={handleLogoutAll} />
-            </React.Suspense>
+            </Suspense>
           )}
 
           {/* ADMIN MODE */}
           {admin && !user && !receptionist && (
-            <div  style={{ color: darkMode ? '#ffffff' : '#000000' }}>
-              <div >
-                <div >
-                  <div  style={{ 
-                    background: darkMode ? 'rgba(255, 255, 255, 0.08)' : '#ffffff',
-                    color: darkMode ? '#ffffff' : '#000000',
-                    border: `1px solid ${darkMode ? 'rgba(255, 255, 255, 0.15)' : '#dee2e6'}`
-                  }}>
-                    <div  style={{ color: darkMode ? '#ffffff' : '#000000' }}>
-                      <div >
-                        <div>
-                          <h5  style={{ color: darkMode ? '#ffffff' : '#000000' }}>
-                            <i ></i>
-                            Admin Dashboard
-                          </h5>
-                          <p  style={{ color: darkMode ? 'rgba(255, 255, 255, 0.7)' : '#6c757d' }}>
-                            <i ></i>
-                            {admin?.name || "Admin"}
-                            <span >
-                              <i ></i>
-                              ({admin?.email || ""})
-                            </span>
-                          </p>
-                        </div>
-                        <button onClick={handleLogoutAll} >
-                          <i ></i>
-                          Logout
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div style={{ color: darkMode ? '#ffffff' : '#000000' }}>
-                    <React.Suspense fallback={
-                      <div >
-                        <div ></div>
-                        <p  style={{ color: darkMode ? 'rgba(255, 255, 255, 0.7)' : '#6c757d' }}>
-                          Loading admin dashboard...
-                        </p>
-                      </div>
-                    }>
-                      <AdminDashboard />
-                    </React.Suspense>
-                  </div>
-                </div>
+            <Suspense fallback={
+              <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
+                <div className="spinner-border text-primary mb-3"></div>
+                <p className="text-muted">Loading Admin Dashboard...</p>
               </div>
-            </div>
+            }>
+              <AdminDashboard admin={admin} onLogout={handleLogoutAll} />
+            </Suspense>
           )}
 
           {/* RECEPTIONIST MODE */}
           {receptionist && !user && !admin && (
-            <div >
-              <div >
-                <div >
-                  <div >
-                    <div >
-                      <div >
-                        <div>
-                          <h5 >
-                            <i ></i>
-                            Clinic Reception
-                          </h5>
-                          <p >
-                            <i ></i>
-                            {receptionist?.name || "Receptionist"}
-                            <span >
-                              <i ></i>
-                              ({receptionist?.email || ""})
-                            </span>
-                          </p>
-                        </div>
-                        <button onClick={handleLogoutAll} >
-                          <i ></i>
-                          Logout
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <React.Suspense fallback={
-                    <div >
-                      <div ></div>
-                      <p >Loading clinic dashboard...</p>
-                    </div>
-                  }>
-                    <ClinicDashboard receptionist={receptionist} />
-                  </React.Suspense>
-                </div>
+            <Suspense fallback={
+              <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
+                <div className="spinner-border text-primary mb-3"></div>
+                <p className="text-muted">Loading Clinic Dashboard...</p>
               </div>
-            </div>
+            }>
+              <ClinicDashboard receptionist={receptionist} onLogout={handleLogoutAll} />
+            </Suspense>
           )}
-        </div>
+        </>
       )}
 
       {/* Floating Theme Toggle Button - Always Visible */}

@@ -104,8 +104,12 @@ const appointmentSchema = new mongoose.Schema(
       type: Number, // Duration in seconds
       default: 0
     },
-    // Stripe Payment Integration
-    paymentIntentId: {
+    // Razorpay Payment Integration
+    razorpayOrderId: {
+      type: String,
+      index: true
+    },
+    razorpayPaymentId: {
       type: String,
       index: true
     },
@@ -115,16 +119,22 @@ const appointmentSchema = new mongoose.Schema(
       default: "pending"
     },
     paymentDetails: {
-      paymentIntentId: String,
+      razorpayOrderId: String,
+      razorpayPaymentId: String,
       amount: Number,
       currency: String,
-      paymentMethod: String,
+      method: String,
+      bank: String,
+      wallet: String,
+      vpa: String,
+      testMode: Boolean,
       paidAt: Date
     },
     refundDetails: {
       refundId: String,
       amount: Number,
       reason: String,
+      status: String,
       refundedAt: Date
     },
     // Legacy payment structure (for backward compatibility)

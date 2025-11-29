@@ -7,6 +7,7 @@ const LocationSetupModal = ({ userId, onComplete, userName, onBackToHome }) => {
   const [loading, setLoading] = useState(false);
   const [showManualEntry, setShowManualEntry] = useState(false);
   const [detectedLocation, setDetectedLocation] = useState(null);
+  const [coordinates, setCoordinates] = useState(null);
   const [manualForm, setManualForm] = useState({
     address: '',
     city: '',
@@ -26,8 +27,14 @@ const LocationSetupModal = ({ userId, onComplete, userName, onBackToHome }) => {
       
       if (result.success) {
         setDetectedLocation(result.location);
+        setCoordinates(result.coordinates);
         setStep('detected');
-        toast.success('Location detected successfully!');
+        
+        // Show accuracy in toast
+        const accuracyMsg = result.coordinates?.accuracy 
+          ? ` (Accuracy: ${Math.round(result.coordinates.accuracy)}m)`
+          : '';
+        toast.success(`Location detected successfully!${accuracyMsg}`);
       } else {
         toast.error(result.error || 'Failed to detect location');
         setStep('initial');
@@ -191,6 +198,19 @@ const LocationSetupModal = ({ userId, onComplete, userName, onBackToHome }) => {
                   <i className="fas fa-globe"></i>
                   <span>{detectedLocation.country} {detectedLocation.pincode && `- ${detectedLocation.pincode}`}</span>
                 </div>
+                {coordinates && (
+                  <div className="detail-row coordinates">
+                    <i className="fas fa-crosshairs"></i>
+                    <span>
+                      GPS: {coordinates.latitude.toFixed(6)}, {coordinates.longitude.toFixed(6)}
+                      {coordinates.accuracy && (
+                        <span className="accuracy-badge">
+                          ±{Math.round(coordinates.accuracy)}m
+                        </span>
+                      )}
+                    </span>
+                  </div>
+                )}
               </div>
             </div>
 

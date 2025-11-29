@@ -1,6 +1,6 @@
 import axios from '../api/config';
 
-// Request location permission and get coordinates
+// Request high-accuracy location with multiple attempts
 export const requestLocationPermission = () => {
   return new Promise((resolve, reject) => {
     if (!navigator.geolocation) {
@@ -8,38 +8,108 @@ export const requestLocationPermission = () => {
       return;
     }
 
+    // High accuracy options for precise GPS location
+    const highAccuracyOptions = {
+      enableHighAccuracy: true, // Use GPS for most accurate location
+      timeout: 15000, // Wait up to 15 seconds
+      maximumAge: 0 // Don't use cached location
+    };
+
+    // Try to get high accuracy location first
     navigator.geolocation.getCurrentPosition(
       (position) => {
+        console.log('📍 Location accuracy:', position.coords.accuracy, 'meters');
         resolve({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
-          accuracy: position.coords.accuracy
+          accuracy: position.coords.accuracy,
+          altitude: position.coords.altitude,
+          altitudeAccuracy: position.coords.altitudeAccuracy,
+          heading: position.coords.heading,
+          speed: position.coords.speed
         });
       },
       (error) => {
-        let errorMessage = 'Unable to retrieve location';
-        switch (error.code) {
-          case error.PERMISSION_DENIED:
-            errorMessage = 'Location permission denied';
-            break;
-          case error.POSITION_UNAVAILABLE:
-            errorMessage = 'Location information unavailable';
-            break;
-          case error.TIMEOUT:
-            errorMessage = 'Location request timed out';
-            break;
-          default:
-            errorMessage = 'An unknown error occurred';
-        }
-        reject(new Error(errorMessage));
+        // If high accuracy fails, try with lower accuracy as fallback
+        console.warn('High accuracy location failed, trying fallback...');
+        
+        const fallbackOptions = {
+          enableHighAccuracy: false,
+          timeout: 10000,
+          maximumAge: 60000 // Allow 1 minute old cached location
+        };
+
+        navigator.geolocation.getCurrentPosition(
+          (position) => {
+            console.log('📍 Fallback location accuracy:', position.coords.accuracy, 'meters');
+            resolve({
+              latitude: position.coords.latitude,
+              longitude: position.coords.longitude,
+              accuracy: position.coords.accuracy,
+              altitude: position.coords.altitude,
+              altitudeAccuracy: position.coords.altitudeAccuracy,
+              heading: position.coords.heading,
+              speed: position.coords.speed
+            });
+          },
+          (fallbackError) => {
+            let errorMessage = 'Unable to retrieve location';
+            switch (fallbackError.code) {
+              case fallbackError.PERMISSION_DENIED:
+                errorMessage = 'Location permission denied. Please enable location access in your browser settings.';
+                break;
+              case fallbackError.POSITION_UNAVAILABLE:
+                errorMessage = 'Location information unavailable. Please check your GPS/location settings.';
+                break;
+              case fallbackError.TIMEOUT:
+                errorMessage = 'Location request timed out. Please try again.';
+                break;
+              default:
+                errorMessage = 'An unknown error occurred while getting location';
+            }
+            reject(new Error(errorMessage));
+          },
+          fallbackOptions
+        );
       },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
+      highAccuracyOptions
     );
   });
+};
+
+// Watch position for continuous updates (more accurate over time)
+export const watchLocationUpdates = (onUpdate, onError) => {
+  if (!navigator.geolocation) {
+    onError(new Error('Geolocation is not supported'));
+    return null;
+  }
+
+  const watchId = navigator.geolocation.watchPosition(
+    (position) => {
+      onUpdate({
+        latitude: position.coords.latitude,
+        longitude: position.coords.longitude,
+        accuracy: position.coords.accuracy
+      });
+    },
+    (error) => {
+      onError(error);
+    },
+    {
+      enableHighAccuracy: true,
+      timeout: 10000,
+      maximumAge: 0
+    }
+  );
+
+  return watchId;
+};
+
+// Stop watching location
+export const stopWatchingLocation = (watchId) => {
+  if (watchId && navigator.geolocation) {
+    navigator.geolocation.clearWatch(watchId);
+  }
 };
 
 // Get full address details from coordinates using reverse geocoding
@@ -127,8 +197,14 @@ export const checkLocationStatus = async (userId) => {
 // Complete flow: Request permission, get coordinates, reverse geocode, and save
 export const trackUserLocation = async (userId) => {
   try {
-    // Request location permission
+    // Request location permission with high accuracy
     const coords = await requestLocationPermission();
+    
+    console.log('📍 GPS Coordinates:', {
+      lat: coords.latitude,
+      lng: coords.longitude,
+      accuracy: coords.accuracy + ' meters'
+    });
     
     // Get full address details
     const addressData = await getAddressFromCoordinates(
@@ -149,8 +225,16 @@ export const trackUserLocation = async (userId) => {
     
     return {
       success: true,
-      location: result.location,
-      locationCaptured: result.locationCaptured
+      location: {
+        ...result.location,
+        accuracy: coords.accuracy // Include accuracy in response
+      },
+      locationCaptured: result.locationCaptured,
+      coordinates: {
+        latitude: coords.latitude,
+        longitude: coords.longitude,
+        accuracy: coords.accuracy
+      }
     };
   } catch (error) {
     return {

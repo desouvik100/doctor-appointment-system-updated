@@ -398,3 +398,33 @@
     font-size: 1.5rem;
   }
 }
+
+
+/* Coordinates display */
+.detail-row.coordinates {
+  background: #f0fdf4;
+  border-radius: 8px;
+  padding: 0.75rem !important;
+  margin-top: 0.5rem;
+}
+
+.detail-row.coordinates i {
+  color: #22c55e;
+}
+
+.detail-row.coordinates span {
+  font-family: 'Courier New', monospace;
+  font-size: 0.85rem;
+  color: #166534;
+}
+
+.accuracy-badge {
+  display: inline-block;
+  background: #22c55e;
+  color: white !important;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  margin-left: 8px;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+}
