@@ -51,7 +51,8 @@ router.post('/register', async (req, res) => {
         email: user.email,
         role: user.role,
         phone: user.phone,
-        profilePhoto: user.profilePhoto
+        profilePhoto: user.profilePhoto,
+        locationCaptured: false // New users haven't captured location yet
       }
     });
   } catch (error) {
@@ -97,7 +98,9 @@ router.post('/login', async (req, res) => {
         email: user.email,
         role: user.role,
         phone: user.phone,
-        profilePhoto: user.profilePhoto
+        profilePhoto: user.profilePhoto,
+        locationCaptured: user.locationCaptured || false,
+        loginLocation: user.loginLocation || null
       }
     });
   } catch (error) {

@@ -42,12 +42,12 @@ export const requestLocationPermission = () => {
   });
 };
 
-// Get city and country from coordinates using reverse geocoding
-export const getCityFromCoordinates = async (latitude, longitude) => {
+// Get full address details from coordinates using reverse geocoding
+export const getAddressFromCoordinates = async (latitude, longitude) => {
   try {
     // Using OpenStreetMap Nominatim API (free, no API key required)
     const response = await fetch(
-      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=10&addressdetails=1`,
+      `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
       {
         headers: {
           'User-Agent': 'HealthSync-App'
@@ -56,18 +56,36 @@ export const getCityFromCoordinates = async (latitude, longitude) => {
     );
     
     const data = await response.json();
+    const addr = data.address || {};
     
     return {
-      city: data.address?.city || data.address?.town || data.address?.village || 'Unknown',
-      country: data.address?.country || 'Unknown'
+      address: data.display_name || null,
+      city: addr.city || addr.town || addr.village || addr.suburb || addr.county || 'Unknown',
+      state: addr.state || addr.region || null,
+      country: addr.country || 'Unknown',
+      pincode: addr.postcode || null,
+      locality: addr.suburb || addr.neighbourhood || addr.locality || null
     };
   } catch (error) {
-    console.error('Error getting city from coordinates:', error);
+    console.error('Error getting address from coordinates:', error);
     return {
+      address: null,
       city: null,
-      country: null
+      state: null,
+      country: null,
+      pincode: null,
+      locality: null
     };
   }
+};
+
+// Legacy function for backward compatibility
+export const getCityFromCoordinates = async (latitude, longitude) => {
+  const result = await getAddressFromCoordinates(latitude, longitude);
+  return {
+    city: result.city,
+    country: result.country
+  };
 };
 
 // Update user location in database
@@ -95,29 +113,70 @@ export const getUserLocation = async (userId) => {
   }
 };
 
+// Check if user needs location setup
+export const checkLocationStatus = async (userId) => {
+  try {
+    const response = await axios.get(`/api/location/check-location-status/${userId}`);
+    return response.data;
+  } catch (error) {
+    console.error('Error checking location status:', error);
+    return { needsLocationSetup: true, locationCaptured: false };
+  }
+};
+
 // Complete flow: Request permission, get coordinates, reverse geocode, and save
 export const trackUserLocation = async (userId) => {
   try {
     // Request location permission
     const coords = await requestLocationPermission();
     
-    // Get city and country
-    const { city, country } = await getCityFromCoordinates(
+    // Get full address details
+    const addressData = await getAddressFromCoordinates(
       coords.latitude,
       coords.longitude
     );
     
-    // Update in database
+    // Update in database with full details
     const result = await updateUserLocation(userId, {
       latitude: coords.latitude,
       longitude: coords.longitude,
-      city,
-      country
+      address: addressData.address,
+      city: addressData.city,
+      state: addressData.state,
+      country: addressData.country,
+      pincode: addressData.pincode
     });
     
     return {
       success: true,
-      location: result.location
+      location: result.location,
+      locationCaptured: result.locationCaptured
+    };
+  } catch (error) {
+    return {
+      success: false,
+      error: error.message
+    };
+  }
+};
+
+// Save manual location entry
+export const saveManualLocation = async (userId, manualData) => {
+  try {
+    const result = await updateUserLocation(userId, {
+      latitude: manualData.latitude || 0,
+      longitude: manualData.longitude || 0,
+      address: manualData.address,
+      city: manualData.city,
+      state: manualData.state,
+      country: manualData.country,
+      pincode: manualData.pincode
+    });
+    
+    return {
+      success: true,
+      location: result.location,
+      locationCaptured: result.locationCaptured
     };
   } catch (error) {
     return {

@@ -1,86 +1,173 @@
 /* Location Permission Modal Styles */
-.location-modal-backdrop {
+.location-modal-overlay {
   position: fixed;
   inset: 0;
-  background: rgba(15, 23, 42, 0.6);
-  backdrop-filter: blur(4px);
-  z-index: 400;
+  background: rgba(15, 23, 42, 0.7);
+  backdrop-filter: blur(8px);
+  z-index: 10000;
   display: flex;
   align-items: center;
   justify-content: center;
   padding: 1rem;
 }
 
-.location-modal {
+.location-modal-content {
   background: #fff;
-  border-radius: 16px;
-  box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1);
+  border-radius: 20px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
   width: 100%;
-  max-width: 400px;
+  max-width: 420px;
   padding: 2rem;
   text-align: center;
+  animation: modalFadeIn 0.3s ease-out;
+}
+
+@keyframes modalFadeIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95) translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1) translateY(0);
+  }
 }
 
 .location-modal-icon {
-  width: 64px;
-  height: 64px;
+  width: 80px;
+  height: 80px;
   margin: 0 auto 1.5rem;
-  background: #dbeafe;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
+  animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
 }
 
 .location-modal-icon i {
-  font-size: 1.75rem;
-  color: #2563eb;
+  font-size: 2rem;
+  color: white;
 }
 
-.location-modal h3 {
-  font-size: 1.25rem;
-  font-weight: 600;
-  margin-bottom: 0.5rem;
+.location-modal-title {
+  font-size: 1.5rem;
+  font-weight: 700;
+  margin-bottom: 0.75rem;
   color: #1e293b;
 }
 
-.location-modal p {
+.location-modal-desc {
   color: #64748b;
   margin-bottom: 1.5rem;
-  font-size: 0.875rem;
+  font-size: 0.95rem;
+  line-height: 1.5;
+}
+
+.location-modal-benefits {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 1rem;
+  margin-bottom: 1.5rem;
+  text-align: left;
+}
+
+.location-benefit-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 0.6rem 0;
+  color: #475569;
+  font-size: 0.9rem;
+}
+
+.location-benefit-item:not(:last-child) {
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.location-benefit-item i {
+  width: 28px;
+  height: 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.75rem;
 }
 
 .location-modal-actions {
   display: flex;
+  flex-direction: column;
   gap: 0.75rem;
 }
 
-.location-modal-actions button {
-  flex: 1;
-  padding: 0.75rem 1rem;
-  border-radius: 8px;
+.location-btn-allow {
+  width: 100%;
+  padding: 1rem;
+  border-radius: 12px;
   font-weight: 600;
-  font-size: 0.875rem;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+.location-btn-allow:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(102, 126, 234, 0.4);
+}
+
+.location-btn-allow:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.location-btn-deny {
+  width: 100%;
+  padding: 0.875rem;
+  border-radius: 12px;
+  font-weight: 600;
+  font-size: 0.95rem;
   cursor: pointer;
   transition: all 0.2s ease;
-}
-
-.location-allow-btn {
-  background: #2563eb;
-  color: #fff;
-  border: none;
-}
-
-.location-allow-btn:hover {
-  background: #1d4ed8;
-}
-
-.location-deny-btn {
-  background: #fff;
+  background: #f1f5f9;
   color: #64748b;
   border: 2px solid #e2e8f0;
 }
 
-.location-deny-btn:hover {
-  background: #f1f5f9;
+.location-btn-deny:hover:not(:disabled) {
+  background: #e2e8f0;
+  color: #475569;
+}
+
+.location-btn-deny:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.location-modal-privacy {
+  margin-top: 1rem;
+  font-size: 0.8rem;
+  color: #94a3b8;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.location-modal-privacy i {
+  color: #22c55e;
 }

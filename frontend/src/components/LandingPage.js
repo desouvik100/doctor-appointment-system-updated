@@ -100,7 +100,17 @@ const LandingPage = ({ onNavigate = () => {} }) => {
         <div className="landing-nav__container">
           <div className="landing-nav__logo">
             <div className="landing-nav__logo-icon heartbeat-logo">
-              <i className="fas fa-heart" style={{ color: '#ef4444' }}></i>
+              <svg viewBox="0 0 50 40" className="bpm-logo">
+                <path 
+                  d="M5 20 L12 20 L16 8 L22 32 L28 14 L32 20 L45 20" 
+                  stroke="#ef4444" 
+                  strokeWidth="3" 
+                  fill="none" 
+                  strokeLinecap="round" 
+                  strokeLinejoin="round"
+                  className="bpm-line"
+                />
+              </svg>
             </div>
             <span>HealthSync</span>
           </div>
@@ -221,39 +231,103 @@ const LandingPage = ({ onNavigate = () => {} }) => {
           </div>
 
           <div className="landing-hero__visual">
-            <div className="landing-hero__phone">
-              <div className="landing-hero__phone-screen">
-                <div className="landing-hero__phone-content">
-                  <div className="landing-hero__phone-header">
-                    <span>📅 My Appointments</span>
-                  </div>
-                  <div className="landing-hero__phone-card" style={{marginBottom: '10px'}}>
-                    <div className="landing-hero__phone-card-header">
-                      <span>🎥 Online Consultation</span>
-                      <span className="landing-hero__phone-badge">✅ Confirmed</span>
-                    </div>
-                    <div className="landing-hero__phone-card-body">
-                      <p><strong>Dr. John Smith</strong></p>
-                      <p>Cardiologist • 📅 Today, 14:30</p>
-                    </div>
-                    <button className="landing-hero__phone-btn">
-                      🎥 Join Video Call
-                    </button>
-                  </div>
-                  <div className="landing-hero__phone-card">
-                    <div className="landing-hero__phone-card-header">
-                      <span>🏥 In-Clinic Visit</span>
-                      <span className="landing-hero__phone-badge" style={{background: '#3b82f6'}}>📍 Scheduled</span>
-                    </div>
-                    <div className="landing-hero__phone-card-body">
-                      <p><strong>Dr. Sarah Wilson</strong></p>
-                      <p>Dermatologist • 📅 Tomorrow, 10:00</p>
-                    </div>
-                    <button className="landing-hero__phone-btn" style={{background: '#3b82f6'}}>
-                      📍 Get Directions
-                    </button>
-                  </div>
-                </div>
+            {/* Healthcare Illustration */}
+            <div className="landing-hero__illustration">
+              <svg viewBox="0 0 500 500" className="hero-illustration">
+                {/* Background Circle */}
+                <circle cx="250" cy="250" r="200" fill="url(#bgGradient)" className="hero-illustration__bg"/>
+                
+                {/* Hospital Building */}
+                <g className="hero-illustration__hospital">
+                  <rect x="150" y="200" width="200" height="180" rx="10" fill="#ffffff" stroke="#667eea" strokeWidth="3"/>
+                  <rect x="220" y="320" width="60" height="60" fill="#667eea"/>
+                  <rect x="170" y="230" width="40" height="50" rx="5" fill="#e0e7ff"/>
+                  <rect x="230" y="230" width="40" height="50" rx="5" fill="#e0e7ff"/>
+                  <rect x="290" y="230" width="40" height="50" rx="5" fill="#e0e7ff"/>
+                  <rect x="170" y="290" width="40" height="50" rx="5" fill="#e0e7ff"/>
+                  <rect x="290" y="290" width="40" height="50" rx="5" fill="#e0e7ff"/>
+                  {/* Cross */}
+                  <rect x="235" y="180" width="30" height="10" fill="#ef4444"/>
+                  <rect x="245" y="170" width="10" height="30" fill="#ef4444"/>
+                </g>
+                
+                {/* Doctor Character */}
+                <g className="hero-illustration__doctor">
+                  <circle cx="100" cy="280" r="30" fill="#fcd5ce"/>
+                  <path d="M70 310 Q100 350 130 310" fill="#ffffff" stroke="#667eea" strokeWidth="2"/>
+                  <rect x="75" y="310" width="50" height="70" rx="10" fill="#667eea"/>
+                  <circle cx="90" cy="275" r="4" fill="#1a202c"/>
+                  <circle cx="110" cy="275" r="4" fill="#1a202c"/>
+                  <path d="M95 290 Q100 295 105 290" stroke="#1a202c" strokeWidth="2" fill="none"/>
+                  <rect x="85" y="250" width="30" height="15" rx="5" fill="#667eea"/>
+                  {/* Stethoscope */}
+                  <circle cx="120" cy="340" r="8" fill="#10b981" stroke="#059669" strokeWidth="2"/>
+                </g>
+                
+                {/* Patient Character */}
+                <g className="hero-illustration__patient">
+                  <circle cx="400" cy="300" r="25" fill="#fcd5ce"/>
+                  <rect x="375" y="325" width="50" height="55" rx="10" fill="#3b82f6"/>
+                  <circle cx="390" cy="295" r="3" fill="#1a202c"/>
+                  <circle cx="410" cy="295" r="3" fill="#1a202c"/>
+                  <path d="M395 308 Q400 312 405 308" stroke="#1a202c" strokeWidth="2" fill="none"/>
+                </g>
+                
+                {/* Video Call Icon */}
+                <g className="hero-illustration__video">
+                  <rect x="360" y="180" width="80" height="60" rx="10" fill="#10b981"/>
+                  <polygon points="420,195 450,210 420,225" fill="#ffffff"/>
+                  <circle cx="440" cy="180" r="12" fill="#ef4444"/>
+                  <text x="440" y="184" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="bold">LIVE</text>
+                </g>
+                
+                {/* Calendar Icon */}
+                <g className="hero-illustration__calendar">
+                  <rect x="60" y="150" width="60" height="50" rx="8" fill="#f59e0b"/>
+                  <rect x="60" y="150" width="60" height="15" rx="8" fill="#d97706"/>
+                  <text x="90" y="185" textAnchor="middle" fill="#ffffff" fontSize="16" fontWeight="bold">15</text>
+                  <circle cx="75" y="145" r="4" fill="#1a202c"/>
+                  <circle cx="105" y="145" r="4" fill="#1a202c"/>
+                </g>
+                
+                {/* Heart Rate */}
+                <g className="hero-illustration__heartrate">
+                  <path d="M50 420 L80 420 L90 400 L100 440 L110 410 L120 420 L150 420" 
+                        stroke="#ef4444" strokeWidth="3" fill="none" className="heartrate-line"/>
+                </g>
+                
+                {/* Pills */}
+                <g className="hero-illustration__pills">
+                  <ellipse cx="420" cy="400" rx="20" ry="10" fill="#ec4899"/>
+                  <ellipse cx="450" cy="410" rx="15" ry="8" fill="#8b5cf6"/>
+                </g>
+                
+                {/* Floating Plus Signs */}
+                <text x="80" y="120" fill="#667eea" fontSize="24" opacity="0.5" className="float-element">+</text>
+                <text x="420" cy="130" fill="#10b981" fontSize="20" opacity="0.5" className="float-element">+</text>
+                <text x="350" y="420" fill="#f59e0b" fontSize="18" opacity="0.5" className="float-element">+</text>
+                
+                {/* Gradients */}
+                <defs>
+                  <linearGradient id="bgGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                    <stop offset="0%" stopColor="#e0e7ff" stopOpacity="0.5"/>
+                    <stop offset="100%" stopColor="#c7d2fe" stopOpacity="0.3"/>
+                  </linearGradient>
+                </defs>
+              </svg>
+              
+              {/* Floating Badges */}
+              <div className="hero-illustration__badge hero-illustration__badge--1">
+                <i className="fas fa-check-circle"></i>
+                <span>Verified Doctors</span>
+              </div>
+              <div className="hero-illustration__badge hero-illustration__badge--2">
+                <i className="fas fa-shield-alt"></i>
+                <span>Secure & Private</span>
+              </div>
+              <div className="hero-illustration__badge hero-illustration__badge--3">
+                <i className="fas fa-clock"></i>
+                <span>24/7 Available</span>
               </div>
             </div>
           </div>
@@ -370,6 +444,94 @@ const LandingPage = ({ onNavigate = () => {} }) => {
                 </div>
               </div>
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Contact Section */}
+      <section id="contact" className="landing-contact">
+        <div className="landing-contact__container">
+          <div className="landing-contact__header">
+            <h2>Get In Touch</h2>
+            <p>Have questions? We'd love to hear from you. Send us a message and we'll respond as soon as possible.</p>
+          </div>
+          
+          <div className="landing-contact__grid">
+            <div className="landing-contact__info">
+              <div className="landing-contact__info-item">
+                <div className="landing-contact__info-icon">📍</div>
+                <div>
+                  <h4>Our Location</h4>
+                  <p>123 Healthcare Avenue, Medical District<br />Kolkata, West Bengal 700001</p>
+                </div>
+              </div>
+              
+              <div className="landing-contact__info-item">
+                <div className="landing-contact__info-icon">📞</div>
+                <div>
+                  <h4>Phone Number</h4>
+                  <p>+91 98765 43210<br />+91 87654 32109</p>
+                </div>
+              </div>
+              
+              <div className="landing-contact__info-item">
+                <div className="landing-contact__info-icon">📧</div>
+                <div>
+                  <h4>Email Address</h4>
+                  <p>support@healthsync.com<br />info@healthsync.com</p>
+                </div>
+              </div>
+              
+              <div className="landing-contact__info-item">
+                <div className="landing-contact__info-icon">⏰</div>
+                <div>
+                  <h4>Working Hours</h4>
+                  <p>Mon - Sat: 9:00 AM - 8:00 PM<br />Sunday: 10:00 AM - 6:00 PM</p>
+                </div>
+              </div>
+            </div>
+            
+            <div className="landing-contact__form-wrapper">
+              <form className="landing-contact__form" onSubmit={(e) => e.preventDefault()}>
+                <div className="landing-contact__form-row">
+                  <div className="landing-contact__form-group">
+                    <label>Your Name</label>
+                    <input type="text" placeholder="John Doe" />
+                  </div>
+                  <div className="landing-contact__form-group">
+                    <label>Email Address</label>
+                    <input type="email" placeholder="john@example.com" />
+                  </div>
+                </div>
+                
+                <div className="landing-contact__form-group">
+                  <label>Phone Number</label>
+                  <input type="tel" placeholder="+91 98765 43210" />
+                </div>
+                
+                <div className="landing-contact__form-group">
+                  <label>Subject</label>
+                  <select>
+                    <option value="">Select a topic</option>
+                    <option value="general">General Inquiry</option>
+                    <option value="support">Technical Support</option>
+                    <option value="booking">Booking Help</option>
+                    <option value="feedback">Feedback</option>
+                    <option value="partnership">Partnership</option>
+                  </select>
+                </div>
+                
+                <div className="landing-contact__form-group">
+                  <label>Your Message</label>
+                  <textarea rows="4" placeholder="How can we help you?"></textarea>
+                </div>
+                
+                <button type="submit" className="landing-contact__submit">
+                  <i className="fas fa-paper-plane"></i>
+                  Send Message
+                </button>
+              </form>
+            </div>
           </div>
         </div>
       </section>

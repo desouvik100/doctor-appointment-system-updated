@@ -13,54 +13,54 @@ const LocationPermissionModal = ({ show, onAllow, onDeny, onClose }) => {
   };
 
   return (
-    <div >
-      <div >
-        <div >
-          <i ></i>
+    <div className="location-modal-overlay">
+      <div className="location-modal-content">
+        <div className="location-modal-icon">
+          <i className="fas fa-map-marker-alt"></i>
         </div>
         
-        <h3 >Enable Location Services</h3>
+        <h3 className="location-modal-title">Enable Location Services</h3>
         
-        <p >
+        <p className="location-modal-desc">
           HealthSync would like to access your location to help you find nearby doctors and clinics.
         </p>
         
-        <div >
-          <div >
-            <i ></i>
+        <div className="location-modal-benefits">
+          <div className="location-benefit-item">
+            <i className="fas fa-hospital"></i>
             <span>Find doctors near you</span>
           </div>
-          <div >
-            <i ></i>
+          <div className="location-benefit-item">
+            <i className="fas fa-route"></i>
             <span>Get accurate distance estimates</span>
           </div>
-          <div >
-            <i ></i>
+          <div className="location-benefit-item">
+            <i className="fas fa-star"></i>
             <span>Personalized recommendations</span>
           </div>
         </div>
         
-        <div >
+        <div className="location-modal-actions">
           <button 
-             
+            className="location-btn-allow"
             onClick={handleAllow}
             disabled={loading}
           >
             {loading ? (
               <>
-                <i ></i>
+                <i className="fas fa-spinner fa-spin"></i>
                 Getting Location...
               </>
             ) : (
               <>
-                <i ></i>
+                <i className="fas fa-check"></i>
                 Allow Location
               </>
             )}
           </button>
           
           <button 
-             
+            className="location-btn-deny"
             onClick={onDeny}
             disabled={loading}
           >
@@ -68,8 +68,8 @@ const LocationPermissionModal = ({ show, onAllow, onDeny, onClose }) => {
           </button>
         </div>
         
-        <p >
-          <i ></i>
+        <p className="location-modal-privacy">
+          <i className="fas fa-shield-alt"></i>
           Your location data is secure and private
         </p>
       </div>
@@ -78,4 +78,3 @@ const LocationPermissionModal = ({ show, onAllow, onDeny, onClose }) => {
 };
 
 export default LocationPermissionModal;
-

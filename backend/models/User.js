@@ -64,7 +64,15 @@ const userSchema = new mongoose.Schema(
         type: Number,
         default: null
       },
+      address: {
+        type: String,
+        default: null
+      },
       city: {
+        type: String,
+        default: null
+      },
+      state: {
         type: String,
         default: null
       },
@@ -72,10 +80,18 @@ const userSchema = new mongoose.Schema(
         type: String,
         default: null
       },
+      pincode: {
+        type: String,
+        default: null
+      },
       lastUpdated: {
         type: Date,
         default: null
       }
+    },
+    locationCaptured: {
+      type: Boolean,
+      default: false
     }
   },
   { timestamps: true }

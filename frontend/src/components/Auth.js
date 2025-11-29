@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import axios from "../api/config";
-import LocationPermissionModal from './LocationPermissionModal';
-import { trackUserLocation } from '../utils/locationService';
+import LocationSetupModal from './LocationSetupModal';
+import { checkLocationStatus } from '../utils/locationService';
 import toast from 'react-hot-toast';
 import './Auth.css';
 import './PatientAuth.css';
@@ -34,8 +34,9 @@ function Auth({ onLogin, onBack }) {
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [resetEmail, setResetEmail] = useState("");
   const [resetLoading, setResetLoading] = useState(false);
-  const [showLocationModal, setShowLocationModal] = useState(false);
+  const [showLocationSetup, setShowLocationSetup] = useState(false);
   const [loggedInUserId, setLoggedInUserId] = useState(null);
+  const [pendingUser, setPendingUser] = useState(null);
 
   // Email validation
   const validateEmail = (email) => {
@@ -192,8 +193,20 @@ function Auth({ onLogin, onBack }) {
         });
         
         if (registerResponse.data.user) {
-          localStorage.setItem("user", JSON.stringify(registerResponse.data.user));
-          onLogin(registerResponse.data.user);
+          const user = registerResponse.data.user;
+          
+          // Store token if provided
+          if (registerResponse.data.token) {
+            localStorage.setItem("token", registerResponse.data.token);
+            axios.defaults.headers.common['Authorization'] = `Bearer ${registerResponse.data.token}`;
+          }
+          
+          // New registration - always show location setup
+          setLoggedInUserId(user.id || user._id);
+          setPendingUser(user);
+          localStorage.setItem("user", JSON.stringify(user));
+          setShowOtpVerification(false);
+          setShowLocationSetup(true);
         }
       } else {
         setError(otpResponse.data.message || "Invalid OTP");
@@ -205,31 +218,18 @@ function Auth({ onLogin, onBack }) {
     }
   };
 
-  // Handle location permission allow
-  const handleLocationAllow = async () => {
-    try {
-      const result = await trackUserLocation(loggedInUserId);
-      
-      if (result.success) {
-        toast.success(`Location saved: ${result.location.city || 'Unknown'}`);
-      } else {
-        toast.error(result.error || 'Failed to get location');
-      }
-    } catch (error) {
-      console.error('Location error:', error);
-      // Don't show error toast for location - it's optional
-    } finally {
-      setShowLocationModal(false);
+  // Handle location setup complete (mandatory for first-time users)
+  const handleLocationComplete = (location) => {
+    setShowLocationSetup(false);
+    
+    // Now complete the login with the pending user
+    if (pendingUser) {
+      // Update user in localStorage with location captured flag
+      const updatedUser = { ...pendingUser, locationCaptured: true };
+      localStorage.setItem("user", JSON.stringify(updatedUser));
+      onLogin(updatedUser);
+      setPendingUser(null);
     }
-  };
-
-  // Handle location permission deny
-  const handleLocationDeny = () => {
-    setShowLocationModal(false);
-    toast('You can enable location later in settings', {
-      icon: 'ℹ️',
-      duration: 3000
-    });
   };
 
   const handleSubmit = async (e) => {
@@ -251,17 +251,23 @@ function Auth({ onLogin, onBack }) {
           axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         }
         
-        localStorage.setItem("user", JSON.stringify(response.data.user));
-        setLoggedInUserId(response.data.user.id);
+        const user = response.data.user;
+        setLoggedInUserId(user.id);
         setLoading(false);
         
-        // Call onLogin immediately to navigate to dashboard
-        onLogin(response.data.user);
+        // Check if user needs location setup (first-time login)
+        const locationStatus = await checkLocationStatus(user.id);
         
-        // Show location modal after navigation (optional)
-        setTimeout(() => {
-          setShowLocationModal(true);
-        }, 500);
+        if (locationStatus.needsLocationSetup) {
+          // Store user temporarily and show location setup modal
+          setPendingUser(user);
+          localStorage.setItem("user", JSON.stringify(user));
+          setShowLocationSetup(true);
+        } else {
+          // Location already captured, proceed to dashboard
+          localStorage.setItem("user", JSON.stringify(user));
+          onLogin(user);
+        }
       } catch (error) {
         setError(error.response?.data?.message || "Invalid credentials");
         setLoading(false);
@@ -1082,11 +1088,21 @@ function Auth({ onLogin, onBack }) {
         </div>
       )}
 
-      {/* Location Permission Modal */}
-      {showLocationModal && (
-        <LocationPermissionModal
-          onAllow={handleLocationAllow}
-          onDeny={handleLocationDeny}
+      {/* Mandatory Location Setup Modal for First-Time Users */}
+      {showLocationSetup && (
+        <LocationSetupModal
+          userId={loggedInUserId}
+          userName={pendingUser?.name}
+          onComplete={handleLocationComplete}
+          onBackToHome={() => {
+            // Clear pending user and go back to home
+            setShowLocationSetup(false);
+            setPendingUser(null);
+            setLoggedInUserId(null);
+            localStorage.removeItem("user");
+            localStorage.removeItem("token");
+            if (onBack) onBack();
+          }}
         />
       )}
     </div>
