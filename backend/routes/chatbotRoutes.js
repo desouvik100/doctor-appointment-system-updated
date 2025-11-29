@@ -26,8 +26,9 @@ const initializeAI = () => {
     try {
       const { GoogleGenerativeAI } = require('@google/generative-ai');
       const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
-      gemini = genAI.getGenerativeModel({ model: 'gemini-pro' });
-      console.log('✅ Gemini initialized successfully');
+      // Use gemini-2.0-flash (latest available model)
+      gemini = genAI.getGenerativeModel({ model: 'gemini-2.0-flash' });
+      console.log('✅ Gemini 2.0 Flash initialized successfully');
     } catch (error) {
       console.error('❌ Failed to initialize Gemini:', error.message);
     }
@@ -104,10 +105,12 @@ router.post('/chat', async (req, res) => {
     if (provider === 'openai' && openai) {
       aiResponse = await handleOpenAIRequest(message, conversationHistory, contextualPrompt);
     } else if (provider === 'gemini' && gemini) {
+      console.log('🤖 Calling Gemini API with message:', message.substring(0, 50) + '...');
       aiResponse = await handleGeminiRequest(message, conversationHistory, contextualPrompt);
+      console.log('✅ Gemini response received:', aiResponse.substring(0, 100) + '...');
     } else {
-      // Fallback response
-      aiResponse = getFallbackResponse(message);
+      console.error('❌ No AI provider available! Provider:', provider, 'Gemini:', !!gemini, 'OpenAI:', !!openai);
+      throw new Error('No AI provider configured. Please check your API keys.');
     }
 
     res.json({
@@ -168,20 +171,37 @@ async function handleOpenAIRequest(message, conversationHistory, systemPrompt) {
 
 // Gemini handler
 async function handleGeminiRequest(message, conversationHistory, systemPrompt) {
-  // Build conversation context for Gemini
-  let conversationText = systemPrompt + '\n\n';
-  
-  // Add recent conversation history
-  conversationHistory.slice(-6).forEach(msg => {
-    const role = msg.role === 'assistant' ? 'Assistant' : 'User';
-    conversationText += `${role}: ${msg.content}\n`;
-  });
-  
-  conversationText += `User: ${message}\nAssistant:`;
+  try {
+    // Build conversation context for Gemini
+    let conversationText = systemPrompt + '\n\n';
+    
+    // Add recent conversation history
+    conversationHistory.slice(-6).forEach(msg => {
+      const role = msg.role === 'assistant' ? 'Assistant' : 'User';
+      conversationText += `${role}: ${msg.content}\n`;
+    });
+    
+    conversationText += `User: ${message}\nAssistant:`;
 
-  const result = await gemini.generateContent(conversationText);
-  const response = await result.response;
-  return response.text();
+    console.log('📤 Sending to Gemini...');
+    const result = await gemini.generateContent(conversationText);
+    console.log('📥 Gemini raw result received');
+    
+    const response = result.response;
+    const text = response.text();
+    
+    if (!text || text.trim() === '') {
+      console.error('❌ Empty response from Gemini');
+      throw new Error('Empty response from Gemini');
+    }
+    
+    console.log('✅ Gemini text extracted successfully');
+    return text;
+  } catch (error) {
+    console.error('❌ Gemini API Error:', error.message);
+    console.error('Full error:', error);
+    throw error;
+  }
 }
 
 // Fallback responses for when AI is unavailable

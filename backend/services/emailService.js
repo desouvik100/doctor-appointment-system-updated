@@ -4,57 +4,158 @@ const nodemailer = require('nodemailer');
 // In-memory OTP store: { "email|type" : { otp, expiresAt } }
 const otpStore = new Map();
 
+// Track email service status
+let emailServiceReady = false;
+let useResend = false;
+
 // Generate a 6-digit OTP
 function generateOTP() {
   return Math.floor(100000 + Math.random() * 900000).toString();
 }
 
-// ---- Nodemailer transporter ----
-const transporter = nodemailer.createTransport({
-  service: 'gmail',
-  auth: {
-    user: process.env.EMAIL_USER,
-    pass: process.env.EMAIL_PASS
-  }
-});
+// ---- Nodemailer transporter with better config for cloud platforms ----
+let transporter = null;
 
-// Test transporter connection
-transporter.verify((error, success) => {
-  if (error) {
-    console.error('❌ Email transporter error:', error.message);
-  } else {
-    console.log('✅ Email transporter ready');
-  }
-});
-
-// Small helper to send any email via Nodemailer
-async function sendEmail({ to, subject, html, text }) {
+function initializeTransporter() {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
-    console.warn('⚠️  Email credentials not configured. Email will not be sent.');
+    console.warn('⚠️ Email credentials not configured');
+    return null;
+  }
+
+  return nodemailer.createTransport({
+    service: 'gmail',
+    auth: {
+      user: process.env.EMAIL_USER,
+      pass: process.env.EMAIL_PASS
+    },
+    // Better settings for cloud platforms
+    pool: true,
+    maxConnections: 1,
+    rateDelta: 20000,
+    rateLimit: 5,
+    // Timeout settings
+    connectionTimeout: 10000,
+    greetingTimeout: 10000,
+    socketTimeout: 15000
+  });
+}
+
+// Initialize transporter
+transporter = initializeTransporter();
+
+// Test transporter connection (non-blocking)
+if (transporter) {
+  transporter.verify()
+    .then(() => {
+      console.log('✅ Email transporter ready');
+      emailServiceReady = true;
+    })
+    .catch((error) => {
+      console.warn('⚠️ Gmail SMTP unavailable:', error.message);
+      console.log('📧 Will use Resend API as fallback if configured');
+      emailServiceReady = false;
+      
+      // Check if Resend is available
+      if (process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.includes('your_')) {
+        useResend = true;
+        console.log('✅ Resend API configured as email fallback');
+      }
+    });
+} else {
+  console.warn('⚠️ Email transporter not initialized');
+}
+
+// Send email via Resend API
+async function sendViaResend({ to, subject, html, text }) {
+  if (!process.env.RESEND_API_KEY || process.env.RESEND_API_KEY.includes('your_')) {
+    throw new Error('Resend API not configured');
+  }
+
+  const { Resend } = require('resend');
+  const resend = new Resend(process.env.RESEND_API_KEY);
+
+  const fromEmail = process.env.RESEND_FROM_EMAIL || 'HealthSync <onboarding@resend.dev>';
+
+  const { data, error } = await resend.emails.send({
+    from: fromEmail,
+    to: [to],
+    subject: subject,
+    html: html,
+    text: text
+  });
+
+  if (error) {
+    throw new Error(error.message);
+  }
+
+  return { success: true, messageId: data.id, provider: 'resend' };
+}
+
+// Small helper to send any email via Nodemailer or Resend
+async function sendEmail({ to, subject, html, text }) {
+  // Check if any email service is configured
+  const hasGmail = process.env.EMAIL_USER && process.env.EMAIL_PASS;
+  const hasResend = process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.includes('your_');
+
+  if (!hasGmail && !hasResend) {
+    console.warn('⚠️ No email service configured. Email will not be sent.');
     console.log('📧 Email would have been sent to:', to);
     console.log('📧 Subject:', subject);
     return { success: true, message: 'Email service not configured (development mode)' };
   }
 
-  try {
-    const mailOptions = {
-      from: process.env.EMAIL_USER,
-      to,
-      subject,
-      html,
-      text
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Email sent successfully');
-    console.log('📧 Message ID:', info.messageId);
-    console.log('📧 To:', to);
-    console.log('📧 Subject:', subject);
-    return { success: true, messageId: info.messageId };
-  } catch (err) {
-    console.error('❌ Email sending error:', err.message);
-    throw err;
+  // Try Resend first if Gmail is not working
+  if (useResend || !emailServiceReady) {
+    if (hasResend) {
+      try {
+        const result = await sendViaResend({ to, subject, html, text });
+        console.log('✅ Email sent via Resend');
+        console.log('📧 To:', to);
+        return result;
+      } catch (resendError) {
+        console.error('❌ Resend error:', resendError.message);
+        // Fall through to try Gmail
+      }
+    }
   }
+
+  // Try Gmail/Nodemailer
+  if (hasGmail && transporter) {
+    try {
+      const mailOptions = {
+        from: process.env.EMAIL_USER,
+        to,
+        subject,
+        html,
+        text
+      };
+
+      const info = await transporter.sendMail(mailOptions);
+      console.log('✅ Email sent via Gmail');
+      console.log('📧 Message ID:', info.messageId);
+      console.log('📧 To:', to);
+      return { success: true, messageId: info.messageId, provider: 'gmail' };
+    } catch (gmailError) {
+      console.error('❌ Gmail error:', gmailError.message);
+      
+      // Try Resend as last resort
+      if (hasResend) {
+        try {
+          const result = await sendViaResend({ to, subject, html, text });
+          console.log('✅ Email sent via Resend (fallback)');
+          return result;
+        } catch (resendError) {
+          console.error('❌ Resend fallback also failed:', resendError.message);
+        }
+      }
+      
+      throw gmailError;
+    }
+  }
+
+  // If we get here, no email was sent
+  console.warn('⚠️ Could not send email - no working email service');
+  return { success: false, message: 'No email service available' };
 }
 
 // ---- PUBLIC: send OTP ----

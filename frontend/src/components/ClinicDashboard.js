@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/config";
 import toast from 'react-hot-toast';
+import './ClinicDashboard.css';
 
 function ClinicDashboard({ receptionist }) {
   const [appointments, setAppointments] = useState([]);

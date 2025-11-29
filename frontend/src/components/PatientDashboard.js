@@ -2,6 +2,8 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
 import BookingModal from './BookingModal';
+import AIAssistant from './AIAssistant';
+import './PatientDashboard.css';
 
 const PatientDashboard = ({ user, onLogout }) => {
   const [currentUser] = useState(user);
@@ -112,126 +114,32 @@ const PatientDashboard = ({ user, onLogout }) => {
       .slice(0, 2);
   };
 
-  const headerStyles = {
-    card: { background: '#ffffff', border: '1px solid #e6e8ee', borderRadius: 16, padding: '16px 20px', boxShadow: '0 1px 3px rgba(15,23,42,0.06)' },
-    content: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', gap: '16px', flexWrap: 'wrap' },
-    userInfo: { display: 'flex', alignItems: 'center', gap: '16px' },
-    avatar: { width: 56, height: 56, borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', background: '#5b4bff', color: '#ffffff', fontWeight: 700 },
-    details: { display: 'flex', flexDirection: 'column' },
-    title: { fontSize: 20, fontWeight: 700, margin: 0, color: '#0f172a' },
-    email: { display: 'flex', alignItems: 'center', gap: 8, color: '#64748b', fontSize: 14, margin: 0 },
-    status: { display: 'inline-flex', alignItems: 'center', gap: 8, marginTop: 8, color: '#10b981', fontWeight: 600 },
-    statusDot: { width: 8, height: 8, borderRadius: '50%', background: '#10b981' },
-    logout: { border: '1px solid #e5e7eb', background: '#ffffff', color: '#dc2626', padding: '8px 12px', borderRadius: 8, fontWeight: 600 }
-  };
-
   return (
     <div className="patient-dashboard">
-      {/* Professional Navbar - Inline Styles */}
-      <nav style={{
-        background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-        boxShadow: '0 4px 20px rgba(102, 126, 234, 0.15)',
-        position: 'sticky',
-        top: 0,
-        zIndex: 100,
-        borderBottom: '1px solid rgba(255, 255, 255, 0.1)',
-      }}>
-        <div style={{
-          maxWidth: '1400px',
-          margin: '0 auto',
-          padding: '16px 40px',
-          display: 'flex',
-          justifyContent: 'space-between',
-          alignItems: 'center',
-          width: '100%',
-        }}>
-          {/* Brand */}
-          <div style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '12px',
-            color: 'white',
-            fontWeight: 700,
-            fontSize: '1.25rem',
-          }}>
-            <div style={{
-              width: '40px',
-              height: '40px',
-              background: 'rgba(255, 255, 255, 0.2)',
-              borderRadius: '10px',
-              display: 'flex',
-              alignItems: 'center',
-              justifyContent: 'center',
-              fontSize: '20px',
-              border: '2px solid rgba(255, 255, 255, 0.3)',
-            }}>
-              <i className="fas fa-heartbeat"></i>
-            </div>
-            <span style={{
-              background: 'linear-gradient(135deg, #ffffff 0%, #f0f4f8 100%)',
-              WebkitBackgroundClip: 'text',
-              WebkitTextFillColor: 'transparent',
-              backgroundClip: 'text',
-            }}>HealthSync Pro</span>
-          </div>
-
-          {/* Logout Button */}
-          <button onClick={onLogout} style={{
-            display: 'flex',
-            alignItems: 'center',
-            gap: '8px',
-            padding: '10px 20px',
-            background: 'rgba(255, 255, 255, 0.15)',
-            border: '2px solid rgba(255, 255, 255, 0.3)',
-            color: 'white',
-            borderRadius: '10px',
-            fontSize: '0.9rem',
-            fontWeight: 600,
-            cursor: 'pointer',
-            transition: 'all 0.3s ease',
-            whiteSpace: 'nowrap',
-            backdropFilter: 'blur(10px)',
-          }}
-          onMouseEnter={(e) => {
-            e.target.style.background = 'rgba(255, 255, 255, 0.25)';
-            e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)';
-            e.target.style.transform = 'translateY(-2px)';
-          }}
-          onMouseLeave={(e) => {
-            e.target.style.background = 'rgba(255, 255, 255, 0.15)';
-            e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
-            e.target.style.transform = 'translateY(0)';
-          }}>
-            <i className="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
-          </button>
-        </div>
-      </nav>
-
       <div className="patient-dashboard__container">
         
         {/* Welcome Card */}
-        <div className="patient-dashboard__header-card" style={headerStyles.card}>
-          <div className="patient-dashboard__header-content" style={headerStyles.content}>
-            <div className="patient-dashboard__user-info" style={headerStyles.userInfo}>
-              <div className="patient-dashboard__avatar" style={headerStyles.avatar}>
+        <div className="patient-dashboard__header-card">
+          <div className="patient-dashboard__header-content">
+            <div className="patient-dashboard__user-info">
+              <div className="patient-dashboard__avatar">
                 {getUserInitials()}
               </div>
-              <div className="patient-dashboard__user-details" style={headerStyles.details}>
-                <h1 className="patient-dashboard__welcome-title" style={headerStyles.title}>
+              <div className="patient-dashboard__user-details">
+                <h1 className="patient-dashboard__welcome-title">
                   Welcome back, {currentUser.name}!
                 </h1>
-                <p className="patient-dashboard__user-email" style={headerStyles.email}>
+                <p className="patient-dashboard__user-email">
                   <i className="fas fa-envelope"></i>
                   {currentUser.email}
                 </p>
-                <div className="patient-dashboard__status" style={headerStyles.status}>
-                  <span className="patient-dashboard__status-dot" style={headerStyles.statusDot}></span>
+                <div className="patient-dashboard__status">
+                  <span className="patient-dashboard__status-dot"></span>
                   Online
                 </div>
               </div>
             </div>
-            <button className="patient-dashboard__logout-btn" style={headerStyles.logout} onClick={onLogout}>
+            <button className="patient-dashboard__logout-btn" onClick={onLogout}>
               <i className="fas fa-sign-out-alt"></i>
               Logout
             </button>
@@ -625,26 +533,8 @@ const PatientDashboard = ({ user, onLogout }) => {
 
         {/* AI Assistant Tab Content */}
         {activeTab === 'ai-assistant' && (
-          <div className="patient-dashboard__doctors-section">
-            <div className="patient-dashboard__section-header">
-              <h2 className="patient-dashboard__section-title">
-                <div className="patient-dashboard__section-icon">
-                  <i className="fas fa-robot"></i>
-                </div>
-                AI Health Assistant
-              </h2>
-            </div>
-            <div className="patient-dashboard__empty-state">
-              <div className="patient-dashboard__empty-icon">
-                <i className="fas fa-robot"></i>
-              </div>
-              <h3 className="patient-dashboard__empty-title">
-                AI Assistant Coming Soon
-              </h3>
-              <p className="patient-dashboard__empty-text">
-                Get personalized health advice from our AI assistant
-              </p>
-            </div>
+          <div className="patient-dashboard__ai-section">
+            <AIAssistant user={currentUser} />
           </div>
         )}
 

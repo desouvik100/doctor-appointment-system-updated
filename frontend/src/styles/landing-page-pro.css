@@ -47,6 +47,9 @@
   gap: 12px;
   font-size: 24px;
   font-weight: 700;
+}
+
+.landing-nav__logo > span {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   -webkit-background-clip: text;
   background-clip: text;
@@ -55,6 +58,40 @@
 
 .landing-nav__logo-icon {
   font-size: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+/* Red Heart Blinking Animation */
+.landing-nav__logo-icon.heartbeat-logo {
+  animation: heartbeat 1.5s ease-in-out infinite;
+}
+
+.landing-nav__logo-icon.heartbeat-logo i,
+.landing-nav__logo-icon.heartbeat-logo .fa-heart {
+  color: #ef4444 !important;
+  -webkit-text-fill-color: #ef4444 !important;
+  font-size: 28px;
+  filter: drop-shadow(0 0 8px rgba(239, 68, 68, 0.6));
+}
+
+@keyframes heartbeat {
+  0%, 100% {
+    transform: scale(1);
+  }
+  15% {
+    transform: scale(1.2);
+  }
+  30% {
+    transform: scale(1);
+  }
+  45% {
+    transform: scale(1.15);
+  }
+  60% {
+    transform: scale(1);
+  }
 }
 
 .landing-nav__links {

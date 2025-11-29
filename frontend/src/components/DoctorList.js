@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "../api/config";
 import BookAppointment from "./BookAppointment";
 import DoctorRecommendationBadge from "./DoctorRecommendationBadge";
+import './DoctorList.css';
 
 function DoctorList({ user }) {
   const [doctors, setDoctors] = useState([]);

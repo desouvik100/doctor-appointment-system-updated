@@ -1,266 +1,153 @@
-/* frontend/src/components/SmartTimePicker.css */
-/* Professional Healthcare Design */
+/* ============================================
+   Smart Time Picker Styles
+   ============================================ */
 
 .smart-time-picker {
-  margin: 20px 0;
-  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: #fff;
+  border-radius: 16px;
+  padding: 20px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
 }
 
-.time-picker-label {
-  display: block;
-  font-weight: 600;
-  color: #1f2937;
-  margin-bottom: 10px;
-  font-size: 14px;
-}
-
-.time-input-wrapper {
-  position: relative;
+.smart-time-picker__header {
   display: flex;
+  justify-content: space-between;
   align-items: center;
+  margin-bottom: 16px;
+}
+
+.smart-time-picker__title {
+  font-size: 1rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.smart-time-picker__date {
+  font-size: 0.9rem;
+  color: #64748b;
+}
+
+/* Period Tabs */
+.smart-time-picker__periods {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.smart-time-picker__period {
+  flex: 1;
+  padding: 10px 16px;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.smart-time-picker__period:hover {
+  background: #e2e8f0;
+}
+
+.smart-time-picker__period--active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+}
+
+/* Time Slots Grid */
+.smart-time-picker__slots {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
   gap: 10px;
 }
 
-.time-input {
-  flex: 1;
-  padding: 12px 16px;
-  font-size: 16px;
-  border: 2px solid #e5e7eb;
-  border-radius: 8px;
-  transition: all 0.3s ease;
+.smart-time-picker__slot {
+  padding: 12px 8px;
+  background: #f8fafc;
+  border: 2px solid transparent;
+  border-radius: 10px;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
 }
 
-.time-input:focus {
-  outline: none;
+.smart-time-picker__slot:hover:not(.smart-time-picker__slot--disabled) {
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  background: #f1f5f9;
 }
 
-.time-input.available {
-  border-color: #10b981;
-  background-color: #f0fdf4;
+.smart-time-picker__slot--selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #fff;
+  border-color: transparent;
 }
 
-.time-input.unavailable {
-  border-color: #ef4444;
-  background-color: #fef2f2;
+.smart-time-picker__slot--disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+  text-decoration: line-through;
 }
 
-.checking-spinner {
-  position: absolute;
-  right: 120px;
-  color: #667eea;
-  font-size: 18px;
+.smart-time-picker__slot--busy {
+  background: #fee2e2;
+  color: #dc2626;
 }
 
-.availability-badge {
+/* Availability Indicator */
+.smart-time-picker__availability {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 16px;
+  padding-top: 16px;
+  border-top: 1px solid #f1f5f9;
+}
+
+.smart-time-picker__legend {
   display: flex;
   align-items: center;
   gap: 6px;
-  padding: 8px 16px;
-  border-radius: 20px;
-  font-size: 13px;
-  font-weight: 600;
-  white-space: nowrap;
+  font-size: 0.8rem;
+  color: #64748b;
 }
 
-.availability-badge.available {
-  background-color: #d1fae5;
-  color: #065f46;
-}
-
-.availability-badge.unavailable {
-  background-color: #fee2e2;
-  color: #991b1b;
-}
-
-.availability-badge i {
-  font-size: 14px;
-}
-
-/* Quick Slots Section */
-.quick-slots-section {
-  background: #f9fafb;
-  border-radius: 8px;
-  padding: 15px;
-}
-
-.quick-slots-header {
-  font-size: 13px;
-  font-weight: 600;
-  color: #4b5563;
-  margin-bottom: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.quick-slots-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(90px, 1fr));
-  gap: 8px;
-}
-
-.quick-slot-btn {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  padding: 10px 8px;
-  border: 2px solid #e5e7eb;
-  border-radius: 6px;
-  background: white;
-  cursor: pointer;
-  transition: all 0.2s ease;
-  font-size: 13px;
-}
-
-.quick-slot-btn:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
-}
-
-.quick-slot-btn.available {
-  border-color: #d1d5db;
-}
-
-.quick-slot-btn.available:hover:not(:disabled) {
-  border-color: #667eea;
-  background-color: #f0f4ff;
-}
-
-.quick-slot-btn.booked {
-  background-color: #fef2f2;
-  border-color: #fecaca;
-  cursor: not-allowed;
-  opacity: 0.6;
-}
-
-.quick-slot-btn.selected {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
-  color: white;
-}
-
-.quick-slot-btn.selected .slot-status i {
-  color: white;
-}
-
-.slot-time {
-  font-weight: 600;
-  margin-bottom: 4px;
-}
-
-.slot-status {
-  font-size: 12px;
-}
-
-.slot-status i {
-  font-size: 14px;
-}
-
-.quick-slot-btn.available .slot-status i {
-  color: #10b981;
-}
-
-.quick-slot-btn.booked .slot-status i {
-  color: #ef4444;
-}
-
-/* Legend */
-.time-picker-legend {
-  display: flex;
-  gap: 20px;
-  flex-wrap: wrap;
-}
-
-.legend-item {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.legend-dot {
+.smart-time-picker__legend-dot {
   width: 12px;
   height: 12px;
-  border-radius: 50%;
-  border: 2px solid;
-}
-
-.legend-dot.available {
-  background-color: #d1fae5;
-  border-color: #10b981;
-}
-
-.legend-dot.booked {
-  background-color: #fee2e2;
-  border-color: #ef4444;
-}
-
-.legend-dot.selected {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
-}
-
-/* Info */
-.time-picker-info {
-  display: flex;
-  align-items: flex-start;
-  gap: 8px;
-  padding: 12px;
-  background-color: #eff6ff;
-  border-left: 3px solid #3b82f6;
   border-radius: 4px;
-  font-size: 13px;
-  color: #1e40af;
 }
 
-.time-picker-info i {
-  margin-top: 2px;
-  flex-shrink: 0;
+.smart-time-picker__legend-dot--available {
+  background: #d1fae5;
+  border: 1px solid #10b981;
+}
+
+.smart-time-picker__legend-dot--busy {
+  background: #fee2e2;
+  border: 1px solid #dc2626;
+}
+
+.smart-time-picker__legend-dot--selected {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
 }
 
 /* Responsive */
-@media (max-width: 768px) {
-  .quick-slots-grid {
-    grid-template-columns: repeat(auto-fill, minmax(70px, 1fr));
-    gap: 6px;
+@media (max-width: 576px) {
+  .smart-time-picker__slots {
+    grid-template-columns: repeat(3, 1fr);
   }
-
-  .quick-slot-btn {
-    padding: 8px 6px;
-    font-size: 12px;
+  
+  .smart-time-picker__periods {
+    flex-wrap: wrap;
   }
-
-  .time-input-wrapper {
-    flex-direction: column;
-    align-items: stretch;
+  
+  .smart-time-picker__period {
+    flex: none;
+    width: calc(50% - 4px);
   }
-
-  .availability-badge {
-    justify-content: center;
-  }
-
-  .checking-spinner {
-    right: 16px;
-    top: 50%;
-    transform: translateY(-50%);
-  }
-}
-
-/* Alert styling */
-.alert {
-  padding: 12px 16px;
-  border-radius: 6px;
-  font-size: 14px;
-  display: flex;
-  align-items: center;
-}
-
-.alert-warning {
-  background-color: #fffbeb;
-  border: 1px solid #fbbf24;
-  color: #92400e;
 }

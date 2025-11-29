@@ -208,10 +208,59 @@ router.post('/', async (req, res) => {
       console.log(`✅ Token generated for appointment ${appointment._id}: ${tokenResult.token}`);
     }
     
-    // Schedule Google Meet link generation for online consultations
+    // Generate Google Meet link IMMEDIATELY for online consultations
     if (appointment.consultationType === 'online') {
-      scheduleGoogleMeetGeneration(appointment);
-      console.log(`✅ Scheduled Google Meet generation for appointment ${appointment._id}`);
+      try {
+        const { generateGoogleMeetLink } = require('../services/googleMeetService');
+        const { sendAppointmentEmail } = require('../services/emailService');
+        
+        console.log(`🔄 Generating Meet link immediately for appointment ${appointment._id}...`);
+        
+        // Generate the meet link
+        const meetResult = await generateGoogleMeetLink({
+          ...appointment.toObject(),
+          userId: user,
+          doctorId: doctor
+        });
+        
+        if (meetResult.success) {
+          appointment.googleMeetLink = meetResult.meetLink;
+          appointment.googleEventId = meetResult.eventId;
+          appointment.meetLinkGenerated = true;
+          appointment.meetLinkGeneratedAt = new Date();
+          appointment.meetingLink = meetResult.meetLink;
+          await appointment.save();
+          
+          console.log(`✅ Meet link generated: ${meetResult.meetLink} (Provider: ${meetResult.provider})`);
+          
+          // Send email to patient immediately
+          try {
+            const populatedForEmail = await Appointment.findById(appointment._id)
+              .populate('userId', 'name email')
+              .populate('doctorId', 'name email specialization')
+              .populate('clinicId', 'name address');
+            
+            await sendAppointmentEmail(populatedForEmail, 'patient');
+            appointment.meetLinkSentToPatient = true;
+            console.log(`✅ Email sent to patient: ${user.email}`);
+            
+            // Send email to doctor
+            if (doctor.email) {
+              await sendAppointmentEmail(populatedForEmail, 'doctor');
+              appointment.meetLinkSentToDoctor = true;
+              console.log(`✅ Email sent to doctor: ${doctor.email}`);
+            }
+            
+            await appointment.save();
+          } catch (emailError) {
+            console.error('❌ Error sending appointment emails:', emailError.message);
+          }
+        }
+      } catch (meetError) {
+        console.error('❌ Error generating meet link:', meetError.message);
+        // Still schedule for later as backup
+        scheduleGoogleMeetGeneration(appointment);
+      }
     }
     
     const populatedAppointment = await Appointment.findById(appointment._id)
@@ -284,7 +333,10 @@ router.delete('/:id', async (req, res) => {
 // Generate meeting link and join code for online consultation
 router.post('/:id/generate-meeting', async (req, res) => {
   try {
-    const appointment = await Appointment.findById(req.params.id);
+    const appointment = await Appointment.findById(req.params.id)
+      .populate('userId', 'name email')
+      .populate('doctorId', 'name email specialization')
+      .populate('clinicId', 'name address');
     
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
@@ -299,18 +351,63 @@ router.post('/:id/generate-meeting', async (req, res) => {
       appointment.generateJoinCode();
     }
 
-    // Generate meeting link (you can integrate with Zoom, Google Meet, etc.)
-    // For now, using a simple internal meeting room
-    const meetingLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/consultation/${appointment._id}`;
-    appointment.meetingLink = meetingLink;
-
-    await appointment.save();
-
-    res.json({
-      meetingLink: appointment.meetingLink,
-      joinCode: appointment.joinCode,
-      appointmentId: appointment._id
-    });
+    // Generate Google Meet link
+    const { generateGoogleMeetLink } = require('../services/googleMeetService');
+    const { sendAppointmentEmail } = require('../services/emailService');
+    
+    console.log(`🔄 Generating Meet link for appointment ${appointment._id}...`);
+    
+    const meetResult = await generateGoogleMeetLink(appointment);
+    
+    if (meetResult.success) {
+      appointment.googleMeetLink = meetResult.meetLink;
+      appointment.googleEventId = meetResult.eventId;
+      appointment.meetLinkGenerated = true;
+      appointment.meetLinkGeneratedAt = new Date();
+      appointment.meetingLink = meetResult.meetLink;
+      
+      await appointment.save();
+      
+      console.log(`✅ Meet link generated: ${meetResult.meetLink}`);
+      
+      // Send emails to both patient and doctor
+      const { sendEmails } = req.query;
+      if (sendEmails !== 'false') {
+        try {
+          await sendAppointmentEmail(appointment, 'patient');
+          appointment.meetLinkSentToPatient = true;
+          console.log(`✅ Email sent to patient: ${appointment.userId.email}`);
+          
+          if (appointment.doctorId?.email) {
+            await sendAppointmentEmail(appointment, 'doctor');
+            appointment.meetLinkSentToDoctor = true;
+            console.log(`✅ Email sent to doctor: ${appointment.doctorId.email}`);
+          }
+          
+          await appointment.save();
+        } catch (emailError) {
+          console.error('❌ Error sending emails:', emailError.message);
+        }
+      }
+      
+      res.json({
+        success: true,
+        meetingLink: appointment.meetingLink,
+        googleMeetLink: appointment.googleMeetLink,
+        joinCode: appointment.joinCode,
+        appointmentId: appointment._id,
+        provider: meetResult.provider,
+        emailsSent: {
+          patient: appointment.meetLinkSentToPatient,
+          doctor: appointment.meetLinkSentToDoctor
+        }
+      });
+    } else {
+      res.status(500).json({ 
+        success: false, 
+        message: 'Failed to generate meeting link' 
+      });
+    }
   } catch (error) {
     console.error('Error generating meeting:', error);
     res.status(500).json({ message: 'Server error', error: error.message });

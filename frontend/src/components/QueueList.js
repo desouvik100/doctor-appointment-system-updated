@@ -1,6 +1,7 @@
 import { useState, useEffect } from 'react';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
+import './QueueList.css';
 
 const QueueList = ({ doctorId, date }) => {
   const [queue, setQueue] = useState([]);

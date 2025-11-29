@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "../api/config";
 import toast from 'react-hot-toast';
+import AdminChatbot from './AdminChatbot';
 import '../styles/admin-dashboard-professional.css';
 
 // Stat Card Component
@@ -56,6 +57,31 @@ function AdminDashboard() {
 
   const [doctorForm, setDoctorForm] = useState({
     name: "", email: "", phone: "", specialization: "", consultationFee: 500
+  });
+
+  // Clinic modal and form states
+  const [showClinicModal, setShowClinicModal] = useState(false);
+  const [editingClinic, setEditingClinic] = useState(null);
+  const [clinicForm, setClinicForm] = useState({
+    name: "",
+    type: "clinic",
+    address: "",
+    addressLine2: "",
+    landmark: "",
+    city: "",
+    state: "",
+    country: "India",
+    pincode: "",
+    latitude: "",
+    longitude: "",
+    googleMapsUrl: "",
+    phone: "",
+    alternatePhone: "",
+    email: "",
+    website: "",
+    description: "",
+    facilities: [],
+    isActive: true
   });
 
   const handleTabChange = useCallback((tab) => {
@@ -122,6 +148,116 @@ function AdminDashboard() {
       } catch (error) {
         toast.error("Error deleting doctor");
       }
+    }
+  };
+
+  // Clinic CRUD Operations
+  const handleAddClinic = () => {
+    setEditingClinic(null);
+    setClinicForm({
+      name: "",
+      type: "clinic",
+      address: "",
+      addressLine2: "",
+      landmark: "",
+      city: "",
+      state: "",
+      country: "India",
+      pincode: "",
+      latitude: "",
+      longitude: "",
+      googleMapsUrl: "",
+      phone: "",
+      alternatePhone: "",
+      email: "",
+      website: "",
+      description: "",
+      facilities: [],
+      isActive: true
+    });
+    setShowClinicModal(true);
+  };
+
+  const handleEditClinic = (clinic) => {
+    setEditingClinic(clinic);
+    setClinicForm({
+      name: clinic.name || "",
+      type: clinic.type || "clinic",
+      address: clinic.address || "",
+      addressLine2: clinic.addressLine2 || "",
+      landmark: clinic.landmark || "",
+      city: clinic.city || "",
+      state: clinic.state || "",
+      country: clinic.country || "India",
+      pincode: clinic.pincode || "",
+      latitude: clinic.latitude || "",
+      longitude: clinic.longitude || "",
+      googleMapsUrl: clinic.googleMapsUrl || "",
+      phone: clinic.phone || "",
+      alternatePhone: clinic.alternatePhone || "",
+      email: clinic.email || "",
+      website: clinic.website || "",
+      description: clinic.description || "",
+      facilities: clinic.facilities || [],
+      isActive: clinic.isActive !== false
+    });
+    setShowClinicModal(true);
+  };
+
+  const handleSaveClinic = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingClinic) {
+        await axios.put(`/api/clinics/${editingClinic._id}`, clinicForm);
+        toast.success("Clinic updated successfully!");
+      } else {
+        await axios.post("/api/clinics", clinicForm);
+        toast.success("Clinic created successfully!");
+      }
+      setShowClinicModal(false);
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Error saving clinic");
+    }
+  };
+
+  const handleDeleteClinic = async (clinicId) => {
+    if (window.confirm("Are you sure you want to delete this clinic? This will also deactivate all associated doctors.")) {
+      try {
+        await axios.delete(`/api/clinics/${clinicId}`);
+        fetchDashboardData();
+        toast.success("Clinic deleted successfully!");
+      } catch (error) {
+        toast.error("Error deleting clinic");
+      }
+    }
+  };
+
+  const getCurrentLocation = () => {
+    if (navigator.geolocation) {
+      navigator.geolocation.getCurrentPosition(
+        (position) => {
+          setClinicForm(prev => ({
+            ...prev,
+            latitude: position.coords.latitude.toFixed(6),
+            longitude: position.coords.longitude.toFixed(6)
+          }));
+          toast.success("Location captured!");
+        },
+        (error) => {
+          toast.error("Unable to get location: " + error.message);
+        }
+      );
+    } else {
+      toast.error("Geolocation is not supported by this browser");
+    }
+  };
+
+  const openGoogleMaps = () => {
+    if (clinicForm.latitude && clinicForm.longitude) {
+      window.open(`https://www.google.com/maps?q=${clinicForm.latitude},${clinicForm.longitude}`, '_blank');
+    } else {
+      toast.error("Please enter coordinates first");
     }
   };
 
@@ -380,6 +516,9 @@ function AdminDashboard() {
                   </div>
                   Clinic Management
                 </h2>
+                <button className="btn btn-primary" onClick={handleAddClinic}>
+                  <i className="fas fa-plus"></i> Add Clinic
+                </button>
               </div>
               
               <div className="admin-table-container">
@@ -387,18 +526,68 @@ function AdminDashboard() {
                   <thead>
                     <tr>
                       <th>Name</th>
+                      <th>Type</th>
+                      <th>Address</th>
                       <th>City</th>
+                      <th>Location</th>
                       <th>Phone</th>
-                      <th>Email</th>
+                      <th>Status</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
                     {clinics.map(clinic => (
                       <tr key={clinic._id}>
-                        <td>{clinic.name}</td>
-                        <td>{clinic.city}</td>
+                        <td><strong>{clinic.name}</strong></td>
+                        <td>
+                          <span className={`badge ${clinic.type === 'hospital' ? 'badge-info' : 'badge-primary'}`}>
+                            {clinic.type || 'clinic'}
+                          </span>
+                        </td>
+                        <td style={{ maxWidth: '200px' }}>
+                          <div style={{ fontSize: '13px' }}>{clinic.address}</div>
+                          {clinic.landmark && <div style={{ fontSize: '11px', color: '#718096' }}>Near: {clinic.landmark}</div>}
+                        </td>
+                        <td>{clinic.city}, {clinic.state || ''}</td>
+                        <td>
+                          {clinic.latitude && clinic.longitude ? (
+                            <a 
+                              href={`https://www.google.com/maps?q=${clinic.latitude},${clinic.longitude}`}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              className="btn btn-sm"
+                              style={{ fontSize: '11px', padding: '4px 8px', background: '#10b981', color: 'white', borderRadius: '4px', textDecoration: 'none' }}
+                            >
+                              <i className="fas fa-map-marker-alt"></i> View Map
+                            </a>
+                          ) : (
+                            <span style={{ color: '#a0aec0', fontSize: '12px' }}>Not set</span>
+                          )}
+                        </td>
                         <td>{clinic.phone || 'N/A'}</td>
-                        <td>{clinic.email || 'N/A'}</td>
+                        <td>
+                          <span className={`badge ${clinic.isActive !== false ? 'badge-success' : 'badge-error'}`}>
+                            {clinic.isActive !== false ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td>
+                          <div className="admin-actions">
+                            <button 
+                              className="admin-action-btn admin-action-btn--edit"
+                              onClick={() => handleEditClinic(clinic)}
+                              title="Edit Clinic"
+                            >
+                              <i className="fas fa-edit"></i>
+                            </button>
+                            <button 
+                              className="admin-action-btn admin-action-btn--delete"
+                              onClick={() => handleDeleteClinic(clinic._id)}
+                              title="Delete Clinic"
+                            >
+                              <i className="fas fa-trash"></i>
+                            </button>
+                          </div>
+                        </td>
                       </tr>
                     ))}
                   </tbody>
@@ -409,6 +598,252 @@ function AdminDashboard() {
         </div>
 
       </div>
+      
+      {/* AI Chatbot */}
+      <AdminChatbot 
+        systemStats={stats} 
+        currentContext={activeTab} 
+      />
+
+      {/* Clinic Modal */}
+      {showClinicModal && (
+        <div className="modal-overlay" onClick={() => setShowClinicModal(false)}>
+          <div className="modal-content modal-lg" onClick={e => e.stopPropagation()}>
+            <div className="modal-header">
+              <h3><i className="fas fa-hospital"></i> {editingClinic ? 'Edit Clinic' : 'Add New Clinic'}</h3>
+              <button className="modal-close" onClick={() => setShowClinicModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <form onSubmit={handleSaveClinic}>
+              <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+                
+                {/* Basic Information */}
+                <div className="form-section">
+                  <h4 className="form-section-title"><i className="fas fa-info-circle"></i> Basic Information</h4>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>Clinic Name *</label>
+                      <input
+                        type="text"
+                        value={clinicForm.name}
+                        onChange={e => setClinicForm({...clinicForm, name: e.target.value})}
+                        placeholder="Enter clinic name"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Type</label>
+                      <select
+                        value={clinicForm.type}
+                        onChange={e => setClinicForm({...clinicForm, type: e.target.value})}
+                      >
+                        <option value="clinic">Clinic</option>
+                        <option value="hospital">Hospital</option>
+                      </select>
+                    </div>
+                  </div>
+                  <div className="form-group">
+                    <label>Description</label>
+                    <textarea
+                      value={clinicForm.description}
+                      onChange={e => setClinicForm({...clinicForm, description: e.target.value})}
+                      placeholder="Brief description of the clinic"
+                      rows="2"
+                    />
+                  </div>
+                </div>
+
+                {/* Address Section */}
+                <div className="form-section">
+                  <h4 className="form-section-title"><i className="fas fa-map-marker-alt"></i> Address Details</h4>
+                  <div className="form-group">
+                    <label>Address Line 1 *</label>
+                    <input
+                      type="text"
+                      value={clinicForm.address}
+                      onChange={e => setClinicForm({...clinicForm, address: e.target.value})}
+                      placeholder="Street address, building name"
+                      required
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Address Line 2</label>
+                    <input
+                      type="text"
+                      value={clinicForm.addressLine2}
+                      onChange={e => setClinicForm({...clinicForm, addressLine2: e.target.value})}
+                      placeholder="Floor, suite, unit number"
+                    />
+                  </div>
+                  <div className="form-group">
+                    <label>Landmark</label>
+                    <input
+                      type="text"
+                      value={clinicForm.landmark}
+                      onChange={e => setClinicForm({...clinicForm, landmark: e.target.value})}
+                      placeholder="Near landmark (e.g., Near City Mall)"
+                    />
+                  </div>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>City *</label>
+                      <input
+                        type="text"
+                        value={clinicForm.city}
+                        onChange={e => setClinicForm({...clinicForm, city: e.target.value})}
+                        placeholder="City"
+                        required
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>State</label>
+                      <input
+                        type="text"
+                        value={clinicForm.state}
+                        onChange={e => setClinicForm({...clinicForm, state: e.target.value})}
+                        placeholder="State"
+                      />
+                    </div>
+                  </div>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>Pincode</label>
+                      <input
+                        type="text"
+                        value={clinicForm.pincode}
+                        onChange={e => setClinicForm({...clinicForm, pincode: e.target.value})}
+                        placeholder="Pincode"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Country</label>
+                      <input
+                        type="text"
+                        value={clinicForm.country}
+                        onChange={e => setClinicForm({...clinicForm, country: e.target.value})}
+                        placeholder="Country"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Location Coordinates */}
+                <div className="form-section">
+                  <h4 className="form-section-title"><i className="fas fa-crosshairs"></i> Exact Location (GPS Coordinates)</h4>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>Latitude</label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={clinicForm.latitude}
+                        onChange={e => setClinicForm({...clinicForm, latitude: e.target.value})}
+                        placeholder="e.g., 28.6139"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Longitude</label>
+                      <input
+                        type="number"
+                        step="any"
+                        value={clinicForm.longitude}
+                        onChange={e => setClinicForm({...clinicForm, longitude: e.target.value})}
+                        placeholder="e.g., 77.2090"
+                      />
+                    </div>
+                  </div>
+                  <div className="form-actions-inline">
+                    <button type="button" className="btn btn-secondary" onClick={getCurrentLocation}>
+                      <i className="fas fa-location-arrow"></i> Get Current Location
+                    </button>
+                    <button type="button" className="btn btn-info" onClick={openGoogleMaps}>
+                      <i className="fas fa-external-link-alt"></i> View on Google Maps
+                    </button>
+                  </div>
+                  <div className="form-group" style={{ marginTop: '10px' }}>
+                    <label>Google Maps URL</label>
+                    <input
+                      type="url"
+                      value={clinicForm.googleMapsUrl}
+                      onChange={e => setClinicForm({...clinicForm, googleMapsUrl: e.target.value})}
+                      placeholder="https://maps.google.com/..."
+                    />
+                  </div>
+                </div>
+
+                {/* Contact Information */}
+                <div className="form-section">
+                  <h4 className="form-section-title"><i className="fas fa-phone"></i> Contact Information</h4>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>Phone</label>
+                      <input
+                        type="tel"
+                        value={clinicForm.phone}
+                        onChange={e => setClinicForm({...clinicForm, phone: e.target.value})}
+                        placeholder="Primary phone number"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Alternate Phone</label>
+                      <input
+                        type="tel"
+                        value={clinicForm.alternatePhone}
+                        onChange={e => setClinicForm({...clinicForm, alternatePhone: e.target.value})}
+                        placeholder="Alternate phone number"
+                      />
+                    </div>
+                  </div>
+                  <div className="form-grid">
+                    <div className="form-group">
+                      <label>Email</label>
+                      <input
+                        type="email"
+                        value={clinicForm.email}
+                        onChange={e => setClinicForm({...clinicForm, email: e.target.value})}
+                        placeholder="clinic@example.com"
+                      />
+                    </div>
+                    <div className="form-group">
+                      <label>Website</label>
+                      <input
+                        type="url"
+                        value={clinicForm.website}
+                        onChange={e => setClinicForm({...clinicForm, website: e.target.value})}
+                        placeholder="https://www.clinic.com"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                {/* Status */}
+                <div className="form-section">
+                  <div className="form-group">
+                    <label className="checkbox-label">
+                      <input
+                        type="checkbox"
+                        checked={clinicForm.isActive}
+                        onChange={e => setClinicForm({...clinicForm, isActive: e.target.checked})}
+                      />
+                      <span>Active (Clinic is operational)</span>
+                    </label>
+                  </div>
+                </div>
+
+              </div>
+              <div className="modal-footer">
+                <button type="button" className="btn btn-secondary" onClick={() => setShowClinicModal(false)}>
+                  Cancel
+                </button>
+                <button type="submit" className="btn btn-primary">
+                  <i className="fas fa-save"></i> {editingClinic ? 'Update Clinic' : 'Create Clinic'}
+                </button>
+              </div>
+            </form>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

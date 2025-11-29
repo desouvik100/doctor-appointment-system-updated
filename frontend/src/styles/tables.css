@@ -1,0 +1,290 @@
+/* ============================================
+   Table Styles - History & Data Tables
+   ============================================ */
+
+/* Table Container */
+.table-container {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  overflow: hidden;
+}
+
+.table-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.table-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+}
+
+.table-actions {
+  display: flex;
+  gap: var(--space-2);
+}
+
+/* Base Table */
+.table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: var(--space-4) var(--space-5);
+  text-align: left;
+  vertical-align: middle;
+}
+
+.table th {
+  background: var(--bg-secondary);
+  font-size: var(--font-size-xs);
+  font-weight: 600;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  border-bottom: 1px solid var(--border);
+}
+
+.table td {
+  font-size: var(--font-size-sm);
+  color: var(--text-primary);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table tbody tr:hover {
+  background: var(--bg-secondary);
+}
+
+/* Table Cell Variants */
+.table-cell-primary {
+  font-weight: 600;
+  color: var(--text-primary);
+}
+
+.table-cell-secondary {
+  color: var(--text-secondary);
+}
+
+.table-cell-muted {
+  color: var(--text-muted);
+  font-size: var(--font-size-xs);
+}
+
+/* Table Actions Column */
+.table-actions-cell {
+  display: flex;
+  gap: var(--space-2);
+  justify-content: flex-end;
+}
+
+.table-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  background: transparent;
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.table-action-btn:hover {
+  background: var(--bg-secondary);
+  color: var(--text-primary);
+}
+
+.table-action-btn.danger:hover {
+  background: var(--danger-light);
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.table-action-btn.success:hover {
+  background: var(--success-light);
+  border-color: var(--success);
+  color: var(--success);
+}
+
+/* Sortable Headers */
+.table-sortable th {
+  cursor: pointer;
+  user-select: none;
+}
+
+.table-sortable th:hover {
+  background: var(--border-light);
+}
+
+.sort-icon {
+  margin-left: var(--space-1);
+  opacity: 0.5;
+}
+
+.sort-icon.active {
+  opacity: 1;
+  color: var(--brand-primary);
+}
+
+/* Responsive Table - Stacked on Mobile */
+@media (max-width: 768px) {
+  .table-responsive {
+    display: block;
+  }
+  
+  .table-responsive thead {
+    display: none;
+  }
+  
+  .table-responsive tbody {
+    display: block;
+  }
+  
+  .table-responsive tr {
+    display: block;
+    padding: var(--space-4);
+    border-bottom: 1px solid var(--border-light);
+  }
+  
+  .table-responsive tr:last-child {
+    border-bottom: none;
+  }
+  
+  .table-responsive td {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: var(--space-2) 0;
+    border: none;
+  }
+  
+  .table-responsive td::before {
+    content: attr(data-label);
+    font-weight: 600;
+    font-size: var(--font-size-xs);
+    color: var(--text-muted);
+    text-transform: uppercase;
+  }
+  
+  .table-responsive .table-actions-cell {
+    justify-content: flex-start;
+    padding-top: var(--space-3);
+    border-top: 1px solid var(--border-light);
+    margin-top: var(--space-2);
+  }
+  
+  .table-responsive .table-actions-cell::before {
+    display: none;
+  }
+}
+
+/* Table Pagination */
+.table-pagination {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-4) var(--space-5);
+  border-top: 1px solid var(--border-light);
+}
+
+.pagination-info {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+}
+
+.pagination-controls {
+  display: flex;
+  gap: var(--space-1);
+}
+
+.pagination-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 36px;
+  height: 36px;
+  padding: 0 var(--space-3);
+  background: var(--card-bg);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-sm);
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.pagination-btn:hover:not(:disabled) {
+  background: var(--bg-secondary);
+  border-color: var(--text-muted);
+}
+
+.pagination-btn.active {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--text-inverse);
+}
+
+.pagination-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* Empty Table State */
+.table-empty {
+  text-align: center;
+  padding: var(--space-12) var(--space-6);
+}
+
+.table-empty-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-4);
+  background: var(--bg-secondary);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.table-empty-icon i {
+  font-size: 1.5rem;
+  color: var(--text-muted);
+}
+
+.table-empty-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-bottom: var(--space-2);
+}
+
+.table-empty-message {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-5);
+}
+
+/* Compact Table */
+.table-compact th,
+.table-compact td {
+  padding: var(--space-2) var(--space-3);
+}
+
+/* Striped Table */
+.table-striped tbody tr:nth-child(even) {
+  background: var(--bg-secondary);
+}
+
+.table-striped tbody tr:hover {
+  background: var(--border-light);
+}

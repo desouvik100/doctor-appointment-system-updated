@@ -4,42 +4,80 @@ const { OAuth2 } = google.auth;
 
 // Initialize OAuth2 client
 let oauth2Client = null;
+let isGoogleConfigured = false;
 
 function initializeGoogleAuth() {
-  if (!process.env.GOOGLE_CLIENT_ID || !process.env.GOOGLE_CLIENT_SECRET) {
-    console.warn('⚠️ Google OAuth credentials not configured. Using fallback Jitsi Meet links.');
+  // Check if Google credentials are properly configured (not placeholder values)
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+
+  const isPlaceholder = (val) => !val || val.includes('your_') || val === '';
+
+  if (isPlaceholder(clientId) || isPlaceholder(clientSecret)) {
+    console.warn('⚠️ Google OAuth credentials not configured. Google Meet links will not be generated.');
+    console.warn('   Please configure GOOGLE_CLIENT_ID and GOOGLE_CLIENT_SECRET in .env');
+    isGoogleConfigured = false;
     return null;
   }
 
-  oauth2Client = new OAuth2(
-    process.env.GOOGLE_CLIENT_ID,
-    process.env.GOOGLE_CLIENT_SECRET,
-    process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5005/api/google/callback'
-  );
+  try {
+    oauth2Client = new OAuth2(
+      clientId,
+      clientSecret,
+      process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5005/api/google/callback'
+    );
 
-  // Set refresh token if available
-  if (process.env.GOOGLE_REFRESH_TOKEN) {
-    oauth2Client.setCredentials({
-      refresh_token: process.env.GOOGLE_REFRESH_TOKEN
-    });
+    // Set refresh token if available
+    if (!isPlaceholder(refreshToken)) {
+      oauth2Client.setCredentials({
+        refresh_token: refreshToken
+      });
+      isGoogleConfigured = true;
+      console.log('✅ Google OAuth configured - Google Meet links enabled');
+    } else {
+      console.warn('⚠️ Google refresh token not configured.');
+      console.warn('   Visit http://localhost:5005/api/google/auth-url to authorize');
+      isGoogleConfigured = false;
+    }
+
+    return oauth2Client;
+  } catch (error) {
+    console.error('❌ Error initializing Google OAuth:', error.message);
+    isGoogleConfigured = false;
+    return null;
   }
+}
 
-  return oauth2Client;
+// Initialize on module load
+initializeGoogleAuth();
+
+/**
+ * Check if Google Meet is configured
+ */
+function isGoogleMeetConfigured() {
+  return isGoogleConfigured;
 }
 
 /**
  * Generate Google Meet link for appointment
+ * Doctor/Clinic is the organizer (admin of the call)
+ * Patient is added as attendee
  * @param {Object} appointment - Appointment object with date, time, doctor, patient info
  * @returns {Promise<Object>} - { meetLink, eventId, success }
  */
 async function generateGoogleMeetLink(appointment) {
   try {
-    // Initialize auth client
+    // Re-initialize to check current state
     const auth = initializeGoogleAuth();
-    
-    // Fallback to Jitsi if Google not configured
-    if (!auth) {
-      return generateFallbackMeetLink(appointment);
+
+    if (!auth || !isGoogleConfigured) {
+      console.error('❌ Google Meet not configured. Cannot generate meeting link.');
+      return {
+        success: false,
+        error: 'Google Meet not configured. Please set up Google OAuth credentials.',
+        setupUrl: 'http://localhost:5005/api/google/auth-url'
+      };
     }
 
     const calendar = google.calendar({ version: 'v3', auth });
@@ -49,13 +87,67 @@ async function generateGoogleMeetLink(appointment) {
     const [hours, minutes] = appointment.time.split(':');
     appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-    // End time (30 minutes after start)
+    // End time (30 minutes after start for consultation)
     const endTime = new Date(appointmentDate.getTime() + 30 * 60 * 1000);
 
-    // Create calendar event with Google Meet
+    // Get doctor and patient info
+    const doctorName = appointment.doctorId?.name || 'Doctor';
+    const doctorEmail = appointment.doctorId?.email;
+    const patientName = appointment.userId?.name || 'Patient';
+    const patientEmail = appointment.userId?.email;
+    const clinicName = appointment.clinicId?.name || 'HealthSync Clinic';
+
+    // Build attendees list
+    // The calendar owner (from OAuth) is automatically the organizer/admin
+    // Doctor and Patient are added as attendees
+    const attendees = [];
+
+    // Add patient as attendee (required)
+    if (patientEmail) {
+      attendees.push({
+        email: patientEmail,
+        displayName: patientName,
+        responseStatus: 'needsAction',
+        comment: 'Patient'
+      });
+    }
+
+    // Add doctor as attendee if different from organizer
+    if (doctorEmail) {
+      attendees.push({
+        email: doctorEmail,
+        displayName: `Dr. ${doctorName}`,
+        responseStatus: 'accepted',
+        comment: 'Doctor/Host',
+        // Note: The organizer is set by the OAuth account
+        // To make doctor the true admin, use their Google account for OAuth
+      });
+    }
+
+    // Create calendar event with Google Meet conference
     const event = {
-      summary: `Medical Consultation - ${appointment.doctorId?.name || 'Doctor'}`,
-      description: `Online consultation between Dr. ${appointment.doctorId?.name || 'Doctor'} and ${appointment.userId?.name || 'Patient'}.\n\nReason: ${appointment.reason || 'General consultation'}`,
+      summary: `🏥 Medical Consultation - Dr. ${doctorName}`,
+      description: `
+📋 Online Medical Consultation
+
+👨‍⚕️ Doctor: Dr. ${doctorName}
+👤 Patient: ${patientName}
+🏥 Clinic: ${clinicName}
+📝 Reason: ${appointment.reason || 'General consultation'}
+
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+📌 Important Instructions:
+• Join the meeting 5 minutes before scheduled time
+• Ensure stable internet connection
+• Have your camera and microphone ready
+• Keep relevant medical documents handy
+
+🔒 This is a private medical consultation.
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+
+Powered by HealthSync Pro
+      `.trim(),
+      location: 'Google Meet (Online)',
       start: {
         dateTime: appointmentDate.toISOString(),
         timeZone: process.env.TIMEZONE || 'Asia/Kolkata',
@@ -64,104 +156,130 @@ async function generateGoogleMeetLink(appointment) {
         dateTime: endTime.toISOString(),
         timeZone: process.env.TIMEZONE || 'Asia/Kolkata',
       },
-      attendees: [
-        { email: appointment.userId?.email },
-        { email: appointment.doctorId?.email || process.env.EMAIL_USER }
-      ],
+      attendees: attendees,
       conferenceData: {
         createRequest: {
           requestId: `healthsync-${appointment._id}-${Date.now()}`,
-          conferenceSolutionKey: { type: 'hangoutsMeet' }
+          conferenceSolutionKey: {
+            type: 'hangoutsMeet'
+          }
         }
       },
+      guestsCanModify: false,
+      guestsCanInviteOthers: false,
+      guestsCanSeeOtherGuests: true,
       reminders: {
         useDefault: false,
         overrides: [
-          { method: 'email', minutes: 30 },
-          { method: 'popup', minutes: 15 }
+          { method: 'email', minutes: 60 },    // 1 hour before
+          { method: 'email', minutes: 15 },    // 15 minutes before
+          { method: 'popup', minutes: 10 }     // 10 minutes before
         ]
-      }
+      },
+      colorId: '9', // Blue color for medical
+      visibility: 'private',
+      status: 'confirmed'
     };
+
+    console.log('📅 Creating Google Calendar event with Meet...');
+    console.log(`   Doctor: ${doctorName} (${doctorEmail || 'no email'})`);
+    console.log(`   Patient: ${patientName} (${patientEmail || 'no email'})`);
 
     const response = await calendar.events.insert({
       calendarId: 'primary',
       resource: event,
       conferenceDataVersion: 1,
-      sendUpdates: 'all'
+      sendUpdates: 'all',  // Send email invites to all attendees
+      sendNotifications: true
     });
 
+    // Extract Google Meet link
     const meetLink = response.data.conferenceData?.entryPoints?.find(
       ep => ep.entryPointType === 'video'
     )?.uri;
 
+    // Get dial-in info if available
+    const dialIn = response.data.conferenceData?.entryPoints?.find(
+      ep => ep.entryPointType === 'phone'
+    );
+
     if (!meetLink) {
-      console.warn('⚠️ Google Meet link not generated, using fallback');
-      return generateFallbackMeetLink(appointment);
+      console.error('❌ Google Meet link not found in response');
+      return {
+        success: false,
+        error: 'Failed to generate Google Meet link. Please try again.'
+      };
     }
 
-    console.log('✅ Google Meet link generated:', meetLink);
+    console.log('✅ Google Meet link generated successfully!');
+    console.log(`   Meet Link: ${meetLink}`);
+    console.log(`   Event ID: ${response.data.id}`);
+    console.log(`   Calendar invites sent to attendees`);
 
     return {
       success: true,
       meetLink,
       eventId: response.data.id,
-      provider: 'google'
+      htmlLink: response.data.htmlLink,
+      provider: 'google-meet',
+      dialIn: dialIn ? {
+        phone: dialIn.uri,
+        pin: dialIn.pin
+      } : null,
+      attendees: {
+        doctor: doctorEmail,
+        patient: patientEmail
+      }
     };
 
   } catch (error) {
     console.error('❌ Error generating Google Meet link:', error.message);
-    
-    // Fallback to Jitsi Meet
-    return generateFallbackMeetLink(appointment);
+
+    // Provide helpful error messages
+    if (error.message.includes('invalid_grant')) {
+      console.error('   Token expired. Please re-authorize at /api/google/auth-url');
+    } else if (error.message.includes('insufficient')) {
+      console.error('   Insufficient permissions. Ensure Calendar API is enabled.');
+    }
+
+    return {
+      success: false,
+      error: error.message,
+      setupUrl: 'http://localhost:5005/api/google/auth-url'
+    };
   }
 }
 
 /**
- * Generate fallback Jitsi Meet link
- * @param {Object} appointment - Appointment object
- * @returns {Object} - { meetLink, eventId, success }
- */
-function generateFallbackMeetLink(appointment) {
-  const roomName = `healthsync-${appointment._id}`;
-  const meetLink = `https://meet.jit.si/${roomName}`;
-  
-  console.log('✅ Fallback Jitsi Meet link generated:', meetLink);
-  
-  return {
-    success: true,
-    meetLink,
-    eventId: null,
-    provider: 'jitsi',
-    fallback: true
-  };
-}
-
-/**
- * Delete Google Calendar event
+ * Delete Google Calendar event and associated Meet
  * @param {String} eventId - Google Calendar event ID
- * @returns {Promise<Boolean>}
+ * @returns {Promise<Object>}
  */
 async function deleteGoogleMeetEvent(eventId) {
   try {
-    if (!eventId) return false;
+    if (!eventId) {
+      return { success: false, error: 'No event ID provided' };
+    }
 
     const auth = initializeGoogleAuth();
-    if (!auth) return false;
+    if (!auth || !isGoogleConfigured) {
+      return { success: false, error: 'Google not configured' };
+    }
 
     const calendar = google.calendar({ version: 'v3', auth });
-    
+
     await calendar.events.delete({
       calendarId: 'primary',
       eventId: eventId,
-      sendUpdates: 'all'
+      sendUpdates: 'all'  // Notify attendees of cancellation
     });
 
     console.log('✅ Google Calendar event deleted:', eventId);
-    return true;
+    return { success: true };
 
   } catch (error) {
     console.error('❌ Error deleting Google Calendar event:', error.message);
-    return false;
+    return { success: false, error: error.message };
   }
 }
 
@@ -169,18 +287,22 @@ async function deleteGoogleMeetEvent(eventId) {
  * Update Google Calendar event
  * @param {String} eventId - Google Calendar event ID
  * @param {Object} updates - Updates to apply
- * @returns {Promise<Boolean>}
+ * @returns {Promise<Object>}
  */
 async function updateGoogleMeetEvent(eventId, updates) {
   try {
-    if (!eventId) return false;
+    if (!eventId) {
+      return { success: false, error: 'No event ID provided' };
+    }
 
     const auth = initializeGoogleAuth();
-    if (!auth) return false;
+    if (!auth || !isGoogleConfigured) {
+      return { success: false, error: 'Google not configured' };
+    }
 
     const calendar = google.calendar({ version: 'v3', auth });
-    
-    await calendar.events.patch({
+
+    const response = await calendar.events.patch({
       calendarId: 'primary',
       eventId: eventId,
       resource: updates,
@@ -188,17 +310,37 @@ async function updateGoogleMeetEvent(eventId, updates) {
     });
 
     console.log('✅ Google Calendar event updated:', eventId);
-    return true;
+    return { success: true, event: response.data };
 
   } catch (error) {
     console.error('❌ Error updating Google Calendar event:', error.message);
-    return false;
+    return { success: false, error: error.message };
   }
+}
+
+/**
+ * Get Google configuration status
+ */
+function getGoogleStatus() {
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  const clientSecret = process.env.GOOGLE_CLIENT_SECRET;
+  const refreshToken = process.env.GOOGLE_REFRESH_TOKEN;
+
+  const isPlaceholder = (val) => !val || val.includes('your_') || val === '';
+
+  return {
+    clientIdConfigured: !isPlaceholder(clientId),
+    clientSecretConfigured: !isPlaceholder(clientSecret),
+    refreshTokenConfigured: !isPlaceholder(refreshToken),
+    fullyConfigured: isGoogleConfigured,
+    provider: 'google-meet'
+  };
 }
 
 module.exports = {
   generateGoogleMeetLink,
-  generateFallbackMeetLink,
   deleteGoogleMeetEvent,
-  updateGoogleMeetEvent
+  updateGoogleMeetEvent,
+  isGoogleMeetConfigured,
+  getGoogleStatus
 };

@@ -102,10 +102,19 @@
         
         // Apply styles without transition to prevent flicker
         document.documentElement.style.cssText = 'background: ' + gradient + ' !important; background-attachment: fixed !important; min-height: 100vh; transition: none !important; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;';
-        document.body.style.cssText = 'background: transparent !important; margin: 0; padding: 0; min-height: 100vh; transition: none !important; overflow-x: hidden;';
+        
+        // Only apply to body if it exists
+        if (document.body) {
+          document.body.style.cssText = 'background: transparent !important; margin: 0; padding: 0; min-height: 100vh; transition: none !important; overflow-x: hidden;';
+        }
       };
       
       applyGradient();
+      
+      // Re-apply when body is ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', applyGradient);
+      }
       
       // Mark as loaded after a brief delay to prevent animation flicker
       setTimeout(function() {

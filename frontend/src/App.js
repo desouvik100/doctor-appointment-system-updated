@@ -1,13 +1,9 @@
 import React, { useState, useEffect, useCallback, Suspense } from "react";
-import './styles/responsive-master.css';
-import './styles/professional-master.css';
+import './index.css';
 import './styles/landing-page-professional.css';
 import './styles/landing-page-pro.css';
-import './styles/auth-professional.css';
 import './styles/admin-dashboard-professional.css';
-import './styles/components-professional.css';
-import PerformanceMonitor from './components/PerformanceMonitor';
-import OptimizedLoader from './components/OptimizedLoader';
+import './styles/admin-dashboard-pro.css';
 import toast, { Toaster } from 'react-hot-toast';
 
 // Import auth components
@@ -22,45 +18,13 @@ import LiveStatsDisplay from "./components/LiveStatsDisplay";
 import LandingPage from "./components/LandingPage";
 
 // Lazy load dashboard components
-const DoctorList = React.lazy(() =>
-  import("./components/DoctorList").catch(() => ({
-    default: ({ user }) => (
-      <div >
-        <h4><i ></i>Find Doctors</h4>
-        <p>Welcome {user.name}! Doctor search functionality is loading...</p>
-        <div >
-          <button  disabled>
-            <i ></i>Search Doctors</button>
-        </div>
-      </div>
-    )
-  }))
-);
-
-const MyAppointments = React.lazy(() =>
-  import("./components/MyAppointments").catch(() => ({
-    default: ({ user }) => (
-      <div >
-        <h4><i ></i>My Appointments</h4>
-        <p>Welcome {user.name}! Your appointments are loading...</p>
-        <div >
-          <button  disabled>
-            <i ></i>View Appointments</button>
-        </div>
-      </div>
-    )
-  }))
-);
-
-const PaymentHistory = React.lazy(() =>
-  import("./components/PaymentHistory").catch(() => ({
-    default: ({ user }) => (
-      <div >
-        <h4><i ></i>Payment History</h4>
-        <p>Welcome {user.name}! Your payment history is loading...</p>
-        <div >
-          <button  disabled>
-            <i ></i>View Payments</button>
+const PatientDashboard = React.lazy(() =>
+  import("./components/PatientDashboard").catch(() => ({
+    default: ({ user, onLogout }) => (
+      <div className="patient-dashboard">
+        <div className="patient-dashboard__container">
+          <h4>Patient Dashboard</h4>
+          <p>Welcome {user.name}! Dashboard is loading...</p>
         </div>
       </div>
     )
@@ -111,7 +75,6 @@ const ClinicDashboard = React.lazy(() =>
 
 function App() {
   const [currentView, setCurrentView] = useState("landing");
-  const [page, setPage] = useState("doctors");
   const [user, setUser] = useState(null);
   const [admin, setAdmin] = useState(null);
   const [receptionist, setReceptionist] = useState(null);
@@ -211,22 +174,6 @@ function App() {
     const handleKeyPress = (e) => {
       if (e.ctrlKey || e.metaKey) {
         switch (e.key) {
-          case '1':
-            e.preventDefault();
-            if (user) setPage('doctors');
-            break;
-          case '2':
-            e.preventDefault();
-            if (user) setPage('appointments');
-            break;
-          case '3':
-            e.preventDefault();
-            if (user) setPage('ai-assistant');
-            break;
-          case '4':
-            e.preventDefault();
-            if (user) setPage('payments');
-            break;
           case 'd':
             e.preventDefault();
             toggleDarkMode();
@@ -1577,142 +1524,58 @@ function App() {
 
       {currentView === "dashboard" && (
         <div >
-          <nav >
-            <div >
-              <span >
-                <i ></i>
-                HealthSync Pro
-              </span>
+          {/* Top Navbar - Only show for Admin and Receptionist modes */}
+          {(admin || receptionist) && !user && (
+            <nav >
               <div >
-                <button
-                  
-                  onClick={toggleDarkMode}
-                  title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode (Ctrl+D)`}
-                  aria-label={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
-                  style={{
-                    width: '45px',
-                    height: '45px',
-                    borderRadius: '50%',
-                    background: 'rgba(255, 255, 255, 0.2)',
-                    border: '2px solid rgba(255, 255, 255, 0.4)',
-                    color: '#ffffff',
-                    fontSize: '1.1rem',
-                    display: 'flex',
-                    alignItems: 'center',
-                    justifyContent: 'center',
-                    transition: 'all 0.3s ease'
-                  }}
-                >
+                <span >
                   <i ></i>
-                </button>
-                <button
-                  
-                  onClick={handleLogoutAll}
-                >
-                  <i ></i>
-                  Logout
-                </button>
-              </div>
-            </div>
-          </nav>
-
-          {/* USER MODE */}
-          {user && !admin && !receptionist && (
-            <div >
-              <div >
+                  HealthSync Pro
+                </span>
                 <div >
-                  <div >
-                    <div >
-                      <div >
-                        <div >
-                          <div >
-                            <i ></i>
-                          </div>
-                          <div>
-                            <h5 >Welcome back, {user?.name || "User"}!</h5>
-                            <p >
-                              <i ></i>
-                              {user?.email || ""}
-                            </p>
-                            <small >
-                              <i  style={{ fontSize: '0.5rem' }}></i>
-                              Online
-                            </small>
-                          </div>
-                        </div>
-                        <button onClick={handleLogoutAll} >
-                          <i ></i>
-                          Logout
-                        </button>
-                      </div>
-                    </div>
-                  </div>
-
-                  <div >
-                    <div >
-                      <nav >
-                        <div  role="tablist">
-                          <button
-                            onClick={() => {
-                              setPage("doctors");
-                              scrollToTop();
-                            }}
-                            
-                          >
-                            <i ></i>
-                            Find Doctors
-                          </button>
-                          <button
-                            onClick={() => {
-                              setPage("appointments");
-                              scrollToTop();
-                            }}
-                            
-                          >
-                            <i ></i>
-                            My Appointments
-                          </button>
-                          <button
-                            onClick={() => {
-                              setPage("ai-assistant");
-                              scrollToTop();
-                            }}
-                            
-                          >
-                            <i ></i>
-                            AI Assistant
-                          </button>
-                          <button
-                            onClick={() => {
-                              setPage("payments");
-                              scrollToTop();
-                            }}
-                            
-                          >
-                            <i ></i>
-                            Payments
-                          </button>
-                        </div>
-                      </nav>
-                    </div>
-                  </div>
-
-                  <div >
-                    <React.Suspense fallback={
-                      <div >
-                        <div ></div>
-                        <p >Loading {page}...</p>
-                      </div>
-                    }>
-                      {page === "doctors" && <DoctorList user={user} />}
-                      {page === "appointments" && <MyAppointments user={user} />}
-                      {page === "ai-assistant" && <AIAssistant user={user} />}
-                      {page === "payments" && <PaymentHistory user={user} />}
-                    </React.Suspense>
-                  </div>
+                  <button
+                    
+                    onClick={toggleDarkMode}
+                    title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode (Ctrl+D)`}
+                    aria-label={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
+                    style={{
+                      width: '45px',
+                      height: '45px',
+                      borderRadius: '50%',
+                      background: 'rgba(255, 255, 255, 0.2)',
+                      border: '2px solid rgba(255, 255, 255, 0.4)',
+                      color: '#ffffff',
+                      fontSize: '1.1rem',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                      transition: 'all 0.3s ease'
+                    }}
+                  >
+                    <i ></i>
+                  </button>
+                  <button
+                    
+                    onClick={handleLogoutAll}
+                  >
+                    <i ></i>
+                    Logout
+                  </button>
                 </div>
               </div>
-            </div>
+            </nav>
+          )}
+
+          {/* USER MODE - Patient Dashboard (has its own header) */}
+          {user && !admin && !receptionist && (
+            <React.Suspense fallback={
+              <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
+                <div className="spinner-border text-primary mb-3"></div>
+                <p className="text-muted">Loading Patient Dashboard...</p>
+              </div>
+            }>
+              <PatientDashboard user={user} onLogout={handleLogoutAll} />
+            </React.Suspense>
           )}
 
           {/* ADMIN MODE */}

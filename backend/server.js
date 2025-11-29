@@ -42,6 +42,8 @@ app.use('/api/payments', require('./routes/paymentRoutes'));
 app.use('/api/chatbot', require('./routes/chatbotRoutes'));
 app.use('/api/token', require('./routes/tokenRoutes'));
 app.use('/api/otp', require('./routes/otpRoutes'));
+app.use('/api/google', require('./routes/googleRoutes'));
+app.use('/api/consultations', require('./routes/consultationRoutes'));
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');

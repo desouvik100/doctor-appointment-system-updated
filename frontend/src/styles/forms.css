@@ -1,0 +1,290 @@
+/* ============================================
+   Form Styles - Inputs, Selects, Validation
+   ============================================ */
+
+/* Form Group */
+.form-group {
+  margin-bottom: var(--space-5);
+}
+
+/* Labels */
+.form-label {
+  display: block;
+  margin-bottom: var(--space-2);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-primary);
+}
+
+.form-label.required::after {
+  content: ' *';
+  color: var(--danger);
+}
+
+/* Base Input Styles */
+.form-control {
+  display: block;
+  width: 100%;
+  height: 48px;
+  padding: var(--space-3) var(--space-4);
+  font-family: var(--font-family);
+  font-size: var(--font-size-base);
+  color: var(--text-primary);
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-md);
+  transition: all var(--transition-fast);
+}
+
+.form-control::placeholder {
+  color: var(--text-muted);
+}
+
+.form-control:hover:not(:disabled) {
+  border-color: var(--text-muted);
+}
+
+.form-control:focus {
+  outline: none;
+  border-color: var(--brand-primary);
+  box-shadow: 0 0 0 4px var(--brand-primary-light);
+}
+
+.form-control:disabled {
+  background: var(--bg-secondary);
+  cursor: not-allowed;
+  opacity: 0.7;
+}
+
+/* Textarea */
+textarea.form-control {
+  height: auto;
+  min-height: 120px;
+  resize: vertical;
+}
+
+/* Select */
+select.form-control {
+  appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6 9 12 15 18 9'%3E%3C/polyline%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right var(--space-4) center;
+  padding-right: var(--space-10);
+}
+
+/* Input with Icon */
+.input-group {
+  position: relative;
+}
+
+.input-icon {
+  position: absolute;
+  left: var(--space-4);
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-muted);
+  pointer-events: none;
+}
+
+.input-group .form-control {
+  padding-left: var(--space-10);
+}
+
+.input-icon-right {
+  left: auto;
+  right: var(--space-4);
+}
+
+.input-group.icon-right .form-control {
+  padding-left: var(--space-4);
+  padding-right: var(--space-10);
+}
+
+/* Validation States */
+.form-control.is-valid {
+  border-color: var(--success);
+}
+
+.form-control.is-valid:focus {
+  box-shadow: 0 0 0 4px var(--success-light);
+}
+
+.form-control.is-invalid {
+  border-color: var(--danger);
+}
+
+.form-control.is-invalid:focus {
+  box-shadow: 0 0 0 4px var(--danger-light);
+}
+
+/* Feedback Messages */
+.form-feedback {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  margin-top: var(--space-2);
+  font-size: var(--font-size-sm);
+}
+
+.form-feedback.valid {
+  color: var(--success);
+}
+
+.form-feedback.invalid {
+  color: var(--danger);
+}
+
+.form-hint {
+  margin-top: var(--space-2);
+  font-size: var(--font-size-sm);
+  color: var(--text-muted);
+}
+
+/* Checkbox & Radio */
+.form-check {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  margin-bottom: var(--space-3);
+}
+
+.form-check-input {
+  width: 20px;
+  height: 20px;
+  margin: 0;
+  flex-shrink: 0;
+  accent-color: var(--brand-primary);
+  cursor: pointer;
+}
+
+.form-check-label {
+  font-size: var(--font-size-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+}
+
+/* Switch Toggle */
+.form-switch {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+}
+
+.form-switch-input {
+  position: absolute;
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.form-switch-slider {
+  width: 44px;
+  height: 24px;
+  background: var(--border);
+  border-radius: var(--radius-full);
+  cursor: pointer;
+  transition: background var(--transition-fast);
+  position: relative;
+}
+
+.form-switch-slider::after {
+  content: '';
+  position: absolute;
+  top: 2px;
+  left: 2px;
+  width: 20px;
+  height: 20px;
+  background: var(--card-bg);
+  border-radius: var(--radius-full);
+  box-shadow: var(--shadow-sm);
+  transition: transform var(--transition-fast);
+}
+
+.form-switch-input:checked + .form-switch-slider {
+  background: var(--brand-primary);
+}
+
+.form-switch-input:checked + .form-switch-slider::after {
+  transform: translateX(20px);
+}
+
+.form-switch-input:focus + .form-switch-slider {
+  box-shadow: 0 0 0 4px var(--brand-primary-light);
+}
+
+/* Date/Time Picker Styling */
+input[type="date"].form-control,
+input[type="time"].form-control,
+input[type="datetime-local"].form-control {
+  appearance: none;
+}
+
+/* File Input */
+.form-file {
+  position: relative;
+}
+
+.form-file-input {
+  position: absolute;
+  opacity: 0;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+}
+
+.form-file-label {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-6);
+  background: var(--bg-secondary);
+  border: 2px dashed var(--border);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.form-file-label:hover {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-light);
+}
+
+/* Input Sizes */
+.form-control-sm {
+  height: 36px;
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.form-control-lg {
+  height: 56px;
+  padding: var(--space-4) var(--space-5);
+  font-size: var(--font-size-lg);
+}
+
+/* Inline Form */
+.form-inline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  align-items: flex-end;
+}
+
+.form-inline .form-group {
+  margin-bottom: 0;
+  flex: 1;
+  min-width: 200px;
+}
+
+@media (max-width: 576px) {
+  .form-inline {
+    flex-direction: column;
+  }
+  
+  .form-inline .form-group {
+    width: 100%;
+  }
+}

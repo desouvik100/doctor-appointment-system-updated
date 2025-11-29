@@ -54,6 +54,25 @@ router.get('/:id/doctors', async (req, res) => {
   }
 });
 
+// Find clinics near a location
+router.get('/nearby/:lat/:lng', async (req, res) => {
+  try {
+    const { lat, lng } = req.params;
+    const { maxDistance = 10 } = req.query; // Default 10km
+    
+    const clinics = await Clinic.findNearby(
+      parseFloat(lat), 
+      parseFloat(lng), 
+      parseFloat(maxDistance)
+    );
+    
+    res.json(clinics);
+  } catch (error) {
+    console.error('Error finding nearby clinics:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Create new clinic (admin only)
 router.post('/', async (req, res) => {
   try {
@@ -61,12 +80,26 @@ router.post('/', async (req, res) => {
       name,
       type,
       address,
+      addressLine2,
+      landmark,
       city,
       state,
+      country,
       pincode,
+      latitude,
+      longitude,
+      googleMapsUrl,
+      placeId,
       phone,
+      alternatePhone,
       email,
-      logoUrl
+      website,
+      description,
+      facilities,
+      specializations,
+      operatingHours,
+      logoUrl,
+      images
     } = req.body;
 
     // Check if clinic with name already exists in the same city
@@ -79,13 +112,30 @@ router.post('/', async (req, res) => {
       name,
       type: type || 'clinic',
       address,
+      addressLine2,
+      landmark,
       city,
       state,
+      country: country || 'India',
       pincode,
       phone,
+      alternatePhone,
       email,
-      logoUrl
+      website,
+      description,
+      facilities: facilities || [],
+      specializations: specializations || [],
+      operatingHours,
+      logoUrl,
+      images: images || [],
+      googleMapsUrl,
+      placeId
     });
+
+    // Set coordinates if provided
+    if (latitude && longitude) {
+      clinic.setCoordinates(parseFloat(latitude), parseFloat(longitude));
+    }
 
     await clinic.save();
     res.status(201).json(clinic);
@@ -98,16 +148,25 @@ router.post('/', async (req, res) => {
 // Update clinic
 router.put('/:id', async (req, res) => {
   try {
-    const clinic = await Clinic.findByIdAndUpdate(
-      req.params.id,
-      req.body,
-      { new: true, runValidators: true }
-    );
-
+    const { latitude, longitude, ...updateData } = req.body;
+    
+    const clinic = await Clinic.findById(req.params.id);
+    
     if (!clinic) {
       return res.status(404).json({ message: 'Clinic not found' });
     }
 
+    // Update all fields
+    Object.keys(updateData).forEach(key => {
+      clinic[key] = updateData[key];
+    });
+
+    // Update coordinates if provided
+    if (latitude !== undefined && longitude !== undefined) {
+      clinic.setCoordinates(parseFloat(latitude), parseFloat(longitude));
+    }
+
+    await clinic.save();
     res.json(clinic);
   } catch (error) {
     console.error('Error updating clinic:', error);

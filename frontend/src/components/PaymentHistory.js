@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import axios from '../api/config';
+import './PaymentHistory.css';
 
 const PaymentHistory = ({ user }) => {
   const [payments, setPayments] = useState([]);

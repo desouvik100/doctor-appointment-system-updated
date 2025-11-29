@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "../api/config";
 import toast from 'react-hot-toast';
 import OnlineConsultation from './OnlineConsultation';
+import './MyAppointments.css';
 
 function MyAppointments({ user }) {
   const [appointments, setAppointments] = useState([]);

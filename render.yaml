@@ -1,6 +1,7 @@
 services:
+  # Backend API Service
   - type: web
-    name: doctor-appointment-backend
+    name: healthsync-backend
     env: node
     region: oregon
     plan: free
@@ -11,9 +12,43 @@ services:
     envVars:
       - key: NODE_ENV
         value: production
+      - key: PORT
+        value: 5005
+      # MongoDB - Set in Render Dashboard (secret)
+      - key: MONGODB_URI
+        sync: false
+      # JWT - Set in Render Dashboard (secret)
+      - key: JWT_SECRET
+        sync: false
+      # Email Configuration
       - key: EMAIL_USER
-        value: desouvik0000@gmail.com
+        sync: false
       - key: EMAIL_PASS
-        value: vlbabtmdlopfdtzr
+        sync: false
+      # AI Chatbot
+      - key: GEMINI_API_KEY
+        sync: false
+      - key: AI_PROVIDER
+        value: gemini
+      # Google Meet Integration
+      - key: GOOGLE_CLIENT_ID
+        sync: false
+      - key: GOOGLE_CLIENT_SECRET
+        sync: false
+      - key: GOOGLE_REFRESH_TOKEN
+        sync: false
+      - key: GOOGLE_REDIRECT_URI
+        value: https://healthsync-backend.onrender.com/api/google/callback
+      # Stripe (optional)
+      - key: STRIPE_SECRET_KEY
+        sync: false
+      - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      # CORS - Update with your Vercel frontend URL
       - key: CORS_ORIGIN
-        value: https://doctor-appointment-system-updated.vercel.app
+        value: https://healthsync-pro.vercel.app
+      - key: FRONTEND_URL
+        value: https://healthsync-pro.vercel.app
+      # Timezone
+      - key: TIMEZONE
+        value: Asia/Kolkata

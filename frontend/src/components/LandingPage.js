@@ -87,7 +87,9 @@ const LandingPage = ({ onNavigate = () => {} }) => {
       <nav className={`landing-nav ${scrolled ? 'scrolled' : ''}`}>
         <div className="landing-nav__container">
           <div className="landing-nav__logo">
-            <div className="landing-nav__logo-icon">🏥</div>
+            <div className="landing-nav__logo-icon heartbeat-logo">
+              <i className="fas fa-heart" style={{ color: '#ef4444' }}></i>
+            </div>
             <span>HealthSync</span>
           </div>
           <div className="landing-nav__links">

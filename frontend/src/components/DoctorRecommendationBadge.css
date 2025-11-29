@@ -1,76 +1,69 @@
-.doctor-recommendation-badge {
-  display: flex;
+/* Doctor Recommendation Badge Styles */
+.recommendation-badge {
+  display: inline-flex;
   align-items: center;
-  gap: 0.75rem;
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
-  border: 2px solid;
-  margin-bottom: 1rem;
-  animation: slideIn 0.4s ease;
-  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+  gap: 0.375rem;
+  padding: 0.25rem 0.75rem;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border: 1px solid #f59e0b;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #92400e;
 }
 
-@keyframes slideIn {
-  from {
-    opacity: 0;
-    transform: translateX(-20px);
-  }
-  to {
-    opacity: 1;
-    transform: translateX(0);
-  }
+.recommendation-badge i {
+  color: #f59e0b;
 }
 
-.badge-icon {
-  width: 40px;
-  height: 40px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-size: 1.25rem;
-  background: white;
-  border-radius: 50%;
-  flex-shrink: 0;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+.recommendation-badge.top-rated {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  border-color: #2563eb;
+  color: #1e40af;
 }
 
-.badge-content {
-  flex: 1;
+.recommendation-badge.top-rated i {
+  color: #2563eb;
 }
 
-.badge-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  margin-bottom: 0.125rem;
+.recommendation-badge.verified {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  border-color: #10b981;
+  color: #065f46;
 }
 
-.badge-description {
-  font-size: 0.8rem;
-  color: #64748b;
+.recommendation-badge.verified i {
+  color: #10b981;
 }
 
-.badge-stats {
-  font-size: 1.25rem;
-  font-weight: 800;
-  flex-shrink: 0;
+.recommendation-tooltip {
+  position: absolute;
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  padding: 0.5rem 0.75rem;
+  background: #1e293b;
+  color: #fff;
+  font-size: 0.75rem;
+  border-radius: 6px;
+  white-space: nowrap;
+  opacity: 0;
+  visibility: hidden;
+  transition: all 0.2s ease;
+  z-index: 10;
 }
 
-@media (max-width: 768px) {
-  .doctor-recommendation-badge {
-    padding: 0.5rem 0.75rem;
-  }
+.recommendation-badge:hover .recommendation-tooltip {
+  opacity: 1;
+  visibility: visible;
+}
 
-  .badge-icon {
-    width: 35px;
-    height: 35px;
-    font-size: 1rem;
-  }
-
-  .badge-title {
-    font-size: 0.85rem;
-  }
-
-  .badge-description {
-    font-size: 0.75rem;
-  }
+.recommendation-tooltip::after {
+  content: '';
+  position: absolute;
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border: 6px solid transparent;
+  border-top-color: #1e293b;
 }

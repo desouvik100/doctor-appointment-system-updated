@@ -1,0 +1,327 @@
+/* ============================================
+   Booking Flow Styles - Stepper & Summary
+   ============================================ */
+
+/* Booking Container */
+.booking-container {
+  display: grid;
+  gap: var(--space-6);
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+@media (min-width: 992px) {
+  .booking-container {
+    grid-template-columns: 1fr 360px;
+  }
+}
+
+/* Stepper */
+.booking-stepper {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: var(--space-8);
+  position: relative;
+}
+
+.booking-stepper::before {
+  content: '';
+  position: absolute;
+  top: 20px;
+  left: 40px;
+  right: 40px;
+  height: 2px;
+  background: var(--border);
+  z-index: 0;
+}
+
+.stepper-step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-2);
+  position: relative;
+  z-index: 1;
+}
+
+.stepper-number {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--card-bg);
+  border: 2px solid var(--border);
+  border-radius: var(--radius-full);
+  font-weight: 600;
+  color: var(--text-muted);
+  transition: all var(--transition-base);
+}
+
+.stepper-step.active .stepper-number {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--text-inverse);
+}
+
+.stepper-step.completed .stepper-number {
+  background: var(--success);
+  border-color: var(--success);
+  color: var(--text-inverse);
+}
+
+.stepper-label {
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-muted);
+  text-align: center;
+}
+
+.stepper-step.active .stepper-label {
+  color: var(--brand-primary);
+}
+
+.stepper-step.completed .stepper-label {
+  color: var(--success);
+}
+
+/* Booking Form */
+.booking-form {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-6);
+}
+
+.booking-section {
+  margin-bottom: var(--space-6);
+  padding-bottom: var(--space-6);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.booking-section:last-child {
+  margin-bottom: 0;
+  padding-bottom: 0;
+  border-bottom: none;
+}
+
+.booking-section-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-bottom: var(--space-4);
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+
+.booking-section-title i {
+  color: var(--brand-primary);
+}
+
+/* Time Slot Selection */
+.time-slots {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+  gap: var(--space-2);
+}
+
+.time-slot {
+  padding: var(--space-3);
+  background: var(--bg-secondary);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  text-align: center;
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.time-slot:hover:not(.disabled) {
+  border-color: var(--brand-primary);
+  background: var(--brand-primary-light);
+}
+
+.time-slot.selected {
+  background: var(--brand-primary);
+  border-color: var(--brand-primary);
+  color: var(--text-inverse);
+}
+
+.time-slot.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  text-decoration: line-through;
+}
+
+/* Date Selection */
+.date-grid {
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: var(--space-2);
+}
+
+.date-cell {
+  aspect-ratio: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: var(--bg-secondary);
+  border: 2px solid transparent;
+  border-radius: var(--radius-md);
+  font-size: var(--font-size-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.date-cell:hover:not(.disabled) {
+  border-color: var(--brand-primary);
+}
+
+.date-cell.selected {
+  background: var(--brand-primary);
+  color: var(--text-inverse);
+}
+
+.date-cell.today {
+  border-color: var(--brand-accent);
+}
+
+.date-cell.disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+
+/* Booking Summary - Sticky Sidebar */
+.booking-summary {
+  background: var(--card-bg);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-card);
+  padding: var(--space-5);
+  height: fit-content;
+}
+
+@media (min-width: 992px) {
+  .booking-summary {
+    position: sticky;
+    top: calc(var(--navbar-height) + var(--space-6));
+  }
+}
+
+.summary-title {
+  font-size: var(--font-size-lg);
+  font-weight: 600;
+  margin-bottom: var(--space-4);
+  padding-bottom: var(--space-4);
+  border-bottom: 1px solid var(--border-light);
+}
+
+.summary-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: var(--space-3);
+  font-size: var(--font-size-sm);
+}
+
+.summary-label {
+  color: var(--text-secondary);
+}
+
+.summary-value {
+  font-weight: 500;
+  color: var(--text-primary);
+  text-align: right;
+}
+
+.summary-divider {
+  height: 1px;
+  background: var(--border-light);
+  margin: var(--space-4) 0;
+}
+
+.summary-total {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: var(--font-size-lg);
+  font-weight: 700;
+}
+
+.summary-total .amount {
+  color: var(--brand-primary);
+}
+
+.summary-actions {
+  margin-top: var(--space-5);
+}
+
+/* Success State */
+.booking-success {
+  text-align: center;
+  padding: var(--space-10);
+}
+
+.success-icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto var(--space-5);
+  background: var(--success-light);
+  border-radius: var(--radius-full);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.success-icon i {
+  font-size: 2.5rem;
+  color: var(--success);
+}
+
+.success-title {
+  font-size: var(--font-size-2xl);
+  font-weight: 700;
+  margin-bottom: var(--space-2);
+}
+
+.success-message {
+  color: var(--text-secondary);
+  margin-bottom: var(--space-6);
+}
+
+/* Error State */
+.booking-error {
+  background: var(--danger-light);
+  border: 1px solid var(--danger);
+  border-radius: var(--radius-md);
+  padding: var(--space-4);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+}
+
+.booking-error i {
+  color: var(--danger);
+  font-size: 1.25rem;
+  flex-shrink: 0;
+}
+
+.booking-error-message {
+  color: var(--danger);
+  font-size: var(--font-size-sm);
+}
+
+/* Mobile Stepper */
+@media (max-width: 576px) {
+  .booking-stepper {
+    overflow-x: auto;
+    padding-bottom: var(--space-2);
+  }
+  
+  .stepper-label {
+    font-size: var(--font-size-xs);
+    max-width: 60px;
+  }
+}
