@@ -17,38 +17,38 @@ const LandingPage = ({ onNavigate = () => {} }) => {
   const features = [
     {
       icon: '🎥',
-      title: 'Google Meet Integration',
-      description: 'Automatic video consultation links generated 18 minutes before appointments. Seamless online consultations with one-click join.',
+      title: 'Online Video Consultations',
+      description: 'Connect with doctors from home via Google Meet. Automatic video links generated before your appointment for seamless virtual visits.',
       color: '#10b981'
     },
     {
-      icon: '⏰',
-      title: 'Smart Time Selection',
-      description: '1-minute precision booking with real-time availability checking. No more fixed time slots - book exactly when you need.',
+      icon: '🏥',
+      title: 'In-Clinic Appointments',
+      description: 'Prefer face-to-face consultations? Book in-person visits at your nearest clinic with smart queue management and wait time estimates.',
       color: '#3b82f6'
     },
     {
-      icon: '📧',
-      title: 'Instant Notifications',
-      description: 'Professional email notifications with appointment details and meeting links. Never miss an appointment again.',
+      icon: '⏰',
+      title: 'Flexible Scheduling',
+      description: 'Book appointments with 1-minute precision. Real-time availability checking ensures you get the slot that works best for you.',
       color: '#f59e0b'
     },
     {
-      icon: '🏥',
+      icon: '👨‍⚕️',
       title: 'Expert Doctors',
-      description: 'Access to verified healthcare professionals across multiple specializations. Find the right doctor for your needs.',
+      description: 'Access verified healthcare professionals across multiple specializations. Choose between online or in-clinic based on your preference.',
       color: '#8b5cf6'
     },
     {
-      icon: '💳',
-      title: 'Secure Payments',
-      description: 'Safe and secure payment processing with transparent pricing. Test mode available for development.',
+      icon: '📧',
+      title: 'Smart Notifications',
+      description: 'Get email reminders with appointment details, clinic directions for in-person visits, or meeting links for online consultations.',
       color: '#ec4899'
     },
     {
       icon: '📱',
-      title: 'Mobile Optimized',
-      description: 'Fully responsive design works perfectly on all devices. Book appointments on the go, anytime, anywhere.',
+      title: 'Book Anywhere',
+      description: 'Fully responsive design works on all devices. Schedule online or offline appointments on the go, anytime, anywhere.',
       color: '#06b6d4'
     }
   ];
@@ -64,19 +64,19 @@ const LandingPage = ({ onNavigate = () => {} }) => {
     {
       name: 'Sarah Johnson',
       role: 'Patient',
-      text: 'HealthSync made booking my appointment so easy! The Google Meet integration is amazing - no more confusion about meeting links.',
+      text: 'I love having the choice! When I\'m busy, I book online consultations. For detailed checkups, I visit the clinic. HealthSync makes both so easy!',
       avatar: '👩‍🦰'
     },
     {
       name: 'Dr. Rajesh Kumar',
       role: 'Cardiologist',
-      text: 'The automatic scheduling and email notifications save me so much time. My patients love the professional experience.',
+      text: 'Managing both online and in-clinic appointments from one platform is a game-changer. My patients appreciate the flexibility.',
       avatar: '👨‍⚕️'
     },
     {
       name: 'Priya Sharma',
       role: 'Patient',
-      text: 'I can book appointments at any time with 1-minute precision. The real-time availability checking is incredibly helpful.',
+      text: 'Booked an online consultation for a quick follow-up and an in-clinic visit for my annual checkup. The whole process was seamless!',
       avatar: '👩‍💼'
     }
   ];
@@ -149,31 +149,32 @@ const LandingPage = ({ onNavigate = () => {} }) => {
           <div className="landing-hero__content">
             <div className="landing-hero__badge">
               <span className="landing-hero__badge-dot"></span>
-              Now with Google Meet Integration
+              Online & In-Clinic Appointments Available
             </div>
 
             <h1 className="landing-hero__title">
-              Healthcare Appointments
-              <span className="landing-hero__title-gradient"> Made Simple</span>
+              Book Doctor Appointments
+              <span className="landing-hero__title-gradient"> Online & In-Clinic</span>
             </h1>
 
             <p className="landing-hero__subtitle">
-              Book appointments with expert doctors, get automatic Google Meet links, and enjoy seamless online consultations. 
-              Smart scheduling with 1-minute precision and real-time availability.
+              Choose how you want to consult - visit the clinic in person or connect via video call from home. 
+              Book appointments with expert doctors, get automatic Google Meet links for online consultations, 
+              or schedule in-clinic visits with smart queue management.
             </p>
 
             <div className="landing-hero__features-list">
               <div className="landing-hero__feature-item">
                 <i className="fas fa-check-circle"></i>
-                <span>Automatic Google Meet Links</span>
+                <span>Online Video Consultations</span>
               </div>
               <div className="landing-hero__feature-item">
                 <i className="fas fa-check-circle"></i>
-                <span>1-Minute Precision Booking</span>
+                <span>In-Clinic Appointments</span>
               </div>
               <div className="landing-hero__feature-item">
                 <i className="fas fa-check-circle"></i>
-                <span>Real-Time Availability</span>
+                <span>Real-Time Doctor Availability</span>
               </div>
             </div>
 
@@ -214,19 +215,30 @@ const LandingPage = ({ onNavigate = () => {} }) => {
                   <div className="landing-hero__phone-header">
                     <span>📅 My Appointments</span>
                   </div>
-                  <div className="landing-hero__phone-card">
+                  <div className="landing-hero__phone-card" style={{marginBottom: '10px'}}>
                     <div className="landing-hero__phone-card-header">
                       <span>🎥 Online Consultation</span>
                       <span className="landing-hero__phone-badge">✅ Confirmed</span>
                     </div>
                     <div className="landing-hero__phone-card-body">
                       <p><strong>Dr. John Smith</strong></p>
-                      <p>Cardiologist</p>
-                      <p>📅 Dec 1, 2024 • 14:30</p>
-                      <p>🎥 Google Meet Link Ready</p>
+                      <p>Cardiologist • 📅 Today, 14:30</p>
                     </div>
                     <button className="landing-hero__phone-btn">
-                      🎥 Join Meeting
+                      🎥 Join Video Call
+                    </button>
+                  </div>
+                  <div className="landing-hero__phone-card">
+                    <div className="landing-hero__phone-card-header">
+                      <span>🏥 In-Clinic Visit</span>
+                      <span className="landing-hero__phone-badge" style={{background: '#3b82f6'}}>📍 Scheduled</span>
+                    </div>
+                    <div className="landing-hero__phone-card-body">
+                      <p><strong>Dr. Sarah Wilson</strong></p>
+                      <p>Dermatologist • 📅 Tomorrow, 10:00</p>
+                    </div>
+                    <button className="landing-hero__phone-btn" style={{background: '#3b82f6'}}>
+                      📍 Get Directions
                     </button>
                   </div>
                 </div>
@@ -272,7 +284,7 @@ const LandingPage = ({ onNavigate = () => {} }) => {
             <div className="landing-how-it-works__step">
               <div className="landing-how-it-works__step-number">1</div>
               <h3>Find a Doctor</h3>
-              <p>Browse through our network of 500+ verified healthcare professionals across all specializations.</p>
+              <p>Browse through our network of verified healthcare professionals across all specializations and clinics.</p>
               <div className="landing-how-it-works__step-icon">🔍</div>
             </div>
 
@@ -280,26 +292,26 @@ const LandingPage = ({ onNavigate = () => {} }) => {
 
             <div className="landing-how-it-works__step">
               <div className="landing-how-it-works__step-number">2</div>
-              <h3>Select Time</h3>
-              <p>Choose your preferred date and time with 1-minute precision. Real-time availability checking prevents conflicts.</p>
-              <div className="landing-how-it-works__step-icon">⏰</div>
+              <h3>Choose Consultation Type</h3>
+              <p>Select Online for video consultation from home, or In-Clinic for face-to-face visit at the doctor's clinic.</p>
+              <div className="landing-how-it-works__step-icon">🏥</div>
             </div>
 
             <div className="landing-how-it-works__connector"></div>
 
             <div className="landing-how-it-works__step">
               <div className="landing-how-it-works__step-number">3</div>
-              <h3>Get Meet Link</h3>
-              <p>For online consultations, Google Meet link is automatically generated 18 minutes before your appointment.</p>
-              <div className="landing-how-it-works__step-icon">🎥</div>
+              <h3>Pick Your Time</h3>
+              <p>Choose your preferred date and time. For in-clinic visits, see estimated wait times. For online, get your Meet link.</p>
+              <div className="landing-how-it-works__step-icon">⏰</div>
             </div>
 
             <div className="landing-how-it-works__connector"></div>
 
             <div className="landing-how-it-works__step">
               <div className="landing-how-it-works__step-number">4</div>
-              <h3>Join Consultation</h3>
-              <p>Click the "Join Meeting" button 15 minutes before your appointment to start your video consultation.</p>
+              <h3>Attend Your Appointment</h3>
+              <p>Visit the clinic in person or join the video call from home. Get reminders and all details via email.</p>
               <div className="landing-how-it-works__step-icon">✅</div>
             </div>
           </div>
@@ -353,8 +365,8 @@ const LandingPage = ({ onNavigate = () => {} }) => {
       {/* CTA Section */}
       <section className="landing-cta">
         <div className="landing-cta__container">
-          <h2>Ready to Transform Your Healthcare Experience?</h2>
-          <p>Join thousands of patients and doctors using HealthSync for seamless appointments and consultations.</p>
+          <h2>Ready to Book Your Appointment?</h2>
+          <p>Join thousands of patients using HealthSync for hassle-free doctor appointments - online video consultations or in-clinic visits.</p>
           
           <div className="landing-cta__actions">
             <button 
