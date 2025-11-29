@@ -50,6 +50,18 @@ const LandingPage = ({ onNavigate = () => {} }) => {
       title: 'Book Anywhere',
       description: 'Fully responsive design works on all devices. Schedule online or offline appointments on the go, anytime, anywhere.',
       color: '#06b6d4'
+    },
+    {
+      icon: '🤖',
+      title: 'AI Health Assistant',
+      description: 'Get instant health guidance with our AI-powered chatbot. Check symptoms, get recommendations, and find the right specialist for your needs.',
+      color: '#14b8a6'
+    },
+    {
+      icon: '💳',
+      title: 'Secure Payments',
+      description: 'Pay consultation fees securely online with multiple payment options. Transparent pricing with no hidden charges.',
+      color: '#f43f5e'
     }
   ];
 
