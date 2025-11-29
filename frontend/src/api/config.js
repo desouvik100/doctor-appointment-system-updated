@@ -3,8 +3,8 @@ import axios from 'axios';
 // Configure axios defaults
 const API_BASE_URL = process.env.REACT_APP_API_URL || (
   process.env.NODE_ENV === 'production' 
-    ? process.env.REACT_APP_BACKEND_URL || 'https://doctor-appointment-backend.onrender.com' // Render backend URL
-    : 'http://localhost:5005' // Local backend on port 5005
+    ? process.env.REACT_APP_BACKEND_URL || 'https://doctor-appointment-system-updated.onrender.com'
+    : 'http://localhost:5005'
 );
 
 console.log('API Base URL:', API_BASE_URL);
