@@ -9,9 +9,13 @@ function ClinicDashboard({ receptionist }) {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("all");
   const [searchTerm, setSearchTerm] = useState("");
+  const [activeTab, setActiveTab] = useState("appointments");
+  const [doctors, setDoctors] = useState([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(false);
 
   useEffect(() => {
     fetchAppointments();
+    fetchDoctors();
   }, [receptionist]);
 
   const fetchAppointments = async () => {
@@ -23,6 +27,32 @@ function ClinicDashboard({ receptionist }) {
       console.error("Error fetching appointments:", error);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const fetchDoctors = async () => {
+    try {
+      setDoctorsLoading(true);
+      const response = await axios.get(`/api/receptionists/doctors/${receptionist.clinicId}`);
+      setDoctors(response.data);
+    } catch (error) {
+      console.error("Error fetching doctors:", error);
+    } finally {
+      setDoctorsLoading(false);
+    }
+  };
+
+  const updateDoctorAvailability = async (doctorId, availability) => {
+    try {
+      await axios.put(`/api/receptionists/doctors/${doctorId}/availability`, {
+        availability,
+        clinicId: receptionist.clinicId
+      });
+      toast.success(`Doctor status updated to ${availability}`);
+      fetchDoctors();
+    } catch (error) {
+      toast.error("Failed to update doctor availability");
+      console.error("Error updating doctor availability:", error);
     }
   };
 
@@ -209,21 +239,151 @@ function ClinicDashboard({ receptionist }) {
             <div className="card-body">
               <div className="d-flex align-items-center">
                 <div className="flex-grow-1">
-                  <h4 className="mb-0">{appointments.filter(a => a.status === "completed").length}</h4>
-                  <p className="mb-0 small">Completed</p>
+                  <h4 className="mb-0">{doctors.filter(d => d.availability === "Available").length}/{doctors.length}</h4>
+                  <p className="mb-0 small">Doctors Available</p>
                   <small className="opacity-75">
-                    <i className="fas fa-thumbs-up me-1"></i>
-                    All done
+                    <i className="fas fa-user-md me-1"></i>
+                    {doctors.filter(d => d.availability === "Busy").length} busy
                   </small>
                 </div>
-                <i className="fas fa-check-double fa-2x opacity-75"></i>
+                <i className="fas fa-user-md fa-2x opacity-75"></i>
               </div>
             </div>
           </div>
         </div>
       </div>
 
+      {/* Navigation Tabs */}
+      <ul className="nav nav-tabs mb-4">
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "appointments" ? "active" : ""}`}
+            onClick={() => setActiveTab("appointments")}
+          >
+            <i className="fas fa-calendar-check me-2"></i>
+            Appointments
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "doctors" ? "active" : ""}`}
+            onClick={() => setActiveTab("doctors")}
+          >
+            <i className="fas fa-user-md me-2"></i>
+            Manage Doctors
+            <span className="badge bg-primary ms-2">{doctors.length}</span>
+          </button>
+        </li>
+      </ul>
+
+      {/* Doctor Management Tab */}
+      {activeTab === "doctors" && (
+        <div className="card shadow-sm mb-4">
+          <div className="card-header">
+            <div className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">
+                <i className="fas fa-user-md me-2"></i>
+                Doctor Availability Management
+              </h5>
+              <button className="btn btn-sm btn-outline-primary" onClick={fetchDoctors}>
+                <i className="fas fa-sync-alt me-1"></i>
+                Refresh
+              </button>
+            </div>
+          </div>
+          <div className="card-body">
+            {doctorsLoading ? (
+              <div className="text-center py-4">
+                <div className="spinner-border text-primary" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
+                <p className="mt-2">Loading doctors...</p>
+              </div>
+            ) : doctors.length === 0 ? (
+              <div className="text-center py-4">
+                <i className="fas fa-user-md fa-3x text-muted mb-3"></i>
+                <p className="text-muted">No doctors found for this clinic.</p>
+              </div>
+            ) : (
+              <div className="row g-3">
+                {doctors.map((doctor) => (
+                  <div key={doctor._id} className="col-md-6 col-lg-4">
+                    <div className={`card h-100 border-2 ${
+                      doctor.availability === 'Available' ? 'border-success' : 
+                      doctor.availability === 'Busy' ? 'border-danger' : 'border-warning'
+                    }`}>
+                      <div className="card-body">
+                        <div className="d-flex align-items-start mb-3">
+                          <div className={`rounded-circle p-3 me-3 ${
+                            doctor.availability === 'Available' ? 'bg-success' : 
+                            doctor.availability === 'Busy' ? 'bg-danger' : 'bg-warning'
+                          }`}>
+                            <i className="fas fa-user-md text-white fa-lg"></i>
+                          </div>
+                          <div className="flex-grow-1">
+                            <h6 className="mb-1">Dr. {doctor.name}</h6>
+                            <small className="text-muted">{doctor.specialization}</small>
+                            <div className="mt-1">
+                              <span className={`badge ${
+                                doctor.availability === 'Available' ? 'bg-success' : 
+                                doctor.availability === 'Busy' ? 'bg-danger' : 'bg-warning'
+                              }`}>
+                                {doctor.availability}
+                              </span>
+                            </div>
+                          </div>
+                        </div>
+                        
+                        <div className="mb-3">
+                          <small className="text-muted d-block">
+                            <i className="fas fa-envelope me-1"></i> {doctor.email}
+                          </small>
+                          <small className="text-muted d-block">
+                            <i className="fas fa-phone me-1"></i> {doctor.phone}
+                          </small>
+                          <small className="text-muted d-block">
+                            <i className="fas fa-rupee-sign me-1"></i> ₹{doctor.consultationFee} per visit
+                          </small>
+                        </div>
+
+                        <div className="d-flex gap-2">
+                          <button
+                            className={`btn btn-sm flex-fill ${doctor.availability === 'Available' ? 'btn-success' : 'btn-outline-success'}`}
+                            onClick={() => updateDoctorAvailability(doctor._id, 'Available')}
+                            disabled={doctor.availability === 'Available'}
+                          >
+                            <i className="fas fa-check me-1"></i>
+                            Available
+                          </button>
+                          <button
+                            className={`btn btn-sm flex-fill ${doctor.availability === 'Busy' ? 'btn-danger' : 'btn-outline-danger'}`}
+                            onClick={() => updateDoctorAvailability(doctor._id, 'Busy')}
+                            disabled={doctor.availability === 'Busy'}
+                          >
+                            <i className="fas fa-times me-1"></i>
+                            Busy
+                          </button>
+                          <button
+                            className={`btn btn-sm flex-fill ${doctor.availability === 'On Leave' ? 'btn-warning' : 'btn-outline-warning'}`}
+                            onClick={() => updateDoctorAvailability(doctor._id, 'On Leave')}
+                            disabled={doctor.availability === 'On Leave'}
+                          >
+                            <i className="fas fa-plane me-1"></i>
+                            Leave
+                          </button>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
       {/* Appointments Management */}
+      {activeTab === "appointments" && (
       <div className="card shadow-sm">
         <div className="card-header">
           <div className="d-flex justify-content-between align-items-center mb-2">
@@ -389,6 +549,7 @@ function ClinicDashboard({ receptionist }) {
           )}
         </div>
       </div>
+      )}
     </div>
   );
 }

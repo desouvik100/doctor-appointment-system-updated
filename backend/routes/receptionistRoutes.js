@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Appointment = require('../models/Appointment');
+const Doctor = require('../models/Doctor');
 const router = express.Router();
 
 // Receptionist login
@@ -162,6 +163,63 @@ router.put('/:id/reject', async (req, res) => {
     });
   } catch (error) {
     console.error('Error rejecting receptionist:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// ==========================================
+// DOCTOR MANAGEMENT FOR CLINICS
+// ==========================================
+
+// Get doctors for a specific clinic
+router.get('/doctors/:clinicId', async (req, res) => {
+  try {
+    const { clinicId } = req.params;
+    
+    const doctors = await Doctor.find({ clinicId, isActive: true })
+      .sort({ name: 1 });
+
+    res.json(doctors);
+  } catch (error) {
+    console.error('Error fetching clinic doctors:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Update doctor availability (clinic can set Available/Busy)
+router.put('/doctors/:doctorId/availability', async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const { availability, clinicId } = req.body;
+
+    // Validate availability value
+    if (!['Available', 'Busy', 'On Leave'].includes(availability)) {
+      return res.status(400).json({ message: 'Invalid availability status. Use: Available, Busy, or On Leave' });
+    }
+
+    // Find doctor and verify they belong to this clinic
+    const doctor = await Doctor.findById(doctorId);
+    
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    // Verify doctor belongs to the clinic
+    if (clinicId && doctor.clinicId.toString() !== clinicId) {
+      return res.status(403).json({ message: 'You can only update doctors from your clinic' });
+    }
+
+    // Update availability
+    doctor.availability = availability;
+    await doctor.save();
+
+    res.json({
+      success: true,
+      message: `Doctor availability updated to ${availability}`,
+      doctor
+    });
+  } catch (error) {
+    console.error('Error updating doctor availability:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
