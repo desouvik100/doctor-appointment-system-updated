@@ -256,8 +256,8 @@ function ClinicAuth({ onLogin, onBack }) {
     setError("");
     
     try {
-      // Use the receptionist-specific reset endpoint
-      const response = await axios.post("/api/receptionists/reset-password", {
+      // Use the clinic-specific reset endpoint (consistent with clinic login)
+      const response = await axios.post("/api/auth/clinic/reset-password", {
         email: forgotEmail.toLowerCase().trim(),
         newPassword: newPassword
       });

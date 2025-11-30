@@ -127,7 +127,7 @@ router.get('/clinic/:clinicId', async (req, res) => {
   }
 });
 
-// Create new doctor (admin only)
+// Create new doctor (admin or receptionist)
 router.post('/', async (req, res) => {
   try {
     const {
@@ -136,22 +136,51 @@ router.post('/', async (req, res) => {
       phone,
       specialization,
       clinicId,
+      clinicName,
       availability,
       consultationFee,
       experience,
       qualification
     } = req.body;
 
+    console.log('📋 Creating doctor:', { name, email, clinicId, clinicName });
+
     // Check if doctor with email already exists
-    const existingDoctor = await Doctor.findOne({ email });
-    if (existingDoctor) {
-      return res.status(400).json({ message: 'Doctor with this email already exists' });
+    if (email) {
+      const existingDoctor = await Doctor.findOne({ email });
+      if (existingDoctor) {
+        return res.status(400).json({ message: 'Doctor with this email already exists' });
+      }
     }
 
-    // Verify clinic exists
-    const clinic = await Clinic.findById(clinicId);
-    if (!clinic) {
-      return res.status(400).json({ message: 'Clinic not found' });
+    let finalClinicId = clinicId;
+
+    // If no clinicId provided but clinicName is provided, try to find or create clinic
+    if (!clinicId && clinicName) {
+      let clinic = await Clinic.findOne({ name: { $regex: new RegExp(`^${clinicName}$`, 'i') } });
+      if (!clinic) {
+        // Create a new clinic
+        clinic = new Clinic({
+          name: clinicName,
+          address: 'Address to be updated',
+          city: 'City to be updated',
+          phone: phone || '0000000000',
+          isActive: true
+        });
+        await clinic.save();
+        console.log('✅ Created new clinic:', clinic._id);
+      }
+      finalClinicId = clinic._id;
+    }
+
+    // Verify clinic exists if clinicId is provided
+    if (finalClinicId) {
+      const clinic = await Clinic.findById(finalClinicId);
+      if (!clinic) {
+        return res.status(400).json({ message: 'Clinic not found. Please contact admin to assign you to a clinic.' });
+      }
+    } else {
+      return res.status(400).json({ message: 'No clinic assigned. Please contact admin to assign you to a clinic first.' });
     }
 
     const doctor = new Doctor({

@@ -339,6 +339,61 @@ router.post('/forgot-password', async (req, res) => {
   }
 });
 
+// Clinic/Receptionist Reset Password (after OTP verification - OTP already verified)
+router.post('/clinic/reset-password', async (req, res) => {
+  try {
+    console.log('📧 Clinic reset password request:', { email: req.body.email });
+    
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Email and new password are required' 
+      });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ 
+        success: false,
+        message: 'Password must be at least 6 characters' 
+      });
+    }
+
+    // Find user by email
+    const user = await User.findOne({ email: email.toLowerCase().trim() });
+    if (!user) {
+      console.log('❌ User not found:', email);
+      return res.status(404).json({ 
+        success: false,
+        message: 'No account found with this email' 
+      });
+    }
+
+    console.log('✅ User found:', user.email, 'Role:', user.role);
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+
+    // Update password
+    await User.findByIdAndUpdate(user._id, { password: hashedPassword });
+
+    console.log(`✅ Password reset successful for: ${email}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Clinic reset password error:', error);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error: ' + error.message 
+    });
+  }
+});
+
 // Reset Password (after OTP verification)
 router.post('/reset-password', async (req, res) => {
   try {

@@ -94,13 +94,15 @@ function ClinicDashboard({ receptionist, onLogout }) {
       if (editingDoctor) {
         await axios.put(`/api/doctors/${editingDoctor._id}`, {
           ...doctorForm,
-          clinicId: receptionist.clinicId
+          clinicId: receptionist.clinicId,
+          clinicName: receptionist.clinicName
         });
         toast.success('Doctor updated successfully');
       } else {
         await axios.post('/api/doctors', {
           ...doctorForm,
-          clinicId: receptionist.clinicId
+          clinicId: receptionist.clinicId,
+          clinicName: receptionist.clinicName
         });
         toast.success('Doctor added successfully');
       }
