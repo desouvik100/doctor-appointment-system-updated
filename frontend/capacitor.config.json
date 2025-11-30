@@ -1,0 +1,37 @@
+{
+  "appId": "com.healthsync.app",
+  "appName": "HealthSync",
+  "webDir": "build",
+  "bundledWebRuntime": false,
+  "server": {
+    "androidScheme": "https",
+    "cleartext": true,
+    "allowNavigation": [
+      "*.razorpay.com",
+      "*.stripe.com",
+      "api.razorpay.com",
+      "checkout.razorpay.com"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 2000,
+      "backgroundColor": "#4F46E5",
+      "showSpinner": true,
+      "spinnerColor": "#ffffff"
+    },
+    "PushNotifications": {
+      "presentationOptions": ["badge", "sound", "alert"]
+    },
+    "Keyboard": {
+      "resize": "body",
+      "resizeOnFullScreen": true
+    }
+  },
+  "android": {
+    "allowMixedContent": true
+  },
+  "ios": {
+    "contentInset": "automatic"
+  }
+}

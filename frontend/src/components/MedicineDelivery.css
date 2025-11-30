@@ -1,0 +1,572 @@
+.medicine-delivery {
+  padding: 1.5rem;
+}
+
+.medicine-delivery__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.medicine-delivery__header h2 {
+  font-size: 1.5rem;
+  color: var(--text-primary, #1e293b);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.medicine-delivery__header h2 i {
+  color: #10b981;
+}
+
+.medicine-delivery__tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.medicine-delivery__tabs button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-secondary, #f8fafc);
+  color: var(--text-secondary, #64748b);
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  transition: all 0.3s ease;
+}
+
+.medicine-delivery__tabs button.active {
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border-color: transparent;
+}
+
+.medicine-delivery__cart-btn {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #3b82f6, #2563eb);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+  position: relative;
+}
+
+.medicine-delivery__cart-count {
+  position: absolute;
+  top: -8px;
+  right: -8px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.medicine-delivery__filters {
+  margin-bottom: 1.5rem;
+}
+
+.medicine-delivery__search {
+  position: relative;
+  margin-bottom: 1rem;
+}
+
+.medicine-delivery__search i {
+  position: absolute;
+  left: 1rem;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--text-secondary, #64748b);
+}
+
+.medicine-delivery__search input {
+  width: 100%;
+  padding: 0.75rem 1rem 0.75rem 2.5rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  background: var(--bg-secondary, #f8fafc);
+  color: var(--text-primary, #1e293b);
+  font-size: 1rem;
+}
+
+.medicine-delivery__categories {
+  display: flex;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.medicine-delivery__categories button {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-primary, white);
+  color: var(--text-secondary, #64748b);
+  border-radius: 20px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.medicine-delivery__categories button.active {
+  background: #10b981;
+  color: white;
+  border-color: transparent;
+}
+
+.medicine-delivery__loading {
+  display: flex;
+  justify-content: center;
+  padding: 3rem;
+}
+
+.medicine-delivery__spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color, #e2e8f0);
+  border-top-color: #10b981;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+.medicine-delivery__grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 1rem;
+}
+
+.medicine-card {
+  background: var(--bg-primary, white);
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  text-align: center;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.medicine-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.1);
+}
+
+.medicine-card__rx {
+  position: absolute;
+  top: 0.75rem;
+  right: 0.75rem;
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  font-weight: 700;
+  padding: 0.25rem 0.5rem;
+  border-radius: 4px;
+}
+
+.medicine-card__icon {
+  width: 60px;
+  height: 60px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+}
+
+.medicine-card__icon i {
+  font-size: 1.5rem;
+  color: white;
+}
+
+.medicine-card h3 {
+  font-size: 0.95rem;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 0.25rem;
+}
+
+.medicine-card__manufacturer {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #64748b);
+  margin-bottom: 0.5rem;
+}
+
+.medicine-card__category {
+  display: inline-block;
+  font-size: 0.7rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-secondary, #f8fafc);
+  color: #10b981;
+  border-radius: 4px;
+  margin-bottom: 0.75rem;
+}
+
+.medicine-card__price {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #10b981;
+  margin-bottom: 0.75rem;
+}
+
+.medicine-card__add-btn {
+  width: 100%;
+  padding: 0.5rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.3s ease;
+}
+
+.medicine-card__add-btn:hover {
+  transform: scale(1.02);
+}
+
+/* Orders */
+.medicine-delivery__orders {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.medicine-delivery__empty {
+  text-align: center;
+  padding: 3rem;
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 16px;
+}
+
+.medicine-delivery__empty i {
+  font-size: 3rem;
+  color: #10b981;
+  margin-bottom: 1rem;
+}
+
+.medicine-delivery__empty h3 {
+  color: var(--text-primary, #1e293b);
+}
+
+.medicine-delivery__empty p {
+  color: var(--text-secondary, #64748b);
+  margin-bottom: 1rem;
+}
+
+.medicine-delivery__empty button {
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+.order-card {
+  background: var(--bg-primary, white);
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.order-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 0.75rem;
+}
+
+.order-card__number {
+  font-weight: 600;
+  color: var(--text-primary, #1e293b);
+  margin-right: 0.5rem;
+}
+
+.order-card__date {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.order-card__status {
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  color: white;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.order-card__items {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 0.75rem;
+}
+
+.order-card__items span {
+  font-size: 0.85rem;
+  padding: 0.25rem 0.5rem;
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 4px;
+  color: var(--text-secondary, #64748b);
+}
+
+.order-card__more {
+  color: #10b981 !important;
+  font-weight: 500;
+}
+
+.order-card__footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.order-card__total {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: #10b981;
+}
+
+.order-card__actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.order-card__cancel {
+  padding: 0.5rem 1rem;
+  background: #fee2e2;
+  color: #ef4444;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.order-card__reorder {
+  padding: 0.5rem 1rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.85rem;
+}
+
+.order-card__eta {
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px dashed var(--border-color, #e2e8f0);
+  font-size: 0.85rem;
+  color: var(--text-secondary, #64748b);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.order-card__eta i {
+  color: #10b981;
+}
+
+/* Modal */
+.medicine-delivery__modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.medicine-delivery__modal {
+  background: var(--bg-primary, white);
+  border-radius: 16px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow-y: auto;
+}
+
+.medicine-delivery__modal-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.25rem;
+  border-bottom: 1px solid var(--border-color, #e2e8f0);
+}
+
+.medicine-delivery__modal-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.medicine-delivery__modal-header h3 i {
+  color: #10b981;
+}
+
+.medicine-delivery__modal-header button {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+}
+
+.medicine-delivery__checkout {
+  padding: 1.25rem;
+}
+
+.medicine-delivery__cart-items h4,
+.medicine-delivery__address h4 {
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 0.75rem;
+}
+
+.cart-item {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding: 0.75rem;
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 8px;
+  margin-bottom: 0.5rem;
+}
+
+.cart-item__info {
+  flex: 1;
+}
+
+.cart-item__name {
+  display: block;
+  font-weight: 500;
+  color: var(--text-primary, #1e293b);
+}
+
+.cart-item__price {
+  font-size: 0.85rem;
+  color: #10b981;
+}
+
+.cart-item__qty {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.cart-item__qty button {
+  width: 28px;
+  height: 28px;
+  border: 1px solid var(--border-color, #e2e8f0);
+  background: var(--bg-primary, white);
+  border-radius: 4px;
+  cursor: pointer;
+  color: var(--text-primary, #1e293b);
+}
+
+.cart-item__remove {
+  background: none;
+  border: none;
+  color: #ef4444;
+  cursor: pointer;
+}
+
+.medicine-delivery__address {
+  margin-top: 1.5rem;
+}
+
+.medicine-delivery__form-row {
+  display: flex;
+  gap: 0.75rem;
+  margin-bottom: 0.75rem;
+}
+
+.medicine-delivery__address input,
+.medicine-delivery__address textarea {
+  flex: 1;
+  padding: 0.75rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  background: var(--bg-secondary, #f8fafc);
+  color: var(--text-primary, #1e293b);
+}
+
+.medicine-delivery__address textarea {
+  width: 100%;
+  margin-bottom: 0.75rem;
+  resize: none;
+}
+
+.medicine-delivery__summary {
+  margin-top: 1.5rem;
+  padding: 1rem;
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 8px;
+}
+
+.medicine-delivery__summary-row {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 0.5rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.medicine-delivery__discount {
+  color: #10b981 !important;
+}
+
+.medicine-delivery__total {
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-primary, #1e293b) !important;
+  padding-top: 0.5rem;
+  border-top: 1px solid var(--border-color, #e2e8f0);
+}
+
+.medicine-delivery__place-order {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #10b981, #059669);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 1rem;
+  margin-top: 1rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 768px) {
+  .medicine-delivery__header {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  
+  .medicine-delivery__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .medicine-delivery__form-row {
+    flex-direction: column;
+  }
+}

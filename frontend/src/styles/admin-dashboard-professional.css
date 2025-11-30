@@ -656,3 +656,21 @@
   background: rgba(59, 130, 246, 0.1);
   color: #3b82f6;
 }
+
+
+/* Admin Tab Badge */
+.admin-tab__badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 20px;
+  font-weight: 600;
+  margin-left: 0.5rem;
+  min-width: 20px;
+  text-align: center;
+}
+
+.admin-tab--active .admin-tab__badge {
+  background: rgba(255, 255, 255, 0.3);
+}

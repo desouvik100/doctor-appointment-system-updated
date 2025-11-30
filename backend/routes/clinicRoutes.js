@@ -200,4 +200,78 @@ router.delete('/:id', async (req, res) => {
   }
 });
 
+// ==========================================
+// CLINIC APPROVAL SYSTEM (Admin Only)
+// ==========================================
+
+// Get pending clinics
+router.get('/admin/pending', async (req, res) => {
+  try {
+    const pendingClinics = await Clinic.find({ approvalStatus: 'pending' })
+      .sort({ createdAt: -1 });
+    res.json(pendingClinics);
+  } catch (error) {
+    console.error('Error fetching pending clinics:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Approve clinic
+router.put('/:id/approve', async (req, res) => {
+  try {
+    const { adminId } = req.body;
+    
+    const clinic = await Clinic.findByIdAndUpdate(
+      req.params.id,
+      { 
+        approvalStatus: 'approved',
+        approvedBy: adminId,
+        approvedAt: new Date(),
+        isVerified: true
+      },
+      { new: true }
+    );
+
+    if (!clinic) {
+      return res.status(404).json({ message: 'Clinic not found' });
+    }
+
+    res.json({
+      message: 'Clinic approved successfully',
+      clinic
+    });
+  } catch (error) {
+    console.error('Error approving clinic:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Reject clinic
+router.put('/:id/reject', async (req, res) => {
+  try {
+    const { reason } = req.body;
+    
+    const clinic = await Clinic.findByIdAndUpdate(
+      req.params.id,
+      { 
+        approvalStatus: 'rejected',
+        rejectionReason: reason
+      },
+      { new: true }
+    );
+
+    if (!clinic) {
+      return res.status(404).json({ message: 'Clinic not found' });
+    }
+
+    res.json({
+      message: 'Clinic rejected',
+      clinic
+    });
+  } catch (error) {
+    console.error('Error rejecting clinic:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router;

@@ -1,0 +1,621 @@
+.health-checkup {
+  padding: 1.5rem;
+}
+
+.health-checkup__loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.health-checkup__spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color, #e2e8f0);
+  border-top-color: var(--primary-color, #3b82f6);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.health-checkup__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.health-checkup__title {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.health-checkup__title-icon {
+  width: 56px;
+  height: 56px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.5rem;
+}
+
+.health-checkup__title h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.health-checkup__title p {
+  margin: 0.25rem 0 0;
+  color: var(--text-secondary, #64748b);
+  font-size: 0.9rem;
+}
+
+.health-checkup__tabs {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.health-checkup__tab {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-secondary, #64748b);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.health-checkup__tab:hover {
+  border-color: var(--primary-color, #3b82f6);
+  color: var(--primary-color, #3b82f6);
+}
+
+.health-checkup__tab--active {
+  background: var(--primary-color, #3b82f6);
+  border-color: var(--primary-color, #3b82f6);
+  color: white;
+}
+
+.health-checkup__badge {
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.125rem 0.5rem;
+  border-radius: 20px;
+  font-weight: 600;
+}
+
+/* Packages Grid */
+.health-checkup__packages {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1.5rem;
+}
+
+.health-checkup__package-card {
+  background: var(--bg-primary, #ffffff);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 2px solid var(--border-color, #e2e8f0);
+  transition: all 0.3s;
+}
+
+.health-checkup__package-card:hover {
+  border-color: var(--primary-color, #3b82f6);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+  transform: translateY(-4px);
+}
+
+.health-checkup__package-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+}
+
+.health-checkup__package-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.health-checkup__discount-badge {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  padding: 0.25rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 700;
+}
+
+.health-checkup__package-price {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  margin-bottom: 1rem;
+}
+
+.health-checkup__original-price {
+  color: var(--text-secondary, #64748b);
+  text-decoration: line-through;
+  font-size: 1rem;
+}
+
+.health-checkup__discounted-price {
+  font-size: 1.75rem;
+  font-weight: 700;
+  color: #059669;
+}
+
+.health-checkup__package-info {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  font-size: 0.85rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.health-checkup__package-info span {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.health-checkup__tests-preview {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.health-checkup__test-tag {
+  background: var(--bg-secondary, #f8fafc);
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.health-checkup__more-tests {
+  background: var(--primary-color, #3b82f6);
+  color: white;
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.health-checkup__select-btn {
+  width: 100%;
+  padding: 0.875rem;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.health-checkup__select-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+}
+
+/* Booking Form */
+.health-checkup__booking-form {
+  background: var(--bg-primary, #ffffff);
+  border-radius: 16px;
+  padding: 1.5rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.health-checkup__back-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 1rem;
+  background: var(--bg-secondary, #f8fafc);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  color: var(--text-secondary, #64748b);
+  font-size: 0.9rem;
+  cursor: pointer;
+  margin-bottom: 1.5rem;
+  transition: all 0.2s;
+}
+
+.health-checkup__back-btn:hover {
+  background: var(--bg-tertiary, #e2e8f0);
+}
+
+.health-checkup__selected-package {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: linear-gradient(135deg, #eff6ff 0%, #dbeafe 100%);
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.health-checkup__selected-package h3 {
+  margin: 0;
+  color: var(--text-primary, #1e293b);
+}
+
+.health-checkup__tests-list {
+  margin-bottom: 1.5rem;
+}
+
+.health-checkup__tests-list h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 1rem;
+  color: var(--text-primary, #1e293b);
+  font-size: 1rem;
+}
+
+.health-checkup__tests-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+  gap: 0.75rem;
+}
+
+.health-checkup__test-item {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.5rem 0.75rem;
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 8px;
+  font-size: 0.85rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.health-checkup__test-icon {
+  font-size: 1rem;
+}
+
+.health-checkup__form-section {
+  margin-bottom: 1.5rem;
+}
+
+.health-checkup__form-section h4 {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0 0 0.75rem;
+  color: var(--text-primary, #1e293b);
+  font-size: 0.95rem;
+}
+
+.health-checkup__form-row {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+}
+
+.health-checkup__select,
+.health-checkup__input {
+  width: 100%;
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 10px;
+  font-size: 0.95rem;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #1e293b);
+  transition: all 0.2s;
+}
+
+.health-checkup__select:focus,
+.health-checkup__input:focus {
+  outline: none;
+  border-color: var(--primary-color, #3b82f6);
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.health-checkup__time-slots {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.health-checkup__time-slot {
+  padding: 0.5rem 1rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 8px;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #1e293b);
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.health-checkup__time-slot:hover {
+  border-color: var(--primary-color, #3b82f6);
+}
+
+.health-checkup__time-slot--selected {
+  background: var(--primary-color, #3b82f6);
+  border-color: var(--primary-color, #3b82f6);
+  color: white;
+}
+
+.health-checkup__no-slots {
+  color: var(--text-secondary, #64748b);
+  font-size: 0.9rem;
+  font-style: italic;
+}
+
+.health-checkup__patient-form {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1rem;
+}
+
+.health-checkup__input--full {
+  grid-column: 1 / -1;
+}
+
+.health-checkup__fasting-notice {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem 1.25rem;
+  background: #fef3c7;
+  border: 1px solid #fbbf24;
+  border-radius: 12px;
+  margin-bottom: 1.5rem;
+}
+
+.health-checkup__fasting-notice i {
+  color: #f59e0b;
+  font-size: 1.25rem;
+  margin-top: 0.125rem;
+}
+
+.health-checkup__fasting-notice strong {
+  color: #92400e;
+  display: block;
+  margin-bottom: 0.25rem;
+}
+
+.health-checkup__fasting-notice p {
+  margin: 0;
+  color: #78350f;
+  font-size: 0.9rem;
+}
+
+.health-checkup__summary {
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 12px;
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+}
+
+.health-checkup__summary-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 0.5rem 0;
+  font-size: 0.95rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.health-checkup__strike {
+  text-decoration: line-through;
+}
+
+.health-checkup__discount {
+  color: #10b981;
+}
+
+.health-checkup__summary-total {
+  border-top: 1px solid var(--border-color, #e2e8f0);
+  margin-top: 0.5rem;
+  padding-top: 0.75rem;
+  font-weight: 700;
+  font-size: 1.1rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.health-checkup__book-btn {
+  width: 100%;
+  padding: 1rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 12px;
+  font-size: 1.1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: all 0.2s;
+}
+
+.health-checkup__book-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.health-checkup__book-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Bookings */
+.health-checkup__bookings {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.health-checkup__empty {
+  text-align: center;
+  padding: 3rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.health-checkup__empty i {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+  opacity: 0.5;
+}
+
+.health-checkup__empty h3 {
+  margin: 0 0 0.5rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.health-checkup__empty p {
+  margin: 0 0 1.5rem;
+}
+
+.health-checkup__empty button {
+  padding: 0.75rem 1.5rem;
+  background: var(--primary-color, #3b82f6);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.health-checkup__booking-card {
+  background: var(--bg-primary, #ffffff);
+  border-radius: 12px;
+  padding: 1.25rem;
+  border: 1px solid var(--border-color, #e2e8f0);
+}
+
+.health-checkup__booking-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.health-checkup__booking-header h4 {
+  margin: 0;
+  color: var(--text-primary, #1e293b);
+}
+
+.health-checkup__status {
+  padding: 0.375rem 0.75rem;
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-transform: capitalize;
+}
+
+.health-checkup__booking-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.health-checkup__booking-detail {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  color: var(--text-secondary, #64748b);
+}
+
+.health-checkup__booking-detail i {
+  color: var(--primary-color, #3b82f6);
+}
+
+.health-checkup__booking-tests {
+  font-size: 0.85rem;
+  color: var(--text-secondary, #64748b);
+  margin-bottom: 1rem;
+}
+
+.health-checkup__cancel-btn {
+  padding: 0.5rem 1rem;
+  background: #fef2f2;
+  border: 1px solid #fecaca;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  transition: all 0.2s;
+}
+
+.health-checkup__cancel-btn:hover {
+  background: #fee2e2;
+}
+
+/* Dark mode */
+[data-theme="dark"] .health-checkup__package-card,
+[data-theme="dark"] .health-checkup__booking-form,
+[data-theme="dark"] .health-checkup__booking-card {
+  background: var(--bg-secondary, #1e293b);
+}
+
+[data-theme="dark"] .health-checkup__selected-package {
+  background: linear-gradient(135deg, #1e3a5f 0%, #1e293b 100%);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .health-checkup__header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .health-checkup__packages {
+    grid-template-columns: 1fr;
+  }
+
+  .health-checkup__form-row {
+    grid-template-columns: 1fr;
+  }
+
+  .health-checkup__patient-form {
+    grid-template-columns: 1fr;
+  }
+
+  .health-checkup__tests-grid {
+    grid-template-columns: 1fr;
+  }
+}

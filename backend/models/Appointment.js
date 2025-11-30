@@ -43,6 +43,29 @@ const appointmentSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    patientNotes: {
+      type: String,
+      trim: true
+    },
+    doctorNotes: {
+      type: String,
+      trim: true
+    },
+    rescheduledFrom: {
+      date: Date,
+      time: String,
+      reason: String,
+      rescheduledAt: Date
+    },
+    prescriptionId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Prescription'
+    },
+    // For family member booking
+    bookedFor: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'FamilyMember'
+    },
     // Online Consultation Fields
     consultationType: {
       type: String,
@@ -198,6 +221,17 @@ const appointmentSchema = new mongoose.Schema(
     },
     tokenExpiredAt: {
       type: Date
+    },
+    // QR Code for check-in
+    qrCode: {
+      type: String // Base64 encoded QR code or unique identifier
+    },
+    // Reminder tracking
+    remindersSent: {
+      email24h: { type: Boolean, default: false },
+      sms24h: { type: Boolean, default: false },
+      email1h: { type: Boolean, default: false },
+      sms1h: { type: Boolean, default: false }
     }
   },
   {

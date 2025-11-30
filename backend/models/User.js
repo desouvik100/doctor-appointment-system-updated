@@ -92,7 +92,63 @@ const userSchema = new mongoose.Schema(
     locationCaptured: {
       type: Boolean,
       default: false
-    }
+    },
+    // Favorite Doctors
+    favoriteDoctors: [{
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'Doctor'
+    }],
+    // Family Members
+    familyMembers: [{
+      name: { type: String, required: true },
+      relationship: { type: String, required: true }, // spouse, child, parent, sibling, other
+      age: { type: Number },
+      gender: { type: String, enum: ['male', 'female', 'other'] },
+      phone: { type: String },
+      bloodGroup: { type: String },
+      allergies: [{ type: String }],
+      chronicConditions: [{ type: String }],
+      createdAt: { type: Date, default: Date.now }
+    }],
+    // Medical History
+    medicalHistory: {
+      bloodGroup: { type: String },
+      allergies: [{ type: String }],
+      chronicConditions: [{ type: String }],
+      currentMedications: [{ type: String }],
+      pastSurgeries: [{ 
+        name: String, 
+        date: Date, 
+        hospital: String 
+      }],
+      emergencyContact: {
+        name: String,
+        phone: String,
+        relationship: String
+      }
+    },
+    // Health Reports
+    healthReports: [{
+      name: { type: String, required: true },
+      type: { type: String }, // lab_report, xray, mri, prescription, other
+      fileUrl: { type: String },
+      uploadedAt: { type: Date, default: Date.now },
+      notes: { type: String }
+    }],
+    // Notification Preferences
+    notificationPreferences: {
+      emailReminders: { type: Boolean, default: true },
+      smsReminders: { type: Boolean, default: true },
+      pushNotifications: { type: Boolean, default: true },
+      reminderHoursBefore: { type: Number, default: 24 }
+    },
+    // Mobile Device Tokens (FCM)
+    devices: [{
+      fcmToken: { type: String, required: true },
+      platform: { type: String, enum: ['android', 'ios', 'web'] },
+      deviceId: { type: String },
+      registeredAt: { type: Date, default: Date.now }
+    }]
   },
   { timestamps: true }
 );

@@ -16,7 +16,9 @@
     "create:admin": "node scripts/migrateUserData.js admin",
     "migrate:clinics": "node scripts/migrateClinicData.js migrate",
     "migrate:clinics:force": "node scripts/migrateClinicData.js migrate --force",
-    "create:sample-clinics": "node scripts/migrateClinicData.js sample"
+    "create:sample-clinics": "node scripts/migrateClinicData.js sample",
+    "seed:bankura": "node seed-bankura-data.js",
+    "update:clinic-coords": "node scripts/update-clinic-coordinates.js"
   },
   "keywords": [],
   "author": "",

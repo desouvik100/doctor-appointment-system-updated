@@ -1,0 +1,326 @@
+.health-profile {
+  background: #fff;
+  border-radius: 20px;
+  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+.health-profile__loading {
+  text-align: center;
+  padding: 60px;
+  color: #667eea;
+  font-size: 1.2rem;
+}
+
+.health-profile__tabs {
+  display: flex;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+  overflow-x: auto;
+}
+
+.health-profile__tabs button {
+  flex: 1;
+  min-width: 140px;
+  padding: 16px 20px;
+  background: none;
+  border: none;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  border-bottom: 3px solid transparent;
+}
+
+.health-profile__tabs button:hover {
+  color: #667eea;
+  background: #f1f5f9;
+}
+
+.health-profile__tabs button.active {
+  color: #667eea;
+  border-bottom-color: #667eea;
+  background: #fff;
+}
+
+.health-profile__content {
+  padding: 24px;
+}
+
+.health-profile__section h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.2rem;
+  color: #1e293b;
+  margin: 0 0 20px;
+}
+
+.health-profile__section h3 i {
+  color: #667eea;
+}
+
+.health-profile__section h4 {
+  font-size: 1rem;
+  color: #475569;
+  margin: 24px 0 12px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.health-profile__form {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.health-profile__field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.health-profile__field label {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: #475569;
+}
+
+.health-profile__field input,
+.health-profile__field select {
+  padding: 12px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.95rem;
+  transition: all 0.2s;
+}
+
+.health-profile__field input:focus,
+.health-profile__field select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.health-profile__full {
+  grid-column: 1 / -1;
+}
+
+.health-profile__save {
+  grid-column: 1 / -1;
+  padding: 14px 28px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  transition: all 0.2s;
+  margin-top: 8px;
+}
+
+.health-profile__save:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+}
+
+.health-profile__save:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Section Header */
+.health-profile__section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.health-profile__add-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border: none;
+  border-radius: 10px;
+  color: #fff;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.health-profile__add-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* Empty State */
+.health-profile__empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.health-profile__empty i {
+  font-size: 4rem;
+  color: #cbd5e1;
+  margin-bottom: 16px;
+}
+
+.health-profile__empty p {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #475569;
+  margin: 0 0 8px;
+}
+
+/* Reports */
+.health-profile__reports {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.health-profile__report {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  transition: all 0.2s;
+}
+
+.health-profile__report:hover {
+  background: #f1f5f9;
+}
+
+.health-profile__report-icon {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-size: 1.2rem;
+}
+
+.health-profile__report-info {
+  flex: 1;
+}
+
+.health-profile__report-info h4 {
+  margin: 0 0 4px;
+  padding: 0;
+  border: none;
+  font-size: 1rem;
+  color: #1e293b;
+}
+
+.health-profile__report-info span {
+  font-size: 0.85rem;
+  color: #64748b;
+  text-transform: capitalize;
+}
+
+.health-profile__report button {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.health-profile__report button:hover {
+  background: #fecaca;
+  transform: scale(1.1);
+}
+
+/* Settings Toggle */
+.health-profile__settings {
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+.health-profile__toggle {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  cursor: pointer;
+}
+
+.health-profile__toggle input {
+  display: none;
+}
+
+.health-profile__toggle-slider {
+  width: 50px;
+  height: 28px;
+  background: #e2e8f0;
+  border-radius: 14px;
+  position: relative;
+  transition: all 0.3s;
+}
+
+.health-profile__toggle-slider::after {
+  content: '';
+  position: absolute;
+  width: 22px;
+  height: 22px;
+  background: #fff;
+  border-radius: 50%;
+  top: 3px;
+  left: 3px;
+  transition: all 0.3s;
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.health-profile__toggle input:checked + .health-profile__toggle-slider {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+}
+
+.health-profile__toggle input:checked + .health-profile__toggle-slider::after {
+  left: 25px;
+}
+
+.health-profile__toggle span:last-child {
+  font-weight: 500;
+  color: #334155;
+}
+
+@media (max-width: 768px) {
+  .health-profile__tabs button {
+    min-width: 100px;
+    padding: 12px 16px;
+    font-size: 0.85rem;
+  }
+  
+  .health-profile__tabs button span {
+    display: none;
+  }
+  
+  .health-profile__form {
+    grid-template-columns: 1fr;
+  }
+  
+  .health-profile__content {
+    padding: 16px;
+  }
+}

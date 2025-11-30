@@ -91,8 +91,34 @@ async function sendViaResend({ to, subject, html, text }) {
   return { success: true, messageId: data.id, provider: 'resend' };
 }
 
+// List of fake/test domains that should not receive real emails
+const FAKE_EMAIL_DOMAINS = [
+  'healthsync.com',
+  'example.com',
+  'test.com',
+  'fake.com',
+  'demo.com',
+  'sample.com',
+  'localhost',
+  'mailinator.com'
+];
+
+// Check if email is a fake/test email
+function isFakeEmail(email) {
+  if (!email) return true;
+  const domain = email.split('@')[1]?.toLowerCase();
+  return FAKE_EMAIL_DOMAINS.some(fakeDomain => domain === fakeDomain || domain?.endsWith('.' + fakeDomain));
+}
+
 // Small helper to send any email via Nodemailer or Resend
 async function sendEmail({ to, subject, html, text }) {
+  // Skip sending to fake/test email addresses
+  if (isFakeEmail(to)) {
+    console.log('📧 Skipping email to fake/test address:', to);
+    console.log('📧 Subject:', subject);
+    return { success: true, message: 'Skipped - fake/test email address', skipped: true };
+  }
+
   // Check if any email service is configured
   const hasGmail = process.env.EMAIL_USER && process.env.EMAIL_PASS;
   const hasResend = process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.includes('your_');

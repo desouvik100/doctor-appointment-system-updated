@@ -36,16 +36,61 @@ router.get('/summary', async (req, res) => {
   }
 });
 
-// Get all doctors
+// Get all doctors with filters
 router.get('/', async (req, res) => {
   try {
-    const doctors = await Doctor.find({ isActive: true })
+    const { 
+      specialization, 
+      city, 
+      minFee, 
+      maxFee, 
+      minRating, 
+      availability,
+      search,
+      sortBy = 'name',
+      sortOrder = 'asc'
+    } = req.query;
+
+    const query = { isActive: true };
+
+    // Apply filters
+    if (specialization) query.specialization = specialization;
+    if (availability) query.availability = availability;
+    if (minRating) query.rating = { $gte: parseFloat(minRating) };
+    if (minFee || maxFee) {
+      query.consultationFee = {};
+      if (minFee) query.consultationFee.$gte = parseInt(minFee);
+      if (maxFee) query.consultationFee.$lte = parseInt(maxFee);
+    }
+    if (search) {
+      query.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { specialization: { $regex: search, $options: 'i' } }
+      ];
+    }
+
+    let doctors = await Doctor.find(query)
       .populate('clinicId', 'name address city phone')
-      .sort({ name: 1 });
+      .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 });
+
+    // Filter by city (from populated clinic)
+    if (city) {
+      doctors = doctors.filter(d => d.clinicId?.city?.toLowerCase().includes(city.toLowerCase()));
+    }
     
     res.json(doctors);
   } catch (error) {
     console.error('Error fetching doctors:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get all specializations
+router.get('/specializations/list', async (req, res) => {
+  try {
+    const specializations = await Doctor.distinct('specialization', { isActive: true });
+    res.json(specializations.sort());
+  } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

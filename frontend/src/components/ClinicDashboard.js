@@ -12,10 +12,28 @@ function ClinicDashboard({ receptionist, onLogout }) {
   const [activeTab, setActiveTab] = useState("appointments");
   const [doctors, setDoctors] = useState([]);
   const [doctorsLoading, setDoctorsLoading] = useState(false);
+  
+  // Patient management state
+  const [patients, setPatients] = useState([]);
+  const [patientsLoading, setPatientsLoading] = useState(false);
+  const [patientSearch, setPatientSearch] = useState("");
+  const [showPatientModal, setShowPatientModal] = useState(false);
+  const [editingPatient, setEditingPatient] = useState(null);
+  const [patientForm, setPatientForm] = useState({
+    name: '', email: '', phone: '', bloodGroup: ''
+  });
+  
+  // Doctor form state
+  const [showDoctorModal, setShowDoctorModal] = useState(false);
+  const [editingDoctor, setEditingDoctor] = useState(null);
+  const [doctorForm, setDoctorForm] = useState({
+    name: '', email: '', phone: '', specialization: '', consultationFee: 500, experience: 0, qualification: 'MBBS'
+  });
 
   useEffect(() => {
     fetchAppointments();
     fetchDoctors();
+    fetchPatients();
   }, [receptionist]);
 
   const fetchAppointments = async () => {
@@ -55,6 +73,79 @@ function ClinicDashboard({ receptionist, onLogout }) {
       console.error("Error updating doctor availability:", error);
     }
   };
+
+  // Fetch patients who have appointments at this clinic
+  const fetchPatients = async () => {
+    try {
+      setPatientsLoading(true);
+      const response = await axios.get(`/api/receptionists/patients/${receptionist.clinicId}`);
+      setPatients(response.data);
+    } catch (error) {
+      console.error("Error fetching patients:", error);
+    } finally {
+      setPatientsLoading(false);
+    }
+  };
+
+  // Create/Update Doctor
+  const handleDoctorSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      if (editingDoctor) {
+        await axios.put(`/api/doctors/${editingDoctor._id}`, {
+          ...doctorForm,
+          clinicId: receptionist.clinicId
+        });
+        toast.success('Doctor updated successfully');
+      } else {
+        await axios.post('/api/doctors', {
+          ...doctorForm,
+          clinicId: receptionist.clinicId
+        });
+        toast.success('Doctor added successfully');
+      }
+      setShowDoctorModal(false);
+      setEditingDoctor(null);
+      setDoctorForm({ name: '', email: '', phone: '', specialization: '', consultationFee: 500, experience: 0, qualification: 'MBBS' });
+      fetchDoctors();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to save doctor');
+    }
+  };
+
+  // Delete Doctor
+  const handleDeleteDoctor = async (doctorId) => {
+    if (!window.confirm('Are you sure you want to remove this doctor?')) return;
+    try {
+      await axios.delete(`/api/doctors/${doctorId}`);
+      toast.success('Doctor removed successfully');
+      fetchDoctors();
+    } catch (error) {
+      toast.error('Failed to remove doctor');
+    }
+  };
+
+  // Edit Doctor
+  const handleEditDoctor = (doctor) => {
+    setEditingDoctor(doctor);
+    setDoctorForm({
+      name: doctor.name,
+      email: doctor.email,
+      phone: doctor.phone,
+      specialization: doctor.specialization,
+      consultationFee: doctor.consultationFee,
+      experience: doctor.experience || 0,
+      qualification: doctor.qualification || 'MBBS'
+    });
+    setShowDoctorModal(true);
+  };
+
+  // Filter patients by search
+  const filteredPatients = patients.filter(patient => 
+    patient.name?.toLowerCase().includes(patientSearch.toLowerCase()) ||
+    patient.email?.toLowerCase().includes(patientSearch.toLowerCase()) ||
+    patient.phone?.includes(patientSearch)
+  );
 
   useEffect(() => {
     filterAppointments();
@@ -280,6 +371,24 @@ function ClinicDashboard({ receptionist, onLogout }) {
             <span className="badge bg-primary ms-2">{doctors.length}</span>
           </button>
         </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "patients" ? "active" : ""}`}
+            onClick={() => setActiveTab("patients")}
+          >
+            <i className="fas fa-users me-2"></i>
+            Patients
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "queue" ? "active" : ""}`}
+            onClick={() => setActiveTab("queue")}
+          >
+            <i className="fas fa-list-ol me-2"></i>
+            Today's Queue
+          </button>
+        </li>
       </ul>
 
       {/* Doctor Management Tab */}
@@ -289,12 +398,22 @@ function ClinicDashboard({ receptionist, onLogout }) {
             <div className="d-flex justify-content-between align-items-center">
               <h5 className="mb-0">
                 <i className="fas fa-user-md me-2"></i>
-                Doctor Availability Management
+                Doctor Management
               </h5>
-              <button className="btn btn-sm btn-outline-primary" onClick={fetchDoctors}>
-                <i className="fas fa-sync-alt me-1"></i>
-                Refresh
-              </button>
+              <div>
+                <button className="btn btn-sm btn-success me-2" onClick={() => {
+                  setEditingDoctor(null);
+                  setDoctorForm({ name: '', email: '', phone: '', specialization: '', consultationFee: 500, experience: 0, qualification: 'MBBS' });
+                  setShowDoctorModal(true);
+                }}>
+                  <i className="fas fa-plus me-1"></i>
+                  Add Doctor
+                </button>
+                <button className="btn btn-sm btn-outline-primary" onClick={fetchDoctors}>
+                  <i className="fas fa-sync-alt me-1"></i>
+                  Refresh
+                </button>
+              </div>
             </div>
           </div>
           <div className="card-body">
@@ -352,7 +471,7 @@ function ClinicDashboard({ receptionist, onLogout }) {
                           </small>
                         </div>
 
-                        <div className="d-flex gap-2">
+                        <div className="d-flex gap-2 mb-2">
                           <button
                             className={`btn btn-sm flex-fill ${doctor.availability === 'Available' ? 'btn-success' : 'btn-outline-success'}`}
                             onClick={() => updateDoctorAvailability(doctor._id, 'Available')}
@@ -376,6 +495,22 @@ function ClinicDashboard({ receptionist, onLogout }) {
                           >
                             <i className="fas fa-plane me-1"></i>
                             Leave
+                          </button>
+                        </div>
+                        <div className="d-flex gap-2">
+                          <button
+                            className="btn btn-sm btn-outline-primary flex-fill"
+                            onClick={() => handleEditDoctor(doctor)}
+                          >
+                            <i className="fas fa-edit me-1"></i>
+                            Edit
+                          </button>
+                          <button
+                            className="btn btn-sm btn-outline-danger flex-fill"
+                            onClick={() => handleDeleteDoctor(doctor._id)}
+                          >
+                            <i className="fas fa-trash me-1"></i>
+                            Remove
                           </button>
                         </div>
                       </div>
@@ -555,6 +690,300 @@ function ClinicDashboard({ receptionist, onLogout }) {
           )}
         </div>
       </div>
+      )}
+
+      {/* Patients Tab */}
+      {activeTab === "patients" && (
+        <div className="card shadow-sm">
+          <div className="card-header">
+            <div className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">
+                <i className="fas fa-users me-2"></i>
+                Patient Records
+              </h5>
+              <button className="btn btn-sm btn-outline-primary" onClick={fetchPatients}>
+                <i className="fas fa-sync-alt me-1"></i> Refresh
+              </button>
+            </div>
+            <div className="mt-2">
+              <input
+                type="text"
+                className="form-control"
+                placeholder="Search patients by name, email, or phone..."
+                value={patientSearch}
+                onChange={(e) => setPatientSearch(e.target.value)}
+              />
+            </div>
+          </div>
+          <div className="card-body">
+            {patientsLoading ? (
+              <div className="text-center py-4">
+                <div className="spinner-border text-primary"></div>
+                <p className="mt-2">Loading patients...</p>
+              </div>
+            ) : filteredPatients.length === 0 ? (
+              <div className="text-center py-4">
+                <i className="fas fa-users fa-3x text-muted mb-3"></i>
+                <p className="text-muted">No patients found.</p>
+              </div>
+            ) : (
+              <div className="table-responsive">
+                <table className="table table-hover">
+                  <thead>
+                    <tr>
+                      <th>Patient</th>
+                      <th>Contact</th>
+                      <th>Blood Group</th>
+                      <th>Total Visits</th>
+                      <th>Last Visit</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filteredPatients.map((patient) => (
+                      <tr key={patient._id}>
+                        <td>
+                          <div className="d-flex align-items-center">
+                            <div className="bg-primary rounded-circle p-2 me-2 text-white">
+                              {patient.name?.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <strong>{patient.name}</strong>
+                              <br />
+                              <small className="text-muted">{patient.email}</small>
+                            </div>
+                          </div>
+                        </td>
+                        <td>
+                          <small>
+                            <i className="fas fa-phone me-1"></i>
+                            {patient.phone || 'N/A'}
+                          </small>
+                        </td>
+                        <td>
+                          <span className="badge bg-danger">
+                            {patient.medicalHistory?.bloodGroup || 'Unknown'}
+                          </span>
+                        </td>
+                        <td>
+                          <span className="badge bg-info">{patient.appointmentCount || 0}</span>
+                        </td>
+                        <td>
+                          <small className="text-muted">
+                            {patient.lastVisit ? formatDate(patient.lastVisit) : 'Never'}
+                          </small>
+                        </td>
+                        <td>
+                          <button 
+                            className="btn btn-sm btn-outline-primary me-1"
+                            onClick={() => {
+                              setActiveTab('appointments');
+                              setSearchTerm(patient.name);
+                            }}
+                          >
+                            <i className="fas fa-calendar"></i>
+                          </button>
+                          <a 
+                            href={`tel:${patient.phone}`}
+                            className="btn btn-sm btn-outline-success"
+                          >
+                            <i className="fas fa-phone"></i>
+                          </a>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Today's Queue Tab */}
+      {activeTab === "queue" && (
+        <div className="card shadow-sm">
+          <div className="card-header">
+            <div className="d-flex justify-content-between align-items-center">
+              <h5 className="mb-0">
+                <i className="fas fa-list-ol me-2"></i>
+                Today's Queue
+              </h5>
+              <span className="badge bg-primary">{todayAppointments.length} patients</span>
+            </div>
+          </div>
+          <div className="card-body">
+            {todayAppointments.length === 0 ? (
+              <div className="text-center py-4">
+                <i className="fas fa-calendar-check fa-3x text-muted mb-3"></i>
+                <p className="text-muted">No appointments scheduled for today.</p>
+              </div>
+            ) : (
+              <div className="list-group">
+                {todayAppointments
+                  .sort((a, b) => a.time.localeCompare(b.time))
+                  .map((apt, index) => (
+                    <div key={apt._id} className={`list-group-item d-flex align-items-center ${apt.status === 'completed' ? 'bg-light' : ''}`}>
+                      <div className={`rounded-circle p-2 me-3 text-white ${
+                        apt.status === 'completed' ? 'bg-success' :
+                        apt.status === 'confirmed' ? 'bg-primary' :
+                        apt.status === 'cancelled' ? 'bg-danger' : 'bg-warning'
+                      }`}>
+                        <strong>{index + 1}</strong>
+                      </div>
+                      <div className="flex-grow-1">
+                        <div className="d-flex justify-content-between">
+                          <div>
+                            <strong>{apt.userId?.name}</strong>
+                            <span className="text-muted ms-2">→ Dr. {apt.doctorId?.name}</span>
+                          </div>
+                          <div>
+                            <span className="badge bg-secondary me-2">{formatTime(apt.time)}</span>
+                            {getStatusBadge(apt.status)}
+                          </div>
+                        </div>
+                        <small className="text-muted">{apt.reason}</small>
+                      </div>
+                      <div className="ms-3">
+                        {apt.status === 'pending' && (
+                          <button 
+                            className="btn btn-sm btn-success"
+                            onClick={() => updateAppointmentStatus(apt._id, 'confirmed')}
+                          >
+                            <i className="fas fa-check"></i>
+                          </button>
+                        )}
+                        {apt.status === 'confirmed' && (
+                          <button 
+                            className="btn btn-sm btn-info"
+                            onClick={() => updateAppointmentStatus(apt._id, 'completed')}
+                          >
+                            <i className="fas fa-check-double"></i>
+                          </button>
+                        )}
+                      </div>
+                    </div>
+                  ))}
+              </div>
+            )}
+          </div>
+        </div>
+      )}
+
+      {/* Doctor Modal */}
+      {showDoctorModal && (
+        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header">
+                <h5 className="modal-title">
+                  {editingDoctor ? 'Edit Doctor' : 'Add New Doctor'}
+                </h5>
+                <button className="btn-close" onClick={() => {
+                  setShowDoctorModal(false);
+                  setEditingDoctor(null);
+                }}></button>
+              </div>
+              <form onSubmit={handleDoctorSubmit}>
+                <div className="modal-body">
+                  <div className="mb-3">
+                    <label className="form-label">Name *</label>
+                    <input
+                      type="text"
+                      className="form-control"
+                      value={doctorForm.name}
+                      onChange={(e) => setDoctorForm({...doctorForm, name: e.target.value})}
+                      required
+                    />
+                  </div>
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Email *</label>
+                      <input
+                        type="email"
+                        className="form-control"
+                        value={doctorForm.email}
+                        onChange={(e) => setDoctorForm({...doctorForm, email: e.target.value})}
+                        required
+                      />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Phone *</label>
+                      <input
+                        type="tel"
+                        className="form-control"
+                        value={doctorForm.phone}
+                        onChange={(e) => setDoctorForm({...doctorForm, phone: e.target.value})}
+                        required
+                      />
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Specialization *</label>
+                      <select
+                        className="form-select"
+                        value={doctorForm.specialization}
+                        onChange={(e) => setDoctorForm({...doctorForm, specialization: e.target.value})}
+                        required
+                      >
+                        <option value="">Select</option>
+                        <option value="General Physician">General Physician</option>
+                        <option value="Cardiologist">Cardiologist</option>
+                        <option value="Dermatologist">Dermatologist</option>
+                        <option value="Pediatrician">Pediatrician</option>
+                        <option value="Orthopedic">Orthopedic</option>
+                        <option value="Gynecologist">Gynecologist</option>
+                        <option value="ENT Specialist">ENT Specialist</option>
+                        <option value="Neurologist">Neurologist</option>
+                        <option value="Psychiatrist">Psychiatrist</option>
+                        <option value="Dentist">Dentist</option>
+                      </select>
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Consultation Fee (₹)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={doctorForm.consultationFee}
+                        onChange={(e) => setDoctorForm({...doctorForm, consultationFee: parseInt(e.target.value)})}
+                      />
+                    </div>
+                  </div>
+                  <div className="row">
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Experience (years)</label>
+                      <input
+                        type="number"
+                        className="form-control"
+                        value={doctorForm.experience}
+                        onChange={(e) => setDoctorForm({...doctorForm, experience: parseInt(e.target.value)})}
+                      />
+                    </div>
+                    <div className="col-md-6 mb-3">
+                      <label className="form-label">Qualification</label>
+                      <input
+                        type="text"
+                        className="form-control"
+                        value={doctorForm.qualification}
+                        onChange={(e) => setDoctorForm({...doctorForm, qualification: e.target.value})}
+                        placeholder="e.g., MBBS, MD"
+                      />
+                    </div>
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowDoctorModal(false)}>
+                    Cancel
+                  </button>
+                  <button type="submit" className="btn btn-primary">
+                    {editingDoctor ? 'Update' : 'Add'} Doctor
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
       )}
     </div>
   );

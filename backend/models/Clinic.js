@@ -58,7 +58,17 @@ const clinicSchema = new mongoose.Schema(
     images: [{ type: String }],
     
     isActive: { type: Boolean, default: true },
-    isVerified: { type: Boolean, default: false }
+    isVerified: { type: Boolean, default: false },
+    
+    // Admin Approval System
+    approvalStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'pending'
+    },
+    approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+    approvedAt: { type: Date },
+    rejectionReason: { type: String }
   },
   { timestamps: true }
 );

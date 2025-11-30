@@ -45,6 +45,18 @@ app.use('/api/otp', require('./routes/otpRoutes'));
 app.use('/api/google', require('./routes/googleRoutes'));
 app.use('/api/consultations', require('./routes/consultationRoutes'));
 app.use('/api/location', require('./routes/locationRoutes'));
+app.use('/api/family', require('./routes/familyRoutes'));
+app.use('/api/reviews', require('./routes/reviewRoutes'));
+app.use('/api/prescriptions', require('./routes/prescriptionRoutes'));
+app.use('/api/favorites', require('./routes/favoritesRoutes'));
+app.use('/api/health', require('./routes/healthRoutes'));
+app.use('/api/notifications', require('./routes/notificationRoutes'));
+app.use('/api/lab-reports', require('./routes/labReportRoutes'));
+app.use('/api/medicines', require('./routes/medicineRoutes'));
+app.use('/api/ambulance', require('./routes/ambulanceRoutes'));
+app.use('/api/articles', require('./routes/articleRoutes'));
+app.use('/api/chat', require('./routes/chatRoutes'));
+app.use('/api/health-checkup', require('./routes/healthCheckupRoutes'));
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');

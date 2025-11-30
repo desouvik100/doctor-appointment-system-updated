@@ -55,6 +55,72 @@ router.post('/login', async (req, res) => {
   }
 });
 
+// Reset password for receptionist (after OTP verification)
+router.post('/reset-password', async (req, res) => {
+  try {
+    console.log('📧 Reset password request received:', { email: req.body.email });
+    
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      console.log('❌ Missing email or password');
+      return res.status(400).json({ 
+        success: false,
+        message: 'Email and new password are required' 
+      });
+    }
+
+    if (newPassword.length < 6) {
+      console.log('❌ Password too short');
+      return res.status(400).json({ 
+        success: false,
+        message: 'Password must be at least 6 characters' 
+      });
+    }
+
+    // Find user by email - first try receptionist, then any user
+    let user = await User.findOne({ email: email.toLowerCase().trim(), role: 'receptionist' });
+    
+    if (!user) {
+      // Try finding any user with this email
+      user = await User.findOne({ email: email.toLowerCase().trim() });
+      if (user) {
+        console.log('Found user with role:', user.role);
+      }
+    }
+    
+    if (!user) {
+      console.log('❌ No user found with email:', email);
+      return res.status(404).json({ 
+        success: false,
+        message: 'No account found with this email' 
+      });
+    }
+
+    console.log('✅ User found:', user.email, 'Role:', user.role);
+
+    // Hash new password
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    // Update password using findByIdAndUpdate to avoid validation issues
+    await User.findByIdAndUpdate(user._id, { password: hashedPassword });
+
+    console.log(`✅ Password reset successful for: ${email}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'Password reset successfully'
+    });
+  } catch (error) {
+    console.error('❌ Error resetting password:', error.message);
+    console.error('Stack:', error.stack);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error: ' + error.message 
+    });
+  }
+});
+
 // Get appointments for receptionist's clinic
 router.get('/appointments/:clinicId', async (req, res) => {
   try {
@@ -182,6 +248,50 @@ router.get('/doctors/:clinicId', async (req, res) => {
     res.json(doctors);
   } catch (error) {
     console.error('Error fetching clinic doctors:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get patients who have appointments at this clinic
+router.get('/patients/:clinicId', async (req, res) => {
+  try {
+    const { clinicId } = req.params;
+    
+    // Get all appointments for this clinic to find unique patients
+    const appointments = await Appointment.find({ clinicId })
+      .populate('userId', 'name email phone medicalHistory')
+      .sort({ date: -1 });
+
+    // Get unique patients with their appointment stats
+    const patientMap = new Map();
+    
+    appointments.forEach(apt => {
+      if (apt.userId) {
+        const patientId = apt.userId._id.toString();
+        if (!patientMap.has(patientId)) {
+          patientMap.set(patientId, {
+            _id: apt.userId._id,
+            name: apt.userId.name,
+            email: apt.userId.email,
+            phone: apt.userId.phone,
+            medicalHistory: apt.userId.medicalHistory,
+            appointmentCount: 1,
+            lastVisit: apt.date
+          });
+        } else {
+          const patient = patientMap.get(patientId);
+          patient.appointmentCount++;
+          if (new Date(apt.date) > new Date(patient.lastVisit)) {
+            patient.lastVisit = apt.date;
+          }
+        }
+      }
+    });
+
+    const patients = Array.from(patientMap.values());
+    res.json(patients);
+  } catch (error) {
+    console.error('Error fetching patients:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

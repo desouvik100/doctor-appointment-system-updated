@@ -54,6 +54,33 @@ const doctorSchema = new mongoose.Schema(
     isActive: { 
       type: Boolean, 
       default: true 
+    },
+    // Rating & Reviews
+    rating: {
+      type: Number,
+      default: 0,
+      min: 0,
+      max: 5
+    },
+    reviewCount: {
+      type: Number,
+      default: 0
+    },
+    // Profile
+    profilePhoto: {
+      type: String,
+      default: null
+    },
+    bio: {
+      type: String,
+      trim: true
+    },
+    languages: [{
+      type: String
+    }],
+    registrationNumber: {
+      type: String,
+      trim: true
     }
   },
   { timestamps: true }

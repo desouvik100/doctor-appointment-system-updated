@@ -149,33 +149,51 @@
    ============================================ */
 .patient-dashboard__quick-actions {
   margin-bottom: 28px;
+  overflow: hidden;
 }
 
 .patient-dashboard__tabs {
   display: flex;
-  gap: 16px;
+  gap: 10px;
   background: #fff;
   padding: 12px;
   border-radius: 20px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  overflow-x: auto;
+  scrollbar-width: thin;
+  scrollbar-color: #cbd5e1 transparent;
+  -webkit-overflow-scrolling: touch;
+}
+
+.patient-dashboard__tabs::-webkit-scrollbar {
+  height: 6px;
+}
+
+.patient-dashboard__tabs::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.patient-dashboard__tabs::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
 }
 
 .patient-dashboard__tab {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 18px 32px;
+  gap: 8px;
+  padding: 12px 16px;
   background: transparent;
   border: none;
-  border-radius: 16px;
-  font-size: 1rem;
+  border-radius: 12px;
+  font-size: 0.9rem;
   font-weight: 500;
   color: #64748b;
   cursor: pointer;
   transition: all 0.3s ease;
   white-space: nowrap;
-  flex: 1;
-  justify-content: center;
+  flex-shrink: 0;
+  min-width: fit-content;
 }
 
 .patient-dashboard__tab:hover {
@@ -195,19 +213,24 @@
 }
 
 .patient-dashboard__tab-icon {
-  width: 40px;
-  height: 40px;
+  width: 28px;
+  height: 28px;
   display: flex;
   align-items: center;
   justify-content: center;
   background: rgba(100, 116, 139, 0.1);
-  border-radius: 12px;
-  font-size: 1.15rem;
+  border-radius: 8px;
+  font-size: 0.95rem;
   flex-shrink: 0;
 }
 
 .patient-dashboard__tab--active .patient-dashboard__tab-icon {
   background: rgba(255, 255, 255, 0.2);
+}
+
+.patient-dashboard__tab-label {
+  font-weight: 600;
+  font-size: 0.85rem;
 }
 
 .patient-dashboard__tab-label {
@@ -388,16 +411,110 @@
   opacity: 1;
 }
 
+/* Doctor Card Quick Actions */
+.doctor-card__quick-actions {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.doctor-card__fav-btn,
+.doctor-card__share-btn,
+.doctor-card__call-btn,
+.doctor-card__chat-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.doctor-card__fav-btn {
+  background: rgba(239, 68, 68, 0.1);
+  color: #94a3b8;
+}
+
+.doctor-card__fav-btn:hover {
+  background: rgba(239, 68, 68, 0.2);
+  color: #ef4444;
+}
+
+.doctor-card__fav-btn--active {
+  background: rgba(239, 68, 68, 0.15);
+  color: #ef4444;
+}
+
+.doctor-card__share-btn {
+  background: rgba(59, 130, 246, 0.1);
+  color: #94a3b8;
+}
+
+.doctor-card__share-btn:hover {
+  background: rgba(59, 130, 246, 0.2);
+  color: #3b82f6;
+}
+
+.doctor-card__call-btn {
+  background: rgba(16, 185, 129, 0.1);
+  color: #94a3b8;
+}
+
+.doctor-card__call-btn:hover {
+  background: rgba(16, 185, 129, 0.2);
+  color: #10b981;
+}
+
+.doctor-card__chat-btn {
+  background: rgba(139, 92, 246, 0.1);
+  color: #94a3b8;
+}
+
+.doctor-card__chat-btn:hover {
+  background: rgba(139, 92, 246, 0.2);
+  color: #8b5cf6;
+}
+
+/* Doctor Card Rating */
+.doctor-card__rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+}
+
+.doctor-card__rating i {
+  color: #f59e0b;
+}
+
+.doctor-card__rating span {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.doctor-card__review-count {
+  color: #94a3b8;
+  font-weight: 400;
+}
+
 .doctor-card__badge {
   position: absolute;
-  top: 20px;
-  right: 20px;
-  padding: 8px 16px;
+  top: 60px;
+  right: 16px;
+  padding: 6px 12px;
   background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
   color: #fff;
-  font-size: 0.75rem;
+  font-size: 0.7rem;
   font-weight: 700;
-  border-radius: 24px;
+  border-radius: 20px;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
@@ -537,6 +654,46 @@
   cursor: not-allowed;
   transform: none;
   box-shadow: none;
+}
+
+/* Doctor Card Actions Container */
+.doctor-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.doctor-card__directions-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #64748b;
+  border: 2px solid #e2e8f0;
+  border-radius: 14px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.doctor-card__directions-btn:hover {
+  background: linear-gradient(135deg, #e2e8f0 0%, #cbd5e1 100%);
+  border-color: #cbd5e1;
+  color: #475569;
+  transform: translateY(-2px);
+}
+
+/* Doctor Card Distance */
+.doctor-card__distance {
+  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
+  padding: 6px 12px;
+  border-radius: 8px;
+  color: #2563eb;
+  font-weight: 600;
 }
 
 
@@ -974,14 +1131,28 @@
   }
   
   .patient-dashboard__tabs {
-    flex-direction: column;
-    gap: 10px;
+    flex-direction: row;
+    gap: 8px;
+    padding: 10px;
+    overflow-x: auto;
   }
   
   .patient-dashboard__tab {
-    width: 100%;
-    justify-content: flex-start;
+    padding: 10px 12px;
+    gap: 6px;
+    min-width: auto;
     flex: none;
+  }
+  
+  .patient-dashboard__tab-icon {
+    width: 24px;
+    height: 24px;
+    font-size: 0.85rem;
+    border-radius: 6px;
+  }
+  
+  .patient-dashboard__tab-label {
+    font-size: 0.8rem;
   }
   
   .patient-dashboard__filters-grid {
@@ -1061,4 +1232,678 @@
   padding: 0;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
   overflow: hidden;
+}
+
+/* ============================================
+   Location & Nearby Search Styles
+   ============================================ */
+
+.patient-dashboard__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.patient-dashboard__location-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 2px solid rgba(255, 255, 255, 0.4);
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  backdrop-filter: blur(10px);
+}
+
+.patient-dashboard__location-btn:hover:not(:disabled) {
+  background: rgba(255, 255, 255, 0.3);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+.patient-dashboard__location-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.patient-dashboard__location-btn--loading {
+  pointer-events: none;
+}
+
+.patient-dashboard__location-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  opacity: 0.9;
+  margin-top: 4px;
+  color: rgba(255, 255, 255, 0.9);
+}
+
+.patient-dashboard__location-info i {
+  color: #fbbf24;
+}
+
+/* Nearby Toggle Section */
+.patient-dashboard__nearby-toggle {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-bottom: 20px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  flex-wrap: wrap;
+}
+
+.patient-dashboard__nearby-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(16, 185, 129, 0.3);
+}
+
+.patient-dashboard__nearby-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.4);
+}
+
+.patient-dashboard__nearby-btn:disabled {
+  background: #94a3b8;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+.patient-dashboard__nearby-btn--active {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.patient-dashboard__nearby-btn--active:hover:not(:disabled) {
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+}
+
+.patient-dashboard__distance-filter {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.patient-dashboard__distance-filter label {
+  font-size: 0.9rem;
+  color: #64748b;
+  font-weight: 500;
+}
+
+.patient-dashboard__distance-select {
+  padding: 10px 16px;
+  border: 2px solid #e2e8f0;
+  border-radius: 10px;
+  font-size: 0.9rem;
+  color: #334155;
+  background: #fff;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.patient-dashboard__distance-select:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.patient-dashboard__current-location {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #f1f5f9;
+  border-radius: 20px;
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.patient-dashboard__current-location i {
+  color: #ef4444;
+}
+
+/* Doctor Card Distance Badge */
+.doctor-card__distance {
+  color: #10b981 !important;
+  font-weight: 600;
+  background: rgba(16, 185, 129, 0.1);
+  padding: 4px 10px;
+  border-radius: 6px;
+  display: inline-flex;
+}
+
+.doctor-card__distance i {
+  color: #10b981;
+}
+
+/* Responsive adjustments for location features */
+@media (max-width: 768px) {
+  .patient-dashboard__header-actions {
+    flex-direction: column;
+    width: 100%;
+    gap: 10px;
+  }
+  
+  .patient-dashboard__location-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .patient-dashboard__nearby-toggle {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .patient-dashboard__nearby-btn {
+    width: 100%;
+    justify-content: center;
+  }
+  
+  .patient-dashboard__distance-filter {
+    justify-content: space-between;
+  }
+  
+  .patient-dashboard__current-location {
+    justify-content: center;
+  }
+}
+
+/* ============================================
+   Doctor Card Actions & Directions Button
+   ============================================ */
+
+.doctor-card__actions {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.doctor-card__directions-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(59, 130, 246, 0.3);
+}
+
+.doctor-card__directions-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(59, 130, 246, 0.4);
+}
+
+.doctor-card__directions-btn i {
+  font-size: 1rem;
+}
+
+/* Responsive adjustments */
+@media (min-width: 768px) {
+  .doctor-card__actions {
+    flex-direction: row;
+  }
+  
+  .doctor-card__book-btn,
+  .doctor-card__directions-btn {
+    flex: 1;
+  }
+}
+
+@media (max-width: 767px) {
+  .doctor-card__directions-btn {
+    padding: 10px 16px;
+    font-size: 0.9rem;
+  }
+}
+
+/* ============================================
+   Doctor Card Quick Actions (Favorite, Share, Call)
+   ============================================ */
+
+.doctor-card__quick-actions {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  display: flex;
+  gap: 8px;
+  z-index: 10;
+}
+
+.doctor-card__fav-btn,
+.doctor-card__share-btn,
+.doctor-card__call-btn {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  border: none;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  font-size: 0.9rem;
+}
+
+.doctor-card__fav-btn {
+  background: #fff;
+  color: #94a3b8;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.doctor-card__fav-btn:hover {
+  color: #ef4444;
+  transform: scale(1.1);
+}
+
+.doctor-card__fav-btn--active {
+  color: #ef4444;
+  background: #fef2f2;
+}
+
+.doctor-card__share-btn {
+  background: #fff;
+  color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+}
+
+.doctor-card__share-btn:hover {
+  background: #eff6ff;
+  transform: scale(1.1);
+}
+
+.doctor-card__call-btn {
+  background: #10b981;
+  color: #fff;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
+}
+
+.doctor-card__call-btn:hover {
+  background: #059669;
+  transform: scale(1.1);
+}
+
+/* Doctor Rating */
+.doctor-card__rating {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 8px;
+  font-size: 0.9rem;
+}
+
+.doctor-card__rating i {
+  color: #f59e0b;
+}
+
+.doctor-card__rating span:first-of-type {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.doctor-card__review-count {
+  color: #64748b;
+  font-size: 0.85rem;
+}
+
+/* Emergency SOS Button */
+.patient-dashboard__sos-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 20px;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 0.95rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+  animation: pulse-sos 2s infinite;
+}
+
+.patient-dashboard__sos-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(239, 68, 68, 0.5);
+}
+
+@keyframes pulse-sos {
+  0%, 100% { box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4); }
+  50% { box-shadow: 0 4px 25px rgba(239, 68, 68, 0.6); }
+}
+
+/* Make doctor card position relative for quick actions */
+.doctor-card {
+  position: relative;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .doctor-card__quick-actions {
+    top: 12px;
+    right: 12px;
+    gap: 6px;
+  }
+  
+  .doctor-card__fav-btn,
+  .doctor-card__share-btn,
+  .doctor-card__call-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
+  
+  .patient-dashboard__sos-btn {
+    padding: 10px 16px;
+    font-size: 0.85rem;
+  }
+}
+
+/* ============================================
+   Appointment Card Review Button
+   ============================================ */
+
+.appointment-card-pro__footer-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.appointment-card-pro__review-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.appointment-card-pro__review-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.4);
+}
+
+.appointment-card-pro__review-btn i {
+  font-size: 0.9rem;
+}
+
+
+/* Notification Button */
+.patient-dashboard__notification-btn {
+  position: relative;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.1rem;
+}
+
+.patient-dashboard__notification-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.patient-dashboard__notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 20px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* Chat Button on Doctor Card */
+.doctor-card__chat-btn {
+  background: rgba(139, 92, 246, 0.1);
+  border: none;
+  color: #8b5cf6;
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.doctor-card__chat-btn:hover {
+  background: #8b5cf6;
+  color: white;
+}
+
+/* Messages Section */
+.patient-dashboard__messages-section {
+  background: var(--bg-primary, #ffffff);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.patient-dashboard__messages-info {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.patient-dashboard__messages-info h3 {
+  margin: 1rem 0 0.5rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.patient-dashboard__messages-info p {
+  color: var(--text-secondary, #64748b);
+  margin-bottom: 1.5rem;
+}
+
+/* Chat Overlay */
+.patient-dashboard__chat-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.patient-dashboard__chat-modal {
+  width: 100%;
+  max-width: 500px;
+  height: 80vh;
+  max-height: 700px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .patient-dashboard__notification-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .patient-dashboard__messages-section {
+  background: var(--bg-secondary, #1e293b);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .patient-dashboard__chat-modal {
+    max-width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+
+/* ============================================
+   Notification Button
+   ============================================ */
+.patient-dashboard__notification-btn {
+  position: relative;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 0.5rem 0.75rem;
+  border-radius: 10px;
+  cursor: pointer;
+  transition: all 0.2s;
+  font-size: 1.1rem;
+}
+
+.patient-dashboard__notification-btn:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+.patient-dashboard__notification-badge {
+  position: absolute;
+  top: -5px;
+  right: -5px;
+  background: #ef4444;
+  color: white;
+  font-size: 0.7rem;
+  padding: 0.125rem 0.375rem;
+  border-radius: 20px;
+  font-weight: 600;
+  min-width: 18px;
+  text-align: center;
+}
+
+/* ============================================
+   Messages Section
+   ============================================ */
+.patient-dashboard__messages-section {
+  background: var(--bg-primary, #ffffff);
+  border-radius: 16px;
+  padding: 1.5rem;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08);
+}
+
+.patient-dashboard__messages-info {
+  text-align: center;
+  padding: 3rem 1rem;
+}
+
+.patient-dashboard__messages-info h3 {
+  margin: 1rem 0 0.5rem;
+  color: var(--text-primary, #1e293b);
+}
+
+.patient-dashboard__messages-info p {
+  color: var(--text-secondary, #64748b);
+  margin-bottom: 1.5rem;
+}
+
+/* ============================================
+   Chat Overlay
+   ============================================ */
+.patient-dashboard__chat-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 1rem;
+}
+
+.patient-dashboard__chat-modal {
+  width: 100%;
+  max-width: 500px;
+  height: 80vh;
+  max-height: 700px;
+  border-radius: 16px;
+  overflow: hidden;
+}
+
+/* ============================================
+   Header Actions
+   ============================================ */
+.patient-dashboard__header-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* Dark mode adjustments */
+[data-theme="dark"] .patient-dashboard__notification-btn {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.2);
+}
+
+[data-theme="dark"] .patient-dashboard__messages-section {
+  background: var(--bg-secondary, #1e293b);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .patient-dashboard__chat-modal {
+    max-width: 100%;
+    height: 100vh;
+    max-height: 100vh;
+    border-radius: 0;
+  }
+  
+  .patient-dashboard__header-actions {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .doctor-card__quick-actions {
+    gap: 4px;
+  }
+  
+  .doctor-card__fav-btn,
+  .doctor-card__share-btn,
+  .doctor-card__call-btn,
+  .doctor-card__chat-btn {
+    width: 32px;
+    height: 32px;
+    font-size: 0.8rem;
+  }
 }

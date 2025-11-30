@@ -3,6 +3,16 @@ import axios from '../api/config';
 import toast from 'react-hot-toast';
 import BookingModal from './BookingModal';
 import AIAssistant from './AIAssistant';
+import ReviewModal from './ReviewModal';
+import HealthProfile from './HealthProfile';
+import LabReports from './LabReports';
+import MedicineDelivery from './MedicineDelivery';
+import AmbulanceBooking from './AmbulanceBooking';
+import DoctorChat from './DoctorChat';
+import HealthTips from './HealthTips';
+import NotificationCenter from './NotificationCenter';
+import HealthCheckup from './HealthCheckup';
+import { trackUserLocation, getUserLocation } from '../utils/locationService';
 import './PatientDashboard.css';
 
 const PatientDashboard = ({ user, onLogout }) => {
@@ -22,6 +32,27 @@ const PatientDashboard = ({ user, onLogout }) => {
   const [selectedSpecialization, setSelectedSpecialization] = useState('');
   const [selectedClinic, setSelectedClinic] = useState('');
   
+  // Location state
+  const [userLocation, setUserLocation] = useState(null);
+  const [updatingLocation, setUpdatingLocation] = useState(false);
+  const [nearbyMode, setNearbyMode] = useState(false);
+  const [maxDistance, setMaxDistance] = useState(50);
+  
+  // Favorites state
+  const [favoriteDoctors, setFavoriteDoctors] = useState([]);
+  
+  // Review modal state
+  const [showReviewModal, setShowReviewModal] = useState(false);
+  const [reviewAppointment, setReviewAppointment] = useState(null);
+  
+  // Chat state
+  const [showChat, setShowChat] = useState(false);
+  const [chatDoctor, setChatDoctor] = useState(null);
+  
+  // Notification state
+  const [showNotifications, setShowNotifications] = useState(false);
+  const [unreadNotifications, setUnreadNotifications] = useState(0);
+  
   // Debounce ref
   const searchTimeoutRef = useRef(null);
 
@@ -30,7 +61,41 @@ const PatientDashboard = ({ user, onLogout }) => {
     fetchDoctors();
     fetchAppointments();
     fetchClinics();
+    fetchUserLocation();
+    fetchFavorites();
+    fetchUnreadNotifications();
   }, []);
+
+  // Fetch unread notification count
+  const fetchUnreadNotifications = async () => {
+    try {
+      const userId = currentUser.id || currentUser._id;
+      const response = await axios.get(`/api/notifications/unread-count/${userId}`);
+      setUnreadNotifications(response.data.unreadCount || 0);
+    } catch (error) {
+      // Silently fail - notifications are optional
+      setUnreadNotifications(0);
+    }
+  };
+
+  // Open chat with doctor
+  const openDoctorChat = (doctor) => {
+    setChatDoctor(doctor);
+    setShowChat(true);
+  };
+
+  // Fetch user's saved location
+  const fetchUserLocation = async () => {
+    try {
+      const userId = currentUser.id || currentUser._id;
+      const location = await getUserLocation(userId);
+      if (location?.latitude) {
+        setUserLocation(location);
+      }
+    } catch (error) {
+      console.log('No saved location found');
+    }
+  };
 
   const fetchDoctors = async () => {
     try {
@@ -45,9 +110,85 @@ const PatientDashboard = ({ user, onLogout }) => {
     }
   };
 
+  // Fetch nearby doctors based on user location
+  const fetchNearbyDoctors = async () => {
+    try {
+      setLoading(true);
+      const userId = currentUser.id || currentUser._id;
+      const params = new URLSearchParams({ maxDistance: maxDistance.toString() });
+      if (selectedSpecialization) params.append('specialization', selectedSpecialization);
+      
+      const response = await axios.get(`/api/location/nearby-doctors/${userId}?${params}`);
+      setDoctors(response.data.doctors || []);
+      toast.success(`Found ${response.data.totalFound} doctors within ${maxDistance}km`);
+    } catch (error) {
+      console.error('Error fetching nearby doctors:', error);
+      toast.error(error.response?.data?.message || 'Failed to load nearby doctors');
+      setNearbyMode(false);
+      fetchDoctors(); // Fallback to all doctors
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Update user location
+  const handleUpdateLocation = async () => {
+    setUpdatingLocation(true);
+    try {
+      const userId = currentUser.id || currentUser._id;
+      const result = await trackUserLocation(userId);
+      if (result.success) {
+        setUserLocation(result.location);
+        toast.success(`Location updated: ${result.location.city || 'Unknown'}, ${result.location.state || ''}`);
+        if (nearbyMode) {
+          fetchNearbyDoctors();
+        }
+      } else {
+        toast.error(result.error || 'Failed to update location');
+      }
+    } catch (error) {
+      toast.error('Failed to get your location. Please enable location access.');
+    } finally {
+      setUpdatingLocation(false);
+    }
+  };
+
+  // Toggle nearby mode
+  const toggleNearbyMode = async () => {
+    if (!nearbyMode) {
+      if (!userLocation?.latitude) {
+        toast.error('Please update your location first');
+        return;
+      }
+      setNearbyMode(true);
+      // Clear specialization filter when switching to nearby mode for better results
+      // setSelectedSpecialization('');
+      try {
+        setLoading(true);
+        const userId = currentUser.id || currentUser._id;
+        const params = new URLSearchParams({ maxDistance: maxDistance.toString() });
+        // Don't filter by specialization initially to show all nearby doctors
+        
+        const response = await axios.get(`/api/location/nearby-doctors/${userId}?${params}`);
+        setDoctors(response.data.doctors || []);
+        toast.success(`Found ${response.data.totalFound} doctors within ${maxDistance}km`);
+      } catch (error) {
+        console.error('Error fetching nearby doctors:', error);
+        toast.error(error.response?.data?.message || 'Failed to load nearby doctors');
+        setNearbyMode(false);
+      } finally {
+        setLoading(false);
+      }
+    } else {
+      setNearbyMode(false);
+      fetchDoctors();
+    }
+  };
+
   const fetchAppointments = async () => {
     try {
-      const response = await axios.get(`/api/appointments/user/${currentUser.id}`);
+      const userId = currentUser.id || currentUser._id;
+      const response = await axios.get(`/api/appointments/user/${userId}`);
       setAppointments(response.data);
     } catch (error) {
       console.error('Error fetching appointments:', error);
@@ -114,6 +255,120 @@ const PatientDashboard = ({ user, onLogout }) => {
       .slice(0, 2);
   };
 
+  // Fetch favorites
+  const fetchFavorites = async () => {
+    try {
+      const userId = currentUser.id || currentUser._id;
+      const response = await axios.get(`/api/favorites/${userId}`);
+      setFavoriteDoctors(response.data.map(d => d._id));
+    } catch (error) {
+      console.log('Error fetching favorites');
+    }
+  };
+
+  // Toggle favorite doctor
+  const toggleFavorite = async (doctorId) => {
+    try {
+      const userId = currentUser.id || currentUser._id;
+      const response = await axios.post(`/api/favorites/${userId}/toggle`, { doctorId });
+      
+      if (response.data.isFavorite) {
+        setFavoriteDoctors([...favoriteDoctors, doctorId]);
+        toast.success('Added to favorites');
+      } else {
+        setFavoriteDoctors(favoriteDoctors.filter(id => id !== doctorId));
+        toast.success('Removed from favorites');
+      }
+    } catch (error) {
+      toast.error('Failed to update favorites');
+    }
+  };
+
+  // Check if doctor is favorite
+  const isFavorite = (doctorId) => favoriteDoctors.includes(doctorId);
+
+  // Call clinic directly
+  const callClinic = (phone) => {
+    if (phone) {
+      window.location.href = `tel:${phone}`;
+    } else {
+      toast.error('Phone number not available');
+    }
+  };
+
+  // Share doctor profile
+  const shareDoctor = async (doctor) => {
+    const shareData = {
+      title: `Dr. ${doctor.name} - ${doctor.specialization}`,
+      text: `Book an appointment with Dr. ${doctor.name}, ${doctor.specialization} at ${doctor.clinicId?.name || 'HealthSync'}. Fee: ₹${doctor.consultationFee}`,
+      url: window.location.href
+    };
+
+    if (navigator.share) {
+      try {
+        await navigator.share(shareData);
+      } catch (err) {
+        copyToClipboard(shareData.text + ' ' + shareData.url);
+      }
+    } else {
+      copyToClipboard(shareData.text + ' ' + shareData.url);
+    }
+  };
+
+  // Copy to clipboard helper
+  const copyToClipboard = (text) => {
+    navigator.clipboard.writeText(text);
+    toast.success('Copied to clipboard!');
+  };
+
+  // Emergency SOS
+  const handleEmergency = async () => {
+    try {
+      const userId = currentUser.id || currentUser._id;
+      const response = await axios.get(`/api/health/emergency/${userId}`);
+      const { emergencyNumbers, nearbyHospitalsUrl } = response.data;
+      
+      // Show emergency options
+      const choice = window.confirm(
+        `🚨 EMERGENCY SERVICES 🚨\n\n` +
+        `Ambulance: ${emergencyNumbers.ambulance}\n` +
+        `National Emergency: ${emergencyNumbers.nationalEmergency}\n\n` +
+        `Click OK to find nearby hospitals on map\n` +
+        `Click Cancel to call ambulance directly`
+      );
+      
+      if (choice && nearbyHospitalsUrl) {
+        window.open(nearbyHospitalsUrl, '_blank');
+      } else {
+        window.location.href = `tel:${emergencyNumbers.ambulance}`;
+      }
+    } catch (error) {
+      // Fallback to direct call
+      window.location.href = 'tel:102';
+    }
+  };
+
+  // Open Google Maps directions
+  const openDirections = (clinic) => {
+    if (!userLocation?.latitude || !userLocation?.longitude) {
+      toast.error('Please update your location first to get directions');
+      return;
+    }
+    
+    const destLat = clinic?.latitude;
+    const destLng = clinic?.longitude;
+    
+    if (!destLat || !destLng) {
+      // Fallback to clinic address if no coordinates
+      const address = encodeURIComponent(`${clinic?.name}, ${clinic?.address}, ${clinic?.city}`);
+      window.open(`https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${address}`, '_blank');
+      return;
+    }
+    
+    const url = `https://www.google.com/maps/dir/?api=1&origin=${userLocation.latitude},${userLocation.longitude}&destination=${destLat},${destLng}&travelmode=driving`;
+    window.open(url, '_blank');
+  };
+
   return (
     <div className="patient-dashboard">
       <div className="patient-dashboard__container">
@@ -137,12 +392,49 @@ const PatientDashboard = ({ user, onLogout }) => {
                   <span className="patient-dashboard__status-dot"></span>
                   Online
                 </div>
+                {userLocation?.city && (
+                  <div className="patient-dashboard__location-info">
+                    <i className="fas fa-map-marker-alt"></i>
+                    <span>{userLocation.city}{userLocation.state ? `, ${userLocation.state}` : ''}</span>
+                  </div>
+                )}
               </div>
             </div>
-            <button className="patient-dashboard__logout-btn" onClick={onLogout}>
-              <i className="fas fa-sign-out-alt"></i>
-              Logout
-            </button>
+            <div className="patient-dashboard__header-actions">
+              <button 
+                className="patient-dashboard__notification-btn"
+                onClick={() => setShowNotifications(true)}
+                title="Notifications"
+              >
+                <i className="fas fa-bell"></i>
+                {unreadNotifications > 0 && (
+                  <span className="patient-dashboard__notification-badge">{unreadNotifications}</span>
+                )}
+              </button>
+              <button 
+                className="patient-dashboard__sos-btn"
+                onClick={handleEmergency}
+                title="Emergency SOS"
+              >
+                <i className="fas fa-ambulance"></i> SOS
+              </button>
+              <button 
+                className={`patient-dashboard__location-btn ${updatingLocation ? 'patient-dashboard__location-btn--loading' : ''}`}
+                onClick={handleUpdateLocation}
+                disabled={updatingLocation}
+                title="Update your location to find nearby doctors"
+              >
+                {updatingLocation ? (
+                  <><i className="fas fa-spinner fa-spin"></i> Updating...</>
+                ) : (
+                  <><i className="fas fa-location-crosshairs"></i> Update Location</>
+                )}
+              </button>
+              <button className="patient-dashboard__logout-btn" onClick={onLogout}>
+                <i className="fas fa-sign-out-alt"></i>
+                Logout
+              </button>
+            </div>
           </div>
         </div>
 
@@ -180,6 +472,16 @@ const PatientDashboard = ({ user, onLogout }) => {
             </button>
             
             <button 
+              className={`patient-dashboard__tab ${activeTab === 'health' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('health')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-heartbeat"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Health Profile</span>
+            </button>
+            
+            <button 
               className={`patient-dashboard__tab ${activeTab === 'payments' ? 'patient-dashboard__tab--active' : ''}`}
               onClick={() => setActiveTab('payments')}
             >
@@ -187,6 +489,66 @@ const PatientDashboard = ({ user, onLogout }) => {
                 <i className="fas fa-credit-card"></i>
               </div>
               <span className="patient-dashboard__tab-label">Payments</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'lab-reports' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('lab-reports')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-flask"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Lab Reports</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'medicines' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('medicines')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-pills"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Medicines</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'ambulance' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('ambulance')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-ambulance"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Ambulance</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'messages' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('messages')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-comments"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Messages</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'health-tips' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('health-tips')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-lightbulb"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Health Tips</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'checkup' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('checkup')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-stethoscope"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Full Body Checkup</span>
             </button>
           </div>
         </div>
@@ -196,6 +558,45 @@ const PatientDashboard = ({ user, onLogout }) => {
           <>
             {/* Search & Filters */}
             <div className="patient-dashboard__filters">
+              {/* Nearby Toggle */}
+              <div className="patient-dashboard__nearby-toggle">
+                <button 
+                  className={`patient-dashboard__nearby-btn ${nearbyMode ? 'patient-dashboard__nearby-btn--active' : ''}`}
+                  onClick={toggleNearbyMode}
+                  disabled={!userLocation?.latitude && !nearbyMode}
+                  title={!userLocation?.latitude ? 'Update your location first' : 'Find doctors near you'}
+                >
+                  <i className="fas fa-map-marker-alt"></i>
+                  {nearbyMode ? 'Show All Doctors' : 'Find Nearby'}
+                </button>
+                
+                {nearbyMode && (
+                  <div className="patient-dashboard__distance-filter">
+                    <label>Within:</label>
+                    <select 
+                      value={maxDistance} 
+                      onChange={(e) => {
+                        setMaxDistance(e.target.value);
+                        setTimeout(fetchNearbyDoctors, 100);
+                      }}
+                      className="patient-dashboard__distance-select"
+                    >
+                      <option value="5">5 km</option>
+                      <option value="10">10 km</option>
+                      <option value="25">25 km</option>
+                      <option value="50">50 km</option>
+                      <option value="100">100 km</option>
+                    </select>
+                  </div>
+                )}
+                
+                {userLocation?.city && (
+                  <span className="patient-dashboard__current-location">
+                    <i className="fas fa-location-dot"></i> {userLocation.city}
+                  </span>
+                )}
+              </div>
+
               <div className="patient-dashboard__filters-grid">
                 <div className="patient-dashboard__filter-group">
                   <i className="fas fa-search patient-dashboard__filter-icon"></i>
@@ -213,7 +614,10 @@ const PatientDashboard = ({ user, onLogout }) => {
                   <select
                     className="patient-dashboard__filter-select"
                     value={selectedSpecialization}
-                    onChange={(e) => setSelectedSpecialization(e.target.value)}
+                    onChange={(e) => {
+                      setSelectedSpecialization(e.target.value);
+                      if (nearbyMode) setTimeout(fetchNearbyDoctors, 100);
+                    }}
                   >
                     <option value="">All Specializations</option>
                     {specializations.map(spec => (
@@ -222,19 +626,21 @@ const PatientDashboard = ({ user, onLogout }) => {
                   </select>
                 </div>
                 
-                <div className="patient-dashboard__filter-group">
-                  <i className="fas fa-hospital patient-dashboard__filter-icon"></i>
-                  <select
-                    className="patient-dashboard__filter-select"
-                    value={selectedClinic}
-                    onChange={(e) => setSelectedClinic(e.target.value)}
-                  >
-                    <option value="">All Clinics</option>
-                    {clinics.map(clinic => (
-                      <option key={clinic._id} value={clinic._id}>{clinic.name}</option>
-                    ))}
-                  </select>
-                </div>
+                {!nearbyMode && (
+                  <div className="patient-dashboard__filter-group">
+                    <i className="fas fa-hospital patient-dashboard__filter-icon"></i>
+                    <select
+                      className="patient-dashboard__filter-select"
+                      value={selectedClinic}
+                      onChange={(e) => setSelectedClinic(e.target.value)}
+                    >
+                      <option value="">All Clinics</option>
+                      {clinics.map(clinic => (
+                        <option key={clinic._id} value={clinic._id}>{clinic.name}</option>
+                      ))}
+                    </select>
+                  </div>
+                )}
               </div>
               
               {(searchTerm || selectedSpecialization || selectedClinic) && (
@@ -278,8 +684,49 @@ const PatientDashboard = ({ user, onLogout }) => {
                 <div className="patient-dashboard__doctors-grid">
                   {filteredDoctors.map(doctor => (
                     <div key={doctor._id} className="doctor-card">
+                      {/* Quick Actions */}
+                      <div className="doctor-card__quick-actions">
+                        <button 
+                          className={`doctor-card__fav-btn ${isFavorite(doctor._id) ? 'doctor-card__fav-btn--active' : ''}`}
+                          onClick={() => toggleFavorite(doctor._id)}
+                          title={isFavorite(doctor._id) ? 'Remove from favorites' : 'Add to favorites'}
+                        >
+                          <i className={isFavorite(doctor._id) ? 'fas fa-heart' : 'far fa-heart'}></i>
+                        </button>
+                        <button 
+                          className="doctor-card__share-btn"
+                          onClick={() => shareDoctor(doctor)}
+                          title="Share doctor profile"
+                        >
+                          <i className="fas fa-share-alt"></i>
+                        </button>
+                        <button 
+                          className="doctor-card__call-btn"
+                          onClick={() => callClinic(doctor.clinicId?.phone || doctor.phone)}
+                          title="Call clinic"
+                        >
+                          <i className="fas fa-phone"></i>
+                        </button>
+                        <button 
+                          className="doctor-card__chat-btn"
+                          onClick={() => openDoctorChat(doctor)}
+                          title="Chat with doctor"
+                        >
+                          <i className="fas fa-comment-medical"></i>
+                        </button>
+                      </div>
+
                       {doctor.experience > 10 && (
                         <span className="doctor-card__badge">Most Experienced</span>
+                      )}
+                      
+                      {/* Rating */}
+                      {doctor.rating > 0 && (
+                        <div className="doctor-card__rating">
+                          <i className="fas fa-star"></i>
+                          <span>{doctor.rating.toFixed(1)}</span>
+                          <span className="doctor-card__review-count">({doctor.reviewCount || 0} reviews)</span>
+                        </div>
                       )}
                       
                       <h3 className="doctor-card__name">Dr. {doctor.name}</h3>
@@ -290,6 +737,12 @@ const PatientDashboard = ({ user, onLogout }) => {
                           <i className="fas fa-hospital doctor-card__meta-icon"></i>
                           {doctor.clinicId?.name || 'No clinic assigned'}
                         </div>
+                        {nearbyMode && doctor.distanceText && (
+                          <div className="doctor-card__meta-item doctor-card__distance">
+                            <i className="fas fa-route doctor-card__meta-icon"></i>
+                            {doctor.distanceText}
+                          </div>
+                        )}
                         <div className="doctor-card__meta-item">
                           <i className="fas fa-envelope doctor-card__meta-icon"></i>
                           {doctor.email}
@@ -316,16 +769,26 @@ const PatientDashboard = ({ user, onLogout }) => {
                         {doctor.availability || 'Available'}
                       </div>
                       
-                      <button 
-                        className="doctor-card__book-btn"
-                        disabled={doctor.availability !== 'Available'}
-                        onClick={() => {
-                          setSelectedDoctor(doctor);
-                          setShowBookingModal(true);
-                        }}
-                      >
-                        <i className="fas fa-calendar-plus"></i> Book Appointment
-                      </button>
+                      <div className="doctor-card__actions">
+                        <button 
+                          className="doctor-card__book-btn"
+                          disabled={doctor.availability !== 'Available'}
+                          onClick={() => {
+                            setSelectedDoctor(doctor);
+                            setShowBookingModal(true);
+                          }}
+                        >
+                          <i className="fas fa-calendar-plus"></i> Book Appointment
+                        </button>
+                        
+                        <button 
+                          className="doctor-card__directions-btn"
+                          onClick={() => openDirections(doctor.clinicId)}
+                          title="Get directions to clinic"
+                        >
+                          <i className="fas fa-directions"></i> Get Directions
+                        </button>
+                      </div>
                     </div>
                   ))}
                 </div>
@@ -517,11 +980,24 @@ const PatientDashboard = ({ user, onLogout }) => {
                           <i className="fas fa-hourglass-half"></i>
                           <span>{getTimeUntil()}</span>
                         </div>
-                        {apt.payment?.totalAmount && (
-                          <div className="appointment-card-pro__amount">
-                            ₹{apt.payment.totalAmount}
-                          </div>
-                        )}
+                        <div className="appointment-card-pro__footer-actions">
+                          {apt.status === 'completed' && (
+                            <button 
+                              className="appointment-card-pro__review-btn"
+                              onClick={() => {
+                                setReviewAppointment(apt);
+                                setShowReviewModal(true);
+                              }}
+                            >
+                              <i className="fas fa-star"></i> Write Review
+                            </button>
+                          )}
+                          {apt.payment?.totalAmount && (
+                            <div className="appointment-card-pro__amount">
+                              ₹{apt.payment.totalAmount}
+                            </div>
+                          )}
+                        </div>
                       </div>
                     </div>
                   );
@@ -536,6 +1012,11 @@ const PatientDashboard = ({ user, onLogout }) => {
           <div className="patient-dashboard__ai-section">
             <AIAssistant user={currentUser} />
           </div>
+        )}
+
+        {/* Health Profile Tab Content */}
+        {activeTab === 'health' && (
+          <HealthProfile userId={currentUser.id || currentUser._id} />
         )}
 
         {/* Payments Tab Content */}
@@ -560,6 +1041,112 @@ const PatientDashboard = ({ user, onLogout }) => {
               <p className="patient-dashboard__empty-text">
                 Your payment transactions will appear here
               </p>
+            </div>
+          </div>
+        )}
+
+        {/* Lab Reports Tab Content */}
+        {activeTab === 'lab-reports' && (
+          <LabReports userId={currentUser.id || currentUser._id} />
+        )}
+
+        {/* Medicine Delivery Tab Content */}
+        {activeTab === 'medicines' && (
+          <MedicineDelivery 
+            userId={currentUser.id || currentUser._id}
+            userAddress={userLocation}
+          />
+        )}
+
+        {/* Ambulance Booking Tab Content */}
+        {activeTab === 'ambulance' && (
+          <AmbulanceBooking 
+            userId={currentUser.id || currentUser._id}
+            userName={currentUser.name}
+            userPhone={currentUser.phone}
+            userLocation={userLocation}
+          />
+        )}
+
+        {/* Messages Tab Content */}
+        {activeTab === 'messages' && (
+          <div className="patient-dashboard__messages-section">
+            <div className="patient-dashboard__section-header">
+              <h2 className="patient-dashboard__section-title">
+                <div className="patient-dashboard__section-icon">
+                  <i className="fas fa-comments"></i>
+                </div>
+                Messages
+              </h2>
+            </div>
+            <div className="patient-dashboard__messages-info">
+              <div className="patient-dashboard__empty-icon">
+                <i className="fas fa-comment-medical"></i>
+              </div>
+              <h3>Chat with Your Doctors</h3>
+              <p>Click the chat icon on any doctor card to start a conversation</p>
+              <button 
+                className="patient-dashboard__empty-btn"
+                onClick={() => setActiveTab('doctors')}
+              >
+                <i className="fas fa-user-md"></i> Find Doctors
+              </button>
+            </div>
+          </div>
+        )}
+
+        {/* Health Tips Tab Content */}
+        {activeTab === 'health-tips' && (
+          <HealthTips />
+        )}
+
+        {/* Full Body Checkup Tab Content */}
+        {activeTab === 'checkup' && (
+          <HealthCheckup 
+            userId={currentUser.id || currentUser._id}
+            userName={currentUser.name}
+            userEmail={currentUser.email}
+            userPhone={currentUser.phone}
+          />
+        )}
+
+        {/* Review Modal */}
+        {showReviewModal && reviewAppointment && (
+          <ReviewModal
+            appointment={reviewAppointment}
+            onClose={() => {
+              setShowReviewModal(false);
+              setReviewAppointment(null);
+            }}
+            onSuccess={() => {
+              fetchAppointments();
+            }}
+          />
+        )}
+
+        {/* Notification Center */}
+        {showNotifications && (
+          <NotificationCenter
+            userId={currentUser.id || currentUser._id}
+            onClose={() => {
+              setShowNotifications(false);
+              fetchUnreadNotifications();
+            }}
+          />
+        )}
+
+        {/* Doctor Chat Modal */}
+        {showChat && chatDoctor && (
+          <div className="patient-dashboard__chat-overlay">
+            <div className="patient-dashboard__chat-modal">
+              <DoctorChat
+                user={currentUser}
+                doctor={chatDoctor}
+                onClose={() => {
+                  setShowChat(false);
+                  setChatDoctor(null);
+                }}
+              />
             </div>
           </div>
         )}

@@ -556,4 +556,57 @@ router.get('/user/:userId/online-upcoming', async (req, res) => {
   }
 });
 
+// Reschedule appointment
+router.put('/:id/reschedule', async (req, res) => {
+  try {
+    const { date, time, reason } = req.body;
+    const appointment = await Appointment.findById(req.params.id);
+
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+
+    if (['completed', 'cancelled'].includes(appointment.status)) {
+      return res.status(400).json({ message: 'Cannot reschedule completed or cancelled appointments' });
+    }
+
+    const oldDate = appointment.date;
+    const oldTime = appointment.time;
+
+    appointment.date = new Date(date);
+    appointment.time = time;
+    appointment.rescheduledFrom = { date: oldDate, time: oldTime, reason, rescheduledAt: new Date() };
+    appointment.status = 'pending'; // Reset to pending for confirmation
+
+    await appointment.save();
+
+    res.json({ message: 'Appointment rescheduled successfully', appointment });
+  } catch (error) {
+    console.error('Error rescheduling appointment:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Add notes to appointment
+router.put('/:id/notes', async (req, res) => {
+  try {
+    const { notes, noteType } = req.body; // noteType: 'patient' or 'doctor'
+    const updateField = noteType === 'doctor' ? 'doctorNotes' : 'patientNotes';
+    
+    const appointment = await Appointment.findByIdAndUpdate(
+      req.params.id,
+      { [updateField]: notes },
+      { new: true }
+    );
+
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+
+    res.json({ message: 'Notes updated', appointment });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router;

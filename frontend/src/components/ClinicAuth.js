@@ -39,6 +39,15 @@ function ClinicAuth({ onLogin, onBack }) {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
   const [canResendOtp, setCanResendOtp] = useState(true);
+  
+  // Forgot password states
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotOtp, setForgotOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [confirmNewPassword, setConfirmNewPassword] = useState("");
+  const [forgotStep, setForgotStep] = useState(1); // 1: email, 2: otp, 3: new password
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   // Validation functions
   const validateEmail = (email) => {
@@ -151,7 +160,7 @@ function ClinicAuth({ onLogin, onBack }) {
     setError("");
     
     try {
-      await axios.post("/api/auth/send-otp", { 
+      await axios.post("/api/otp/send-otp", { 
         email: formData.email,
         type: 'staff-registration'
       });
@@ -179,13 +188,108 @@ function ClinicAuth({ onLogin, onBack }) {
     }
   };
 
+  // Forgot Password - Send OTP
+  const handleForgotSendOtp = async () => {
+    if (!forgotEmail || !validateEmail(forgotEmail)) {
+      setError("Please enter a valid email address");
+      return;
+    }
+    
+    setForgotLoading(true);
+    setError("");
+    
+    try {
+      await axios.post("/api/otp/send-otp", {
+        email: forgotEmail,
+        type: 'password-reset'
+      });
+      setForgotStep(2);
+      setSuccess("OTP sent to your email");
+    } catch (error) {
+      setError(error.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // Forgot Password - Verify OTP
+  const handleForgotVerifyOtp = async () => {
+    if (!forgotOtp || forgotOtp.length !== 6) {
+      setError("Please enter a valid 6-digit OTP");
+      return;
+    }
+    
+    setForgotLoading(true);
+    setError("");
+    
+    try {
+      const response = await axios.post("/api/otp/verify-otp", {
+        email: forgotEmail,
+        otp: forgotOtp,
+        type: 'password-reset'
+      });
+      
+      if (response.data.verified) {
+        setForgotStep(3);
+        setSuccess("OTP verified. Please set your new password.");
+      }
+    } catch (error) {
+      setError(error.response?.data?.message || "Invalid OTP");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // Forgot Password - Reset Password
+  const handleResetPassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+    
+    if (newPassword !== confirmNewPassword) {
+      setError("Passwords do not match");
+      return;
+    }
+    
+    setForgotLoading(true);
+    setError("");
+    
+    try {
+      // Use the receptionist-specific reset endpoint
+      const response = await axios.post("/api/receptionists/reset-password", {
+        email: forgotEmail.toLowerCase().trim(),
+        newPassword: newPassword
+      });
+      
+      console.log('Password reset response:', response.data);
+      
+      if (response.data.success) {
+        setSuccess("Password reset successfully! You can now login with your new password.");
+        setShowForgotPassword(false);
+        setForgotStep(1);
+        setForgotEmail("");
+        setForgotOtp("");
+        setNewPassword("");
+        setConfirmNewPassword("");
+      } else {
+        setError(response.data.message || "Failed to reset password");
+      }
+    } catch (error) {
+      console.error('Password reset error:', error.response?.data || error.message);
+      setError(error.response?.data?.message || "Failed to reset password. Please try again.");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
   // Verify OTP
   const verifyOtp = async () => {
     setLoading(true);
     setError("");
     
     try {
-      const response = await axios.post("/api/auth/verify-otp", {
+      const response = await axios.post("/api/otp/verify-otp", {
         email: formData.email,
         otp: otp,
         type: 'staff-registration'
@@ -360,8 +464,56 @@ function ClinicAuth({ onLogin, onBack }) {
   };
 
   return (
-    <div>
-      <form onSubmit={handleSubmit}>
+    <div className="clinic-auth-container">
+      <div className="clinic-auth__left">
+        <div className="clinic-auth__branding">
+          <div className="clinic-auth__logo">
+            <i className="fas fa-hospital-user"></i>
+          </div>
+          <h1>Staff Portal</h1>
+          <p>Healthcare Management System</p>
+        </div>
+        <div className="clinic-auth__features">
+          <div className="clinic-auth__feature">
+            <i className="fas fa-calendar-check"></i>
+            <div>
+              <h4>Appointment Management</h4>
+              <p>Manage patient appointments efficiently</p>
+            </div>
+          </div>
+          <div className="clinic-auth__feature">
+            <i className="fas fa-users"></i>
+            <div>
+              <h4>Patient Records</h4>
+              <p>Access and update patient information</p>
+            </div>
+          </div>
+          <div className="clinic-auth__feature">
+            <i className="fas fa-chart-line"></i>
+            <div>
+              <h4>Analytics Dashboard</h4>
+              <p>Track clinic performance metrics</p>
+            </div>
+          </div>
+        </div>
+      </div>
+      
+      <div className="clinic-auth__right">
+        <div className="clinic-auth__form-container">
+          <div className="clinic-auth__header">
+            {onBack && (
+              <button type="button" className="clinic-auth__back-btn" onClick={onBack}>
+                <i className="fas fa-arrow-left"></i> Back
+              </button>
+            )}
+            <h2>
+              <i className="fas fa-hospital-user me-2"></i>
+              {isLogin ? 'Staff Login' : 'Staff Registration'}
+            </h2>
+            <p>{isLogin ? 'Access your clinic dashboard' : 'Apply for a staff position'}</p>
+          </div>
+
+      <form onSubmit={handleSubmit} className="clinic-auth__form">
         {/* Personal Information Section */}
         {!isLogin && (
           <>
@@ -952,18 +1104,149 @@ function ClinicAuth({ onLogin, onBack }) {
 
       {isLogin && (
         <div className="text-center mt-2">
-          <button type="button" className="btn btn-link btn-sm text-muted">
+          <button 
+            type="button" 
+            className="btn btn-link btn-sm text-muted"
+            onClick={() => {
+              setShowForgotPassword(true);
+              setError("");
+              setSuccess("");
+            }}
+          >
             <i className="fas fa-key me-1"></i>
             Forgot Password?
           </button>
         </div>
       )}
 
-      <div className="mt-3 p-3 bg-light rounded">
-        <small className="text-muted">
-          <i className="fas fa-shield-alt me-1 text-success"></i>
-          <strong>Secure & Compliant:</strong> {isLogin ? "Staff access with role-based permissions" : "All applications are reviewed within 24-48 hours. Background checks may be required."}
-        </small>
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div className="clinic-auth__modal-overlay" onClick={() => setShowForgotPassword(false)}>
+          <div className="clinic-auth__modal" onClick={(e) => e.stopPropagation()}>
+            <div className="clinic-auth__modal-header">
+              <h4><i className="fas fa-key"></i> Reset Password</h4>
+              <button 
+                className="clinic-auth__modal-close"
+                onClick={() => {
+                  setShowForgotPassword(false);
+                  setForgotStep(1);
+                  setForgotEmail("");
+                  setForgotOtp("");
+                  setNewPassword("");
+                  setConfirmNewPassword("");
+                  setError("");
+                  setSuccess("");
+                }}
+              >
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            
+            <div className="clinic-auth__modal-body">
+              {error && <div className="alert alert-danger">{error}</div>}
+              {success && <div className="alert alert-success">{success}</div>}
+              
+              {/* Step 1: Enter Email */}
+              {forgotStep === 1 && (
+                <div>
+                  <p className="text-muted mb-3">Enter your registered email address to receive a verification code.</p>
+                  <div className="mb-3">
+                    <label className="form-label">Email Address</label>
+                    <input
+                      type="email"
+                      className="form-control"
+                      placeholder="Enter your email"
+                      value={forgotEmail}
+                      onChange={(e) => setForgotEmail(e.target.value)}
+                    />
+                  </div>
+                  <button 
+                    className="btn btn-primary w-100"
+                    onClick={handleForgotSendOtp}
+                    disabled={forgotLoading}
+                  >
+                    {forgotLoading ? <><i className="fas fa-spinner fa-spin"></i> Sending...</> : "Send OTP"}
+                  </button>
+                </div>
+              )}
+              
+              {/* Step 2: Enter OTP */}
+              {forgotStep === 2 && (
+                <div>
+                  <p className="text-muted mb-3">Enter the 6-digit code sent to {forgotEmail}</p>
+                  <div className="mb-3">
+                    <label className="form-label">Verification Code</label>
+                    <input
+                      type="text"
+                      className="form-control text-center"
+                      placeholder="000000"
+                      maxLength={6}
+                      value={forgotOtp}
+                      onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, ''))}
+                      style={{ letterSpacing: '0.5em', fontSize: '1.25rem' }}
+                    />
+                  </div>
+                  <button 
+                    className="btn btn-primary w-100"
+                    onClick={handleForgotVerifyOtp}
+                    disabled={forgotLoading}
+                  >
+                    {forgotLoading ? <><i className="fas fa-spinner fa-spin"></i> Verifying...</> : "Verify OTP"}
+                  </button>
+                  <button 
+                    className="btn btn-link w-100 mt-2"
+                    onClick={() => setForgotStep(1)}
+                  >
+                    <i className="fas fa-arrow-left"></i> Back
+                  </button>
+                </div>
+              )}
+              
+              {/* Step 3: New Password */}
+              {forgotStep === 3 && (
+                <div>
+                  <p className="text-muted mb-3">Create a new password for your account.</p>
+                  <div className="mb-3">
+                    <label className="form-label">New Password</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      placeholder="Enter new password"
+                      value={newPassword}
+                      onChange={(e) => setNewPassword(e.target.value)}
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Confirm Password</label>
+                    <input
+                      type="password"
+                      className="form-control"
+                      placeholder="Confirm new password"
+                      value={confirmNewPassword}
+                      onChange={(e) => setConfirmNewPassword(e.target.value)}
+                    />
+                  </div>
+                  <button 
+                    className="btn btn-success w-100"
+                    onClick={handleResetPassword}
+                    disabled={forgotLoading}
+                  >
+                    {forgotLoading ? <><i className="fas fa-spinner fa-spin"></i> Resetting...</> : "Reset Password"}
+                  </button>
+                </div>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      <div className="clinic-auth__security-notice">
+        <i className="fas fa-shield-alt"></i>
+        <p>
+          <strong>Secure & Compliant:</strong> {isLogin ? "Staff access with role-based permissions" : "All applications are reviewed within 24-48 hours."}
+        </p>
+      </div>
+        </div>
       </div>
     </div>
   );

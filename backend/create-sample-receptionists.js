@@ -9,7 +9,7 @@ const Clinic = require('./models/Clinic');
 async function createSampleReceptionists() {
   try {
     // Connect to MongoDB
-    await mongoose.connect(process.env.MONGO_URI);
+    await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/doctor_appointment');
     console.log('✅ Connected to MongoDB');
 
     // Get existing clinics
@@ -34,23 +34,29 @@ async function createSampleReceptionists() {
       {
         name: 'Alice Johnson',
         email: 'alice@citymedical.com',
-        passwordHash: hashedPassword,
+        password: hashedPassword,
         role: 'receptionist',
-        clinicId: clinics[0]._id // Assign to first clinic
+        clinicId: clinics[0]._id,
+        approvalStatus: 'approved',
+        isActive: true
       },
       {
         name: 'Bob Smith',
         email: 'bob@downtownclinic.com',
-        passwordHash: hashedPassword,
+        password: hashedPassword,
         role: 'receptionist',
-        clinicId: clinics[1]._id // Assign to second clinic
+        clinicId: clinics.length > 1 ? clinics[1]._id : clinics[0]._id,
+        approvalStatus: 'approved',
+        isActive: true
       },
       {
         name: 'Carol Davis',
         email: 'carol@reception.com',
-        passwordHash: hashedPassword,
+        password: hashedPassword,
         role: 'receptionist',
-        clinicId: null // No clinic assigned
+        clinicId: null,
+        approvalStatus: 'approved',
+        isActive: true
       }
     ]);
 

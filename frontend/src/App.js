@@ -6,6 +6,9 @@ import './styles/admin-dashboard-professional.css';
 import './styles/admin-dashboard-pro.css';
 import toast, { Toaster } from 'react-hot-toast';
 
+// Mobile/Capacitor initialization
+import { useMobileInit } from './mobile/useMobileInit';
+
 // Import auth components
 import Auth from "./components/Auth";
 import AdminAuth from "./components/AdminAuth";
@@ -86,6 +89,10 @@ function App() {
     return saved === 'true';
   });
   const [activeSection, setActiveSection] = useState("home");
+
+  // Initialize mobile services (Capacitor)
+  const userId = user?.id || user?._id;
+  useMobileInit(userId);
 
   // ANTI-FLICKER: Prevent FOUC and ensure smooth theme transitions
   useEffect(() => {

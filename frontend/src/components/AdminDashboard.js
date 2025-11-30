@@ -44,6 +44,10 @@ function AdminDashboard({ admin, onLogout }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
 
+  // Pending approvals state
+  const [pendingStaff, setPendingStaff] = useState([]);
+  const [pendingClinics, setPendingClinics] = useState([]);
+
   // Modal states
   const [showUserModal, setShowUserModal] = useState(false);
   const [showDoctorModal, setShowDoctorModal] = useState(false);
@@ -124,7 +128,75 @@ function AdminDashboard({ admin, onLogout }) {
 
   useEffect(() => {
     fetchDashboardData();
+    fetchPendingApprovals();
   }, [fetchDashboardData]);
+
+  // Fetch pending approvals
+  const fetchPendingApprovals = async () => {
+    try {
+      const [staffRes, clinicsRes] = await Promise.allSettled([
+        axios.get('/api/receptionists/pending'),
+        axios.get('/api/clinics/admin/pending')
+      ]);
+      
+      if (staffRes.status === 'fulfilled') {
+        setPendingStaff(staffRes.value.data || []);
+      }
+      if (clinicsRes.status === 'fulfilled') {
+        setPendingClinics(clinicsRes.value.data || []);
+      }
+    } catch (error) {
+      console.error('Error fetching pending approvals:', error);
+    }
+  };
+
+  // Approve staff
+  const handleApproveStaff = async (staffId, clinicId) => {
+    try {
+      await axios.put(`/api/receptionists/${staffId}/approve`, { clinicId });
+      toast.success('Staff approved successfully!');
+      fetchPendingApprovals();
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to approve staff');
+    }
+  };
+
+  // Reject staff
+  const handleRejectStaff = async (staffId) => {
+    if (!window.confirm('Are you sure you want to reject this staff registration?')) return;
+    try {
+      await axios.put(`/api/receptionists/${staffId}/reject`);
+      toast.success('Staff rejected');
+      fetchPendingApprovals();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to reject staff');
+    }
+  };
+
+  // Approve clinic
+  const handleApproveClinic = async (clinicId) => {
+    try {
+      await axios.put(`/api/clinics/${clinicId}/approve`, { adminId: admin?.id || admin?._id });
+      toast.success('Clinic approved successfully!');
+      fetchPendingApprovals();
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to approve clinic');
+    }
+  };
+
+  // Reject clinic
+  const handleRejectClinic = async (clinicId) => {
+    const reason = window.prompt('Enter rejection reason (optional):');
+    try {
+      await axios.put(`/api/clinics/${clinicId}/reject`, { reason });
+      toast.success('Clinic rejected');
+      fetchPendingApprovals();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to reject clinic');
+    }
+  };
 
   // CRUD Operations
   const handleDeleteUser = async (userId) => {
@@ -450,6 +522,12 @@ function AdminDashboard({ admin, onLogout }) {
           <TabButton tab="clinics" activeTab={activeTab} onClick={handleTabChange}>
             <i className="fas fa-hospital"></i> Clinics
           </TabButton>
+          <TabButton tab="approvals" activeTab={activeTab} onClick={handleTabChange}>
+            <i className="fas fa-user-check"></i> Approvals
+            {(pendingStaff.length + pendingClinics.length) > 0 && (
+              <span className="admin-tab__badge">{pendingStaff.length + pendingClinics.length}</span>
+            )}
+          </TabButton>
         </div>
 
         {/* Content Sections */}
@@ -713,6 +791,149 @@ function AdminDashboard({ admin, onLogout }) {
                     ))}
                   </tbody>
                 </table>
+              </div>
+            </>
+          )}
+
+          {activeTab === "approvals" && (
+            <>
+              <div className="admin-section__header">
+                <h2 className="admin-section__title">
+                  <div className="admin-section__icon">
+                    <i className="fas fa-user-check"></i>
+                  </div>
+                  Pending Approvals
+                </h2>
+              </div>
+
+              {/* Pending Staff */}
+              <div style={{ marginBottom: '2rem' }}>
+                <h3 style={{ fontSize: '1.1rem', color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <i className="fas fa-user-tie" style={{ color: '#3b82f6' }}></i>
+                  Pending Staff Registrations ({pendingStaff.length})
+                </h3>
+                {pendingStaff.length === 0 ? (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b', background: '#f8fafc', borderRadius: '12px' }}>
+                    <i className="fas fa-check-circle" style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }}></i>
+                    <p>No pending staff registrations</p>
+                  </div>
+                ) : (
+                  <div className="admin-table-container">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Email</th>
+                          <th>Phone</th>
+                          <th>Clinic Name</th>
+                          <th>Registered</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pendingStaff.map(staff => (
+                          <tr key={staff._id}>
+                            <td><strong>{staff.name}</strong></td>
+                            <td>{staff.email}</td>
+                            <td>{staff.phone || 'N/A'}</td>
+                            <td>{staff.clinicName || 'Not specified'}</td>
+                            <td>{new Date(staff.createdAt).toLocaleDateString()}</td>
+                            <td>
+                              <div className="admin-actions">
+                                <select 
+                                  style={{ padding: '6px 10px', borderRadius: '6px', border: '1px solid #e2e8f0', marginRight: '8px', fontSize: '13px' }}
+                                  onChange={(e) => {
+                                    if (e.target.value) {
+                                      handleApproveStaff(staff._id, e.target.value);
+                                    }
+                                  }}
+                                  defaultValue=""
+                                >
+                                  <option value="">Assign Clinic & Approve</option>
+                                  {clinics.map(clinic => (
+                                    <option key={clinic._id} value={clinic._id}>{clinic.name}</option>
+                                  ))}
+                                </select>
+                                <button 
+                                  className="admin-action-btn admin-action-btn--delete"
+                                  onClick={() => handleRejectStaff(staff._id)}
+                                  title="Reject"
+                                >
+                                  <i className="fas fa-times"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Pending Clinics */}
+              <div>
+                <h3 style={{ fontSize: '1.1rem', color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <i className="fas fa-hospital" style={{ color: '#10b981' }}></i>
+                  Pending Clinic Registrations ({pendingClinics.length})
+                </h3>
+                {pendingClinics.length === 0 ? (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b', background: '#f8fafc', borderRadius: '12px' }}>
+                    <i className="fas fa-check-circle" style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }}></i>
+                    <p>No pending clinic registrations</p>
+                  </div>
+                ) : (
+                  <div className="admin-table-container">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Type</th>
+                          <th>Address</th>
+                          <th>City</th>
+                          <th>Phone</th>
+                          <th>Registered</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pendingClinics.map(clinic => (
+                          <tr key={clinic._id}>
+                            <td><strong>{clinic.name}</strong></td>
+                            <td>
+                              <span className={`badge ${clinic.type === 'hospital' ? 'badge-info' : 'badge-primary'}`}>
+                                {clinic.type || 'clinic'}
+                              </span>
+                            </td>
+                            <td>{clinic.address}</td>
+                            <td>{clinic.city}</td>
+                            <td>{clinic.phone || 'N/A'}</td>
+                            <td>{new Date(clinic.createdAt).toLocaleDateString()}</td>
+                            <td>
+                              <div className="admin-actions">
+                                <button 
+                                  className="admin-action-btn"
+                                  style={{ background: '#10b981', color: 'white' }}
+                                  onClick={() => handleApproveClinic(clinic._id)}
+                                  title="Approve"
+                                >
+                                  <i className="fas fa-check"></i>
+                                </button>
+                                <button 
+                                  className="admin-action-btn admin-action-btn--delete"
+                                  onClick={() => handleRejectClinic(clinic._id)}
+                                  title="Reject"
+                                >
+                                  <i className="fas fa-times"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
               </div>
             </>
           )}
