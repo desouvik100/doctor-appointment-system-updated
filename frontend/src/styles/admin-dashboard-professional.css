@@ -674,3 +674,107 @@
 .admin-tab--active .admin-tab__badge {
   background: rgba(255, 255, 255, 0.3);
 }
+
+
+/* ============================================
+   Dark Mode - Admin Dashboard
+   ============================================ */
+
+.dark-mode .admin-dashboard,
+[data-theme="dark"] .admin-dashboard {
+  background: #0f172a;
+}
+
+.dark-mode .admin-sidebar,
+[data-theme="dark"] .admin-sidebar {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-mode .admin-sidebar__nav-item,
+[data-theme="dark"] .admin-sidebar__nav-item {
+  color: #94a3b8;
+}
+
+.dark-mode .admin-sidebar__nav-item:hover,
+.dark-mode .admin-sidebar__nav-item.active,
+[data-theme="dark"] .admin-sidebar__nav-item:hover,
+[data-theme="dark"] .admin-sidebar__nav-item.active {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.dark-mode .admin-main,
+[data-theme="dark"] .admin-main {
+  background: #0f172a;
+}
+
+.dark-mode .admin-card,
+.dark-mode .stat-card,
+.dark-mode .dashboard-card,
+[data-theme="dark"] .admin-card,
+[data-theme="dark"] .stat-card,
+[data-theme="dark"] .dashboard-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-mode .admin-card h3,
+.dark-mode .admin-card h4,
+[data-theme="dark"] .admin-card h3,
+[data-theme="dark"] .admin-card h4 {
+  color: #f1f5f9;
+}
+
+.dark-mode .admin-card p,
+[data-theme="dark"] .admin-card p {
+  color: #94a3b8;
+}
+
+.dark-mode .admin-table,
+[data-theme="dark"] .admin-table {
+  background: #1e293b;
+}
+
+.dark-mode .admin-table th,
+[data-theme="dark"] .admin-table th {
+  background: #334155;
+  color: #f1f5f9;
+  border-color: #475569;
+}
+
+.dark-mode .admin-table td,
+[data-theme="dark"] .admin-table td {
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+.dark-mode .admin-table tr:hover,
+[data-theme="dark"] .admin-table tr:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.dark-mode .admin-header,
+[data-theme="dark"] .admin-header {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-mode .admin-header h1,
+.dark-mode .admin-header h2,
+[data-theme="dark"] .admin-header h1,
+[data-theme="dark"] .admin-header h2 {
+  color: #f1f5f9;
+}
+
+.dark-mode .admin-search input,
+[data-theme="dark"] .admin-search input {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark-mode .admin-search input::placeholder,
+[data-theme="dark"] .admin-search input::placeholder {
+  color: #64748b;
+}

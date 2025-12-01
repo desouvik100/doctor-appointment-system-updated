@@ -343,3 +343,94 @@
     display: none;
   }
 }
+
+
+/* ============================================
+   Dark Mode - Clinic Dashboard
+   ============================================ */
+
+.dark-mode .clinic-dashboard,
+[data-theme="dark"] .clinic-dashboard {
+  background: #0f172a;
+}
+
+.dark-mode .clinic-sidebar,
+[data-theme="dark"] .clinic-sidebar {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-mode .clinic-sidebar__nav-item,
+[data-theme="dark"] .clinic-sidebar__nav-item {
+  color: #94a3b8;
+}
+
+.dark-mode .clinic-sidebar__nav-item:hover,
+.dark-mode .clinic-sidebar__nav-item.active,
+[data-theme="dark"] .clinic-sidebar__nav-item:hover,
+[data-theme="dark"] .clinic-sidebar__nav-item.active {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.dark-mode .clinic-main,
+[data-theme="dark"] .clinic-main {
+  background: #0f172a;
+}
+
+.dark-mode .clinic-card,
+[data-theme="dark"] .clinic-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-mode .clinic-card h3,
+.dark-mode .clinic-card h4,
+[data-theme="dark"] .clinic-card h3,
+[data-theme="dark"] .clinic-card h4 {
+  color: #f1f5f9;
+}
+
+.dark-mode .clinic-card p,
+[data-theme="dark"] .clinic-card p {
+  color: #94a3b8;
+}
+
+.dark-mode .clinic-table,
+[data-theme="dark"] .clinic-table {
+  background: #1e293b;
+}
+
+.dark-mode .clinic-table th,
+[data-theme="dark"] .clinic-table th {
+  background: #334155;
+  color: #f1f5f9;
+  border-color: #475569;
+}
+
+.dark-mode .clinic-table td,
+[data-theme="dark"] .clinic-table td {
+  color: #94a3b8;
+  border-color: #334155;
+}
+
+.dark-mode .clinic-table tr:hover,
+[data-theme="dark"] .clinic-table tr:hover {
+  background: rgba(59, 130, 246, 0.1);
+}
+
+.dark-mode .queue-card,
+[data-theme="dark"] .queue-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-mode .queue-card__patient,
+[data-theme="dark"] .queue-card__patient {
+  color: #f1f5f9;
+}
+
+.dark-mode .queue-card__info,
+[data-theme="dark"] .queue-card__info {
+  color: #94a3b8;
+}

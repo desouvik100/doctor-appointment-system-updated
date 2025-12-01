@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useRef } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import axios from '../api/config';
 import './AdminChatbot.css';
 
@@ -10,36 +10,60 @@ const AdminChatbot = ({ systemStats = {}, currentContext = 'general' }) => {
   const [suggestions, setSuggestions] = useState([]);
   const [aiStatus, setAiStatus] = useState({ provider: 'gemini', configured: true, fallbackMode: false });
   const [isMinimized, setIsMinimized] = useState(false);
+  const [initialized, setInitialized] = useState(false);
   const messagesEndRef = useRef(null);
+  const abortControllerRef = useRef(null);
 
-  useEffect(() => {
-    initializeChatbot();
+  // Fetch suggestions with abort support
+  const fetchSuggestions = useCallback(async (context = 'general') => {
+    // Cancel any pending request
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
+    }
+    abortControllerRef.current = new AbortController();
+
+    try {
+      const response = await axios.get(`/api/chatbot/suggestions?context=${context}`, { 
+        timeout: 3000,
+        signal: abortControllerRef.current.signal
+      });
+      if (response.data.success) {
+        setSuggestions(response.data.suggestions);
+      }
+    } catch (error) {
+      if (error.name !== 'CanceledError' && error.code !== 'ERR_CANCELED') {
+        setSuggestions([
+          "Explain quantum computing simply",
+          "What are the latest AI trends?",
+          "Help me write a professional email",
+          "What's the best way to learn coding?"
+        ]);
+      }
+    }
   }, []);
 
+  // Initialize chatbot once
   useEffect(() => {
-    if (isOpen) {
-      fetchSuggestions(currentContext);
-    }
-  }, [currentContext, isOpen]);
+    if (initialized) return;
+    
+    const initializeChatbot = async () => {
+      try {
+        const statusResponse = await axios.get('/api/chatbot/status', { timeout: 3000 });
+        const status = statusResponse.data;
+        setAiStatus({
+          ...status,
+          configured: true,
+          fallbackMode: status.fallbackMode || false
+        });
+      } catch (error) {
+        console.warn('Chatbot API unavailable, using fallback mode');
+        setAiStatus({ provider: 'offline', configured: true, fallbackMode: true });
+      }
 
-  const initializeChatbot = async () => {
-    try {
-      const statusResponse = await axios.get('/api/chatbot/status', { timeout: 3000 });
-      const status = statusResponse.data;
-      setAiStatus({
-        ...status,
-        configured: true,
-        fallbackMode: status.fallbackMode || false
-      });
-    } catch (error) {
-      console.warn('Chatbot API unavailable, using fallback mode');
-      setAiStatus({ provider: 'offline', configured: true, fallbackMode: true });
-    }
-
-    const welcomeMessage = {
-      id: 1,
-      role: 'assistant',
-      content: `Hello! 👋 I'm HealthSync AI, powered by Google Gemini.
+      const welcomeMessage = {
+        id: 1,
+        role: 'assistant',
+        content: `Hello! 👋 I'm HealthSync AI, powered by Google Gemini.
 
 I'm a real AI assistant that can help you with ANY question - not just healthcare! Ask me about:
 
@@ -55,12 +79,29 @@ Current System Stats:
 • Appointments: ${systemStats.totalAppointments || 0} | Clinics: ${systemStats.totalClinics || 0}
 
 What would you like to know?`,
-      timestamp: new Date()
+        timestamp: new Date()
+      };
+      
+      setMessages([welcomeMessage]);
+      setInitialized(true);
     };
+
+    initializeChatbot();
     
-    setMessages([welcomeMessage]);
-    fetchSuggestions(currentContext);
-  };
+    // Cleanup on unmount
+    return () => {
+      if (abortControllerRef.current) {
+        abortControllerRef.current.abort();
+      }
+    };
+  }, [initialized, systemStats]);
+
+  // Fetch suggestions only when chatbot opens and context changes
+  useEffect(() => {
+    if (isOpen && initialized) {
+      fetchSuggestions(currentContext);
+    }
+  }, [currentContext, isOpen, initialized, fetchSuggestions]);
 
   useEffect(() => {
     scrollToBottom();
@@ -68,22 +109,6 @@ What would you like to know?`,
 
   const scrollToBottom = () => {
     messagesEndRef.current?.scrollIntoView({ behavior: 'smooth', block: 'end' });
-  };
-
-  const fetchSuggestions = async (context = 'general') => {
-    try {
-      const response = await axios.get(`/api/chatbot/suggestions?context=${context}`, { timeout: 3000 });
-      if (response.data.success) {
-        setSuggestions(response.data.suggestions);
-      }
-    } catch (error) {
-      setSuggestions([
-        "Explain quantum computing simply",
-        "What are the latest AI trends?",
-        "Help me write a professional email",
-        "What's the best way to learn coding?"
-      ]);
-    }
   };
 
   const sendMessage = async (messageText = inputMessage) => {

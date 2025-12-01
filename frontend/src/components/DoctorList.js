@@ -233,9 +233,22 @@ function DoctorList({ user }) {
                         />
                       )}
                       <div className="d-flex align-items-center mb-3">
-                        <div className="bg-primary rounded-circle p-2 me-3">
-                          <i className="fas fa-user-md text-white"></i>
-                        </div>
+                        {doctor.profilePhoto ? (
+                          <img 
+                            src={doctor.profilePhoto} 
+                            alt={`Dr. ${doctor.name}`}
+                            className="rounded-circle me-3"
+                            style={{ width: '50px', height: '50px', objectFit: 'cover' }}
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=0D8ABC&color=fff&size=50`;
+                            }}
+                          />
+                        ) : (
+                          <div className="bg-primary rounded-circle p-2 me-3" style={{ width: '50px', height: '50px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                            <i className="fas fa-user-md text-white"></i>
+                          </div>
+                        )}
                         <div>
                           <h6 className="card-title mb-0">Dr. {doctor.name}</h6>
                           <small className="text-muted">{doctor.specialization}</small>

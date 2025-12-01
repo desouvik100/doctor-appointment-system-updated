@@ -119,9 +119,11 @@
   display: flex;
   align-items: center;
   gap: var(--space-2);
-  font-size: var(--font-size-sm);
-  opacity: 0.8;
+  font-size: 14px;
+  color: #ffffff;
+  opacity: 1;
   margin: 0;
+  font-weight: 500;
 }
 
 /* Right Panel - Form */
@@ -329,7 +331,7 @@
 
 .patient-auth__security-notice p {
   font-size: var(--font-size-sm);
-  color: var(--text-secondary);
+  color: #4a5568;
   margin: 0;
 }
 
@@ -345,24 +347,28 @@
 }
 
 .patient-auth__toggle-mode p {
-  font-size: var(--font-size-sm);
-  color: var(--text-secondary);
+  font-size: 15px;
+  color: #1a202c;
   margin: 0;
+  font-weight: 500;
 }
 
 .patient-auth__toggle-btn {
-  background: none;
+  background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
   border: none;
-  color: var(--brand-primary);
-  font-size: var(--font-size-sm);
+  color: #ffffff;
+  font-size: 16px;
   font-weight: 600;
   cursor: pointer;
-  transition: color var(--transition-fast);
+  transition: all 0.3s ease;
+  padding: 12px 28px;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
 }
 
 .patient-auth__toggle-btn:hover {
-  color: var(--brand-primary-hover);
-  text-decoration: underline;
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(59, 130, 246, 0.4);
 }
 
 /* Forgot Password */
@@ -374,14 +380,16 @@
 .patient-auth__forgot-password-btn {
   background: none;
   border: none;
-  color: var(--text-secondary);
-  font-size: var(--font-size-sm);
+  color: #1a202c;
+  font-size: 14px;
+  font-weight: 500;
   cursor: pointer;
   transition: color var(--transition-fast);
 }
 
 .patient-auth__forgot-password-btn:hover {
-  color: var(--brand-primary);
+  color: #3b82f6;
+  text-decoration: underline;
 }
 
 /* Mobile Responsive */
@@ -401,4 +409,94 @@
   .patient-auth__submit-btn {
     height: 48px;
   }
+}
+
+
+/* ============================================
+   Dark Mode - Patient Auth
+   ============================================ */
+
+.dark-mode .patient-auth-container,
+[data-theme="dark"] .patient-auth-container {
+  background: #0f172a;
+}
+
+.dark-mode .patient-auth__right,
+[data-theme="dark"] .patient-auth__right {
+  background: #0f172a;
+}
+
+.dark-mode .patient-auth__header h2,
+[data-theme="dark"] .patient-auth__header h2 {
+  color: #f1f5f9;
+}
+
+.dark-mode .patient-auth__header p,
+[data-theme="dark"] .patient-auth__header p {
+  color: #94a3b8;
+}
+
+.dark-mode .patient-auth__label,
+[data-theme="dark"] .patient-auth__label {
+  color: #f1f5f9;
+}
+
+.dark-mode .patient-auth__input,
+[data-theme="dark"] .patient-auth__input {
+  background: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark-mode .patient-auth__input::placeholder,
+[data-theme="dark"] .patient-auth__input::placeholder {
+  color: #64748b;
+}
+
+.dark-mode .patient-auth__input:focus,
+[data-theme="dark"] .patient-auth__input:focus {
+  background: #1e293b;
+  border-color: #3b82f6;
+}
+
+.dark-mode .patient-auth__back-btn,
+[data-theme="dark"] .patient-auth__back-btn {
+  background: #1e293b;
+  color: #94a3b8;
+}
+
+.dark-mode .patient-auth__back-btn:hover,
+[data-theme="dark"] .patient-auth__back-btn:hover {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.dark-mode .patient-auth__security-notice,
+[data-theme="dark"] .patient-auth__security-notice {
+  background: #1e293b;
+}
+
+.dark-mode .patient-auth__security-notice p,
+[data-theme="dark"] .patient-auth__security-notice p {
+  color: #94a3b8;
+}
+
+.dark-mode .patient-auth__toggle-mode,
+[data-theme="dark"] .patient-auth__toggle-mode {
+  border-top-color: #334155;
+}
+
+.dark-mode .patient-auth__toggle-mode p,
+[data-theme="dark"] .patient-auth__toggle-mode p {
+  color: #94a3b8;
+}
+
+.dark-mode .patient-auth__password-toggle,
+[data-theme="dark"] .patient-auth__password-toggle {
+  color: #64748b;
+}
+
+.dark-mode .patient-auth__password-toggle:hover,
+[data-theme="dark"] .patient-auth__password-toggle:hover {
+  color: #f1f5f9;
 }

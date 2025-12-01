@@ -716,6 +716,25 @@ const PatientDashboard = ({ user, onLogout }) => {
                         </button>
                       </div>
 
+                      {/* Profile Photo */}
+                      <div className="doctor-card__photo-container">
+                        {doctor.profilePhoto ? (
+                          <img 
+                            src={doctor.profilePhoto} 
+                            alt={`Dr. ${doctor.name}`}
+                            className="doctor-card__photo"
+                            onError={(e) => {
+                              e.target.onerror = null;
+                              e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=667eea&color=fff&size=100`;
+                            }}
+                          />
+                        ) : (
+                          <div className="doctor-card__photo-placeholder">
+                            <i className="fas fa-user-md"></i>
+                          </div>
+                        )}
+                      </div>
+
                       {doctor.experience > 10 && (
                         <span className="doctor-card__badge">Most Experienced</span>
                       )}

@@ -844,7 +844,7 @@ function Auth({ onLogin, onBack }) {
                   setValidationErrors({});
                 }}
               >
-                {isLogin ? "Register here" : "Sign in here"}
+                {isLogin ? "Sign up" : "Sign in"}
               </button>
             </div>
           )}

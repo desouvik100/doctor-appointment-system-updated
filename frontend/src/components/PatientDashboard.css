@@ -505,6 +505,43 @@
   font-weight: 400;
 }
 
+/* Doctor Profile Photo */
+.doctor-card__photo-container {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 16px;
+  margin-top: 8px;
+}
+
+.doctor-card__photo {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 4px solid #667eea;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.doctor-card:hover .doctor-card__photo {
+  transform: scale(1.05);
+  box-shadow: 0 12px 32px rgba(102, 126, 234, 0.4);
+}
+
+.doctor-card__photo-placeholder {
+  width: 90px;
+  height: 90px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2.5rem;
+  color: #fff;
+  border: 4px solid #e0e7ff;
+  box-shadow: 0 8px 24px rgba(102, 126, 234, 0.3);
+}
+
 .doctor-card__badge {
   position: absolute;
   top: 60px;
@@ -1906,4 +1943,108 @@
     height: 32px;
     font-size: 0.8rem;
   }
+}
+
+
+/* ============================================
+   Dark Mode - Patient Dashboard
+   ============================================ */
+
+.dark-mode .patient-dashboard,
+[data-theme="dark"] .patient-dashboard {
+  background: #0f172a;
+}
+
+.dark-mode .patient-dashboard__sidebar,
+[data-theme="dark"] .patient-dashboard__sidebar {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-mode .patient-dashboard__nav-item,
+[data-theme="dark"] .patient-dashboard__nav-item {
+  color: #94a3b8;
+}
+
+.dark-mode .patient-dashboard__nav-item:hover,
+.dark-mode .patient-dashboard__nav-item.active,
+[data-theme="dark"] .patient-dashboard__nav-item:hover,
+[data-theme="dark"] .patient-dashboard__nav-item.active {
+  background: #334155;
+  color: #f1f5f9;
+}
+
+.dark-mode .patient-dashboard__main,
+[data-theme="dark"] .patient-dashboard__main {
+  background: #0f172a;
+}
+
+.dark-mode .patient-dashboard__card,
+.dark-mode .dashboard-card,
+[data-theme="dark"] .patient-dashboard__card,
+[data-theme="dark"] .dashboard-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-mode .patient-dashboard__card h3,
+.dark-mode .dashboard-card h3,
+[data-theme="dark"] .patient-dashboard__card h3,
+[data-theme="dark"] .dashboard-card h3 {
+  color: #f1f5f9;
+}
+
+.dark-mode .patient-dashboard__card p,
+.dark-mode .dashboard-card p,
+[data-theme="dark"] .patient-dashboard__card p,
+[data-theme="dark"] .dashboard-card p {
+  color: #94a3b8;
+}
+
+.dark-mode .stat-card,
+[data-theme="dark"] .stat-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-mode .stat-card__value,
+[data-theme="dark"] .stat-card__value {
+  color: #f1f5f9;
+}
+
+.dark-mode .stat-card__label,
+[data-theme="dark"] .stat-card__label {
+  color: #94a3b8;
+}
+
+.dark-mode .appointment-card,
+[data-theme="dark"] .appointment-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-mode .appointment-card__title,
+[data-theme="dark"] .appointment-card__title {
+  color: #f1f5f9;
+}
+
+.dark-mode .appointment-card__info,
+[data-theme="dark"] .appointment-card__info {
+  color: #94a3b8;
+}
+
+.dark-mode .doctor-card,
+[data-theme="dark"] .doctor-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-mode .doctor-card__name,
+[data-theme="dark"] .doctor-card__name {
+  color: #f1f5f9;
+}
+
+.dark-mode .doctor-card__specialty,
+[data-theme="dark"] .doctor-card__specialty {
+  color: #94a3b8;
 }

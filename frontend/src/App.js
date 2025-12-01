@@ -13,6 +13,7 @@ import { useMobileInit } from './mobile/useMobileInit';
 import Auth from "./components/Auth";
 import AdminAuth from "./components/AdminAuth";
 import ClinicAuth from "./components/ClinicAuth";
+import DoctorAuth from "./components/DoctorAuth";
 import AIAssistant from "./components/AIAssistant";
 import MedicalHero from "./components/MedicalHero";
 import SymptomChecker from "./components/SymptomChecker";
@@ -76,11 +77,23 @@ const ClinicDashboard = React.lazy(() =>
   }))
 );
 
+const DoctorDashboard = React.lazy(() =>
+  import("./components/DoctorDashboard").catch(() => ({
+    default: ({ doctor }) => (
+      <div className="container py-4">
+        <h4>Doctor Dashboard</h4>
+        <p>Welcome Dr. {doctor?.name}! Dashboard is loading...</p>
+      </div>
+    )
+  }))
+);
+
 function App() {
   const [currentView, setCurrentView] = useState("landing");
   const [user, setUser] = useState(null);
   const [admin, setAdmin] = useState(null);
   const [receptionist, setReceptionist] = useState(null);
+  const [doctor, setDoctor] = useState(null);
   const [loginType, setLoginType] = useState("patient");
   const [notifications, setNotifications] = useState([]);
   const [darkMode, setDarkMode] = useState(() => {
@@ -96,8 +109,9 @@ function App() {
 
   // ANTI-FLICKER: Prevent FOUC and ensure smooth theme transitions
   useEffect(() => {
-    // Apply initial theme to document root
+    // Apply initial theme to document root and body
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    document.body.classList.toggle('dark-mode', darkMode);
     
     // Ensure loaded class is present (may already be set by index.html)
     if (!document.documentElement.classList.contains('loaded')) {
@@ -162,8 +176,9 @@ function App() {
     setDarkMode(prev => {
       const newMode = !prev;
       localStorage.setItem('darkMode', newMode);
-      // Apply theme to document root
+      // Apply theme to document root and body
       document.documentElement.setAttribute('data-theme', newMode ? 'dark' : 'light');
+      document.body.classList.toggle('dark-mode', newMode);
       toast.success(`Switched to ${newMode ? 'Dark' : 'Light'} mode`);
       return newMode;
     });
@@ -201,6 +216,8 @@ function App() {
       setAdmin(userData);
     } else if (userType === 'receptionist') {
       setReceptionist(userData);
+    } else if (userType === 'doctor') {
+      setDoctor(userData);
     } else {
       setUser(userData);
     }
@@ -212,9 +229,12 @@ function App() {
     setUser(null);
     setAdmin(null);
     setReceptionist(null);
+    setDoctor(null);
     localStorage.removeItem("user");
     localStorage.removeItem("admin");
     localStorage.removeItem("receptionist");
+    localStorage.removeItem("doctor");
+    localStorage.removeItem("doctorToken");
     setCurrentView("landing");
     toast.success('Logged out successfully');
   };
@@ -693,6 +713,24 @@ function App() {
                   >
                     <i ></i>
                     Staff Login
+                  </button>
+                  <button
+                    
+                    style={{
+                      borderRadius: '8px',
+                      padding: '0.5rem 1rem',
+                      fontSize: '0.875rem',
+                      background: 'rgba(255, 255, 255, 0.1)',
+                      backdropFilter: 'blur(10px)',
+                      border: '1px solid rgba(255, 255, 255, 0.3)'
+                    }}
+                    onClick={() => {
+                      setLoginType("doctor");
+                      setCurrentView("auth");
+                    }}
+                  >
+                    <i className="fas fa-user-md me-1"></i>
+                    Doctor Login
                   </button>
                 </div>
               </div>
@@ -1405,6 +1443,8 @@ function App() {
       {/* Render based on current view */}
       {currentView === "landing" && (
         <LandingPage 
+          darkMode={darkMode}
+          toggleDarkMode={toggleDarkMode}
           onNavigate={(view) => {
             if (view === 'register') {
               setLoginType('patient');
@@ -1417,6 +1457,9 @@ function App() {
               setCurrentView('auth');
             } else if (view === 'receptionist-login') {
               setLoginType('receptionist');
+              setCurrentView('auth');
+            } else if (view === 'doctor-login') {
+              setLoginType('doctor');
               setCurrentView('auth');
             }
           }}
@@ -1442,6 +1485,13 @@ function App() {
           {loginType === "receptionist" && (
             <ClinicAuth 
               onLogin={(data) => handleLogin(data, 'receptionist')}
+              onBack={() => setCurrentView('landing')}
+            />
+          )}
+
+          {loginType === "doctor" && (
+            <DoctorAuth 
+              onLogin={(data) => handleLogin(data, 'doctor')}
               onBack={() => setCurrentView('landing')}
             />
           )}
@@ -1475,7 +1525,7 @@ function App() {
           )}
 
           {/* RECEPTIONIST MODE */}
-          {receptionist && !user && !admin && (
+          {receptionist && !user && !admin && !doctor && (
             <Suspense fallback={
               <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
                 <div className="spinner-border text-primary mb-3"></div>
@@ -1485,76 +1535,87 @@ function App() {
               <ClinicDashboard receptionist={receptionist} onLogout={handleLogoutAll} />
             </Suspense>
           )}
+
+          {/* DOCTOR MODE */}
+          {doctor && !user && !admin && !receptionist && (
+            <Suspense fallback={
+              <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
+                <div className="spinner-border text-primary mb-3"></div>
+                <p className="text-muted">Loading Doctor Dashboard...</p>
+              </div>
+            }>
+              <DoctorDashboard doctor={doctor} onLogout={handleLogoutAll} />
+            </Suspense>
+          )}
         </>
       )}
 
-      {/* Floating Theme Toggle Button - Always Visible */}
-      <button
-        
-        onClick={toggleDarkMode}
-        title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode (Ctrl+D)`}
-        aria-label={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
-        style={{
-          position: 'fixed',
-          bottom: '2rem',
-          right: '2rem',
-          width: '60px',
-          height: '60px',
-          borderRadius: '50%',
-          background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-          border: darkMode ? '3px solid rgba(102, 126, 234, 0.5)' : '3px solid rgba(255, 255, 255, 0.5)',
-          color: darkMode ? '#fbbf24' : '#667eea',
-          fontSize: '1.5rem',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          cursor: 'pointer',
-          zIndex: 9999,
-          boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1)',
-          backdropFilter: 'blur(5px)',
-          WebkitBackdropFilter: 'blur(5px)',
-          transition: 'all 0.3s ease',
-          border: 'none'
-        }}
-        onMouseEnter={(e) => {
-          e.target.style.transform = 'scale(1.1) rotate(15deg)';
-          e.target.style.boxShadow = '0 6px 20px rgba(0, 0, 0, 0.2), 0 3px 10px rgba(0, 0, 0, 0.1)';
-        }}
-        onMouseLeave={(e) => {
-          e.target.style.transform = 'scale(1) rotate(0deg)';
-          e.target.style.boxShadow = '0 4px 12px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.1)';
-        }}
-      >
-        <i ></i>
-      </button>
-
-      {/* Scroll to Top Button */}
-      {(user || admin || receptionist) && (
+      {/* Floating Theme Toggle Button - Only show when logged in (not on landing page) */}
+      {(user || admin || receptionist || doctor) && (
         <button
-          
-          onClick={scrollToTop}
-          title="Scroll to top"
+          onClick={toggleDarkMode}
+          title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode (Ctrl+D)`}
+          aria-label={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
           style={{
             position: 'fixed',
-            bottom: '2rem',
-            right: '6rem',
-            width: '50px',
-            height: '50px',
+            bottom: '32px',
+            right: '32px',
+            width: '56px',
+            height: '56px',
             borderRadius: '50%',
-            background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-            border: 'none',
-            color: darkMode ? '#fbbf24' : '#667eea',
-            fontSize: '1.25rem',
+            background: darkMode 
+              ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' 
+              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
+            border: '3px solid ' + (darkMode ? '#fbbf24' : '#ffffff'),
+            color: darkMode ? '#fbbf24' : '#ffffff',
+            fontSize: '1.5rem',
             display: 'flex',
             alignItems: 'center',
             justifyContent: 'center',
             cursor: 'pointer',
             zIndex: 9999,
+            boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2)',
+            transition: 'all 0.3s ease'
+          }}
+          onMouseEnter={(e) => {
+            e.currentTarget.style.transform = 'scale(1.1) rotate(15deg)';
+            e.currentTarget.style.boxShadow = '0 6px 25px rgba(102, 126, 234, 0.5), 0 3px 12px rgba(0, 0, 0, 0.25)';
+          }}
+          onMouseLeave={(e) => {
+            e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
+            e.currentTarget.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2)';
+          }}
+        >
+          <i className={darkMode ? 'fas fa-sun' : 'fas fa-moon'}></i>
+        </button>
+      )}
+
+      {/* Scroll to Top Button */}
+      {(user || admin || receptionist) && (
+        <button
+          onClick={scrollToTop}
+          title="Scroll to top"
+          style={{
+            position: 'fixed',
+            bottom: '32px',
+            right: '110px',
+            width: '50px',
+            height: '50px',
+            borderRadius: '50%',
+            background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
+            border: 'none',
+            color: darkMode ? '#94a3b8' : '#667eea',
+            fontSize: '1.25rem',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            cursor: 'pointer',
+            zIndex: 9998,
             boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
             transition: 'all 0.3s ease'
           }}
         >
-          <i ></i>
+          <i className="fas fa-arrow-up"></i>
         </button>
       )}
     </div>

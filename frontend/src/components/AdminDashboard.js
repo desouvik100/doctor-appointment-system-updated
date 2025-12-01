@@ -47,12 +47,22 @@ function AdminDashboard({ admin, onLogout }) {
   // Pending approvals state
   const [pendingStaff, setPendingStaff] = useState([]);
   const [pendingClinics, setPendingClinics] = useState([]);
+  const [pendingDoctors, setPendingDoctors] = useState([]);
 
   // Modal states
   const [showUserModal, setShowUserModal] = useState(false);
   const [showDoctorModal, setShowDoctorModal] = useState(false);
   const [editingUser, setEditingUser] = useState(null);
   const [editingDoctor, setEditingDoctor] = useState(null);
+
+  // OTP verification states
+  const [showOtpModal, setShowOtpModal] = useState(false);
+  const [otpEmail, setOtpEmail] = useState("");
+  const [otp, setOtp] = useState("");
+  const [otpType, setOtpType] = useState(""); // 'user', 'doctor', 'clinic'
+  const [otpLoading, setOtpLoading] = useState(false);
+  const [otpSent, setOtpSent] = useState(false);
+  const [pendingFormData, setPendingFormData] = useState(null);
 
   // Form states
   const [userForm, setUserForm] = useState({
@@ -96,7 +106,7 @@ function AdminDashboard({ admin, onLogout }) {
     try {
       setLoading(true);
       const [usersRes, doctorsRes, appointmentsRes, clinicsRes] = await Promise.allSettled([
-        axios.get("/api/users"),
+        axios.get("/api/users?includeInactive=true"),
         axios.get("/api/doctors"),
         axios.get("/api/appointments"),
         axios.get("/api/clinics")
@@ -126,17 +136,13 @@ function AdminDashboard({ admin, onLogout }) {
     }
   }, []);
 
-  useEffect(() => {
-    fetchDashboardData();
-    fetchPendingApprovals();
-  }, [fetchDashboardData]);
-
   // Fetch pending approvals
-  const fetchPendingApprovals = async () => {
+  const fetchPendingApprovals = useCallback(async () => {
     try {
-      const [staffRes, clinicsRes] = await Promise.allSettled([
+      const [staffRes, clinicsRes, doctorsRes] = await Promise.allSettled([
         axios.get('/api/receptionists/pending'),
-        axios.get('/api/clinics/admin/pending')
+        axios.get('/api/clinics/admin/pending'),
+        axios.get('/api/doctors/admin/pending')
       ]);
       
       if (staffRes.status === 'fulfilled') {
@@ -145,10 +151,18 @@ function AdminDashboard({ admin, onLogout }) {
       if (clinicsRes.status === 'fulfilled') {
         setPendingClinics(clinicsRes.value.data || []);
       }
+      if (doctorsRes.status === 'fulfilled') {
+        setPendingDoctors(doctorsRes.value.data || []);
+      }
     } catch (error) {
       console.error('Error fetching pending approvals:', error);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+    fetchPendingApprovals();
+  }, [fetchDashboardData, fetchPendingApprovals]);
 
   // Approve staff
   const handleApproveStaff = async (staffId, clinicId) => {
@@ -159,6 +173,30 @@ function AdminDashboard({ admin, onLogout }) {
       fetchDashboardData();
     } catch (error) {
       toast.error(error.response?.data?.message || 'Failed to approve staff');
+    }
+  };
+
+  // Approve doctor
+  const handleApproveDoctor = async (doctorId) => {
+    try {
+      await axios.put(`/api/doctors/${doctorId}/approve`);
+      toast.success('Doctor approved successfully!');
+      fetchPendingApprovals();
+      fetchDashboardData();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to approve doctor');
+    }
+  };
+
+  // Reject doctor
+  const handleRejectDoctor = async (doctorId) => {
+    const reason = window.prompt('Enter rejection reason (optional):');
+    try {
+      await axios.put(`/api/doctors/${doctorId}/reject`, { reason });
+      toast.success('Doctor rejected');
+      fetchPendingApprovals();
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to reject doctor');
     }
   };
 
@@ -260,17 +298,113 @@ function AdminDashboard({ admin, onLogout }) {
     e.preventDefault();
     try {
       if (editingUser) {
+        // Editing existing user - no OTP needed
         await axios.put(`/api/users/${editingUser._id}`, userForm);
         toast.success("User updated successfully!");
+        setShowUserModal(false);
+        fetchDashboardData();
       } else {
-        await axios.post("/api/users", userForm);
-        toast.success("User created successfully!");
+        // Creating new user - require OTP verification
+        setShowUserModal(false);
+        setPendingFormData(userForm);
+        setOtpEmail(userForm.email);
+        setOtpType("user");
+        setShowOtpModal(true);
+        await sendOtpForVerification(userForm.email, "admin-create-user");
       }
-      setShowUserModal(false);
-      fetchDashboardData();
     } catch (error) {
       toast.error(error.response?.data?.message || "Error saving user");
     }
+  };
+
+  // Send OTP for admin-created accounts
+  const sendOtpForVerification = async (email, type) => {
+    setOtpLoading(true);
+    try {
+      const response = await axios.post("/api/otp/send-otp", { email, type });
+      setOtpSent(true);
+      toast.success("OTP sent to " + email);
+      // Auto-fill OTP in development mode
+      if (response.data.otp) {
+        setOtp(response.data.otp);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+      setShowOtpModal(false);
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // Verify OTP and create account
+  const handleVerifyOtpAndCreate = async () => {
+    if (!otp || otp.length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP");
+      return;
+    }
+
+    setOtpLoading(true);
+    try {
+      // Verify OTP first
+      const verifyResponse = await axios.post("/api/otp/verify-otp", {
+        email: otpEmail,
+        otp: otp,
+        type: otpType === "user" ? "admin-create-user" : otpType === "doctor" ? "admin-create-doctor" : "admin-create-clinic"
+      });
+
+      if (verifyResponse.data.success || verifyResponse.data.verified) {
+        // OTP verified, now create the account
+        try {
+          if (otpType === "user") {
+            await axios.post("/api/users", { ...pendingFormData, emailVerified: true });
+            toast.success("User created successfully!");
+          } else if (otpType === "doctor") {
+            await axios.post("/api/doctors", { ...pendingFormData, emailVerified: true, approvalStatus: "approved" });
+            toast.success("Doctor created successfully!");
+          } else if (otpType === "clinic") {
+            await axios.post("/api/clinics", { ...pendingFormData, emailVerified: true });
+            toast.success("Clinic created successfully!");
+          }
+
+          // Reset states and refresh data
+          setShowOtpModal(false);
+          setOtp("");
+          setOtpEmail("");
+          setOtpType("");
+          setPendingFormData(null);
+          setOtpSent(false);
+          
+          // Force refresh dashboard data
+          await fetchDashboardData();
+        } catch (createError) {
+          const errorMsg = createError.response?.data?.message || "Failed to create account";
+          toast.error(errorMsg);
+          
+          // If duplicate email error, close modal and reset
+          if (errorMsg.includes("already exists")) {
+            setShowOtpModal(false);
+            setOtp("");
+            setOtpEmail("");
+            setOtpType("");
+            setPendingFormData(null);
+            setOtpSent(false);
+          }
+          // Otherwise keep modal open so user can try again or cancel
+        }
+      } else {
+        toast.error(verifyResponse.data.message || "Invalid OTP");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "OTP verification failed");
+    } finally {
+      setOtpLoading(false);
+    }
+  };
+
+  // Resend OTP
+  const handleResendOtp = async () => {
+    const type = otpType === "user" ? "admin-create-user" : otpType === "doctor" ? "admin-create-doctor" : "admin-create-clinic";
+    await sendOtpForVerification(otpEmail, type);
   };
 
   // Doctor CRUD Operations
@@ -299,14 +433,20 @@ function AdminDashboard({ admin, onLogout }) {
     e.preventDefault();
     try {
       if (editingDoctor) {
+        // Editing existing doctor - no OTP needed
         await axios.put(`/api/doctors/${editingDoctor._id}`, doctorForm);
         toast.success("Doctor updated successfully!");
+        setShowDoctorModal(false);
+        fetchDashboardData();
       } else {
-        await axios.post("/api/doctors", doctorForm);
-        toast.success("Doctor created successfully!");
+        // Creating new doctor - require OTP verification
+        setShowDoctorModal(false);
+        setPendingFormData(doctorForm);
+        setOtpEmail(doctorForm.email);
+        setOtpType("doctor");
+        setShowOtpModal(true);
+        await sendOtpForVerification(doctorForm.email, "admin-create-doctor");
       }
-      setShowDoctorModal(false);
-      fetchDashboardData();
     } catch (error) {
       toast.error(error.response?.data?.message || "Error saving doctor");
     }
@@ -369,14 +509,28 @@ function AdminDashboard({ admin, onLogout }) {
     e.preventDefault();
     try {
       if (editingClinic) {
+        // Editing existing clinic - no OTP needed
         await axios.put(`/api/clinics/${editingClinic._id}`, clinicForm);
         toast.success("Clinic updated successfully!");
+        setShowClinicModal(false);
+        fetchDashboardData();
       } else {
-        await axios.post("/api/clinics", clinicForm);
-        toast.success("Clinic created successfully!");
+        // Creating new clinic - require OTP verification if email provided
+        if (clinicForm.email) {
+          setShowClinicModal(false);
+          setPendingFormData(clinicForm);
+          setOtpEmail(clinicForm.email);
+          setOtpType("clinic");
+          setShowOtpModal(true);
+          await sendOtpForVerification(clinicForm.email, "admin-create-clinic");
+        } else {
+          // No email provided, create without OTP
+          await axios.post("/api/clinics", clinicForm);
+          toast.success("Clinic created successfully!");
+          setShowClinicModal(false);
+          fetchDashboardData();
+        }
       }
-      setShowClinicModal(false);
-      fetchDashboardData();
     } catch (error) {
       toast.error(error.response?.data?.message || "Error saving clinic");
     }
@@ -524,8 +678,8 @@ function AdminDashboard({ admin, onLogout }) {
           </TabButton>
           <TabButton tab="approvals" activeTab={activeTab} onClick={handleTabChange}>
             <i className="fas fa-user-check"></i> Approvals
-            {(pendingStaff.length + pendingClinics.length) > 0 && (
-              <span className="admin-tab__badge">{pendingStaff.length + pendingClinics.length}</span>
+            {(pendingStaff.length + pendingClinics.length + pendingDoctors.length) > 0 && (
+              <span className="admin-tab__badge">{pendingStaff.length + pendingClinics.length + pendingDoctors.length}</span>
             )}
           </TabButton>
         </div>
@@ -922,6 +1076,69 @@ function AdminDashboard({ admin, onLogout }) {
                                 <button 
                                   className="admin-action-btn admin-action-btn--delete"
                                   onClick={() => handleRejectClinic(clinic._id)}
+                                  title="Reject"
+                                >
+                                  <i className="fas fa-times"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
+
+              {/* Pending Doctors */}
+              <div style={{ marginTop: '2rem' }}>
+                <h3 style={{ fontSize: '1.1rem', color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                  <i className="fas fa-user-md" style={{ color: '#8b5cf6' }}></i>
+                  Pending Doctor Registrations ({pendingDoctors.length})
+                </h3>
+                {pendingDoctors.length === 0 ? (
+                  <div style={{ padding: '2rem', textAlign: 'center', color: '#64748b', background: '#f8fafc', borderRadius: '12px' }}>
+                    <i className="fas fa-check-circle" style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }}></i>
+                    <p>No pending doctor registrations</p>
+                  </div>
+                ) : (
+                  <div className="admin-table-container">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Name</th>
+                          <th>Email</th>
+                          <th>Specialization</th>
+                          <th>Clinic</th>
+                          <th>Phone</th>
+                          <th>Registered</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pendingDoctors.map(doctor => (
+                          <tr key={doctor._id}>
+                            <td><strong>Dr. {doctor.name}</strong></td>
+                            <td>{doctor.email}</td>
+                            <td>
+                              <span className="badge badge-info">{doctor.specialization}</span>
+                            </td>
+                            <td>{doctor.clinicId?.name || 'N/A'}</td>
+                            <td>{doctor.phone}</td>
+                            <td>{new Date(doctor.createdAt).toLocaleDateString()}</td>
+                            <td>
+                              <div className="admin-actions">
+                                <button 
+                                  className="admin-action-btn"
+                                  style={{ background: '#8b5cf6', color: 'white' }}
+                                  onClick={() => handleApproveDoctor(doctor._id)}
+                                  title="Approve"
+                                >
+                                  <i className="fas fa-check"></i>
+                                </button>
+                                <button 
+                                  className="admin-action-btn admin-action-btn--delete"
+                                  onClick={() => handleRejectDoctor(doctor._id)}
                                   title="Reject"
                                 >
                                   <i className="fas fa-times"></i>
@@ -1357,6 +1574,105 @@ function AdminDashboard({ admin, onLogout }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* OTP Verification Modal */}
+      {showOtpModal && (
+        <div className="modal-overlay" onClick={() => { setShowOtpModal(false); setOtp(""); setOtpSent(false); }}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '450px' }}>
+            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white' }}>
+              <h3><i className="fas fa-shield-alt"></i> Email Verification Required</h3>
+              <button className="modal-close" onClick={() => { setShowOtpModal(false); setOtp(""); setOtpSent(false); }} style={{ color: 'white' }}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body" style={{ padding: '30px', textAlign: 'center' }}>
+              <div style={{ marginBottom: '20px' }}>
+                <i className="fas fa-envelope-open-text" style={{ fontSize: '48px', color: '#667eea', marginBottom: '15px' }}></i>
+                <p style={{ color: '#4a5568', marginBottom: '10px' }}>
+                  A verification code has been sent to:
+                </p>
+                <p style={{ fontWeight: '600', color: '#1a202c', fontSize: '16px' }}>
+                  {otpEmail}
+                </p>
+              </div>
+
+              <div style={{ marginBottom: '20px' }}>
+                <label style={{ display: 'block', marginBottom: '8px', fontWeight: '500', color: '#4a5568' }}>
+                  Enter 6-digit OTP
+                </label>
+                <input
+                  type="text"
+                  value={otp}
+                  onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                  placeholder="000000"
+                  maxLength="6"
+                  style={{
+                    width: '100%',
+                    padding: '15px',
+                    fontSize: '24px',
+                    textAlign: 'center',
+                    letterSpacing: '8px',
+                    border: '2px solid #e2e8f0',
+                    borderRadius: '8px',
+                    fontFamily: 'monospace'
+                  }}
+                  disabled={otpLoading}
+                />
+              </div>
+
+              <button
+                onClick={handleVerifyOtpAndCreate}
+                disabled={otpLoading || otp.length !== 6}
+                style={{
+                  width: '100%',
+                  padding: '14px',
+                  background: otp.length === 6 ? 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' : '#e2e8f0',
+                  color: otp.length === 6 ? 'white' : '#a0aec0',
+                  border: 'none',
+                  borderRadius: '8px',
+                  fontSize: '16px',
+                  fontWeight: '600',
+                  cursor: otp.length === 6 ? 'pointer' : 'not-allowed',
+                  marginBottom: '15px'
+                }}
+              >
+                {otpLoading ? (
+                  <><i className="fas fa-spinner fa-spin"></i> Verifying...</>
+                ) : (
+                  <><i className="fas fa-check-circle"></i> Verify & Create {otpType === 'user' ? 'User' : otpType === 'doctor' ? 'Doctor' : 'Clinic'}</>
+                )}
+              </button>
+
+              <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', fontSize: '14px' }}>
+                <button
+                  onClick={handleResendOtp}
+                  disabled={otpLoading}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#667eea',
+                    cursor: 'pointer',
+                    fontWeight: '500'
+                  }}
+                >
+                  <i className="fas fa-redo"></i> Resend OTP
+                </button>
+                <button
+                  onClick={() => { setShowOtpModal(false); setOtp(""); setOtpSent(false); }}
+                  style={{
+                    background: 'none',
+                    border: 'none',
+                    color: '#718096',
+                    cursor: 'pointer'
+                  }}
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
           </div>
         </div>
       )}

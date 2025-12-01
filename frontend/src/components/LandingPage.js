@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import '../styles/landing-page-pro.css';
 
-const LandingPage = ({ onNavigate = () => {} }) => {
+const LandingPage = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode = () => {} }) => {
   const [scrolled, setScrolled] = useState(false);
   const [activeFeature, setActiveFeature] = useState(0);
 
@@ -122,6 +122,30 @@ const LandingPage = ({ onNavigate = () => {} }) => {
             <a href="#contact" className="landing-nav__link">Contact</a>
           </div>
           <div className="landing-nav__actions">
+            {/* Dark Mode Toggle */}
+            <button
+              className="landing-nav__theme-toggle"
+              onClick={toggleDarkMode}
+              title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
+              style={{
+                width: '40px',
+                height: '40px',
+                borderRadius: '50%',
+                background: darkMode ? '#334155' : '#f1f5f9',
+                border: '2px solid ' + (darkMode ? '#fbbf24' : '#667eea'),
+                color: darkMode ? '#fbbf24' : '#667eea',
+                fontSize: '1.1rem',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                cursor: 'pointer',
+                transition: 'all 0.3s ease',
+                marginRight: '8px'
+              }}
+            >
+              <i className={darkMode ? 'fas fa-sun' : 'fas fa-moon'}></i>
+            </button>
+            
             <div className="landing-nav__dropdown">
               <button className="landing-nav__btn landing-nav__btn--secondary">
                 Login ▼
@@ -144,6 +168,13 @@ const LandingPage = ({ onNavigate = () => {} }) => {
                   onClick={() => onNavigate('receptionist-login')}
                 >
                   Receptionist Login
+                </button>
+                <button 
+                  className="landing-nav__dropdown-item"
+                  onClick={() => onNavigate('doctor-login')}
+                >
+                  <i className="fas fa-user-md me-2"></i>
+                  Doctor Login
                 </button>
               </div>
             </div>

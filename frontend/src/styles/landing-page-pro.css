@@ -232,6 +232,8 @@
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   color: white;
   box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+  padding: 14px 36px;
+  font-size: 16px;
 }
 
 .landing-nav__btn--primary:hover {
@@ -1801,4 +1803,231 @@
     flex-direction: column;
     gap: 16px;
   }
+}
+
+
+/* ============================================
+   Dark Mode - Landing Page
+   ============================================ */
+
+.dark-mode .landing-page,
+[data-theme="dark"] .landing-page {
+  background: #0f172a;
+}
+
+.dark-mode .landing-nav.scrolled,
+[data-theme="dark"] .landing-nav.scrolled {
+  background: rgba(15, 23, 42, 0.95);
+}
+
+.dark-mode .landing-nav__link,
+[data-theme="dark"] .landing-nav__link {
+  color: #94a3b8;
+}
+
+.dark-mode .landing-nav__link:hover,
+[data-theme="dark"] .landing-nav__link:hover {
+  color: #3b82f6;
+}
+
+.dark-mode .landing-hero__title,
+[data-theme="dark"] .landing-hero__title {
+  color: #f1f5f9;
+}
+
+.dark-mode .landing-hero__subtitle,
+[data-theme="dark"] .landing-hero__subtitle {
+  color: #94a3b8;
+}
+
+.dark-mode .landing-hero__feature-item,
+[data-theme="dark"] .landing-hero__feature-item {
+  color: #e2e8f0;
+}
+
+.dark-mode .landing-features,
+[data-theme="dark"] .landing-features {
+  background: #1e293b;
+}
+
+.dark-mode .landing-features__header h2,
+[data-theme="dark"] .landing-features__header h2 {
+  color: #f1f5f9;
+}
+
+.dark-mode .landing-features__header p,
+[data-theme="dark"] .landing-features__header p {
+  color: #94a3b8;
+}
+
+.dark-mode .landing-feature-card,
+[data-theme="dark"] .landing-feature-card {
+  background: #0f172a;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .landing-feature-card__title,
+[data-theme="dark"] .landing-feature-card__title {
+  color: #f1f5f9;
+}
+
+.dark-mode .landing-feature-card__description,
+[data-theme="dark"] .landing-feature-card__description {
+  color: #94a3b8;
+}
+
+.dark-mode .landing-how-it-works,
+[data-theme="dark"] .landing-how-it-works {
+  background: #0f172a;
+}
+
+.dark-mode .landing-how-it-works__container h2,
+[data-theme="dark"] .landing-how-it-works__container h2 {
+  color: #f1f5f9;
+}
+
+.dark-mode .landing-how-it-works__step,
+[data-theme="dark"] .landing-how-it-works__step {
+  background: #1e293b;
+}
+
+.dark-mode .landing-how-it-works__step h3,
+[data-theme="dark"] .landing-how-it-works__step h3 {
+  color: #f1f5f9;
+}
+
+.dark-mode .landing-how-it-works__step p,
+[data-theme="dark"] .landing-how-it-works__step p {
+  color: #94a3b8;
+}
+
+.dark-mode .landing-testimonials,
+[data-theme="dark"] .landing-testimonials {
+  background: #1e293b;
+}
+
+.dark-mode .landing-testimonials__container h2,
+[data-theme="dark"] .landing-testimonials__container h2 {
+  color: #f1f5f9;
+}
+
+.dark-mode .landing-testimonial-card,
+[data-theme="dark"] .landing-testimonial-card {
+  background: #0f172a;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+}
+
+.dark-mode .landing-testimonial-card__header h4,
+[data-theme="dark"] .landing-testimonial-card__header h4 {
+  color: #f1f5f9;
+}
+
+.dark-mode .landing-testimonial-card__text,
+[data-theme="dark"] .landing-testimonial-card__text {
+  color: #94a3b8;
+}
+
+.dark-mode .landing-contact,
+[data-theme="dark"] .landing-contact {
+  background: #0f172a;
+}
+
+.dark-mode .landing-contact__header h2,
+[data-theme="dark"] .landing-contact__header h2 {
+  color: #f1f5f9;
+}
+
+.dark-mode .landing-contact__header p,
+[data-theme="dark"] .landing-contact__header p {
+  color: #94a3b8;
+}
+
+.dark-mode .landing-contact__info-item h4,
+[data-theme="dark"] .landing-contact__info-item h4 {
+  color: #f1f5f9;
+}
+
+.dark-mode .landing-contact__info-item p,
+[data-theme="dark"] .landing-contact__info-item p {
+  color: #94a3b8;
+}
+
+.dark-mode .landing-contact__form-wrapper,
+[data-theme="dark"] .landing-contact__form-wrapper {
+  background: #1e293b;
+}
+
+.dark-mode .landing-contact__form-group label,
+[data-theme="dark"] .landing-contact__form-group label {
+  color: #f1f5f9;
+}
+
+.dark-mode .landing-contact__form-group input,
+.dark-mode .landing-contact__form-group select,
+.dark-mode .landing-contact__form-group textarea,
+[data-theme="dark"] .landing-contact__form-group input,
+[data-theme="dark"] .landing-contact__form-group select,
+[data-theme="dark"] .landing-contact__form-group textarea {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark-mode .landing-about,
+[data-theme="dark"] .landing-about {
+  background: #1e293b;
+}
+
+.dark-mode .landing-about__header h2,
+[data-theme="dark"] .landing-about__header h2 {
+  color: #f1f5f9;
+}
+
+.dark-mode .landing-about__story,
+.dark-mode .landing-about__card,
+[data-theme="dark"] .landing-about__story,
+[data-theme="dark"] .landing-about__card {
+  background: #0f172a;
+}
+
+.dark-mode .landing-about__story h3,
+.dark-mode .landing-about__card h4,
+[data-theme="dark"] .landing-about__story h3,
+[data-theme="dark"] .landing-about__card h4 {
+  color: #f1f5f9;
+}
+
+.dark-mode .landing-about__story p,
+.dark-mode .landing-about__card p,
+[data-theme="dark"] .landing-about__story p,
+[data-theme="dark"] .landing-about__card p {
+  color: #94a3b8;
+}
+
+.dark-mode .landing-footer,
+[data-theme="dark"] .landing-footer {
+  background: #0f172a;
+}
+
+.dark-mode .landing-nav__dropdown-menu,
+[data-theme="dark"] .landing-nav__dropdown-menu {
+  background: #1e293b;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+}
+
+.dark-mode .landing-nav__dropdown-item,
+[data-theme="dark"] .landing-nav__dropdown-item {
+  color: #94a3b8;
+}
+
+.dark-mode .landing-nav__dropdown-item:hover,
+[data-theme="dark"] .landing-nav__dropdown-item:hover {
+  background: #334155;
+  color: #3b82f6;
+}
+
+.dark-mode .landing-nav__btn--secondary,
+[data-theme="dark"] .landing-nav__btn--secondary {
+  color: #94a3b8;
+  border-color: #334155;
 }

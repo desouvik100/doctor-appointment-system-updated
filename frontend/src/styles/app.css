@@ -152,3 +152,203 @@ textarea:focus-visible {
 .section-title i {
   color: var(--brand-primary);
 }
+
+
+/* ============================================
+   Dark Mode Styles
+   ============================================ */
+
+/* Dark mode body */
+body.dark-mode {
+  background-color: #0f172a;
+  color: #f1f5f9;
+}
+
+/* Dark mode cards */
+.dark-mode .card,
+.dark-mode .modal-content,
+.dark-mode .dropdown-menu {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+/* Dark mode inputs */
+.dark-mode input,
+.dark-mode select,
+.dark-mode textarea,
+.dark-mode .form-control,
+.dark-mode .form-select {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark-mode input::placeholder,
+.dark-mode textarea::placeholder {
+  color: #64748b;
+}
+
+.dark-mode input:focus,
+.dark-mode select:focus,
+.dark-mode textarea:focus {
+  background-color: #1e293b;
+  border-color: #3b82f6;
+  color: #f1f5f9;
+}
+
+/* Dark mode tables */
+.dark-mode table,
+.dark-mode .table {
+  color: #f1f5f9;
+}
+
+.dark-mode th,
+.dark-mode td {
+  border-color: #334155;
+}
+
+.dark-mode thead {
+  background-color: #1e293b;
+}
+
+.dark-mode tbody tr:hover {
+  background-color: rgba(59, 130, 246, 0.1);
+}
+
+/* Dark mode navbar */
+.dark-mode .navbar,
+.dark-mode nav {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+
+/* Dark mode sidebar */
+.dark-mode .sidebar {
+  background-color: #1e293b;
+  border-color: #334155;
+}
+
+/* Dark mode text */
+.dark-mode h1,
+.dark-mode h2,
+.dark-mode h3,
+.dark-mode h4,
+.dark-mode h5,
+.dark-mode h6 {
+  color: #f1f5f9;
+}
+
+.dark-mode p,
+.dark-mode span,
+.dark-mode label {
+  color: #94a3b8;
+}
+
+/* Dark mode borders */
+.dark-mode hr,
+.dark-mode .border {
+  border-color: #334155;
+}
+
+/* Dark mode buttons - secondary */
+.dark-mode .btn-secondary,
+.dark-mode .btn-outline-secondary {
+  background-color: #334155;
+  border-color: #475569;
+  color: #f1f5f9;
+}
+
+.dark-mode .btn-secondary:hover,
+.dark-mode .btn-outline-secondary:hover {
+  background-color: #475569;
+}
+
+/* Dark mode alerts */
+.dark-mode .alert {
+  border-color: #334155;
+}
+
+.dark-mode .alert-info {
+  background-color: rgba(59, 130, 246, 0.2);
+  color: #93c5fd;
+}
+
+.dark-mode .alert-success {
+  background-color: rgba(16, 185, 129, 0.2);
+  color: #6ee7b7;
+}
+
+.dark-mode .alert-warning {
+  background-color: rgba(245, 158, 11, 0.2);
+  color: #fcd34d;
+}
+
+.dark-mode .alert-danger {
+  background-color: rgba(239, 68, 68, 0.2);
+  color: #fca5a5;
+}
+
+/* Dark mode modals */
+.dark-mode .modal-backdrop {
+  background-color: rgba(0, 0, 0, 0.7);
+}
+
+.dark-mode .modal-header,
+.dark-mode .modal-footer {
+  border-color: #334155;
+}
+
+/* Dark mode scrollbar */
+.dark-mode::-webkit-scrollbar-track {
+  background: #1e293b;
+}
+
+.dark-mode::-webkit-scrollbar-thumb {
+  background: #475569;
+}
+
+.dark-mode::-webkit-scrollbar-thumb:hover {
+  background: #64748b;
+}
+
+/* Dark mode selection */
+.dark-mode ::selection {
+  background: rgba(59, 130, 246, 0.4);
+  color: #f1f5f9;
+}
+
+/* Dark mode badges */
+.dark-mode .badge {
+  background-color: #334155;
+  color: #f1f5f9;
+}
+
+/* Dark mode list groups */
+.dark-mode .list-group-item {
+  background-color: #1e293b;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark-mode .list-group-item:hover {
+  background-color: #334155;
+}
+
+/* Dark mode progress bars */
+.dark-mode .progress {
+  background-color: #334155;
+}
+
+/* Dark mode tooltips */
+.dark-mode .tooltip {
+  background-color: #1e293b;
+  color: #f1f5f9;
+}
+
+/* Dark mode code blocks */
+.dark-mode pre,
+.dark-mode code {
+  background-color: #0f172a;
+  color: #e2e8f0;
+}

@@ -29,6 +29,9 @@ function ClinicDashboard({ receptionist, onLogout }) {
   const [doctorForm, setDoctorForm] = useState({
     name: '', email: '', phone: '', specialization: '', consultationFee: 500, experience: 0, qualification: 'MBBS'
   });
+  
+  // Queue management state
+  const [selectedQueueDoctor, setSelectedQueueDoctor] = useState("all");
 
   useEffect(() => {
     fetchAppointments();
@@ -129,13 +132,14 @@ function ClinicDashboard({ receptionist, onLogout }) {
 
   // Edit Doctor
   const handleEditDoctor = (doctor) => {
+    console.log('Editing doctor:', doctor);
     setEditingDoctor(doctor);
     setDoctorForm({
-      name: doctor.name,
-      email: doctor.email,
-      phone: doctor.phone,
-      specialization: doctor.specialization,
-      consultationFee: doctor.consultationFee,
+      name: doctor.name || '',
+      email: doctor.email || '',
+      phone: doctor.phone || '',
+      specialization: doctor.specialization || '',
+      consultationFee: doctor.consultationFee || 500,
       experience: doctor.experience || 0,
       qualification: doctor.qualification || 'MBBS'
     });
@@ -190,9 +194,10 @@ function ClinicDashboard({ receptionist, onLogout }) {
   const getStatusBadge = (status) => {
     const statusClasses = {
       pending: "bg-warning text-dark",
-      confirmed: "bg-success",
+      confirmed: "bg-primary",
+      in_progress: "bg-info",
       cancelled: "bg-danger",
-      completed: "bg-info"
+      completed: "bg-success"
     };
 
     return (
@@ -403,11 +408,16 @@ function ClinicDashboard({ receptionist, onLogout }) {
                 Doctor Management
               </h5>
               <div>
-                <button className="btn btn-sm btn-success me-2" onClick={() => {
-                  setEditingDoctor(null);
-                  setDoctorForm({ name: '', email: '', phone: '', specialization: '', consultationFee: 500, experience: 0, qualification: 'MBBS' });
-                  setShowDoctorModal(true);
-                }}>
+                <button 
+                  type="button"
+                  className="btn btn-sm btn-success me-2" 
+                  onClick={() => {
+                    console.log('Add Doctor clicked');
+                    setEditingDoctor(null);
+                    setDoctorForm({ name: '', email: '', phone: '', specialization: '', consultationFee: 500, experience: 0, qualification: 'MBBS' });
+                    setShowDoctorModal(true);
+                  }}
+                >
                   <i className="fas fa-plus me-1"></i>
                   Add Doctor
                 </button>
@@ -441,12 +451,30 @@ function ClinicDashboard({ receptionist, onLogout }) {
                     }`}>
                       <div className="card-body">
                         <div className="d-flex align-items-start mb-3">
-                          <div className={`rounded-circle p-3 me-3 ${
-                            doctor.availability === 'Available' ? 'bg-success' : 
-                            doctor.availability === 'Busy' ? 'bg-danger' : 'bg-warning'
-                          }`}>
-                            <i className="fas fa-user-md text-white fa-lg"></i>
-                          </div>
+                          {doctor.profilePhoto ? (
+                            <img 
+                              src={doctor.profilePhoto} 
+                              alt={`Dr. ${doctor.name}`}
+                              className="rounded-circle me-3"
+                              style={{ 
+                                width: '55px', 
+                                height: '55px', 
+                                objectFit: 'cover',
+                                border: `3px solid ${doctor.availability === 'Available' ? '#198754' : doctor.availability === 'Busy' ? '#dc3545' : '#ffc107'}`
+                              }}
+                              onError={(e) => {
+                                e.target.onerror = null;
+                                e.target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(doctor.name)}&background=0D8ABC&color=fff&size=55`;
+                              }}
+                            />
+                          ) : (
+                            <div className={`rounded-circle p-3 me-3 ${
+                              doctor.availability === 'Available' ? 'bg-success' : 
+                              doctor.availability === 'Busy' ? 'bg-danger' : 'bg-warning'
+                            }`} style={{ width: '55px', height: '55px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <i className="fas fa-user-md text-white fa-lg"></i>
+                            </div>
+                          )}
                           <div className="flex-grow-1">
                             <h6 className="mb-1">Dr. {doctor.name}</h6>
                             <small className="text-muted">{doctor.specialization}</small>
@@ -501,6 +529,7 @@ function ClinicDashboard({ receptionist, onLogout }) {
                         </div>
                         <div className="d-flex gap-2">
                           <button
+                            type="button"
                             className="btn btn-sm btn-outline-primary flex-fill"
                             onClick={() => handleEditDoctor(doctor)}
                           >
@@ -508,6 +537,7 @@ function ClinicDashboard({ receptionist, onLogout }) {
                             Edit
                           </button>
                           <button
+                            type="button"
                             className="btn btn-sm btn-outline-danger flex-fill"
                             onClick={() => handleDeleteDoctor(doctor._id)}
                           >
@@ -806,76 +836,193 @@ function ClinicDashboard({ receptionist, onLogout }) {
       {activeTab === "queue" && (
         <div className="card shadow-sm">
           <div className="card-header">
-            <div className="d-flex justify-content-between align-items-center">
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
               <h5 className="mb-0">
                 <i className="fas fa-list-ol me-2"></i>
                 Today's Queue
               </h5>
-              <span className="badge bg-primary">{todayAppointments.length} patients</span>
+              <div className="d-flex align-items-center gap-2">
+                <select 
+                  className="form-select form-select-sm" 
+                  style={{width: 'auto'}}
+                  value={selectedQueueDoctor}
+                  onChange={(e) => setSelectedQueueDoctor(e.target.value)}
+                >
+                  <option value="all">All Doctors</option>
+                  {doctors.map(doc => (
+                    <option key={doc._id} value={doc._id}>Dr. {doc.name}</option>
+                  ))}
+                </select>
+                <button className="btn btn-sm btn-outline-primary" onClick={fetchAppointments}>
+                  <i className="fas fa-sync-alt"></i>
+                </button>
+              </div>
             </div>
           </div>
           <div className="card-body">
-            {todayAppointments.length === 0 ? (
-              <div className="text-center py-4">
-                <i className="fas fa-calendar-check fa-3x text-muted mb-3"></i>
-                <p className="text-muted">No appointments scheduled for today.</p>
-              </div>
-            ) : (
-              <div className="list-group">
-                {todayAppointments
-                  .sort((a, b) => a.time.localeCompare(b.time))
-                  .map((apt, index) => (
-                    <div key={apt._id} className={`list-group-item d-flex align-items-center ${apt.status === 'completed' ? 'bg-light' : ''}`}>
-                      <div className={`rounded-circle p-2 me-3 text-white ${
-                        apt.status === 'completed' ? 'bg-success' :
-                        apt.status === 'confirmed' ? 'bg-primary' :
-                        apt.status === 'cancelled' ? 'bg-danger' : 'bg-warning'
-                      }`}>
-                        <strong>{index + 1}</strong>
-                      </div>
-                      <div className="flex-grow-1">
-                        <div className="d-flex justify-content-between">
-                          <div>
-                            <strong>{apt.userId?.name}</strong>
-                            <span className="text-muted ms-2">→ Dr. {apt.doctorId?.name}</span>
-                          </div>
-                          <div>
-                            <span className="badge bg-secondary me-2">{formatTime(apt.time)}</span>
-                            {getStatusBadge(apt.status)}
-                          </div>
-                        </div>
-                        <small className="text-muted">{apt.reason}</small>
-                      </div>
-                      <div className="ms-3">
-                        {apt.status === 'pending' && (
-                          <button 
-                            className="btn btn-sm btn-success"
-                            onClick={() => updateAppointmentStatus(apt._id, 'confirmed')}
-                          >
-                            <i className="fas fa-check"></i>
-                          </button>
-                        )}
-                        {apt.status === 'confirmed' && (
-                          <button 
-                            className="btn btn-sm btn-info"
-                            onClick={() => updateAppointmentStatus(apt._id, 'completed')}
-                          >
-                            <i className="fas fa-check-double"></i>
-                          </button>
-                        )}
+            {(() => {
+              const queueAppointments = todayAppointments
+                .filter(apt => selectedQueueDoctor === "all" || apt.doctorId?._id === selectedQueueDoctor)
+                .sort((a, b) => {
+                  // Sort: in_progress first, then confirmed, then pending, completed last
+                  const statusOrder = { 'in_progress': 0, 'confirmed': 1, 'pending': 2, 'completed': 3, 'cancelled': 4 };
+                  const statusDiff = (statusOrder[a.status] || 5) - (statusOrder[b.status] || 5);
+                  if (statusDiff !== 0) return statusDiff;
+                  return a.time.localeCompare(b.time);
+                });
+              
+              const waitingCount = queueAppointments.filter(a => ['pending', 'confirmed'].includes(a.status)).length;
+              const completedCount = queueAppointments.filter(a => a.status === 'completed').length;
+              
+              return (
+                <>
+                  {/* Queue Stats */}
+                  <div className="row mb-3">
+                    <div className="col-4">
+                      <div className="text-center p-2 bg-warning bg-opacity-10 rounded">
+                        <h4 className="mb-0 text-warning">{waitingCount}</h4>
+                        <small className="text-muted">Waiting</small>
                       </div>
                     </div>
-                  ))}
-              </div>
-            )}
+                    <div className="col-4">
+                      <div className="text-center p-2 bg-primary bg-opacity-10 rounded">
+                        <h4 className="mb-0 text-primary">{queueAppointments.filter(a => a.status === 'in_progress').length}</h4>
+                        <small className="text-muted">In Progress</small>
+                      </div>
+                    </div>
+                    <div className="col-4">
+                      <div className="text-center p-2 bg-success bg-opacity-10 rounded">
+                        <h4 className="mb-0 text-success">{completedCount}</h4>
+                        <small className="text-muted">Completed</small>
+                      </div>
+                    </div>
+                  </div>
+
+                  {queueAppointments.length === 0 ? (
+                    <div className="text-center py-4">
+                      <i className="fas fa-calendar-check fa-3x text-muted mb-3"></i>
+                      <p className="text-muted">No appointments scheduled for today{selectedQueueDoctor !== "all" ? " for this doctor" : ""}.</p>
+                    </div>
+                  ) : (
+                    <div className="table-responsive">
+                      <table className="table table-hover align-middle">
+                        <thead className="table-light">
+                          <tr>
+                            <th style={{width: '60px'}}>#</th>
+                            <th>Token ID</th>
+                            <th>Patient</th>
+                            <th>Doctor</th>
+                            <th>Time</th>
+                            <th>Status</th>
+                            <th style={{width: '180px'}}>Actions</th>
+                          </tr>
+                        </thead>
+                        <tbody>
+                          {queueAppointments.map((apt, index) => (
+                            <tr key={apt._id} className={apt.status === 'completed' ? 'table-success' : apt.status === 'in_progress' ? 'table-info' : ''}>
+                              <td>
+                                <div className={`badge rounded-pill ${
+                                  apt.status === 'completed' ? 'bg-success' :
+                                  apt.status === 'in_progress' ? 'bg-info' :
+                                  apt.status === 'confirmed' ? 'bg-primary' :
+                                  apt.status === 'cancelled' ? 'bg-danger' : 'bg-warning'
+                                }`} style={{width: '32px', height: '32px', display: 'flex', alignItems: 'center', justifyContent: 'center'}}>
+                                  {apt.status === 'completed' ? <i className="fas fa-check"></i> : index + 1}
+                                </div>
+                              </td>
+                              <td>
+                                <code className="bg-light px-2 py-1 rounded">
+                                  {apt.token || `APT-${apt._id.slice(-6).toUpperCase()}`}
+                                </code>
+                              </td>
+                              <td>
+                                <div>
+                                  <strong>{apt.userId?.name || 'Unknown'}</strong>
+                                  <br/>
+                                  <small className="text-muted">
+                                    <i className="fas fa-phone me-1"></i>
+                                    {apt.userId?.phone || 'N/A'}
+                                  </small>
+                                </div>
+                              </td>
+                              <td>
+                                <span className="text-primary">Dr. {apt.doctorId?.name || 'Unknown'}</span>
+                                <br/>
+                                <small className="text-muted">{apt.doctorId?.specialization}</small>
+                              </td>
+                              <td>
+                                <span className="badge bg-secondary">{formatTime(apt.time)}</span>
+                              </td>
+                              <td>{getStatusBadge(apt.status)}</td>
+                              <td>
+                                <div className="btn-group btn-group-sm">
+                                  {apt.status === 'pending' && (
+                                    <>
+                                      <button 
+                                        className="btn btn-outline-primary"
+                                        onClick={() => updateAppointmentStatus(apt._id, 'confirmed')}
+                                        title="Confirm"
+                                      >
+                                        <i className="fas fa-check"></i>
+                                      </button>
+                                      <button 
+                                        className="btn btn-outline-danger"
+                                        onClick={() => updateAppointmentStatus(apt._id, 'cancelled')}
+                                        title="Cancel"
+                                      >
+                                        <i className="fas fa-times"></i>
+                                      </button>
+                                    </>
+                                  )}
+                                  {apt.status === 'confirmed' && (
+                                    <>
+                                      <button 
+                                        className="btn btn-info text-white"
+                                        onClick={() => updateAppointmentStatus(apt._id, 'in_progress')}
+                                        title="Start Treatment"
+                                      >
+                                        <i className="fas fa-play me-1"></i> Start
+                                      </button>
+                                    </>
+                                  )}
+                                  {apt.status === 'in_progress' && (
+                                    <button 
+                                      className="btn btn-success"
+                                      onClick={() => updateAppointmentStatus(apt._id, 'completed')}
+                                      title="Mark Complete"
+                                    >
+                                      <i className="fas fa-check-double me-1"></i> Complete
+                                    </button>
+                                  )}
+                                  {apt.status === 'completed' && (
+                                    <span className="text-success">
+                                      <i className="fas fa-check-circle me-1"></i> Done
+                                    </span>
+                                  )}
+                                  {apt.status === 'cancelled' && (
+                                    <span className="text-danger">
+                                      <i className="fas fa-ban me-1"></i> Cancelled
+                                    </span>
+                                  )}
+                                </div>
+                              </td>
+                            </tr>
+                          ))}
+                        </tbody>
+                      </table>
+                    </div>
+                  )}
+                </>
+              );
+            })()}
           </div>
         </div>
       )}
 
       {/* Doctor Modal */}
       {showDoctorModal && (
-        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)'}}>
-          <div className="modal-dialog">
+        <div className="modal show d-block" style={{backgroundColor: 'rgba(0,0,0,0.5)', position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, zIndex: 1050}}>
+          <div className="modal-dialog" style={{marginTop: '50px'}}>
             <div className="modal-content">
               <div className="modal-header">
                 <h5 className="modal-title">
