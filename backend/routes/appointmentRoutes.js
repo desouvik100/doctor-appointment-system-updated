@@ -287,6 +287,31 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Update appointment status
+router.put('/:id/status', async (req, res) => {
+  try {
+    const { status } = req.body;
+    
+    const appointment = await Appointment.findByIdAndUpdate(
+      req.params.id,
+      { status },
+      { new: true }
+    )
+      .populate('userId', 'name email phone')
+      .populate('doctorId', 'name specialization')
+      .populate('clinicId', 'name address');
+
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+
+    res.json(appointment);
+  } catch (error) {
+    console.error('Error updating appointment status:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Update appointment
 router.put('/:id', async (req, res) => {
   try {

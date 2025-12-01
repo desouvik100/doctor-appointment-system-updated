@@ -2,6 +2,7 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
+const Doctor = require('../models/Doctor');
 
 const router = express.Router();
 
@@ -457,6 +458,162 @@ router.post('/reset-password', async (req, res) => {
       message: 'Failed to reset password',
       error: error.message 
     });
+  }
+});
+
+// ==========================================
+// DOCTOR AUTHENTICATION
+// ==========================================
+
+// Doctor Login
+router.post('/doctor/login', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    // Find doctor by email
+    const doctor = await Doctor.findOne({ email: email.toLowerCase().trim(), isActive: true })
+      .populate('clinicId', 'name address city phone');
+
+    if (!doctor) {
+      return res.status(400).json({ message: 'Invalid credentials or doctor not found' });
+    }
+
+    // Check approval status
+    if (doctor.approvalStatus === 'pending') {
+      return res.status(403).json({ 
+        message: 'Your account is pending admin approval. Please wait for confirmation.',
+        status: 'pending'
+      });
+    }
+
+    if (doctor.approvalStatus === 'rejected') {
+      return res.status(403).json({ 
+        message: 'Your account has been rejected. Please contact admin.',
+        status: 'rejected',
+        reason: doctor.rejectionReason
+      });
+    }
+
+    // Check if doctor has set up password
+    if (!doctor.password) {
+      return res.status(400).json({ 
+        message: 'Please set up your password first',
+        needsPasswordSetup: true,
+        doctorEmail: doctor.email
+      });
+    }
+
+    // Verify password
+    const isMatch = await bcrypt.compare(password, doctor.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Invalid credentials' });
+    }
+
+    // Update last login
+    doctor.lastLogin = new Date();
+    await doctor.save();
+
+    // Generate token
+    const token = jwt.sign(
+      { doctorId: doctor._id, role: 'doctor' },
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '24h' }
+    );
+
+    res.json({
+      token,
+      doctor: {
+        id: doctor._id,
+        name: doctor.name,
+        email: doctor.email,
+        phone: doctor.phone,
+        specialization: doctor.specialization,
+        clinicId: doctor.clinicId,
+        profilePhoto: doctor.profilePhoto,
+        qualification: doctor.qualification,
+        experience: doctor.experience
+      }
+    });
+  } catch (error) {
+    console.error('Doctor login error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Doctor Password Setup (first time)
+router.post('/doctor/setup-password', async (req, res) => {
+  try {
+    const { email, password } = req.body;
+
+    if (!email || !password) {
+      return res.status(400).json({ message: 'Email and password are required' });
+    }
+
+    if (password.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    // Find doctor by email
+    const doctor = await Doctor.findOne({ email: email.toLowerCase().trim() });
+
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found with this email' });
+    }
+
+    if (doctor.password) {
+      return res.status(400).json({ message: 'Password already set. Please use login or reset password.' });
+    }
+
+    // Hash and save password
+    const hashedPassword = await bcrypt.hash(password, 10);
+    doctor.password = hashedPassword;
+    doctor.isVerified = true;
+    await doctor.save();
+
+    res.json({
+      success: true,
+      message: 'Password set successfully. You can now login.'
+    });
+  } catch (error) {
+    console.error('Doctor password setup error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Doctor Reset Password
+router.post('/doctor/reset-password', async (req, res) => {
+  try {
+    const { email, newPassword } = req.body;
+
+    if (!email || !newPassword) {
+      return res.status(400).json({ message: 'Email and new password are required' });
+    }
+
+    if (newPassword.length < 6) {
+      return res.status(400).json({ message: 'Password must be at least 6 characters' });
+    }
+
+    const doctor = await Doctor.findOne({ email: email.toLowerCase().trim() });
+
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
+    doctor.password = hashedPassword;
+    await doctor.save();
+
+    res.json({
+      success: true,
+      message: 'Password reset successfully'
+    });
+  } catch (error) {
+    console.error('Doctor reset password error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

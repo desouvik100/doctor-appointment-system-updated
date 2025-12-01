@@ -98,45 +98,58 @@ async function generateGoogleMeetLink(appointment) {
     const clinicName = appointment.clinicId?.name || 'HealthSync Clinic';
 
     // Build attendees list
-    // The calendar owner (from OAuth) is automatically the organizer/admin
-    // Doctor and Patient are added as attendees
+    // Doctor is added FIRST as the primary host/admin of the meeting
+    // Patient is added as attendee
     const attendees = [];
 
-    // Add patient as attendee (required)
-    if (patientEmail) {
-      attendees.push({
-        email: patientEmail,
-        displayName: patientName,
-        responseStatus: 'needsAction',
-        comment: 'Patient'
-      });
-    }
-
-    // Add doctor as attendee if different from organizer
+    // Add doctor FIRST as the primary host (will have admin controls in Meet)
     if (doctorEmail) {
       attendees.push({
         email: doctorEmail,
         displayName: `Dr. ${doctorName}`,
         responseStatus: 'accepted',
-        comment: 'Doctor/Host',
-        // Note: The organizer is set by the OAuth account
-        // To make doctor the true admin, use their Google account for OAuth
+        comment: 'Doctor - Meeting Host',
+        organizer: false, // OAuth account is organizer, but doctor is primary attendee
+        optional: false
+      });
+    }
+
+    // Add patient as attendee
+    if (patientEmail) {
+      attendees.push({
+        email: patientEmail,
+        displayName: patientName,
+        responseStatus: 'needsAction',
+        comment: 'Patient',
+        optional: false
       });
     }
 
     // Create calendar event with Google Meet conference
+    // Doctor is the HOST of the meeting
     const event = {
-      summary: `🏥 Medical Consultation - Dr. ${doctorName}`,
+      summary: `🏥 Medical Consultation - Dr. ${doctorName} (Host)`,
       description: `
 📋 Online Medical Consultation
 
-👨‍⚕️ Doctor: Dr. ${doctorName}
+🎯 MEETING HOST: Dr. ${doctorName}
+   Email: ${doctorEmail || 'Not provided'}
+
 👤 Patient: ${patientName}
+   Email: ${patientEmail || 'Not provided'}
+
 🏥 Clinic: ${clinicName}
 📝 Reason: ${appointment.reason || 'General consultation'}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-📌 Important Instructions:
+📌 Instructions for Doctor (Host):
+• You have full control of the meeting
+• You can admit/remove participants
+• You can mute/unmute participants
+• You can share your screen
+• You can record the consultation if needed
+
+📌 Instructions for Patient:
 • Join the meeting 5 minutes before scheduled time
 • Ensure stable internet connection
 • Have your camera and microphone ready

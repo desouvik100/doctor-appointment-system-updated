@@ -1,4 +1,5 @@
 const express = require('express');
+const bcrypt = require('bcryptjs');
 const Doctor = require('../models/Doctor');
 const Clinic = require('../models/Clinic');
 const router = express.Router();
@@ -127,7 +128,7 @@ router.get('/clinic/:clinicId', async (req, res) => {
   }
 });
 
-// Create new doctor (admin or receptionist)
+// Create new doctor (admin or receptionist or self-registration)
 router.post('/', async (req, res) => {
   try {
     const {
@@ -140,7 +141,8 @@ router.post('/', async (req, res) => {
       availability,
       consultationFee,
       experience,
-      qualification
+      qualification,
+      password
     } = req.body;
 
     console.log('📋 Creating doctor:', { name, email, clinicId, clinicName });
@@ -183,16 +185,25 @@ router.post('/', async (req, res) => {
       return res.status(400).json({ message: 'No clinic assigned. Please contact admin to assign you to a clinic first.' });
     }
 
+    // Hash password if provided
+    let hashedPassword = null;
+    if (password) {
+      const salt = await bcrypt.genSalt(10);
+      hashedPassword = await bcrypt.hash(password, salt);
+    }
+
     const doctor = new Doctor({
       name,
       email,
       phone,
       specialization,
-      clinicId,
+      clinicId: finalClinicId,
       availability: availability || 'Available',
       consultationFee: consultationFee || 500,
       experience: experience || 0,
-      qualification: qualification || 'MBBS'
+      qualification: qualification || 'MBBS',
+      password: hashedPassword,
+      approvalStatus: 'pending' // New doctors need admin approval
     });
 
     await doctor.save();
@@ -200,7 +211,12 @@ router.post('/', async (req, res) => {
     const populatedDoctor = await Doctor.findById(doctor._id)
       .populate('clinicId', 'name address city phone');
     
-    res.status(201).json(populatedDoctor);
+    console.log('✅ Doctor created with pending status:', doctor.name);
+    
+    res.status(201).json({
+      ...populatedDoctor.toObject(),
+      message: 'Doctor registration submitted. Awaiting admin approval.'
+    });
   } catch (error) {
     console.error('Error creating doctor:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -243,6 +259,74 @@ router.delete('/:id', async (req, res) => {
     res.json({ message: 'Doctor deactivated successfully' });
   } catch (error) {
     console.error('Error deleting doctor:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// ==========================================
+// ADMIN APPROVAL ROUTES
+// ==========================================
+
+// Get pending doctors (admin only)
+router.get('/admin/pending', async (req, res) => {
+  try {
+    const pendingDoctors = await Doctor.find({ approvalStatus: 'pending' })
+      .populate('clinicId', 'name address city')
+      .sort({ createdAt: -1 });
+    
+    res.json(pendingDoctors);
+  } catch (error) {
+    console.error('Error fetching pending doctors:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Approve doctor (admin only)
+router.put('/:id/approve', async (req, res) => {
+  try {
+    const doctor = await Doctor.findById(req.params.id);
+    
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    doctor.approvalStatus = 'approved';
+    doctor.approvedAt = new Date();
+    await doctor.save();
+
+    const populatedDoctor = await Doctor.findById(doctor._id)
+      .populate('clinicId', 'name address city phone');
+
+    res.json({
+      message: 'Doctor approved successfully',
+      doctor: populatedDoctor
+    });
+  } catch (error) {
+    console.error('Error approving doctor:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Reject doctor (admin only)
+router.put('/:id/reject', async (req, res) => {
+  try {
+    const { reason } = req.body;
+    const doctor = await Doctor.findById(req.params.id);
+    
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    doctor.approvalStatus = 'rejected';
+    doctor.rejectionReason = reason || 'No reason provided';
+    await doctor.save();
+
+    res.json({
+      message: 'Doctor rejected',
+      doctor
+    });
+  } catch (error) {
+    console.error('Error rejecting doctor:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

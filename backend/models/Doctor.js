@@ -81,6 +81,35 @@ const doctorSchema = new mongoose.Schema(
     registrationNumber: {
       type: String,
       trim: true
+    },
+    // Authentication
+    password: {
+      type: String,
+      default: null
+    },
+    isVerified: {
+      type: Boolean,
+      default: false
+    },
+    lastLogin: {
+      type: Date,
+      default: null
+    },
+    // Admin Approval System
+    approvalStatus: {
+      type: String,
+      enum: ['pending', 'approved', 'rejected'],
+      default: 'approved' // Existing doctors are approved by default
+    },
+    approvedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
+    approvedAt: {
+      type: Date
+    },
+    rejectionReason: {
+      type: String
     }
   },
   { timestamps: true }

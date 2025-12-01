@@ -7,7 +7,11 @@ const router = express.Router();
 // Get all users (Admin only)
 router.get('/', async (req, res) => {
   try {
-    const users = await User.find({ isActive: true })
+    // Include all users for admin dashboard (both active and inactive)
+    const { includeInactive } = req.query;
+    const filter = includeInactive === 'true' ? {} : { isActive: true };
+    
+    const users = await User.find(filter)
       .populate('clinicId', 'name address city phone')
       .sort({ createdAt: -1 });
 
