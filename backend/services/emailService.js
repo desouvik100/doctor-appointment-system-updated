@@ -575,7 +575,7 @@ async function sendAppointmentEmail(appointment, recipientType = 'patient') {
 
     const subject = recipientType === 'patient' 
       ? `Appointment Confirmed - Dr. ${otherParty.name}`
-      : `New Appointment - ${otherParty.name}`;
+      : `🎥 New Online Consultation - ${otherParty.name} (You are the Host)`;
 
     const text = `
 Your ${appointment.consultationType === 'online' ? 'Online' : 'In-Person'} Appointment Details:
@@ -628,12 +628,12 @@ Thank you for choosing HealthSync!
     
     <div class="content">
       <h2 style="color: #1f2937; margin-bottom: 10px;">
-        ${recipientType === 'patient' ? '✅ Your Appointment is Confirmed!' : '📅 New Appointment Scheduled'}
+        ${recipientType === 'patient' ? '✅ Your Appointment is Confirmed!' : '📅 New Appointment Scheduled - You are the Meeting Host'}
       </h2>
       <p style="color: #6b7280; margin-bottom: 20px;">
         ${recipientType === 'patient' 
           ? `Your ${appointment.consultationType === 'online' ? 'online consultation' : 'appointment'} with Dr. ${otherParty.name} has been confirmed.`
-          : `You have a new ${appointment.consultationType === 'online' ? 'online consultation' : 'appointment'} with ${otherParty.name}.`
+          : `You have a new ${appointment.consultationType === 'online' ? 'online consultation' : 'appointment'} with ${otherParty.name}. <strong>You are the meeting host/admin</strong> and have full control over the meeting.`
         }
       </p>
 
@@ -681,8 +681,12 @@ Thank you for choosing HealthSync!
       <div class="info-box">
         <strong>📌 Important:</strong><br>
         ${appointment.consultationType === 'online' 
-          ? 'Please join the meeting 5 minutes before your scheduled time. Make sure you have a stable internet connection and your camera/microphone are working.'
-          : 'Please arrive at the clinic 10 minutes before your scheduled time. Bring any relevant medical documents or prescriptions.'
+          ? (recipientType === 'doctor' 
+              ? '<strong>As the meeting host, you have full admin controls:</strong><br>• Admit/remove participants<br>• Mute/unmute participants<br>• Share your screen<br>• Record the consultation if needed<br><br>Please join the meeting a few minutes early to prepare.'
+              : 'Please join the meeting 5 minutes before your scheduled time. Make sure you have a stable internet connection and your camera/microphone are working.')
+          : (recipientType === 'doctor'
+              ? 'A new patient appointment has been scheduled. Please review the patient details before the appointment.'
+              : 'Please arrive at the clinic 10 minutes before your scheduled time. Bring any relevant medical documents or prescriptions.')
         }
       </div>
 
