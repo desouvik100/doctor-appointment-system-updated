@@ -3,6 +3,7 @@ const router = express.Router();
 const Review = require('../models/Review');
 const Doctor = require('../models/Doctor');
 const Appointment = require('../models/Appointment');
+const LoyaltyPoints = require('../models/LoyaltyPoints');
 
 // Get reviews for a doctor
 router.get('/doctor/:doctorId', async (req, res) => {
@@ -72,6 +73,21 @@ router.post('/', async (req, res) => {
     });
 
     await review.save();
+
+    // Award loyalty points for leaving a review
+    try {
+      let loyalty = await LoyaltyPoints.findOne({ userId });
+      if (!loyalty) {
+        loyalty = new LoyaltyPoints({ userId });
+      }
+      const multiplier = { bronze: 1, silver: 1.25, gold: 1.5, platinum: 2 }[loyalty.tier] || 1;
+      const points = Math.floor(30 * multiplier);
+      loyalty.addPoints(points, `Earned ${points} points for leaving a review`, 'review', review._id);
+      await loyalty.save();
+      console.log(`🎁 Awarded ${points} loyalty points to user ${userId} for review`);
+    } catch (loyaltyError) {
+      console.error('Error awarding loyalty points:', loyaltyError);
+    }
 
     res.status(201).json({ message: 'Review submitted successfully', review });
   } catch (error) {

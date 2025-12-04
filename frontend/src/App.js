@@ -20,13 +20,14 @@ import SymptomChecker from "./components/SymptomChecker";
 import FloatingChatBubble from "./components/FloatingChatBubble";
 import LiveStatsDisplay from "./components/LiveStatsDisplay";
 import LandingPage from "./components/LandingPage";
+import CorporateWellness from "./components/CorporateWellness";
 
 // Lazy load dashboard components
 const PatientDashboard = React.lazy(() =>
-  import("./components/PatientDashboard").catch(() => ({
+  import("./components/PatientDashboardPro").catch(() => ({
     default: ({ user, onLogout }) => (
-      <div className="patient-dashboard">
-        <div className="patient-dashboard__container">
+      <div className="dashboard-pro">
+        <div className="dashboard-pro__content">
           <h4>Patient Dashboard</h4>
           <p>Welcome {user.name}! Dashboard is loading...</p>
         </div>
@@ -1461,9 +1462,35 @@ function App() {
             } else if (view === 'doctor-login') {
               setLoginType('doctor');
               setCurrentView('auth');
+            } else if (view === 'corporate') {
+              setCurrentView('corporate');
             }
           }}
         />
+      )}
+
+      {currentView === "corporate" && (
+        <div style={{ paddingTop: '20px' }}>
+          <div style={{ maxWidth: '1400px', margin: '0 auto', padding: '0 1rem' }}>
+            <button 
+              onClick={() => setCurrentView('landing')}
+              style={{
+                background: 'none',
+                border: 'none',
+                color: '#667eea',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                gap: '0.5rem',
+                marginBottom: '1rem',
+                fontSize: '1rem'
+              }}
+            >
+              <i className="fas fa-arrow-left"></i> Back to Home
+            </button>
+          </div>
+          <CorporateWellness />
+        </div>
       )}
 
       {currentView === "auth" && (

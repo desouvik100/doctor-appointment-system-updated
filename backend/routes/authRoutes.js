@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
+const LoyaltyPoints = require('../models/LoyaltyPoints');
 
 const router = express.Router();
 
@@ -36,6 +37,18 @@ router.post('/register', async (req, res) => {
 
     await user.save();
 
+    // Award signup bonus loyalty points
+    let signupBonus = null;
+    try {
+      const loyalty = new LoyaltyPoints({ userId: user._id });
+      loyalty.addPoints(100, 'Welcome bonus: 100 points for signing up!', 'signup', user._id);
+      await loyalty.save();
+      signupBonus = 100;
+      console.log(`🎁 Awarded 100 signup bonus points to new user ${user._id}`);
+    } catch (loyaltyError) {
+      console.error('Error creating loyalty account:', loyaltyError);
+    }
+
     // Create token
     const token = jwt.sign(
       { userId: user._id, role: user.role },
@@ -54,7 +67,8 @@ router.post('/register', async (req, res) => {
         phone: user.phone,
         profilePhoto: user.profilePhoto,
         locationCaptured: false // New users haven't captured location yet
-      }
+      },
+      loyaltyBonus: signupBonus
     });
   } catch (error) {
     console.error('Registration error:', error);
@@ -72,15 +86,24 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
+    // Normalize email to lowercase
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Find user (only patients can login through this route)
-    const user = await User.findOne({ email, role: 'patient', isActive: true });
+    const user = await User.findOne({ email: normalizedEmail, role: 'patient', isActive: true });
     if (!user) {
+      console.log(`❌ Login failed: User not found for email: ${normalizedEmail}`);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     // Check password
+    console.log(`🔐 Attempting login for: ${normalizedEmail}`);
+    console.log(`🔐 Stored password hash starts with: ${user.password.substring(0, 20)}...`);
+    console.log(`🔐 Input password length: ${password.length}`);
     const isMatch = await bcrypt.compare(password, user.password);
+    console.log(`🔐 Password match result: ${isMatch}`);
     if (!isMatch) {
+      console.log(`❌ Login failed: Password mismatch for ${normalizedEmail}`);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
@@ -305,8 +328,11 @@ router.post('/forgot-password', async (req, res) => {
       });
     }
 
+    // Normalize email to lowercase
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Find user by email
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       // Don't reveal if email exists for security
       return res.status(200).json({ 
@@ -318,10 +344,10 @@ router.post('/forgot-password', async (req, res) => {
     // Import email service
     const { sendOTP } = require('../services/emailService');
 
-    // Send OTP for password reset
-    const result = await sendOTP(email, 'password-reset');
+    // Send OTP for password reset (use normalized email for consistency)
+    const result = await sendOTP(normalizedEmail, 'password-reset');
 
-    console.log(`✅ Password reset OTP sent to: ${email}`);
+    console.log(`✅ Password reset OTP sent to: ${normalizedEmail}`);
 
     res.status(200).json({
       success: true,
@@ -408,6 +434,9 @@ router.post('/reset-password', async (req, res) => {
       });
     }
 
+    // Normalize email to lowercase (must match how it was stored during forgot-password)
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Validate password length
     if (newPassword.length < 6) {
       return res.status(400).json({ 
@@ -419,8 +448,8 @@ router.post('/reset-password', async (req, res) => {
     // Import email service
     const { verifyOTP } = require('../services/emailService');
 
-    // Verify OTP
-    const otpVerification = verifyOTP(email, otp, 'password-reset');
+    // Verify OTP (use normalized email to match the stored OTP key)
+    const otpVerification = verifyOTP(normalizedEmail, otp, 'password-reset');
     if (!otpVerification.success) {
       return res.status(400).json({ 
         success: false,
@@ -429,7 +458,7 @@ router.post('/reset-password', async (req, res) => {
     }
 
     // Find user by email
-    const user = await User.findOne({ email });
+    const user = await User.findOne({ email: normalizedEmail });
     if (!user) {
       return res.status(404).json({ 
         success: false,
@@ -439,12 +468,31 @@ router.post('/reset-password', async (req, res) => {
 
     // Hash new password
     const hashedPassword = await bcrypt.hash(newPassword, 10);
+    
+    console.log(`🔐 Resetting password for user: ${normalizedEmail}`);
+    console.log(`🔐 New password hash: ${hashedPassword.substring(0, 20)}...`);
 
-    // Update user password
-    user.password = hashedPassword;
-    await user.save();
-
-    console.log(`✅ Password reset successful for: ${email}`);
+    // Update password using findByIdAndUpdate to avoid any potential pre-save hooks
+    const updateResult = await User.findByIdAndUpdate(
+      user._id, 
+      { password: hashedPassword },
+      { new: true }
+    );
+    
+    if (!updateResult) {
+      console.log(`❌ Failed to update password for: ${normalizedEmail}`);
+      return res.status(500).json({ 
+        success: false,
+        message: 'Failed to update password in database' 
+      });
+    }
+    
+    // Verify the update by re-fetching the user
+    const verifyUser = await User.findById(user._id);
+    console.log(`🔐 Password updated in DB. New hash starts with: ${updateResult.password.substring(0, 20)}...`);
+    console.log(`🔐 Verification - DB hash starts with: ${verifyUser.password.substring(0, 20)}...`);
+    console.log(`🔐 Hashes match: ${updateResult.password === verifyUser.password}`);
+    console.log(`✅ Password reset successful for: ${normalizedEmail}`);
 
     res.status(200).json({
       success: true,

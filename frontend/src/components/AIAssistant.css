@@ -4,9 +4,9 @@
 
 /* Container */
 .ai-assistant {
-  background: #fff;
-  border-radius: 20px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.08);
+  background: var(--card-bg, #fff);
+  border-radius: var(--radius-lg, 12px);
+  border: 1px solid var(--border, #e2e8f0);
   overflow: hidden;
   display: flex;
   flex-direction: column;
@@ -15,8 +15,8 @@
 
 /* Header */
 .ai-assistant__header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  padding: 20px 24px;
+  background: linear-gradient(135deg, #1e40af 0%, #3b82f6 100%);
+  padding: 1rem 1.25rem;
   color: #fff;
 }
 

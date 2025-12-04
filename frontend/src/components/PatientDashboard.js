@@ -12,7 +12,15 @@ import DoctorChat from './DoctorChat';
 import HealthTips from './HealthTips';
 import NotificationCenter from './NotificationCenter';
 import HealthCheckup from './HealthCheckup';
-import { trackUserLocation, getUserLocation } from '../utils/locationService';
+import { trackUserLocation, getUserLocation, saveManualLocation } from '../utils/locationService';
+import MedicineReminder from './MedicineReminder';
+import HealthAnalytics from './HealthAnalytics';
+import EmergencyContacts from './EmergencyContacts';
+import HealthInsurance from './HealthInsurance';
+import ReferralRewards from './ReferralRewards';
+import HealthWallet from './HealthWallet';
+import SecondOpinion from './SecondOpinion';
+import LoyaltyPoints from './LoyaltyPoints';
 import './PatientDashboard.css';
 
 const PatientDashboard = ({ user, onLogout }) => {
@@ -37,6 +45,8 @@ const PatientDashboard = ({ user, onLogout }) => {
   const [updatingLocation, setUpdatingLocation] = useState(false);
   const [nearbyMode, setNearbyMode] = useState(false);
   const [maxDistance, setMaxDistance] = useState(50);
+  const [showManualLocation, setShowManualLocation] = useState(false);
+  const [manualCity, setManualCity] = useState('');
   
   // Favorites state
   const [favoriteDoctors, setFavoriteDoctors] = useState([]);
@@ -139,7 +149,20 @@ const PatientDashboard = ({ user, onLogout }) => {
       const result = await trackUserLocation(userId);
       if (result.success) {
         setUserLocation(result.location);
-        toast.success(`Location updated: ${result.location.city || 'Unknown'}, ${result.location.state || ''}`);
+        const accuracy = result.coordinates?.accuracy 
+          ? ` (±${Math.round(result.coordinates.accuracy)}m)` 
+          : '';
+        toast.success(
+          `Location: ${result.location.city || 'Unknown'}, ${result.location.state || ''}${accuracy}`,
+          { duration: 5000 }
+        );
+        console.log('📍 Location details:', {
+          city: result.location.city,
+          state: result.location.state,
+          lat: result.coordinates?.latitude,
+          lng: result.coordinates?.longitude,
+          accuracy: result.coordinates?.accuracy
+        });
         if (nearbyMode) {
           fetchNearbyDoctors();
         }
@@ -148,6 +171,36 @@ const PatientDashboard = ({ user, onLogout }) => {
       }
     } catch (error) {
       toast.error('Failed to get your location. Please enable location access.');
+    } finally {
+      setUpdatingLocation(false);
+    }
+  };
+
+  // Save manual location
+  const handleSaveManualLocation = async () => {
+    if (!manualCity.trim()) {
+      toast.error('Please enter a city name');
+      return;
+    }
+    setUpdatingLocation(true);
+    try {
+      const userId = currentUser.id || currentUser._id;
+      const result = await saveManualLocation(userId, {
+        city: manualCity.trim(),
+        state: '',
+        country: 'India',
+        address: manualCity.trim()
+      });
+      if (result.success) {
+        setUserLocation(result.location);
+        setShowManualLocation(false);
+        setManualCity('');
+        toast.success(`Location set to: ${manualCity.trim()}`);
+      } else {
+        toast.error(result.error || 'Failed to save location');
+      }
+    } catch (error) {
+      toast.error('Failed to save location');
     } finally {
       setUpdatingLocation(false);
     }
@@ -418,18 +471,44 @@ const PatientDashboard = ({ user, onLogout }) => {
               >
                 <i className="fas fa-ambulance"></i> SOS
               </button>
-              <button 
-                className={`patient-dashboard__location-btn ${updatingLocation ? 'patient-dashboard__location-btn--loading' : ''}`}
-                onClick={handleUpdateLocation}
-                disabled={updatingLocation}
-                title="Update your location to find nearby doctors"
-              >
-                {updatingLocation ? (
-                  <><i className="fas fa-spinner fa-spin"></i> Updating...</>
-                ) : (
-                  <><i className="fas fa-location-crosshairs"></i> Update Location</>
+              <div className="patient-dashboard__location-wrapper">
+                <button 
+                  className={`patient-dashboard__location-btn ${updatingLocation ? 'patient-dashboard__location-btn--loading' : ''}`}
+                  onClick={handleUpdateLocation}
+                  disabled={updatingLocation}
+                  title="Auto-detect your location"
+                >
+                  {updatingLocation ? (
+                    <><i className="fas fa-spinner fa-spin"></i> Updating...</>
+                  ) : (
+                    <><i className="fas fa-location-crosshairs"></i> Auto Location</>
+                  )}
+                </button>
+                <button 
+                  className="patient-dashboard__manual-location-btn"
+                  onClick={() => setShowManualLocation(!showManualLocation)}
+                  title="Enter location manually"
+                >
+                  <i className="fas fa-edit"></i>
+                </button>
+                {showManualLocation && (
+                  <div className="patient-dashboard__manual-location-popup">
+                    <input
+                      type="text"
+                      placeholder="Enter your city (e.g., Bankura)"
+                      value={manualCity}
+                      onChange={(e) => setManualCity(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && handleSaveManualLocation()}
+                    />
+                    <button onClick={handleSaveManualLocation} disabled={updatingLocation}>
+                      <i className="fas fa-check"></i> Save
+                    </button>
+                    <button onClick={() => setShowManualLocation(false)}>
+                      <i className="fas fa-times"></i>
+                    </button>
+                  </div>
                 )}
-              </button>
+              </div>
               <button className="patient-dashboard__logout-btn" onClick={onLogout}>
                 <i className="fas fa-sign-out-alt"></i>
                 Logout
@@ -549,6 +628,86 @@ const PatientDashboard = ({ user, onLogout }) => {
                 <i className="fas fa-stethoscope"></i>
               </div>
               <span className="patient-dashboard__tab-label">Full Body Checkup</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'medicine-reminder' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('medicine-reminder')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-pills"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Medicine Reminder</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'health-analytics' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('health-analytics')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-chart-line"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Health Analytics</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'emergency' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('emergency')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-phone-alt"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Emergency</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'insurance' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('insurance')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-shield-alt"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Insurance</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'wallet' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('wallet')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-wallet"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Wallet</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'referrals' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('referrals')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-gift"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Refer & Earn</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'second-opinion' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('second-opinion')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-user-md"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Second Opinion</span>
+            </button>
+            
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'loyalty' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => setActiveTab('loyalty')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-coins"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Loyalty Points</span>
             </button>
           </div>
         </div>
@@ -1126,6 +1285,57 @@ const PatientDashboard = ({ user, onLogout }) => {
             userName={currentUser.name}
             userEmail={currentUser.email}
             userPhone={currentUser.phone}
+          />
+        )}
+
+        {/* Medicine Reminder Tab Content */}
+        {activeTab === 'medicine-reminder' && (
+          <MedicineReminder userId={currentUser.id || currentUser._id} />
+        )}
+
+        {/* Health Analytics Tab Content */}
+        {activeTab === 'health-analytics' && (
+          <HealthAnalytics userId={currentUser.id || currentUser._id} />
+        )}
+
+        {/* Emergency Contacts Tab Content */}
+        {activeTab === 'emergency' && (
+          <EmergencyContacts userId={currentUser.id || currentUser._id} />
+        )}
+
+        {/* Health Insurance Tab Content */}
+        {activeTab === 'insurance' && (
+          <HealthInsurance userId={currentUser.id || currentUser._id} />
+        )}
+
+        {/* Health Wallet Tab Content */}
+        {activeTab === 'wallet' && (
+          <HealthWallet 
+            userId={currentUser.id || currentUser._id}
+            userName={currentUser.name}
+          />
+        )}
+
+        {/* Referral & Rewards Tab Content */}
+        {activeTab === 'referrals' && (
+          <ReferralRewards 
+            userId={currentUser.id || currentUser._id}
+            userName={currentUser.name}
+          />
+        )}
+
+        {/* Second Opinion Tab Content */}
+        {activeTab === 'second-opinion' && (
+          <SecondOpinion 
+            userId={currentUser.id || currentUser._id}
+            userName={currentUser.name}
+          />
+        )}
+
+        {/* Loyalty Points Tab Content */}
+        {activeTab === 'loyalty' && (
+          <LoyaltyPoints 
+            userId={currentUser.id || currentUser._id}
           />
         )}
 

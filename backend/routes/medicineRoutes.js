@@ -1,157 +1,202 @@
 const express = require('express');
+const MedicineReminder = require('../models/MedicineReminder');
+const User = require('../models/User');
 const router = express.Router();
-const MedicineOrder = require('../models/MedicineOrder');
 
-// Medicine catalog (mock data)
-const medicineCatalog = [
-  { id: 1, name: 'Paracetamol 500mg', price: 25, manufacturer: 'Cipla', category: 'Pain Relief', requiresPrescription: false },
-  { id: 2, name: 'Azithromycin 500mg', price: 120, manufacturer: 'Sun Pharma', category: 'Antibiotics', requiresPrescription: true },
-  { id: 3, name: 'Omeprazole 20mg', price: 85, manufacturer: 'Dr. Reddy\'s', category: 'Gastric', requiresPrescription: false },
-  { id: 4, name: 'Metformin 500mg', price: 45, manufacturer: 'USV', category: 'Diabetes', requiresPrescription: true },
-  { id: 5, name: 'Amlodipine 5mg', price: 55, manufacturer: 'Torrent', category: 'Blood Pressure', requiresPrescription: true },
-  { id: 6, name: 'Cetirizine 10mg', price: 30, manufacturer: 'Cipla', category: 'Allergy', requiresPrescription: false },
-  { id: 7, name: 'Vitamin D3 60K', price: 150, manufacturer: 'Abbott', category: 'Vitamins', requiresPrescription: false },
-  { id: 8, name: 'Pantoprazole 40mg', price: 95, manufacturer: 'Alkem', category: 'Gastric', requiresPrescription: false },
-  { id: 9, name: 'Amoxicillin 500mg', price: 80, manufacturer: 'GSK', category: 'Antibiotics', requiresPrescription: true },
-  { id: 10, name: 'Ibuprofen 400mg', price: 35, manufacturer: 'Cipla', category: 'Pain Relief', requiresPrescription: false }
-];
-
-// Get medicine catalog
-router.get('/catalog', (req, res) => {
-  const { category, search } = req.query;
-  let medicines = [...medicineCatalog];
-  
-  if (category) {
-    medicines = medicines.filter(m => m.category === category);
-  }
-  if (search) {
-    medicines = medicines.filter(m => 
-      m.name.toLowerCase().includes(search.toLowerCase())
-    );
-  }
-  
-  res.json(medicines);
-});
-
-// Get categories
-router.get('/categories', (req, res) => {
-  const categories = [...new Set(medicineCatalog.map(m => m.category))];
-  res.json(categories);
-});
-
-// Place order
-router.post('/order', async (req, res) => {
+// Get all medicines for a user
+router.get('/user/:userId', async (req, res) => {
   try {
-    const { userId, medicines, deliveryAddress, paymentMethod, prescriptionId } = req.body;
+    const medicines = await MedicineReminder.find({ 
+      userId: req.params.userId,
+      isActive: true 
+    }).sort({ createdAt: -1 });
     
-    // Calculate totals
-    const subtotal = medicines.reduce((sum, m) => sum + (m.price * m.quantity), 0);
-    const deliveryFee = subtotal > 500 ? 0 : 40;
-    const discount = subtotal > 1000 ? subtotal * 0.1 : 0;
-    const totalAmount = subtotal + deliveryFee - discount;
+    res.json(medicines);
+  } catch (error) {
+    console.error('Error fetching medicines:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get today's reminders for a user
+router.get('/user/:userId/today', async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
     
-    const order = new MedicineOrder({
+    const medicines = await MedicineReminder.find({ 
+      userId: req.params.userId,
+      isActive: true,
+      startDate: { $lte: new Date() },
+      $or: [
+        { endDate: null },
+        { endDate: { $gte: today } }
+      ]
+    });
+
+    // Build today's schedule
+    const reminders = [];
+    medicines.forEach(med => {
+      if (med.frequency !== 'asNeeded') {
+        med.times.forEach(time => {
+          // Check if already taken today
+          const takenToday = med.takenHistory.find(h => 
+            new Date(h.date).toDateString() === today.toDateString() && 
+            h.time === time
+          );
+          
+          reminders.push({
+            medicineId: med._id,
+            name: med.name,
+            dosage: med.dosage,
+            time,
+            color: med.color,
+            taken: !!takenToday,
+            takenAt: takenToday?.takenAt
+          });
+        });
+      }
+    });
+
+    // Sort by time
+    reminders.sort((a, b) => a.time.localeCompare(b.time));
+    
+    res.json(reminders);
+  } catch (error) {
+    console.error('Error fetching today reminders:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Add new medicine
+router.post('/', async (req, res) => {
+  try {
+    const { userId, name, dosage, frequency, times, startDate, endDate, notes, color, emailReminders } = req.body;
+
+    if (!userId || !name || !dosage || !times || times.length === 0) {
+      return res.status(400).json({ message: 'User ID, name, dosage, and at least one time are required' });
+    }
+
+    const medicine = new MedicineReminder({
       userId,
-      prescriptionId,
-      medicines,
-      deliveryAddress,
-      subtotal,
-      deliveryFee,
-      discount,
-      totalAmount,
-      paymentMethod,
-      paymentStatus: paymentMethod === 'COD' ? 'Pending' : 'Paid',
-      estimatedDelivery: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000), // 2 days
-      trackingUpdates: [{
-        status: 'Placed',
-        message: 'Order placed successfully'
-      }]
+      name,
+      dosage,
+      frequency: frequency || 'daily',
+      times,
+      startDate: startDate || new Date(),
+      endDate: endDate || null,
+      notes,
+      color: color || '#667eea',
+      emailReminders: emailReminders !== false
     });
+
+    await medicine.save();
     
-    await order.save();
-    res.status(201).json({ success: true, order });
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Get user orders
-router.get('/orders/:userId', async (req, res) => {
-  try {
-    const orders = await MedicineOrder.find({ userId: req.params.userId })
-      .sort({ createdAt: -1 });
-    res.json(orders);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Get order details
-router.get('/order/:orderId', async (req, res) => {
-  try {
-    const order = await MedicineOrder.findById(req.params.orderId)
-      .populate('prescriptionId');
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
-    }
-    res.json(order);
-  } catch (error) {
-    res.status(500).json({ message: error.message });
-  }
-});
-
-// Cancel order
-router.put('/order/:orderId/cancel', async (req, res) => {
-  try {
-    const order = await MedicineOrder.findById(req.params.orderId);
-    if (!order) {
-      return res.status(404).json({ message: 'Order not found' });
-    }
-    if (['Shipped', 'Out for Delivery', 'Delivered'].includes(order.orderStatus)) {
-      return res.status(400).json({ message: 'Cannot cancel order at this stage' });
-    }
+    console.log(`💊 Medicine reminder created: ${name} for user ${userId}`);
     
-    order.orderStatus = 'Cancelled';
-    order.trackingUpdates.push({
-      status: 'Cancelled',
-      message: 'Order cancelled by user'
+    res.status(201).json(medicine);
+  } catch (error) {
+    console.error('Error creating medicine:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Mark medicine as taken
+router.post('/:id/taken', async (req, res) => {
+  try {
+    const { time } = req.body;
+    const medicine = await MedicineReminder.findById(req.params.id);
+    
+    if (!medicine) {
+      return res.status(404).json({ message: 'Medicine not found' });
+    }
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    // Check if already marked as taken
+    const alreadyTaken = medicine.takenHistory.find(h => 
+      new Date(h.date).toDateString() === today.toDateString() && 
+      h.time === time
+    );
+
+    if (alreadyTaken) {
+      return res.status(400).json({ message: 'Already marked as taken' });
+    }
+
+    medicine.takenHistory.push({
+      date: today,
+      time,
+      takenAt: new Date()
     });
-    await order.save();
+
+    await medicine.save();
     
-    res.json({ success: true, order });
+    res.json({ message: 'Marked as taken', medicine });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error marking medicine as taken:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
-// Reorder from previous order
-router.post('/reorder/:orderId', async (req, res) => {
+// Update medicine
+router.put('/:id', async (req, res) => {
   try {
-    const previousOrder = await MedicineOrder.findById(req.params.orderId);
-    if (!previousOrder) {
-      return res.status(404).json({ message: 'Order not found' });
+    const medicine = await MedicineReminder.findByIdAndUpdate(
+      req.params.id,
+      req.body,
+      { new: true, runValidators: true }
+    );
+
+    if (!medicine) {
+      return res.status(404).json({ message: 'Medicine not found' });
     }
-    
-    const newOrder = new MedicineOrder({
-      userId: previousOrder.userId,
-      medicines: previousOrder.medicines,
-      deliveryAddress: previousOrder.deliveryAddress,
-      subtotal: previousOrder.subtotal,
-      deliveryFee: previousOrder.deliveryFee,
-      discount: previousOrder.discount,
-      totalAmount: previousOrder.totalAmount,
-      paymentMethod: previousOrder.paymentMethod,
-      estimatedDelivery: new Date(Date.now() + 2 * 24 * 60 * 60 * 1000),
-      trackingUpdates: [{
-        status: 'Placed',
-        message: 'Reorder placed successfully'
-      }]
-    });
-    
-    await newOrder.save();
-    res.status(201).json({ success: true, order: newOrder });
+
+    res.json(medicine);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    console.error('Error updating medicine:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Delete medicine (soft delete)
+router.delete('/:id', async (req, res) => {
+  try {
+    const medicine = await MedicineReminder.findByIdAndUpdate(
+      req.params.id,
+      { isActive: false },
+      { new: true }
+    );
+
+    if (!medicine) {
+      return res.status(404).json({ message: 'Medicine not found' });
+    }
+
+    res.json({ message: 'Medicine deleted successfully' });
+  } catch (error) {
+    console.error('Error deleting medicine:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Toggle email reminders
+router.put('/:id/email-reminders', async (req, res) => {
+  try {
+    const { enabled } = req.body;
+    const medicine = await MedicineReminder.findByIdAndUpdate(
+      req.params.id,
+      { emailReminders: enabled },
+      { new: true }
+    );
+
+    if (!medicine) {
+      return res.status(404).json({ message: 'Medicine not found' });
+    }
+
+    res.json({ message: `Email reminders ${enabled ? 'enabled' : 'disabled'}`, medicine });
+  } catch (error) {
+    console.error('Error toggling email reminders:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 

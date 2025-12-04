@@ -120,6 +120,14 @@ const LandingPage = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode =
             <a href="#stats" className="landing-nav__link">Stats</a>
             <a href="#testimonials" className="landing-nav__link">Testimonials</a>
             <a href="#contact" className="landing-nav__link">Contact</a>
+            <button 
+              className="landing-nav__link landing-nav__link--business"
+              onClick={() => onNavigate('corporate')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
+            >
+              <i className="fas fa-building" style={{ marginRight: '4px' }}></i>
+              For Business
+            </button>
           </div>
           <div className="landing-nav__actions">
             {/* Dark Mode Toggle */}

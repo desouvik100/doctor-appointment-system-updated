@@ -3,12 +3,12 @@
    ============================================ */
 
 :root {
-  /* Brand Colors */
+  /* Brand Colors - Professional Blue */
   --brand-primary: #2563eb;
   --brand-primary-hover: #1d4ed8;
-  --brand-primary-light: #dbeafe;
-  --brand-accent: #0891b2;
-  --brand-accent-hover: #0e7490;
+  --brand-primary-light: #eff6ff;
+  --brand-accent: #0284c7;
+  --brand-accent-hover: #0369a1;
   
   /* Semantic Colors */
   --success: #10b981;
@@ -51,13 +51,13 @@
   --radius-xl: 16px;
   --radius-full: 9999px;
   
-  /* Shadows */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.07), 0 2px 4px -1px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-  --shadow-card: 0 4px 8px rgba(10, 10, 20, 0.04);
-  --shadow-card-hover: 0 8px 16px rgba(10, 10, 20, 0.08);
+  /* Shadows - Subtle, professional */
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
+  --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.06);
+  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04);
+  --shadow-card-hover: 0 4px 8px rgba(0, 0, 0, 0.08);
   
   /* Typography */
   --font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;

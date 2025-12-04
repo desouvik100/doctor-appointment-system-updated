@@ -331,4 +331,70 @@ router.put('/:id/reject', async (req, res) => {
   }
 });
 
+// Check doctors without email (for debugging)
+router.get('/admin/check-emails', async (req, res) => {
+  try {
+    const doctorsWithoutEmail = await Doctor.find({ 
+      $or: [
+        { email: { $exists: false } },
+        { email: null },
+        { email: '' }
+      ],
+      isActive: true
+    }).select('name email phone clinicId');
+
+    const allDoctors = await Doctor.find({ isActive: true })
+      .select('name email phone')
+      .populate('clinicId', 'name');
+
+    res.json({
+      totalDoctors: allDoctors.length,
+      doctorsWithoutEmail: doctorsWithoutEmail.length,
+      doctors: allDoctors.map(d => ({
+        id: d._id,
+        name: d.name,
+        email: d.email || 'NOT SET',
+        phone: d.phone,
+        clinic: d.clinicId?.name
+      }))
+    });
+  } catch (error) {
+    console.error('Error checking doctor emails:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Update doctor email
+router.put('/:id/email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ message: 'Email is required' });
+    }
+
+    const doctor = await Doctor.findByIdAndUpdate(
+      req.params.id,
+      { email: email.toLowerCase().trim() },
+      { new: true }
+    );
+
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    res.json({
+      message: 'Doctor email updated successfully',
+      doctor: {
+        id: doctor._id,
+        name: doctor.name,
+        email: doctor.email
+      }
+    });
+  } catch (error) {
+    console.error('Error updating doctor email:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router;

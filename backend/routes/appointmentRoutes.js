@@ -2,10 +2,44 @@ const express = require('express');
 const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
+const LoyaltyPoints = require('../models/LoyaltyPoints');
 const { USE_STRIPE_PAYMENTS } = require('../config/paymentConfig');
 const { scheduleGoogleMeetGeneration } = require('../services/appointmentScheduler');
 const TokenService = require('../services/tokenService');
 const router = express.Router();
+
+// Helper function to award loyalty points
+const awardLoyaltyPoints = async (userId, action, referenceId, customPoints = null, description = null) => {
+  try {
+    const POINTS_CONFIG = {
+      appointment: 50,
+      referral: 200,
+      review: 30,
+      signup: 100,
+      birthday: 500,
+      tierMultiplier: { bronze: 1, silver: 1.25, gold: 1.5, platinum: 2 }
+    };
+
+    let loyalty = await LoyaltyPoints.findOne({ userId });
+    if (!loyalty) {
+      loyalty = new LoyaltyPoints({ userId });
+    }
+
+    let points = customPoints || POINTS_CONFIG[action] || 0;
+    const multiplier = POINTS_CONFIG.tierMultiplier[loyalty.tier] || 1;
+    points = Math.floor(points * multiplier);
+
+    const desc = description || `Earned ${points} points for ${action}`;
+    loyalty.addPoints(points, desc, action, referenceId);
+    await loyalty.save();
+
+    console.log(`🎁 Awarded ${points} loyalty points to user ${userId} for ${action}`);
+    return { success: true, points, tier: loyalty.tier };
+  } catch (error) {
+    console.error('Error awarding loyalty points:', error);
+    return { success: false, error: error.message };
+  }
+};
 
 // Get all appointments
 router.get('/', async (req, res) => {
@@ -49,6 +83,77 @@ router.get('/doctor/:doctorId', async (req, res) => {
     res.json(appointments);
   } catch (error) {
     console.error('Error fetching doctor appointments:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get doctor's patient queue for a specific date
+router.get('/doctor/:doctorId/queue', async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const { date } = req.query;
+    
+    // Default to today if no date provided
+    const queryDate = date ? new Date(date) : new Date();
+    
+    // Create start and end of day properly (don't modify the same object)
+    const startOfDay = new Date(queryDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(queryDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    console.log(`📋 Fetching queue for doctor ${doctorId}`);
+    console.log(`   Date range: ${startOfDay.toISOString()} to ${endOfDay.toISOString()}`);
+    
+    const appointments = await Appointment.find({
+      doctorId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: { $in: ['pending', 'confirmed', 'in_progress'] }
+    })
+      .populate('userId', 'name email phone profilePhoto')
+      .populate('clinicId', 'name')
+      .sort({ tokenNumber: 1, time: 1 });
+    
+    console.log(`   Found ${appointments.length} appointments in queue`);
+    
+    res.json(appointments);
+  } catch (error) {
+    console.error('Error fetching doctor queue:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Skip patient (move to end of queue)
+router.put('/:id/skip', async (req, res) => {
+  try {
+    const appointment = await Appointment.findById(req.params.id);
+    
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+    
+    // Get the highest token number for this doctor today
+    const today = new Date();
+    const startOfDay = new Date(today);
+    startOfDay.setHours(0, 0, 0, 0);
+    
+    const endOfDay = new Date(today);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const lastAppointment = await Appointment.findOne({
+      doctorId: appointment.doctorId,
+      date: { $gte: startOfDay, $lte: endOfDay }
+    }).sort({ tokenNumber: -1 });
+    
+    // Move to end of queue by giving highest token number + 1
+    appointment.tokenNumber = (lastAppointment?.tokenNumber || 0) + 1;
+    appointment.notes = (appointment.notes || '') + ' [Skipped and moved to end of queue]';
+    await appointment.save();
+    
+    res.json({ message: 'Patient moved to end of queue', appointment });
+  } catch (error) {
+    console.error('Error skipping patient:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -232,6 +337,8 @@ router.post('/', async (req, res) => {
           await appointment.save();
           
           console.log(`✅ Meet link generated: ${meetResult.meetLink} (Provider: ${meetResult.provider})`);
+          console.log(`📧 Doctor email: ${doctor.email || 'NOT SET'}`);
+          console.log(`📧 Patient email: ${user.email || 'NOT SET'}`);
           
           // Send email to patient immediately
           try {
@@ -244,17 +351,25 @@ router.post('/', async (req, res) => {
             appointment.meetLinkSentToPatient = true;
             console.log(`✅ Email sent to patient: ${user.email}`);
             
-            // Send email to doctor
+            // Send email to doctor - ALWAYS try if doctor has email
             if (doctor.email) {
-              await sendAppointmentEmail(populatedForEmail, 'doctor');
-              appointment.meetLinkSentToDoctor = true;
-              console.log(`✅ Email sent to doctor: ${doctor.email}`);
+              try {
+                await sendAppointmentEmail(populatedForEmail, 'doctor');
+                appointment.meetLinkSentToDoctor = true;
+                console.log(`✅ Email sent to doctor: ${doctor.email}`);
+              } catch (doctorEmailError) {
+                console.error(`❌ Failed to send email to doctor (${doctor.email}):`, doctorEmailError.message);
+              }
+            } else {
+              console.warn(`⚠️ Doctor ${doctor.name} has no email configured - cannot send Meet link`);
             }
             
             await appointment.save();
           } catch (emailError) {
             console.error('❌ Error sending appointment emails:', emailError.message);
           }
+        } else {
+          console.error(`❌ Meet link generation failed: ${meetResult.error}`);
         }
       } catch (meetError) {
         console.error('❌ Error generating meet link:', meetError.message);
@@ -268,6 +383,15 @@ router.post('/', async (req, res) => {
       .populate('doctorId', 'name specialization consultationFee email')
       .populate('clinicId', 'name address');
     
+    // Award loyalty points for booking appointment
+    const loyaltyResult = await awardLoyaltyPoints(
+      userId, 
+      'appointment', 
+      appointment._id,
+      null,
+      `Booked appointment with Dr. ${doctor.name}`
+    );
+    
     res.status(201).json({
       ...populatedAppointment.toObject(),
       requiresPayment: USE_STRIPE_PAYMENTS,
@@ -279,7 +403,11 @@ router.post('/', async (req, res) => {
         totalAmount
       },
       token: tokenResult.token,
-      tokenExpiredAt: tokenResult.expiresAt
+      tokenExpiredAt: tokenResult.expiresAt,
+      loyaltyPoints: loyaltyResult.success ? {
+        earned: loyaltyResult.points,
+        tier: loyaltyResult.tier
+      } : null
     });
   } catch (error) {
     console.error('Error creating appointment:', error);

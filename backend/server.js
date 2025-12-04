@@ -3,6 +3,7 @@ const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
 const { initializeScheduler } = require('./services/appointmentScheduler');
+const { initializeMedicineReminders } = require('./services/medicineReminderService');
 
 const app = express();
 
@@ -57,6 +58,7 @@ app.use('/api/ambulance', require('./routes/ambulanceRoutes'));
 app.use('/api/articles', require('./routes/articleRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/health-checkup', require('./routes/healthCheckupRoutes'));
+app.use('/api/loyalty', require('./routes/loyaltyRoutes'));
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');
@@ -89,4 +91,7 @@ app.listen(PORT, async () => {
   
   // Initialize appointment scheduler after server starts
   await initializeScheduler();
+  
+  // Initialize medicine reminder service
+  initializeMedicineReminders();
 });

@@ -730,4 +730,5 @@ module.exports = {
   verifyOTP,
   sendTestEmail,
   sendAppointmentEmail,
+  sendEmail,
 };

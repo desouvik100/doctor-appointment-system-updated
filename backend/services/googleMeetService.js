@@ -97,6 +97,14 @@ async function generateGoogleMeetLink(appointment) {
     const patientEmail = appointment.userId?.email;
     const clinicName = appointment.clinicId?.name || 'HealthSync Clinic';
 
+    console.log('📧 Google Meet - Attendee emails:');
+    console.log(`   Doctor: ${doctorName} <${doctorEmail || 'NO EMAIL'}>`);
+    console.log(`   Patient: ${patientName} <${patientEmail || 'NO EMAIL'}>`);
+
+    if (!doctorEmail) {
+      console.warn('⚠️ WARNING: Doctor has no email - they will NOT receive calendar invite!');
+    }
+
     // Build attendees list
     // Doctor is added FIRST as the primary host/admin of the meeting
     // Patient is added as attendee

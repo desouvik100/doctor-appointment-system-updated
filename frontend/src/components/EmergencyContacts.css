@@ -1,0 +1,337 @@
+.emergency-contacts {
+  padding: 1.25rem;
+  max-width: 800px;
+  margin: 0 auto;
+}
+
+/* SOS Section */
+.sos-section {
+  text-align: center;
+  margin-bottom: 2rem;
+}
+
+.sos-button {
+  width: 120px;
+  height: 120px;
+  border-radius: 50%;
+  background: #dc2626;
+  border: none;
+  color: white;
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin: 0 auto;
+  transition: all 0.2s ease;
+}
+
+.sos-button:hover {
+  background: #b91c1c;
+  transform: scale(1.05);
+}
+
+.sos-button i {
+  font-size: 2.5rem;
+}
+
+.sos-hint {
+  color: var(--text-secondary, #64748b);
+  font-size: 0.8rem;
+  margin-top: 0.75rem;
+}
+
+/* Emergency Numbers Grid */
+.emergency-section {
+  margin-bottom: 1.5rem;
+}
+
+.emergency-section h3 {
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  margin-bottom: 1rem;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-weight: 600;
+}
+
+.emergency-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.75rem;
+}
+
+.emergency-number-btn {
+  background: var(--card-bg, #fff);
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-md, 8px);
+  padding: 1rem 0.75rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.emergency-number-btn:hover {
+  border-color: var(--btn-color);
+  box-shadow: var(--shadow-sm);
+}
+
+.emergency-number-btn i {
+  font-size: 1.25rem;
+  color: var(--btn-color);
+}
+
+.emergency-number-btn .number {
+  font-size: 1.125rem;
+  font-weight: 700;
+  color: var(--text-primary, #1e293b);
+}
+
+.emergency-number-btn .label {
+  font-size: 0.7rem;
+  color: var(--text-secondary, #64748b);
+}
+
+/* Find Hospitals */
+.hospitals-section {
+  margin-bottom: 1.5rem;
+}
+
+.find-hospitals-btn {
+  width: 100%;
+  padding: 0.875rem;
+  background: var(--success, #10b981);
+  border: none;
+  border-radius: var(--radius-md, 8px);
+  color: white;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background 0.2s ease;
+}
+
+.find-hospitals-btn:hover:not(:disabled) {
+  background: #059669;
+}
+
+.find-hospitals-btn:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+/* Contacts Section */
+.contacts-section {
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: var(--radius-lg, 12px);
+  padding: 1.25rem;
+}
+
+.section-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 1rem;
+}
+
+.section-header h3 {
+  font-size: 1rem;
+  color: var(--text-primary, #1e293b);
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin: 0;
+  font-weight: 600;
+}
+
+.add-contact-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: var(--brand-primary, #2563eb);
+  border: none;
+  color: white;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.add-contact-btn:hover {
+  background: var(--brand-primary-hover, #1d4ed8);
+}
+
+/* Add Contact Form */
+.add-contact-form {
+  background: var(--card-bg, #fff);
+  border-radius: var(--radius-md, 8px);
+  padding: 1rem;
+  margin-bottom: 1rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  border: 1px solid var(--border, #e2e8f0);
+}
+
+.add-contact-form input,
+.add-contact-form select {
+  padding: 0.625rem 0.875rem;
+  border: 1px solid var(--border, #e2e8f0);
+  border-radius: var(--radius-sm, 6px);
+  font-size: 0.9rem;
+  background: var(--card-bg, #fff);
+  color: var(--text-primary, #1e293b);
+  transition: border-color 0.2s ease;
+}
+
+.add-contact-form input:focus,
+.add-contact-form select:focus {
+  outline: none;
+  border-color: var(--brand-primary, #2563eb);
+}
+
+.save-btn {
+  padding: 0.625rem;
+  background: var(--brand-primary, #2563eb);
+  border: none;
+  border-radius: var(--radius-sm, 6px);
+  color: white;
+  font-weight: 600;
+  font-size: 0.9rem;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 0.5rem;
+  transition: background 0.2s ease;
+}
+
+.save-btn:hover {
+  background: var(--brand-primary-hover, #1d4ed8);
+}
+
+/* Contacts List */
+.contacts-list {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+}
+
+.no-contacts {
+  text-align: center;
+  color: var(--text-muted, #94a3b8);
+  padding: 1.5rem;
+  font-size: 0.9rem;
+}
+
+.contact-card {
+  background: var(--card-bg, #fff);
+  border-radius: var(--radius-md, 8px);
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border: 1px solid var(--border, #e2e8f0);
+  transition: border-color 0.2s ease;
+}
+
+.contact-card.primary {
+  border-color: var(--brand-primary, #2563eb);
+  background: var(--brand-primary-light, #dbeafe);
+}
+
+.contact-info h4 {
+  font-size: 0.95rem;
+  color: var(--text-primary, #1e293b);
+  margin: 0 0 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.primary-badge {
+  font-size: 0.65rem;
+  background: var(--brand-primary, #2563eb);
+  color: white;
+  padding: 0.125rem 0.5rem;
+  border-radius: var(--radius-full, 9999px);
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.contact-info p {
+  font-size: 0.8rem;
+  color: var(--text-secondary, #64748b);
+  margin: 0.25rem 0;
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+}
+
+.contact-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.contact-actions button {
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-sm, 6px);
+  border: none;
+  background: var(--bg-secondary, #f1f5f9);
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.contact-actions button:hover {
+  background: var(--brand-primary, #2563eb);
+  color: white;
+}
+
+.contact-actions .delete-btn:hover {
+  background: var(--danger, #ef4444);
+}
+
+/* Dark Mode */
+[data-theme="dark"] .contacts-section {
+  background: var(--bg-secondary);
+}
+
+[data-theme="dark"] .contact-card,
+[data-theme="dark"] .add-contact-form,
+[data-theme="dark"] .emergency-number-btn {
+  background: var(--card-bg);
+  border-color: var(--border);
+}
+
+[data-theme="dark"] .add-contact-form input,
+[data-theme="dark"] .add-contact-form select {
+  background: var(--bg-secondary);
+  border-color: var(--border);
+  color: var(--text-primary);
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .emergency-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .sos-button {
+    width: 100px;
+    height: 100px;
+  }
+  
+  .sos-button i {
+    font-size: 2rem;
+  }
+}

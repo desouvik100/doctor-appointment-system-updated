@@ -512,6 +512,7 @@ function Auth({ onLogin, onBack }) {
                   type="email"
                   className="patient-auth__input"
                   name="email"
+                  autoComplete="email"
                   value={formData.email}
                   onChange={handleChange}
                   placeholder="your.email@example.com"
@@ -537,6 +538,7 @@ function Auth({ onLogin, onBack }) {
                     type={showPassword ? "text" : "password"}
                     className="patient-auth__input"
                     name="password"
+                    autoComplete={isLogin ? "current-password" : "new-password"}
                     value={formData.password}
                     onChange={handleChange}
                     placeholder={isLogin ? "Enter your password" : "Create a strong password"}
@@ -771,6 +773,8 @@ function Auth({ onLogin, onBack }) {
                   onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
                   placeholder="000000"
                   maxLength="6"
+                  autoComplete="one-time-code"
+                  inputMode="numeric"
                   style={{ fontSize: '1.2rem', letterSpacing: '0.5rem', textAlign: 'center' }}
                   disabled={loading}
                 />
@@ -961,6 +965,8 @@ function Auth({ onLogin, onBack }) {
                       maxLength="6"
                       required
                       disabled={loading}
+                      autoComplete="one-time-code"
+                      inputMode="numeric"
                       style={{ letterSpacing: '0.5em', fontSize: '1.2rem', textAlign: 'center' }}
                     />
                   </div>
@@ -978,6 +984,7 @@ function Auth({ onLogin, onBack }) {
                       placeholder="Enter new password"
                       required
                       disabled={loading}
+                      autoComplete="new-password"
                     />
                   </div>
 
@@ -994,6 +1001,7 @@ function Auth({ onLogin, onBack }) {
                       placeholder="Confirm new password"
                       required
                       disabled={loading}
+                      autoComplete="new-password"
                     />
                   </div>
                 </>

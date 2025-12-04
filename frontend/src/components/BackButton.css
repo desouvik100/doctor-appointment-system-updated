@@ -1,0 +1,118 @@
+.back-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: #ffffff;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+}
+
+.back-button:hover {
+  transform: translateX(-4px);
+  box-shadow: 0 6px 20px rgba(102, 126, 234, 0.4);
+  background: linear-gradient(135deg, #5a6fd6 0%, #6a4190 100%);
+}
+
+.back-button:active {
+  transform: translateX(-2px) scale(0.98);
+}
+
+.back-button i {
+  font-size: 0.9rem;
+  transition: transform 0.3s ease;
+}
+
+.back-button:hover i {
+  transform: translateX(-3px);
+}
+
+/* Variant: Outline style */
+.back-button--outline {
+  background: transparent;
+  border: 2px solid #667eea;
+  color: #667eea;
+  box-shadow: none;
+}
+
+.back-button--outline:hover {
+  background: rgba(102, 126, 234, 0.1);
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+/* Variant: Light style */
+.back-button--light {
+  background: rgba(255, 255, 255, 0.9);
+  color: #667eea;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+}
+
+.back-button--light:hover {
+  background: #ffffff;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.15);
+}
+
+/* Variant: Minimal style */
+.back-button--minimal {
+  background: transparent;
+  color: #64748b;
+  padding: 8px 16px;
+  box-shadow: none;
+}
+
+.back-button--minimal:hover {
+  color: #667eea;
+  background: rgba(102, 126, 234, 0.08);
+  box-shadow: none;
+}
+
+/* Dark mode support */
+[data-theme="dark"] .back-button {
+  box-shadow: 0 4px 15px rgba(102, 126, 234, 0.2);
+}
+
+[data-theme="dark"] .back-button--outline {
+  border-color: #818cf8;
+  color: #818cf8;
+}
+
+[data-theme="dark"] .back-button--outline:hover {
+  background: rgba(129, 140, 248, 0.15);
+}
+
+[data-theme="dark"] .back-button--light {
+  background: rgba(30, 41, 59, 0.9);
+  color: #818cf8;
+}
+
+[data-theme="dark"] .back-button--light:hover {
+  background: #1e293b;
+}
+
+[data-theme="dark"] .back-button--minimal {
+  color: #94a3b8;
+}
+
+[data-theme="dark"] .back-button--minimal:hover {
+  color: #818cf8;
+  background: rgba(129, 140, 248, 0.1);
+}
+
+/* Size variants */
+.back-button--sm {
+  padding: 6px 14px;
+  font-size: 0.85rem;
+  border-radius: 8px;
+}
+
+.back-button--lg {
+  padding: 14px 28px;
+  font-size: 1.1rem;
+  border-radius: 16px;
+}

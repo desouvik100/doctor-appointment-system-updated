@@ -115,7 +115,29 @@ export const stopWatchingLocation = (watchId) => {
 // Get full address details from coordinates using reverse geocoding
 export const getAddressFromCoordinates = async (latitude, longitude) => {
   try {
-    // Using OpenStreetMap Nominatim API (free, no API key required)
+    // Try BigDataCloud API first (more accurate for India)
+    try {
+      const bdcResponse = await fetch(
+        `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${latitude}&longitude=${longitude}&localityLanguage=en`
+      );
+      const bdcData = await bdcResponse.json();
+      
+      if (bdcData && bdcData.city) {
+        console.log('📍 Using BigDataCloud geocoding:', bdcData);
+        return {
+          address: bdcData.locality || bdcData.city || null,
+          city: bdcData.city || bdcData.locality || 'Unknown',
+          state: bdcData.principalSubdivision || null,
+          country: bdcData.countryName || 'Unknown',
+          pincode: bdcData.postcode || null,
+          locality: bdcData.locality || bdcData.neighbourhood || null
+        };
+      }
+    } catch (bdcError) {
+      console.warn('BigDataCloud API failed, trying Nominatim...', bdcError);
+    }
+
+    // Fallback to OpenStreetMap Nominatim API
     const response = await fetch(
       `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
       {
@@ -128,9 +150,11 @@ export const getAddressFromCoordinates = async (latitude, longitude) => {
     const data = await response.json();
     const addr = data.address || {};
     
+    console.log('📍 Using Nominatim geocoding:', addr);
+    
     return {
       address: data.display_name || null,
-      city: addr.city || addr.town || addr.village || addr.suburb || addr.county || 'Unknown',
+      city: addr.city || addr.town || addr.village || addr.suburb || addr.county || addr.state_district || 'Unknown',
       state: addr.state || addr.region || null,
       country: addr.country || 'Unknown',
       pincode: addr.postcode || null,

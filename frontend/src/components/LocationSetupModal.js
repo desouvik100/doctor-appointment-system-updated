@@ -137,21 +137,27 @@ const LocationSetupModal = ({ userId, onComplete, userName, onBackToHome }) => {
 
             <button 
               className="location-setup-btn primary"
-              onClick={handleDetectLocation}
-              disabled={loading}
-            >
-              <i className="fas fa-crosshairs"></i>
-              Detect My Location (GPS)
-            </button>
-
-            <button 
-              className="location-setup-btn secondary"
               onClick={() => setShowManualEntry(true)}
               disabled={loading}
             >
               <i className="fas fa-keyboard"></i>
-              Enter Location Manually
+              Enter My Location
             </button>
+
+            <button 
+              className="location-setup-btn secondary"
+              onClick={handleDetectLocation}
+              disabled={loading}
+            >
+              <i className="fas fa-crosshairs"></i>
+              Try Auto-Detect (GPS)
+            </button>
+            
+            <p className="location-setup-note">
+              <i className="fas fa-info-circle"></i>
+              <strong>Tip:</strong> Manual entry is more accurate on desktop computers. 
+              Auto-detect works best on mobile devices with GPS.
+            </p>
 
             <p className="location-setup-privacy">
               <i className="fas fa-shield-alt"></i>
