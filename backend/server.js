@@ -62,6 +62,7 @@ app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/health-checkup', require('./routes/healthCheckupRoutes'));
 app.use('/api/profile', require('./routes/profileRoutes'));
 app.use('/api/loyalty', require('./routes/loyaltyRoutes'));
+app.use('/api/reminders', require('./routes/reminderRoutes'));
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');

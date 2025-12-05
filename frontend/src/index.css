@@ -111,6 +111,8 @@ html {
   scroll-behavior: smooth;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
+  overflow-x: hidden;
+  width: 100%;
 }
 
 body {
@@ -120,6 +122,15 @@ body {
   background: linear-gradient(135deg, #f8fafc 0%, #ffffff 50%, #eef2ff 100%);
   min-height: 100vh;
   color: #1e293b;
+  overflow-x: hidden;
+  width: 100%;
+  position: relative;
+}
+
+#root {
+  overflow-x: hidden;
+  width: 100%;
+  min-height: 100vh;
 }
 
 /* Better defaults */
@@ -416,5 +427,207 @@ textarea:focus {
   .premium-card {
     box-shadow: none;
     border: 1px solid #ddd;
+  }
+}
+
+
+/* ============================================
+   Mobile Display Gap Fix
+   ============================================ */
+
+/* Prevent horizontal overflow on all devices */
+html, body, #root {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Fix for elements causing horizontal scroll */
+.landing-premium,
+.hero-premium,
+.features-premium,
+.auth-premium,
+.dashboard-pro,
+section,
+footer,
+nav {
+  max-width: 100vw;
+  overflow-x: hidden;
+}
+
+/* Mobile-specific fixes */
+@media (max-width: 768px) {
+  /* Prevent any element from exceeding viewport */
+  * {
+    max-width: 100vw;
+  }
+  
+  /* Fix hero section on mobile */
+  .hero-premium {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  
+  .hero-premium__container {
+    padding: 0 !important;
+    gap: 32px !important;
+  }
+  
+  .hero-premium__visual {
+    display: none !important;
+  }
+  
+  .hero-premium__title {
+    font-size: 2rem !important;
+    line-height: 1.2 !important;
+  }
+  
+  .hero-premium__subtitle {
+    font-size: 1rem !important;
+  }
+  
+  .hero-premium__stats {
+    flex-wrap: wrap !important;
+    gap: 16px !important;
+  }
+  
+  .hero-premium__actions {
+    flex-direction: column !important;
+    width: 100% !important;
+  }
+  
+  .hero-premium__actions button {
+    width: 100% !important;
+  }
+  
+  /* Fix trust badges overflow */
+  .hero-premium__content > div:last-child {
+    flex-wrap: wrap !important;
+    justify-content: center !important;
+  }
+  
+  /* Fix features grid */
+  .features-premium__grid {
+    grid-template-columns: 1fr !important;
+    padding: 0 16px !important;
+  }
+  
+  /* Fix pricing cards */
+  #pricing > div > div:last-child {
+    grid-template-columns: 1fr !important;
+  }
+  
+  #pricing > div > div:last-child > div {
+    transform: none !important;
+  }
+  
+  /* Fix testimonials */
+  #testimonials > div > div:last-child {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Fix footer grid */
+  footer > div > div:first-child {
+    grid-template-columns: 1fr !important;
+    gap: 32px !important;
+  }
+  
+  /* Fix floating elements */
+  .staff-dropdown {
+    bottom: 12px !important;
+    right: 12px !important;
+  }
+  
+  /* Fix section padding */
+  section {
+    padding-left: 16px !important;
+    padding-right: 16px !important;
+  }
+  
+  /* Fix navigation */
+  .nav-premium__container {
+    padding: 0 16px !important;
+  }
+  
+  /* Fix any absolute positioned elements */
+  [style*="position: absolute"] {
+    max-width: calc(100vw - 32px);
+  }
+  
+  /* Fix images - but not profile photos */
+  img:not([class*="avatar"]):not([class*="profile"]):not([style*="border-radius: 50%"]):not([style*="border-radius:50%"]) {
+    max-width: 100% !important;
+  }
+  
+  /* Fix grid gaps */
+  [style*="grid-template-columns"] {
+    grid-template-columns: 1fr !important;
+  }
+  
+  /* Fix flex gaps */
+  [style*="gap: 48px"],
+  [style*="gap: 64px"],
+  [style*="gap: 80px"] {
+    gap: 24px !important;
+  }
+}
+
+/* Small mobile devices */
+@media (max-width: 480px) {
+  .hero-premium__title {
+    font-size: 1.75rem !important;
+  }
+  
+  .hero-premium__badge {
+    font-size: 11px !important;
+    padding: 4px 10px !important;
+  }
+  
+  section {
+    padding-top: 60px !important;
+    padding-bottom: 60px !important;
+  }
+  
+  h2 {
+    font-size: 1.5rem !important;
+  }
+  
+  /* Fix back to top button position */
+  button[aria-label="Back to top"] {
+    bottom: 12px !important;
+    left: 12px !important;
+    width: 40px !important;
+    height: 40px !important;
+  }
+}
+
+/* Landscape mobile fix */
+@media (max-width: 896px) and (orientation: landscape) {
+  .hero-premium {
+    min-height: auto !important;
+    padding-top: 100px !important;
+    padding-bottom: 60px !important;
+  }
+}
+
+/* Safe area insets for notched devices */
+@supports (padding: max(0px)) {
+  body {
+    padding-left: max(0px, env(safe-area-inset-left));
+    padding-right: max(0px, env(safe-area-inset-right));
+  }
+  
+  .nav-premium {
+    padding-top: max(16px, env(safe-area-inset-top));
+  }
+  
+  footer {
+    padding-bottom: max(32px, env(safe-area-inset-bottom));
+  }
+}
+
+/* Fix for iOS rubber banding */
+@supports (-webkit-touch-callout: none) {
+  html, body {
+    height: -webkit-fill-available;
   }
 }

@@ -32,6 +32,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null // URL or base64 string for profile picture
     },
+    googleId: {
+      type: String,
+      default: null // Google OAuth ID for social login
+    },
     role: {
       type: String,
       enum: ["patient", "admin", "receptionist"],

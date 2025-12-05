@@ -1,9 +1,14 @@
 // frontend/src/components/AuthPremium.js
 // Premium SaaS Auth Page - Stripe/Notion inspired
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import axios from "../api/config";
 import toast from 'react-hot-toast';
 import '../styles/premium-saas.css';
+import { useLanguage } from '../i18n/LanguageContext';
+import LanguageSelector from './LanguageSelector';
+
+// Google Client ID - Replace with your actual client ID from Google Cloud Console
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 
 // Inline styles for ECG animation
 const ecgAnimationStyle = document.createElement('style');
@@ -20,12 +25,129 @@ if (!document.head.querySelector('#ecg-animation-style')) {
 }
 
 function AuthPremium({ onLogin, onBack }) {
+  const { t } = useLanguage();
   const [isLogin, setIsLogin] = useState(true);
   const [formData, setFormData] = useState({
     name: "", email: "", password: "", confirmPassword: "", phone: ""
   });
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [socialLoading, setSocialLoading] = useState(null);
+
+  // Load Google Sign-In script
+  useEffect(() => {
+    const loadGoogleScript = () => {
+      if (document.getElementById('google-signin-script')) return;
+      
+      const script = document.createElement('script');
+      script.id = 'google-signin-script';
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      script.onload = () => {
+        console.log('Google Sign-In script loaded');
+      };
+      document.body.appendChild(script);
+    };
+    loadGoogleScript();
+  }, []);
+
+  // Handle Google Sign-In using OAuth2 popup
+  const handleGoogleSignIn = async () => {
+    if (!GOOGLE_CLIENT_ID) {
+      toast.error('Google Sign-In not configured. Please contact support.');
+      return;
+    }
+
+    setSocialLoading('google');
+    
+    try {
+      // Check if Google script is loaded
+      if (!window.google?.accounts?.oauth2) {
+        toast.error('Google Sign-In is loading. Please try again.');
+        setSocialLoading(null);
+        return;
+      }
+
+      // Use OAuth2 token client for popup-based sign-in
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'email profile openid',
+        callback: async (tokenResponse) => {
+          if (tokenResponse.access_token) {
+            await handleGoogleToken(tokenResponse.access_token);
+          } else {
+            toast.error('Google Sign-In was cancelled');
+            setSocialLoading(null);
+          }
+        },
+        error_callback: (error) => {
+          console.error('Google OAuth error:', error);
+          toast.error('Google Sign-In failed. Please try again.');
+          setSocialLoading(null);
+        }
+      });
+
+      // Request access token (opens popup)
+      tokenClient.requestAccessToken();
+    } catch (error) {
+      console.error('Google Sign-In error:', error);
+      toast.error('Google Sign-In failed. Please try again.');
+      setSocialLoading(null);
+    }
+  };
+
+  // Handle Google access token
+  const handleGoogleToken = async (accessToken) => {
+    try {
+      // Get user info from Google
+      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      
+      if (!userInfoResponse.ok) {
+        throw new Error('Failed to get user info from Google');
+      }
+      
+      const userInfo = await userInfoResponse.json();
+      await processGoogleUser(userInfo);
+    } catch (error) {
+      console.error('Google token error:', error);
+      toast.error('Failed to get user info from Google');
+      setSocialLoading(null);
+    }
+  };
+
+  // Process Google user data
+  const processGoogleUser = async (googleUser) => {
+    try {
+      // Try to login or register with Google
+      const response = await axios.post('/api/auth/google-signin', {
+        email: googleUser.email,
+        name: googleUser.name || googleUser.given_name + ' ' + (googleUser.family_name || ''),
+        googleId: googleUser.sub || googleUser.id,
+        profilePhoto: googleUser.picture
+      });
+
+      const userData = {
+        ...response.data.user,
+        token: response.data.token
+      };
+      localStorage.setItem("user", JSON.stringify(userData));
+      toast.success(`Welcome${response.data.isNewUser ? '' : ' back'}, ${userData.name?.split(' ')[0]}!`);
+      onLogin(userData, "patient");
+    } catch (error) {
+      console.error('Google sign-in API error:', error);
+      toast.error(error.response?.data?.message || 'Google sign-in failed');
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  // Handle Apple Sign-In (placeholder - requires Apple Developer account)
+  const handleAppleSignIn = () => {
+    toast('Apple Sign-In requires Apple Developer account setup', { icon: 'ℹ️' });
+  };
 
   // ECG Logo SVG with animation
   const ECGLogo = () => (
@@ -124,7 +246,7 @@ function AuthPremium({ onLogin, onBack }) {
             onMouseLeave={(e) => e.target.style.color = '#64748b'}
           >
             <i className="fas fa-arrow-left"></i>
-            Back to Home
+            {t('backToHome')}
           </button>
 
           {/* Logo */}
@@ -135,21 +257,26 @@ function AuthPremium({ onLogin, onBack }) {
             <span className="auth-premium__logo-text">HealthSync</span>
           </div>
 
+          {/* Language Selector */}
+          <div style={{ position: 'absolute', top: '20px', right: '20px' }}>
+            <LanguageSelector />
+          </div>
+
           {/* Title */}
           <h1 className="auth-premium__title">
-            {isLogin ? 'Welcome back' : 'Create your account'}
+            {isLogin ? t('welcomeBack') : t('createAccount')}
           </h1>
           <p className="auth-premium__subtitle">
             {isLogin 
-              ? 'Sign in to access your healthcare dashboard' 
-              : 'Start your journey to better healthcare'}
+              ? t('signInAccess')
+              : t('startJourney')}
           </p>
 
           {/* Form */}
           <form className="auth-premium__form" onSubmit={handleSubmit}>
             {!isLogin && (
               <div className="auth-premium__field">
-                <label className="auth-premium__label">Full Name</label>
+                <label className="auth-premium__label">{t('fullName')}</label>
                 <div className="input-group-premium">
                   <span className="input-icon"><i className="fas fa-user"></i></span>
                   <input
@@ -166,7 +293,7 @@ function AuthPremium({ onLogin, onBack }) {
             )}
 
             <div className="auth-premium__field">
-              <label className="auth-premium__label">Email Address</label>
+              <label className="auth-premium__label">{t('emailAddress')}</label>
               <div className="input-group-premium">
                 <span className="input-icon"><i className="fas fa-envelope"></i></span>
                 <input
@@ -183,7 +310,7 @@ function AuthPremium({ onLogin, onBack }) {
 
             {!isLogin && (
               <div className="auth-premium__field">
-                <label className="auth-premium__label">Phone Number</label>
+                <label className="auth-premium__label">{t('phoneNumber')}</label>
                 <div className="input-group-premium">
                   <span className="input-icon"><i className="fas fa-phone"></i></span>
                   <input
@@ -200,7 +327,7 @@ function AuthPremium({ onLogin, onBack }) {
             )}
 
             <div className="auth-premium__field">
-              <label className="auth-premium__label">Password</label>
+              <label className="auth-premium__label">{t('password')}</label>
               <div className="input-group-premium">
                 <span className="input-icon"><i className="fas fa-lock"></i></span>
                 <input
@@ -235,7 +362,7 @@ function AuthPremium({ onLogin, onBack }) {
 
             {!isLogin && (
               <div className="auth-premium__field">
-                <label className="auth-premium__label">Confirm Password</label>
+                <label className="auth-premium__label">{t('confirmPassword')}</label>
                 <div className="input-group-premium">
                   <span className="input-icon"><i className="fas fa-lock"></i></span>
                   <input
@@ -260,7 +387,7 @@ function AuthPremium({ onLogin, onBack }) {
                   fontSize: '14px',
                   cursor: 'pointer'
                 }}>
-                  Forgot password?
+                  {t('forgotPassword')}
                 </button>
               </div>
             )}
@@ -272,24 +399,38 @@ function AuthPremium({ onLogin, onBack }) {
               style={{ width: '100%', marginTop: '8px', padding: '14px' }}
             >
               {loading ? (
-                <><i className="fas fa-spinner fa-spin"></i> Please wait...</>
+                <><i className="fas fa-spinner fa-spin"></i> {t('loading')}</>
               ) : (
-                isLogin ? 'Sign in' : 'Create account'
+                isLogin ? t('signIn') : t('createAccount')
               )}
             </button>
           </form>
 
           {/* Divider */}
           <div className="auth-premium__divider">
-            <span>or continue with</span>
+            <span>{t('orContinueWith')}</span>
           </div>
 
           {/* Social Login */}
           <div style={{ display: 'flex', gap: '12px' }}>
-            <button className="btn-premium btn-premium-secondary" style={{ flex: 1 }}>
-              <i className="fab fa-google"></i> Google
+            <button 
+              className="btn-premium btn-premium-secondary" 
+              style={{ flex: 1 }}
+              onClick={handleGoogleSignIn}
+              disabled={socialLoading === 'google'}
+            >
+              {socialLoading === 'google' ? (
+                <><i className="fas fa-spinner fa-spin"></i> {t('signingIn')}</>
+              ) : (
+                <><i className="fab fa-google"></i> Google</>
+              )}
             </button>
-            <button className="btn-premium btn-premium-secondary" style={{ flex: 1 }}>
+            <button 
+              className="btn-premium btn-premium-secondary" 
+              style={{ flex: 1 }}
+              onClick={handleAppleSignIn}
+              disabled={socialLoading === 'apple'}
+            >
               <i className="fab fa-apple"></i> Apple
             </button>
           </div>
@@ -297,9 +438,9 @@ function AuthPremium({ onLogin, onBack }) {
           {/* Footer */}
           <div className="auth-premium__footer">
             {isLogin ? (
-              <>Don't have an account? <a href="#" onClick={(e) => { e.preventDefault(); setIsLogin(false); }}>Sign up</a></>
+              <>{t('dontHaveAccount')} <a href="#" onClick={(e) => { e.preventDefault(); setIsLogin(false); }}>{t('signUp')}</a></>
             ) : (
-              <>Already have an account? <a href="#" onClick={(e) => { e.preventDefault(); setIsLogin(true); }}>Sign in</a></>
+              <>{t('alreadyHaveAccount')} <a href="#" onClick={(e) => { e.preventDefault(); setIsLogin(true); }}>{t('signIn')}</a></>
             )}
           </div>
         </div>

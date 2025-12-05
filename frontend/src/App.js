@@ -7,6 +7,9 @@ import './styles/admin-dashboard-professional.css';
 import './styles/admin-dashboard-pro.css';
 import toast, { Toaster } from 'react-hot-toast';
 
+// Language/i18n
+import { LanguageProvider } from './i18n/LanguageContext';
+
 // Mobile/Capacitor initialization
 import { useMobileInit } from './mobile/useMobileInit';
 
@@ -60,20 +63,12 @@ const AdminDashboard = React.lazy(() =>
 );
 
 const ClinicDashboard = React.lazy(() =>
-  import("./components/ClinicDashboard").catch(() => ({
+  import("./components/ClinicDashboardPro").catch(() => ({
     default: ({ receptionist }) => (
-      <div >
-        <h4><i ></i>Clinic Dashboard</h4>
-        <p>Welcome {receptionist.name}! Clinic management is loading...</p>
-        <div >
-          <div >
-            <button  disabled>
-              <i ></i>Book Appointment</button>
-          </div>
-          <div >
-            <button  disabled>
-              <i ></i>Manage Patients</button>
-          </div>
+      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+        <div className="text-center">
+          <h4 className="text-xl font-bold text-slate-800">Clinic Dashboard</h4>
+          <p className="text-slate-600">Welcome {receptionist?.name}! Loading...</p>
         </div>
       </div>
     )
@@ -92,7 +87,14 @@ const DoctorDashboard = React.lazy(() =>
 );
 
 function App() {
-  const [currentView, setCurrentView] = useState("landing");
+  // Initialize view from URL hash or default to landing
+  const getInitialView = () => {
+    const hash = window.location.hash.slice(1); // Remove #
+    const validViews = ['landing', 'auth', 'dashboard', 'corporate'];
+    return validViews.includes(hash) ? hash : 'landing';
+  };
+
+  const [currentView, setCurrentViewState] = useState(getInitialView);
   const [user, setUser] = useState(null);
   const [admin, setAdmin] = useState(null);
   const [receptionist, setReceptionist] = useState(null);
@@ -105,6 +107,38 @@ function App() {
     return saved === 'true';
   });
   const [activeSection, setActiveSection] = useState("home");
+
+  // Custom setCurrentView that also updates browser history
+  const setCurrentView = useCallback((view, replace = false) => {
+    setCurrentViewState(view);
+    const newUrl = view === 'landing' ? window.location.pathname : `${window.location.pathname}#${view}`;
+    if (replace) {
+      window.history.replaceState({ view }, '', newUrl);
+    } else {
+      window.history.pushState({ view }, '', newUrl);
+    }
+  }, []);
+
+  // Handle browser back/forward buttons
+  useEffect(() => {
+    const handlePopState = (event) => {
+      if (event.state && event.state.view) {
+        setCurrentViewState(event.state.view);
+      } else {
+        // No state, check hash or default to landing
+        const hash = window.location.hash.slice(1);
+        const validViews = ['landing', 'auth', 'dashboard', 'corporate'];
+        setCurrentViewState(validViews.includes(hash) ? hash : 'landing');
+      }
+    };
+
+    window.addEventListener('popstate', handlePopState);
+    
+    // Set initial state
+    window.history.replaceState({ view: currentView }, '', window.location.href);
+
+    return () => window.removeEventListener('popstate', handlePopState);
+  }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
   // Initialize mobile services (Capacitor)
   const userId = user?.id || user?._id;
@@ -197,8 +231,8 @@ function App() {
   };
 
   useEffect(() => {
-    if (user || admin || receptionist) {
-      setCurrentView("dashboard");
+    if (user || admin || receptionist || doctor) {
+      setCurrentView("dashboard", true); // Replace to prevent back to auth
     }
 
     const handleKeyPress = (e) => {
@@ -217,7 +251,7 @@ function App() {
 
     document.addEventListener('keydown', handleKeyPress);
     return () => document.removeEventListener('keydown', handleKeyPress);
-  }, [user, admin, receptionist, darkMode, toggleDarkMode]);
+  }, [user, admin, receptionist, doctor, toggleDarkMode, setCurrentView]);
 
   const handleLogin = (userData, userType) => {
     if (userType === 'admin') {
@@ -229,7 +263,7 @@ function App() {
     } else {
       setUser(userData);
     }
-    setCurrentView("dashboard");
+    setCurrentView("dashboard", true); // Replace history on login
     addNotification(`Welcome ${userData.name}!`, 'success');
   };
 
@@ -243,7 +277,7 @@ function App() {
     localStorage.removeItem("receptionist");
     localStorage.removeItem("doctor");
     localStorage.removeItem("doctorToken");
-    setCurrentView("landing");
+    setCurrentView("landing", true); // Replace history on logout
     toast.success('Logged out successfully');
   };
 
@@ -1392,6 +1426,7 @@ function App() {
   );
 
   return (
+    <LanguageProvider>
     <div>
       {/* Global Toast Notifications */}
       <Toaster
@@ -1653,6 +1688,7 @@ function App() {
         </button>
       )}
     </div>
+    </LanguageProvider>
   );
 }
 

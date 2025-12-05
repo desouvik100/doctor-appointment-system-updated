@@ -1,16 +1,29 @@
 // frontend/src/components/LandingPagePremium.js
 // Premium SaaS Landing Page - Stripe/Notion/Linear inspired
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import '../styles/premium-saas.css';
+import { useLanguage } from '../i18n/LanguageContext';
+import LanguageSelector from './LanguageSelector';
 
 const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode = () => {} }) => {
+  const { t, language } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [activeFaq, setActiveFaq] = useState(null);
+  const [showBackToTop, setShowBackToTop] = useState(false);
 
   useEffect(() => {
-    const handleScroll = () => setScrolled(window.scrollY > 20);
+    const handleScroll = () => {
+      setScrolled(window.scrollY > 20);
+      setShowBackToTop(window.scrollY > 500);
+    };
     window.addEventListener('scroll', handleScroll, { passive: true });
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
+
+  const scrollToTop = () => {
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  };
 
   // ECG Logo SVG Component
   const ECGLogo = ({ className = '' }) => (
@@ -29,12 +42,27 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
   );
 
   const features = [
-    { icon: 'fa-video', title: 'Video Consultations', desc: 'HD video calls with automatic Google Meet links' },
-    { icon: 'fa-hospital', title: 'In-Clinic Visits', desc: 'Book in-person appointments with queue management' },
-    { icon: 'fa-calendar-check', title: 'Smart Scheduling', desc: 'Real-time availability with 1-minute precision' },
-    { icon: 'fa-robot', title: 'AI Health Assistant', desc: '24/7 symptom checker and health guidance' },
-    { icon: 'fa-shield-alt', title: 'Secure & Private', desc: 'HIPAA compliant with end-to-end encryption' },
-    { icon: 'fa-mobile-alt', title: 'Mobile Ready', desc: 'Book appointments anywhere, anytime' },
+    { icon: 'fa-video', titleKey: 'videoConsultations', descKey: 'videoConsultationsDesc' },
+    { icon: 'fa-hospital', titleKey: 'inClinicVisits', descKey: 'inClinicVisitsDesc' },
+    { icon: 'fa-calendar-check', titleKey: 'smartScheduling', descKey: 'smartSchedulingDesc' },
+    { icon: 'fa-robot', titleKey: 'aiHealthAssistant', descKey: 'aiHealthAssistantDesc' },
+    { icon: 'fa-shield-alt', titleKey: 'securePrivate', descKey: 'securePrivateDesc' },
+    { icon: 'fa-mobile-alt', titleKey: 'mobileReady', descKey: 'mobileReadyDesc' },
+  ];
+
+  const pricingPlans = [
+    { name: 'Basic', price: 'Free', period: 'forever', features: ['5 appointments/month', 'Video consultations', 'AI health assistant', 'Email support'], cta: 'Get Started', popular: false },
+    { name: 'Pro', price: '₹299', period: '/month', features: ['Unlimited appointments', 'Priority booking', 'Health analytics', 'Family accounts (up to 5)', '24/7 support', 'Medicine reminders'], cta: 'Start Free Trial', popular: true },
+    { name: 'Enterprise', price: 'Custom', period: '', features: ['Everything in Pro', 'Corporate wellness', 'Dedicated account manager', 'Custom integrations', 'SLA guarantee', 'On-site health camps'], cta: 'Contact Sales', popular: false },
+  ];
+
+  const faqs = [
+    { q: 'How do I book an appointment?', a: 'Simply sign up, browse doctors by specialty or location, select your preferred time slot, and confirm your booking. You\'ll receive instant confirmation via email and SMS.' },
+    { q: 'Are the doctors verified?', a: 'Yes, all doctors on HealthSync are verified medical professionals. We verify their medical licenses, qualifications, and credentials before they can join our platform.' },
+    { q: 'How do video consultations work?', a: 'After booking a video consultation, you\'ll receive a Google Meet link. At your appointment time, simply click the link to join the video call with your doctor.' },
+    { q: 'Can I cancel or reschedule appointments?', a: 'Yes, you can cancel or reschedule appointments up to 2 hours before the scheduled time through your dashboard at no extra charge.' },
+    { q: 'Is my health data secure?', a: 'Absolutely. We use bank-level encryption and are HIPAA compliant. Your health data is never shared without your explicit consent.' },
+    { q: 'Do you offer refunds?', a: 'Yes, if a doctor cancels or doesn\'t show up, you\'ll receive a full refund. For other cases, please contact our support team.' },
   ];
 
   return (
@@ -50,19 +78,17 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
           </div>
 
           <div className="nav-premium__links">
-            <a href="#features" className="nav-premium__link">Features</a>
-            <a href="#how-it-works" className="nav-premium__link">How it Works</a>
-            <a href="#testimonials" className="nav-premium__link">Testimonials</a>
-            <button 
-              className="nav-premium__link"
-              onClick={() => onNavigate('corporate')}
-              style={{ background: 'none', border: 'none', cursor: 'pointer' }}
-            >
-              For Business
-            </button>
+            <a href="#features" className="nav-premium__link">{t('features')}</a>
+            <a href="#how-it-works" className="nav-premium__link">{t('howItWorks')}</a>
+            <a href="#pricing" className="nav-premium__link">{t('pricing')}</a>
+            <a href="#security" className="nav-premium__link">{t('security')}</a>
+            <a href="#faq" className="nav-premium__link">{t('faq')}</a>
           </div>
 
           <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+            {/* Language Selector - Always visible */}
+            <LanguageSelector darkMode={!scrolled} />
+            
             <button
               onClick={toggleDarkMode}
               className="btn-premium btn-premium-ghost"
@@ -72,19 +98,59 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             </button>
             
             <button 
-              className="btn-premium btn-premium-secondary"
+              className="btn-premium btn-premium-secondary hide-mobile"
               onClick={() => onNavigate('login')}
             >
-              Sign In
+              {t('signIn')}
             </button>
             <button 
-              className="btn-premium btn-premium-primary"
+              className="btn-premium btn-premium-primary hide-mobile"
               onClick={() => onNavigate('register')}
             >
-              Get Started
+              {t('getStarted')}
+            </button>
+            
+            {/* Mobile Menu Button */}
+            <button 
+              className="show-mobile"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+              style={{ 
+                background: 'none', 
+                border: 'none', 
+                color: darkMode ? '#fff' : '#0f172a',
+                fontSize: '24px',
+                cursor: 'pointer',
+                display: 'none'
+              }}
+            >
+              <i className={`fas ${mobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
             </button>
           </div>
         </div>
+        
+        {/* Mobile Menu */}
+        {mobileMenuOpen && (
+          <div style={{
+            position: 'absolute',
+            top: '100%',
+            left: 0,
+            right: 0,
+            background: darkMode ? '#1e293b' : '#ffffff',
+            borderTop: '1px solid rgba(0,0,0,0.1)',
+            padding: '16px 24px',
+            boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
+          }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+              <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#0f172a', textDecoration: 'none', fontWeight: '500' }}>{t('features')}</a>
+              <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#0f172a', textDecoration: 'none', fontWeight: '500' }}>{t('pricing')}</a>
+              <a href="#security" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#0f172a', textDecoration: 'none', fontWeight: '500' }}>{t('security')}</a>
+              <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#0f172a', textDecoration: 'none', fontWeight: '500' }}>{t('faq')}</a>
+              <hr style={{ border: 'none', borderTop: '1px solid rgba(0,0,0,0.1)', margin: '8px 0' }} />
+              <button onClick={() => { onNavigate('login'); setMobileMenuOpen(false); }} style={{ padding: '12px', background: 'transparent', border: '1px solid #6366f1', color: '#6366f1', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>{t('signIn')}</button>
+              <button onClick={() => { onNavigate('register'); setMobileMenuOpen(false); }} style={{ padding: '12px', background: '#6366f1', border: 'none', color: '#fff', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>{t('getStarted')}</button>
+            </div>
+          </div>
+        )}
       </nav>
 
       {/* Hero Section */}
@@ -93,17 +159,16 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
           <div className="hero-premium__content animate-slide-up">
             <div className="hero-premium__badge">
               <i className="fas fa-sparkles" style={{ fontSize: '12px' }}></i>
-              Now with AI-powered health insights
+              {t('aiHealthAssistant')}
             </div>
             
             <h1 className="hero-premium__title">
-              Healthcare appointments,<br />
-              <span>simplified.</span>
+              {t('heroTitle')}<br />
+              <span>{t('heroTitleHighlight')}</span>
             </h1>
             
             <p className="hero-premium__subtitle">
-              Book video consultations or in-clinic visits with verified doctors. 
-              Get AI-powered health guidance, smart scheduling, and seamless care management.
+              {t('heroSubtitle')}
             </p>
             
             <div className="hero-premium__actions">
@@ -116,35 +181,35 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                   fontWeight: '600'
                 }}
               >
-                Start for free
+                {t('startForFree')}
                 <i className="fas fa-arrow-right"></i>
               </button>
               <button 
                 className="btn-premium btn-premium-lg"
-                onClick={() => onNavigate('login')}
+                onClick={() => onNavigate('register')}
                 style={{ 
-                  background: 'rgba(255,255,255,0.15)', 
+                  background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
                   color: '#ffffff',
-                  border: '1px solid rgba(255,255,255,0.3)'
+                  border: 'none'
                 }}
               >
-                <i className="fas fa-play-circle"></i>
-                Watch demo
+                <i className="fas fa-robot"></i>
+                {language === 'bn' ? 'ডাক্তার খুঁজুন' : language === 'hi' ? 'डॉक्टर खोजें' : 'Find My Doctor'}
               </button>
             </div>
             
             <div className="hero-premium__stats">
               <div className="hero-premium__stat">
                 <div className="hero-premium__stat-value">500+</div>
-                <div className="hero-premium__stat-label">Verified Doctors</div>
+                <div className="hero-premium__stat-label">{t('verifiedDoctors')}</div>
               </div>
               <div className="hero-premium__stat">
                 <div className="hero-premium__stat-value">50K+</div>
-                <div className="hero-premium__stat-label">Happy Patients</div>
+                <div className="hero-premium__stat-label">{t('happyPatients')}</div>
               </div>
               <div className="hero-premium__stat">
                 <div className="hero-premium__stat-value">99.9%</div>
-                <div className="hero-premium__stat-label">Uptime</div>
+                <div className="hero-premium__stat-label">{t('uptime')}</div>
               </div>
             </div>
 
@@ -347,7 +412,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             marginBottom: '16px',
             lineHeight: '1.2'
           }}>
-            Everything you need for<br />modern healthcare
+            {t('everythingYouNeed')}
           </h2>
           <p style={{ 
             color: '#475569', 
@@ -356,7 +421,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             maxWidth: '600px',
             margin: '0 auto'
           }}>
-            Powerful features designed to make healthcare accessible and efficient
+            {t('powerfulFeatures')}
           </p>
         </div>
         
@@ -392,7 +457,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                 color: '#0f172a', 
                 marginBottom: '12px' 
               }}>
-                {feature.title}
+                {t(feature.titleKey)}
               </h3>
               <p style={{ 
                 fontSize: '14px', 
@@ -400,7 +465,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                 lineHeight: '1.6',
                 margin: 0
               }}>
-                {feature.desc}
+                {t(feature.descKey)}
               </p>
             </div>
           ))}
@@ -408,23 +473,23 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" style={{ padding: '120px 24px', background: '#ffffff' }}>
+      <section id="how-it-works" style={{ padding: '120px 24px', background: '#ffffff', position: 'relative', zIndex: 10 }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '16px', color: '#0f172a' }}>How it works</h2>
+            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '16px', color: '#0f172a' }}>{t('howItWorksTitle')}</h2>
             <p style={{ color: '#64748b', fontSize: '18px' }}>
-              Get started in minutes with our simple process
+              {t('getStartedMinutes')}
             </p>
           </div>
           
-          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '32px' }}>
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '32px' }}>
             {[
-              { step: '1', title: 'Find a Doctor', desc: 'Browse verified doctors by specialty, location, or availability', icon: 'fa-search' },
-              { step: '2', title: 'Choose Type', desc: 'Select video consultation or in-clinic visit based on your preference', icon: 'fa-hand-pointer' },
-              { step: '3', title: 'Book Slot', desc: 'Pick your preferred date and time with real-time availability', icon: 'fa-calendar-alt' },
-              { step: '4', title: 'Get Care', desc: 'Attend your appointment and receive quality healthcare', icon: 'fa-heart' },
+              { step: '1', titleKey: 'findDoctor', descKey: 'findDoctorDesc', icon: 'fa-search' },
+              { step: '2', titleKey: 'chooseType', descKey: 'chooseTypeDesc', icon: 'fa-hand-pointer' },
+              { step: '3', titleKey: 'bookSlot', descKey: 'bookSlotDesc', icon: 'fa-calendar-alt' },
+              { step: '4', titleKey: 'getCare', descKey: 'getCareDesc', icon: 'fa-heart' },
             ].map((item, index) => (
-              <div key={index} style={{ textAlign: 'center' }}>
+              <div key={index} style={{ textAlign: 'center', padding: '24px', background: '#f8fafc', borderRadius: '16px' }}>
                 <div style={{
                   width: '64px',
                   height: '64px',
@@ -447,9 +512,9 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                   marginBottom: '8px',
                   textTransform: 'uppercase',
                   letterSpacing: '0.1em'
-                }}>Step {item.step}</div>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px', color: '#0f172a' }}>{item.title}</h3>
-                <p style={{ fontSize: '14px', color: '#64748b', lineHeight: '1.6' }}>{item.desc}</p>
+                }}>{t('step')} {item.step}</div>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px', color: '#0f172a' }}>{t(item.titleKey)}</h3>
+                <p style={{ fontSize: '14px', color: '#64748b', lineHeight: '1.6' }}>{t(item.descKey)}</p>
               </div>
             ))}
           </div>
@@ -457,12 +522,12 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" style={{ padding: '120px 24px', background: '#f8fafc' }}>
+      <section id="testimonials" style={{ padding: '120px 24px', background: '#f8fafc', position: 'relative', zIndex: 10 }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '16px', color: '#0f172a' }}>Loved by thousands</h2>
+            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '16px', color: '#0f172a' }}>{t('lovedByThousands')}</h2>
             <p style={{ color: '#64748b', fontSize: '18px' }}>
-              See what our users have to say about HealthSync
+              {t('seeWhatUsers')}
             </p>
           </div>
           
@@ -526,6 +591,218 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
       </section>
 
 
+      {/* Pricing Section */}
+      <section id="pricing" style={{ padding: '120px 24px', background: '#ffffff', position: 'relative', zIndex: 10 }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '64px' }}>
+            <div style={{ display: 'inline-block', padding: '6px 16px', background: '#ede9fe', borderRadius: '20px', fontSize: '13px', fontWeight: '600', color: '#7c3aed', marginBottom: '16px' }}>{t('pricing').toUpperCase()}</div>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: '700', marginBottom: '16px', color: '#0f172a' }}>{t('pricingTitle')}</h2>
+            <p style={{ color: '#64748b', fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>{t('pricingSubtitle')}</p>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', maxWidth: '1000px', margin: '0 auto' }}>
+            {pricingPlans.map((plan, index) => (
+              <div key={index} style={{ 
+                padding: '32px', 
+                background: plan.popular ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' : '#ffffff', 
+                borderRadius: '24px', 
+                border: plan.popular ? 'none' : '1px solid #e2e8f0',
+                boxShadow: plan.popular ? '0 20px 40px rgba(99, 102, 241, 0.3)' : '0 1px 3px rgba(0,0,0,0.05)',
+                position: 'relative',
+                transform: plan.popular ? 'scale(1.05)' : 'scale(1)'
+              }}>
+                {plan.popular && <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: '#fbbf24', color: '#0f172a', padding: '4px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>MOST POPULAR</div>}
+                <h3 style={{ fontSize: '20px', fontWeight: '600', color: plan.popular ? '#fff' : '#0f172a', marginBottom: '8px' }}>{plan.name}</h3>
+                <div style={{ marginBottom: '24px' }}>
+                  <span style={{ fontSize: '3rem', fontWeight: '700', color: plan.popular ? '#fff' : '#0f172a' }}>{plan.price}</span>
+                  <span style={{ fontSize: '16px', color: plan.popular ? 'rgba(255,255,255,0.8)' : '#64748b' }}>{plan.period}</span>
+                </div>
+                <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px 0' }}>
+                  {plan.features.map((feature, i) => (
+                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', fontSize: '14px', color: plan.popular ? 'rgba(255,255,255,0.9)' : '#475569' }}>
+                      <i className="fas fa-check" style={{ color: plan.popular ? '#fff' : '#22c55e', fontSize: '12px' }}></i>
+                      {feature}
+                    </li>
+                  ))}
+                </ul>
+                <button onClick={() => onNavigate('register')} style={{ 
+                  width: '100%', 
+                  padding: '14px', 
+                  background: plan.popular ? '#fff' : '#6366f1', 
+                  color: plan.popular ? '#6366f1' : '#fff', 
+                  border: 'none', 
+                  borderRadius: '12px', 
+                  fontSize: '15px', 
+                  fontWeight: '600', 
+                  cursor: 'pointer',
+                  transition: 'transform 0.2s, box-shadow 0.2s'
+                }}
+                onMouseEnter={(e) => { e.target.style.transform = 'translateY(-2px)'; e.target.style.boxShadow = '0 4px 12px rgba(0,0,0,0.15)'; }}
+                onMouseLeave={(e) => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = 'none'; }}
+                >{plan.cta}</button>
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* Privacy & Security Section */}
+      <section id="security" style={{ padding: '120px 24px', background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)', position: 'relative', zIndex: 10, overflow: 'hidden' }}>
+        {/* Background decoration */}
+        <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(34, 197, 94, 0.1) 0%, transparent 70%)', borderRadius: '50%' }}></div>
+        <div style={{ position: 'absolute', bottom: '10%', right: '5%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%)', borderRadius: '50%' }}></div>
+        
+        <div style={{ maxWidth: '1280px', margin: '0 auto', position: 'relative', zIndex: 1 }}>
+          <div style={{ textAlign: 'center', marginBottom: '64px' }}>
+            <div style={{ display: 'inline-flex', alignItems: 'center', gap: '8px', padding: '10px 20px', background: 'rgba(34, 197, 94, 0.15)', borderRadius: '24px', marginBottom: '20px', border: '1px solid rgba(34, 197, 94, 0.3)' }}>
+              <i className="fas fa-shield-alt" style={{ color: '#22c55e', fontSize: '16px' }}></i>
+              <span style={{ color: '#22c55e', fontSize: '14px', fontWeight: '600', letterSpacing: '0.05em' }}>{t('securityFirst').toUpperCase()}</span>
+            </div>
+            <h2 style={{ fontSize: '2.75rem', fontWeight: '700', color: '#fff', marginBottom: '20px', lineHeight: '1.2' }}>{t('yourPrivacyMatters')}</h2>
+            <p style={{ color: '#94a3b8', fontSize: '18px', maxWidth: '650px', margin: '0 auto', lineHeight: '1.7' }}>{t('securityDesc')}</p>
+          </div>
+          
+          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '24px' }}>
+            {[
+              { icon: 'fa-lock', titleKey: 'encryption', descKey: 'encryptionDesc' },
+              { icon: 'fa-user-shield', titleKey: 'hipaaCompliant', descKey: 'hipaaDesc' },
+              { icon: 'fa-database', titleKey: 'secureStorage', descKey: 'secureStorageDesc' },
+              { icon: 'fa-eye-slash', titleKey: 'noDataSelling', descKey: 'noDataSellingDesc' },
+            ].map((item, index) => (
+              <div key={index} style={{ 
+                padding: '32px', 
+                background: 'rgba(255,255,255,0.03)', 
+                borderRadius: '20px', 
+                border: '1px solid rgba(255,255,255,0.08)',
+                backdropFilter: 'blur(10px)',
+                transition: 'all 0.3s ease'
+              }}
+              onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.08)'; e.currentTarget.style.transform = 'translateY(-4px)'; }}
+              onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(255,255,255,0.03)'; e.currentTarget.style.transform = 'translateY(0)'; }}
+              >
+                <div style={{ width: '56px', height: '56px', background: 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)', borderRadius: '14px', display: 'flex', alignItems: 'center', justifyContent: 'center', marginBottom: '20px', boxShadow: '0 8px 20px rgba(34, 197, 94, 0.3)' }}>
+                  <i className={`fas ${item.icon}`} style={{ color: '#fff', fontSize: '22px' }}></i>
+                </div>
+                <h3 style={{ fontSize: '20px', fontWeight: '600', color: '#fff', marginBottom: '12px' }}>{t(item.titleKey)}</h3>
+                <p style={{ fontSize: '15px', color: '#94a3b8', lineHeight: '1.7', margin: 0 }}>{t(item.descKey)}</p>
+              </div>
+            ))}
+          </div>
+          
+          {/* Certification Badges */}
+          <div style={{ marginTop: '64px', textAlign: 'center' }}>
+            <p style={{ color: '#64748b', fontSize: '14px', marginBottom: '24px', fontWeight: '500' }}>{t('certifiedCompliant')}</p>
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '20px', flexWrap: 'wrap' }}>
+              {['ISO 27001', 'SOC 2', 'HIPAA', 'GDPR'].map((cert, i) => (
+                <div key={i} style={{ 
+                  display: 'flex', 
+                  alignItems: 'center', 
+                  gap: '10px', 
+                  padding: '14px 24px', 
+                  background: 'rgba(34, 197, 94, 0.1)', 
+                  borderRadius: '12px', 
+                  border: '1px solid rgba(34, 197, 94, 0.2)',
+                  transition: 'all 0.2s ease'
+                }}
+                onMouseEnter={(e) => { e.currentTarget.style.background = 'rgba(34, 197, 94, 0.2)'; }}
+                onMouseLeave={(e) => { e.currentTarget.style.background = 'rgba(34, 197, 94, 0.1)'; }}
+                >
+                  <i className="fas fa-certificate" style={{ color: '#22c55e', fontSize: '16px' }}></i>
+                  <span style={{ color: '#fff', fontSize: '15px', fontWeight: '600' }}>{cert}</span>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* FAQ Section */}
+      <section id="faq" style={{ padding: '120px 24px', background: '#f8fafc', position: 'relative', zIndex: 10 }}>
+        <div style={{ maxWidth: '800px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '64px' }}>
+            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '16px', color: '#0f172a' }}>{t('faqTitle')}</h2>
+            <p style={{ color: '#64748b', fontSize: '18px' }}>{t('faqSubtitle')}</p>
+          </div>
+          
+          <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+            {faqs.map((faq, index) => (
+              <div key={index} style={{ 
+                background: '#ffffff', 
+                borderRadius: '16px', 
+                border: '1px solid #e2e8f0',
+                overflow: 'hidden'
+              }}>
+                <button 
+                  onClick={() => setActiveFaq(activeFaq === index ? null : index)}
+                  style={{ 
+                    width: '100%', 
+                    padding: '20px 24px', 
+                    background: 'transparent', 
+                    border: 'none', 
+                    display: 'flex', 
+                    justifyContent: 'space-between', 
+                    alignItems: 'center',
+                    cursor: 'pointer',
+                    textAlign: 'left'
+                  }}
+                >
+                  <span style={{ fontSize: '16px', fontWeight: '600', color: '#0f172a' }}>{faq.q}</span>
+                  <i className={`fas fa-chevron-${activeFaq === index ? 'up' : 'down'}`} style={{ color: '#6366f1', fontSize: '14px' }}></i>
+                </button>
+                {activeFaq === index && (
+                  <div style={{ padding: '0 24px 20px', color: '#64748b', fontSize: '15px', lineHeight: '1.7' }}>
+                    {faq.a}
+                  </div>
+                )}
+              </div>
+            ))}
+          </div>
+        </div>
+      </section>
+
+      {/* App Download Section */}
+      <section style={{ padding: '100px 24px', background: '#0f172a', position: 'relative', zIndex: 10 }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '48px' }}>
+          <div style={{ flex: '1', minWidth: '300px' }}>
+            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', color: '#fff', marginBottom: '16px' }}>{t('getTheApp')}</h2>
+            <p style={{ color: '#94a3b8', fontSize: '18px', lineHeight: '1.7', marginBottom: '32px' }}>{t('downloadAppDesc')}</p>
+            <div style={{ display: 'flex', gap: '16px', flexWrap: 'wrap' }}>
+              <button style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 24px', background: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer' }}>
+                <i className="fab fa-apple" style={{ fontSize: '28px', color: '#0f172a' }}></i>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '10px', color: '#64748b' }}>Download on the</div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: '#0f172a' }}>App Store</div>
+                </div>
+              </button>
+              <button style={{ display: 'flex', alignItems: 'center', gap: '12px', padding: '12px 24px', background: '#fff', border: 'none', borderRadius: '12px', cursor: 'pointer' }}>
+                <i className="fab fa-google-play" style={{ fontSize: '24px', color: '#0f172a' }}></i>
+                <div style={{ textAlign: 'left' }}>
+                  <div style={{ fontSize: '10px', color: '#64748b' }}>Get it on</div>
+                  <div style={{ fontSize: '16px', fontWeight: '600', color: '#0f172a' }}>Google Play</div>
+                </div>
+              </button>
+            </div>
+          </div>
+          <div style={{ flex: '1', minWidth: '300px', display: 'flex', justifyContent: 'center' }}>
+            <div style={{ position: 'relative' }}>
+              <div style={{ width: '220px', height: '440px', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', borderRadius: '36px', padding: '8px', boxShadow: '0 30px 60px rgba(0,0,0,0.3)' }}>
+                <div style={{ width: '100%', height: '100%', background: '#1e293b', borderRadius: '28px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                  <div style={{ width: '60px', height: '60px', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <svg viewBox="0 0 50 32" fill="none" style={{ width: 32, height: 24 }}>
+                      <path d="M0 16 L8 16 L12 16" stroke="rgba(255,255,255,0.4)" strokeWidth="2.5" strokeLinecap="round"/>
+                      <path d="M12 16 L16 6 L20 26 L24 10 L28 22 L32 16" stroke="#fff" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round"/>
+                      <path d="M32 16 L40 16 L50 16" stroke="rgba(255,255,255,0.4)" strokeWidth="2.5" strokeLinecap="round"/>
+                    </svg>
+                  </div>
+                  <div style={{ color: '#fff', fontSize: '18px', fontWeight: '700' }}>{t('appName')}</div>
+                  <div style={{ color: '#94a3b8', fontSize: '12px' }}>{t('yourHealthSimplified')}</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </section>
+
       {/* CTA Section */}
       <section style={{ 
         padding: '100px 24px', 
@@ -554,10 +831,10 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
         
         <div style={{ maxWidth: '800px', margin: '0 auto', textAlign: 'center', position: 'relative', zIndex: 1 }}>
           <h2 style={{ fontSize: '2.5rem', fontWeight: '700', color: '#ffffff', marginBottom: '16px' }}>
-            Ready to transform your healthcare experience?
+            {t('readyToTransform')}
           </h2>
           <p style={{ fontSize: '18px', color: 'rgba(255,255,255,0.9)', marginBottom: '32px', lineHeight: '1.7' }}>
-            Join thousands of patients and doctors using HealthSync for seamless healthcare management.
+            {t('joinThousands')}
           </p>
           <div style={{ display: 'flex', gap: '16px', justifyContent: 'center', flexWrap: 'wrap' }}>
             <button 
@@ -570,7 +847,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                 border: 'none'
               }}
             >
-              Get started free
+              {t('getStartedFree')}
               <i className="fas fa-arrow-right"></i>
             </button>
             <button 
@@ -582,7 +859,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                 border: '1px solid rgba(255,255,255,0.3)'
               }}
             >
-              Contact sales
+              {t('contactSales')}
             </button>
           </div>
         </div>
@@ -609,12 +886,12 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             </div>
             
             {[
-              { title: 'Product', links: ['Features', 'Pricing', 'Security', 'Enterprise'] },
-              { title: 'Company', links: ['About', 'Careers', 'Blog', 'Press'] },
-              { title: 'Resources', links: ['Documentation', 'Help Center', 'API', 'Status'] },
+              { titleKey: 'product', links: ['Features', 'Pricing', 'Security', 'Enterprise'] },
+              { titleKey: 'company', links: ['About', 'Careers', 'Blog', 'Press'] },
+              { titleKey: 'resources', links: ['Documentation', 'Help Center', 'API', 'Status'] },
             ].map((section, index) => (
               <div key={index}>
-                <h4 style={{ color: '#ffffff', fontSize: '14px', fontWeight: '600', marginBottom: '16px' }}>{section.title}</h4>
+                <h4 style={{ color: '#ffffff', fontSize: '14px', fontWeight: '600', marginBottom: '16px' }}>{t(section.titleKey)}</h4>
                 <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                   {section.links.map((link, i) => (
                     <li key={i} style={{ marginBottom: '10px' }}>
@@ -630,7 +907,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             
             {/* Staff Portal Links */}
             <div>
-              <h4 style={{ color: '#ffffff', fontSize: '14px', fontWeight: '600', marginBottom: '16px' }}>Staff Portal</h4>
+              <h4 style={{ color: '#ffffff', fontSize: '14px', fontWeight: '600', marginBottom: '16px' }}>{t('staffPortal')}</h4>
               <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
                 <li style={{ marginBottom: '10px' }}>
                   <button 
@@ -646,7 +923,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                     }}
                     onMouseEnter={(e) => e.target.style.color = '#ffffff'}
                     onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
-                  >Admin Login</button>
+                  >{t('adminLogin')}</button>
                 </li>
                 <li style={{ marginBottom: '10px' }}>
                   <button 
@@ -662,7 +939,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                     }}
                     onMouseEnter={(e) => e.target.style.color = '#ffffff'}
                     onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
-                  >Doctor Login</button>
+                  >{t('doctorLogin')}</button>
                 </li>
                 <li style={{ marginBottom: '10px' }}>
                   <button 
@@ -678,7 +955,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                     }}
                     onMouseEnter={(e) => e.target.style.color = '#ffffff'}
                     onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
-                  >Staff Login</button>
+                  >{t('staffLogin')}</button>
                 </li>
               </ul>
             </div>
@@ -691,7 +968,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             justifyContent: 'space-between',
             alignItems: 'center'
           }}>
-            <p style={{ fontSize: '13px', color: '#94a3b8' }}>© 2024 HealthSync. All rights reserved.</p>
+            <p style={{ fontSize: '13px', color: '#94a3b8' }}>© 2025 {t('appName')}. {t('allRightsReserved')}</p>
             <div style={{ display: 'flex', gap: '16px' }}>
               {['twitter', 'linkedin', 'github', 'instagram'].map((social) => (
                 <a key={social} href="#" style={{ color: '#94a3b8', fontSize: '18px' }}>
@@ -843,6 +1120,37 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
           <i className="fas fa-chevron-up" style={{ fontSize: '9px', marginLeft: '2px' }}></i>
         </button>
       </div>
+
+      {/* Back to Top Button */}
+      {showBackToTop && (
+        <button
+          onClick={scrollToTop}
+          style={{
+            position: 'fixed',
+            bottom: '16px',
+            left: '16px',
+            width: '44px',
+            height: '44px',
+            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            color: '#ffffff',
+            border: 'none',
+            borderRadius: '12px',
+            cursor: 'pointer',
+            display: 'flex',
+            alignItems: 'center',
+            justifyContent: 'center',
+            boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
+            zIndex: 50,
+            transition: 'all 0.3s ease',
+            animation: 'fadeIn 0.3s ease'
+          }}
+          onMouseEnter={(e) => { e.target.style.transform = 'translateY(-3px)'; e.target.style.boxShadow = '0 8px 20px rgba(99, 102, 241, 0.5)'; }}
+          onMouseLeave={(e) => { e.target.style.transform = 'translateY(0)'; e.target.style.boxShadow = '0 4px 14px rgba(99, 102, 241, 0.4)'; }}
+          aria-label="Back to top"
+        >
+          <i className="fas fa-arrow-up" style={{ fontSize: '16px' }}></i>
+        </button>
+      )}
     </div>
   );
 };

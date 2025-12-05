@@ -665,4 +665,251 @@ router.post('/doctor/reset-password', async (req, res) => {
   }
 });
 
+// ==========================================
+// GOOGLE SIGN-IN
+// ==========================================
+
+// Google Sign-In for Patients (login or register)
+router.post('/google-signin', async (req, res) => {
+  try {
+    const { email, name, googleId, profilePhoto } = req.body;
+
+    if (!email || !googleId) {
+      return res.status(400).json({ message: 'Email and Google ID are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+    let isNewUser = false;
+
+    // Check if user exists
+    let user = await User.findOne({ email: normalizedEmail });
+
+    if (user) {
+      // User exists - update Google ID and profile photo if not set
+      if (!user.googleId) {
+        user.googleId = googleId;
+      }
+      if (profilePhoto && !user.profilePhoto) {
+        user.profilePhoto = profilePhoto;
+      }
+      await user.save();
+    } else {
+      // Create new user with Google
+      isNewUser = true;
+      
+      // Generate a random password for Google users (they won't use it)
+      const randomPassword = Math.random().toString(36).slice(-12) + Math.random().toString(36).slice(-12);
+      const hashedPassword = await bcrypt.hash(randomPassword, 10);
+
+      user = new User({
+        name: name || email.split('@')[0],
+        email: normalizedEmail,
+        password: hashedPassword,
+        googleId: googleId,
+        profilePhoto: profilePhoto || null,
+        role: 'patient',
+        isActive: true
+      });
+
+      await user.save();
+
+      // Award signup bonus loyalty points for new Google users
+      try {
+        const loyalty = new LoyaltyPoints({ userId: user._id });
+        loyalty.addPoints(100, 'Welcome bonus: 100 points for signing up with Google!', 'signup', user._id);
+        await loyalty.save();
+        console.log(`🎁 Awarded 100 signup bonus points to new Google user ${user._id}`);
+      } catch (loyaltyError) {
+        console.error('Error creating loyalty account:', loyaltyError);
+      }
+    }
+
+    // Create token
+    const token = jwt.sign(
+      { userId: user._id, role: user.role },
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '24h' }
+    );
+
+    console.log(`✅ Google sign-in successful for: ${normalizedEmail} (${isNewUser ? 'new user' : 'existing user'})`);
+
+    res.json({
+      token,
+      isNewUser,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        profilePhoto: user.profilePhoto,
+        locationCaptured: user.locationCaptured || false
+      }
+    });
+  } catch (error) {
+    console.error('Google sign-in error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Google Sign-In for Doctors
+router.post('/doctor/google-signin', async (req, res) => {
+  try {
+    const { email, name, googleId, profilePhoto } = req.body;
+
+    if (!email || !googleId) {
+      return res.status(400).json({ message: 'Email and Google ID are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if doctor exists
+    let doctor = await Doctor.findOne({ email: normalizedEmail });
+
+    if (doctor) {
+      // Doctor exists - check approval status
+      if (doctor.approvalStatus === 'pending') {
+        return res.status(403).json({ 
+          message: 'Your account is pending admin approval. Please wait for confirmation.',
+          status: 'pending'
+        });
+      }
+
+      if (doctor.approvalStatus === 'rejected') {
+        return res.status(403).json({ 
+          message: 'Your account has been rejected. Please contact admin.',
+          status: 'rejected'
+        });
+      }
+
+      // Update Google ID and profile photo if not set
+      if (!doctor.googleId) {
+        doctor.googleId = googleId;
+      }
+      if (profilePhoto && !doctor.profilePhoto) {
+        doctor.profilePhoto = profilePhoto;
+      }
+      doctor.lastLogin = new Date();
+      await doctor.save();
+
+      // Generate token
+      const token = jwt.sign(
+        { doctorId: doctor._id, role: 'doctor' },
+        process.env.JWT_SECRET || 'fallback_secret',
+        { expiresIn: '24h' }
+      );
+
+      console.log(`✅ Doctor Google sign-in successful for: ${normalizedEmail}`);
+
+      return res.json({
+        token,
+        isNewUser: false,
+        doctor: {
+          id: doctor._id,
+          name: doctor.name,
+          email: doctor.email,
+          phone: doctor.phone,
+          specialization: doctor.specialization,
+          clinicId: doctor.clinicId,
+          profilePhoto: doctor.profilePhoto,
+          qualification: doctor.qualification,
+          experience: doctor.experience
+        }
+      });
+    } else {
+      // Doctor doesn't exist - return error (doctors must register first)
+      return res.status(404).json({ 
+        message: 'No doctor account found with this email. Please register first or contact admin.',
+        needsRegistration: true
+      });
+    }
+  } catch (error) {
+    console.error('Doctor Google sign-in error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Google Sign-In for Staff/Receptionist
+router.post('/clinic/google-signin', async (req, res) => {
+  try {
+    const { email, name, googleId, profilePhoto } = req.body;
+
+    if (!email || !googleId) {
+      return res.status(400).json({ message: 'Email and Google ID are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if staff user exists
+    let user = await User.findOne({ email: normalizedEmail, role: 'receptionist' });
+
+    if (user) {
+      // Staff exists - check approval status
+      if (user.approvalStatus === 'pending') {
+        return res.status(403).json({ 
+          message: 'Your account is pending admin approval. Please wait for confirmation.',
+          status: 'pending'
+        });
+      }
+
+      if (user.approvalStatus === 'rejected') {
+        return res.status(403).json({ 
+          message: 'Your account has been rejected. Please contact admin.',
+          status: 'rejected'
+        });
+      }
+
+      if (!user.isActive) {
+        return res.status(403).json({ 
+          message: 'Your account is inactive. Please contact admin.',
+          status: 'inactive'
+        });
+      }
+
+      // Update Google ID and profile photo if not set
+      if (!user.googleId) {
+        user.googleId = googleId;
+      }
+      if (profilePhoto && !user.profilePhoto) {
+        user.profilePhoto = profilePhoto;
+      }
+      await user.save();
+
+      // Generate token
+      const token = jwt.sign(
+        { userId: user._id, role: user.role },
+        process.env.JWT_SECRET || 'fallback_secret',
+        { expiresIn: '24h' }
+      );
+
+      console.log(`✅ Staff Google sign-in successful for: ${normalizedEmail}`);
+
+      return res.json({
+        token,
+        isNewUser: false,
+        user: {
+          id: user._id,
+          name: user.name,
+          email: user.email,
+          role: user.role,
+          phone: user.phone,
+          clinicId: user.clinicId,
+          clinicName: user.clinicName,
+          approvalStatus: user.approvalStatus,
+          profilePhoto: user.profilePhoto
+        }
+      });
+    } else {
+      // Staff doesn't exist - return error (staff must register first)
+      return res.status(404).json({ 
+        message: 'No staff account found with this email. Please register first or contact admin.',
+        needsRegistration: true
+      });
+    }
+  } catch (error) {
+    console.error('Staff Google sign-in error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router;

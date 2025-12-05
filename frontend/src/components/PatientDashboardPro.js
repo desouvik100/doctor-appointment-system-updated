@@ -2,8 +2,30 @@ import { useState, useEffect, useMemo } from 'react';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
 import '../styles/premium-saas.css';
+import { useLanguage } from '../i18n/LanguageContext';
+import LanguageSelector from './LanguageSelector';
+
+// Get profile photo URL - checks profilePhoto field, then generates fallback
+const getProfilePhotoUrl = (user) => {
+  if (!user) return null;
+  // Check if user has a valid profile photo URL
+  if (user.profilePhoto) {
+    // Accept any valid URL or base64 data
+    if (user.profilePhoto.startsWith('http') || user.profilePhoto.startsWith('data:') || user.profilePhoto.startsWith('/')) {
+      return user.profilePhoto;
+    }
+  }
+  return null;
+};
+
+// Fallback avatar URL using UI Avatars (generates avatar from name)
+const getFallbackAvatarUrl = (name, bgColor = '6366f1') => {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=${bgColor}&color=fff&size=100&bold=true`;
+};
+
 import BookingModal from './BookingModal';
 import AIAssistant from './AIAssistant';
+import FindMyDoctorWizard from './FindMyDoctorWizard';
 import ReviewModal from './ReviewModal';
 import HealthProfile from './HealthProfile';
 import LabReports from './LabReports';
@@ -24,11 +46,15 @@ import SecondOpinion from './SecondOpinion';
 import LoyaltyPoints from './LoyaltyPoints';
 import UserProfileModal from './UserProfileModal';
 import TransactionHistory from './TransactionHistory';
+import QuickHealthTools from './QuickHealthTools';
+import EmailReminders from './EmailReminders';
+import HealthCalculators from './HealthCalculators';
 
 const PatientDashboardPro = ({ user, onLogout }) => {
   // Ensure user has id field (handle both id and _id from different sources)
   const normalizedUser = user ? { ...user, id: user.id || user._id } : null;
   const [currentUser, setCurrentUser] = useState(normalizedUser);
+  const { t, language } = useLanguage();
   
   // Debug: Log user data to help troubleshoot
   console.log('PatientDashboardPro user:', { id: currentUser?.id, _id: currentUser?._id, name: currentUser?.name });
@@ -54,6 +80,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
   const [showProfileModal, setShowProfileModal] = useState(false);
+  const [showFindDoctorWizard, setShowFindDoctorWizard] = useState(false);
   const [nearbyMode, setNearbyMode] = useState(false);
   const [maxDistance, setMaxDistance] = useState(50);
 
@@ -95,35 +122,39 @@ const PatientDashboardPro = ({ user, onLogout }) => {
   };
 
   const menuSections = [
-    { title: 'Main', items: [
-      { id: 'overview', icon: 'fas fa-home', label: 'Overview' },
-      { id: 'doctors', icon: 'fas fa-user-md', label: 'Find Doctors' },
-      { id: 'appointments', icon: 'fas fa-calendar-check', label: 'Appointments' },
+    { titleKey: 'main', items: [
+      { id: 'overview', icon: 'fas fa-home', labelKey: 'overview' },
+      { id: 'find-my-doctor', icon: 'fas fa-robot', labelKey: 'findMyDoctor' },
+      { id: 'doctors', icon: 'fas fa-user-md', labelKey: 'findDoctors' },
+      { id: 'appointments', icon: 'fas fa-calendar-check', labelKey: 'appointments' },
     ]},
-    { title: 'Health', items: [
-      { id: 'ai-assistant', icon: 'fas fa-robot', label: 'AI Assistant' },
-      { id: 'health', icon: 'fas fa-heartbeat', label: 'Health Profile' },
-      { id: 'lab-reports', icon: 'fas fa-flask', label: 'Lab Reports' },
-      { id: 'checkup', icon: 'fas fa-stethoscope', label: 'Health Checkup' },
-      { id: 'health-analytics', icon: 'fas fa-chart-line', label: 'Analytics' },
+    { titleKey: 'health', items: [
+      { id: 'ai-assistant', icon: 'fas fa-robot', labelKey: 'aiHealthAssistant' },
+      { id: 'health', icon: 'fas fa-heartbeat', labelKey: 'healthProfile' },
+      { id: 'lab-reports', icon: 'fas fa-flask', labelKey: 'labReportsMenu' },
+      { id: 'checkup', icon: 'fas fa-stethoscope', labelKey: 'healthCheckup' },
+      { id: 'health-analytics', icon: 'fas fa-chart-line', labelKey: 'analytics' },
     ]},
-    { title: 'Services', items: [
-      { id: 'medicines', icon: 'fas fa-pills', label: 'Medicines' },
-      { id: 'medicine-reminder', icon: 'fas fa-bell', label: 'Reminders' },
-      { id: 'ambulance', icon: 'fas fa-ambulance', label: 'Ambulance' },
-      { id: 'second-opinion', icon: 'fas fa-user-md', label: 'Second Opinion' },
+    { titleKey: 'services', items: [
+      { id: 'medicines', icon: 'fas fa-pills', labelKey: 'medicines' },
+      { id: 'medicine-reminder', icon: 'fas fa-bell', labelKey: 'reminders' },
+      { id: 'ambulance', icon: 'fas fa-ambulance', labelKey: 'ambulance' },
+      { id: 'second-opinion', icon: 'fas fa-user-md', labelKey: 'secondOpinion' },
     ]},
-    { title: 'Financial', items: [
-      { id: 'wallet', icon: 'fas fa-wallet', label: 'Wallet' },
-      { id: 'transactions', icon: 'fas fa-receipt', label: 'Transactions' },
-      { id: 'insurance', icon: 'fas fa-shield-alt', label: 'Insurance' },
-      { id: 'loyalty', icon: 'fas fa-coins', label: 'Loyalty Points' },
-      { id: 'referrals', icon: 'fas fa-gift', label: 'Refer & Earn' },
+    { titleKey: 'financial', items: [
+      { id: 'wallet', icon: 'fas fa-wallet', labelKey: 'wallet' },
+      { id: 'transactions', icon: 'fas fa-receipt', labelKey: 'transactions' },
+      { id: 'insurance', icon: 'fas fa-shield-alt', labelKey: 'insurance' },
+      { id: 'loyalty', icon: 'fas fa-coins', labelKey: 'loyaltyPoints' },
+      { id: 'referrals', icon: 'fas fa-gift', labelKey: 'referEarn' },
     ]},
-    { title: 'Support', items: [
-      { id: 'emergency', icon: 'fas fa-phone-alt', label: 'Emergency' },
-      { id: 'health-tips', icon: 'fas fa-lightbulb', label: 'Health Tips' },
-      { id: 'messages', icon: 'fas fa-comments', label: 'Messages' },
+    { titleKey: 'support', items: [
+      { id: 'emergency', icon: 'fas fa-phone-alt', labelKey: 'emergency' },
+      { id: 'health-tips', icon: 'fas fa-lightbulb', labelKey: 'healthTips' },
+      { id: 'quick-tools', icon: 'fas fa-tools', labelKey: 'quickTools' },
+      { id: 'calculators', icon: 'fas fa-calculator', labelKey: 'calculators' },
+      { id: 'email-reminders', icon: 'fas fa-envelope', labelKey: 'emailReminders' },
+      { id: 'messages', icon: 'fas fa-comments', labelKey: 'messages' },
     ]}
   ];
 
@@ -164,12 +195,12 @@ const PatientDashboardPro = ({ user, onLogout }) => {
         <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
           {menuSections.map((section, idx) => (
             <div key={idx}>
-              <h3 className={`text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-3 ${sidebarCollapsed ? 'opacity-0' : 'opacity-100'}`}>{section.title}</h3>
+              <h3 className={`text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-3 ${sidebarCollapsed ? 'opacity-0' : 'opacity-100'}`}>{t(section.titleKey)}</h3>
               <div className="space-y-1">
                 {section.items.map(item => (
-                  <button key={item.id} onClick={() => { setActiveSection(item.id); setMobileSidebarOpen(false); }} title={item.label} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeSection === item.id ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
+                  <button key={item.id} onClick={() => { if (item.id === 'find-my-doctor') { setShowFindDoctorWizard(true); } else { setActiveSection(item.id); } setMobileSidebarOpen(false); }} title={t(item.labelKey)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeSection === item.id ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
                     <i className={`${item.icon} w-5 text-center`}></i>
-                    <span className={`whitespace-nowrap ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>{item.label}</span>
+                    <span className={`whitespace-nowrap ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>{t(item.labelKey)}</span>
                   </button>
                 ))}
               </div>
@@ -178,19 +209,20 @@ const PatientDashboardPro = ({ user, onLogout }) => {
         </nav>
         <div className="p-4 border-t border-slate-800/50">
           <button onClick={() => setShowProfileModal(true)} className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-700/50 transition-colors cursor-pointer">
-            {currentUser?.profilePhoto ? (
-              <img src={currentUser.profilePhoto} alt="Profile" className="w-10 h-10 rounded-xl object-cover" />
-            ) : (
-              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm">{getUserInitials()}</div>
-            )}
+            <img 
+              src={getProfilePhotoUrl(currentUser) || getFallbackAvatarUrl(currentUser?.name, '10b981')} 
+              alt="Profile" 
+              className="w-10 h-10 rounded-xl object-cover" 
+              onError={(e) => { e.target.src = getFallbackAvatarUrl(currentUser?.name, '10b981'); }} 
+            />
             <div className={`flex-1 min-w-0 text-left ${sidebarCollapsed ? 'hidden' : ''}`}>
               <p className="text-sm font-medium text-white truncate">{currentUser?.name}</p>
-              <p className="text-xs text-slate-400 flex items-center gap-1"><i className="fas fa-cog text-[10px]"></i> Edit Profile</p>
+              <p className="text-xs text-slate-400 flex items-center gap-1"><i className="fas fa-cog text-[10px]"></i> {t('edit')} {t('profile')}</p>
             </div>
           </button>
           <button onClick={onLogout} className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-red-500/20">
             <i className="fas fa-sign-out-alt"></i>
-            {!sidebarCollapsed && <span>Logout</span>}
+            {!sidebarCollapsed && <span>{t('logout')}</span>}
           </button>
         </div>
       </aside>
@@ -205,18 +237,21 @@ const PatientDashboardPro = ({ user, onLogout }) => {
             </div>
           </div>
           <div className="flex items-center gap-3">
-            <button onClick={() => setActiveSection('doctors')} className="hidden sm:flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white font-bold rounded-2xl hover:shadow-xl hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none"><i className="fas fa-calendar-plus text-lg"></i><span className="text-base">Book Now</span></button>
+            <button onClick={() => setShowFindDoctorWizard(true)} className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300"><i className="fas fa-robot"></i><span className="text-sm">{language === 'bn' ? 'ডাক্তার খুঁজুন' : language === 'hi' ? 'डॉक्टर खोजें' : 'Find My Doctor'}</span></button>
+            <button onClick={() => setActiveSection('doctors')} className="hidden sm:flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white font-bold rounded-2xl hover:shadow-xl hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none"><i className="fas fa-calendar-plus text-lg"></i><span className="text-base">{t('bookNow')}</span></button>
+            <LanguageSelector />
             <button onClick={handleUpdateLocation} disabled={updatingLocation} className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center"><i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'} text-slate-600`}></i></button>
             <button onClick={() => setShowNotifications(true)} className="relative w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center">
               <i className="fas fa-bell text-slate-600"></i>
               {unreadNotifications > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">{unreadNotifications}</span>}
             </button>
             <button onClick={() => setShowProfileModal(true)} className="hidden sm:flex items-center gap-3 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl p-2 -m-2 transition-colors">
-              {currentUser?.profilePhoto ? (
-                <img src={currentUser.profilePhoto} alt="Profile" className="w-10 h-10 rounded-xl object-cover" />
-              ) : (
-                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">{getUserInitials()}</div>
-              )}
+              <img 
+                src={getProfilePhotoUrl(currentUser) || getFallbackAvatarUrl(currentUser?.name)} 
+                alt="Profile" 
+                className="w-10 h-10 rounded-xl object-cover" 
+                onError={(e) => { e.target.src = getFallbackAvatarUrl(currentUser?.name); }} 
+              />
               <div className="hidden md:block text-left"><p className="text-sm font-medium text-slate-800">{currentUser?.name}</p><p className="text-xs text-slate-500">{currentUser?.email}</p></div>
             </button>
           </div>
@@ -244,15 +279,18 @@ const PatientDashboardPro = ({ user, onLogout }) => {
               <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
                 <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-bold text-slate-800">🔥 Top Doctors</h3><button onClick={() => setActiveSection('doctors')} className="text-sm font-medium text-indigo-600 hover:text-indigo-700">View All →</button></div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  {recentDoctors.map(doc => (
+                  {recentDoctors.map(doc => {
+                    const docInitials = doc.name ? doc.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'DR';
+                    return (
                     <div key={doc._id} className="group p-4 rounded-xl bg-slate-50 hover:bg-white border-2 border-transparent hover:border-indigo-200 hover:shadow-lg transition-all text-center">
                       <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform overflow-hidden">
-                        {doc.profilePhoto ? <img src={doc.profilePhoto} alt={doc.name} className="w-full h-full object-cover" /> : <i className="fas fa-user-md text-white text-2xl"></i>}
+                        {doc.profilePhoto ? <img src={doc.profilePhoto} alt={doc.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} /> : null}
+                        {!doc.profilePhoto && <span className="text-white text-lg font-bold">{docInitials}</span>}
                       </div>
                       <h4 className="font-semibold text-slate-800 text-sm">Dr. {doc.name}</h4><p className="text-xs text-slate-500 mb-2">{doc.specialization}</p><p className="text-sm font-bold text-indigo-600 mb-3">₹{doc.consultationFee}</p>
                       <button onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className="w-full py-2 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-lg hover:shadow-lg">Book Now</button>
                     </div>
-                  ))}
+                  );})}
                 </div>
               </div>
               <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
@@ -313,11 +351,16 @@ const PatientDashboardPro = ({ user, onLogout }) => {
               ) : filteredDoctors.length === 0 ? (<div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-user-md text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">No doctors found</h3><p className="text-slate-500">Try adjusting your filters</p></div>
               ) : (
                 <div className="space-y-4">
-                  {(nearbyMode ? doctors : filteredDoctors).map(doc => (
+                  {(nearbyMode ? doctors : filteredDoctors).map(doc => {
+                    const docInitials = doc.name ? doc.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'DR';
+                    return (
                     <div key={doc._id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg hover:border-indigo-200 transition-all">
                       <div className="flex flex-col lg:flex-row lg:items-center gap-4">
                         <div className="flex items-center gap-4 flex-1">
-                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 overflow-hidden">{doc.profilePhoto ? <img src={doc.profilePhoto} alt={doc.name} className="w-full h-full object-cover" /> : <i className="fas fa-user-md text-white text-2xl"></i>}</div>
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 overflow-hidden">
+                            {doc.profilePhoto ? <img src={doc.profilePhoto} alt={doc.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} /> : null}
+                            {!doc.profilePhoto && <span className="text-white text-lg font-bold">{docInitials}</span>}
+                          </div>
                           <div><h4 className="font-bold text-slate-800">Dr. {doc.name}</h4><p className="text-sm text-indigo-600 font-medium">{doc.specialization}</p><p className="text-sm text-slate-500"><i className="fas fa-hospital text-xs mr-1"></i>{doc.clinicId?.name || 'Independent'}</p>{nearbyMode && doc.distanceText && <p className="text-xs text-emerald-600 font-medium mt-1"><i className="fas fa-route mr-1"></i>{doc.distanceText}</p>}</div>
                         </div>
                         <div className="flex items-center gap-6 text-sm text-slate-500">{doc.experience && <span><i className="fas fa-award text-amber-500 mr-1"></i>{doc.experience} yrs</span>}{doc.rating > 0 && <span><i className="fas fa-star text-amber-500 mr-1"></i>{doc.rating.toFixed(1)}</span>}</div>
@@ -328,7 +371,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                         </div>
                       </div>
                     </div>
-                  ))}
+                  );})}
                 </div>
               )}
             </div>
@@ -378,6 +421,9 @@ const PatientDashboardPro = ({ user, onLogout }) => {
           {activeSection === 'referrals' && <ReferralRewards userId={getUserId()} userName={currentUser?.name} />}
           {activeSection === 'emergency' && <EmergencyContacts userId={getUserId()} />}
           {activeSection === 'health-tips' && <HealthTips />}
+          {activeSection === 'quick-tools' && <QuickHealthTools userId={getUserId()} />}
+          {activeSection === 'calculators' && <HealthCalculators />}
+          {activeSection === 'email-reminders' && <EmailReminders userId={getUserId()} userEmail={currentUser?.email} />}
           {activeSection === 'messages' && <div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-comments text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">Chat with Doctors</h3><p className="text-slate-500 mb-4">Click on a doctor to start</p><button onClick={() => setActiveSection('doctors')} className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg">Find Doctors</button></div>}
         </div>
         <footer className="bg-white border-t border-slate-200 px-4 lg:px-8 py-4">
@@ -401,6 +447,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       {showNotifications && <NotificationCenter userId={getUserId()} onClose={() => { setShowNotifications(false); fetchUnreadNotifications(); }} />}
       {showChat && chatDoctor && <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"><DoctorChat user={currentUser} doctor={chatDoctor} onClose={() => { setShowChat(false); setChatDoctor(null); }} /></div>}
       {showProfileModal && <UserProfileModal user={currentUser} onClose={() => setShowProfileModal(false)} onUpdate={handleProfileUpdate} />}
+      {showFindDoctorWizard && <FindMyDoctorWizard onClose={() => setShowFindDoctorWizard(false)} onComplete={(recommendation) => { setShowFindDoctorWizard(false); setSelectedSpecialization(recommendation.primarySpecialist); setActiveSection('doctors'); }} onBookDoctor={(specialist) => { setSelectedSpecialization(specialist); setActiveSection('doctors'); }} />}
     </div>
   );
 };

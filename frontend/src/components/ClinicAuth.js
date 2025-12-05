@@ -1,10 +1,13 @@
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../api/config";
 import "../styles/theme-system.css";
 import "./ClinicAuth.css";
 
+const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
+
 function ClinicAuth({ onLogin, onBack }) {
   const [isLogin, setIsLogin] = useState(true);
+  const [socialLoading, setSocialLoading] = useState(null);
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -48,6 +51,106 @@ function ClinicAuth({ onLogin, onBack }) {
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
   const [forgotStep, setForgotStep] = useState(1); // 1: email, 2: otp, 3: new password
   const [forgotLoading, setForgotLoading] = useState(false);
+
+  // Load Google Sign-In script
+  useEffect(() => {
+    const loadGoogleScript = () => {
+      if (document.getElementById('google-signin-script')) return;
+      const script = document.createElement('script');
+      script.id = 'google-signin-script';
+      script.src = 'https://accounts.google.com/gsi/client';
+      script.async = true;
+      script.defer = true;
+      document.body.appendChild(script);
+    };
+    loadGoogleScript();
+  }, []);
+
+  // Handle Google Sign-In for Staff
+  const handleGoogleSignIn = async () => {
+    if (!GOOGLE_CLIENT_ID) {
+      setError('Google Sign-In not configured. Please contact support.');
+      return;
+    }
+
+    setSocialLoading('google');
+    setError("");
+
+    try {
+      if (!window.google?.accounts?.oauth2) {
+        setError('Google Sign-In is loading. Please try again.');
+        setSocialLoading(null);
+        return;
+      }
+
+      const tokenClient = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID,
+        scope: 'email profile openid',
+        callback: async (tokenResponse) => {
+          if (tokenResponse.access_token) {
+            await handleGoogleToken(tokenResponse.access_token);
+          } else {
+            setError('Google Sign-In was cancelled');
+            setSocialLoading(null);
+          }
+        },
+        error_callback: (error) => {
+          console.error('Google OAuth error:', error);
+          setError('Google Sign-In failed. Please try again.');
+          setSocialLoading(null);
+        }
+      });
+
+      tokenClient.requestAccessToken();
+    } catch (error) {
+      console.error('Google Sign-In error:', error);
+      setError('Google Sign-In failed. Please try again.');
+      setSocialLoading(null);
+    }
+  };
+
+  const handleGoogleToken = async (accessToken) => {
+    try {
+      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
+        headers: { Authorization: `Bearer ${accessToken}` }
+      });
+      
+      if (!userInfoResponse.ok) {
+        throw new Error('Failed to get user info from Google');
+      }
+      
+      const userInfo = await userInfoResponse.json();
+      await processGoogleUser(userInfo);
+    } catch (error) {
+      console.error('Google token error:', error);
+      setError('Failed to get user info from Google');
+      setSocialLoading(null);
+    }
+  };
+
+  const processGoogleUser = async (googleUser) => {
+    try {
+      const response = await axios.post('/api/auth/clinic/google-signin', {
+        email: googleUser.email,
+        name: googleUser.name || googleUser.given_name + ' ' + (googleUser.family_name || ''),
+        googleId: googleUser.sub || googleUser.id,
+        profilePhoto: googleUser.picture
+      });
+
+      localStorage.setItem("receptionist", JSON.stringify(response.data.user));
+      setSuccess(`Welcome back, ${response.data.user.name?.split(' ')[0]}!`);
+      setTimeout(() => onLogin(response.data.user), 500);
+    } catch (error) {
+      console.error('Staff Google sign-in API error:', error);
+      if (error.response?.data?.needsRegistration) {
+        setError('No staff account found. Please register first or use email/password login.');
+      } else {
+        setError(error.response?.data?.message || 'Google sign-in failed');
+      }
+    } finally {
+      setSocialLoading(null);
+    }
+  };
 
   // Validation functions
   const validateEmail = (email) => {
@@ -965,6 +1068,31 @@ function ClinicAuth({ onLogin, onBack }) {
               </>
             )}
           </button>
+        )}
+
+        {/* Google Sign-In for Login only */}
+        {isLogin && !showOtpVerification && (
+          <>
+            <div className="d-flex align-items-center my-3">
+              <hr className="flex-grow-1" />
+              <span className="px-3 text-muted small">or continue with</span>
+              <hr className="flex-grow-1" />
+            </div>
+
+            <button
+              type="button"
+              className="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2"
+              onClick={handleGoogleSignIn}
+              disabled={socialLoading === 'google'}
+              style={{ padding: '10px' }}
+            >
+              {socialLoading === 'google' ? (
+                <><span className="spinner-border spinner-border-sm"></span> Signing in...</>
+              ) : (
+                <><i className="fab fa-google"></i> Sign in with Google</>
+              )}
+            </button>
+          </>
         )}
       </form>
 
