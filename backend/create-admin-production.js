@@ -20,7 +20,7 @@ const createAdminProduction = async () => {
     
     // Admin credentials
     const adminEmail = 'admin@healthsyncpro.in';
-    const adminPassword = 'admin123';
+    const adminPassword = 'Admin@123';
     
     // Hash password
     const hashedPassword = await bcrypt.hash(adminPassword, 10);
