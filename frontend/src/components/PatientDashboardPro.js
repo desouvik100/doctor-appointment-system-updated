@@ -4,25 +4,6 @@ import toast from 'react-hot-toast';
 import '../styles/premium-saas.css';
 import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSelector from './LanguageSelector';
-
-// Get profile photo URL - checks profilePhoto field, then generates fallback
-const getProfilePhotoUrl = (user) => {
-  if (!user) return null;
-  // Check if user has a valid profile photo URL
-  if (user.profilePhoto) {
-    // Accept any valid URL or base64 data
-    if (user.profilePhoto.startsWith('http') || user.profilePhoto.startsWith('data:') || user.profilePhoto.startsWith('/')) {
-      return user.profilePhoto;
-    }
-  }
-  return null;
-};
-
-// Fallback avatar URL using UI Avatars (generates avatar from name)
-const getFallbackAvatarUrl = (name, bgColor = '6366f1') => {
-  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=${bgColor}&color=fff&size=100&bold=true`;
-};
-
 import BookingModal from './BookingModal';
 import AIAssistant from './AIAssistant';
 import FindMyDoctorWizard from './FindMyDoctorWizard';
@@ -49,6 +30,24 @@ import TransactionHistory from './TransactionHistory';
 import QuickHealthTools from './QuickHealthTools';
 import EmailReminders from './EmailReminders';
 import HealthCalculators from './HealthCalculators';
+
+// Get profile photo URL - checks profilePhoto field, then generates fallback
+const getProfilePhotoUrl = (user) => {
+  if (!user) return null;
+  // Check if user has a valid profile photo URL
+  if (user.profilePhoto) {
+    // Accept any valid URL or base64 data
+    if (user.profilePhoto.startsWith('http') || user.profilePhoto.startsWith('data:') || user.profilePhoto.startsWith('/')) {
+      return user.profilePhoto;
+    }
+  }
+  return null;
+};
+
+// Fallback avatar URL using UI Avatars (generates avatar from name)
+const getFallbackAvatarUrl = (name, bgColor = '6366f1') => {
+  return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=${bgColor}&color=fff&size=100&bold=true`;
+};
 
 const PatientDashboardPro = ({ user, onLogout }) => {
   // Ensure user has id field (handle both id and _id from different sources)
