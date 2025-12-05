@@ -314,6 +314,49 @@ router.get('/receptionist/test', (req, res) => {
   res.json({ message: 'Receptionist routes are working' });
 });
 
+// One-time admin setup route (use once then remove)
+router.post('/setup-admin', async (req, res) => {
+  try {
+    const { secretKey } = req.body;
+    
+    // Security: require a secret key to prevent unauthorized access
+    if (secretKey !== 'healthsync-admin-setup-2024') {
+      return res.status(403).json({ message: 'Invalid secret key' });
+    }
+    
+    const adminEmail = 'admin@healthsyncpro.in';
+    const adminPassword = 'Admin@123';
+    
+    // Hash password
+    const hashedPassword = await bcrypt.hash(adminPassword, 10);
+    
+    // Update or create admin
+    const result = await User.findOneAndUpdate(
+      { email: adminEmail },
+      {
+        name: 'System Administrator',
+        email: adminEmail,
+        password: hashedPassword,
+        role: 'admin',
+        approvalStatus: 'approved',
+        isActive: true
+      },
+      { upsert: true, new: true }
+    );
+    
+    console.log('✅ Admin created/updated:', adminEmail);
+    
+    res.json({
+      success: true,
+      message: 'Admin account created successfully',
+      email: adminEmail
+    });
+  } catch (error) {
+    console.error('Admin setup error:', error);
+    res.status(500).json({ message: 'Failed to create admin', error: error.message });
+  }
+});
+
 // Receptionist sign-up
 router.post('/receptionist/register', async (req, res) => {
   try {
