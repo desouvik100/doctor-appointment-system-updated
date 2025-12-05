@@ -264,13 +264,126 @@
   grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
 }
 
-@media (max-width: 576px) {
+/* Responsive Card Styles */
+@media (max-width: 767px) {
   .card-grid {
     grid-template-columns: 1fr;
+    gap: var(--space-4);
+  }
+  
+  .card-body {
+    padding: var(--space-4);
+  }
+  
+  .card-header,
+  .card-footer {
+    padding: var(--space-3) var(--space-4);
+  }
+  
+  .doctor-card-header {
+    padding: var(--space-4);
+    gap: var(--space-3);
+  }
+  
+  .doctor-avatar {
+    width: 56px;
+    height: 56px;
+  }
+  
+  .doctor-avatar i {
+    font-size: 1.5rem;
+  }
+  
+  .doctor-name {
+    font-size: var(--font-size-base);
+  }
+  
+  .doctor-card-body {
+    padding: 0 var(--space-4) var(--space-3);
+  }
+  
+  .doctor-card-actions {
+    padding: var(--space-3) var(--space-4);
+    flex-direction: column;
+  }
+  
+  .doctor-card-actions .btn-primary {
+    width: 100%;
+  }
+  
+  .doctor-quick-actions {
+    justify-content: center;
+    width: 100%;
+  }
+  
+  .quick-action-btn {
+    flex: 1;
+    max-width: 60px;
   }
   
   .appointment-card {
     flex-direction: column;
     align-items: flex-start;
+    gap: var(--space-3);
+  }
+  
+  .appointment-date {
+    display: flex;
+    align-items: center;
+    gap: var(--space-2);
+    padding: var(--space-2) var(--space-3);
+    min-width: auto;
+  }
+  
+  .appointment-day {
+    font-size: var(--font-size-xl);
+  }
+  
+  .appointment-meta {
+    gap: var(--space-2);
+  }
+}
+
+@media (max-width: 479px) {
+  .card {
+    border-radius: var(--radius-md);
+  }
+  
+  .card-body {
+    padding: var(--space-3);
+  }
+  
+  .doctor-card-header {
+    padding: var(--space-3);
+  }
+  
+  .doctor-avatar {
+    width: 48px;
+    height: 48px;
+  }
+  
+  .doctor-avatar i {
+    font-size: 1.25rem;
+  }
+  
+  .doctor-name {
+    font-size: var(--font-size-sm);
+  }
+  
+  .doctor-specialty {
+    font-size: var(--font-size-xs);
+  }
+  
+  .doctor-details {
+    gap: var(--space-2);
+  }
+  
+  .doctor-detail {
+    font-size: var(--font-size-xs);
+  }
+  
+  .status-badge {
+    padding: 2px var(--space-2);
+    font-size: 10px;
   }
 }

@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import './index.css';
+import './styles/premium-saas.css';
 import './styles/landing-page-professional.css';
 import './styles/landing-page-pro.css';
 import './styles/admin-dashboard-professional.css';
@@ -19,7 +20,8 @@ import MedicalHero from "./components/MedicalHero";
 import SymptomChecker from "./components/SymptomChecker";
 import FloatingChatBubble from "./components/FloatingChatBubble";
 import LiveStatsDisplay from "./components/LiveStatsDisplay";
-import LandingPage from "./components/LandingPage";
+import LandingPage from "./components/LandingPagePremium";
+import AuthPremium from "./components/AuthPremium";
 import CorporateWellness from "./components/CorporateWellness";
 
 // Lazy load dashboard components
@@ -149,7 +151,12 @@ function App() {
       const raw = localStorage.getItem(key);
       if (!raw) return;
       try {
-        const parsed = JSON.parse(raw);
+        let parsed = JSON.parse(raw);
+        // Handle nested user object format: { token, user: {...} }
+        if (parsed.user && typeof parsed.user === 'object') {
+          parsed = { ...parsed.user, token: parsed.token };
+          localStorage.setItem(key, JSON.stringify(parsed)); // Update to flat format
+        }
         if (isValidObject(parsed, keys)) {
           setter(parsed);
         } else {
@@ -1496,7 +1503,7 @@ function App() {
       {currentView === "auth" && (
         <>
           {loginType === "patient" && (
-            <Auth 
+            <AuthPremium 
               onLogin={(data) => handleLogin(data, 'patient')} 
               onBack={() => setCurrentView("landing")}
             />

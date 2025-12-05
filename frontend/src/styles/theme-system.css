@@ -1,38 +1,45 @@
-/* Theme System - Light/Dark Mode Support */
-:root {
-  /* Light theme (default) */
-  --theme-bg: #f8fafc;
-  --theme-bg-secondary: #f1f5f9;
-  --theme-card-bg: #ffffff;
-  --theme-text-primary: #1e293b;
-  --theme-text-secondary: #64748b;
-  --theme-text-muted: #94a3b8;
-  --theme-border: #e2e8f0;
-  --theme-border-light: #f1f5f9;
+/* ============================================
+   Theme System - Premium SaaS Design
+   ============================================ */
+
+@import './_vars.css';
+
+/* Base Theme Styles */
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
 }
 
-[data-theme="dark"] {
-  --theme-bg: #0f172a;
-  --theme-bg-secondary: #1e293b;
-  --theme-card-bg: #1e293b;
-  --theme-text-primary: #f1f5f9;
-  --theme-text-secondary: #94a3b8;
-  --theme-text-muted: #64748b;
-  --theme-border: #334155;
-  --theme-border-light: #1e293b;
-}
-
-/* Apply theme variables */
 body {
-  background-color: var(--theme-bg);
-  color: var(--theme-text-primary);
+  font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  background: var(--bg);
+  color: var(--text-primary);
+  line-height: 1.6;
+  transition: background-color var(--transition-normal), color var(--transition-normal);
 }
 
-/* Theme transition */
-body,
-.card,
-.modal,
-.sidebar,
-.navbar {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
+/* Selection */
+::selection {
+  background: rgba(99, 102, 241, 0.2);
+  color: var(--brand-primary);
+}
+
+/* Scrollbar */
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--bg-secondary);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--border-dark);
+  border-radius: var(--radius-full);
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--text-muted);
 }

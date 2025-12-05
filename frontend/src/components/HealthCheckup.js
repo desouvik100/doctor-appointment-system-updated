@@ -1,7 +1,6 @@
 import { useState, useEffect } from 'react';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
-import './HealthCheckup.css';
 
 const HealthCheckup = ({ userId, userName, userEmail, userPhone }) => {
   const [packages, setPackages] = useState([]);
@@ -16,36 +15,18 @@ const HealthCheckup = ({ userId, userName, userEmail, userPhone }) => {
   const [myBookings, setMyBookings] = useState([]);
   const [activeView, setActiveView] = useState('packages');
   const [patientDetails, setPatientDetails] = useState({
-    name: userName || '',
-    age: '',
-    gender: '',
-    phone: userPhone || '',
-    email: userEmail || '',
-    address: ''
+    name: userName || '', age: '', gender: '', phone: userPhone || '', email: userEmail || '', address: ''
   });
 
-  useEffect(() => {
-    fetchPackages();
-    fetchClinics();
-    fetchMyBookings();
-  }, []);
-
-  useEffect(() => {
-    if (selectedClinic && selectedDate) {
-      fetchAvailableSlots();
-    }
-  }, [selectedClinic, selectedDate]);
+  useEffect(() => { fetchPackages(); fetchClinics(); fetchMyBookings(); }, []);
+  useEffect(() => { if (selectedClinic && selectedDate) fetchAvailableSlots(); }, [selectedClinic, selectedDate]);
 
   const fetchPackages = async () => {
     try {
       const response = await axios.get('/api/health-checkup/packages');
       setPackages(response.data);
-    } catch (error) {
-      // Use default packages if API fails
-      setPackages(getDefaultPackages());
-    } finally {
-      setLoading(false);
-    }
+    } catch { setPackages(getDefaultPackages()); }
+    finally { setLoading(false); }
   };
 
   const getDefaultPackages = () => [
@@ -55,421 +36,226 @@ const HealthCheckup = ({ userId, userName, userEmail, userPhone }) => {
     { id: 'executive', name: 'Executive Health Checkup', price: 7999, discountedPrice: 5999, discount: 25, duration: '5-6 hours', tests: [{name: 'Full Body'}, {name: 'Echo'}, {name: 'TMT'}, {name: 'Eye'}, {name: 'Dental'}, {name: 'Diet Consultation'}], fastingRequired: true }
   ];
 
-  const fetchClinics = async () => {
-    try {
-      const response = await axios.get('/api/clinics');
-      setClinics(response.data);
-    } catch (error) {
-      console.error('Error fetching clinics:', error);
-    }
-  };
-
-  const fetchMyBookings = async () => {
-    try {
-      const response = await axios.get(`/api/health-checkup/user/${userId}`);
-      setMyBookings(response.data);
-    } catch (error) {
-      // Silently fail - bookings will show empty
-      setMyBookings([]);
-    }
-  };
-
-  const fetchAvailableSlots = async () => {
-    try {
-      const response = await axios.get(`/api/health-checkup/slots/${selectedClinic}/${selectedDate}`);
-      setAvailableSlots(response.data.availableSlots);
-    } catch (error) {
-      console.error('Error fetching slots:', error);
-      setAvailableSlots([]);
-    }
-  };
+  const fetchClinics = async () => { try { const r = await axios.get('/api/clinics'); setClinics(r.data); } catch {} };
+  const fetchMyBookings = async () => { try { const r = await axios.get(`/api/health-checkup/user/${userId}`); setMyBookings(r.data); } catch { setMyBookings([]); } };
+  const fetchAvailableSlots = async () => { try { const r = await axios.get(`/api/health-checkup/slots/${selectedClinic}/${selectedDate}`); setAvailableSlots(r.data.availableSlots); } catch { setAvailableSlots([]); } };
 
   const handleBookCheckup = async () => {
-    if (!selectedPackage || !selectedClinic || !selectedDate || !selectedTime) {
-      toast.error('Please fill all required fields');
-      return;
-    }
-
-    if (!patientDetails.name || !patientDetails.age || !patientDetails.gender || !patientDetails.phone) {
-      toast.error('Please fill patient details');
-      return;
-    }
-
+    if (!selectedPackage || !selectedClinic || !selectedDate || !selectedTime) { toast.error('Please fill all required fields'); return; }
+    if (!patientDetails.name || !patientDetails.age || !patientDetails.gender || !patientDetails.phone) { toast.error('Please fill patient details'); return; }
     setBooking(true);
     try {
-      const response = await axios.post('/api/health-checkup/book', {
-        userId,
-        clinicId: selectedClinic,
-        packageType: selectedPackage.id,
-        scheduledDate: selectedDate,
-        scheduledTime: selectedTime,
-        patientDetails,
-        reportDelivery: 'email'
-      });
-
+      await axios.post('/api/health-checkup/book', { userId, clinicId: selectedClinic, packageType: selectedPackage.id, scheduledDate: selectedDate, scheduledTime: selectedTime, patientDetails, reportDelivery: 'email' });
       toast.success('Health checkup booked successfully!');
-      setSelectedPackage(null);
-      setSelectedClinic('');
-      setSelectedDate('');
-      setSelectedTime('');
-      setActiveView('bookings');
-      fetchMyBookings();
-    } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to book checkup');
-    } finally {
-      setBooking(false);
-    }
+      setSelectedPackage(null); setSelectedClinic(''); setSelectedDate(''); setSelectedTime(''); setActiveView('bookings'); fetchMyBookings();
+    } catch (error) { toast.error(error.response?.data?.message || 'Failed to book checkup'); }
+    finally { setBooking(false); }
   };
 
   const handleCancelBooking = async (bookingId) => {
     if (!window.confirm('Are you sure you want to cancel this booking?')) return;
-    
-    try {
-      await axios.put(`/api/health-checkup/${bookingId}/cancel`, { reason: 'User cancelled' });
-      toast.success('Booking cancelled');
-      fetchMyBookings();
-    } catch (error) {
-      toast.error('Failed to cancel booking');
-    }
+    try { await axios.put(`/api/health-checkup/${bookingId}/cancel`, { reason: 'User cancelled' }); toast.success('Booking cancelled'); fetchMyBookings(); }
+    catch { toast.error('Failed to cancel booking'); }
   };
 
-  const getMinDate = () => {
-    const tomorrow = new Date();
-    tomorrow.setDate(tomorrow.getDate() + 1);
-    return tomorrow.toISOString().split('T')[0];
-  };
+  const getMinDate = () => { const d = new Date(); d.setDate(d.getDate() + 1); return d.toISOString().split('T')[0]; };
+  const getStatusColor = (status) => ({ pending: 'bg-amber-100 text-amber-700', confirmed: 'bg-blue-100 text-blue-700', in_progress: 'bg-purple-100 text-purple-700', completed: 'bg-emerald-100 text-emerald-700', cancelled: 'bg-red-100 text-red-700' }[status] || 'bg-slate-100 text-slate-700');
 
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: '#f59e0b',
-      confirmed: '#3b82f6',
-      in_progress: '#8b5cf6',
-      completed: '#10b981',
-      cancelled: '#ef4444'
-    };
-    return colors[status] || '#64748b';
-  };
-
-  const getCategoryIcon = (category) => {
-    const icons = {
-      Blood: '🩸',
-      Diabetes: '💉',
-      Heart: '❤️',
-      Liver: '🫁',
-      Kidney: '🫘',
-      Thyroid: '🦋',
-      Vitamins: '💊',
-      Radiology: '📷',
-      Urine: '🧪',
-      Stool: '🧫',
-      'Cancer Markers': '🔬',
-      Consultation: '👨‍⚕️',
-      Eye: '👁️',
-      Dental: '🦷',
-      Bone: '🦴',
-      Lungs: '🫁',
-      Hormones: '⚗️',
-      Gynecology: '🩺',
-      ENT: '👂'
-    };
-    return icons[category] || '🔬';
-  };
-
-  if (loading) {
-    return (
-      <div className="health-checkup__loading">
-        <div className="health-checkup__spinner"></div>
-        <p>Loading packages...</p>
-      </div>
-    );
-  }
+  if (loading) return (
+    <div className="flex flex-col items-center justify-center py-20">
+      <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
+      <p className="text-slate-500">Loading packages...</p>
+    </div>
+  );
 
   return (
-    <div className="health-checkup">
-      <div className="health-checkup__header">
-        <div className="health-checkup__title">
-          <div className="health-checkup__title-icon">
-            <i className="fas fa-stethoscope"></i>
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+        <div className="flex items-center gap-4">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg">
+            <i className="fas fa-stethoscope text-white text-2xl"></i>
           </div>
           <div>
-            <h2>Full Body Health Checkup</h2>
-            <p>Comprehensive health packages at partner clinics</p>
+            <h2 className="text-xl font-bold text-slate-800">Full Body Health Checkup</h2>
+            <p className="text-sm text-slate-500">Comprehensive health packages at partner clinics</p>
           </div>
         </div>
-        <div className="health-checkup__tabs">
-          <button 
-            className={`health-checkup__tab ${activeView === 'packages' ? 'health-checkup__tab--active' : ''}`}
-            onClick={() => setActiveView('packages')}
-          >
-            <i className="fas fa-box"></i> Packages
-          </button>
-          <button 
-            className={`health-checkup__tab ${activeView === 'bookings' ? 'health-checkup__tab--active' : ''}`}
-            onClick={() => setActiveView('bookings')}
-          >
-            <i className="fas fa-calendar-check"></i> My Bookings
-            {myBookings.filter(b => b.status !== 'cancelled' && b.status !== 'completed').length > 0 && (
-              <span className="health-checkup__badge">
-                {myBookings.filter(b => b.status !== 'cancelled' && b.status !== 'completed').length}
-              </span>
-            )}
-          </button>
+        <div className="flex gap-2 p-1 bg-slate-100 rounded-xl">
+          {[
+            { id: 'packages', icon: 'fa-box', label: 'Packages' },
+            { id: 'bookings', icon: 'fa-calendar-check', label: 'My Bookings', badge: myBookings.filter(b => !['cancelled', 'completed'].includes(b.status)).length }
+          ].map(tab => (
+            <button
+              key={tab.id}
+              onClick={() => setActiveView(tab.id)}
+              className={`flex items-center gap-2 px-4 py-2.5 rounded-lg text-sm font-medium transition-all
+                ${activeView === tab.id ? 'bg-white text-indigo-600 shadow-sm' : 'text-slate-600 hover:text-slate-800'}`}
+            >
+              <i className={`fas ${tab.icon}`}></i> {tab.label}
+              {tab.badge > 0 && <span className="px-2 py-0.5 bg-indigo-500 text-white text-xs rounded-full">{tab.badge}</span>}
+            </button>
+          ))}
         </div>
       </div>
 
+      {/* Packages View */}
       {activeView === 'packages' && !selectedPackage && (
-        <div className="health-checkup__packages">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
           {packages.map(pkg => (
-            <div key={pkg.id} className="health-checkup__package-card">
-              <div className="health-checkup__package-header">
-                <h3>{pkg.name}</h3>
-                <span className="health-checkup__discount-badge">{pkg.discount}% OFF</span>
+            <div key={pkg.id} className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-lg hover:border-indigo-200 transition-all">
+              <div className="flex items-start justify-between mb-4">
+                <h3 className="text-lg font-bold text-slate-800">{pkg.name}</h3>
+                <span className="px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-bold rounded-full">{pkg.discount}% OFF</span>
               </div>
-              <div className="health-checkup__package-price">
-                <span className="health-checkup__original-price">₹{pkg.price}</span>
-                <span className="health-checkup__discounted-price">₹{pkg.discountedPrice}</span>
+              <div className="flex items-baseline gap-2 mb-4">
+                <span className="text-sm text-slate-400 line-through">₹{pkg.price}</span>
+                <span className="text-3xl font-bold text-indigo-600">₹{pkg.discountedPrice}</span>
               </div>
-              <div className="health-checkup__package-info">
-                <span><i className="fas fa-clock"></i> {pkg.duration}</span>
-                <span><i className="fas fa-vial"></i> {pkg.tests.length} Tests</span>
-                {pkg.fastingRequired && <span><i className="fas fa-utensils"></i> Fasting Required</span>}
+              <div className="flex flex-wrap gap-3 text-sm text-slate-500 mb-4">
+                <span className="flex items-center gap-1"><i className="fas fa-clock text-indigo-400"></i> {pkg.duration}</span>
+                <span className="flex items-center gap-1"><i className="fas fa-vial text-indigo-400"></i> {pkg.tests.length} Tests</span>
+                {pkg.fastingRequired && <span className="flex items-center gap-1"><i className="fas fa-utensils text-amber-400"></i> Fasting</span>}
               </div>
-              <div className="health-checkup__tests-preview">
-                {pkg.tests.slice(0, 5).map((test, idx) => (
-                  <span key={idx} className="health-checkup__test-tag">
-                    {getCategoryIcon(test.category)} {test.name}
-                  </span>
+              <div className="flex flex-wrap gap-2 mb-4">
+                {pkg.tests.slice(0, 4).map((test, idx) => (
+                  <span key={idx} className="px-2 py-1 bg-slate-100 text-slate-600 text-xs rounded-lg">{test.name}</span>
                 ))}
-                {pkg.tests.length > 5 && (
-                  <span className="health-checkup__more-tests">+{pkg.tests.length - 5} more</span>
-                )}
+                {pkg.tests.length > 4 && <span className="px-2 py-1 bg-indigo-100 text-indigo-600 text-xs rounded-lg">+{pkg.tests.length - 4} more</span>}
               </div>
-              <button 
-                className="health-checkup__select-btn"
-                onClick={() => setSelectedPackage(pkg)}
-              >
-                Select Package <i className="fas fa-arrow-right"></i>
+              <button onClick={() => setSelectedPackage(pkg)} className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg transition-all">
+                Select Package <i className="fas fa-arrow-right ml-2"></i>
               </button>
             </div>
           ))}
         </div>
       )}
 
+      {/* Booking Form */}
       {activeView === 'packages' && selectedPackage && (
-        <div className="health-checkup__booking-form">
-          <button className="health-checkup__back-btn" onClick={() => setSelectedPackage(null)}>
+        <div className="space-y-6">
+          <button onClick={() => setSelectedPackage(null)} className="flex items-center gap-2 text-slate-600 hover:text-indigo-600 transition-colors">
             <i className="fas fa-arrow-left"></i> Back to Packages
           </button>
 
-          <div className="health-checkup__selected-package">
-            <h3>{selectedPackage.name}</h3>
-            <div className="health-checkup__package-price">
-              <span className="health-checkup__original-price">₹{selectedPackage.price}</span>
-              <span className="health-checkup__discounted-price">₹{selectedPackage.discountedPrice}</span>
+          <div className="bg-gradient-to-r from-indigo-500 to-purple-600 rounded-2xl p-6 text-white">
+            <h3 className="text-xl font-bold mb-2">{selectedPackage.name}</h3>
+            <div className="flex items-baseline gap-2">
+              <span className="text-white/60 line-through">₹{selectedPackage.price}</span>
+              <span className="text-3xl font-bold">₹{selectedPackage.discountedPrice}</span>
             </div>
           </div>
 
-          <div className="health-checkup__tests-list">
-            <h4><i className="fas fa-list-check"></i> Included Tests ({selectedPackage.tests.length})</h4>
-            <div className="health-checkup__tests-grid">
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2">
+              <i className="fas fa-list-check text-indigo-500"></i> Included Tests ({selectedPackage.tests.length})
+            </h4>
+            <div className="grid grid-cols-2 md:grid-cols-3 gap-2">
               {selectedPackage.tests.map((test, idx) => (
-                <div key={idx} className="health-checkup__test-item">
-                  <span className="health-checkup__test-icon">{getCategoryIcon(test.category)}</span>
-                  <span>{test.name}</span>
+                <div key={idx} className="flex items-center gap-2 p-2 bg-slate-50 rounded-lg text-sm">
+                  <i className="fas fa-check text-emerald-500"></i> {test.name}
                 </div>
               ))}
             </div>
           </div>
 
-          <div className="health-checkup__form-section">
-            <h4><i className="fas fa-hospital"></i> Select Clinic</h4>
-            <select 
-              value={selectedClinic} 
-              onChange={(e) => setSelectedClinic(e.target.value)}
-              className="health-checkup__select"
-            >
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm space-y-4">
+            <h4 className="font-bold text-slate-800 flex items-center gap-2"><i className="fas fa-hospital text-indigo-500"></i> Select Clinic</h4>
+            <select value={selectedClinic} onChange={(e) => setSelectedClinic(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
               <option value="">Choose a clinic</option>
-              {clinics.map(clinic => (
-                <option key={clinic._id} value={clinic._id}>
-                  {clinic.name} - {clinic.city || clinic.address}
-                </option>
-              ))}
+              {clinics.map(c => <option key={c._id} value={c._id}>{c.name} - {c.city || c.address}</option>)}
             </select>
           </div>
 
-          <div className="health-checkup__form-row">
-            <div className="health-checkup__form-section">
-              <h4><i className="fas fa-calendar"></i> Select Date</h4>
-              <input 
-                type="date" 
-                value={selectedDate}
-                min={getMinDate()}
-                onChange={(e) => setSelectedDate(e.target.value)}
-                className="health-checkup__input"
-              />
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+              <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><i className="fas fa-calendar text-indigo-500"></i> Select Date</h4>
+              <input type="date" value={selectedDate} min={getMinDate()} onChange={(e) => setSelectedDate(e.target.value)} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
-            <div className="health-checkup__form-section">
-              <h4><i className="fas fa-clock"></i> Select Time</h4>
-              <div className="health-checkup__time-slots">
-                {availableSlots.length === 0 ? (
-                  <p className="health-checkup__no-slots">
-                    {selectedClinic && selectedDate ? 'No slots available' : 'Select clinic and date first'}
-                  </p>
-                ) : (
-                  availableSlots.map(slot => (
-                    <button
-                      key={slot}
-                      className={`health-checkup__time-slot ${selectedTime === slot ? 'health-checkup__time-slot--selected' : ''}`}
-                      onClick={() => setSelectedTime(slot)}
-                    >
-                      {slot}
-                    </button>
-                  ))
-                )}
-              </div>
+            <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+              <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><i className="fas fa-clock text-indigo-500"></i> Select Time</h4>
+              {availableSlots.length === 0 ? (
+                <p className="text-sm text-slate-500">{selectedClinic && selectedDate ? 'No slots available' : 'Select clinic and date first'}</p>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {availableSlots.map(slot => (
+                    <button key={slot} onClick={() => setSelectedTime(slot)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${selectedTime === slot ? 'bg-indigo-500 text-white' : 'bg-slate-100 text-slate-600 hover:bg-indigo-100'}`}>{slot}</button>
+                  ))}
+                </div>
+              )}
             </div>
           </div>
 
-          <div className="health-checkup__form-section">
-            <h4><i className="fas fa-user"></i> Patient Details</h4>
-            <div className="health-checkup__patient-form">
-              <input
-                type="text"
-                placeholder="Full Name *"
-                value={patientDetails.name}
-                onChange={(e) => setPatientDetails({...patientDetails, name: e.target.value})}
-                className="health-checkup__input"
-              />
-              <input
-                type="number"
-                placeholder="Age *"
-                value={patientDetails.age}
-                onChange={(e) => setPatientDetails({...patientDetails, age: e.target.value})}
-                className="health-checkup__input"
-              />
-              <select
-                value={patientDetails.gender}
-                onChange={(e) => setPatientDetails({...patientDetails, gender: e.target.value})}
-                className="health-checkup__select"
-              >
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <h4 className="font-bold text-slate-800 mb-4 flex items-center gap-2"><i className="fas fa-user text-indigo-500"></i> Patient Details</h4>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <input type="text" placeholder="Full Name *" value={patientDetails.name} onChange={(e) => setPatientDetails({...patientDetails, name: e.target.value})} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <input type="number" placeholder="Age *" value={patientDetails.age} onChange={(e) => setPatientDetails({...patientDetails, age: e.target.value})} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <select value={patientDetails.gender} onChange={(e) => setPatientDetails({...patientDetails, gender: e.target.value})} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500">
                 <option value="">Select Gender *</option>
                 <option value="male">Male</option>
                 <option value="female">Female</option>
                 <option value="other">Other</option>
               </select>
-              <input
-                type="tel"
-                placeholder="Phone Number *"
-                value={patientDetails.phone}
-                onChange={(e) => setPatientDetails({...patientDetails, phone: e.target.value})}
-                className="health-checkup__input"
-              />
-              <input
-                type="email"
-                placeholder="Email"
-                value={patientDetails.email}
-                onChange={(e) => setPatientDetails({...patientDetails, email: e.target.value})}
-                className="health-checkup__input"
-              />
-              <input
-                type="text"
-                placeholder="Address"
-                value={patientDetails.address}
-                onChange={(e) => setPatientDetails({...patientDetails, address: e.target.value})}
-                className="health-checkup__input health-checkup__input--full"
-              />
+              <input type="tel" placeholder="Phone Number *" value={patientDetails.phone} onChange={(e) => setPatientDetails({...patientDetails, phone: e.target.value})} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <input type="email" placeholder="Email" value={patientDetails.email} onChange={(e) => setPatientDetails({...patientDetails, email: e.target.value})} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <input type="text" placeholder="Address" value={patientDetails.address} onChange={(e) => setPatientDetails({...patientDetails, address: e.target.value})} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500" />
             </div>
           </div>
 
           {selectedPackage.fastingRequired && (
-            <div className="health-checkup__fasting-notice">
-              <i className="fas fa-exclamation-triangle"></i>
+            <div className="flex items-start gap-4 p-4 bg-amber-50 border border-amber-200 rounded-xl">
+              <i className="fas fa-exclamation-triangle text-amber-500 text-xl mt-0.5"></i>
               <div>
-                <strong>Fasting Required</strong>
-                <p>Please fast for 10-12 hours before the checkup. Only water is allowed.</p>
+                <p className="font-semibold text-amber-800">Fasting Required</p>
+                <p className="text-sm text-amber-700">Please fast for 10-12 hours before the checkup. Only water is allowed.</p>
               </div>
             </div>
           )}
 
-          <div className="health-checkup__summary">
-            <div className="health-checkup__summary-row">
-              <span>Package Price</span>
-              <span className="health-checkup__strike">₹{selectedPackage.price}</span>
-            </div>
-            <div className="health-checkup__summary-row">
-              <span>Discount ({selectedPackage.discount}%)</span>
-              <span className="health-checkup__discount">-₹{selectedPackage.price - selectedPackage.discountedPrice}</span>
-            </div>
-            <div className="health-checkup__summary-row health-checkup__summary-total">
-              <span>Total Amount</span>
-              <span>₹{selectedPackage.discountedPrice}</span>
-            </div>
+          <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+            <div className="flex justify-between text-slate-600 mb-2"><span>Package Price</span><span className="line-through">₹{selectedPackage.price}</span></div>
+            <div className="flex justify-between text-emerald-600 mb-2"><span>Discount ({selectedPackage.discount}%)</span><span>-₹{selectedPackage.price - selectedPackage.discountedPrice}</span></div>
+            <div className="flex justify-between text-xl font-bold text-slate-800 pt-3 border-t"><span>Total Amount</span><span>₹{selectedPackage.discountedPrice}</span></div>
           </div>
 
-          <button 
-            className="health-checkup__book-btn"
-            onClick={handleBookCheckup}
-            disabled={booking || !selectedClinic || !selectedDate || !selectedTime}
-          >
-            {booking ? (
-              <><i className="fas fa-spinner fa-spin"></i> Booking...</>
-            ) : (
-              <><i className="fas fa-check"></i> Confirm Booking - ₹{selectedPackage.discountedPrice}</>
-            )}
+          <button onClick={handleBookCheckup} disabled={booking || !selectedClinic || !selectedDate || !selectedTime} className="w-full py-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed transition-all">
+            {booking ? <><i className="fas fa-spinner fa-spin mr-2"></i> Booking...</> : <><i className="fas fa-check mr-2"></i> Confirm Booking - ₹{selectedPackage.discountedPrice}</>}
           </button>
         </div>
       )}
 
+      {/* Bookings View */}
       {activeView === 'bookings' && (
-        <div className="health-checkup__bookings">
+        <div className="space-y-4">
           {myBookings.length === 0 ? (
-            <div className="health-checkup__empty">
-              <i className="fas fa-calendar-xmark"></i>
-              <h3>No Bookings Yet</h3>
-              <p>Book your first health checkup package</p>
-              <button onClick={() => setActiveView('packages')}>
-                <i className="fas fa-box"></i> View Packages
+            <div className="text-center py-16">
+              <div className="w-20 h-20 mx-auto rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                <i className="fas fa-calendar-xmark text-3xl text-slate-400"></i>
+              </div>
+              <h3 className="text-xl font-bold text-slate-800 mb-2">No Bookings Yet</h3>
+              <p className="text-slate-500 mb-6">Book your first health checkup package</p>
+              <button onClick={() => setActiveView('packages')} className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg transition-all">
+                <i className="fas fa-box mr-2"></i> View Packages
               </button>
             </div>
           ) : (
-            myBookings.map(booking => (
-              <div key={booking._id} className="health-checkup__booking-card">
-                <div className="health-checkup__booking-header">
-                  <h4>{booking.packageName}</h4>
-                  <span 
-                    className="health-checkup__status"
-                    style={{ backgroundColor: `${getStatusColor(booking.status)}20`, color: getStatusColor(booking.status) }}
-                  >
-                    {booking.status.replace('_', ' ')}
-                  </span>
+            myBookings.map(b => (
+              <div key={b._id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+                <div className="flex items-start justify-between mb-4">
+                  <h4 className="font-bold text-slate-800">{b.packageName}</h4>
+                  <span className={`px-3 py-1 text-xs font-semibold rounded-full ${getStatusColor(b.status)}`}>{b.status.replace('_', ' ')}</span>
                 </div>
-                <div className="health-checkup__booking-details">
-                  <div className="health-checkup__booking-detail">
-                    <i className="fas fa-hospital"></i>
-                    <span>{booking.clinicId?.name || 'Clinic'}</span>
-                  </div>
-                  <div className="health-checkup__booking-detail">
-                    <i className="fas fa-calendar"></i>
-                    <span>{new Date(booking.scheduledDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
-                  </div>
-                  <div className="health-checkup__booking-detail">
-                    <i className="fas fa-clock"></i>
-                    <span>{booking.scheduledTime}</span>
-                  </div>
-                  <div className="health-checkup__booking-detail">
-                    <i className="fas fa-rupee-sign"></i>
-                    <span>₹{booking.price?.discounted || booking.price?.original}</span>
-                  </div>
+                <div className="flex flex-wrap gap-4 text-sm text-slate-600 mb-4">
+                  <span className="flex items-center gap-1"><i className="fas fa-hospital text-indigo-400"></i> {b.clinicId?.name || 'Clinic'}</span>
+                  <span className="flex items-center gap-1"><i className="fas fa-calendar text-indigo-400"></i> {new Date(b.scheduledDate).toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}</span>
+                  <span className="flex items-center gap-1"><i className="fas fa-clock text-indigo-400"></i> {b.scheduledTime}</span>
+                  <span className="flex items-center gap-1"><i className="fas fa-rupee-sign text-indigo-400"></i> ₹{b.price?.discounted || b.price?.original}</span>
                 </div>
-                <div className="health-checkup__booking-tests">
-                  <span>{booking.tests?.length || 0} tests included</span>
-                </div>
-                {booking.status === 'pending' && (
-                  <button 
-                    className="health-checkup__cancel-btn"
-                    onClick={() => handleCancelBooking(booking._id)}
-                  >
-                    <i className="fas fa-times"></i> Cancel Booking
+                <p className="text-sm text-slate-500 mb-4">{b.tests?.length || 0} tests included</p>
+                {b.status === 'pending' && (
+                  <button onClick={() => handleCancelBooking(b._id)} className="px-4 py-2 bg-red-100 text-red-600 font-medium rounded-xl hover:bg-red-200 transition-colors">
+                    <i className="fas fa-times mr-2"></i> Cancel Booking
                   </button>
                 )}
               </div>

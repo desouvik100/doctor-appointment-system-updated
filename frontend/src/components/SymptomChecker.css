@@ -43,19 +43,20 @@
 
 .symptom-input:focus {
   outline: none;
-  border-color: #2563eb;
-  box-shadow: 0 0 0 4px #dbeafe;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
 }
 
 .symptom-submit-btn {
   padding: 1rem 1.5rem;
-  background: #2563eb;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: #fff;
   border: none;
   border-radius: 12px;
   font-weight: 600;
   cursor: pointer;
   transition: all 0.2s ease;
+  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
 }
 
 .symptom-submit-btn:hover {
@@ -140,4 +141,71 @@
   font-size: 0.875rem;
   color: #64748b;
   margin: 0;
+}
+
+
+/* Responsive */
+@media (max-width: 768px) {
+  .symptom-checker-section {
+    padding: 2rem 0;
+  }
+  
+  .symptom-checker-header h2 {
+    font-size: 1.5rem;
+  }
+  
+  .symptom-input-group {
+    flex-direction: column;
+  }
+  
+  .symptom-input {
+    padding: 0.875rem 1rem;
+    font-size: 16px; /* Prevents iOS zoom */
+  }
+  
+  .symptom-submit-btn {
+    width: 100%;
+    padding: 0.875rem;
+  }
+  
+  .symptom-results {
+    padding: 1rem;
+  }
+  
+  .result-item {
+    padding: 0.75rem;
+    gap: 0.75rem;
+  }
+  
+  .result-icon {
+    width: 36px;
+    height: 36px;
+  }
+}
+
+@media (max-width: 479px) {
+  .symptom-checker-container {
+    padding: 0 0.75rem;
+  }
+  
+  .symptom-checker-header h2 {
+    font-size: 1.25rem;
+  }
+  
+  .symptom-checker-header p {
+    font-size: 0.9rem;
+  }
+  
+  .symptom-tag {
+    padding: 0.375rem 0.75rem;
+    font-size: 0.8rem;
+  }
+  
+  .result-info h5 {
+    font-size: 0.9rem;
+  }
+  
+  .result-info p {
+    font-size: 0.8rem;
+  }
 }

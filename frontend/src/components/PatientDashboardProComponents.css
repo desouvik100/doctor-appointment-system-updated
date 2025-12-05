@@ -1,0 +1,21 @@
+/* PatientDashboardPro Components - Minimal CSS */
+/* Most styling is now handled by Tailwind CSS inline classes */
+
+/* Custom scrollbar for component containers */
+.component-scrollbar::-webkit-scrollbar {
+  width: 4px;
+  height: 4px;
+}
+
+.component-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+.component-scrollbar::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 2px;
+}
+
+.component-scrollbar::-webkit-scrollbar-thumb:hover {
+  background: #cbd5e1;
+}

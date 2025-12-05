@@ -1,31 +1,20 @@
 /* ============================================
-   CSS Variables - Design System
+   Premium SaaS Design System - CSS Variables
    ============================================ */
 
 :root {
-  /* Brand Colors - Professional Blue */
-  --brand-primary: #2563eb;
-  --brand-primary-hover: #1d4ed8;
-  --brand-primary-light: #eff6ff;
-  --brand-accent: #0284c7;
-  --brand-accent-hover: #0369a1;
+  /* Brand Colors - Indigo/Purple Theme */
+  --brand-primary: #6366f1;
+  --brand-primary-hover: #4f46e5;
+  --brand-primary-light: rgba(99, 102, 241, 0.1);
+  --brand-accent: #8b5cf6;
+  --brand-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   
-  /* Semantic Colors */
-  --success: #10b981;
-  --success-light: #d1fae5;
-  --warning: #f59e0b;
-  --warning-light: #fef3c7;
-  --danger: #ef4444;
-  --danger-light: #fee2e2;
-  --info: #3b82f6;
-  --info-light: #dbeafe;
-  
-  /* Neutral Colors */
+  /* Background Colors */
   --bg: #f8fafc;
   --bg-secondary: #f1f5f9;
+  --bg-tertiary: #e2e8f0;
   --card-bg: #ffffff;
-  --border: #e2e8f0;
-  --border-light: #f1f5f9;
   
   /* Text Colors */
   --text-primary: #1e293b;
@@ -33,34 +22,64 @@
   --text-muted: #94a3b8;
   --text-inverse: #ffffff;
   
-  /* Spacing Scale (4px base) */
-  --space-1: 4px;
-  --space-2: 8px;
-  --space-3: 12px;
-  --space-4: 16px;
-  --space-5: 20px;
-  --space-6: 24px;
-  --space-8: 32px;
-  --space-10: 40px;
-  --space-12: 48px;
+  /* Border Colors */
+  --border: #e2e8f0;
+  --border-light: #f1f5f9;
+  --border-dark: #cbd5e1;
+  
+  /* Status Colors */
+  --success: #10b981;
+  --success-light: #ecfdf5;
+  --success-dark: #059669;
+  
+  --warning: #f59e0b;
+  --warning-light: #fffbeb;
+  --warning-dark: #d97706;
+  
+  --danger: #ef4444;
+  --danger-light: #fef2f2;
+  --danger-dark: #dc2626;
+  
+  --info: #3b82f6;
+  --info-light: #eff6ff;
+  --info-dark: #2563eb;
+
+  /* Shadows */
+  --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.1), 0 1px 2px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  --shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+  --shadow-glow: 0 0 20px rgba(99, 102, 241, 0.3);
   
   /* Border Radius */
-  --radius-sm: 6px;
-  --radius-md: 8px;
-  --radius-lg: 12px;
-  --radius-xl: 16px;
+  --radius-sm: 0.375rem;
+  --radius-md: 0.5rem;
+  --radius-lg: 0.75rem;
+  --radius-xl: 1rem;
+  --radius-2xl: 1.5rem;
   --radius-full: 9999px;
   
-  /* Shadows - Subtle, professional */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.06), 0 1px 2px rgba(0, 0, 0, 0.04);
-  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.08), 0 2px 4px rgba(0, 0, 0, 0.04);
-  --shadow-xl: 0 8px 16px rgba(0, 0, 0, 0.1), 0 4px 8px rgba(0, 0, 0, 0.06);
-  --shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04);
-  --shadow-card-hover: 0 4px 8px rgba(0, 0, 0, 0.08);
+  /* Transitions */
+  --transition-fast: 0.15s ease;
+  --transition-normal: 0.3s ease;
+  --transition-slow: 0.5s ease;
   
-  /* Typography */
-  --font-family: 'Inter', system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  /* Spacing */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+  --space-12: 3rem;
+  --space-16: 4rem;
+  --space-20: 5rem;
+  
+  /* Font Sizes */
   --font-size-xs: 0.75rem;
   --font-size-sm: 0.875rem;
   --font-size-base: 1rem;
@@ -69,92 +88,43 @@
   --font-size-2xl: 1.5rem;
   --font-size-3xl: 1.875rem;
   --font-size-4xl: 2.25rem;
-  --line-height: 1.5;
-  --line-height-tight: 1.25;
-  --line-height-relaxed: 1.625;
+  --font-size-5xl: 3rem;
   
-  /* Transitions */
-  --transition-fast: 150ms ease;
-  --transition-base: 200ms ease;
-  --transition-slow: 300ms ease;
+  /* Font Weights */
+  --font-normal: 400;
+  --font-medium: 500;
+  --font-semibold: 600;
+  --font-bold: 700;
+  --font-extrabold: 800;
   
-  /* Z-index Scale */
+  /* Z-Index */
   --z-dropdown: 100;
   --z-sticky: 200;
-  --z-modal-backdrop: 300;
-  --z-modal: 400;
-  --z-toast: 500;
-  
-  /* Layout */
-  --navbar-height: 56px;
-  --sidebar-width: 260px;
-  --sidebar-collapsed: 72px;
-  --container-max: 1280px;
+  --z-fixed: 300;
+  --z-modal-backdrop: 400;
+  --z-modal: 500;
+  --z-popover: 600;
+  --z-tooltip: 700;
 }
 
-/* ============================================
-   Dark Mode Variables
-   ============================================ */
-
-[data-theme="dark"],
-.dark-mode {
-  /* Background Colors */
+/* Dark Mode Variables */
+.dark-mode,
+[data-theme="dark"] {
   --bg: #0f172a;
   --bg-secondary: #1e293b;
+  --bg-tertiary: #334155;
   --card-bg: #1e293b;
   
-  /* Border Colors */
-  --border: #334155;
-  --border-light: #1e293b;
-  
-  /* Text Colors */
   --text-primary: #f1f5f9;
   --text-secondary: #94a3b8;
   --text-muted: #64748b;
   
-  /* Shadows for dark mode */
-  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.3);
-  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -1px rgba(0, 0, 0, 0.3);
-  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -2px rgba(0, 0, 0, 0.3);
-  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 10px 10px -5px rgba(0, 0, 0, 0.4);
-  --shadow-card: 0 4px 8px rgba(0, 0, 0, 0.3);
-  --shadow-card-hover: 0 8px 16px rgba(0, 0, 0, 0.4);
+  --border: #334155;
+  --border-light: #1e293b;
+  --border-dark: #475569;
   
-  /* Semantic Colors - slightly adjusted for dark mode */
-  --success-light: rgba(16, 185, 129, 0.2);
-  --warning-light: rgba(245, 158, 11, 0.2);
-  --danger-light: rgba(239, 68, 68, 0.2);
-  --info-light: rgba(59, 130, 246, 0.2);
-  --brand-primary-light: rgba(37, 99, 235, 0.2);
-}
-
-/* Apply dark mode to body */
-body.dark-mode,
-[data-theme="dark"] body {
-  background-color: var(--bg);
-  color: var(--text-primary);
-}
-
-/* Dark mode transitions */
-body,
-.card,
-.modal,
-.sidebar,
-.navbar,
-input,
-select,
-textarea,
-button {
-  transition: background-color 0.3s ease, color 0.3s ease, border-color 0.3s ease;
-}
-
-/* Reduced Motion */
-@media (prefers-reduced-motion: reduce) {
-  *,
-  *::before,
-  *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
+  --success-light: rgba(16, 185, 129, 0.1);
+  --warning-light: rgba(245, 158, 11, 0.1);
+  --danger-light: rgba(239, 68, 68, 0.1);
+  --info-light: rgba(59, 130, 246, 0.1);
 }

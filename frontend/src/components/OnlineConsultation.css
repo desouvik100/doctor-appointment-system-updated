@@ -8,7 +8,7 @@
 
 .consultation-header {
   padding: 1.5rem;
-  background: linear-gradient(135deg, #2563eb 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
   color: #fff;
 }
 
@@ -45,18 +45,18 @@
 }
 
 .consultation-option:hover {
-  border-color: #2563eb;
-  background: #dbeafe;
+  border-color: #6366f1;
+  background: #eef2ff;
 }
 
 .consultation-option.selected {
-  border-color: #2563eb;
-  background: #dbeafe;
+  border-color: #6366f1;
+  background: #eef2ff;
 }
 
 .consultation-option i {
   font-size: 1.5rem;
-  color: #2563eb;
+  color: #6366f1;
   margin-bottom: 0.5rem;
 }
 
@@ -85,4 +85,73 @@
 .start-consultation-btn:disabled {
   opacity: 0.5;
   cursor: not-allowed;
+}
+
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .consultation-header {
+    padding: 1.25rem;
+  }
+  
+  .consultation-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .consultation-body {
+    padding: 1.25rem;
+  }
+  
+  .consultation-options {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .consultation-option {
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-align: left;
+  }
+  
+  .consultation-option i {
+    margin-bottom: 0;
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 479px) {
+  .online-consultation {
+    border-radius: 8px;
+  }
+  
+  .consultation-header {
+    padding: 1rem;
+  }
+  
+  .consultation-header h3 {
+    font-size: 1rem;
+  }
+  
+  .consultation-header p {
+    font-size: 0.8rem;
+  }
+  
+  .consultation-body {
+    padding: 1rem;
+  }
+  
+  .consultation-option {
+    padding: 0.875rem;
+  }
+  
+  .consultation-option span {
+    font-size: 0.9rem;
+  }
+  
+  .start-consultation-btn {
+    padding: 0.875rem;
+    font-size: 0.95rem;
+  }
 }

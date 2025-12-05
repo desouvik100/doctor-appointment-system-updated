@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo, useRef, useCallback } from 'react';
+import { useState, useEffect, useMemo } from 'react';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
+import '../styles/premium-saas.css';
 import BookingModal from './BookingModal';
 import AIAssistant from './AIAssistant';
 import ReviewModal from './ReviewModal';
@@ -12,7 +13,7 @@ import DoctorChat from './DoctorChat';
 import HealthTips from './HealthTips';
 import NotificationCenter from './NotificationCenter';
 import HealthCheckup from './HealthCheckup';
-import { trackUserLocation, getUserLocation, saveManualLocation } from '../utils/locationService';
+import { trackUserLocation, getUserLocation } from '../utils/locationService';
 import MedicineReminder from './MedicineReminder';
 import HealthAnalytics from './HealthAnalytics';
 import EmergencyContacts from './EmergencyContacts';
@@ -21,583 +22,310 @@ import ReferralRewards from './ReferralRewards';
 import HealthWallet from './HealthWallet';
 import SecondOpinion from './SecondOpinion';
 import LoyaltyPoints from './LoyaltyPoints';
-import './PatientDashboardPro.css';
+import UserProfileModal from './UserProfileModal';
+import TransactionHistory from './TransactionHistory';
 
 const PatientDashboardPro = ({ user, onLogout }) => {
-  const [currentUser] = useState(user);
+  // Ensure user has id field (handle both id and _id from different sources)
+  const normalizedUser = user ? { ...user, id: user.id || user._id } : null;
+  const [currentUser, setCurrentUser] = useState(normalizedUser);
+  
+  // Debug: Log user data to help troubleshoot
+  console.log('PatientDashboardPro user:', { id: currentUser?.id, _id: currentUser?._id, name: currentUser?.name });
   const [activeSection, setActiveSection] = useState('overview');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
-  
-  // Doctor list state
   const [doctors, setDoctors] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [clinics, setClinics] = useState([]);
   const [loading, setLoading] = useState(false);
-  
-  // Filter state
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialization, setSelectedSpecialization] = useState('');
   const [selectedClinic, setSelectedClinic] = useState('');
-  
-  // Location state
   const [userLocation, setUserLocation] = useState(null);
   const [updatingLocation, setUpdatingLocation] = useState(false);
-  const [nearbyMode, setNearbyMode] = useState(false);
-  const [maxDistance, setMaxDistance] = useState(50);
-  
-  // Favorites & Reviews
   const [favoriteDoctors, setFavoriteDoctors] = useState([]);
   const [showReviewModal, setShowReviewModal] = useState(false);
   const [reviewAppointment, setReviewAppointment] = useState(null);
-  
-  // Chat & Notifications
   const [showChat, setShowChat] = useState(false);
   const [chatDoctor, setChatDoctor] = useState(null);
   const [showNotifications, setShowNotifications] = useState(false);
   const [unreadNotifications, setUnreadNotifications] = useState(0);
-  
-  const searchTimeoutRef = useRef(null);
+  const [showProfileModal, setShowProfileModal] = useState(false);
+  const [nearbyMode, setNearbyMode] = useState(false);
+  const [maxDistance, setMaxDistance] = useState(50);
 
-  // Navigation menu structure
-  const menuSections = [
-    {
-      title: 'Main',
-      items: [
-        { id: 'overview', icon: 'fas fa-home', label: 'Overview' },
-        { id: 'doctors', icon: 'fas fa-user-md', label: 'Find Doctors' },
-        { id: 'appointments', icon: 'fas fa-calendar-check', label: 'Appointments' },
-      ]
-    },
-    {
-      title: 'Health Services',
-      items: [
-        { id: 'ai-assistant', icon: 'fas fa-robot', label: 'AI Assistant' },
-        { id: 'health', icon: 'fas fa-heartbeat', label: 'Health Profile' },
-        { id: 'lab-reports', icon: 'fas fa-flask', label: 'Lab Reports' },
-        { id: 'checkup', icon: 'fas fa-stethoscope', label: 'Health Checkup' },
-        { id: 'health-analytics', icon: 'fas fa-chart-line', label: 'Analytics' },
-      ]
-    },
-    {
-      title: 'Services',
-      items: [
-        { id: 'medicines', icon: 'fas fa-pills', label: 'Medicines' },
-        { id: 'medicine-reminder', icon: 'fas fa-bell', label: 'Reminders' },
-        { id: 'ambulance', icon: 'fas fa-ambulance', label: 'Ambulance' },
-        { id: 'second-opinion', icon: 'fas fa-user-md', label: 'Second Opinion' },
-      ]
-    },
-    {
-      title: 'Financial',
-      items: [
-        { id: 'wallet', icon: 'fas fa-wallet', label: 'Wallet' },
-        { id: 'insurance', icon: 'fas fa-shield-alt', label: 'Insurance' },
-        { id: 'loyalty', icon: 'fas fa-coins', label: 'Loyalty Points' },
-        { id: 'referrals', icon: 'fas fa-gift', label: 'Refer & Earn' },
-      ]
-    },
-    {
-      title: 'Support',
-      items: [
-        { id: 'emergency', icon: 'fas fa-phone-alt', label: 'Emergency' },
-        { id: 'health-tips', icon: 'fas fa-lightbulb', label: 'Health Tips' },
-        { id: 'messages', icon: 'fas fa-comments', label: 'Messages' },
-      ]
-    }
-  ];
-
-  useEffect(() => {
-    fetchDoctors();
-    fetchAppointments();
-    fetchClinics();
-    fetchUserLocation();
-    fetchFavorites();
-    fetchUnreadNotifications();
-  }, []);
-
-  const fetchUnreadNotifications = async () => {
-    try {
-      const userId = currentUser.id || currentUser._id;
-      const response = await axios.get(`/api/notifications/unread-count/${userId}`);
-      setUnreadNotifications(response.data.unreadCount || 0);
-    } catch (error) {
-      setUnreadNotifications(0);
-    }
+  const handleProfileUpdate = (updatedUser) => {
+    setCurrentUser(updatedUser);
   };
 
-  const fetchUserLocation = async () => {
-    try {
-      const userId = currentUser.id || currentUser._id;
-      const location = await getUserLocation(userId);
-      if (location?.latitude) setUserLocation(location);
-    } catch (error) {
-      console.log('No saved location found');
-    }
-  };
-
-  const fetchDoctors = async () => {
+  const fetchNearbyDoctors = async () => {
+    const userId = getUserId();
+    if (!userId || !userLocation?.latitude) return;
     try {
       setLoading(true);
-      const response = await axios.get('/api/doctors');
-      setDoctors(response.data);
+      const params = new URLSearchParams({ maxDistance: maxDistance.toString() });
+      if (selectedSpecialization) params.append('specialization', selectedSpecialization);
+      const response = await axios.get(`/api/location/nearby-doctors/${userId}?${params}`);
+      setDoctors(response.data.doctors || []);
+      toast.success(`Found ${response.data.totalFound} doctors within ${maxDistance}km`);
     } catch (error) {
-      toast.error('Failed to load doctors');
+      toast.error('Failed to load nearby doctors');
+      setNearbyMode(false);
+      fetchDoctors();
     } finally {
       setLoading(false);
     }
   };
 
-  const fetchAppointments = async () => {
-    try {
-      const userId = currentUser.id || currentUser._id;
-      const response = await axios.get(`/api/appointments/user/${userId}`);
-      setAppointments(response.data);
-    } catch (error) {
-      console.error('Error fetching appointments:', error);
-    }
-  };
-
-  const fetchClinics = async () => {
-    try {
-      const response = await axios.get('/api/clinics');
-      setClinics(response.data);
-    } catch (error) {
-      console.error('Error fetching clinics:', error);
-    }
-  };
-
-  const fetchFavorites = async () => {
-    try {
-      const userId = currentUser.id || currentUser._id;
-      const response = await axios.get(`/api/favorites/${userId}`);
-      setFavoriteDoctors(response.data.map(d => d._id));
-    } catch (error) {
-      console.log('Error fetching favorites');
-    }
-  };
-
-  const handleUpdateLocation = async () => {
-    setUpdatingLocation(true);
-    try {
-      const userId = currentUser.id || currentUser._id;
-      const result = await trackUserLocation(userId);
-      if (result.success) {
-        setUserLocation(result.location);
-        toast.success(`Location: ${result.location.city || 'Unknown'}`);
-      } else {
-        toast.error(result.error || 'Failed to update location');
+  const toggleNearbyMode = async () => {
+    if (!nearbyMode) {
+      if (!userLocation?.latitude) {
+        toast.error('Please update your location first');
+        return;
       }
-    } catch (error) {
-      toast.error('Failed to get your location');
-    } finally {
-      setUpdatingLocation(false);
+      setNearbyMode(true);
+      fetchNearbyDoctors();
+    } else {
+      setNearbyMode(false);
+      fetchDoctors();
     }
   };
 
-  const filteredDoctors = useMemo(() => {
-    return doctors.filter(doctor => {
-      const matchesSearch = !searchTerm || 
-        doctor.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        doctor.specialization.toLowerCase().includes(searchTerm.toLowerCase());
-      const matchesSpecialization = !selectedSpecialization || 
-        doctor.specialization === selectedSpecialization;
-      const matchesClinic = !selectedClinic || 
-        doctor.clinicId?._id === selectedClinic;
-      return matchesSearch && matchesSpecialization && matchesClinic;
-    });
-  }, [doctors, searchTerm, selectedSpecialization, selectedClinic]);
+  const menuSections = [
+    { title: 'Main', items: [
+      { id: 'overview', icon: 'fas fa-home', label: 'Overview' },
+      { id: 'doctors', icon: 'fas fa-user-md', label: 'Find Doctors' },
+      { id: 'appointments', icon: 'fas fa-calendar-check', label: 'Appointments' },
+    ]},
+    { title: 'Health', items: [
+      { id: 'ai-assistant', icon: 'fas fa-robot', label: 'AI Assistant' },
+      { id: 'health', icon: 'fas fa-heartbeat', label: 'Health Profile' },
+      { id: 'lab-reports', icon: 'fas fa-flask', label: 'Lab Reports' },
+      { id: 'checkup', icon: 'fas fa-stethoscope', label: 'Health Checkup' },
+      { id: 'health-analytics', icon: 'fas fa-chart-line', label: 'Analytics' },
+    ]},
+    { title: 'Services', items: [
+      { id: 'medicines', icon: 'fas fa-pills', label: 'Medicines' },
+      { id: 'medicine-reminder', icon: 'fas fa-bell', label: 'Reminders' },
+      { id: 'ambulance', icon: 'fas fa-ambulance', label: 'Ambulance' },
+      { id: 'second-opinion', icon: 'fas fa-user-md', label: 'Second Opinion' },
+    ]},
+    { title: 'Financial', items: [
+      { id: 'wallet', icon: 'fas fa-wallet', label: 'Wallet' },
+      { id: 'transactions', icon: 'fas fa-receipt', label: 'Transactions' },
+      { id: 'insurance', icon: 'fas fa-shield-alt', label: 'Insurance' },
+      { id: 'loyalty', icon: 'fas fa-coins', label: 'Loyalty Points' },
+      { id: 'referrals', icon: 'fas fa-gift', label: 'Refer & Earn' },
+    ]},
+    { title: 'Support', items: [
+      { id: 'emergency', icon: 'fas fa-phone-alt', label: 'Emergency' },
+      { id: 'health-tips', icon: 'fas fa-lightbulb', label: 'Health Tips' },
+      { id: 'messages', icon: 'fas fa-comments', label: 'Messages' },
+    ]}
+  ];
 
-  const specializations = useMemo(() => {
-    return [...new Set(doctors.map(d => d.specialization))].sort();
-  }, [doctors]);
+  const getUserId = () => currentUser?.id || currentUser?._id;
 
-  const getUserInitials = () => {
-    return currentUser.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
-  };
+  useEffect(() => { fetchDoctors(); fetchClinics(); if (getUserId()) { fetchAppointments(); fetchUserLocation(); fetchFavorites(); fetchUnreadNotifications(); } }, [currentUser]);
 
-  const toggleFavorite = async (doctorId) => {
-    try {
-      const userId = currentUser.id || currentUser._id;
-      const response = await axios.post(`/api/favorites/${userId}/toggle`, { doctorId });
-      if (response.data.isFavorite) {
-        setFavoriteDoctors([...favoriteDoctors, doctorId]);
-        toast.success('Added to favorites');
-      } else {
-        setFavoriteDoctors(favoriteDoctors.filter(id => id !== doctorId));
-        toast.success('Removed from favorites');
-      }
-    } catch (error) {
-      toast.error('Failed to update favorites');
-    }
-  };
-
-  const upcomingAppointments = appointments.filter(apt => 
-    new Date(apt.date) >= new Date() && apt.status !== 'cancelled'
-  ).slice(0, 3);
-
+  const fetchUnreadNotifications = async () => { const userId = getUserId(); if (!userId) return; try { const res = await axios.get(`/api/notifications/unread-count/${userId}`); setUnreadNotifications(res.data.unreadCount || 0); } catch { setUnreadNotifications(0); } };
+  const fetchUserLocation = async () => { const userId = getUserId(); if (!userId) return; try { const loc = await getUserLocation(userId); if (loc?.latitude) setUserLocation(loc); } catch { /* no location */ } };
+  const fetchDoctors = async () => { try { setLoading(true); const res = await axios.get('/api/doctors'); setDoctors(res.data); } catch { toast.error('Failed to load doctors'); } finally { setLoading(false); } };
+  const fetchAppointments = async () => { const userId = getUserId(); if (!userId) return; try { const res = await axios.get(`/api/appointments/user/${userId}`); setAppointments(res.data); } catch (e) { console.error(e); } };
+  const fetchClinics = async () => { try { const res = await axios.get('/api/clinics'); setClinics(res.data); } catch (e) { console.error(e); } };
+  const fetchFavorites = async () => { const userId = getUserId(); if (!userId) return; try { const res = await axios.get(`/api/favorites/${userId}`); setFavoriteDoctors(res.data.map(d => d._id)); } catch { /* no favorites */ } };
+  const handleUpdateLocation = async () => { const userId = getUserId(); if (!userId) { toast.error('User not found'); return; } setUpdatingLocation(true); try { const result = await trackUserLocation(userId); if (result.success) { setUserLocation(result.location); toast.success(`Location: ${result.location.city || 'Unknown'}`); } else { toast.error(result.error || 'Failed'); } } catch { toast.error('Failed to get location'); } finally { setUpdatingLocation(false); } };
+  const filteredDoctors = useMemo(() => doctors.filter(doc => { const matchSearch = !searchTerm || doc.name.toLowerCase().includes(searchTerm.toLowerCase()) || doc.specialization.toLowerCase().includes(searchTerm.toLowerCase()); const matchSpec = !selectedSpecialization || doc.specialization === selectedSpecialization; const matchClinic = !selectedClinic || doc.clinicId?._id === selectedClinic; return matchSearch && matchSpec && matchClinic; }), [doctors, searchTerm, selectedSpecialization, selectedClinic]);
+  const specializations = useMemo(() => [...new Set(doctors.map(d => d.specialization))].sort(), [doctors]);
+  const getUserInitials = () => (currentUser?.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+  const toggleFavorite = async (doctorId) => { const userId = getUserId(); if (!userId) return; try { const res = await axios.post(`/api/favorites/${userId}/toggle`, { doctorId }); if (res.data.isFavorite) { setFavoriteDoctors([...favoriteDoctors, doctorId]); toast.success('Added'); } else { setFavoriteDoctors(favoriteDoctors.filter(id => id !== doctorId)); toast.success('Removed'); } } catch { toast.error('Failed'); } };
+  const upcomingAppointments = appointments.filter(apt => new Date(apt.date) >= new Date() && apt.status !== 'cancelled').slice(0, 3);
   const recentDoctors = doctors.slice(0, 4);
+  const stats = { upcomingCount: upcomingAppointments.length, completedCount: appointments.filter(a => a.status === 'completed').length, favoritesCount: favoriteDoctors.length };
 
-  // Quick stats for overview
-  const stats = {
-    totalAppointments: appointments.length,
-    upcomingCount: upcomingAppointments.length,
-    completedCount: appointments.filter(a => a.status === 'completed').length,
-    favoritesCount: favoriteDoctors.length
-  };
 
-  
-return (
-    <div className={`dashboard-pro ${sidebarCollapsed ? 'dashboard-pro--collapsed' : ''} ${mobileSidebarOpen ? 'dashboard-pro--sidebar-open' : ''}`}>
-      {/* Mobile Overlay */}
-      {mobileSidebarOpen && (
-        <div className="dashboard-pro__overlay" onClick={() => setMobileSidebarOpen(false)} />
-      )}
-      
-      {/* Sidebar Navigation */}
-      <aside className="dashboard-pro__sidebar">
-        <div className="dashboard-pro__sidebar-header">
-          <div className="dashboard-pro__logo">
-            <div className="dashboard-pro__logo-icon">
-              <svg className="dashboard-pro__bpm-logo" viewBox="0 0 60 40" fill="none">
-                <path 
-                  className="dashboard-pro__bpm-line" 
-                  d="M0 20 L10 20 L15 20 L20 8 L25 32 L30 12 L35 28 L40 20 L50 20 L60 20" 
-                  stroke="#ef4444" 
-                  strokeWidth="3" 
-                  strokeLinecap="round" 
-                  strokeLinejoin="round"
-                  fill="none"
-                />
-              </svg>
-            </div>
-            <span>HealthSync</span>
+  return (
+    <div className="min-h-screen bg-gradient-to-br from-slate-200 via-gray-100 to-zinc-200 flex">
+      {mobileSidebarOpen && <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" onClick={() => setMobileSidebarOpen(false)} />}
+      <aside className={`fixed lg:sticky top-0 left-0 h-screen bg-gradient-to-b from-gray-950 via-slate-950 to-black border-r border-slate-800/50 z-50 transition-all duration-300 flex flex-col ${sidebarCollapsed ? 'w-20' : 'w-72'} ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`} onMouseEnter={() => setSidebarCollapsed(false)} onMouseLeave={() => setSidebarCollapsed(true)}>
+        <div className="h-20 flex items-center px-4 border-b border-slate-800/50">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg animate-logo-glow">
+            <svg className="w-8 h-8" viewBox="0 0 60 40" fill="none">
+              <path d="M0 20 L10 20 L15 20" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"/>
+              <path className="ecg-line" d="M15 20 L20 8 L25 32 L30 12 L35 28 L40 20" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+              <path d="M40 20 L50 20 L60 20" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"/>
+            </svg>
           </div>
+          <span className={`ml-3 font-bold text-white text-xl transition-opacity ${sidebarCollapsed ? 'opacity-0' : 'opacity-100'}`}>HealthSync</span>
         </div>
-
-        <nav className="dashboard-pro__nav">
+        <nav className="flex-1 overflow-y-auto py-4 px-3 space-y-6">
           {menuSections.map((section, idx) => (
-            <div key={idx} className="dashboard-pro__nav-section">
-              <h3 className="dashboard-pro__nav-title">{section.title}</h3>
-              {section.items.map(item => (
-                <button
-                  key={item.id}
-                  className={`dashboard-pro__nav-item ${activeSection === item.id ? 'dashboard-pro__nav-item--active' : ''}`}
-                  onClick={() => { setActiveSection(item.id); setMobileSidebarOpen(false); }}
-                  title={item.label}
-                >
-                  <i className={item.icon}></i>
-                  <span>{item.label}</span>
-                </button>
-              ))}
+            <div key={idx}>
+              <h3 className={`text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-3 ${sidebarCollapsed ? 'opacity-0' : 'opacity-100'}`}>{section.title}</h3>
+              <div className="space-y-1">
+                {section.items.map(item => (
+                  <button key={item.id} onClick={() => { setActiveSection(item.id); setMobileSidebarOpen(false); }} title={item.label} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeSection === item.id ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
+                    <i className={`${item.icon} w-5 text-center`}></i>
+                    <span className={`whitespace-nowrap ${sidebarCollapsed ? 'opacity-0 w-0' : 'opacity-100'}`}>{item.label}</span>
+                  </button>
+                ))}
+              </div>
             </div>
           ))}
         </nav>
-
-        <div className="dashboard-pro__sidebar-footer">
-          <button className="dashboard-pro__logout-btn" onClick={onLogout}>
+        <div className="p-4 border-t border-slate-800/50">
+          <button onClick={() => setShowProfileModal(true)} className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-700/50 transition-colors cursor-pointer">
+            {currentUser?.profilePhoto ? (
+              <img src={currentUser.profilePhoto} alt="Profile" className="w-10 h-10 rounded-xl object-cover" />
+            ) : (
+              <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm">{getUserInitials()}</div>
+            )}
+            <div className={`flex-1 min-w-0 text-left ${sidebarCollapsed ? 'hidden' : ''}`}>
+              <p className="text-sm font-medium text-white truncate">{currentUser?.name}</p>
+              <p className="text-xs text-slate-400 flex items-center gap-1"><i className="fas fa-cog text-[10px]"></i> Edit Profile</p>
+            </div>
+          </button>
+          <button onClick={onLogout} className="mt-3 w-full flex items-center justify-center gap-2 px-3 py-2 rounded-xl text-sm text-slate-400 hover:text-white hover:bg-red-500/20">
             <i className="fas fa-sign-out-alt"></i>
-            <span>Logout</span>
+            {!sidebarCollapsed && <span>Logout</span>}
           </button>
         </div>
       </aside>
 
-      {/* Main Content */}
-      <main className="dashboard-pro__main">
-        {/* Top Header */}
-        <header className="dashboard-pro__header">
-          <div className="dashboard-pro__header-left">
-            <button 
-              className="dashboard-pro__menu-btn"
-              onClick={() => setMobileSidebarOpen(true)}
-            >
-              <i className="fas fa-bars"></i>
-            </button>
-            <h1 className="dashboard-pro__page-title">
-              {menuSections.flatMap(s => s.items).find(i => i.id === activeSection)?.label || 'Dashboard'}
-            </h1>
-            {userLocation?.city && (
-              <span className="dashboard-pro__location">
-                <i className="fas fa-map-marker-alt"></i> {userLocation.city}
-              </span>
-            )}
-          </div>
-          <div className="dashboard-pro__header-right">
-            <button 
-              className="dashboard-pro__header-btn"
-              onClick={handleUpdateLocation}
-              disabled={updatingLocation}
-            >
-              <i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'}`}></i>
-            </button>
-            <button 
-              className="dashboard-pro__header-btn dashboard-pro__header-btn--notification"
-              onClick={() => setShowNotifications(true)}
-            >
-              <i className="fas fa-bell"></i>
-              {unreadNotifications > 0 && (
-                <span className="dashboard-pro__badge">{unreadNotifications}</span>
-              )}
-            </button>
-            <div className="dashboard-pro__user-menu">
-              <div className="dashboard-pro__avatar">{getUserInitials()}</div>
-              <div className="dashboard-pro__user-info">
-                <span className="dashboard-pro__user-name">{currentUser.name}</span>
-                <span className="dashboard-pro__user-email">{currentUser.email}</span>
-              </div>
+      <main className="flex-1 flex flex-col min-h-screen">
+        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 px-4 lg:px-8 h-16 flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <button className="lg:hidden w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center" onClick={() => setMobileSidebarOpen(true)}><i className="fas fa-bars text-slate-600"></i></button>
+            <div>
+              <h1 className="text-lg font-bold text-slate-800">Welcome, {(currentUser?.name || 'User').split(' ')[0]}! 👋</h1>
+              <p className="text-xs text-slate-500">{userLocation?.city ? <><i className="fas fa-map-marker-alt text-indigo-500 mr-1"></i>{userLocation.city}</> : 'Have a healthy day!'}</p>
             </div>
           </div>
+          <div className="flex items-center gap-3">
+            <button onClick={() => setActiveSection('doctors')} className="hidden sm:flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white font-bold rounded-2xl hover:shadow-xl hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none"><i className="fas fa-calendar-plus text-lg"></i><span className="text-base">Book Now</span></button>
+            <button onClick={handleUpdateLocation} disabled={updatingLocation} className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center"><i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'} text-slate-600`}></i></button>
+            <button onClick={() => setShowNotifications(true)} className="relative w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center">
+              <i className="fas fa-bell text-slate-600"></i>
+              {unreadNotifications > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">{unreadNotifications}</span>}
+            </button>
+            <button onClick={() => setShowProfileModal(true)} className="hidden sm:flex items-center gap-3 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl p-2 -m-2 transition-colors">
+              {currentUser?.profilePhoto ? (
+                <img src={currentUser.profilePhoto} alt="Profile" className="w-10 h-10 rounded-xl object-cover" />
+              ) : (
+                <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-sm">{getUserInitials()}</div>
+              )}
+              <div className="hidden md:block text-left"><p className="text-sm font-medium text-slate-800">{currentUser?.name}</p><p className="text-xs text-slate-500">{currentUser?.email}</p></div>
+            </button>
+          </div>
         </header>
-
-        {/* Content Area */}
-        <div className="dashboard-pro__content">
-          {/* Overview Section */}
+        <div className="flex-1 p-4 lg:p-8 overflow-auto">
           {activeSection === 'overview' && (
-            <div className="dashboard-pro__overview">
-              {/* Welcome Banner */}
-              <div className="dashboard-pro__welcome-banner">
-                <div className="dashboard-pro__welcome-content">
-                  <h2>Welcome back, {currentUser.name.split(' ')[0]}! 👋</h2>
-                  <p>Here's what's happening with your health today.</p>
-                </div>
-                <button 
-                  className="dashboard-pro__sos-btn"
-                  onClick={() => window.location.href = 'tel:102'}
-                >
-                  <i className="fas fa-ambulance"></i> Emergency SOS
-                </button>
-              </div>
+            <div className="space-y-6">
 
-              {/* Stats Cards */}
-              <div className="dashboard-pro__stats-grid">
-                <div className="dashboard-pro__stat-card dashboard-pro__stat-card--primary">
-                  <div className="dashboard-pro__stat-icon">
-                    <i className="fas fa-calendar-check"></i>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                {[{ icon: 'fa-users', value: '10,000+', label: 'Happy Patients', color: 'from-blue-500 to-cyan-500' }, { icon: 'fa-user-md', value: '500+', label: 'Expert Doctors', color: 'from-emerald-500 to-teal-500' }, { icon: 'fa-star', value: '4.9/5', label: 'User Rating', color: 'from-amber-500 to-orange-500' }, { icon: 'fa-hospital', value: '50+', label: 'Partner Clinics', color: 'from-purple-500 to-pink-500' }].map((b, i) => (
+                  <div key={i} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
+                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${b.color} flex items-center justify-center mb-3`}><i className={`fas ${b.icon} text-white`}></i></div>
+                    <p className="text-xl font-bold text-slate-800">{b.value}</p><p className="text-sm text-slate-500">{b.label}</p>
                   </div>
-                  <div className="dashboard-pro__stat-info">
-                    <span className="dashboard-pro__stat-value">{stats.upcomingCount}</span>
-                    <span className="dashboard-pro__stat-label">Upcoming</span>
+                ))}
+              </div>
+              <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                {[{ icon: 'fa-calendar-check', value: stats.upcomingCount, label: 'Upcoming', gradient: 'from-indigo-500 to-purple-600', bg: 'bg-indigo-50' }, { icon: 'fa-check-circle', value: stats.completedCount, label: 'Completed', gradient: 'from-emerald-500 to-teal-600', bg: 'bg-emerald-50' }, { icon: 'fa-heart', value: stats.favoritesCount, label: 'Favorites', gradient: 'from-rose-500 to-pink-600', bg: 'bg-rose-50' }, { icon: 'fa-user-md', value: doctors.length, label: 'Doctors', gradient: 'from-cyan-500 to-blue-600', bg: 'bg-cyan-50' }].map((s, i) => (
+                  <div key={i} className={`${s.bg} rounded-xl p-3 border border-slate-100 hover:shadow-md transition-all flex items-center gap-3`}>
+                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${s.gradient} flex items-center justify-center shadow`}><i className={`fas ${s.icon} text-white text-sm`}></i></div>
+                    <div><p className="text-xl font-bold text-slate-800">{s.value}</p><p className="text-xs text-slate-500">{s.label}</p></div>
                   </div>
-                </div>
-                <div className="dashboard-pro__stat-card dashboard-pro__stat-card--success">
-                  <div className="dashboard-pro__stat-icon">
-                    <i className="fas fa-check-circle"></i>
-                  </div>
-                  <div className="dashboard-pro__stat-info">
-                    <span className="dashboard-pro__stat-value">{stats.completedCount}</span>
-                    <span className="dashboard-pro__stat-label">Completed</span>
-                  </div>
-                </div>
-                <div className="dashboard-pro__stat-card dashboard-pro__stat-card--warning">
-                  <div className="dashboard-pro__stat-icon">
-                    <i className="fas fa-heart"></i>
-                  </div>
-                  <div className="dashboard-pro__stat-info">
-                    <span className="dashboard-pro__stat-value">{stats.favoritesCount}</span>
-                    <span className="dashboard-pro__stat-label">Favorites</span>
-                  </div>
-                </div>
-                <div className="dashboard-pro__stat-card dashboard-pro__stat-card--info">
-                  <div className="dashboard-pro__stat-icon">
-                    <i className="fas fa-user-md"></i>
-                  </div>
-                  <div className="dashboard-pro__stat-info">
-                    <span className="dashboard-pro__stat-value">{doctors.length}</span>
-                    <span className="dashboard-pro__stat-label">Doctors</span>
-                  </div>
+                ))}
+              </div>
+              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-bold text-slate-800">🔥 Top Doctors</h3><button onClick={() => setActiveSection('doctors')} className="text-sm font-medium text-indigo-600 hover:text-indigo-700">View All →</button></div>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {recentDoctors.map(doc => (
+                    <div key={doc._id} className="group p-4 rounded-xl bg-slate-50 hover:bg-white border-2 border-transparent hover:border-indigo-200 hover:shadow-lg transition-all text-center">
+                      <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform overflow-hidden">
+                        {doc.profilePhoto ? <img src={doc.profilePhoto} alt={doc.name} className="w-full h-full object-cover" /> : <i className="fas fa-user-md text-white text-2xl"></i>}
+                      </div>
+                      <h4 className="font-semibold text-slate-800 text-sm">Dr. {doc.name}</h4><p className="text-xs text-slate-500 mb-2">{doc.specialization}</p><p className="text-sm font-bold text-indigo-600 mb-3">₹{doc.consultationFee}</p>
+                      <button onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className="w-full py-2 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-lg hover:shadow-lg">Book Now</button>
+                    </div>
+                  ))}
                 </div>
               </div>
-
-              {/* Quick Actions */}
-              <div className="dashboard-pro__quick-actions">
-                <h3>Quick Actions</h3>
-                <div className="dashboard-pro__actions-grid">
-                  <button className="dashboard-pro__action-card" onClick={() => setActiveSection('doctors')}>
-                    <i className="fas fa-user-md"></i>
-                    <span>Book Appointment</span>
-                  </button>
-                  <button className="dashboard-pro__action-card" onClick={() => setActiveSection('ai-assistant')}>
-                    <i className="fas fa-robot"></i>
-                    <span>AI Health Check</span>
-                  </button>
-                  <button className="dashboard-pro__action-card" onClick={() => setActiveSection('medicines')}>
-                    <i className="fas fa-pills"></i>
-                    <span>Order Medicines</span>
-                  </button>
-                  <button className="dashboard-pro__action-card" onClick={() => setActiveSection('lab-reports')}>
-                    <i className="fas fa-flask"></i>
-                    <span>Lab Reports</span>
-                  </button>
+              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                <h3 className="text-lg font-bold text-slate-800 mb-4">Quick Actions</h3>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                  {[{ icon: 'fa-user-md', label: 'Book Appointment', section: 'doctors', color: 'from-indigo-500 to-purple-600' }, { icon: 'fa-robot', label: 'AI Health Check', section: 'ai-assistant', color: 'from-emerald-500 to-teal-600' }, { icon: 'fa-pills', label: 'Order Medicines', section: 'medicines', color: 'from-amber-500 to-orange-600' }, { icon: 'fa-flask', label: 'Lab Reports', section: 'lab-reports', color: 'from-rose-500 to-pink-600' }].map((a, i) => (
+                    <button key={i} onClick={() => setActiveSection(a.section)} className="group flex flex-col items-center gap-3 p-5 rounded-xl bg-slate-50 hover:bg-white border-2 border-transparent hover:border-indigo-200 hover:shadow-lg transition-all">
+                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${a.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}><i className={`fas ${a.icon} text-white text-xl`}></i></div>
+                      <span className="text-sm font-medium text-slate-700">{a.label}</span>
+                    </button>
+                  ))}
                 </div>
               </div>
-
-              {/* Upcoming Appointments */}
               {upcomingAppointments.length > 0 && (
-                <div className="dashboard-pro__section">
-                  <div className="dashboard-pro__section-header">
-                    <h3>Upcoming Appointments</h3>
-                    <button onClick={() => setActiveSection('appointments')}>View All</button>
-                  </div>
-                  <div className="dashboard-pro__appointments-list">
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                  <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-bold text-slate-800">Upcoming Appointments</h3><button onClick={() => setActiveSection('appointments')} className="text-sm font-medium text-indigo-600 hover:text-indigo-700">View All →</button></div>
+                  <div className="space-y-3">
                     {upcomingAppointments.map(apt => (
-                      <div key={apt._id} className="dashboard-pro__appointment-card">
-                        <div className="dashboard-pro__appointment-avatar">
-                          <i className="fas fa-user-md"></i>
-                        </div>
-                        <div className="dashboard-pro__appointment-info">
-                          <h4>Dr. {apt.doctorId?.name || 'Unknown'}</h4>
-                          <p>{apt.doctorId?.specialization}</p>
-                        </div>
-                        <div className="dashboard-pro__appointment-time">
-                          <span className="dashboard-pro__appointment-date">
-                            {new Date(apt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}
-                          </span>
-                          <span className="dashboard-pro__appointment-hour">{apt.time}</span>
-                        </div>
-                        <span className={`dashboard-pro__appointment-status dashboard-pro__appointment-status--${apt.status}`}>
-                          {apt.status}
-                        </span>
+                      <div key={apt._id} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 hover:bg-indigo-50 transition-colors">
+                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center"><i className="fas fa-user-md text-white"></i></div>
+                        <div className="flex-1 min-w-0"><h4 className="font-semibold text-slate-800">Dr. {apt.doctorId?.name || 'Unknown'}</h4><p className="text-sm text-slate-500">{apt.doctorId?.specialization}</p></div>
+                        <div className="text-right"><p className="text-sm font-semibold text-slate-800">{new Date(apt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p><p className="text-sm text-slate-500">{apt.time}</p></div>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${apt.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : apt.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'}`}>{apt.status}</span>
                       </div>
                     ))}
                   </div>
                 </div>
               )}
-
-              {/* Featured Doctors */}
-              <div className="dashboard-pro__section">
-                <div className="dashboard-pro__section-header">
-                  <h3>Top Doctors</h3>
-                  <button onClick={() => setActiveSection('doctors')}>View All</button>
-                </div>
-                <div className="dashboard-pro__doctors-grid">
-                  {recentDoctors.map(doctor => (
-                    <div key={doctor._id} className="dashboard-pro__doctor-card">
-                      <div className="dashboard-pro__doctor-photo">
-                        {doctor.profilePhoto ? (
-                          <img src={doctor.profilePhoto} alt={doctor.name} />
-                        ) : (
-                          <i className="fas fa-user-md"></i>
-                        )}
-                      </div>
-                      <h4>Dr. {doctor.name}</h4>
-                      <p>{doctor.specialization}</p>
-                      <span className="dashboard-pro__doctor-fee">₹{doctor.consultationFee}</span>
-                      <button 
-                        className="dashboard-pro__book-btn"
-                        onClick={() => {
-                          setSelectedDoctor(doctor);
-                          setShowBookingModal(true);
-                        }}
-                      >
-                        Book Now
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
             </div>
           )}
-
-
-          {/* Doctors Section */}
           {activeSection === 'doctors' && (
-            <div className="dashboard-pro__doctors-section">
-              <div className="dashboard-pro__filters">
-                <div className="dashboard-pro__search-box">
-                  <i className="fas fa-search"></i>
-                  <input
-                    type="text"
-                    placeholder="Search doctors by name or specialization..."
-                    value={searchTerm}
-                    onChange={(e) => setSearchTerm(e.target.value)}
-                  />
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                <div className="flex flex-col lg:flex-row gap-4">
+                  <div className="flex-1 relative"><i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" placeholder="Search doctors..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
+                  <select value={selectedSpecialization} onChange={(e) => { setSelectedSpecialization(e.target.value); if (nearbyMode) setTimeout(fetchNearbyDoctors, 100); }} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="">All Specializations</option>{specializations.map(s => <option key={s} value={s}>{s}</option>)}</select>
+                  {!nearbyMode && <select value={selectedClinic} onChange={(e) => setSelectedClinic(e.target.value)} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="">All Clinics</option>{clinics.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}</select>}
+                  <button onClick={toggleNearbyMode} disabled={!userLocation?.latitude && !nearbyMode} className={`px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${nearbyMode ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600'} ${!userLocation?.latitude && !nearbyMode ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                    <i className="fas fa-map-marker-alt"></i>
+                    {nearbyMode ? 'Show All' : 'Find Nearby'}
+                  </button>
+                  {nearbyMode && (
+                    <select value={maxDistance} onChange={(e) => { setMaxDistance(Number(e.target.value)); setTimeout(fetchNearbyDoctors, 100); }} className="px-4 py-3 bg-indigo-50 border border-indigo-200 rounded-xl text-sm text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                      <option value={5}>Within 5 km</option>
+                      <option value={10}>Within 10 km</option>
+                      <option value={25}>Within 25 km</option>
+                      <option value={50}>Within 50 km</option>
+                      <option value={100}>Within 100 km</option>
+                    </select>
+                  )}
                 </div>
-                <select
-                  value={selectedSpecialization}
-                  onChange={(e) => setSelectedSpecialization(e.target.value)}
-                >
-                  <option value="">All Specializations</option>
-                  {specializations.map(spec => (
-                    <option key={spec} value={spec}>{spec}</option>
-                  ))}
-                </select>
-                <select
-                  value={selectedClinic}
-                  onChange={(e) => setSelectedClinic(e.target.value)}
-                >
-                  <option value="">All Clinics</option>
-                  {clinics.map(clinic => (
-                    <option key={clinic._id} value={clinic._id}>{clinic.name}</option>
-                  ))}
-                </select>
               </div>
-
-              <div className="dashboard-pro__results-header">
-                <span>{filteredDoctors.length} doctors found</span>
+              <div className="flex items-center justify-between">
+                <p className="text-sm text-slate-500 font-medium">{nearbyMode ? doctors.length : filteredDoctors.length} doctors found {nearbyMode && userLocation?.city && <span className="text-indigo-600">near {userLocation.city}</span>}</p>
+                {!userLocation?.latitude && <button onClick={handleUpdateLocation} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"><i className="fas fa-location-crosshairs"></i> Update location to find nearby doctors</button>}
               </div>
-
-              {loading ? (
-                <div className="dashboard-pro__loading">
-                  <div className="dashboard-pro__spinner"></div>
-                  <p>Loading doctors...</p>
-                </div>
-              ) : filteredDoctors.length === 0 ? (
-                <div className="dashboard-pro__empty">
-                  <i className="fas fa-user-md"></i>
-                  <h3>No doctors found</h3>
-                  <p>Try adjusting your search filters</p>
-                </div>
+              {loading ? (<div className="flex flex-col items-center justify-center py-20"><div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div><p className="text-slate-500">Loading...</p></div>
+              ) : filteredDoctors.length === 0 ? (<div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-user-md text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">No doctors found</h3><p className="text-slate-500">Try adjusting your filters</p></div>
               ) : (
-                <div className="dashboard-pro__doctors-list">
-                  {filteredDoctors.map(doctor => (
-                    <div key={doctor._id} className="dashboard-pro__doctor-row">
-                      <div className="dashboard-pro__doctor-main">
-                        <div className="dashboard-pro__doctor-avatar">
-                          {doctor.profilePhoto ? (
-                            <img src={doctor.profilePhoto} alt={doctor.name} />
-                          ) : (
-                            <i className="fas fa-user-md"></i>
-                          )}
+                <div className="space-y-4">
+                  {(nearbyMode ? doctors : filteredDoctors).map(doc => (
+                    <div key={doc._id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg hover:border-indigo-200 transition-all">
+                      <div className="flex flex-col lg:flex-row lg:items-center gap-4">
+                        <div className="flex items-center gap-4 flex-1">
+                          <div className="w-16 h-16 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center flex-shrink-0 overflow-hidden">{doc.profilePhoto ? <img src={doc.profilePhoto} alt={doc.name} className="w-full h-full object-cover" /> : <i className="fas fa-user-md text-white text-2xl"></i>}</div>
+                          <div><h4 className="font-bold text-slate-800">Dr. {doc.name}</h4><p className="text-sm text-indigo-600 font-medium">{doc.specialization}</p><p className="text-sm text-slate-500"><i className="fas fa-hospital text-xs mr-1"></i>{doc.clinicId?.name || 'Independent'}</p>{nearbyMode && doc.distanceText && <p className="text-xs text-emerald-600 font-medium mt-1"><i className="fas fa-route mr-1"></i>{doc.distanceText}</p>}</div>
                         </div>
-                        <div className="dashboard-pro__doctor-details">
-                          <h4>Dr. {doctor.name}</h4>
-                          <p className="dashboard-pro__doctor-spec">{doctor.specialization}</p>
-                          <p className="dashboard-pro__doctor-clinic">
-                            <i className="fas fa-hospital"></i> {doctor.clinicId?.name || 'Independent'}
-                          </p>
+                        <div className="flex items-center gap-6 text-sm text-slate-500">{doc.experience && <span><i className="fas fa-award text-amber-500 mr-1"></i>{doc.experience} yrs</span>}{doc.rating > 0 && <span><i className="fas fa-star text-amber-500 mr-1"></i>{doc.rating.toFixed(1)}</span>}</div>
+                        <div className="text-center lg:text-right"><p className="text-2xl font-bold text-slate-800">₹{doc.consultationFee}</p><p className="text-xs text-slate-500">per visit</p></div>
+                        <div className="flex items-center gap-3">
+                          <button onClick={() => toggleFavorite(doc._id)} className={`w-10 h-10 rounded-xl flex items-center justify-center ${favoriteDoctors.includes(doc._id) ? 'bg-rose-100 text-rose-500' : 'bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-500'}`}><i className={favoriteDoctors.includes(doc._id) ? 'fas fa-heart' : 'far fa-heart'}></i></button>
+                          <button disabled={doc.availability !== 'Available'} onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className={`px-6 py-2.5 rounded-xl font-medium ${doc.availability === 'Available' ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-lg' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>{doc.availability === 'Available' ? 'Book Now' : 'Unavailable'}</button>
                         </div>
-                      </div>
-                      <div className="dashboard-pro__doctor-meta">
-                        {doctor.experience && (
-                          <span><i className="fas fa-award"></i> {doctor.experience} yrs</span>
-                        )}
-                        {doctor.rating > 0 && (
-                          <span><i className="fas fa-star"></i> {doctor.rating.toFixed(1)}</span>
-                        )}
-                      </div>
-                      <div className="dashboard-pro__doctor-price">
-                        <span className="dashboard-pro__price">₹{doctor.consultationFee}</span>
-                        <span className="dashboard-pro__price-label">per visit</span>
-                      </div>
-                      <div className="dashboard-pro__doctor-actions">
-                        <button
-                          className={`dashboard-pro__fav-btn ${favoriteDoctors.includes(doctor._id) ? 'dashboard-pro__fav-btn--active' : ''}`}
-                          onClick={() => toggleFavorite(doctor._id)}
-                        >
-                          <i className={favoriteDoctors.includes(doctor._id) ? 'fas fa-heart' : 'far fa-heart'}></i>
-                        </button>
-                        <button
-                          className="dashboard-pro__book-btn"
-                          disabled={doctor.availability !== 'Available'}
-                          onClick={() => {
-                            setSelectedDoctor(doctor);
-                            setShowBookingModal(true);
-                          }}
-                        >
-                          {doctor.availability === 'Available' ? 'Book Now' : 'Unavailable'}
-                        </button>
                       </div>
                     </div>
                   ))}
@@ -605,222 +333,77 @@ return (
               )}
             </div>
           )}
-
-          {/* Appointments Section */}
           {activeSection === 'appointments' && (
-            <div className="dashboard-pro__appointments-section">
+            <div className="space-y-6">
               {appointments.length === 0 ? (
-                <div className="dashboard-pro__empty">
-                  <i className="fas fa-calendar-times"></i>
-                  <h3>No appointments yet</h3>
-                  <p>Book your first appointment with our expert doctors</p>
-                  <button onClick={() => setActiveSection('doctors')}>Find Doctors</button>
-                </div>
+                <div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-calendar-times text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">No appointments yet</h3><p className="text-slate-500 mb-4">Book your first appointment</p><button onClick={() => setActiveSection('doctors')} className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg">Find Doctors</button></div>
               ) : (
-                <div className="dashboard-pro__appointments-full">
+                <div className="space-y-4">
                   {appointments.map(apt => (
-                    <div key={apt._id} className="dashboard-pro__apt-card">
-                      <div className="dashboard-pro__apt-header">
-                        <span className={`dashboard-pro__apt-type ${apt.consultationType === 'online' ? 'dashboard-pro__apt-type--online' : ''}`}>
-                          <i className={apt.consultationType === 'online' ? 'fas fa-video' : 'fas fa-hospital'}></i>
-                          {apt.consultationType === 'online' ? 'Online' : 'In-Person'}
-                        </span>
-                        <span className={`dashboard-pro__apt-status dashboard-pro__apt-status--${apt.status}`}>
-                          {apt.status}
-                        </span>
+                    <div key={apt._id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg transition-all">
+                      <div className="flex items-center justify-between mb-4">
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${apt.consultationType === 'online' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'}`}><i className={`fas ${apt.consultationType === 'online' ? 'fa-video' : 'fa-hospital'} mr-1`}></i>{apt.consultationType === 'online' ? 'Online' : 'In-Person'}</span>
+                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${apt.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : apt.status === 'pending' ? 'bg-amber-100 text-amber-700' : apt.status === 'completed' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>{apt.status}</span>
                       </div>
-                      <div className="dashboard-pro__apt-body">
-                        <div className="dashboard-pro__apt-doctor">
-                          <div className="dashboard-pro__apt-avatar">
-                            <i className="fas fa-user-md"></i>
-                          </div>
-                          <div>
-                            <h4>Dr. {apt.doctorId?.name || 'Unknown'}</h4>
-                            <p>{apt.doctorId?.specialization}</p>
-                          </div>
-                        </div>
-                        <div className="dashboard-pro__apt-details">
-                          <div><i className="fas fa-calendar"></i> {new Date(apt.date).toLocaleDateString()}</div>
-                          <div><i className="fas fa-clock"></i> {apt.time}</div>
-                          <div><i className="fas fa-hospital"></i> {apt.clinicId?.name || 'HealthSync'}</div>
-                        </div>
-                        {apt.consultationType === 'online' && apt.googleMeetLink && (
-                          <button 
-                            className="dashboard-pro__join-btn"
-                            onClick={() => window.open(apt.googleMeetLink, '_blank')}
-                          >
-                            <i className="fas fa-video"></i> Join Meeting
-                          </button>
-                        )}
+                      <div className="flex items-center gap-4 mb-4">
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center"><i className="fas fa-user-md text-white text-xl"></i></div>
+                        <div><h4 className="font-bold text-slate-800">Dr. {apt.doctorId?.name || 'Unknown'}</h4><p className="text-sm text-slate-500">{apt.doctorId?.specialization}</p></div>
                       </div>
-                      {apt.status === 'completed' && (
-                        <div className="dashboard-pro__apt-footer">
-                          <button onClick={() => { setReviewAppointment(apt); setShowReviewModal(true); }}>
-                            <i className="fas fa-star"></i> Write Review
-                          </button>
-                        </div>
-                      )}
+                      <div className="flex flex-wrap gap-4 text-sm text-slate-600 mb-4">
+                        <span><i className="fas fa-calendar text-indigo-500 mr-2"></i>{new Date(apt.date).toLocaleDateString()}</span>
+                        <span><i className="fas fa-clock text-indigo-500 mr-2"></i>{apt.time}</span>
+                        <span><i className="fas fa-hospital text-indigo-500 mr-2"></i>{apt.clinicId?.name || 'HealthSync'}</span>
+                      </div>
+                      {apt.consultationType === 'online' && apt.googleMeetLink && <button onClick={() => window.open(apt.googleMeetLink, '_blank')} className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium rounded-xl hover:shadow-lg"><i className="fas fa-video mr-2"></i>Join Meeting</button>}
+                      {apt.status === 'completed' && <button onClick={() => { setReviewAppointment(apt); setShowReviewModal(true); }} className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:shadow-lg mt-2"><i className="fas fa-star mr-2"></i>Write Review</button>}
                     </div>
                   ))}
                 </div>
               )}
             </div>
           )}
-
-          {/* AI Assistant */}
           {activeSection === 'ai-assistant' && <AIAssistant user={currentUser} />}
-
-          {/* Health Profile */}
-          {activeSection === 'health' && <HealthProfile userId={currentUser.id || currentUser._id} />}
-
-          {/* Lab Reports */}
-          {activeSection === 'lab-reports' && <LabReports userId={currentUser.id || currentUser._id} />}
-
-          {/* Health Checkup */}
-          {activeSection === 'checkup' && (
-            <HealthCheckup 
-              userId={currentUser.id || currentUser._id}
-              userName={currentUser.name}
-              userEmail={currentUser.email}
-              userPhone={currentUser.phone}
-            />
-          )}
-
-          {/* Health Analytics */}
-          {activeSection === 'health-analytics' && <HealthAnalytics userId={currentUser.id || currentUser._id} />}
-
-          {/* Medicines */}
-          {activeSection === 'medicines' && (
-            <MedicineDelivery userId={currentUser.id || currentUser._id} userAddress={userLocation} />
-          )}
-
-          {/* Medicine Reminder */}
-          {activeSection === 'medicine-reminder' && <MedicineReminder userId={currentUser.id || currentUser._id} />}
-
-          {/* Ambulance */}
-          {activeSection === 'ambulance' && (
-            <AmbulanceBooking 
-              userId={currentUser.id || currentUser._id}
-              userName={currentUser.name}
-              userPhone={currentUser.phone}
-              userLocation={userLocation}
-            />
-          )}
-
-          {/* Second Opinion */}
-          {activeSection === 'second-opinion' && (
-            <SecondOpinion userId={currentUser.id || currentUser._id} userName={currentUser.name} />
-          )}
-
-          {/* Wallet */}
-          {activeSection === 'wallet' && (
-            <HealthWallet userId={currentUser.id || currentUser._id} userName={currentUser.name} />
-          )}
-
-          {/* Insurance */}
-          {activeSection === 'insurance' && <HealthInsurance userId={currentUser.id || currentUser._id} />}
-
-          {/* Loyalty Points */}
-          {activeSection === 'loyalty' && <LoyaltyPoints userId={currentUser.id || currentUser._id} />}
-
-          {/* Referrals */}
-          {activeSection === 'referrals' && (
-            <ReferralRewards userId={currentUser.id || currentUser._id} userName={currentUser.name} />
-          )}
-
-          {/* Emergency */}
-          {activeSection === 'emergency' && <EmergencyContacts userId={currentUser.id || currentUser._id} />}
-
-          {/* Health Tips */}
+          {activeSection === 'health' && <HealthProfile userId={getUserId()} />}
+          {activeSection === 'lab-reports' && <LabReports userId={getUserId()} />}
+          {activeSection === 'checkup' && <HealthCheckup userId={getUserId()} userName={currentUser?.name} userEmail={currentUser?.email} userPhone={currentUser?.phone} />}
+          {activeSection === 'health-analytics' && <HealthAnalytics userId={getUserId()} />}
+          {activeSection === 'medicines' && <MedicineDelivery userId={getUserId()} userAddress={userLocation} />}
+          {activeSection === 'medicine-reminder' && <MedicineReminder userId={getUserId()} />}
+          {activeSection === 'ambulance' && <AmbulanceBooking userId={getUserId()} userName={currentUser?.name} userPhone={currentUser?.phone} userLocation={userLocation} />}
+          {activeSection === 'second-opinion' && <SecondOpinion userId={getUserId()} userName={currentUser?.name} />}
+          {activeSection === 'wallet' && <HealthWallet userId={getUserId()} userName={currentUser?.name} />}
+          {activeSection === 'transactions' && <TransactionHistory userId={getUserId()} appointments={appointments} />}
+          {activeSection === 'insurance' && <HealthInsurance userId={getUserId()} />}
+          {activeSection === 'loyalty' && <LoyaltyPoints userId={getUserId()} />}
+          {activeSection === 'referrals' && <ReferralRewards userId={getUserId()} userName={currentUser?.name} />}
+          {activeSection === 'emergency' && <EmergencyContacts userId={getUserId()} />}
           {activeSection === 'health-tips' && <HealthTips />}
-
-          {/* Messages */}
-          {activeSection === 'messages' && (
-            <div className="dashboard-pro__empty">
-              <i className="fas fa-comments"></i>
-              <h3>Chat with Doctors</h3>
-              <p>Click on a doctor to start a conversation</p>
-              <button onClick={() => setActiveSection('doctors')}>Find Doctors</button>
-            </div>
-          )}
+          {activeSection === 'messages' && <div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-comments text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">Chat with Doctors</h3><p className="text-slate-500 mb-4">Click on a doctor to start</p><button onClick={() => setActiveSection('doctors')} className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg">Find Doctors</button></div>}
         </div>
+        <footer className="bg-white border-t border-slate-200 px-4 lg:px-8 py-4">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-sm text-slate-500">
+            <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">HS</div><span className="font-semibold text-slate-700">HealthSync</span></div>
+            <div className="flex items-center gap-6"><a href="#privacy" className="hover:text-indigo-600">Privacy</a><a href="#terms" className="hover:text-indigo-600">Terms</a><a href="#support" className="hover:text-indigo-600">Support</a></div>
+            <p>© 2024 HealthSync. All rights reserved.</p>
+          </div>
+        </footer>
       </main>
-
-      {/* Mobile Bottom Navigation */}
-      <nav className="dashboard-pro__mobile-nav">
-        <button 
-          className={`dashboard-pro__mobile-nav-item ${activeSection === 'overview' ? 'dashboard-pro__mobile-nav-item--active' : ''}`}
-          onClick={() => setActiveSection('overview')}
-        >
-          <i className="fas fa-home"></i>
-          <span>Home</span>
-        </button>
-        <button 
-          className={`dashboard-pro__mobile-nav-item ${activeSection === 'doctors' ? 'dashboard-pro__mobile-nav-item--active' : ''}`}
-          onClick={() => setActiveSection('doctors')}
-        >
-          <i className="fas fa-user-md"></i>
-          <span>Doctors</span>
-        </button>
-        <button 
-          className={`dashboard-pro__mobile-nav-item ${activeSection === 'appointments' ? 'dashboard-pro__mobile-nav-item--active' : ''}`}
-          onClick={() => setActiveSection('appointments')}
-        >
-          <i className="fas fa-calendar"></i>
-          <span>Bookings</span>
-        </button>
-        <button 
-          className={`dashboard-pro__mobile-nav-item ${activeSection === 'ai-assistant' ? 'dashboard-pro__mobile-nav-item--active' : ''}`}
-          onClick={() => setActiveSection('ai-assistant')}
-        >
-          <i className="fas fa-robot"></i>
-          <span>AI</span>
-        </button>
-        <button 
-          className="dashboard-pro__mobile-nav-item"
-          onClick={() => setMobileSidebarOpen(true)}
-        >
-          <i className="fas fa-ellipsis-h"></i>
-          <span>More</span>
-        </button>
-      </nav>
-
-      {/* Modals */}
-      {showBookingModal && selectedDoctor && (
-        <BookingModal
-          doctor={selectedDoctor}
-          user={currentUser}
-          onClose={() => { setShowBookingModal(false); setSelectedDoctor(null); }}
-          onSuccess={() => { fetchAppointments(); setShowBookingModal(false); setSelectedDoctor(null); }}
-        />
-      )}
-
-      {showReviewModal && reviewAppointment && (
-        <ReviewModal
-          appointment={reviewAppointment}
-          onClose={() => { setShowReviewModal(false); setReviewAppointment(null); }}
-          onSuccess={() => fetchAppointments()}
-        />
-      )}
-
-      {showNotifications && (
-        <NotificationCenter
-          userId={currentUser.id || currentUser._id}
-          onClose={() => { setShowNotifications(false); fetchUnreadNotifications(); }}
-        />
-      )}
-
-      {showChat && chatDoctor && (
-        <div className="dashboard-pro__chat-overlay">
-          <DoctorChat
-            user={currentUser}
-            doctor={chatDoctor}
-            onClose={() => { setShowChat(false); setChatDoctor(null); }}
-          />
+      <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 py-2 z-40">
+        <div className="flex items-center justify-around">
+          {[{ id: 'overview', icon: 'fa-home', label: 'Home' }, { id: 'doctors', icon: 'fa-user-md', label: 'Doctors' }, { id: 'appointments', icon: 'fa-calendar', label: 'Bookings' }, { id: 'ai-assistant', icon: 'fa-robot', label: 'AI' }].map(item => (
+            <button key={item.id} onClick={() => setActiveSection(item.id)} className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl ${activeSection === item.id ? 'text-indigo-600 bg-indigo-50' : 'text-slate-400'}`}><i className={`fas ${item.icon}`}></i><span className="text-xs font-medium">{item.label}</span></button>
+          ))}
+          <button onClick={() => setMobileSidebarOpen(true)} className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-slate-400"><i className="fas fa-ellipsis-h"></i><span className="text-xs font-medium">More</span></button>
         </div>
-      )}
+      </nav>
+      {showBookingModal && selectedDoctor && <BookingModal doctor={selectedDoctor} user={currentUser} onClose={() => { setShowBookingModal(false); setSelectedDoctor(null); }} onSuccess={() => { fetchAppointments(); setShowBookingModal(false); setSelectedDoctor(null); }} />}
+      {showReviewModal && reviewAppointment && <ReviewModal appointment={reviewAppointment} onClose={() => { setShowReviewModal(false); setReviewAppointment(null); }} onSuccess={() => fetchAppointments()} />}
+      {showNotifications && <NotificationCenter userId={getUserId()} onClose={() => { setShowNotifications(false); fetchUnreadNotifications(); }} />}
+      {showChat && chatDoctor && <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"><DoctorChat user={currentUser} doctor={chatDoctor} onClose={() => { setShowChat(false); setChatDoctor(null); }} /></div>}
+      {showProfileModal && <UserProfileModal user={currentUser} onClose={() => setShowProfileModal(false)} onUpdate={handleProfileUpdate} />}
     </div>
   );
 };
+
 
 export default PatientDashboardPro;

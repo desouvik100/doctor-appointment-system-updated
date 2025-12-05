@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "../api/config";
 import toast from 'react-hot-toast';
 import AdminChatbot from './AdminChatbot';
+import '../styles/premium-saas.css';
 import '../styles/admin-dashboard-professional.css';
 
 // Stat Card Component
@@ -606,7 +607,11 @@ function AdminDashboard({ admin, onLogout }) {
           <div className="admin-navbar__content">
             <div className="admin-navbar__brand">
               <div className="admin-navbar__logo">
-                <i className="fas fa-heartbeat"></i>
+                <svg viewBox="0 0 60 40" fill="none" className="admin-logo-svg">
+                  <path d="M0 20 L10 20 L15 20" stroke="rgba(255,255,255,0.4)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path className="ecg-pulse" d="M15 20 L20 8 L25 32 L30 12 L35 28 L40 20" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                  <path d="M40 20 L50 20 L60 20" stroke="rgba(255,255,255,0.4)" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
+                </svg>
               </div>
               <h1 className="admin-navbar__title">HealthSync Admin</h1>
             </div>

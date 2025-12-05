@@ -17,13 +17,13 @@
 }
 
 .recommendation-badge.top-rated {
-  background: linear-gradient(135deg, #dbeafe 0%, #bfdbfe 100%);
-  border-color: #2563eb;
-  color: #1e40af;
+  background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+  border-color: #6366f1;
+  color: #4338ca;
 }
 
 .recommendation-badge.top-rated i {
-  color: #2563eb;
+  color: #6366f1;
 }
 
 .recommendation-badge.verified {

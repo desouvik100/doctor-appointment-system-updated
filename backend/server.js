@@ -13,8 +13,10 @@ app.use((req, res, next) => {
   if (req.originalUrl === '/api/payments/webhook') {
     return next();
   }
-  return express.json()(req, res, next);
+  // Increase limit for profile photo uploads (base64 images can be large)
+  return express.json({ limit: '10mb' })(req, res, next);
 });
+app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // MongoDB connection
 const connectDB = async () => {
@@ -58,6 +60,7 @@ app.use('/api/ambulance', require('./routes/ambulanceRoutes'));
 app.use('/api/articles', require('./routes/articleRoutes'));
 app.use('/api/chat', require('./routes/chatRoutes'));
 app.use('/api/health-checkup', require('./routes/healthCheckupRoutes'));
+app.use('/api/profile', require('./routes/profileRoutes'));
 app.use('/api/loyalty', require('./routes/loyaltyRoutes'));
 
 // Debug: Log all registered routes

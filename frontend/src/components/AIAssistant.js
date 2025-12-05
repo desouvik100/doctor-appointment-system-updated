@@ -1,5 +1,4 @@
 import React, { useState, useEffect, useRef } from 'react';
-import './AIAssistant.css';
 
 const AIAssistant = ({ user }) => {
   const [messages, setMessages] = useState([
@@ -215,89 +214,96 @@ Is there a specific health topic you'd like general information about? I can hel
   ];
 
   return (
-    <div className="ai-assistant">
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden flex flex-col h-[calc(100vh-12rem)]">
       {/* Header */}
-      <div className="ai-assistant__header">
-        <div className="ai-assistant__header-content">
-          <div className="ai-assistant__header-left">
-            <div className="ai-assistant__avatar">
-              <i className="fas fa-robot"></i>
+      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 p-4 lg:p-5">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-4">
+            <div className="w-12 h-12 rounded-2xl bg-white/20 backdrop-blur flex items-center justify-center">
+              <i className="fas fa-robot text-white text-xl"></i>
             </div>
             <div>
-              <h4 className="ai-assistant__title">
+              <h4 className="text-white font-bold flex items-center gap-2">
                 AI Health Assistant
-                <span className="ai-assistant__status-dot"></span>
+                <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
               </h4>
-              <p className="ai-assistant__subtitle">
+              <p className="text-indigo-100 text-sm">
                 {isOnline ? 'Online • Ready to help' : 'Offline • Reconnecting...'}
               </p>
             </div>
           </div>
-          <div className="ai-assistant__stats">
+          <div className="flex items-center gap-2 px-3 py-1.5 bg-white/10 rounded-lg text-white text-sm">
             <i className="fas fa-comments"></i>
             {messageCount} messages
           </div>
         </div>
       </div>
 
-      {/* Body */}
-      <div className="ai-assistant__body">
-        {/* Messages */}
-        <div className="ai-assistant__messages" ref={chatContainerRef}>
-          {messages.map((message) => (
-            <div 
-              key={message.id} 
-              className={`ai-assistant__message ai-assistant__message--${message.type}`}
-            >
-              <div className="ai-assistant__message-bubble">
-                <div style={{ whiteSpace: 'pre-line' }}>
+      {/* Messages */}
+      <div className="flex-1 overflow-y-auto p-4 lg:p-6 space-y-4 bg-slate-50" ref={chatContainerRef}>
+        {messages.map((message) => (
+          <div 
+            key={message.id} 
+            className={`flex ${message.type === 'user' ? 'justify-end' : 'justify-start'}`}
+          >
+            <div className={`max-w-[85%] lg:max-w-[70%] ${message.type === 'user' ? 'order-1' : ''}`}>
+              <div className={`rounded-2xl px-4 py-3 ${
+                message.type === 'user' 
+                  ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white rounded-br-md' 
+                  : 'bg-white border border-slate-200 text-slate-700 rounded-bl-md shadow-sm'
+              }`}>
+                <div style={{ whiteSpace: 'pre-line' }} className="text-sm leading-relaxed">
                   {message.content}
                 </div>
               </div>
-              <div className="ai-assistant__message-time">
+              <div className={`text-xs text-slate-400 mt-1 ${message.type === 'user' ? 'text-right' : ''}`}>
                 {message.timestamp.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
               </div>
             </div>
-          ))}
+          </div>
+        ))}
 
-          {isTyping && (
-            <div className="ai-assistant__message ai-assistant__message--ai">
-              <div className="ai-assistant__typing">
-                <div className="ai-assistant__typing-dots">
-                  <span></span>
-                  <span></span>
-                  <span></span>
+        {isTyping && (
+          <div className="flex justify-start">
+            <div className="bg-white border border-slate-200 rounded-2xl rounded-bl-md px-4 py-3 shadow-sm">
+              <div className="flex items-center gap-2 text-slate-500 text-sm">
+                <div className="flex gap-1">
+                  <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '0ms' }}></span>
+                  <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '150ms' }}></span>
+                  <span className="w-2 h-2 bg-indigo-400 rounded-full animate-bounce" style={{ animationDelay: '300ms' }}></span>
                 </div>
                 AI is typing...
               </div>
             </div>
-          )}
-        </div>
-
-        {/* Quick Questions */}
-        <div className="ai-assistant__quick-questions">
-          <span className="ai-assistant__quick-label">Quick questions:</span>
-          <div className="ai-assistant__quick-grid">
-            {quickQuestions.map((question, index) => (
-              <button
-                key={index}
-                className="ai-assistant__quick-btn"
-                onClick={() => setInputMessage(question)}
-              >
-                {question}
-              </button>
-            ))}
           </div>
-        </div>
+        )}
+      </div>
 
-        {/* Input Area */}
-        <div className="ai-assistant__input-area">
-          <div className="ai-assistant__input-wrapper">
-            <div className="ai-assistant__input-icon">
+      {/* Quick Questions */}
+      <div className="px-4 py-3 bg-white border-t border-slate-100">
+        <span className="text-xs font-medium text-slate-500 mb-2 block">Quick questions:</span>
+        <div className="flex flex-wrap gap-2">
+          {quickQuestions.map((question, index) => (
+            <button
+              key={index}
+              className="px-3 py-1.5 bg-slate-100 hover:bg-indigo-100 hover:text-indigo-600 text-slate-600 text-xs font-medium rounded-lg transition-colors"
+              onClick={() => setInputMessage(question)}
+            >
+              {question}
+            </button>
+          ))}
+        </div>
+      </div>
+
+      {/* Input Area */}
+      <div className="p-4 bg-white border-t border-slate-100">
+        <div className="flex items-end gap-3">
+          <div className="flex-1 relative">
+            <div className="absolute left-4 top-3 text-indigo-400">
               <i className="fas fa-comment-medical"></i>
             </div>
             <textarea
-              className="ai-assistant__textarea"
+              className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm resize-none focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
               placeholder="Ask me about health tips, symptoms, or how to use this system..."
               value={inputMessage}
               onChange={(e) => setInputMessage(e.target.value)}
@@ -305,35 +311,39 @@ Is there a specific health topic you'd like general information about? I can hel
               rows="1"
               disabled={!isOnline}
             />
-            <button
-              className="ai-assistant__send-btn"
-              onClick={handleSendMessage}
-              disabled={!inputMessage.trim() || isTyping || !isOnline}
-            >
-              {isTyping ? (
-                <i className="fas fa-spinner fa-spin"></i>
-              ) : (
-                <i className="fas fa-paper-plane"></i>
-              )}
-            </button>
           </div>
-          
-          <div className="ai-assistant__footer-info">
-            <div className="ai-assistant__disclaimer">
-              <i className="fas fa-info-circle"></i>
-              General information only • Not medical diagnosis
-            </div>
-            <span className="ai-assistant__char-count">
-              {inputMessage.length}/500
-            </span>
+          <button
+            className={`w-12 h-12 rounded-xl flex items-center justify-center transition-all ${
+              inputMessage.trim() && !isTyping && isOnline
+                ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-lg'
+                : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+            }`}
+            onClick={handleSendMessage}
+            disabled={!inputMessage.trim() || isTyping || !isOnline}
+          >
+            {isTyping ? (
+              <i className="fas fa-spinner fa-spin"></i>
+            ) : (
+              <i className="fas fa-paper-plane"></i>
+            )}
+          </button>
+        </div>
+        
+        <div className="flex items-center justify-between mt-3 text-xs">
+          <div className="flex items-center gap-1 text-slate-400">
+            <i className="fas fa-info-circle"></i>
+            General information only • Not medical diagnosis
           </div>
-          
-          <div className="ai-assistant__emergency">
-            <p className="ai-assistant__emergency-text">
-              <i className="fas fa-exclamation-triangle"></i>
-              <strong>Emergency?</strong> Call 911 or go to your nearest emergency room
-            </p>
-          </div>
+          <span className="text-slate-400">
+            {inputMessage.length}/500
+          </span>
+        </div>
+        
+        <div className="mt-3 p-3 bg-red-50 border border-red-200 rounded-xl">
+          <p className="text-red-600 text-xs font-medium flex items-center gap-2">
+            <i className="fas fa-exclamation-triangle"></i>
+            <span><strong>Emergency?</strong> Call 911 or go to your nearest emergency room</span>
+          </p>
         </div>
       </div>
     </div>

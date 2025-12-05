@@ -1,230 +1,112 @@
 import React, { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import './EmergencyContacts.css';
 
 const EmergencyContacts = ({ userId }) => {
   const [contacts, setContacts] = useState([]);
   const [showAddForm, setShowAddForm] = useState(false);
-  const [newContact, setNewContact] = useState({
-    name: '',
-    phone: '',
-    relationship: '',
-    isPrimary: false
-  });
-  const [nearbyHospitals, setNearbyHospitals] = useState([]);
-  const [loadingHospitals, setLoadingHospitals] = useState(false);
+  const [newContact, setNewContact] = useState({ name: '', phone: '', relationship: '', isPrimary: false });
 
-  // Default emergency numbers for India
   const emergencyNumbers = [
-    { name: 'Ambulance', number: '102', icon: 'fa-ambulance', color: '#ef4444' },
-    { name: 'Police', number: '100', icon: 'fa-shield-alt', color: '#3b82f6' },
-    { name: 'Fire', number: '101', icon: 'fa-fire', color: '#f97316' },
-    { name: 'Women Helpline', number: '1091', icon: 'fa-female', color: '#ec4899' },
-    { name: 'Child Helpline', number: '1098', icon: 'fa-child', color: '#8b5cf6' },
-    { name: 'Emergency', number: '112', icon: 'fa-exclamation-triangle', color: '#dc2626' }
+    { name: 'Ambulance', number: '102', icon: 'fa-ambulance', color: 'from-red-500 to-rose-600' },
+    { name: 'Police', number: '100', icon: 'fa-shield-alt', color: 'from-blue-500 to-indigo-600' },
+    { name: 'Fire', number: '101', icon: 'fa-fire', color: 'from-orange-500 to-amber-600' },
+    { name: 'Women Helpline', number: '1091', icon: 'fa-female', color: 'from-pink-500 to-rose-600' },
+    { name: 'Child Helpline', number: '1098', icon: 'fa-child', color: 'from-purple-500 to-violet-600' },
+    { name: 'Emergency', number: '112', icon: 'fa-exclamation-triangle', color: 'from-red-600 to-red-700' }
   ];
 
-  useEffect(() => {
-    loadContacts();
-  }, []);
+  useEffect(() => { loadContacts(); }, []);
 
   const loadContacts = () => {
-    const saved = localStorage.getItem(`emergency_contacts_${userId}`);
-    if (saved) {
-      setContacts(JSON.parse(saved));
-    }
+    const saved = localStorage.getItem('emergency_contacts_' + userId);
+    if (saved) setContacts(JSON.parse(saved));
   };
 
   const saveContacts = (newContacts) => {
-    localStorage.setItem(`emergency_contacts_${userId}`, JSON.stringify(newContacts));
+    localStorage.setItem('emergency_contacts_' + userId, JSON.stringify(newContacts));
     setContacts(newContacts);
   };
 
   const handleAddContact = () => {
-    if (!newContact.name || !newContact.phone) {
-      toast.error('Name and phone are required');
-      return;
-    }
-    const updated = [...contacts, { ...newContact, id: Date.now() }];
-    saveContacts(updated);
+    if (!newContact.name || !newContact.phone) { toast.error('Name and phone required'); return; }
+    saveContacts([...contacts, { ...newContact, id: Date.now() }]);
     setNewContact({ name: '', phone: '', relationship: '', isPrimary: false });
     setShowAddForm(false);
-    toast.success('Emergency contact added');
+    toast.success('Contact added');
   };
 
-  const handleDeleteContact = (id) => {
-    const updated = contacts.filter(c => c.id !== id);
-    saveContacts(updated);
-    toast.success('Contact removed');
-  };
-
-
-  const setPrimaryContact = (id) => {
-    const updated = contacts.map(c => ({
-      ...c,
-      isPrimary: c.id === id
-    }));
-    saveContacts(updated);
-    toast.success('Primary contact updated');
-  };
-
-  const callNumber = (number) => {
-    window.location.href = `tel:${number}`;
-  };
-
-  const findNearbyHospitals = () => {
-    setLoadingHospitals(true);
-    if (navigator.geolocation) {
-      navigator.geolocation.getCurrentPosition(
-        (position) => {
-          const { latitude, longitude } = position.coords;
-          const mapsUrl = `https://www.google.com/maps/search/hospitals+near+me/@${latitude},${longitude},14z`;
-          window.open(mapsUrl, '_blank');
-          setLoadingHospitals(false);
-        },
-        () => {
-          window.open('https://www.google.com/maps/search/hospitals+near+me', '_blank');
-          setLoadingHospitals(false);
-        }
-      );
-    } else {
-      window.open('https://www.google.com/maps/search/hospitals+near+me', '_blank');
-      setLoadingHospitals(false);
-    }
-  };
-
-  const sendSOSAlert = () => {
-    const primaryContact = contacts.find(c => c.isPrimary) || contacts[0];
-    if (primaryContact) {
-      const message = encodeURIComponent(
-        `🚨 EMERGENCY SOS from HealthSync!\n\nYour contact needs immediate help. Please call them or emergency services immediately.`
-      );
-      window.open(`https://wa.me/${primaryContact.phone.replace(/\D/g, '')}?text=${message}`, '_blank');
-      toast.success('SOS alert sent to ' + primaryContact.name);
-    } else {
-      callNumber('112');
-    }
-  };
+  const handleDeleteContact = (id) => { saveContacts(contacts.filter(c => c.id !== id)); toast.success('Removed'); };
+  const setPrimaryContact = (id) => { saveContacts(contacts.map(c => ({ ...c, isPrimary: c.id === id }))); toast.success('Updated'); };
+  const callNumber = (num) => { window.location.href = 'tel:' + num; };
 
   return (
-    <div className="emergency-contacts">
-      {/* SOS Button */}
-      <div className="sos-section">
-        <button className="sos-button" onClick={sendSOSAlert}>
-          <i className="fas fa-exclamation-circle"></i>
-          <span>SOS Emergency</span>
-        </button>
-        <p className="sos-hint">Tap to alert your emergency contact</p>
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-red-500 to-rose-600 rounded-2xl p-6 text-white">
+        <h2 className="text-2xl font-bold mb-1">Emergency Contacts</h2>
+        <p className="text-red-100">Quick access to emergency services</p>
       </div>
 
-      {/* Quick Emergency Numbers */}
-      <div className="emergency-section">
-        <h3><i className="fas fa-phone-alt"></i> Emergency Helplines</h3>
-        <div className="emergency-grid">
-          {emergencyNumbers.map((item, index) => (
-            <button
-              key={index}
-              className="emergency-number-btn"
-              onClick={() => callNumber(item.number)}
-              style={{ '--btn-color': item.color }}
-            >
-              <i className={`fas ${item.icon}`}></i>
-              <span className="number">{item.number}</span>
-              <span className="label">{item.name}</span>
+      <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-800 mb-4">Emergency Helplines</h3>
+        <div className="grid grid-cols-2 lg:grid-cols-3 gap-4">
+          {emergencyNumbers.map((item, idx) => (
+            <button key={idx} onClick={() => callNumber(item.number)} className="group flex items-center gap-4 p-4 rounded-xl bg-slate-50 hover:shadow-lg transition-all text-left">
+              <div className={'w-12 h-12 rounded-xl bg-gradient-to-br ' + item.color + ' flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform'}>
+                <i className={'fas ' + item.icon + ' text-white text-lg'}></i>
+              </div>
+              <div>
+                <p className="font-semibold text-slate-800">{item.name}</p>
+                <p className="text-lg font-bold text-red-600">{item.number}</p>
+              </div>
             </button>
           ))}
         </div>
       </div>
 
-      {/* Find Nearby Hospitals */}
-      <div className="hospitals-section">
-        <button 
-          className="find-hospitals-btn"
-          onClick={findNearbyHospitals}
-          disabled={loadingHospitals}
-        >
-          {loadingHospitals ? (
-            <><i className="fas fa-spinner fa-spin"></i> Finding...</>
-          ) : (
-            <><i className="fas fa-hospital"></i> Find Nearby Hospitals</>
-          )}
-        </button>
-      </div>
-
-      {/* Personal Emergency Contacts */}
-      <div className="contacts-section">
-        <div className="section-header">
-          <h3><i className="fas fa-users"></i> My Emergency Contacts</h3>
-          <button 
-            className="add-contact-btn"
-            onClick={() => setShowAddForm(!showAddForm)}
-          >
-            <i className={`fas fa-${showAddForm ? 'times' : 'plus'}`}></i>
-          </button>
+      <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-slate-800">Personal Contacts</h3>
+          <button onClick={() => setShowAddForm(true)} className="px-4 py-2 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-xl hover:shadow-lg">Add Contact</button>
         </div>
 
         {showAddForm && (
-          <div className="add-contact-form">
-            <input
-              type="text"
-              placeholder="Contact Name"
-              value={newContact.name}
-              onChange={(e) => setNewContact({...newContact, name: e.target.value})}
-            />
-            <input
-              type="tel"
-              placeholder="Phone Number"
-              value={newContact.phone}
-              onChange={(e) => setNewContact({...newContact, phone: e.target.value})}
-            />
-            <select
-              value={newContact.relationship}
-              onChange={(e) => setNewContact({...newContact, relationship: e.target.value})}
-            >
-              <option value="">Select Relationship</option>
-              <option value="spouse">Spouse</option>
-              <option value="parent">Parent</option>
-              <option value="child">Child</option>
-              <option value="sibling">Sibling</option>
-              <option value="friend">Friend</option>
-              <option value="other">Other</option>
-            </select>
-            <button className="save-btn" onClick={handleAddContact}>
-              <i className="fas fa-save"></i> Save Contact
-            </button>
+          <div className="mb-6 p-4 bg-slate-50 rounded-xl">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-4">
+              <input type="text" placeholder="Name *" value={newContact.name} onChange={(e) => setNewContact({...newContact, name: e.target.value})} className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <input type="tel" placeholder="Phone *" value={newContact.phone} onChange={(e) => setNewContact({...newContact, phone: e.target.value})} className="px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+            <div className="flex gap-3">
+              <button onClick={handleAddContact} className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl">Save</button>
+              <button onClick={() => setShowAddForm(false)} className="px-6 py-2.5 bg-slate-100 text-slate-600 font-medium rounded-xl">Cancel</button>
+            </div>
           </div>
         )}
 
-        <div className="contacts-list">
-          {contacts.length === 0 ? (
-            <p className="no-contacts">No emergency contacts added yet</p>
-          ) : (
-            contacts.map(contact => (
-              <div key={contact.id} className={`contact-card ${contact.isPrimary ? 'primary' : ''}`}>
-                <div className="contact-info">
-                  <h4>{contact.name} {contact.isPrimary && <span className="primary-badge">Primary</span>}</h4>
-                  <p><i className="fas fa-phone"></i> {contact.phone}</p>
-                  {contact.relationship && (
-                    <p><i className="fas fa-heart"></i> {contact.relationship}</p>
-                  )}
+        {contacts.length === 0 ? (
+          <div className="text-center py-8">
+            <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 flex items-center justify-center mb-3">
+              <i className="fas fa-user-plus text-2xl text-slate-400"></i>
+            </div>
+            <p className="text-slate-500">No personal contacts added yet</p>
+          </div>
+        ) : (
+          <div className="space-y-3">
+            {contacts.map(contact => (
+              <div key={contact.id} className={'flex items-center gap-4 p-4 rounded-xl ' + (contact.isPrimary ? 'bg-indigo-50 border-2 border-indigo-200' : 'bg-slate-50')}>
+                <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold">{contact.name.charAt(0).toUpperCase()}</div>
+                <div className="flex-1">
+                  <h4 className="font-semibold text-slate-800">{contact.name}</h4>
+                  <p className="text-sm text-slate-500">{contact.phone}</p>
                 </div>
-                <div className="contact-actions">
-                  <button onClick={() => callNumber(contact.phone)} title="Call">
-                    <i className="fas fa-phone"></i>
-                  </button>
-                  {!contact.isPrimary && (
-                    <button onClick={() => setPrimaryContact(contact.id)} title="Set as Primary">
-                      <i className="fas fa-star"></i>
-                    </button>
-                  )}
-                  <button onClick={() => handleDeleteContact(contact.id)} title="Delete" className="delete-btn">
-                    <i className="fas fa-trash"></i>
-                  </button>
+                <div className="flex items-center gap-2">
+                  <button onClick={() => callNumber(contact.phone)} className="w-10 h-10 rounded-xl bg-emerald-100 text-emerald-600 hover:bg-emerald-200 flex items-center justify-center"><i className="fas fa-phone"></i></button>
+                  {!contact.isPrimary && <button onClick={() => setPrimaryContact(contact.id)} className="w-10 h-10 rounded-xl bg-amber-100 text-amber-600 hover:bg-amber-200 flex items-center justify-center"><i className="fas fa-star"></i></button>}
+                  <button onClick={() => handleDeleteContact(contact.id)} className="w-10 h-10 rounded-xl bg-red-100 text-red-600 hover:bg-red-200 flex items-center justify-center"><i className="fas fa-trash"></i></button>
                 </div>
               </div>
-            ))
-          )}
-        </div>
+            ))}
+          </div>
+        )}
       </div>
     </div>
   );

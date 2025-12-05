@@ -1,30 +1,17 @@
-import React, { useState, useEffect } from 'react';
+import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import './SecondOpinion.css';
 
 const SecondOpinion = ({ userId, userName }) => {
   const [activeStep, setActiveStep] = useState(1);
   const [requests, setRequests] = useState([]);
   const [showNewRequest, setShowNewRequest] = useState(false);
   const [loading, setLoading] = useState(false);
-  
   const [formData, setFormData] = useState({
-    condition: '',
-    currentDiagnosis: '',
-    symptoms: '',
-    duration: '',
-    currentTreatment: '',
-    specialization: '',
-    urgency: 'normal',
-    documents: [],
-    additionalNotes: ''
+    condition: '', currentDiagnosis: '', symptoms: '', duration: '',
+    currentTreatment: '', specialization: '', urgency: 'normal', additionalNotes: ''
   });
 
-  const specializations = [
-    'Cardiology', 'Oncology', 'Neurology', 'Orthopedics', 
-    'Gastroenterology', 'Pulmonology', 'Nephrology', 'Endocrinology',
-    'Dermatology', 'Psychiatry', 'Rheumatology', 'Urology'
-  ];
+  const specializations = ['Cardiology', 'Oncology', 'Neurology', 'Orthopedics', 'Gastroenterology', 'Pulmonology', 'Nephrology', 'Endocrinology', 'Dermatology', 'Psychiatry'];
 
   const expertDoctors = [
     { id: 1, name: 'Dr. Rajesh Sharma', specialization: 'Cardiology', experience: '25 years', hospital: 'AIIMS Delhi', rating: 4.9, fee: 2500 },
@@ -33,364 +20,164 @@ const SecondOpinion = ({ userId, userName }) => {
     { id: 4, name: 'Dr. Sunita Reddy', specialization: 'Orthopedics', experience: '18 years', hospital: 'Apollo', rating: 4.7, fee: 2000 }
   ];
 
-  useEffect(() => {
-    loadRequests();
-  }, []);
+  useEffect(() => { loadRequests(); }, []);
 
   const loadRequests = () => {
-    const saved = localStorage.getItem(`second_opinion_${userId}`);
+    const saved = localStorage.getItem('second_opinion_' + userId);
     if (saved) setRequests(JSON.parse(saved));
   };
 
   const saveRequests = (data) => {
-    localStorage.setItem(`second_opinion_${userId}`, JSON.stringify(data));
+    localStorage.setItem('second_opinion_' + userId, JSON.stringify(data));
     setRequests(data);
   };
 
   const handleSubmit = () => {
-    if (!formData.condition || !formData.currentDiagnosis || !formData.specialization) {
-      toast.error('Please fill all required fields');
+    if (!formData.condition || !formData.specialization) {
+      toast.error('Please fill required fields');
       return;
     }
-
     setLoading(true);
     setTimeout(() => {
-      const request = {
-        id: Date.now(),
-        ...formData,
-        status: 'pending',
-        requestNumber: `SO${Date.now().toString().slice(-8)}`,
-        submittedAt: new Date().toISOString(),
-        estimatedResponse: new Date(Date.now() + 48 * 60 * 60 * 1000).toISOString()
-      };
-      
-      saveRequests([request, ...requests]);
-      setFormData({
-        condition: '', currentDiagnosis: '', symptoms: '', duration: '',
-        currentTreatment: '', specialization: '', urgency: 'normal',
-        documents: [], additionalNotes: ''
-      });
+      const newRequest = { ...formData, id: Date.now(), status: 'pending', createdAt: new Date().toISOString(), userName };
+      saveRequests([newRequest, ...requests]);
+      setFormData({ condition: '', currentDiagnosis: '', symptoms: '', duration: '', currentTreatment: '', specialization: '', urgency: 'normal', additionalNotes: '' });
       setShowNewRequest(false);
       setActiveStep(1);
+      toast.success('Request submitted successfully!');
       setLoading(false);
-      toast.success('Second opinion request submitted!');
     }, 1500);
   };
 
-  const getStatusColor = (status) => {
-    const colors = {
-      pending: '#f59e0b',
-      reviewing: '#3b82f6',
-      completed: '#10b981',
-      cancelled: '#ef4444'
-    };
-    return colors[status] || '#6b7280';
-  };
+  const getStatusColor = (status) => ({
+    pending: 'bg-amber-100 text-amber-700',
+    in_review: 'bg-blue-100 text-blue-700',
+    completed: 'bg-emerald-100 text-emerald-700',
+    cancelled: 'bg-red-100 text-red-700'
+  }[status] || 'bg-slate-100 text-slate-700');
 
   return (
-    <div className="second-opinion">
-      {/* Hero Section */}
-      <div className="so-hero">
-        <div className="hero-content">
-          <h2><i className="fas fa-user-md"></i> Get Expert Second Opinion</h2>
-          <p>Connect with India's top specialists for a comprehensive review of your diagnosis</p>
-          <div className="hero-stats">
-            <div className="stat">
-              <span className="value">500+</span>
-              <span className="label">Expert Doctors</span>
-            </div>
-            <div className="stat">
-              <span className="value">48hrs</span>
-              <span className="label">Response Time</span>
-            </div>
-            <div className="stat">
-              <span className="value">95%</span>
-              <span className="label">Satisfaction</span>
-            </div>
+    <div className="space-y-6">
+      <div className="bg-gradient-to-r from-purple-600 via-indigo-600 to-purple-700 rounded-2xl p-6 lg:p-8 text-white">
+        <div className="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-4">
+          <div>
+            <h2 className="text-2xl lg:text-3xl font-bold mb-2">Get a Second Opinion</h2>
+            <p className="text-purple-100">Connect with top specialists for expert medical advice</p>
           </div>
-        </div>
-        <button className="request-btn" onClick={() => setShowNewRequest(true)}>
-          <i className="fas fa-plus"></i> Request Second Opinion
-        </button>
-      </div>
-
-      {/* Why Second Opinion */}
-      <div className="why-section">
-        <h3>Why Get a Second Opinion?</h3>
-        <div className="reasons-grid">
-          <div className="reason-card">
-            <i className="fas fa-check-double"></i>
-            <h4>Confirm Diagnosis</h4>
-            <p>Ensure accuracy of your current diagnosis with expert review</p>
-          </div>
-          <div className="reason-card">
-            <i className="fas fa-lightbulb"></i>
-            <h4>Explore Options</h4>
-            <p>Discover alternative treatment approaches you might have missed</p>
-          </div>
-          <div className="reason-card">
-            <i className="fas fa-heart"></i>
-            <h4>Peace of Mind</h4>
-            <p>Make informed decisions about your health with confidence</p>
-          </div>
-          <div className="reason-card">
-            <i className="fas fa-hospital"></i>
-            <h4>Top Specialists</h4>
-            <p>Access doctors from premier institutions across India</p>
-          </div>
+          <button onClick={() => setShowNewRequest(true)} className="flex items-center gap-2 px-6 py-3 bg-white text-purple-600 font-semibold rounded-xl shadow-lg hover:shadow-xl transition-all">
+            <i className="fas fa-plus"></i> New Request
+          </button>
         </div>
       </div>
 
-      {/* Expert Doctors */}
-      <div className="experts-section">
-        <h3><i className="fas fa-star"></i> Our Expert Panel</h3>
-        <div className="experts-grid">
-          {expertDoctors.map(doctor => (
-            <div key={doctor.id} className="expert-card">
-              <div className="expert-avatar">
-                <i className="fas fa-user-md"></i>
+      {showNewRequest && (
+        <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+          <div className="flex items-center justify-between mb-6">
+            <h3 className="text-lg font-bold text-slate-800">Request Second Opinion</h3>
+            <button onClick={() => setShowNewRequest(false)} className="w-8 h-8 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center"><i className="fas fa-times text-slate-500"></i></button>
+          </div>
+
+          <div className="flex gap-2 mb-6">
+            {[1, 2, 3].map(step => (
+              <div key={step} className={'flex-1 h-2 rounded-full ' + (activeStep >= step ? 'bg-indigo-500' : 'bg-slate-200')}></div>
+            ))}
+          </div>
+
+          {activeStep === 1 && (
+            <div className="space-y-4">
+              <h4 className="font-semibold text-slate-800">Medical Condition Details</h4>
+              <input type="text" placeholder="Condition/Disease Name *" value={formData.condition} onChange={(e) => setFormData({...formData, condition: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+              <textarea placeholder="Current Diagnosis" value={formData.currentDiagnosis} onChange={(e) => setFormData({...formData, currentDiagnosis: e.target.value})} rows={3} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+              <textarea placeholder="Symptoms" value={formData.symptoms} onChange={(e) => setFormData({...formData, symptoms: e.target.value})} rows={3} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+              <button onClick={() => setActiveStep(2)} className="w-full py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg">Continue</button>
+            </div>
+          )}
+
+          {activeStep === 2 && (
+            <div className="space-y-4">
+              <h4 className="font-semibold text-slate-800">Select Specialization</h4>
+              <div className="grid grid-cols-2 md:grid-cols-3 gap-3">
+                {specializations.map(spec => (
+                  <button key={spec} onClick={() => setFormData({...formData, specialization: spec})} className={'p-3 rounded-xl text-sm font-medium transition-all ' + (formData.specialization === spec ? 'bg-indigo-500 text-white' : 'bg-slate-50 text-slate-700 hover:bg-slate-100')}>{spec}</button>
+                ))}
               </div>
-              <div className="expert-info">
-                <h4>{doctor.name}</h4>
-                <span className="specialization">{doctor.specialization}</span>
-                <p className="hospital"><i className="fas fa-hospital"></i> {doctor.hospital}</p>
-                <p className="experience"><i className="fas fa-briefcase"></i> {doctor.experience}</p>
+              <div className="flex gap-3">
+                <button onClick={() => setActiveStep(1)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-medium rounded-xl">Back</button>
+                <button onClick={() => setActiveStep(3)} disabled={!formData.specialization} className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg disabled:opacity-50">Continue</button>
               </div>
-              <div className="expert-footer">
-                <div className="rating">
-                  <i className="fas fa-star"></i> {doctor.rating}
+            </div>
+          )}
+
+          {activeStep === 3 && (
+            <div className="space-y-4">
+              <h4 className="font-semibold text-slate-800">Additional Information</h4>
+              <select value={formData.urgency} onChange={(e) => setFormData({...formData, urgency: e.target.value})} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                <option value="normal">Normal (3-5 days)</option>
+                <option value="urgent">Urgent (24-48 hours)</option>
+                <option value="emergency">Emergency (Same day)</option>
+              </select>
+              <textarea placeholder="Additional Notes" value={formData.additionalNotes} onChange={(e) => setFormData({...formData, additionalNotes: e.target.value})} rows={3} className="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"></textarea>
+              <div className="flex gap-3">
+                <button onClick={() => setActiveStep(2)} className="flex-1 py-3 bg-slate-100 text-slate-600 font-medium rounded-xl">Back</button>
+                <button onClick={handleSubmit} disabled={loading} className="flex-1 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg disabled:opacity-50">
+                  {loading ? 'Submitting...' : 'Submit Request'}
+                </button>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
+      <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-800 mb-4">Expert Doctors</h3>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {expertDoctors.map(doc => (
+            <div key={doc.id} className="p-4 rounded-xl bg-slate-50 hover:bg-white border-2 border-transparent hover:border-indigo-200 hover:shadow-lg transition-all">
+              <div className="flex items-center gap-4">
+                <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center">
+                  <i className="fas fa-user-md text-white text-xl"></i>
                 </div>
-                <div className="fee">₹{doctor.fee}</div>
+                <div className="flex-1">
+                  <h4 className="font-bold text-slate-800">{doc.name}</h4>
+                  <p className="text-sm text-indigo-600">{doc.specialization}</p>
+                  <p className="text-xs text-slate-500">{doc.hospital} • {doc.experience}</p>
+                </div>
+              </div>
+              <div className="flex items-center justify-between mt-4 pt-4 border-t border-slate-200">
+                <div className="flex items-center gap-1 text-amber-500">
+                  <i className="fas fa-star"></i>
+                  <span className="font-semibold">{doc.rating}</span>
+                </div>
+                <span className="font-bold text-slate-800">₹{doc.fee}</span>
               </div>
             </div>
           ))}
         </div>
       </div>
 
-      {/* My Requests */}
-      <div className="requests-section">
-        <h3><i className="fas fa-file-medical"></i> My Second Opinion Requests</h3>
+      <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+        <h3 className="text-lg font-bold text-slate-800 mb-4">Your Requests</h3>
         {requests.length === 0 ? (
-          <div className="empty-state">
-            <i className="fas fa-clipboard-list"></i>
-            <p>No requests yet</p>
-            <span>Submit your first second opinion request</span>
+          <div className="text-center py-8">
+            <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 flex items-center justify-center mb-3">
+              <i className="fas fa-file-medical text-2xl text-slate-400"></i>
+            </div>
+            <p className="text-slate-500">No requests yet</p>
           </div>
         ) : (
-          <div className="requests-list">
+          <div className="space-y-3">
             {requests.map(req => (
-              <div key={req.id} className="request-card">
-                <div className="request-header">
-                  <div>
-                    <h4>{req.condition}</h4>
-                    <span className="request-number">#{req.requestNumber}</span>
-                  </div>
-                  <span className="status-badge" style={{background: getStatusColor(req.status)}}>
-                    {req.status}
-                  </span>
+              <div key={req.id} className="p-4 rounded-xl bg-slate-50">
+                <div className="flex items-center justify-between mb-2">
+                  <h4 className="font-semibold text-slate-800">{req.condition}</h4>
+                  <span className={'px-3 py-1 rounded-full text-xs font-semibold ' + getStatusColor(req.status)}>{req.status}</span>
                 </div>
-                <div className="request-details">
-                  <p><i className="fas fa-stethoscope"></i> {req.specialization}</p>
-                  <p><i className="fas fa-calendar"></i> {new Date(req.submittedAt).toLocaleDateString()}</p>
-                  <p><i className="fas fa-clock"></i> Response by: {new Date(req.estimatedResponse).toLocaleDateString()}</p>
-                </div>
-                <div className="request-diagnosis">
-                  <strong>Current Diagnosis:</strong> {req.currentDiagnosis}
-                </div>
+                <p className="text-sm text-slate-500">{req.specialization} • {new Date(req.createdAt).toLocaleDateString()}</p>
               </div>
             ))}
           </div>
         )}
       </div>
-
-      {/* New Request Modal */}
-      {showNewRequest && (
-        <div className="modal-overlay" onClick={() => setShowNewRequest(false)}>
-          <div className="modal-content" onClick={e => e.stopPropagation()}>
-            <div className="modal-header">
-              <h3><i className="fas fa-file-medical-alt"></i> Request Second Opinion</h3>
-              <button className="close-btn" onClick={() => setShowNewRequest(false)}>
-                <i className="fas fa-times"></i>
-              </button>
-            </div>
-
-            {/* Progress Steps */}
-            <div className="progress-steps">
-              {[1, 2, 3].map(step => (
-                <div key={step} className={`step ${activeStep >= step ? 'active' : ''} ${activeStep > step ? 'completed' : ''}`}>
-                  <div className="step-number">{activeStep > step ? <i className="fas fa-check"></i> : step}</div>
-                  <span>{step === 1 ? 'Medical Info' : step === 2 ? 'Documents' : 'Review'}</span>
-                </div>
-              ))}
-            </div>
-
-            <div className="modal-body">
-              {/* Step 1: Medical Information */}
-              {activeStep === 1 && (
-                <div className="form-step">
-                  <div className="form-group">
-                    <label>Medical Condition *</label>
-                    <input
-                      type="text"
-                      placeholder="e.g., Heart Disease, Cancer, etc."
-                      value={formData.condition}
-                      onChange={(e) => setFormData({...formData, condition: e.target.value})}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Current Diagnosis *</label>
-                    <textarea
-                      placeholder="Describe your current diagnosis in detail"
-                      value={formData.currentDiagnosis}
-                      onChange={(e) => setFormData({...formData, currentDiagnosis: e.target.value})}
-                    />
-                  </div>
-                  <div className="form-row">
-                    <div className="form-group">
-                      <label>Specialization Needed *</label>
-                      <select
-                        value={formData.specialization}
-                        onChange={(e) => setFormData({...formData, specialization: e.target.value})}
-                      >
-                        <option value="">Select Specialization</option>
-                        {specializations.map(s => <option key={s} value={s}>{s}</option>)}
-                      </select>
-                    </div>
-                    <div className="form-group">
-                      <label>Urgency Level</label>
-                      <select
-                        value={formData.urgency}
-                        onChange={(e) => setFormData({...formData, urgency: e.target.value})}
-                      >
-                        <option value="normal">Normal (48-72 hrs)</option>
-                        <option value="urgent">Urgent (24 hrs) +₹500</option>
-                        <option value="emergency">Emergency (12 hrs) +₹1000</option>
-                      </select>
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>Symptoms</label>
-                    <textarea
-                      placeholder="List your symptoms"
-                      value={formData.symptoms}
-                      onChange={(e) => setFormData({...formData, symptoms: e.target.value})}
-                    />
-                  </div>
-                  <div className="form-group">
-                    <label>Current Treatment</label>
-                    <textarea
-                      placeholder="Describe your current treatment plan"
-                      value={formData.currentTreatment}
-                      onChange={(e) => setFormData({...formData, currentTreatment: e.target.value})}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Step 2: Documents */}
-              {activeStep === 2 && (
-                <div className="form-step">
-                  <div className="upload-section">
-                    <div className="upload-area">
-                      <i className="fas fa-cloud-upload-alt"></i>
-                      <h4>Upload Medical Documents</h4>
-                      <p>Drag & drop or click to upload</p>
-                      <span>Supported: PDF, JPG, PNG (Max 10MB each)</span>
-                    </div>
-                    <div className="document-types">
-                      <h5>Recommended Documents:</h5>
-                      <ul>
-                        <li><i className="fas fa-check"></i> Medical reports & test results</li>
-                        <li><i className="fas fa-check"></i> X-rays, MRI, CT scans</li>
-                        <li><i className="fas fa-check"></i> Previous prescriptions</li>
-                        <li><i className="fas fa-check"></i> Discharge summaries</li>
-                        <li><i className="fas fa-check"></i> Pathology reports</li>
-                      </ul>
-                    </div>
-                  </div>
-                  <div className="form-group">
-                    <label>Additional Notes</label>
-                    <textarea
-                      placeholder="Any additional information for the specialist"
-                      value={formData.additionalNotes}
-                      onChange={(e) => setFormData({...formData, additionalNotes: e.target.value})}
-                    />
-                  </div>
-                </div>
-              )}
-
-              {/* Step 3: Review */}
-              {activeStep === 3 && (
-                <div className="form-step review-step">
-                  <div className="review-card">
-                    <h4>Review Your Request</h4>
-                    <div className="review-item">
-                      <span>Condition:</span>
-                      <strong>{formData.condition}</strong>
-                    </div>
-                    <div className="review-item">
-                      <span>Specialization:</span>
-                      <strong>{formData.specialization}</strong>
-                    </div>
-                    <div className="review-item">
-                      <span>Urgency:</span>
-                      <strong>{formData.urgency}</strong>
-                    </div>
-                    <div className="review-item">
-                      <span>Diagnosis:</span>
-                      <strong>{formData.currentDiagnosis}</strong>
-                    </div>
-                  </div>
-                  <div className="pricing-card">
-                    <h4>Pricing</h4>
-                    <div className="price-row">
-                      <span>Consultation Fee</span>
-                      <span>₹1,500</span>
-                    </div>
-                    {formData.urgency === 'urgent' && (
-                      <div className="price-row">
-                        <span>Urgent Processing</span>
-                        <span>₹500</span>
-                      </div>
-                    )}
-                    {formData.urgency === 'emergency' && (
-                      <div className="price-row">
-                        <span>Emergency Processing</span>
-                        <span>₹1,000</span>
-                      </div>
-                    )}
-                    <div className="price-row total">
-                      <span>Total</span>
-                      <span>₹{1500 + (formData.urgency === 'urgent' ? 500 : formData.urgency === 'emergency' ? 1000 : 0)}</span>
-                    </div>
-                  </div>
-                </div>
-              )}
-            </div>
-
-            <div className="modal-footer">
-              {activeStep > 1 && (
-                <button className="back-btn" onClick={() => setActiveStep(activeStep - 1)}>
-                  <i className="fas fa-arrow-left"></i> Back
-                </button>
-              )}
-              {activeStep < 3 ? (
-                <button className="next-btn" onClick={() => setActiveStep(activeStep + 1)}>
-                  Next <i className="fas fa-arrow-right"></i>
-                </button>
-              ) : (
-                <button className="submit-btn" onClick={handleSubmit} disabled={loading}>
-                  {loading ? (
-                    <><i className="fas fa-spinner fa-spin"></i> Submitting...</>
-                  ) : (
-                    <><i className="fas fa-paper-plane"></i> Submit & Pay</>
-                  )}
-                </button>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
     </div>
   );
 };

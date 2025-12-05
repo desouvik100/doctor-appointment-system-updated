@@ -403,13 +403,96 @@
 }
 
 /* Responsive */
-@media (max-width: 768px) {
+@media (max-width: 479px) {
+  .doctor-list__filters {
+    padding: 16px;
+    border-radius: 12px;
+  }
+  
+  .doctor-list__search-input input {
+    padding: 12px 12px 12px 40px;
+    font-size: 0.95rem;
+  }
+  
+  .doctor-list__search-input i {
+    left: 12px;
+  }
+  
+  .doctor-list__search-btn {
+    padding: 12px 20px;
+    font-size: 0.9rem;
+  }
+  
+  .doctor-list__filter-select {
+    padding: 10px 12px;
+    font-size: 0.9rem;
+  }
+  
+  .doctor-card {
+    border-radius: 12px;
+  }
+  
+  .doctor-card__header {
+    padding: 16px;
+    gap: 12px;
+  }
+  
+  .doctor-card__avatar {
+    width: 64px;
+    height: 64px;
+    border-radius: 12px;
+  }
+  
+  .doctor-card__avatar i {
+    font-size: 1.5rem;
+  }
+  
+  .doctor-card__name {
+    font-size: 1rem;
+  }
+  
+  .doctor-card__body {
+    padding: 0 16px 16px;
+  }
+  
+  .doctor-card__footer {
+    padding: 12px 16px;
+    flex-direction: column;
+  }
+  
+  .doctor-card__book-btn {
+    width: 100%;
+    padding: 12px 16px;
+  }
+  
+  .doctor-card__action-btn {
+    width: 100%;
+    height: 44px;
+  }
+  
+  .doctor-list__title {
+    font-size: 1.25rem;
+  }
+  
+  .doctor-list__results-info {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+}
+
+@media (max-width: 767px) {
   .doctor-list__search-row {
     flex-direction: column;
   }
   
+  .doctor-list__filter-row {
+    grid-template-columns: 1fr;
+  }
+  
   .doctor-list__grid {
     grid-template-columns: 1fr;
+    gap: 16px;
   }
   
   .doctor-card__header {
@@ -419,5 +502,33 @@
   
   .doctor-card__avatar {
     margin: 0 auto;
+  }
+  
+  .doctor-card__rating {
+    justify-content: center;
+  }
+  
+  .doctor-card__details {
+    justify-content: center;
+  }
+  
+  .doctor-card__badges {
+    justify-content: center;
+  }
+}
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .doctor-list__grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  
+  .doctor-list__filter-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (min-width: 1024px) {
+  .doctor-list__grid {
+    grid-template-columns: repeat(auto-fill, minmax(340px, 1fr));
   }
 }

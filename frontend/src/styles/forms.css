@@ -288,3 +288,74 @@ input[type="datetime-local"].form-control {
     width: 100%;
   }
 }
+
+/* Mobile Form Optimizations */
+@media (max-width: 767px) {
+  .form-group {
+    margin-bottom: var(--space-4);
+  }
+  
+  .form-control {
+    height: 48px;
+    padding: var(--space-3);
+    font-size: 16px; /* Prevents iOS zoom on focus */
+    border-radius: var(--radius-md);
+  }
+  
+  textarea.form-control {
+    min-height: 100px;
+  }
+  
+  .form-label {
+    font-size: var(--font-size-sm);
+    margin-bottom: var(--space-1);
+  }
+  
+  .form-check {
+    gap: var(--space-2);
+  }
+  
+  .form-check-input {
+    width: 22px;
+    height: 22px;
+  }
+  
+  .form-file-label {
+    padding: var(--space-4);
+  }
+  
+  .input-icon {
+    left: var(--space-3);
+  }
+  
+  .input-group .form-control {
+    padding-left: var(--space-8);
+  }
+}
+
+@media (max-width: 479px) {
+  .form-control {
+    height: 44px;
+    padding: var(--space-2) var(--space-3);
+  }
+  
+  .form-control-lg {
+    height: 48px;
+    padding: var(--space-3);
+    font-size: var(--font-size-base);
+  }
+  
+  .form-switch-slider {
+    width: 40px;
+    height: 22px;
+  }
+  
+  .form-switch-slider::after {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .form-switch-input:checked + .form-switch-slider::after {
+    transform: translateX(18px);
+  }
+}
