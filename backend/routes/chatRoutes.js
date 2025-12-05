@@ -4,11 +4,56 @@ const Conversation = require('../models/Conversation');
 const ChatMessage = require('../models/ChatMessage');
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
+const Appointment = require('../models/Appointment');
+
+// Check if patient has a confirmed appointment with doctor
+router.get('/can-chat/:patientId/:doctorId', async (req, res) => {
+  try {
+    const { patientId, doctorId } = req.params;
+
+    // Check for confirmed/completed appointments
+    const appointment = await Appointment.findOne({
+      userId: patientId,
+      doctorId: doctorId,
+      status: { $in: ['confirmed', 'completed'] }
+    }).sort({ date: -1 });
+
+    if (appointment) {
+      res.json({ 
+        canChat: true, 
+        appointmentId: appointment._id,
+        appointmentDate: appointment.date,
+        appointmentStatus: appointment.status
+      });
+    } else {
+      res.json({ 
+        canChat: false, 
+        message: 'You need a confirmed appointment to chat with this doctor' 
+      });
+    }
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
 
 // Get or create conversation between patient and doctor
 router.post('/conversation', async (req, res) => {
   try {
     const { patientId, doctorId, appointmentId } = req.body;
+
+    // Verify patient has a confirmed appointment with this doctor
+    const hasAppointment = await Appointment.findOne({
+      userId: patientId,
+      doctorId: doctorId,
+      status: { $in: ['confirmed', 'completed'] }
+    });
+
+    if (!hasAppointment) {
+      return res.status(403).json({ 
+        message: 'You can only message doctors after booking a confirmed appointment',
+        requiresAppointment: true
+      });
+    }
 
     // Check if conversation exists
     let conversation = await Conversation.findOne({ patientId, doctorId, isActive: true });
@@ -21,7 +66,7 @@ router.post('/conversation', async (req, res) => {
       conversation = new Conversation({
         patientId,
         doctorId,
-        appointmentId,
+        appointmentId: appointmentId || hasAppointment._id,
         participants: [
           {
             participantId: patientId,

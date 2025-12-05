@@ -8,26 +8,55 @@ const DoctorChat = ({ user, doctor, appointmentId, onClose }) => {
   const [newMessage, setNewMessage] = useState('');
   const [loading, setLoading] = useState(true);
   const [sending, setSending] = useState(false);
+  const [canChat, setCanChat] = useState(null);
+  const [chatError, setChatError] = useState(null);
   const messagesEndRef = useRef(null);
   const inputRef = useRef(null);
 
   const userId = user?.id || user?._id;
   const doctorId = doctor?._id || doctor?.id;
 
-  useEffect(() => { initializeChat(); }, [userId, doctorId]);
+  useEffect(() => { checkChatEligibility(); }, [userId, doctorId]);
   useEffect(() => { scrollToBottom(); }, [messages]);
   useEffect(() => { if (conversation?._id) { const interval = setInterval(fetchMessages, 5000); return () => clearInterval(interval); } }, [conversation]);
 
   const scrollToBottom = () => messagesEndRef.current?.scrollIntoView({ behavior: 'smooth' });
 
-  const initializeChat = async () => {
+  // Check if user can chat with this doctor (has confirmed appointment)
+  const checkChatEligibility = async () => {
     try {
       setLoading(true);
+      const r = await axios.get(`/api/chat/can-chat/${userId}/${doctorId}`);
+      
+      if (r.data.canChat) {
+        setCanChat(true);
+        await initializeChat();
+      } else {
+        setCanChat(false);
+        setChatError(r.data.message || 'You need a confirmed appointment to chat with this doctor');
+        setLoading(false);
+      }
+    } catch (error) {
+      setCanChat(false);
+      setChatError('Failed to verify chat eligibility');
+      setLoading(false);
+    }
+  };
+
+  const initializeChat = async () => {
+    try {
       const r = await axios.post('/api/chat/conversation', { patientId: userId, doctorId, appointmentId });
       setConversation(r.data);
       await fetchMessages(r.data._id);
       await markAsRead(r.data._id);
-    } catch { toast.error('Failed to start chat'); }
+    } catch (error) {
+      if (error.response?.data?.requiresAppointment) {
+        setCanChat(false);
+        setChatError(error.response.data.message);
+      } else {
+        toast.error('Failed to start chat');
+      }
+    }
     finally { setLoading(false); }
   };
 
@@ -68,6 +97,43 @@ const DoctorChat = ({ user, doctor, appointmentId, onClose }) => {
     <div className="bg-white rounded-2xl border border-slate-100 shadow-sm h-[calc(100vh-12rem)] flex flex-col items-center justify-center">
       <div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div>
       <p className="text-slate-500">Starting chat...</p>
+    </div>
+  );
+
+  // Show error if user can't chat (no confirmed appointment)
+  if (canChat === false) return (
+    <div className="bg-white rounded-2xl border border-slate-100 shadow-sm h-[calc(100vh-12rem)] flex flex-col">
+      {/* Header */}
+      <div className="bg-gradient-to-r from-indigo-600 via-purple-600 to-indigo-700 p-4 flex items-center gap-4">
+        <button onClick={onClose} className="w-10 h-10 rounded-xl bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition-colors">
+          <i className="fas fa-arrow-left"></i>
+        </button>
+        <div className="flex items-center gap-3 flex-1">
+          <div className="w-12 h-12 rounded-xl bg-white/20 flex items-center justify-center overflow-hidden">
+            {doctor?.profilePhoto ? <img src={doctor.profilePhoto} alt={doctor.name} className="w-full h-full object-cover" /> : <i className="fas fa-user-md text-white text-xl"></i>}
+          </div>
+          <div>
+            <h3 className="text-white font-bold">Dr. {doctor?.name}</h3>
+            <p className="text-indigo-100 text-sm">{doctor?.specialization}</p>
+          </div>
+        </div>
+      </div>
+      
+      {/* No Appointment Message */}
+      <div className="flex-1 flex flex-col items-center justify-center p-8 text-center">
+        <div className="w-20 h-20 rounded-full bg-amber-100 flex items-center justify-center mb-6">
+          <i className="fas fa-calendar-times text-3xl text-amber-500"></i>
+        </div>
+        <h3 className="text-xl font-bold text-slate-800 mb-2">Appointment Required</h3>
+        <p className="text-slate-500 mb-6 max-w-sm">{chatError || 'You need to book a confirmed appointment with this doctor before you can start a conversation.'}</p>
+        <button 
+          onClick={onClose}
+          className="px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-semibold rounded-xl hover:shadow-lg transition-all"
+        >
+          <i className="fas fa-calendar-plus mr-2"></i>
+          Book Appointment
+        </button>
+      </div>
     </div>
   );
 
