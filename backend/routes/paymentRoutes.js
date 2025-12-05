@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const paymentService = require('../services/paymentService');
 const Appointment = require('../models/Appointment');
-const { USE_RAZORPAY_PAYMENTS, RAZORPAY_KEY_ID } = require('../config/paymentConfig');
+const { USE_PAYU_PAYMENTS, PAYU_MERCHANT_KEY, FRONTEND_URL } = require('../config/paymentConfig');
 
 // Get payment calculation for appointment
 router.get('/calculate/:appointmentId', async (req, res) => {
@@ -18,7 +18,7 @@ router.get('/calculate/:appointmentId', async (req, res) => {
     
     res.json({
       success: true,
-      testMode: !USE_RAZORPAY_PAYMENTS,
+      testMode: !USE_PAYU_PAYMENTS,
       appointmentId,
       doctorName: appointment.doctorId.name,
       ...breakdown
@@ -29,7 +29,7 @@ router.get('/calculate/:appointmentId', async (req, res) => {
   }
 });
 
-// Create Razorpay Order
+// Create PayU Order
 router.post('/create-order', async (req, res) => {
   try {
     const { appointmentId, userId } = req.body;
@@ -38,8 +38,8 @@ router.post('/create-order', async (req, res) => {
       return res.status(400).json({ message: 'Appointment ID and User ID are required' });
     }
 
-    // If Razorpay is disabled, return test mode response
-    if (!USE_RAZORPAY_PAYMENTS) {
+    // If PayU is disabled, return test mode response
+    if (!USE_PAYU_PAYMENTS) {
       // In test mode, directly confirm the appointment
       const appointment = await Appointment.findById(appointmentId);
       if (appointment) {
@@ -56,7 +56,7 @@ router.post('/create-order', async (req, res) => {
       return res.json({
         success: true,
         testMode: true,
-        message: 'Razorpay disabled - appointment confirmed in test mode (no payment required)',
+        message: 'PayU disabled - appointment confirmed in test mode (no payment required)',
         appointmentId
       });
     }
@@ -78,33 +78,53 @@ router.post('/create-order', async (req, res) => {
   }
 });
 
-// Verify Razorpay Payment
+// PayU Success Callback (POST from PayU)
+router.post('/payu/success', async (req, res) => {
+  try {
+    console.log('PayU Success Callback:', req.body);
+    
+    const result = await paymentService.verifyPayment(req.body);
+    
+    // Redirect to frontend success page
+    res.redirect(result.redirectUrl);
+  } catch (error) {
+    console.error('PayU success callback error:', error);
+    res.redirect(`${FRONTEND_URL}/payment-failed?error=${encodeURIComponent(error.message)}`);
+  }
+});
+
+// PayU Failure Callback (POST from PayU)
+router.post('/payu/failure', async (req, res) => {
+  try {
+    console.log('PayU Failure Callback:', req.body);
+    
+    const result = await paymentService.verifyPayment(req.body);
+    
+    // Redirect to frontend failure page
+    res.redirect(result.redirectUrl);
+  } catch (error) {
+    console.error('PayU failure callback error:', error);
+    res.redirect(`${FRONTEND_URL}/payment-failed?error=${encodeURIComponent(error.message)}`);
+  }
+});
+
+// Legacy verify endpoint (for compatibility)
 router.post('/verify', async (req, res) => {
   try {
-    const { razorpay_order_id, razorpay_payment_id, razorpay_signature } = req.body;
-    
-    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
-      return res.status(400).json({ message: 'Missing payment verification parameters' });
-    }
-
-    // If Razorpay is disabled, return test mode response
-    if (!USE_RAZORPAY_PAYMENTS) {
+    // If PayU is disabled, return test mode response
+    if (!USE_PAYU_PAYMENTS) {
       return res.json({
         success: true,
         testMode: true,
-        message: 'Razorpay disabled - payment verification skipped in test mode'
+        message: 'PayU disabled - payment verification skipped in test mode'
       });
     }
     
-    const result = await paymentService.verifyPayment(
-      razorpay_order_id,
-      razorpay_payment_id,
-      razorpay_signature
-    );
+    const result = await paymentService.verifyPayment(req.body);
     
     res.json({
-      success: true,
-      message: 'Payment verified successfully',
+      success: result.success,
+      message: result.success ? 'Payment verified successfully' : 'Payment verification failed',
       ...result
     });
   } catch (error) {
@@ -151,7 +171,7 @@ router.post('/refund', async (req, res) => {
     
     res.json({
       success: true,
-      message: 'Refund processed successfully',
+      message: 'Refund request submitted successfully',
       ...result
     });
   } catch (error) {
@@ -164,27 +184,10 @@ router.post('/refund', async (req, res) => {
   }
 });
 
-// Razorpay webhook endpoint
-router.post('/webhook', express.json(), async (req, res) => {
-  try {
-    const signature = req.headers['x-razorpay-signature'];
-    
-    await paymentService.handleWebhook(req.body, signature);
-    
-    res.json({ received: true });
-  } catch (error) {
-    console.error('Webhook error:', error);
-    res.status(400).json({ error: error.message });
-  }
-});
-
-// Get Razorpay config (key ID for frontend)
+// Get PayU config for frontend
 router.get('/config', (req, res) => {
-  res.json({
-    keyId: USE_RAZORPAY_PAYMENTS ? RAZORPAY_KEY_ID : null,
-    testMode: !USE_RAZORPAY_PAYMENTS,
-    paymentsEnabled: USE_RAZORPAY_PAYMENTS
-  });
+  const config = paymentService.getConfig();
+  res.json(config);
 });
 
 // Get payment status for an appointment (for mobile polling)
@@ -212,102 +215,103 @@ router.get('/status/:appointmentId', async (req, res) => {
   }
 });
 
-// Hosted checkout page for mobile (renders Razorpay checkout)
+// Hosted checkout page for PayU (renders PayU form)
 router.get('/checkout', async (req, res) => {
-  const { orderId, appointmentId, amount, currency, keyId, prefillName, prefillEmail, prefillContact, successUrl, cancelUrl } = req.query;
+  const { appointmentId, userId } = req.query;
   
-  if (!USE_RAZORPAY_PAYMENTS) {
+  if (!USE_PAYU_PAYMENTS) {
     return res.send(`
       <!DOCTYPE html>
       <html>
       <head><title>Test Mode</title></head>
       <body style="font-family: sans-serif; text-align: center; padding: 50px;">
         <h2>Payment Test Mode</h2>
-        <p>Razorpay is disabled. Payment auto-completed.</p>
+        <p>PayU is disabled. Payment auto-completed.</p>
         <script>
           setTimeout(() => {
-            window.location.href = '${successUrl}&status=success';
+            window.location.href = '${FRONTEND_URL}/payment-success?appointmentId=${appointmentId}&status=success';
           }, 2000);
         </script>
       </body>
       </html>
     `);
   }
-  
-  // Render Razorpay checkout page
-  res.send(`
-    <!DOCTYPE html>
-    <html>
-    <head>
-      <title>HealthSync Payment</title>
-      <meta name="viewport" content="width=device-width, initial-scale=1">
-      <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
-      <style>
-        body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 20px; background: #f5f5f5; }
-        .container { max-width: 400px; margin: 0 auto; text-align: center; }
-        .logo { font-size: 24px; font-weight: bold; color: #4F46E5; margin-bottom: 20px; }
-        .amount { font-size: 32px; font-weight: bold; margin: 20px 0; }
-        .loading { color: #666; }
-        .error { color: #dc2626; padding: 20px; }
-        .btn { background: #4F46E5; color: white; border: none; padding: 15px 30px; border-radius: 8px; font-size: 16px; cursor: pointer; }
-        .btn:hover { background: #4338CA; }
-      </style>
-    </head>
-    <body>
-      <div class="container">
-        <div class="logo">HealthSync</div>
-        <p class="loading">Initializing payment...</p>
-        <div class="amount">₹${amount}</div>
-        <button class="btn" id="payBtn" style="display:none;">Pay Now</button>
-      </div>
-      <script>
-        const options = {
-          key: '${keyId}',
-          amount: ${parseFloat(amount) * 100},
-          currency: '${currency || 'INR'}',
-          name: 'HealthSync',
-          description: 'Appointment Payment',
-          order_id: '${orderId}',
-          prefill: {
-            name: '${prefillName || ''}',
-            email: '${prefillEmail || ''}',
-            contact: '${prefillContact || ''}'
-          },
-          theme: { color: '#4F46E5' },
-          handler: function(response) {
-            const successParams = new URLSearchParams({
-              appointmentId: '${appointmentId}',
-              status: 'success',
-              paymentId: response.razorpay_payment_id,
-              orderId: response.razorpay_order_id,
-              signature: response.razorpay_signature
-            });
-            window.location.href = '${successUrl}&' + successParams.toString();
-          },
-          modal: {
-            ondismiss: function() {
-              window.location.href = '${cancelUrl}&status=cancelled';
-            }
-          }
-        };
+
+  try {
+    const orderData = await paymentService.createOrder(appointmentId, userId);
+    const params = orderData.payuParams;
+    
+    // Render PayU checkout form that auto-submits
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head>
+        <title>HealthSync Payment</title>
+        <meta name="viewport" content="width=device-width, initial-scale=1">
+        <style>
+          body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
+          .container { max-width: 400px; background: white; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
+          .logo { font-size: 28px; font-weight: bold; color: #4F46E5; margin-bottom: 10px; }
+          .subtitle { color: #6b7280; margin-bottom: 30px; }
+          .amount { font-size: 36px; font-weight: bold; color: #1f2937; margin: 20px 0; }
+          .amount span { font-size: 18px; color: #6b7280; }
+          .loading { display: flex; align-items: center; justify-content: center; gap: 10px; color: #4F46E5; margin: 20px 0; }
+          .spinner { width: 24px; height: 24px; border: 3px solid #e5e7eb; border-top-color: #4F46E5; border-radius: 50%; animation: spin 1s linear infinite; }
+          @keyframes spin { to { transform: rotate(360deg); } }
+          .secure { display: flex; align-items: center; justify-content: center; gap: 8px; color: #10b981; font-size: 14px; margin-top: 20px; }
+        </style>
+      </head>
+      <body>
+        <div class="container">
+          <div class="logo">🏥 HealthSync</div>
+          <div class="subtitle">Secure Payment Gateway</div>
+          <div class="amount"><span>₹</span>${params.amount}</div>
+          <div class="loading">
+            <div class="spinner"></div>
+            <span>Redirecting to PayU...</span>
+          </div>
+          <div class="secure">🔒 256-bit SSL Encrypted</div>
+        </div>
         
-        const rzp = new Razorpay(options);
-        rzp.on('payment.failed', function(response) {
-          window.location.href = '${cancelUrl}&status=failed&error=' + encodeURIComponent(response.error.description);
-        });
+        <form id="payuForm" action="${orderData.payuUrl}" method="POST" style="display:none;">
+          <input type="hidden" name="key" value="${params.key}" />
+          <input type="hidden" name="txnid" value="${params.txnid}" />
+          <input type="hidden" name="amount" value="${params.amount}" />
+          <input type="hidden" name="productinfo" value="${params.productinfo}" />
+          <input type="hidden" name="firstname" value="${params.firstname}" />
+          <input type="hidden" name="email" value="${params.email}" />
+          <input type="hidden" name="phone" value="${params.phone}" />
+          <input type="hidden" name="surl" value="${params.surl}" />
+          <input type="hidden" name="furl" value="${params.furl}" />
+          <input type="hidden" name="hash" value="${params.hash}" />
+          <input type="hidden" name="udf1" value="${params.udf1}" />
+          <input type="hidden" name="udf2" value="${params.udf2}" />
+          <input type="hidden" name="udf3" value="${params.udf3}" />
+          <input type="hidden" name="udf4" value="${params.udf4}" />
+          <input type="hidden" name="udf5" value="${params.udf5 || ''}" />
+        </form>
         
-        // Auto-open checkout
-        setTimeout(() => {
-          document.querySelector('.loading').style.display = 'none';
-          document.getElementById('payBtn').style.display = 'inline-block';
-          rzp.open();
-        }, 500);
-        
-        document.getElementById('payBtn').onclick = () => rzp.open();
-      </script>
-    </body>
-    </html>
-  `);
+        <script>
+          setTimeout(() => {
+            document.getElementById('payuForm').submit();
+          }, 1500);
+        </script>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head><title>Error</title></head>
+      <body style="font-family: sans-serif; text-align: center; padding: 50px;">
+        <h2>Payment Error</h2>
+        <p>${error.message}</p>
+        <a href="${FRONTEND_URL}">Go Back</a>
+      </body>
+      </html>
+    `);
+  }
 });
 
 module.exports = router;

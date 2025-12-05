@@ -2,19 +2,23 @@ const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 const crypto = require('crypto');
-const { USE_RAZORPAY_PAYMENTS, RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = require('../config/paymentConfig');
+const { 
+  USE_PAYU_PAYMENTS, 
+  PAYU_MERCHANT_KEY, 
+  PAYU_MERCHANT_SALT,
+  PAYU_MODE,
+  PAYU_BASE_URL,
+  FRONTEND_URL,
+  BACKEND_URL
+} = require('../config/paymentConfig');
 
-// Only initialize Razorpay if payments are enabled
-let razorpay = null;
-if (USE_RAZORPAY_PAYMENTS && RAZORPAY_KEY_ID && RAZORPAY_KEY_SECRET) {
-  const Razorpay = require('razorpay');
-  razorpay = new Razorpay({
-    key_id: RAZORPAY_KEY_ID,
-    key_secret: RAZORPAY_KEY_SECRET
-  });
-  console.log('✅ Razorpay payments ENABLED');
+// PayU configuration check
+const isPayUEnabled = USE_PAYU_PAYMENTS && PAYU_MERCHANT_KEY && PAYU_MERCHANT_SALT;
+
+if (isPayUEnabled) {
+  console.log(`✅ PayU payments ENABLED (${PAYU_MODE} mode)`);
 } else {
-  console.log('⚠️  Razorpay payments DISABLED - Running in test mode');
+  console.log('⚠️  PayU payments DISABLED - Running in test mode');
 }
 
 class PaymentService {
@@ -22,7 +26,8 @@ class PaymentService {
     this.currency = process.env.CURRENCY || 'INR';
     this.platformFeePercentage = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE) || 7;
     this.gstPercentage = parseFloat(process.env.GST_PERCENTAGE) || 18;
-    this.useRazorpayPayments = USE_RAZORPAY_PAYMENTS && razorpay !== null;
+    this.usePayUPayments = isPayUEnabled;
+    this.payuBaseUrl = PAYU_BASE_URL;
   }
 
   // Calculate payment breakdown
@@ -41,13 +46,28 @@ class PaymentService {
     };
   }
 
-  // Create Razorpay Order
+  // Generate PayU hash
+  generateHash(params) {
+    // PayU hash formula: sha512(key|txnid|amount|productinfo|firstname|email|udf1|udf2|udf3|udf4|udf5||||||salt)
+    const hashString = `${PAYU_MERCHANT_KEY}|${params.txnid}|${params.amount}|${params.productinfo}|${params.firstname}|${params.email}|${params.udf1 || ''}|${params.udf2 || ''}|${params.udf3 || ''}|${params.udf4 || ''}|${params.udf5 || ''}||||||${PAYU_MERCHANT_SALT}`;
+    return crypto.createHash('sha512').update(hashString).digest('hex');
+  }
+
+  // Verify PayU response hash
+  verifyHash(params) {
+    // Reverse hash formula: sha512(salt|status||||||udf5|udf4|udf3|udf2|udf1|email|firstname|productinfo|amount|txnid|key)
+    const hashString = `${PAYU_MERCHANT_SALT}|${params.status}||||||${params.udf5 || ''}|${params.udf4 || ''}|${params.udf3 || ''}|${params.udf2 || ''}|${params.udf1 || ''}|${params.email}|${params.firstname}|${params.productinfo}|${params.amount}|${params.txnid}|${PAYU_MERCHANT_KEY}`;
+    const calculatedHash = crypto.createHash('sha512').update(hashString).digest('hex');
+    return calculatedHash === params.hash;
+  }
+
+  // Create PayU Order/Transaction
   async createOrder(appointmentId, userId) {
-    // If Razorpay is disabled, return test mode response
-    if (!this.useRazorpayPayments) {
+    // If PayU is disabled, return test mode response
+    if (!this.usePayUPayments) {
       return {
         testMode: true,
-        message: 'Razorpay disabled - running in test mode',
+        message: 'PayU disabled - running in test mode',
         appointmentId: appointmentId
       };
     }
@@ -66,125 +86,132 @@ class PaymentService {
       }
 
       const paymentBreakdown = this.calculatePaymentBreakdown(appointment.doctorId.consultationFee);
+      
+      // Generate unique transaction ID
+      const txnid = `TXN${Date.now()}${appointmentId.slice(-6)}`;
 
-      // Create Razorpay Order
-      const orderOptions = {
-        amount: paymentBreakdown.total * 100, // Razorpay expects amount in paise
-        currency: this.currency,
-        receipt: `apt_${appointmentId}`,
-        notes: {
-          appointmentId: appointmentId,
-          userId: userId,
-          doctorId: appointment.doctorId._id.toString(),
-          doctorName: appointment.doctorId.name,
-          consultationFee: paymentBreakdown.consultationFee.toString(),
-          gst: paymentBreakdown.gst.toString(),
-          platformFee: paymentBreakdown.platformFee.toString()
-        }
+      // PayU payment parameters
+      const payuParams = {
+        key: PAYU_MERCHANT_KEY,
+        txnid: txnid,
+        amount: paymentBreakdown.total.toFixed(2),
+        productinfo: `Consultation with Dr. ${appointment.doctorId.name}`,
+        firstname: appointment.userId.name.split(' ')[0],
+        email: appointment.userId.email,
+        phone: appointment.userId.phone || '9999999999',
+        surl: `${BACKEND_URL}/api/payments/payu/success`,
+        furl: `${BACKEND_URL}/api/payments/payu/failure`,
+        udf1: appointmentId,
+        udf2: userId,
+        udf3: appointment.doctorId._id.toString(),
+        udf4: paymentBreakdown.consultationFee.toString(),
+        udf5: ''
       };
 
-      const order = await razorpay.orders.create(orderOptions);
+      // Generate hash
+      payuParams.hash = this.generateHash(payuParams);
 
-      // Update appointment with order ID
-      appointment.razorpayOrderId = order.id;
+      // Update appointment with transaction ID
+      appointment.payuTxnId = txnid;
       appointment.paymentStatus = 'pending';
       await appointment.save();
 
       return {
-        orderId: order.id,
+        payuUrl: `${this.payuBaseUrl}/_payment`,
+        payuParams: payuParams,
         amount: paymentBreakdown.total,
-        amountInPaise: order.amount,
-        currency: order.currency,
         breakdown: paymentBreakdown,
-        keyId: RAZORPAY_KEY_ID,
-        prefill: {
-          name: appointment.userId.name,
-          email: appointment.userId.email,
-          contact: appointment.userId.phone || ''
-        },
-        notes: order.notes
+        txnid: txnid
       };
 
     } catch (error) {
-      console.error('Error creating Razorpay order:', error);
+      console.error('Error creating PayU order:', error);
       throw error;
     }
   }
 
-  // Verify Razorpay Payment
-  async verifyPayment(razorpayOrderId, razorpayPaymentId, razorpaySignature) {
-    // If Razorpay is disabled, return test mode response
-    if (!this.useRazorpayPayments) {
+  // Verify PayU Payment (called from success/failure callback)
+  async verifyPayment(payuResponse) {
+    // If PayU is disabled, return test mode response
+    if (!this.usePayUPayments) {
       return {
         success: true,
         testMode: true,
-        message: 'Razorpay disabled - payment verification skipped in test mode'
+        message: 'PayU disabled - payment verification skipped in test mode'
       };
     }
 
     try {
-      // Verify signature
-      const body = razorpayOrderId + '|' + razorpayPaymentId;
-      const expectedSignature = crypto
-        .createHmac('sha256', RAZORPAY_KEY_SECRET)
-        .update(body.toString())
-        .digest('hex');
-
-      const isAuthentic = expectedSignature === razorpaySignature;
-
-      if (!isAuthentic) {
-        throw new Error('Payment verification failed - Invalid signature');
+      // Verify hash
+      const isValidHash = this.verifyHash(payuResponse);
+      
+      if (!isValidHash) {
+        console.error('PayU hash verification failed');
+        throw new Error('Payment verification failed - Invalid hash');
       }
 
-      // Find appointment by order ID
-      const appointment = await Appointment.findOne({ razorpayOrderId: razorpayOrderId });
+      const appointmentId = payuResponse.udf1;
+      const appointment = await Appointment.findById(appointmentId);
       
       if (!appointment) {
-        throw new Error('Appointment not found for this order');
+        throw new Error('Appointment not found for this transaction');
       }
 
-      // Fetch payment details from Razorpay
-      const payment = await razorpay.payments.fetch(razorpayPaymentId);
+      // Check payment status
+      if (payuResponse.status === 'success') {
+        // Update appointment with payment details
+        appointment.paymentStatus = 'completed';
+        appointment.status = 'confirmed';
+        appointment.payuPaymentId = payuResponse.mihpayid;
+        appointment.paymentDetails = {
+          payuTxnId: payuResponse.txnid,
+          payuPaymentId: payuResponse.mihpayid,
+          amount: parseFloat(payuResponse.amount),
+          currency: 'INR',
+          method: payuResponse.mode,
+          bank: payuResponse.bankcode || payuResponse.bank_ref_num,
+          status: payuResponse.status,
+          paidAt: new Date()
+        };
+        await appointment.save();
 
-      // Update appointment with payment details
-      appointment.paymentStatus = 'completed';
-      appointment.status = 'confirmed';
-      appointment.razorpayPaymentId = razorpayPaymentId;
-      appointment.paymentDetails = {
-        razorpayOrderId: razorpayOrderId,
-        razorpayPaymentId: razorpayPaymentId,
-        amount: payment.amount / 100,
-        currency: payment.currency,
-        method: payment.method,
-        bank: payment.bank,
-        wallet: payment.wallet,
-        vpa: payment.vpa,
-        paidAt: new Date()
-      };
-      await appointment.save();
+        return {
+          success: true,
+          verified: true,
+          appointment: appointment,
+          redirectUrl: `${FRONTEND_URL}/payment-success?appointmentId=${appointmentId}`,
+          paymentDetails: {
+            txnid: payuResponse.txnid,
+            paymentId: payuResponse.mihpayid,
+            amount: payuResponse.amount,
+            method: payuResponse.mode
+          }
+        };
+      } else {
+        // Payment failed
+        appointment.paymentStatus = 'failed';
+        appointment.status = 'pending';
+        await appointment.save();
 
-      return {
-        success: true,
-        verified: true,
-        appointment: appointment,
-        paymentDetails: {
-          orderId: razorpayOrderId,
-          paymentId: razorpayPaymentId,
-          amount: payment.amount / 100,
-          method: payment.method
-        }
-      };
+        return {
+          success: false,
+          verified: true,
+          appointment: appointment,
+          redirectUrl: `${FRONTEND_URL}/payment-failed?appointmentId=${appointmentId}&error=${encodeURIComponent(payuResponse.error_Message || 'Payment failed')}`,
+          error: payuResponse.error_Message || 'Payment failed'
+        };
+      }
 
     } catch (error) {
-      console.error('Error verifying payment:', error);
+      console.error('Error verifying PayU payment:', error);
       throw error;
     }
   }
 
-  // Process refund
+  // Process refund (PayU refund API)
   async processRefund(appointmentId, reason = 'Appointment cancelled') {
-    // If Razorpay is disabled, just cancel the appointment
-    if (!this.useRazorpayPayments) {
+    // If PayU is disabled, just cancel the appointment
+    if (!this.usePayUPayments) {
       const appointment = await Appointment.findById(appointmentId);
       if (appointment) {
         appointment.status = 'cancelled';
@@ -202,7 +229,7 @@ class PaymentService {
     try {
       const appointment = await Appointment.findById(appointmentId);
       
-      if (!appointment || !appointment.razorpayPaymentId) {
+      if (!appointment || !appointment.payuPaymentId) {
         throw new Error('No payment found for this appointment');
       }
 
@@ -210,31 +237,23 @@ class PaymentService {
         throw new Error('Cannot refund incomplete payment');
       }
 
-      // Create refund in Razorpay
-      const refund = await razorpay.payments.refund(appointment.razorpayPaymentId, {
-        amount: appointment.paymentDetails.amount * 100, // Amount in paise
-        speed: 'normal',
-        notes: {
-          appointmentId: appointmentId,
-          reason: reason
-        }
-      });
-
-      // Update appointment
-      appointment.paymentStatus = 'refunded';
+      // PayU refund requires API call
+      // Note: PayU refund API requires merchant dashboard or API integration
+      // For now, mark as refund requested
+      appointment.paymentStatus = 'refund_requested';
       appointment.status = 'cancelled';
       appointment.refundDetails = {
-        refundId: refund.id,
-        amount: refund.amount / 100,
         reason: reason,
-        status: refund.status,
-        refundedAt: new Date()
+        requestedAt: new Date(),
+        amount: appointment.paymentDetails.amount
       };
       await appointment.save();
 
+      console.log(`Refund requested for appointment ${appointmentId}`);
+
       return {
         success: true,
-        refund: refund,
+        message: 'Refund request submitted. It will be processed within 5-7 business days.',
         appointment: appointment
       };
 
@@ -249,7 +268,7 @@ class PaymentService {
     try {
       const appointments = await Appointment.find({ 
         userId: userId,
-        paymentStatus: { $in: ['completed', 'refunded'] }
+        paymentStatus: { $in: ['completed', 'refunded', 'refund_requested'] }
       })
       .populate('doctorId', 'name specialization')
       .populate('clinicId', 'name')
@@ -276,103 +295,15 @@ class PaymentService {
     }
   }
 
-  // Handle Razorpay webhooks
-  async handleWebhook(body, signature) {
-    // If Razorpay is disabled, ignore webhooks
-    if (!this.useRazorpayPayments) {
-      return { received: true, testMode: true, message: 'Webhooks disabled in test mode' };
-    }
-
-    try {
-      // Verify webhook signature
-      const expectedSignature = crypto
-        .createHmac('sha256', process.env.RAZORPAY_WEBHOOK_SECRET)
-        .update(JSON.stringify(body))
-        .digest('hex');
-
-      if (expectedSignature !== signature) {
-        throw new Error('Invalid webhook signature');
-      }
-
-      const event = body.event;
-      const payload = body.payload;
-
-      switch (event) {
-        case 'payment.captured':
-          await this.handlePaymentCaptured(payload.payment.entity);
-          break;
-        
-        case 'payment.failed':
-          await this.handlePaymentFailed(payload.payment.entity);
-          break;
-        
-        case 'refund.created':
-          await this.handleRefundCreated(payload.refund.entity);
-          break;
-        
-        default:
-          console.log(`Unhandled Razorpay event: ${event}`);
-      }
-
-      return { received: true };
-
-    } catch (error) {
-      console.error('Webhook error:', error);
-      throw error;
-    }
-  }
-
-  async handlePaymentCaptured(payment) {
-    const orderId = payment.order_id;
-    const appointment = await Appointment.findOne({ razorpayOrderId: orderId });
-    
-    if (appointment && appointment.paymentStatus !== 'completed') {
-      appointment.paymentStatus = 'completed';
-      appointment.status = 'confirmed';
-      appointment.razorpayPaymentId = payment.id;
-      appointment.paymentDetails = {
-        razorpayOrderId: orderId,
-        razorpayPaymentId: payment.id,
-        amount: payment.amount / 100,
-        currency: payment.currency,
-        method: payment.method,
-        paidAt: new Date()
-      };
-      await appointment.save();
-      
-      console.log(`Payment captured for appointment with order ${orderId}`);
-    }
-  }
-
-  async handlePaymentFailed(payment) {
-    const orderId = payment.order_id;
-    const appointment = await Appointment.findOne({ razorpayOrderId: orderId });
-    
-    if (appointment) {
-      appointment.paymentStatus = 'failed';
-      appointment.status = 'pending';
-      await appointment.save();
-      
-      console.log(`Payment failed for appointment with order ${orderId}`);
-    }
-  }
-
-  async handleRefundCreated(refund) {
-    const paymentId = refund.payment_id;
-    const appointment = await Appointment.findOne({ razorpayPaymentId: paymentId });
-    
-    if (appointment) {
-      appointment.paymentStatus = 'refunded';
-      appointment.refundDetails = {
-        refundId: refund.id,
-        amount: refund.amount / 100,
-        status: refund.status,
-        refundedAt: new Date()
-      };
-      await appointment.save();
-      
-      console.log(`Refund created for payment ${paymentId}`);
-    }
+  // Get payment config for frontend
+  getConfig() {
+    return {
+      paymentsEnabled: this.usePayUPayments,
+      testMode: PAYU_MODE === 'test',
+      currency: this.currency,
+      platformFeePercentage: this.platformFeePercentage,
+      gstPercentage: this.gstPercentage
+    };
   }
 }
 

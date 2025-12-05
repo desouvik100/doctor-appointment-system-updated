@@ -7,10 +7,10 @@
     "androidScheme": "https",
     "cleartext": true,
     "allowNavigation": [
-      "*.razorpay.com",
-      "*.stripe.com",
-      "api.razorpay.com",
-      "checkout.razorpay.com"
+      "*.payu.in",
+      "test.payu.in",
+      "secure.payu.in",
+      "*.stripe.com"
     ]
   },
   "plugins": {

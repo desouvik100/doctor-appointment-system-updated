@@ -127,7 +127,16 @@ const appointmentSchema = new mongoose.Schema(
       type: Number, // Duration in seconds
       default: 0
     },
-    // Razorpay Payment Integration
+    // PayU Payment Integration
+    payuTxnId: {
+      type: String,
+      index: true
+    },
+    payuPaymentId: {
+      type: String,
+      index: true
+    },
+    // Legacy Razorpay fields (for backward compatibility)
     razorpayOrderId: {
       type: String,
       index: true
@@ -138,10 +147,12 @@ const appointmentSchema = new mongoose.Schema(
     },
     paymentStatus: {
       type: String,
-      enum: ["pending", "completed", "failed", "refunded", "not_required"],
+      enum: ["pending", "completed", "failed", "refunded", "refund_requested", "not_required"],
       default: "pending"
     },
     paymentDetails: {
+      payuTxnId: String,
+      payuPaymentId: String,
       razorpayOrderId: String,
       razorpayPaymentId: String,
       amount: Number,
@@ -150,6 +161,7 @@ const appointmentSchema = new mongoose.Schema(
       bank: String,
       wallet: String,
       vpa: String,
+      status: String,
       testMode: Boolean,
       paidAt: Date
     },
@@ -158,6 +170,7 @@ const appointmentSchema = new mongoose.Schema(
       amount: Number,
       reason: String,
       status: String,
+      requestedAt: Date,
       refundedAt: Date
     },
     // Legacy payment structure (for backward compatibility)
