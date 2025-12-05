@@ -1,8 +1,8 @@
 import { useState, useEffect, useMemo } from 'react';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
-import '../styles/premium-saas.css';
 import { useLanguage } from '../i18n/LanguageContext';
+import '../styles/premium-saas.css';
 import LanguageSelector from './LanguageSelector';
 import BookingModal from './BookingModal';
 import AIAssistant from './AIAssistant';
