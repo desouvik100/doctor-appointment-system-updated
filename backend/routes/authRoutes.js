@@ -7,18 +7,94 @@ const LoyaltyPoints = require('../models/LoyaltyPoints');
 
 const router = express.Router();
 
-// Register
+// Send OTP for registration
+router.post('/send-registration-otp', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: normalizedEmail });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'User with this email already exists' });
+    }
+
+    // Import email service and send OTP
+    const { sendOTP } = require('../services/emailService');
+    const result = await sendOTP(normalizedEmail, 'registration');
+
+    console.log(`✅ Registration OTP sent to: ${normalizedEmail}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'OTP sent to your email. Please verify to complete registration.',
+      // For development only - remove in production
+      ...(process.env.NODE_ENV === 'development' && { otp: result.otp })
+    });
+
+  } catch (error) {
+    console.error('❌ Send registration OTP error:', error);
+    res.status(500).json({ success: false, message: 'Failed to send OTP', error: error.message });
+  }
+});
+
+// Verify OTP for registration
+router.post('/verify-registration-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: 'Email and OTP are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Import email service and verify OTP
+    const { verifyOTP } = require('../services/emailService');
+    const verification = verifyOTP(normalizedEmail, otp, 'registration');
+
+    if (!verification.success) {
+      return res.status(400).json({ success: false, message: verification.message });
+    }
+
+    console.log(`✅ Registration OTP verified for: ${normalizedEmail}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'OTP verified successfully. You can now complete registration.',
+      verified: true
+    });
+
+  } catch (error) {
+    console.error('❌ Verify registration OTP error:', error);
+    res.status(500).json({ success: false, message: 'Failed to verify OTP', error: error.message });
+  }
+});
+
+// Register (requires OTP verification first)
 router.post('/register', async (req, res) => {
   try {
-    const { name, email, password, phone, role } = req.body;
+    const { name, email, password, phone, role, otpVerified } = req.body;
 
     // Validate required fields
     if (!name || !email || !password) {
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
 
+    // Check if OTP was verified (skip for Google sign-in which sets otpVerified: true)
+    if (!otpVerified) {
+      return res.status(400).json({ message: 'Please verify your email with OTP first' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Check if user exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ message: 'User already exists' });
     }
@@ -29,7 +105,7 @@ router.post('/register', async (req, res) => {
     // Create user
     const user = new User({
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       phone: phone || '',
       role: role || 'patient'

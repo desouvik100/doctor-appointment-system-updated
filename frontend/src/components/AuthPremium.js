@@ -33,6 +33,72 @@ function AuthPremium({ onLogin, onBack }) {
   const [loading, setLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const [socialLoading, setSocialLoading] = useState(null);
+  
+  // OTP verification states
+  const [showOtpStep, setShowOtpStep] = useState(false);
+  const [otp, setOtp] = useState("");
+  const [otpVerified, setOtpVerified] = useState(false);
+  const [otpSending, setOtpSending] = useState(false);
+  const [otpTimer, setOtpTimer] = useState(0);
+
+  // OTP timer countdown
+  useEffect(() => {
+    if (otpTimer > 0) {
+      const timer = setTimeout(() => setOtpTimer(otpTimer - 1), 1000);
+      return () => clearTimeout(timer);
+    }
+  }, [otpTimer]);
+
+  // Send OTP for registration
+  const handleSendOtp = async () => {
+    if (!formData.email) {
+      toast.error("Please enter your email first");
+      return;
+    }
+    
+    setOtpSending(true);
+    try {
+      const response = await axios.post("/api/auth/send-registration-otp", {
+        email: formData.email
+      });
+      
+      if (response.data.success) {
+        toast.success("OTP sent to your email!");
+        setShowOtpStep(true);
+        setOtpTimer(60); // 60 second cooldown
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  // Verify OTP
+  const handleVerifyOtp = async () => {
+    if (!otp || otp.length !== 6) {
+      toast.error("Please enter a valid 6-digit OTP");
+      return;
+    }
+    
+    setLoading(true);
+    try {
+      const response = await axios.post("/api/auth/verify-registration-otp", {
+        email: formData.email,
+        otp: otp
+      });
+      
+      if (response.data.success) {
+        toast.success("Email verified successfully!");
+        setOtpVerified(true);
+        setShowOtpStep(false);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Invalid OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
 
   // Load Google Sign-In script
   useEffect(() => {
@@ -191,6 +257,12 @@ function AuthPremium({ onLogin, onBack }) {
         toast.success("Welcome back!");
         onLogin(userData, "patient");
       } else {
+        // Registration flow - require OTP verification
+        if (!otpVerified) {
+          toast.error("Please verify your email with OTP first");
+          setLoading(false);
+          return;
+        }
         if (formData.password !== formData.confirmPassword) {
           toast.error("Passwords don't match");
           setLoading(false);
@@ -201,7 +273,8 @@ function AuthPremium({ onLogin, onBack }) {
           email: formData.email,
           password: formData.password,
           phone: formData.phone,
-          role: 'patient'
+          role: 'patient',
+          otpVerified: true
         });
         // Combine token with user data for proper storage
         const userData = {
@@ -302,11 +375,99 @@ function AuthPremium({ onLogin, onBack }) {
                   className="input-premium"
                   placeholder="you@example.com"
                   value={formData.email}
-                  onChange={handleChange}
+                  onChange={(e) => {
+                    handleChange(e);
+                    // Reset OTP verification if email changes
+                    if (!isLogin && otpVerified) {
+                      setOtpVerified(false);
+                      setShowOtpStep(false);
+                      setOtp("");
+                    }
+                  }}
                   required
+                  disabled={!isLogin && otpVerified}
                 />
+                {!isLogin && otpVerified && (
+                  <span style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#10b981' }}>
+                    <i className="fas fa-check-circle"></i>
+                  </span>
+                )}
               </div>
             </div>
+
+            {/* OTP Verification Section for Registration */}
+            {!isLogin && !otpVerified && (
+              <div className="auth-premium__field">
+                {!showOtpStep ? (
+                  <button
+                    type="button"
+                    onClick={handleSendOtp}
+                    disabled={otpSending || !formData.email || otpTimer > 0}
+                    className="btn-premium btn-premium-secondary"
+                    style={{ width: '100%', padding: '12px' }}
+                  >
+                    {otpSending ? (
+                      <><i className="fas fa-spinner fa-spin"></i> Sending OTP...</>
+                    ) : otpTimer > 0 ? (
+                      `Resend OTP in ${otpTimer}s`
+                    ) : (
+                      <><i className="fas fa-paper-plane"></i> Send OTP to verify email</>
+                    )}
+                  </button>
+                ) : (
+                  <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '12px', padding: '16px' }}>
+                    <label className="auth-premium__label" style={{ color: '#166534', marginBottom: '8px', display: 'block' }}>
+                      <i className="fas fa-shield-alt"></i> Enter 6-digit OTP sent to your email
+                    </label>
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input
+                        type="text"
+                        value={otp}
+                        onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                        placeholder="000000"
+                        maxLength={6}
+                        className="input-premium"
+                        style={{ flex: 1, textAlign: 'center', letterSpacing: '8px', fontSize: '18px', fontWeight: '600' }}
+                      />
+                      <button
+                        type="button"
+                        onClick={handleVerifyOtp}
+                        disabled={loading || otp.length !== 6}
+                        className="btn-premium btn-premium-primary"
+                        style={{ padding: '12px 20px' }}
+                      >
+                        {loading ? <i className="fas fa-spinner fa-spin"></i> : 'Verify'}
+                      </button>
+                    </div>
+                    <div style={{ display: 'flex', justifyContent: 'space-between', marginTop: '8px' }}>
+                      <button
+                        type="button"
+                        onClick={() => { setShowOtpStep(false); setOtp(""); }}
+                        style={{ background: 'none', border: 'none', color: '#6b7280', fontSize: '13px', cursor: 'pointer' }}
+                      >
+                        Change email
+                      </button>
+                      <button
+                        type="button"
+                        onClick={handleSendOtp}
+                        disabled={otpSending || otpTimer > 0}
+                        style={{ background: 'none', border: 'none', color: '#6366f1', fontSize: '13px', cursor: 'pointer' }}
+                      >
+                        {otpTimer > 0 ? `Resend in ${otpTimer}s` : 'Resend OTP'}
+                      </button>
+                    </div>
+                  </div>
+                )}
+              </div>
+            )}
+
+            {/* Show verified badge */}
+            {!isLogin && otpVerified && (
+              <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', padding: '12px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                <i className="fas fa-check-circle" style={{ color: '#10b981', fontSize: '18px' }}></i>
+                <span style={{ color: '#166534', fontWeight: '500' }}>Email verified successfully!</span>
+              </div>
+            )}
 
             {!isLogin && (
               <div className="auth-premium__field">
