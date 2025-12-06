@@ -1126,12 +1126,18 @@ const PatientDashboard = ({ user, onLogout }) => {
                                   </button>
                                 </div>
                                 {canJoin ? (
-                                  <button 
-                                    className="appointment-card-pro__join-btn"
-                                    onClick={() => window.open(meetLink, '_blank')}
-                                  >
-                                    <i className="fas fa-video"></i> Join Meeting Now
-                                  </button>
+                                  <>
+                                    <div className="appointment-card-pro__meet-warning">
+                                      <i className="fas fa-exclamation-triangle"></i>
+                                      <span>Please wait for the doctor to start the meeting first. If you see "waiting for host", the doctor hasn't joined yet.</span>
+                                    </div>
+                                    <button 
+                                      className="appointment-card-pro__join-btn"
+                                      onClick={() => window.open(meetLink, '_blank')}
+                                    >
+                                      <i className="fas fa-video"></i> Join Meeting
+                                    </button>
+                                  </>
                                 ) : (
                                   <div className="appointment-card-pro__meet-info">
                                     <i className="fas fa-info-circle"></i>

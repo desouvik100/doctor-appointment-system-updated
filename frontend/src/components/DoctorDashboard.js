@@ -296,15 +296,25 @@ function DoctorDashboard({ doctor, onLogout }) {
                         Complete Consultation
                       </button>
                       {currentPatient.consultationType === 'online' && currentPatient.googleMeetLink && (
-                        <a 
-                          href={currentPatient.googleMeetLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="btn btn-info w-100"
-                        >
-                          <i className="fas fa-video me-2"></i>
-                          Join Video Call
-                        </a>
+                        <div className="online-consultation-section">
+                          <div className="alert alert-warning mb-2 py-2">
+                            <i className="fas fa-info-circle me-2"></i>
+                            <small><strong>Important:</strong> Click "Start Meeting" first so patients can join</small>
+                          </div>
+                          <a 
+                            href={currentPatient.googleMeetLink}
+                            target="_blank"
+                            rel="noopener noreferrer"
+                            className="btn btn-primary w-100 mb-2"
+                            style={{ background: 'linear-gradient(135deg, #1a73e8 0%, #4285f4 100%)', border: 'none' }}
+                          >
+                            <i className="fas fa-video me-2"></i>
+                            🎬 Start Meeting (Join as Host)
+                          </a>
+                          <small className="text-muted d-block text-center">
+                            You must join first to let patients enter
+                          </small>
+                        </div>
                       )}
                     </div>
                   </div>
@@ -479,16 +489,17 @@ function DoctorDashboard({ doctor, onLogout }) {
                       <td><small>{apt.reason}</small></td>
                       <td>{getStatusBadge(apt.status)}</td>
                       <td>
-                        {/* Google Meet Link for Online Appointments */}
+                        {/* Google Meet Link for Online Appointments - Doctor starts first */}
                         {apt.consultationType === "online" && apt.googleMeetLink && (
                           <a 
                             href={apt.googleMeetLink} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="btn btn-sm btn-success me-1"
-                            title="Join Google Meet"
+                            className="btn btn-sm btn-primary me-1"
+                            title="Start Meeting (Join as Host)"
+                            style={{ background: '#1a73e8' }}
                           >
-                            <i className="fas fa-video"></i>
+                            <i className="fas fa-video me-1"></i>Start
                           </a>
                         )}
                         {apt.consultationType === "online" && apt.meetingLink && !apt.googleMeetLink && (
@@ -496,10 +507,10 @@ function DoctorDashboard({ doctor, onLogout }) {
                             href={apt.meetingLink} 
                             target="_blank" 
                             rel="noopener noreferrer"
-                            className="btn btn-sm btn-success me-1"
-                            title="Join Meeting"
+                            className="btn btn-sm btn-primary me-1"
+                            title="Start Meeting (Join as Host)"
                           >
-                            <i className="fas fa-video"></i>
+                            <i className="fas fa-video me-1"></i>Start
                           </a>
                         )}
                         {apt.status === "confirmed" && (
