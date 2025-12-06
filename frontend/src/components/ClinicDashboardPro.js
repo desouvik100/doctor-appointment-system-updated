@@ -492,10 +492,10 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
                               </div>
                               <span className={`px-3 py-1 rounded-full text-xs font-semibold bg-${getStatusColor(apt.status)}-100 text-${getStatusColor(apt.status)}-700`}>{apt.status}</span>
                               <div className="flex gap-2 items-center">
-                                {/* Google Meet Link for Online Appointments */}
+                                {/* Meet Link for Online Appointments - Doctor joins as Host */}
                                 {apt.consultationType === 'online' && apt.googleMeetLink && (
-                                  <a href={apt.googleMeetLink} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600" title="Join Google Meet">
-                                    <i className="fas fa-video mr-1"></i>Meet
+                                  <a href={apt.doctorMeetLink || apt.googleMeetLink} target="_blank" rel="noopener noreferrer" className={`px-3 py-1.5 ${apt.meetingProvider === 'jitsi' ? 'bg-purple-500 hover:bg-purple-600' : 'bg-green-500 hover:bg-green-600'} text-white rounded-lg text-xs font-medium`} title="Join as Host (Moderator)">
+                                    <i className="fas fa-video mr-1"></i>{apt.meetingProvider === 'jitsi' ? 'Host' : 'Meet'}
                                   </a>
                                 )}
                                 {apt.consultationType === 'online' && !apt.googleMeetLink && (

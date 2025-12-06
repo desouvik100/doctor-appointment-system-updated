@@ -96,6 +96,20 @@ const appointmentSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
+    // Separate links for doctor (host) and patient
+    doctorMeetLink: {
+      type: String,
+      trim: true
+    },
+    patientMeetLink: {
+      type: String,
+      trim: true
+    },
+    meetingProvider: {
+      type: String,
+      enum: ['google-meet', 'jitsi', 'other'],
+      default: 'google-meet'
+    },
     meetLinkGenerated: {
       type: Boolean,
       default: false

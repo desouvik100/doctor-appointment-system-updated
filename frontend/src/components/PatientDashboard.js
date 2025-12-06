@@ -1028,7 +1028,8 @@ const PatientDashboard = ({ user, onLogout }) => {
             ) : (
               <div className="patient-dashboard__appointments-list">
                 {appointments.map(apt => {
-                  const meetLink = apt.googleMeetLink || apt.meetingLink;
+                  // Use patient-specific link if available (for Jitsi), otherwise use general link
+                  const meetLink = apt.patientMeetLink || apt.googleMeetLink || apt.meetingLink;
                   const isOnline = apt.consultationType === 'online';
                   const appointmentDate = new Date(apt.date);
                   const [hours, minutes] = (apt.time || '00:00').split(':');

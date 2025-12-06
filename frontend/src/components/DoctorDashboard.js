@@ -507,17 +507,18 @@ function DoctorDashboard({ doctor, onLogout }) {
                       <td><small>{apt.reason}</small></td>
                       <td>{getStatusBadge(apt.status)}</td>
                       <td>
-                        {/* Google Meet Link for Online Appointments - Doctor starts first */}
+                        {/* Meet Link for Online Appointments - Doctor joins as Host */}
                         {apt.consultationType === "online" && apt.googleMeetLink && (
                           <a 
-                            href={apt.googleMeetLink} 
+                            href={apt.doctorMeetLink || apt.googleMeetLink} 
                             target="_blank" 
                             rel="noopener noreferrer"
                             className="btn btn-sm btn-primary me-1"
-                            title="Start Meeting (Join as Host)"
-                            style={{ background: '#1a73e8' }}
+                            title="Join as Host (You have moderator controls)"
+                            style={{ background: apt.meetingProvider === 'jitsi' ? '#location' : '#1a73e8' }}
                           >
-                            <i className="fas fa-video me-1"></i>Start
+                            <i className="fas fa-video me-1"></i>
+                            {apt.meetingProvider === 'jitsi' ? 'Host Meeting' : 'Start'}
                           </a>
                         )}
                         {apt.consultationType === "online" && !apt.googleMeetLink && (

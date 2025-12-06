@@ -434,20 +434,66 @@ function getGoogleStatus() {
  */
 
 /**
- * Generate a Jitsi Meet link as fallback (no host required)
+ * Generate a Jitsi Meet link with Doctor as Host/Moderator
  * @param {Object} appointment - Appointment details
- * @returns {Object} - Meeting link info
+ * @returns {Object} - Meeting link info with separate doctor (host) and patient links
  */
 function generateJitsiMeetLink(appointment) {
-  const roomName = `healthsync-${appointment._id || Date.now()}`;
-  const meetLink = `https://meet.jit.si/${roomName}`;
+  const appointmentId = appointment._id || Date.now();
+  const roomName = `HealthSync-Consultation-${appointmentId}`;
+  
+  // Get doctor and patient info
+  const doctorName = appointment.doctorId?.name || 'Doctor';
+  const patientName = appointment.userId?.name || 'Patient';
+  
+  // Base Jitsi URL
+  const baseUrl = `https://meet.jit.si/${roomName}`;
+  
+  // Doctor link - with moderator settings
+  // Using URL config to set doctor as moderator with lobby enabled
+  const doctorConfig = {
+    'userInfo.displayName': `Dr. ${doctorName} (Host)`,
+    'config.startWithAudioMuted': false,
+    'config.startWithVideoMuted': false,
+    'config.prejoinPageEnabled': false,
+    'config.disableModeratorIndicator': false,
+    'config.enableLobby': true,  // Enable lobby so doctor can admit patients
+    'config.lobbyModeEnabled': true
+  };
+  
+  // Patient link - as guest
+  const patientConfig = {
+    'userInfo.displayName': patientName,
+    'config.startWithAudioMuted': true,
+    'config.startWithVideoMuted': false,
+    'config.prejoinPageEnabled': true
+  };
+  
+  // Build URL with config
+  const doctorParams = Object.entries(doctorConfig)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&');
+  
+  const patientParams = Object.entries(patientConfig)
+    .map(([key, value]) => `${encodeURIComponent(key)}=${encodeURIComponent(value)}`)
+    .join('&');
+  
+  const doctorLink = `${baseUrl}#${doctorParams}`;
+  const patientLink = `${baseUrl}#${patientParams}`;
+  
+  console.log('🎥 Jitsi Meet links generated:');
+  console.log(`   Room: ${roomName}`);
+  console.log(`   Doctor (Host): Dr. ${doctorName}`);
+  console.log(`   Patient: ${patientName}`);
   
   return {
     success: true,
-    meetLink,
+    meetLink: baseUrl,  // Generic link (works for both)
+    doctorLink,         // Doctor joins as host
+    patientLink,        // Patient joins as guest
     provider: 'jitsi',
     roomName,
-    note: 'Jitsi Meet - No host required, anyone can join'
+    note: 'Jitsi Meet - Doctor is the host with moderator controls'
   };
 }
 

@@ -330,10 +330,20 @@ router.post('/', async (req, res) => {
         
         if (meetResult.success) {
           appointment.googleMeetLink = meetResult.meetLink;
-          appointment.googleEventId = meetResult.eventId;
+          appointment.googleEventId = meetResult.eventId || null;
           appointment.meetLinkGenerated = true;
           appointment.meetLinkGeneratedAt = new Date();
           appointment.meetingLink = meetResult.meetLink;
+          appointment.meetingProvider = meetResult.provider || 'google-meet';
+          
+          // Store separate doctor and patient links (for Jitsi)
+          if (meetResult.doctorLink) {
+            appointment.doctorMeetLink = meetResult.doctorLink;
+          }
+          if (meetResult.patientLink) {
+            appointment.patientMeetLink = meetResult.patientLink;
+          }
+          
           await appointment.save();
           
           console.log(`✅ Meet link generated: ${meetResult.meetLink} (Provider: ${meetResult.provider})`);
@@ -541,14 +551,23 @@ router.post('/:id/generate-meeting', async (req, res) => {
     
     if (meetResult.success) {
       appointment.googleMeetLink = meetResult.meetLink;
-      appointment.googleEventId = meetResult.eventId;
+      appointment.googleEventId = meetResult.eventId || null;
       appointment.meetLinkGenerated = true;
       appointment.meetLinkGeneratedAt = new Date();
       appointment.meetingLink = meetResult.meetLink;
+      appointment.meetingProvider = meetResult.provider || 'google-meet';
+      
+      // Store separate doctor and patient links (for Jitsi)
+      if (meetResult.doctorLink) {
+        appointment.doctorMeetLink = meetResult.doctorLink;
+      }
+      if (meetResult.patientLink) {
+        appointment.patientMeetLink = meetResult.patientLink;
+      }
       
       await appointment.save();
       
-      console.log(`✅ Meet link generated: ${meetResult.meetLink}`);
+      console.log(`✅ Meet link generated: ${meetResult.meetLink} (Provider: ${meetResult.provider})`);
       
       // Send emails to both patient and doctor
       const { sendEmails } = req.query;
@@ -574,6 +593,8 @@ router.post('/:id/generate-meeting', async (req, res) => {
         success: true,
         meetingLink: appointment.meetingLink,
         googleMeetLink: appointment.googleMeetLink,
+        doctorMeetLink: appointment.doctorMeetLink,
+        patientMeetLink: appointment.patientMeetLink,
         joinCode: appointment.joinCode,
         appointmentId: appointment._id,
         provider: meetResult.provider,
