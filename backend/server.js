@@ -63,6 +63,11 @@ app.use('/api/health-checkup', require('./routes/healthCheckupRoutes'));
 app.use('/api/profile', require('./routes/profileRoutes'));
 app.use('/api/loyalty', require('./routes/loyaltyRoutes'));
 app.use('/api/reminders', require('./routes/reminderRoutes'));
+app.use('/api/medicine-reminders', require('./routes/medicineReminderRoutes'));
+app.use('/api/health-packages', require('./routes/healthPackageRoutes'));
+app.use('/api/referrals', require('./routes/referralRoutes'));
+app.use('/api/loyalty-points', require('./routes/loyaltyPointsRoutes'));
+app.use('/api/queue', require('./routes/queueRoutes'));
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');

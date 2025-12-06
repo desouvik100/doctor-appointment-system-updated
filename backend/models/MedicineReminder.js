@@ -6,7 +6,11 @@ const medicineReminderSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  name: {
+  prescriptionId: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'Prescription'
+  },
+  medicineName: {
     type: String,
     required: true,
     trim: true
@@ -18,56 +22,100 @@ const medicineReminderSchema = new mongoose.Schema({
   },
   frequency: {
     type: String,
-    enum: ['daily', 'twice', 'thrice', 'weekly', 'asNeeded'],
-    default: 'daily'
+    enum: ['once_daily', 'twice_daily', 'thrice_daily', 'four_times', 'every_6_hours', 'every_8_hours', 'every_12_hours', 'weekly', 'as_needed'],
+    default: 'once_daily'
   },
   times: [{
-    type: String,  // Format: "HH:MM"
-    required: true
+    hour: { type: Number, min: 0, max: 23 },
+    minute: { type: Number, min: 0, max: 59 },
+    label: { type: String } // 'Morning', 'Afternoon', 'Evening', 'Night'
   }],
+  timing: {
+    type: String,
+    enum: ['before_food', 'after_food', 'with_food', 'empty_stomach', 'bedtime', 'any_time'],
+    default: 'after_food'
+  },
   startDate: {
     type: Date,
+    required: true,
     default: Date.now
   },
   endDate: {
-    type: Date,
-    default: null
+    type: Date
   },
-  notes: {
+  durationDays: {
+    type: Number
+  },
+  instructions: {
     type: String,
     trim: true
-  },
-  color: {
-    type: String,
-    default: '#667eea'
   },
   isActive: {
     type: Boolean,
     default: true
   },
-  // Track which reminders have been taken
-  takenHistory: [{
-    date: Date,
-    time: String,
-    takenAt: Date
-  }],
-  // Email reminder settings
-  emailReminders: {
+  notificationEnabled: {
     type: Boolean,
     default: true
   },
-  reminderMinutesBefore: {
+  notificationMinutesBefore: {
     type: Number,
-    default: 5  // Send email 5 minutes before
+    default: 5
   },
-  lastEmailSent: {
-    type: Date,
-    default: null
+  // Track doses taken
+  dosesTaken: [{
+    scheduledTime: Date,
+    takenAt: Date,
+    status: {
+      type: String,
+      enum: ['taken', 'missed', 'skipped', 'pending'],
+      default: 'pending'
+    },
+    notes: String
+  }],
+  // Stats
+  totalDoses: {
+    type: Number,
+    default: 0
+  },
+  dosesTakenCount: {
+    type: Number,
+    default: 0
+  },
+  dosesMissedCount: {
+    type: Number,
+    default: 0
+  },
+  adherenceRate: {
+    type: Number,
+    default: 100
+  },
+  // Refill reminder
+  pillCount: {
+    type: Number
+  },
+  refillReminderAt: {
+    type: Number // Remind when pills reach this count
+  },
+  lastRefillDate: {
+    type: Date
   }
-}, { timestamps: true });
+}, {
+  timestamps: true
+});
 
-// Index for efficient querying
-medicineReminderSchema.index({ userId: 1, isActive: 1 });
-medicineReminderSchema.index({ 'times': 1, isActive: 1 });
+// Calculate adherence rate
+medicineReminderSchema.methods.calculateAdherence = function() {
+  if (this.totalDoses === 0) return 100;
+  this.adherenceRate = Math.round((this.dosesTakenCount / this.totalDoses) * 100);
+  return this.adherenceRate;
+};
+
+// Check if reminder is still active
+medicineReminderSchema.methods.isStillActive = function() {
+  if (!this.isActive) return false;
+  if (this.endDate && new Date() > this.endDate) return false;
+  return true;
+};
 
 module.exports = mongoose.model('MedicineReminder', medicineReminderSchema);

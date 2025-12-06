@@ -1,0 +1,636 @@
+/* Doctor Review Styles */
+.doctor-review-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.doctor-review {
+  background: #ffffff;
+  border-radius: 24px;
+  width: 100%;
+  max-width: 600px;
+  max-height: 90vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.doctor-review__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #ffffff;
+}
+
+.doctor-review__header h2 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 1.25rem;
+  margin: 0;
+}
+
+.doctor-review__close {
+  background: rgba(255, 255, 255, 0.2);
+  border: none;
+  color: #ffffff;
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+.doctor-review__content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 24px;
+}
+
+/* Doctor Info */
+.doctor-review__doctor-info {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 16px;
+  margin-bottom: 24px;
+}
+
+.doctor-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.doctor-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.doctor-avatar i {
+  font-size: 28px;
+  color: #ffffff;
+}
+
+.doctor-details h3 {
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 4px 0;
+}
+
+.doctor-details p {
+  font-size: 14px;
+  color: #64748b;
+  margin: 0 0 8px 0;
+}
+
+.appointment-date {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 12px;
+  color: #6366f1;
+  background: #ede9fe;
+  padding: 4px 10px;
+  border-radius: 6px;
+}
+
+/* Rating Sections */
+.rating-section {
+  margin-bottom: 24px;
+}
+
+.rating-section h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #334155;
+  margin: 0 0 12px 0;
+}
+
+.rating-section--main {
+  text-align: center;
+  padding: 24px;
+  background: #f8fafc;
+  border-radius: 16px;
+}
+
+.rating-section--main h4 {
+  font-size: 16px;
+  margin-bottom: 16px;
+}
+
+/* Stars */
+.stars-container {
+  display: flex;
+  justify-content: center;
+  gap: 8px;
+}
+
+.star-btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 4px;
+  transition: transform 0.2s;
+}
+
+.star-btn:hover {
+  transform: scale(1.2);
+}
+
+.stars-container--large .star-btn {
+  font-size: 36px;
+  color: #e2e8f0;
+}
+
+.stars-container--large .star-btn--active {
+  color: #fbbf24;
+}
+
+.star-btn--small {
+  font-size: 18px;
+  color: #e2e8f0;
+}
+
+.star-btn--small.star-btn--active {
+  color: #fbbf24;
+}
+
+.main-rating {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.rating-label {
+  font-size: 18px;
+  font-weight: 600;
+  color: #6366f1;
+}
+
+/* Detailed Ratings */
+.detailed-ratings {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.detailed-rating-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+
+.detailed-rating-label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 14px;
+  color: #475569;
+}
+
+.detailed-rating-label i {
+  color: #6366f1;
+  width: 20px;
+}
+
+.detailed-rating-stars {
+  display: flex;
+  gap: 4px;
+}
+
+/* Tags */
+.tags-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.tag-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #f1f5f9;
+  border: 2px solid transparent;
+  border-radius: 20px;
+  font-size: 13px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.tag-btn:hover {
+  background: #e2e8f0;
+}
+
+.tag-btn--selected {
+  background: #ede9fe;
+  border-color: #6366f1;
+  color: #6366f1;
+}
+
+.tag-btn i {
+  font-size: 12px;
+}
+
+/* Input & Textarea */
+.rating-section input,
+.rating-section textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 14px;
+  transition: all 0.2s;
+}
+
+.rating-section input:focus,
+.rating-section textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+}
+
+.char-count {
+  display: block;
+  text-align: right;
+  font-size: 12px;
+  color: #94a3b8;
+  margin-top: 6px;
+}
+
+/* Recommend Buttons */
+.recommend-buttons {
+  display: flex;
+  gap: 12px;
+}
+
+.recommend-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  background: #f1f5f9;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  font-size: 15px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.recommend-btn--yes {
+  background: #dcfce7;
+  border-color: #22c55e;
+  color: #22c55e;
+}
+
+.recommend-btn--no {
+  background: #fef2f2;
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+/* Anonymous Option */
+.anonymous-option {
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.anonymous-option label {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.anonymous-option input[type="checkbox"] {
+  width: 18px;
+  height: 18px;
+  accent-color: #6366f1;
+}
+
+.anonymous-option span {
+  font-size: 14px;
+  font-weight: 500;
+  color: #334155;
+}
+
+.anonymous-hint {
+  font-size: 12px;
+  color: #94a3b8;
+  margin: 8px 0 0 28px;
+}
+
+/* Footer */
+.doctor-review__footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 20px 24px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-cancel {
+  padding: 12px 24px;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.btn-submit {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: #ffffff;
+  cursor: pointer;
+}
+
+.btn-submit:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Reviews Display */
+.doctor-reviews {
+  padding: 20px;
+}
+
+.reviews-summary {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 24px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 16px;
+  color: #ffffff;
+  margin-bottom: 20px;
+}
+
+.reviews-summary__rating {
+  text-align: center;
+}
+
+.big-rating {
+  font-size: 3rem;
+  font-weight: 700;
+}
+
+.reviews-summary .stars {
+  display: flex;
+  gap: 4px;
+  justify-content: center;
+  margin: 8px 0;
+}
+
+.reviews-summary .stars i {
+  color: #fbbf24;
+}
+
+.total-reviews {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.reviews-summary__recommend {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 16px;
+}
+
+.reviews-summary__recommend i {
+  font-size: 24px;
+}
+
+.reviews-sort {
+  margin-bottom: 16px;
+}
+
+.reviews-sort select {
+  padding: 10px 14px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+  background: #ffffff;
+}
+
+.reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.review-card {
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 16px;
+  padding: 20px;
+}
+
+.review-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 12px;
+}
+
+.reviewer-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.reviewer-avatar {
+  width: 40px;
+  height: 40px;
+  background: #f1f5f9;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #64748b;
+}
+
+.reviewer-name {
+  display: block;
+  font-weight: 600;
+  color: #0f172a;
+}
+
+.review-date {
+  display: block;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+.review-rating i {
+  color: #fbbf24;
+  font-size: 14px;
+}
+
+.review-title {
+  font-size: 15px;
+  font-weight: 600;
+  color: #0f172a;
+  margin: 0 0 8px 0;
+}
+
+.review-text {
+  font-size: 14px;
+  color: #475569;
+  line-height: 1.6;
+  margin: 0 0 12px 0;
+}
+
+.review-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 12px;
+}
+
+.review-tag {
+  padding: 4px 10px;
+  background: #ede9fe;
+  color: #6366f1;
+  border-radius: 6px;
+  font-size: 12px;
+}
+
+.review-recommend {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 13px;
+  color: #22c55e;
+}
+
+.no-reviews {
+  text-align: center;
+  padding: 40px;
+  color: #94a3b8;
+}
+
+.no-reviews i {
+  font-size: 48px;
+  margin-bottom: 12px;
+}
+
+.reviews-loading {
+  text-align: center;
+  padding: 40px;
+  color: #6366f1;
+  font-size: 24px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .doctor-review {
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .reviews-summary {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .detailed-rating-item {
+    flex-direction: column;
+    gap: 8px;
+    align-items: flex-start;
+  }
+
+  .recommend-buttons {
+    flex-direction: column;
+  }
+}
+
+/* Dark Mode */
+.dark-mode .doctor-review {
+  background: #1e293b;
+}
+
+.dark-mode .doctor-review__doctor-info,
+.dark-mode .rating-section--main,
+.dark-mode .detailed-rating-item,
+.dark-mode .anonymous-option {
+  background: #0f172a;
+}
+
+.dark-mode .doctor-details h3,
+.dark-mode .rating-section h4 {
+  color: #f1f5f9;
+}
+
+.dark-mode .rating-section input,
+.dark-mode .rating-section textarea {
+  background: #0f172a;
+  border-color: #334155;
+  color: #f1f5f9;
+}
+
+.dark-mode .tag-btn {
+  background: #334155;
+  color: #94a3b8;
+}
+
+.dark-mode .tag-btn--selected {
+  background: #312e81;
+  color: #a5b4fc;
+}
+
+.dark-mode .doctor-review__footer {
+  border-color: #334155;
+}
+
+.dark-mode .review-card {
+  background: #1e293b;
+  border-color: #334155;
+}
+
+.dark-mode .reviewer-name,
+.dark-mode .review-title {
+  color: #f1f5f9;
+}

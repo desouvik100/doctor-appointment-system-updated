@@ -1,0 +1,453 @@
+/* FollowUpBooking.css - Follow-up Booking Styles */
+
+.follow-up-booking {
+  background: var(--bg-primary, #ffffff);
+  border-radius: 16px;
+  max-width: 600px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+.follow-up-booking__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.follow-up-booking__header h2 {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary, #1f2937);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.follow-up-booking__header h2 i {
+  color: #6366f1;
+}
+
+.follow-up-booking__close {
+  background: none;
+  border: none;
+  font-size: 1.25rem;
+  color: var(--text-secondary, #6b7280);
+  cursor: pointer;
+  padding: 8px;
+  border-radius: 8px;
+  transition: all 0.2s;
+}
+
+.follow-up-booking__close:hover {
+  background: var(--bg-secondary, #f3f4f6);
+  color: var(--text-primary, #1f2937);
+}
+
+/* Previous Appointment */
+.previous-appointment {
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.previous-appointment__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 4px 12px;
+  background: #6366f1;
+  color: white;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  margin-bottom: 12px;
+}
+
+.previous-appointment__content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.doctor-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.doctor-avatar {
+  width: 48px;
+  height: 48px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 1.25rem;
+  overflow: hidden;
+}
+
+.doctor-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.doctor-details h3 {
+  font-size: 1rem;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+  margin-bottom: 2px;
+}
+
+.doctor-details p {
+  font-size: 0.8125rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.visit-date {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--text-secondary, #6b7280);
+  font-size: 0.875rem;
+}
+
+.visit-date i {
+  color: #22c55e;
+}
+
+/* Follow-up Sections */
+.follow-up-section {
+  padding: 20px 24px;
+  border-bottom: 1px solid var(--border-color, #e5e7eb);
+}
+
+.follow-up-section h4 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: var(--text-primary, #1f2937);
+  margin-bottom: 16px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.follow-up-section h4 i {
+  color: #6366f1;
+}
+
+/* Reason Grid */
+.reason-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.reason-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: var(--bg-secondary, #f9fafb);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.reason-btn i {
+  font-size: 1.25rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.reason-btn span {
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--text-primary, #1f2937);
+  text-align: center;
+}
+
+.reason-btn:hover {
+  border-color: #6366f1;
+  background: #f0f9ff;
+}
+
+.reason-btn--selected {
+  border-color: #6366f1;
+  background: #eef2ff;
+}
+
+.reason-btn--selected i {
+  color: #6366f1;
+}
+
+/* Date Scroll */
+.date-scroll {
+  display: flex;
+  gap: 10px;
+  overflow-x: auto;
+  padding-bottom: 8px;
+  -webkit-overflow-scrolling: touch;
+}
+
+.date-scroll::-webkit-scrollbar {
+  height: 4px;
+}
+
+.date-scroll::-webkit-scrollbar-track {
+  background: var(--bg-secondary, #f3f4f6);
+  border-radius: 2px;
+}
+
+.date-scroll::-webkit-scrollbar-thumb {
+  background: #6366f1;
+  border-radius: 2px;
+}
+
+.date-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  min-width: 70px;
+  padding: 12px 16px;
+  background: var(--bg-secondary, #f9fafb);
+  border: 2px solid transparent;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.date-btn:hover {
+  border-color: #6366f1;
+}
+
+.date-btn--selected {
+  background: #6366f1;
+  border-color: #6366f1;
+}
+
+.date-day {
+  font-size: 0.6875rem;
+  font-weight: 500;
+  color: var(--text-secondary, #6b7280);
+  text-transform: uppercase;
+}
+
+.date-num {
+  font-size: 1.25rem;
+  font-weight: 700;
+  color: var(--text-primary, #1f2937);
+}
+
+.date-month {
+  font-size: 0.6875rem;
+  color: var(--text-secondary, #6b7280);
+}
+
+.date-btn--selected .date-day,
+.date-btn--selected .date-num,
+.date-btn--selected .date-month {
+  color: white;
+}
+
+/* Slots */
+.slots-loading,
+.no-slots {
+  text-align: center;
+  padding: 24px;
+  color: var(--text-secondary, #6b7280);
+}
+
+.slots-loading i,
+.no-slots i {
+  font-size: 2rem;
+  margin-bottom: 12px;
+  opacity: 0.5;
+}
+
+.no-slots p {
+  font-weight: 500;
+  margin-bottom: 4px;
+}
+
+.no-slots span {
+  font-size: 0.8125rem;
+}
+
+.slot-group {
+  margin-bottom: 16px;
+}
+
+.slot-group:last-child {
+  margin-bottom: 0;
+}
+
+.slot-group__label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8125rem;
+  font-weight: 500;
+  color: var(--text-secondary, #6b7280);
+  margin-bottom: 10px;
+}
+
+.slot-group__label i {
+  color: #f59e0b;
+}
+
+.slots-grid {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.slot-btn {
+  padding: 10px 16px;
+  background: var(--bg-secondary, #f9fafb);
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--text-primary, #1f2937);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.slot-btn:hover {
+  border-color: #6366f1;
+  background: #f0f9ff;
+}
+
+.slot-btn--selected {
+  background: #6366f1;
+  border-color: #6366f1;
+  color: white;
+}
+
+/* Notes */
+.follow-up-section textarea {
+  width: 100%;
+  padding: 14px 16px;
+  border: 1px solid var(--border-color, #e5e7eb);
+  border-radius: 12px;
+  font-size: 0.9375rem;
+  font-family: inherit;
+  resize: vertical;
+  background: var(--bg-primary, #ffffff);
+  color: var(--text-primary, #1f2937);
+}
+
+.follow-up-section textarea:focus {
+  outline: none;
+  border-color: #6366f1;
+}
+
+.follow-up-section textarea::placeholder {
+  color: var(--text-secondary, #9ca3af);
+}
+
+/* Booking Summary */
+.booking-summary {
+  padding: 20px 24px;
+  background: #f0fdf4;
+  border-bottom: 1px solid #bbf7d0;
+}
+
+.booking-summary h4 {
+  font-size: 0.9375rem;
+  font-weight: 600;
+  color: #166534;
+  margin-bottom: 12px;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.summary-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 0.875rem;
+  color: #15803d;
+}
+
+.summary-item i {
+  color: #22c55e;
+  width: 16px;
+}
+
+/* Actions */
+.follow-up-actions {
+  display: flex;
+  gap: 12px;
+  padding: 20px 24px;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px 20px;
+  border: none;
+  border-radius: 12px;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.action-btn--secondary {
+  background: var(--bg-secondary, #f3f4f6);
+  color: var(--text-primary, #1f2937);
+}
+
+.action-btn--secondary:hover {
+  background: var(--border-color, #e5e7eb);
+}
+
+.action-btn--primary {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: white;
+}
+
+.action-btn--primary:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.action-btn--primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .previous-appointment__content {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .reason-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .summary-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .follow-up-actions {
+    flex-direction: column;
+  }
+}
