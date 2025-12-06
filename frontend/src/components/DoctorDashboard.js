@@ -3,13 +3,14 @@ import axios from "../api/config";
 import toast from "react-hot-toast";
 import "./ClinicDashboard.css"; // Reuse clinic dashboard styles
 import "./DoctorDashboard.css"; // Doctor-specific styles
+import DoctorWallet from "./DoctorWallet";
 
 function DoctorDashboard({ doctor, onLogout }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("today");
   const [stats, setStats] = useState({ total: 0, today: 0, pending: 0, completed: 0 });
-  const [activeTab, setActiveTab] = useState("queue"); // queue, appointments
+  const [activeTab, setActiveTab] = useState("queue"); // queue, appointments, wallet
   const [queue, setQueue] = useState([]);
   const [currentPatient, setCurrentPatient] = useState(null);
   const [queueLoading, setQueueLoading] = useState(false);
@@ -268,6 +269,13 @@ function DoctorDashboard({ doctor, onLogout }) {
         >
           <i className="fas fa-calendar-alt me-2"></i>
           All Appointments
+        </button>
+        <button 
+          className={`doctor-tab ${activeTab === 'wallet' ? 'active' : ''}`}
+          onClick={() => setActiveTab('wallet')}
+        >
+          <i className="fas fa-wallet me-2"></i>
+          My Wallet
         </button>
       </div>
 
@@ -549,6 +557,11 @@ function DoctorDashboard({ doctor, onLogout }) {
           )}
         </div>
       </div>
+      )}
+
+      {/* Wallet Tab */}
+      {activeTab === 'wallet' && (
+        <DoctorWallet doctorId={doctorId} doctorName={doctor.name} />
       )}
     </div>
   );

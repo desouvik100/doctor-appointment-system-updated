@@ -156,6 +156,7 @@ app.use('/api/doctor-leaves', require('./routes/doctorLeaveRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/export', require('./routes/exportRoutes'));
 app.use('/api/invoices', require('./routes/invoiceRoutes'));
+app.use('/api/wallet', require('./routes/walletRoutes'));
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');

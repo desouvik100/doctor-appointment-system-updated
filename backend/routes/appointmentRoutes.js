@@ -463,11 +463,50 @@ router.put('/:id/status', async (req, res) => {
       { new: true }
     )
       .populate('userId', 'name email phone')
-      .populate('doctorId', 'name specialization')
+      .populate('doctorId', 'name specialization consultationFee')
       .populate('clinicId', 'name address');
 
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
+    }
+
+    // Add earnings to doctor's wallet when appointment is completed
+    if (status === 'completed' && appointment.doctorId) {
+      try {
+        const DoctorWallet = require('../models/DoctorWallet');
+        const wallet = await DoctorWallet.getOrCreateWallet(appointment.doctorId._id);
+        
+        // Get consultation fee from appointment or doctor
+        const consultationFee = appointment.payment?.consultationFee || 
+                               appointment.doctorId.consultationFee || 
+                               500;
+        
+        const patientName = appointment.userId?.name || 'Patient';
+        const { doctorEarning, commission } = wallet.addEarning(
+          consultationFee,
+          appointment._id,
+          patientName,
+          `Consultation with ${patientName} - ${appointment.consultationType === 'online' ? 'Online' : 'In-Clinic'}`
+        );
+        
+        // Update consultation type stats
+        if (appointment.consultationType === 'online') {
+          wallet.stats.onlineConsultations += 1;
+        } else {
+          wallet.stats.inClinicVisits += 1;
+        }
+        
+        await wallet.save();
+        
+        console.log(`💰 Wallet updated for Dr. ${appointment.doctorId.name}:`);
+        console.log(`   Consultation Fee: ₹${consultationFee}`);
+        console.log(`   Doctor Earning: ₹${doctorEarning}`);
+        console.log(`   Platform Commission: ₹${commission}`);
+        console.log(`   New Balance: ₹${wallet.balance}`);
+      } catch (walletError) {
+        console.error('Error updating doctor wallet:', walletError.message);
+        // Don't fail the request if wallet update fails
+      }
     }
 
     res.json(appointment);
