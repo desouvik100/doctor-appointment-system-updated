@@ -299,8 +299,8 @@ router.post('/', async (req, res) => {
     // Generate join code for online consultations
     if (appointment.consultationType === 'online') {
       appointment.generateJoinCode();
-      const meetingLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/consultation/${appointment._id}`;
-      appointment.meetingLink = meetingLink;
+      // Don't set meetingLink here - it will be set when Google Meet link is generated
+      // This prevents wrong URLs from being used
     }
 
     await appointment.save();

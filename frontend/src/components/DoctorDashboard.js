@@ -502,16 +502,10 @@ function DoctorDashboard({ doctor, onLogout }) {
                             <i className="fas fa-video me-1"></i>Start
                           </a>
                         )}
-                        {apt.consultationType === "online" && apt.meetingLink && !apt.googleMeetLink && (
-                          <a 
-                            href={apt.meetingLink} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-primary me-1"
-                            title="Start Meeting (Join as Host)"
-                          >
-                            <i className="fas fa-video me-1"></i>Start
-                          </a>
+                        {apt.consultationType === "online" && !apt.googleMeetLink && (
+                          <span className="badge bg-warning text-dark" title="Google Meet link not generated yet">
+                            <i className="fas fa-clock me-1"></i>Generating...
+                          </span>
                         )}
                         {apt.status === "confirmed" && (
                           <button className="btn btn-sm btn-info me-1" onClick={() => updateAppointmentStatus(apt._id, "in_progress")} title="Start Appointment">

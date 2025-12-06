@@ -474,7 +474,18 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
                                 <p className="text-sm text-slate-500">Dr. {apt.doctorId?.name} • {formatTime(apt.time)}</p>
                               </div>
                               <span className={`px-3 py-1 rounded-full text-xs font-semibold bg-${getStatusColor(apt.status)}-100 text-${getStatusColor(apt.status)}-700`}>{apt.status}</span>
-                              <div className="flex gap-2">
+                              <div className="flex gap-2 items-center">
+                                {/* Google Meet Link for Online Appointments */}
+                                {apt.consultationType === 'online' && apt.googleMeetLink && (
+                                  <a href={apt.googleMeetLink} target="_blank" rel="noopener noreferrer" className="px-3 py-1.5 bg-green-500 text-white rounded-lg text-xs font-medium hover:bg-green-600" title="Join Google Meet">
+                                    <i className="fas fa-video mr-1"></i>Meet
+                                  </a>
+                                )}
+                                {apt.consultationType === 'online' && !apt.googleMeetLink && (
+                                  <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-lg text-xs" title="Meet link generating...">
+                                    <i className="fas fa-clock mr-1"></i>...
+                                  </span>
+                                )}
                                 {apt.status === 'pending' && (<><button onClick={() => updateAppointmentStatus(apt._id, 'confirmed')} className="px-3 py-1.5 bg-cyan-100 text-cyan-700 rounded-lg text-xs font-medium hover:bg-cyan-200"><i className="fas fa-check mr-1"></i>Confirm</button></>)}
                                 {apt.status === 'confirmed' && <button onClick={() => updateAppointmentStatus(apt._id, 'in_progress')} className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-medium hover:bg-blue-600"><i className="fas fa-play mr-1"></i>Start</button>}
                                 {apt.status === 'in_progress' && <button onClick={() => updateAppointmentStatus(apt._id, 'completed')} className="px-3 py-1.5 bg-emerald-500 text-white rounded-lg text-xs font-medium hover:bg-emerald-600"><i className="fas fa-check-double mr-1"></i>Complete</button>}
