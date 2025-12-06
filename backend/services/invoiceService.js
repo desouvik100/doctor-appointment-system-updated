@@ -586,11 +586,8 @@ function generateInvoiceHTML(invoiceData) {
       height: 80px;
       background: white;
       border-radius: 8px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 10px;
-      color: #64748b;
+      padding: 5px;
+      object-fit: contain;
     }
     
     .qr-info {
@@ -810,7 +807,7 @@ function generateInvoiceHTML(invoiceData) {
       </div>
       
       <div class="qr-section">
-        <div class="qr-code">QR Code</div>
+        <img class="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`HealthSync Invoice\nInvoice: ${invoiceNumber}\nAmount: ${formatCurrency(totalAmount)}\nDate: ${formatDate(generatedAt, 'short')}\nPatient: ${patient?.name || 'N/A'}\nDoctor: Dr. ${doctor?.name || 'N/A'}`)}" alt="Invoice QR Code" />
         <div class="qr-info">
           <strong>Scan to verify</strong><br>
           Invoice: ${invoiceNumber}<br>
