@@ -82,13 +82,24 @@ async function generateGoogleMeetLink(appointment) {
 
     const calendar = google.calendar({ version: 'v3', auth });
 
-    // Parse appointment date and time
+    // Parse appointment date and time with proper timezone handling
     const appointmentDate = new Date(appointment.date);
-    const [hours, minutes] = appointment.time.split(':');
-    appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
-
-    // End time (30 minutes after start for consultation)
-    const endTime = new Date(appointmentDate.getTime() + 30 * 60 * 1000);
+    const [hours, minutes] = (appointment.time || '10:00').split(':');
+    
+    // Create date string in IST format for Google Calendar
+    const year = appointmentDate.getFullYear();
+    const month = String(appointmentDate.getMonth() + 1).padStart(2, '0');
+    const day = String(appointmentDate.getDate()).padStart(2, '0');
+    const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
+    
+    // Format: YYYY-MM-DDTHH:MM:SS (local time, timezone specified separately)
+    const startDateTime = `${year}-${month}-${day}T${timeStr}`;
+    const endDateTime = new Date(`${year}-${month}-${day}T${timeStr}`);
+    endDateTime.setMinutes(endDateTime.getMinutes() + 30);
+    const endTimeStr = `${year}-${month}-${day}T${String(endDateTime.getHours()).padStart(2, '0')}:${String(endDateTime.getMinutes()).padStart(2, '0')}:00`;
+    
+    console.log(`📅 Appointment time: ${appointment.time} on ${year}-${month}-${day}`);
+    console.log(`   Start: ${startDateTime}, End: ${endTimeStr}`);
 
     // Get doctor and patient info
     const doctorName = appointment.doctorId?.name || 'Doctor';
@@ -169,12 +180,12 @@ Powered by HealthSync Pro
       `.trim(),
       location: 'Google Meet (Online)',
       start: {
-        dateTime: appointmentDate.toISOString(),
-        timeZone: process.env.TIMEZONE || 'Asia/Kolkata',
+        dateTime: startDateTime,
+        timeZone: 'Asia/Kolkata',
       },
       end: {
-        dateTime: endTime.toISOString(),
-        timeZone: process.env.TIMEZONE || 'Asia/Kolkata',
+        dateTime: endTimeStr,
+        timeZone: 'Asia/Kolkata',
       },
       attendees: attendees,
       conferenceData: {
