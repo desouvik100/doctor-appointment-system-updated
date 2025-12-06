@@ -26,33 +26,38 @@
    NODE_ENV=production
    PORT=5005
    
-   # MongoDB Atlas
-   MONGODB_URI=mongodb+srv://your_username:your_password@cluster.mongodb.net/doctor_appointment
+   # MongoDB Atlas (get from your MongoDB Atlas dashboard)
+   MONGODB_URI=your_mongodb_connection_string
    
-   # JWT
-   JWT_SECRET=your_secure_jwt_secret_here
+   # JWT (generate a secure random string)
+   JWT_SECRET=your_secure_jwt_secret
    
-   # Email
+   # Email (Gmail App Password)
    EMAIL_USER=your_email@gmail.com
-   EMAIL_PASS=your_app_password
+   EMAIL_PASS=your_gmail_app_password
    
-   # AI Chatbot
+   # Resend Email (optional - for better deliverability)
+   RESEND_API_KEY=your_resend_api_key
+   RESEND_FROM_EMAIL=Your App <no-reply@yourdomain.com>
+   
+   # AI Chatbot (get from Google AI Studio)
    GEMINI_API_KEY=your_gemini_api_key
    AI_PROVIDER=gemini
    
-   # Google Meet
+   # Google Meet (get from Google Cloud Console)
    GOOGLE_CLIENT_ID=your_google_client_id
    GOOGLE_CLIENT_SECRET=your_google_client_secret
    GOOGLE_REFRESH_TOKEN=your_google_refresh_token
    GOOGLE_REDIRECT_URI=https://healthsync-backend.onrender.com/api/google/callback
    
-   # Stripe (if using payments)
+   # Stripe (get from Stripe Dashboard)
    STRIPE_SECRET_KEY=your_stripe_secret_key
    STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
    
-   # CORS
-   CORS_ORIGIN=https://your-frontend-domain.vercel.app
-   FRONTEND_URL=https://your-frontend-domain.vercel.app
+   # CORS & URLs
+   CORS_ORIGIN=https://your-frontend.vercel.app
+   FRONTEND_URL=https://your-frontend.vercel.app
+   BACKEND_URL=https://healthsync-backend.onrender.com
    
    # Timezone
    TIMEZONE=Asia/Kolkata
@@ -78,9 +83,14 @@
 
 4. **Add Environment Variables**:
    ```
-   REACT_APP_API_URL=https://healthsync-backend.onrender.com
-   REACT_APP_BACKEND_URL=https://healthsync-backend.onrender.com
+   REACT_APP_API_URL=https://your-backend.onrender.com
+   REACT_APP_BACKEND_URL=https://your-backend.onrender.com
    REACT_APP_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
+   REACT_APP_USE_STRIPE_PAYMENTS=false
+   REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
+   GENERATE_SOURCEMAP=false
+   CI=false
+   DISABLE_ESLINT_PLUGIN=true
    ```
 
 5. **Deploy**: Click "Deploy"

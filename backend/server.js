@@ -68,6 +68,10 @@ app.use('/api/health-packages', require('./routes/healthPackageRoutes'));
 app.use('/api/referrals', require('./routes/referralRoutes'));
 app.use('/api/loyalty-points', require('./routes/loyaltyPointsRoutes'));
 app.use('/api/queue', require('./routes/queueRoutes'));
+app.use('/api/doctor-leaves', require('./routes/doctorLeaveRoutes'));
+app.use('/api/analytics', require('./routes/analyticsRoutes'));
+app.use('/api/export', require('./routes/exportRoutes'));
+app.use('/api/invoices', require('./routes/invoiceRoutes'));
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');

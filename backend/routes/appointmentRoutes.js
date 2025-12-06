@@ -391,6 +391,33 @@ router.post('/', async (req, res) => {
       null,
       `Booked appointment with Dr. ${doctor.name}`
     );
+
+    // Send invoice email automatically
+    let invoiceResult = null;
+    try {
+      const { generateAndSendInvoice } = require('../services/invoiceService');
+      invoiceResult = await generateAndSendInvoice(
+        populatedAppointment,
+        populatedAppointment.userId,
+        populatedAppointment.doctorId,
+        populatedAppointment.clinicId,
+        {
+          consultationFee,
+          platformFee,
+          tax: gst,
+          totalAmount,
+          status: 'pending'
+        }
+      );
+      if (invoiceResult.success) {
+        console.log(`✅ Invoice ${invoiceResult.invoiceNumber} sent to ${populatedAppointment.userId?.email}`);
+        // Save invoice number to appointment
+        appointment.invoiceNumber = invoiceResult.invoiceNumber;
+        await appointment.save();
+      }
+    } catch (invoiceError) {
+      console.error('❌ Invoice sending failed:', invoiceError.message);
+    }
     
     res.status(201).json({
       ...populatedAppointment.toObject(),

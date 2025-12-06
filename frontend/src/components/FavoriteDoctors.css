@@ -1,0 +1,260 @@
+/* frontend/src/components/FavoriteDoctors.css */
+
+.favorite-doctors {
+  padding: 20px;
+}
+
+.favorites-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 40px;
+  color: var(--text-secondary, #64748b);
+}
+
+.favorites-loading .spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--border-color, #e2e8f0);
+  border-top-color: var(--primary, #667eea);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 15px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.favorites-empty {
+  text-align: center;
+  padding: 50px 20px;
+  background: var(--bg-secondary, #f8fafc);
+  border-radius: 16px;
+}
+
+.favorites-empty i {
+  font-size: 50px;
+  color: #ef4444;
+  opacity: 0.3;
+  margin-bottom: 15px;
+}
+
+.favorites-empty h3 {
+  color: var(--text-primary, #1f2937);
+  margin-bottom: 8px;
+}
+
+.favorites-empty p {
+  color: var(--text-secondary, #64748b);
+  font-size: 14px;
+}
+
+.favorites-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.favorites-header h3 {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  font-size: 20px;
+  color: var(--text-primary, #1f2937);
+  margin: 0;
+}
+
+.favorites-header h3 i {
+  color: #ef4444;
+}
+
+.favorites-count {
+  padding: 6px 14px;
+  background: rgba(239, 68, 68, 0.1);
+  color: #ef4444;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.favorites-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+  gap: 20px;
+}
+
+.favorite-card {
+  background: var(--bg-primary, white);
+  border: 1px solid var(--border-color, #e2e8f0);
+  border-radius: 16px;
+  padding: 20px;
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.favorite-card:hover {
+  box-shadow: var(--shadow-lg, 0 10px 15px rgba(0, 0, 0, 0.1));
+  transform: translateY(-5px);
+}
+
+.remove-favorite {
+  position: absolute;
+  top: 15px;
+  right: 15px;
+  width: 36px;
+  height: 36px;
+  background: rgba(239, 68, 68, 0.1);
+  border: none;
+  border-radius: 50%;
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.remove-favorite:hover {
+  background: #ef4444;
+  color: white;
+}
+
+.doctor-avatar {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 15px;
+}
+
+.doctor-avatar img {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  object-fit: cover;
+  border: 3px solid var(--primary, #667eea);
+}
+
+.avatar-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 50%;
+  background: linear-gradient(135deg, var(--primary, #667eea) 0%, #764ba2 100%);
+  color: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.doctor-info {
+  text-align: center;
+}
+
+.doctor-info h4 {
+  font-size: 18px;
+  color: var(--text-primary, #1f2937);
+  margin: 0 0 5px 0;
+}
+
+.specialization {
+  color: var(--primary, #667eea);
+  font-size: 14px;
+  margin: 0 0 12px 0;
+}
+
+.doctor-meta {
+  display: flex;
+  justify-content: center;
+  gap: 15px;
+  margin-bottom: 12px;
+}
+
+.rating {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  color: #f59e0b;
+  font-size: 14px;
+  font-weight: 500;
+}
+
+.experience {
+  color: var(--text-secondary, #64748b);
+  font-size: 14px;
+}
+
+.doctor-fee {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 5px;
+  font-size: 20px;
+  font-weight: 700;
+  color: var(--text-primary, #1f2937);
+  margin-bottom: 15px;
+}
+
+.doctor-fee i {
+  font-size: 16px;
+  color: var(--text-secondary, #64748b);
+}
+
+.book-btn {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px;
+  background: linear-gradient(135deg, var(--primary, #667eea) 0%, #764ba2 100%);
+  color: white;
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.book-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+}
+
+/* Favorite Button (for use in doctor cards) */
+.favorite-btn {
+  width: 40px;
+  height: 40px;
+  background: var(--bg-secondary, #f8fafc);
+  border: 2px solid var(--border-color, #e2e8f0);
+  border-radius: 50%;
+  color: var(--text-secondary, #64748b);
+  cursor: pointer;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.favorite-btn:hover {
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.favorite-btn.active {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: #ef4444;
+  color: #ef4444;
+}
+
+.favorite-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .favorites-grid {
+    grid-template-columns: 1fr;
+  }
+}

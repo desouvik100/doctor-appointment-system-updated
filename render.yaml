@@ -25,6 +25,11 @@ services:
         sync: false
       - key: EMAIL_PASS
         sync: false
+      # Resend Email (production)
+      - key: RESEND_API_KEY
+        sync: false
+      - key: RESEND_FROM_EMAIL
+        value: Doctor Appointment <no-reply@healthsyncpro.in>
       # AI Chatbot
       - key: GEMINI_API_KEY
         sync: false
@@ -46,9 +51,12 @@ services:
         sync: false
       # CORS - Update with your Vercel frontend URL
       - key: CORS_ORIGIN
-        value: https://healthsync-pro.vercel.app
+        value: https://healthsyncpro.vercel.app
       - key: FRONTEND_URL
-        value: https://healthsync-pro.vercel.app
+        value: https://healthsyncpro.vercel.app
+      # Backend URL for invoice links
+      - key: BACKEND_URL
+        value: https://healthsync-backend.onrender.com
       # Timezone
       - key: TIMEZONE
         value: Asia/Kolkata

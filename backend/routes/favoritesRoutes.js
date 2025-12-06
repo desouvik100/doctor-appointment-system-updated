@@ -16,10 +16,59 @@ router.get('/:userId', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json(user.favoriteDoctors || []);
+    res.json({ favorites: user.favoriteDoctors || [] });
   } catch (error) {
     console.error('Error fetching favorites:', error);
     res.status(500).json({ message: 'Error fetching favorites', error: error.message });
+  }
+});
+
+// Add doctor to favorites (POST /:userId with body)
+router.post('/:userId', async (req, res) => {
+  try {
+    const { doctorId } = req.body;
+    const { userId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if already in favorites
+    if (user.favoriteDoctors?.includes(doctorId)) {
+      return res.status(400).json({ message: 'Doctor already in favorites' });
+    }
+
+    user.favoriteDoctors = user.favoriteDoctors || [];
+    user.favoriteDoctors.push(doctorId);
+    await user.save();
+
+    res.json({ message: 'Doctor added to favorites', favoriteDoctors: user.favoriteDoctors });
+  } catch (error) {
+    console.error('Error adding favorite:', error);
+    res.status(500).json({ message: 'Error adding favorite', error: error.message });
+  }
+});
+
+// Remove doctor from favorites (DELETE /:userId/:doctorId)
+router.delete('/:userId/:doctorId', async (req, res) => {
+  try {
+    const { userId, doctorId } = req.params;
+
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    user.favoriteDoctors = user.favoriteDoctors?.filter(
+      id => id.toString() !== doctorId
+    ) || [];
+    await user.save();
+
+    res.json({ message: 'Doctor removed from favorites', favoriteDoctors: user.favoriteDoctors });
+  } catch (error) {
+    console.error('Error removing favorite:', error);
+    res.status(500).json({ message: 'Error removing favorite', error: error.message });
   }
 });
 

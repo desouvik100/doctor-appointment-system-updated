@@ -186,7 +186,8 @@ router.post('/:id/send', async (req, res) => {
   try {
     const { via } = req.body; // ['email', 'sms', 'whatsapp', 'app']
     const prescription = await Prescription.findById(req.params.id)
-      .populate('patientId', 'name email phone');
+      .populate('patientId', 'name email phone')
+      .populate('doctorId', 'name');
 
     if (!prescription) {
       return res.status(404).json({ message: 'Prescription not found' });
@@ -198,11 +199,38 @@ router.post('/:id/send', async (req, res) => {
     prescription.sentVia = via || ['app'];
     await prescription.save();
 
-    // TODO: Implement actual email/SMS sending
+    // Send notifications based on 'via' array
+    const notifications = [];
+    
+    if (via?.includes('sms') && prescription.patientId?.phone) {
+      try {
+        const { sendPrescriptionReadySMS } = require('../services/smsService');
+        await sendPrescriptionReadySMS(prescription.patientId.phone, prescription.doctorId?.name);
+        notifications.push('sms');
+      } catch (smsError) {
+        console.warn('SMS notification failed:', smsError.message);
+      }
+    }
+
+    if (via?.includes('email') && prescription.patientId?.email) {
+      try {
+        const { sendEmail } = require('../services/emailService');
+        await sendEmail({
+          to: prescription.patientId.email,
+          subject: `Prescription from Dr. ${prescription.doctorId?.name || 'Doctor'} - HealthSync`,
+          html: `<p>Your prescription is ready. Please login to HealthSync to view and download it.</p>`,
+          text: `Your prescription from Dr. ${prescription.doctorId?.name} is ready. Login to HealthSync to view it.`
+        });
+        notifications.push('email');
+      } catch (emailError) {
+        console.warn('Email notification failed:', emailError.message);
+      }
+    }
 
     res.json({
       message: 'Prescription sent successfully',
-      prescription
+      prescription,
+      notificationsSent: notifications
     });
   } catch (error) {
     console.error('Send prescription error:', error);
