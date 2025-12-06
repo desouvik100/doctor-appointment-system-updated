@@ -4,27 +4,25 @@ const cors = require('cors');
 require('dotenv').config();
 const { initializeScheduler } = require('./services/appointmentScheduler');
 const { initializeMedicineReminders } = require('./services/medicineReminderService');
+const cacheService = require('./services/cacheService');
 
 const app = express();
 
 // ===== PERFORMANCE OPTIMIZATIONS =====
 
-// Simple in-memory cache for frequently accessed data
-const cache = new Map();
-const CACHE_TTL = 60000; // 1 minute
+// Initialize Redis cache (falls back to in-memory if Redis not available)
+cacheService.initializeRedis().then(connected => {
+  if (connected) {
+    console.log('🚀 Redis cache enabled for high performance');
+  }
+});
 
+// Add cache helper to all requests
 app.use((req, res, next) => {
-  // Add cache helper to request
   req.cache = {
-    get: (key) => {
-      const item = cache.get(key);
-      if (item && Date.now() < item.expiry) return item.data;
-      cache.delete(key);
-      return null;
-    },
-    set: (key, data, ttl = CACHE_TTL) => {
-      cache.set(key, { data, expiry: Date.now() + ttl });
-    }
+    get: cacheService.get,
+    set: cacheService.set,
+    del: cacheService.del
   };
   next();
 });
