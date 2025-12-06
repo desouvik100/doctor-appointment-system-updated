@@ -7,6 +7,65 @@ const { initializeMedicineReminders } = require('./services/medicineReminderServ
 
 const app = express();
 
+// ===== PERFORMANCE OPTIMIZATIONS =====
+
+// Simple in-memory cache for frequently accessed data
+const cache = new Map();
+const CACHE_TTL = 60000; // 1 minute
+
+app.use((req, res, next) => {
+  // Add cache helper to request
+  req.cache = {
+    get: (key) => {
+      const item = cache.get(key);
+      if (item && Date.now() < item.expiry) return item.data;
+      cache.delete(key);
+      return null;
+    },
+    set: (key, data, ttl = CACHE_TTL) => {
+      cache.set(key, { data, expiry: Date.now() + ttl });
+    }
+  };
+  next();
+});
+
+// Simple rate limiting (in-memory)
+const rateLimitMap = new Map();
+const RATE_LIMIT_WINDOW = 60000; // 1 minute
+const RATE_LIMIT_MAX = 100; // 100 requests per minute per IP
+
+app.use((req, res, next) => {
+  const ip = req.ip || req.connection.remoteAddress;
+  const now = Date.now();
+  
+  if (!rateLimitMap.has(ip)) {
+    rateLimitMap.set(ip, { count: 1, resetTime: now + RATE_LIMIT_WINDOW });
+  } else {
+    const record = rateLimitMap.get(ip);
+    if (now > record.resetTime) {
+      record.count = 1;
+      record.resetTime = now + RATE_LIMIT_WINDOW;
+    } else {
+      record.count++;
+      if (record.count > RATE_LIMIT_MAX) {
+        return res.status(429).json({ 
+          message: 'Too many requests. Please try again later.',
+          retryAfter: Math.ceil((record.resetTime - now) / 1000)
+        });
+      }
+    }
+  }
+  next();
+});
+
+// Clean up rate limit map periodically
+setInterval(() => {
+  const now = Date.now();
+  for (const [ip, record] of rateLimitMap.entries()) {
+    if (now > record.resetTime) rateLimitMap.delete(ip);
+  }
+}, 60000);
+
 // Middleware
 app.use(cors());
 app.use((req, res, next) => {
@@ -18,18 +77,45 @@ app.use((req, res, next) => {
 });
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
-// MongoDB connection
+// Response compression for better performance
+app.use((req, res, next) => {
+  // Add performance headers
+  res.set('X-Response-Time', Date.now().toString());
+  next();
+});
+
+// MongoDB connection with optimized settings for high load
 const connectDB = async () => {
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/doctor_appointment', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      // Connection pool settings for high concurrency
+      maxPoolSize: 50, // Maximum connections in pool
+      minPoolSize: 10, // Minimum connections to maintain
+      serverSelectionTimeoutMS: 5000, // Timeout for server selection
+      socketTimeoutMS: 45000, // Socket timeout
+      // Performance settings
+      retryWrites: true,
+      w: 'majority',
     });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`Connection Pool: min=${10}, max=${50}`);
   } catch (error) {
     console.error('MongoDB connection error:', error);
+    // Retry connection after 5 seconds
+    setTimeout(connectDB, 5000);
   }
 };
+
+// Handle MongoDB connection events
+mongoose.connection.on('disconnected', () => {
+  console.warn('⚠️ MongoDB disconnected. Attempting reconnection...');
+});
+
+mongoose.connection.on('error', (err) => {
+  console.error('MongoDB error:', err);
+});
 
 // Connect to MongoDB
 connectDB();

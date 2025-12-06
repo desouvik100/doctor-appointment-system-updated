@@ -119,4 +119,13 @@ const doctorSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ===== PERFORMANCE INDEXES =====
+doctorSchema.index({ email: 1 });
+doctorSchema.index({ specialization: 1, isActive: 1 });
+doctorSchema.index({ clinicId: 1, isActive: 1 });
+doctorSchema.index({ approvalStatus: 1 });
+doctorSchema.index({ rating: -1 }); // For sorting by rating
+doctorSchema.index({ consultationFee: 1 }); // For price filtering
+doctorSchema.index({ 'availability': 1, isActive: 1 });
+
 module.exports = mongoose.model('Doctor', doctorSchema);

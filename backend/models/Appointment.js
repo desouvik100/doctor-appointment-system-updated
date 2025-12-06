@@ -324,4 +324,34 @@ appointmentSchema.virtual('appointmentDateTime').get(function() {
   return appointmentDate;
 });
 
+// ===== PERFORMANCE INDEXES =====
+// Critical indexes for high-load scenarios
+
+// Most common query: Get appointments by doctor and date
+appointmentSchema.index({ doctorId: 1, date: 1, status: 1 });
+
+// Patient's appointments
+appointmentSchema.index({ userId: 1, date: -1, status: 1 });
+
+// Clinic's appointments
+appointmentSchema.index({ clinicId: 1, date: 1 });
+
+// Status-based queries (pending, confirmed, etc.)
+appointmentSchema.index({ status: 1, date: 1 });
+
+// Payment status queries
+appointmentSchema.index({ paymentStatus: 1, createdAt: -1 });
+
+// Token lookup (for queue system)
+appointmentSchema.index({ token: 1 });
+
+// Online consultation queries
+appointmentSchema.index({ consultationType: 1, date: 1, status: 1 });
+
+// Queue status queries
+appointmentSchema.index({ queueStatus: 1, doctorId: 1, date: 1 });
+
+// Compound index for conflict checking
+appointmentSchema.index({ doctorId: 1, date: 1, time: 1, status: 1 });
+
 module.exports = mongoose.model("Appointment", appointmentSchema);

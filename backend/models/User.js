@@ -157,4 +157,12 @@ const userSchema = new mongoose.Schema(
   { timestamps: true }
 );
 
+// ===== PERFORMANCE INDEXES =====
+userSchema.index({ email: 1 }); // Already unique, but explicit
+userSchema.index({ phone: 1 });
+userSchema.index({ role: 1, isActive: 1 });
+userSchema.index({ clinicId: 1 });
+userSchema.index({ googleId: 1 }, { sparse: true });
+userSchema.index({ 'loginLocation.city': 1 });
+
 module.exports = mongoose.model('User', userSchema);
