@@ -152,6 +152,24 @@ function DoctorDashboard({ doctor, onLogout }) {
     }
   };
 
+  // Regenerate Google Meet link for an appointment
+  const regenerateMeetLink = async (appointmentId) => {
+    try {
+      toast.loading("Generating meeting link...", { id: "meet-gen" });
+      const response = await axios.post(`/api/appointments/${appointmentId}/generate-meeting`);
+      if (response.data.success) {
+        toast.success("Meeting link generated!", { id: "meet-gen" });
+        fetchAppointments();
+        fetchQueue();
+      } else {
+        toast.error(response.data.message || "Failed to generate link", { id: "meet-gen" });
+      }
+    } catch (error) {
+      console.error("Error generating meet link:", error);
+      toast.error("Failed to generate meeting link", { id: "meet-gen" });
+    }
+  };
+
   const formatDate = (date) => new Date(date).toLocaleDateString("en-IN", {
     weekday: "short", day: "numeric", month: "short", year: "numeric"
   });
@@ -503,9 +521,13 @@ function DoctorDashboard({ doctor, onLogout }) {
                           </a>
                         )}
                         {apt.consultationType === "online" && !apt.googleMeetLink && (
-                          <span className="badge bg-warning text-dark" title="Google Meet link not generated yet">
-                            <i className="fas fa-clock me-1"></i>Generating...
-                          </span>
+                          <button 
+                            className="btn btn-sm btn-warning me-1"
+                            onClick={() => regenerateMeetLink(apt._id)}
+                            title="Click to generate Google Meet link"
+                          >
+                            <i className="fas fa-sync-alt me-1"></i>Generate
+                          </button>
                         )}
                         {apt.status === "confirmed" && (
                           <button className="btn btn-sm btn-info me-1" onClick={() => updateAppointmentStatus(apt._id, "in_progress")} title="Start Appointment">

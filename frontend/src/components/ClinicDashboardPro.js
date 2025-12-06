@@ -127,6 +127,23 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
     }
   };
 
+  // Regenerate Google Meet link for an appointment
+  const regenerateMeetLink = async (appointmentId) => {
+    try {
+      toast.loading("Generating meeting link...", { id: "meet-gen" });
+      const response = await axios.post(`/api/appointments/${appointmentId}/generate-meeting`);
+      if (response.data.success) {
+        toast.success("Meeting link generated!", { id: "meet-gen" });
+        fetchAppointments();
+      } else {
+        toast.error(response.data.message || "Failed to generate link", { id: "meet-gen" });
+      }
+    } catch (error) {
+      console.error("Error generating meet link:", error);
+      toast.error("Failed to generate meeting link", { id: "meet-gen" });
+    }
+  };
+
   const todayAppointments = useMemo(() => {
     const today = new Date().toDateString();
     return appointments.filter(apt => new Date(apt.date).toDateString() === today);
@@ -482,9 +499,9 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
                                   </a>
                                 )}
                                 {apt.consultationType === 'online' && !apt.googleMeetLink && (
-                                  <span className="px-2 py-1 bg-amber-100 text-amber-700 rounded-lg text-xs" title="Meet link generating...">
-                                    <i className="fas fa-clock mr-1"></i>...
-                                  </span>
+                                  <button onClick={() => regenerateMeetLink(apt._id)} className="px-2 py-1 bg-amber-500 text-white rounded-lg text-xs font-medium hover:bg-amber-600" title="Click to generate Meet link">
+                                    <i className="fas fa-sync-alt mr-1"></i>Generate
+                                  </button>
                                 )}
                                 {apt.status === 'pending' && (<><button onClick={() => updateAppointmentStatus(apt._id, 'confirmed')} className="px-3 py-1.5 bg-cyan-100 text-cyan-700 rounded-lg text-xs font-medium hover:bg-cyan-200"><i className="fas fa-check mr-1"></i>Confirm</button></>)}
                                 {apt.status === 'confirmed' && <button onClick={() => updateAppointmentStatus(apt._id, 'in_progress')} className="px-3 py-1.5 bg-blue-500 text-white rounded-lg text-xs font-medium hover:bg-blue-600"><i className="fas fa-play mr-1"></i>Start</button>}
