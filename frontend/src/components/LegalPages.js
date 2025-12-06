@@ -346,84 +346,282 @@ export const RefundPolicy = ({ onBack }) => (
 );
 
 export const ContactUs = ({ onBack }) => (
-  <div className="legal-page">
-    <div className="legal-page__container">
+  <div className="legal-page contact-page">
+    <div className="legal-page__container contact-page__container">
       <button className="legal-page__back" onClick={onBack}>
         <i className="fas fa-arrow-left"></i> Back to Home
       </button>
       
       <h1>Contact Us</h1>
       
+      {/* Hero Section */}
       <section className="contact-hero">
-        <p>We're here to help! Reach out to us through any of the following channels.</p>
+        <div className="contact-hero__icon">
+          <i className="fas fa-headset"></i>
+        </div>
+        <h2>We'd Love to Hear From You</h2>
+        <p>Have questions about our services? Need help with an appointment? Our team is here to assist you 24/7.</p>
       </section>
 
+      {/* Contact Cards */}
       <div className="contact-grid">
-        <div className="contact-card">
-          <div className="contact-card__icon">
-            <i className="fas fa-envelope"></i>
-          </div>
-          <h3>Email Support</h3>
-          <p>For general inquiries and support</p>
-          <a href={`mailto:${COMPANY_INFO.email}`}>{COMPANY_INFO.email}</a>
-        </div>
-
-        <div className="contact-card">
+        <div className="contact-card contact-card--primary">
           <div className="contact-card__icon">
             <i className="fas fa-phone-alt"></i>
           </div>
-          <h3>Phone Support</h3>
-          <p>Mon-Sat: 9:00 AM - 8:00 PM IST</p>
-          <a href={`tel:${COMPANY_INFO.phone}`}>{COMPANY_INFO.phone}</a>
+          <h3>Call Us</h3>
+          <p className="contact-card__subtitle">Speak directly with our team</p>
+          <a href={`tel:${COMPANY_INFO.phone}`} className="contact-card__link">{COMPANY_INFO.phone}</a>
+          <span className="contact-card__badge">
+            <i className="fas fa-clock"></i> Mon-Sat: 9AM - 8PM IST
+          </span>
         </div>
 
-        <div className="contact-card">
+        <div className="contact-card contact-card--secondary">
+          <div className="contact-card__icon">
+            <i className="fas fa-envelope"></i>
+          </div>
+          <h3>Email Us</h3>
+          <p className="contact-card__subtitle">Get response within 24 hours</p>
+          <a href={`mailto:${COMPANY_INFO.email}`} className="contact-card__link">{COMPANY_INFO.email}</a>
+          <span className="contact-card__badge">
+            <i className="fas fa-reply"></i> Quick Response
+          </span>
+        </div>
+
+        <div className="contact-card contact-card--accent">
           <div className="contact-card__icon">
             <i className="fas fa-map-marker-alt"></i>
           </div>
-          <h3>Office Address</h3>
-          <p>{COMPANY_INFO.legalName}</p>
-          <p>{COMPANY_INFO.address}</p>
+          <h3>Visit Us</h3>
+          <p className="contact-card__subtitle">Our office location</p>
+          <p className="contact-card__address">{COMPANY_INFO.address}</p>
+          <a 
+            href={`https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(COMPANY_INFO.address)}`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="contact-card__map-link"
+          >
+            <i className="fas fa-directions"></i> Get Directions
+          </a>
         </div>
 
-        <div className="contact-card">
+        <div className="contact-card contact-card--info">
           <div className="contact-card__icon">
-            <i className="fas fa-clock"></i>
+            <i className="fab fa-whatsapp"></i>
           </div>
-          <h3>Business Hours</h3>
-          <p>Monday - Saturday</p>
-          <p>9:00 AM - 8:00 PM IST</p>
+          <h3>WhatsApp</h3>
+          <p className="contact-card__subtitle">Quick chat support</p>
+          <a 
+            href={`https://wa.me/917001268485?text=Hi, I need help with HealthSync Pro`}
+            target="_blank"
+            rel="noopener noreferrer"
+            className="contact-card__link"
+          >
+            Chat on WhatsApp
+          </a>
+          <span className="contact-card__badge">
+            <i className="fas fa-bolt"></i> Instant Reply
+          </span>
         </div>
       </div>
 
-      <section>
-        <h2>Quick Links</h2>
-        <ul>
-          <li><strong>Appointment Issues:</strong> {COMPANY_INFO.email}</li>
-          <li><strong>Payment & Refunds:</strong> {COMPANY_INFO.email}</li>
-          <li><strong>Technical Support:</strong> {COMPANY_INFO.email}</li>
-          <li><strong>Doctor Registration:</strong> {COMPANY_INFO.email}</li>
-        </ul>
+      {/* Contact Form Section */}
+      <section className="contact-form-section">
+        <div className="contact-form-header">
+          <h2><i className="fas fa-paper-plane"></i> Send Us a Message</h2>
+          <p>Fill out the form below and we'll get back to you as soon as possible.</p>
+        </div>
+        
+        <form className="contact-form" onSubmit={(e) => {
+          e.preventDefault();
+          const formData = new FormData(e.target);
+          const mailtoLink = `mailto:${COMPANY_INFO.email}?subject=${encodeURIComponent(formData.get('subject'))}&body=${encodeURIComponent(`Name: ${formData.get('name')}\nEmail: ${formData.get('email')}\nPhone: ${formData.get('phone')}\n\nMessage:\n${formData.get('message')}`)}`;
+          window.location.href = mailtoLink;
+        }}>
+          <div className="contact-form__row">
+            <div className="contact-form__group">
+              <label htmlFor="name">
+                <i className="fas fa-user"></i> Full Name *
+              </label>
+              <input 
+                type="text" 
+                id="name" 
+                name="name" 
+                placeholder="Enter your full name"
+                required 
+              />
+            </div>
+            <div className="contact-form__group">
+              <label htmlFor="email">
+                <i className="fas fa-envelope"></i> Email Address *
+              </label>
+              <input 
+                type="email" 
+                id="email" 
+                name="email" 
+                placeholder="Enter your email"
+                required 
+              />
+            </div>
+          </div>
+          
+          <div className="contact-form__row">
+            <div className="contact-form__group">
+              <label htmlFor="phone">
+                <i className="fas fa-phone"></i> Phone Number
+              </label>
+              <input 
+                type="tel" 
+                id="phone" 
+                name="phone" 
+                placeholder="Enter your phone number"
+              />
+            </div>
+            <div className="contact-form__group">
+              <label htmlFor="subject">
+                <i className="fas fa-tag"></i> Subject *
+              </label>
+              <select id="subject" name="subject" required>
+                <option value="">Select a subject</option>
+                <option value="Appointment Help">Appointment Help</option>
+                <option value="Payment & Refund">Payment & Refund</option>
+                <option value="Technical Support">Technical Support</option>
+                <option value="Doctor Registration">Doctor Registration</option>
+                <option value="Partnership Inquiry">Partnership Inquiry</option>
+                <option value="Feedback">Feedback</option>
+                <option value="Other">Other</option>
+              </select>
+            </div>
+          </div>
+          
+          <div className="contact-form__group contact-form__group--full">
+            <label htmlFor="message">
+              <i className="fas fa-comment-alt"></i> Your Message *
+            </label>
+            <textarea 
+              id="message" 
+              name="message" 
+              rows="5" 
+              placeholder="Tell us how we can help you..."
+              required
+            ></textarea>
+          </div>
+          
+          <button type="submit" className="contact-form__submit">
+            <i className="fas fa-paper-plane"></i> Send Message
+          </button>
+        </form>
       </section>
 
-      <section>
-        <h2>Response Time</h2>
-        <ul>
-          <li>Email: Within 24 hours</li>
-          <li>Phone: Immediate during business hours</li>
-          <li>In-app chat: Within 2 hours</li>
-        </ul>
+      {/* Support Categories */}
+      <section className="support-categories">
+        <h2><i className="fas fa-life-ring"></i> How Can We Help?</h2>
+        <div className="support-grid">
+          <div className="support-item">
+            <div className="support-item__icon">
+              <i className="fas fa-calendar-check"></i>
+            </div>
+            <h4>Appointment Issues</h4>
+            <p>Help with booking, rescheduling, or cancelling appointments</p>
+          </div>
+          <div className="support-item">
+            <div className="support-item__icon">
+              <i className="fas fa-credit-card"></i>
+            </div>
+            <h4>Payment & Refunds</h4>
+            <p>Questions about payments, refunds, or billing</p>
+          </div>
+          <div className="support-item">
+            <div className="support-item__icon">
+              <i className="fas fa-user-md"></i>
+            </div>
+            <h4>Doctor Registration</h4>
+            <p>Join our platform as a healthcare provider</p>
+          </div>
+          <div className="support-item">
+            <div className="support-item__icon">
+              <i className="fas fa-cog"></i>
+            </div>
+            <h4>Technical Support</h4>
+            <p>App issues, login problems, or technical help</p>
+          </div>
+        </div>
       </section>
 
-      <section>
-        <h2>Grievance Officer</h2>
-        <p>In accordance with Information Technology Act 2000 and rules made thereunder:</p>
-        <ul>
-          <li><strong>Name:</strong> Grievance Officer</li>
-          <li><strong>Email:</strong> {COMPANY_INFO.email}</li>
-          <li><strong>Phone:</strong> {COMPANY_INFO.phone}</li>
-          <li><strong>Address:</strong> {COMPANY_INFO.address}</li>
-        </ul>
+      {/* Business Info */}
+      <section className="business-info">
+        <div className="business-info__card">
+          <h2><i className="fas fa-building"></i> Business Information</h2>
+          <div className="business-info__grid">
+            <div className="business-info__item">
+              <span className="business-info__label">Company Name</span>
+              <span className="business-info__value">{COMPANY_INFO.legalName}</span>
+            </div>
+            <div className="business-info__item">
+              <span className="business-info__label">Registered Address</span>
+              <span className="business-info__value">{COMPANY_INFO.address}</span>
+            </div>
+            <div className="business-info__item">
+              <span className="business-info__label">Email</span>
+              <span className="business-info__value">{COMPANY_INFO.email}</span>
+            </div>
+            <div className="business-info__item">
+              <span className="business-info__label">Phone</span>
+              <span className="business-info__value">{COMPANY_INFO.phone}</span>
+            </div>
+            <div className="business-info__item">
+              <span className="business-info__label">Website</span>
+              <span className="business-info__value">{COMPANY_INFO.website}</span>
+            </div>
+            <div className="business-info__item">
+              <span className="business-info__label">Business Hours</span>
+              <span className="business-info__value">Mon-Sat: 9:00 AM - 8:00 PM IST</span>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      {/* Grievance Officer - Required by Indian IT Act */}
+      <section className="grievance-section">
+        <h2><i className="fas fa-gavel"></i> Grievance Officer</h2>
+        <p>In accordance with Information Technology Act 2000 and Consumer Protection Act 2019:</p>
+        <div className="grievance-card">
+          <div className="grievance-card__icon">
+            <i className="fas fa-user-tie"></i>
+          </div>
+          <div className="grievance-card__info">
+            <h4>Grievance Redressal Officer</h4>
+            <p><i className="fas fa-envelope"></i> {COMPANY_INFO.email}</p>
+            <p><i className="fas fa-phone"></i> {COMPANY_INFO.phone}</p>
+            <p><i className="fas fa-map-marker-alt"></i> {COMPANY_INFO.address}</p>
+            <p className="grievance-card__note">
+              <i className="fas fa-info-circle"></i> Complaints will be acknowledged within 48 hours and resolved within 30 days.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      {/* Social Links */}
+      <section className="social-section">
+        <h2>Connect With Us</h2>
+        <div className="social-links">
+          <a href="#" className="social-link social-link--facebook" title="Facebook">
+            <i className="fab fa-facebook-f"></i>
+          </a>
+          <a href="#" className="social-link social-link--twitter" title="Twitter">
+            <i className="fab fa-twitter"></i>
+          </a>
+          <a href="#" className="social-link social-link--instagram" title="Instagram">
+            <i className="fab fa-instagram"></i>
+          </a>
+          <a href="#" className="social-link social-link--linkedin" title="LinkedIn">
+            <i className="fab fa-linkedin-in"></i>
+          </a>
+          <a href="#" className="social-link social-link--youtube" title="YouTube">
+            <i className="fab fa-youtube"></i>
+          </a>
+        </div>
       </section>
     </div>
   </div>
