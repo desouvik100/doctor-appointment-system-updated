@@ -135,8 +135,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       { id: 'health-analytics', icon: 'fas fa-chart-line', labelKey: 'analytics' },
     ]},
     { titleKey: 'services', items: [
-      { id: 'medicines', icon: 'fas fa-pills', labelKey: 'medicines' },
-      { id: 'medicine-reminder', icon: 'fas fa-bell', labelKey: 'reminders' },
+      { id: 'medicine-reminder', icon: 'fas fa-pills', labelKey: 'reminders' },
       { id: 'ambulance', icon: 'fas fa-ambulance', labelKey: 'ambulance' },
       { id: 'second-opinion', icon: 'fas fa-user-md', labelKey: 'secondOpinion' },
     ]},
