@@ -885,25 +885,64 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               </p>
             </div>
             
-            {[
-              { titleKey: 'product', links: ['Features', 'Pricing', 'Security', 'Enterprise'] },
-              { titleKey: 'company', links: ['About', 'Careers', 'Blog', 'Press'] },
-              { titleKey: 'resources', links: ['Documentation', 'Help Center', 'API', 'Status'] },
-            ].map((section, index) => (
-              <div key={index}>
-                <h4 style={{ color: '#ffffff', fontSize: '14px', fontWeight: '600', marginBottom: '16px' }}>{t(section.titleKey)}</h4>
-                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
-                  {section.links.map((link, i) => (
-                    <li key={i} style={{ marginBottom: '10px' }}>
-                      <a href="#" style={{ color: '#94a3b8', fontSize: '14px', textDecoration: 'none', transition: 'color 0.2s' }}
-                         onMouseEnter={(e) => e.target.style.color = '#ffffff'}
-                         onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
-                      >{link}</a>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            ))}
+            {/* Product Links */}
+            <div>
+              <h4 style={{ color: '#ffffff', fontSize: '14px', fontWeight: '600', marginBottom: '16px' }}>{t('product')}</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                {['Features', 'Pricing', 'Security'].map((link, i) => (
+                  <li key={i} style={{ marginBottom: '10px' }}>
+                    <a href={`#${link.toLowerCase()}`} style={{ color: '#94a3b8', fontSize: '14px', textDecoration: 'none', transition: 'color 0.2s' }}
+                       onMouseEnter={(e) => e.target.style.color = '#ffffff'}
+                       onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+                    >{link}</a>
+                  </li>
+                ))}
+              </ul>
+            </div>
+            
+            {/* Company Links */}
+            <div>
+              <h4 style={{ color: '#ffffff', fontSize: '14px', fontWeight: '600', marginBottom: '16px' }}>{t('company')}</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <li style={{ marginBottom: '10px' }}>
+                  <button onClick={() => onNavigate('about-us')} style={{ color: '#94a3b8', fontSize: '14px', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                     onMouseEnter={(e) => e.target.style.color = '#ffffff'}
+                     onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+                  >About Us</button>
+                </li>
+                <li style={{ marginBottom: '10px' }}>
+                  <button onClick={() => onNavigate('contact-us')} style={{ color: '#94a3b8', fontSize: '14px', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                     onMouseEnter={(e) => e.target.style.color = '#ffffff'}
+                     onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+                  >Contact Us</button>
+                </li>
+              </ul>
+            </div>
+            
+            {/* Legal Links - PayU Required */}
+            <div>
+              <h4 style={{ color: '#ffffff', fontSize: '14px', fontWeight: '600', marginBottom: '16px' }}>Legal</h4>
+              <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                <li style={{ marginBottom: '10px' }}>
+                  <button onClick={() => onNavigate('terms')} style={{ color: '#94a3b8', fontSize: '14px', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                     onMouseEnter={(e) => e.target.style.color = '#ffffff'}
+                     onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+                  >Terms & Conditions</button>
+                </li>
+                <li style={{ marginBottom: '10px' }}>
+                  <button onClick={() => onNavigate('privacy')} style={{ color: '#94a3b8', fontSize: '14px', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                     onMouseEnter={(e) => e.target.style.color = '#ffffff'}
+                     onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+                  >Privacy Policy</button>
+                </li>
+                <li style={{ marginBottom: '10px' }}>
+                  <button onClick={() => onNavigate('refund')} style={{ color: '#94a3b8', fontSize: '14px', textDecoration: 'none', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                     onMouseEnter={(e) => e.target.style.color = '#ffffff'}
+                     onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+                  >Refund Policy</button>
+                </li>
+              </ul>
+            </div>
             
             {/* Staff Portal Links */}
             <div>
@@ -965,17 +1004,41 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             borderTop: '1px solid #1e293b', 
             paddingTop: '24px',
             display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
+            flexDirection: 'column',
+            gap: '16px'
           }}>
-            <p style={{ fontSize: '13px', color: '#94a3b8' }}>© 2025 {t('appName')}. {t('allRightsReserved')}</p>
-            <div style={{ display: 'flex', gap: '16px' }}>
-              {['twitter', 'linkedin', 'github', 'instagram'].map((social) => (
-                <a key={social} href="#" style={{ color: '#94a3b8', fontSize: '18px' }}>
-                  <i className={`fab fa-${social}`}></i>
-                </a>
-              ))}
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '16px' }}>
+              <p style={{ fontSize: '13px', color: '#94a3b8', margin: 0 }}>© 2025 {t('appName')}. {t('allRightsReserved')}</p>
+              <div style={{ display: 'flex', gap: '24px', flexWrap: 'wrap' }}>
+                <button onClick={() => onNavigate('terms')} style={{ fontSize: '13px', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                   onMouseEnter={(e) => e.target.style.color = '#ffffff'}
+                   onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+                >Terms & Conditions</button>
+                <button onClick={() => onNavigate('privacy')} style={{ fontSize: '13px', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                   onMouseEnter={(e) => e.target.style.color = '#ffffff'}
+                   onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+                >Privacy Policy</button>
+                <button onClick={() => onNavigate('refund')} style={{ fontSize: '13px', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                   onMouseEnter={(e) => e.target.style.color = '#ffffff'}
+                   onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+                >Refund Policy</button>
+                <button onClick={() => onNavigate('contact-us')} style={{ fontSize: '13px', color: '#94a3b8', background: 'none', border: 'none', cursor: 'pointer', padding: 0 }}
+                   onMouseEnter={(e) => e.target.style.color = '#ffffff'}
+                   onMouseLeave={(e) => e.target.style.color = '#94a3b8'}
+                >Contact Us</button>
+              </div>
+              <div style={{ display: 'flex', gap: '16px' }}>
+                {['twitter', 'linkedin', 'github', 'instagram'].map((social) => (
+                  <a key={social} href="#" style={{ color: '#94a3b8', fontSize: '18px' }}>
+                    <i className={`fab fa-${social}`}></i>
+                  </a>
+                ))}
+              </div>
             </div>
+            <p style={{ fontSize: '12px', color: '#64748b', textAlign: 'center', margin: 0 }}>
+              <i className="fas fa-shield-alt" style={{ marginRight: '6px' }}></i>
+              Secure payments powered by PayU | HIPAA Compliant | SSL Encrypted
+            </p>
           </div>
         </div>
       </footer>

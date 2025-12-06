@@ -26,6 +26,8 @@ import LiveStatsDisplay from "./components/LiveStatsDisplay";
 import LandingPage from "./components/LandingPagePremium";
 import AuthPremium from "./components/AuthPremium";
 import CorporateWellness from "./components/CorporateWellness";
+import { TermsAndConditions, PrivacyPolicy, RefundPolicy, ContactUs, AboutUs } from "./components/LegalPages";
+import './styles/legal-pages.css';
 
 // Lazy load dashboard components
 const PatientDashboard = React.lazy(() =>
@@ -1506,6 +1508,16 @@ function App() {
               setCurrentView('auth');
             } else if (view === 'corporate') {
               setCurrentView('corporate');
+            } else if (view === 'terms') {
+              setCurrentView('terms');
+            } else if (view === 'privacy') {
+              setCurrentView('privacy');
+            } else if (view === 'refund') {
+              setCurrentView('refund');
+            } else if (view === 'contact-us') {
+              setCurrentView('contact-us');
+            } else if (view === 'about-us') {
+              setCurrentView('about-us');
             }
           }}
         />
@@ -1533,6 +1545,23 @@ function App() {
           </div>
           <CorporateWellness />
         </div>
+      )}
+
+      {/* Legal Pages - PayU Compliance */}
+      {currentView === "terms" && (
+        <TermsAndConditions onBack={() => setCurrentView('landing')} />
+      )}
+      {currentView === "privacy" && (
+        <PrivacyPolicy onBack={() => setCurrentView('landing')} />
+      )}
+      {currentView === "refund" && (
+        <RefundPolicy onBack={() => setCurrentView('landing')} />
+      )}
+      {currentView === "contact-us" && (
+        <ContactUs onBack={() => setCurrentView('landing')} />
+      )}
+      {currentView === "about-us" && (
+        <AboutUs onBack={() => setCurrentView('landing')} />
       )}
 
       {currentView === "auth" && (
