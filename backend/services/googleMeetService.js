@@ -267,11 +267,11 @@ Powered by HealthSync Pro
     );
 
     if (!meetLink) {
-      console.error('❌ Google Meet link not found in response');
-      return {
-        success: false,
-        error: 'Failed to generate Google Meet link. Please try again.'
-      };
+      console.error('❌ Google Meet link not found in response - falling back to Jitsi');
+      // Fall back to Jitsi Meet when Google Meet fails
+      const jitsiResult = generateJitsiMeetLink(appointment);
+      console.log(`✅ Jitsi Meet link generated as fallback: ${jitsiResult.meetLink}`);
+      return jitsiResult;
     }
 
     console.log('✅ Google Meet link generated successfully!');
@@ -305,11 +305,11 @@ Powered by HealthSync Pro
       console.error('   Insufficient permissions. Ensure Calendar API is enabled.');
     }
 
-    return {
-      success: false,
-      error: error.message,
-      setupUrl: 'http://localhost:5005/api/google/auth-url'
-    };
+    // Fall back to Jitsi Meet when Google Meet fails
+    console.log('⚠️ Falling back to Jitsi Meet...');
+    const jitsiResult = generateJitsiMeetLink(appointment);
+    console.log(`✅ Jitsi Meet link generated as fallback: ${jitsiResult.meetLink}`);
+    return jitsiResult;
   }
 }
 
