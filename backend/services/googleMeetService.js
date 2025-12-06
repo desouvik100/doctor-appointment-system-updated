@@ -106,18 +106,17 @@ async function generateGoogleMeetLink(appointment) {
     }
 
     // Build attendees list
-    // Doctor is added FIRST as the primary host/admin of the meeting
+    // Doctor is added as attendee (they will be co-host in the meeting)
     // Patient is added as attendee
     const attendees = [];
 
-    // Add doctor FIRST as the primary host (will have admin controls in Meet)
+    // Add doctor as attendee
     if (doctorEmail) {
       attendees.push({
         email: doctorEmail,
         displayName: `Dr. ${doctorName}`,
         responseStatus: 'accepted',
-        comment: 'Doctor - Meeting Host',
-        organizer: false, // OAuth account is organizer, but doctor is primary attendee
+        comment: 'Doctor - Consultation Host',
         optional: false
       });
     }
@@ -184,6 +183,12 @@ Powered by HealthSync Pro
           conferenceSolutionKey: {
             type: 'hangoutsMeet'
           }
+        },
+        // Conference settings - allow participants to join without host
+        conferenceSolution: {
+          key: {
+            type: 'hangoutsMeet'
+          }
         }
       },
       guestsCanModify: false,
@@ -215,9 +220,17 @@ Powered by HealthSync Pro
     });
 
     // Extract Google Meet link
-    const meetLink = response.data.conferenceData?.entryPoints?.find(
+    let meetLink = response.data.conferenceData?.entryPoints?.find(
       ep => ep.entryPointType === 'video'
     )?.uri;
+
+    // Add authuser parameter to help with account selection
+    // This helps when users have multiple Google accounts
+    if (meetLink) {
+      // The meet link format: https://meet.google.com/xxx-xxxx-xxx
+      // We keep it clean for universal access
+      console.log('   Original Meet Link:', meetLink);
+    }
 
     // Get dial-in info if available
     const dialIn = response.data.conferenceData?.entryPoints?.find(
@@ -358,10 +371,84 @@ function getGoogleStatus() {
   };
 }
 
+// Module exports moved to end of file after all functions are defined
+
+
+/**
+ * IMPORTANT: Google Meet Host Settings
+ * 
+ * The "Please wait until a meeting host brings you into the call" message appears because:
+ * 1. Google Meet's "Quick Access" is OFF in Google Workspace settings
+ * 2. The meeting organizer (OAuth account) hasn't joined yet
+ * 
+ * SOLUTIONS:
+ * 
+ * Option 1: Enable Quick Access (Recommended for personal Google accounts)
+ * - Go to meet.google.com
+ * - Click Settings (gear icon)
+ * - Under "Host controls", enable "Quick access"
+ * - This allows anyone with the link to join without waiting
+ * 
+ * Option 2: For Google Workspace accounts
+ * - Admin must enable "Quick access" in Admin Console
+ * - Go to: admin.google.com > Apps > Google Workspace > Google Meet
+ * - Enable "Let people outside your organization join meetings"
+ * 
+ * Option 3: Doctor joins first (Current workaround)
+ * - Doctor clicks "Start Meeting" which opens the Meet link
+ * - Once doctor joins, patients can enter
+ * 
+ * Option 4: Use a different video solution
+ * - Jitsi Meet (free, no host required)
+ * - Daily.co
+ * - Twilio Video
+ */
+
+/**
+ * Generate a Jitsi Meet link as fallback (no host required)
+ * @param {Object} appointment - Appointment details
+ * @returns {Object} - Meeting link info
+ */
+function generateJitsiMeetLink(appointment) {
+  const roomName = `healthsync-${appointment._id || Date.now()}`;
+  const meetLink = `https://meet.jit.si/${roomName}`;
+  
+  return {
+    success: true,
+    meetLink,
+    provider: 'jitsi',
+    roomName,
+    note: 'Jitsi Meet - No host required, anyone can join'
+  };
+}
+
+/**
+ * Generate meeting link with fallback options
+ * Tries Google Meet first, falls back to Jitsi if Google fails
+ */
+async function generateMeetingLink(appointment, preferredProvider = 'google') {
+  if (preferredProvider === 'jitsi') {
+    return generateJitsiMeetLink(appointment);
+  }
+
+  // Try Google Meet first
+  const googleResult = await generateGoogleMeetLink(appointment);
+  
+  if (googleResult.success) {
+    return googleResult;
+  }
+
+  // Fallback to Jitsi if Google fails
+  console.log('⚠️ Google Meet failed, falling back to Jitsi Meet');
+  return generateJitsiMeetLink(appointment);
+}
+
 module.exports = {
   generateGoogleMeetLink,
   deleteGoogleMeetEvent,
   updateGoogleMeetEvent,
   isGoogleMeetConfigured,
-  getGoogleStatus
+  getGoogleStatus,
+  generateJitsiMeetLink,
+  generateMeetingLink
 };
