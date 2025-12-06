@@ -596,10 +596,45 @@ function generateInvoiceHTML(invoiceData) {
     }
     
     /* Print Styles */
+    /* Download Button */
+    .download-bar {
+      max-width: 850px;
+      margin: 0 auto 20px;
+      display: flex;
+      gap: 15px;
+      justify-content: flex-end;
+    }
+    
+    .download-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 24px;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      text-decoration: none;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .download-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+    }
+    
+    .download-btn.secondary {
+      background: #1a1a2e;
+    }
+    
     @media print {
       body { background: white; padding: 0; }
       .invoice-wrapper { box-shadow: none; border-radius: 0; }
       .status-ribbon { print-color-adjust: exact; -webkit-print-color-adjust: exact; }
+      .download-bar { display: none !important; }
     }
     
     @media (max-width: 600px) {
@@ -610,10 +645,21 @@ function generateInvoiceHTML(invoiceData) {
       .payment-info { grid-template-columns: 1fr; }
       .totals-box { width: 100%; }
       .footer-contact { flex-direction: column; gap: 15px; }
+      .download-bar { flex-direction: column; }
     }
   </style>
 </head>
 <body>
+  <!-- Download Buttons -->
+  <div class="download-bar">
+    <button class="download-btn" onclick="window.print()">
+      📄 Download as PDF
+    </button>
+    <button class="download-btn secondary" onclick="window.print()">
+      🖨️ Print Invoice
+    </button>
+  </div>
+
   <div class="invoice-wrapper">
     <div class="status-ribbon">${payment?.status === 'completed' || payment?.status === 'success' ? 'PAID' : 'PENDING'}</div>
 
