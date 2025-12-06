@@ -56,6 +56,8 @@ function AdminDashboard({ admin, onLogout }) {
   const [showPayoutModal, setShowPayoutModal] = useState(false);
   const [selectedWallet, setSelectedWallet] = useState(null);
   const [payoutForm, setPayoutForm] = useState({ amount: '', method: 'bank_transfer', reference: '' });
+  const [pendingWithdrawals, setPendingWithdrawals] = useState([]);
+  const [withdrawalStats, setWithdrawalStats] = useState({ totalPending: 0, totalAmount: 0 });
 
   // Modal states
   const [showUserModal, setShowUserModal] = useState(false);
@@ -210,10 +212,46 @@ function AdminDashboard({ admin, onLogout }) {
     }
   };
 
+  // Fetch pending withdrawal requests
+  const fetchPendingWithdrawals = async () => {
+    try {
+      const response = await axios.get('/api/wallet/admin/withdrawals');
+      if (response.data.success) {
+        setPendingWithdrawals(response.data.requests);
+        setWithdrawalStats({
+          totalPending: response.data.totalPending,
+          totalAmount: response.data.totalAmount
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching pending withdrawals:', error);
+    }
+  };
+
+  // Process withdrawal request (approve/reject)
+  const handleProcessWithdrawal = async (walletId, requestId, action, reference = '', rejectionReason = '') => {
+    try {
+      const response = await axios.put(`/api/wallet/admin/withdrawals/${walletId}/${requestId}`, {
+        action,
+        reference,
+        rejectionReason,
+        adminId: admin?.id || admin?._id
+      });
+      if (response.data.success) {
+        toast.success(response.data.message);
+        fetchPendingWithdrawals();
+        fetchDoctorWallets();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to process withdrawal');
+    }
+  };
+
   // Fetch wallets when payouts tab is active
   useEffect(() => {
     if (activeTab === 'payouts') {
       fetchDoctorWallets();
+      fetchPendingWithdrawals();
     }
   }, [activeTab]);
 
@@ -1228,24 +1266,111 @@ function AdminDashboard({ admin, onLogout }) {
               </div>
 
               {/* Summary Cards */}
-              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                <div style={{ background: 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)', color: 'white', padding: '1.5rem', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Pending Withdrawals</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>{withdrawalStats.totalPending || 0}</div>
+                  <div style={{ fontSize: '0.75rem', opacity: 0.8 }}>₹{withdrawalStats.totalAmount?.toLocaleString() || 0}</div>
+                </div>
                 <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '1.5rem', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Pending Payouts</div>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Pending</div>
                   <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>₹{walletSummary.totalPendingPayouts?.toLocaleString() || 0}</div>
                 </div>
                 <div style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', padding: '1.5rem', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Earnings (All Time)</div>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Earnings</div>
                   <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>₹{walletSummary.totalEarnings?.toLocaleString() || 0}</div>
                 </div>
                 <div style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white', padding: '1.5rem', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Paid Out</div>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Paid</div>
                   <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>₹{walletSummary.totalPayouts?.toLocaleString() || 0}</div>
                 </div>
                 <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', color: 'white', padding: '1.5rem', borderRadius: '12px' }}>
-                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Doctors</div>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Doctors</div>
                   <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>{walletSummary.totalDoctors || 0}</div>
                 </div>
               </div>
+
+              {/* Pending Withdrawal Requests */}
+              {pendingWithdrawals.length > 0 && (
+                <div style={{ marginBottom: '2rem' }}>
+                  <h3 style={{ fontSize: '1.1rem', color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                    <i className="fas fa-clock" style={{ color: '#ef4444' }}></i>
+                    Pending Withdrawal Requests ({pendingWithdrawals.length})
+                  </h3>
+                  <div className="admin-table-container">
+                    <table className="admin-table">
+                      <thead>
+                        <tr>
+                          <th>Doctor</th>
+                          <th>Amount</th>
+                          <th>Method</th>
+                          <th>Bank Details</th>
+                          <th>Requested</th>
+                          <th>Actions</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {pendingWithdrawals.map((req, index) => (
+                          <tr key={index}>
+                            <td>
+                              <strong>Dr. {req.doctor?.name}</strong>
+                              <br />
+                              <small className="text-muted">{req.doctor?.email}</small>
+                            </td>
+                            <td style={{ color: '#ef4444', fontWeight: 'bold', fontSize: '1.1rem' }}>
+                              ₹{req.amount?.toLocaleString()}
+                            </td>
+                            <td>
+                              <span className="badge badge-info">{req.payoutMethod}</span>
+                            </td>
+                            <td style={{ fontSize: '0.75rem' }}>
+                              {req.bankDetails?.accountNumber ? (
+                                <>
+                                  <div>{req.bankDetails.bankName}</div>
+                                  <div>A/C: ****{req.bankDetails.accountNumber?.slice(-4)}</div>
+                                  <div>IFSC: {req.bankDetails.ifscCode}</div>
+                                </>
+                              ) : (
+                                <span style={{ color: '#ef4444' }}>Not Added</span>
+                              )}
+                            </td>
+                            <td>{new Date(req.requestedAt).toLocaleDateString()}</td>
+                            <td>
+                              <div className="admin-actions">
+                                <button 
+                                  className="admin-action-btn"
+                                  style={{ background: '#10b981', color: 'white' }}
+                                  onClick={() => {
+                                    const reference = window.prompt('Enter transaction reference/ID:');
+                                    if (reference !== null) {
+                                      handleProcessWithdrawal(req.walletId, req._id, 'approve', reference);
+                                    }
+                                  }}
+                                  title="Approve & Pay"
+                                >
+                                  <i className="fas fa-check"></i>
+                                </button>
+                                <button 
+                                  className="admin-action-btn admin-action-btn--delete"
+                                  onClick={() => {
+                                    const reason = window.prompt('Enter rejection reason:');
+                                    if (reason !== null) {
+                                      handleProcessWithdrawal(req.walletId, req._id, 'reject', '', reason);
+                                    }
+                                  }}
+                                  title="Reject"
+                                >
+                                  <i className="fas fa-times"></i>
+                                </button>
+                              </div>
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
 
               {/* Doctor Wallets Table */}
               <div className="admin-table-container">

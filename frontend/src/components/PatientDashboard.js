@@ -6,7 +6,7 @@ import AIAssistant from './AIAssistant';
 import ReviewModal from './ReviewModal';
 import HealthProfile from './HealthProfile';
 import LabReports from './LabReports';
-import MedicineDelivery from './MedicineDelivery';
+// MedicineDelivery removed - medicine selling not supported for PayU compliance
 import AmbulanceBooking from './AmbulanceBooking';
 import DoctorChat from './DoctorChat';
 import HealthTips from './HealthTips';
@@ -578,16 +578,6 @@ const PatientDashboard = ({ user, onLogout }) => {
                 <i className="fas fa-flask"></i>
               </div>
               <span className="patient-dashboard__tab-label">Lab Reports</span>
-            </button>
-            
-            <button 
-              className={`patient-dashboard__tab ${activeTab === 'medicines' ? 'patient-dashboard__tab--active' : ''}`}
-              onClick={() => setActiveTab('medicines')}
-            >
-              <div className="patient-dashboard__tab-icon">
-                <i className="fas fa-pills"></i>
-              </div>
-              <span className="patient-dashboard__tab-label">Medicines</span>
             </button>
             
             <button 
@@ -1233,14 +1223,6 @@ const PatientDashboard = ({ user, onLogout }) => {
         {/* Lab Reports Tab Content */}
         {activeTab === 'lab-reports' && (
           <LabReports userId={currentUser.id || currentUser._id} />
-        )}
-
-        {/* Medicine Delivery Tab Content */}
-        {activeTab === 'medicines' && (
-          <MedicineDelivery 
-            userId={currentUser.id || currentUser._id}
-            userAddress={userLocation}
-          />
         )}
 
         {/* Ambulance Booking Tab Content */}

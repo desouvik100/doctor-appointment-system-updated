@@ -5,9 +5,12 @@ import toast from 'react-hot-toast';
 const DoctorWallet = ({ doctorId, doctorName }) => {
   const [wallet, setWallet] = useState(null);
   const [transactions, setTransactions] = useState([]);
+  const [withdrawals, setWithdrawals] = useState([]);
   const [loading, setLoading] = useState(true);
   const [showTransactions, setShowTransactions] = useState(false);
   const [showBankModal, setShowBankModal] = useState(false);
+  const [showWithdrawModal, setShowWithdrawModal] = useState(false);
+  const [withdrawForm, setWithdrawForm] = useState({ amount: '', method: 'bank_transfer', notes: '' });
   const [bankForm, setBankForm] = useState({
     accountHolderName: '',
     accountNumber: '',
@@ -19,8 +22,57 @@ const DoctorWallet = ({ doctorId, doctorName }) => {
   useEffect(() => {
     if (doctorId) {
       fetchWallet();
+      fetchWithdrawals();
     }
   }, [doctorId]);
+
+  const fetchWithdrawals = async () => {
+    try {
+      const response = await axios.get(`/api/wallet/doctor/${doctorId}/withdrawals`);
+      if (response.data.success) {
+        setWithdrawals(response.data.requests);
+      }
+    } catch (error) {
+      console.error('Error fetching withdrawals:', error);
+    }
+  };
+
+  const handleWithdrawRequest = async (e) => {
+    e.preventDefault();
+    if (!withdrawForm.amount || parseFloat(withdrawForm.amount) <= 0) {
+      toast.error('Please enter a valid amount');
+      return;
+    }
+    if (parseFloat(withdrawForm.amount) > wallet?.pendingAmount) {
+      toast.error('Amount exceeds available balance');
+      return;
+    }
+    try {
+      const response = await axios.post(`/api/wallet/doctor/${doctorId}/withdraw`, withdrawForm);
+      if (response.data.success) {
+        toast.success(response.data.message);
+        setShowWithdrawModal(false);
+        setWithdrawForm({ amount: '', method: 'bank_transfer', notes: '' });
+        fetchWallet();
+        fetchWithdrawals();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to submit withdrawal request');
+    }
+  };
+
+  const handleCancelWithdrawal = async (requestId) => {
+    if (!window.confirm('Are you sure you want to cancel this withdrawal request?')) return;
+    try {
+      const response = await axios.delete(`/api/wallet/doctor/${doctorId}/withdraw/${requestId}`);
+      if (response.data.success) {
+        toast.success('Withdrawal request cancelled');
+        fetchWithdrawals();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to cancel request');
+    }
+  };
 
   const fetchWallet = async () => {
     try {
@@ -113,12 +165,21 @@ const DoctorWallet = ({ doctorId, doctorName }) => {
               </h5>
               <small className="opacity-75">Dr. {doctorName}</small>
             </div>
-            <button 
-              className="btn btn-light btn-sm"
-              onClick={() => setShowBankModal(true)}
-            >
-              <i className="fas fa-university me-1"></i>Bank Details
-            </button>
+            <div className="d-flex gap-2">
+              <button 
+                className="btn btn-success btn-sm"
+                onClick={() => setShowWithdrawModal(true)}
+                disabled={!wallet?.pendingAmount || wallet.pendingAmount <= 0}
+              >
+                <i className="fas fa-money-bill-wave me-1"></i>Withdraw
+              </button>
+              <button 
+                className="btn btn-light btn-sm"
+                onClick={() => setShowBankModal(true)}
+              >
+                <i className="fas fa-university me-1"></i>Bank Details
+              </button>
+            </div>
           </div>
           
           <div className="row g-3">
@@ -364,6 +425,133 @@ const DoctorWallet = ({ doctorId, doctorName }) => {
                   </button>
                   <button type="submit" className="btn btn-primary">
                     <i className="fas fa-save me-1"></i>Save Details
+                  </button>
+                </div>
+              </form>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Withdrawal Requests Section */}
+      {withdrawals.length > 0 && (
+        <div className="card border-0 shadow-sm mt-4">
+          <div className="card-header bg-white">
+            <h6 className="mb-0">
+              <i className="fas fa-money-bill-wave me-2 text-success"></i>Withdrawal Requests
+            </h6>
+          </div>
+          <div className="card-body p-0">
+            <div className="list-group list-group-flush">
+              {withdrawals.slice(0, 5).map((req, index) => (
+                <div key={index} className="list-group-item d-flex justify-content-between align-items-center">
+                  <div>
+                    <p className="mb-0 fw-medium">{formatCurrency(req.amount)}</p>
+                    <small className="text-muted">
+                      {formatDate(req.requestedAt)} • {req.payoutMethod}
+                    </small>
+                  </div>
+                  <div className="d-flex align-items-center gap-2">
+                    <span className={`badge ${
+                      req.status === 'completed' ? 'bg-success' : 
+                      req.status === 'pending' ? 'bg-warning' : 
+                      req.status === 'rejected' ? 'bg-danger' : 'bg-secondary'
+                    }`}>
+                      {req.status}
+                    </span>
+                    {req.status === 'pending' && (
+                      <button 
+                        className="btn btn-sm btn-outline-danger"
+                        onClick={() => handleCancelWithdrawal(req._id)}
+                        title="Cancel Request"
+                      >
+                        <i className="fas fa-times"></i>
+                      </button>
+                    )}
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Withdraw Modal */}
+      {showWithdrawModal && (
+        <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <div className="modal-dialog">
+            <div className="modal-content">
+              <div className="modal-header" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}>
+                <h5 className="modal-title">
+                  <i className="fas fa-money-bill-wave me-2"></i>Request Withdrawal
+                </h5>
+                <button className="btn-close btn-close-white" onClick={() => setShowWithdrawModal(false)}></button>
+              </div>
+              <form onSubmit={handleWithdrawRequest}>
+                <div className="modal-body">
+                  <div className="alert alert-info mb-3">
+                    <i className="fas fa-info-circle me-2"></i>
+                    Available for withdrawal: <strong>{formatCurrency(wallet?.pendingAmount)}</strong>
+                  </div>
+                  
+                  {!wallet?.bankDetails?.accountNumber && (
+                    <div className="alert alert-warning mb-3">
+                      <i className="fas fa-exclamation-triangle me-2"></i>
+                      Please add your bank details before requesting withdrawal.
+                      <button 
+                        type="button"
+                        className="btn btn-sm btn-warning ms-2"
+                        onClick={() => { setShowWithdrawModal(false); setShowBankModal(true); }}
+                      >
+                        Add Bank Details
+                      </button>
+                    </div>
+                  )}
+                  
+                  <div className="mb-3">
+                    <label className="form-label">Withdrawal Amount (₹)</label>
+                    <input
+                      type="number"
+                      className="form-control"
+                      value={withdrawForm.amount}
+                      onChange={(e) => setWithdrawForm({...withdrawForm, amount: e.target.value})}
+                      max={wallet?.pendingAmount}
+                      placeholder={`Max: ₹${wallet?.pendingAmount || 0}`}
+                      required
+                    />
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Payment Method</label>
+                    <select
+                      className="form-select"
+                      value={withdrawForm.method}
+                      onChange={(e) => setWithdrawForm({...withdrawForm, method: e.target.value})}
+                    >
+                      <option value="bank_transfer">Bank Transfer (NEFT/IMPS)</option>
+                      <option value="upi">UPI</option>
+                    </select>
+                  </div>
+                  <div className="mb-3">
+                    <label className="form-label">Notes (Optional)</label>
+                    <textarea
+                      className="form-control"
+                      value={withdrawForm.notes}
+                      onChange={(e) => setWithdrawForm({...withdrawForm, notes: e.target.value})}
+                      placeholder="Any special instructions..."
+                      rows={2}
+                    />
+                  </div>
+                </div>
+                <div className="modal-footer">
+                  <button type="button" className="btn btn-secondary" onClick={() => setShowWithdrawModal(false)}>
+                    Cancel
+                  </button>
+                  <button 
+                    type="submit" 
+                    className="btn btn-success"
+                    disabled={!wallet?.bankDetails?.accountNumber}
+                  >
+                    <i className="fas fa-paper-plane me-1"></i>Submit Request
                   </button>
                 </div>
               </form>

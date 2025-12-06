@@ -1,9 +1,39 @@
 const mongoose = require('mongoose');
 
+// Withdrawal Request Schema
+const withdrawalRequestSchema = new mongoose.Schema({
+  amount: {
+    type: Number,
+    required: true
+  },
+  status: {
+    type: String,
+    enum: ['pending', 'approved', 'rejected', 'completed'],
+    default: 'pending'
+  },
+  requestedAt: {
+    type: Date,
+    default: Date.now
+  },
+  processedAt: Date,
+  processedBy: {
+    type: mongoose.Schema.Types.ObjectId,
+    ref: 'User'
+  },
+  payoutMethod: {
+    type: String,
+    enum: ['bank_transfer', 'upi', 'cash', 'other'],
+    default: 'bank_transfer'
+  },
+  payoutReference: String,
+  rejectionReason: String,
+  notes: String
+});
+
 const transactionSchema = new mongoose.Schema({
   type: {
     type: String,
-    enum: ['earning', 'payout', 'bonus', 'deduction'],
+    enum: ['earning', 'payout', 'bonus', 'deduction', 'withdrawal'],
     required: true
   },
   amount: {
@@ -115,6 +145,8 @@ const doctorWalletSchema = new mongoose.Schema({
   },
   // Transaction history
   transactions: [transactionSchema],
+  // Withdrawal requests
+  withdrawalRequests: [withdrawalRequestSchema],
   // Commission percentage (company takes this %)
   commissionRate: {
     type: Number,
@@ -187,6 +219,70 @@ doctorWalletSchema.methods.processPayout = function(amount, method, reference, p
   this.pendingAmount -= amount;
   
   return true;
+};
+
+// Method to create withdrawal request
+doctorWalletSchema.methods.createWithdrawalRequest = function(amount, method = 'bank_transfer', notes = '') {
+  if (amount > this.pendingAmount) {
+    throw new Error('Withdrawal amount exceeds available balance');
+  }
+  
+  // Check if there's already a pending request
+  const pendingRequest = this.withdrawalRequests.find(r => r.status === 'pending');
+  if (pendingRequest) {
+    throw new Error('You already have a pending withdrawal request');
+  }
+  
+  this.withdrawalRequests.push({
+    amount,
+    status: 'pending',
+    payoutMethod: method,
+    notes,
+    requestedAt: new Date()
+  });
+  
+  return this.withdrawalRequests[this.withdrawalRequests.length - 1];
+};
+
+// Method to process withdrawal request
+doctorWalletSchema.methods.processWithdrawalRequest = function(requestId, action, processedBy, reference = '', rejectionReason = '') {
+  const request = this.withdrawalRequests.id(requestId);
+  if (!request) {
+    throw new Error('Withdrawal request not found');
+  }
+  
+  if (request.status !== 'pending') {
+    throw new Error('Request has already been processed');
+  }
+  
+  if (action === 'approve' || action === 'complete') {
+    request.status = 'completed';
+    request.processedAt = new Date();
+    request.processedBy = processedBy;
+    request.payoutReference = reference;
+    
+    // Deduct from wallet
+    this.transactions.push({
+      type: 'withdrawal',
+      amount: -request.amount,
+      description: `Withdrawal request #${requestId.toString().slice(-6)} - ${request.payoutMethod}`,
+      status: 'completed',
+      payoutMethod: request.payoutMethod,
+      payoutReference: reference,
+      processedBy
+    });
+    
+    this.balance -= request.amount;
+    this.totalPayouts += request.amount;
+    this.pendingAmount -= request.amount;
+  } else if (action === 'reject') {
+    request.status = 'rejected';
+    request.processedAt = new Date();
+    request.processedBy = processedBy;
+    request.rejectionReason = rejectionReason;
+  }
+  
+  return request;
 };
 
 // Static method to get or create wallet

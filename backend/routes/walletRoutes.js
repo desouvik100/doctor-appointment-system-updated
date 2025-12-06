@@ -84,7 +84,213 @@ router.put('/doctor/:doctorId/bank-details', async (req, res) => {
   }
 });
 
+// ============ WITHDRAWAL REQUEST ROUTES ============
+
+// Create withdrawal request (Doctor)
+router.post('/doctor/:doctorId/withdraw', async (req, res) => {
+  try {
+    const { amount, method, notes } = req.body;
+    
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid withdrawal amount' });
+    }
+    
+    const wallet = await DoctorWallet.getOrCreateWallet(req.params.doctorId);
+    const doctor = await Doctor.findById(req.params.doctorId);
+    
+    // Check if bank details are added
+    if (!wallet.bankDetails?.accountNumber && method === 'bank_transfer') {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Please add your bank details before requesting withdrawal' 
+      });
+    }
+    
+    const request = wallet.createWithdrawalRequest(amount, method || 'bank_transfer', notes);
+    await wallet.save();
+    
+    console.log(`💸 Withdrawal request created by Dr. ${doctor?.name}: ₹${amount}`);
+    
+    res.json({
+      success: true,
+      message: `Withdrawal request for ₹${amount} submitted successfully`,
+      request
+    });
+  } catch (error) {
+    console.error('Error creating withdrawal request:', error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
+
+// Get withdrawal requests (Doctor)
+router.get('/doctor/:doctorId/withdrawals', async (req, res) => {
+  try {
+    const wallet = await DoctorWallet.getOrCreateWallet(req.params.doctorId);
+    
+    const requests = wallet.withdrawalRequests
+      .sort((a, b) => b.requestedAt - a.requestedAt);
+    
+    res.json({
+      success: true,
+      requests,
+      pendingRequest: requests.find(r => r.status === 'pending')
+    });
+  } catch (error) {
+    console.error('Error fetching withdrawal requests:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Cancel withdrawal request (Doctor)
+router.delete('/doctor/:doctorId/withdraw/:requestId', async (req, res) => {
+  try {
+    const wallet = await DoctorWallet.getOrCreateWallet(req.params.doctorId);
+    const request = wallet.withdrawalRequests.id(req.params.requestId);
+    
+    if (!request) {
+      return res.status(404).json({ success: false, message: 'Request not found' });
+    }
+    
+    if (request.status !== 'pending') {
+      return res.status(400).json({ success: false, message: 'Can only cancel pending requests' });
+    }
+    
+    request.status = 'rejected';
+    request.rejectionReason = 'Cancelled by doctor';
+    request.processedAt = new Date();
+    
+    await wallet.save();
+    
+    res.json({ success: true, message: 'Withdrawal request cancelled' });
+  } catch (error) {
+    console.error('Error cancelling withdrawal:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // ============ ADMIN ROUTES ============
+
+// Get all pending withdrawal requests (Admin)
+router.get('/admin/withdrawals', async (req, res) => {
+  try {
+    const wallets = await DoctorWallet.find({
+      'withdrawalRequests.status': 'pending'
+    }).populate('doctorId', 'name email phone specialization');
+    
+    const pendingRequests = [];
+    wallets.forEach(wallet => {
+      wallet.withdrawalRequests
+        .filter(r => r.status === 'pending')
+        .forEach(request => {
+          pendingRequests.push({
+            ...request.toObject(),
+            walletId: wallet._id,
+            doctor: wallet.doctorId,
+            bankDetails: wallet.bankDetails,
+            walletBalance: wallet.pendingAmount
+          });
+        });
+    });
+    
+    // Sort by request date
+    pendingRequests.sort((a, b) => new Date(b.requestedAt) - new Date(a.requestedAt));
+    
+    res.json({
+      success: true,
+      requests: pendingRequests,
+      totalPending: pendingRequests.length,
+      totalAmount: pendingRequests.reduce((sum, r) => sum + r.amount, 0)
+    });
+  } catch (error) {
+    console.error('Error fetching pending withdrawals:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Process withdrawal request (Admin - Approve/Reject)
+router.put('/admin/withdrawals/:walletId/:requestId', async (req, res) => {
+  try {
+    const { action, reference, rejectionReason, adminId } = req.body;
+    
+    if (!['approve', 'reject'].includes(action)) {
+      return res.status(400).json({ success: false, message: 'Invalid action' });
+    }
+    
+    const wallet = await DoctorWallet.findById(req.params.walletId)
+      .populate('doctorId', 'name email');
+    
+    if (!wallet) {
+      return res.status(404).json({ success: false, message: 'Wallet not found' });
+    }
+    
+    const request = wallet.processWithdrawalRequest(
+      req.params.requestId,
+      action,
+      adminId,
+      reference,
+      rejectionReason
+    );
+    
+    await wallet.save();
+    
+    // Send email notification
+    try {
+      const { sendEmail } = require('../services/emailService');
+      const doctor = wallet.doctorId;
+      
+      if (doctor?.email) {
+        const subject = action === 'approve' 
+          ? `✅ Withdrawal Request Approved - ₹${request.amount}`
+          : `❌ Withdrawal Request Rejected`;
+        
+        const html = `
+          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+            <div style="background: ${action === 'approve' ? 'linear-gradient(135deg, #10b981 0%, #059669 100%)' : 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)'}; color: white; padding: 20px; border-radius: 12px 12px 0 0; text-align: center;">
+              <h1 style="margin: 0;">💰 HealthSync</h1>
+              <p style="margin: 10px 0 0; opacity: 0.9;">Withdrawal Request ${action === 'approve' ? 'Approved' : 'Rejected'}</p>
+            </div>
+            <div style="background: #f8fafc; padding: 20px; border-radius: 0 0 12px 12px;">
+              <p>Dear Dr. ${doctor.name},</p>
+              ${action === 'approve' ? `
+                <p>Your withdrawal request has been <strong style="color: #10b981;">approved</strong> and processed.</p>
+                <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                  <p style="margin: 5px 0;"><strong>Amount:</strong> ₹${request.amount.toLocaleString()}</p>
+                  <p style="margin: 5px 0;"><strong>Method:</strong> ${request.payoutMethod}</p>
+                  <p style="margin: 5px 0;"><strong>Reference:</strong> ${reference || 'N/A'}</p>
+                </div>
+                <p>The amount will be credited to your registered bank account within 1-3 business days.</p>
+              ` : `
+                <p>Your withdrawal request has been <strong style="color: #ef4444;">rejected</strong>.</p>
+                <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0;">
+                  <p style="margin: 5px 0;"><strong>Amount:</strong> ₹${request.amount.toLocaleString()}</p>
+                  <p style="margin: 5px 0;"><strong>Reason:</strong> ${rejectionReason || 'Not specified'}</p>
+                </div>
+                <p>Please contact support if you have any questions.</p>
+              `}
+              <p style="color: #64748b; font-size: 14px; margin-top: 20px;">
+                Thank you for being a part of HealthSync!
+              </p>
+            </div>
+          </div>
+        `;
+        
+        await sendEmail({ to: doctor.email, subject, html });
+        console.log(`📧 Withdrawal notification sent to ${doctor.email}`);
+      }
+    } catch (emailError) {
+      console.error('Error sending withdrawal email:', emailError.message);
+    }
+    
+    res.json({
+      success: true,
+      message: `Withdrawal request ${action === 'approve' ? 'approved' : 'rejected'}`,
+      request
+    });
+  } catch (error) {
+    console.error('Error processing withdrawal:', error);
+    res.status(400).json({ success: false, message: error.message });
+  }
+});
 
 // Get all doctors' wallets (Admin)
 router.get('/admin/all', async (req, res) => {

@@ -70,7 +70,7 @@ const translations = {
     quickActions: 'Quick Actions',
     bookAppointment: 'Book Appointment',
     aiHealthCheck: 'AI Health Check',
-    orderMedicines: 'Order Medicines',
+    medicineReminder: 'Medicine Reminder',
     labReports: 'Lab Reports',
     
     // Stats
@@ -295,7 +295,7 @@ const translations = {
     quickActions: 'त्वरित कार्य',
     bookAppointment: 'अपॉइंटमेंट बुक करें',
     aiHealthCheck: 'AI स्वास्थ्य जांच',
-    orderMedicines: 'दवाइयां ऑर्डर करें',
+    medicineReminder: 'दवा रिमाइंडर',
     labReports: 'लैब रिपोर्ट',
     
     // Stats
@@ -515,7 +515,7 @@ const translations = {
     quickActions: 'দ্রুত কার্যক্রম',
     bookAppointment: 'অ্যাপয়েন্টমেন্ট বুক করুন',
     aiHealthCheck: 'AI স্বাস্থ্য পরীক্ষা',
-    orderMedicines: 'ওষুধ অর্ডার করুন',
+    medicineReminder: 'ওষুধ রিমাইন্ডার',
     labReports: 'ল্যাব রিপোর্ট',
     
     // Stats

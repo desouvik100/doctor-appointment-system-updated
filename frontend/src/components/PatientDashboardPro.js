@@ -10,7 +10,7 @@ import FindMyDoctorWizard from './FindMyDoctorWizard';
 import ReviewModal from './ReviewModal';
 import HealthProfile from './HealthProfile';
 import LabReports from './LabReports';
-import MedicineDelivery from './MedicineDelivery';
+// MedicineDelivery removed - medicine selling not supported for PayU compliance
 import AmbulanceBooking from './AmbulanceBooking';
 import DoctorChat from './DoctorChat';
 import HealthTips from './HealthTips';
@@ -295,7 +295,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
               <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
                 <h3 className="text-lg font-bold text-slate-800 mb-4">Quick Actions</h3>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  {[{ icon: 'fa-user-md', label: 'Book Appointment', section: 'doctors', color: 'from-indigo-500 to-purple-600' }, { icon: 'fa-robot', label: 'AI Health Check', section: 'ai-assistant', color: 'from-emerald-500 to-teal-600' }, { icon: 'fa-pills', label: 'Order Medicines', section: 'medicines', color: 'from-amber-500 to-orange-600' }, { icon: 'fa-flask', label: 'Lab Reports', section: 'lab-reports', color: 'from-rose-500 to-pink-600' }].map((a, i) => (
+                  {[{ icon: 'fa-user-md', label: 'Book Appointment', section: 'doctors', color: 'from-indigo-500 to-purple-600' }, { icon: 'fa-robot', label: 'AI Health Check', section: 'ai-assistant', color: 'from-emerald-500 to-teal-600' }, { icon: 'fa-flask', label: 'Lab Reports', section: 'lab-reports', color: 'from-rose-500 to-pink-600' }, { icon: 'fa-bell', label: 'Medicine Reminder', section: 'medicine-reminder', color: 'from-amber-500 to-orange-600' }].map((a, i) => (
                     <button key={i} onClick={() => setActiveSection(a.section)} className="group flex flex-col items-center gap-3 p-5 rounded-xl bg-slate-50 hover:bg-white border-2 border-transparent hover:border-indigo-200 hover:shadow-lg transition-all">
                       <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${a.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}><i className={`fas ${a.icon} text-white text-xl`}></i></div>
                       <span className="text-sm font-medium text-slate-700">{a.label}</span>
@@ -409,7 +409,6 @@ const PatientDashboardPro = ({ user, onLogout }) => {
           {activeSection === 'lab-reports' && <LabReports userId={getUserId()} />}
           {activeSection === 'checkup' && <HealthCheckup userId={getUserId()} userName={currentUser?.name} userEmail={currentUser?.email} userPhone={currentUser?.phone} />}
           {activeSection === 'health-analytics' && <HealthAnalytics userId={getUserId()} />}
-          {activeSection === 'medicines' && <MedicineDelivery userId={getUserId()} userAddress={userLocation} />}
           {activeSection === 'medicine-reminder' && <MedicineReminder userId={getUserId()} />}
           {activeSection === 'ambulance' && <AmbulanceBooking userId={getUserId()} userName={currentUser?.name} userPhone={currentUser?.phone} userLocation={userLocation} />}
           {activeSection === 'second-opinion' && <SecondOpinion userId={getUserId()} userName={currentUser?.name} />}
