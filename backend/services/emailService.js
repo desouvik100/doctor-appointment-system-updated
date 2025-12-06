@@ -562,16 +562,39 @@ async function sendAppointmentEmail(appointment, recipientType = 'patient') {
       throw new Error(`${recipientType} email not found`);
     }
 
+    // Format date in IST timezone
     const appointmentDate = new Date(appointment.date);
-    const formattedDate = appointmentDate.toLocaleDateString('en-US', {
+    const formattedDate = appointmentDate.toLocaleDateString('en-IN', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
-      day: 'numeric'
+      day: 'numeric',
+      timeZone: 'Asia/Kolkata'
     });
+
+    // Use the stored time directly (it's already in IST format like "10:00" or "14:30")
+    const appointmentTime = appointment.time || 'Time not set';
+    
+    // Format time for display (convert 24h to 12h format)
+    let displayTime = appointmentTime;
+    if (appointmentTime && appointmentTime.includes(':')) {
+      const [hours, minutes] = appointmentTime.split(':');
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour % 12 || 12;
+      displayTime = `${hour12}:${minutes} ${ampm} IST`;
+    }
 
     const meetLink = appointment.googleMeetLink || appointment.meetingLink;
     const clinicName = appointment.clinicId?.name || 'HealthSync Clinic';
+    
+    // Debug logging
+    console.log('📧 Preparing appointment email:');
+    console.log(`   Recipient: ${recipient.email} (${recipientType})`);
+    console.log(`   Date: ${formattedDate}`);
+    console.log(`   Time: ${displayTime} (stored: ${appointmentTime})`);
+    console.log(`   Meet Link: ${meetLink || 'NOT SET'}`);
+    console.log(`   Consultation Type: ${appointment.consultationType}`);
 
     const subject = recipientType === 'patient' 
       ? `Appointment Confirmed - Dr. ${otherParty.name}`
@@ -582,9 +605,13 @@ Your ${appointment.consultationType === 'online' ? 'Online' : 'In-Person'} Appoi
 
 ${recipientType === 'patient' ? 'Doctor' : 'Patient'}: ${otherParty.name}
 Date: ${formattedDate}
-Time: ${appointment.time}
+Time: ${displayTime}
 Clinic: ${clinicName}
-${appointment.consultationType === 'online' && meetLink ? `\nGoogle Meet Link: ${meetLink}` : ''}
+${appointment.consultationType === 'online' && meetLink ? `
+
+🎥 GOOGLE MEET LINK: ${meetLink}
+
+Click the link above to join your online consultation.` : ''}
 
 ${appointment.consultationType === 'online' ? 'Join the meeting 5 minutes before your scheduled time.' : 'Please arrive 10 minutes early.'}
 
@@ -648,7 +675,7 @@ Thank you for choosing HealthSync!
         </div>
         <div class="detail-row">
           <div class="detail-label">Time:</div>
-          <div class="detail-value">${appointment.time}</div>
+          <div class="detail-value"><strong style="color: #667eea; font-size: 16px;">${displayTime}</strong></div>
         </div>
         <div class="detail-row">
           <div class="detail-label">Type:</div>
@@ -667,14 +694,23 @@ Thank you for choosing HealthSync!
       </div>
 
       ${appointment.consultationType === 'online' && meetLink ? `
-      <div class="meet-link-box">
-        <h3>🎥 Join Your Online Consultation</h3>
-        <p style="margin: 10px 0; font-size: 14px;">Click the button below to join the meeting</p>
-        <a href="${meetLink}" class="meet-button">Join Meeting</a>
-        <p style="margin-top: 15px; font-size: 12px; opacity: 0.9;">
-          Or copy this link: <br>
-          <span style="word-break: break-all;">${meetLink}</span>
+      <div class="meet-link-box" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 25px; border-radius: 12px; text-align: center; margin: 25px 0; border: 3px solid #059669;">
+        <h3 style="font-size: 22px; margin-bottom: 15px;">🎥 JOIN YOUR ONLINE CONSULTATION</h3>
+        <p style="margin: 10px 0; font-size: 16px;">Your appointment is at <strong>${displayTime}</strong></p>
+        <a href="${meetLink}" style="display: inline-block; background: white; color: #059669; padding: 15px 40px; border-radius: 8px; text-decoration: none; font-weight: 700; font-size: 18px; margin: 15px 0; box-shadow: 0 4px 12px rgba(0,0,0,0.2);">
+          🚀 JOIN MEETING NOW
+        </a>
+        <p style="margin-top: 20px; font-size: 14px; background: rgba(255,255,255,0.2); padding: 15px; border-radius: 8px;">
+          <strong>Meeting Link:</strong><br>
+          <a href="${meetLink}" style="color: white; word-break: break-all; font-size: 13px;">${meetLink}</a>
         </p>
+      </div>
+      ` : ''}
+      
+      ${appointment.consultationType === 'online' && !meetLink ? `
+      <div style="background: #fef3c7; border: 2px solid #f59e0b; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0;">
+        <h3 style="color: #92400e; margin-bottom: 10px;">⚠️ Meeting Link Not Available Yet</h3>
+        <p style="color: #78350f; font-size: 14px;">The Google Meet link will be sent to you shortly. Please check your email again in a few minutes.</p>
       </div>
       ` : ''}
 

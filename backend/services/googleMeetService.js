@@ -83,23 +83,41 @@ async function generateGoogleMeetLink(appointment) {
     const calendar = google.calendar({ version: 'v3', auth });
 
     // Parse appointment date and time with proper timezone handling
+    // The appointment.date is stored as a Date object, we need to extract the date part correctly
     const appointmentDate = new Date(appointment.date);
     const [hours, minutes] = (appointment.time || '10:00').split(':');
     
-    // Create date string in IST format for Google Calendar
-    const year = appointmentDate.getFullYear();
-    const month = String(appointmentDate.getMonth() + 1).padStart(2, '0');
-    const day = String(appointmentDate.getDate()).padStart(2, '0');
+    // IMPORTANT: Extract date components in IST timezone to avoid UTC conversion issues
+    // Use toLocaleDateString to get the correct date in IST
+    const istDateStr = appointmentDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); // Returns YYYY-MM-DD format
+    const [year, month, day] = istDateStr.split('-');
+    
     const timeStr = `${String(hours).padStart(2, '0')}:${String(minutes).padStart(2, '0')}:00`;
     
     // Format: YYYY-MM-DDTHH:MM:SS (local time, timezone specified separately)
     const startDateTime = `${year}-${month}-${day}T${timeStr}`;
-    const endDateTime = new Date(`${year}-${month}-${day}T${timeStr}`);
-    endDateTime.setMinutes(endDateTime.getMinutes() + 30);
-    const endTimeStr = `${year}-${month}-${day}T${String(endDateTime.getHours()).padStart(2, '0')}:${String(endDateTime.getMinutes()).padStart(2, '0')}:00`;
     
-    console.log(`📅 Appointment time: ${appointment.time} on ${year}-${month}-${day}`);
-    console.log(`   Start: ${startDateTime}, End: ${endTimeStr}`);
+    // Calculate end time (30 minutes after start)
+    const startHour = parseInt(hours);
+    const startMinute = parseInt(minutes);
+    let endHour = startHour;
+    let endMinute = startMinute + 30;
+    if (endMinute >= 60) {
+      endMinute -= 60;
+      endHour += 1;
+    }
+    if (endHour >= 24) {
+      endHour = 23;
+      endMinute = 59;
+    }
+    const endTimeStr = `${year}-${month}-${day}T${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}:00`;
+    
+    console.log(`📅 Appointment Details:`);
+    console.log(`   Original Date: ${appointment.date}`);
+    console.log(`   IST Date: ${istDateStr}`);
+    console.log(`   Selected Time: ${appointment.time}`);
+    console.log(`   Calendar Start: ${startDateTime} (Asia/Kolkata)`);
+    console.log(`   Calendar End: ${endTimeStr} (Asia/Kolkata)`);
 
     // Get doctor and patient info
     const doctorName = appointment.doctorId?.name || 'Doctor';
