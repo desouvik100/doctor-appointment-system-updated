@@ -40,6 +40,13 @@ function AuthPremium({ onLogin, onBack }) {
   const [otpVerified, setOtpVerified] = useState(false);
   const [otpSending, setOtpSending] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
+  
+  // Forgot password states
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [resetEmail, setResetEmail] = useState("");
+  const [resetOtp, setResetOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [resetStep, setResetStep] = useState(1); // 1=email, 2=otp+password
 
   // OTP timer countdown
   useEffect(() => {
@@ -95,6 +102,59 @@ function AuthPremium({ onLogin, onBack }) {
       }
     } catch (error) {
       toast.error(error.response?.data?.message || "Invalid OTP");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Forgot Password - Send OTP
+  const handleForgotPasswordSendOtp = async () => {
+    if (!resetEmail) {
+      toast.error("Please enter your email");
+      return;
+    }
+    setOtpSending(true);
+    try {
+      const response = await axios.post("/api/auth/forgot-password", { email: resetEmail });
+      if (response.data.success) {
+        toast.success("OTP sent to your email!");
+        setResetStep(2);
+        setOtpTimer(60);
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setOtpSending(false);
+    }
+  };
+
+  // Forgot Password - Reset with OTP
+  const handleResetPassword = async () => {
+    if (!resetOtp || resetOtp.length !== 6) {
+      toast.error("Please enter valid 6-digit OTP");
+      return;
+    }
+    if (!newPassword || newPassword.length < 6) {
+      toast.error("Password must be at least 6 characters");
+      return;
+    }
+    setLoading(true);
+    try {
+      const response = await axios.post("/api/auth/reset-password", {
+        email: resetEmail,
+        otp: resetOtp,
+        newPassword: newPassword
+      });
+      if (response.data.success) {
+        toast.success("Password reset successfully! Please login.");
+        setShowForgotPassword(false);
+        setResetStep(1);
+        setResetEmail("");
+        setResetOtp("");
+        setNewPassword("");
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || "Failed to reset password");
     } finally {
       setLoading(false);
     }
@@ -541,7 +601,7 @@ function AuthPremium({ onLogin, onBack }) {
 
             {isLogin && (
               <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '-8px' }}>
-                <button type="button" style={{
+                <button type="button" onClick={() => setShowForgotPassword(true)} style={{
                   background: 'none',
                   border: 'none',
                   color: 'var(--premium-primary)',
@@ -651,6 +711,41 @@ function AuthPremium({ onLogin, onBack }) {
           </div>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '400px', margin: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
+              <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600' }}>
+                <i className="fas fa-key" style={{ marginRight: '8px', color: '#6366f1' }}></i>
+                Reset Password
+              </h3>
+              <button onClick={() => { setShowForgotPassword(false); setResetStep(1); setResetEmail(""); setResetOtp(""); setNewPassword(""); }} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}>×</button>
+            </div>
+
+            {resetStep === 1 ? (
+              <>
+                <p style={{ color: '#64748b', marginBottom: '20px', fontSize: '14px' }}>Enter your email to receive a verification code.</p>
+                <input type="email" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} placeholder="Enter your email" style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', marginBottom: '16px', boxSizing: 'border-box' }} />
+                <button onClick={handleForgotPasswordSendOtp} disabled={otpSending} style={{ width: '100%', padding: '12px', background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                  {otpSending ? <><i className="fas fa-spinner fa-spin"></i> Sending...</> : 'Send OTP'}
+                </button>
+              </>
+            ) : (
+              <>
+                <p style={{ color: '#64748b', marginBottom: '20px', fontSize: '14px' }}>Enter the OTP sent to {resetEmail} and your new password.</p>
+                <input type="text" value={resetOtp} onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="Enter 6-digit OTP" maxLength={6} style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', marginBottom: '12px', boxSizing: 'border-box', letterSpacing: '4px', textAlign: 'center' }} />
+                <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password" style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', marginBottom: '16px', boxSizing: 'border-box' }} />
+                <button onClick={handleResetPassword} disabled={loading} style={{ width: '100%', padding: '12px', background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                  {loading ? <><i className="fas fa-spinner fa-spin"></i> Resetting...</> : 'Reset Password'}
+                </button>
+                <button onClick={() => setResetStep(1)} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: '#6366f1', fontSize: '14px', cursor: 'pointer', marginTop: '8px' }}>← Back to email</button>
+              </>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

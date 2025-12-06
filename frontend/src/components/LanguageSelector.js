@@ -10,24 +10,25 @@ const LanguageSelector = ({ variant = 'dropdown', className = '', style = {}, da
 
   const currentLang = languages.find(l => l.code === language) || languages[0];
 
-  // Determine button styles based on context (darkMode = light text on dark bg)
-  const buttonBg = darkMode ? 'rgba(255,255,255,0.2)' : 'rgba(99, 102, 241, 0.1)';
-  const buttonBgHover = darkMode ? 'rgba(255,255,255,0.3)' : 'rgba(99, 102, 241, 0.2)';
-  const buttonBorder = darkMode ? 'rgba(255,255,255,0.4)' : 'rgba(99, 102, 241, 0.3)';
-  const buttonColor = darkMode ? '#ffffff' : '#1e293b';
+  // Short codes for display
+  const shortCodes = { en: 'EN', hi: 'हि', bn: 'বা' };
 
-  // Calculate dropdown position when opening
+  // Dark mode = black button, Light mode = indigo button
+  const buttonBg = darkMode ? '#000000' : '#6366f1';
+  const buttonBgHover = darkMode ? '#1a1a1a' : '#4f46e5';
+  const buttonBorder = darkMode ? '#000000' : '#6366f1';
+  const buttonColor = '#ffffff';
+
   useEffect(() => {
     if (isOpen && buttonRef.current) {
       const rect = buttonRef.current.getBoundingClientRect();
       setDropdownPosition({
-        top: rect.bottom + 8,
+        top: rect.bottom + 4,
         right: window.innerWidth - rect.right
       });
     }
   }, [isOpen]);
 
-  // Close dropdown when clicking outside or pressing Escape
   useEffect(() => {
     const handleEscape = (e) => {
       if (e.key === 'Escape') setIsOpen(false);
@@ -40,74 +41,63 @@ const LanguageSelector = ({ variant = 'dropdown', className = '', style = {}, da
 
   if (variant === 'buttons') {
     return (
-      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', ...style }} className={className}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '2px', ...style }} className={className}>
         {languages.map((lang) => (
           <button
             key={lang.code}
             onClick={() => setLanguage(lang.code)}
             style={{
-              padding: '6px 12px',
-              fontSize: '13px',
-              fontWeight: '500',
-              borderRadius: '8px',
+              padding: '4px 8px',
+              fontSize: '11px',
+              fontWeight: '600',
+              borderRadius: '4px',
               border: 'none',
               cursor: 'pointer',
               transition: 'all 0.2s',
-              background: language === lang.code ? '#6366f1' : buttonBg,
+              background: language === lang.code ? '#6366f1' : 'transparent',
               color: language === lang.code ? '#fff' : buttonColor
             }}
           >
-            {lang.flag} {lang.nativeName}
+            {shortCodes[lang.code] || lang.code.toUpperCase()}
           </button>
         ))}
       </div>
     );
   }
 
-  // Dropdown menu rendered via portal to escape stacking context
   const dropdownMenu = isOpen ? createPortal(
     <>
-      {/* Backdrop - fixed to cover entire screen */}
       <div 
-        style={{ 
-          position: 'fixed', 
-          inset: 0, 
-          zIndex: 999998,
-          background: 'transparent'
-        }}
+        style={{ position: 'fixed', inset: 0, zIndex: 999998 }}
         onClick={() => setIsOpen(false)}
       />
-      {/* Dropdown - fixed position calculated from button */}
       <div style={{
         position: 'fixed',
         top: dropdownPosition.top,
         right: dropdownPosition.right,
         background: '#ffffff',
-        borderRadius: '12px',
-        boxShadow: '0 20px 50px rgba(0,0,0,0.25)',
+        borderRadius: '8px',
+        boxShadow: '0 10px 40px rgba(0,0,0,0.15)',
         border: '1px solid #e2e8f0',
         overflow: 'hidden',
         zIndex: 999999,
-        minWidth: '160px'
+        minWidth: '120px'
       }}>
         {languages.map((lang) => (
           <button
             key={lang.code}
-            onClick={() => {
-              setLanguage(lang.code);
-              setIsOpen(false);
-            }}
+            onClick={() => { setLanguage(lang.code); setIsOpen(false); }}
             style={{
               width: '100%',
               display: 'flex',
               alignItems: 'center',
-              gap: '12px',
-              padding: '12px 16px',
-              fontSize: '14px',
+              gap: '8px',
+              padding: '8px 12px',
+              fontSize: '13px',
               fontWeight: '500',
               border: 'none',
               cursor: 'pointer',
-              transition: 'all 0.2s',
+              transition: 'all 0.15s',
               background: language === lang.code ? '#eef2ff' : '#ffffff',
               color: language === lang.code ? '#6366f1' : '#334155',
               textAlign: 'left'
@@ -115,11 +105,9 @@ const LanguageSelector = ({ variant = 'dropdown', className = '', style = {}, da
             onMouseEnter={(e) => { if (language !== lang.code) e.currentTarget.style.background = '#f8fafc'; }}
             onMouseLeave={(e) => { if (language !== lang.code) e.currentTarget.style.background = '#ffffff'; }}
           >
-            <span style={{ fontSize: '18px' }}>{lang.flag}</span>
+            <span style={{ fontWeight: '600', minWidth: '24px' }}>{shortCodes[lang.code] || lang.code.toUpperCase()}</span>
             <span>{lang.nativeName}</span>
-            {language === lang.code && (
-              <i className="fas fa-check" style={{ marginLeft: 'auto', color: '#6366f1' }}></i>
-            )}
+            {language === lang.code && <i className="fas fa-check" style={{ marginLeft: 'auto', fontSize: '10px' }}></i>}
           </button>
         ))}
       </div>
@@ -135,13 +123,13 @@ const LanguageSelector = ({ variant = 'dropdown', className = '', style = {}, da
         style={{
           display: 'flex',
           alignItems: 'center',
-          gap: '8px',
-          padding: '8px 14px',
-          fontSize: '14px',
+          gap: '4px',
+          padding: '5px 10px',
+          fontSize: '12px',
           fontWeight: '600',
           background: buttonBg,
           border: `1px solid ${buttonBorder}`,
-          borderRadius: '8px',
+          borderRadius: '6px',
           cursor: 'pointer',
           transition: 'all 0.2s',
           color: buttonColor
@@ -149,9 +137,9 @@ const LanguageSelector = ({ variant = 'dropdown', className = '', style = {}, da
         onMouseEnter={(e) => { e.currentTarget.style.background = buttonBgHover; }}
         onMouseLeave={(e) => { e.currentTarget.style.background = buttonBg; }}
       >
-        <span style={{ fontSize: '18px' }}>{currentLang.flag}</span>
-        <span style={{ fontWeight: '600' }}>{currentLang.nativeName}</span>
-        <i className={`fas fa-chevron-${isOpen ? 'up' : 'down'}`} style={{ fontSize: '10px', opacity: 1 }}></i>
+        <i className="fas fa-globe" style={{ fontSize: '11px', opacity: 0.8 }}></i>
+        <span>{shortCodes[language] || language.toUpperCase()}</span>
+        <i className={`fas fa-chevron-${isOpen ? 'up' : 'down'}`} style={{ fontSize: '8px', opacity: 0.7 }}></i>
       </button>
       {dropdownMenu}
     </div>
