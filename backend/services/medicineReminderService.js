@@ -122,18 +122,23 @@ async function checkAndSendReminders() {
     today.setHours(0, 0, 0, 0);
 
     // Find all active medicines with email reminders enabled
+    // Note: times is an array of strings like ["08:00", "14:00", "20:00"]
     const medicines = await MedicineReminder.find({
       isActive: true,
       emailReminders: true,
-      times: currentTime,
       startDate: { $lte: now },
       $or: [
         { endDate: null },
         { endDate: { $gte: today } }
       ]
     }).populate('userId', 'name email');
+    
+    // Filter medicines that have the current time in their times array
+    const medicinesForCurrentTime = medicines.filter(m => 
+      Array.isArray(m.times) && m.times.includes(currentTime)
+    );
 
-    for (const medicine of medicines) {
+    for (const medicine of medicinesForCurrentTime) {
       if (!medicine.userId || !medicine.userId.email) {
         continue;
       }
