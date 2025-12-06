@@ -10,11 +10,17 @@ const Appointment = require('../models/Appointment');
 const getTodayString = () => new Date().toISOString().split('T')[0];
 
 // Get or create queue for a doctor
+// Doctor is automatically set as 'available' (host) when queue is created
 const getOrCreateQueue = async (doctorId, date = getTodayString()) => {
   let queue = await WaitingQueue.findOne({ doctorId, date });
   if (!queue) {
-    queue = new WaitingQueue({ doctorId, date });
+    queue = new WaitingQueue({ 
+      doctorId, 
+      date,
+      doctorStatus: 'available' // Doctor is automatically available as host
+    });
     await queue.save();
+    console.log(`Queue created for doctor ${doctorId} on ${date} - Doctor set as available (host)`);
   }
   return queue;
 };
@@ -151,6 +157,30 @@ router.post('/leave', async (req, res) => {
 });
 
 // ==================== DOCTOR ENDPOINTS ====================
+
+// Initialize doctor's queue (auto-sets as available/host)
+// Call this when doctor logs in or opens their dashboard
+router.post('/doctor/:doctorId/initialize', async (req, res) => {
+  try {
+    const queue = await getOrCreateQueue(req.params.doctorId);
+    
+    // If doctor was offline, set them as available
+    if (queue.doctorStatus === 'offline') {
+      queue.doctorStatus = 'available';
+      await queue.save();
+    }
+
+    res.json({
+      message: 'Queue initialized - Doctor is now available',
+      doctorStatus: queue.doctorStatus,
+      date: queue.date,
+      stats: queue.getStats()
+    });
+  } catch (error) {
+    console.error('Initialize queue error:', error);
+    res.status(500).json({ message: 'Failed to initialize queue', error: error.message });
+  }
+});
 
 // Get doctor's queue
 router.get('/doctor/:doctorId', async (req, res) => {

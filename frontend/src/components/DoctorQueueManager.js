@@ -18,6 +18,22 @@ const DoctorQueueManager = ({ doctorId, onStartConsultation, onClose }) => {
   const [loading, setLoading] = useState(true);
   const [actionLoading, setActionLoading] = useState(null);
 
+  // Initialize queue - auto-sets doctor as available (host)
+  const initializeQueue = useCallback(async () => {
+    try {
+      const response = await fetch(`${API_URL}/api/queue/doctor/${doctorId}/initialize`, {
+        method: 'POST'
+      });
+      if (response.ok) {
+        const data = await response.json();
+        setDoctorStatus(data.doctorStatus);
+        console.log('Queue initialized:', data.message);
+      }
+    } catch (error) {
+      console.error('Initialize queue error:', error);
+    }
+  }, [doctorId]);
+
   const fetchQueue = useCallback(async () => {
     try {
       const response = await fetch(`${API_URL}/api/queue/doctor/${doctorId}`);
@@ -39,10 +55,14 @@ const DoctorQueueManager = ({ doctorId, onStartConsultation, onClose }) => {
   }, [doctorId]);
 
   useEffect(() => {
-    fetchQueue();
+    // Initialize queue first (sets doctor as available/host)
+    initializeQueue().then(() => {
+      fetchQueue();
+    });
+    
     const interval = setInterval(fetchQueue, 10000); // Refresh every 10 seconds
     return () => clearInterval(interval);
-  }, [fetchQueue]);
+  }, [initializeQueue, fetchQueue]);
 
   const updateStatus = async (status) => {
     setActionLoading('status');

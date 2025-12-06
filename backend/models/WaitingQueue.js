@@ -42,11 +42,11 @@ const waitingQueueSchema = new mongoose.Schema({
     estimatedWaitMinutes: Number,
     notes: String
   }],
-  // Doctor status
+  // Doctor status - defaults to 'available' when queue is created
   doctorStatus: {
     type: String,
     enum: ['offline', 'available', 'busy', 'break', 'ready'],
-    default: 'offline'
+    default: 'available'
   },
   currentPatientId: {
     type: mongoose.Schema.Types.ObjectId,
