@@ -50,6 +50,13 @@ function AdminDashboard({ admin, onLogout }) {
   const [pendingClinics, setPendingClinics] = useState([]);
   const [pendingDoctors, setPendingDoctors] = useState([]);
 
+  // Doctor Wallet/Payout state
+  const [doctorWallets, setDoctorWallets] = useState([]);
+  const [walletSummary, setWalletSummary] = useState({});
+  const [showPayoutModal, setShowPayoutModal] = useState(false);
+  const [selectedWallet, setSelectedWallet] = useState(null);
+  const [payoutForm, setPayoutForm] = useState({ amount: '', method: 'bank_transfer', reference: '' });
+
   // Modal states
   const [showUserModal, setShowUserModal] = useState(false);
   const [showDoctorModal, setShowDoctorModal] = useState(false);
@@ -164,6 +171,51 @@ function AdminDashboard({ admin, onLogout }) {
     fetchDashboardData();
     fetchPendingApprovals();
   }, [fetchDashboardData, fetchPendingApprovals]);
+
+  // Fetch doctor wallets for payout management
+  const fetchDoctorWallets = async () => {
+    try {
+      const response = await axios.get('/api/wallet/admin/all');
+      if (response.data.success) {
+        setDoctorWallets(response.data.wallets);
+        setWalletSummary(response.data.summary);
+      }
+    } catch (error) {
+      console.error('Error fetching doctor wallets:', error);
+    }
+  };
+
+  // Process payout to doctor
+  const handleProcessPayout = async () => {
+    if (!selectedWallet || !payoutForm.amount) {
+      toast.error('Please enter payout amount');
+      return;
+    }
+    try {
+      const response = await axios.post('/api/wallet/admin/payout', {
+        doctorId: selectedWallet.doctor._id,
+        amount: parseFloat(payoutForm.amount),
+        method: payoutForm.method,
+        reference: payoutForm.reference,
+        adminId: admin?.id || admin?._id
+      });
+      if (response.data.success) {
+        toast.success(response.data.message);
+        setShowPayoutModal(false);
+        setPayoutForm({ amount: '', method: 'bank_transfer', reference: '' });
+        fetchDoctorWallets();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to process payout');
+    }
+  };
+
+  // Fetch wallets when payouts tab is active
+  useEffect(() => {
+    if (activeTab === 'payouts') {
+      fetchDoctorWallets();
+    }
+  }, [activeTab]);
 
   // Approve staff
   const handleApproveStaff = async (staffId, clinicId) => {
@@ -687,6 +739,9 @@ function AdminDashboard({ admin, onLogout }) {
               <span className="admin-tab__badge">{pendingStaff.length + pendingClinics.length + pendingDoctors.length}</span>
             )}
           </TabButton>
+          <TabButton tab="payouts" activeTab={activeTab} onClick={handleTabChange}>
+            <i className="fas fa-wallet"></i> Doctor Payouts
+          </TabButton>
         </div>
 
         {/* Content Sections */}
@@ -1156,6 +1211,106 @@ function AdminDashboard({ admin, onLogout }) {
                     </table>
                   </div>
                 )}
+              </div>
+            </>
+          )}
+
+          {/* Doctor Payouts Section */}
+          {activeTab === "payouts" && (
+            <>
+              <div className="admin-section__header">
+                <h2 className="admin-section__title">
+                  <div className="admin-section__icon" style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
+                    <i className="fas fa-wallet"></i>
+                  </div>
+                  Doctor Payouts & Earnings
+                </h2>
+              </div>
+
+              {/* Summary Cards */}
+              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                <div style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', padding: '1.5rem', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Pending Payouts</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>₹{walletSummary.totalPendingPayouts?.toLocaleString() || 0}</div>
+                </div>
+                <div style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', padding: '1.5rem', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Earnings (All Time)</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>₹{walletSummary.totalEarnings?.toLocaleString() || 0}</div>
+                </div>
+                <div style={{ background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)', color: 'white', padding: '1.5rem', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Paid Out</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>₹{walletSummary.totalPayouts?.toLocaleString() || 0}</div>
+                </div>
+                <div style={{ background: 'linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%)', color: 'white', padding: '1.5rem', borderRadius: '12px' }}>
+                  <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Doctors</div>
+                  <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>{walletSummary.totalDoctors || 0}</div>
+                </div>
+              </div>
+
+              {/* Doctor Wallets Table */}
+              <div className="admin-table-container">
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Doctor</th>
+                      <th>Email</th>
+                      <th>Specialization</th>
+                      <th>Total Earnings</th>
+                      <th>Pending Payout</th>
+                      <th>Total Paid</th>
+                      <th>Patients</th>
+                      <th>Bank Details</th>
+                      <th>Actions</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {doctorWallets.length === 0 ? (
+                      <tr>
+                        <td colSpan="9" style={{ textAlign: 'center', padding: '2rem', color: '#64748b' }}>
+                          <i className="fas fa-wallet" style={{ fontSize: '2rem', marginBottom: '0.5rem', opacity: 0.5 }}></i>
+                          <p>No doctor wallets found</p>
+                        </td>
+                      </tr>
+                    ) : (
+                      doctorWallets.map(wallet => (
+                        <tr key={wallet._id}>
+                          <td><strong>Dr. {wallet.doctor?.name || 'Unknown'}</strong></td>
+                          <td>{wallet.doctor?.email || 'N/A'}</td>
+                          <td>
+                            <span className="badge badge-info">{wallet.doctor?.specialization || 'N/A'}</span>
+                          </td>
+                          <td style={{ color: '#10b981', fontWeight: 'bold' }}>₹{wallet.totalEarnings?.toLocaleString()}</td>
+                          <td style={{ color: '#f59e0b', fontWeight: 'bold' }}>₹{wallet.pendingAmount?.toLocaleString()}</td>
+                          <td style={{ color: '#3b82f6' }}>₹{wallet.totalPayouts?.toLocaleString()}</td>
+                          <td>{wallet.stats?.completedAppointments || 0}</td>
+                          <td>
+                            {wallet.bankDetails?.accountNumber ? (
+                              <div style={{ fontSize: '0.75rem' }}>
+                                <div><strong>{wallet.bankDetails.bankName}</strong></div>
+                                <div>A/C: ****{wallet.bankDetails.accountNumber?.slice(-4)}</div>
+                                <div>IFSC: {wallet.bankDetails.ifscCode}</div>
+                                {wallet.bankDetails.upiId && <div>UPI: {wallet.bankDetails.upiId}</div>}
+                              </div>
+                            ) : (
+                              <span style={{ color: '#ef4444', fontSize: '0.75rem' }}>Not Added</span>
+                            )}
+                          </td>
+                          <td>
+                            <button 
+                              className="admin-action-btn"
+                              style={{ background: '#10b981', color: 'white' }}
+                              onClick={() => { setSelectedWallet(wallet); setShowPayoutModal(true); }}
+                              disabled={wallet.pendingAmount <= 0}
+                              title="Process Payout"
+                            >
+                              <i className="fas fa-money-bill-wave"></i>
+                            </button>
+                          </td>
+                        </tr>
+                      ))
+                    )}
+                  </tbody>
+                </table>
               </div>
             </>
           )}
@@ -1675,6 +1830,119 @@ function AdminDashboard({ admin, onLogout }) {
                   }}
                 >
                   Cancel
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Payout Modal */}
+      {showPayoutModal && selectedWallet && (
+        <div className="modal-overlay" onClick={() => setShowPayoutModal(false)}>
+          <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
+            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}>
+              <h3><i className="fas fa-money-bill-wave"></i> Process Payout</h3>
+              <button className="modal-close" onClick={() => setShowPayoutModal(false)} style={{ color: 'white' }}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body" style={{ padding: '1.5rem' }}>
+              <div style={{ background: '#f0fdf4', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                <h4 style={{ margin: 0, color: '#166534' }}>Dr. {selectedWallet.doctor?.name}</h4>
+                <p style={{ margin: '0.5rem 0 0', color: '#15803d', fontSize: '0.875rem' }}>{selectedWallet.doctor?.email}</p>
+                <div style={{ marginTop: '1rem', display: 'flex', gap: '1rem' }}>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#166534' }}>Pending Amount</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#166534' }}>₹{selectedWallet.pendingAmount?.toLocaleString()}</div>
+                  </div>
+                  <div>
+                    <div style={{ fontSize: '0.75rem', color: '#166534' }}>Total Earnings</div>
+                    <div style={{ fontSize: '1.25rem', fontWeight: 'bold', color: '#166534' }}>₹{selectedWallet.totalEarnings?.toLocaleString()}</div>
+                  </div>
+                </div>
+              </div>
+
+              {selectedWallet.bankDetails?.accountNumber ? (
+                <div style={{ background: '#f8fafc', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem' }}>
+                  <h5 style={{ margin: '0 0 0.5rem', color: '#334155' }}><i className="fas fa-university"></i> Bank Details</h5>
+                  <div style={{ fontSize: '0.875rem', color: '#64748b' }}>
+                    <p style={{ margin: '0.25rem 0' }}><strong>Name:</strong> {selectedWallet.bankDetails.accountHolderName}</p>
+                    <p style={{ margin: '0.25rem 0' }}><strong>Bank:</strong> {selectedWallet.bankDetails.bankName}</p>
+                    <p style={{ margin: '0.25rem 0' }}><strong>Account:</strong> {selectedWallet.bankDetails.accountNumber}</p>
+                    <p style={{ margin: '0.25rem 0' }}><strong>IFSC:</strong> {selectedWallet.bankDetails.ifscCode}</p>
+                    {selectedWallet.bankDetails.upiId && <p style={{ margin: '0.25rem 0' }}><strong>UPI:</strong> {selectedWallet.bankDetails.upiId}</p>}
+                  </div>
+                </div>
+              ) : (
+                <div style={{ background: '#fef2f2', padding: '1rem', borderRadius: '8px', marginBottom: '1.5rem', color: '#991b1b' }}>
+                  <i className="fas fa-exclamation-triangle"></i> Doctor has not added bank details yet
+                </div>
+              )}
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Payout Amount (₹)</label>
+                <input
+                  type="number"
+                  className="form-control"
+                  value={payoutForm.amount}
+                  onChange={(e) => setPayoutForm({...payoutForm, amount: e.target.value})}
+                  max={selectedWallet.pendingAmount}
+                  placeholder={`Max: ₹${selectedWallet.pendingAmount}`}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                />
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Payment Method</label>
+                <select
+                  className="form-control"
+                  value={payoutForm.method}
+                  onChange={(e) => setPayoutForm({...payoutForm, method: e.target.value})}
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                >
+                  <option value="bank_transfer">Bank Transfer (NEFT/IMPS)</option>
+                  <option value="upi">UPI</option>
+                  <option value="cash">Cash</option>
+                  <option value="other">Other</option>
+                </select>
+              </div>
+
+              <div className="form-group" style={{ marginBottom: '1.5rem' }}>
+                <label style={{ display: 'block', marginBottom: '0.5rem', fontWeight: '500' }}>Reference/Transaction ID</label>
+                <input
+                  type="text"
+                  className="form-control"
+                  value={payoutForm.reference}
+                  onChange={(e) => setPayoutForm({...payoutForm, reference: e.target.value})}
+                  placeholder="Enter transaction reference"
+                  style={{ width: '100%', padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                />
+              </div>
+
+              <div style={{ display: 'flex', gap: '1rem' }}>
+                <button
+                  onClick={() => setShowPayoutModal(false)}
+                  style={{ flex: 1, padding: '0.75rem', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}
+                >
+                  Cancel
+                </button>
+                <button
+                  onClick={handleProcessPayout}
+                  disabled={!payoutForm.amount || parseFloat(payoutForm.amount) <= 0}
+                  style={{ 
+                    flex: 1, 
+                    padding: '0.75rem', 
+                    borderRadius: '8px', 
+                    border: 'none', 
+                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
+                    color: 'white', 
+                    fontWeight: '600',
+                    cursor: 'pointer',
+                    opacity: (!payoutForm.amount || parseFloat(payoutForm.amount) <= 0) ? 0.5 : 1
+                  }}
+                >
+                  <i className="fas fa-check"></i> Process Payout
                 </button>
               </div>
             </div>
