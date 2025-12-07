@@ -313,16 +313,18 @@ router.post('/', async (req, res) => {
       console.log(`✅ Token generated for appointment ${appointment._id}: ${tokenResult.token}`);
     }
     
-    // Generate Google Meet link IMMEDIATELY for online consultations
+    // Generate Meet link IMMEDIATELY for online consultations
     if (appointment.consultationType === 'online') {
       try {
-        const { generateGoogleMeetLink } = require('../services/googleMeetService');
+        const { generateMeetingLink } = require('../services/googleMeetService');
         const { sendAppointmentEmail } = require('../services/emailService');
         
         console.log(`🔄 Generating Meet link immediately for appointment ${appointment._id}...`);
+        console.log(`📧 Patient email: ${user.email || 'NOT SET'}`);
+        console.log(`📧 Doctor email: ${doctor.email || 'NOT SET'}`);
         
-        // Generate the meet link
-        const meetResult = await generateGoogleMeetLink({
+        // Generate the meet link (tries Google Meet first, falls back to Jitsi)
+        const meetResult = await generateMeetingLink({
           ...appointment.toObject(),
           userId: user,
           doctorId: doctor
@@ -580,13 +582,15 @@ router.post('/:id/generate-meeting', async (req, res) => {
       appointment.generateJoinCode();
     }
 
-    // Generate Google Meet link
-    const { generateGoogleMeetLink } = require('../services/googleMeetService');
+    // Generate Meet link (tries Google Meet first, falls back to Jitsi)
+    const { generateMeetingLink } = require('../services/googleMeetService');
     const { sendAppointmentEmail } = require('../services/emailService');
     
     console.log(`🔄 Generating Meet link for appointment ${appointment._id}...`);
+    console.log(`📧 Patient email: ${appointment.userId?.email || 'NOT SET'}`);
+    console.log(`📧 Doctor email: ${appointment.doctorId?.email || 'NOT SET'}`);
     
-    const meetResult = await generateGoogleMeetLink(appointment);
+    const meetResult = await generateMeetingLink(appointment);
     
     if (meetResult.success) {
       appointment.googleMeetLink = meetResult.meetLink;

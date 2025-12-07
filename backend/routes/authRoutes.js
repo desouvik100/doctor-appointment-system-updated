@@ -1031,4 +1031,64 @@ router.post('/clinic/google-signin', async (req, res) => {
   }
 });
 
+// ============================================
+// TEST EMAIL ENDPOINT (for debugging)
+// ============================================
+router.post('/test-email', async (req, res) => {
+  try {
+    const { email } = req.body;
+    
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+    
+    console.log('📧 Testing email service...');
+    console.log(`   Target email: ${email}`);
+    console.log(`   EMAIL_USER configured: ${process.env.EMAIL_USER ? 'YES' : 'NO'}`);
+    console.log(`   EMAIL_PASS configured: ${process.env.EMAIL_PASS ? 'YES' : 'NO'}`);
+    
+    const { sendTestEmail } = require('../services/emailService');
+    await sendTestEmail(email);
+    
+    res.json({ 
+      success: true, 
+      message: `Test email sent to ${email}. Check your inbox!`,
+      config: {
+        emailUserConfigured: !!process.env.EMAIL_USER,
+        emailPassConfigured: !!process.env.EMAIL_PASS
+      }
+    });
+  } catch (error) {
+    console.error('❌ Test email failed:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Failed to send test email',
+      error: error.message,
+      config: {
+        emailUserConfigured: !!process.env.EMAIL_USER,
+        emailPassConfigured: !!process.env.EMAIL_PASS
+      }
+    });
+  }
+});
+
+// Check email and meet configuration status
+router.get('/config-status', async (req, res) => {
+  try {
+    const { getGoogleStatus } = require('../services/googleMeetService');
+    const googleStatus = getGoogleStatus();
+    
+    res.json({
+      email: {
+        configured: !!(process.env.EMAIL_USER && process.env.EMAIL_PASS),
+        user: process.env.EMAIL_USER ? process.env.EMAIL_USER.substring(0, 5) + '***' : 'NOT SET'
+      },
+      googleMeet: googleStatus,
+      frontendUrl: process.env.FRONTEND_URL || 'NOT SET'
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
+});
+
 module.exports = router;
