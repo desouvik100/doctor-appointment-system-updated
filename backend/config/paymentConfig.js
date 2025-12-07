@@ -1,8 +1,12 @@
 // Payment Configuration
 // Controls whether Razorpay payments are enabled or disabled
 
-const USE_RAZORPAY_PAYMENTS = process.env.USE_RAZORPAY_PAYMENTS === 'true' || 
-  (process.env.RAZORPAY_KEY_ID && process.env.RAZORPAY_KEY_SECRET);
+// Check if Razorpay is properly configured (keys must start with rzp_)
+const hasValidRazorpayKeys = process.env.RAZORPAY_KEY_ID && 
+  process.env.RAZORPAY_KEY_SECRET && 
+  process.env.RAZORPAY_KEY_ID.startsWith('rzp_');
+
+const USE_RAZORPAY_PAYMENTS = process.env.USE_RAZORPAY_PAYMENTS === 'true' || hasValidRazorpayKeys;
 
 module.exports = {
   // Razorpay Configuration

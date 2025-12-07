@@ -308,7 +308,7 @@ class RazorpayService {
   // Get config for frontend
   getConfig() {
     return {
-      paymentsEnabled: this.useRazorpay,
+      paymentsEnabled: Boolean(this.useRazorpay),
       keyId: this.useRazorpay ? RAZORPAY_KEY_ID : null,
       testMode: RAZORPAY_MODE === 'test',
       currency: this.currency,
