@@ -1,8 +1,10 @@
-import React, { useState, useEffect, useMemo, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "../api/config";
 import toast from 'react-hot-toast';
 import AdminChatbot from './AdminChatbot';
 import AdminEmailSender from './AdminEmailSender';
+import ThemeToggle from './ThemeToggle';
+import { exportAppointmentsToPDF } from '../utils/pdfExport';
 import '../styles/premium-saas.css';
 import '../styles/admin-dashboard-professional.css';
 
@@ -735,6 +737,7 @@ function AdminDashboard({ admin, onLogout }) {
                   {admin.name || 'Admin'}
                 </span>
               )}
+              <ThemeToggle compact />
               <button className="btn btn-primary" onClick={fetchDashboardData}>
                 <i className="fas fa-sync-alt"></i> Refresh
               </button>
@@ -929,6 +932,12 @@ function AdminDashboard({ admin, onLogout }) {
                   </div>
                   Appointments
                 </h2>
+                <button 
+                  className="btn btn-outline-primary"
+                  onClick={() => exportAppointmentsToPDF(appointments, 'All Appointments Report')}
+                >
+                  <i className="fas fa-file-pdf me-2"></i>Export PDF
+                </button>
               </div>
               
               <div className="admin-table-container">

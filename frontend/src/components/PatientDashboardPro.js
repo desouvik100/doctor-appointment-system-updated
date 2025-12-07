@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 import { useLanguage } from '../i18n/LanguageContext';
 import '../styles/premium-saas.css';
 import LanguageSelector from './LanguageSelector';
+import ThemeToggle from './ThemeToggle';
+import { exportAppointmentsToPDF } from '../utils/pdfExport';
 import BookingModal from './BookingModal';
 import AIAssistant from './AIAssistant';
 import FindMyDoctorWizard from './FindMyDoctorWizard';
@@ -238,6 +240,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
             <button onClick={() => setShowFindDoctorWizard(true)} className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300"><i className="fas fa-robot"></i><span className="text-sm">{language === 'bn' ? 'ডাক্তার খুঁজুন' : language === 'hi' ? 'डॉक्टर खोजें' : 'Find My Doctor'}</span></button>
             <button onClick={() => setActiveSection('doctors')} className="hidden sm:flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white font-bold rounded-2xl hover:shadow-xl hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none"><i className="fas fa-calendar-plus text-lg"></i><span className="text-base">{t('bookNow')}</span></button>
             <LanguageSelector />
+            <ThemeToggle compact />
             <button onClick={handleUpdateLocation} disabled={updatingLocation} className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center"><i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'} text-slate-600`}></i></button>
             <button onClick={() => setShowNotifications(true)} className="relative w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center">
               <i className="fas fa-bell text-slate-600"></i>
@@ -376,6 +379,18 @@ const PatientDashboardPro = ({ user, onLogout }) => {
           )}
           {activeSection === 'appointments' && (
             <div className="space-y-6">
+              <div className="flex justify-between items-center">
+                <h2 className="text-xl font-bold text-slate-800">{t('appointments')}</h2>
+                {appointments.length > 0 && (
+                  <button 
+                    onClick={() => exportAppointmentsToPDF(appointments, 'My Appointments')}
+                    className="px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-medium rounded-xl flex items-center gap-2 transition-colors"
+                  >
+                    <i className="fas fa-file-pdf text-red-500"></i>
+                    Export PDF
+                  </button>
+                )}
+              </div>
               {appointments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-calendar-times text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">No appointments yet</h3><p className="text-slate-500 mb-4">Book your first appointment</p><button onClick={() => setActiveSection('doctors')} className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg">Find Doctors</button></div>
               ) : (

@@ -4,6 +4,8 @@ import toast from 'react-hot-toast';
 import '../styles/premium-saas.css';
 import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSelector from './LanguageSelector';
+import ThemeToggle from './ThemeToggle';
+import { exportAppointmentsToPDF } from '../utils/pdfExport';
 
 const ClinicDashboardPro = ({ receptionist, onLogout }) => {
   const { t } = useLanguage();
@@ -255,6 +257,7 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
           <div className="flex items-center gap-4">
             <button className="lg:hidden w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center" onClick={() => setMobileSidebarOpen(true)}><i className="fas fa-bars text-slate-600"></i></button>
             <LanguageSelector />
+            <ThemeToggle compact />
             <div>
               <h1 className="text-lg font-bold text-slate-800">Welcome, {(receptionist?.name || 'Staff').split(' ')[0]}! 👋</h1>
               <p className="text-xs text-slate-500"><i className="fas fa-hospital text-cyan-500 mr-1"></i>{receptionist?.clinicName || 'Clinic'}</p>
@@ -375,10 +378,16 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
                     <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
                     <input type="text" placeholder="Search appointments..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-cyan-500" />
                   </div>
-                  <div className="flex gap-2 flex-wrap">
+                  <div className="flex gap-2 flex-wrap items-center">
                     {['all', 'pending', 'confirmed', 'completed', 'cancelled'].map(f => (
                       <button key={f} onClick={() => setFilter(f)} className={`px-4 py-2 rounded-xl text-sm font-medium transition-all ${filter === f ? 'bg-cyan-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'}`}>{f.charAt(0).toUpperCase() + f.slice(1)}</button>
                     ))}
+                    <button 
+                      onClick={() => exportAppointmentsToPDF(filteredAppointments, 'Clinic Appointments Report')}
+                      className="px-4 py-2 rounded-xl text-sm font-medium bg-red-50 text-red-600 hover:bg-red-100 transition-all flex items-center gap-2"
+                    >
+                      <i className="fas fa-file-pdf"></i>PDF
+                    </button>
                   </div>
                 </div>
               </div>

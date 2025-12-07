@@ -1,9 +1,11 @@
-import React, { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import axios from "../api/config";
 import toast from "react-hot-toast";
 import "./ClinicDashboard.css"; // Reuse clinic dashboard styles
 import "./DoctorDashboard.css"; // Doctor-specific styles
 import DoctorWallet from "./DoctorWallet";
+import ThemeToggle from "./ThemeToggle";
+import { exportAppointmentsToPDF } from "../utils/pdfExport";
 
 function DoctorDashboard({ doctor, onLogout }) {
   const [appointments, setAppointments] = useState([]);
@@ -224,9 +226,12 @@ function DoctorDashboard({ doctor, onLogout }) {
                     <p className="mb-0 opacity-75">{doctor.specialization} | {doctor.clinicId?.name || "Clinic"}</p>
                   </div>
                 </div>
-                <button className="btn btn-light" onClick={onLogout}>
-                  <i className="fas fa-sign-out-alt me-2"></i>Logout
-                </button>
+                <div className="d-flex align-items-center gap-3">
+                  <ThemeToggle compact />
+                  <button className="btn btn-light" onClick={onLogout}>
+                    <i className="fas fa-sign-out-alt me-2"></i>Logout
+                  </button>
+                </div>
               </div>
             </div>
           </div>
@@ -461,14 +466,22 @@ function DoctorDashboard({ doctor, onLogout }) {
       {activeTab === 'appointments' && (
       <div className="card">
         <div className="card-header">
-          <div className="d-flex justify-content-between align-items-center">
+          <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
             <h5 className="mb-0"><i className="fas fa-calendar-alt me-2"></i>Appointments</h5>
-            <div className="btn-group btn-group-sm">
-              {["today", "upcoming", "completed", "all"].map(f => (
-                <button key={f} className={`btn ${filter === f ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setFilter(f)}>
-                  {f.charAt(0).toUpperCase() + f.slice(1)}
-                </button>
-              ))}
+            <div className="d-flex align-items-center gap-2">
+              <div className="btn-group btn-group-sm">
+                {["today", "upcoming", "completed", "all"].map(f => (
+                  <button key={f} className={`btn ${filter === f ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setFilter(f)}>
+                    {f.charAt(0).toUpperCase() + f.slice(1)}
+                  </button>
+                ))}
+              </div>
+              <button 
+                className="btn btn-outline-secondary btn-sm"
+                onClick={() => exportAppointmentsToPDF(getFilteredAppointments(), `Dr. ${doctor.name} - Appointments`)}
+              >
+                <i className="fas fa-file-pdf me-1"></i>PDF
+              </button>
             </div>
           </div>
         </div>
