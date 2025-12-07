@@ -1,8 +1,8 @@
 const express = require('express');
 const router = express.Router();
-const paymentService = require('../services/paymentService');
+const razorpayService = require('../services/razorpayService');
 const Appointment = require('../models/Appointment');
-const { USE_PAYU_PAYMENTS, PAYU_MERCHANT_KEY, FRONTEND_URL } = require('../config/paymentConfig');
+const { USE_RAZORPAY_PAYMENTS, RAZORPAY_KEY_ID, FRONTEND_URL } = require('../config/paymentConfig');
 
 // Get payment calculation for appointment
 router.get('/calculate/:appointmentId', async (req, res) => {
@@ -14,11 +14,11 @@ router.get('/calculate/:appointmentId', async (req, res) => {
       return res.status(404).json({ message: 'Appointment not found' });
     }
     
-    const breakdown = paymentService.calculatePaymentBreakdown(appointment.doctorId.consultationFee);
+    const breakdown = razorpayService.calculatePaymentBreakdown(appointment.doctorId.consultationFee);
     
     res.json({
       success: true,
-      testMode: !USE_PAYU_PAYMENTS,
+      testMode: !USE_RAZORPAY_PAYMENTS,
       appointmentId,
       doctorName: appointment.doctorId.name,
       ...breakdown
@@ -29,7 +29,7 @@ router.get('/calculate/:appointmentId', async (req, res) => {
   }
 });
 
-// Create PayU Order
+// Create Razorpay Order
 router.post('/create-order', async (req, res) => {
   try {
     const { appointmentId, userId } = req.body;
@@ -38,9 +38,8 @@ router.post('/create-order', async (req, res) => {
       return res.status(400).json({ message: 'Appointment ID and User ID are required' });
     }
 
-    // If PayU is disabled, return test mode response
-    if (!USE_PAYU_PAYMENTS) {
-      // In test mode, directly confirm the appointment
+    // If Razorpay is disabled, return test mode response
+    if (!USE_RAZORPAY_PAYMENTS) {
       const appointment = await Appointment.findById(appointmentId);
       if (appointment) {
         appointment.paymentStatus = 'completed';
@@ -56,12 +55,12 @@ router.post('/create-order', async (req, res) => {
       return res.json({
         success: true,
         testMode: true,
-        message: 'PayU disabled - appointment confirmed in test mode (no payment required)',
+        message: 'Razorpay disabled - appointment confirmed in test mode',
         appointmentId
       });
     }
     
-    const orderData = await paymentService.createOrder(appointmentId, userId);
+    const orderData = await razorpayService.createOrder(appointmentId, userId);
     
     res.json({
       success: true,
@@ -78,49 +77,26 @@ router.post('/create-order', async (req, res) => {
   }
 });
 
-// PayU Success Callback (POST from PayU)
-router.post('/payu/success', async (req, res) => {
-  try {
-    console.log('PayU Success Callback:', req.body);
-    
-    const result = await paymentService.verifyPayment(req.body);
-    
-    // Redirect to frontend success page
-    res.redirect(result.redirectUrl);
-  } catch (error) {
-    console.error('PayU success callback error:', error);
-    res.redirect(`${FRONTEND_URL}/payment-failed?error=${encodeURIComponent(error.message)}`);
-  }
-});
-
-// PayU Failure Callback (POST from PayU)
-router.post('/payu/failure', async (req, res) => {
-  try {
-    console.log('PayU Failure Callback:', req.body);
-    
-    const result = await paymentService.verifyPayment(req.body);
-    
-    // Redirect to frontend failure page
-    res.redirect(result.redirectUrl);
-  } catch (error) {
-    console.error('PayU failure callback error:', error);
-    res.redirect(`${FRONTEND_URL}/payment-failed?error=${encodeURIComponent(error.message)}`);
-  }
-});
-
-// Legacy verify endpoint (for compatibility)
+// Verify Razorpay Payment
 router.post('/verify', async (req, res) => {
   try {
-    // If PayU is disabled, return test mode response
-    if (!USE_PAYU_PAYMENTS) {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, appointmentId } = req.body;
+    
+    // If Razorpay is disabled, return test mode response
+    if (!USE_RAZORPAY_PAYMENTS) {
       return res.json({
         success: true,
         testMode: true,
-        message: 'PayU disabled - payment verification skipped in test mode'
+        message: 'Razorpay disabled - payment verification skipped in test mode'
       });
     }
     
-    const result = await paymentService.verifyPayment(req.body);
+    const result = await razorpayService.verifyPayment({
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      appointmentId
+    });
     
     res.json({
       success: result.success,
@@ -141,8 +117,7 @@ router.post('/verify', async (req, res) => {
 router.get('/history/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    
-    const paymentHistory = await paymentService.getPaymentHistory(userId);
+    const paymentHistory = await razorpayService.getPaymentHistory(userId);
     
     res.json({
       success: true,
@@ -167,11 +142,11 @@ router.post('/refund', async (req, res) => {
       return res.status(400).json({ message: 'Appointment ID is required' });
     }
     
-    const result = await paymentService.processRefund(appointmentId, reason);
+    const result = await razorpayService.processRefund(appointmentId, reason);
     
     res.json({
       success: true,
-      message: 'Refund request submitted successfully',
+      message: 'Refund processed successfully',
       ...result
     });
   } catch (error) {
@@ -184,13 +159,13 @@ router.post('/refund', async (req, res) => {
   }
 });
 
-// Get PayU config for frontend
+// Get Razorpay config for frontend
 router.get('/config', (req, res) => {
-  const config = paymentService.getConfig();
+  const config = razorpayService.getConfig();
   res.json(config);
 });
 
-// Get payment status for an appointment (for mobile polling)
+// Get payment status for an appointment
 router.get('/status/:appointmentId', async (req, res) => {
   try {
     const { appointmentId } = req.params;
@@ -212,105 +187,6 @@ router.get('/status/:appointmentId', async (req, res) => {
   } catch (error) {
     console.error('Payment status error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
-  }
-});
-
-// Hosted checkout page for PayU (renders PayU form)
-router.get('/checkout', async (req, res) => {
-  const { appointmentId, userId } = req.query;
-  
-  if (!USE_PAYU_PAYMENTS) {
-    return res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head><title>Test Mode</title></head>
-      <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-        <h2>Payment Test Mode</h2>
-        <p>PayU is disabled. Payment auto-completed.</p>
-        <script>
-          setTimeout(() => {
-            window.location.href = '${FRONTEND_URL}/payment-success?appointmentId=${appointmentId}&status=success';
-          }, 2000);
-        </script>
-      </body>
-      </html>
-    `);
-  }
-
-  try {
-    const orderData = await paymentService.createOrder(appointmentId, userId);
-    const params = orderData.payuParams;
-    
-    // Render PayU checkout form that auto-submits
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head>
-        <title>HealthSync Payment</title>
-        <meta name="viewport" content="width=device-width, initial-scale=1">
-        <style>
-          body { font-family: -apple-system, BlinkMacSystemFont, sans-serif; margin: 0; padding: 20px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; }
-          .container { max-width: 400px; background: white; border-radius: 16px; padding: 40px; text-align: center; box-shadow: 0 20px 60px rgba(0,0,0,0.3); }
-          .logo { font-size: 28px; font-weight: bold; color: #4F46E5; margin-bottom: 10px; }
-          .subtitle { color: #6b7280; margin-bottom: 30px; }
-          .amount { font-size: 36px; font-weight: bold; color: #1f2937; margin: 20px 0; }
-          .amount span { font-size: 18px; color: #6b7280; }
-          .loading { display: flex; align-items: center; justify-content: center; gap: 10px; color: #4F46E5; margin: 20px 0; }
-          .spinner { width: 24px; height: 24px; border: 3px solid #e5e7eb; border-top-color: #4F46E5; border-radius: 50%; animation: spin 1s linear infinite; }
-          @keyframes spin { to { transform: rotate(360deg); } }
-          .secure { display: flex; align-items: center; justify-content: center; gap: 8px; color: #10b981; font-size: 14px; margin-top: 20px; }
-        </style>
-      </head>
-      <body>
-        <div class="container">
-          <div class="logo">🏥 HealthSync</div>
-          <div class="subtitle">Secure Payment Gateway</div>
-          <div class="amount"><span>₹</span>${params.amount}</div>
-          <div class="loading">
-            <div class="spinner"></div>
-            <span>Redirecting to PayU...</span>
-          </div>
-          <div class="secure">🔒 256-bit SSL Encrypted</div>
-        </div>
-        
-        <form id="payuForm" action="${orderData.payuUrl}" method="POST" style="display:none;">
-          <input type="hidden" name="key" value="${params.key}" />
-          <input type="hidden" name="txnid" value="${params.txnid}" />
-          <input type="hidden" name="amount" value="${params.amount}" />
-          <input type="hidden" name="productinfo" value="${params.productinfo}" />
-          <input type="hidden" name="firstname" value="${params.firstname}" />
-          <input type="hidden" name="email" value="${params.email}" />
-          <input type="hidden" name="phone" value="${params.phone}" />
-          <input type="hidden" name="surl" value="${params.surl}" />
-          <input type="hidden" name="furl" value="${params.furl}" />
-          <input type="hidden" name="hash" value="${params.hash}" />
-          <input type="hidden" name="udf1" value="${params.udf1}" />
-          <input type="hidden" name="udf2" value="${params.udf2}" />
-          <input type="hidden" name="udf3" value="${params.udf3}" />
-          <input type="hidden" name="udf4" value="${params.udf4}" />
-          <input type="hidden" name="udf5" value="${params.udf5 || ''}" />
-        </form>
-        
-        <script>
-          setTimeout(() => {
-            document.getElementById('payuForm').submit();
-          }, 1500);
-        </script>
-      </body>
-      </html>
-    `);
-  } catch (error) {
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head><title>Error</title></head>
-      <body style="font-family: sans-serif; text-align: center; padding: 50px;">
-        <h2>Payment Error</h2>
-        <p>${error.message}</p>
-        <a href="${FRONTEND_URL}">Go Back</a>
-      </body>
-      </html>
-    `);
   }
 });
 
