@@ -1091,4 +1091,86 @@ router.get('/config-status', async (req, res) => {
   }
 });
 
+// ============================================
+// CREATE TEST USER FOR RAZORPAY VERIFICATION
+// ============================================
+router.post('/create-test-user', async (req, res) => {
+  try {
+    const { secretKey } = req.body;
+    
+    // Simple security check - require a secret key
+    if (secretKey !== 'razorpay-verification-2024') {
+      return res.status(403).json({ success: false, message: 'Invalid secret key' });
+    }
+    
+    const bcrypt = require('bcryptjs');
+    
+    // Test User Credentials
+    const TEST_USER = {
+      name: 'Razorpay Test User',
+      email: 'testuser@healthsync.com',
+      password: 'Test@123456',
+      phone: '+91-9999999999',
+      role: 'patient',
+      isVerified: true,
+      address: {
+        street: '123 Test Street',
+        city: 'Bankura',
+        state: 'West Bengal',
+        pincode: '722101',
+        country: 'India'
+      },
+      dateOfBirth: new Date('1990-01-15'),
+      gender: 'male',
+      bloodGroup: 'O+',
+      emergencyContact: {
+        name: 'Emergency Contact',
+        phone: '+91-8888888888',
+        relationship: 'Family'
+      }
+    };
+    
+    // Check if test user already exists
+    const existingUser = await User.findOne({ email: TEST_USER.email });
+    
+    if (existingUser) {
+      return res.json({
+        success: true,
+        message: 'Test user already exists',
+        credentials: {
+          email: 'testuser@healthsync.com',
+          password: 'Test@123456'
+        }
+      });
+    }
+    
+    // Hash password
+    const salt = await bcrypt.genSalt(10);
+    const hashedPassword = await bcrypt.hash(TEST_USER.password, salt);
+    
+    // Create test user
+    const testUser = new User({
+      ...TEST_USER,
+      password: hashedPassword
+    });
+    
+    await testUser.save();
+    
+    console.log('✅ Test user created for Razorpay verification');
+    
+    res.json({
+      success: true,
+      message: 'Test user created successfully',
+      credentials: {
+        email: 'testuser@healthsync.com',
+        password: 'Test@123456'
+      }
+    });
+    
+  } catch (error) {
+    console.error('❌ Error creating test user:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
