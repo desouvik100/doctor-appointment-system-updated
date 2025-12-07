@@ -161,6 +161,7 @@ app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/export', require('./routes/exportRoutes'));
 app.use('/api/invoices', require('./routes/invoiceRoutes'));
 app.use('/api/wallet', require('./routes/walletRoutes'));
+app.use('/api/admin/email', require('./routes/adminEmailRoutes'));
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');

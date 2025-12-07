@@ -2,6 +2,7 @@ import React, { useState, useEffect, useMemo, useCallback } from "react";
 import axios from "../api/config";
 import toast from 'react-hot-toast';
 import AdminChatbot from './AdminChatbot';
+import AdminEmailSender from './AdminEmailSender';
 import '../styles/premium-saas.css';
 import '../styles/admin-dashboard-professional.css';
 
@@ -780,6 +781,9 @@ function AdminDashboard({ admin, onLogout }) {
           <TabButton tab="payouts" activeTab={activeTab} onClick={handleTabChange}>
             <i className="fas fa-wallet"></i> Doctor Payouts
           </TabButton>
+          <TabButton tab="email" activeTab={activeTab} onClick={handleTabChange}>
+            <i className="fas fa-envelope"></i> Send Email
+          </TabButton>
         </div>
 
         {/* Content Sections */}
@@ -1437,6 +1441,21 @@ function AdminDashboard({ admin, onLogout }) {
                   </tbody>
                 </table>
               </div>
+            </>
+          )}
+
+          {/* Email Section */}
+          {activeTab === "email" && (
+            <>
+              <div className="admin-section__header">
+                <h2 className="admin-section__title">
+                  <div className="admin-section__icon">
+                    <i className="fas fa-envelope"></i>
+                  </div>
+                  Send Email
+                </h2>
+              </div>
+              <AdminEmailSender />
             </>
           )}
         </div>
