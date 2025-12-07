@@ -16,6 +16,11 @@ const BookingModal = ({ doctor, user, onClose, onSuccess }) => {
   const [reason, setReason] = useState('');
   const [bookedTimes, setBookedTimes] = useState([]);
   const [availability, setAvailability] = useState(null);
+  
+  // Payment state
+  const [paymentConfig, setPaymentConfig] = useState(null);
+  const [showPayment, setShowPayment] = useState(false);
+  const [appointmentData, setAppointmentData] = useState(null);
 
   // Get minimum date (today)
   const getMinDate = () => {
@@ -30,12 +35,27 @@ const BookingModal = ({ doctor, user, onClose, onSuccess }) => {
     return maxDate.toISOString().split('T')[0];
   };
 
+  // Fetch payment config on mount
+  useEffect(() => {
+    fetchPaymentConfig();
+  }, []);
+
   // Fetch booked times when date changes
   useEffect(() => {
     if (selectedDate && doctor?._id) {
       fetchBookedTimes();
     }
   }, [selectedDate, doctor]);
+
+  const fetchPaymentConfig = async () => {
+    try {
+      const response = await axios.get('/api/payments/config');
+      setPaymentConfig(response.data);
+      console.log('Payment config:', response.data);
+    } catch (error) {
+      console.error('Error fetching payment config:', error);
+    }
+  };
 
   // Check availability when time changes
   useEffect(() => {
@@ -119,7 +139,7 @@ const BookingModal = ({ doctor, user, onClose, onSuccess }) => {
     try {
       setLoading(true);
       
-      const appointmentData = {
+      const appointmentPayload = {
         userId: user.id,
         doctorId: doctor._id,
         clinicId: doctor.clinicId?._id || doctor.clinicId,
@@ -129,24 +149,123 @@ const BookingModal = ({ doctor, user, onClose, onSuccess }) => {
         consultationType
       };
 
-      const response = await axios.post('/api/appointments', appointmentData);
+      const response = await axios.post('/api/appointments', appointmentPayload);
       
-      toast.success('Appointment booked successfully!');
-      
-      if (consultationType === 'online') {
-        toast.success('Google Meet link will be sent 18 minutes before your appointment', {
-          duration: 5000,
-          icon: '🎥'
-        });
+      // Check if payment is enabled
+      if (paymentConfig?.paymentsEnabled && paymentConfig?.keyId) {
+        // Store appointment data and show payment
+        setAppointmentData(response.data);
+        setShowPayment(true);
+        setLoading(false);
+      } else {
+        // No payment required - complete booking
+        toast.success('Appointment booked successfully!');
+        
+        if (consultationType === 'online') {
+          toast.success('Meet link will be sent to your email', {
+            duration: 5000,
+            icon: '🎥'
+          });
+        }
+        
+        onSuccess(response.data);
+        onClose();
       }
-      
-      onSuccess(response.data);
-      onClose();
       
     } catch (error) {
       console.error('Error booking appointment:', error);
       toast.error(error.response?.data?.message || 'Failed to book appointment');
-    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Handle Razorpay payment
+  const handlePayment = async () => {
+    if (!appointmentData) return;
+    
+    try {
+      setLoading(true);
+      
+      // Create Razorpay order
+      const orderResponse = await axios.post('/api/payments/create-order', {
+        appointmentId: appointmentData._id,
+        userId: user.id
+      });
+      
+      if (orderResponse.data.testMode) {
+        // Test mode - payment skipped
+        toast.success('Appointment confirmed!');
+        onSuccess(appointmentData);
+        onClose();
+        return;
+      }
+      
+      const order = orderResponse.data;
+      
+      // Open Razorpay checkout
+      const options = {
+        key: order.keyId,
+        amount: order.amountInPaise,
+        currency: order.currency,
+        name: 'HealthSync',
+        description: `Consultation with Dr. ${doctor.name}`,
+        order_id: order.orderId,
+        handler: async function (response) {
+          try {
+            // Verify payment
+            const verifyResponse = await axios.post('/api/payments/verify', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              appointmentId: appointmentData._id
+            });
+            
+            if (verifyResponse.data.success) {
+              toast.success('Payment successful! Appointment confirmed.');
+              if (consultationType === 'online') {
+                toast.success('Meet link will be sent to your email', {
+                  duration: 5000,
+                  icon: '🎥'
+                });
+              }
+              onSuccess(appointmentData);
+              onClose();
+            } else {
+              toast.error('Payment verification failed');
+            }
+          } catch (err) {
+            console.error('Payment verification error:', err);
+            toast.error('Payment verification failed');
+          }
+        },
+        prefill: {
+          name: user.name,
+          email: user.email,
+          contact: user.phone || ''
+        },
+        theme: {
+          color: '#6366f1'
+        },
+        modal: {
+          ondismiss: function() {
+            setLoading(false);
+            toast.error('Payment cancelled');
+          }
+        }
+      };
+      
+      const razorpay = new window.Razorpay(options);
+      razorpay.on('payment.failed', function (response) {
+        console.error('Payment failed:', response.error);
+        toast.error(response.error.description || 'Payment failed');
+        setLoading(false);
+      });
+      razorpay.open();
+      setLoading(false);
+      
+    } catch (error) {
+      console.error('Payment error:', error);
+      toast.error('Failed to initiate payment');
       setLoading(false);
     }
   };
@@ -479,11 +598,33 @@ const BookingModal = ({ doctor, user, onClose, onSuccess }) => {
                     </div>
                   </div>
 
-                  <div className="booking-modal__test-mode">
-                    <i className="fas fa-flask"></i>
-                    <span>Test Mode: Payment will be skipped</span>
-                  </div>
+                  {paymentConfig?.paymentsEnabled && paymentConfig?.keyId ? (
+                    <div className="booking-modal__payment-enabled">
+                      <i className="fas fa-lock"></i>
+                      <span>Secure payment via Razorpay</span>
+                    </div>
+                  ) : (
+                    <div className="booking-modal__test-mode">
+                      <i className="fas fa-flask"></i>
+                      <span>Test Mode: Payment will be skipped</span>
+                    </div>
+                  )}
                 </div>
+              </div>
+            </div>
+          )}
+
+          {/* Payment Step */}
+          {showPayment && appointmentData && (
+            <div className="booking-modal__payment-step">
+              <div className="booking-modal__payment-success">
+                <i className="fas fa-check-circle"></i>
+                <h3>Appointment Created!</h3>
+                <p>Please complete payment to confirm your booking</p>
+              </div>
+              <div className="booking-modal__payment-amount">
+                <span>Amount to Pay</span>
+                <span className="amount">₹{totalAmount}</span>
               </div>
             </div>
           )}
@@ -491,7 +632,7 @@ const BookingModal = ({ doctor, user, onClose, onSuccess }) => {
 
         {/* Footer */}
         <div className="booking-modal__footer">
-          {step > 1 && (
+          {step > 1 && !showPayment && (
             <button
               type="button"
               className="booking-modal__btn booking-modal__btn--secondary"
@@ -502,7 +643,26 @@ const BookingModal = ({ doctor, user, onClose, onSuccess }) => {
             </button>
           )}
           
-          {step < 3 ? (
+          {showPayment ? (
+            <button
+              type="button"
+              className="booking-modal__btn booking-modal__btn--razorpay"
+              onClick={handlePayment}
+              disabled={loading}
+            >
+              {loading ? (
+                <>
+                  <i className="fas fa-spinner fa-spin"></i>
+                  Processing...
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-credit-card"></i>
+                  Pay ₹{totalAmount} with Razorpay
+                </>
+              )}
+            </button>
+          ) : step < 3 ? (
             <button
               type="button"
               className="booking-modal__btn booking-modal__btn--primary"
@@ -530,7 +690,7 @@ const BookingModal = ({ doctor, user, onClose, onSuccess }) => {
               ) : (
                 <>
                   <i className="fas fa-check"></i>
-                  Confirm Booking
+                  {paymentConfig?.paymentsEnabled ? 'Proceed to Payment' : 'Confirm Booking'}
                 </>
               )}
             </button>
