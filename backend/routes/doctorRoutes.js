@@ -2,7 +2,28 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const Doctor = require('../models/Doctor');
 const Clinic = require('../models/Clinic');
+const aiSecurityService = require('../services/aiSecurityService');
 const router = express.Router();
+
+// Security helper - log doctor account operations
+const logDoctorOperation = async (req, action, doctor, details = {}) => {
+  try {
+    await aiSecurityService.analyzeActivity({
+      userId: doctor?._id,
+      userType: 'Doctor',
+      userName: doctor?.name,
+      userEmail: doctor?.email,
+      action: action,
+      endpoint: req.originalUrl,
+      method: req.method,
+      ipAddress: req.ip || req.headers['x-forwarded-for'],
+      userAgent: req.headers['user-agent'],
+      requestBody: { action, ...details }
+    });
+  } catch (error) {
+    console.error('Security logging error:', error);
+  }
+};
 
 // Get doctors summary (statistics)
 router.get('/summary', async (req, res) => {
@@ -246,6 +267,9 @@ router.put('/:id', async (req, res) => {
 // Delete doctor (soft delete)
 router.delete('/:id', async (req, res) => {
   try {
+    // Get doctor before deletion for logging
+    const doctorToDelete = await Doctor.findById(req.params.id);
+    
     const doctor = await Doctor.findByIdAndUpdate(
       req.params.id,
       { isActive: false },
@@ -255,6 +279,9 @@ router.delete('/:id', async (req, res) => {
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
+
+    // Log doctor deletion for security monitoring
+    await logDoctorOperation(req, 'delete_user', doctorToDelete, { action: 'deactivate' });
 
     res.json({ message: 'Doctor deactivated successfully' });
   } catch (error) {

@@ -199,14 +199,40 @@ const SecurityMonitor = ({ adminId }) => {
   };
 
   // Force logout
-  const handleForceLogout = async (userId) => {
+  const handleForceLogout = async (userId, reason) => {
     try {
-      const response = await axios.post('/api/security/force-logout', { userId, reason: 'Security concern' });
+      const response = await axios.post('/api/security/force-logout', { userId, reason: reason || 'Security concern' });
       if (response.data.success) {
-        toast.success('User will be logged out');
+        toast.success('User logged out and notified via email');
       }
     } catch (error) {
       toast.error('Failed to force logout');
+    }
+  };
+
+  // Unsuspend user
+  const handleUnsuspendUser = async (userId) => {
+    try {
+      const response = await axios.post('/api/security/unsuspend-user', { userId, adminId });
+      if (response.data.success) {
+        toast.success('User unsuspended and notified via email');
+        fetchAlerts();
+      }
+    } catch (error) {
+      toast.error('Failed to unsuspend user');
+    }
+  };
+
+  // Require password reset
+  const handleRequirePasswordReset = async (userId, reason) => {
+    try {
+      const response = await axios.post('/api/security/require-password-reset', { userId, reason, adminId });
+      if (response.data.success) {
+        toast.success('Password reset required and user notified via email');
+        fetchAlerts();
+      }
+    } catch (error) {
+      toast.error('Failed to require password reset');
     }
   };
 
@@ -511,10 +537,17 @@ const SecurityMonitor = ({ adminId }) => {
               id="logoutUserId"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-3"
             />
+            <input
+              type="text"
+              placeholder="Reason for logout"
+              id="logoutReason"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-3"
+            />
             <button
               onClick={() => {
                 const userId = document.getElementById('logoutUserId').value;
-                if (userId) handleForceLogout(userId);
+                const reason = document.getElementById('logoutReason').value;
+                if (userId) handleForceLogout(userId, reason);
               }}
               className="w-full py-2 bg-orange-600 text-white font-medium rounded-lg hover:bg-orange-700"
             >
@@ -547,6 +580,59 @@ const SecurityMonitor = ({ adminId }) => {
               className="w-full py-2 bg-purple-600 text-white font-medium rounded-lg hover:bg-purple-700"
             >
               Block IP
+            </button>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+            <h3 className="font-semibold text-slate-800 mb-4">
+              <i className="fas fa-user-check text-green-600 mr-2"></i>
+              Unsuspend User
+            </h3>
+            <p className="text-sm text-slate-500 mb-4">Restore a suspended user account.</p>
+            <input
+              type="text"
+              placeholder="Enter User ID"
+              id="unsuspendUserId"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-3"
+            />
+            <button
+              onClick={() => {
+                const userId = document.getElementById('unsuspendUserId').value;
+                if (userId) handleUnsuspendUser(userId);
+              }}
+              className="w-full py-2 bg-green-600 text-white font-medium rounded-lg hover:bg-green-700"
+            >
+              Unsuspend User
+            </button>
+          </div>
+
+          <div className="bg-white rounded-xl p-6 border border-slate-200 shadow-sm">
+            <h3 className="font-semibold text-slate-800 mb-4">
+              <i className="fas fa-key text-indigo-600 mr-2"></i>
+              Require Password Reset
+            </h3>
+            <p className="text-sm text-slate-500 mb-4">Force a user to reset their password on next login.</p>
+            <input
+              type="text"
+              placeholder="Enter User ID"
+              id="resetUserId"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-3"
+            />
+            <input
+              type="text"
+              placeholder="Reason for password reset"
+              id="resetReason"
+              className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-3"
+            />
+            <button
+              onClick={() => {
+                const userId = document.getElementById('resetUserId').value;
+                const reason = document.getElementById('resetReason').value;
+                if (userId) handleRequirePasswordReset(userId, reason);
+              }}
+              className="w-full py-2 bg-indigo-600 text-white font-medium rounded-lg hover:bg-indigo-700"
+            >
+              Require Password Reset
             </button>
           </div>
 

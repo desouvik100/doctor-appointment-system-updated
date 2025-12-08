@@ -2,7 +2,35 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Clinic = require('../models/Clinic');
+const aiSecurityService = require('../services/aiSecurityService');
 const router = express.Router();
+
+// Security helper - log account operations
+const logAccountOperation = async (req, action, targetUser, details = {}) => {
+  try {
+    // Get admin info from request (if available)
+    const adminId = req.body?.adminId || req.headers['x-admin-id'];
+    
+    await aiSecurityService.analyzeActivity({
+      userId: adminId,
+      userType: 'Admin',
+      userName: 'Admin',
+      action: action,
+      endpoint: req.originalUrl,
+      method: req.method,
+      ipAddress: req.ip || req.headers['x-forwarded-for'],
+      userAgent: req.headers['user-agent'],
+      requestBody: {
+        action,
+        targetUserId: targetUser?._id,
+        targetUserEmail: targetUser?.email,
+        ...details
+      }
+    });
+  } catch (error) {
+    console.error('Security logging error:', error);
+  }
+};
 
 // Get all users (Admin only)
 router.get('/', async (req, res) => {
@@ -80,6 +108,9 @@ router.post('/', async (req, res) => {
 
     await user.save();
 
+    // Log account creation for security monitoring
+    await logAccountOperation(req, 'create_user', user, { role: user.role });
+
     const populatedUser = await User.findById(user._id)
       .populate('clinicId', 'name address city phone');
 
@@ -128,6 +159,9 @@ router.put('/:id', async (req, res) => {
 // Delete user (soft delete)
 router.delete('/:id', async (req, res) => {
   try {
+    // Get user before deletion for logging
+    const userToDelete = await User.findById(req.params.id);
+    
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { isActive: false },
@@ -138,12 +172,12 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Log account deletion for security monitoring
+    await logAccountOperation(req, 'delete_user', userToDelete, { action: 'deactivate' });
     res.json({ message: 'User deactivated successfully' });
   } catch (error) {
     console.error('Error deleting user:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
-
 module.exports = router;
-

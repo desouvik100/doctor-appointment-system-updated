@@ -318,23 +318,77 @@ router.post('/suspend-user', async (req, res) => {
     
     const User = require('../models/User');
     const Doctor = require('../models/Doctor');
+    const { sendEmail } = require('../services/emailService');
     
-    // Try to suspend in both collections
-    await User.findByIdAndUpdate(userId, {
-      isActive: false,
-      suspendedAt: new Date(),
-      suspendReason: reason || 'Suspended by admin'
-    });
+    // Try to find user in both collections
+    let user = await User.findById(userId);
+    let userType = 'patient';
     
-    await Doctor.findByIdAndUpdate(userId, {
-      isActive: false,
-      suspendedAt: new Date(),
-      suspendReason: reason || 'Suspended by admin'
-    });
+    if (!user) {
+      user = await Doctor.findById(userId);
+      userType = 'doctor';
+    }
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Suspend the user
+    if (userType === 'doctor') {
+      await Doctor.findByIdAndUpdate(userId, {
+        isActive: false,
+        suspendedAt: new Date(),
+        suspendReason: reason || 'Suspended by admin'
+      });
+    } else {
+      await User.findByIdAndUpdate(userId, {
+        isActive: false,
+        suspendedAt: new Date(),
+        suspendReason: reason || 'Suspended by admin'
+      });
+    }
+
+    // Send email notification to user
+    if (user.email) {
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: '⚠️ Account Suspended - HealthSync',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0;">⚠️ Account Suspended</h1>
+              </div>
+              <div style="background: #f8f9fa; padding: 20px; border: 1px solid #e9ecef;">
+                <p>Dear ${user.name},</p>
+                <p>Your HealthSync account has been <strong style="color: #ef4444;">suspended</strong> due to security concerns.</p>
+                <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #ef4444;">
+                  <p style="margin: 5px 0;"><strong>Reason:</strong> ${reason || 'Security violation detected'}</p>
+                  <p style="margin: 5px 0;"><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+                </div>
+                <p>If you believe this is a mistake, please contact our support team immediately.</p>
+                <p style="color: #666; font-size: 12px; margin-top: 20px;">
+                  This action was taken to protect your account and our platform's security.
+                </p>
+              </div>
+              <div style="background: #343a40; padding: 15px; border-radius: 0 0 10px 10px; text-align: center;">
+                <p style="color: #adb5bd; margin: 0; font-size: 12px;">HealthSync Security Team</p>
+              </div>
+            </div>
+          `
+        });
+        console.log(`📧 Suspension email sent to ${user.email}`);
+      } catch (emailError) {
+        console.error('Error sending suspension email:', emailError);
+      }
+    }
 
     // Create alert
     await aiSecurityService.createAlert({
       userId,
+      userType: userType === 'doctor' ? 'Doctor' : 'User',
+      userName: user.name,
+      userEmail: user.email,
       activityType: 'account_manipulation',
       severity: 'high',
       confidenceScore: 100,
@@ -342,7 +396,7 @@ router.post('/suspend-user', async (req, res) => {
       details: { action: 'manual_suspend', adminId }
     });
 
-    res.json({ success: true, message: 'User suspended' });
+    res.json({ success: true, message: 'User suspended and notified via email' });
   } catch (error) {
     console.error('Error suspending user:', error);
     res.status(500).json({ success: false, message: 'Failed to suspend user' });
@@ -357,8 +411,91 @@ router.post('/unsuspend-user', async (req, res) => {
       return res.status(400).json({ success: false, message: 'User ID required' });
     }
     
-    await aiSecurityService.unsuspendUser(userId, adminId);
-    res.json({ success: true, message: 'User unsuspended' });
+    const User = require('../models/User');
+    const Doctor = require('../models/Doctor');
+    const { sendEmail } = require('../services/emailService');
+    
+    // Try to find user in both collections
+    let user = await User.findById(userId);
+    let userType = 'patient';
+    
+    if (!user) {
+      user = await Doctor.findById(userId);
+      userType = 'doctor';
+    }
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Unsuspend the user
+    if (userType === 'doctor') {
+      await Doctor.findByIdAndUpdate(userId, {
+        isActive: true,
+        $unset: { suspendedAt: 1, suspendReason: 1 }
+      });
+    } else {
+      await User.findByIdAndUpdate(userId, {
+        isActive: true,
+        $unset: { suspendedAt: 1, suspendReason: 1 }
+      });
+    }
+
+    // Send email notification to user
+    if (user.email) {
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: '✅ Account Restored - HealthSync',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0;">✅ Account Restored</h1>
+              </div>
+              <div style="background: #f8f9fa; padding: 20px; border: 1px solid #e9ecef;">
+                <p>Dear ${user.name},</p>
+                <p>Great news! Your HealthSync account has been <strong style="color: #10b981;">restored</strong> and is now active again.</p>
+                <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #10b981;">
+                  <p style="margin: 5px 0;"><strong>Status:</strong> Active</p>
+                  <p style="margin: 5px 0;"><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+                </div>
+                <p>You can now log in and access all features of your account.</p>
+                <div style="text-align: center; margin: 20px 0;">
+                  <a href="${process.env.FRONTEND_URL || 'https://healthsync.com'}/login" 
+                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                    Login to Your Account
+                  </a>
+                </div>
+                <p style="color: #666; font-size: 12px; margin-top: 20px;">
+                  Thank you for your patience. If you have any questions, please contact our support team.
+                </p>
+              </div>
+              <div style="background: #343a40; padding: 15px; border-radius: 0 0 10px 10px; text-align: center;">
+                <p style="color: #adb5bd; margin: 0; font-size: 12px;">HealthSync Security Team</p>
+              </div>
+            </div>
+          `
+        });
+        console.log(`📧 Account restored email sent to ${user.email}`);
+      } catch (emailError) {
+        console.error('Error sending unsuspend email:', emailError);
+      }
+    }
+
+    // Log the action
+    await aiSecurityService.createAlert({
+      userId,
+      userType: userType === 'doctor' ? 'Doctor' : 'User',
+      userName: user.name,
+      userEmail: user.email,
+      activityType: 'account_manipulation',
+      severity: 'low',
+      confidenceScore: 100,
+      description: `Account restored by admin`,
+      details: { action: 'manual_unsuspend', adminId }
+    });
+
+    res.json({ success: true, message: 'User unsuspended and notified via email' });
   } catch (error) {
     console.error('Error unsuspending user:', error);
     res.status(500).json({ success: false, message: 'Failed to unsuspend user' });
@@ -373,8 +510,73 @@ router.post('/force-logout', async (req, res) => {
       return res.status(400).json({ success: false, message: 'User ID required' });
     }
     
+    const User = require('../models/User');
+    const Doctor = require('../models/Doctor');
+    const { sendEmail } = require('../services/emailService');
+    
+    // Try to find user in both collections
+    let user = await User.findById(userId);
+    let userType = 'patient';
+    
+    if (!user) {
+      user = await Doctor.findById(userId);
+      userType = 'doctor';
+    }
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Force logout via the service
     await aiSecurityService.forceLogout(userId, reason || 'Forced logout by admin');
-    res.json({ success: true, message: 'User will be logged out' });
+
+    // Send email notification to user
+    if (user.email) {
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: '🔒 Security Alert: Session Terminated - HealthSync',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0;">🔒 Session Terminated</h1>
+              </div>
+              <div style="background: #f8f9fa; padding: 20px; border: 1px solid #e9ecef;">
+                <p>Dear ${user.name},</p>
+                <p>Your HealthSync session has been <strong style="color: #f59e0b;">terminated</strong> for security reasons.</p>
+                <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #f59e0b;">
+                  <p style="margin: 5px 0;"><strong>Reason:</strong> ${reason || 'Security precaution'}</p>
+                  <p style="margin: 5px 0;"><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+                </div>
+                <p>If this was you, you can log in again. If you did not expect this, please:</p>
+                <ul style="color: #4b5563; margin: 10px 0;">
+                  <li>Change your password immediately</li>
+                  <li>Review your recent account activity</li>
+                  <li>Contact support if you notice anything suspicious</li>
+                </ul>
+                <div style="text-align: center; margin: 20px 0;">
+                  <a href="${process.env.FRONTEND_URL || 'https://healthsync.com'}/login" 
+                     style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                    Login Again
+                  </a>
+                </div>
+                <p style="color: #666; font-size: 12px; margin-top: 20px;">
+                  This action was taken to protect your account security.
+                </p>
+              </div>
+              <div style="background: #343a40; padding: 15px; border-radius: 0 0 10px 10px; text-align: center;">
+                <p style="color: #adb5bd; margin: 0; font-size: 12px;">HealthSync Security Team</p>
+              </div>
+            </div>
+          `
+        });
+        console.log(`📧 Force logout email sent to ${user.email}`);
+      } catch (emailError) {
+        console.error('Error sending force logout email:', emailError);
+      }
+    }
+
+    res.json({ success: true, message: 'User logged out and notified via email' });
   } catch (error) {
     console.error('Error forcing logout:', error);
     res.status(500).json({ success: false, message: 'Failed to force logout' });
@@ -388,6 +590,107 @@ router.get('/check-ip/:ip', async (req, res) => {
     res.json({ success: true, blocked: !!block, details: block || null });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to check IP' });
+  }
+});
+
+// Require password reset for user
+router.post('/require-password-reset', async (req, res) => {
+  try {
+    const { userId, reason, adminId } = req.body;
+    if (!userId) {
+      return res.status(400).json({ success: false, message: 'User ID required' });
+    }
+    
+    const User = require('../models/User');
+    const Doctor = require('../models/Doctor');
+    const { sendEmail } = require('../services/emailService');
+    
+    // Try to find user in both collections
+    let user = await User.findById(userId);
+    let userType = 'patient';
+    
+    if (!user) {
+      user = await Doctor.findById(userId);
+      userType = 'doctor';
+    }
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Mark user as requiring password reset
+    if (userType === 'doctor') {
+      await Doctor.findByIdAndUpdate(userId, {
+        requirePasswordReset: true,
+        passwordResetRequiredAt: new Date(),
+        passwordResetReason: reason || 'Required by admin'
+      });
+    } else {
+      await User.findByIdAndUpdate(userId, {
+        requirePasswordReset: true,
+        passwordResetRequiredAt: new Date(),
+        passwordResetReason: reason || 'Required by admin'
+      });
+    }
+
+    // Send email notification to user
+    if (user.email) {
+      try {
+        await sendEmail({
+          to: user.email,
+          subject: '🔐 Password Reset Required - HealthSync',
+          html: `
+            <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+              <div style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
+                <h1 style="color: white; margin: 0;">🔐 Password Reset Required</h1>
+              </div>
+              <div style="background: #f8f9fa; padding: 20px; border: 1px solid #e9ecef;">
+                <p>Dear ${user.name},</p>
+                <p>For security reasons, you are required to <strong style="color: #8b5cf6;">reset your password</strong> before you can continue using your HealthSync account.</p>
+                <div style="background: white; padding: 15px; border-radius: 8px; margin: 15px 0; border-left: 4px solid #8b5cf6;">
+                  <p style="margin: 5px 0;"><strong>Reason:</strong> ${reason || 'Security precaution'}</p>
+                  <p style="margin: 5px 0;"><strong>Date:</strong> ${new Date().toLocaleString()}</p>
+                </div>
+                <p>Please reset your password as soon as possible to regain full access to your account.</p>
+                <div style="text-align: center; margin: 20px 0;">
+                  <a href="${process.env.FRONTEND_URL || 'https://healthsync.com'}/forgot-password" 
+                     style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: 600;">
+                    Reset Password Now
+                  </a>
+                </div>
+                <p style="color: #666; font-size: 12px; margin-top: 20px;">
+                  This action was taken to protect your account. If you have questions, please contact support.
+                </p>
+              </div>
+              <div style="background: #343a40; padding: 15px; border-radius: 0 0 10px 10px; text-align: center;">
+                <p style="color: #adb5bd; margin: 0; font-size: 12px;">HealthSync Security Team</p>
+              </div>
+            </div>
+          `
+        });
+        console.log(`📧 Password reset required email sent to ${user.email}`);
+      } catch (emailError) {
+        console.error('Error sending password reset email:', emailError);
+      }
+    }
+
+    // Log the action
+    await aiSecurityService.createAlert({
+      userId,
+      userType: userType === 'doctor' ? 'Doctor' : 'User',
+      userName: user.name,
+      userEmail: user.email,
+      activityType: 'account_manipulation',
+      severity: 'medium',
+      confidenceScore: 100,
+      description: `Password reset required by admin: ${reason || 'No reason provided'}`,
+      details: { action: 'require_password_reset', adminId }
+    });
+
+    res.json({ success: true, message: 'Password reset required and user notified via email' });
+  } catch (error) {
+    console.error('Error requiring password reset:', error);
+    res.status(500).json({ success: false, message: 'Failed to require password reset' });
   }
 });
 

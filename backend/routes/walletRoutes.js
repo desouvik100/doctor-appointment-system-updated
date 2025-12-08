@@ -3,6 +3,30 @@ const router = express.Router();
 const DoctorWallet = require('../models/DoctorWallet');
 const Doctor = require('../models/Doctor');
 const Appointment = require('../models/Appointment');
+const aiSecurityService = require('../services/aiSecurityService');
+
+// Security helper - log financial operations
+const logFinancialActivity = async (req, action, details) => {
+  try {
+    const doctor = req.doctor || await Doctor.findById(req.params.doctorId);
+    if (doctor) {
+      await aiSecurityService.analyzeActivity({
+        userId: doctor._id,
+        userType: 'Doctor',
+        userName: doctor.name,
+        userEmail: doctor.email,
+        action: 'payment',
+        endpoint: req.originalUrl,
+        method: req.method,
+        ipAddress: req.ip || req.headers['x-forwarded-for'],
+        userAgent: req.headers['user-agent'],
+        requestBody: { action, ...details }
+      });
+    }
+  } catch (error) {
+    console.error('Security logging error:', error);
+  }
+};
 
 // Get doctor's wallet
 router.get('/doctor/:doctorId', async (req, res) => {
@@ -108,6 +132,9 @@ router.post('/doctor/:doctorId/withdraw', async (req, res) => {
     
     const request = wallet.createWithdrawalRequest(amount, method || 'bank_transfer', notes);
     await wallet.save();
+    
+    // Log financial activawy for security monitoring
+    await logFinancialActivity(req, 'withdrawal_request', { amount, method });
     
     console.log(`💸 Withdrawal request created by Dr. ${doctor?.name}: ₹${amount}`);
     

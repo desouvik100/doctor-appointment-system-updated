@@ -119,6 +119,21 @@ mongoose.connection.on('error', (err) => {
 // Connect to MongoDB
 connectDB();
 
+// ===== SECURITY MONITORING =====
+// Apply security middleware BEFORE routes to monitor all API activity
+const { checkBlockedIP } = require('./middleware/securityMiddleware');
+
+// Check blocked IPs on all requests
+app.use('/api', checkBlockedIP);
+
+// Apply security monitoring to track activities (runs after response)
+app.use('/api', securityMonitor);
+
+// Track failed login attempts specifically
+app.use('/api/auth', trackFailedLogin);
+
+console.log('🛡️ AI Security monitoring enabled');
+
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/users', require('./routes/userRoutes'));
@@ -164,10 +179,6 @@ app.use('/api/invoices', require('./routes/invoiceRoutes'));
 app.use('/api/wallet', require('./routes/walletRoutes'));
 app.use('/api/admin/email', require('./routes/adminEmailRoutes'));
 app.use('/api/security', require('./routes/securityRoutes'));
-
-// Apply security monitoring to all API routes
-app.use('/api', securityMonitor);
-app.use('/api/auth', trackFailedLogin);
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');
