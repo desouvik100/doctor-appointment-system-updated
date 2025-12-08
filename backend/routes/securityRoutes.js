@@ -313,35 +313,56 @@ router.post('/suspend-user', async (req, res) => {
   try {
     const { userId, reason, adminId } = req.body;
     if (!userId) {
-      return res.status(400).json({ success: false, message: 'User ID required' });
+      return res.status(400).json({ success: false, message: 'User ID or Email required' });
     }
     
     const User = require('../models/User');
     const Doctor = require('../models/Doctor');
     const { sendEmail } = require('../services/emailService');
     
-    // Try to find user in both collections
-    let user = await User.findById(userId);
+    // Check if userId is an email or MongoDB ObjectId
+    const isEmail = userId.includes('@');
+    let user = null;
     let userType = 'patient';
     
-    if (!user) {
-      user = await Doctor.findById(userId);
-      userType = 'doctor';
+    if (isEmail) {
+      // Search by email
+      user = await User.findOne({ email: userId });
+      if (!user) {
+        user = await Doctor.findOne({ email: userId });
+        if (user) userType = 'doctor';
+      }
+    } else {
+      // Search by ID
+      try {
+        user = await User.findById(userId);
+        if (!user) {
+          user = await Doctor.findById(userId);
+          if (user) userType = 'doctor';
+        }
+      } catch (idError) {
+        // Invalid ObjectId format, try email search as fallback
+        user = await User.findOne({ email: userId });
+        if (!user) {
+          user = await Doctor.findOne({ email: userId });
+          if (user) userType = 'doctor';
+        }
+      }
     }
     
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found with provided ID or email' });
     }
     
     // Suspend the user
     if (userType === 'doctor') {
-      await Doctor.findByIdAndUpdate(userId, {
+      await Doctor.findByIdAndUpdate(user._id, {
         isActive: false,
         suspendedAt: new Date(),
         suspendReason: reason || 'Suspended by admin'
       });
     } else {
-      await User.findByIdAndUpdate(userId, {
+      await User.findByIdAndUpdate(user._id, {
         isActive: false,
         suspendedAt: new Date(),
         suspendReason: reason || 'Suspended by admin'
@@ -385,7 +406,7 @@ router.post('/suspend-user', async (req, res) => {
 
     // Create alert
     await aiSecurityService.createAlert({
-      userId,
+      userId: user._id,
       userType: userType === 'doctor' ? 'Doctor' : 'User',
       userName: user.name,
       userEmail: user.email,
@@ -408,34 +429,52 @@ router.post('/unsuspend-user', async (req, res) => {
   try {
     const { userId, adminId } = req.body;
     if (!userId) {
-      return res.status(400).json({ success: false, message: 'User ID required' });
+      return res.status(400).json({ success: false, message: 'User ID or Email required' });
     }
     
     const User = require('../models/User');
     const Doctor = require('../models/Doctor');
     const { sendEmail } = require('../services/emailService');
     
-    // Try to find user in both collections
-    let user = await User.findById(userId);
+    // Check if userId is an email or MongoDB ObjectId
+    const isEmail = userId.includes('@');
+    let user = null;
     let userType = 'patient';
     
-    if (!user) {
-      user = await Doctor.findById(userId);
-      userType = 'doctor';
+    if (isEmail) {
+      user = await User.findOne({ email: userId });
+      if (!user) {
+        user = await Doctor.findOne({ email: userId });
+        if (user) userType = 'doctor';
+      }
+    } else {
+      try {
+        user = await User.findById(userId);
+        if (!user) {
+          user = await Doctor.findById(userId);
+          if (user) userType = 'doctor';
+        }
+      } catch (idError) {
+        user = await User.findOne({ email: userId });
+        if (!user) {
+          user = await Doctor.findOne({ email: userId });
+          if (user) userType = 'doctor';
+        }
+      }
     }
     
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found with provided ID or email' });
     }
     
     // Unsuspend the user
     if (userType === 'doctor') {
-      await Doctor.findByIdAndUpdate(userId, {
+      await Doctor.findByIdAndUpdate(user._id, {
         isActive: true,
         $unset: { suspendedAt: 1, suspendReason: 1 }
       });
     } else {
-      await User.findByIdAndUpdate(userId, {
+      await User.findByIdAndUpdate(user._id, {
         isActive: true,
         $unset: { suspendedAt: 1, suspendReason: 1 }
       });
@@ -484,7 +523,7 @@ router.post('/unsuspend-user', async (req, res) => {
 
     // Log the action
     await aiSecurityService.createAlert({
-      userId,
+      userId: user._id,
       userType: userType === 'doctor' ? 'Doctor' : 'User',
       userName: user.name,
       userEmail: user.email,
@@ -507,28 +546,46 @@ router.post('/force-logout', async (req, res) => {
   try {
     const { userId, reason } = req.body;
     if (!userId) {
-      return res.status(400).json({ success: false, message: 'User ID required' });
+      return res.status(400).json({ success: false, message: 'User ID or Email required' });
     }
     
     const User = require('../models/User');
     const Doctor = require('../models/Doctor');
     const { sendEmail } = require('../services/emailService');
     
-    // Try to find user in both collections
-    let user = await User.findById(userId);
+    // Check if userId is an email or MongoDB ObjectId
+    const isEmail = userId.includes('@');
+    let user = null;
     let userType = 'patient';
     
-    if (!user) {
-      user = await Doctor.findById(userId);
-      userType = 'doctor';
+    if (isEmail) {
+      user = await User.findOne({ email: userId });
+      if (!user) {
+        user = await Doctor.findOne({ email: userId });
+        if (user) userType = 'doctor';
+      }
+    } else {
+      try {
+        user = await User.findById(userId);
+        if (!user) {
+          user = await Doctor.findById(userId);
+          if (user) userType = 'doctor';
+        }
+      } catch (idError) {
+        user = await User.findOne({ email: userId });
+        if (!user) {
+          user = await Doctor.findOne({ email: userId });
+          if (user) userType = 'doctor';
+        }
+      }
     }
     
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found with provided ID or email' });
     }
     
     // Force logout via the service
-    await aiSecurityService.forceLogout(userId, reason || 'Forced logout by admin');
+    await aiSecurityService.forceLogout(user._id, reason || 'Forced logout by admin');
 
     // Send email notification to user
     if (user.email) {
@@ -598,35 +655,53 @@ router.post('/require-password-reset', async (req, res) => {
   try {
     const { userId, reason, adminId } = req.body;
     if (!userId) {
-      return res.status(400).json({ success: false, message: 'User ID required' });
+      return res.status(400).json({ success: false, message: 'User ID or Email required' });
     }
     
     const User = require('../models/User');
     const Doctor = require('../models/Doctor');
     const { sendEmail } = require('../services/emailService');
     
-    // Try to find user in both collections
-    let user = await User.findById(userId);
+    // Check if userId is an email or MongoDB ObjectId
+    const isEmail = userId.includes('@');
+    let user = null;
     let userType = 'patient';
     
-    if (!user) {
-      user = await Doctor.findById(userId);
-      userType = 'doctor';
+    if (isEmail) {
+      user = await User.findOne({ email: userId });
+      if (!user) {
+        user = await Doctor.findOne({ email: userId });
+        if (user) userType = 'doctor';
+      }
+    } else {
+      try {
+        user = await User.findById(userId);
+        if (!user) {
+          user = await Doctor.findById(userId);
+          if (user) userType = 'doctor';
+        }
+      } catch (idError) {
+        user = await User.findOne({ email: userId });
+        if (!user) {
+          user = await Doctor.findOne({ email: userId });
+          if (user) userType = 'doctor';
+        }
+      }
     }
     
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+      return res.status(404).json({ success: false, message: 'User not found with provided ID or email' });
     }
     
     // Mark user as requiring password reset
     if (userType === 'doctor') {
-      await Doctor.findByIdAndUpdate(userId, {
+      await Doctor.findByIdAndUpdate(user._id, {
         requirePasswordReset: true,
         passwordResetRequiredAt: new Date(),
         passwordResetReason: reason || 'Required by admin'
       });
     } else {
-      await User.findByIdAndUpdate(userId, {
+      await User.findByIdAndUpdate(user._id, {
         requirePasswordReset: true,
         passwordResetRequiredAt: new Date(),
         passwordResetReason: reason || 'Required by admin'
@@ -676,7 +751,7 @@ router.post('/require-password-reset', async (req, res) => {
 
     // Log the action
     await aiSecurityService.createAlert({
-      userId,
+      userId: user._id,
       userType: userType === 'doctor' ? 'Doctor' : 'User',
       userName: user.name,
       userEmail: user.email,

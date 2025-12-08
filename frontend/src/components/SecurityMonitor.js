@@ -503,7 +503,7 @@ const SecurityMonitor = ({ adminId }) => {
             <p className="text-sm text-slate-500 mb-4">Temporarily disable a user account for security reasons.</p>
             <input
               type="text"
-              placeholder="Enter User ID"
+              placeholder="Enter User ID or Email"
               id="suspendUserId"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-3"
             />
@@ -533,7 +533,7 @@ const SecurityMonitor = ({ adminId }) => {
             <p className="text-sm text-slate-500 mb-4">Force a user to log out from all sessions.</p>
             <input
               type="text"
-              placeholder="Enter User ID"
+              placeholder="Enter User ID or Email"
               id="logoutUserId"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-3"
             />
@@ -591,7 +591,7 @@ const SecurityMonitor = ({ adminId }) => {
             <p className="text-sm text-slate-500 mb-4">Restore a suspended user account.</p>
             <input
               type="text"
-              placeholder="Enter User ID"
+              placeholder="Enter User ID or Email"
               id="unsuspendUserId"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-3"
             />
@@ -614,7 +614,7 @@ const SecurityMonitor = ({ adminId }) => {
             <p className="text-sm text-slate-500 mb-4">Force a user to reset their password on next login.</p>
             <input
               type="text"
-              placeholder="Enter User ID"
+              placeholder="Enter User ID or Email"
               id="resetUserId"
               className="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm mb-3"
             />
