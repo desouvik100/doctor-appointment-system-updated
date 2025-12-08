@@ -4,8 +4,9 @@ import toast from "react-hot-toast";
 import "./ClinicDashboard.css"; // Reuse clinic dashboard styles
 import "./DoctorDashboard.css"; // Doctor-specific styles
 import DoctorWallet from "./DoctorWallet";
-import ThemeToggle from "./ThemeToggle";
 import { exportAppointmentsToPDF } from "../utils/pdfExport";
+import PrescriptionManager from "./PrescriptionManager";
+import SecurityWarningBanner from "./SecurityWarningBanner";
 
 function DoctorDashboard({ doctor, onLogout }) {
   const [appointments, setAppointments] = useState([]);
@@ -16,6 +17,8 @@ function DoctorDashboard({ doctor, onLogout }) {
   const [queue, setQueue] = useState([]);
   const [currentPatient, setCurrentPatient] = useState(null);
   const [queueLoading, setQueueLoading] = useState(false);
+  const [showPrescription, setShowPrescription] = useState(false);
+  const [prescriptionPatient, setPrescriptionPatient] = useState(null);
 
   // Get doctor ID (handle both id and _id)
   const doctorId = doctor.id || doctor._id;
@@ -207,6 +210,9 @@ function DoctorDashboard({ doctor, onLogout }) {
 
   return (
     <div className="container-fluid py-4">
+      {/* Security Warning Banner */}
+      <SecurityWarningBanner userId={doctorId} />
+      
       {/* Header */}
       <div className="row mb-4">
         <div className="col-12">
@@ -226,12 +232,9 @@ function DoctorDashboard({ doctor, onLogout }) {
                     <p className="mb-0 opacity-75">{doctor.specialization} | {doctor.clinicId?.name || "Clinic"}</p>
                   </div>
                 </div>
-                <div className="d-flex align-items-center gap-3">
-                  <ThemeToggle compact />
-                  <button className="btn btn-light" onClick={onLogout}>
-                    <i className="fas fa-sign-out-alt me-2"></i>Logout
-                  </button>
-                </div>
+                <button className="btn btn-light" onClick={onLogout}>
+                  <i className="fas fa-sign-out-alt me-2"></i>Logout
+                </button>
               </div>
             </div>
           </div>
@@ -319,6 +322,13 @@ function DoctorDashboard({ doctor, onLogout }) {
                     <p className="text-muted">{currentPatient.reason}</p>
                     
                     <div className="current-patient-actions mt-4">
+                      <button 
+                        className="btn btn-primary btn-lg w-100 mb-2"
+                        onClick={() => { setPrescriptionPatient(currentPatient); setShowPrescription(true); }}
+                      >
+                        <i className="fas fa-prescription me-2"></i>
+                        Write Prescription
+                      </button>
                       <button 
                         className="btn btn-success btn-lg w-100 mb-2"
                         onClick={completeCurrentPatient}
@@ -575,6 +585,19 @@ function DoctorDashboard({ doctor, onLogout }) {
       {/* Wallet Tab */}
       {activeTab === 'wallet' && (
         <DoctorWallet doctorId={doctorId} doctorName={doctor.name} />
+      )}
+
+      {/* Prescription Modal */}
+      {showPrescription && prescriptionPatient && (
+        <PrescriptionManager
+          doctorId={doctorId}
+          doctorName={doctor.name}
+          patientId={prescriptionPatient.userId?._id}
+          patientName={prescriptionPatient.userId?.name || 'Patient'}
+          appointmentId={prescriptionPatient._id}
+          onClose={() => { setShowPrescription(false); setPrescriptionPatient(null); }}
+          onSave={() => { setShowPrescription(false); setPrescriptionPatient(null); toast.success('Prescription saved!'); }}
+        />
       )}
     </div>
   );

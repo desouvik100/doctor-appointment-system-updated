@@ -156,6 +156,7 @@ router.post('/register', async (req, res) => {
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    const aiSecurityService = require('../services/aiSecurityService');
 
     // Validate required fields
     if (!email || !password) {
@@ -164,22 +165,25 @@ router.post('/login', async (req, res) => {
 
     // Normalize email to lowercase
     const normalizedEmail = email.toLowerCase().trim();
+    const ipAddress = req.ip || req.headers['x-forwarded-for'];
+    const userAgent = req.headers['user-agent'];
 
     // Find user (only patients can login through this route)
     const user = await User.findOne({ email: normalizedEmail, role: 'patient', isActive: true });
     if (!user) {
       console.log(`❌ Login failed: User not found for email: ${normalizedEmail}`);
+      // Track failed login attempt
+      await aiSecurityService.trackFailedLogin(normalizedEmail, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
     // Check password
     console.log(`🔐 Attempting login for: ${normalizedEmail}`);
-    console.log(`🔐 Stored password hash starts with: ${user.password.substring(0, 20)}...`);
-    console.log(`🔐 Input password length: ${password.length}`);
     const isMatch = await bcrypt.compare(password, user.password);
-    console.log(`🔐 Password match result: ${isMatch}`);
     if (!isMatch) {
       console.log(`❌ Login failed: Password mismatch for ${normalizedEmail}`);
+      // Track failed login attempt
+      await aiSecurityService.trackFailedLogin(normalizedEmail, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
@@ -213,6 +217,9 @@ router.post('/login', async (req, res) => {
 router.post('/admin/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    const aiSecurityService = require('../services/aiSecurityService');
+    const ipAddress = req.ip || req.headers['x-forwarded-for'];
+    const userAgent = req.headers['user-agent'];
 
     // Validate required fields
     if (!email || !password) {
@@ -222,12 +229,14 @@ router.post('/admin/login', async (req, res) => {
     // Find admin user
     const user = await User.findOne({ email, role: 'admin', isActive: true });
     if (!user) {
+      await aiSecurityService.trackFailedLogin(email, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid admin credentials' });
     }
 
     // Check password
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
+      await aiSecurityService.trackFailedLogin(email, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid admin credentials' });
     }
 
@@ -636,16 +645,22 @@ router.post('/reset-password', async (req, res) => {
 router.post('/doctor/login', async (req, res) => {
   try {
     const { email, password } = req.body;
+    const aiSecurityService = require('../services/aiSecurityService');
+    const ipAddress = req.ip || req.headers['x-forwarded-for'];
+    const userAgent = req.headers['user-agent'];
 
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Find doctor by email
-    const doctor = await Doctor.findOne({ email: email.toLowerCase().trim(), isActive: true })
+    const doctor = await Doctor.findOne({ email: normalizedEmail, isActive: true })
       .populate('clinicId', 'name address city phone');
 
     if (!doctor) {
+      await aiSecurityService.trackFailedLogin(normalizedEmail, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid credentials or doctor not found' });
     }
 
@@ -677,6 +692,7 @@ router.post('/doctor/login', async (req, res) => {
     // Verify password
     const isMatch = await bcrypt.compare(password, doctor.password);
     if (!isMatch) {
+      await aiSecurityService.trackFailedLogin(normalizedEmail, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 

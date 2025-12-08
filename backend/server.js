@@ -5,6 +5,7 @@ require('dotenv').config();
 const { initializeScheduler } = require('./services/appointmentScheduler');
 const { initializeMedicineReminders } = require('./services/medicineReminderService');
 const cacheService = require('./services/cacheService');
+const { securityMonitor, trackFailedLogin } = require('./middleware/securityMiddleware');
 
 const app = express();
 
@@ -162,6 +163,11 @@ app.use('/api/export', require('./routes/exportRoutes'));
 app.use('/api/invoices', require('./routes/invoiceRoutes'));
 app.use('/api/wallet', require('./routes/walletRoutes'));
 app.use('/api/admin/email', require('./routes/adminEmailRoutes'));
+app.use('/api/security', require('./routes/securityRoutes'));
+
+// Apply security monitoring to all API routes
+app.use('/api', securityMonitor);
+app.use('/api/auth', trackFailedLogin);
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');

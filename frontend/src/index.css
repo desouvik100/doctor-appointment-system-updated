@@ -391,29 +391,29 @@ textarea:focus {
 }
 
 /* ============================================
-   Dark Mode Variables
+   Dark Mode Variables - Pure Black
    ============================================ */
 
 .dark-mode,
 [data-theme="dark"] {
-  --bg: #0f172a;
-  --bg-secondary: #1e293b;
-  --card-bg: #1e293b;
-  --text-primary: #f1f5f9;
-  --text-secondary: #94a3b8;
-  --text-muted: #64748b;
-  --border: #334155;
-  --border-light: #1e293b;
-  --success-light: rgba(16, 185, 129, 0.1);
-  --warning-light: rgba(245, 158, 11, 0.1);
-  --danger-light: rgba(239, 68, 68, 0.1);
-  --info-light: rgba(59, 130, 246, 0.1);
+  --bg: #000000;
+  --bg-secondary: #0a0a0a;
+  --card-bg: #0a0a0a;
+  --text-primary: #ffffff;
+  --text-secondary: #b3b3b3;
+  --text-muted: #808080;
+  --border: #1a1a1a;
+  --border-light: #121212;
+  --success-light: rgba(16, 185, 129, 0.15);
+  --warning-light: rgba(245, 158, 11, 0.15);
+  --danger-light: rgba(239, 68, 68, 0.15);
+  --info-light: rgba(59, 130, 246, 0.15);
 }
 
 .dark-mode body,
 [data-theme="dark"] body {
-  background: linear-gradient(135deg, #0f172a 0%, #1e293b 50%, #0f172a 100%);
-  color: #f1f5f9;
+  background: #000000;
+  color: #ffffff;
 }
 
 /* ============================================

@@ -6,6 +6,9 @@ import '../styles/premium-saas.css';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import { exportAppointmentsToPDF } from '../utils/pdfExport';
+import MedicalTimeline from './MedicalTimeline';
+import RescheduleModal from './RescheduleModal';
+import FloatingActionButton from './FloatingActionButton';
 import BookingModal from './BookingModal';
 import AIAssistant from './AIAssistant';
 import FindMyDoctorWizard from './FindMyDoctorWizard';
@@ -32,6 +35,7 @@ import TransactionHistory from './TransactionHistory';
 import QuickHealthTools from './QuickHealthTools';
 import EmailReminders from './EmailReminders';
 import HealthCalculators from './HealthCalculators';
+import SecurityWarningBanner from './SecurityWarningBanner';
 
 // Get profile photo URL - checks profilePhoto field, then generates fallback
 const getProfilePhotoUrl = (user) => {
@@ -132,6 +136,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
     { titleKey: 'health', items: [
       { id: 'ai-assistant', icon: 'fas fa-robot', labelKey: 'aiHealthAssistant' },
       { id: 'health', icon: 'fas fa-heartbeat', labelKey: 'healthProfile' },
+      { id: 'medical-history', icon: 'fas fa-history', labelKey: 'medicalHistory' },
       { id: 'lab-reports', icon: 'fas fa-flask', labelKey: 'labReportsMenu' },
       { id: 'checkup', icon: 'fas fa-stethoscope', labelKey: 'healthCheckup' },
       { id: 'health-analytics', icon: 'fas fa-chart-line', labelKey: 'analytics' },
@@ -179,10 +184,13 @@ const PatientDashboardPro = ({ user, onLogout }) => {
 
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-200 via-gray-100 to-zinc-200 flex">
+    <div className="min-h-screen bg-slate-50 flex">
+      {/* Security Warning Banner */}
+      <SecurityWarningBanner userId={getUserId()} />
+      
       {mobileSidebarOpen && <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" onClick={() => setMobileSidebarOpen(false)} />}
-      <aside className={`fixed lg:sticky top-0 left-0 h-screen bg-gradient-to-b from-gray-950 via-slate-950 to-black border-r border-slate-800/50 z-50 transition-all duration-300 flex flex-col ${mobileSidebarOpen ? 'w-72' : sidebarCollapsed ? 'w-20' : 'w-72'} ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`} onMouseEnter={() => !mobileSidebarOpen && setSidebarCollapsed(false)} onMouseLeave={() => !mobileSidebarOpen && setSidebarCollapsed(true)}>
-        <div className="h-20 flex items-center px-4 border-b border-slate-800/50">
+      <aside className={`fixed top-0 left-0 bottom-0 bg-gradient-to-b from-gray-950 via-slate-950 to-black border-r border-slate-800/50 z-50 transition-all duration-300 flex flex-col ${mobileSidebarOpen ? 'w-72' : sidebarCollapsed ? 'w-20' : 'w-72'} ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`} onMouseEnter={() => !mobileSidebarOpen && setSidebarCollapsed(false)} onMouseLeave={() => !mobileSidebarOpen && setSidebarCollapsed(true)}>
+        <div className="h-20 flex items-center px-4 border-b border-slate-800/50 flex-shrink-0">
           <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg animate-logo-glow">
             <svg className="w-8 h-8" viewBox="0 0 60 40" fill="none">
               <path d="M0 20 L10 20 L15 20" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"/>
@@ -207,7 +215,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
             </div>
           ))}
         </nav>
-        <div className="p-4 border-t border-slate-800/50">
+        <div className="p-4 border-t border-slate-800/50 bg-black flex-shrink-0">
           <button onClick={() => setShowProfileModal(true)} className="w-full flex items-center gap-3 p-2 rounded-xl hover:bg-slate-700/50 transition-colors cursor-pointer">
             <img 
               src={getProfilePhotoUrl(currentUser) || getFallbackAvatarUrl(currentUser?.name, '10b981')} 
@@ -227,33 +235,30 @@ const PatientDashboardPro = ({ user, onLogout }) => {
         </div>
       </aside>
 
-      <main className="flex-1 flex flex-col min-h-screen">
-        <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 px-4 lg:px-8 h-16 flex items-center justify-between">
+      <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}`}>
+        <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 lg:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button className="lg:hidden w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center" onClick={() => setMobileSidebarOpen(true)}><i className="fas fa-bars text-slate-600"></i></button>
+            <button className="lg:hidden w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center" onClick={() => setMobileSidebarOpen(true)}><i className="fas fa-bars text-slate-600 text-sm"></i></button>
             <div>
-              <h1 className="text-lg font-bold text-slate-800">Welcome, {(currentUser?.name || 'User').split(' ')[0]}! 👋</h1>
-              <p className="text-xs text-slate-500">{userLocation?.city ? <><i className="fas fa-map-marker-alt text-indigo-500 mr-1"></i>{userLocation.city}</> : 'Have a healthy day!'}</p>
+              <h1 className="text-base font-semibold text-slate-800">Welcome back, {(currentUser?.name || 'User').split(' ')[0]}</h1>
+              <p className="text-xs text-slate-500">{userLocation?.city ? <><i className="fas fa-map-marker-alt text-indigo-500 mr-1"></i>{userLocation.city}</> : 'Have a healthy day'}</p>
             </div>
           </div>
-          <div className="flex items-center gap-3">
-            <button onClick={() => setShowFindDoctorWizard(true)} className="hidden sm:flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold rounded-xl hover:shadow-lg hover:scale-105 transition-all duration-300"><i className="fas fa-robot"></i><span className="text-sm">{language === 'bn' ? 'ডাক্তার খুঁজুন' : language === 'hi' ? 'डॉक्टर खोजें' : 'Find My Doctor'}</span></button>
-            <button onClick={() => setActiveSection('doctors')} className="hidden sm:flex items-center gap-3 px-6 py-3 bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 text-white font-bold rounded-2xl hover:shadow-xl hover:scale-105 transition-all duration-300 animate-pulse hover:animate-none"><i className="fas fa-calendar-plus text-lg"></i><span className="text-base">{t('bookNow')}</span></button>
+          <div className="flex items-center gap-2">
+            <button onClick={() => setActiveSection('doctors')} className="hidden sm:flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"><i className="fas fa-plus text-xs"></i>{t('bookNow')}</button>
             <LanguageSelector />
-            <ThemeToggle compact />
-            <button onClick={handleUpdateLocation} disabled={updatingLocation} className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center"><i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'} text-slate-600`}></i></button>
-            <button onClick={() => setShowNotifications(true)} className="relative w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center">
-              <i className="fas fa-bell text-slate-600"></i>
-              {unreadNotifications > 0 && <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold rounded-full flex items-center justify-center">{unreadNotifications}</span>}
+            <button onClick={handleUpdateLocation} disabled={updatingLocation} className="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center"><i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'} text-slate-500 text-sm`}></i></button>
+            <button onClick={() => setShowNotifications(true)} className="relative w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center">
+              <i className="fas fa-bell text-slate-500 text-sm"></i>
+              {unreadNotifications > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{unreadNotifications}</span>}
             </button>
-            <button onClick={() => setShowProfileModal(true)} className="hidden sm:flex items-center gap-3 pl-3 border-l border-slate-200 hover:bg-slate-50 rounded-xl p-2 -m-2 transition-colors">
+            <button onClick={() => setShowProfileModal(true)} className="flex items-center gap-2 ml-2 hover:bg-slate-50 rounded-lg p-1.5 transition-colors">
               <img 
                 src={getProfilePhotoUrl(currentUser) || getFallbackAvatarUrl(currentUser?.name)} 
                 alt="Profile" 
-                className="w-10 h-10 rounded-xl object-cover" 
+                className="w-8 h-8 rounded-lg object-cover" 
                 onError={(e) => { e.target.src = getFallbackAvatarUrl(currentUser?.name); }} 
               />
-              <div className="hidden md:block text-left"><p className="text-sm font-medium text-slate-800">{currentUser?.name}</p><p className="text-xs text-slate-500">{currentUser?.email}</p></div>
             </button>
           </div>
         </header>
@@ -261,60 +266,78 @@ const PatientDashboardPro = ({ user, onLogout }) => {
           {activeSection === 'overview' && (
             <div className="space-y-6">
 
-              <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                {[{ icon: 'fa-users', value: '10,000+', label: 'Happy Patients', color: 'from-blue-500 to-cyan-500' }, { icon: 'fa-user-md', value: '500+', label: 'Expert Doctors', color: 'from-emerald-500 to-teal-500' }, { icon: 'fa-star', value: '4.9/5', label: 'User Rating', color: 'from-amber-500 to-orange-500' }, { icon: 'fa-hospital', value: '50+', label: 'Partner Clinics', color: 'from-purple-500 to-pink-500' }].map((b, i) => (
-                  <div key={i} className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm hover:shadow-md transition-shadow">
-                    <div className={`w-10 h-10 rounded-xl bg-gradient-to-br ${b.color} flex items-center justify-center mb-3`}><i className={`fas ${b.icon} text-white`}></i></div>
-                    <p className="text-xl font-bold text-slate-800">{b.value}</p><p className="text-sm text-slate-500">{b.label}</p>
-                  </div>
-                ))}
-              </div>
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                {[{ icon: 'fa-calendar-check', value: stats.upcomingCount, label: 'Upcoming', gradient: 'from-indigo-500 to-purple-600', bg: 'bg-indigo-50' }, { icon: 'fa-check-circle', value: stats.completedCount, label: 'Completed', gradient: 'from-emerald-500 to-teal-600', bg: 'bg-emerald-50' }, { icon: 'fa-heart', value: stats.favoritesCount, label: 'Favorites', gradient: 'from-rose-500 to-pink-600', bg: 'bg-rose-50' }, { icon: 'fa-user-md', value: doctors.length, label: 'Doctors', gradient: 'from-cyan-500 to-blue-600', bg: 'bg-cyan-50' }].map((s, i) => (
-                  <div key={i} className={`${s.bg} rounded-xl p-3 border border-slate-100 hover:shadow-md transition-all flex items-center gap-3`}>
-                    <div className={`w-10 h-10 rounded-lg bg-gradient-to-br ${s.gradient} flex items-center justify-center shadow`}><i className={`fas ${s.icon} text-white text-sm`}></i></div>
-                    <div><p className="text-xl font-bold text-slate-800">{s.value}</p><p className="text-xs text-slate-500">{s.label}</p></div>
-                  </div>
+                {[
+                  { icon: 'fa-calendar-check', value: stats.upcomingCount, label: 'Upcoming', gradient: 'from-blue-500 to-indigo-600', section: 'appointments' },
+                  { icon: 'fa-check-circle', value: stats.completedCount, label: 'Completed', gradient: 'from-emerald-500 to-teal-600', section: 'appointments' },
+                  { icon: 'fa-heart', value: stats.favoritesCount, label: 'Favorites', gradient: 'from-rose-500 to-pink-600', section: 'favorites' },
+                  { icon: 'fa-user-md', value: doctors.length, label: 'Doctors', gradient: 'from-violet-500 to-purple-600', section: 'doctors' }
+                ].map((s, i) => (
+                  <button key={i} onClick={() => setActiveSection(s.section)} className={`relative overflow-hidden rounded-xl p-4 bg-gradient-to-br ${s.gradient} hover:scale-[1.02] transition-all cursor-pointer text-left`}>
+                    <div className="flex items-center gap-3">
+                      <div className="w-10 h-10 bg-white/20 rounded-lg flex items-center justify-center">
+                        <i className={`fas ${s.icon} text-white`}></i>
+                      </div>
+                      <div>
+                        <p className="text-2xl font-bold text-white">{s.value}</p>
+                        <p className="text-xs text-white/70">{s.label}</p>
+                      </div>
+                    </div>
+                  </button>
                 ))}
               </div>
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-bold text-slate-800">🔥 Top Doctors</h3><button onClick={() => setActiveSection('doctors')} className="text-sm font-medium text-indigo-600 hover:text-indigo-700">View All →</button></div>
+              <div className="bg-white rounded-2xl p-6 border border-slate-100">
+                <div className="flex items-center justify-between mb-6">
+                  <h3 className="text-lg font-semibold text-slate-800">Top Doctors</h3>
+                  <button onClick={() => setActiveSection('doctors')} className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1">View All <i className="fas fa-arrow-right text-xs"></i></button>
+                </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {recentDoctors.map(doc => {
                     const docInitials = doc.name ? doc.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'DR';
                     return (
-                    <div key={doc._id} className="group p-4 rounded-xl bg-slate-50 hover:bg-white border-2 border-transparent hover:border-indigo-200 hover:shadow-lg transition-all text-center">
-                      <div className="w-16 h-16 mx-auto rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-3 group-hover:scale-105 transition-transform overflow-hidden">
+                    <div key={doc._id} className="group p-4 rounded-xl border border-slate-100 hover:border-indigo-200 hover:shadow-md transition-all text-center bg-white">
+                      <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-3 overflow-hidden ring-4 ring-indigo-50">
                         {doc.profilePhoto ? <img src={doc.profilePhoto} alt={doc.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} /> : null}
-                        {!doc.profilePhoto && <span className="text-white text-lg font-bold">{docInitials}</span>}
+                        {!doc.profilePhoto && <span className="text-white font-semibold">{docInitials}</span>}
                       </div>
-                      <h4 className="font-semibold text-slate-800 text-sm">Dr. {doc.name}</h4><p className="text-xs text-slate-500 mb-2">{doc.specialization}</p><p className="text-sm font-bold text-indigo-600 mb-3">₹{doc.consultationFee}</p>
-                      <button onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className="w-full py-2 px-4 bg-gradient-to-r from-indigo-500 to-purple-600 text-white text-sm font-medium rounded-lg hover:shadow-lg">Book Now</button>
+                      <h4 className="font-semibold text-slate-800 text-sm mb-0.5">Dr. {doc.name}</h4>
+                      <p className="text-xs text-slate-500 mb-2">{doc.specialization}</p>
+                      <p className="text-sm font-bold text-indigo-600 mb-3">₹{doc.consultationFee}</p>
+                      <button onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className="w-full py-2 px-4 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">Book Now</button>
                     </div>
                   );})}
                 </div>
               </div>
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                <h3 className="text-lg font-bold text-slate-800 mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  {[{ icon: 'fa-user-md', label: 'Book Appointment', section: 'doctors', color: 'from-indigo-500 to-purple-600' }, { icon: 'fa-robot', label: 'AI Health Check', section: 'ai-assistant', color: 'from-emerald-500 to-teal-600' }, { icon: 'fa-flask', label: 'Lab Reports', section: 'lab-reports', color: 'from-rose-500 to-pink-600' }, { icon: 'fa-bell', label: 'Medicine Reminder', section: 'medicine-reminder', color: 'from-amber-500 to-orange-600' }].map((a, i) => (
-                    <button key={i} onClick={() => setActiveSection(a.section)} className="group flex flex-col items-center gap-3 p-5 rounded-xl bg-slate-50 hover:bg-white border-2 border-transparent hover:border-indigo-200 hover:shadow-lg transition-all">
-                      <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${a.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}><i className={`fas ${a.icon} text-white text-xl`}></i></div>
+              <div className="bg-white rounded-2xl p-6 border border-slate-100">
+                <h3 className="text-lg font-semibold text-slate-800 mb-4">Quick Actions</h3>
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
+                  {[{ icon: 'fa-user-md', label: 'Book Appointment', section: 'doctors', color: 'text-indigo-600', bg: 'bg-indigo-50' }, { icon: 'fa-robot', label: 'AI Health Check', section: 'ai-assistant', color: 'text-emerald-600', bg: 'bg-emerald-50' }, { icon: 'fa-flask', label: 'Lab Reports', section: 'lab-reports', color: 'text-rose-600', bg: 'bg-rose-50' }, { icon: 'fa-bell', label: 'Medicine Reminder', section: 'medicine-reminder', color: 'text-amber-600', bg: 'bg-amber-50' }].map((a, i) => (
+                    <button key={i} onClick={() => setActiveSection(a.section)} className="group flex items-center gap-3 p-4 rounded-xl border border-slate-100 hover:border-slate-200 hover:bg-slate-50 transition-all text-left">
+                      <div className={`w-10 h-10 rounded-lg ${a.bg} flex items-center justify-center flex-shrink-0`}><i className={`fas ${a.icon} ${a.color}`}></i></div>
                       <span className="text-sm font-medium text-slate-700">{a.label}</span>
                     </button>
                   ))}
                 </div>
               </div>
               {upcomingAppointments.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                  <div className="flex items-center justify-between mb-4"><h3 className="text-lg font-bold text-slate-800">Upcoming Appointments</h3><button onClick={() => setActiveSection('appointments')} className="text-sm font-medium text-indigo-600 hover:text-indigo-700">View All →</button></div>
+                <div className="bg-white rounded-2xl p-6 border border-slate-100">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold text-slate-800">Upcoming Appointments</h3>
+                    <button onClick={() => setActiveSection('appointments')} className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1">View All <i className="fas fa-arrow-right text-xs"></i></button>
+                  </div>
                   <div className="space-y-3">
                     {upcomingAppointments.map(apt => (
-                      <div key={apt._id} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 hover:bg-indigo-50 transition-colors">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center"><i className="fas fa-user-md text-white"></i></div>
-                        <div className="flex-1 min-w-0"><h4 className="font-semibold text-slate-800">Dr. {apt.doctorId?.name || 'Unknown'}</h4><p className="text-sm text-slate-500">{apt.doctorId?.specialization}</p></div>
-                        <div className="text-right"><p className="text-sm font-semibold text-slate-800">{new Date(apt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p><p className="text-sm text-slate-500">{apt.time}</p></div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${apt.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : apt.status === 'pending' ? 'bg-amber-100 text-amber-700' : 'bg-slate-100 text-slate-700'}`}>{apt.status}</span>
+                      <div key={apt._id} className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-indigo-200 transition-colors">
+                        <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center"><i className="fas fa-user-md text-indigo-600"></i></div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-medium text-slate-800 text-sm">Dr. {apt.doctorId?.name || 'Unknown'}</h4>
+                          <p className="text-xs text-slate-500">{apt.doctorId?.specialization}</p>
+                        </div>
+                        <div className="text-right">
+                          <p className="text-sm font-medium text-slate-800">{new Date(apt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
+                          <p className="text-xs text-slate-500">{apt.time}</p>
+                        </div>
+                        <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${apt.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700' : apt.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{apt.status}</span>
                       </div>
                     ))}
                   </div>
@@ -422,6 +445,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
           {activeSection === 'health' && <HealthProfile userId={getUserId()} />}
           {activeSection === 'lab-reports' && <LabReports userId={getUserId()} />}
           {activeSection === 'checkup' && <HealthCheckup userId={getUserId()} userName={currentUser?.name} userEmail={currentUser?.email} userPhone={currentUser?.phone} />}
+          {activeSection === 'medical-history' && <MedicalTimeline userId={getUserId()} />}
           {activeSection === 'health-analytics' && <HealthAnalytics userId={getUserId()} />}
           {activeSection === 'medicine-reminder' && <MedicineReminder userId={getUserId()} />}
           {activeSection === 'ambulance' && <AmbulanceBooking userId={getUserId()} userName={currentUser?.name} userPhone={currentUser?.phone} userLocation={userLocation} />}
@@ -460,6 +484,18 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       {showChat && chatDoctor && <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"><DoctorChat user={currentUser} doctor={chatDoctor} onClose={() => { setShowChat(false); setChatDoctor(null); }} /></div>}
       {showProfileModal && <UserProfileModal user={currentUser} onClose={() => setShowProfileModal(false)} onUpdate={handleProfileUpdate} />}
       {showFindDoctorWizard && <FindMyDoctorWizard onClose={() => setShowFindDoctorWizard(false)} onComplete={(recommendation) => { setShowFindDoctorWizard(false); setSelectedSpecialization(recommendation.primarySpecialist); setActiveSection('doctors'); }} onBookDoctor={(specialist) => { setSelectedSpecialization(specialist); setActiveSection('doctors'); }} />}
+      
+      {/* Floating Action Button for Mobile */}
+      <div className="lg:hidden">
+        <FloatingActionButton 
+          actions={[
+            { id: 'book', icon: 'fa-calendar-plus', label: 'Book Appointment', color: 'indigo', onClick: () => setActiveSection('doctors') },
+            { id: 'ai', icon: 'fa-robot', label: 'AI Assistant', color: 'purple', onClick: () => setActiveSection('ai-assistant') },
+            { id: 'emergency', icon: 'fa-ambulance', label: 'Emergency', color: 'red', onClick: () => setActiveSection('ambulance') },
+            { id: 'history', icon: 'fa-history', label: 'Medical History', color: 'emerald', onClick: () => setActiveSection('medical-history') }
+          ]}
+        />
+      </div>
     </div>
   );
 };

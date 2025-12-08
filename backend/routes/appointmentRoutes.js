@@ -853,4 +853,45 @@ router.put('/:id/notes', async (req, res) => {
   }
 });
 
+// Reschedule appointment
+router.put('/:id/reschedule', async (req, res) => {
+  try {
+    const { newDate, newTime, reason } = req.body;
+    
+    if (!newDate || !newTime) {
+      return res.status(400).json({ message: 'New date and time are required' });
+    }
+
+    const appointment = await Appointment.findById(req.params.id);
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+
+    // Store old date/time for reference
+    const oldDate = appointment.date;
+    const oldTime = appointment.time;
+
+    // Update appointment
+    appointment.date = new Date(newDate);
+    appointment.time = newTime;
+    appointment.rescheduledFrom = { date: oldDate, time: oldTime, reason: reason || 'Rescheduled by user' };
+    appointment.rescheduledAt = new Date();
+    
+    await appointment.save();
+
+    const updatedAppointment = await Appointment.findById(req.params.id)
+      .populate('userId', 'name email phone')
+      .populate('doctorId', 'name specialization')
+      .populate('clinicId', 'name address');
+
+    res.json({ 
+      message: 'Appointment rescheduled successfully', 
+      appointment: updatedAppointment 
+    });
+  } catch (error) {
+    console.error('Error rescheduling appointment:', error);
+    res.status(500).json({ message: 'Failed to reschedule appointment', error: error.message });
+  }
+});
+
 module.exports = router;

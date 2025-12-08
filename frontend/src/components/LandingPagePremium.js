@@ -135,16 +135,16 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             top: '100%',
             left: 0,
             right: 0,
-            background: darkMode ? '#1e293b' : '#ffffff',
+            background: darkMode ? '#000000' : '#ffffff',
             borderTop: '1px solid rgba(0,0,0,0.1)',
             padding: '16px 24px',
             boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
           }}>
             <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#0f172a', textDecoration: 'none', fontWeight: '500' }}>{t('features')}</a>
-              <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#0f172a', textDecoration: 'none', fontWeight: '500' }}>{t('pricing')}</a>
-              <a href="#security" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#0f172a', textDecoration: 'none', fontWeight: '500' }}>{t('security')}</a>
-              <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#0f172a', textDecoration: 'none', fontWeight: '500' }}>{t('faq')}</a>
+              <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#1f2937', textDecoration: 'none', fontWeight: '500' }}>{t('features')}</a>
+              <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#1f2937', textDecoration: 'none', fontWeight: '500' }}>{t('pricing')}</a>
+              <a href="#security" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#1f2937', textDecoration: 'none', fontWeight: '500' }}>{t('security')}</a>
+              <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#1f2937', textDecoration: 'none', fontWeight: '500' }}>{t('faq')}</a>
               <hr style={{ border: 'none', borderTop: '1px solid rgba(0,0,0,0.1)', margin: '8px 0' }} />
               <button onClick={() => { onNavigate('login'); setMobileMenuOpen(false); }} style={{ padding: '12px', background: 'transparent', border: '1px solid #6366f1', color: '#6366f1', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>{t('signIn')}</button>
               <button onClick={() => { onNavigate('register'); setMobileMenuOpen(false); }} style={{ padding: '12px', background: '#6366f1', border: 'none', color: '#fff', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>{t('getStarted')}</button>
@@ -403,10 +403,10 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
 
 
       {/* Features Section */}
-      <section id="features" className="features-premium" style={{ background: '#f8fafc', position: 'relative', zIndex: 10 }}>
+      <section id="features" className="features-premium" style={{ background: darkMode ? '#000000' : '#f8fafc', position: 'relative', zIndex: 10 }}>
         <div className="features-premium__header">
           <h2 style={{ 
-            color: '#0f172a', 
+            color: darkMode ? '#ffffff' : '#0f172a', 
             fontSize: '2.5rem', 
             fontWeight: '700', 
             marginBottom: '16px',
@@ -415,7 +415,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             {t('everythingYouNeed')}
           </h2>
           <p style={{ 
-            color: '#475569', 
+            color: darkMode ? '#a3a3a3' : '#475569', 
             fontSize: '18px', 
             lineHeight: '1.7',
             maxWidth: '600px',
@@ -432,8 +432,8 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               className="feature-card-premium animate-slide-up" 
               style={{ 
                 animationDelay: `${index * 50}ms`,
-                background: '#ffffff',
-                border: '1px solid #e2e8f0',
+                background: darkMode ? '#0a0a0a' : '#ffffff',
+                border: darkMode ? '1px solid #1a1a1a' : '1px solid #e2e8f0',
                 borderRadius: '20px',
                 padding: '32px'
               }}
@@ -454,14 +454,14 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               <h3 style={{ 
                 fontSize: '18px', 
                 fontWeight: '600', 
-                color: '#0f172a', 
+                color: darkMode ? '#ffffff' : '#0f172a', 
                 marginBottom: '12px' 
               }}>
                 {t(feature.titleKey)}
               </h3>
               <p style={{ 
                 fontSize: '14px', 
-                color: '#64748b', 
+                color: darkMode ? '#a3a3a3' : '#64748b', 
                 lineHeight: '1.6',
                 margin: 0
               }}>
@@ -473,11 +473,11 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
       </section>
 
       {/* How It Works */}
-      <section id="how-it-works" style={{ padding: '120px 24px', background: '#ffffff', position: 'relative', zIndex: 10 }}>
+      <section id="how-it-works" style={{ padding: '120px 24px', background: darkMode ? '#0a0a0a' : '#ffffff', position: 'relative', zIndex: 10 }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '16px', color: '#0f172a' }}>{t('howItWorksTitle')}</h2>
-            <p style={{ color: '#64748b', fontSize: '18px' }}>
+            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '16px', color: darkMode ? '#ffffff' : '#0f172a' }}>{t('howItWorksTitle')}</h2>
+            <p style={{ color: darkMode ? '#a3a3a3' : '#64748b', fontSize: '18px' }}>
               {t('getStartedMinutes')}
             </p>
           </div>
@@ -489,7 +489,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               { step: '3', titleKey: 'bookSlot', descKey: 'bookSlotDesc', icon: 'fa-calendar-alt' },
               { step: '4', titleKey: 'getCare', descKey: 'getCareDesc', icon: 'fa-heart' },
             ].map((item, index) => (
-              <div key={index} style={{ textAlign: 'center', padding: '24px', background: '#f8fafc', borderRadius: '16px' }}>
+              <div key={index} style={{ textAlign: 'center', padding: '24px', background: darkMode ? '#0a0a0a' : '#f8fafc', borderRadius: '16px', border: darkMode ? '1px solid #1a1a1a' : 'none' }}>
                 <div style={{
                   width: '64px',
                   height: '64px',
@@ -513,8 +513,8 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                   textTransform: 'uppercase',
                   letterSpacing: '0.1em'
                 }}>{t('step')} {item.step}</div>
-                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px', color: '#0f172a' }}>{t(item.titleKey)}</h3>
-                <p style={{ fontSize: '14px', color: '#64748b', lineHeight: '1.6' }}>{t(item.descKey)}</p>
+                <h3 style={{ fontSize: '18px', fontWeight: '600', marginBottom: '8px', color: darkMode ? '#ffffff' : '#0f172a' }}>{t(item.titleKey)}</h3>
+                <p style={{ fontSize: '14px', color: darkMode ? '#a3a3a3' : '#64748b', lineHeight: '1.6' }}>{t(item.descKey)}</p>
               </div>
             ))}
           </div>
@@ -522,11 +522,11 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
       </section>
 
       {/* Testimonials */}
-      <section id="testimonials" style={{ padding: '120px 24px', background: '#f8fafc', position: 'relative', zIndex: 10 }}>
+      <section id="testimonials" style={{ padding: '120px 24px', background: darkMode ? '#000000' : '#f8fafc', position: 'relative', zIndex: 10 }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '16px', color: '#0f172a' }}>{t('lovedByThousands')}</h2>
-            <p style={{ color: '#64748b', fontSize: '18px' }}>
+            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '16px', color: darkMode ? '#ffffff' : '#0f172a' }}>{t('lovedByThousands')}</h2>
+            <p style={{ color: darkMode ? '#a3a3a3' : '#64748b', fontSize: '18px' }}>
               {t('seeWhatUsers')}
             </p>
           </div>
@@ -554,9 +554,9 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             ].map((testimonial, index) => (
               <div key={index} style={{ 
                 padding: '28px', 
-                background: '#ffffff', 
+                background: darkMode ? '#0a0a0a' : '#ffffff', 
                 borderRadius: '20px', 
-                border: '1px solid #e2e8f0',
+                border: darkMode ? '1px solid #1a1a1a' : '1px solid #e2e8f0',
                 boxShadow: '0 1px 3px rgba(0, 0, 0, 0.05)'
               }}>
                 <div style={{ display: 'flex', gap: '4px', marginBottom: '16px' }}>
@@ -564,7 +564,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                     <i key={i} className="fas fa-star" style={{ color: '#f59e0b', fontSize: '14px' }}></i>
                   ))}
                 </div>
-                <p style={{ fontSize: '15px', color: '#475569', lineHeight: '1.7', marginBottom: '20px' }}>
+                <p style={{ fontSize: '15px', color: darkMode ? '#d4d4d4' : '#475569', lineHeight: '1.7', marginBottom: '20px' }}>
                   "{testimonial.text}"
                 </p>
                 <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
@@ -576,12 +576,12 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                       height: '48px', 
                       borderRadius: '50%', 
                       objectFit: 'cover',
-                      border: '2px solid #e2e8f0'
+                      border: darkMode ? '2px solid #1a1a1a' : '2px solid #e2e8f0'
                     }}
                   />
                   <div>
-                    <div style={{ fontWeight: '600', color: '#0f172a' }}>{testimonial.name}</div>
-                    <div style={{ fontSize: '13px', color: '#64748b' }}>{testimonial.role}</div>
+                    <div style={{ fontWeight: '600', color: darkMode ? '#ffffff' : '#0f172a' }}>{testimonial.name}</div>
+                    <div style={{ fontSize: '13px', color: darkMode ? '#a3a3a3' : '#64748b' }}>{testimonial.role}</div>
                   </div>
                 </div>
               </div>
@@ -592,34 +592,34 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
 
 
       {/* Pricing Section */}
-      <section id="pricing" style={{ padding: '120px 24px', background: '#ffffff', position: 'relative', zIndex: 10 }}>
+      <section id="pricing" style={{ padding: '120px 24px', background: darkMode ? '#0a0a0a' : '#ffffff', position: 'relative', zIndex: 10 }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-            <div style={{ display: 'inline-block', padding: '6px 16px', background: '#ede9fe', borderRadius: '20px', fontSize: '13px', fontWeight: '600', color: '#7c3aed', marginBottom: '16px' }}>{t('pricing').toUpperCase()}</div>
-            <h2 style={{ fontSize: '2.5rem', fontWeight: '700', marginBottom: '16px', color: '#0f172a' }}>{t('pricingTitle')}</h2>
-            <p style={{ color: '#64748b', fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>{t('pricingSubtitle')}</p>
+            <div style={{ display: 'inline-block', padding: '6px 16px', background: darkMode ? 'rgba(139, 92, 246, 0.2)' : '#ede9fe', borderRadius: '20px', fontSize: '13px', fontWeight: '600', color: '#7c3aed', marginBottom: '16px' }}>{t('pricing').toUpperCase()}</div>
+            <h2 style={{ fontSize: '2.5rem', fontWeight: '700', marginBottom: '16px', color: darkMode ? '#ffffff' : '#0f172a' }}>{t('pricingTitle')}</h2>
+            <p style={{ color: darkMode ? '#a3a3a3' : '#64748b', fontSize: '18px', maxWidth: '600px', margin: '0 auto' }}>{t('pricingSubtitle')}</p>
           </div>
           
           <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '24px', maxWidth: '1000px', margin: '0 auto' }}>
             {pricingPlans.map((plan, index) => (
               <div key={index} style={{ 
                 padding: '32px', 
-                background: plan.popular ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' : '#ffffff', 
+                background: plan.popular ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' : (darkMode ? '#0a0a0a' : '#ffffff'), 
                 borderRadius: '24px', 
-                border: plan.popular ? 'none' : '1px solid #e2e8f0',
+                border: plan.popular ? 'none' : (darkMode ? '1px solid #1a1a1a' : '1px solid #e2e8f0'),
                 boxShadow: plan.popular ? '0 20px 40px rgba(99, 102, 241, 0.3)' : '0 1px 3px rgba(0,0,0,0.05)',
                 position: 'relative',
                 transform: plan.popular ? 'scale(1.05)' : 'scale(1)'
               }}>
                 {plan.popular && <div style={{ position: 'absolute', top: '-12px', left: '50%', transform: 'translateX(-50%)', background: '#fbbf24', color: '#0f172a', padding: '4px 16px', borderRadius: '20px', fontSize: '12px', fontWeight: '700' }}>MOST POPULAR</div>}
-                <h3 style={{ fontSize: '20px', fontWeight: '600', color: plan.popular ? '#fff' : '#0f172a', marginBottom: '8px' }}>{plan.name}</h3>
+                <h3 style={{ fontSize: '20px', fontWeight: '600', color: plan.popular ? '#fff' : (darkMode ? '#ffffff' : '#0f172a'), marginBottom: '8px' }}>{plan.name}</h3>
                 <div style={{ marginBottom: '24px' }}>
-                  <span style={{ fontSize: '3rem', fontWeight: '700', color: plan.popular ? '#fff' : '#0f172a' }}>{plan.price}</span>
-                  <span style={{ fontSize: '16px', color: plan.popular ? 'rgba(255,255,255,0.8)' : '#64748b' }}>{plan.period}</span>
+                  <span style={{ fontSize: '3rem', fontWeight: '700', color: plan.popular ? '#fff' : (darkMode ? '#ffffff' : '#0f172a') }}>{plan.price}</span>
+                  <span style={{ fontSize: '16px', color: plan.popular ? 'rgba(255,255,255,0.8)' : (darkMode ? '#a3a3a3' : '#64748b') }}>{plan.period}</span>
                 </div>
                 <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 32px 0' }}>
                   {plan.features.map((feature, i) => (
-                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', fontSize: '14px', color: plan.popular ? 'rgba(255,255,255,0.9)' : '#475569' }}>
+                    <li key={i} style={{ display: 'flex', alignItems: 'center', gap: '12px', marginBottom: '12px', fontSize: '14px', color: plan.popular ? 'rgba(255,255,255,0.9)' : (darkMode ? '#d4d4d4' : '#475569') }}>
                       <i className="fas fa-check" style={{ color: plan.popular ? '#fff' : '#22c55e', fontSize: '12px' }}></i>
                       {feature}
                     </li>
@@ -647,7 +647,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
       </section>
 
       {/* Privacy & Security Section */}
-      <section id="security" style={{ padding: '120px 24px', background: 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)', position: 'relative', zIndex: 10, overflow: 'hidden' }}>
+      <section id="security" style={{ padding: '120px 24px', background: darkMode ? 'linear-gradient(180deg, #000000 0%, #0a0a0a 100%)' : 'linear-gradient(180deg, #0f172a 0%, #1e293b 100%)', position: 'relative', zIndex: 10, overflow: 'hidden' }}>
         {/* Background decoration */}
         <div style={{ position: 'absolute', top: '10%', left: '5%', width: '300px', height: '300px', background: 'radial-gradient(circle, rgba(34, 197, 94, 0.1) 0%, transparent 70%)', borderRadius: '50%' }}></div>
         <div style={{ position: 'absolute', bottom: '10%', right: '5%', width: '400px', height: '400px', background: 'radial-gradient(circle, rgba(99, 102, 241, 0.1) 0%, transparent 70%)', borderRadius: '50%' }}></div>
@@ -717,19 +717,19 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
       </section>
 
       {/* FAQ Section */}
-      <section id="faq" style={{ padding: '120px 24px', background: '#f8fafc', position: 'relative', zIndex: 10 }}>
+      <section id="faq" style={{ padding: '120px 24px', background: darkMode ? '#000000' : '#f8fafc', position: 'relative', zIndex: 10 }}>
         <div style={{ maxWidth: '800px', margin: '0 auto' }}>
           <div style={{ textAlign: 'center', marginBottom: '64px' }}>
-            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '16px', color: '#0f172a' }}>{t('faqTitle')}</h2>
-            <p style={{ color: '#64748b', fontSize: '18px' }}>{t('faqSubtitle')}</p>
+            <h2 style={{ fontSize: '2.25rem', fontWeight: '700', marginBottom: '16px', color: darkMode ? '#ffffff' : '#0f172a' }}>{t('faqTitle')}</h2>
+            <p style={{ color: darkMode ? '#a3a3a3' : '#64748b', fontSize: '18px' }}>{t('faqSubtitle')}</p>
           </div>
           
           <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
             {faqs.map((faq, index) => (
               <div key={index} style={{ 
-                background: '#ffffff', 
+                background: darkMode ? '#0a0a0a' : '#ffffff', 
                 borderRadius: '16px', 
-                border: '1px solid #e2e8f0',
+                border: darkMode ? '1px solid #1a1a1a' : '1px solid #e2e8f0',
                 overflow: 'hidden'
               }}>
                 <button 
@@ -746,11 +746,11 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                     textAlign: 'left'
                   }}
                 >
-                  <span style={{ fontSize: '16px', fontWeight: '600', color: '#0f172a' }}>{faq.q}</span>
+                  <span style={{ fontSize: '16px', fontWeight: '600', color: darkMode ? '#ffffff' : '#0f172a' }}>{faq.q}</span>
                   <i className={`fas fa-chevron-${activeFaq === index ? 'up' : 'down'}`} style={{ color: '#6366f1', fontSize: '14px' }}></i>
                 </button>
                 {activeFaq === index && (
-                  <div style={{ padding: '0 24px 20px', color: '#64748b', fontSize: '15px', lineHeight: '1.7' }}>
+                  <div style={{ padding: '0 24px 20px', color: darkMode ? '#a3a3a3' : '#64748b', fontSize: '15px', lineHeight: '1.7' }}>
                     {faq.a}
                   </div>
                 )}
@@ -761,7 +761,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
       </section>
 
       {/* App Download Section */}
-      <section style={{ padding: '100px 24px', background: '#0f172a', position: 'relative', zIndex: 10 }}>
+      <section style={{ padding: '100px 24px', background: darkMode ? '#000000' : '#0f172a', position: 'relative', zIndex: 10 }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto', display: 'flex', alignItems: 'center', justifyContent: 'space-between', flexWrap: 'wrap', gap: '48px' }}>
           <div style={{ flex: '1', minWidth: '300px' }}>
             <h2 style={{ fontSize: '2.25rem', fontWeight: '700', color: '#fff', marginBottom: '16px' }}>{t('getTheApp')}</h2>
@@ -786,7 +786,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
           <div style={{ flex: '1', minWidth: '300px', display: 'flex', justifyContent: 'center' }}>
             <div style={{ position: 'relative' }}>
               <div style={{ width: '220px', height: '440px', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', borderRadius: '36px', padding: '8px', boxShadow: '0 30px 60px rgba(0,0,0,0.3)' }}>
-                <div style={{ width: '100%', height: '100%', background: '#1e293b', borderRadius: '28px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
+                <div style={{ width: '100%', height: '100%', background: darkMode ? '#0a0a0a' : '#1e293b', borderRadius: '28px', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center', gap: '16px' }}>
                   <div style={{ width: '60px', height: '60px', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', borderRadius: '16px', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                     <svg viewBox="0 0 50 32" fill="none" style={{ width: 32, height: 24 }}>
                       <path d="M0 16 L8 16 L12 16" stroke="rgba(255,255,255,0.4)" strokeWidth="2.5" strokeLinecap="round"/>
@@ -868,7 +868,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
       {/* Footer */}
       <footer style={{ 
         padding: '64px 24px 32px', 
-        background: '#0f172a',
+        background: darkMode ? '#000000' : '#0f172a',
         color: '#94a3b8'
       }}>
         <div style={{ maxWidth: '1280px', margin: '0 auto' }}>

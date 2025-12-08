@@ -1648,46 +1648,6 @@ function App() {
         </>
       )}
 
-      {/* Floating Theme Toggle Button - Only show when logged in (not on landing page) */}
-      {(user || admin || receptionist || doctor) && (
-        <button
-          onClick={toggleDarkMode}
-          title={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode (Ctrl+D)`}
-          aria-label={`Switch to ${darkMode ? 'Light' : 'Dark'} Mode`}
-          style={{
-            position: 'fixed',
-            bottom: '32px',
-            right: '32px',
-            width: '56px',
-            height: '56px',
-            borderRadius: '50%',
-            background: darkMode 
-              ? 'linear-gradient(135deg, #1e293b 0%, #334155 100%)' 
-              : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)',
-            border: '3px solid ' + (darkMode ? '#fbbf24' : '#ffffff'),
-            color: darkMode ? '#fbbf24' : '#ffffff',
-            fontSize: '1.5rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 9999,
-            boxShadow: '0 4px 20px rgba(102, 126, 234, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2)',
-            transition: 'all 0.3s ease'
-          }}
-          onMouseEnter={(e) => {
-            e.currentTarget.style.transform = 'scale(1.1) rotate(15deg)';
-            e.currentTarget.style.boxShadow = '0 6px 25px rgba(102, 126, 234, 0.5), 0 3px 12px rgba(0, 0, 0, 0.25)';
-          }}
-          onMouseLeave={(e) => {
-            e.currentTarget.style.transform = 'scale(1) rotate(0deg)';
-            e.currentTarget.style.boxShadow = '0 4px 20px rgba(102, 126, 234, 0.4), 0 2px 8px rgba(0, 0, 0, 0.2)';
-          }}
-        >
-          <i className={darkMode ? 'fas fa-sun' : 'fas fa-moon'}></i>
-        </button>
-      )}
-
       {/* Scroll to Top Button */}
       {(user || admin || receptionist) && (
         <button

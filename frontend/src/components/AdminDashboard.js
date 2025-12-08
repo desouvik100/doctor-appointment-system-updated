@@ -5,6 +5,10 @@ import AdminChatbot from './AdminChatbot';
 import AdminEmailSender from './AdminEmailSender';
 import ThemeToggle from './ThemeToggle';
 import { exportAppointmentsToPDF } from '../utils/pdfExport';
+import DashboardAnalytics from './DashboardAnalytics';
+import RevenueReport from './RevenueReport';
+import ActivityLog from './ActivityLog';
+import SecurityMonitor from './SecurityMonitor';
 import '../styles/premium-saas.css';
 import '../styles/admin-dashboard-professional.css';
 
@@ -61,6 +65,9 @@ function AdminDashboard({ admin, onLogout }) {
   const [payoutForm, setPayoutForm] = useState({ amount: '', method: 'bank_transfer', reference: '' });
   const [pendingWithdrawals, setPendingWithdrawals] = useState([]);
   const [withdrawalStats, setWithdrawalStats] = useState({ totalPending: 0, totalAmount: 0 });
+  
+  // Security alerts state
+  const [securityAlertCount, setSecurityAlertCount] = useState(0);
 
   // Modal states
   const [showUserModal, setShowUserModal] = useState(false);
@@ -172,10 +179,23 @@ function AdminDashboard({ admin, onLogout }) {
     }
   }, []);
 
+  // Fetch security alerts count
+  const fetchSecurityAlerts = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/security/stats');
+      if (response.data.success) {
+        setSecurityAlertCount(response.data.stats.newAlerts || 0);
+      }
+    } catch (error) {
+      console.error('Error fetching security alerts:', error);
+    }
+  }, []);
+
   useEffect(() => {
     fetchDashboardData();
     fetchPendingApprovals();
-  }, [fetchDashboardData, fetchPendingApprovals]);
+    fetchSecurityAlerts();
+  }, [fetchDashboardData, fetchPendingApprovals, fetchSecurityAlerts]);
 
   // Fetch doctor wallets for payout management
   const fetchDoctorWallets = async () => {
@@ -784,8 +804,23 @@ function AdminDashboard({ admin, onLogout }) {
           <TabButton tab="payouts" activeTab={activeTab} onClick={handleTabChange}>
             <i className="fas fa-wallet"></i> Doctor Payouts
           </TabButton>
+          <TabButton tab="analytics" activeTab={activeTab} onClick={handleTabChange}>
+            <i className="fas fa-chart-line"></i> Analytics
+          </TabButton>
+          <TabButton tab="revenue" activeTab={activeTab} onClick={handleTabChange}>
+            <i className="fas fa-rupee-sign"></i> Revenue
+          </TabButton>
+          <TabButton tab="activity" activeTab={activeTab} onClick={handleTabChange}>
+            <i className="fas fa-history"></i> Activity Log
+          </TabButton>
           <TabButton tab="email" activeTab={activeTab} onClick={handleTabChange}>
             <i className="fas fa-envelope"></i> Send Email
+          </TabButton>
+          <TabButton tab="security" activeTab={activeTab} onClick={handleTabChange}>
+            <i className="fas fa-shield-alt"></i> AI Security
+            {securityAlertCount > 0 && (
+              <span className="admin-tab__badge" style={{ background: '#ef4444' }}>{securityAlertCount}</span>
+            )}
           </TabButton>
         </div>
 
@@ -801,9 +836,49 @@ function AdminDashboard({ admin, onLogout }) {
                   System Overview
                 </h2>
               </div>
-              <p style={{ color: '#718096', fontSize: '16px' }}>
+              <p style={{ color: '#718096', fontSize: '16px', marginBottom: '20px' }}>
                 Welcome to the HealthSync Admin Dashboard. Monitor and manage your healthcare system from here.
               </p>
+              
+              {/* Security Alerts Widget */}
+              {securityAlertCount > 0 && (
+                <div 
+                  onClick={() => handleTabChange('security')}
+                  style={{
+                    background: 'linear-gradient(135deg, #fee2e2 0%, #fecaca 100%)',
+                    border: '1px solid #fca5a5',
+                    borderRadius: '12px',
+                    padding: '16px 20px',
+                    marginBottom: '20px',
+                    cursor: 'pointer',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '16px',
+                    transition: 'all 0.2s'
+                  }}
+                >
+                  <div style={{
+                    width: '48px',
+                    height: '48px',
+                    borderRadius: '12px',
+                    background: '#ef4444',
+                    display: 'flex',
+                    alignItems: 'center',
+                    justifyContent: 'center'
+                  }}>
+                    <i className="fas fa-shield-alt" style={{ color: 'white', fontSize: '20px' }}></i>
+                  </div>
+                  <div style={{ flex: 1 }}>
+                    <h4 style={{ margin: 0, color: '#991b1b', fontSize: '16px', fontWeight: '600' }}>
+                      {securityAlertCount} Security Alert{securityAlertCount > 1 ? 's' : ''} Detected
+                    </h4>
+                    <p style={{ margin: '4px 0 0', color: '#b91c1c', fontSize: '14px' }}>
+                      AI has detected suspicious activities. Click to review.
+                    </p>
+                  </div>
+                  <i className="fas fa-arrow-right" style={{ color: '#dc2626' }}></i>
+                </div>
+              )}
             </>
           )}
 
@@ -1453,6 +1528,28 @@ function AdminDashboard({ admin, onLogout }) {
             </>
           )}
 
+          {/* Analytics Section */}
+          {activeTab === "analytics" && (
+            <DashboardAnalytics 
+              appointments={appointments} 
+              doctors={doctors} 
+              users={users} 
+            />
+          )}
+
+          {/* Revenue Section */}
+          {activeTab === "revenue" && (
+            <RevenueReport 
+              appointments={appointments} 
+              doctors={doctors} 
+            />
+          )}
+
+          {/* Activity Log Section */}
+          {activeTab === "activity" && (
+            <ActivityLog userType="all" />
+          )}
+
           {/* Email Section */}
           {activeTab === "email" && (
             <>
@@ -1465,6 +1562,24 @@ function AdminDashboard({ admin, onLogout }) {
                 </h2>
               </div>
               <AdminEmailSender />
+            </>
+          )}
+
+          {/* AI Security Monitor Section */}
+          {activeTab === "security" && (
+            <>
+              <div className="admin-section__header">
+                <h2 className="admin-section__title">
+                  <div className="admin-section__icon">
+                    <i className="fas fa-shield-alt"></i>
+                  </div>
+                  AI Security Monitor
+                </h2>
+              </div>
+              <p style={{ color: '#718096', fontSize: '14px', marginBottom: '20px' }}>
+                AI-powered security monitoring detects suspicious activities by staff, doctors, and admins in real-time.
+              </p>
+              <SecurityMonitor adminId={admin?.id || admin?._id} />
             </>
           )}
         </div>

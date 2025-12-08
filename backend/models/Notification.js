@@ -33,7 +33,10 @@ const notificationSchema = new mongoose.Schema({
       'review_request',
       'general',
       'emergency',
-      'promotion'
+      'promotion',
+      'security_warning',
+      'account_suspended',
+      'password_reset_required'
     ],
     default: 'general'
   },

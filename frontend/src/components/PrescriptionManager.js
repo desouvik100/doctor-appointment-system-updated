@@ -1,127 +1,24 @@
-// frontend/src/components/PrescriptionManager.js
-// Digital Prescription System for Doctors
-import { useState, useEffect } from 'react';
-import './PrescriptionManager.css';
+import { useState } from 'react';
+import axios from '../api/config';
+import toast from 'react-hot-toast';
 
-const API_URL = process.env.REACT_APP_API_URL || 'http://localhost:5005';
-
-const PrescriptionManager = ({ appointment, doctor, onClose, onSave }) => {
+const PrescriptionManager = ({ doctorId, doctorName, patientId, patientName, appointmentId, onClose, onSave }) => {
   const [prescription, setPrescription] = useState({
     diagnosis: '',
-    symptoms: [],
-    medicines: [],
-    labTests: [],
+    symptoms: '',
+    medicines: [{ name: '', dosage: '', frequency: '', duration: '', instructions: '' }],
+    tests: [],
     advice: '',
-    dietaryInstructions: '',
-    followUpDate: '',
-    followUpInstructions: '',
-    vitals: {
-      bloodPressure: '',
-      pulse: '',
-      temperature: '',
-      weight: '',
-      height: '',
-      spo2: '',
-      bloodSugar: ''
-    },
-    allergies: []
+    followUpDate: ''
   });
-  
-  const [newSymptom, setNewSymptom] = useState('');
-  const [newAllergy, setNewAllergy] = useState('');
-  const [loading, setSaving] = useState(false);
-  const [showMedicineForm, setShowMedicineForm] = useState(false);
-  const [newMedicine, setNewMedicine] = useState({
-    name: '',
-    dosage: '',
-    frequency: 'Once daily',
-    duration: '7 days',
-    timing: 'after_food',
-    instructions: '',
-    quantity: 1
-  });
-  const [newLabTest, setNewLabTest] = useState({ name: '', instructions: '', urgent: false });
-
-  // Common medicines for quick add
-  const commonMedicines = [
-    { name: 'Paracetamol 500mg', dosage: '1 tablet' },
-    { name: 'Azithromycin 500mg', dosage: '1 tablet' },
-    { name: 'Cetirizine 10mg', dosage: '1 tablet' },
-    { name: 'Omeprazole 20mg', dosage: '1 capsule' },
-    { name: 'Amoxicillin 500mg', dosage: '1 capsule' },
-    { name: 'Ibuprofen 400mg', dosage: '1 tablet' },
-    { name: 'Metformin 500mg', dosage: '1 tablet' },
-    { name: 'Vitamin D3 60000IU', dosage: '1 sachet' }
-  ];
-
-  const frequencies = [
-    'Once daily', 'Twice daily', 'Thrice daily', 'Four times daily',
-    'Every 6 hours', 'Every 8 hours', 'Every 12 hours', 'Weekly', 'As needed'
-  ];
-
-  const durations = [
-    '3 days', '5 days', '7 days', '10 days', '14 days', '21 days', '30 days', 'Continue'
-  ];
-
-  const timings = [
-    { value: 'before_food', label: 'Before Food' },
-    { value: 'after_food', label: 'After Food' },
-    { value: 'with_food', label: 'With Food' },
-    { value: 'empty_stomach', label: 'Empty Stomach' },
-    { value: 'bedtime', label: 'At Bedtime' },
-    { value: 'as_needed', label: 'As Needed' }
-  ];
-
-  const commonLabTests = [
-    'Complete Blood Count (CBC)', 'Blood Sugar (Fasting)', 'Blood Sugar (PP)',
-    'HbA1c', 'Lipid Profile', 'Liver Function Test (LFT)', 'Kidney Function Test (KFT)',
-    'Thyroid Profile (T3, T4, TSH)', 'Urine Routine', 'Chest X-Ray', 'ECG'
-  ];
-
-  const addSymptom = () => {
-    if (newSymptom.trim()) {
-      setPrescription(prev => ({
-        ...prev,
-        symptoms: [...prev.symptoms, newSymptom.trim()]
-      }));
-      setNewSymptom('');
-    }
-  };
-
-  const removeSymptom = (index) => {
-    setPrescription(prev => ({
-      ...prev,
-      symptoms: prev.symptoms.filter((_, i) => i !== index)
-    }));
-  };
-
-  const addAllergy = () => {
-    if (newAllergy.trim()) {
-      setPrescription(prev => ({
-        ...prev,
-        allergies: [...prev.allergies, newAllergy.trim()]
-      }));
-      setNewAllergy('');
-    }
-  };
+  const [saving, setSaving] = useState(false);
+  const [newTest, setNewTest] = useState('');
 
   const addMedicine = () => {
-    if (newMedicine.name && newMedicine.dosage) {
-      setPrescription(prev => ({
-        ...prev,
-        medicines: [...prev.medicines, { ...newMedicine }]
-      }));
-      setNewMedicine({
-        name: '',
-        dosage: '',
-        frequency: 'Once daily',
-        duration: '7 days',
-        timing: 'after_food',
-        instructions: '',
-        quantity: 1
-      });
-      setShowMedicineForm(false);
-    }
+    setPrescription(prev => ({
+      ...prev,
+      medicines: [...prev.medicines, { name: '', dosage: '', frequency: '', duration: '', instructions: '' }]
+    }));
   };
 
   const removeMedicine = (index) => {
@@ -131,439 +28,342 @@ const PrescriptionManager = ({ appointment, doctor, onClose, onSave }) => {
     }));
   };
 
-  const addLabTest = () => {
-    if (newLabTest.name) {
-      setPrescription(prev => ({
-        ...prev,
-        labTests: [...prev.labTests, { ...newLabTest }]
-      }));
-      setNewLabTest({ name: '', instructions: '', urgent: false });
+  const updateMedicine = (index, field, value) => {
+    setPrescription(prev => ({
+      ...prev,
+      medicines: prev.medicines.map((med, i) => i === index ? { ...med, [field]: value } : med)
+    }));
+  };
+
+  const addTest = () => {
+    if (newTest.trim()) {
+      setPrescription(prev => ({ ...prev, tests: [...prev.tests, newTest.trim()] }));
+      setNewTest('');
     }
   };
 
-  const removeLabTest = (index) => {
-    setPrescription(prev => ({
-      ...prev,
-      labTests: prev.labTests.filter((_, i) => i !== index)
-    }));
+  const removeTest = (index) => {
+    setPrescription(prev => ({ ...prev, tests: prev.tests.filter((_, i) => i !== index) }));
   };
 
-  const quickAddMedicine = (med) => {
-    setNewMedicine(prev => ({
-      ...prev,
-      name: med.name,
-      dosage: med.dosage
-    }));
-    setShowMedicineForm(true);
-  };
+  const handleSave = async () => {
+    if (!prescription.diagnosis.trim()) {
+      toast.error('Please enter diagnosis');
+      return;
+    }
+    if (prescription.medicines.some(m => !m.name.trim())) {
+      toast.error('Please fill all medicine names');
+      return;
+    }
 
-  const handleSave = async (finalize = false) => {
-    setSaving(true);
     try {
-      const response = await fetch(`${API_URL}/api/prescriptions/create`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          appointmentId: appointment._id,
-          patientId: appointment.userId?._id || appointment.userId,
-          doctorId: doctor._id,
-          ...prescription
-        })
-      });
+      setSaving(true);
+      const data = {
+        doctorId,
+        doctorName,
+        patientId,
+        patientName,
+        appointmentId,
+        ...prescription,
+        createdAt: new Date().toISOString()
+      };
 
-      const data = await response.json();
-      
-      if (response.ok) {
-        if (finalize) {
-          await fetch(`${API_URL}/api/prescriptions/${data.prescription._id}/finalize`, {
-            method: 'POST'
-          });
-        }
-        onSave && onSave(data.prescription);
-        onClose && onClose();
-      } else {
-        alert(data.message || 'Failed to save prescription');
-      }
+      await axios.post('/api/prescriptions', data);
+      toast.success('Prescription saved successfully');
+      if (onSave) onSave(data);
+      if (onClose) onClose();
     } catch (error) {
-      console.error('Save prescription error:', error);
-      alert('Failed to save prescription');
+      toast.error('Failed to save prescription');
     } finally {
       setSaving(false);
     }
   };
 
+  const handlePrint = () => {
+    const printContent = generatePrintContent();
+    const printWindow = window.open('', '_blank');
+    printWindow.document.write(printContent);
+    printWindow.document.close();
+    printWindow.onload = () => {
+      printWindow.print();
+      printWindow.close();
+    };
+  };
+
+  const generatePrintContent = () => `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <title>Prescription - ${patientName}</title>
+      <style>
+        body { font-family: Arial, sans-serif; padding: 40px; max-width: 800px; margin: 0 auto; }
+        .header { text-align: center; border-bottom: 2px solid #6366f1; padding-bottom: 20px; margin-bottom: 20px; }
+        .header h1 { color: #6366f1; margin: 0; }
+        .header p { color: #64748b; margin: 5px 0; }
+        .patient-info { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px; }
+        .section { margin-bottom: 20px; }
+        .section h3 { color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
+        .medicine { padding: 10px; margin: 8px 0; background: #f1f5f9; border-radius: 6px; border-left: 3px solid #6366f1; }
+        .medicine strong { color: #1e293b; }
+        .rx { font-size: 24px; color: #6366f1; font-weight: bold; }
+        .footer { margin-top: 40px; text-align: right; }
+        .signature { border-top: 1px solid #1e293b; padding-top: 10px; display: inline-block; }
+        @media print { body { padding: 20px; } }
+      </style>
+    </head>
+    <body>
+      <div class="header">
+        <h1>HealthSync</h1>
+        <p>Digital Prescription</p>
+      </div>
+      
+      <div class="patient-info">
+        <div>
+          <strong>Patient:</strong> ${patientName}<br>
+          <strong>Date:</strong> ${new Date().toLocaleDateString()}
+        </div>
+        <div>
+          <strong>Doctor:</strong> Dr. ${doctorName}<br>
+          <strong>Prescription ID:</strong> RX${Date.now().toString().slice(-8)}
+        </div>
+      </div>
+
+      <div class="section">
+        <h3>Diagnosis</h3>
+        <p>${prescription.diagnosis}</p>
+      </div>
+
+      ${prescription.symptoms ? `
+        <div class="section">
+          <h3>Symptoms</h3>
+          <p>${prescription.symptoms}</p>
+        </div>
+      ` : ''}
+
+      <div class="section">
+        <h3><span class="rx">℞</span> Medicines</h3>
+        ${prescription.medicines.filter(m => m.name).map(med => `
+          <div class="medicine">
+            <strong>${med.name}</strong> - ${med.dosage}<br>
+            <small>Frequency: ${med.frequency} | Duration: ${med.duration}</small>
+            ${med.instructions ? `<br><small>Instructions: ${med.instructions}</small>` : ''}
+          </div>
+        `).join('')}
+      </div>
+
+      ${prescription.tests.length > 0 ? `
+        <div class="section">
+          <h3>Recommended Tests</h3>
+          <ul>${prescription.tests.map(t => `<li>${t}</li>`).join('')}</ul>
+        </div>
+      ` : ''}
+
+      ${prescription.advice ? `
+        <div class="section">
+          <h3>Advice</h3>
+          <p>${prescription.advice}</p>
+        </div>
+      ` : ''}
+
+      ${prescription.followUpDate ? `
+        <div class="section">
+          <h3>Follow-up Date</h3>
+          <p>${new Date(prescription.followUpDate).toLocaleDateString()}</p>
+        </div>
+      ` : ''}
+
+      <div class="footer">
+        <div class="signature">
+          <strong>Dr. ${doctorName}</strong><br>
+          <small>Digital Signature</small>
+        </div>
+      </div>
+    </body>
+    </html>
+  `;
+
+  const frequencyOptions = ['Once daily', 'Twice daily', 'Three times daily', 'Four times daily', 'Every 6 hours', 'Every 8 hours', 'Before meals', 'After meals', 'At bedtime', 'As needed'];
+  const durationOptions = ['3 days', '5 days', '7 days', '10 days', '14 days', '1 month', '2 months', '3 months', 'Ongoing'];
+
   return (
-    <div className="prescription-manager">
-      <div className="prescription-manager__header">
-        <h2><i className="fas fa-file-prescription"></i> Digital Prescription</h2>
-        <button className="prescription-manager__close" onClick={onClose}>
-          <i className="fas fa-times"></i>
-        </button>
-      </div>
-
-      <div className="prescription-manager__patient-info">
-        <div className="patient-info__item">
-          <span className="label">Patient:</span>
-          <span className="value">{appointment?.userId?.name || 'N/A'}</span>
+    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+      <div className="bg-white rounded-2xl w-full max-w-3xl max-h-[90vh] overflow-hidden shadow-2xl">
+        {/* Header */}
+        <div className="bg-gradient-to-r from-indigo-600 to-purple-600 text-white p-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-xl font-bold">Create Prescription</h2>
+              <p className="text-indigo-200">Patient: {patientName}</p>
+            </div>
+            <button onClick={onClose} className="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center">
+              <i className="fas fa-times"></i>
+            </button>
+          </div>
         </div>
-        <div className="patient-info__item">
-          <span className="label">Date:</span>
-          <span className="value">{new Date().toLocaleDateString('en-IN')}</span>
-        </div>
-        <div className="patient-info__item">
-          <span className="label">Appointment:</span>
-          <span className="value">{appointment?.reason || 'Consultation'}</span>
-        </div>
-      </div>
 
-      <div className="prescription-manager__content">
-        {/* Vitals Section */}
-        <section className="prescription-section">
-          <h3><i className="fas fa-heartbeat"></i> Vitals</h3>
-          <div className="vitals-grid">
-            <div className="vital-input">
-              <label>Blood Pressure</label>
+        {/* Content */}
+        <div className="p-6 overflow-y-auto max-h-[calc(90vh-200px)]">
+          {/* Diagnosis & Symptoms */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Diagnosis *</label>
               <input
                 type="text"
-                placeholder="120/80 mmHg"
-                value={prescription.vitals.bloodPressure}
-                onChange={(e) => setPrescription(prev => ({
-                  ...prev,
-                  vitals: { ...prev.vitals, bloodPressure: e.target.value }
-                }))}
+                value={prescription.diagnosis}
+                onChange={(e) => setPrescription(prev => ({ ...prev, diagnosis: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Enter diagnosis"
               />
             </div>
-            <div className="vital-input">
-              <label>Pulse</label>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Symptoms</label>
               <input
                 type="text"
-                placeholder="72 bpm"
-                value={prescription.vitals.pulse}
-                onChange={(e) => setPrescription(prev => ({
-                  ...prev,
-                  vitals: { ...prev.vitals, pulse: e.target.value }
-                }))}
-              />
-            </div>
-            <div className="vital-input">
-              <label>Temperature</label>
-              <input
-                type="text"
-                placeholder="98.6°F"
-                value={prescription.vitals.temperature}
-                onChange={(e) => setPrescription(prev => ({
-                  ...prev,
-                  vitals: { ...prev.vitals, temperature: e.target.value }
-                }))}
-              />
-            </div>
-            <div className="vital-input">
-              <label>SpO2</label>
-              <input
-                type="text"
-                placeholder="98%"
-                value={prescription.vitals.spo2}
-                onChange={(e) => setPrescription(prev => ({
-                  ...prev,
-                  vitals: { ...prev.vitals, spo2: e.target.value }
-                }))}
-              />
-            </div>
-            <div className="vital-input">
-              <label>Weight</label>
-              <input
-                type="text"
-                placeholder="70 kg"
-                value={prescription.vitals.weight}
-                onChange={(e) => setPrescription(prev => ({
-                  ...prev,
-                  vitals: { ...prev.vitals, weight: e.target.value }
-                }))}
-              />
-            </div>
-            <div className="vital-input">
-              <label>Blood Sugar</label>
-              <input
-                type="text"
-                placeholder="100 mg/dL"
-                value={prescription.vitals.bloodSugar}
-                onChange={(e) => setPrescription(prev => ({
-                  ...prev,
-                  vitals: { ...prev.vitals, bloodSugar: e.target.value }
-                }))}
+                value={prescription.symptoms}
+                onChange={(e) => setPrescription(prev => ({ ...prev, symptoms: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
+                placeholder="Enter symptoms"
               />
             </div>
           </div>
-        </section>
 
-        {/* Symptoms Section */}
-        <section className="prescription-section">
-          <h3><i className="fas fa-notes-medical"></i> Symptoms</h3>
-          <div className="tags-input">
-            <div className="tags-list">
-              {prescription.symptoms.map((symptom, index) => (
-                <span key={index} className="tag">
-                  {symptom}
-                  <button onClick={() => removeSymptom(index)}><i className="fas fa-times"></i></button>
-                </span>
-              ))}
+          {/* Medicines */}
+          <div className="mb-6">
+            <div className="flex items-center justify-between mb-3">
+              <label className="text-sm font-medium text-slate-700">Medicines</label>
+              <button onClick={addMedicine} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium">
+                <i className="fas fa-plus mr-1"></i>Add Medicine
+              </button>
             </div>
-            <div className="tag-add">
-              <input
-                type="text"
-                placeholder="Add symptom..."
-                value={newSymptom}
-                onChange={(e) => setNewSymptom(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addSymptom()}
-              />
-              <button onClick={addSymptom}><i className="fas fa-plus"></i></button>
-            </div>
-          </div>
-        </section>
-
-        {/* Diagnosis Section */}
-        <section className="prescription-section">
-          <h3><i className="fas fa-stethoscope"></i> Diagnosis</h3>
-          <textarea
-            placeholder="Enter diagnosis..."
-            value={prescription.diagnosis}
-            onChange={(e) => setPrescription(prev => ({ ...prev, diagnosis: e.target.value }))}
-            rows={3}
-          />
-        </section>
-
-        {/* Allergies Section */}
-        <section className="prescription-section">
-          <h3><i className="fas fa-allergies"></i> Known Allergies</h3>
-          <div className="tags-input">
-            <div className="tags-list">
-              {prescription.allergies.map((allergy, index) => (
-                <span key={index} className="tag tag--warning">
-                  {allergy}
-                  <button onClick={() => setPrescription(prev => ({
-                    ...prev,
-                    allergies: prev.allergies.filter((_, i) => i !== index)
-                  }))}><i className="fas fa-times"></i></button>
-                </span>
-              ))}
-            </div>
-            <div className="tag-add">
-              <input
-                type="text"
-                placeholder="Add allergy..."
-                value={newAllergy}
-                onChange={(e) => setNewAllergy(e.target.value)}
-                onKeyPress={(e) => e.key === 'Enter' && addAllergy()}
-              />
-              <button onClick={addAllergy}><i className="fas fa-plus"></i></button>
-            </div>
-          </div>
-        </section>
-
-        {/* Medicines Section */}
-        <section className="prescription-section prescription-section--medicines">
-          <h3><i className="fas fa-pills"></i> Medicines</h3>
-          
-          {/* Quick Add */}
-          <div className="quick-add">
-            <span className="quick-add__label">Quick Add:</span>
-            <div className="quick-add__buttons">
-              {commonMedicines.slice(0, 4).map((med, index) => (
-                <button key={index} onClick={() => quickAddMedicine(med)}>
-                  {med.name.split(' ')[0]}
-                </button>
-              ))}
-            </div>
-          </div>
-
-          {/* Medicine List */}
-          <div className="medicines-list">
-            {prescription.medicines.map((med, index) => (
-              <div key={index} className="medicine-item">
-                <div className="medicine-item__header">
-                  <span className="medicine-item__number">{index + 1}</span>
-                  <span className="medicine-item__name">{med.name}</span>
-                  <button className="medicine-item__remove" onClick={() => removeMedicine(index)}>
-                    <i className="fas fa-trash"></i>
-                  </button>
-                </div>
-                <div className="medicine-item__details">
-                  <span><i className="fas fa-prescription-bottle"></i> {med.dosage}</span>
-                  <span><i className="fas fa-clock"></i> {med.frequency}</span>
-                  <span><i className="fas fa-calendar"></i> {med.duration}</span>
-                  <span><i className="fas fa-utensils"></i> {timings.find(t => t.value === med.timing)?.label}</span>
-                </div>
-                {med.instructions && (
-                  <div className="medicine-item__instructions">
-                    <i className="fas fa-info-circle"></i> {med.instructions}
+            <div className="space-y-3">
+              {prescription.medicines.map((med, index) => (
+                <div key={index} className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                  <div className="flex items-center justify-between mb-3">
+                    <span className="text-sm font-medium text-slate-600">Medicine {index + 1}</span>
+                    {prescription.medicines.length > 1 && (
+                      <button onClick={() => removeMedicine(index)} className="text-red-500 hover:text-red-600">
+                        <i className="fas fa-trash-alt"></i>
+                      </button>
+                    )}
                   </div>
-                )}
-              </div>
-            ))}
-          </div>
-
-          {/* Add Medicine Form */}
-          {showMedicineForm ? (
-            <div className="medicine-form">
-              <div className="medicine-form__row">
-                <input
-                  type="text"
-                  placeholder="Medicine name"
-                  value={newMedicine.name}
-                  onChange={(e) => setNewMedicine(prev => ({ ...prev, name: e.target.value }))}
-                />
-                <input
-                  type="text"
-                  placeholder="Dosage (e.g., 1 tablet)"
-                  value={newMedicine.dosage}
-                  onChange={(e) => setNewMedicine(prev => ({ ...prev, dosage: e.target.value }))}
-                />
-              </div>
-              <div className="medicine-form__row">
-                <select
-                  value={newMedicine.frequency}
-                  onChange={(e) => setNewMedicine(prev => ({ ...prev, frequency: e.target.value }))}
-                >
-                  {frequencies.map(f => <option key={f} value={f}>{f}</option>)}
-                </select>
-                <select
-                  value={newMedicine.duration}
-                  onChange={(e) => setNewMedicine(prev => ({ ...prev, duration: e.target.value }))}
-                >
-                  {durations.map(d => <option key={d} value={d}>{d}</option>)}
-                </select>
-                <select
-                  value={newMedicine.timing}
-                  onChange={(e) => setNewMedicine(prev => ({ ...prev, timing: e.target.value }))}
-                >
-                  {timings.map(t => <option key={t.value} value={t.value}>{t.label}</option>)}
-                </select>
-              </div>
-              <input
-                type="text"
-                placeholder="Special instructions (optional)"
-                value={newMedicine.instructions}
-                onChange={(e) => setNewMedicine(prev => ({ ...prev, instructions: e.target.value }))}
-              />
-              <div className="medicine-form__actions">
-                <button className="btn-cancel" onClick={() => setShowMedicineForm(false)}>Cancel</button>
-                <button className="btn-add" onClick={addMedicine}>Add Medicine</button>
-              </div>
-            </div>
-          ) : (
-            <button className="btn-add-medicine" onClick={() => setShowMedicineForm(true)}>
-              <i className="fas fa-plus"></i> Add Medicine
-            </button>
-          )}
-        </section>
-
-        {/* Lab Tests Section */}
-        <section className="prescription-section">
-          <h3><i className="fas fa-flask"></i> Lab Tests</h3>
-          
-          <div className="lab-tests-list">
-            {prescription.labTests.map((test, index) => (
-              <div key={index} className={`lab-test-item ${test.urgent ? 'lab-test-item--urgent' : ''}`}>
-                <span className="lab-test-item__name">
-                  {test.urgent && <i className="fas fa-exclamation-circle"></i>}
-                  {test.name}
-                </span>
-                {test.instructions && <span className="lab-test-item__instructions">{test.instructions}</span>}
-                <button onClick={() => removeLabTest(index)}><i className="fas fa-times"></i></button>
-              </div>
-            ))}
-          </div>
-
-          <div className="lab-test-add">
-            <select
-              value={newLabTest.name}
-              onChange={(e) => setNewLabTest(prev => ({ ...prev, name: e.target.value }))}
-            >
-              <option value="">Select test...</option>
-              {commonLabTests.map(test => (
-                <option key={test} value={test}>{test}</option>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-3">
+                    <input
+                      type="text"
+                      value={med.name}
+                      onChange={(e) => updateMedicine(index, 'name', e.target.value)}
+                      className="col-span-2 px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                      placeholder="Medicine name *"
+                    />
+                    <input
+                      type="text"
+                      value={med.dosage}
+                      onChange={(e) => updateMedicine(index, 'dosage', e.target.value)}
+                      className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                      placeholder="Dosage (e.g., 500mg)"
+                    />
+                    <select
+                      value={med.frequency}
+                      onChange={(e) => updateMedicine(index, 'frequency', e.target.value)}
+                      className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                    >
+                      <option value="">Frequency</option>
+                      {frequencyOptions.map(f => <option key={f} value={f}>{f}</option>)}
+                    </select>
+                    <select
+                      value={med.duration}
+                      onChange={(e) => updateMedicine(index, 'duration', e.target.value)}
+                      className="px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                    >
+                      <option value="">Duration</option>
+                      {durationOptions.map(d => <option key={d} value={d}>{d}</option>)}
+                    </select>
+                    <input
+                      type="text"
+                      value={med.instructions}
+                      onChange={(e) => updateMedicine(index, 'instructions', e.target.value)}
+                      className="col-span-2 md:col-span-3 px-3 py-2 rounded-lg border border-slate-200 text-sm"
+                      placeholder="Special instructions"
+                    />
+                  </div>
+                </div>
               ))}
-              <option value="other">Other...</option>
-            </select>
-            {newLabTest.name === 'other' && (
+            </div>
+          </div>
+
+          {/* Tests */}
+          <div className="mb-6">
+            <label className="block text-sm font-medium text-slate-700 mb-2">Recommended Tests</label>
+            <div className="flex gap-2 mb-2">
               <input
                 type="text"
-                placeholder="Enter test name"
-                onChange={(e) => setNewLabTest(prev => ({ ...prev, name: e.target.value }))}
+                value={newTest}
+                onChange={(e) => setNewTest(e.target.value)}
+                onKeyPress={(e) => e.key === 'Enter' && addTest()}
+                className="flex-1 px-4 py-2 rounded-xl border border-slate-200 text-sm"
+                placeholder="Add test (e.g., CBC, Blood Sugar)"
               />
+              <button onClick={addTest} className="px-4 py-2 bg-slate-100 hover:bg-slate-200 rounded-xl text-sm font-medium">
+                Add
+              </button>
+            </div>
+            {prescription.tests.length > 0 && (
+              <div className="flex flex-wrap gap-2">
+                {prescription.tests.map((test, index) => (
+                  <span key={index} className="px-3 py-1 bg-purple-100 text-purple-700 rounded-full text-sm flex items-center gap-2">
+                    {test}
+                    <button onClick={() => removeTest(index)} className="hover:text-purple-900">
+                      <i className="fas fa-times text-xs"></i>
+                    </button>
+                  </span>
+                ))}
+              </div>
             )}
-            <label className="checkbox-label">
-              <input
-                type="checkbox"
-                checked={newLabTest.urgent}
-                onChange={(e) => setNewLabTest(prev => ({ ...prev, urgent: e.target.checked }))}
-              />
-              Urgent
-            </label>
-            <button onClick={addLabTest} disabled={!newLabTest.name}>
-              <i className="fas fa-plus"></i> Add
-            </button>
           </div>
-        </section>
 
-        {/* Advice Section */}
-        <section className="prescription-section">
-          <h3><i className="fas fa-comment-medical"></i> Advice</h3>
-          <textarea
-            placeholder="General advice for the patient..."
-            value={prescription.advice}
-            onChange={(e) => setPrescription(prev => ({ ...prev, advice: e.target.value }))}
-            rows={3}
-          />
-        </section>
-
-        {/* Dietary Instructions */}
-        <section className="prescription-section">
-          <h3><i className="fas fa-apple-alt"></i> Dietary Instructions</h3>
-          <textarea
-            placeholder="Diet recommendations..."
-            value={prescription.dietaryInstructions}
-            onChange={(e) => setPrescription(prev => ({ ...prev, dietaryInstructions: e.target.value }))}
-            rows={2}
-          />
-        </section>
-
-        {/* Follow-up Section */}
-        <section className="prescription-section">
-          <h3><i className="fas fa-calendar-check"></i> Follow-up</h3>
-          <div className="followup-row">
-            <div className="followup-date">
-              <label>Follow-up Date</label>
+          {/* Advice & Follow-up */}
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Advice</label>
+              <textarea
+                value={prescription.advice}
+                onChange={(e) => setPrescription(prev => ({ ...prev, advice: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm resize-none"
+                rows={3}
+                placeholder="General advice for patient"
+              />
+            </div>
+            <div>
+              <label className="block text-sm font-medium text-slate-700 mb-2">Follow-up Date</label>
               <input
                 type="date"
                 value={prescription.followUpDate}
                 onChange={(e) => setPrescription(prev => ({ ...prev, followUpDate: e.target.value }))}
+                className="w-full px-4 py-3 rounded-xl border border-slate-200"
                 min={new Date().toISOString().split('T')[0]}
               />
             </div>
-            <div className="followup-instructions">
-              <label>Instructions</label>
-              <input
-                type="text"
-                placeholder="Follow-up instructions..."
-                value={prescription.followUpInstructions}
-                onChange={(e) => setPrescription(prev => ({ ...prev, followUpInstructions: e.target.value }))}
-              />
-            </div>
           </div>
-        </section>
-      </div>
+        </div>
 
-      <div className="prescription-manager__footer">
-        <button className="btn-secondary" onClick={onClose}>
-          Cancel
-        </button>
-        <button className="btn-draft" onClick={() => handleSave(false)} disabled={loading}>
-          {loading ? 'Saving...' : 'Save Draft'}
-        </button>
-        <button className="btn-primary" onClick={() => handleSave(true)} disabled={loading}>
-          {loading ? 'Saving...' : 'Finalize & Send'}
-        </button>
+        {/* Footer */}
+        <div className="p-6 bg-slate-50 border-t border-slate-200 flex items-center justify-between">
+          <button onClick={handlePrint} className="px-6 py-2.5 bg-slate-200 hover:bg-slate-300 text-slate-700 font-medium rounded-xl flex items-center gap-2">
+            <i className="fas fa-print"></i>Preview & Print
+          </button>
+          <div className="flex gap-3">
+            <button onClick={onClose} className="px-6 py-2.5 border border-slate-300 text-slate-700 font-medium rounded-xl hover:bg-slate-100">
+              Cancel
+            </button>
+            <button 
+              onClick={handleSave} 
+              disabled={saving}
+              className="px-6 py-2.5 bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg disabled:opacity-50 flex items-center gap-2"
+            >
+              {saving ? <i className="fas fa-spinner fa-spin"></i> : <i className="fas fa-save"></i>}
+              Save Prescription
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
