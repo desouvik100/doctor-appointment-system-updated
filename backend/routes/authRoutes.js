@@ -168,8 +168,21 @@ router.post('/login', async (req, res) => {
     const ipAddress = req.ip || req.headers['x-forwarded-for'];
     const userAgent = req.headers['user-agent'];
 
-    // Find user (only patients can login through this route)
-    const user = await User.findOne({ email: normalizedEmail, role: 'patient', isActive: true });
+    // First check if user exists (regardless of isActive status)
+    const userCheck = await User.findOne({ email: normalizedEmail, role: 'patient' });
+    
+    // Check if user is suspended
+    if (userCheck && userCheck.isActive === false) {
+      console.log(`🚫 Login blocked: User suspended - ${normalizedEmail}`);
+      return res.status(403).json({ 
+        message: 'Your account has been suspended',
+        reason: userCheck.suspendReason || 'Contact admin for more information',
+        suspended: true
+      });
+    }
+
+    // Find active user
+    const user = userCheck && userCheck.isActive ? userCheck : null;
     if (!user) {
       console.log(`❌ Login failed: User not found for email: ${normalizedEmail}`);
       // Track failed login attempt
@@ -226,8 +239,21 @@ router.post('/admin/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    // Find admin user
-    const user = await User.findOne({ email, role: 'admin', isActive: true });
+    // First check if admin exists (regardless of isActive status)
+    const userCheck = await User.findOne({ email, role: 'admin' });
+    
+    // Check if admin is suspended
+    if (userCheck && userCheck.isActive === false) {
+      console.log(`🚫 Admin login blocked: Account suspended - ${email}`);
+      return res.status(403).json({ 
+        message: 'Your admin account has been suspended',
+        reason: userCheck.suspendReason || 'Contact system administrator',
+        suspended: true
+      });
+    }
+
+    // Find active admin user
+    const user = userCheck && userCheck.isActive ? userCheck : null;
     if (!user) {
       await aiSecurityService.trackFailedLogin(email, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid admin credentials' });
@@ -273,13 +299,25 @@ router.post('/clinic/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    // Find receptionist user
-    const user = await User.findOne({ 
+    // First check if receptionist exists (regardless of isActive status)
+    const userCheck = await User.findOne({ 
       email, 
-      role: 'receptionist', 
-      isActive: true,
-      approvalStatus: 'approved' // Only approved receptionists can login
+      role: 'receptionist',
+      approvalStatus: 'approved'
     });
+    
+    // Check if receptionist is suspended
+    if (userCheck && userCheck.isActive === false) {
+      console.log(`🚫 Receptionist login blocked: Account suspended - ${email}`);
+      return res.status(403).json({ 
+        message: 'Your account has been suspended',
+        reason: userCheck.suspendReason || 'Contact admin for more information',
+        suspended: true
+      });
+    }
+
+    // Find active receptionist user
+    const user = userCheck && userCheck.isActive ? userCheck : null;
     
     if (!user) {
       return res.status(400).json({ message: 'Invalid receptionist credentials or account not approved' });
@@ -655,9 +693,22 @@ router.post('/doctor/login', async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Find doctor by email
-    const doctor = await Doctor.findOne({ email: normalizedEmail, isActive: true })
+    // First check if doctor exists (regardless of isActive status)
+    const doctorCheck = await Doctor.findOne({ email: normalizedEmail })
       .populate('clinicId', 'name address city phone');
+
+    // Check if doctor is suspended
+    if (doctorCheck && doctorCheck.isActive === false) {
+      console.log(`🚫 Doctor login blocked: Account suspended - ${normalizedEmail}`);
+      return res.status(403).json({ 
+        message: 'Your account has been suspended',
+        reason: doctorCheck.suspendReason || 'Contact admin for more information',
+        suspended: true
+      });
+    }
+
+    // Find active doctor
+    const doctor = doctorCheck && doctorCheck.isActive ? doctorCheck : null;
 
     if (!doctor) {
       await aiSecurityService.trackFailedLogin(normalizedEmail, ipAddress, userAgent);
