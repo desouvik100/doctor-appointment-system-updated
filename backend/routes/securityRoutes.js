@@ -337,14 +337,35 @@ router.get('/blocked-ips', async (req, res) => {
 router.post('/block-ip', async (req, res) => {
   try {
     const { ipAddress, reason, duration } = req.body;
+    console.log('Block IP request:', { ipAddress, reason, duration });
+    
     if (!ipAddress) {
       return res.status(400).json({ success: false, message: 'IP address required' });
     }
-    aiSecurityService.blockIP(ipAddress, reason || 'Manually blocked by admin', duration);
-    res.json({ success: true, message: `IP ${ipAddress} blocked` });
+    
+    // Validate IP format (basic validation)
+    const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$|^([a-fA-F0-9:]+)$/;
+    if (!ipRegex.test(ipAddress.trim())) {
+      return res.status(400).json({ success: false, message: 'Invalid IP address format' });
+    }
+    
+    aiSecurityService.blockIP(ipAddress.trim(), reason || 'Manually blocked by admin', duration);
+    
+    // Log the action
+    await aiSecurityService.createAlert({
+      userType: 'Admin',
+      activityType: 'account_manipulation',
+      severity: 'medium',
+      confidenceScore: 100,
+      description: `IP address ${ipAddress} manually blocked by admin`,
+      details: { ipAddress, reason, action: 'ip_blocked' }
+    });
+    
+    console.log(`✅ IP ${ipAddress} blocked successfully`);
+    res.json({ success: true, message: `IP ${ipAddress} blocked successfully` });
   } catch (error) {
     console.error('Error blocking IP:', error);
-    res.status(500).json({ success: false, message: 'Failed to block IP' });
+    res.status(500).json({ success: false, message: 'Failed to block IP: ' + error.message });
   }
 });
 
