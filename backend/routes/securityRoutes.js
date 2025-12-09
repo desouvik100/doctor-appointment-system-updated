@@ -8,29 +8,47 @@ const Doctor = require('../models/Doctor');
 
 // Helper function to find user by ID or email
 async function findUserByIdOrEmail(identifier) {
-  const User = require('../models/User');
-  const Doctor = require('../models/Doctor');
-  
   let user = null;
   let userType = 'patient';
   
   if (!identifier) return { user: null, userType: 'patient' };
   
+  const searchEmail = identifier.toLowerCase().trim();
+  
   // Check if it's an email (contains @)
   if (identifier.includes('@')) {
     // Search by email only
-    user = await User.findOne({ email: identifier.toLowerCase().trim() });
-    if (!user) {
-      user = await Doctor.findOne({ email: identifier.toLowerCase().trim() });
-      if (user) userType = 'doctor';
+    console.log(`🔍 Searching for user by email: ${searchEmail}`);
+    user = await User.findOne({ email: searchEmail });
+    if (user) {
+      console.log(`✅ Found user: ${user.name} (${user.email})`);
+    } else {
+      console.log(`🔍 User not found, checking doctors...`);
+      user = await Doctor.findOne({ email: searchEmail });
+      if (user) {
+        userType = 'doctor';
+        console.log(`✅ Found doctor: ${user.name} (${user.email})`);
+      }
     }
   } else if (mongoose.Types.ObjectId.isValid(identifier)) {
     // Valid ObjectId format - search by ID
+    console.log(`🔍 Searching for user by ID: ${identifier}`);
     user = await User.findById(identifier);
-    if (!user) {
+    if (user) {
+      console.log(`✅ Found user by ID: ${user.name}`);
+    } else {
       user = await Doctor.findById(identifier);
-      if (user) userType = 'doctor';
+      if (user) {
+        userType = 'doctor';
+        console.log(`✅ Found doctor by ID: ${user.name}`);
+      }
     }
+  } else {
+    console.log(`⚠️ Invalid identifier format: ${identifier}`);
+  }
+  
+  if (!user) {
+    console.log(`❌ No user found for identifier: ${identifier}`);
   }
   
   return { user, userType };
@@ -362,21 +380,36 @@ router.post('/suspend-user', async (req, res) => {
     console.log(`🔒 Suspending ${userType}: ${user.email} (ID: ${user._id})`);
     
     let updateResult;
-    if (userType === 'doctor') {
-      updateResult = await Doctor.findByIdAndUpdate(user._id, {
-        isActive: false,
-        suspendedAt: new Date(),
-        suspendReason: reason || 'Suspended by admin'
-      }, { new: true });
-    } else {
-      updateResult = await User.findByIdAndUpdate(user._id, {
-        isActive: false,
-        suspendedAt: new Date(),
-        suspendReason: reason || 'Suspended by admin'
-      }, { new: true });
-    }
+    const updateData = {
+      isActive: false,
+      suspendedAt: new Date(),
+      suspendReason: reason || 'Suspended by admin'
+    };
     
-    console.log(`✅ User suspended. isActive: ${updateResult.isActive}, suspendReason: ${updateResult.suspendReason}`);
+    try {
+      if (userType === 'doctor') {
+        updateResult = await Doctor.findByIdAndUpdate(
+          user._id, 
+          { $set: updateData }, 
+          { new: true }
+        );
+      } else {
+        updateResult = await User.findByIdAndUpdate(
+          user._id, 
+          { $set: updateData }, 
+          { new: true }
+        );
+      }
+      
+      if (!updateResult) {
+        throw new Error('Update returned null - user may have been deleted');
+      }
+      
+      console.log(`✅ User suspended. isActive: ${updateResult.isActive}, reason: ${updateResult.suspendReason}`);
+    } catch (updateError) {
+      console.error('❌ Database update failed:', updateError);
+      throw updateError;
+    }
 
     // Send email notification to user
     if (user.email) {
@@ -429,7 +462,7 @@ router.post('/suspend-user', async (req, res) => {
     res.json({ success: true, message: 'User suspended and notified via email' });
   } catch (error) {
     console.error('Error suspending user:', error);
-    res.status(500).json({ success: false, message: 'Failed to suspend user' });
+    res.status(500).json({ success: false, message: 'Failed to suspend user: ' + error.message });
   }
 });
 

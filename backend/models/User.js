@@ -50,6 +50,14 @@ const userSchema = new mongoose.Schema(
       type: Boolean, 
       default: true 
     },
+    suspendedAt: {
+      type: Date,
+      default: null
+    },
+    suspendReason: {
+      type: String,
+      default: null
+    },
     approvalStatus: {
       type: String,
       enum: ["pending", "approved", "rejected"],

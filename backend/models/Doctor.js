@@ -55,6 +55,14 @@ const doctorSchema = new mongoose.Schema(
       type: Boolean, 
       default: true 
     },
+    suspendedAt: {
+      type: Date,
+      default: null
+    },
+    suspendReason: {
+      type: String,
+      default: null
+    },
     // Rating & Reviews
     rating: {
       type: Number,
