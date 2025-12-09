@@ -58,6 +58,10 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null
     },
+    forceLogoutAt: {
+      type: Date,
+      default: null
+    },
     approvalStatus: {
       type: String,
       enum: ["pending", "approved", "rejected"],

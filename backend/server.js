@@ -126,7 +126,7 @@ const { checkBlockedIP } = require('./middleware/securityMiddleware');
 // Check blocked IPs on all requests
 app.use('/api', checkBlockedIP);
 
-// Check for suspended users on authenticated requests
+// Check for suspended users and force logout on authenticated requests
 app.use('/api', async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
@@ -140,6 +140,7 @@ app.use('/api', async (req, res, next) => {
     try {
       const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
       const userId = decoded.userId || decoded.doctorId || decoded.id;
+      const tokenIssuedAt = decoded.iat ? new Date(decoded.iat * 1000) : null;
       
       if (userId) {
         const User = require('./models/User');
@@ -148,19 +149,35 @@ app.use('/api', async (req, res, next) => {
         let userRecord = null;
         
         if (decoded.doctorId) {
-          userRecord = await Doctor.findById(decoded.doctorId).select('isActive suspendReason').lean();
+          userRecord = await Doctor.findById(decoded.doctorId).select('isActive suspendReason forceLogoutAt').lean();
         } else {
-          userRecord = await User.findById(userId).select('isActive suspendReason').lean();
+          userRecord = await User.findById(userId).select('isActive suspendReason forceLogoutAt').lean();
         }
         
-        if (userRecord && userRecord.isActive === false) {
-          console.log(`🚫 Blocked suspended user: ${userId}`);
-          return res.status(403).json({
-            success: false,
-            message: 'Your account has been suspended',
-            reason: userRecord.suspendReason || 'Contact admin for more information',
-            suspended: true
-          });
+        if (userRecord) {
+          // Check if user is suspended
+          if (userRecord.isActive === false) {
+            console.log(`🚫 Blocked suspended user: ${userId}`);
+            return res.status(403).json({
+              success: false,
+              message: 'Your account has been suspended',
+              reason: userRecord.suspendReason || 'Contact admin for more information',
+              suspended: true
+            });
+          }
+          
+          // Check if force logout was triggered after token was issued
+          if (userRecord.forceLogoutAt && tokenIssuedAt) {
+            const forceLogoutTime = new Date(userRecord.forceLogoutAt);
+            if (forceLogoutTime > tokenIssuedAt) {
+              console.log(`🔒 Force logout: Token issued at ${tokenIssuedAt.toISOString()}, force logout at ${forceLogoutTime.toISOString()}`);
+              return res.status(401).json({
+                success: false,
+                message: 'Your session has been terminated. Please log in again.',
+                forceLogout: true
+              });
+            }
+          }
         }
       }
     } catch (jwtError) {
@@ -169,7 +186,7 @@ app.use('/api', async (req, res, next) => {
     
     next();
   } catch (error) {
-    console.error('Suspension check middleware error:', error);
+    console.error('Security check middleware error:', error);
     next(); // Don't block on errors
   }
 });

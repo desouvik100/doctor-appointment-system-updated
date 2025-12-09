@@ -63,6 +63,10 @@ const doctorSchema = new mongoose.Schema(
       type: String,
       default: null
     },
+    forceLogoutAt: {
+      type: Date,
+      default: null
+    },
     // Rating & Reviews
     rating: {
       type: Number,

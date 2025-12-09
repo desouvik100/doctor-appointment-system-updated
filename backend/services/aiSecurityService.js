@@ -689,20 +689,32 @@ class AISecurityService {
     return deg * (Math.PI / 180);
   }
 
-  // Force logout user (invalidate sessions)
+  // Force logout user (invalidate sessions by setting forceLogoutAt timestamp)
   async forceLogout(userId, reason) {
     try {
-      // In a real implementation, you'd invalidate JWT tokens or sessions
-      // For now, we'll create a record and the frontend can check this
       const User = require('../models/User');
-      await User.findByIdAndUpdate(userId, {
-        forceLogout: true,
-        forceLogoutReason: reason,
-        forceLogoutAt: new Date()
-      });
+      const Doctor = require('../models/Doctor');
+      
+      const forceLogoutAt = new Date();
+      
+      // Try to update User first
+      const userResult = await User.findByIdAndUpdate(userId, {
+        forceLogoutAt: forceLogoutAt
+      }, { new: true });
+      
+      // Also try Doctor model
+      const doctorResult = await Doctor.findByIdAndUpdate(userId, {
+        forceLogoutAt: forceLogoutAt
+      }, { new: true });
 
-      console.log(`🔒 Force logout triggered for user ${userId}: ${reason}`);
-      return true;
+      if (userResult || doctorResult) {
+        console.log(`🔒 Force logout triggered for user ${userId}: ${reason}`);
+        console.log(`   forceLogoutAt set to: ${forceLogoutAt.toISOString()}`);
+        return true;
+      } else {
+        console.log(`⚠️ User ${userId} not found for force logout`);
+        return false;
+      }
     } catch (error) {
       console.error('Error in force logout:', error);
       return false;

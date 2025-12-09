@@ -110,6 +110,33 @@ axiosInstance.interceptors.response.use(
       return Promise.reject(error);
     }
     
+    // Handle force logout (401 with forceLogout flag)
+    if (error.response?.status === 401 && error.response?.data?.forceLogout) {
+      console.log('🔒 Force logout - session terminated by admin');
+      
+      // Clear all tokens
+      if (isNative) {
+        try {
+          const { Preferences } = await import('@capacitor/preferences');
+          await Preferences.remove({ key: 'user' });
+          await Preferences.remove({ key: 'admin' });
+          await Preferences.remove({ key: 'receptionist' });
+          await Preferences.remove({ key: 'doctor' });
+        } catch (e) {
+          // Fallback
+        }
+      }
+      localStorage.removeItem('user');
+      localStorage.removeItem('admin');
+      localStorage.removeItem('receptionist');
+      localStorage.removeItem('doctor');
+      
+      // Show alert and redirect
+      alert('Session Terminated\n\nYour session has been terminated by an administrator. Please log in again.');
+      window.location.href = '/login';
+      return Promise.reject(error);
+    }
+    
     if (error.response?.status === 401) {
       // Clear invalid tokens
       if (isNative) {
