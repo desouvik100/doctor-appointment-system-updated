@@ -4,7 +4,13 @@
 require('dotenv').config({ path: require('path').join(__dirname, '..', '.env') });
 const mongoose = require('mongoose');
 
-const MONGODB_URI = process.env.MONGODB_URI || 'mongodb+srv://healthsync:healthsync123@cluster0.mongodb.net/healthsync?retryWrites=true&w=majority';
+const MONGODB_URI = process.env.MONGODB_URI;
+
+if (!MONGODB_URI) {
+  console.error('❌ MONGODB_URI environment variable is not set');
+  console.error('   Please set it in backend/.env file');
+  process.exit(1);
+}
 
 async function unsuspendUser(email) {
   try {
