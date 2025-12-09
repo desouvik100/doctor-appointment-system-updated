@@ -188,13 +188,18 @@ const SecurityMonitor = ({ adminId }) => {
   // Suspend user
   const handleSuspendUser = async (userId, reason) => {
     try {
+      console.log('Suspending user:', userId, 'Reason:', reason);
       const response = await axios.post('/api/security/suspend-user', { userId, reason, adminId });
+      console.log('Suspend response:', response.data);
       if (response.data.success) {
-        toast.success('User suspended');
+        toast.success('User suspended and notified via email');
         fetchAlerts();
+      } else {
+        toast.error(response.data.message || 'Failed to suspend user');
       }
     } catch (error) {
-      toast.error('Failed to suspend user');
+      console.error('Suspend error:', error.response?.data || error.message);
+      toast.error(error.response?.data?.message || 'Failed to suspend user');
     }
   };
 
@@ -890,16 +895,43 @@ const SecurityMonitor = ({ adminId }) => {
                         <i className="fas fa-bell mr-1"></i> Notify User
                       </button>
                       <button
-                        onClick={() => handleAddAction(alert._id, 'Account suspended', 'Temporary suspension')}
+                        onClick={async () => {
+                          if (alert.userEmail || alert.userId) {
+                            await handleSuspendUser(alert.userEmail || alert.userId, `Suspended due to: ${alert.activityType}`);
+                            handleAddAction(alert._id, 'Account suspended', 'User account suspended');
+                          } else {
+                            toast.error('No user email/ID found for this alert');
+                          }
+                        }}
                         className="px-3 py-1.5 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200"
                       >
                         <i className="fas fa-ban mr-1"></i> Suspend Account
                       </button>
                       <button
-                        onClick={() => handleAddAction(alert._id, 'Password reset required', 'Forced password reset')}
+                        onClick={async () => {
+                          if (alert.userEmail || alert.userId) {
+                            await handleRequirePasswordReset(alert.userEmail || alert.userId, `Required due to: ${alert.activityType}`);
+                            handleAddAction(alert._id, 'Password reset required', 'Forced password reset');
+                          } else {
+                            toast.error('No user email/ID found for this alert');
+                          }
+                        }}
                         className="px-3 py-1.5 text-xs bg-blue-100 text-blue-700 rounded-lg hover:bg-blue-200"
                       >
                         <i className="fas fa-key mr-1"></i> Force Password Reset
+                      </button>
+                      <button
+                        onClick={async () => {
+                          if (alert.userEmail || alert.userId) {
+                            await handleForceLogout(alert.userEmail || alert.userId, `Logged out due to: ${alert.activityType}`);
+                            handleAddAction(alert._id, 'Force logout', 'User session terminated');
+                          } else {
+                            toast.error('No user email/ID found for this alert');
+                          }
+                        }}
+                        className="px-3 py-1.5 text-xs bg-orange-100 text-orange-700 rounded-lg hover:bg-orange-200"
+                      >
+                        <i className="fas fa-sign-out-alt mr-1"></i> Force Logout
                       </button>
                     </div>
 
