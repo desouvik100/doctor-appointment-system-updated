@@ -346,7 +346,12 @@ function AuthPremium({ onLogin, onBack }) {
         onLogin(userData, "patient");
       }
     } catch (error) {
-      toast.error(error.response?.data?.message || "Something went wrong");
+      // Handle suspended account
+      if (error.response?.status === 403 && error.response?.data?.suspended) {
+        toast.error(`Account Suspended: ${error.response?.data?.reason || 'Contact admin for assistance'}`);
+      } else {
+        toast.error(error.response?.data?.message || "Something went wrong");
+      }
     } finally {
       setLoading(false);
     }

@@ -29,7 +29,11 @@ function AdminAuth({ onLogin, onBack }) {
       localStorage.setItem("admin", JSON.stringify(response.data.user));
       onLogin(response.data.user, "admin");
     } catch (error) {
-      setError(error.response?.data?.message || "Invalid admin credentials");
+      if (error.response?.status === 403 && error.response?.data?.suspended) {
+        setError(`Account Suspended: ${error.response?.data?.reason || 'Contact system administrator'}`);
+      } else {
+        setError(error.response?.data?.message || "Invalid admin credentials");
+      }
     } finally {
       setLoading(false);
     }

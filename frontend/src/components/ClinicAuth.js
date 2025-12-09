@@ -520,7 +520,11 @@ function ClinicAuth({ onLogin, onBack }) {
         return;
       }
     } catch (error) {
-      setError(error.response?.data?.message || (isLogin ? "Invalid staff credentials" : "Registration failed"));
+      if (error.response?.status === 403 && error.response?.data?.suspended) {
+        setError(`Account Suspended: ${error.response?.data?.reason || 'Contact admin for assistance'}`);
+      } else {
+        setError(error.response?.data?.message || (isLogin ? "Invalid staff credentials" : "Registration failed"));
+      }
     } finally {
       setLoading(false);
     }

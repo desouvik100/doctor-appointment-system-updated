@@ -82,6 +82,34 @@ axiosInstance.interceptors.request.use(
 axiosInstance.interceptors.response.use(
   (response) => response,
   async (error) => {
+    // Handle suspended users (403 with suspended flag)
+    if (error.response?.status === 403 && error.response?.data?.suspended) {
+      console.log('🚫 Account suspended - logging out user');
+      const reason = error.response?.data?.reason || 'Your account has been suspended';
+      
+      // Clear all tokens
+      if (isNative) {
+        try {
+          const { Preferences } = await import('@capacitor/preferences');
+          await Preferences.remove({ key: 'user' });
+          await Preferences.remove({ key: 'admin' });
+          await Preferences.remove({ key: 'receptionist' });
+          await Preferences.remove({ key: 'doctor' });
+        } catch (e) {
+          // Fallback
+        }
+      }
+      localStorage.removeItem('user');
+      localStorage.removeItem('admin');
+      localStorage.removeItem('receptionist');
+      localStorage.removeItem('doctor');
+      
+      // Show alert and redirect
+      alert(`Account Suspended\n\n${reason}\n\nPlease contact admin for assistance.`);
+      window.location.href = '/login';
+      return Promise.reject(error);
+    }
+    
     if (error.response?.status === 401) {
       // Clear invalid tokens
       if (isNative) {

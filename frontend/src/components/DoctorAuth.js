@@ -160,7 +160,9 @@ function DoctorAuth({ onLogin, onBack }) {
       localStorage.setItem("doctorToken", response.data.token);
       onLogin(response.data.doctor);
     } catch (error) {
-      if (error.response?.data?.needsPasswordSetup) {
+      if (error.response?.status === 403 && error.response?.data?.suspended) {
+        setError(`Account Suspended: ${error.response?.data?.reason || 'Contact admin for assistance'}`);
+      } else if (error.response?.data?.needsPasswordSetup) {
         setNeedsPasswordSetup(true);
         setSetupEmail(error.response.data.doctorEmail);
         setError("");
