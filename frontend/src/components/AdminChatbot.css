@@ -2,40 +2,40 @@
    Admin Chatbot - Professional Styles
    ============================================ */
 
-/* Toggle Button - Bottom Left Position */
+/* Toggle Button - Bottom Left Position - Compact */
 .admin-chatbot__toggle {
   position: fixed;
-  bottom: 30px;
-  left: 30px;
+  bottom: 20px;
+  left: 20px;
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px 24px;
+  gap: 10px;
+  padding: 10px 16px;
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   border: none;
-  border-radius: 60px;
+  border-radius: 50px;
   color: #fff;
   cursor: pointer;
-  box-shadow: 0 10px 40px rgba(16, 185, 129, 0.4), 0 4px 12px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.35);
   z-index: 999;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
 }
 
 .admin-chatbot__toggle:hover {
-  transform: translateY(-4px) scale(1.02);
-  box-shadow: 0 16px 50px rgba(16, 185, 129, 0.5), 0 6px 20px rgba(0, 0, 0, 0.15);
+  transform: translateY(-2px);
+  box-shadow: 0 6px 20px rgba(16, 185, 129, 0.45);
 }
 
 .admin-chatbot__toggle-icon {
-  width: 48px;
-  height: 48px;
-  background: rgba(255, 255, 255, 0.25);
+  width: 32px;
+  height: 32px;
+  background: rgba(255, 255, 255, 0.2);
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 1.4rem;
-  border: 2px solid rgba(255, 255, 255, 0.3);
+  font-size: 1rem;
+  border: none;
 }
 
 .admin-chatbot__toggle-text {
@@ -45,27 +45,26 @@
 }
 
 .admin-chatbot__toggle-text strong {
-  font-size: 1rem;
-  font-weight: 700;
-  letter-spacing: 0.3px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  letter-spacing: 0.2px;
 }
 
 .admin-chatbot__toggle-status {
   display: flex;
   align-items: center;
-  gap: 8px;
-  font-size: 0.8rem;
-  opacity: 0.95;
-  margin-top: 2px;
+  gap: 5px;
+  font-size: 0.65rem;
+  opacity: 0.9;
+  margin-top: 1px;
 }
 
 .admin-chatbot__status-dot {
-  width: 10px;
-  height: 10px;
+  width: 6px;
+  height: 6px;
   background: #fff;
   border-radius: 50%;
   animation: pulse 2s infinite;
-  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.3);
 }
 
 @keyframes pulse {
@@ -75,37 +74,37 @@
 
 .admin-chatbot__badge {
   position: absolute;
-  top: -6px;
-  right: -6px;
-  width: 28px;
-  height: 28px;
+  top: -4px;
+  right: -4px;
+  width: 18px;
+  height: 18px;
   background: #fbbf24;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 0.75rem;
+  font-size: 0.6rem;
   font-weight: 700;
-  border: 3px solid #fff;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  border: 2px solid #fff;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.15);
 }
 
-/* Chat Window - Opens from Bottom Left */
+/* Chat Window - Opens from Bottom Left - Compact */
 .admin-chatbot__window {
   position: fixed;
-  bottom: 110px;
-  left: 30px;
-  width: 420px;
-  height: 580px;
+  bottom: 75px;
+  left: 20px;
+  width: 360px;
+  height: 480px;
   background: #fff;
-  border-radius: 24px;
-  box-shadow: 0 25px 80px rgba(0, 0, 0, 0.2), 0 10px 30px rgba(16, 185, 129, 0.15);
+  border-radius: 20px;
+  box-shadow: 0 15px 50px rgba(0, 0, 0, 0.15), 0 5px 20px rgba(16, 185, 129, 0.1);
   z-index: 1000;
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  animation: slideUpLeft 0.35s cubic-bezier(0.4, 0, 0.2, 1);
-  border: 1px solid rgba(16, 185, 129, 0.2);
+  animation: slideUpLeft 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  border: 1px solid rgba(16, 185, 129, 0.15);
 }
 
 .admin-chatbot__window--hidden {

@@ -12,27 +12,60 @@ import SecurityMonitor from './SecurityMonitor';
 import '../styles/premium-saas.css';
 import '../styles/admin-dashboard-professional.css';
 
-// Stat Card Component
+// Stat Card Component - MNC Enterprise Style
 const StatCard = ({ title, value, icon, color = "primary" }) => {
-  const bgColors = {
-    primary: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-    success: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
-    warning: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-    info: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+  const colors = {
+    primary: '#6366f1',
+    success: '#10b981',
+    warning: '#f59e0b',
+    info: '#3b82f6'
   };
   
   return (
-    <div className="admin-stat-card">
-      <div className="admin-stat-card__content">
-        <div 
-          className="admin-stat-card__icon" 
-          style={{ background: bgColors[color] || bgColors.primary }}
-        >
-          <i className={`fas fa-${icon}`} style={{ color: 'white', fontSize: '1.75rem' }}></i>
+    <div style={{
+      background: '#ffffff',
+      border: '1px solid #e2e8f0',
+      borderRadius: '12px',
+      padding: '20px 24px',
+      transition: 'all 0.2s ease'
+    }}>
+      <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
+        <div style={{
+          width: '48px',
+          height: '48px',
+          minWidth: '48px',
+          background: colors[color] || colors.primary,
+          borderRadius: '10px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'center'
+        }}>
+          <i 
+            className={`fas fa-${icon}`} 
+            style={{ 
+              color: '#ffffff', 
+              fontSize: '1.25rem',
+              WebkitTextFillColor: '#ffffff'
+            }}
+          />
         </div>
-        <div className="admin-stat-card__details">
-          <div className="admin-stat-card__value" style={{ color: '#0f172a', fontWeight: 800 }}>{value}</div>
-          <div className="admin-stat-card__label" style={{ color: '#475569' }}>{title}</div>
+        <div>
+          <div style={{ 
+            fontSize: '1.75rem', 
+            fontWeight: 700, 
+            color: '#0f172a',
+            lineHeight: 1.2,
+            marginBottom: '4px'
+          }}>
+            {value}
+          </div>
+          <div style={{ 
+            fontSize: '0.8125rem', 
+            fontWeight: 500, 
+            color: '#64748b'
+          }}>
+            {title}
+          </div>
         </div>
       </div>
     </div>
