@@ -13,19 +13,31 @@ import '../styles/premium-saas.css';
 import '../styles/admin-dashboard-professional.css';
 
 // Stat Card Component
-const StatCard = ({ title, value, icon, color = "primary" }) => (
-  <div className="admin-stat-card">
-    <div className="admin-stat-card__content">
-      <div className="admin-stat-card__icon" style={{ background: color === 'success' ? '#10b981' : color === 'warning' ? '#f59e0b' : color === 'info' ? '#3b82f6' : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)' }}>
-        <i className={`fas fa-${icon}`}></i>
-      </div>
-      <div className="admin-stat-card__details">
-        <div className="admin-stat-card__value">{value}</div>
-        <div className="admin-stat-card__label">{title}</div>
+const StatCard = ({ title, value, icon, color = "primary" }) => {
+  const bgColors = {
+    primary: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+    success: 'linear-gradient(135deg, #10b981 0%, #059669 100%)',
+    warning: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
+    info: 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)'
+  };
+  
+  return (
+    <div className="admin-stat-card">
+      <div className="admin-stat-card__content">
+        <div 
+          className="admin-stat-card__icon" 
+          style={{ background: bgColors[color] || bgColors.primary }}
+        >
+          <i className={`fas fa-${icon}`} style={{ color: 'white', fontSize: '1.75rem' }}></i>
+        </div>
+        <div className="admin-stat-card__details">
+          <div className="admin-stat-card__value" style={{ color: '#0f172a', fontWeight: 800 }}>{value}</div>
+          <div className="admin-stat-card__label" style={{ color: '#475569' }}>{title}</div>
+        </div>
       </div>
     </div>
-  </div>
-);
+  );
+};
 
 // Tab Button Component
 const TabButton = ({ tab, activeTab, onClick, children }) => (
