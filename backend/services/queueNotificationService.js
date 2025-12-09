@@ -94,14 +94,20 @@ async function getQueuePosition(appointmentId) {
 
 /**
  * Check and send notification if patient's turn is approaching
- * Notifies when patient is within 3 positions of being called
+ * AI-powered smart notification: Notifies when patient is within 2 positions
+ * This gives patients enough time to prepare and arrive
  */
-async function checkAndNotifyPatient(appointmentId, notifyAtPosition = 3) {
+async function checkAndNotifyPatient(appointmentId, notifyAtPosition = 2) {
   try {
     const queueInfo = await getQueuePosition(appointmentId);
     if (!queueInfo) return { notified: false, reason: 'Appointment not found or not today' };
     
     const { position, patientEmail, patientName, doctorName, estimatedWaitMinutes, appointmentTime } = queueInfo;
+    
+    // Skip if no email
+    if (!patientEmail) {
+      return { notified: false, reason: 'No email address for patient' };
+    }
     
     // Check if already notified at this position
     const previousNotification = notifiedPatients.get(appointmentId);
@@ -109,8 +115,13 @@ async function checkAndNotifyPatient(appointmentId, notifyAtPosition = 3) {
       return { notified: false, reason: 'Already notified at this or earlier position' };
     }
     
-    // Notify if within threshold
+    // Smart notification logic:
+    // - Position 1: "You are NEXT!" (urgent)
+    // - Position 2: "Only 1 patient before you!" (urgent)
+    // - Position 3: "2 patients before you" (prepare)
     if (position <= notifyAtPosition && position > 0) {
+      console.log(`🤖 AI Smart Notification: Alerting ${patientName} at position ${position}`);
+      
       // Send email notification
       const result = await sendQueueNotificationEmail(
         patientEmail,
@@ -125,13 +136,17 @@ async function checkAndNotifyPatient(appointmentId, notifyAtPosition = 3) {
         // Track notification
         notifiedPatients.set(appointmentId, {
           position,
-          notifiedAt: new Date()
+          notifiedAt: new Date(),
+          type: position === 1 ? 'next' : position === 2 ? 'urgent' : 'prepare'
         });
+        
+        console.log(`✅ Smart notification sent to ${patientEmail} (Position: ${position})`);
         
         return { 
           notified: true, 
           position, 
           estimatedWaitMinutes,
+          urgency: position <= 2 ? 'urgent' : 'normal',
           message: `Notification sent to ${patientEmail}` 
         };
       }

@@ -244,6 +244,8 @@ app.use('/api/invoices', require('./routes/invoiceRoutes'));
 app.use('/api/wallet', require('./routes/walletRoutes'));
 app.use('/api/admin/email', require('./routes/adminEmailRoutes'));
 app.use('/api/security', require('./routes/securityRoutes'));
+app.use('/api/ai', require('./routes/aiRoutes')); // AI-powered features
+app.use('/api/ai-health', require('./routes/aiHealthRoutes')); // Advanced AI health features
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');

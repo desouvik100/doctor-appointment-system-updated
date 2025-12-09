@@ -131,6 +131,13 @@ const doctorSchema = new mongoose.Schema(
       type: Number,
       default: 500
     },
+    // Consultation duration in minutes (for queue-based booking)
+    consultationDuration: {
+      type: Number,
+      default: 30,
+      min: 10,
+      max: 120
+    },
     experience: {
       type: Number,
       default: 0

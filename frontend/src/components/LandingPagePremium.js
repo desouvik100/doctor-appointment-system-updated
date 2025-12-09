@@ -278,13 +278,13 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                   border: '4px solid rgba(255,255,255,0.3)'
                 }}>
                   <img 
-                    src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=400&h=500&fit=crop&crop=face"
-                    alt="Smiling Doctor"
+                    src="https://media.istockphoto.com/id/2187596922/photo/portrait-of-happy-smiling-healthcare-team-looking-at-camera.jpg?s=2048x2048&w=is&k=20&c=qqyAW8F9M4bSbfmtfCPPQOGh-rtREBn7RvBlGr9ZS0k="
+                    alt="Medical Team"
                     style={{
                       width: '100%',
                       height: '100%',
                       objectFit: 'cover',
-                      objectPosition: 'center top'
+                      objectPosition: 'center center'
                     }}
                   />
                   {/* Gradient Overlay */}
@@ -300,8 +300,8 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                     padding: '20px'
                   }}>
                     <div>
-                      <div style={{ color: '#ffffff', fontWeight: '700', fontSize: '18px' }}>Dr. Sarah Mitchell</div>
-                      <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>Senior Cardiologist</div>
+                      <div style={{ color: '#ffffff', fontWeight: '700', fontSize: '18px' }}>Our Medical Team</div>
+                      <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>Expert Healthcare Professionals</div>
                       <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
                         {[1,2,3,4,5].map(i => (
                           <i key={i} className="fas fa-star" style={{ color: '#fbbf24', fontSize: '12px' }}></i>

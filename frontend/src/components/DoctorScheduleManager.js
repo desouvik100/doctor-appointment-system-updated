@@ -15,6 +15,7 @@ const DoctorScheduleManager = ({ doctorId }) => {
   const [activeView, setActiveView] = useState('weekly'); // weekly, calendar, settings
   const [weeklySchedule, setWeeklySchedule] = useState({});
   const [specialDates, setSpecialDates] = useState([]);
+  const [consultationDuration, setConsultationDuration] = useState(30); // Queue-based booking duration
   const [consultationSettings, setConsultationSettings] = useState({
     virtualConsultationEnabled: true,
     inClinicConsultationEnabled: true,
@@ -42,6 +43,7 @@ const DoctorScheduleManager = ({ doctorId }) => {
         setWeeklySchedule(schedule.weeklySchedule || getDefaultSchedule());
         setSpecialDates(schedule.specialDates || []);
         setConsultationSettings(schedule.consultationSettings || consultationSettings);
+        setConsultationDuration(schedule.consultationDuration || 30);
       }
     } catch (error) {
       console.error('Error fetching schedule:', error);
@@ -129,7 +131,8 @@ const DoctorScheduleManager = ({ doctorId }) => {
       setSaving(true);
       const response = await axios.put(`/api/doctors/${doctorId}/schedule`, {
         weeklySchedule,
-        consultationSettings
+        consultationSettings,
+        consultationDuration
       });
       if (response.data.success) {
         toast.success('Schedule saved successfully!');
@@ -406,6 +409,31 @@ const DoctorScheduleManager = ({ doctorId }) => {
         <div className="settings-view">
           <div className="settings-card">
             <h5><i className="fas fa-clock me-2"></i>Appointment Settings</h5>
+            
+            {/* Consultation Duration - Main setting for queue-based booking */}
+            <div className="setting-row highlight-setting">
+              <label><i className="fas fa-user-clock me-2"></i>Consultation Duration (Queue Booking)</label>
+              <select 
+                value={consultationDuration}
+                onChange={(e) => setConsultationDuration(parseInt(e.target.value))}
+                className="duration-select"
+              >
+                <option value={10}>10 minutes</option>
+                <option value={15}>15 minutes</option>
+                <option value={20}>20 minutes</option>
+                <option value={30}>30 minutes (Recommended)</option>
+                <option value={45}>45 minutes</option>
+                <option value={60}>60 minutes</option>
+                <option value={90}>90 minutes</option>
+                <option value={120}>120 minutes</option>
+              </select>
+              <small className="setting-hint">
+                <i className="fas fa-info-circle me-1"></i>
+                This determines how patient queue times are calculated. Each patient's estimated arrival time will be spaced by this duration.
+              </small>
+            </div>
+
+            <hr className="setting-divider" />
             
             <div className="setting-row">
               <label>Slot Duration (minutes)</label>

@@ -182,10 +182,19 @@ router.post('/check-availability', async (req, res) => {
       return res.status(400).json({ message: 'Doctor ID, date, and time are required' });
     }
 
+    // Parse date correctly to avoid timezone issues
+    const [year, month, day] = date.split('-').map(Number);
+    const queryDate = new Date(year, month - 1, day);
+    queryDate.setHours(0, 0, 0, 0);
+    
+    const startOfDay = new Date(queryDate);
+    const endOfDay = new Date(queryDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
     // Check for exact time conflict
     const existingAppointment = await Appointment.findOne({
       doctorId,
-      date: new Date(date),
+      date: { $gte: startOfDay, $lte: endOfDay },
       time,
       status: { $in: ['pending', 'confirmed', 'in_progress'] }
     });
@@ -213,9 +222,18 @@ router.get('/booked-times/:doctorId/:date', async (req, res) => {
   try {
     const { doctorId, date } = req.params;
 
+    // Parse date correctly to avoid timezone issues
+    const [year, month, day] = date.split('-').map(Number);
+    const queryDate = new Date(year, month - 1, day);
+    queryDate.setHours(0, 0, 0, 0);
+    
+    const startOfDay = new Date(queryDate);
+    const endOfDay = new Date(queryDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
     const appointments = await Appointment.find({
       doctorId,
-      date: new Date(date),
+      date: { $gte: startOfDay, $lte: endOfDay },
       status: { $in: ['pending', 'confirmed', 'in_progress'] }
     }).select('time');
 
@@ -226,6 +244,106 @@ router.get('/booked-times/:doctorId/:date', async (req, res) => {
   } catch (error) {
     console.error('Error fetching booked times:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get queue info for a doctor on a specific date (for queue-based booking)
+router.get('/queue-info/:doctorId/:date', async (req, res) => {
+  try {
+    const { doctorId, date } = req.params;
+    
+    // Get doctor's consultation duration
+    const doctor = await Doctor.findById(doctorId).select('consultationDuration');
+    const slotDuration = doctor?.consultationDuration || 30; // Default 30 min
+    
+    // Parse date correctly to avoid timezone issues
+    const [year, month, day] = date.split('-').map(Number);
+    const queryDate = new Date(year, month - 1, day);
+    queryDate.setHours(0, 0, 0, 0);
+    
+    const startOfDay = new Date(queryDate);
+    const endOfDay = new Date(queryDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    // Get count of appointments for this doctor on this date
+    const appointments = await Appointment.find({
+      doctorId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: { $in: ['pending', 'confirmed', 'in_progress'] }
+    }).sort({ queueNumber: 1 });
+
+    const currentQueueCount = appointments.length;
+    
+    // Calculate max slots based on consultation duration (9 AM - 7 PM = 10 hours, minus 1 hour lunch)
+    const totalMinutes = 9 * 60; // 9 hours of working time
+    const maxSlots = Math.floor(totalMinutes / slotDuration);
+    const nextQueueNumber = currentQueueCount + 1;
+    
+    // Calculate estimated time for next patient
+    const startHour = 9;
+    let minutesFromStart = currentQueueCount * slotDuration;
+    let hours = Math.floor(minutesFromStart / 60);
+    let minutes = minutesFromStart % 60;
+    let estimatedHour = startHour + hours;
+    
+    // Skip lunch hour (1 PM - 2 PM)
+    if (estimatedHour >= 13) {
+      estimatedHour += 1;
+    }
+    
+    const estimatedTime = estimatedHour < 19 
+      ? `${estimatedHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
+      : null;
+
+    res.json({
+      success: true,
+      currentQueueCount,
+      nextQueueNumber,
+      estimatedTime,
+      maxSlots,
+      availableSlots: Math.max(0, maxSlots - currentQueueCount),
+      isFull: currentQueueCount >= maxSlots,
+      slotDuration // Send to frontend for display
+    });
+
+  } catch (error) {
+    console.error('Error fetching queue info:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+// Smart Queue Status - Real-time with pattern analysis
+router.get('/smart-queue/:doctorId/:date', async (req, res) => {
+  try {
+    const { doctorId, date } = req.params;
+    const { queueNumber } = req.query;
+    
+    const smartQueueService = require('../services/smartQueueService');
+    const result = await smartQueueService.getSmartQueueStatus(
+      doctorId, 
+      date, 
+      queueNumber ? parseInt(queueNumber) : null
+    );
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching smart queue status:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+// Get user's queue update by appointment ID
+router.get('/my-queue/:appointmentId', async (req, res) => {
+  try {
+    const { appointmentId } = req.params;
+    
+    const smartQueueService = require('../services/smartQueueService');
+    const result = await smartQueueService.getUserQueueUpdate(appointmentId);
+    
+    res.json(result);
+  } catch (error) {
+    console.error('Error fetching user queue update:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
 
@@ -251,10 +369,19 @@ router.post('/', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Parse date correctly to avoid timezone issues
+    const [year, month, day] = date.split('-').map(Number);
+    const appointmentDate = new Date(year, month - 1, day);
+    appointmentDate.setHours(0, 0, 0, 0);
+    
+    const startOfDay = new Date(appointmentDate);
+    const endOfDay = new Date(appointmentDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
     // Check for conflicting appointments (exact minute)
     const existingAppointment = await Appointment.findOne({
       doctorId,
-      date: new Date(date),
+      date: { $gte: startOfDay, $lte: endOfDay },
       time,
       status: { $in: ['pending', 'confirmed', 'in_progress'] }
     });
@@ -279,7 +406,7 @@ router.post('/', async (req, res) => {
       userId,
       doctorId,
       clinicId,
-      date: new Date(date),
+      date: appointmentDate, // Use properly parsed local date
       time,
       reason,
       consultationType: consultationType || 'in_person', // Default to in_person
@@ -454,14 +581,413 @@ router.post('/', async (req, res) => {
   }
 });
 
+// Queue-based booking (no time selection - auto-assigns queue position)
+router.post('/queue-booking', async (req, res) => {
+  try {
+    const { userId, doctorId, clinicId, date, reason, consultationType, urgencyLevel, reminderPreference, sendEstimatedTimeEmail } = req.body;
+
+    // Validate required fields (reason is now optional)
+    if (!userId || !doctorId || !date) {
+      return res.status(400).json({ message: 'User, doctor and date are required' });
+    }
+    
+    // Default reason if not provided
+    const appointmentReason = reason || 'General Consultation';
+
+    // Check if doctor exists
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    // Check if user exists
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Parse date correctly to avoid timezone issues
+    // Date comes as YYYY-MM-DD string, parse it as local date
+    const [year, month, day] = date.split('-').map(Number);
+    const appointmentDate = new Date(year, month - 1, day);
+    appointmentDate.setHours(0, 0, 0, 0);
+    
+    // Get current queue count for this doctor on this date
+    const startOfDay = new Date(appointmentDate);
+    const endOfDay = new Date(appointmentDate);
+    endOfDay.setHours(23, 59, 59, 999);
+    
+    const existingAppointments = await Appointment.find({
+      doctorId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: { $in: ['pending', 'confirmed', 'in_progress'] }
+    }).sort({ queueNumber: -1 });
+
+    const currentQueueCount = existingAppointments.length;
+    const maxSlots = 20;
+
+    if (currentQueueCount >= maxSlots) {
+      return res.status(400).json({ 
+        message: 'No slots available for this date. Please select another date.',
+        isFull: true
+      });
+    }
+
+    // Calculate queue number and estimated time
+    const queueNumber = currentQueueCount + 1;
+    
+    // Get doctor's consultation duration (default 30 min)
+    const slotDuration = doctor.consultationDuration || 30;
+    
+    // Calculate estimated time based on doctor's consultation duration
+    const startHour = 9;
+    let minutesFromStart = (queueNumber - 1) * slotDuration;
+    let hours = Math.floor(minutesFromStart / 60);
+    let minutes = minutesFromStart % 60;
+    let estimatedHour = startHour + hours;
+    
+    // Skip lunch hour (1 PM - 2 PM)
+    if (estimatedHour >= 13) {
+      estimatedHour += 1;
+    }
+    
+    const estimatedTime = `${estimatedHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+    // Calculate payment breakdown
+    const consultationFee = doctor.consultationFee || 500;
+    const gst = Math.round(consultationFee * 0.22);
+    const platformFee = Math.round(consultationFee * 0.07);
+    const totalAmount = consultationFee + gst + platformFee;
+
+    const appointmentData = {
+      userId,
+      doctorId,
+      clinicId: clinicId || doctor.clinicId,
+      date: appointmentDate, // Use properly parsed local date
+      time: estimatedTime,
+      queueNumber,
+      estimatedArrivalTime: estimatedTime,
+      reason: appointmentReason,
+      consultationType: consultationType || 'in_person',
+      urgencyLevel: urgencyLevel || 'normal',
+      reminderPreference: reminderPreference || 'email',
+      status: 'confirmed',
+      paymentStatus: 'not_required',
+      payment: {
+        consultationFee,
+        gst,
+        platformFee,
+        totalAmount,
+        paymentStatus: 'not_required'
+      }
+    };
+
+    const appointment = new Appointment(appointmentData);
+
+    // Generate join code for online consultations
+    if (appointment.consultationType === 'online') {
+      appointment.generateJoinCode();
+    }
+
+    await appointment.save();
+    
+    // Generate appointment token
+    const doctorCode = doctor.specialization?.substring(0, 5).toUpperCase() || 'GEN';
+    const TokenService = require('../services/tokenService');
+    const tokenResult = await TokenService.generateTokenForAppointment(appointment._id, doctorCode);
+
+    // Send estimated time email
+    if (sendEstimatedTimeEmail && user.email) {
+      try {
+        const { sendQueueBookingEmail } = require('../services/emailService');
+        await sendQueueBookingEmail({
+          patientName: user.name,
+          patientEmail: user.email,
+          doctorName: doctor.name,
+          specialization: doctor.specialization,
+          clinicName: doctor.clinicId?.name || 'HealthSync Clinic',
+          date: appointmentDate.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+          queueNumber,
+          estimatedTime: formatTimeForEmail(estimatedTime),
+          consultationType: consultationType || 'in_person',
+          tokenNumber: tokenResult.token
+        });
+        console.log(`✅ Queue booking email sent to ${user.email}`);
+      } catch (emailError) {
+        console.error('❌ Error sending queue booking email:', emailError.message);
+      }
+    }
+
+    // Award loyalty points
+    const loyaltyResult = await awardLoyaltyPoints(
+      userId, 
+      'appointment', 
+      appointment._id,
+      null,
+      `Booked appointment with Dr. ${doctor.name}`
+    );
+
+    const populatedAppointment = await Appointment.findById(appointment._id)
+      .populate('userId', 'name email phone')
+      .populate('doctorId', 'name specialization consultationFee email')
+      .populate('clinicId', 'name address');
+
+    res.status(201).json({
+      success: true,
+      ...populatedAppointment.toObject(),
+      queueNumber,
+      estimatedTime,
+      token: tokenResult.token,
+      loyaltyPoints: loyaltyResult.success ? {
+        earned: loyaltyResult.points,
+        tier: loyaltyResult.tier
+      } : null
+    });
+
+  } catch (error) {
+    console.error('Error creating queue booking:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Walk-in/Offline booking - For receptionists to add patients at clinic
+router.post('/walk-in', async (req, res) => {
+  try {
+    const { 
+      doctorId, 
+      clinicId, 
+      date, 
+      reason,
+      // Walk-in patient details (no app account needed)
+      patientName,
+      patientPhone,
+      patientAge,
+      patientGender,
+      // Optional - if patient has account
+      userId,
+      // Who is adding this booking
+      addedBy,
+      consultationType
+    } = req.body;
+
+    // Validate required fields
+    if (!doctorId || !date) {
+      return res.status(400).json({ message: 'Doctor and date are required' });
+    }
+
+    // Either userId or walk-in patient details required
+    if (!userId && !patientName) {
+      return res.status(400).json({ message: 'Either user ID or patient name is required' });
+    }
+
+    // Check if doctor exists
+    const doctor = await Doctor.findById(doctorId);
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    // Parse date correctly to avoid timezone issues
+    const [year, month, day] = date.split('-').map(Number);
+    const appointmentDate = new Date(year, month - 1, day);
+    appointmentDate.setHours(0, 0, 0, 0);
+    
+    const startOfDay = new Date(appointmentDate);
+    const endOfDay = new Date(appointmentDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    // Get current queue count for this doctor on this date
+    const existingAppointments = await Appointment.find({
+      doctorId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: { $in: ['pending', 'confirmed', 'in_progress'] }
+    }).sort({ queueNumber: -1 });
+
+    const currentQueueCount = existingAppointments.length;
+    const slotDuration = doctor.consultationDuration || 30;
+    const totalMinutes = 9 * 60;
+    const maxSlots = Math.floor(totalMinutes / slotDuration);
+
+    if (currentQueueCount >= maxSlots) {
+      return res.status(400).json({ 
+        message: 'No slots available for this date.',
+        isFull: true
+      });
+    }
+
+    // Calculate queue number and estimated time
+    const queueNumber = currentQueueCount + 1;
+    
+    const startHour = 9;
+    let minutesFromStart = (queueNumber - 1) * slotDuration;
+    let hours = Math.floor(minutesFromStart / 60);
+    let minutes = minutesFromStart % 60;
+    let estimatedHour = startHour + hours;
+    
+    if (estimatedHour >= 13) {
+      estimatedHour += 1;
+    }
+    
+    const estimatedTime = `${estimatedHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
+
+    const appointmentData = {
+      doctorId,
+      clinicId: clinicId || doctor.clinicId,
+      date: appointmentDate, // Use properly parsed local date
+      time: estimatedTime,
+      queueNumber,
+      estimatedArrivalTime: estimatedTime,
+      reason: reason || 'Walk-in Consultation',
+      consultationType: consultationType || 'in_person',
+      status: 'confirmed',
+      paymentStatus: 'not_required',
+      bookingSource: 'offline',
+      isWalkIn: !userId,
+      addedBy: addedBy || null
+    };
+
+    // If user has account, link it
+    if (userId) {
+      appointmentData.userId = userId;
+    } else {
+      // Store walk-in patient details
+      appointmentData.walkInPatient = {
+        name: patientName,
+        phone: patientPhone,
+        age: patientAge,
+        gender: patientGender
+      };
+      // Use a placeholder user ID (you might want to create a "walk-in" user)
+      appointmentData.userId = addedBy || doctorId; // Temporary - links to who added it
+    }
+
+    const appointment = new Appointment(appointmentData);
+    await appointment.save();
+
+    // Generate token
+    const doctorCode = doctor.specialization?.substring(0, 5).toUpperCase() || 'GEN';
+    const TokenService = require('../services/tokenService');
+    const tokenResult = await TokenService.generateTokenForAppointment(appointment._id, doctorCode);
+
+    const populatedAppointment = await Appointment.findById(appointment._id)
+      .populate('userId', 'name email phone')
+      .populate('doctorId', 'name specialization consultationFee')
+      .populate('clinicId', 'name address');
+
+    res.status(201).json({
+      success: true,
+      message: 'Walk-in patient added to queue',
+      ...populatedAppointment.toObject(),
+      queueNumber,
+      estimatedTime,
+      token: tokenResult.token,
+      bookingSource: 'offline'
+    });
+
+  } catch (error) {
+    console.error('Error creating walk-in booking:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get today's queue for a doctor (unified - both online and offline)
+router.get('/doctor/:doctorId/today-queue', async (req, res) => {
+  try {
+    const { doctorId } = req.params;
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const appointments = await Appointment.find({
+      doctorId,
+      date: { $gte: today, $lt: tomorrow },
+      status: { $in: ['pending', 'confirmed', 'in_progress'] }
+    })
+    .populate('userId', 'name email phone profilePhoto')
+    .sort({ queueNumber: 1 });
+
+    // Format response with source indicator
+    const queue = appointments.map(apt => ({
+      _id: apt._id,
+      queueNumber: apt.queueNumber,
+      estimatedTime: apt.estimatedArrivalTime,
+      status: apt.status,
+      consultationType: apt.consultationType,
+      reason: apt.reason,
+      bookingSource: apt.bookingSource || 'online',
+      isWalkIn: apt.isWalkIn,
+      patient: apt.isWalkIn ? {
+        name: apt.walkInPatient?.name,
+        phone: apt.walkInPatient?.phone,
+        age: apt.walkInPatient?.age,
+        gender: apt.walkInPatient?.gender,
+        isWalkIn: true
+      } : {
+        _id: apt.userId?._id,
+        name: apt.userId?.name,
+        email: apt.userId?.email,
+        phone: apt.userId?.phone,
+        profilePhoto: apt.userId?.profilePhoto,
+        isWalkIn: false
+      }
+    }));
+
+    // Stats
+    const onlineCount = appointments.filter(a => a.bookingSource === 'online' || !a.bookingSource).length;
+    const offlineCount = appointments.filter(a => a.bookingSource === 'offline').length;
+
+    res.json({
+      success: true,
+      queue,
+      stats: {
+        total: appointments.length,
+        online: onlineCount,
+        offline: offlineCount,
+        pending: appointments.filter(a => a.status === 'pending').length,
+        confirmed: appointments.filter(a => a.status === 'confirmed').length,
+        inProgress: appointments.filter(a => a.status === 'in_progress').length
+      }
+    });
+
+  } catch (error) {
+    console.error('Error fetching today queue:', error);
+    res.status(500).json({ success: false, message: 'Server error' });
+  }
+});
+
+// Helper function to format time for email
+function formatTimeForEmail(time) {
+  if (!time) return '';
+  const [hours, minutes] = time.split(':');
+  const hour = parseInt(hours);
+  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const hour12 = hour % 12 || 12;
+  return `${hour12}:${minutes} ${ampm}`;
+}
+
 // Update appointment status
 router.put('/:id/status', async (req, res) => {
   try {
     const { status } = req.body;
     
+    // Build update object with consultation timing
+    const updateData = { status };
+    
+    // Record consultation start time when status changes to in_progress
+    if (status === 'in_progress') {
+      updateData.consultationStartTime = new Date();
+      updateData.consultationStatus = 'in_progress';
+    }
+    
+    // Record consultation end time when status changes to completed
+    if (status === 'completed') {
+      updateData.consultationEndTime = new Date();
+      updateData.consultationStatus = 'completed';
+    }
+    
     const appointment = await Appointment.findByIdAndUpdate(
       req.params.id,
-      { status },
+      updateData,
       { new: true }
     )
       .populate('userId', 'name email phone')
@@ -470,6 +996,19 @@ router.put('/:id/status', async (req, res) => {
 
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
+    }
+    
+    // Calculate and log consultation duration if completed
+    if (status === 'completed' && appointment.consultationStartTime) {
+      const durationMinutes = Math.round(
+        (new Date() - new Date(appointment.consultationStartTime)) / 60000
+      );
+      console.log(`📊 Consultation completed: ${durationMinutes} minutes (Dr. ${appointment.doctorId?.name})`);
+      
+      // Update duration in appointment
+      await Appointment.findByIdAndUpdate(req.params.id, {
+        consultationDuration: durationMinutes * 60 // Store in seconds
+      });
     }
 
     // Add earnings to doctor's wallet when appointment is completed
@@ -509,6 +1048,36 @@ router.put('/:id/status', async (req, res) => {
         console.error('Error updating doctor wallet:', walletError.message);
         // Don't fail the request if wallet update fails
       }
+
+      // 🔔 AUTOMATIC SMART NOTIFICATION: Notify patients who are 2 positions away
+      try {
+        const { processQueueNotifications } = require('../services/queueNotificationService');
+        const notificationResults = await processQueueNotifications(appointment.doctorId._id, 2);
+        console.log(`🔔 Auto-notification triggered after completing patient:`);
+        notificationResults.forEach(r => {
+          if (r.notified) {
+            console.log(`   ✅ Notified patient at position ${r.position}`);
+          }
+        });
+      } catch (notifyError) {
+        console.error('Error sending auto-notifications:', notifyError.message);
+      }
+    }
+
+    // 🔔 Also notify when starting a new patient (in_progress)
+    if (status === 'in_progress' && appointment.doctorId) {
+      try {
+        const { processQueueNotifications } = require('../services/queueNotificationService');
+        const notificationResults = await processQueueNotifications(appointment.doctorId._id, 2);
+        console.log(`🔔 Auto-notification triggered after calling next patient:`);
+        notificationResults.forEach(r => {
+          if (r.notified) {
+            console.log(`   ✅ Notified patient at position ${r.position}`);
+          }
+        });
+      } catch (notifyError) {
+        console.error('Error sending auto-notifications:', notifyError.message);
+      }
     }
 
     res.json(appointment);
@@ -537,6 +1106,98 @@ router.put('/:id', async (req, res) => {
     res.json(appointment);
   } catch (error) {
     console.error('Error updating appointment:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Cancel appointment with reason and notification
+router.put('/:id/cancel', async (req, res) => {
+  try {
+    const { reason, cancelledBy, notifyPatient = true, notifyDoctor = true } = req.body;
+    
+    const appointment = await Appointment.findById(req.params.id)
+      .populate('userId', 'name email phone')
+      .populate('doctorId', 'name email specialization')
+      .populate('clinicId', 'name');
+    
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+    
+    // Check if appointment can be cancelled
+    if (['completed', 'cancelled'].includes(appointment.status)) {
+      return res.status(400).json({ 
+        message: `Cannot cancel an appointment that is already ${appointment.status}` 
+      });
+    }
+    
+    // Update appointment with cancellation details
+    appointment.status = 'cancelled';
+    appointment.cancellationReason = reason || 'No reason provided';
+    appointment.cancelledBy = cancelledBy || 'patient';
+    appointment.cancelledAt = new Date();
+    
+    await appointment.save();
+    
+    // Send cancellation notifications
+    const notifications = [];
+    
+    if (notifyPatient && appointment.userId?.email) {
+      try {
+        const { sendCancellationEmail } = require('../services/emailService');
+        await sendCancellationEmail({
+          recipientEmail: appointment.userId.email,
+          recipientName: appointment.userId.name,
+          recipientType: 'patient',
+          doctorName: appointment.doctorId?.name,
+          appointmentDate: appointment.date,
+          appointmentTime: appointment.time,
+          reason: appointment.cancellationReason,
+          cancelledBy: appointment.cancelledBy
+        });
+        notifications.push({ type: 'patient', sent: true });
+        console.log(`📧 Cancellation email sent to patient: ${appointment.userId.email}`);
+      } catch (emailError) {
+        console.error('Error sending patient cancellation email:', emailError.message);
+        notifications.push({ type: 'patient', sent: false, error: emailError.message });
+      }
+    }
+    
+    if (notifyDoctor && appointment.doctorId?.email) {
+      try {
+        const { sendCancellationEmail } = require('../services/emailService');
+        await sendCancellationEmail({
+          recipientEmail: appointment.doctorId.email,
+          recipientName: appointment.doctorId.name,
+          recipientType: 'doctor',
+          patientName: appointment.userId?.name || 'Patient',
+          appointmentDate: appointment.date,
+          appointmentTime: appointment.time,
+          reason: appointment.cancellationReason,
+          cancelledBy: appointment.cancelledBy
+        });
+        notifications.push({ type: 'doctor', sent: true });
+        console.log(`📧 Cancellation email sent to doctor: ${appointment.doctorId.email}`);
+      } catch (emailError) {
+        console.error('Error sending doctor cancellation email:', emailError.message);
+        notifications.push({ type: 'doctor', sent: false, error: emailError.message });
+      }
+    }
+    
+    // Log cancellation
+    console.log(`❌ Appointment ${appointment._id} cancelled:`);
+    console.log(`   Reason: ${appointment.cancellationReason}`);
+    console.log(`   Cancelled by: ${appointment.cancelledBy}`);
+    
+    res.json({
+      success: true,
+      message: 'Appointment cancelled successfully',
+      appointment,
+      notifications
+    });
+    
+  } catch (error) {
+    console.error('Error cancelling appointment:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

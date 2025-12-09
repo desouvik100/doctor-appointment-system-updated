@@ -1,0 +1,137 @@
+/* DoctorAvailabilityBadge.css */
+
+.availability-badge {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding: 12px 16px;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  transition: all 0.3s ease;
+}
+
+.availability-badge__status {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-weight: 600;
+}
+
+.availability-badge__status i {
+  font-size: 1rem;
+}
+
+.availability-badge__queue,
+.availability-badge__wait,
+.availability-badge__next {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.8rem;
+  opacity: 0.9;
+}
+
+.availability-badge__queue i,
+.availability-badge__wait i,
+.availability-badge__next i {
+  font-size: 0.75rem;
+  width: 14px;
+  text-align: center;
+}
+
+/* Status variants */
+.availability-badge--free {
+  background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
+  color: #065f46;
+  border: 1px solid #6ee7b7;
+}
+
+.availability-badge--free .availability-badge__status i {
+  color: #10b981;
+}
+
+.availability-badge--busy {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  color: #92400e;
+  border: 1px solid #fcd34d;
+}
+
+.availability-badge--busy .availability-badge__status i {
+  color: #f59e0b;
+}
+
+.availability-badge--full {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  color: #991b1b;
+  border: 1px solid #fca5a5;
+}
+
+.availability-badge--full .availability-badge__status i {
+  color: #ef4444;
+}
+
+.availability-badge--loading {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+.availability-badge--error {
+  background: linear-gradient(135deg, #f1f5f9 0%, #e2e8f0 100%);
+  color: #64748b;
+  border: 1px solid #cbd5e1;
+}
+
+/* Compact variant */
+.availability-badge--compact {
+  display: inline-flex;
+  flex-direction: row;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 12px;
+  border-radius: 20px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.availability-badge--compact i {
+  font-size: 0.7rem;
+}
+
+/* Animation for status dot */
+.availability-badge--free::before {
+  content: '';
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: 8px;
+  height: 8px;
+  background: #10b981;
+  border-radius: 50%;
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    transform: scale(1);
+    opacity: 1;
+  }
+  50% {
+    transform: scale(1.2);
+    opacity: 0.7;
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .availability-badge {
+    padding: 10px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .availability-badge__queue,
+  .availability-badge__wait,
+  .availability-badge__next {
+    font-size: 0.75rem;
+  }
+}

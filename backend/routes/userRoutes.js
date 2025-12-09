@@ -32,6 +32,33 @@ const logAccountOperation = async (req, action, targetUser, details = {}) => {
   }
 };
 
+// Search user by phone (for walk-in patient lookup)
+router.get('/search', async (req, res) => {
+  try {
+    const { phone, email } = req.query;
+    
+    if (!phone && !email) {
+      return res.status(400).json({ message: 'Phone or email required for search' });
+    }
+
+    const query = {};
+    if (phone) query.phone = { $regex: phone, $options: 'i' };
+    if (email) query.email = { $regex: email, $options: 'i' };
+
+    const user = await User.findOne(query)
+      .select('name email phone profilePhoto');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json(user);
+  } catch (error) {
+    console.error('Error searching user:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Get all users (Admin only)
 router.get('/', async (req, res) => {
   try {

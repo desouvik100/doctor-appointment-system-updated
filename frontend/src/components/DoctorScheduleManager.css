@@ -656,3 +656,41 @@
     font-size: 0.8rem;
   }
 }
+
+
+/* Consultation Duration Highlight Setting */
+.highlight-setting {
+  background: linear-gradient(135deg, rgba(102, 126, 234, 0.1), rgba(118, 75, 162, 0.1));
+  border: 2px solid rgba(102, 126, 234, 0.3);
+  border-radius: 12px;
+  padding: 16px !important;
+  margin-bottom: 16px;
+}
+
+.highlight-setting label {
+  color: #667eea;
+  font-weight: 600;
+}
+
+.duration-select {
+  border: 2px solid #667eea !important;
+  font-weight: 600;
+}
+
+.setting-hint {
+  display: block;
+  margin-top: 8px;
+  color: #64748b;
+  font-size: 0.8rem;
+  line-height: 1.4;
+}
+
+.setting-hint i {
+  color: #667eea;
+}
+
+.setting-divider {
+  border: none;
+  border-top: 1px dashed #e2e8f0;
+  margin: 20px 0;
+}

@@ -446,17 +446,18 @@ router.get('/:id/schedule', async (req, res) => {
 // Update doctor's weekly schedule
 router.put('/:id/schedule', async (req, res) => {
   try {
-    const { weeklySchedule, consultationSettings } = req.body;
+    const { weeklySchedule, consultationSettings, consultationDuration } = req.body;
     
     const updateData = {};
     if (weeklySchedule) updateData.weeklySchedule = weeklySchedule;
     if (consultationSettings) updateData.consultationSettings = consultationSettings;
+    if (consultationDuration) updateData.consultationDuration = consultationDuration;
     
     const doctor = await Doctor.findByIdAndUpdate(
       req.params.id,
       { $set: updateData },
       { new: true }
-    ).select('name weeklySchedule consultationSettings');
+    ).select('name weeklySchedule consultationSettings consultationDuration');
     
     if (!doctor) {
       return res.status(404).json({ success: false, message: 'Doctor not found' });
@@ -466,6 +467,39 @@ router.put('/:id/schedule', async (req, res) => {
   } catch (error) {
     console.error('Error updating schedule:', error);
     res.status(500).json({ success: false, message: 'Failed to update schedule' });
+  }
+});
+
+// Update consultation duration only
+router.put('/:id/consultation-duration', async (req, res) => {
+  try {
+    const { consultationDuration } = req.body;
+    
+    if (!consultationDuration || consultationDuration < 10 || consultationDuration > 120) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Consultation duration must be between 10 and 120 minutes' 
+      });
+    }
+    
+    const doctor = await Doctor.findByIdAndUpdate(
+      req.params.id,
+      { $set: { consultationDuration } },
+      { new: true }
+    ).select('name consultationDuration');
+    
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+    
+    res.json({ 
+      success: true, 
+      message: `Consultation duration updated to ${consultationDuration} minutes`, 
+      doctor 
+    });
+  } catch (error) {
+    console.error('Error updating consultation duration:', error);
+    res.status(500).json({ success: false, message: 'Failed to update consultation duration' });
   }
 });
 

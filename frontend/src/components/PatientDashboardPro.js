@@ -38,6 +38,9 @@ import QuickHealthTools from './QuickHealthTools';
 import EmailReminders from './EmailReminders';
 import HealthCalculators from './HealthCalculators';
 import SecurityWarningBanner from './SecurityWarningBanner';
+import LiveQueueTracker from './LiveQueueTracker';
+import AIChatbotWidget from './AIChatbotWidget';
+import AIHealthHub from './AIHealthHub';
 
 // Get profile photo URL - checks profilePhoto field, then generates fallback
 const getProfilePhotoUrl = (user) => {
@@ -91,6 +94,9 @@ const PatientDashboardPro = ({ user, onLogout }) => {
   const [showFindDoctorWizard, setShowFindDoctorWizard] = useState(false);
   const [nearbyMode, setNearbyMode] = useState(false);
   const [maxDistance, setMaxDistance] = useState(50);
+  const [showQueueTracker, setShowQueueTracker] = useState(false);
+  const [trackedAppointment, setTrackedAppointment] = useState(null);
+  const [showAIHealthHub, setShowAIHealthHub] = useState(false);
 
   const handleProfileUpdate = (updatedUser) => {
     setCurrentUser(updatedUser);
@@ -341,6 +347,16 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                           <p className="text-xs text-slate-500">{apt.time}</p>
                         </div>
                         <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${apt.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700' : apt.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{apt.status}</span>
+                        {/* Track Queue button for today's appointments */}
+                        {new Date(apt.date).toDateString() === new Date().toDateString() && (apt.status === 'confirmed' || apt.status === 'pending') && (
+                          <button 
+                            onClick={() => { setTrackedAppointment(apt); setShowQueueTracker(true); }}
+                            className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 flex items-center gap-1"
+                          >
+                            <i className="fas fa-users text-[10px]"></i>
+                            Queue
+                          </button>
+                        )}
                       </div>
                     ))}
                   </div>
@@ -437,6 +453,15 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                         <span><i className="fas fa-clock text-indigo-500 mr-2"></i>{apt.time}</span>
                         <span><i className="fas fa-hospital text-indigo-500 mr-2"></i>{apt.clinicId?.name || 'HealthSync'}</span>
                       </div>
+                      {/* Track Queue Button - for today's confirmed/pending appointments */}
+                      {(apt.status === 'confirmed' || apt.status === 'pending') && new Date(apt.date).toDateString() === new Date().toDateString() && (
+                        <button 
+                          onClick={() => { setTrackedAppointment(apt); setShowQueueTracker(true); }} 
+                          className="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg mb-2"
+                        >
+                          <i className="fas fa-users mr-2"></i>Track Live Queue
+                        </button>
+                      )}
                       {apt.consultationType === 'online' && apt.googleMeetLink && <button onClick={() => window.open(apt.googleMeetLink, '_blank')} className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium rounded-xl hover:shadow-lg"><i className="fas fa-video mr-2"></i>Join Meeting</button>}
                       {apt.status === 'completed' && <button onClick={() => { setReviewAppointment(apt); setShowReviewModal(true); }} className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:shadow-lg mt-2"><i className="fas fa-star mr-2"></i>Write Review</button>}
                     </div>
@@ -489,6 +514,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       {showChat && chatDoctor && <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"><DoctorChat user={currentUser} doctor={chatDoctor} onClose={() => { setShowChat(false); setChatDoctor(null); }} /></div>}
       {showProfileModal && <UserProfileModal user={currentUser} onClose={() => setShowProfileModal(false)} onUpdate={handleProfileUpdate} />}
       {showFindDoctorWizard && <FindMyDoctorWizard onClose={() => setShowFindDoctorWizard(false)} onComplete={(recommendation) => { setShowFindDoctorWizard(false); setSelectedSpecialization(recommendation.primarySpecialist); setActiveSection('doctors'); }} onBookDoctor={(specialist) => { setSelectedSpecialization(specialist); setActiveSection('doctors'); }} />}
+      {showQueueTracker && trackedAppointment && <LiveQueueTracker appointment={trackedAppointment} onClose={() => { setShowQueueTracker(false); setTrackedAppointment(null); }} />}
       
       {/* Floating Action Button for Mobile */}
       <div className="lg:hidden">
@@ -501,6 +527,28 @@ const PatientDashboardPro = ({ user, onLogout }) => {
           ]}
         />
       </div>
+
+      {/* AI Chatbot Widget - Floating */}
+      <div className="hidden lg:block">
+        <AIChatbotWidget userId={getUserId()} />
+      </div>
+
+      {/* AI Health Hub Button - Floating */}
+      <button
+        className="fixed bottom-24 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-2xl hover:scale-110"
+        onClick={() => setShowAIHealthHub(true)}
+        title="AI Health Assistant"
+      >
+        🤖
+      </button>
+
+      {/* AI Health Hub Modal */}
+      {showAIHealthHub && (
+        <AIHealthHub 
+          user={currentUser} 
+          onClose={() => setShowAIHealthHub(false)} 
+        />
+      )}
     </div>
   );
 };

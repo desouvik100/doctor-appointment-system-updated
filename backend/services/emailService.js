@@ -763,20 +763,37 @@ Thank you for choosing HealthSync!
 
 // Send queue position notification email
 async function sendQueueNotificationEmail(patientEmail, patientName, doctorName, queuePosition, estimatedTime, appointmentTime) {
-  const subject = `🔔 Your Turn is Coming Soon - Dr. ${doctorName}`;
+  // Dynamic subject based on position
+  const isUrgent = queuePosition <= 2;
+  const subject = isUrgent 
+    ? `🚨 URGENT: Only ${queuePosition} patient(s) before you! - Dr. ${doctorName}`
+    : `🔔 Your Turn is Coming Soon - Dr. ${doctorName}`;
+  
+  // Urgent styling for position 1-2
+  const headerBg = isUrgent 
+    ? 'linear-gradient(135deg, #ef4444, #dc2626)' 
+    : 'linear-gradient(135deg, #6366f1, #8b5cf6)';
+  const headerText = isUrgent ? '🚨 GET READY NOW!' : '⏰ Your Turn is Approaching!';
+  const alertBg = isUrgent ? '#fef2f2' : '#fef3c7';
+  const alertBorder = isUrgent ? '#ef4444' : '#f59e0b';
+  const alertTextColor = isUrgent ? '#991b1b' : '#92400e';
   
   const html = `
     <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px;">
-      <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
-        <h1 style="color: white; margin: 0; font-size: 24px;">⏰ Your Turn is Approaching!</h1>
+      <div style="background: ${headerBg}; padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 24px;">${headerText}</h1>
+        ${isUrgent ? '<p style="color: rgba(255,255,255,0.9); margin: 10px 0 0; font-size: 16px;">Please head to the clinic immediately!</p>' : ''}
       </div>
       
       <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
         <p style="font-size: 16px; color: #334155;">Hello <strong>${patientName}</strong>,</p>
         
-        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; border-radius: 8px;">
-          <p style="margin: 0; color: #92400e; font-weight: 600;">
-            <span style="font-size: 24px;">📍</span> You are <strong style="font-size: 20px; color: #d97706;">#${queuePosition}</strong> in the queue
+        <div style="background: ${alertBg}; border-left: 4px solid ${alertBorder}; padding: 20px; margin: 20px 0; border-radius: 8px; text-align: center;">
+          ${isUrgent ? '<p style="margin: 0 0 10px; color: #dc2626; font-size: 14px; font-weight: 600; text-transform: uppercase; letter-spacing: 1px;">⚡ ALMOST YOUR TURN ⚡</p>' : ''}
+          <p style="margin: 0; color: ${alertTextColor}; font-weight: 600;">
+            ${queuePosition === 1 
+              ? '<span style="font-size: 32px;">🎯</span><br><strong style="font-size: 24px; color: #dc2626;">YOU ARE NEXT!</strong>' 
+              : `<span style="font-size: 24px;">📍</span> Only <strong style="font-size: 28px; color: ${isUrgent ? '#dc2626' : '#d97706'};">${queuePosition}</strong> patient(s) before you`}
           </p>
         </div>
         
@@ -792,25 +809,27 @@ async function sendQueueNotificationEmail(patientEmail, patientName, doctorName,
             </tr>
             <tr>
               <td style="padding: 10px 0; color: #64748b;">Estimated Wait:</td>
-              <td style="padding: 10px 0; color: #059669; font-weight: 600; text-align: right;">~${estimatedTime} minutes</td>
+              <td style="padding: 10px 0; color: ${isUrgent ? '#dc2626' : '#059669'}; font-weight: 600; text-align: right;">~${estimatedTime} minutes</td>
             </tr>
           </table>
         </div>
         
-        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 16px; border-radius: 8px; margin: 20px 0;">
-          <p style="margin: 0; color: #065f46; font-size: 14px;">
-            <strong>💡 Tip:</strong> Please arrive at the clinic soon to avoid missing your turn. 
-            We recommend being present at least 10 minutes before your estimated time.
+        <div style="background: ${isUrgent ? '#fef2f2' : '#ecfdf5'}; border: 1px solid ${isUrgent ? '#fecaca' : '#a7f3d0'}; padding: 16px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: ${isUrgent ? '#991b1b' : '#065f46'}; font-size: 14px;">
+            ${isUrgent 
+              ? '<strong>⚠️ ACTION REQUIRED:</strong> Please proceed to the clinic NOW. If you are not present when called, you may lose your turn.'
+              : '<strong>💡 Tip:</strong> Please arrive at the clinic soon to avoid missing your turn. We recommend being present at least 10 minutes before your estimated time.'}
           </p>
         </div>
         
         <p style="color: #64748b; font-size: 14px; margin-top: 20px;">
-          This is an automated notification from HealthSync. Your actual wait time may vary based on consultation duration.
+          This is an automated AI-powered notification from HealthSync. Your actual wait time may vary based on consultation duration.
         </p>
       </div>
       
       <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 12px;">
         <p>© ${new Date().getFullYear()} HealthSync - Your Health, Our Priority</p>
+        <p style="margin: 5px 0 0; font-size: 11px;">🤖 Smart Queue Management powered by AI</p>
       </div>
     </div>
   `;
@@ -825,6 +844,259 @@ async function sendQueueNotificationEmail(patientEmail, patientName, doctorName,
   }
 }
 
+// Send queue booking confirmation email with estimated arrival time
+async function sendQueueBookingEmail({ patientName, patientEmail, doctorName, specialization, clinicName, date, queueNumber, estimatedTime, consultationType, tokenNumber }) {
+  const subject = `✅ Appointment Confirmed - Queue #${queueNumber} | Dr. ${doctorName}`;
+  
+  const html = `
+    <!DOCTYPE html>
+    <html>
+    <head>
+      <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    </head>
+    <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8;">
+      <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+        <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px 20px 0 0; padding: 30px; text-align: center;">
+          <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Booking Confirmed!</h1>
+          <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0;">Your appointment has been successfully scheduled</p>
+        </div>
+        
+        <div style="background: white; padding: 30px; border-radius: 0 0 20px 20px; box-shadow: 0 10px 40px rgba(0,0,0,0.1);">
+          <p style="color: #334155; font-size: 16px; margin-bottom: 25px;">Dear <strong>${patientName}</strong>,</p>
+          
+          <!-- Queue Token Display -->
+          <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 16px; padding: 25px; text-align: center; margin-bottom: 25px;">
+            <p style="color: rgba(255,255,255,0.8); margin: 0 0 5px; font-size: 14px; text-transform: uppercase; letter-spacing: 1px;">Your Queue Token</p>
+            <p style="color: white; margin: 0; font-size: 48px; font-weight: 800;">#${queueNumber}</p>
+            ${tokenNumber ? `<p style="color: rgba(255,255,255,0.7); margin: 10px 0 0; font-size: 12px;">Token: ${tokenNumber}</p>` : ''}
+          </div>
+          
+          <!-- Estimated Time -->
+          <div style="background: #f0fdf4; border: 2px solid #10b981; border-radius: 12px; padding: 20px; text-align: center; margin-bottom: 25px;">
+            <p style="color: #059669; margin: 0 0 5px; font-size: 14px; font-weight: 600;">⏰ ESTIMATED ARRIVAL TIME</p>
+            <p style="color: #047857; margin: 0; font-size: 32px; font-weight: 700;">${estimatedTime}</p>
+            <p style="color: #6b7280; margin: 10px 0 0; font-size: 13px;">Please arrive 15 minutes before this time</p>
+          </div>
+          
+          <!-- Appointment Details -->
+          <div style="background: #f8fafc; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+            <h3 style="color: #1e293b; margin: 0 0 15px; font-size: 16px;">📋 Appointment Details</h3>
+            <table style="width: 100%; border-collapse: collapse;">
+              <tr>
+                <td style="padding: 10px 0; color: #64748b; font-size: 14px;">Doctor</td>
+                <td style="padding: 10px 0; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right;">Dr. ${doctorName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; color: #64748b; font-size: 14px; border-top: 1px solid #e2e8f0;">Specialization</td>
+                <td style="padding: 10px 0; color: #1e293b; font-size: 14px; text-align: right; border-top: 1px solid #e2e8f0;">${specialization}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; color: #64748b; font-size: 14px; border-top: 1px solid #e2e8f0;">Clinic</td>
+                <td style="padding: 10px 0; color: #1e293b; font-size: 14px; text-align: right; border-top: 1px solid #e2e8f0;">${clinicName}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; color: #64748b; font-size: 14px; border-top: 1px solid #e2e8f0;">Date</td>
+                <td style="padding: 10px 0; color: #1e293b; font-size: 14px; font-weight: 600; text-align: right; border-top: 1px solid #e2e8f0;">${date}</td>
+              </tr>
+              <tr>
+                <td style="padding: 10px 0; color: #64748b; font-size: 14px; border-top: 1px solid #e2e8f0;">Type</td>
+                <td style="padding: 10px 0; color: #1e293b; font-size: 14px; text-align: right; border-top: 1px solid #e2e8f0;">${consultationType === 'online' ? '🎥 Video Consultation' : '🏥 In-Person Visit'}</td>
+              </tr>
+            </table>
+          </div>
+          
+          <!-- Important Notes -->
+          <div style="background: #fef3c7; border-radius: 12px; padding: 20px; margin-bottom: 25px;">
+            <h4 style="color: #92400e; margin: 0 0 10px; font-size: 14px;">⚠️ Important Notes</h4>
+            <ul style="color: #78350f; margin: 0; padding-left: 20px; font-size: 13px; line-height: 1.8;">
+              <li>Your estimated time is calculated based on your queue position</li>
+              <li>Actual time may vary depending on previous consultations</li>
+              <li>You will receive a notification when your turn is approaching</li>
+              ${consultationType === 'in_person' ? '<li>Please bring your ID and any previous medical records</li>' : '<li>Video call link will be sent 15 minutes before your turn</li>'}
+            </ul>
+          </div>
+          
+          <p style="color: #64748b; font-size: 14px; text-align: center; margin: 0;">
+            Thank you for choosing HealthSync Pro!<br>
+            <span style="color: #667eea;">Your health is our priority 💙</span>
+          </p>
+        </div>
+        
+        <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 20px;">
+          © ${new Date().getFullYear()} HealthSync Pro. All rights reserved.
+        </p>
+      </div>
+    </body>
+    </html>
+  `;
+
+  try {
+    await sendEmail({ to: patientEmail, subject, html });
+    console.log(`✅ Queue booking email sent to ${patientEmail}`);
+    return { success: true };
+  } catch (error) {
+    console.error('❌ Error sending queue booking email:', error.message);
+    return { success: false, error: error.message };
+  }
+}
+
+// ---- Send Cancellation Email ----
+async function sendCancellationEmail({
+  recipientEmail,
+  recipientName,
+  recipientType,
+  doctorName,
+  patientName,
+  appointmentDate,
+  appointmentTime,
+  reason,
+  cancelledBy
+}) {
+  try {
+    if (!recipientEmail) {
+      throw new Error('Recipient email is required');
+    }
+
+    // Format date
+    const formattedDate = new Date(appointmentDate).toLocaleDateString('en-IN', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+      timeZone: 'Asia/Kolkata'
+    });
+
+    // Format time
+    let displayTime = appointmentTime || 'Time not set';
+    if (appointmentTime && appointmentTime.includes(':')) {
+      const [hours, minutes] = appointmentTime.split(':');
+      const hour = parseInt(hours);
+      const ampm = hour >= 12 ? 'PM' : 'AM';
+      const hour12 = hour % 12 || 12;
+      displayTime = `${hour12}:${minutes} ${ampm} IST`;
+    }
+
+    const otherPartyName = recipientType === 'patient' ? `Dr. ${doctorName}` : patientName;
+    const cancelledByText = cancelledBy === 'patient' ? 'the patient' : 
+                           cancelledBy === 'doctor' ? 'the doctor' : 
+                           cancelledBy === 'clinic' ? 'the clinic' : 'the system';
+
+    const subject = `Appointment Cancelled - ${formattedDate}`;
+
+    const text = `
+Dear ${recipientName},
+
+Your appointment has been cancelled.
+
+Appointment Details:
+- ${recipientType === 'patient' ? 'Doctor' : 'Patient'}: ${otherPartyName}
+- Date: ${formattedDate}
+- Time: ${displayTime}
+
+Cancellation Reason: ${reason || 'No reason provided'}
+Cancelled by: ${cancelledByText}
+
+If you need to reschedule, please visit HealthSync to book a new appointment.
+
+Thank you for using HealthSync.
+    `;
+
+    const html = `
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>${subject}</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f0f2f5; }
+    .container { max-width: 600px; margin: 20px auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
+    .header { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 30px; text-align: center; }
+    .header h1 { font-size: 28px; margin-bottom: 5px; }
+    .header p { font-size: 14px; opacity: 0.9; }
+    .content { padding: 30px; }
+    .alert-box { background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
+    .alert-box h3 { color: #dc2626; margin-bottom: 8px; font-size: 16px; }
+    .alert-box p { color: #7f1d1d; font-size: 14px; }
+    .appointment-card { background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0; }
+    .detail-row { display: flex; padding: 10px 0; border-bottom: 1px solid #e5e7eb; }
+    .detail-row:last-child { border-bottom: none; }
+    .detail-label { font-weight: 600; color: #4b5563; width: 120px; }
+    .detail-value { color: #1f2937; flex: 1; }
+    .reason-box { background: #fffbeb; border: 1px solid #fde68a; padding: 16px; border-radius: 8px; margin: 20px 0; }
+    .reason-box h4 { color: #92400e; margin-bottom: 8px; font-size: 14px; }
+    .reason-box p { color: #78350f; font-size: 14px; }
+    .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 20px; }
+    .footer { background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; font-size: 13px; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <h1>🏥 HealthSync</h1>
+      <p>Appointment Cancellation Notice</p>
+    </div>
+    
+    <div class="content">
+      <div class="alert-box">
+        <h3>❌ Appointment Cancelled</h3>
+        <p>Your scheduled appointment has been cancelled by ${cancelledByText}.</p>
+      </div>
+      
+      <h2 style="color: #1f2937; margin-bottom: 10px;">Hello ${recipientName},</h2>
+      <p style="color: #6b7280; margin-bottom: 20px;">We're sorry to inform you that your appointment has been cancelled.</p>
+
+      <div class="appointment-card">
+        <div class="detail-row">
+          <div class="detail-label">${recipientType === 'patient' ? 'Doctor:' : 'Patient:'}</div>
+          <div class="detail-value">${otherPartyName}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Date:</div>
+          <div class="detail-value">${formattedDate}</div>
+        </div>
+        <div class="detail-row">
+          <div class="detail-label">Time:</div>
+          <div class="detail-value">${displayTime}</div>
+        </div>
+      </div>
+      
+      <div class="reason-box">
+        <h4>📝 Cancellation Reason</h4>
+        <p>${reason || 'No reason provided'}</p>
+      </div>
+      
+      <p style="color: #6b7280; margin-top: 20px;">
+        If you need to reschedule, please visit HealthSync to book a new appointment at your convenience.
+      </p>
+      
+      <center>
+        <a href="${process.env.FRONTEND_URL || 'https://healthsync.com'}" class="cta-button">
+          Book New Appointment
+        </a>
+      </center>
+    </div>
+    
+    <div class="footer">
+      <p>© ${new Date().getFullYear()} HealthSync. All rights reserved.</p>
+      <p>This is an automated message. Please do not reply to this email.</p>
+    </div>
+  </div>
+</body>
+</html>
+    `;
+
+    await sendEmail({ to: recipientEmail, subject, html, text });
+    console.log(`📧 Cancellation email sent to ${recipientEmail}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Error sending cancellation email:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 module.exports = {
   sendOTP,
   verifyOTP,
@@ -832,4 +1104,6 @@ module.exports = {
   sendAppointmentEmail,
   sendEmail,
   sendQueueNotificationEmail,
+  sendQueueBookingEmail,
+  sendCancellationEmail,
 };

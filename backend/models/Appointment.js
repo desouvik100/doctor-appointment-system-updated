@@ -39,6 +39,48 @@ const appointmentSchema = new mongoose.Schema(
       type: Number,
       default: 1
     },
+    // Queue-based booking fields
+    queueNumber: {
+      type: Number,
+      default: null
+    },
+    estimatedArrivalTime: {
+      type: String,
+      trim: true
+    },
+    urgencyLevel: {
+      type: String,
+      enum: ['normal', 'urgent', 'emergency'],
+      default: 'normal'
+    },
+    reminderPreference: {
+      type: String,
+      enum: ['email', 'sms', 'both'],
+      default: 'email'
+    },
+    // Booking source - online (app/website) or offline (walk-in at clinic)
+    bookingSource: {
+      type: String,
+      enum: ['online', 'offline', 'phone', 'receptionist'],
+      default: 'online'
+    },
+    // For offline walk-in patients without app account
+    walkInPatient: {
+      name: { type: String, trim: true },
+      phone: { type: String, trim: true },
+      age: { type: Number },
+      gender: { type: String, enum: ['male', 'female', 'other'] }
+    },
+    // Flag to identify if this is a walk-in without user account
+    isWalkIn: {
+      type: Boolean,
+      default: false
+    },
+    // Added by (receptionist/doctor ID for offline bookings)
+    addedBy: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: 'User'
+    },
     notes: {
       type: String,
       trim: true
@@ -259,6 +301,19 @@ const appointmentSchema = new mongoose.Schema(
       sms24h: { type: Boolean, default: false },
       email1h: { type: Boolean, default: false },
       sms1h: { type: Boolean, default: false }
+    },
+    // Cancellation tracking
+    cancellationReason: {
+      type: String,
+      trim: true
+    },
+    cancelledBy: {
+      type: String,
+      enum: ['patient', 'doctor', 'clinic', 'system'],
+      default: null
+    },
+    cancelledAt: {
+      type: Date
     }
   },
   {
