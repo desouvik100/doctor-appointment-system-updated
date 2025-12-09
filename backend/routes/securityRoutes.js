@@ -821,4 +821,22 @@ router.get('/suspended-users', async (req, res) => {
   }
 });
 
+// Delete all security alerts
+router.delete('/alerts/all', async (req, res) => {
+  try {
+    const result = await SuspiciousActivity.deleteMany({});
+    
+    console.log(`🗑️ Deleted ${result.deletedCount} security alerts`);
+    
+    res.json({
+      success: true,
+      message: `Successfully deleted ${result.deletedCount} security alerts`,
+      deletedCount: result.deletedCount
+    });
+  } catch (error) {
+    console.error('Error deleting all alerts:', error);
+    res.status(500).json({ success: false, message: 'Failed to delete alerts' });
+  }
+});
+
 module.exports = router;

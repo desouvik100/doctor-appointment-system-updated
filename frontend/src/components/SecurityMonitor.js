@@ -282,6 +282,30 @@ const SecurityMonitor = ({ adminId }) => {
     }
   };
 
+  // Delete all alerts
+  const handleDeleteAllAlerts = async () => {
+    if (!window.confirm('⚠️ WARNING: This will permanently delete ALL security alerts!\n\nAre you sure you want to continue?')) return;
+    if (!window.confirm('This action cannot be undone. Type "DELETE" in the next prompt to confirm.')) return;
+    
+    const confirmation = window.prompt('Type DELETE to confirm:');
+    if (confirmation !== 'DELETE') {
+      toast.error('Deletion cancelled - confirmation text did not match');
+      return;
+    }
+    
+    try {
+      const response = await axios.delete('/api/security/alerts/all');
+      if (response.data.success) {
+        toast.success(response.data.message);
+        fetchAlerts();
+        fetchStats();
+        fetchAnalytics();
+      }
+    } catch (error) {
+      toast.error('Failed to delete alerts');
+    }
+  };
+
   if (loading) {
     return (
       <div className="flex items-center justify-center py-20">
@@ -876,6 +900,12 @@ const SecurityMonitor = ({ adminId }) => {
               className="px-3 py-1.5 text-xs bg-slate-100 text-slate-600 rounded-lg hover:bg-slate-200 font-medium"
             >
               <i className="fas fa-trash mr-1"></i> Clear Test Data
+            </button>
+            <button
+              onClick={handleDeleteAllAlerts}
+              className="px-3 py-1.5 text-xs bg-red-100 text-red-700 rounded-lg hover:bg-red-200 font-medium"
+            >
+              <i className="fas fa-trash-alt mr-1"></i> Delete All Alerts
             </button>
           </div>
         </div>
