@@ -12,13 +12,53 @@ import SecurityMonitor from './SecurityMonitor';
 import '../styles/premium-saas.css';
 import '../styles/admin-dashboard-professional.css';
 
-// Stat Card Component - MNC Enterprise Style
+// Stat Card Component - MNC Enterprise Style with SVG Icons
 const StatCard = ({ title, value, icon, color = "primary" }) => {
   const colors = {
     primary: '#6366f1',
     success: '#10b981',
     warning: '#f59e0b',
     info: '#3b82f6'
+  };
+
+  // SVG icons for reliability
+  const icons = {
+    users: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"/>
+        <circle cx="9" cy="7" r="4"/>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"/>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"/>
+      </svg>
+    ),
+    'user-md': (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"/>
+        <circle cx="12" cy="7" r="4"/>
+        <path d="M12 11v4"/>
+        <path d="M10 13h4"/>
+      </svg>
+    ),
+    'calendar-check': (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+        <line x1="16" y1="2" x2="16" y2="6"/>
+        <line x1="8" y1="2" x2="8" y2="6"/>
+        <line x1="3" y1="10" x2="21" y2="10"/>
+        <path d="M9 16l2 2 4-4"/>
+      </svg>
+    ),
+    hospital: (
+      <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+        <path d="M3 21h18"/>
+        <path d="M5 21V7l8-4v18"/>
+        <path d="M19 21V11l-6-4"/>
+        <path d="M9 9v.01"/>
+        <path d="M9 12v.01"/>
+        <path d="M9 15v.01"/>
+        <path d="M9 18v.01"/>
+      </svg>
+    )
   };
   
   return (
@@ -27,7 +67,8 @@ const StatCard = ({ title, value, icon, color = "primary" }) => {
       border: '1px solid #e2e8f0',
       borderRadius: '12px',
       padding: '20px 24px',
-      transition: 'all 0.2s ease'
+      transition: 'all 0.2s ease',
+      boxShadow: '0 1px 3px rgba(0,0,0,0.05)'
     }}>
       <div style={{ display: 'flex', alignItems: 'center', gap: '16px' }}>
         <div style={{
@@ -38,16 +79,10 @@ const StatCard = ({ title, value, icon, color = "primary" }) => {
           borderRadius: '10px',
           display: 'flex',
           alignItems: 'center',
-          justifyContent: 'center'
+          justifyContent: 'center',
+          color: '#ffffff'
         }}>
-          <i 
-            className={`fas fa-${icon}`} 
-            style={{ 
-              color: '#ffffff', 
-              fontSize: '1.25rem',
-              WebkitTextFillColor: '#ffffff'
-            }}
-          />
+          {icons[icon] || <i className={`fas fa-${icon}`} style={{ fontSize: '1.25rem' }} />}
         </div>
         <div>
           <div style={{ 

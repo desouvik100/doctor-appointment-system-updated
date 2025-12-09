@@ -39,6 +39,94 @@ const doctorSchema = new mongoose.Schema(
       type: String,
       default: "Available"
     },
+    // Weekly Schedule - Doctor's regular availability
+    weeklySchedule: {
+      monday: {
+        isAvailable: { type: Boolean, default: true },
+        slots: [{
+          startTime: String, // "09:00"
+          endTime: String,   // "13:00"
+          type: { type: String, enum: ['in-clinic', 'virtual', 'both'], default: 'both' },
+          maxPatients: { type: Number, default: 10 }
+        }]
+      },
+      tuesday: {
+        isAvailable: { type: Boolean, default: true },
+        slots: [{
+          startTime: String,
+          endTime: String,
+          type: { type: String, enum: ['in-clinic', 'virtual', 'both'], default: 'both' },
+          maxPatients: { type: Number, default: 10 }
+        }]
+      },
+      wednesday: {
+        isAvailable: { type: Boolean, default: true },
+        slots: [{
+          startTime: String,
+          endTime: String,
+          type: { type: String, enum: ['in-clinic', 'virtual', 'both'], default: 'both' },
+          maxPatients: { type: Number, default: 10 }
+        }]
+      },
+      thursday: {
+        isAvailable: { type: Boolean, default: true },
+        slots: [{
+          startTime: String,
+          endTime: String,
+          type: { type: String, enum: ['in-clinic', 'virtual', 'both'], default: 'both' },
+          maxPatients: { type: Number, default: 10 }
+        }]
+      },
+      friday: {
+        isAvailable: { type: Boolean, default: true },
+        slots: [{
+          startTime: String,
+          endTime: String,
+          type: { type: String, enum: ['in-clinic', 'virtual', 'both'], default: 'both' },
+          maxPatients: { type: Number, default: 10 }
+        }]
+      },
+      saturday: {
+        isAvailable: { type: Boolean, default: true },
+        slots: [{
+          startTime: String,
+          endTime: String,
+          type: { type: String, enum: ['in-clinic', 'virtual', 'both'], default: 'both' },
+          maxPatients: { type: Number, default: 10 }
+        }]
+      },
+      sunday: {
+        isAvailable: { type: Boolean, default: false },
+        slots: [{
+          startTime: String,
+          endTime: String,
+          type: { type: String, enum: ['in-clinic', 'virtual', 'both'], default: 'both' },
+          maxPatients: { type: Number, default: 10 }
+        }]
+      }
+    },
+    // Special dates - Override weekly schedule for specific dates
+    specialDates: [{
+      date: { type: Date, required: true },
+      isAvailable: { type: Boolean, default: true },
+      reason: String, // "Holiday", "Conference", "Emergency Leave"
+      slots: [{
+        startTime: String,
+        endTime: String,
+        type: { type: String, enum: ['in-clinic', 'virtual', 'both'], default: 'both' },
+        maxPatients: { type: Number, default: 10 }
+      }]
+    }],
+    // Consultation settings
+    consultationSettings: {
+      virtualConsultationEnabled: { type: Boolean, default: true },
+      inClinicConsultationEnabled: { type: Boolean, default: true },
+      virtualConsultationFee: { type: Number, default: null }, // null means same as consultationFee
+      slotDuration: { type: Number, default: 15 }, // minutes per appointment
+      bufferTime: { type: Number, default: 5 }, // minutes between appointments
+      advanceBookingDays: { type: Number, default: 30 }, // How far in advance can patients book
+      cancellationHours: { type: Number, default: 24 } // Hours before appointment for free cancellation
+    },
     consultationFee: {
       type: Number,
       default: 500

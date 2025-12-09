@@ -20,15 +20,49 @@ const DoctorAvailabilityCalendar = ({ doctorId, onSelectSlot, selectedDate, onDa
     try {
       setLoading(true);
       const year = currentMonth.getFullYear();
-      const month = currentMonth.getMonth() + 1;
-      const response = await axios.get(`/api/doctors/${doctorId}/availability?year=${year}&month=${month}`);
-      setAvailability(response.data.availability || {});
+      const month = currentMonth.getMonth();
+      const response = await axios.get(`/api/doctors/${doctorId}/calendar?year=${year}&month=${month}`);
+      
+      if (response.data.success && response.data.calendar) {
+        // Convert calendar array to availability object
+        const avail = {};
+        response.data.calendar.forEach(day => {
+          if (!day.isPast && day.isAvailable) {
+            avail[day.date] = { 
+              available: true, 
+              slots: day.slots?.flatMap(slot => generateSlotsFromRange(slot.startTime, slot.endTime)) || generateTimeSlots()
+            };
+          }
+        });
+        setAvailability(avail);
+      } else {
+        generateDefaultAvailability();
+      }
     } catch (error) {
       // Generate default availability if API fails
       generateDefaultAvailability();
     } finally {
       setLoading(false);
     }
+  };
+
+  const generateSlotsFromRange = (startTime, endTime) => {
+    if (!startTime || !endTime) return [];
+    const slots = [];
+    const [startHour, startMin] = startTime.split(':').map(Number);
+    const [endHour, endMin] = endTime.split(':').map(Number);
+    let current = startHour * 60 + startMin;
+    const end = endHour * 60 + endMin;
+    
+    while (current < end) {
+      const hour = Math.floor(current / 60);
+      const min = current % 60;
+      if (hour !== 13) { // Skip lunch hour
+        slots.push(`${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`);
+      }
+      current += 30; // 30 min slots
+    }
+    return slots;
   };
 
   const generateDefaultAvailability = () => {

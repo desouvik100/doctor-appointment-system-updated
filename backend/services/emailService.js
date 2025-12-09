@@ -761,10 +761,75 @@ Thank you for choosing HealthSync!
   }
 }
 
+// Send queue position notification email
+async function sendQueueNotificationEmail(patientEmail, patientName, doctorName, queuePosition, estimatedTime, appointmentTime) {
+  const subject = `🔔 Your Turn is Coming Soon - Dr. ${doctorName}`;
+  
+  const html = `
+    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px;">
+      <div style="background: linear-gradient(135deg, #6366f1, #8b5cf6); padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
+        <h1 style="color: white; margin: 0; font-size: 24px;">⏰ Your Turn is Approaching!</h1>
+      </div>
+      
+      <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+        <p style="font-size: 16px; color: #334155;">Hello <strong>${patientName}</strong>,</p>
+        
+        <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; margin: 20px 0; border-radius: 8px;">
+          <p style="margin: 0; color: #92400e; font-weight: 600;">
+            <span style="font-size: 24px;">📍</span> You are <strong style="font-size: 20px; color: #d97706;">#${queuePosition}</strong> in the queue
+          </p>
+        </div>
+        
+        <div style="background: #f1f5f9; padding: 20px; border-radius: 12px; margin: 20px 0;">
+          <table style="width: 100%; border-collapse: collapse;">
+            <tr>
+              <td style="padding: 10px 0; color: #64748b;">Doctor:</td>
+              <td style="padding: 10px 0; color: #1e293b; font-weight: 600; text-align: right;">Dr. ${doctorName}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 0; color: #64748b;">Your Slot Time:</td>
+              <td style="padding: 10px 0; color: #1e293b; font-weight: 600; text-align: right;">${appointmentTime}</td>
+            </tr>
+            <tr>
+              <td style="padding: 10px 0; color: #64748b;">Estimated Wait:</td>
+              <td style="padding: 10px 0; color: #059669; font-weight: 600; text-align: right;">~${estimatedTime} minutes</td>
+            </tr>
+          </table>
+        </div>
+        
+        <div style="background: #ecfdf5; border: 1px solid #a7f3d0; padding: 16px; border-radius: 8px; margin: 20px 0;">
+          <p style="margin: 0; color: #065f46; font-size: 14px;">
+            <strong>💡 Tip:</strong> Please arrive at the clinic soon to avoid missing your turn. 
+            We recommend being present at least 10 minutes before your estimated time.
+          </p>
+        </div>
+        
+        <p style="color: #64748b; font-size: 14px; margin-top: 20px;">
+          This is an automated notification from HealthSync. Your actual wait time may vary based on consultation duration.
+        </p>
+      </div>
+      
+      <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 12px;">
+        <p>© ${new Date().getFullYear()} HealthSync - Your Health, Our Priority</p>
+      </div>
+    </div>
+  `;
+
+  try {
+    await sendEmail(patientEmail, subject, html);
+    console.log(`✅ Queue notification sent to ${patientEmail}`);
+    return { success: true };
+  } catch (error) {
+    console.error('Failed to send queue notification:', error);
+    return { success: false, error: error.message };
+  }
+}
+
 module.exports = {
   sendOTP,
   verifyOTP,
   sendTestEmail,
   sendAppointmentEmail,
   sendEmail,
+  sendQueueNotificationEmail,
 };

@@ -2,6 +2,7 @@ import { useState, useEffect, useMemo, useRef } from 'react';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
 import BookingModal from './BookingModal';
+import DoctorProfilePage from './DoctorProfilePage';
 import AIAssistant from './AIAssistant';
 import ReviewModal from './ReviewModal';
 import HealthProfile from './HealthProfile';
@@ -28,6 +29,7 @@ const PatientDashboard = ({ user, onLogout }) => {
   const [activeTab, setActiveTab] = useState('doctors');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showDoctorProfile, setShowDoctorProfile] = useState(false);
   
   // Doctor list state
   const [doctors, setDoctors] = useState([]);
@@ -939,6 +941,16 @@ const PatientDashboard = ({ user, onLogout }) => {
                       
                       <div className="doctor-card__actions">
                         <button 
+                          className="doctor-card__profile-btn"
+                          onClick={() => {
+                            setSelectedDoctor(doctor);
+                            setShowDoctorProfile(true);
+                          }}
+                        >
+                          <i className="fas fa-calendar-alt"></i> View Availability
+                        </button>
+                        
+                        <button 
                           className="doctor-card__book-btn"
                           disabled={doctor.availability !== 'Available'}
                           onClick={() => {
@@ -946,15 +958,7 @@ const PatientDashboard = ({ user, onLogout }) => {
                             setShowBookingModal(true);
                           }}
                         >
-                          <i className="fas fa-calendar-plus"></i> Book Appointment
-                        </button>
-                        
-                        <button 
-                          className="doctor-card__directions-btn"
-                          onClick={() => openDirections(doctor.clinicId)}
-                          title="Get directions to clinic"
-                        >
-                          <i className="fas fa-directions"></i> Get Directions
+                          <i className="fas fa-calendar-plus"></i> Book Now
                         </button>
                       </div>
                     </div>
@@ -963,6 +967,25 @@ const PatientDashboard = ({ user, onLogout }) => {
               )}
             </div>
           </>
+        )}
+
+        {/* Doctor Profile Page with Availability Calendar */}
+        {showDoctorProfile && selectedDoctor && (
+          <div className="doctor-profile-overlay">
+            <DoctorProfilePage
+              doctor={selectedDoctor}
+              user={currentUser}
+              onBack={() => {
+                setShowDoctorProfile(false);
+                setSelectedDoctor(null);
+              }}
+              onBookingSuccess={(appointment) => {
+                fetchAppointments();
+                setShowDoctorProfile(false);
+                setSelectedDoctor(null);
+              }}
+            />
+          </div>
         )}
 
         {/* Booking Modal */}

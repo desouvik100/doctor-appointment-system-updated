@@ -40,12 +40,42 @@ const BookingModal = ({ doctor, user, onClose, onSuccess }) => {
     fetchPaymentConfig();
   }, []);
 
-  // Fetch booked times when date changes
+  // Fetch booked times and available slots when date changes
   useEffect(() => {
     if (selectedDate && doctor?._id) {
       fetchBookedTimes();
+      fetchAvailableSlots();
     }
   }, [selectedDate, doctor]);
+
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [dayAvailable, setDayAvailable] = useState(true);
+  const [unavailableReason, setUnavailableReason] = useState('');
+
+  const fetchAvailableSlots = async () => {
+    try {
+      setSlotsLoading(true);
+      const response = await axios.get(`/api/doctors/${doctor._id}/available-slots?date=${selectedDate}`);
+      if (response.data.success) {
+        if (response.data.available) {
+          setDayAvailable(true);
+          setAvailableSlots(response.data.slots || []);
+        } else {
+          setDayAvailable(false);
+          setUnavailableReason(response.data.reason || 'Doctor not available on this date');
+          setAvailableSlots([]);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching available slots:', error);
+      // Fallback to default slots
+      setDayAvailable(true);
+      setAvailableSlots([]);
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
 
   const fetchPaymentConfig = async () => {
     try {
@@ -93,6 +123,17 @@ const BookingModal = ({ doctor, user, onClose, onSuccess }) => {
   };
 
   const generateTimeSlots = () => {
+    // If we have available slots from doctor's schedule, use those
+    if (availableSlots.length > 0) {
+      return availableSlots.map(slot => ({
+        time: slot.time,
+        booked: bookedTimes.includes(slot.time) || !slot.available,
+        label: formatTime(slot.time),
+        type: slot.type // 'in-clinic', 'virtual', or 'both'
+      }));
+    }
+    
+    // Fallback to default slots
     const slots = [];
     for (let hour = 9; hour < 18; hour++) {
       for (let minute = 0; minute < 60; minute += 30) {
@@ -100,7 +141,8 @@ const BookingModal = ({ doctor, user, onClose, onSuccess }) => {
         slots.push({
           time: timeStr,
           booked: bookedTimes.includes(timeStr),
-          label: formatTime(timeStr)
+          label: formatTime(timeStr),
+          type: 'both'
         });
       }
     }
@@ -386,23 +428,44 @@ const BookingModal = ({ doctor, user, onClose, onSuccess }) => {
 
                   {/* Quick Time Slots */}
                   <div className="booking-modal__time-slots">
-                    <p className="booking-modal__slots-label">Quick Select:</p>
-                    <div className="booking-modal__slots-grid">
-                      {timeSlots.map((slot) => (
-                        <button
-                          key={slot.time}
-                          type="button"
-                          className={`booking-modal__slot ${slot.booked ? 'booked' : ''} ${selectedTime === slot.time ? 'selected' : ''}`}
-                          onClick={() => !slot.booked && setSelectedTime(slot.time)}
-                          disabled={slot.booked}
-                        >
-                          <span className="booking-modal__slot-time">{slot.label}</span>
-                          <span className="booking-modal__slot-status">
-                            {slot.booked ? <i className="fas fa-times"></i> : <i className="fas fa-check"></i>}
-                          </span>
-                        </button>
-                      ))}
-                    </div>
+                    {slotsLoading ? (
+                      <div className="booking-modal__slots-loading">
+                        <i className="fas fa-spinner fa-spin"></i>
+                        <span>Loading available slots...</span>
+                      </div>
+                    ) : !dayAvailable ? (
+                      <div className="booking-modal__day-unavailable">
+                        <i className="fas fa-calendar-times"></i>
+                        <p>{unavailableReason}</p>
+                        <small>Please select a different date</small>
+                      </div>
+                    ) : (
+                      <>
+                        <p className="booking-modal__slots-label">Quick Select:</p>
+                        <div className="booking-modal__slots-grid">
+                          {timeSlots.map((slot) => (
+                            <button
+                              key={slot.time}
+                              type="button"
+                              className={`booking-modal__slot ${slot.booked ? 'booked' : ''} ${selectedTime === slot.time ? 'selected' : ''}`}
+                              onClick={() => !slot.booked && setSelectedTime(slot.time)}
+                              disabled={slot.booked}
+                              title={slot.type === 'virtual' ? 'Virtual only' : slot.type === 'in-clinic' ? 'In-clinic only' : 'Both types available'}
+                            >
+                              <span className="booking-modal__slot-time">{slot.label}</span>
+                              <span className="booking-modal__slot-status">
+                                {slot.booked ? <i className="fas fa-times"></i> : <i className="fas fa-check"></i>}
+                              </span>
+                              {slot.type && slot.type !== 'both' && (
+                                <span className="booking-modal__slot-type">
+                                  <i className={slot.type === 'virtual' ? 'fas fa-video' : 'fas fa-hospital'}></i>
+                                </span>
+                              )}
+                            </button>
+                          ))}
+                        </div>
+                      </>
+                    )}
                   </div>
 
                   {/* Legend */}

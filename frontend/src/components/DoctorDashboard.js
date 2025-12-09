@@ -4,6 +4,7 @@ import toast from "react-hot-toast";
 import "./ClinicDashboard.css"; // Reuse clinic dashboard styles
 import "./DoctorDashboard.css"; // Doctor-specific styles
 import DoctorWallet from "./DoctorWallet";
+import DoctorScheduleManager from "./DoctorScheduleManager";
 import { exportAppointmentsToPDF } from "../utils/pdfExport";
 import PrescriptionManager from "./PrescriptionManager";
 import SecurityWarningBanner from "./SecurityWarningBanner";
@@ -13,7 +14,7 @@ function DoctorDashboard({ doctor, onLogout }) {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("today");
   const [stats, setStats] = useState({ total: 0, today: 0, pending: 0, completed: 0 });
-  const [activeTab, setActiveTab] = useState("queue"); // queue, appointments, wallet
+  const [activeTab, setActiveTab] = useState("queue"); // queue, appointments, schedule, wallet
   const [queue, setQueue] = useState([]);
   const [currentPatient, setCurrentPatient] = useState(null);
   const [queueLoading, setQueueLoading] = useState(false);
@@ -158,6 +159,35 @@ function DoctorDashboard({ doctor, onLogout }) {
     }
   };
 
+  // Notify patient about their queue position
+  const notifyPatient = async (appointmentId) => {
+    try {
+      toast.loading("Sending notification...", { id: "notify" });
+      const response = await axios.post(`/api/appointments/${appointmentId}/notify-patient`);
+      if (response.data.success && response.data.notified) {
+        toast.success(`Notification sent! Patient is #${response.data.position} in queue`, { id: "notify" });
+      } else {
+        toast.success(response.data.reason || "Patient already notified", { id: "notify" });
+      }
+    } catch (error) {
+      toast.error("Failed to send notification", { id: "notify" });
+    }
+  };
+
+  // Notify all upcoming patients (next 3 in queue)
+  const notifyUpcomingPatients = async () => {
+    try {
+      toast.loading("Sending notifications...", { id: "notify-all" });
+      const response = await axios.post(`/api/appointments/doctor/${doctorId}/notify-queue`, { notifyAtPosition: 3 });
+      if (response.data.success) {
+        const notified = response.data.results.filter(r => r.notified).length;
+        toast.success(`Notified ${notified} patient(s)`, { id: "notify-all" });
+      }
+    } catch (error) {
+      toast.error("Failed to send notifications", { id: "notify-all" });
+    }
+  };
+
   // Regenerate Google Meet link for an appointment
   const regenerateMeetLink = async (appointmentId) => {
     try {
@@ -279,6 +309,13 @@ function DoctorDashboard({ doctor, onLogout }) {
           All Appointments
         </button>
         <button 
+          className={`doctor-tab ${activeTab === 'schedule' ? 'active' : ''}`}
+          onClick={() => setActiveTab('schedule')}
+        >
+          <i className="fas fa-clock me-2"></i>
+          My Schedule
+        </button>
+        <button 
           className={`doctor-tab ${activeTab === 'wallet' ? 'active' : ''}`}
           onClick={() => setActiveTab('wallet')}
         >
@@ -394,6 +431,16 @@ function DoctorDashboard({ doctor, onLogout }) {
                   >
                     <i className={`fas fa-sync ${queueLoading ? 'fa-spin' : ''}`}></i>
                   </button>
+                  {queue.length > 0 && (
+                    <button 
+                      className="btn btn-sm btn-outline-info me-2"
+                      onClick={notifyUpcomingPatients}
+                      title="Notify next 3 patients"
+                    >
+                      <i className="fas fa-bell me-1"></i>
+                      Notify
+                    </button>
+                  )}
                   {queue.length > 0 && currentPatient && (
                     <button 
                       className="btn btn-sm btn-primary"
@@ -413,57 +460,77 @@ function DoctorDashboard({ doctor, onLogout }) {
                   </div>
                 ) : (
                   <div className="queue-list">
-                    {queue.map((patient, index) => (
-                      <div key={patient._id} className={`queue-item ${index === 0 ? 'next-up' : ''}`}>
-                        <div className="queue-position">
-                          {index + 1}
-                        </div>
-                        <div className="queue-patient-info">
-                          <h6 className="mb-0">{patient.userId?.name || 'Unknown'}</h6>
-                          <small className="text-muted">
-                            Token #{patient.tokenNumber || '-'} • {formatTime(patient.time)}
-                          </small>
-                          <br />
-                          <small className="text-muted">{patient.reason}</small>
-                        </div>
-                        <div className="queue-patient-type">
-                          {patient.consultationType === 'online' ? (
-                            <span className="badge bg-info">
-                              <i className="fas fa-video"></i>
-                            </span>
-                          ) : (
-                            <span className="badge bg-secondary">
-                              <i className="fas fa-hospital"></i>
-                            </span>
-                          )}
-                        </div>
-                        <div className="queue-actions">
-                          {index === 0 && !currentPatient && (
+                    {queue.map((patient, index) => {
+                      // Calculate estimated wait time (15 min per patient + 5 min buffer)
+                      const estimatedWaitMinutes = index * 20;
+                      const estimatedTime = new Date(Date.now() + estimatedWaitMinutes * 60000);
+                      const estimatedTimeStr = estimatedTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
+                      
+                      return (
+                        <div key={patient._id} className={`queue-item ${index === 0 ? 'next-up' : ''}`}>
+                          <div className="queue-position">
+                            {index + 1}
+                          </div>
+                          <div className="queue-patient-info">
+                            <h6 className="mb-0">{patient.userId?.name || 'Unknown'}</h6>
+                            <small className="text-muted">
+                              Token #{patient.tokenNumber || '-'} • {formatTime(patient.time)}
+                            </small>
+                            <br />
+                            <small className="text-muted">{patient.reason}</small>
+                            <div className="mt-1">
+                              <span className="badge bg-light text-dark" style={{ fontSize: '0.7rem' }}>
+                                <i className="fas fa-clock me-1"></i>
+                                Est. ~{estimatedWaitMinutes} min ({estimatedTimeStr})
+                              </span>
+                            </div>
+                          </div>
+                          <div className="queue-patient-type">
+                            {patient.consultationType === 'online' ? (
+                              <span className="badge bg-info">
+                                <i className="fas fa-video"></i>
+                              </span>
+                            ) : (
+                              <span className="badge bg-secondary">
+                                <i className="fas fa-hospital"></i>
+                              </span>
+                            )}
+                          </div>
+                          <div className="queue-actions">
+                            {index === 0 && !currentPatient && (
+                              <button 
+                                className="btn btn-sm btn-success me-1"
+                                onClick={() => updateAppointmentStatus(patient._id, 'in_progress')}
+                                title="Start consultation"
+                              >
+                                <i className="fas fa-play"></i>
+                              </button>
+                            )}
                             <button 
-                              className="btn btn-sm btn-success me-1"
-                              onClick={() => updateAppointmentStatus(patient._id, 'in_progress')}
-                              title="Start consultation"
+                              className="btn btn-sm btn-outline-primary me-1"
+                              onClick={() => notifyPatient(patient._id)}
+                              title="Send notification to patient"
                             >
-                              <i className="fas fa-play"></i>
+                              <i className="fas fa-bell"></i>
                             </button>
-                          )}
-                          <button 
-                            className="btn btn-sm btn-outline-warning me-1"
-                            onClick={() => skipPatient(patient._id)}
-                            title="Skip (move to end)"
-                          >
-                            <i className="fas fa-step-forward"></i>
-                          </button>
-                          <button 
-                            className="btn btn-sm btn-outline-danger"
-                            onClick={() => markNoShow(patient._id)}
-                            title="Mark as no-show"
-                          >
-                            <i className="fas fa-user-slash"></i>
-                          </button>
+                            <button 
+                              className="btn btn-sm btn-outline-warning me-1"
+                              onClick={() => skipPatient(patient._id)}
+                              title="Skip (move to end)"
+                            >
+                              <i className="fas fa-step-forward"></i>
+                            </button>
+                            <button 
+                              className="btn btn-sm btn-outline-danger"
+                              onClick={() => markNoShow(patient._id)}
+                              title="Mark as no-show"
+                            >
+                              <i className="fas fa-user-slash"></i>
+                            </button>
+                          </div>
                         </div>
-                      </div>
-                    ))}
+                      );
+                    })}
                   </div>
                 )}
               </div>
@@ -580,6 +647,11 @@ function DoctorDashboard({ doctor, onLogout }) {
           )}
         </div>
       </div>
+      )}
+
+      {/* Schedule Tab */}
+      {activeTab === 'schedule' && (
+        <DoctorScheduleManager doctorId={doctorId} />
       )}
 
       {/* Wallet Tab */}

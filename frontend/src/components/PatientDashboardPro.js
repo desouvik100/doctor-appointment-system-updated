@@ -10,6 +10,8 @@ import MedicalTimeline from './MedicalTimeline';
 import RescheduleModal from './RescheduleModal';
 import FloatingActionButton from './FloatingActionButton';
 import BookingModal from './BookingModal';
+import CinemaStyleBooking from './CinemaStyleBooking';
+import DoctorProfilePage from './DoctorProfilePage';
 import AIAssistant from './AIAssistant';
 import FindMyDoctorWizard from './FindMyDoctorWizard';
 import ReviewModal from './ReviewModal';
@@ -66,6 +68,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
   const [activeSection, setActiveSection] = useState('overview');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
+  const [showDoctorProfile, setShowDoctorProfile] = useState(false);
   const [sidebarCollapsed, setSidebarCollapsed] = useState(true);
   const [mobileSidebarOpen, setMobileSidebarOpen] = useState(false);
   const [doctors, setDoctors] = useState([]);
@@ -391,6 +394,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                         <div className="text-center lg:text-right"><p className="text-2xl font-bold text-slate-800">₹{doc.consultationFee}</p><p className="text-xs text-slate-500">per visit</p></div>
                         <div className="flex items-center gap-3">
                           <button onClick={() => toggleFavorite(doc._id)} className={`w-10 h-10 rounded-xl flex items-center justify-center ${favoriteDoctors.includes(doc._id) ? 'bg-rose-100 text-rose-500' : 'bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-500'}`}><i className={favoriteDoctors.includes(doc._id) ? 'fas fa-heart' : 'far fa-heart'}></i></button>
+                          <button onClick={() => { setSelectedDoctor(doc); setShowDoctorProfile(true); }} className="px-4 py-2.5 rounded-xl font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 flex items-center gap-2"><i className="fas fa-calendar-alt"></i><span className="hidden sm:inline">Schedule</span></button>
                           <button disabled={doc.availability !== 'Available'} onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className={`px-6 py-2.5 rounded-xl font-medium ${doc.availability === 'Available' ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-lg' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>{doc.availability === 'Available' ? 'Book Now' : 'Unavailable'}</button>
                         </div>
                       </div>
@@ -478,7 +482,8 @@ const PatientDashboardPro = ({ user, onLogout }) => {
           <button onClick={() => setMobileSidebarOpen(true)} className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-slate-400"><i className="fas fa-ellipsis-h"></i><span className="text-xs font-medium">More</span></button>
         </div>
       </nav>
-      {showBookingModal && selectedDoctor && <BookingModal doctor={selectedDoctor} user={currentUser} onClose={() => { setShowBookingModal(false); setSelectedDoctor(null); }} onSuccess={() => { fetchAppointments(); setShowBookingModal(false); setSelectedDoctor(null); }} />}
+      {showBookingModal && selectedDoctor && <CinemaStyleBooking doctor={selectedDoctor} user={currentUser} onClose={() => { setShowBookingModal(false); setSelectedDoctor(null); }} onSuccess={() => { fetchAppointments(); setShowBookingModal(false); setSelectedDoctor(null); }} />}
+      {showDoctorProfile && selectedDoctor && <div className="fixed inset-0 z-50 overflow-y-auto"><DoctorProfilePage doctor={selectedDoctor} user={currentUser} onBack={() => { setShowDoctorProfile(false); setSelectedDoctor(null); }} onBookingSuccess={() => { fetchAppointments(); setShowDoctorProfile(false); setSelectedDoctor(null); }} /></div>}
       {showReviewModal && reviewAppointment && <ReviewModal appointment={reviewAppointment} onClose={() => { setShowReviewModal(false); setReviewAppointment(null); }} onSuccess={() => fetchAppointments()} />}
       {showNotifications && <NotificationCenter userId={getUserId()} onClose={() => { setShowNotifications(false); fetchUnreadNotifications(); }} />}
       {showChat && chatDoctor && <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4"><DoctorChat user={currentUser} doctor={chatDoctor} onClose={() => { setShowChat(false); setChatDoctor(null); }} /></div>}

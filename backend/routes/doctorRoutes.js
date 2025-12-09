@@ -424,4 +424,265 @@ router.put('/:id/email', async (req, res) => {
   }
 });
 
+// ============ AVAILABILITY CALENDAR ENDPOINTS ============
+
+// Get doctor's weekly schedule
+router.get('/:id/schedule', async (req, res) => {
+  try {
+    const doctor = await Doctor.findById(req.params.id)
+      .select('name weeklySchedule specialDates consultationSettings consultationFee');
+    
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+    
+    res.json({ success: true, schedule: doctor });
+  } catch (error) {
+    console.error('Error fetching schedule:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch schedule' });
+  }
+});
+
+// Update doctor's weekly schedule
+router.put('/:id/schedule', async (req, res) => {
+  try {
+    const { weeklySchedule, consultationSettings } = req.body;
+    
+    const updateData = {};
+    if (weeklySchedule) updateData.weeklySchedule = weeklySchedule;
+    if (consultationSettings) updateData.consultationSettings = consultationSettings;
+    
+    const doctor = await Doctor.findByIdAndUpdate(
+      req.params.id,
+      { $set: updateData },
+      { new: true }
+    ).select('name weeklySchedule consultationSettings');
+    
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+    
+    res.json({ success: true, message: 'Schedule updated successfully', doctor });
+  } catch (error) {
+    console.error('Error updating schedule:', error);
+    res.status(500).json({ success: false, message: 'Failed to update schedule' });
+  }
+});
+
+// Add special date (holiday, leave, special hours)
+router.post('/:id/special-dates', async (req, res) => {
+  try {
+    const { date, isAvailable, reason, slots } = req.body;
+    
+    if (!date) {
+      return res.status(400).json({ success: false, message: 'Date is required' });
+    }
+    
+    const doctor = await Doctor.findByIdAndUpdate(
+      req.params.id,
+      {
+        $push: {
+          specialDates: {
+            date: new Date(date),
+            isAvailable: isAvailable !== false,
+            reason: reason || '',
+            slots: slots || []
+          }
+        }
+      },
+      { new: true }
+    ).select('specialDates');
+    
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+    
+    res.json({ success: true, message: 'Special date added', specialDates: doctor.specialDates });
+  } catch (error) {
+    console.error('Error adding special date:', error);
+    res.status(500).json({ success: false, message: 'Failed to add special date' });
+  }
+});
+
+// Remove special date
+router.delete('/:id/special-dates/:dateId', async (req, res) => {
+  try {
+    const doctor = await Doctor.findByIdAndUpdate(
+      req.params.id,
+      { $pull: { specialDates: { _id: req.params.dateId } } },
+      { new: true }
+    ).select('specialDates');
+    
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+    
+    res.json({ success: true, message: 'Special date removed', specialDates: doctor.specialDates });
+  } catch (error) {
+    console.error('Error removing special date:', error);
+    res.status(500).json({ success: false, message: 'Failed to remove special date' });
+  }
+});
+
+// Get available slots for a specific date (for patients booking)
+router.get('/:id/available-slots', async (req, res) => {
+  try {
+    const { date } = req.query;
+    if (!date) {
+      return res.status(400).json({ success: false, message: 'Date is required' });
+    }
+    
+    const doctor = await Doctor.findById(req.params.id)
+      .select('weeklySchedule specialDates consultationSettings consultationFee');
+    
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+    
+    const requestedDate = new Date(date);
+    const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][requestedDate.getDay()];
+    
+    // Check for special date override
+    const specialDate = doctor.specialDates?.find(sd => {
+      const sdDate = new Date(sd.date);
+      return sdDate.toDateString() === requestedDate.toDateString();
+    });
+    
+    let daySchedule;
+    let isSpecialDate = false;
+    
+    if (specialDate) {
+      isSpecialDate = true;
+      if (!specialDate.isAvailable) {
+        return res.json({
+          success: true,
+          available: false,
+          reason: specialDate.reason || 'Doctor not available on this date',
+          slots: []
+        });
+      }
+      daySchedule = { isAvailable: true, slots: specialDate.slots };
+    } else {
+      daySchedule = doctor.weeklySchedule?.[dayOfWeek];
+    }
+    
+    if (!daySchedule?.isAvailable) {
+      return res.json({
+        success: true,
+        available: false,
+        reason: `Doctor not available on ${dayOfWeek}s`,
+        slots: []
+      });
+    }
+    
+    // Generate time slots based on schedule
+    const slots = [];
+    const slotDuration = doctor.consultationSettings?.slotDuration || 15;
+    const bufferTime = doctor.consultationSettings?.bufferTime || 5;
+    
+    (daySchedule.slots || []).forEach(slot => {
+      if (!slot.startTime || !slot.endTime) return;
+      
+      const [startHour, startMin] = slot.startTime.split(':').map(Number);
+      const [endHour, endMin] = slot.endTime.split(':').map(Number);
+      
+      let currentTime = startHour * 60 + startMin;
+      const endTime = endHour * 60 + endMin;
+      
+      while (currentTime + slotDuration <= endTime) {
+        const hour = Math.floor(currentTime / 60);
+        const min = currentTime % 60;
+        const timeStr = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
+        
+        slots.push({
+          time: timeStr,
+          type: slot.type || 'both',
+          available: true // TODO: Check against existing appointments
+        });
+        
+        currentTime += slotDuration + bufferTime;
+      }
+    });
+    
+    res.json({
+      success: true,
+      available: true,
+      isSpecialDate,
+      dayOfWeek,
+      slots,
+      consultationFee: doctor.consultationFee,
+      virtualFee: doctor.consultationSettings?.virtualConsultationFee || doctor.consultationFee,
+      settings: doctor.consultationSettings
+    });
+  } catch (error) {
+    console.error('Error fetching available slots:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch available slots' });
+  }
+});
+
+// Get doctor's calendar view (for doctor dashboard)
+router.get('/:id/calendar', async (req, res) => {
+  try {
+    const { month, year } = req.query;
+    const currentDate = new Date();
+    const targetMonth = parseInt(month) || currentDate.getMonth();
+    const targetYear = parseInt(year) || currentDate.getFullYear();
+    
+    const doctor = await Doctor.findById(req.params.id)
+      .select('weeklySchedule specialDates consultationSettings');
+    
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+    
+    // Generate calendar data for the month
+    const firstDay = new Date(targetYear, targetMonth, 1);
+    const lastDay = new Date(targetYear, targetMonth + 1, 0);
+    const calendarDays = [];
+    
+    for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
+      const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][d.getDay()];
+      const dateStr = d.toISOString().split('T')[0];
+      
+      // Check for special date
+      const specialDate = doctor.specialDates?.find(sd => {
+        const sdDate = new Date(sd.date);
+        return sdDate.toDateString() === d.toDateString();
+      });
+      
+      let dayInfo = {
+        date: dateStr,
+        dayOfWeek,
+        isToday: d.toDateString() === currentDate.toDateString(),
+        isPast: d < currentDate && d.toDateString() !== currentDate.toDateString()
+      };
+      
+      if (specialDate) {
+        dayInfo.isSpecialDate = true;
+        dayInfo.isAvailable = specialDate.isAvailable;
+        dayInfo.reason = specialDate.reason;
+        dayInfo.slots = specialDate.slots;
+        dayInfo.specialDateId = specialDate._id;
+      } else {
+        const weeklyDay = doctor.weeklySchedule?.[dayOfWeek];
+        dayInfo.isAvailable = weeklyDay?.isAvailable || false;
+        dayInfo.slots = weeklyDay?.slots || [];
+      }
+      
+      calendarDays.push(dayInfo);
+    }
+    
+    res.json({
+      success: true,
+      month: targetMonth,
+      year: targetYear,
+      calendar: calendarDays,
+      settings: doctor.consultationSettings
+    });
+  } catch (error) {
+    console.error('Error fetching calendar:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch calendar' });
+  }
+});
+
 module.exports = router;

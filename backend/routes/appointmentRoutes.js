@@ -894,4 +894,55 @@ router.put('/:id/reschedule', async (req, res) => {
   }
 });
 
+// ============ QUEUE NOTIFICATION ENDPOINTS ============
+const queueNotificationService = require('../services/queueNotificationService');
+
+// Get queue position and estimated time for an appointment
+router.get('/:id/queue-position', async (req, res) => {
+  try {
+    const queueInfo = await queueNotificationService.getQueuePosition(req.params.id);
+    if (!queueInfo) {
+      return res.status(404).json({ success: false, message: 'Appointment not found or not scheduled for today' });
+    }
+    res.json({ success: true, ...queueInfo });
+  } catch (error) {
+    console.error('Error getting queue position:', error);
+    res.status(500).json({ success: false, message: 'Failed to get queue position' });
+  }
+});
+
+// Get full queue with estimated times for a doctor
+router.get('/doctor/:doctorId/queue-estimates', async (req, res) => {
+  try {
+    const queue = await queueNotificationService.getQueueWithEstimates(req.params.doctorId);
+    res.json({ success: true, queue });
+  } catch (error) {
+    console.error('Error getting queue estimates:', error);
+    res.status(500).json({ success: false, message: 'Failed to get queue estimates' });
+  }
+});
+
+// Manually trigger queue notification check for a doctor
+router.post('/doctor/:doctorId/notify-queue', async (req, res) => {
+  try {
+    const { notifyAtPosition = 3 } = req.body;
+    const results = await queueNotificationService.processQueueNotifications(req.params.doctorId, notifyAtPosition);
+    res.json({ success: true, results });
+  } catch (error) {
+    console.error('Error processing queue notifications:', error);
+    res.status(500).json({ success: false, message: 'Failed to process notifications' });
+  }
+});
+
+// Send notification to specific patient
+router.post('/:id/notify-patient', async (req, res) => {
+  try {
+    const result = await queueNotificationService.checkAndNotifyPatient(req.params.id, 10); // Force notify
+    res.json({ success: true, ...result });
+  } catch (error) {
+    console.error('Error notifying patient:', error);
+    res.status(500).json({ success: false, message: 'Failed to notify patient' });
+  }
+});
+
 module.exports = router;

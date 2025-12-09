@@ -668,8 +668,46 @@
 /* Doctor Card Actions Container */
 .doctor-card__actions {
   display: flex;
-  flex-direction: column;
-  gap: 12px;
+  gap: 10px;
+}
+
+.doctor-card__profile-btn {
+  flex: 1;
+  display: flex !important;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  color: #ffffff !important;
+  border: none !important;
+  border-radius: var(--radius-md, 8px);
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  box-shadow: 0 2px 8px rgba(99, 102, 241, 0.3);
+}
+
+.doctor-card__profile-btn:hover {
+  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%) !important;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.doctor-card__profile-btn i {
+  font-size: 0.85rem;
+}
+
+/* Doctor Profile Overlay */
+.doctor-profile-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  z-index: 1000;
+  overflow-y: auto;
 }
 
 .doctor-card__directions-btn {

@@ -917,3 +917,58 @@
     font-size: 0.7rem;
   }
 }
+
+
+/* Slots Loading */
+.booking-modal__slots-loading {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 30px;
+  color: #64748b;
+}
+
+.booking-modal__slots-loading i {
+  font-size: 1.25rem;
+  color: #6366f1;
+}
+
+/* Day Unavailable */
+.booking-modal__day-unavailable {
+  text-align: center;
+  padding: 30px 20px;
+  background: #fef2f2;
+  border-radius: 12px;
+  border: 1px solid #fecaca;
+}
+
+.booking-modal__day-unavailable i {
+  font-size: 2.5rem;
+  color: #ef4444;
+  margin-bottom: 12px;
+}
+
+.booking-modal__day-unavailable p {
+  margin: 0 0 8px;
+  font-weight: 600;
+  color: #dc2626;
+}
+
+.booking-modal__day-unavailable small {
+  color: #64748b;
+}
+
+/* Slot Type Indicator */
+.booking-modal__slot-type {
+  position: absolute;
+  top: 2px;
+  right: 2px;
+  font-size: 0.6rem;
+  color: #6366f1;
+  opacity: 0.7;
+}
+
+.booking-modal__slot {
+  position: relative;
+}
