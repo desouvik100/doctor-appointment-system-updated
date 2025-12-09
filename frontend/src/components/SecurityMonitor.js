@@ -7,9 +7,10 @@ const SecurityMonitor = ({ adminId }) => {
   const [stats, setStats] = useState({});
   const [analytics, setAnalytics] = useState(null);
   const [blockedIPs, setBlockedIPs] = useState([]);
+  const [suspendedUsers, setSuspendedUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedAlert, setSelectedAlert] = useState(null);
-  const [activeTab, setActiveTab] = useState('alerts'); // alerts, analytics, blocked, actions
+  const [activeTab, setActiveTab] = useState('alerts'); // alerts, analytics, blocked, suspended, actions
   const [blockIPModal, setBlockIPModal] = useState(false);
   const [newBlockIP, setNewBlockIP] = useState({ ip: '', reason: '' });
   const [filters, setFilters] = useState({
@@ -100,14 +101,25 @@ const SecurityMonitor = ({ adminId }) => {
     }
   }, []);
 
+  const fetchSuspendedUsers = useCallback(async () => {
+    try {
+      const response = await axios.get('/api/security/suspended-users');
+      if (response.data.success) {
+        setSuspendedUsers(response.data.suspendedUsers);
+      }
+    } catch (error) {
+      console.error('Error fetching suspended users:', error);
+    }
+  }, []);
+
   useEffect(() => {
     const loadData = async () => {
       setLoading(true);
-      await Promise.all([fetchAlerts(), fetchStats(), fetchAnalytics(), fetchBlockedIPs()]);
+      await Promise.all([fetchAlerts(), fetchStats(), fetchAnalytics(), fetchBlockedIPs(), fetchSuspendedUsers()]);
       setLoading(false);
     };
     loadData();
-  }, [fetchAlerts, fetchStats, fetchAnalytics, fetchBlockedIPs]);
+  }, [fetchAlerts, fetchStats, fetchAnalytics, fetchBlockedIPs, fetchSuspendedUsers]);
 
   const handleStatusUpdate = async (alertId, newStatus) => {
     try {
@@ -281,11 +293,12 @@ const SecurityMonitor = ({ adminId }) => {
   return (
     <div className="space-y-6">
       {/* Tab Navigation */}
-      <div className="flex gap-2 border-b border-slate-200 pb-2">
+      <div className="flex gap-2 border-b border-slate-200 pb-2 flex-wrap">
         {[
           { id: 'alerts', icon: 'fa-bell', label: 'Alerts' },
           { id: 'analytics', icon: 'fa-chart-bar', label: 'Analytics' },
           { id: 'blocked', icon: 'fa-ban', label: 'Blocked IPs' },
+          { id: 'suspended', icon: 'fa-user-slash', label: 'Suspended Users' },
           { id: 'actions', icon: 'fa-gavel', label: 'Quick Actions' }
         ].map(tab => (
           <button
@@ -304,6 +317,9 @@ const SecurityMonitor = ({ adminId }) => {
             )}
             {tab.id === 'blocked' && blockedIPs.length > 0 && (
               <span className="px-1.5 py-0.5 bg-orange-500 text-white text-xs rounded-full">{blockedIPs.length}</span>
+            )}
+            {tab.id === 'suspended' && suspendedUsers.length > 0 && (
+              <span className="px-1.5 py-0.5 bg-red-600 text-white text-xs rounded-full">{suspendedUsers.length}</span>
             )}
           </button>
         ))}
@@ -489,6 +505,81 @@ const SecurityMonitor = ({ adminId }) => {
                     className="px-3 py-1.5 bg-green-100 text-green-700 text-sm rounded-lg hover:bg-green-200"
                   >
                     Unblock
+                  </button>
+                </div>
+              ))}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Suspended Users Tab */}
+      {activeTab === 'suspended' && (
+        <div className="bg-white rounded-xl border border-slate-200 shadow-sm">
+          <div className="p-4 border-b border-slate-200 flex items-center justify-between">
+            <h3 className="font-semibold text-slate-800">
+              <i className="fas fa-user-slash text-red-600 mr-2"></i>
+              Suspended Users ({suspendedUsers.length})
+            </h3>
+            <button
+              onClick={fetchSuspendedUsers}
+              className="px-3 py-1.5 bg-slate-100 text-slate-600 text-sm font-medium rounded-lg hover:bg-slate-200"
+            >
+              <i className="fas fa-sync-alt mr-1"></i> Refresh
+            </button>
+          </div>
+          {suspendedUsers.length === 0 ? (
+            <div className="p-8 text-center">
+              <div className="w-16 h-16 mx-auto rounded-full bg-green-100 flex items-center justify-center mb-4">
+                <i className="fas fa-check-circle text-3xl text-green-600"></i>
+              </div>
+              <h4 className="text-lg font-semibold text-slate-800 mb-2">No Suspended Users</h4>
+              <p className="text-slate-500">All users are currently active</p>
+            </div>
+          ) : (
+            <div className="divide-y divide-slate-100">
+              {suspendedUsers.map((user) => (
+                <div key={user._id} className="p-4 flex items-center justify-between hover:bg-slate-50">
+                  <div className="flex items-center gap-4">
+                    <div className="w-10 h-10 rounded-full bg-red-100 flex items-center justify-center">
+                      <i className={`fas ${user.userType === 'doctor' ? 'fa-user-md' : 'fa-user'} text-red-600`}></i>
+                    </div>
+                    <div>
+                      <p className="font-medium text-slate-800">{user.name}</p>
+                      <p className="text-sm text-slate-500">{user.email}</p>
+                      <div className="flex items-center gap-2 mt-1">
+                        <span className={`px-2 py-0.5 text-xs rounded-full ${
+                          user.userType === 'doctor' ? 'bg-blue-100 text-blue-700' :
+                          user.userType === 'admin' ? 'bg-purple-100 text-purple-700' :
+                          user.userType === 'receptionist' ? 'bg-green-100 text-green-700' :
+                          'bg-slate-100 text-slate-700'
+                        }`}>
+                          {user.userType}
+                        </span>
+                        {user.suspendedAt && (
+                          <span className="text-xs text-slate-400">
+                            Suspended: {new Date(user.suspendedAt).toLocaleDateString()}
+                          </span>
+                        )}
+                      </div>
+                      {user.suspendReason && (
+                        <p className="text-xs text-red-600 mt-1">
+                          <i className="fas fa-exclamation-circle mr-1"></i>
+                          {user.suspendReason}
+                        </p>
+                      )}
+                    </div>
+                  </div>
+                  <button
+                    onClick={async () => {
+                      if (window.confirm(`Are you sure you want to unsuspend ${user.name}?`)) {
+                        await handleUnsuspendUser(user.email);
+                        fetchSuspendedUsers();
+                      }
+                    }}
+                    className="px-4 py-2 bg-green-600 text-white text-sm font-medium rounded-lg hover:bg-green-700"
+                  >
+                    <i className="fas fa-user-check mr-1"></i> Unsuspend
                   </button>
                 </div>
               ))}

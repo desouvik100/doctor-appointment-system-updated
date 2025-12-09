@@ -126,6 +126,54 @@ const { checkBlockedIP } = require('./middleware/securityMiddleware');
 // Check blocked IPs on all requests
 app.use('/api', checkBlockedIP);
 
+// Check for suspended users on authenticated requests
+app.use('/api', async (req, res, next) => {
+  try {
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return next(); // No token, let the route handle it
+    }
+
+    const jwt = require('jsonwebtoken');
+    const token = authHeader.split(' ')[1];
+    
+    try {
+      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+      const userId = decoded.userId || decoded.doctorId || decoded.id;
+      
+      if (userId) {
+        const User = require('./models/User');
+        const Doctor = require('./models/Doctor');
+        
+        let userRecord = null;
+        
+        if (decoded.doctorId) {
+          userRecord = await Doctor.findById(decoded.doctorId).select('isActive suspendReason').lean();
+        } else {
+          userRecord = await User.findById(userId).select('isActive suspendReason').lean();
+        }
+        
+        if (userRecord && userRecord.isActive === false) {
+          console.log(`🚫 Blocked suspended user: ${userId}`);
+          return res.status(403).json({
+            success: false,
+            message: 'Your account has been suspended',
+            reason: userRecord.suspendReason || 'Contact admin for more information',
+            suspended: true
+          });
+        }
+      }
+    } catch (jwtError) {
+      // Invalid token, let the route handle it
+    }
+    
+    next();
+  } catch (error) {
+    console.error('Suspension check middleware error:', error);
+    next(); // Don't block on errors
+  }
+});
+
 // Apply security monitoring to track activities (runs after response)
 app.use('/api', securityMonitor);
 

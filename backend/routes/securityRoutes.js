@@ -789,4 +789,36 @@ router.get('/check-user-status/:identifier', async (req, res) => {
   }
 });
 
+// Get all suspended users
+router.get('/suspended-users', async (req, res) => {
+  try {
+    // Get suspended users from User collection
+    const suspendedUsers = await User.find({ isActive: false })
+      .select('_id name email role suspendedAt suspendReason createdAt')
+      .sort({ suspendedAt: -1 })
+      .lean();
+    
+    // Get suspended doctors from Doctor collection
+    const suspendedDoctors = await Doctor.find({ isActive: false })
+      .select('_id name email specialization suspendedAt suspendReason createdAt')
+      .sort({ suspendedAt: -1 })
+      .lean();
+    
+    // Combine and format
+    const allSuspended = [
+      ...suspendedUsers.map(u => ({ ...u, userType: u.role || 'patient' })),
+      ...suspendedDoctors.map(d => ({ ...d, userType: 'doctor' }))
+    ].sort((a, b) => new Date(b.suspendedAt || b.createdAt) - new Date(a.suspendedAt || a.createdAt));
+    
+    res.json({
+      success: true,
+      suspendedUsers: allSuspended,
+      count: allSuspended.length
+    });
+  } catch (error) {
+    console.error('Error fetching suspended users:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch suspended users' });
+  }
+});
+
 module.exports = router;
