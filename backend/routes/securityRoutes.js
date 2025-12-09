@@ -3,6 +3,8 @@ const router = express.Router();
 const mongoose = require('mongoose');
 const aiSecurityService = require('../services/aiSecurityService');
 const SuspiciousActivity = require('../models/SuspiciousActivity');
+const User = require('../models/User');
+const Doctor = require('../models/Doctor');
 
 // Helper function to find user by ID or email
 async function findUserByIdOrEmail(identifier) {
@@ -357,19 +359,24 @@ router.post('/suspend-user', async (req, res) => {
     }
     
     // Suspend the user
+    console.log(`🔒 Suspending ${userType}: ${user.email} (ID: ${user._id})`);
+    
+    let updateResult;
     if (userType === 'doctor') {
-      await Doctor.findByIdAndUpdate(user._id, {
+      updateResult = await Doctor.findByIdAndUpdate(user._id, {
         isActive: false,
         suspendedAt: new Date(),
         suspendReason: reason || 'Suspended by admin'
-      });
+      }, { new: true });
     } else {
-      await User.findByIdAndUpdate(user._id, {
+      updateResult = await User.findByIdAndUpdate(user._id, {
         isActive: false,
         suspendedAt: new Date(),
         suspendReason: reason || 'Suspended by admin'
-      });
+      }, { new: true });
     }
+    
+    console.log(`✅ User suspended. isActive: ${updateResult.isActive}, suspendReason: ${updateResult.suspendReason}`);
 
     // Send email notification to user
     if (user.email) {
@@ -718,6 +725,34 @@ router.post('/test-email', async (req, res) => {
   } catch (error) {
     console.error('Error sending test email:', error);
     res.status(500).json({ success: false, message: 'Failed to send test email' });
+  }
+});
+
+// Debug endpoint to check user suspension status
+router.get('/check-user-status/:identifier', async (req, res) => {
+  try {
+    const { identifier } = req.params;
+    const { user, userType } = await findUserByIdOrEmail(identifier);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    res.json({
+      success: true,
+      user: {
+        id: user._id,
+        email: user.email,
+        name: user.name,
+        userType,
+        isActive: user.isActive,
+        suspendedAt: user.suspendedAt,
+        suspendReason: user.suspendReason
+      }
+    });
+  } catch (error) {
+    console.error('Error checking user status:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
