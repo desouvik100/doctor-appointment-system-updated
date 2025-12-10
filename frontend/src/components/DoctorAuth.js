@@ -60,7 +60,8 @@ function DoctorAuth({ onLogin, onBack }) {
   // Handle Google Sign-In
   const handleGoogleSignIn = async () => {
     if (!GOOGLE_CLIENT_ID) {
-      setError('Google Sign-In not configured. Please contact support.');
+      setError('Google Sign-In not configured. Please use email/password login.');
+      console.error('❌ REACT_APP_GOOGLE_CLIENT_ID is not set');
       return;
     }
 
@@ -69,32 +70,46 @@ function DoctorAuth({ onLogin, onBack }) {
 
     try {
       if (!window.google?.accounts?.oauth2) {
-        setError('Google Sign-In is loading. Please try again.');
+        setError('Google Sign-In is still loading. Please wait a moment and try again.');
+        console.log('⏳ Google script not yet loaded');
         setSocialLoading(null);
         return;
       }
+
+      console.log('🔐 Initiating Doctor Google Sign-In...');
 
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: 'email profile openid',
         callback: async (tokenResponse) => {
           if (tokenResponse.access_token) {
+            console.log('✅ Access token received');
             await handleGoogleToken(tokenResponse.access_token);
+          } else if (tokenResponse.error) {
+            console.error('❌ Google OAuth error:', tokenResponse.error);
+            setError(tokenResponse.error === 'access_denied' ? 'Google Sign-In was cancelled.' : 'Google Sign-In failed.');
+            setSocialLoading(null);
           } else {
             setError('Google Sign-In was cancelled');
             setSocialLoading(null);
           }
         },
         error_callback: (error) => {
-          console.error('Google OAuth error:', error);
-          setError('Google Sign-In failed. Please try again.');
+          console.error('❌ Google OAuth error:', error);
+          if (error.type === 'popup_failed_to_open') {
+            setError('Popup blocked! Please allow popups for this site.');
+          } else if (error.type === 'popup_closed') {
+            setError('Sign-in popup was closed. Please try again.');
+          } else {
+            setError('Google Sign-In failed. Please try again.');
+          }
           setSocialLoading(null);
         }
       });
 
       tokenClient.requestAccessToken();
     } catch (error) {
-      console.error('Google Sign-In error:', error);
+      console.error('❌ Google Sign-In error:', error);
       setError('Google Sign-In failed. Please try again.');
       setSocialLoading(null);
     }

@@ -113,10 +113,18 @@ const PatientDashboard = ({ user, onLogout }) => {
     try {
       setLoading(true);
       const response = await axios.get('/api/doctors');
-      setDoctors(response.data);
+      setDoctors(response.data || []);
     } catch (error) {
       console.error('Error fetching doctors:', error);
-      toast.error('Failed to load doctors');
+      // More specific error messages
+      if (!error.response) {
+        toast.error('Network error. Please check your connection.', { id: 'doctors-error' });
+      } else if (error.response.status === 500) {
+        toast.error('Server error. Please try again later.');
+      } else {
+        toast.error('Failed to load doctors. Pull down to refresh.');
+      }
+      setDoctors([]);
     } finally {
       setLoading(false);
     }
@@ -135,7 +143,14 @@ const PatientDashboard = ({ user, onLogout }) => {
       toast.success(`Found ${response.data.totalFound} doctors within ${maxDistance}km`);
     } catch (error) {
       console.error('Error fetching nearby doctors:', error);
-      toast.error(error.response?.data?.message || 'Failed to load nearby doctors');
+      // More specific error handling
+      if (!error.response) {
+        toast.error('Network error. Showing all doctors instead.', { duration: 4000 });
+      } else if (error.response.status === 404) {
+        toast.error('No doctors found nearby. Try increasing the distance.', { duration: 4000 });
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to load nearby doctors');
+      }
       setNearbyMode(false);
       fetchDoctors(); // Fallback to all doctors
     } finally {

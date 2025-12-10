@@ -1,0 +1,626 @@
+/* ============================================
+   Mobile Enhancements - Global Responsive Fixes
+   ============================================ */
+
+/* ===== Touch-Friendly Improvements ===== */
+@media (max-width: 768px) {
+  /* Increase tap targets */
+  button, 
+  .btn,
+  a.btn,
+  input[type="submit"],
+  input[type="button"],
+  .clickable {
+    min-height: 44px;
+    min-width: 44px;
+  }
+
+  /* Better form inputs on mobile */
+  input[type="text"],
+  input[type="email"],
+  input[type="password"],
+  input[type="tel"],
+  input[type="number"],
+  input[type="date"],
+  input[type="time"],
+  select,
+  textarea {
+    font-size: 16px !important; /* Prevents iOS zoom on focus */
+    padding: 12px 14px;
+    border-radius: 10px;
+  }
+
+  /* Prevent horizontal scroll */
+  body {
+    overflow-x: hidden;
+  }
+
+  /* Better scrolling */
+  .scrollable {
+    -webkit-overflow-scrolling: touch;
+    scroll-behavior: smooth;
+  }
+}
+
+/* ===== Patient Dashboard Mobile ===== */
+@media (max-width: 768px) {
+  .patient-dashboard__container {
+    padding: 12px 16px;
+  }
+
+  .patient-dashboard__header-card {
+    padding: 16px 18px;
+    border-radius: 12px;
+    margin-bottom: 16px;
+  }
+
+  .patient-dashboard__header-content {
+    flex-direction: column;
+    gap: 16px;
+    text-align: center;
+  }
+
+  .patient-dashboard__user-info {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .patient-dashboard__avatar {
+    width: 56px;
+    height: 56px;
+    font-size: 1.25rem;
+  }
+
+  .patient-dashboard__welcome-title {
+    font-size: 1.2rem;
+  }
+
+  .patient-dashboard__logout-btn {
+    width: 100%;
+    justify-content: center;
+    padding: 12px 20px;
+  }
+
+  /* Tabs - Horizontal scroll */
+  .patient-dashboard__tabs {
+    display: flex;
+    overflow-x: auto;
+    gap: 8px;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+
+  .patient-dashboard__tabs::-webkit-scrollbar {
+    display: none;
+  }
+
+  .patient-dashboard__tab {
+    flex-shrink: 0;
+    padding: 10px 16px;
+    font-size: 0.85rem;
+    white-space: nowrap;
+  }
+
+  /* Doctor cards grid */
+  .patient-dashboard__doctors-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .doctor-card {
+    padding: 14px;
+  }
+
+  .doctor-card__header {
+    flex-direction: column;
+    text-align: center;
+    gap: 10px;
+  }
+
+  .doctor-card__avatar {
+    width: 60px;
+    height: 60px;
+  }
+
+  .doctor-card__actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .doctor-card__actions button {
+    width: 100%;
+  }
+}
+
+/* ===== Doctor Dashboard Mobile ===== */
+@media (max-width: 768px) {
+  .doctor-dashboard__container {
+    padding: 12px;
+  }
+
+  .doctor-dashboard__header {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+
+  .doctor-dashboard__stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 12px;
+  }
+
+  .stat-card__value {
+    font-size: 1.5rem;
+  }
+
+  /* Queue management */
+  .queue-container {
+    padding: 12px;
+  }
+
+  .queue-patient-card {
+    padding: 12px;
+  }
+
+  .queue-patient-card__actions {
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .queue-patient-card__actions button {
+    width: 100%;
+    padding: 10px;
+  }
+
+  /* Tabs */
+  .doctor-dashboard__tabs {
+    display: flex;
+    overflow-x: auto;
+    gap: 6px;
+    padding-bottom: 8px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .doctor-dashboard__tab {
+    flex-shrink: 0;
+    padding: 10px 14px;
+    font-size: 0.8rem;
+  }
+}
+
+/* ===== Cinema Style Booking Mobile ===== */
+@media (max-width: 768px) {
+  .cinema-booking-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .cinema-booking-modal {
+    max-width: 100%;
+    max-height: 95vh;
+    border-radius: 20px 20px 0 0;
+    animation: slideUpMobile 0.3s ease;
+  }
+
+  @keyframes slideUpMobile {
+    from { transform: translateY(100%); }
+    to { transform: translateY(0); }
+  }
+
+  .cinema-booking-header {
+    padding: 16px;
+  }
+
+  .doctor-info {
+    gap: 12px;
+  }
+
+  .doctor-avatar,
+  .doctor-avatar-placeholder {
+    width: 44px;
+    height: 44px;
+    border-radius: 10px;
+  }
+
+  .doctor-info h2 {
+    font-size: 1rem;
+  }
+
+  .doctor-info p {
+    font-size: 0.8rem;
+  }
+
+  .close-btn {
+    width: 36px;
+    height: 36px;
+  }
+
+  /* Progress steps */
+  .booking-progress {
+    padding: 12px;
+    gap: 4px;
+  }
+
+  .step-icon {
+    width: 30px;
+    height: 30px;
+    font-size: 0.75rem;
+  }
+
+  .progress-step span {
+    font-size: 0.65rem;
+  }
+
+  .progress-line {
+    width: 20px;
+  }
+
+  /* Calendar */
+  .booking-calendar {
+    padding: 12px;
+  }
+
+  .calendar-header {
+    margin-bottom: 12px;
+  }
+
+  .calendar-header h3 {
+    font-size: 1rem;
+  }
+
+  .calendar-grid {
+    gap: 4px;
+  }
+
+  .calendar-day {
+    padding: 8px 4px;
+    font-size: 0.8rem;
+  }
+
+  .calendar-day-name {
+    font-size: 0.65rem;
+  }
+
+  /* Booking content */
+  .booking-content {
+    padding: 16px;
+  }
+
+  .consultation-type-selector {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .consultation-type-btn {
+    padding: 14px;
+  }
+
+  /* Symptoms */
+  .symptoms-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+
+  .symptom-chip {
+    padding: 8px 10px;
+    font-size: 0.75rem;
+  }
+
+  /* Queue info */
+  .queue-info-card {
+    padding: 14px;
+  }
+
+  .queue-number {
+    font-size: 2rem;
+  }
+
+  /* Booking footer */
+  .booking-footer {
+    padding: 12px 16px;
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .booking-footer button {
+    width: 100%;
+    padding: 14px;
+  }
+}
+
+/* ===== Schedule Manager Mobile ===== */
+@media (max-width: 768px) {
+  .doctor-schedule-manager {
+    padding: 14px;
+  }
+
+  .schedule-header h4 {
+    font-size: 1.1rem;
+  }
+
+  .schedule-tabs {
+    flex-wrap: nowrap;
+    overflow-x: auto;
+    gap: 6px;
+    padding-bottom: 12px;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .schedule-tab {
+    flex-shrink: 0;
+    padding: 8px 14px;
+    font-size: 0.8rem;
+  }
+
+  .schedule-mode-selector {
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .mode-buttons {
+    width: 100%;
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 6px;
+  }
+
+  .mode-btn {
+    padding: 8px 10px;
+    font-size: 0.75rem;
+    justify-content: center;
+  }
+
+  .mode-btn i {
+    display: none;
+  }
+
+  .schedule-days {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .schedule-day-card {
+    padding: 12px;
+  }
+
+  .day-header h5 {
+    font-size: 0.95rem;
+  }
+
+  .time-slot {
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+
+  .slot-times {
+    width: 100%;
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .slot-times input[type="time"] {
+    width: 100px;
+    padding: 8px;
+  }
+
+  .slot-options {
+    width: 100%;
+    justify-content: space-between;
+  }
+
+  .slot-type-select {
+    flex: 1;
+    font-size: 0.75rem;
+  }
+}
+
+/* ===== AI Report Analyzer Mobile ===== */
+@media (max-width: 768px) {
+  .ai-report-analyzer {
+    padding: 14px;
+  }
+
+  .analyzer-header h3 {
+    font-size: 1.1rem;
+  }
+
+  .upload-zone {
+    padding: 20px;
+  }
+
+  .upload-icon {
+    font-size: 2rem;
+  }
+
+  .manual-entry-grid {
+    grid-template-columns: 1fr;
+    gap: 12px;
+  }
+
+  .test-input-group {
+    padding: 12px;
+  }
+
+  .results-section {
+    padding: 14px;
+  }
+
+  .condition-card {
+    padding: 12px;
+  }
+
+  .recommendation-item {
+    padding: 10px;
+    font-size: 0.85rem;
+  }
+}
+
+/* ===== Modal & Dialog Mobile ===== */
+@media (max-width: 768px) {
+  .modal-overlay {
+    padding: 0;
+    align-items: flex-end;
+  }
+
+  .modal-content {
+    max-width: 100%;
+    max-height: 90vh;
+    border-radius: 16px 16px 0 0;
+    margin: 0;
+  }
+
+  .modal-header {
+    padding: 14px 16px;
+    position: sticky;
+    top: 0;
+    background: inherit;
+    z-index: 10;
+  }
+
+  .modal-body {
+    padding: 16px;
+    overflow-y: auto;
+    -webkit-overflow-scrolling: touch;
+  }
+
+  .modal-footer {
+    padding: 12px 16px;
+    position: sticky;
+    bottom: 0;
+    background: inherit;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .modal-footer button {
+    width: 100%;
+  }
+}
+
+/* ===== Toast Notifications Mobile ===== */
+@media (max-width: 768px) {
+  .Toastify__toast-container {
+    width: 100%;
+    padding: 0 12px;
+  }
+
+  .Toastify__toast {
+    margin-bottom: 8px;
+    border-radius: 10px;
+  }
+}
+
+/* ===== Safe Area for Notched Devices ===== */
+@supports (padding: max(0px)) {
+  .patient-dashboard,
+  .doctor-dashboard,
+  .cinema-booking-modal {
+    padding-bottom: max(16px, env(safe-area-inset-bottom));
+  }
+
+  .modal-footer,
+  .booking-footer {
+    padding-bottom: max(12px, env(safe-area-inset-bottom));
+  }
+}
+
+/* ===== Landscape Mobile ===== */
+@media (max-width: 896px) and (orientation: landscape) {
+  .cinema-booking-modal {
+    max-height: 100vh;
+    border-radius: 0;
+  }
+
+  .booking-content {
+    max-height: 50vh;
+    overflow-y: auto;
+  }
+
+  .modal-content {
+    max-height: 100vh;
+    border-radius: 0;
+  }
+}
+
+/* ===== Small Mobile (< 375px) ===== */
+@media (max-width: 375px) {
+  .patient-dashboard__container,
+  .doctor-dashboard__container {
+    padding: 8px 12px;
+  }
+
+  .patient-dashboard__header-card {
+    padding: 12px 14px;
+  }
+
+  .patient-dashboard__welcome-title {
+    font-size: 1rem;
+  }
+
+  .patient-dashboard__tab,
+  .doctor-dashboard__tab {
+    padding: 8px 12px;
+    font-size: 0.75rem;
+  }
+
+  .doctor-card {
+    padding: 10px;
+  }
+
+  .stat-card {
+    padding: 10px;
+  }
+
+  .stat-card__value {
+    font-size: 1.25rem;
+  }
+
+  .mode-buttons {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ===== Reduce Motion for Accessibility ===== */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* ===== Dark Mode Support ===== */
+@media (prefers-color-scheme: dark) {
+  .patient-dashboard,
+  .doctor-dashboard {
+    --bg: #0f172a;
+    --card-bg: #1e293b;
+    --text: #f1f5f9;
+    --text-muted: #94a3b8;
+    --border: #334155;
+  }
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  .patient-dashboard__logout-btn,
+  .doctor-dashboard__logout-btn,
+  .booking-footer,
+  .modal-overlay,
+  .toast-container {
+    display: none !important;
+  }
+
+  .patient-dashboard,
+  .doctor-dashboard {
+    background: white !important;
+  }
+}

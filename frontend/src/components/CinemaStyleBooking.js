@@ -116,6 +116,11 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         generateDefaultCalendar();
       }
     } catch (error) {
+      console.error('Error fetching calendar:', error);
+      // Show user-friendly message for network errors
+      if (!error.response) {
+        toast.error('Unable to load calendar. Please check your connection.', { id: 'calendar-error' });
+      }
       generateDefaultCalendar();
     } finally {
       setLoading(false);
@@ -168,6 +173,11 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         });
       }
     } catch (error) {
+      console.error('Error fetching queue info:', error);
+      // Show error only for non-network issues
+      if (error.response?.status >= 500) {
+        toast.error('Unable to load queue info. Using defaults.', { id: 'queue-error', duration: 3000 });
+      }
       // Default queue info on error
       setQueueInfo({
         currentQueueCount: 0,
@@ -268,7 +278,22 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
       setTimeout(() => setShowConfetti(false), 3000);
       
     } catch (error) {
-      toast.error(error.response?.data?.message || 'Failed to book appointment');
+      console.error('Booking error:', error);
+      
+      // Handle specific error cases
+      if (!error.response) {
+        toast.error('Network error. Please check your connection and try again.', { duration: 5000 });
+      } else if (error.response.status === 409) {
+        toast.error('This slot is no longer available. Please select another time.', { duration: 4000 });
+        // Refresh queue info
+        fetchQueueInfo(selectedDate);
+      } else if (error.response.status === 400) {
+        toast.error(error.response.data?.message || 'Invalid booking details. Please check and try again.');
+      } else if (error.response.status === 401) {
+        toast.error('Session expired. Please login again.');
+      } else {
+        toast.error(error.response?.data?.message || 'Failed to book appointment. Please try again.');
+      }
       setLoading(false);
     }
   };

@@ -67,11 +67,19 @@ function DoctorDashboard({ doctor, onLogout }) {
   const fetchAppointments = async () => {
     try {
       const response = await axios.get(`/api/appointments/doctor/${doctorId}`);
-      setAppointments(response.data);
-      calculateStats(response.data);
+      setAppointments(response.data || []);
+      calculateStats(response.data || []);
     } catch (error) {
       console.error("Error fetching appointments:", error);
-      toast.error("Failed to load appointments");
+      // More specific error messages
+      if (!error.response) {
+        toast.error("Network error. Please check your connection.", { id: 'fetch-appt-error' });
+      } else if (error.response.status === 401) {
+        toast.error("Session expired. Please login again.");
+      } else {
+        toast.error("Failed to load appointments. Pull to refresh.");
+      }
+      setAppointments([]);
     } finally {
       setLoading(false);
     }
@@ -105,11 +113,22 @@ function DoctorDashboard({ doctor, onLogout }) {
   const updateAppointmentStatus = async (appointmentId, status) => {
     try {
       await axios.put(`/api/appointments/${appointmentId}/status`, { status });
-      toast.success(`Appointment ${status}`);
+      toast.success(`Appointment ${status === 'in_progress' ? 'started' : status}`);
       fetchAppointments();
       fetchQueue();
     } catch (error) {
-      toast.error("Failed to update appointment");
+      console.error("Error updating appointment:", error);
+      if (!error.response) {
+        toast.error("Network error. Please try again.");
+      } else if (error.response.status === 404) {
+        toast.error("Appointment not found. Refreshing...");
+        fetchQueue();
+      } else if (error.response.status === 409) {
+        toast.error("Appointment already updated. Refreshing...");
+        fetchQueue();
+      } else {
+        toast.error(error.response?.data?.message || "Failed to update appointment");
+      }
     }
   };
 

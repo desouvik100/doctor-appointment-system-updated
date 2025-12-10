@@ -13,6 +13,7 @@ const DoctorScheduleManager = ({ doctorId }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [activeView, setActiveView] = useState('weekly'); // weekly, calendar, settings
+  const [scheduleMode, setScheduleMode] = useState('combined'); // combined, in-clinic, virtual
   const [weeklySchedule, setWeeklySchedule] = useState({});
   const [specialDates, setSpecialDates] = useState([]);
   const [consultationDuration, setConsultationDuration] = useState(30); // Queue-based booking duration
@@ -112,7 +113,9 @@ const DoctorScheduleManager = ({ doctorId }) => {
     setWeeklySchedule(prev => {
       const daySchedule = { ...prev[day] };
       const slots = [...(daySchedule.slots || [])];
-      slots.push({ startTime: '09:00', endTime: '17:00', type: 'both', maxPatients: 10 });
+      // Default to current schedule mode, or 'both' if in combined view
+      const defaultType = scheduleMode === 'combined' ? 'both' : scheduleMode;
+      slots.push({ startTime: '09:00', endTime: '17:00', type: defaultType, maxPatients: 10 });
       return { ...prev, [day]: { ...daySchedule, slots } };
     });
   };
@@ -222,79 +225,152 @@ const DoctorScheduleManager = ({ doctorId }) => {
         </button>
       </div>
 
+      {/* Schedule Mode Selector - Only show in weekly view */}
+      {activeView === 'weekly' && (
+        <div className="schedule-mode-selector">
+          <div className="mode-label">
+            <i className="fas fa-filter me-2"></i>View Schedule For:
+          </div>
+          <div className="mode-buttons">
+            <button 
+              className={`mode-btn ${scheduleMode === 'combined' ? 'active' : ''}`}
+              onClick={() => setScheduleMode('combined')}
+            >
+              <i className="fas fa-layer-group me-1"></i>
+              All Appointments
+            </button>
+            <button 
+              className={`mode-btn in-clinic ${scheduleMode === 'in-clinic' ? 'active' : ''}`}
+              onClick={() => setScheduleMode('in-clinic')}
+            >
+              <i className="fas fa-hospital me-1"></i>
+              In-Clinic Only
+            </button>
+            <button 
+              className={`mode-btn virtual ${scheduleMode === 'virtual' ? 'active' : ''}`}
+              onClick={() => setScheduleMode('virtual')}
+            >
+              <i className="fas fa-video me-1"></i>
+              Virtual Only
+            </button>
+          </div>
+        </div>
+      )}
+
 
       {/* Weekly Schedule View */}
       {activeView === 'weekly' && (
         <div className="weekly-schedule-view">
+          {/* Mode-specific info banner */}
+          {scheduleMode !== 'combined' && (
+            <div className={`schedule-mode-banner ${scheduleMode}`}>
+              <i className={`fas ${scheduleMode === 'virtual' ? 'fa-video' : 'fa-hospital'} me-2`}></i>
+              {scheduleMode === 'virtual' 
+                ? 'Showing Virtual Consultation Schedule - Patients can book video calls during these times'
+                : 'Showing In-Clinic Schedule - Patients can visit your clinic during these times'}
+            </div>
+          )}
+
           <div className="schedule-days">
-            {DAYS.map(day => (
-              <div key={day} className={`schedule-day-card ${weeklySchedule[day]?.isAvailable ? 'available' : 'unavailable'}`}>
-                <div className="day-header">
-                  <label className="day-toggle">
-                    <input
-                      type="checkbox"
-                      checked={weeklySchedule[day]?.isAvailable || false}
-                      onChange={() => handleDayToggle(day)}
-                    />
-                    <span className="toggle-slider"></span>
-                  </label>
-                  <h5>{DAY_LABELS[day]}</h5>
-                  {weeklySchedule[day]?.isAvailable && (
-                    <button className="btn-add-slot" onClick={() => addSlot(day)} title="Add time slot">
-                      <i className="fas fa-plus"></i>
-                    </button>
-                  )}
-                </div>
-                
-                {weeklySchedule[day]?.isAvailable ? (
-                  <div className="day-slots">
-                    {(weeklySchedule[day]?.slots || []).map((slot, idx) => (
-                      <div key={idx} className="time-slot">
-                        <div className="slot-times">
-                          <input
-                            type="time"
-                            value={slot.startTime || '09:00'}
-                            onChange={(e) => handleSlotChange(day, idx, 'startTime', e.target.value)}
-                          />
-                          <span>to</span>
-                          <input
-                            type="time"
-                            value={slot.endTime || '17:00'}
-                            onChange={(e) => handleSlotChange(day, idx, 'endTime', e.target.value)}
-                          />
-                        </div>
-                        <div className="slot-options">
-                          <select
-                            value={slot.type || 'both'}
-                            onChange={(e) => handleSlotChange(day, idx, 'type', e.target.value)}
-                            className="slot-type-select"
-                          >
-                            <option value="both">Both</option>
-                            <option value="in-clinic">In-Clinic Only</option>
-                            <option value="virtual">Virtual Only</option>
-                          </select>
-                          <button 
-                            className="btn-remove-slot"
-                            onClick={() => removeSlot(day, idx)}
-                            title="Remove slot"
-                          >
-                            <i className="fas fa-trash"></i>
-                          </button>
-                        </div>
-                      </div>
-                    ))}
-                    {(weeklySchedule[day]?.slots || []).length === 0 && (
-                      <p className="no-slots">No time slots. Click + to add.</p>
+            {DAYS.map(day => {
+              // Filter slots based on schedule mode
+              const allSlots = weeklySchedule[day]?.slots || [];
+              const filteredSlots = scheduleMode === 'combined' 
+                ? allSlots 
+                : allSlots.filter(slot => slot.type === 'both' || slot.type === scheduleMode);
+              
+              const hasRelevantSlots = filteredSlots.length > 0;
+              const isDayAvailable = weeklySchedule[day]?.isAvailable && (scheduleMode === 'combined' || hasRelevantSlots || allSlots.length === 0);
+
+              return (
+                <div key={day} className={`schedule-day-card ${isDayAvailable ? 'available' : 'unavailable'} ${scheduleMode !== 'combined' ? `mode-${scheduleMode}` : ''}`}>
+                  <div className="day-header">
+                    <label className="day-toggle">
+                      <input
+                        type="checkbox"
+                        checked={weeklySchedule[day]?.isAvailable || false}
+                        onChange={() => handleDayToggle(day)}
+                      />
+                      <span className="toggle-slider"></span>
+                    </label>
+                    <h5>{DAY_LABELS[day]}</h5>
+                    {weeklySchedule[day]?.isAvailable && (
+                      <button 
+                        className="btn-add-slot" 
+                        onClick={() => addSlot(day)} 
+                        title={`Add ${scheduleMode === 'combined' ? '' : scheduleMode + ' '}time slot`}
+                      >
+                        <i className="fas fa-plus"></i>
+                      </button>
                     )}
                   </div>
-                ) : (
-                  <div className="day-unavailable">
-                    <i className="fas fa-moon"></i>
-                    <span>Not Available</span>
-                  </div>
-                )}
-              </div>
-            ))}
+                  
+                  {weeklySchedule[day]?.isAvailable ? (
+                    <div className="day-slots">
+                      {(scheduleMode === 'combined' ? allSlots : filteredSlots).map((slot, idx) => {
+                        // Find actual index in allSlots for editing
+                        const actualIdx = scheduleMode === 'combined' ? idx : allSlots.findIndex(s => s === slot);
+                        
+                        return (
+                          <div key={idx} className={`time-slot slot-type-${slot.type || 'both'}`}>
+                            <div className="slot-type-indicator">
+                              {slot.type === 'virtual' && <i className="fas fa-video" title="Virtual"></i>}
+                              {slot.type === 'in-clinic' && <i className="fas fa-hospital" title="In-Clinic"></i>}
+                              {(slot.type === 'both' || !slot.type) && <i className="fas fa-layer-group" title="Both"></i>}
+                            </div>
+                            <div className="slot-times">
+                              <input
+                                type="time"
+                                value={slot.startTime || '09:00'}
+                                onChange={(e) => handleSlotChange(day, actualIdx, 'startTime', e.target.value)}
+                              />
+                              <span>to</span>
+                              <input
+                                type="time"
+                                value={slot.endTime || '17:00'}
+                                onChange={(e) => handleSlotChange(day, actualIdx, 'endTime', e.target.value)}
+                              />
+                            </div>
+                            <div className="slot-options">
+                              <select
+                                value={slot.type || 'both'}
+                                onChange={(e) => handleSlotChange(day, actualIdx, 'type', e.target.value)}
+                                className={`slot-type-select type-${slot.type || 'both'}`}
+                              >
+                                <option value="both">🔄 Both</option>
+                                <option value="in-clinic">🏥 In-Clinic</option>
+                                <option value="virtual">📹 Virtual</option>
+                              </select>
+                              <button 
+                                className="btn-remove-slot"
+                                onClick={() => removeSlot(day, actualIdx)}
+                                title="Remove slot"
+                              >
+                                <i className="fas fa-trash"></i>
+                              </button>
+                            </div>
+                          </div>
+                        );
+                      })}
+                      {filteredSlots.length === 0 && scheduleMode !== 'combined' && allSlots.length > 0 && (
+                        <p className="no-slots mode-specific">
+                          <i className={`fas ${scheduleMode === 'virtual' ? 'fa-video' : 'fa-hospital'} me-2`}></i>
+                          No {scheduleMode === 'virtual' ? 'virtual' : 'in-clinic'} slots. Add one or change existing slot types.
+                        </p>
+                      )}
+                      {allSlots.length === 0 && (
+                        <p className="no-slots">No time slots. Click + to add.</p>
+                      )}
+                    </div>
+                  ) : (
+                    <div className="day-unavailable">
+                      <i className="fas fa-moon"></i>
+                      <span>Not Available</span>
+                    </div>
+                  )}
+                </div>
+              );
+            })}
           </div>
 
           <div className="schedule-actions">

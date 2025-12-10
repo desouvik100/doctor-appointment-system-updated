@@ -27,7 +27,9 @@ import LandingPage from "./components/LandingPagePremium";
 import AuthPremium from "./components/AuthPremium";
 import CorporateWellness from "./components/CorporateWellness";
 import { TermsAndConditions, PrivacyPolicy, RefundPolicy, ContactUs, AboutUs } from "./components/LegalPages";
+import NetworkStatus from "./components/NetworkStatus";
 import './styles/legal-pages.css';
+import './styles/mobile-enhancements.css';
 
 // Lazy load dashboard components
 const PatientDashboard = React.lazy(() =>
@@ -1430,6 +1432,9 @@ function App() {
   return (
     <LanguageProvider>
     <div>
+      {/* Network Status Indicator */}
+      <NetworkStatus />
+      
       {/* Global Toast Notifications */}
       <Toaster
         position="top-right"

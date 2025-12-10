@@ -246,6 +246,7 @@ app.use('/api/admin/email', require('./routes/adminEmailRoutes'));
 app.use('/api/security', require('./routes/securityRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes')); // AI-powered features
 app.use('/api/ai-health', require('./routes/aiHealthRoutes')); // Advanced AI health features
+app.use('/api/ai-report', require('./routes/aiReportRoutes')); // AI medical report analyzer
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');

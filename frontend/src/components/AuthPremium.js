@@ -10,6 +10,11 @@ import LanguageSelector from './LanguageSelector';
 // Google Client ID - Replace with your actual client ID from Google Cloud Console
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 
+// Debug: Log Google Client ID status (remove in production)
+if (process.env.NODE_ENV === 'development') {
+  console.log('Google Client ID configured:', GOOGLE_CLIENT_ID ? 'Yes (ID: ' + GOOGLE_CLIENT_ID.substring(0, 20) + '...)' : 'No');
+}
+
 // Inline styles for ECG animation
 const ecgAnimationStyle = document.createElement('style');
 ecgAnimationStyle.textContent = `
@@ -160,10 +165,39 @@ function AuthPremium({ onLogin, onBack }) {
     }
   };
 
+  // Google script loading state
+  const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false);
+  const [googleScriptError, setGoogleScriptError] = useState(null);
+
   // Load Google Sign-In script
   useEffect(() => {
     const loadGoogleScript = () => {
-      if (document.getElementById('google-signin-script')) return;
+      // Check if already loaded
+      if (window.google?.accounts?.oauth2) {
+        console.log('✅ Google Sign-In already available');
+        setGoogleScriptLoaded(true);
+        return;
+      }
+
+      if (document.getElementById('google-signin-script')) {
+        // Script tag exists, wait for it to load
+        const checkLoaded = setInterval(() => {
+          if (window.google?.accounts?.oauth2) {
+            console.log('✅ Google Sign-In script loaded (delayed)');
+            setGoogleScriptLoaded(true);
+            clearInterval(checkLoaded);
+          }
+        }, 100);
+        // Timeout after 10 seconds
+        setTimeout(() => {
+          clearInterval(checkLoaded);
+          if (!window.google?.accounts?.oauth2) {
+            console.error('❌ Google Sign-In script timeout');
+            setGoogleScriptError('Google Sign-In failed to load. Please refresh the page.');
+          }
+        }, 10000);
+        return;
+      }
       
       const script = document.createElement('script');
       script.id = 'google-signin-script';
@@ -171,17 +205,44 @@ function AuthPremium({ onLogin, onBack }) {
       script.async = true;
       script.defer = true;
       script.onload = () => {
-        console.log('Google Sign-In script loaded');
+        console.log('✅ Google Sign-In script loaded');
+        // Give it a moment to initialize
+        setTimeout(() => {
+          if (window.google?.accounts?.oauth2) {
+            setGoogleScriptLoaded(true);
+          } else {
+            console.error('❌ Google Sign-In not initialized after script load');
+            setGoogleScriptError('Google Sign-In initialization failed.');
+          }
+        }, 500);
+      };
+      script.onerror = (error) => {
+        console.error('❌ Failed to load Google Sign-In script:', error);
+        setGoogleScriptError('Failed to load Google Sign-In. Check your internet connection.');
       };
       document.body.appendChild(script);
     };
-    loadGoogleScript();
+    
+    if (GOOGLE_CLIENT_ID) {
+      loadGoogleScript();
+    } else {
+      console.warn('⚠️ Google Client ID not configured');
+      setGoogleScriptError('Google Sign-In not configured.');
+    }
   }, []);
 
   // Handle Google Sign-In using OAuth2 popup
   const handleGoogleSignIn = async () => {
+    // Check configuration
     if (!GOOGLE_CLIENT_ID) {
-      toast.error('Google Sign-In not configured. Please contact support.');
+      toast.error('Google Sign-In not configured. Please use email/password login.');
+      console.error('❌ REACT_APP_GOOGLE_CLIENT_ID is not set in .env');
+      return;
+    }
+
+    // Check for script errors
+    if (googleScriptError) {
+      toast.error(googleScriptError);
       return;
     }
 
@@ -190,35 +251,63 @@ function AuthPremium({ onLogin, onBack }) {
     try {
       // Check if Google script is loaded
       if (!window.google?.accounts?.oauth2) {
-        toast.error('Google Sign-In is loading. Please try again.');
+        if (!googleScriptLoaded) {
+          toast.error('Google Sign-In is still loading. Please wait a moment and try again.');
+          console.log('⏳ Google script not yet loaded, googleScriptLoaded:', googleScriptLoaded);
+        } else {
+          toast.error('Google Sign-In failed to initialize. Please refresh the page.');
+          console.error('❌ Google script loaded but oauth2 not available');
+        }
         setSocialLoading(null);
         return;
       }
+
+      console.log('🔐 Initiating Google Sign-In with Client ID:', GOOGLE_CLIENT_ID.substring(0, 20) + '...');
 
       // Use OAuth2 token client for popup-based sign-in
       const tokenClient = window.google.accounts.oauth2.initTokenClient({
         client_id: GOOGLE_CLIENT_ID,
         scope: 'email profile openid',
         callback: async (tokenResponse) => {
+          console.log('📥 Google OAuth callback received');
           if (tokenResponse.access_token) {
+            console.log('✅ Access token received');
             await handleGoogleToken(tokenResponse.access_token);
+          } else if (tokenResponse.error) {
+            console.error('❌ Google OAuth error:', tokenResponse.error, tokenResponse.error_description);
+            if (tokenResponse.error === 'access_denied') {
+              toast.error('Google Sign-In was cancelled.');
+            } else if (tokenResponse.error === 'popup_closed_by_user') {
+              toast.error('Sign-in popup was closed. Please try again.');
+            } else {
+              toast.error(`Google Sign-In error: ${tokenResponse.error_description || tokenResponse.error}`);
+            }
+            setSocialLoading(null);
           } else {
             toast.error('Google Sign-In was cancelled');
             setSocialLoading(null);
           }
         },
         error_callback: (error) => {
-          console.error('Google OAuth error:', error);
-          toast.error('Google Sign-In failed. Please try again.');
+          console.error('❌ Google OAuth error_callback:', error);
+          // Provide more specific error messages
+          if (error.type === 'popup_failed_to_open') {
+            toast.error('Popup blocked! Please allow popups for this site.');
+          } else if (error.type === 'popup_closed') {
+            toast.error('Sign-in popup was closed. Please try again.');
+          } else {
+            toast.error('Google Sign-In failed. Please try again or use email/password.');
+          }
           setSocialLoading(null);
         }
       });
 
       // Request access token (opens popup)
+      console.log('🚀 Requesting access token...');
       tokenClient.requestAccessToken();
     } catch (error) {
-      console.error('Google Sign-In error:', error);
-      toast.error('Google Sign-In failed. Please try again.');
+      console.error('❌ Google Sign-In exception:', error);
+      toast.error('Google Sign-In failed. Please try email/password login.');
       setSocialLoading(null);
     }
   };
