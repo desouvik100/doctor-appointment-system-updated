@@ -594,10 +594,17 @@ router.post('/queue-booking', async (req, res) => {
     // Default reason if not provided
     const appointmentReason = reason || 'General Consultation';
 
-    // Check if doctor exists
-    const doctor = await Doctor.findById(doctorId);
+    // Check if doctor exists - populate clinicId to get clinic details
+    const doctor = await Doctor.findById(doctorId).populate('clinicId');
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    // Resolve clinicId - use provided clinicId or doctor's clinicId
+    const resolvedClinicId = clinicId || (doctor.clinicId?._id || doctor.clinicId);
+    if (!resolvedClinicId) {
+      console.error('❌ Queue booking failed: No clinicId for doctor', doctorId);
+      return res.status(400).json({ message: 'Unable to book appointment. Doctor clinic information is missing.' });
     }
 
     // Check if user exists
@@ -662,7 +669,7 @@ router.post('/queue-booking', async (req, res) => {
     const appointmentData = {
       userId,
       doctorId,
-      clinicId: clinicId || doctor.clinicId,
+      clinicId: resolvedClinicId, // Use resolved clinicId
       date: appointmentDate, // Use properly parsed local date
       time: estimatedTime,
       queueNumber,
