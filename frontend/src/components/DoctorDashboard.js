@@ -22,6 +22,7 @@ function DoctorDashboard({ doctor, onLogout }) {
   const [showPrescription, setShowPrescription] = useState(false);
   const [prescriptionPatient, setPrescriptionPatient] = useState(null);
   const [showWalkInModal, setShowWalkInModal] = useState(false);
+  const [queueFilter, setQueueFilter] = useState('all'); // all, virtual, in_clinic
 
   // Get doctor ID (handle both id and _id)
   const doctorId = doctor.id || doctor._id;
@@ -414,6 +415,33 @@ function DoctorDashboard({ doctor, onLogout }) {
             </div>
           </div>
 
+          {/* Queue Type Filter */}
+          <div className="col-12 mb-3">
+            <div className="queue-type-filter">
+              <button 
+                className={`queue-filter-btn ${queueFilter === 'all' ? 'active' : ''}`}
+                onClick={() => setQueueFilter('all')}
+              >
+                <i className="fas fa-layer-group me-1"></i>
+                All ({queue.length})
+              </button>
+              <button 
+                className={`queue-filter-btn in-clinic ${queueFilter === 'in_clinic' ? 'active' : ''}`}
+                onClick={() => setQueueFilter('in_clinic')}
+              >
+                <i className="fas fa-hospital me-1"></i>
+                In-Clinic ({queue.filter(p => p.consultationType !== 'online').length})
+              </button>
+              <button 
+                className={`queue-filter-btn virtual ${queueFilter === 'virtual' ? 'active' : ''}`}
+                onClick={() => setQueueFilter('virtual')}
+              >
+                <i className="fas fa-video me-1"></i>
+                Virtual ({queue.filter(p => p.consultationType === 'online').length})
+              </button>
+            </div>
+          </div>
+
           {/* Current Patient */}
           <div className="col-lg-5 mb-4">
             <div className="card doctor-current-patient-card">
@@ -529,8 +557,12 @@ function DoctorDashboard({ doctor, onLogout }) {
             <div className="card">
               <div className="card-header d-flex justify-content-between align-items-center">
                 <h5 className="mb-0">
-                  <i className="fas fa-list-ol me-2"></i>
-                  Waiting Queue ({queue.length})
+                  <i className={`fas ${queueFilter === 'virtual' ? 'fa-video' : queueFilter === 'in_clinic' ? 'fa-hospital' : 'fa-list-ol'} me-2`}></i>
+                  {queueFilter === 'virtual' ? 'Virtual Queue' : queueFilter === 'in_clinic' ? 'In-Clinic Queue' : 'Waiting Queue'} ({
+                    queueFilter === 'all' ? queue.length 
+                    : queueFilter === 'virtual' ? queue.filter(p => p.consultationType === 'online').length
+                    : queue.filter(p => p.consultationType !== 'online').length
+                  })
                 </h5>
                 <div>
                   <button 
@@ -562,13 +594,21 @@ function DoctorDashboard({ doctor, onLogout }) {
                 </div>
               </div>
               <div className="card-body p-0">
-                {queue.length === 0 ? (
+                {(() => {
+                  // Filter queue based on selected filter
+                  const filteredQueue = queueFilter === 'all' 
+                    ? queue 
+                    : queueFilter === 'virtual'
+                      ? queue.filter(p => p.consultationType === 'online')
+                      : queue.filter(p => p.consultationType !== 'online');
+                  
+                  return filteredQueue.length === 0 ? (
                   <div className="empty-queue-state">
                     <div className="empty-queue-icon">
                       <i className="fas fa-check-circle"></i>
                     </div>
                     <h4>All Clear!</h4>
-                    <p>No patients waiting in queue</p>
+                    <p>{queueFilter === 'all' ? 'No patients waiting in queue' : `No ${queueFilter === 'virtual' ? 'virtual' : 'in-clinic'} patients waiting`}</p>
                     <button className="empty-queue-btn" onClick={() => setShowWalkInModal(true)}>
                       <i className="fas fa-user-plus"></i>
                       Add Walk-In Patient
@@ -576,14 +616,14 @@ function DoctorDashboard({ doctor, onLogout }) {
                   </div>
                 ) : (
                   <div className="queue-list">
-                    {queue.map((patient, index) => {
+                    {filteredQueue.map((patient, index) => {
                       // Calculate estimated wait time (15 min per patient + 5 min buffer)
                       const estimatedWaitMinutes = index * 20;
                       const estimatedTime = new Date(Date.now() + estimatedWaitMinutes * 60000);
                       const estimatedTimeStr = estimatedTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
                       
                       return (
-                        <div key={patient._id} className={`queue-item ${index === 0 ? 'next-up' : ''}`}>
+                        <div key={patient._id} className={`queue-item ${index === 0 ? 'next-up' : ''} ${patient.consultationType === 'online' ? 'virtual-patient' : 'clinic-patient'}`}>
                           <div className="queue-position">
                             {index + 1}
                           </div>
@@ -671,7 +711,8 @@ function DoctorDashboard({ doctor, onLogout }) {
                       );
                     })}
                   </div>
-                )}
+                );
+                })()}
               </div>
             </div>
           </div>

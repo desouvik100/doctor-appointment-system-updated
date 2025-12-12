@@ -1215,53 +1215,115 @@ p {
 }
 
 @media (max-width: 768px) {
+  /* Ensure landing page is visible */
   .landing-premium {
+    display: block !important;
+    visibility: visible !important;
     overflow-x: hidden;
     width: 100%;
     max-width: 100vw;
+    min-height: 100vh;
   }
   
+  /* Navigation mobile fixes */
+  .nav-premium {
+    display: flex !important;
+    visibility: visible !important;
+    padding: 12px 16px;
+  }
+  
+  .nav-premium__container {
+    width: 100%;
+    padding: 0;
+  }
+  
+  .logo-premium {
+    display: flex !important;
+  }
+  
+  .logo-premium__text {
+    font-size: 18px;
+  }
+  
+  /* Hero section mobile fixes */
   .hero-premium {
+    display: flex !important;
+    visibility: visible !important;
     padding: 100px 16px 60px;
-    overflow: hidden;
+    overflow: visible;
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
   }
   
   .hero-premium__container {
+    display: block !important;
     grid-template-columns: 1fr;
     gap: 32px;
     text-align: center;
+    width: 100%;
+  }
+  
+  .hero-premium__content {
+    display: block !important;
+    visibility: visible !important;
   }
   
   .hero-premium__title {
     font-size: 2rem;
     line-height: 1.2;
+    display: block !important;
   }
   
   .hero-premium__subtitle {
     font-size: 1rem;
     margin-left: auto;
     margin-right: auto;
+    display: block !important;
+  }
+  
+  .hero-premium__badge {
+    display: inline-flex !important;
   }
   
   .hero-premium__actions {
+    display: flex !important;
     flex-direction: column;
     justify-content: center;
     width: 100%;
+    gap: 12px;
   }
   
   .hero-premium__actions button {
     width: 100%;
+    display: flex !important;
   }
   
   .hero-premium__stats {
+    display: flex !important;
     flex-direction: row;
     flex-wrap: wrap;
     justify-content: center;
     gap: 16px;
+    margin-top: 32px;
+  }
+  
+  .hero-premium__stat {
+    display: block !important;
   }
   
   .hero-premium__visual {
     display: none;
+  }
+  
+  /* Ensure all sections are visible */
+  .features-premium,
+  .pricing-premium,
+  .security-premium,
+  .faq-premium,
+  .cta-premium {
+    display: block !important;
+    visibility: visible !important;
   }
   
   .features-premium {
@@ -1289,6 +1351,17 @@ p {
     display: flex !important;
   }
   
+  /* Mobile menu toggle button */
+  .mobile-menu-toggle {
+    display: flex !important;
+    align-items: center;
+    justify-content: center;
+    min-width: 44px;
+    min-height: 44px;
+    border-radius: 10px;
+    font-size: 20px;
+  }
+  
   .dashboard-premium__content {
     padding: 16px;
   }
@@ -1308,6 +1381,14 @@ p {
 
 @media (min-width: 769px) {
   .show-mobile {
+    display: none !important;
+  }
+  
+  .mobile-menu-toggle {
+    display: none !important;
+  }
+  
+  .mobile-menu-dropdown {
     display: none !important;
   }
 }
@@ -2147,3 +2228,211 @@ section {
     page-break-inside: avoid;
   }
 }
+
+
+/* ===== Enhanced Animations for Doctor Cards ===== */
+
+/* Subtle pulse animation for Book Now button */
+@keyframes pulse-subtle {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(99, 102, 241, 0);
+  }
+}
+
+.animate-pulse-subtle {
+  animation: pulse-subtle 2s infinite;
+}
+
+/* Slow pulse for urgent care button */
+@keyframes pulse-slow {
+  0%, 100% {
+    transform: scale(1);
+    box-shadow: 0 4px 15px rgba(239, 68, 68, 0.4);
+  }
+  50% {
+    transform: scale(1.02);
+    box-shadow: 0 6px 25px rgba(239, 68, 68, 0.6);
+  }
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s ease-in-out infinite;
+}
+
+/* Card hover lift effect */
+.hover\:-translate-y-1:hover {
+  transform: translateY(-4px);
+}
+
+/* Glow effect for buttons */
+@keyframes glow {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(99, 102, 241, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 20px rgba(99, 102, 241, 0.8);
+  }
+}
+
+.animate-glow {
+  animation: glow 2s ease-in-out infinite;
+}
+
+/* Counter animation */
+@keyframes countUp {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-count-up {
+  animation: countUp 0.5s ease-out forwards;
+}
+
+/* Shimmer effect for loading states */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.animate-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+/* Floating animation */
+@keyframes float {
+  0%, 100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-10px);
+  }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Bounce in animation */
+@keyframes bounceIn {
+  0% {
+    opacity: 0;
+    transform: scale(0.3);
+  }
+  50% {
+    transform: scale(1.05);
+  }
+  70% {
+    transform: scale(0.9);
+  }
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+.animate-bounce-in {
+  animation: bounceIn 0.6s ease-out;
+}
+
+/* Slide in from right */
+@keyframes slideInRight {
+  from {
+    opacity: 0;
+    transform: translateX(30px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(0);
+  }
+}
+
+.animate-slide-in-right {
+  animation: slideInRight 0.4s ease-out;
+}
+
+/* Availability badge pulse */
+@keyframes availablePulse {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+  }
+}
+
+.bg-emerald-500 {
+  animation: availablePulse 2s infinite;
+}
+
+/* Promotional banner gradient animation */
+@keyframes gradientShift {
+  0% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+  100% {
+    background-position: 0% 50%;
+  }
+}
+
+.bg-gradient-animated {
+  background-size: 200% 200%;
+  animation: gradientShift 5s ease infinite;
+}
+
+/* Star rating animation */
+@keyframes starPop {
+  0% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.2);
+  }
+  100% {
+    transform: scale(1);
+  }
+}
+
+.star-animate:hover {
+  animation: starPop 0.3s ease;
+}
+
+/* Card entrance animation */
+@keyframes cardEntrance {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.animate-card-entrance {
+  animation: cardEntrance 0.4s ease-out forwards;
+}
+
+/* Staggered animation delay classes */
+.animation-delay-100 { animation-delay: 100ms; }
+.animation-delay-200 { animation-delay: 200ms; }
+.animation-delay-300 { animation-delay: 300ms; }
+.animation-delay-400 { animation-delay: 400ms; }
+.animation-delay-500 { animation-delay: 500ms; }

@@ -12,11 +12,21 @@ const DAY_LABELS = {
 const DoctorScheduleManager = ({ doctorId }) => {
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
-  const [activeView, setActiveView] = useState('weekly'); // weekly, calendar, settings
+  const [activeView, setActiveView] = useState('weekly'); // weekly, calendar, settings, slots
   const [scheduleMode, setScheduleMode] = useState('combined'); // combined, in-clinic, virtual
   const [weeklySchedule, setWeeklySchedule] = useState({});
   const [specialDates, setSpecialDates] = useState([]);
   const [consultationDuration, setConsultationDuration] = useState(30); // Queue-based booking duration
+  
+  // Slot management states
+  const [slotDate, setSlotDate] = useState(new Date().toISOString().split('T')[0]);
+  const [slotType, setSlotType] = useState('online'); // online or clinic
+  const [onlineSlots, setOnlineSlots] = useState([]);
+  const [clinicSlots, setClinicSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [generatingSlots, setGeneratingSlots] = useState(false);
+  const [deletingSlotId, setDeletingSlotId] = useState(null);
+  
   const [consultationSettings, setConsultationSettings] = useState({
     virtualConsultationEnabled: true,
     inClinicConsultationEnabled: true,
@@ -24,7 +34,16 @@ const DoctorScheduleManager = ({ doctorId }) => {
     slotDuration: 15,
     bufferTime: 5,
     advanceBookingDays: 30,
-    cancellationHours: 24
+    cancellationHours: 24,
+    // Separate settings for virtual and in-clinic
+    virtualSlotDuration: 20,
+    inClinicSlotDuration: 30,
+    maxVirtualSlots: 15,
+    maxInClinicSlots: 20,
+    virtualStartTime: '08:00',
+    virtualEndTime: '20:00',
+    inClinicStartTime: '09:00',
+    inClinicEndTime: '19:00'
   });
   const [calendarData, setCalendarData] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
@@ -78,6 +97,102 @@ const DoctorScheduleManager = ({ doctorId }) => {
       fetchCalendar();
     }
   }, [doctorId, activeView, fetchCalendar]);
+
+  // Fetch slots when date or type changes
+  useEffect(() => {
+    if (doctorId && activeView === 'slots') {
+      fetchSlots();
+    }
+  }, [doctorId, activeView, slotDate, slotType]);
+
+  const fetchSlots = async () => {
+    try {
+      setSlotsLoading(true);
+      const endpoint = slotType === 'online' 
+        ? `/api/slots/online/${doctorId}/${slotDate}`
+        : `/api/slots/clinic/${doctorId}/${slotDate}`;
+      
+      const response = await axios.get(endpoint);
+      if (response.data.success) {
+        if (slotType === 'online') {
+          setOnlineSlots(response.data.slots || []);
+        } else {
+          setClinicSlots(response.data.slots || []);
+        }
+      }
+    } catch (error) {
+      console.error('Error fetching slots:', error);
+      toast.error('Failed to fetch slots');
+    } finally {
+      setSlotsLoading(false);
+    }
+  };
+
+  const generateSlots = async () => {
+    try {
+      setGeneratingSlots(true);
+      const endpoint = slotType === 'online' 
+        ? '/api/slots/online/create'
+        : '/api/slots/clinic/create';
+      
+      const response = await axios.post(endpoint, {
+        doctorId,
+        date: slotDate,
+        generateFromSchedule: true
+      });
+      
+      if (response.data.success) {
+        toast.success(`Generated ${response.data.slots?.length || 0} ${slotType} slots`);
+        fetchSlots();
+      }
+    } catch (error) {
+      console.error('Error generating slots:', error);
+      toast.error(error.response?.data?.message || 'Failed to generate slots');
+    } finally {
+      setGeneratingSlots(false);
+    }
+  };
+
+  const deleteSlot = async (slotId) => {
+    if (!window.confirm('Delete this slot?')) return;
+    
+    try {
+      setDeletingSlotId(slotId);
+      const endpoint = slotType === 'online' 
+        ? `/api/slots/online/${slotId}`
+        : `/api/slots/clinic/${slotId}`;
+      
+      const response = await axios.delete(endpoint);
+      if (response.data.success) {
+        toast.success('Slot deleted');
+        fetchSlots();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to delete slot');
+    } finally {
+      setDeletingSlotId(null);
+    }
+  };
+
+  const toggleBlockSlot = async (slotId, currentlyBlocked) => {
+    try {
+      const endpoint = slotType === 'online' 
+        ? `/api/slots/online/${slotId}/block`
+        : `/api/slots/clinic/${slotId}/block`;
+      
+      const response = await axios.put(endpoint, {
+        blocked: !currentlyBlocked,
+        reason: !currentlyBlocked ? 'Blocked by doctor' : ''
+      });
+      
+      if (response.data.success) {
+        toast.success(currentlyBlocked ? 'Slot unblocked' : 'Slot blocked');
+        fetchSlots();
+      }
+    } catch (error) {
+      toast.error(error.response?.data?.message || 'Failed to update slot');
+    }
+  };
 
   const getDefaultSchedule = () => {
     const schedule = {};
@@ -210,6 +325,12 @@ const DoctorScheduleManager = ({ doctorId }) => {
           onClick={() => setActiveView('weekly')}
         >
           <i className="fas fa-calendar-week me-2"></i>Weekly Schedule
+        </button>
+        <button 
+          className={`schedule-tab ${activeView === 'slots' ? 'active' : ''}`}
+          onClick={() => setActiveView('slots')}
+        >
+          <i className="fas fa-th me-2"></i>Manage Slots
         </button>
         <button 
           className={`schedule-tab ${activeView === 'calendar' ? 'active' : ''}`}
@@ -416,6 +537,187 @@ const DoctorScheduleManager = ({ doctorId }) => {
         </div>
       )}
 
+      {/* Slots Management View */}
+      {activeView === 'slots' && (
+        <div className="slots-management-view">
+          {/* Slot Type Selector */}
+          <div className="slot-type-selector">
+            <button 
+              className={`slot-type-btn online ${slotType === 'online' ? 'active' : ''}`}
+              onClick={() => setSlotType('online')}
+            >
+              <i className="fas fa-video me-2"></i>
+              Online Slots
+            </button>
+            <button 
+              className={`slot-type-btn clinic ${slotType === 'clinic' ? 'active' : ''}`}
+              onClick={() => setSlotType('clinic')}
+            >
+              <i className="fas fa-hospital me-2"></i>
+              Clinic Slots
+            </button>
+          </div>
+
+          {/* Info Banner */}
+          <div className={`slot-info-banner ${slotType}`}>
+            <i className={`fas ${slotType === 'online' ? 'fa-video' : 'fa-hospital'} me-2`}></i>
+            {slotType === 'online' 
+              ? 'Online slots are for video consultations. Patients booking online appointments will see these slots.'
+              : 'Clinic slots are for in-person visits. Patients booking in-clinic appointments will see these slots.'}
+          </div>
+
+          {/* Date Picker & Generate */}
+          <div className="slot-controls">
+            <div className="slot-date-picker">
+              <label><i className="fas fa-calendar-day me-2"></i>Select Date:</label>
+              <input 
+                type="date"
+                value={slotDate}
+                min={new Date().toISOString().split('T')[0]}
+                onChange={(e) => setSlotDate(e.target.value)}
+              />
+            </div>
+            <button 
+              className="btn btn-generate-slots"
+              onClick={generateSlots}
+              disabled={generatingSlots}
+            >
+              {generatingSlots ? (
+                <><i className="fas fa-spinner fa-spin me-2"></i>Generating...</>
+              ) : (
+                <><i className="fas fa-magic me-2"></i>Generate Slots</>
+              )}
+            </button>
+          </div>
+
+          {/* Slots Preview Info */}
+          <div className="slots-preview-info">
+            <h6>
+              <i className={`fas ${slotType === 'online' ? 'fa-video' : 'fa-hospital'} me-2`}></i>
+              {slotType === 'online' ? 'Online' : 'Clinic'} Slots for {new Date(slotDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}
+            </h6>
+            <p className="text-muted small">
+              {slotType === 'online' 
+                ? `Slots will be generated from ${consultationSettings.virtualStartTime || '08:00'} to ${consultationSettings.virtualEndTime || '20:00'} with ${consultationSettings.virtualSlotDuration || 20} min duration`
+                : `Slots will be generated from ${consultationSettings.inClinicStartTime || '09:00'} to ${consultationSettings.inClinicEndTime || '19:00'} with ${consultationSettings.inClinicSlotDuration || 30} min duration (lunch break: 1-2 PM)`}
+            </p>
+          </div>
+
+          {/* Slots Grid */}
+          <div className="slots-grid-container">
+            {slotsLoading ? (
+              <div className="slots-loading">
+                <div className="spinner"></div>
+                <p>Loading slots...</p>
+              </div>
+            ) : (
+              <>
+                {(slotType === 'online' ? onlineSlots : clinicSlots).length === 0 ? (
+                  <div className="no-slots-message">
+                    <i className={`fas ${slotType === 'online' ? 'fa-video-slash' : 'fa-calendar-times'}`}></i>
+                    <h5>No {slotType === 'online' ? 'Online' : 'Clinic'} Slots</h5>
+                    <p>No slots found for this date. Click "Generate Slots" to create slots based on your settings.</p>
+                  </div>
+                ) : (
+                  <div className="slots-grid">
+                    {(slotType === 'online' ? onlineSlots : clinicSlots).map(slot => (
+                      <div 
+                        key={slot._id} 
+                        className={`slot-card ${slot.isBooked ? 'booked' : ''} ${slot.isBlocked ? 'blocked' : ''}`}
+                      >
+                        <div className="slot-time">
+                          <i className="fas fa-clock me-1"></i>
+                          {slot.startTime} - {slot.endTime}
+                        </div>
+                        <div className="slot-duration">
+                          {slot.duration} min
+                        </div>
+                        <div className="slot-status">
+                          {slot.isBooked ? (
+                            <span className="badge bg-danger">
+                              <i className="fas fa-user me-1"></i>Booked
+                            </span>
+                          ) : slot.isBlocked ? (
+                            <span className="badge bg-warning text-dark">
+                              <i className="fas fa-ban me-1"></i>Blocked
+                            </span>
+                          ) : (
+                            <span className="badge bg-success">
+                              <i className="fas fa-check me-1"></i>Available
+                            </span>
+                          )}
+                        </div>
+                        {!slot.isBooked && (
+                          <div className="slot-actions">
+                            <button 
+                              className={`btn-slot-action ${slot.isBlocked ? 'unblock' : 'block'}`}
+                              onClick={() => toggleBlockSlot(slot._id, slot.isBlocked)}
+                              title={slot.isBlocked ? 'Unblock' : 'Block'}
+                            >
+                              <i className={`fas ${slot.isBlocked ? 'fa-unlock' : 'fa-ban'}`}></i>
+                            </button>
+                            <button 
+                              className="btn-slot-action delete"
+                              onClick={() => deleteSlot(slot._id)}
+                              disabled={deletingSlotId === slot._id}
+                              title="Delete"
+                            >
+                              {deletingSlotId === slot._id ? (
+                                <i className="fas fa-spinner fa-spin"></i>
+                              ) : (
+                                <i className="fas fa-trash"></i>
+                              )}
+                            </button>
+                          </div>
+                        )}
+                        {slot.isBooked && slot.bookedBy && (
+                          <div className="slot-booked-info">
+                            <small>
+                              <i className="fas fa-user me-1"></i>
+                              {slot.bookedBy.name || 'Patient'}
+                            </small>
+                          </div>
+                        )}
+                      </div>
+                    ))}
+                  </div>
+                )}
+              </>
+            )}
+          </div>
+
+          {/* Slots Summary */}
+          {(slotType === 'online' ? onlineSlots : clinicSlots).length > 0 && (
+            <div className="slots-summary">
+              <div className="summary-item available">
+                <span className="count">
+                  {(slotType === 'online' ? onlineSlots : clinicSlots).filter(s => !s.isBooked && !s.isBlocked).length}
+                </span>
+                <span className="label">Available</span>
+              </div>
+              <div className="summary-item booked">
+                <span className="count">
+                  {(slotType === 'online' ? onlineSlots : clinicSlots).filter(s => s.isBooked).length}
+                </span>
+                <span className="label">Booked</span>
+              </div>
+              <div className="summary-item blocked">
+                <span className="count">
+                  {(slotType === 'online' ? onlineSlots : clinicSlots).filter(s => s.isBlocked).length}
+                </span>
+                <span className="label">Blocked</span>
+              </div>
+              <div className="summary-item total">
+                <span className="count">
+                  {(slotType === 'online' ? onlineSlots : clinicSlots).length}
+                </span>
+                <span className="label">Total</span>
+              </div>
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Calendar View */}
       {activeView === 'calendar' && (
         <div className="calendar-view">
@@ -605,6 +907,111 @@ const DoctorScheduleManager = ({ doctorId }) => {
                 <small>Leave empty to use same fee as in-clinic</small>
               </div>
             )}
+          </div>
+
+          {/* Separate Virtual & In-Clinic Settings */}
+          <div className="settings-card">
+            <h5><i className="fas fa-hospital me-2"></i>In-Clinic Appointment Settings</h5>
+            <p className="text-muted small mb-3">Configure settings specific to in-person clinic visits</p>
+            
+            <div className="setting-row">
+              <label><i className="fas fa-clock me-2"></i>Consultation Duration (minutes)</label>
+              <select 
+                value={consultationSettings.inClinicSlotDuration || 30}
+                onChange={(e) => setConsultationSettings(prev => ({ ...prev, inClinicSlotDuration: parseInt(e.target.value) }))}
+              >
+                <option value={15}>15 minutes</option>
+                <option value={20}>20 minutes</option>
+                <option value={30}>30 minutes</option>
+                <option value={45}>45 minutes</option>
+                <option value={60}>60 minutes</option>
+              </select>
+            </div>
+
+            <div className="setting-row">
+              <label><i className="fas fa-users me-2"></i>Max Patients Per Day</label>
+              <input 
+                type="number" 
+                min="5" 
+                max="50"
+                value={consultationSettings.maxInClinicSlots || 20}
+                onChange={(e) => setConsultationSettings(prev => ({ ...prev, maxInClinicSlots: parseInt(e.target.value) }))}
+              />
+              <small>Maximum in-clinic appointments per day</small>
+            </div>
+
+            <div className="setting-row">
+              <label><i className="fas fa-hourglass-start me-2"></i>Clinic Hours</label>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <input 
+                  type="time"
+                  value={consultationSettings.inClinicStartTime || '09:00'}
+                  onChange={(e) => setConsultationSettings(prev => ({ ...prev, inClinicStartTime: e.target.value }))}
+                  style={{ flex: 1 }}
+                />
+                <span>to</span>
+                <input 
+                  type="time"
+                  value={consultationSettings.inClinicEndTime || '19:00'}
+                  onChange={(e) => setConsultationSettings(prev => ({ ...prev, inClinicEndTime: e.target.value }))}
+                  style={{ flex: 1 }}
+                />
+              </div>
+            </div>
+          </div>
+
+          <div className="settings-card">
+            <h5><i className="fas fa-video me-2"></i>Virtual Consultation Settings</h5>
+            <p className="text-muted small mb-3">Configure settings specific to online video consultations</p>
+            
+            <div className="setting-row">
+              <label><i className="fas fa-clock me-2"></i>Consultation Duration (minutes)</label>
+              <select 
+                value={consultationSettings.virtualSlotDuration || 20}
+                onChange={(e) => setConsultationSettings(prev => ({ ...prev, virtualSlotDuration: parseInt(e.target.value) }))}
+              >
+                <option value={10}>5 minutes</option>
+                <option value={10}>10 minutes</option>
+                <option value={10}>15 minutes</option>
+                <option value={15}>20 minutes</option>
+                <option value={20}>25 minutes</option>
+                <option value={30}>30 minutes</option>
+                <option value={45}>40 minutes</option>
+              </select>
+              <small>Virtual consultations are typically shorter</small>
+            </div>
+
+            <div className="setting-row">
+              <label><i className="fas fa-users me-2"></i>Max Patients Per Day</label>
+              <input 
+                type="number" 
+                min="5" 
+                max="40"
+                value={consultationSettings.maxVirtualSlots || 15}
+                onChange={(e) => setConsultationSettings(prev => ({ ...prev, maxVirtualSlots: parseInt(e.target.value) }))}
+              />
+              <small>Maximum virtual appointments per day</small>
+            </div>
+
+            <div className="setting-row">
+              <label><i className="fas fa-hourglass-start me-2"></i>Virtual Hours</label>
+              <div style={{ display: 'flex', gap: '10px', alignItems: 'center' }}>
+                <input 
+                  type="time"
+                  value={consultationSettings.virtualStartTime || '08:00'}
+                  onChange={(e) => setConsultationSettings(prev => ({ ...prev, virtualStartTime: e.target.value }))}
+                  style={{ flex: 1 }}
+                />
+                <span>to</span>
+                <input 
+                  type="time"
+                  value={consultationSettings.virtualEndTime || '20:00'}
+                  onChange={(e) => setConsultationSettings(prev => ({ ...prev, virtualEndTime: e.target.value }))}
+                  style={{ flex: 1 }}
+                />
+              </div>
+              <small>Virtual consultations can have extended hours</small>
+            </div>
           </div>
 
           <div className="schedule-actions">

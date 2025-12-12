@@ -42,6 +42,12 @@ const PatientDashboard = ({ user, onLogout }) => {
   const [selectedSpecialization, setSelectedSpecialization] = useState('');
   const [selectedClinic, setSelectedClinic] = useState('');
   
+  // Appointment filter state
+  const [appointmentSearch, setAppointmentSearch] = useState('');
+  const [appointmentStatusFilter, setAppointmentStatusFilter] = useState('all');
+  const [appointmentTypeFilter, setAppointmentTypeFilter] = useState('all');
+  const [appointmentDateFilter, setAppointmentDateFilter] = useState('all');
+  
   // Location state
   const [userLocation, setUserLocation] = useState(null);
   const [updatingLocation, setUpdatingLocation] = useState(false);
@@ -307,12 +313,67 @@ const PatientDashboard = ({ user, onLogout }) => {
     return specs.sort();
   }, [doctors]);
 
+  // Filtered appointments based on search and filters
+  const filteredAppointments = useMemo(() => {
+    return appointments.filter(apt => {
+      // Search filter - search by doctor name, specialization, or reason
+      const searchLower = appointmentSearch.toLowerCase();
+      const matchesSearch = !appointmentSearch || 
+        apt.doctorId?.name?.toLowerCase().includes(searchLower) ||
+        apt.doctorId?.specialization?.toLowerCase().includes(searchLower) ||
+        apt.reason?.toLowerCase().includes(searchLower) ||
+        apt.clinicId?.name?.toLowerCase().includes(searchLower);
+      
+      // Status filter
+      const matchesStatus = appointmentStatusFilter === 'all' || apt.status === appointmentStatusFilter;
+      
+      // Type filter (online/in_person)
+      const matchesType = appointmentTypeFilter === 'all' || apt.consultationType === appointmentTypeFilter;
+      
+      // Date filter
+      let matchesDate = true;
+      if (appointmentDateFilter !== 'all') {
+        const aptDate = new Date(apt.date);
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+        
+        if (appointmentDateFilter === 'today') {
+          const todayEnd = new Date(today);
+          todayEnd.setHours(23, 59, 59, 999);
+          matchesDate = aptDate >= today && aptDate <= todayEnd;
+        } else if (appointmentDateFilter === 'upcoming') {
+          matchesDate = aptDate >= today;
+        } else if (appointmentDateFilter === 'past') {
+          matchesDate = aptDate < today;
+        } else if (appointmentDateFilter === 'week') {
+          const weekEnd = new Date(today);
+          weekEnd.setDate(weekEnd.getDate() + 7);
+          matchesDate = aptDate >= today && aptDate <= weekEnd;
+        } else if (appointmentDateFilter === 'month') {
+          const monthEnd = new Date(today);
+          monthEnd.setMonth(monthEnd.getMonth() + 1);
+          matchesDate = aptDate >= today && aptDate <= monthEnd;
+        }
+      }
+      
+      return matchesSearch && matchesStatus && matchesType && matchesDate;
+    });
+  }, [appointments, appointmentSearch, appointmentStatusFilter, appointmentTypeFilter, appointmentDateFilter]);
+
   // Reset filters
   const resetFilters = () => {
     setSearchTerm('');
     setSelectedSpecialization('');
     setSelectedClinic('');
     toast.success('Filters cleared');
+  };
+
+  // Reset appointment filters
+  const resetAppointmentFilters = () => {
+    setAppointmentSearch('');
+    setAppointmentStatusFilter('all');
+    setAppointmentTypeFilter('all');
+    setAppointmentDateFilter('all');
   };
 
   // Get user initials
@@ -1031,9 +1092,116 @@ const PatientDashboard = ({ user, onLogout }) => {
                 My Appointments
               </h2>
               <span className="patient-dashboard__doctors-count">
-                {appointments.length} {appointments.length === 1 ? 'Appointment' : 'Appointments'}
+                {filteredAppointments.length} of {appointments.length} {appointments.length === 1 ? 'Appointment' : 'Appointments'}
               </span>
             </div>
+
+            {/* Appointment Filters */}
+            {appointments.length > 0 && (
+              <div className="appointment-filters">
+                {/* Search Bar */}
+                <div className="appointment-filters__search">
+                  <i className="fas fa-search"></i>
+                  <input
+                    type="text"
+                    placeholder="Search by doctor, specialization, or reason..."
+                    value={appointmentSearch}
+                    onChange={(e) => setAppointmentSearch(e.target.value)}
+                  />
+                  {appointmentSearch && (
+                    <button className="clear-search" onClick={() => setAppointmentSearch('')}>
+                      <i className="fas fa-times"></i>
+                    </button>
+                  )}
+                </div>
+
+                {/* Filter Buttons Row */}
+                <div className="appointment-filters__row">
+                  {/* Date Filter */}
+                  <div className="appointment-filters__group">
+                    <label><i className="fas fa-calendar"></i> Date</label>
+                    <select 
+                      value={appointmentDateFilter} 
+                      onChange={(e) => setAppointmentDateFilter(e.target.value)}
+                    >
+                      <option value="all">All Dates</option>
+                      <option value="today">Today</option>
+                      <option value="week">This Week</option>
+                      <option value="month">This Month</option>
+                      <option value="upcoming">Upcoming</option>
+                      <option value="past">Past</option>
+                    </select>
+                  </div>
+
+                  {/* Status Filter */}
+                  <div className="appointment-filters__group">
+                    <label><i className="fas fa-info-circle"></i> Status</label>
+                    <select 
+                      value={appointmentStatusFilter} 
+                      onChange={(e) => setAppointmentStatusFilter(e.target.value)}
+                    >
+                      <option value="all">All Status</option>
+                      <option value="pending">Pending</option>
+                      <option value="confirmed">Confirmed</option>
+                      <option value="in_progress">In Progress</option>
+                      <option value="completed">Completed</option>
+                      <option value="cancelled">Cancelled</option>
+                    </select>
+                  </div>
+
+                  {/* Type Filter */}
+                  <div className="appointment-filters__group">
+                    <label><i className="fas fa-stethoscope"></i> Type</label>
+                    <select 
+                      value={appointmentTypeFilter} 
+                      onChange={(e) => setAppointmentTypeFilter(e.target.value)}
+                    >
+                      <option value="all">All Types</option>
+                      <option value="in_person">In-Person</option>
+                      <option value="online">Online</option>
+                    </select>
+                  </div>
+
+                  {/* Reset Button */}
+                  {(appointmentSearch || appointmentStatusFilter !== 'all' || appointmentTypeFilter !== 'all' || appointmentDateFilter !== 'all') && (
+                    <button className="appointment-filters__reset" onClick={resetAppointmentFilters}>
+                      <i className="fas fa-undo"></i> Reset
+                    </button>
+                  )}
+                </div>
+
+                {/* Active Filters Summary */}
+                {(appointmentSearch || appointmentStatusFilter !== 'all' || appointmentTypeFilter !== 'all' || appointmentDateFilter !== 'all') && (
+                  <div className="appointment-filters__active">
+                    <span className="filter-label">Active filters:</span>
+                    {appointmentSearch && (
+                      <span className="filter-tag">
+                        Search: "{appointmentSearch}"
+                        <button onClick={() => setAppointmentSearch('')}><i className="fas fa-times"></i></button>
+                      </span>
+                    )}
+                    {appointmentDateFilter !== 'all' && (
+                      <span className="filter-tag">
+                        {appointmentDateFilter.charAt(0).toUpperCase() + appointmentDateFilter.slice(1)}
+                        <button onClick={() => setAppointmentDateFilter('all')}><i className="fas fa-times"></i></button>
+                      </span>
+                    )}
+                    {appointmentStatusFilter !== 'all' && (
+                      <span className="filter-tag">
+                        {appointmentStatusFilter.replace('_', ' ')}
+                        <button onClick={() => setAppointmentStatusFilter('all')}><i className="fas fa-times"></i></button>
+                      </span>
+                    )}
+                    {appointmentTypeFilter !== 'all' && (
+                      <span className="filter-tag">
+                        {appointmentTypeFilter === 'online' ? 'Online' : 'In-Person'}
+                        <button onClick={() => setAppointmentTypeFilter('all')}><i className="fas fa-times"></i></button>
+                      </span>
+                    )}
+                  </div>
+                )}
+              </div>
+            )}
             
             {appointments.length === 0 ? (
               <div className="patient-dashboard__empty-state">
@@ -1053,9 +1221,27 @@ const PatientDashboard = ({ user, onLogout }) => {
                   <i className="fas fa-user-md"></i> Find Doctors
                 </button>
               </div>
+            ) : filteredAppointments.length === 0 ? (
+              <div className="patient-dashboard__empty-state">
+                <div className="patient-dashboard__empty-icon">
+                  <i className="fas fa-filter"></i>
+                </div>
+                <h3 className="patient-dashboard__empty-title">
+                  No matching appointments
+                </h3>
+                <p className="patient-dashboard__empty-text">
+                  Try adjusting your filters or search term
+                </p>
+                <button 
+                  className="patient-dashboard__empty-btn"
+                  onClick={resetAppointmentFilters}
+                >
+                  <i className="fas fa-undo"></i> Clear Filters
+                </button>
+              </div>
             ) : (
               <div className="patient-dashboard__appointments-list">
-                {appointments.map(apt => {
+                {filteredAppointments.map(apt => {
                   // Use patient-specific link if available (for Jitsi), otherwise use general link
                   const meetLink = apt.patientMeetLink || apt.googleMeetLink || apt.meetingLink;
                   const isOnline = apt.consultationType === 'online';

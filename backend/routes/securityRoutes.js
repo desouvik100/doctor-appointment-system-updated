@@ -506,18 +506,45 @@ router.post('/unsuspend-user', async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found with provided ID or email' });
     }
     
-    // Unsuspend the user
-    if (userType === 'doctor') {
-      await Doctor.findByIdAndUpdate(user._id, {
-        isActive: true,
-        $unset: { suspendedAt: 1, suspendReason: 1 }
-      });
+    // Unsuspend the user - check BOTH collections if email is provided
+    // Some users may exist in both User and Doctor collections
+    const updateData = {
+      $set: { isActive: true },
+      $unset: { suspendedAt: 1, suspendReason: 1 }
+    };
+    
+    let updatedUser = null;
+    let updatedDoctor = null;
+    
+    // Always try to update in User collection if email matches
+    if (user.email) {
+      const userInUserCollection = await User.findOne({ email: user.email.toLowerCase() });
+      if (userInUserCollection) {
+        updatedUser = await User.findByIdAndUpdate(userInUserCollection._id, updateData, { new: true });
+        console.log(`✅ Updated in User collection: ${user.email} - isActive: ${updatedUser?.isActive}`);
+      }
+      
+      // Also try Doctor collection
+      const userInDoctorCollection = await Doctor.findOne({ email: user.email.toLowerCase() });
+      if (userInDoctorCollection) {
+        updatedDoctor = await Doctor.findByIdAndUpdate(userInDoctorCollection._id, updateData, { new: true });
+        console.log(`✅ Updated in Doctor collection: ${user.email} - isActive: ${updatedDoctor?.isActive}`);
+      }
     } else {
-      await User.findByIdAndUpdate(user._id, {
-        isActive: true,
-        $unset: { suspendedAt: 1, suspendReason: 1 }
-      });
+      // Update by ID in the found collection
+      if (userType === 'doctor') {
+        updatedDoctor = await Doctor.findByIdAndUpdate(user._id, updateData, { new: true });
+      } else {
+        updatedUser = await User.findByIdAndUpdate(user._id, updateData, { new: true });
+      }
     }
+    
+    if (!updatedUser && !updatedDoctor) {
+      console.error(`❌ Failed to unsuspend user: ${user.email}`);
+      return res.status(500).json({ success: false, message: 'Database update failed' });
+    }
+    
+    console.log(`✅ User unsuspended: ${user.email} (${userType})`)
 
     // Send email notification to user
     if (user.email) {

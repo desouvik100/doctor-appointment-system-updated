@@ -11,14 +11,29 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
+  const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 769 : false);
 
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
       setShowBackToTop(window.scrollY > 500);
     };
+    const handleResize = () => {
+      const mobile = window.innerWidth < 769;
+      setIsMobile(mobile);
+      // Close mobile menu on larger screens
+      if (!mobile) {
+        setMobileMenuOpen(false);
+      }
+    };
+    // Check on mount
+    handleResize();
     window.addEventListener('scroll', handleScroll, { passive: true });
-    return () => window.removeEventListener('scroll', handleScroll);
+    window.addEventListener('resize', handleResize);
+    return () => {
+      window.removeEventListener('scroll', handleScroll);
+      window.removeEventListener('resize', handleResize);
+    };
   }, []);
 
   const scrollToTop = () => {
@@ -68,7 +83,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
   return (
     <div className={`landing-premium ${darkMode ? 'dark-mode' : ''}`}>
       {/* Navigation */}
-      <nav className={`nav-premium ${scrolled ? 'scrolled' : ''}`}>
+      <nav className={`nav-premium ${scrolled ? 'scrolled' : ''}`} style={{ position: 'fixed', zIndex: 10000 }}>
         <div className="nav-premium__container">
           <div className="logo-premium">
             <div className="logo-premium__icon">
@@ -112,15 +127,20 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             
             {/* Mobile Menu Button */}
             <button 
-              className="show-mobile"
+              className="mobile-menu-toggle"
               onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
               style={{ 
-                background: 'none', 
+                background: scrolled ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255, 255, 255, 0.15)',
                 border: 'none', 
-                color: darkMode ? '#fff' : '#0f172a',
-                fontSize: '24px',
+                color: scrolled ? '#6366f1' : '#0f172a',
+                fontSize: '22px',
                 cursor: 'pointer',
-                display: 'none'
+                padding: '10px 12px',
+                borderRadius: '10px',
+                transition: 'all 0.2s ease',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
               }}
             >
               <i className={`fas ${mobileMenuOpen ? 'fa-times' : 'fa-bars'}`}></i>
@@ -128,26 +148,31 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
           </div>
         </div>
         
-        {/* Mobile Menu */}
-        {mobileMenuOpen && (
-          <div style={{
-            position: 'absolute',
-            top: '100%',
-            left: 0,
-            right: 0,
-            background: darkMode ? '#000000' : '#ffffff',
-            borderTop: '1px solid rgba(0,0,0,0.1)',
-            padding: '16px 24px',
-            boxShadow: '0 10px 40px rgba(0,0,0,0.1)'
-          }}>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
-              <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#1f2937', textDecoration: 'none', fontWeight: '500' }}>{t('features')}</a>
-              <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#1f2937', textDecoration: 'none', fontWeight: '500' }}>{t('pricing')}</a>
-              <a href="#security" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#1f2937', textDecoration: 'none', fontWeight: '500' }}>{t('security')}</a>
-              <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '12px 0', color: darkMode ? '#fff' : '#1f2937', textDecoration: 'none', fontWeight: '500' }}>{t('faq')}</a>
-              <hr style={{ border: 'none', borderTop: '1px solid rgba(0,0,0,0.1)', margin: '8px 0' }} />
-              <button onClick={() => { onNavigate('login'); setMobileMenuOpen(false); }} style={{ padding: '12px', background: 'transparent', border: '1px solid #6366f1', color: '#6366f1', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>{t('signIn')}</button>
-              <button onClick={() => { onNavigate('register'); setMobileMenuOpen(false); }} style={{ padding: '12px', background: '#6366f1', border: 'none', color: '#fff', borderRadius: '8px', fontWeight: '600', cursor: 'pointer' }}>{t('getStarted')}</button>
+        {/* Mobile Menu - Only render on mobile */}
+        {isMobile && mobileMenuOpen && (
+          <div 
+            className="mobile-menu-dropdown"
+            style={{
+              position: 'fixed',
+              top: scrolled ? '56px' : '64px',
+              left: 0,
+              right: 0,
+              background: darkMode ? '#0f172a' : '#ffffff',
+              borderTop: '1px solid rgba(0,0,0,0.1)',
+              padding: '20px 24px',
+              boxShadow: '0 20px 60px rgba(0,0,0,0.25)',
+              zIndex: 99999,
+              maxHeight: 'calc(100vh - 70px)',
+              overflowY: 'auto'
+            }}>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
+              <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>{t('features')}</a>
+              <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>{t('pricing')}</a>
+              <a href="#security" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>{t('security')}</a>
+              <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>{t('faq')}</a>
+              <div style={{ height: '1px', background: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', margin: '12px 0' }} />
+              <button onClick={() => { onNavigate('login'); setMobileMenuOpen(false); }} style={{ padding: '14px', background: 'transparent', border: '2px solid #6366f1', color: '#6366f1', borderRadius: '10px', fontWeight: '700', fontSize: '16px', cursor: 'pointer' }}>{t('signIn')}</button>
+              <button onClick={() => { onNavigate('register'); setMobileMenuOpen(false); }} style={{ padding: '14px', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', border: 'none', color: '#fff', borderRadius: '10px', fontWeight: '700', fontSize: '16px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)' }}>{t('getStarted')}</button>
             </div>
           </div>
         )}

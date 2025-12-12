@@ -689,3 +689,94 @@
 .online-consultation-section .action-btn-large {
   background: linear-gradient(135deg, #1a73e8 0%, #4285f4 100%);
 }
+
+
+/* ============================================
+   QUEUE TYPE FILTER
+   ============================================ */
+.queue-type-filter {
+  display: flex;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--dd-card);
+  border-radius: var(--dd-radius-sm);
+  box-shadow: var(--dd-shadow-sm);
+  border: 1px solid var(--dd-border);
+}
+
+.queue-filter-btn {
+  flex: 1;
+  padding: 10px 16px;
+  border: 2px solid var(--dd-border);
+  border-radius: var(--dd-radius-xs);
+  background: transparent;
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--dd-text-secondary);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+}
+
+.queue-filter-btn:hover {
+  background: var(--dd-bg);
+  border-color: var(--dd-primary-light);
+  color: var(--dd-primary);
+}
+
+.queue-filter-btn.active {
+  background: var(--dd-primary);
+  border-color: var(--dd-primary);
+  color: white;
+}
+
+.queue-filter-btn.in-clinic:hover {
+  border-color: var(--dd-success);
+  color: var(--dd-success);
+}
+
+.queue-filter-btn.in-clinic.active {
+  background: var(--dd-success);
+  border-color: var(--dd-success);
+  color: white;
+}
+
+.queue-filter-btn.virtual:hover {
+  border-color: var(--dd-info);
+  color: var(--dd-info);
+}
+
+.queue-filter-btn.virtual.active {
+  background: var(--dd-info);
+  border-color: var(--dd-info);
+  color: white;
+}
+
+/* Queue Item Type Indicators */
+.queue-item.virtual-patient {
+  border-left: 4px solid var(--dd-info);
+}
+
+.queue-item.clinic-patient {
+  border-left: 4px solid var(--dd-success);
+}
+
+/* Mobile Responsive */
+@media (max-width: 576px) {
+  .queue-type-filter {
+    flex-wrap: wrap;
+  }
+  
+  .queue-filter-btn {
+    flex: 1 1 calc(50% - 4px);
+    padding: 8px 12px;
+    font-size: 0.8rem;
+  }
+  
+  .queue-filter-btn:first-child {
+    flex: 1 1 100%;
+  }
+}

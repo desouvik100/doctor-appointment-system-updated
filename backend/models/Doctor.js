@@ -122,10 +122,19 @@ const doctorSchema = new mongoose.Schema(
       virtualConsultationEnabled: { type: Boolean, default: true },
       inClinicConsultationEnabled: { type: Boolean, default: true },
       virtualConsultationFee: { type: Number, default: null }, // null means same as consultationFee
-      slotDuration: { type: Number, default: 15 }, // minutes per appointment
+      slotDuration: { type: Number, default: 15 }, // minutes per appointment (legacy)
       bufferTime: { type: Number, default: 5 }, // minutes between appointments
       advanceBookingDays: { type: Number, default: 30 }, // How far in advance can patients book
-      cancellationHours: { type: Number, default: 24 } // Hours before appointment for free cancellation
+      cancellationHours: { type: Number, default: 24 }, // Hours before appointment for free cancellation
+      // Separate settings for virtual and in-clinic
+      virtualSlotDuration: { type: Number, default: 20 }, // Virtual consultations typically shorter
+      inClinicSlotDuration: { type: Number, default: 30 }, // In-clinic consultations
+      maxVirtualSlots: { type: Number, default: 15 }, // Max virtual appointments per day
+      maxInClinicSlots: { type: Number, default: 20 }, // Max in-clinic appointments per day
+      virtualStartTime: { type: String, default: '08:00' }, // Virtual can start earlier
+      virtualEndTime: { type: String, default: '20:00' },
+      inClinicStartTime: { type: String, default: '09:00' },
+      inClinicEndTime: { type: String, default: '19:00' }
     },
     consultationFee: {
       type: Number,

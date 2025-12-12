@@ -27,7 +27,8 @@ const appointmentSchema = new mongoose.Schema(
     },
     reason: {
       type: String,
-      required: true,
+      required: false,
+      default: 'General Consultation',
       trim: true
     },
     status: {
@@ -42,6 +43,22 @@ const appointmentSchema = new mongoose.Schema(
     // Queue-based booking fields
     queueNumber: {
       type: Number,
+      default: null
+    },
+    // Slot-based booking fields (for strict online/clinic separation)
+    slotId: {
+      type: mongoose.Schema.Types.ObjectId,
+      refPath: 'slotModel',
+      default: null
+    },
+    slotModel: {
+      type: String,
+      enum: ['OnlineSlot', 'ClinicSlot', null],
+      default: null
+    },
+    slotType: {
+      type: String,
+      enum: ['online', 'clinic', null],
       default: null
     },
     estimatedArrivalTime: {
@@ -309,7 +326,7 @@ const appointmentSchema = new mongoose.Schema(
     },
     cancelledBy: {
       type: String,
-      enum: ['patient', 'doctor', 'clinic', 'system'],
+      enum: ['patient', 'doctor', 'clinic', 'system', null],
       default: null
     },
     cancelledAt: {

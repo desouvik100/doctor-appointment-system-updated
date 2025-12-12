@@ -3,9 +3,12 @@ const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
 const LoyaltyPoints = require('../models/LoyaltyPoints');
+const OnlineSlot = require('../models/OnlineSlot');
+const ClinicSlot = require('../models/ClinicSlot');
 const { USE_STRIPE_PAYMENTS } = require('../config/paymentConfig');
 const { scheduleGoogleMeetGeneration } = require('../services/appointmentScheduler');
 const TokenService = require('../services/tokenService');
+const mongoose = require('mongoose');
 const router = express.Router();
 
 // Helper function to award loyalty points
@@ -30,7 +33,7 @@ const awardLoyaltyPoints = async (userId, action, referenceId, customPoints = nu
     points = Math.floor(points * multiplier);
 
     const desc = description || `Earned ${points} points for ${action}`;
-    loyalty.addPoints(points, desc, action, referenceId);
+    loyalty.addPoints(points, action, desc, referenceId);
     await loyalty.save();
 
     console.log(`🎁 Awarded ${points} loyalty points to user ${userId} for ${action}`);
@@ -251,10 +254,18 @@ router.get('/booked-times/:doctorId/:date', async (req, res) => {
 router.get('/queue-info/:doctorId/:date', async (req, res) => {
   try {
     const { doctorId, date } = req.params;
+    const { consultationType } = req.query; // Optional: 'in_person', 'online', 'virtual'
     
-    // Get doctor's consultation duration
-    const doctor = await Doctor.findById(doctorId).select('consultationDuration');
-    const slotDuration = doctor?.consultationDuration || 30; // Default 30 min
+    // Get doctor's consultation settings
+    const doctor = await Doctor.findById(doctorId).select('consultationDuration consultationSettings');
+    
+    // Determine if requesting virtual or in-clinic queue
+    const isVirtual = consultationType === 'online' || consultationType === 'virtual';
+    
+    // Get appropriate slot duration
+    const virtualDuration = doctor?.consultationSettings?.virtualSlotDuration || doctor?.consultationDuration || 20;
+    const inClinicDuration = doctor?.consultationSettings?.inClinicSlotDuration || doctor?.consultationDuration || 30;
+    const slotDuration = isVirtual ? virtualDuration : inClinicDuration;
     
     // Parse date correctly to avoid timezone issues
     const [year, month, day] = date.split('-').map(Number);
@@ -265,33 +276,59 @@ router.get('/queue-info/:doctorId/:date', async (req, res) => {
     const endOfDay = new Date(queryDate);
     endOfDay.setHours(23, 59, 59, 999);
     
-    // Get count of appointments for this doctor on this date
-    const appointments = await Appointment.find({
+    // Build query based on consultation type
+    const appointmentQuery = {
       doctorId,
       date: { $gte: startOfDay, $lte: endOfDay },
       status: { $in: ['pending', 'confirmed', 'in_progress'] }
-    }).sort({ queueNumber: 1 });
+    };
+    
+    // If consultationType specified, filter by it
+    if (consultationType) {
+      appointmentQuery.consultationType = isVirtual ? { $in: ['online', 'virtual'] } : 'in_person';
+    }
+    
+    // Get count of appointments for this doctor on this date (filtered by type if specified)
+    const appointments = await Appointment.find(appointmentQuery).sort({ queueNumber: 1 });
+    
+    // Also get counts for both types for display
+    const virtualAppointments = await Appointment.countDocuments({
+      doctorId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: { $in: ['pending', 'confirmed', 'in_progress'] },
+      consultationType: { $in: ['online', 'virtual'] }
+    });
+    
+    const inClinicAppointments = await Appointment.countDocuments({
+      doctorId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: { $in: ['pending', 'confirmed', 'in_progress'] },
+      consultationType: 'in_person'
+    });
 
     const currentQueueCount = appointments.length;
     
-    // Calculate max slots based on consultation duration (9 AM - 7 PM = 10 hours, minus 1 hour lunch)
-    const totalMinutes = 9 * 60; // 9 hours of working time
-    const maxSlots = Math.floor(totalMinutes / slotDuration);
+    // Separate max slots for virtual and in-clinic
+    const maxVirtualSlots = doctor?.consultationSettings?.maxVirtualSlots || 15;
+    const maxInClinicSlots = doctor?.consultationSettings?.maxInClinicSlots || 20;
+    const maxSlots = isVirtual ? maxVirtualSlots : maxInClinicSlots;
+    
     const nextQueueNumber = currentQueueCount + 1;
     
     // Calculate estimated time for next patient
-    const startHour = 9;
+    // Virtual starts at 8 AM, In-clinic at 9 AM
+    const startHour = isVirtual ? 8 : 9;
     let minutesFromStart = currentQueueCount * slotDuration;
     let hours = Math.floor(minutesFromStart / 60);
     let minutes = minutesFromStart % 60;
     let estimatedHour = startHour + hours;
     
-    // Skip lunch hour (1 PM - 2 PM)
-    if (estimatedHour >= 13) {
+    // Skip lunch hour (1 PM - 2 PM) for in-clinic only
+    if (!isVirtual && estimatedHour >= 13) {
       estimatedHour += 1;
     }
     
-    const estimatedTime = estimatedHour < 19 
+    const estimatedTime = estimatedHour < 20 
       ? `${estimatedHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
       : null;
 
@@ -303,7 +340,19 @@ router.get('/queue-info/:doctorId/:date', async (req, res) => {
       maxSlots,
       availableSlots: Math.max(0, maxSlots - currentQueueCount),
       isFull: currentQueueCount >= maxSlots,
-      slotDuration // Send to frontend for display
+      slotDuration,
+      consultationType: consultationType || 'all',
+      // Separate counts for UI display
+      virtualQueue: {
+        count: virtualAppointments,
+        maxSlots: maxVirtualSlots,
+        available: Math.max(0, maxVirtualSlots - virtualAppointments)
+      },
+      inClinicQueue: {
+        count: inClinicAppointments,
+        maxSlots: maxInClinicSlots,
+        available: Math.max(0, maxInClinicSlots - inClinicAppointments)
+      }
     });
 
   } catch (error) {
@@ -586,9 +635,18 @@ router.post('/queue-booking', async (req, res) => {
   try {
     const { userId, doctorId, clinicId, date, reason, consultationType, urgencyLevel, reminderPreference, sendEstimatedTimeEmail } = req.body;
 
+    console.log('📋 Queue booking request:', { userId, doctorId, clinicId, date, consultationType });
+
     // Validate required fields (reason is now optional)
     if (!userId || !doctorId || !date) {
+      console.error('❌ Missing required fields:', { userId: !!userId, doctorId: !!doctorId, date: !!date });
       return res.status(400).json({ message: 'User, doctor and date are required' });
+    }
+
+    // Validate date format
+    if (typeof date !== 'string' || !date.match(/^\d{4}-\d{2}-\d{2}$/)) {
+      console.error('❌ Invalid date format:', date);
+      return res.status(400).json({ message: 'Invalid date format. Expected YYYY-MM-DD' });
     }
     
     // Default reason if not provided
@@ -620,41 +678,57 @@ router.post('/queue-booking', async (req, res) => {
     appointmentDate.setHours(0, 0, 0, 0);
     
     // Get current queue count for this doctor on this date
+    // IMPORTANT: Separate queues for virtual and in-clinic appointments
     const startOfDay = new Date(appointmentDate);
     const endOfDay = new Date(appointmentDate);
     endOfDay.setHours(23, 59, 59, 999);
     
+    // Determine consultation type (default to in_person)
+    const appointmentConsultationType = consultationType || 'in_person';
+    const isVirtual = appointmentConsultationType === 'online' || appointmentConsultationType === 'virtual';
+    
+    // Get appointments ONLY for the same consultation type (virtual or in-clinic)
     const existingAppointments = await Appointment.find({
       doctorId,
       date: { $gte: startOfDay, $lte: endOfDay },
-      status: { $in: ['pending', 'confirmed', 'in_progress'] }
+      status: { $in: ['pending', 'confirmed', 'in_progress'] },
+      consultationType: isVirtual ? { $in: ['online', 'virtual'] } : 'in_person'
     }).sort({ queueNumber: -1 });
 
     const currentQueueCount = existingAppointments.length;
-    const maxSlots = 20;
+    
+    // Separate max slots for virtual and in-clinic
+    const maxVirtualSlots = doctor.consultationSettings?.maxVirtualSlots || 15;
+    const maxInClinicSlots = doctor.consultationSettings?.maxInClinicSlots || 20;
+    const maxSlots = isVirtual ? maxVirtualSlots : maxInClinicSlots;
 
     if (currentQueueCount >= maxSlots) {
       return res.status(400).json({ 
-        message: 'No slots available for this date. Please select another date.',
-        isFull: true
+        message: `No ${isVirtual ? 'virtual consultation' : 'in-clinic'} slots available for this date. Please select another date.`,
+        isFull: true,
+        consultationType: appointmentConsultationType
       });
     }
 
-    // Calculate queue number and estimated time
+    // Calculate queue number for THIS consultation type only
     const queueNumber = currentQueueCount + 1;
     
     // Get doctor's consultation duration (default 30 min)
-    const slotDuration = doctor.consultationDuration || 30;
+    // Can have different durations for virtual vs in-clinic
+    const virtualDuration = doctor.consultationSettings?.virtualSlotDuration || doctor.consultationDuration || 20;
+    const inClinicDuration = doctor.consultationSettings?.inClinicSlotDuration || doctor.consultationDuration || 30;
+    const slotDuration = isVirtual ? virtualDuration : inClinicDuration;
     
-    // Calculate estimated time based on doctor's consultation duration
-    const startHour = 9;
+    // Different start times for virtual and in-clinic
+    // Virtual: Can start earlier (8 AM), In-clinic: 9 AM
+    const startHour = isVirtual ? 8 : 9;
     let minutesFromStart = (queueNumber - 1) * slotDuration;
     let hours = Math.floor(minutesFromStart / 60);
     let minutes = minutesFromStart % 60;
     let estimatedHour = startHour + hours;
     
-    // Skip lunch hour (1 PM - 2 PM)
-    if (estimatedHour >= 13) {
+    // Skip lunch hour (1 PM - 2 PM) for in-clinic only
+    if (!isVirtual && estimatedHour >= 13) {
       estimatedHour += 1;
     }
     
@@ -672,6 +746,7 @@ router.post('/queue-booking', async (req, res) => {
       clinicId: resolvedClinicId, // Use resolved clinicId
       date: appointmentDate, // Use properly parsed local date
       time: estimatedTime,
+      tokenNumber: queueNumber, // Set tokenNumber same as queueNumber
       queueNumber,
       estimatedArrivalTime: estimatedTime,
       reason: appointmentReason,
@@ -689,6 +764,8 @@ router.post('/queue-booking', async (req, res) => {
       }
     };
 
+    console.log('📝 Creating appointment with data:', JSON.stringify(appointmentData, null, 2));
+
     const appointment = new Appointment(appointmentData);
 
     // Generate join code for online consultations
@@ -696,14 +773,30 @@ router.post('/queue-booking', async (req, res) => {
       appointment.generateJoinCode();
     }
 
-    await appointment.save();
+    try {
+      await appointment.save();
+    } catch (saveError) {
+      console.error('❌ Appointment save error:', saveError.message);
+      if (saveError.name === 'ValidationError') {
+        const errors = Object.keys(saveError.errors).map(key => `${key}: ${saveError.errors[key].message}`);
+        return res.status(400).json({ message: 'Validation error', errors });
+      }
+      throw saveError;
+    }
+    console.log(`✅ Appointment saved: ${appointment._id}`);
     
     // Generate appointment token
-    const doctorCode = doctor.specialization?.substring(0, 5).toUpperCase() || 'GEN';
-    const TokenService = require('../services/tokenService');
-    const tokenResult = await TokenService.generateTokenForAppointment(appointment._id, doctorCode);
+    let tokenResult = { success: false, token: null };
+    try {
+      const doctorCode = doctor.specialization?.substring(0, 5).toUpperCase() || 'GEN';
+      const TokenService = require('../services/tokenService');
+      tokenResult = await TokenService.generateTokenForAppointment(appointment._id, doctorCode);
+      console.log(`✅ Token generated: ${tokenResult.token}`);
+    } catch (tokenError) {
+      console.error('❌ Token generation failed:', tokenError.message);
+    }
 
-    // Send estimated time email
+    // Send estimated time email (non-blocking)
     if (sendEstimatedTimeEmail && user.email) {
       try {
         const { sendQueueBookingEmail } = require('../services/emailService');
@@ -717,11 +810,12 @@ router.post('/queue-booking', async (req, res) => {
           queueNumber,
           estimatedTime: formatTimeForEmail(estimatedTime),
           consultationType: consultationType || 'in_person',
-          tokenNumber: tokenResult.token
+          tokenNumber: tokenResult?.token || `Q${queueNumber}`
         });
         console.log(`✅ Queue booking email sent to ${user.email}`);
       } catch (emailError) {
         console.error('❌ Error sending queue booking email:', emailError.message);
+        // Don't fail the booking if email fails
       }
     }
 
@@ -739,21 +833,216 @@ router.post('/queue-booking', async (req, res) => {
       .populate('doctorId', 'name specialization consultationFee email')
       .populate('clinicId', 'name address');
 
+    console.log(`✅ Queue booking completed successfully for appointment ${appointment._id}`);
+
     res.status(201).json({
       success: true,
       ...populatedAppointment.toObject(),
       queueNumber,
       estimatedTime,
-      token: tokenResult.token,
-      loyaltyPoints: loyaltyResult.success ? {
+      token: tokenResult?.token || `Q${queueNumber}`,
+      loyaltyPoints: loyaltyResult?.success ? {
         earned: loyaltyResult.points,
         tier: loyaltyResult.tier
       } : null
     });
 
   } catch (error) {
-    console.error('Error creating queue booking:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    console.error('❌ Error creating queue booking:', error);
+    console.error('Stack trace:', error.stack);
+    res.status(500).json({ 
+      success: false,
+      message: 'Server error', 
+      error: error.message,
+      details: process.env.NODE_ENV === 'development' ? error.stack : undefined
+    });
+  }
+});
+
+// ============================================
+// SLOT-BASED BOOKING (Strict Online/Clinic Separation)
+// ============================================
+router.post('/slot-booking', async (req, res) => {
+  const session = await mongoose.startSession();
+  session.startTransaction();
+  
+  try {
+    const { userId, doctorId, clinicId, slotId, slotType, date, time, reason, consultationType } = req.body;
+
+    console.log('📋 Slot-based booking request:', { userId, doctorId, slotId, slotType, consultationType });
+
+    // Strict validation
+    if (!userId || !doctorId || !slotId || !slotType || !date || !time) {
+      throw new Error('Missing required fields: userId, doctorId, slotId, slotType, date, time');
+    }
+
+    // Validate slot type matches consultation type
+    if (slotType === 'online' && consultationType !== 'online') {
+      throw new Error('VALIDATION_ERROR: Cannot book online slot for in-person appointment');
+    }
+    if (slotType === 'clinic' && consultationType === 'online') {
+      throw new Error('VALIDATION_ERROR: Cannot book clinic slot for online appointment');
+    }
+
+    // Get doctor
+    const doctor = await Doctor.findById(doctorId).populate('clinicId');
+    if (!doctor) {
+      throw new Error('Doctor not found');
+    }
+
+    // Get user
+    const user = await User.findById(userId);
+    if (!user) {
+      throw new Error('User not found');
+    }
+
+    // Verify and book the slot atomically from the CORRECT collection
+    let slot;
+    if (slotType === 'online') {
+      slot = await OnlineSlot.findOneAndUpdate(
+        {
+          _id: slotId,
+          isBooked: false,
+          isBlocked: false,
+          slotType: 'online' // Double-check slot type
+        },
+        {
+          $set: {
+            isBooked: true,
+            bookedBy: userId,
+            bookedAt: new Date()
+          }
+        },
+        { new: true, session }
+      );
+      
+      if (!slot) {
+        throw new Error('Online slot is no longer available or invalid');
+      }
+    } else if (slotType === 'clinic') {
+      slot = await ClinicSlot.findOneAndUpdate(
+        {
+          _id: slotId,
+          isBooked: false,
+          isBlocked: false,
+          slotType: 'clinic' // Double-check slot type
+        },
+        {
+          $set: {
+            isBooked: true,
+            bookedBy: userId,
+            bookedAt: new Date()
+          }
+        },
+        { new: true, session }
+      );
+      
+      if (!slot) {
+        throw new Error('Clinic slot is no longer available or invalid');
+      }
+    } else {
+      throw new Error('Invalid slot type. Must be "online" or "clinic"');
+    }
+
+    // Parse date
+    const [year, month, day] = date.split('-').map(Number);
+    const appointmentDate = new Date(year, month - 1, day);
+    appointmentDate.setHours(0, 0, 0, 0);
+
+    // Resolve clinic ID
+    const resolvedClinicId = clinicId || doctor.clinicId?._id || doctor.clinicId;
+
+    // Calculate payment
+    const consultationFee = doctor.consultationFee || 500;
+    const gst = Math.round(consultationFee * 0.22);
+    const platformFee = Math.round(consultationFee * 0.07);
+    const totalAmount = consultationFee + gst + platformFee;
+
+    // Create appointment with slot reference
+    const appointmentData = {
+      userId,
+      doctorId,
+      clinicId: resolvedClinicId,
+      date: appointmentDate,
+      time: time,
+      reason: reason || 'General Consultation',
+      consultationType: consultationType,
+      // Store slot reference for validation
+      slotId: slotId,
+      slotType: slotType,
+      status: 'confirmed',
+      paymentStatus: 'not_required',
+      payment: {
+        consultationFee,
+        gst,
+        platformFee,
+        totalAmount,
+        paymentStatus: 'not_required'
+      }
+    };
+
+    const appointment = new Appointment(appointmentData);
+
+    // Generate join code for online consultations
+    if (consultationType === 'online') {
+      appointment.generateJoinCode();
+    }
+
+    await appointment.save({ session });
+
+    // Update slot with appointment reference
+    if (slotType === 'online') {
+      await OnlineSlot.findByIdAndUpdate(slotId, { appointmentId: appointment._id }, { session });
+    } else {
+      await ClinicSlot.findByIdAndUpdate(slotId, { appointmentId: appointment._id }, { session });
+    }
+
+    // Generate token
+    let tokenResult = { success: false, token: null };
+    try {
+      const doctorCode = doctor.specialization?.substring(0, 5).toUpperCase() || 'GEN';
+      tokenResult = await TokenService.generateTokenForAppointment(appointment._id, doctorCode);
+    } catch (tokenError) {
+      console.error('Token generation failed:', tokenError.message);
+    }
+
+    await session.commitTransaction();
+
+    // Populate and return
+    const populatedAppointment = await Appointment.findById(appointment._id)
+      .populate('userId', 'name email phone')
+      .populate('doctorId', 'name specialization consultationFee email')
+      .populate('clinicId', 'name address');
+
+    console.log(`✅ Slot-based booking completed: ${appointment._id} (${slotType})`);
+
+    res.status(201).json({
+      success: true,
+      ...populatedAppointment.toObject(),
+      slotType,
+      slotId,
+      token: tokenResult?.token || `SB${appointment._id.toString().slice(-6).toUpperCase()}`
+    });
+
+  } catch (error) {
+    await session.abortTransaction();
+    console.error('❌ Slot-based booking error:', error);
+    
+    // Return specific error for validation failures
+    if (error.message.startsWith('VALIDATION_ERROR:')) {
+      return res.status(400).json({ 
+        success: false, 
+        message: error.message.replace('VALIDATION_ERROR: ', ''),
+        validationError: true
+      });
+    }
+    
+    res.status(500).json({ 
+      success: false, 
+      message: error.message || 'Booking failed'
+    });
+  } finally {
+    session.endSession();
   }
 });
 

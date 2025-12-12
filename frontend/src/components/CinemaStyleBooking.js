@@ -5,12 +5,12 @@ import './CinemaStyleBooking.css';
 import LiveQueueTracker from './LiveQueueTracker';
 
 const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
-  const [step, setStep] = useState(1); // 1: Date, 2: Details, 3: Confirm, 4: Success
+  const [step, setStep] = useState(1); // 1: Type, 2: Date, 3: Details, 4: Confirm, 5: Success
   const [loading, setLoading] = useState(false);
   const [calendarData, setCalendarData] = useState([]);
   const [currentMonth, setCurrentMonth] = useState(new Date());
   const [selectedDate, setSelectedDate] = useState(null);
-  const [consultationType, setConsultationType] = useState('in_person');
+  const [consultationType, setConsultationType] = useState(null); // null until selected
   const [reason, setReason] = useState('');
   
   // Queue-based booking states
@@ -49,16 +49,16 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
   }, [currentMonth]);
 
   useEffect(() => {
-    if (selectedDate) {
+    if (selectedDate && consultationType) {
       fetchQueueInfo(selectedDate);
     }
-  }, [selectedDate]);
+  }, [selectedDate, consultationType]); // Refetch when consultation type changes
 
-  // Live queue updates - poll every 10 seconds when on step 2 or 3
+  // Live queue updates - poll every 10 seconds when on step 3 or 4 (details/confirm)
   useEffect(() => {
     let intervalId;
     
-    if (selectedDate && (step === 2 || step === 3) && !bookingSuccess) {
+    if (selectedDate && consultationType && (step === 3 || step === 4) && !bookingSuccess) {
       setIsLiveUpdating(true);
       
       // Poll for queue updates every 10 seconds
@@ -158,7 +158,9 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
     try {
       setQueueLoading(true);
       // Get current queue count for this doctor on this date
-      const response = await axios.get(`/api/appointments/queue-info/${doctorId}/${dateStr}`);
+      // Pass consultationType to get queue info for specific type
+      const typeParam = consultationType === 'online' ? 'online' : 'in_person';
+      const response = await axios.get(`/api/appointments/queue-info/${doctorId}/${dateStr}?consultationType=${typeParam}`);
       
       if (response.data.success) {
         setQueueInfo(response.data);
@@ -167,9 +169,11 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         setQueueInfo({
           currentQueueCount: 0,
           nextQueueNumber: 1,
-          estimatedTime: '09:00',
-          maxSlots: 20,
-          availableSlots: 20
+          estimatedTime: consultationType === 'online' ? '08:00' : '09:00',
+          maxSlots: consultationType === 'online' ? 15 : 20,
+          availableSlots: consultationType === 'online' ? 15 : 20,
+          virtualQueue: { count: 0, maxSlots: 15, available: 15 },
+          inClinicQueue: { count: 0, maxSlots: 20, available: 20 }
         });
       }
     } catch (error) {
@@ -182,9 +186,11 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
       setQueueInfo({
         currentQueueCount: 0,
         nextQueueNumber: 1,
-        estimatedTime: '09:00',
-        maxSlots: 20,
-        availableSlots: 20
+        estimatedTime: consultationType === 'online' ? '08:00' : '09:00',
+        maxSlots: consultationType === 'online' ? 15 : 20,
+        availableSlots: consultationType === 'online' ? 15 : 20,
+        virtualQueue: { count: 0, maxSlots: 15, available: 15 },
+        inClinicQueue: { count: 0, maxSlots: 20, available: 20 }
       });
     } finally {
       setQueueLoading(false);
@@ -193,29 +199,38 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
 
   // Calculate estimated time based on queue position and doctor's consultation duration
   const calculateEstimatedTime = (queueNumber) => {
-    const startHour = 9; // 9 AM
+    // Virtual consultations start at 8 AM, in-clinic at 9 AM
+    const isVirtual = consultationType === 'online';
+    const startHour = isVirtual ? 8 : 9;
     const minutesFromStart = (queueNumber - 1) * slotDuration;
     const hours = Math.floor(minutesFromStart / 60);
     const minutes = minutesFromStart % 60;
     
     let estimatedHour = startHour + hours;
-    // Skip lunch hour (1 PM - 2 PM)
-    if (estimatedHour >= 13) {
+    // Skip lunch hour (1 PM - 2 PM) for in-clinic only
+    if (!isVirtual && estimatedHour >= 13) {
       estimatedHour += 1;
     }
     
-    // Check if within clinic hours
-    if (estimatedHour >= 19) {
-      return null; // Clinic closed
+    // Check if within working hours (virtual: 8 PM, in-clinic: 7 PM)
+    const endHour = isVirtual ? 20 : 19;
+    if (estimatedHour >= endHour) {
+      return null; // Closed
     }
     
     return `${estimatedHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
   };
 
+  const handleTypeSelect = (type) => {
+    setConsultationType(type);
+    setSelectedDate(null); // Reset date when type changes
+    setStep(2);
+  };
+
   const handleDateSelect = (day) => {
     if (day.isPast || !day.isAvailable) return;
     setSelectedDate(day.date);
-    setStep(2);
+    setStep(3);
   };
 
   const handleBooking = async () => {
@@ -250,10 +265,10 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         return;
       }
 
-      const response = await axios.post('/api/appointments/queue-booking', {
+      const bookingData = {
         userId: user.id || user._id,
         doctorId: doctorId,
-        clinicId: doctor.clinicId?._id || doctor.clinicId,
+        clinicId: doctor.clinicId?._id || doctor.clinicId || null,
         date: selectedDate,
         queueNumber: queueNumber,
         estimatedTime: estimatedTime,
@@ -262,7 +277,11 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         urgencyLevel,
         reminderPreference,
         sendEstimatedTimeEmail: true
-      });
+      };
+      
+      console.log('📋 Booking data:', bookingData);
+      
+      const response = await axios.post('/api/appointments/queue-booking', bookingData);
 
       // Show success animation with confetti
       setBookedAppointment({
@@ -272,7 +291,7 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
       });
       setBookingSuccess(true);
       setShowConfetti(true);
-      setStep(4); // Success step
+      setStep(5); // Success step
       
       // Hide confetti after 3 seconds
       setTimeout(() => setShowConfetti(false), 3000);
@@ -288,7 +307,9 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         // Refresh queue info
         fetchQueueInfo(selectedDate);
       } else if (error.response.status === 400) {
-        toast.error(error.response.data?.message || 'Invalid booking details. Please check and try again.');
+        const errorMsg = error.response.data?.errors?.join(', ') || error.response.data?.message || 'Invalid booking details. Please check and try again.';
+        console.error('Validation errors:', error.response.data);
+        toast.error(errorMsg, { duration: 5000 });
       } else if (error.response.status === 401) {
         toast.error('Session expired. Please login again.');
       } else {
@@ -363,25 +384,32 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
           </button>
         </div>
 
-        {/* Progress Steps - Updated for queue-based booking */}
+        {/* Progress Steps - Updated for type-first booking */}
         <div className="booking-progress">
           <div className={`progress-step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'completed' : ''}`}>
             <div className="step-icon">
-              {step > 1 ? <i className="fas fa-check"></i> : <i className="fas fa-calendar"></i>}
+              {step > 1 ? <i className="fas fa-check"></i> : <i className="fas fa-stethoscope"></i>}
             </div>
-            <span>Select Date</span>
+            <span>Type</span>
           </div>
           <div className="progress-line"></div>
           <div className={`progress-step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'completed' : ''}`}>
             <div className="step-icon">
-              {step > 2 ? <i className="fas fa-check"></i> : <i className="fas fa-clipboard"></i>}
+              {step > 2 ? <i className="fas fa-check"></i> : <i className="fas fa-calendar"></i>}
             </div>
-            <span>Details</span>
+            <span>Date</span>
           </div>
           <div className="progress-line"></div>
           <div className={`progress-step ${step >= 3 ? 'active' : ''} ${step > 3 ? 'completed' : ''}`}>
             <div className="step-icon">
-              {step > 3 ? <i className="fas fa-check"></i> : <i className="fas fa-check-circle"></i>}
+              {step > 3 ? <i className="fas fa-check"></i> : <i className="fas fa-clipboard"></i>}
+            </div>
+            <span>Details</span>
+          </div>
+          <div className="progress-line"></div>
+          <div className={`progress-step ${step >= 4 ? 'active' : ''} ${step > 4 ? 'completed' : ''}`}>
+            <div className="step-icon">
+              {step > 4 ? <i className="fas fa-check"></i> : <i className="fas fa-check-circle"></i>}
             </div>
             <span>Confirm</span>
           </div>
@@ -389,19 +417,98 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
 
         {/* Content */}
         <div className="cinema-booking-content">
-          {/* Step 1: Date Selection */}
+          {/* Step 1: Consultation Type Selection - FIRST */}
           {step === 1 && (
+            <div className="type-selection-step">
+              <h3 className="step-title">
+                <i className="fas fa-stethoscope"></i>
+                Choose Consultation Type
+              </h3>
+              <p className="step-subtitle">Select how you'd like to consult with the doctor</p>
+              
+              <div className="type-selection-cards">
+                <div 
+                  className="type-selection-card clinic"
+                  onClick={() => handleTypeSelect('in_person')}
+                >
+                  <div className="type-card-icon">
+                    <i className="fas fa-hospital"></i>
+                  </div>
+                  <div className="type-card-content">
+                    <h4>In-Clinic Visit</h4>
+                    <p>Visit the clinic in person</p>
+                    <ul className="type-card-features">
+                      <li><i className="fas fa-check"></i> Physical examination</li>
+                      <li><i className="fas fa-check"></i> Lab tests on-site</li>
+                      <li><i className="fas fa-check"></i> Detailed consultation</li>
+                    </ul>
+                    <div className="type-card-info">
+                      <span><i className="fas fa-clock"></i> 9 AM - 7 PM</span>
+                      <span><i className="fas fa-user-clock"></i> ~30 min</span>
+                    </div>
+                  </div>
+                  <div className="type-card-arrow">
+                    <i className="fas fa-arrow-right"></i>
+                  </div>
+                </div>
+
+                <div 
+                  className="type-selection-card virtual"
+                  onClick={() => handleTypeSelect('online')}
+                >
+                  <div className="type-card-icon">
+                    <i className="fas fa-video"></i>
+                  </div>
+                  <div className="type-card-content">
+                    <h4>Online Consultation</h4>
+                    <p>Video call from anywhere</p>
+                    <ul className="type-card-features">
+                      <li><i className="fas fa-check"></i> No travel required</li>
+                      <li><i className="fas fa-check"></i> Shorter wait times</li>
+                      <li><i className="fas fa-check"></i> Get prescription online</li>
+                    </ul>
+                    <div className="type-card-info">
+                      <span><i className="fas fa-clock"></i> 8 AM - 8 PM</span>
+                      <span><i className="fas fa-user-clock"></i> ~20 min</span>
+                    </div>
+                  </div>
+                  <div className="type-card-arrow">
+                    <i className="fas fa-arrow-right"></i>
+                  </div>
+                </div>
+              </div>
+
+              <div className="type-selection-note">
+                <i className="fas fa-info-circle"></i>
+                <span>Online and clinic appointments have separate queues. Choose based on your needs.</span>
+              </div>
+            </div>
+          )}
+
+          {/* Step 2: Date Selection */}
+          {step === 2 && (
             <div className="date-selection">
+              {/* Selected Type Banner */}
+              <div className={`selected-type-banner ${consultationType === 'online' ? 'virtual' : 'clinic'}`}>
+                <i className={`fas ${consultationType === 'online' ? 'fa-video' : 'fa-hospital'}`}></i>
+                <span>{consultationType === 'online' ? 'Online Consultation' : 'In-Clinic Visit'}</span>
+                <button className="change-type-btn" onClick={() => setStep(1)}>
+                  <i className="fas fa-edit"></i> Change
+                </button>
+              </div>
+
               {/* Clinic Hours Info */}
               <div className="clinic-hours-banner">
                 <i className="fas fa-clock"></i>
                 <div>
-                  <span className="hours-label">Clinic Hours</span>
-                  <span className="hours-value">9:00 AM - 7:00 PM (Mon-Sat)</span>
+                  <span className="hours-label">{consultationType === 'online' ? 'Online Hours' : 'Clinic Hours'}</span>
+                  <span className="hours-value">
+                    {consultationType === 'online' ? '8:00 AM - 8:00 PM (Mon-Sat)' : '9:00 AM - 7:00 PM (Mon-Sat)'}
+                  </span>
                 </div>
                 <div className="slot-duration">
                   <i className="fas fa-user-clock"></i>
-                  <span>~{doctor?.consultationDuration || 30} min per patient</span>
+                  <span>~{consultationType === 'online' ? '20' : (doctor?.consultationDuration || 30)} min per patient</span>
                 </div>
               </div>
 
@@ -465,13 +572,21 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
           )}
 
 
-          {/* Step 2: Queue Info & Details */}
-          {step === 2 && (
+          {/* Step 3: Queue Info & Details */}
+          {step === 3 && (
             <div className="details-section">
-              <div className="selected-date-banner">
-                <i className="fas fa-calendar-check"></i>
-                <span>{formatDate(selectedDate)}</span>
-                <button onClick={() => setStep(1)} className="change-btn">Change</button>
+              {/* Selected Type & Date Banner */}
+              <div className="selected-info-banner">
+                <div className={`info-item type ${consultationType === 'online' ? 'virtual' : 'clinic'}`}>
+                  <i className={`fas ${consultationType === 'online' ? 'fa-video' : 'fa-hospital'}`}></i>
+                  <span>{consultationType === 'online' ? 'Online' : 'In-Clinic'}</span>
+                  <button onClick={() => setStep(1)} className="change-btn">Change</button>
+                </div>
+                <div className="info-item date">
+                  <i className="fas fa-calendar-check"></i>
+                  <span>{formatDate(selectedDate)}</span>
+                  <button onClick={() => setStep(2)} className="change-btn">Change</button>
+                </div>
               </div>
 
               {/* Queue Information Card */}
@@ -481,7 +596,20 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
                   <p>Checking queue availability...</p>
                 </div>
               ) : queueInfo && (
-                <div className={`queue-info-card ${queueChanged ? 'queue-updated' : ''}`}>
+                <div className={`queue-info-card ${queueChanged ? 'queue-updated' : ''} ${consultationType === 'online' ? 'virtual-queue' : 'clinic-queue'}`}>
+                  {/* Queue Type Banner */}
+                  <div className={`queue-type-banner ${consultationType === 'online' ? 'virtual' : 'clinic'}`}>
+                    <i className={`fas ${consultationType === 'online' ? 'fa-video' : 'fa-hospital'}`}></i>
+                    <span>
+                      {consultationType === 'online' ? 'Virtual Consultation Queue' : 'In-Clinic Queue'}
+                    </span>
+                    <span className="queue-type-note">
+                      {consultationType === 'online' 
+                        ? '(Separate from clinic visits)' 
+                        : '(Separate from online consultations)'}
+                    </span>
+                  </div>
+
                   <div className="queue-header">
                     <h4><i className="fas fa-users"></i> Queue Status</h4>
                     <div className="queue-header-right">
@@ -518,7 +646,9 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
                   <div className="queue-stats">
                     <div className={`queue-stat ${queueChanged ? 'stat-pulse' : ''}`}>
                       <span className="stat-number">{queueInfo.currentQueueCount || 0}</span>
-                      <span className="stat-label">In Queue</span>
+                      <span className="stat-label">
+                        {consultationType === 'online' ? 'Online Queue' : 'Clinic Queue'}
+                      </span>
                     </div>
                     <div className={`queue-stat highlight ${queueChanged ? 'stat-pulse' : ''}`}>
                       <span className="stat-number">#{queueInfo.nextQueueNumber || 1}</span>
@@ -539,47 +669,40 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
                   )}
                   
                   <div className="estimated-time-box">
-                    <i className="fas fa-clock"></i>
+                    <i className={`fas ${consultationType === 'online' ? 'fa-video' : 'fa-clock'}`}></i>
                     <div>
-                      <span className="est-label">Your Estimated Time</span>
+                      <span className="est-label">
+                        {consultationType === 'online' ? 'Your Video Call Time' : 'Your Estimated Time'}
+                      </span>
                       <span className="est-time">{formatTime(calculateEstimatedTime(queueInfo.nextQueueNumber || 1))}</span>
                     </div>
-                    <span className="est-note">*Arrive 15 min early</span>
+                    <span className="est-note">
+                      {consultationType === 'online' 
+                        ? '*Join link sent 15 min before' 
+                        : '*Arrive 15 min early'}
+                    </span>
                   </div>
+
+                  {/* Show both queue counts for transparency */}
+                  {queueInfo.virtualQueue && queueInfo.inClinicQueue && (
+                    <div className="both-queues-info">
+                      <div className="queue-comparison">
+                        <div className={`queue-type-stat ${consultationType === 'online' ? 'active' : ''}`}>
+                          <i className="fas fa-video"></i>
+                          <span>{queueInfo.virtualQueue.count}/{queueInfo.virtualQueue.maxSlots}</span>
+                          <small>Virtual</small>
+                        </div>
+                        <div className="queue-separator">|</div>
+                        <div className={`queue-type-stat ${consultationType === 'in_person' ? 'active' : ''}`}>
+                          <i className="fas fa-hospital"></i>
+                          <span>{queueInfo.inClinicQueue.count}/{queueInfo.inClinicQueue.maxSlots}</span>
+                          <small>In-Clinic</small>
+                        </div>
+                      </div>
+                    </div>
+                  )}
                 </div>
               )}
-
-              <div className="consultation-type">
-                <h4>Consultation Type</h4>
-                <div className="type-options">
-                  <button
-                    className={`type-btn ${consultationType === 'in_person' ? 'selected' : ''}`}
-                    onClick={() => setConsultationType('in_person')}
-                  >
-                    <div className="type-icon">
-                      <i className="fas fa-hospital"></i>
-                    </div>
-                    <div className="type-info">
-                      <span className="type-name">In-Person</span>
-                      <span className="type-desc">Visit the clinic</span>
-                    </div>
-                    {consultationType === 'in_person' && <i className="fas fa-check-circle check"></i>}
-                  </button>
-                  <button
-                    className={`type-btn ${consultationType === 'online' ? 'selected' : ''}`}
-                    onClick={() => setConsultationType('online')}
-                  >
-                    <div className="type-icon virtual">
-                      <i className="fas fa-video"></i>
-                    </div>
-                    <div className="type-info">
-                      <span className="type-name">Video Call</span>
-                      <span className="type-desc">Online consultation</span>
-                    </div>
-                    {consultationType === 'online' && <i className="fas fa-check-circle check"></i>}
-                  </button>
-                </div>
-              </div>
 
               {/* Quick Symptom Selection */}
               <div className="symptoms-section">
@@ -681,15 +804,15 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
 
               <button 
                 className="proceed-btn"
-                onClick={() => setStep(3)}
+                onClick={() => setStep(4)}
               >
                 Proceed to Confirm <i className="fas fa-arrow-right"></i>
               </button>
             </div>
           )}
 
-          {/* Step 3: Confirmation */}
-          {step === 3 && (
+          {/* Step 4: Confirmation */}
+          {step === 4 && (
             <div className="confirmation-section">
               <div className="booking-summary">
                 <h3><i className="fas fa-clipboard-check"></i> Booking Summary</h3>
@@ -748,7 +871,7 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
               </div>
 
               <div className="confirm-actions">
-                <button className="back-btn" onClick={() => setStep(2)}>
+                <button className="back-btn" onClick={() => setStep(3)}>
                   <i className="fas fa-arrow-left"></i> Back
                 </button>
                 <button 
@@ -766,8 +889,8 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
             </div>
           )}
 
-          {/* Step 4: Success Animation */}
-          {step === 4 && bookingSuccess && (
+          {/* Step 5: Success Animation */}
+          {step === 5 && bookingSuccess && (
             <div className="success-section">
               {/* Confetti Animation */}
               {showConfetti && (

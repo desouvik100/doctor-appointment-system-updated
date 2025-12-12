@@ -44,9 +44,16 @@ export const useMobileInit = (userId) => {
       }
 
       try {
-        // Hide splash screen after app is ready
+        // Hide splash screen after app is ready - with delay to prevent flash
         const { SplashScreen } = await import('@capacitor/splash-screen');
-        await SplashScreen.hide();
+        // Wait a bit for the app to render before hiding splash
+        setTimeout(async () => {
+          try {
+            await SplashScreen.hide({ fadeOutDuration: 500 });
+          } catch (e) {
+            console.log('SplashScreen hide error:', e.message);
+          }
+        }, 1000);
       } catch (e) {
         console.log('SplashScreen not available:', e.message);
       }

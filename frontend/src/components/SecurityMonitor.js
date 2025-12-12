@@ -234,9 +234,13 @@ const SecurityMonitor = ({ adminId }) => {
       if (response.data.success) {
         toast.success('User unsuspended and notified via email');
         fetchAlerts();
+        fetchSuspendedUsers(); // Refresh suspended users list
+      } else {
+        toast.error(response.data.message || 'Failed to unsuspend user');
       }
     } catch (error) {
-      toast.error('Failed to unsuspend user');
+      console.error('Unsuspend error:', error);
+      toast.error(error.response?.data?.message || 'Failed to unsuspend user');
     }
   };
 
