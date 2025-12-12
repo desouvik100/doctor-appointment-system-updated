@@ -4,6 +4,7 @@ const OnlineSlot = require('../models/OnlineSlot');
 const ClinicSlot = require('../models/ClinicSlot');
 const Doctor = require('../models/Doctor');
 const mongoose = require('mongoose');
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 
 // ============================================
 // ONLINE SLOTS MANAGEMENT
@@ -74,8 +75,8 @@ router.get('/online/:doctorId', async (req, res) => {
   }
 });
 
-// Create online slots for a doctor
-router.post('/online/create', async (req, res) => {
+// Create online slots for a doctor (doctors/admin only)
+router.post('/online/create', verifyTokenWithRole(['doctor', 'admin']), async (req, res) => {
   try {
     const { doctorId, date, slots, generateFromSchedule } = req.body;
     
@@ -171,8 +172,8 @@ router.post('/online/create', async (req, res) => {
   }
 });
 
-// Delete online slot
-router.delete('/online/:slotId', async (req, res) => {
+// Delete online slot (doctors/admin only)
+router.delete('/online/:slotId', verifyTokenWithRole(['doctor', 'admin']), async (req, res) => {
   try {
     const { slotId } = req.params;
     
@@ -193,8 +194,8 @@ router.delete('/online/:slotId', async (req, res) => {
   }
 });
 
-// Block/Unblock online slot
-router.put('/online/:slotId/block', async (req, res) => {
+// Block/Unblock online slot (doctors/admin only)
+router.put('/online/:slotId/block', verifyTokenWithRole(['doctor', 'admin']), async (req, res) => {
   try {
     const { slotId } = req.params;
     const { blocked, reason } = req.body;
@@ -298,8 +299,8 @@ router.get('/clinic/:doctorId', async (req, res) => {
   }
 });
 
-// Create clinic slots for a doctor
-router.post('/clinic/create', async (req, res) => {
+// Create clinic slots for a doctor (doctors/admin only)
+router.post('/clinic/create', verifyTokenWithRole(['doctor', 'admin']), async (req, res) => {
   try {
     const { doctorId, clinicId, date, slots, generateFromSchedule } = req.body;
     
@@ -414,8 +415,8 @@ router.post('/clinic/create', async (req, res) => {
   }
 });
 
-// Delete clinic slot
-router.delete('/clinic/:slotId', async (req, res) => {
+// Delete clinic slot (doctors/admin only)
+router.delete('/clinic/:slotId', verifyTokenWithRole(['doctor', 'admin']), async (req, res) => {
   try {
     const { slotId } = req.params;
     
@@ -436,8 +437,8 @@ router.delete('/clinic/:slotId', async (req, res) => {
   }
 });
 
-// Block/Unblock clinic slot
-router.put('/clinic/:slotId/block', async (req, res) => {
+// Block/Unblock clinic slot (doctors/admin only)
+router.put('/clinic/:slotId/block', verifyTokenWithRole(['doctor', 'admin']), async (req, res) => {
   try {
     const { slotId } = req.params;
     const { blocked, reason } = req.body;
@@ -465,8 +466,8 @@ router.put('/clinic/:slotId/block', async (req, res) => {
 // UNIFIED SLOT BOOKING (with strict validation)
 // ============================================
 
-// Book a slot (validates slot type matches appointment type)
-router.post('/book', async (req, res) => {
+// Book a slot (validates slot type matches appointment type) - authenticated users
+router.post('/book', verifyToken, async (req, res) => {
   const session = await mongoose.startSession();
   session.startTransaction();
   
@@ -553,8 +554,8 @@ router.post('/release', async (req, res) => {
 // BULK OPERATIONS
 // ============================================
 
-// Generate slots for multiple days
-router.post('/generate-bulk', async (req, res) => {
+// Generate slots for multiple days (doctors/admin only)
+router.post('/generate-bulk', verifyTokenWithRole(['doctor', 'admin']), async (req, res) => {
   try {
     const { doctorId, clinicId, slotType, startDate, endDate, skipWeekends } = req.body;
     

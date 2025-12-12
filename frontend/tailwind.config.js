@@ -8,24 +8,24 @@ module.exports = {
   theme: {
     extend: {
       colors: {
-        // Primary brand colors (Indigo)
+        // Fresh Healthcare - Primary (Sky Blue)
         primary: {
-          50: '#eef2ff',
-          100: '#e0e7ff',
-          200: '#c7d2fe',
-          300: '#a5b4fc',
-          400: '#818cf8',
-          500: '#6366f1',
-          600: '#4f46e5',
-          700: '#4338ca',
-          800: '#3730a3',
-          900: '#312e81',
+          50: '#f0f9ff',
+          100: '#e0f2fe',
+          200: '#bae6fd',
+          300: '#7dd3fc',
+          400: '#38bdf8',
+          500: '#0ea5e9',
+          600: '#0284c7',
+          700: '#0369a1',
+          800: '#075985',
+          900: '#0c4a6e',
         },
-        // Healthcare teal/green accent
+        // Fresh Healthcare - Secondary (Teal)
         health: {
-          50: '#f0fdf9',
-          100: '#ccfbef',
-          200: '#99f6e0',
+          50: '#f0fdfa',
+          100: '#ccfbf1',
+          200: '#99f6e4',
           300: '#5eead4',
           400: '#2dd4bf',
           500: '#14b8a6',
@@ -34,11 +34,24 @@ module.exports = {
           800: '#115e59',
           900: '#134e4a',
         },
+        // Fresh Healthcare - Accent (Orange)
+        accent: {
+          50: '#fff7ed',
+          100: '#ffedd5',
+          200: '#fed7aa',
+          300: '#fdba74',
+          400: '#fb923c',
+          500: '#f97316',
+          600: '#ea580c',
+          700: '#c2410c',
+          800: '#9a3412',
+          900: '#7c2d12',
+        },
         // Semantic colors
         success: {
-          light: '#d1fae5',
-          DEFAULT: '#10b981',
-          dark: '#059669',
+          light: '#dcfce7',
+          DEFAULT: '#22c55e',
+          dark: '#16a34a',
         },
         warning: {
           light: '#fef3c7',
@@ -70,8 +83,9 @@ module.exports = {
         'soft-md': '0 4px 12px rgba(0, 0, 0, 0.08)',
         'soft-lg': '0 8px 24px rgba(0, 0, 0, 0.1)',
         'soft-xl': '0 16px 32px rgba(0, 0, 0, 0.12)',
-        'glow': '0 0 20px rgba(99, 102, 241, 0.3)',
-        'glow-health': '0 0 20px rgba(45, 122, 109, 0.3)',
+        'glow': '0 0 20px rgba(14, 165, 233, 0.3)',
+        'glow-health': '0 0 20px rgba(20, 184, 166, 0.3)',
+        'glow-accent': '0 0 20px rgba(249, 115, 22, 0.3)',
       },
       animation: {
         'fade-in': 'fadeIn 0.3s ease-out',
@@ -123,8 +137,10 @@ module.exports = {
       },
       backgroundImage: {
         'gradient-radial': 'radial-gradient(var(--tw-gradient-stops))',
-        'gradient-health': 'linear-gradient(135deg, #2d7a6d 0%, #3d9b8a 100%)',
-        'gradient-primary': 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+        'gradient-health': 'linear-gradient(135deg, #14b8a6 0%, #0d9488 100%)',
+        'gradient-primary': 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
+        'gradient-accent': 'linear-gradient(135deg, #f97316 0%, #fb923c 100%)',
+        'gradient-fresh': 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 50%, #22c55e 100%)',
       },
     },
   },

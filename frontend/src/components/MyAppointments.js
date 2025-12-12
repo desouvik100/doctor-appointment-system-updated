@@ -8,6 +8,10 @@ function MyAppointments({ user }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedConsultation, setSelectedConsultation] = useState(null);
+  const [activeTab, setActiveTab] = useState('upcoming'); // 'upcoming' or 'completed'
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [queueInfo, setQueueInfo] = useState(null);
+  const [queueLoading, setQueueLoading] = useState(false);
 
   useEffect(() => {
     fetchAppointments();
@@ -27,6 +31,15 @@ function MyAppointments({ user }) {
     }
   };
 
+  // Separate appointments into upcoming (undone) and completed (done)
+  const upcomingAppointments = appointments.filter(apt => 
+    ['pending', 'confirmed', 'in_progress'].includes(apt.status)
+  );
+  
+  const completedAppointments = appointments.filter(apt => 
+    ['completed', 'cancelled'].includes(apt.status)
+  );
+
   const handleCancelAppointment = async (appointmentId) => {
     if (!window.confirm("Are you sure you want to cancel this appointment?")) {
       return;
@@ -35,7 +48,7 @@ function MyAppointments({ user }) {
     try {
       console.log("Cancelling appointment:", appointmentId);
       await axios.put(`/api/appointments/${appointmentId}`, { status: "cancelled" });
-      fetchAppointments(); // Refresh the list
+      fetchAppointments();
       toast.success("Appointment cancelled successfully");
     } catch (error) {
       console.error("Error cancelling appointment:", error);
@@ -44,21 +57,20 @@ function MyAppointments({ user }) {
   };
 
   const getStatusBadge = (status) => {
-    const statusClasses = {
-      pending: "bg-warning text-dark",
-      confirmed: "bg-success",
-      in_progress: "bg-info",
-      cancelled: "bg-danger",
-      completed: "bg-secondary"
+    const statusConfig = {
+      pending: { class: "status-pending", icon: "fa-clock", label: "Pending" },
+      confirmed: { class: "status-confirmed", icon: "fa-check-circle", label: "Confirmed" },
+      in_progress: { class: "status-progress", icon: "fa-spinner", label: "In Progress" },
+      cancelled: { class: "status-cancelled", icon: "fa-times-circle", label: "Cancelled" },
+      completed: { class: "status-completed", icon: "fa-check-double", label: "Completed" }
     };
 
-    const statusLabels = {
-      in_progress: "In Progress"
-    };
+    const config = statusConfig[status] || { class: "status-default", icon: "fa-question", label: status };
 
     return (
-      <span className={`badge ${statusClasses[status] || "bg-secondary"}`}>
-        {statusLabels[status] || (status.charAt(0).toUpperCase() + status.slice(1))}
+      <span className={`appointment-status ${config.class}`}>
+        <i className={`fas ${config.icon}`}></i>
+        {config.label}
       </span>
     );
   };
@@ -68,25 +80,27 @@ function MyAppointments({ user }) {
   };
 
   const getPaymentStatusBadge = (paymentStatus) => {
-    const statusClasses = {
-      pending: "bg-warning text-dark",
-      completed: "bg-success",
-      failed: "bg-danger",
-      refunded: "bg-secondary"
+    const statusConfig = {
+      pending: { class: "payment-pending", label: "Payment Pending" },
+      completed: { class: "payment-completed", label: "Paid" },
+      failed: { class: "payment-failed", label: "Payment Failed" },
+      refunded: { class: "payment-refunded", label: "Refunded" }
     };
 
+    const config = statusConfig[paymentStatus] || { class: "payment-default", label: paymentStatus };
+
     return (
-      <span className={`badge ${statusClasses[paymentStatus] || "bg-secondary"} ms-2`}>
-        Payment: {paymentStatus?.charAt(0).toUpperCase() + paymentStatus?.slice(1)}
+      <span className={`payment-status ${config.class}`}>
+        {config.label}
       </span>
     );
   };
 
   const formatDate = (dateString) => {
-    return new Date(dateString).toLocaleDateString('en-US', {
-      weekday: 'long',
+    return new Date(dateString).toLocaleDateString('en-IN', {
+      weekday: 'short',
       year: 'numeric',
-      month: 'long',
+      month: 'short',
       day: 'numeric'
     });
   };
@@ -97,6 +111,42 @@ function MyAppointments({ user }) {
     const ampm = hour >= 12 ? 'PM' : 'AM';
     const displayHour = hour % 12 || 12;
     return `${displayHour}:${minutes} ${ampm}`;
+  };
+
+  // Fetch live queue info for an appointment
+  const fetchQueueInfo = async (appointment) => {
+    setSelectedAppointment(appointment);
+    setQueueLoading(true);
+    try {
+      const response = await axios.get(`/api/appointments/my-queue/${appointment._id}`);
+      if (response.data.success) {
+        setQueueInfo(response.data);
+      } else {
+        // Fallback to basic queue info
+        const dateStr = new Date(appointment.date).toISOString().split('T')[0];
+        const queueResponse = await axios.get(`/api/appointments/queue-info/${appointment.doctorId?._id}/${dateStr}`);
+        setQueueInfo({
+          ...queueResponse.data,
+          yourQueueNumber: appointment.queueNumber || appointment.tokenNumber,
+          yourEstimatedTime: appointment.time
+        });
+      }
+    } catch (error) {
+      console.error('Error fetching queue info:', error);
+      setQueueInfo({
+        yourQueueNumber: appointment.queueNumber || appointment.tokenNumber || 'N/A',
+        yourEstimatedTime: appointment.time,
+        currentQueueCount: 'N/A'
+      });
+    } finally {
+      setQueueLoading(false);
+    }
+  };
+
+  // Close queue modal
+  const closeQueueModal = () => {
+    setSelectedAppointment(null);
+    setQueueInfo(null);
   };
 
   if (selectedConsultation) {
@@ -114,131 +164,284 @@ function MyAppointments({ user }) {
 
   if (loading) {
     return (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary" role="status">
-          <span className="visually-hidden">Loading...</span>
-        </div>
-        <p className="mt-2">Loading appointments...</p>
+      <div className="appointments-loading">
+        <div className="loading-spinner"></div>
+        <p>Loading your appointments...</p>
       </div>
     );
   }
 
-  return (
-    <div className="card shadow-sm">
-      <div className="card-header bg-primary text-white">
-        <h5 className="mb-0">
-          <i className="fas fa-calendar-check me-2"></i>
-          My Appointments
-        </h5>
-      </div>
-      <div className="card-body">
-        {appointments.length === 0 ? (
-          <div className="text-center py-4">
-            <i className="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-            <p className="text-muted">No appointments found.</p>
-            <p className="text-muted small">Book your first appointment from the "Find Doctors" section.</p>
+  const currentAppointments = activeTab === 'upcoming' ? upcomingAppointments : completedAppointments;
+
+  const renderAppointmentCard = (appointment) => (
+    <div 
+      key={appointment._id} 
+      className={`appointment-card ${appointment.status}`}
+      onClick={() => ['pending', 'confirmed', 'in_progress'].includes(appointment.status) && fetchQueueInfo(appointment)}
+      style={{ cursor: ['pending', 'confirmed', 'in_progress'].includes(appointment.status) ? 'pointer' : 'default' }}
+    >
+      {['pending', 'confirmed', 'in_progress'].includes(appointment.status) && (
+        <div className="click-hint">
+          <i className="fas fa-hand-pointer"></i> Tap for Live Queue
+        </div>
+      )}
+      <div className="appointment-card-header">
+        <div className="doctor-info">
+          <div className="doctor-avatar">
+            {appointment.doctorId?.profilePhoto ? (
+              <img src={appointment.doctorId.profilePhoto} alt={appointment.doctorId?.name} />
+            ) : (
+              <i className="fas fa-user-md"></i>
+            )}
           </div>
-        ) : (
-          <div className="row g-3">
-            {appointments.map((appointment) => (
-              <div key={appointment._id} className="col-12">
-                <div className="card border-0 shadow-sm">
-                  <div className="card-body">
-                    <div className="row align-items-center">
-                      <div className="col-md-8">
-                        <div className="d-flex align-items-center mb-2">
-                          <div className="bg-primary rounded-circle p-2 me-3">
-                            <i className="fas fa-user-md text-white"></i>
-                          </div>
-                          <div>
-                            <h6 className="mb-0">
-                              Dr. {appointment.doctorId?.name || "Unknown Doctor"}
-                            </h6>
-                            <small className="text-muted">
-                              {appointment.doctorId?.specialization || "General Practice"}
-                            </small>
-                          </div>
-                        </div>
-                        
-                        <div className="row g-2 mb-2">
-                          <div className="col-sm-6">
-                            <small className="text-muted d-block">
-                              <i className="fas fa-calendar me-1"></i>
-                              {formatDate(appointment.date)}
-                            </small>
-                          </div>
-                          <div className="col-sm-6">
-                            <small className="text-muted d-block">
-                              <i className="fas fa-clock me-1"></i>
-                              {formatTime(appointment.time)}
-                            </small>
-                          </div>
-                        </div>
-                        
-                        <div className="mb-2">
-                          <span className={`badge ${appointment.consultationType === 'online' ? 'bg-info' : 'bg-secondary'} me-2`}>
-                            <i className={`fas ${appointment.consultationType === 'online' ? 'fa-video' : 'fa-hospital'} me-1`}></i>
-                            {appointment.consultationType === 'online' ? 'Online' : 'In-Person'}
-                          </span>
-                        </div>
+          <div className="doctor-details">
+            <h4>Dr. {appointment.doctorId?.name || "Unknown Doctor"}</h4>
+            <p>{appointment.doctorId?.specialization || "General Practice"}</p>
+          </div>
+        </div>
+        <div className="appointment-badges">
+          {getStatusBadge(appointment.status)}
+          {appointment.payment && getPaymentStatusBadge(appointment.payment.paymentStatus)}
+        </div>
+      </div>
 
-                        {appointment.reason && (
-                          <p className="mb-2 small">
-                            <i className="fas fa-notes-medical me-1"></i>
-                            <strong>Reason:</strong> {appointment.reason}
-                          </p>
-                        )}
-
-                        {appointment.payment && (
-                          <div className="mb-2">
-                            <small className="text-muted d-block">
-                              <i className="fas fa-rupee-sign me-1"></i>
-                              <strong>Total Amount:</strong> ₹{appointment.payment.totalAmount}
-                            </small>
-                            <small className="text-muted">
-                              (Consultation: ₹{appointment.payment.consultationFee} + GST: ₹{appointment.payment.gst} + Platform Fee: ₹{appointment.payment.platformFee})
-                            </small>
-                          </div>
-                        )}
-                      </div>
-                      
-                      <div className="col-md-4 text-md-end">
-                        <div className="mb-2">
-                          {getStatusBadge(appointment.status)}
-                          {appointment.payment && getPaymentStatusBadge(appointment.payment.paymentStatus)}
-                        </div>
-                        
-                        <div className="d-flex flex-column gap-2">
-                          {appointment.consultationType === 'online' && 
-                           (appointment.status === 'confirmed' || appointment.status === 'in_progress') && (
-                            <button
-                              onClick={() => handleJoinConsultation(appointment._id)}
-                              className="btn btn-primary btn-sm"
-                            >
-                              <i className="fas fa-video me-1"></i>
-                              Join Consultation
-                            </button>
-                          )}
-                          
-                          {appointment.status === "pending" && (
-                            <button
-                              onClick={() => handleCancelAppointment(appointment._id)}
-                              className="btn btn-outline-danger btn-sm"
-                            >
-                              <i className="fas fa-times me-1"></i>
-                              Cancel
-                            </button>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
+      <div className="appointment-card-body">
+        <div className="appointment-info-grid">
+          <div className="info-item">
+            <i className="fas fa-calendar-alt"></i>
+            <div>
+              <span className="info-label">Date</span>
+              <span className="info-value">{formatDate(appointment.date)}</span>
+            </div>
+          </div>
+          <div className="info-item">
+            <i className="fas fa-clock"></i>
+            <div>
+              <span className="info-label">Time</span>
+              <span className="info-value">{formatTime(appointment.time)}</span>
+            </div>
+          </div>
+          <div className="info-item">
+            <i className={`fas ${appointment.consultationType === 'online' ? 'fa-video' : 'fa-hospital'}`}></i>
+            <div>
+              <span className="info-label">Type</span>
+              <span className="info-value">{appointment.consultationType === 'online' ? 'Online' : 'In-Person'}</span>
+            </div>
+          </div>
+          {appointment.payment && (
+            <div className="info-item">
+              <i className="fas fa-rupee-sign"></i>
+              <div>
+                <span className="info-label">Amount</span>
+                <span className="info-value">₹{appointment.payment.totalAmount}</span>
               </div>
-            ))}
+            </div>
+          )}
+        </div>
+
+        {appointment.reason && (
+          <div className="appointment-reason">
+            <i className="fas fa-notes-medical"></i>
+            <span>{appointment.reason}</span>
           </div>
         )}
       </div>
+
+      <div className="appointment-card-footer">
+        {appointment.consultationType === 'online' && 
+         (appointment.status === 'confirmed' || appointment.status === 'in_progress') && (
+          <button
+            onClick={() => handleJoinConsultation(appointment._id)}
+            className="btn-join"
+          >
+            <i className="fas fa-video"></i>
+            Join Consultation
+          </button>
+        )}
+        
+        {appointment.status === "pending" && (
+          <button
+            onClick={() => handleCancelAppointment(appointment._id)}
+            className="btn-cancel"
+          >
+            <i className="fas fa-times"></i>
+            Cancel Appointment
+          </button>
+        )}
+
+        {appointment.status === "completed" && (
+          <button className="btn-review" onClick={() => toast.success('Review feature coming soon!')}>
+            <i className="fas fa-star"></i>
+            Leave Review
+          </button>
+        )}
+      </div>
+    </div>
+  );
+
+  return (
+    <div className="my-appointments-container">
+      <div className="appointments-header">
+        <h2>
+          <i className="fas fa-calendar-check"></i>
+          My Appointments
+        </h2>
+        <p>Manage and track all your medical appointments</p>
+      </div>
+
+      {/* Tabs */}
+      <div className="appointments-tabs">
+        <button 
+          className={`tab-btn ${activeTab === 'upcoming' ? 'active' : ''}`}
+          onClick={() => setActiveTab('upcoming')}
+        >
+          <i className="fas fa-calendar-alt"></i>
+          Upcoming
+          {upcomingAppointments.length > 0 && (
+            <span className="tab-count">{upcomingAppointments.length}</span>
+          )}
+        </button>
+        <button 
+          className={`tab-btn ${activeTab === 'completed' ? 'active' : ''}`}
+          onClick={() => setActiveTab('completed')}
+        >
+          <i className="fas fa-check-circle"></i>
+          Completed
+          {completedAppointments.length > 0 && (
+            <span className="tab-count">{completedAppointments.length}</span>
+          )}
+        </button>
+      </div>
+
+      {/* Appointments List */}
+      <div className="appointments-list">
+        {currentAppointments.length === 0 ? (
+          <div className="empty-state">
+            <div className="empty-icon">
+              {activeTab === 'upcoming' ? (
+                <i className="fas fa-calendar-plus"></i>
+              ) : (
+                <i className="fas fa-history"></i>
+              )}
+            </div>
+            <h3>
+              {activeTab === 'upcoming' 
+                ? 'No Upcoming Appointments' 
+                : 'No Completed Appointments'}
+            </h3>
+            <p>
+              {activeTab === 'upcoming'
+                ? 'Book your first appointment from the "Find Doctors" section.'
+                : 'Your completed appointments will appear here.'}
+            </p>
+          </div>
+        ) : (
+          currentAppointments.map(renderAppointmentCard)
+        )}
+      </div>
+
+      {/* Summary Stats */}
+      <div className="appointments-summary">
+        <div className="summary-card">
+          <i className="fas fa-calendar-check"></i>
+          <div>
+            <span className="summary-value">{upcomingAppointments.length}</span>
+            <span className="summary-label">Upcoming</span>
+          </div>
+        </div>
+        <div className="summary-card">
+          <i className="fas fa-check-double"></i>
+          <div>
+            <span className="summary-value">{completedAppointments.filter(a => a.status === 'completed').length}</span>
+            <span className="summary-label">Completed</span>
+          </div>
+        </div>
+        <div className="summary-card">
+          <i className="fas fa-times-circle"></i>
+          <div>
+            <span className="summary-value">{completedAppointments.filter(a => a.status === 'cancelled').length}</span>
+            <span className="summary-label">Cancelled</span>
+          </div>
+        </div>
+      </div>
+
+      {/* Live Queue Modal */}
+      {selectedAppointment && (
+        <div className="queue-modal-overlay" onClick={closeQueueModal}>
+          <div className="queue-modal" onClick={(e) => e.stopPropagation()}>
+            <button className="queue-modal-close" onClick={closeQueueModal}>
+              <i className="fas fa-times"></i>
+            </button>
+            
+            <div className="queue-modal-header">
+              <div className="queue-icon">
+                <i className="fas fa-users"></i>
+              </div>
+              <h3>Live Queue Status</h3>
+              <p>Dr. {selectedAppointment.doctorId?.name}</p>
+            </div>
+
+            {queueLoading ? (
+              <div className="queue-loading">
+                <div className="loading-spinner"></div>
+                <p>Fetching queue status...</p>
+              </div>
+            ) : queueInfo ? (
+              <div className="queue-modal-body">
+                <div className="queue-stats">
+                  <div className="queue-stat highlight">
+                    <span className="queue-stat-value">{queueInfo.yourQueueNumber || queueInfo.queueNumber || 'N/A'}</span>
+                    <span className="queue-stat-label">Your Token</span>
+                  </div>
+                  <div className="queue-stat">
+                    <span className="queue-stat-value">{queueInfo.currentlyServing || queueInfo.currentQueueCount || '-'}</span>
+                    <span className="queue-stat-label">Now Serving</span>
+                  </div>
+                  <div className="queue-stat">
+                    <span className="queue-stat-value">{queueInfo.patientsAhead ?? queueInfo.currentQueueCount ?? '-'}</span>
+                    <span className="queue-stat-label">Ahead of You</span>
+                  </div>
+                </div>
+
+                <div className="queue-time-info">
+                  <div className="time-item">
+                    <i className="fas fa-clock"></i>
+                    <div>
+                      <span className="time-label">Estimated Time</span>
+                      <span className="time-value">{queueInfo.yourEstimatedTime || queueInfo.estimatedTime || selectedAppointment.time}</span>
+                    </div>
+                  </div>
+                  <div className="time-item">
+                    <i className="fas fa-hourglass-half"></i>
+                    <div>
+                      <span className="time-label">Est. Wait</span>
+                      <span className="time-value">{queueInfo.estimatedWaitMinutes ? `~${queueInfo.estimatedWaitMinutes} min` : 'Calculating...'}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="queue-tips">
+                  <h4><i className="fas fa-lightbulb"></i> Tips</h4>
+                  <ul>
+                    <li>Arrive 10 minutes before your estimated time</li>
+                    <li>Keep your phone handy for updates</li>
+                    <li>Carry all relevant medical documents</li>
+                  </ul>
+                </div>
+
+                <button className="btn-refresh-queue" onClick={() => fetchQueueInfo(selectedAppointment)}>
+                  <i className="fas fa-sync-alt"></i> Refresh Status
+                </button>
+              </div>
+            ) : (
+              <div className="queue-error">
+                <i className="fas fa-exclamation-circle"></i>
+                <p>Unable to fetch queue status</p>
+              </div>
+            )}
+          </div>
+        </div>
+      )}
     </div>
   );
 }

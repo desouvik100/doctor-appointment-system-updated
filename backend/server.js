@@ -7,6 +7,7 @@ const { initializeMedicineReminders } = require('./services/medicineReminderServ
 const { initializeScheduledEmails } = require('./services/adminEmailService');
 const cacheService = require('./services/cacheService');
 const { securityMonitor, trackFailedLogin } = require('./middleware/securityMiddleware');
+const { sanitizeInputs } = require('./middleware/validateRequest');
 
 const app = express();
 
@@ -67,7 +68,34 @@ setInterval(() => {
 }, 60000);
 
 // Middleware
-app.use(cors());
+app.use(cors({
+  origin: [
+    'http://localhost:3000',
+    'http://localhost:3001',
+    'http://127.0.0.1:3000',
+    'http://127.0.0.1:3001',
+    process.env.FRONTEND_URL,
+    process.env.CORS_ORIGIN,
+    'https://healthsyncpro.in',
+    'https://www.healthsyncpro.in'
+  ].filter(Boolean),
+  credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
+
+// Security headers for production
+app.use((req, res, next) => {
+  res.setHeader('X-Content-Type-Options', 'nosniff');
+  res.setHeader('X-Frame-Options', 'DENY');
+  res.setHeader('X-XSS-Protection', '1; mode=block');
+  res.setHeader('Referrer-Policy', 'strict-origin-when-cross-origin');
+  if (process.env.NODE_ENV === 'production') {
+    res.setHeader('Strict-Transport-Security', 'max-age=31536000; includeSubDomains');
+  }
+  next();
+});
+
 app.use((req, res, next) => {
   if (req.originalUrl === '/api/payments/webhook') {
     return next();
@@ -76,6 +104,9 @@ app.use((req, res, next) => {
   return express.json({ limit: '10mb' })(req, res, next);
 });
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+// Global input sanitization for XSS prevention
+app.use(sanitizeInputs);
 
 // Response compression for better performance
 app.use((req, res, next) => {
@@ -275,10 +306,48 @@ app.get('/api/health', (req, res) => {
   });
 });
 
+// 404 handler for undefined routes
+app.use((req, res) => {
+  res.status(404).json({
+    success: false,
+    message: 'API endpoint not found',
+    path: req.originalUrl
+  });
+});
+
+// Global error handler
+app.use((err, req, res, next) => {
+  console.error('🔴 Unhandled Error:', err.message);
+  console.error('Stack:', err.stack);
+  
+  // Don't leak error details in production
+  const isDev = process.env.NODE_ENV !== 'production';
+  
+  res.status(err.status || 500).json({
+    success: false,
+    message: isDev ? err.message : 'Internal server error',
+    ...(isDev && { stack: err.stack })
+  });
+});
+
+// Graceful shutdown handler
+process.on('SIGTERM', async () => {
+  console.log('🛑 SIGTERM received. Shutting down gracefully...');
+  await mongoose.connection.close();
+  process.exit(0);
+});
+
+process.on('SIGINT', async () => {
+  console.log('🛑 SIGINT received. Shutting down gracefully...');
+  await mongoose.connection.close();
+  process.exit(0);
+});
+
 const PORT = process.env.PORT || 5005;
 app.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Health check available at http://localhost:${PORT}/api/health`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
   
   // Initialize appointment scheduler after server starts
   await initializeScheduler();

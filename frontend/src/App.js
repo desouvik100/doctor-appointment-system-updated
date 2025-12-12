@@ -1653,34 +1653,7 @@ function App() {
         </>
       )}
 
-      {/* Scroll to Top Button */}
-      {(user || admin || receptionist) && (
-        <button
-          onClick={scrollToTop}
-          title="Scroll to top"
-          style={{
-            position: 'fixed',
-            bottom: '32px',
-            right: '110px',
-            width: '50px',
-            height: '50px',
-            borderRadius: '50%',
-            background: darkMode ? 'rgba(30, 41, 59, 0.95)' : 'rgba(255, 255, 255, 0.95)',
-            border: 'none',
-            color: darkMode ? '#94a3b8' : '#667eea',
-            fontSize: '1.25rem',
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            cursor: 'pointer',
-            zIndex: 9998,
-            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.15)',
-            transition: 'all 0.3s ease'
-          }}
-        >
-          <i className="fas fa-arrow-up"></i>
-        </button>
-      )}
+
     </div>
     </LanguageProvider>
   );

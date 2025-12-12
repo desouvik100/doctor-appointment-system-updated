@@ -995,13 +995,44 @@ function AdminDashboard({ admin, onLogout }) {
                         <td><span className="badge badge-primary">{user.role}</span></td>
                         <td>{user.phone || 'N/A'}</td>
                         <td>
-                          <div className="admin-actions">
+                          <div className="admin-actions" style={{ display: 'flex', gap: '6px' }}>
                             <button 
                               className="admin-action-btn admin-action-btn--edit"
                               onClick={() => handleEditUser(user)}
                               title="Edit User"
                             >
                               <i className="fas fa-edit"></i>
+                            </button>
+                            <button 
+                              style={{ 
+                                padding: '6px 10px', 
+                                background: '#fef3c7', 
+                                color: '#d97706', 
+                                border: 'none', 
+                                borderRadius: '6px', 
+                                cursor: 'pointer',
+                                fontSize: '11px',
+                                fontWeight: '500'
+                              }}
+                              onClick={async () => {
+                                if (window.confirm(`Delete ALL appointments for ${user.name}? This cannot be undone.`)) {
+                                  try {
+                                    const response = await axios.delete(`/api/appointments/admin/user/${user._id}/all`, {
+                                      data: { reason: 'Admin bulk delete from user management' }
+                                    });
+                                    if (response.data.success) {
+                                      toast.success(`Deleted ${response.data.deletedCount} appointments for ${user.name}`);
+                                    } else {
+                                      toast.info(response.data.message);
+                                    }
+                                  } catch (error) {
+                                    toast.error(error.response?.data?.message || 'Failed to delete appointments');
+                                  }
+                                }
+                              }}
+                              title="Delete all appointments for this user"
+                            >
+                              <i className="fas fa-calendar-times"></i>
                             </button>
                             <button 
                               className="admin-action-btn admin-action-btn--delete"
@@ -1087,12 +1118,14 @@ function AdminDashboard({ admin, onLogout }) {
                   </div>
                   Appointments
                 </h2>
-                <button 
-                  className="btn btn-outline-primary"
-                  onClick={() => exportAppointmentsToPDF(appointments, 'All Appointments Report')}
-                >
-                  <i className="fas fa-file-pdf me-2"></i>Export PDF
-                </button>
+                <div style={{ display: 'flex', gap: '10px' }}>
+                  <button 
+                    className="btn btn-outline-primary"
+                    onClick={() => exportAppointmentsToPDF(appointments, 'All Appointments Report')}
+                  >
+                    <i className="fas fa-file-pdf me-2"></i>Export PDF
+                  </button>
+                </div>
               </div>
               
               <div className="admin-table-container">
@@ -1103,7 +1136,10 @@ function AdminDashboard({ admin, onLogout }) {
                       <th>Doctor</th>
                       <th>Date</th>
                       <th>Time</th>
+                      <th>Type</th>
+                      <th>Amount</th>
                       <th>Status</th>
+                      <th>Actions</th>
                     </tr>
                   </thead>
                   <tbody>
@@ -1114,9 +1150,48 @@ function AdminDashboard({ admin, onLogout }) {
                         <td>{new Date(apt.date).toLocaleDateString()}</td>
                         <td>{apt.time}</td>
                         <td>
-                          <span className={`badge ${apt.status === 'confirmed' ? 'badge-success' : apt.status === 'pending' ? 'badge-warning' : 'badge-error'}`}>
+                          <span className={`badge ${apt.consultationType === 'online' ? 'badge-info' : 'badge-secondary'}`} style={{ fontSize: '10px' }}>
+                            {apt.consultationType === 'online' ? '🎥 Online' : '🏥 In-Person'}
+                          </span>
+                        </td>
+                        <td>₹{apt.payment?.totalAmount || 0}</td>
+                        <td>
+                          <span className={`badge ${apt.status === 'confirmed' ? 'badge-success' : apt.status === 'pending' ? 'badge-warning' : apt.status === 'completed' ? 'badge-info' : 'badge-error'}`}>
                             {apt.status}
                           </span>
+                        </td>
+                        <td>
+                          <div style={{ display: 'flex', gap: '8px' }}>
+                            <button 
+                              style={{ 
+                                padding: '6px 12px', 
+                                background: '#fef2f2', 
+                                color: '#ef4444', 
+                                border: 'none', 
+                                borderRadius: '6px', 
+                                cursor: 'pointer',
+                                fontSize: '12px',
+                                fontWeight: '500',
+                                display: 'flex',
+                                alignItems: 'center',
+                                gap: '4px'
+                              }}
+                              onClick={async () => {
+                                if (window.confirm('Delete this appointment?')) {
+                                  try {
+                                    await axios.delete(`/api/appointments/${apt._id}`);
+                                    toast.success('Appointment deleted');
+                                    setAppointments(prev => prev.filter(a => a._id !== apt._id));
+                                  } catch (error) {
+                                    toast.error('Failed to delete appointment');
+                                  }
+                                }
+                              }}
+                              title="Delete Appointment"
+                            >
+                              <i className="fas fa-trash"></i> Delete
+                            </button>
+                          </div>
                         </td>
                       </tr>
                     ))}

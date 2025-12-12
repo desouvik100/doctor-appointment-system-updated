@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const User = require('../models/User');
 const Clinic = require('../models/Clinic');
 const aiSecurityService = require('../services/aiSecurityService');
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const router = express.Router();
 
 // Security helper - log account operations
@@ -60,7 +61,7 @@ router.get('/search', async (req, res) => {
 });
 
 // Get all users (Admin only)
-router.get('/', async (req, res) => {
+router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     // Include all users for admin dashboard (both active and inactive)
     const { includeInactive } = req.query;
@@ -95,7 +96,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // Create new user (Admin only)
-router.post('/', async (req, res) => {
+router.post('/', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { name, email, password, phone, role, clinicId } = req.body;
 

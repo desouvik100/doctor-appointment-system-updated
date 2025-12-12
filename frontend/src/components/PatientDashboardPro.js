@@ -8,7 +8,6 @@ import ThemeToggle from './ThemeToggle';
 import { exportAppointmentsToPDF } from '../utils/pdfExport';
 import MedicalTimeline from './MedicalTimeline';
 import RescheduleModal from './RescheduleModal';
-import FloatingActionButton from './FloatingActionButton';
 import BookingModal from './BookingModal';
 import CinemaStyleBooking from './CinemaStyleBooking';
 import DoctorProfilePage from './DoctorProfilePage';
@@ -39,7 +38,6 @@ import EmailReminders from './EmailReminders';
 import HealthCalculators from './HealthCalculators';
 import SecurityWarningBanner from './SecurityWarningBanner';
 import LiveQueueTracker from './LiveQueueTracker';
-import AIChatbotWidget from './AIChatbotWidget';
 import AIHealthHub from './AIHealthHub';
 import MobileHeroSection from './MobileHeroSection';
 
@@ -57,18 +55,19 @@ const getProfilePhotoUrl = (user) => {
 };
 
 // Fallback avatar URL using UI Avatars (generates avatar from name)
-const getFallbackAvatarUrl = (name, bgColor = '6366f1') => {
+const getFallbackAvatarUrl = (name, bgColor = '0ea5e9') => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=${bgColor}&color=fff&size=100&bold=true`;
 };
 
 const PatientDashboardPro = ({ user, onLogout }) => {
-  // Ensure user has id field (handle both id and _id from different sources)
-  const normalizedUser = user ? { ...user, id: user.id || user._id } : null;
+  // Ensure user has id field (handle id, _id, or userId from different sources)
+  const normalizedUser = user ? { 
+    ...user, 
+    id: user.id || user._id || user.userId,
+    _id: user._id || user.id || user.userId
+  } : null;
   const [currentUser, setCurrentUser] = useState(normalizedUser);
   const { t, language } = useLanguage();
-  
-  // Debug: Log user data to help troubleshoot
-  console.log('PatientDashboardPro user:', { id: currentUser?.id, _id: currentUser?._id, name: currentUser?.name });
   const [activeSection, setActiveSection] = useState('overview');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
   const [showBookingModal, setShowBookingModal] = useState(false);
@@ -245,7 +244,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       {mobileSidebarOpen && <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" onClick={() => setMobileSidebarOpen(false)} />}
       <aside className={`fixed top-0 left-0 bottom-0 bg-gradient-to-b from-gray-950 via-slate-950 to-black border-r border-slate-800/50 z-50 transition-all duration-300 flex flex-col ${mobileSidebarOpen ? 'w-72' : sidebarCollapsed ? 'w-20' : 'w-72'} ${mobileSidebarOpen ? 'translate-x-0' : '-translate-x-full lg:translate-x-0'}`} onMouseEnter={() => !mobileSidebarOpen && setSidebarCollapsed(false)} onMouseLeave={() => !mobileSidebarOpen && setSidebarCollapsed(true)}>
         <div className="h-20 flex items-center px-4 border-b border-slate-800/50 flex-shrink-0">
-          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center shadow-lg animate-logo-glow">
+          <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-sky-500 to-teal-500 flex items-center justify-center shadow-lg animate-logo-glow">
             <svg className="w-8 h-8" viewBox="0 0 60 40" fill="none">
               <path d="M0 20 L10 20 L15 20" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" opacity="0.4"/>
               <path className="ecg-line" d="M15 20 L20 8 L25 32 L30 12 L35 28 L40 20" stroke="#fff" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round"/>
@@ -260,7 +259,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
               <h3 className={`text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-3 ${mobileSidebarOpen || !sidebarCollapsed ? 'opacity-100' : 'opacity-0'}`}>{t(section.titleKey)}</h3>
               <div className="space-y-1">
                 {section.items.map(item => (
-                  <button key={item.id} onClick={() => { if (item.id === 'find-my-doctor') { setShowFindDoctorWizard(true); } else { setActiveSection(item.id); } setMobileSidebarOpen(false); }} title={t(item.labelKey)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeSection === item.id ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
+                  <button key={item.id} onClick={() => { if (item.id === 'find-my-doctor') { setShowFindDoctorWizard(true); } else { setActiveSection(item.id); } setMobileSidebarOpen(false); }} title={t(item.labelKey)} className={`w-full flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm font-medium transition-all ${activeSection === item.id ? 'bg-gradient-to-r from-sky-500 to-teal-500 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
                     <i className={`${item.icon} w-5 text-center`}></i>
                     <span className={`whitespace-nowrap ${mobileSidebarOpen || !sidebarCollapsed ? 'opacity-100' : 'opacity-0 w-0'}`}>{t(item.labelKey)}</span>
                   </button>
@@ -292,14 +291,21 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}`}>
         <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 lg:px-6 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button className="lg:hidden w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center" onClick={() => setMobileSidebarOpen(true)}><i className="fas fa-bars text-slate-600 text-sm"></i></button>
+            <button 
+              type="button"
+              className="lg:hidden w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center cursor-pointer active:bg-slate-300 touch-manipulation" 
+              onClick={() => setMobileSidebarOpen(true)}
+              style={{ WebkitTapHighlightColor: 'transparent' }}
+            >
+              <i className="fas fa-bars text-slate-600 text-base pointer-events-none"></i>
+            </button>
             <div>
               <h1 className="text-base font-semibold text-slate-800">Welcome back, {(currentUser?.name || 'User').split(' ')[0]}</h1>
-              <p className="text-xs text-slate-500">{userLocation?.city ? <><i className="fas fa-map-marker-alt text-indigo-500 mr-1"></i>{userLocation.city}</> : 'Have a healthy day'}</p>
+              <p className="text-xs text-slate-500">{userLocation?.city ? <><i className="fas fa-map-marker-alt text-sky-500 mr-1"></i>{userLocation.city}</> : 'Have a healthy day'}</p>
             </div>
           </div>
           <div className="flex items-center gap-2">
-            <button onClick={() => setActiveSection('doctors')} className="hidden sm:flex items-center gap-2 px-4 py-2 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors"><i className="fas fa-plus text-xs"></i>{t('bookNow')}</button>
+            <button onClick={() => setActiveSection('doctors')} className="hidden sm:flex items-center gap-2 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors"><i className="fas fa-plus text-xs"></i>{t('bookNow')}</button>
             <LanguageSelector />
             <button onClick={handleUpdateLocation} disabled={updatingLocation} className="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center"><i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'} text-slate-500 text-sm`}></i></button>
             <button onClick={() => setShowNotifications(true)} className="relative w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center">
@@ -343,10 +349,10 @@ const PatientDashboardPro = ({ user, onLogout }) => {
               {/* Desktop Stats - Hidden on mobile */}
               <div className="hidden lg:grid grid-cols-2 lg:grid-cols-4 gap-3">
                 {[
-                  { icon: 'fa-calendar-check', value: stats.upcomingCount, label: 'Upcoming', gradient: 'from-blue-500 to-indigo-600', section: 'appointments' },
-                  { icon: 'fa-check-circle', value: stats.completedCount, label: 'Completed', gradient: 'from-emerald-500 to-teal-600', section: 'appointments' },
-                  { icon: 'fa-heart', value: stats.favoritesCount, label: 'Favorites', gradient: 'from-rose-500 to-pink-600', section: 'favorites' },
-                  { icon: 'fa-user-md', value: doctors.length, label: 'Doctors', gradient: 'from-violet-500 to-purple-600', section: 'doctors' }
+                  { icon: 'fa-calendar-check', value: stats.upcomingCount, label: 'Upcoming', gradient: 'from-sky-500 to-cyan-600', section: 'appointments' },
+                  { icon: 'fa-check-circle', value: stats.completedCount, label: 'Completed', gradient: 'from-teal-500 to-emerald-600', section: 'appointments' },
+                  { icon: 'fa-heart', value: stats.favoritesCount, label: 'Favorites', gradient: 'from-orange-500 to-amber-500', section: 'favorites' },
+                  { icon: 'fa-user-md', value: doctors.length, label: 'Doctors', gradient: 'from-green-500 to-teal-600', section: 'doctors' }
                 ].map((s, i) => (
                   <button key={i} onClick={() => setActiveSection(s.section)} className={`relative overflow-hidden rounded-xl p-4 bg-gradient-to-br ${s.gradient} hover:scale-[1.02] transition-all cursor-pointer text-left`}>
                     <div className="flex items-center gap-3">
@@ -364,21 +370,21 @@ const PatientDashboardPro = ({ user, onLogout }) => {
               <div className="bg-white rounded-2xl p-6 border border-slate-100">
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-lg font-semibold text-slate-800">Top Doctors</h3>
-                  <button onClick={() => setActiveSection('doctors')} className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1">View All <i className="fas fa-arrow-right text-xs"></i></button>
+                  <button onClick={() => setActiveSection('doctors')} className="text-sm font-medium text-sky-600 hover:text-sky-700 flex items-center gap-1">View All <i className="fas fa-arrow-right text-xs"></i></button>
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {recentDoctors.map(doc => {
                     const docInitials = doc.name ? doc.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'DR';
                     return (
-                    <div key={doc._id} className="group p-4 rounded-xl border border-slate-100 hover:border-indigo-200 hover:shadow-md transition-all text-center bg-white">
-                      <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-3 overflow-hidden ring-4 ring-indigo-50">
+                    <div key={doc._id} className="group p-4 rounded-xl border border-slate-100 hover:border-sky-200 hover:shadow-md transition-all text-center bg-white">
+                      <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-sky-500 to-teal-500 flex items-center justify-center mb-3 overflow-hidden ring-4 ring-sky-50">
                         {doc.profilePhoto ? <img src={doc.profilePhoto} alt={doc.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} /> : null}
                         {!doc.profilePhoto && <span className="text-white font-semibold">{docInitials}</span>}
                       </div>
-                      <h4 className="font-semibold text-slate-800 text-sm mb-0.5">Dr. {doc.name}</h4>
+                      <h4 className="font-semibold text-slate-800 text-sm mb-0.5">{doc.name?.startsWith('Dr.') ? doc.name : `Dr. ${doc.name}`}</h4>
                       <p className="text-xs text-slate-500 mb-2">{doc.specialization}</p>
-                      <p className="text-sm font-bold text-indigo-600 mb-3">₹{doc.consultationFee}</p>
-                      <button onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className="w-full py-2 px-4 bg-indigo-600 text-white text-sm font-medium rounded-lg hover:bg-indigo-700 transition-colors">Book Now</button>
+                      <p className="text-sm font-bold text-sky-600 mb-3">₹{doc.consultationFee}</p>
+                      <button onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className="w-full py-2 px-4 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors">Book Now</button>
                     </div>
                   );})}
                 </div>
@@ -387,10 +393,10 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                 <h3 className="text-lg font-semibold text-slate-800 mb-4"><i className="fas fa-bolt text-amber-500 mr-2"></i>Quick Actions</h3>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
-                    { icon: 'fa-user-md', label: 'Book Appointment', desc: 'Find best doctor instantly', section: 'doctors', gradient: 'from-indigo-500 to-purple-600', iconBg: 'bg-indigo-100', iconColor: 'text-indigo-600' },
-                    { icon: 'fa-robot', label: 'AI Health Check', desc: 'Get symptoms checked in 2 mins', section: 'ai-assistant', gradient: 'from-emerald-500 to-teal-600', iconBg: 'bg-emerald-100', iconColor: 'text-emerald-600' },
-                    { icon: 'fa-flask', label: 'Lab Reports', desc: 'View & upload test results', section: 'lab-reports', gradient: 'from-rose-500 to-pink-600', iconBg: 'bg-rose-100', iconColor: 'text-rose-600' },
-                    { icon: 'fa-pills', label: 'Medicine Reminder', desc: 'Never miss a dose', section: 'medicine-reminder', gradient: 'from-amber-500 to-orange-600', iconBg: 'bg-amber-100', iconColor: 'text-amber-600' }
+                    { icon: 'fa-user-md', label: 'Book Appointment', desc: 'Find best doctor instantly', section: 'doctors', gradient: 'from-sky-500 to-teal-500', iconBg: 'bg-sky-100', iconColor: 'text-sky-600' },
+                    { icon: 'fa-robot', label: 'AI Health Check', desc: 'Get symptoms checked in 2 mins', section: 'ai-assistant', gradient: 'from-teal-500 to-emerald-500', iconBg: 'bg-teal-100', iconColor: 'text-teal-600' },
+                    { icon: 'fa-flask', label: 'Lab Reports', desc: 'View & upload test results', section: 'lab-reports', gradient: 'from-orange-500 to-amber-500', iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
+                    { icon: 'fa-pills', label: 'Medicine Reminder', desc: 'Never miss a dose', section: 'medicine-reminder', gradient: 'from-green-500 to-emerald-500', iconBg: 'bg-green-100', iconColor: 'text-green-600' }
                   ].map((a, i) => (
                     <button key={i} onClick={() => setActiveSection(a.section)} className="group relative overflow-hidden p-5 rounded-2xl border-2 border-slate-100 hover:border-transparent hover:shadow-xl transition-all duration-300 text-left bg-white hover:bg-gradient-to-br hover:from-slate-50 hover:to-white">
                       {/* Hover gradient overlay */}
@@ -399,7 +405,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                       <div className={`w-14 h-14 rounded-2xl ${a.iconBg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
                         <i className={`fas ${a.icon} text-xl ${a.iconColor}`}></i>
                       </div>
-                      <h4 className="font-semibold text-slate-800 mb-1 group-hover:text-indigo-600 transition-colors">{a.label}</h4>
+                      <h4 className="font-semibold text-slate-800 mb-1 group-hover:text-sky-600 transition-colors">{a.label}</h4>
                       <p className="text-xs text-slate-500">{a.desc}</p>
                       
                       {/* Arrow indicator */}
@@ -414,14 +420,18 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                 <div className="bg-white rounded-2xl p-6 border border-slate-100">
                   <div className="flex items-center justify-between mb-4">
                     <h3 className="text-lg font-semibold text-slate-800">Upcoming Appointments</h3>
-                    <button onClick={() => setActiveSection('appointments')} className="text-sm font-medium text-indigo-600 hover:text-indigo-700 flex items-center gap-1">View All <i className="fas fa-arrow-right text-xs"></i></button>
+                    <button onClick={() => setActiveSection('appointments')} className="text-sm font-medium text-sky-600 hover:text-sky-700 flex items-center gap-1">View All <i className="fas fa-arrow-right text-xs"></i></button>
                   </div>
                   <div className="space-y-3">
                     {upcomingAppointments.map(apt => (
-                      <div key={apt._id} className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-indigo-200 transition-colors">
-                        <div className="w-10 h-10 rounded-lg bg-indigo-50 flex items-center justify-center"><i className="fas fa-user-md text-indigo-600"></i></div>
+                      <div 
+                        key={apt._id} 
+                        className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-sky-200 hover:shadow-md transition-all cursor-pointer group"
+                        onClick={() => { setTrackedAppointment(apt); setShowQueueTracker(true); }}
+                      >
+                        <div className="w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center group-hover:bg-sky-100 transition-colors"><i className="fas fa-user-md text-sky-600"></i></div>
                         <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-slate-800 text-sm">Dr. {apt.doctorId?.name || 'Unknown'}</h4>
+                          <h4 className="font-medium text-slate-800 text-sm">{apt.doctorId?.name?.startsWith('Dr.') ? apt.doctorId.name : `Dr. ${apt.doctorId?.name || 'Unknown'}`}</h4>
                           <p className="text-xs text-slate-500">{apt.doctorId?.specialization}</p>
                         </div>
                         <div className="text-right">
@@ -429,16 +439,11 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                           <p className="text-xs text-slate-500">{apt.time}</p>
                         </div>
                         <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${apt.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700' : apt.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{apt.status}</span>
-                        {/* Track Queue button for today's appointments */}
-                        {new Date(apt.date).toDateString() === new Date().toDateString() && (apt.status === 'confirmed' || apt.status === 'pending') && (
-                          <button 
-                            onClick={() => { setTrackedAppointment(apt); setShowQueueTracker(true); }}
-                            className="px-3 py-1.5 bg-indigo-600 text-white text-xs font-medium rounded-lg hover:bg-indigo-700 flex items-center gap-1"
-                          >
-                            <i className="fas fa-users text-[10px]"></i>
-                            Queue
-                          </button>
-                        )}
+                        {/* Tap for Queue indicator */}
+                        <span className="px-2 py-1 rounded-md text-xs font-medium bg-sky-100 text-sky-700 flex items-center gap-1 animate-pulse">
+                          <i className="fas fa-hand-pointer text-[10px]"></i>
+                          Queue
+                        </span>
                       </div>
                     ))}
                   </div>
@@ -449,7 +454,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
           {activeSection === 'doctors' && (
             <div className="space-y-6">
               {/* Promotional Banner */}
-              <div className="relative overflow-hidden bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-500 rounded-2xl p-5 text-white">
+              <div className="relative overflow-hidden bg-gradient-to-r from-sky-500 via-teal-500 to-emerald-500 rounded-2xl p-5 text-white">
                 <div className="absolute top-0 right-0 w-64 h-64 bg-white/10 rounded-full -translate-y-1/2 translate-x-1/2"></div>
                 <div className="absolute bottom-0 left-0 w-32 h-32 bg-white/10 rounded-full translate-y-1/2 -translate-x-1/2"></div>
                 <div className="relative flex items-center justify-between flex-wrap gap-4">
@@ -460,7 +465,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                     <h3 className="text-xl font-bold mb-1">Winter Health Week Special!</h3>
                     <p className="text-white/80 text-sm">Get 20% off on all Online Consultations today</p>
                   </div>
-                  <button className="px-6 py-3 bg-white text-indigo-600 font-bold rounded-xl hover:bg-indigo-50 transition-all hover:scale-105 shadow-lg">
+                  <button className="px-6 py-3 bg-white text-sky-600 font-bold rounded-xl hover:bg-sky-50 transition-all hover:scale-105 shadow-lg">
                     <i className="fas fa-bolt mr-2"></i>Book Now
                   </button>
                 </div>
@@ -486,8 +491,8 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                       onClick={() => setSelectedSpecialization(spec.value)}
                       className={`px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105 flex items-center gap-2 ${
                         selectedSpecialization === spec.value
-                          ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white shadow-md'
-                          : 'bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600'
+                          ? 'bg-gradient-to-r from-sky-500 to-teal-500 text-white shadow-md'
+                          : 'bg-slate-100 text-slate-600 hover:bg-sky-50 hover:text-sky-600'
                       }`}
                     >
                       <span>{spec.icon}</span>
@@ -500,15 +505,15 @@ const PatientDashboardPro = ({ user, onLogout }) => {
               {/* Search & Filters */}
               <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
                 <div className="flex flex-col lg:flex-row gap-4">
-                  <div className="flex-1 relative"><i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" placeholder="Search doctors by name, specialty..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" /></div>
-                  <select value={selectedSpecialization} onChange={(e) => { setSelectedSpecialization(e.target.value); if (nearbyMode) setTimeout(fetchNearbyDoctors, 100); }} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="">All Specializations</option>{specializations.map(s => <option key={s} value={s}>{s}</option>)}</select>
-                  {!nearbyMode && <select value={selectedClinic} onChange={(e) => setSelectedClinic(e.target.value)} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500"><option value="">All Clinics</option>{clinics.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}</select>}
-                  <button onClick={toggleNearbyMode} disabled={!userLocation?.latitude && !nearbyMode} className={`px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${nearbyMode ? 'bg-indigo-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-indigo-50 hover:text-indigo-600'} ${!userLocation?.latitude && !nearbyMode ? 'opacity-50 cursor-not-allowed' : ''}`}>
+                  <div className="flex-1 relative"><i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" placeholder="Search doctors by name, specialty..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" /></div>
+                  <select value={selectedSpecialization} onChange={(e) => { setSelectedSpecialization(e.target.value); if (nearbyMode) setTimeout(fetchNearbyDoctors, 100); }} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"><option value="">All Specializations</option>{specializations.map(s => <option key={s} value={s}>{s}</option>)}</select>
+                  {!nearbyMode && <select value={selectedClinic} onChange={(e) => setSelectedClinic(e.target.value)} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"><option value="">All Clinics</option>{clinics.map(c => <option key={c._id} value={c._id}>{c.name}</option>)}</select>}
+                  <button onClick={toggleNearbyMode} disabled={!userLocation?.latitude && !nearbyMode} className={`px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${nearbyMode ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-sky-50 hover:text-sky-600'} ${!userLocation?.latitude && !nearbyMode ? 'opacity-50 cursor-not-allowed' : ''}`}>
                     <i className="fas fa-map-marker-alt"></i>
                     {nearbyMode ? 'Show All' : 'Find Nearby'}
                   </button>
                   {nearbyMode && (
-                    <select value={maxDistance} onChange={(e) => { setMaxDistance(Number(e.target.value)); setTimeout(fetchNearbyDoctors, 100); }} className="px-4 py-3 bg-indigo-50 border border-indigo-200 rounded-xl text-sm text-indigo-700 focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <select value={maxDistance} onChange={(e) => { setMaxDistance(Number(e.target.value)); setTimeout(fetchNearbyDoctors, 100); }} className="px-4 py-3 bg-sky-50 border border-sky-200 rounded-xl text-sm text-sky-700 focus:outline-none focus:ring-2 focus:ring-sky-500">
                       <option value={5}>Within 5 km</option>
                       <option value={10}>Within 10 km</option>
                       <option value={25}>Within 25 km</option>
@@ -519,10 +524,10 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                 </div>
               </div>
               <div className="flex items-center justify-between">
-                <p className="text-sm text-slate-500 font-medium">{nearbyMode ? doctors.length : filteredDoctors.length} doctors found {nearbyMode && userLocation?.city && <span className="text-indigo-600">near {userLocation.city}</span>}</p>
-                {!userLocation?.latitude && <button onClick={handleUpdateLocation} className="text-sm text-indigo-600 hover:text-indigo-700 font-medium flex items-center gap-1"><i className="fas fa-location-crosshairs"></i> Update location to find nearby doctors</button>}
+                <p className="text-sm text-slate-500 font-medium">{nearbyMode ? doctors.length : filteredDoctors.length} doctors found {nearbyMode && userLocation?.city && <span className="text-sky-600">near {userLocation.city}</span>}</p>
+                {!userLocation?.latitude && <button onClick={handleUpdateLocation} className="text-sm text-sky-600 hover:text-sky-700 font-medium flex items-center gap-1"><i className="fas fa-location-crosshairs"></i> Update location to find nearby doctors</button>}
               </div>
-              {loading ? (<div className="flex flex-col items-center justify-center py-20"><div className="w-12 h-12 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin mb-4"></div><p className="text-slate-500">Loading...</p></div>
+              {loading ? (<div className="flex flex-col items-center justify-center py-20"><div className="w-12 h-12 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin mb-4"></div><p className="text-slate-500">Loading...</p></div>
               ) : filteredDoctors.length === 0 ? (<div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-user-md text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">No doctors found</h3><p className="text-slate-500">Try adjusting your filters</p></div>
               ) : (
                 <div className="space-y-4">
@@ -538,12 +543,12 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                     const nextSlotClinic = '7:00 PM';
                     
                     return (
-                    <div key={doc._id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-xl hover:border-indigo-200 hover:-translate-y-1 transition-all duration-300 group">
+                    <div key={doc._id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-xl hover:border-sky-200 hover:-translate-y-1 transition-all duration-300 group">
                       <div className="flex flex-col lg:flex-row lg:items-start gap-4">
                         {/* Doctor Avatar with Availability Badge */}
                         <div className="flex items-start gap-4 flex-1">
                           <div className="relative flex-shrink-0">
-                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center overflow-hidden ring-4 ring-white shadow-lg group-hover:ring-indigo-100 transition-all">
+                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sky-500 to-teal-500 flex items-center justify-center overflow-hidden ring-4 ring-white shadow-lg group-hover:ring-sky-100 transition-all">
                               {doc.profilePhoto ? <img src={doc.profilePhoto} alt={doc.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} /> : null}
                               {!doc.profilePhoto && <span className="text-white text-xl font-bold">{docInitials}</span>}
                             </div>
@@ -561,10 +566,10 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                           
                           <div className="flex-1 min-w-0">
                             <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-bold text-slate-800 text-lg">Dr. {doc.name}</h4>
+                              <h4 className="font-bold text-slate-800 text-lg">{doc.name?.startsWith('Dr.') ? doc.name : `Dr. ${doc.name}`}</h4>
                               {doc.isVerified && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-semibold rounded-full"><i className="fas fa-check-circle mr-1"></i>Verified</span>}
                             </div>
-                            <p className="text-sm text-indigo-600 font-semibold">{doc.specialization}</p>
+                            <p className="text-sm text-sky-600 font-semibold">{doc.specialization}</p>
                             <p className="text-sm text-slate-500 mt-0.5"><i className="fas fa-hospital text-xs mr-1"></i>{doc.clinicId?.name || 'Independent Practice'}</p>
                             
                             {/* Rating & Patient Count */}
@@ -575,7 +580,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                                 <span className="text-xs text-amber-600">({mockReviews})</span>
                               </div>
                               <div className="flex items-center gap-1 text-slate-500 text-sm">
-                                <i className="fas fa-users text-indigo-400 text-xs"></i>
+                                <i className="fas fa-users text-sky-400 text-xs"></i>
                                 <span>{mockPatients}+ patients</span>
                               </div>
                               {doc.experience && <div className="flex items-center gap-1 text-slate-500 text-sm">
@@ -623,11 +628,11 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                           <i className="fas fa-user-md text-sm"></i>
                           <span>View Profile</span>
                         </button>
-                        <button onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-medium bg-indigo-100 text-indigo-700 hover:bg-indigo-200 hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
+                        <button onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-medium bg-sky-100 text-sky-700 hover:bg-sky-200 hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
                           <i className="fas fa-calendar-check text-sm"></i>
                           <span>Next Available</span>
                         </button>
-                        <button disabled={doc.availability !== 'Available'} onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${doc.availability === 'Available' ? 'bg-gradient-to-r from-indigo-500 to-purple-600 text-white hover:shadow-lg hover:scale-[1.02] animate-pulse-subtle' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
+                        <button disabled={doc.availability !== 'Available'} onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${doc.availability === 'Available' ? 'bg-gradient-to-r from-sky-500 to-teal-500 text-white hover:shadow-lg hover:scale-[1.02] animate-pulse-subtle' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
                           <i className="fas fa-bolt text-sm"></i>
                           <span>{doc.availability === 'Available' ? 'Book Now' : 'Unavailable'}</span>
                         </button>
@@ -664,7 +669,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                       placeholder="Search by doctor, specialization..."
                       value={appointmentSearch}
                       onChange={(e) => setAppointmentSearch(e.target.value)}
-                      className="w-full pl-11 pr-10 py-3 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:outline-none transition-colors"
+                      className="w-full pl-11 pr-10 py-3 border-2 border-slate-200 rounded-xl focus:border-sky-500 focus:outline-none transition-colors"
                     />
                     {appointmentSearch && (
                       <button onClick={() => setAppointmentSearch('')} className="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 hover:text-slate-600">
@@ -675,21 +680,21 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                   
                   {/* Filter Row */}
                   <div className="flex flex-wrap gap-3">
-                    <select value={appointmentDateFilter} onChange={(e) => setAppointmentDateFilter(e.target.value)} className="px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:outline-none bg-white">
+                    <select value={appointmentDateFilter} onChange={(e) => setAppointmentDateFilter(e.target.value)} className="px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-sky-500 focus:outline-none bg-white">
                       <option value="all">All Dates</option>
                       <option value="today">Today</option>
                       <option value="week">This Week</option>
                       <option value="upcoming">Upcoming</option>
                       <option value="past">Past</option>
                     </select>
-                    <select value={appointmentStatusFilter} onChange={(e) => setAppointmentStatusFilter(e.target.value)} className="px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:outline-none bg-white">
+                    <select value={appointmentStatusFilter} onChange={(e) => setAppointmentStatusFilter(e.target.value)} className="px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-sky-500 focus:outline-none bg-white">
                       <option value="all">All Status</option>
                       <option value="pending">Pending</option>
                       <option value="confirmed">Confirmed</option>
                       <option value="completed">Completed</option>
                       <option value="cancelled">Cancelled</option>
                     </select>
-                    <select value={appointmentTypeFilter} onChange={(e) => setAppointmentTypeFilter(e.target.value)} className="px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-indigo-500 focus:outline-none bg-white">
+                    <select value={appointmentTypeFilter} onChange={(e) => setAppointmentTypeFilter(e.target.value)} className="px-4 py-2 border-2 border-slate-200 rounded-xl focus:border-sky-500 focus:outline-none bg-white">
                       <option value="all">All Types</option>
                       <option value="in_person">In-Person</option>
                       <option value="online">Online</option>
@@ -709,37 +714,53 @@ const PatientDashboardPro = ({ user, onLogout }) => {
               )}
               
               {appointments.length === 0 ? (
-                <div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-calendar-times text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">No appointments yet</h3><p className="text-slate-500 mb-4">Book your first appointment</p><button onClick={() => setActiveSection('doctors')} className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg">Find Doctors</button></div>
+                <div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-calendar-times text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">No appointments yet</h3><p className="text-slate-500 mb-4">Book your first appointment</p><button onClick={() => setActiveSection('doctors')} className="px-6 py-2.5 bg-gradient-to-r from-sky-500 to-teal-500 text-white font-medium rounded-xl hover:shadow-lg">Find Doctors</button></div>
               ) : filteredAppointments.length === 0 ? (
                 <div className="flex flex-col items-center justify-center py-16 text-center"><div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-filter text-2xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">No matching appointments</h3><p className="text-slate-500 mb-4">Try adjusting your filters</p><button onClick={resetAppointmentFilters} className="px-6 py-2.5 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200">Clear Filters</button></div>
               ) : (
                 <div className="space-y-4">
                   {filteredAppointments.map(apt => (
-                    <div key={apt._id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg transition-all">
+                    <div 
+                      key={apt._id} 
+                      className={`bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-lg transition-all ${(apt.status === 'confirmed' || apt.status === 'pending' || apt.status === 'in_progress') ? 'cursor-pointer hover:border-sky-300' : ''}`}
+                      onClick={() => {
+                        if (apt.status === 'confirmed' || apt.status === 'pending' || apt.status === 'in_progress') {
+                          setTrackedAppointment(apt);
+                          setShowQueueTracker(true);
+                        }
+                      }}
+                    >
                       <div className="flex items-center justify-between mb-4">
                         <span className={`px-3 py-1 rounded-full text-xs font-semibold ${apt.consultationType === 'online' ? 'bg-blue-100 text-blue-700' : 'bg-slate-100 text-slate-700'}`}><i className={`fas ${apt.consultationType === 'online' ? 'fa-video' : 'fa-hospital'} mr-1`}></i>{apt.consultationType === 'online' ? 'Online' : 'In-Person'}</span>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold ${apt.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : apt.status === 'pending' ? 'bg-amber-100 text-amber-700' : apt.status === 'completed' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>{apt.status}</span>
+                        <div className="flex items-center gap-2">
+                          {(apt.status === 'confirmed' || apt.status === 'pending' || apt.status === 'in_progress') && (
+                            <span className="px-2 py-1 rounded-full text-xs font-semibold bg-sky-100 text-sky-700 animate-pulse">
+                              <i className="fas fa-hand-pointer mr-1"></i>Tap for Queue
+                            </span>
+                          )}
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${apt.status === 'confirmed' ? 'bg-emerald-100 text-emerald-700' : apt.status === 'pending' ? 'bg-amber-100 text-amber-700' : apt.status === 'completed' ? 'bg-blue-100 text-blue-700' : 'bg-red-100 text-red-700'}`}>{apt.status}</span>
+                        </div>
                       </div>
                       <div className="flex items-center gap-4 mb-4">
-                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center"><i className="fas fa-user-md text-white text-xl"></i></div>
-                        <div><h4 className="font-bold text-slate-800">Dr. {apt.doctorId?.name || 'Unknown'}</h4><p className="text-sm text-slate-500">{apt.doctorId?.specialization}</p></div>
+                        <div className="w-14 h-14 rounded-xl bg-gradient-to-br from-sky-500 to-teal-500 flex items-center justify-center"><i className="fas fa-user-md text-white text-xl"></i></div>
+                        <div><h4 className="font-bold text-slate-800">{apt.doctorId?.name?.startsWith('Dr.') ? apt.doctorId.name : `Dr. ${apt.doctorId?.name || 'Unknown'}`}</h4><p className="text-sm text-slate-500">{apt.doctorId?.specialization}</p></div>
                       </div>
                       <div className="flex flex-wrap gap-4 text-sm text-slate-600 mb-4">
-                        <span><i className="fas fa-calendar text-indigo-500 mr-2"></i>{new Date(apt.date).toLocaleDateString()}</span>
-                        <span><i className="fas fa-clock text-indigo-500 mr-2"></i>{apt.time}</span>
-                        <span><i className="fas fa-hospital text-indigo-500 mr-2"></i>{apt.clinicId?.name || 'HealthSync'}</span>
+                        <span><i className="fas fa-calendar text-sky-500 mr-2"></i>{new Date(apt.date).toLocaleDateString()}</span>
+                        <span><i className="fas fa-clock text-sky-500 mr-2"></i>{apt.time}</span>
+                        <span><i className="fas fa-hospital text-sky-500 mr-2"></i>{apt.clinicId?.name || 'HealthSync'}</span>
                       </div>
-                      {/* Track Queue Button - for today's confirmed/pending appointments */}
-                      {(apt.status === 'confirmed' || apt.status === 'pending') && new Date(apt.date).toDateString() === new Date().toDateString() && (
+                      {/* Track Queue Button - for all upcoming appointments */}
+                      {(apt.status === 'confirmed' || apt.status === 'pending' || apt.status === 'in_progress') && (
                         <button 
-                          onClick={() => { setTrackedAppointment(apt); setShowQueueTracker(true); }} 
-                          className="w-full py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg mb-2"
+                          onClick={(e) => { e.stopPropagation(); setTrackedAppointment(apt); setShowQueueTracker(true); }} 
+                          className="w-full py-2.5 bg-gradient-to-r from-sky-500 to-teal-500 text-white font-medium rounded-xl hover:shadow-lg mb-2"
                         >
-                          <i className="fas fa-users mr-2"></i>Track Live Queue
+                          <i className="fas fa-users mr-2"></i>View Live Queue
                         </button>
                       )}
-                      {apt.consultationType === 'online' && apt.googleMeetLink && <button onClick={() => window.open(apt.googleMeetLink, '_blank')} className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium rounded-xl hover:shadow-lg"><i className="fas fa-video mr-2"></i>Join Meeting</button>}
-                      {apt.status === 'completed' && <button onClick={() => { setReviewAppointment(apt); setShowReviewModal(true); }} className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:shadow-lg mt-2"><i className="fas fa-star mr-2"></i>Write Review</button>}
+                      {apt.consultationType === 'online' && apt.googleMeetLink && <button onClick={(e) => { e.stopPropagation(); window.open(apt.googleMeetLink, '_blank'); }} className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium rounded-xl hover:shadow-lg"><i className="fas fa-video mr-2"></i>Join Meeting</button>}
+                      {apt.status === 'completed' && <button onClick={(e) => { e.stopPropagation(); setReviewAppointment(apt); setShowReviewModal(true); }} className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:shadow-lg mt-2"><i className="fas fa-star mr-2"></i>Write Review</button>}
                     </div>
                   ))}
                 </div>
@@ -765,12 +786,12 @@ const PatientDashboardPro = ({ user, onLogout }) => {
           {activeSection === 'quick-tools' && <QuickHealthTools userId={getUserId()} />}
           {activeSection === 'calculators' && <HealthCalculators />}
           {activeSection === 'email-reminders' && <EmailReminders userId={getUserId()} userEmail={currentUser?.email} />}
-          {activeSection === 'messages' && <div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-comments text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">Chat with Doctors</h3><p className="text-slate-500 mb-4">Click on a doctor to start</p><button onClick={() => setActiveSection('doctors')} className="px-6 py-2.5 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg">Find Doctors</button></div>}
+          {activeSection === 'messages' && <div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-comments text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">Chat with Doctors</h3><p className="text-slate-500 mb-4">Click on a doctor to start</p><button onClick={() => setActiveSection('doctors')} className="px-6 py-2.5 bg-gradient-to-r from-sky-500 to-teal-500 text-white font-medium rounded-xl hover:shadow-lg">Find Doctors</button></div>}
         </div>
         <footer className="bg-white border-t border-slate-200 px-4 lg:px-8 py-4">
           <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center text-white font-bold text-xs">HS</div><span className="font-semibold text-slate-700">HealthSync</span></div>
-            <div className="flex items-center gap-6"><a href="#privacy" className="hover:text-indigo-600">Privacy</a><a href="#terms" className="hover:text-indigo-600">Terms</a><a href="#support" className="hover:text-indigo-600">Support</a></div>
+            <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-teal-500 flex items-center justify-center text-white font-bold text-xs">HS</div><span className="font-semibold text-slate-700">HealthSync</span></div>
+            <div className="flex items-center gap-6"><a href="#privacy" className="hover:text-sky-600">Privacy</a><a href="#terms" className="hover:text-sky-600">Terms</a><a href="#support" className="hover:text-sky-600">Support</a></div>
             <p>© 2024 HealthSync. All rights reserved.</p>
           </div>
         </footer>
@@ -778,7 +799,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 py-2 z-40">
         <div className="flex items-center justify-around">
           {[{ id: 'overview', icon: 'fa-home', label: 'Home' }, { id: 'doctors', icon: 'fa-user-md', label: 'Doctors' }, { id: 'appointments', icon: 'fa-calendar', label: 'Bookings' }, { id: 'ai-assistant', icon: 'fa-robot', label: 'AI' }].map(item => (
-            <button key={item.id} onClick={() => setActiveSection(item.id)} className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl ${activeSection === item.id ? 'text-indigo-600 bg-indigo-50' : 'text-slate-400'}`}><i className={`fas ${item.icon}`}></i><span className="text-xs font-medium">{item.label}</span></button>
+            <button key={item.id} onClick={() => setActiveSection(item.id)} className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl ${activeSection === item.id ? 'text-sky-600 bg-sky-50' : 'text-slate-400'}`}><i className={`fas ${item.icon}`}></i><span className="text-xs font-medium">{item.label}</span></button>
           ))}
           <button onClick={() => setMobileSidebarOpen(true)} className="flex flex-col items-center gap-1 px-3 py-2 rounded-xl text-slate-400"><i className="fas fa-ellipsis-h"></i><span className="text-xs font-medium">More</span></button>
         </div>
@@ -792,43 +813,26 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       {showFindDoctorWizard && <FindMyDoctorWizard onClose={() => setShowFindDoctorWizard(false)} onComplete={(recommendation) => { setShowFindDoctorWizard(false); setSelectedSpecialization(recommendation.primarySpecialist); setActiveSection('doctors'); }} onBookDoctor={(specialist) => { setSelectedSpecialization(specialist); setActiveSection('doctors'); }} />}
       {showQueueTracker && trackedAppointment && <LiveQueueTracker appointment={trackedAppointment} onClose={() => { setShowQueueTracker(false); setTrackedAppointment(null); }} />}
       
-      {/* Floating Action Button for Mobile */}
-      <div className="lg:hidden">
-        <FloatingActionButton 
-          actions={[
-            { id: 'book', icon: 'fa-calendar-plus', label: 'Book Appointment', color: 'indigo', onClick: () => setActiveSection('doctors') },
-            { id: 'ai', icon: 'fa-robot', label: 'AI Assistant', color: 'purple', onClick: () => setActiveSection('ai-assistant') },
-            { id: 'emergency', icon: 'fa-ambulance', label: 'Emergency', color: 'red', onClick: () => setActiveSection('ambulance') },
-            { id: 'history', icon: 'fa-history', label: 'Medical History', color: 'emerald', onClick: () => setActiveSection('medical-history') }
-          ]}
-        />
+      {/* Single Floating Action Button - Clean design */}
+      <div className="fixed bottom-24 right-4 z-30 flex flex-col gap-3">
+        {/* AI Health Hub Button */}
+        <button
+          className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-500 to-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-xl hover:scale-110"
+          onClick={() => setShowAIHealthHub(true)}
+          title="AI Health Assistant"
+        >
+          🤖
+        </button>
+        
+        {/* Urgent Care Button */}
+        <button
+          className="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110"
+          onClick={() => setActiveSection('ambulance')}
+          title="Urgent Care"
+        >
+          <i className="fas fa-ambulance text-base"></i>
+        </button>
       </div>
-
-      {/* AI Chatbot Widget - Floating */}
-      <div className="hidden lg:block">
-        <AIChatbotWidget userId={getUserId()} />
-      </div>
-
-      {/* Floating Urgent Care CTA */}
-      <button
-        className="fixed bottom-44 right-6 z-40 px-4 py-3 rounded-full bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center gap-2 hover:scale-105 animate-pulse-slow group"
-        onClick={() => setActiveSection('ambulance')}
-        title="Need Immediate Help?"
-      >
-        <span className="w-8 h-8 bg-white/20 rounded-full flex items-center justify-center">
-          <i className="fas fa-ambulance text-sm"></i>
-        </span>
-        <span className="font-semibold text-sm hidden sm:inline group-hover:inline">Urgent Care</span>
-      </button>
-
-      {/* AI Health Hub Button - Floating */}
-      <button
-        className="fixed bottom-24 right-6 z-40 w-14 h-14 rounded-full bg-gradient-to-r from-purple-600 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-2xl hover:scale-110"
-        onClick={() => setShowAIHealthHub(true)}
-        title="AI Health Assistant"
-      >
-        🤖
-      </button>
 
       {/* AI Health Hub Modal */}
       {showAIHealthHub && (

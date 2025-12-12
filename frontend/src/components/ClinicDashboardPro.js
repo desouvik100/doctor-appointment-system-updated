@@ -255,7 +255,7 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
         {/* Header */}
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 px-4 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
-            <button className="lg:hidden w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center" onClick={() => setMobileSidebarOpen(true)}><i className="fas fa-bars text-slate-600"></i></button>
+            <button className="lg:hidden w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center" onClick={(e) => { e.stopPropagation(); setMobileSidebarOpen(prev => !prev); }}><i className="fas fa-bars text-slate-600"></i></button>
             <LanguageSelector />
             <ThemeToggle compact />
             <div>

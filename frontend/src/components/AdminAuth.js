@@ -25,10 +25,19 @@ function AdminAuth({ onLogin, onBack }) {
     setError("");
 
     try {
+      console.log('Admin login attempt:', formData.email);
       const response = await axios.post("/api/auth/admin/login", formData);
-      localStorage.setItem("admin", JSON.stringify(response.data.user));
-      onLogin(response.data.user, "admin");
+      console.log('Admin login response:', response.data);
+      
+      // Store both user data and token
+      const adminData = {
+        ...response.data.user,
+        token: response.data.token
+      };
+      localStorage.setItem("admin", JSON.stringify(adminData));
+      onLogin(adminData, "admin");
     } catch (error) {
+      console.error('Admin login error:', error.response?.data || error.message);
       if (error.response?.status === 403 && error.response?.data?.suspended) {
         setError(`Account Suspended: ${error.response?.data?.reason || 'Contact system administrator'}`);
       } else {

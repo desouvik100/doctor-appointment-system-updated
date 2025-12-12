@@ -3,9 +3,10 @@ const router = express.Router();
 const razorpayService = require('../services/razorpayService');
 const Appointment = require('../models/Appointment');
 const { USE_RAZORPAY_PAYMENTS, RAZORPAY_KEY_ID, FRONTEND_URL } = require('../config/paymentConfig');
+const { verifyToken } = require('../middleware/auth');
 
-// Get payment calculation for appointment
-router.get('/calculate/:appointmentId', async (req, res) => {
+// Get payment calculation for appointment (authenticated users)
+router.get('/calculate/:appointmentId', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.params;
     
@@ -29,8 +30,8 @@ router.get('/calculate/:appointmentId', async (req, res) => {
   }
 });
 
-// Create Razorpay Order
-router.post('/create-order', async (req, res) => {
+// Create Razorpay Order (authenticated users)
+router.post('/create-order', verifyToken, async (req, res) => {
   try {
     const { appointmentId, userId } = req.body;
     

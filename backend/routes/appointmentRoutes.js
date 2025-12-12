@@ -9,6 +9,11 @@ const { USE_STRIPE_PAYMENTS } = require('../config/paymentConfig');
 const { scheduleGoogleMeetGeneration } = require('../services/appointmentScheduler');
 const TokenService = require('../services/tokenService');
 const mongoose = require('mongoose');
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
+const { 
+  validateObjectIdParam, 
+  isValidObjectId 
+} = require('../middleware/validateRequest');
 const router = express.Router();
 
 // Helper function to award loyalty points
@@ -44,8 +49,8 @@ const awardLoyaltyPoints = async (userId, action, referenceId, customPoints = nu
   }
 };
 
-// Get all appointments
-router.get('/', async (req, res) => {
+// Get all appointments (admin only)
+router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const appointments = await Appointment.find()
       .populate('userId', 'name email phone')
@@ -60,9 +65,13 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get appointments by user ID
-router.get('/user/:userId', async (req, res) => {
+// Get appointments by user ID (authenticated users only)
+router.get('/user/:userId', verifyToken, async (req, res) => {
   try {
+    // Ensure user can only access their own appointments (unless admin)
+    if (req.user.role !== 'admin' && req.user.id !== req.params.userId) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
     const appointments = await Appointment.find({ userId: req.params.userId })
       .populate('doctorId', 'name specialization')
       .populate('clinicId', 'name address')
@@ -75,9 +84,13 @@ router.get('/user/:userId', async (req, res) => {
   }
 });
 
-// Get appointments by doctor ID
-router.get('/doctor/:doctorId', async (req, res) => {
+// Get appointments by doctor ID (authenticated doctors/admin only)
+router.get('/doctor/:doctorId', verifyToken, async (req, res) => {
   try {
+    // Ensure doctor can only access their own appointments (unless admin)
+    if (req.user.role !== 'admin' && req.user.role !== 'receptionist' && req.user.id !== req.params.doctorId) {
+      return res.status(403).json({ success: false, message: 'Access denied' });
+    }
     const appointments = await Appointment.find({ doctorId: req.params.doctorId })
       .populate('userId', 'name email phone')
       .populate('clinicId', 'name address')
@@ -127,8 +140,8 @@ router.get('/doctor/:doctorId/queue', async (req, res) => {
   }
 });
 
-// Skip patient (move to end of queue)
-router.put('/:id/skip', async (req, res) => {
+// Skip patient (move to end of queue) - doctors/receptionists only
+router.put('/:id/skip', verifyTokenWithRole(['doctor', 'receptionist', 'admin']), async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id);
     
@@ -161,8 +174,8 @@ router.put('/:id/skip', async (req, res) => {
   }
 });
 
-// Get appointments by clinic ID
-router.get('/clinic/:clinicId', async (req, res) => {
+// Get appointments by clinic ID (clinic staff/admin only)
+router.get('/clinic/:clinicId', verifyTokenWithRole(['admin', 'receptionist', 'doctor']), async (req, res) => {
   try {
     const appointments = await Appointment.find({ clinicId: req.params.clinicId })
       .populate('userId', 'name email phone')
@@ -396,14 +409,26 @@ router.get('/my-queue/:appointmentId', async (req, res) => {
   }
 });
 
-// Create new appointment (with payment calculation)
+// Create new appointment (with payment calculation) - uses atomic operation to prevent double booking
 router.post('/', async (req, res) => {
+  const session = await mongoose.startSession();
+  
   try {
     const { userId, doctorId, clinicId, date, time, reason, consultationType } = req.body;
 
     // Validate required fields
     if (!userId || !doctorId || !clinicId || !date || !time || !reason) {
       return res.status(400).json({ message: 'All fields are required' });
+    }
+
+    // Validate ObjectIds
+    if (!isValidObjectId(userId) || !isValidObjectId(doctorId) || !isValidObjectId(clinicId)) {
+      return res.status(400).json({ message: 'Invalid ID format' });
+    }
+
+    // Validate consultation type
+    if (consultationType && !['in_person', 'online'].includes(consultationType)) {
+      return res.status(400).json({ message: 'Invalid consultation type. Must be "in_person" or "online"' });
     }
 
     // Check if doctor exists
@@ -423,21 +448,33 @@ router.post('/', async (req, res) => {
     const appointmentDate = new Date(year, month - 1, day);
     appointmentDate.setHours(0, 0, 0, 0);
     
+    // Validate date is not in the past
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    if (appointmentDate < today) {
+      return res.status(400).json({ message: 'Cannot book appointments in the past' });
+    }
+    
     const startOfDay = new Date(appointmentDate);
     const endOfDay = new Date(appointmentDate);
     endOfDay.setHours(23, 59, 59, 999);
 
-    // Check for conflicting appointments (exact minute)
+    // Start transaction for atomic double-booking prevention
+    session.startTransaction();
+
+    // Atomic check-and-create to prevent race conditions
     const existingAppointment = await Appointment.findOne({
       doctorId,
       date: { $gte: startOfDay, $lte: endOfDay },
       time,
       status: { $in: ['pending', 'confirmed', 'in_progress'] }
-    });
+    }).session(session);
 
     if (existingAppointment) {
-      return res.status(400).json({ 
-        message: 'Doctor is unavailable at this exact minute. Please choose another time.' 
+      await session.abortTransaction();
+      return res.status(409).json({ 
+        message: 'This time slot is no longer available. Please choose another time.',
+        conflict: true
       });
     }
 
@@ -479,7 +516,11 @@ router.post('/', async (req, res) => {
       // This prevents wrong URLs from being used
     }
 
-    await appointment.save();
+    // Save within transaction to ensure atomicity
+    await appointment.save({ session });
+    
+    // Commit transaction - slot is now reserved
+    await session.commitTransaction();
     
     // Generate appointment token
     const doctorCode = doctor.specialization?.substring(0, 5).toUpperCase() || 'GEN';
@@ -625,8 +666,14 @@ router.post('/', async (req, res) => {
       } : null
     });
   } catch (error) {
+    // Abort transaction on error
+    if (session.inTransaction()) {
+      await session.abortTransaction();
+    }
     console.error('Error creating appointment:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  } finally {
+    session.endSession();
   }
 });
 
@@ -1261,8 +1308,8 @@ function formatTimeForEmail(time) {
   return `${hour12}:${minutes} ${ampm}`;
 }
 
-// Update appointment status
-router.put('/:id/status', async (req, res) => {
+// Update appointment status (doctors/receptionists/admin only)
+router.put('/:id/status', verifyTokenWithRole(['doctor', 'receptionist', 'admin']), async (req, res) => {
   try {
     const { status } = req.body;
     
@@ -1383,8 +1430,8 @@ router.put('/:id/status', async (req, res) => {
   }
 });
 
-// Update appointment
-router.put('/:id', async (req, res) => {
+// Update appointment (authenticated users only)
+router.put('/:id', verifyToken, async (req, res) => {
   try {
     const appointment = await Appointment.findByIdAndUpdate(
       req.params.id,
@@ -1406,8 +1453,8 @@ router.put('/:id', async (req, res) => {
   }
 });
 
-// Cancel appointment with reason and notification
-router.put('/:id/cancel', async (req, res) => {
+// Cancel appointment with reason and notification (authenticated users only)
+router.put('/:id/cancel', verifyToken, async (req, res) => {
   try {
     const { reason, cancelledBy, notifyPatient = true, notifyDoctor = true } = req.body;
     
@@ -1498,8 +1545,8 @@ router.put('/:id/cancel', async (req, res) => {
   }
 });
 
-// Delete appointment
-router.delete('/:id', async (req, res) => {
+// Delete appointment (admin only)
+router.delete('/:id', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const appointment = await Appointment.findByIdAndDelete(req.params.id);
     
@@ -1899,6 +1946,193 @@ router.post('/:id/notify-patient', async (req, res) => {
   } catch (error) {
     console.error('Error notifying patient:', error);
     res.status(500).json({ success: false, message: 'Failed to notify patient' });
+  }
+});
+
+// ============================================
+// ADMIN ROUTES - Appointment Management
+// ============================================
+
+// Admin: Get all appointments for a specific user
+router.get('/admin/user/:userId/all', verifyTokenWithRole(['admin']), async (req, res) => {
+  try {
+    const { userId } = req.params;
+    
+    const appointments = await Appointment.find({ userId })
+      .populate('doctorId', 'name specialization')
+      .populate('clinicId', 'name address')
+      .sort({ date: -1 });
+    
+    const user = await User.findById(userId).select('name email phone');
+    
+    res.json({
+      success: true,
+      user,
+      totalAppointments: appointments.length,
+      appointments
+    });
+  } catch (error) {
+    console.error('Error fetching user appointments:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+// Admin: Delete all appointments for a user
+router.delete('/admin/user/:userId/all', verifyTokenWithRole(['admin']), async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const { reason } = req.body;
+    
+    // Get user info first
+    const user = await User.findById(userId).select('name email');
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    // Count appointments before deletion
+    const appointmentCount = await Appointment.countDocuments({ userId });
+    
+    if (appointmentCount === 0) {
+      return res.json({ 
+        success: true, 
+        message: 'No appointments found for this user',
+        deletedCount: 0 
+      });
+    }
+    
+    // Delete all appointments for this user
+    const result = await Appointment.deleteMany({ userId });
+    
+    console.log(`🗑️ Admin deleted ${result.deletedCount} appointments for user ${user.name} (${user.email})`);
+    console.log(`   Reason: ${reason || 'Not specified'}`);
+    
+    // Log this action for security
+    try {
+      const aiSecurityService = require('../services/aiSecurityService');
+      await aiSecurityService.createAlert({
+        userId,
+        userType: 'User',
+        userName: user.name,
+        userEmail: user.email,
+        activityType: 'account_manipulation',
+        severity: 'medium',
+        confidenceScore: 100,
+        description: `Admin deleted all appointments (${result.deletedCount} records)`,
+        details: { 
+          action: 'bulk_appointment_delete',
+          deletedCount: result.deletedCount,
+          reason: reason || 'Not specified'
+        }
+      });
+    } catch (logError) {
+      console.error('Failed to log security event:', logError);
+    }
+    
+    res.json({
+      success: true,
+      message: `Successfully deleted ${result.deletedCount} appointments for ${user.name}`,
+      deletedCount: result.deletedCount,
+      user: { name: user.name, email: user.email }
+    });
+  } catch (error) {
+    console.error('Error deleting user appointments:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+// Admin: Delete specific appointments by IDs
+router.delete('/admin/bulk-delete', verifyTokenWithRole(['admin']), async (req, res) => {
+  try {
+    const { appointmentIds, reason } = req.body;
+    
+    if (!appointmentIds || !Array.isArray(appointmentIds) || appointmentIds.length === 0) {
+      return res.status(400).json({ success: false, message: 'Appointment IDs array is required' });
+    }
+    
+    // Get appointments info before deletion
+    const appointments = await Appointment.find({ _id: { $in: appointmentIds } })
+      .populate('userId', 'name email')
+      .populate('doctorId', 'name');
+    
+    if (appointments.length === 0) {
+      return res.status(404).json({ success: false, message: 'No appointments found with provided IDs' });
+    }
+    
+    // Delete the appointments
+    const result = await Appointment.deleteMany({ _id: { $in: appointmentIds } });
+    
+    console.log(`🗑️ Admin bulk deleted ${result.deletedCount} appointments`);
+    console.log(`   Reason: ${reason || 'Not specified'}`);
+    
+    res.json({
+      success: true,
+      message: `Successfully deleted ${result.deletedCount} appointments`,
+      deletedCount: result.deletedCount,
+      deletedAppointments: appointments.map(a => ({
+        id: a._id,
+        user: a.userId?.name,
+        doctor: a.doctorId?.name,
+        date: a.date,
+        status: a.status
+      }))
+    });
+  } catch (error) {
+    console.error('Error bulk deleting appointments:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
+// Admin: Get appointment statistics
+router.get('/admin/stats', verifyTokenWithRole(['admin']), async (req, res) => {
+  try {
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    
+    const [
+      totalAppointments,
+      todayAppointments,
+      pendingAppointments,
+      completedAppointments,
+      cancelledAppointments,
+      onlineAppointments,
+      inPersonAppointments
+    ] = await Promise.all([
+      Appointment.countDocuments(),
+      Appointment.countDocuments({ date: { $gte: today } }),
+      Appointment.countDocuments({ status: 'pending' }),
+      Appointment.countDocuments({ status: 'completed' }),
+      Appointment.countDocuments({ status: 'cancelled' }),
+      Appointment.countDocuments({ consultationType: 'online' }),
+      Appointment.countDocuments({ consultationType: 'in_person' })
+    ]);
+    
+    // Revenue stats
+    const revenueStats = await Appointment.aggregate([
+      { $match: { status: 'completed' } },
+      { $group: { 
+        _id: null, 
+        totalRevenue: { $sum: '$payment.totalAmount' },
+        avgRevenue: { $avg: '$payment.totalAmount' },
+        count: { $sum: 1 }
+      }}
+    ]);
+    
+    res.json({
+      success: true,
+      stats: {
+        total: totalAppointments,
+        today: todayAppointments,
+        pending: pendingAppointments,
+        completed: completedAppointments,
+        cancelled: cancelledAppointments,
+        online: onlineAppointments,
+        inPerson: inPersonAppointments,
+        revenue: revenueStats[0] || { totalRevenue: 0, avgRevenue: 0, count: 0 }
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching appointment stats:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
 

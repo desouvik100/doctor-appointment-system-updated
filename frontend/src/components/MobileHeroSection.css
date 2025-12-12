@@ -3,20 +3,21 @@
 
 /* CSS Variables for theming */
 .mobile-hero-wrapper {
-  --hero-bg-start: #e8f4f1;
-  --hero-bg-end: #f5f9f8;
-  --hero-primary: #2d7a6d;
-  --hero-primary-dark: #246358;
-  --hero-primary-light: #3d9b8a;
-  --hero-accent: #10b981;
-  --hero-text-dark: #1a3c34;
-  --hero-text-medium: #3d5a52;
+  --hero-bg-start: #e0f2fe;
+  --hero-bg-end: #f0fdfa;
+  --hero-primary: #0ea5e9;
+  --hero-primary-dark: #0284c7;
+  --hero-primary-light: #38bdf8;
+  --hero-secondary: #14b8a6;
+  --hero-accent: #f97316;
+  --hero-text-dark: #0c4a6e;
+  --hero-text-medium: #0369a1;
   --hero-text-light: #64748b;
   --hero-card-bg: #ffffff;
-  --hero-card-border: #e5eeec;
-  --hero-card-shadow: rgba(45, 122, 109, 0.08);
-  --hero-card-hover-shadow: rgba(45, 122, 109, 0.18);
-  --hero-divider: #e5eeec;
+  --hero-card-border: #bae6fd;
+  --hero-card-shadow: rgba(14, 165, 233, 0.08);
+  --hero-card-hover-shadow: rgba(14, 165, 233, 0.18);
+  --hero-divider: #e0f2fe;
 }
 
 /* Dark Mode Support */
@@ -24,17 +25,18 @@ body.dark-mode .mobile-hero-wrapper,
 [data-theme="dark"] .mobile-hero-wrapper {
   --hero-bg-start: #0f172a;
   --hero-bg-end: #1e293b;
-  --hero-primary: #3d9b8a;
-  --hero-primary-dark: #2d7a6d;
-  --hero-primary-light: #4db8a5;
-  --hero-accent: #34d399;
+  --hero-primary: #38bdf8;
+  --hero-primary-dark: #0ea5e9;
+  --hero-primary-light: #7dd3fc;
+  --hero-secondary: #2dd4bf;
+  --hero-accent: #fb923c;
   --hero-text-dark: #f1f5f9;
   --hero-text-medium: #cbd5e1;
   --hero-text-light: #94a3b8;
   --hero-card-bg: #1e293b;
   --hero-card-border: #334155;
   --hero-card-shadow: rgba(0, 0, 0, 0.2);
-  --hero-card-hover-shadow: rgba(61, 155, 138, 0.25);
+  --hero-card-hover-shadow: rgba(14, 165, 233, 0.25);
   --hero-divider: #334155;
 }
 
@@ -73,7 +75,7 @@ body.dark-mode .mobile-hero-wrapper,
 .hero-logo {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, var(--hero-primary) 0%, var(--hero-primary-light) 100%);
+  background: linear-gradient(135deg, var(--hero-primary) 0%, var(--hero-secondary) 100%);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -82,13 +84,13 @@ body.dark-mode .mobile-hero-wrapper,
   font-weight: 800;
   font-size: 22px;
   letter-spacing: -0.5px;
-  box-shadow: 0 4px 14px rgba(45, 122, 109, 0.35);
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.35);
   transition: transform 0.3s ease, box-shadow 0.3s ease;
 }
 
 .hero-logo:hover {
   transform: scale(1.05);
-  box-shadow: 0 6px 20px rgba(45, 122, 109, 0.4);
+  box-shadow: 0 6px 20px rgba(14, 165, 233, 0.4);
 }
 
 .hero-search-btn {
@@ -200,7 +202,7 @@ body.dark-mode .mobile-hero-wrapper,
 .hero-service-icon svg {
   width: 100%;
   height: 100%;
-  filter: drop-shadow(0 4px 8px rgba(45, 122, 109, 0.15));
+  filter: drop-shadow(0 4px 8px rgba(14, 165, 233, 0.15));
 }
 
 .hero-service-label {
@@ -324,7 +326,7 @@ body.dark-mode .mobile-hero-wrapper,
   display: block;
   font-size: 22px;
   font-weight: 800;
-  background: linear-gradient(135deg, var(--hero-primary) 0%, var(--hero-accent) 100%);
+  background: linear-gradient(135deg, var(--hero-primary) 0%, var(--hero-secondary) 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;

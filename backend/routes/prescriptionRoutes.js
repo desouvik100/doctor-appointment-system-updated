@@ -1,9 +1,10 @@
 const express = require('express');
 const router = express.Router();
 const Prescription = require('../models/Prescription');
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 
-// Create prescription
-router.post('/', async (req, res) => {
+// Create prescription (doctors only)
+router.post('/', verifyTokenWithRole(['doctor', 'admin']), async (req, res) => {
   try {
     const prescription = new Prescription(req.body);
     await prescription.save();
@@ -14,9 +15,13 @@ router.post('/', async (req, res) => {
   }
 });
 
-// Get prescriptions by patient
-router.get('/patient/:patientId', async (req, res) => {
+// Get prescriptions by patient (authenticated users only)
+router.get('/patient/:patientId', verifyToken, async (req, res) => {
   try {
+    // Patients can only view their own prescriptions
+    if (req.user.role === 'patient' && req.user.id !== req.params.patientId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
     const prescriptions = await Prescription.find({ patientId: req.params.patientId })
       .populate('doctorId', 'name specialization')
       .sort({ createdAt: -1 });
@@ -26,9 +31,13 @@ router.get('/patient/:patientId', async (req, res) => {
   }
 });
 
-// Get prescriptions by doctor
-router.get('/doctor/:doctorId', async (req, res) => {
+// Get prescriptions by doctor (doctors/admin only)
+router.get('/doctor/:doctorId', verifyTokenWithRole(['doctor', 'admin']), async (req, res) => {
   try {
+    // Doctors can only view their own prescriptions
+    if (req.user.role === 'doctor' && req.user.id !== req.params.doctorId) {
+      return res.status(403).json({ message: 'Access denied' });
+    }
     const prescriptions = await Prescription.find({ doctorId: req.params.doctorId })
       .populate('patientId', 'name email phone')
       .sort({ createdAt: -1 });

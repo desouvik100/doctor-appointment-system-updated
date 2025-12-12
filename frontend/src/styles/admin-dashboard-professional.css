@@ -4,19 +4,22 @@
    ======================================== */
 
 :root {
-  --admin-bg: #f8fafc;
+  --admin-bg: #f0fdfa;
   --admin-sidebar-bg: #0f172a;
   --admin-card-bg: #ffffff;
   --admin-border: #e2e8f0;
   --admin-text: #0f172a;
   --admin-text-secondary: #64748b;
   --admin-text-muted: #94a3b8;
-  --admin-primary: #6366f1;
-  --admin-primary-light: #818cf8;
-  --admin-success: #10b981;
+  --admin-primary: #0ea5e9;
+  --admin-primary-light: #38bdf8;
+  --admin-secondary: #14b8a6;
+  --admin-accent: #f97316;
+  --admin-success: #22c55e;
   --admin-warning: #f59e0b;
   --admin-danger: #ef4444;
-  --admin-info: #3b82f6;
+  --admin-info: #0ea5e9;
+  --admin-gradient: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
 }
 
 /* ========================================

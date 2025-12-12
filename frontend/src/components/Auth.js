@@ -245,13 +245,17 @@ function Auth({ onLogin, onBack }) {
           password: formData.password
         });
         
-        // Store token and user data
+        // Store token and user data together
+        const user = {
+          ...response.data.user,
+          token: response.data.token
+        };
+        
         if (response.data.token) {
           localStorage.setItem("token", response.data.token);
           axios.defaults.headers.common['Authorization'] = `Bearer ${response.data.token}`;
         }
         
-        const user = response.data.user;
         setLoggedInUserId(user.id);
         setLoading(false);
         

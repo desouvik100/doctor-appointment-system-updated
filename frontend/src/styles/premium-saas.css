@@ -7,20 +7,28 @@
    CSS VARIABLES - DESIGN TOKENS
    ============================================ */
 :root {
-  /* Primary Brand - Indigo/Purple */
-  --premium-primary: #6366f1;
-  --premium-primary-hover: #4f46e5;
-  --premium-primary-light: #eef2ff;
-  --premium-primary-dark: #4338ca;
+  /* Fresh Healthcare - Primary (Sky Blue) */
+  --premium-primary: #0ea5e9;
+  --premium-primary-hover: #0284c7;
+  --premium-primary-light: #e0f2fe;
+  --premium-primary-dark: #0369a1;
   
-  /* Accent - Purple */
-  --premium-accent: #8b5cf6;
-  --premium-accent-hover: #7c3aed;
+  /* Fresh Healthcare - Secondary (Teal) */
+  --premium-secondary: #14b8a6;
+  --premium-secondary-hover: #0d9488;
+  --premium-secondary-light: #ccfbf1;
   
-  /* Gradient */
-  --premium-gradient: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
-  --premium-gradient-hover: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
-  --premium-gradient-subtle: linear-gradient(135deg, #eef2ff 0%, #f5f3ff 100%);
+  /* Fresh Healthcare - Accent (Orange) */
+  --premium-accent: #f97316;
+  --premium-accent-hover: #ea580c;
+  --premium-accent-light: #ffedd5;
+  
+  /* Gradient - Fresh Healthcare */
+  --premium-gradient: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+  --premium-gradient-hover: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
+  --premium-gradient-subtle: linear-gradient(135deg, #e0f2fe 0%, #ccfbf1 100%);
+  --premium-gradient-accent: linear-gradient(135deg, #f97316 0%, #fb923c 100%);
+  --premium-gradient-fresh: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 50%, #22c55e 100%);
   
   /* Neutrals */
   --premium-white: #ffffff;
@@ -35,15 +43,15 @@
   --premium-gray-800: #1e293b;
   --premium-gray-900: #0f172a;
   
-  /* Status Colors */
-  --premium-success: #10b981;
-  --premium-success-light: #ecfdf5;
+  /* Status Colors - Fresh Healthcare */
+  --premium-success: #22c55e;
+  --premium-success-light: #dcfce7;
   --premium-warning: #f59e0b;
-  --premium-warning-light: #fffbeb;
+  --premium-warning-light: #fef3c7;
   --premium-error: #ef4444;
-  --premium-error-light: #fef2f2;
-  --premium-info: #3b82f6;
-  --premium-info-light: #eff6ff;
+  --premium-error-light: #fee2e2;
+  --premium-info: #0ea5e9;
+  --premium-info-light: #e0f2fe;
 
   /* Shadows - Stripe-style */
   --premium-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
@@ -52,9 +60,10 @@
   --premium-shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.08), 0 4px 6px -2px rgba(0, 0, 0, 0.04);
   --premium-shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.08), 0 10px 10px -5px rgba(0, 0, 0, 0.03);
   --premium-shadow-2xl: 0 25px 50px -12px rgba(0, 0, 0, 0.15);
-  --premium-shadow-glow: 0 0 40px rgba(99, 102, 241, 0.15);
+  --premium-shadow-glow: 0 0 40px rgba(14, 165, 233, 0.15);
   --premium-shadow-card: 0 1px 3px rgba(0, 0, 0, 0.04), 0 1px 2px rgba(0, 0, 0, 0.06);
-  --premium-shadow-card-hover: 0 20px 40px -15px rgba(99, 102, 241, 0.2);
+  --premium-shadow-card-hover: 0 20px 40px -15px rgba(14, 165, 233, 0.2);
+  --premium-shadow-accent: 0 0 30px rgba(249, 115, 22, 0.2);
   
   /* Border Radius */
   --premium-radius-sm: 6px;
@@ -414,7 +423,7 @@ p {
   display: flex;
   align-items: center;
   padding: 120px 24px 80px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #a78bfa 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 50%, #22c55e 100%);
   position: relative;
   overflow: hidden;
 }
@@ -428,7 +437,7 @@ p {
   width: 100%;
   max-width: 1200px;
   height: 600px;
-  background: radial-gradient(ellipse at center, rgba(99, 102, 241, 0.08) 0%, transparent 70%);
+  background: radial-gradient(ellipse at center, rgba(14, 165, 233, 0.08) 0%, transparent 70%);
   pointer-events: none;
 }
 
@@ -523,7 +532,7 @@ p {
 .hero-premium__card {
   background: white;
   border-radius: 24px;
-  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 60px rgba(99, 102, 241, 0.15);
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25), 0 0 60px rgba(14, 165, 233, 0.15);
   padding: 28px;
   position: relative;
   z-index: 1;
@@ -532,7 +541,7 @@ p {
 
 .hero-premium__card:hover {
   transform: translateY(-5px);
-  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.3), 0 0 80px rgba(99, 102, 241, 0.2);
+  box-shadow: 0 30px 60px -15px rgba(0, 0, 0, 0.3), 0 0 80px rgba(14, 165, 233, 0.2);
 }
 
 /* ============================================
@@ -581,15 +590,15 @@ p {
 
 .feature-card-premium:hover {
   background: #ffffff;
-  border-color: #c7d2fe;
-  box-shadow: 0 20px 40px -15px rgba(99, 102, 241, 0.2);
+  border-color: #bae6fd;
+  box-shadow: 0 20px 40px -15px rgba(14, 165, 233, 0.2);
   transform: translateY(-6px);
 }
 
 .feature-card-premium__icon {
   width: 56px;
   height: 56px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border-radius: 14px;
   display: flex;
   align-items: center;
@@ -597,7 +606,7 @@ p {
   color: #ffffff;
   font-size: 22px;
   margin-bottom: 20px;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
 }
 
 .feature-card-premium__icon i {
@@ -636,7 +645,7 @@ p {
 
 .auth-premium__right {
   flex: 1;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   display: none;
   align-items: center;
   justify-content: center;
@@ -688,13 +697,13 @@ p {
 .auth-premium__logo-icon {
   width: 44px;
   height: 44px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
   justify-content: center;
   color: white;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.4);
   animation: logoGlow 2s ease-in-out infinite;
 }
 
@@ -1117,7 +1126,7 @@ p {
   display: flex;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
   animation: logoGlow 2s ease-in-out infinite;
 }
 
@@ -1139,10 +1148,10 @@ p {
 
 @keyframes logoGlow {
   0%, 100% {
-    box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+    box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
   }
   50% {
-    box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5), 0 0 30px rgba(139, 92, 246, 0.2);
+    box-shadow: 0 4px 20px rgba(14, 165, 233, 0.5), 0 0 30px rgba(20, 184, 166, 0.2);
   }
 }
 
