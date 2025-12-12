@@ -293,11 +293,11 @@ const PatientDashboardPro = ({ user, onLogout }) => {
           <div className="flex items-center gap-4">
             <button 
               type="button"
-              className="lg:hidden w-10 h-10 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center cursor-pointer active:bg-slate-300 touch-manipulation" 
-              onClick={() => setMobileSidebarOpen(true)}
-              style={{ WebkitTapHighlightColor: 'transparent' }}
+              className="lg:hidden w-11 h-11 rounded-xl bg-sky-50 hover:bg-sky-100 flex items-center justify-center cursor-pointer active:scale-95 border border-sky-200" 
+              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
+              onPointerDown={() => setMobileSidebarOpen(true)}
             >
-              <i className="fas fa-bars text-slate-600 text-base pointer-events-none"></i>
+              <i className="fas fa-bars text-sky-600 text-lg"></i>
             </button>
             <div>
               <h1 className="text-base font-semibold text-slate-800">Welcome back, {(currentUser?.name || 'User').split(' ')[0]}</h1>

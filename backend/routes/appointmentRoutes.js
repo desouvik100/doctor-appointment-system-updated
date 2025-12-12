@@ -14,6 +14,7 @@ const {
   validateObjectIdParam, 
   isValidObjectId 
 } = require('../middleware/validateRequest');
+const { verifyClinicAccess, filterByClinic, verifyDoctorAccess } = require('../middleware/clinicIsolation');
 const router = express.Router();
 
 // Helper function to award loyalty points
@@ -103,8 +104,8 @@ router.get('/doctor/:doctorId', verifyToken, async (req, res) => {
   }
 });
 
-// Get doctor's patient queue for a specific date
-router.get('/doctor/:doctorId/queue', async (req, res) => {
+// Get doctor's patient queue for a specific date (with clinic isolation)
+router.get('/doctor/:doctorId/queue', verifyToken, verifyDoctorAccess, async (req, res) => {
   try {
     const { doctorId } = req.params;
     const { date } = req.query;
@@ -174,8 +175,8 @@ router.put('/:id/skip', verifyTokenWithRole(['doctor', 'receptionist', 'admin'])
   }
 });
 
-// Get appointments by clinic ID (clinic staff/admin only)
-router.get('/clinic/:clinicId', verifyTokenWithRole(['admin', 'receptionist', 'doctor']), async (req, res) => {
+// Get appointments by clinic ID (clinic staff/admin only) - with clinic isolation
+router.get('/clinic/:clinicId', verifyTokenWithRole(['admin', 'receptionist', 'doctor']), verifyClinicAccess('clinicId'), async (req, res) => {
   try {
     const appointments = await Appointment.find({ clinicId: req.params.clinicId })
       .populate('userId', 'name email phone')
@@ -1093,8 +1094,8 @@ router.post('/slot-booking', async (req, res) => {
   }
 });
 
-// Walk-in/Offline booking - For receptionists to add patients at clinic
-router.post('/walk-in', async (req, res) => {
+// Walk-in/Offline booking - For receptionists to add patients at clinic (with clinic isolation)
+router.post('/walk-in', verifyTokenWithRole(['receptionist', 'doctor', 'admin']), verifyClinicAccess('clinicId'), async (req, res) => {
   try {
     const { 
       doctorId, 
@@ -1232,8 +1233,8 @@ router.post('/walk-in', async (req, res) => {
   }
 });
 
-// Get today's queue for a doctor (unified - both online and offline)
-router.get('/doctor/:doctorId/today-queue', async (req, res) => {
+// Get today's queue for a doctor (unified - both online and offline) - with clinic isolation
+router.get('/doctor/:doctorId/today-queue', verifyToken, verifyDoctorAccess, async (req, res) => {
   try {
     const { doctorId } = req.params;
     const today = new Date();

@@ -5,6 +5,7 @@ const Clinic = require('../models/Clinic');
 const aiSecurityService = require('../services/aiSecurityService');
 const { sendNewDoctorRegistrationAlert } = require('../services/adminEmailService');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
+const { verifyClinicAccess, verifyDoctorAccess } = require('../middleware/clinicIsolation');
 const router = express.Router();
 
 // Security helper - log doctor account operations

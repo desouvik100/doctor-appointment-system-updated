@@ -4,6 +4,8 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
+const { verifyClinicAccess } = require('../middleware/clinicIsolation');
 const router = express.Router();
 
 // Receptionist login
@@ -121,8 +123,8 @@ router.post('/reset-password', async (req, res) => {
   }
 });
 
-// Get appointments for receptionist's clinic
-router.get('/appointments/:clinicId', async (req, res) => {
+// Get appointments for receptionist's clinic (with clinic isolation)
+router.get('/appointments/:clinicId', verifyToken, verifyClinicAccess('clinicId'), async (req, res) => {
   try {
     const { clinicId } = req.params;
     
@@ -237,8 +239,8 @@ router.put('/:id/reject', async (req, res) => {
 // DOCTOR MANAGEMENT FOR CLINICS
 // ==========================================
 
-// Get doctors for a specific clinic
-router.get('/doctors/:clinicId', async (req, res) => {
+// Get doctors for a specific clinic (with clinic isolation)
+router.get('/doctors/:clinicId', verifyToken, verifyClinicAccess('clinicId'), async (req, res) => {
   try {
     const { clinicId } = req.params;
     
@@ -252,8 +254,8 @@ router.get('/doctors/:clinicId', async (req, res) => {
   }
 });
 
-// Get patients who have appointments at this clinic
-router.get('/patients/:clinicId', async (req, res) => {
+// Get patients who have appointments at this clinic (with clinic isolation)
+router.get('/patients/:clinicId', verifyToken, verifyClinicAccess('clinicId'), async (req, res) => {
   try {
     const { clinicId } = req.params;
     
@@ -296,11 +298,19 @@ router.get('/patients/:clinicId', async (req, res) => {
   }
 });
 
-// Update doctor availability (clinic can set Available/Busy)
-router.put('/doctors/:doctorId/availability', async (req, res) => {
+// Update doctor availability (clinic can set Available/Busy) - with clinic isolation
+router.put('/doctors/:doctorId/availability', verifyTokenWithRole(['receptionist', 'admin']), async (req, res) => {
   try {
     const { doctorId } = req.params;
     const { availability, clinicId } = req.body;
+    
+    // Verify receptionist can only update doctors from their clinic
+    if (req.user.role === 'receptionist' && req.user.clinicId) {
+      const doctor = await Doctor.findById(doctorId);
+      if (doctor && doctor.clinicId?.toString() !== req.user.clinicId?.toString()) {
+        return res.status(403).json({ message: 'Access denied - you can only update doctors from your clinic' });
+      }
+    }
 
     // Validate availability value
     if (!['Available', 'Busy', 'On Leave'].includes(availability)) {

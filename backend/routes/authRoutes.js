@@ -125,9 +125,9 @@ router.post('/register', async (req, res) => {
       console.error('Error creating loyalty account:', loyaltyError);
     }
 
-    // Create token
+    // Create token with clinicId for role-based access
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id, role: user.role, clinicId: user.clinicId || null },
       process.env.JWT_SECRET || 'fallback_secret',
       { expiresIn: '24h' }
     );
@@ -142,6 +142,7 @@ router.post('/register', async (req, res) => {
         role: user.role,
         phone: user.phone,
         profilePhoto: user.profilePhoto,
+        clinicId: user.clinicId || null,
         locationCaptured: false // New users haven't captured location yet
       },
       loyaltyBonus: signupBonus
@@ -200,9 +201,9 @@ router.post('/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
 
-    // Create token
+    // Create token with clinicId for role-based access
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id, role: user.role, clinicId: user.clinicId || null },
       process.env.JWT_SECRET || 'fallback_secret',
       { expiresIn: '24h' }
     );
@@ -216,6 +217,7 @@ router.post('/login', async (req, res) => {
         role: user.role,
         phone: user.phone,
         profilePhoto: user.profilePhoto,
+        clinicId: user.clinicId || null,
         locationCaptured: user.locationCaptured || false,
         loginLocation: user.loginLocation || null
       }
@@ -266,9 +268,9 @@ router.post('/admin/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid admin credentials' });
     }
 
-    // Create token
+    // Create token (admin has no clinicId restriction)
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id, role: user.role, clinicId: null },
       process.env.JWT_SECRET || 'fallback_secret',
       { expiresIn: '24h' }
     );
@@ -402,9 +404,9 @@ router.post('/clinic/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid receptionist credentials' });
     }
 
-    // Create token
+    // Create token with clinicId for clinic isolation
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id, role: user.role, clinicId: user.clinicId || null },
       process.env.JWT_SECRET || 'fallback_secret',
       { expiresIn: '24h' }
     );
@@ -824,9 +826,9 @@ router.post('/doctor/login', async (req, res) => {
     doctor.lastLogin = new Date();
     await doctor.save();
 
-    // Generate token
+    // Generate token with clinicId for clinic isolation
     const token = jwt.sign(
-      { doctorId: doctor._id, role: 'doctor' },
+      { doctorId: doctor._id, role: 'doctor', clinicId: doctor.clinicId || null },
       process.env.JWT_SECRET || 'fallback_secret',
       { expiresIn: '24h' }
     );
@@ -983,9 +985,9 @@ router.post('/google-signin', async (req, res) => {
       }
     }
 
-    // Create token
+    // Create token with clinicId for role-based access
     const token = jwt.sign(
-      { userId: user._id, role: user.role },
+      { userId: user._id, role: user.role, clinicId: user.clinicId || null },
       process.env.JWT_SECRET || 'fallback_secret',
       { expiresIn: '24h' }
     );
@@ -1002,6 +1004,7 @@ router.post('/google-signin', async (req, res) => {
         role: user.role,
         phone: user.phone,
         profilePhoto: user.profilePhoto,
+        clinicId: user.clinicId || null,
         locationCaptured: user.locationCaptured || false
       }
     });
@@ -1051,9 +1054,9 @@ router.post('/doctor/google-signin', async (req, res) => {
       doctor.lastLogin = new Date();
       await doctor.save();
 
-      // Generate token
+      // Generate token with clinicId for clinic isolation
       const token = jwt.sign(
-        { doctorId: doctor._id, role: 'doctor' },
+        { doctorId: doctor._id, role: 'doctor', clinicId: doctor.clinicId || null },
         process.env.JWT_SECRET || 'fallback_secret',
         { expiresIn: '24h' }
       );
@@ -1134,9 +1137,9 @@ router.post('/clinic/google-signin', async (req, res) => {
       }
       await user.save();
 
-      // Generate token
+      // Generate token with clinicId for clinic isolation
       const token = jwt.sign(
-        { userId: user._id, role: user.role },
+        { userId: user._id, role: user.role, clinicId: user.clinicId || null },
         process.env.JWT_SECRET || 'fallback_secret',
         { expiresIn: '24h' }
       );
