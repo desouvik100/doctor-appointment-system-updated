@@ -225,7 +225,7 @@ async function sendOTP(email, type = 'register') {
     actionText = 'Enter this verification code to continue:';
   }
 
-  const text = `${purpose}\n\nYour verification code is: ${otp}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email or contact support if you have concerns.\n\nHealthSync - Your Healthcare Management Platform\nWebsite: https://healthsync.com\nSupport: support@healthsync.com\nPhone: +1 (555) 123-4567`;
+  const text = `${purpose}\n\nYour verification code is: ${otp}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email or contact support if you have concerns.\n\nHealthSync - Your Healthcare Management Platform\nWebsite: https://healthsyncpro.in\nSupport: support@healthsyncpro.in\nPhone: +91-7001268485`;
   
   const html = `
     <!DOCTYPE html>
@@ -413,7 +413,7 @@ async function sendOTP(email, type = 'register') {
                     <div class="support-item">
                       <div class="support-icon">📧</div>
                       <div class="support-label">Email</div>
-                      <div class="support-value">support@healthsync.com</div>
+                      <div class="support-value">support@healthsyncpro.in</div>
                     </div>
                     <div class="support-item">
                       <div class="support-icon">📞</div>
@@ -423,7 +423,7 @@ async function sendOTP(email, type = 'register') {
                     <div class="support-item">
                       <div class="support-icon">🌐</div>
                       <div class="support-label">Website</div>
-                      <div class="support-value">healthsync.com</div>
+                      <div class="support-value">healthsyncpro.in</div>
                     </div>
                   </div>
                 </div>
@@ -446,10 +446,10 @@ async function sendOTP(email, type = 'register') {
                   <div class="footer-text">Providing quality healthcare services since 2020</div>
                   
                   <div class="footer-links">
-                    <a href="https://healthsync.com/about" class="footer-link">About Us</a>
-                    <a href="https://healthsync.com/privacy" class="footer-link">Privacy Policy</a>
-                    <a href="https://healthsync.com/terms" class="footer-link">Terms of Service</a>
-                    <a href="https://healthsync.com/contact" class="footer-link">Contact</a>
+                    <a href="https://healthsyncpro.in/about" class="footer-link">About Us</a>
+                    <a href="https://healthsyncpro.in/privacy" class="footer-link">Privacy Policy</a>
+                    <a href="https://healthsyncpro.in/terms" class="footer-link">Terms of Service</a>
+                    <a href="https://healthsyncpro.in/contact" class="footer-link">Contact</a>
                   </div>
                   
                   <div class="footer-divider"></div>
@@ -734,7 +734,7 @@ Thank you for choosing HealthSync!
     <div class="footer">
       <p><strong>HealthSync</strong> - Your Healthcare Management Platform</p>
       <p style="margin-top: 10px;">
-        📧 support@healthsync.com | 📞 +1 (555) 123-4567
+        📧 support@healthsyncpro.in | 📞 +91-7001268485
       </p>
       <p style="margin-top: 10px; font-size: 11px; color: #6b7280;">
         © ${new Date().getFullYear()} HealthSync. All rights reserved.
@@ -1073,7 +1073,7 @@ Thank you for using HealthSync.
       </p>
       
       <center>
-        <a href="${process.env.FRONTEND_URL || 'https://healthsync.com'}" class="cta-button">
+        <a href="${process.env.FRONTEND_URL || 'https://healthsyncpro.in'}" class="cta-button">
           Book New Appointment
         </a>
       </center>

@@ -825,7 +825,7 @@ function generateInvoiceHTML(invoiceData) {
         <ul>
           <li>This invoice is generated electronically and is valid without signature.</li>
           <li>Payment is due immediately unless otherwise agreed upon.</li>
-          <li>For refund policy, please refer to our terms of service at healthsync.com/terms</li>
+          <li>For refund policy, please refer to our terms of service at healthsyncpro.in/terms</li>
           <li>Medical consultations are subject to the doctor's professional judgment.</li>
           <li>Please retain this invoice for your records and tax purposes.</li>
         </ul>
@@ -838,9 +838,9 @@ function generateInvoiceHTML(invoiceData) {
       <p>Your Trusted Healthcare Management Platform</p>
       
       <div class="footer-contact">
-        <div class="footer-contact-item">📧 desouvik0000@gmail.com</div>
+        <div class="footer-contact-item">📧 support@healthsyncpro.in</div>
         <div class="footer-contact-item">📞 +91-7001268485</div>
-        <div class="footer-contact-item">🌐 healthsync.com</div>
+        <div class="footer-contact-item">🌐 healthsyncpro.in</div>
         <div class="footer-contact-item">📍 Bankura, West Bengal, India - 722101</div>
       </div>
       
@@ -995,7 +995,7 @@ async function sendInvoiceEmail(invoiceData) {
     </div>
     <div class="email-footer">
       <p><strong>HealthSync Healthcare Platform</strong></p>
-      <p>📧 desouvik0000@gmail.com | 📞 +91-7001268485</p>
+      <p>📧 support@healthsyncpro.in | 📞 +91-7001268485</p>
       <p>© ${new Date().getFullYear()} HealthSync. All rights reserved.</p>
     </div>
   </div>

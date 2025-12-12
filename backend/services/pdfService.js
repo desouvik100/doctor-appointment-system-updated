@@ -195,7 +195,7 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
     <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #e5e7eb;">
       <p style="font-size: 10px; color: #9ca3af;">
         This is a computer-generated prescription from HealthSync Healthcare Platform.<br>
-        For any queries, contact: support@healthsync.com | +91-7001268485
+        For any queries, contact: support@healthsyncpro.in | +91-7001268485
       </p>
     </div>
   </div>
@@ -336,7 +336,7 @@ function generateInvoiceHTML(payment, appointment, patient, doctor, clinic) {
     <div class="footer">
       <p>Thank you for choosing HealthSync!</p>
       <p style="margin-top: 10px;">
-        For queries: support@healthsync.com | +91-7001268485<br>
+        For queries: support@healthsyncpro.in | +91-7001268485<br>
         This is a computer-generated invoice and does not require a signature.
       </p>
     </div>

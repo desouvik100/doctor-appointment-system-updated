@@ -273,6 +273,79 @@ router.post('/admin/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    // Send login notification email to admin
+    try {
+      const nodemailer = require('nodemailer');
+      const transporter = nodemailer.createTransport({
+        service: 'gmail',
+        auth: {
+          user: process.env.EMAIL_USER,
+          pass: process.env.EMAIL_PASS,
+        },
+      });
+
+      const loginTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+      const adminEmail = process.env.ADMIN_EMAIL || user.email;
+
+      await transporter.sendMail({
+        from: `"HealthSync Pro Security" <${process.env.EMAIL_USER}>`,
+        to: adminEmail,
+        subject: '🔐 Admin Login Alert - HealthSync Pro',
+        html: `
+          <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px;">
+            <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+              <h1 style="color: white; margin: 0; font-size: 24px;">🔐 Admin Login Alert</h1>
+            </div>
+            <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
+              <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 4px;">
+                <strong style="color: #92400e;">⚠️ Security Notice</strong>
+                <p style="margin: 5px 0 0 0; color: #78350f;">A successful admin login was detected on your HealthSync Pro account.</p>
+              </div>
+              
+              <h3 style="color: #1e293b; margin-bottom: 15px;">Login Details:</h3>
+              <table style="width: 100%; border-collapse: collapse;">
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 12px 0; color: #64748b; width: 40%;">👤 Admin Name</td>
+                  <td style="padding: 12px 0; color: #1e293b; font-weight: 600;">${user.name}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 12px 0; color: #64748b;">📧 Email</td>
+                  <td style="padding: 12px 0; color: #1e293b; font-weight: 600;">${user.email}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 12px 0; color: #64748b;">🕐 Login Time</td>
+                  <td style="padding: 12px 0; color: #1e293b; font-weight: 600;">${loginTime}</td>
+                </tr>
+                <tr style="border-bottom: 1px solid #e2e8f0;">
+                  <td style="padding: 12px 0; color: #64748b;">🌐 IP Address</td>
+                  <td style="padding: 12px 0; color: #1e293b; font-weight: 600;">${ipAddress || 'Unknown'}</td>
+                </tr>
+                <tr>
+                  <td style="padding: 12px 0; color: #64748b;">💻 Device</td>
+                  <td style="padding: 12px 0; color: #1e293b; font-size: 12px;">${userAgent ? userAgent.substring(0, 80) + '...' : 'Unknown'}</td>
+                </tr>
+              </table>
+              
+              <div style="margin-top: 25px; padding: 15px; background: #f1f5f9; border-radius: 8px;">
+                <p style="margin: 0; color: #475569; font-size: 14px;">
+                  <strong>🛡️ If this wasn't you:</strong> Please secure your account immediately by changing your password and reviewing recent activity.
+                </p>
+              </div>
+            </div>
+            <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 12px;">
+              <p>© ${new Date().getFullYear()} HealthSync Pro. All rights reserved.</p>
+              <p>This is an automated security notification.</p>
+            </div>
+          </div>
+        `,
+        text: `Admin Login Alert\n\nA successful admin login was detected.\n\nAdmin: ${user.name}\nEmail: ${user.email}\nTime: ${loginTime}\nIP: ${ipAddress || 'Unknown'}\n\nIf this wasn't you, please secure your account immediately.`
+      });
+      console.log(`📧 Admin login notification sent to ${adminEmail}`);
+    } catch (emailError) {
+      console.error('Failed to send admin login email:', emailError.message);
+      // Don't fail the login if email fails
+    }
+
     res.json({
       token,
       user: {

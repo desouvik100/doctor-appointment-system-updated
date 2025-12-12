@@ -2,6 +2,12 @@
 const express = require('express');
 const router = express.Router();
 const { sendEmail } = require('../services/emailService');
+const { 
+  sendAnalyticsReport, 
+  sendSystemHealthAlert, 
+  sendNewDoctorRegistrationAlert, 
+  sendRevenueSummary 
+} = require('../services/adminEmailService');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 
@@ -221,7 +227,7 @@ function generateEmailTemplate({ recipientName, subject, message, recipientType 
       <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
       
       <p style="color: #6b7280; font-size: 14px; margin: 0;">
-        If you have any questions, please contact us at <a href="mailto:desouvik0000@gmail.com" style="color: ${color};">desouvik0000@gmail.com</a>
+        If you have any questions, please contact us at <a href="mailto:support@healthsyncpro.in" style="color: ${color};">support@healthsyncpro.in</a>
       </p>
     </div>
     
@@ -236,5 +242,111 @@ function generateEmailTemplate({ recipientName, subject, message, recipientType 
 </html>
   `;
 }
+
+// ============================================
+// MANUAL TEST ENDPOINTS FOR ADMIN REPORTS
+// ============================================
+
+// Test daily/weekly analytics report
+router.post('/test/analytics', async (req, res) => {
+  try {
+    const { period = 'daily' } = req.body;
+    console.log(`📊 Manually triggering ${period} analytics report...`);
+    
+    const result = await sendAnalyticsReport(period);
+    
+    if (result.success) {
+      res.json({ success: true, message: `${period} analytics report sent successfully` });
+    } else {
+      res.status(500).json({ success: false, message: result.reason || result.error });
+    }
+  } catch (error) {
+    console.error('Error sending analytics report:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Test system health alert
+router.post('/test/health-alert', async (req, res) => {
+  try {
+    const { alertType = 'server_restart', details = 'Manual test alert from admin panel' } = req.body;
+    console.log(`🚨 Manually triggering ${alertType} health alert...`);
+    
+    const result = await sendSystemHealthAlert(alertType, details);
+    
+    if (result.success) {
+      res.json({ success: true, message: `${alertType} health alert sent successfully` });
+    } else {
+      res.status(500).json({ success: false, message: result.reason || result.error });
+    }
+  } catch (error) {
+    console.error('Error sending health alert:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Test doctor registration alert
+router.post('/test/doctor-registration', async (req, res) => {
+  try {
+    const testDoctor = req.body.doctor || {
+      name: 'Test Doctor',
+      email: 'test.doctor@example.com',
+      phone: '9876543210',
+      specialization: 'General Medicine',
+      clinicName: 'Test Clinic',
+      consultationFee: 500,
+      location: 'Bankura'
+    };
+    
+    console.log(`👨‍⚕️ Manually triggering doctor registration alert...`);
+    
+    const result = await sendNewDoctorRegistrationAlert(testDoctor);
+    
+    if (result.success) {
+      res.json({ success: true, message: 'Doctor registration alert sent successfully' });
+    } else {
+      res.status(500).json({ success: false, message: result.reason || result.error });
+    }
+  } catch (error) {
+    console.error('Error sending doctor registration alert:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Test revenue summary
+router.post('/test/revenue', async (req, res) => {
+  try {
+    const { period = 'weekly' } = req.body;
+    console.log(`💰 Manually triggering ${period} revenue summary...`);
+    
+    const result = await sendRevenueSummary(period);
+    
+    if (result.success) {
+      res.json({ success: true, message: `${period} revenue summary sent successfully` });
+    } else {
+      res.status(500).json({ success: false, message: result.reason || result.error });
+    }
+  } catch (error) {
+    console.error('Error sending revenue summary:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get available alert types
+router.get('/alert-types', (req, res) => {
+  res.json({
+    success: true,
+    alertTypes: [
+      { type: 'database_error', severity: 'critical', description: 'Database connection issues' },
+      { type: 'high_error_rate', severity: 'warning', description: 'High error rate detected' },
+      { type: 'server_restart', severity: 'info', description: 'Server restart notification' },
+      { type: 'memory_warning', severity: 'warning', description: 'High memory usage' },
+      { type: 'payment_failure', severity: 'critical', description: 'Payment system errors' },
+      { type: 'security_breach', severity: 'critical', description: 'Security alert' },
+      { type: 'api_timeout', severity: 'warning', description: 'API timeout issues' },
+      { type: 'backup_complete', severity: 'info', description: 'Backup completed' }
+    ]
+  });
+});
 
 module.exports = router;

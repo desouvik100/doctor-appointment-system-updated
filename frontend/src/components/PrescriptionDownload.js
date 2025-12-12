@@ -176,7 +176,7 @@ const PrescriptionDownload = ({ prescription, onClose }) => {
 
     <div class="disclaimer">
       <p>This is a computer-generated prescription from HealthSync Healthcare Platform.</p>
-      <p>For any queries, contact: support@healthsync.com | +91-7001268485</p>
+      <p>For any queries, contact: support@healthsyncpro.in | +91-7001268485</p>
     </div>
   </div>
 </body>

@@ -7,7 +7,7 @@ const COMPANY_INFO = {
   name: 'HealthSync Pro',
   legalName: 'HealthSync Healthcare Solutions',
   address: 'Bankura, West Bengal, India - 722101',
-  email: 'desouvik0000@gmail.com',
+  email: 'info@healthsyncpro.in',
   phone: '+91-7001268485',
   website: 'https://healthsyncpro.in',
   lastUpdated: 'December 6, 2025'
@@ -433,11 +433,45 @@ export const ContactUs = ({ onBack }) => (
           <p>Fill out the form below and we'll get back to you as soon as possible.</p>
         </div>
         
-        <form className="contact-form" onSubmit={(e) => {
+        <form className="contact-form" onSubmit={async (e) => {
           e.preventDefault();
           const formData = new FormData(e.target);
-          const mailtoLink = `mailto:${COMPANY_INFO.email}?subject=${encodeURIComponent(formData.get('subject'))}&body=${encodeURIComponent(`Name: ${formData.get('name')}\nEmail: ${formData.get('email')}\nPhone: ${formData.get('phone')}\n\nMessage:\n${formData.get('message')}`)}`;
-          window.location.href = mailtoLink;
+          const submitBtn = e.target.querySelector('button[type="submit"]');
+          const originalText = submitBtn.innerHTML;
+          
+          try {
+            submitBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Sending...';
+            submitBtn.disabled = true;
+            
+            const response = await fetch(`${process.env.REACT_APP_API_URL || 'http://localhost:5005'}/api/contact/submit`, {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                name: formData.get('name'),
+                email: formData.get('email'),
+                phone: formData.get('phone'),
+                subject: formData.get('subject'),
+                message: formData.get('message')
+              })
+            });
+            
+            const data = await response.json();
+            
+            if (data.success) {
+              alert('✅ ' + data.message);
+              e.target.reset();
+            } else {
+              alert('❌ ' + (data.message || 'Failed to send message'));
+            }
+          } catch (error) {
+            console.error('Contact form error:', error);
+            // Fallback to mailto
+            const mailtoLink = `mailto:${COMPANY_INFO.email}?subject=${encodeURIComponent(formData.get('subject'))}&body=${encodeURIComponent(`Name: ${formData.get('name')}\nEmail: ${formData.get('email')}\nPhone: ${formData.get('phone')}\n\nMessage:\n${formData.get('message')}`)}`;
+            window.location.href = mailtoLink;
+          } finally {
+            submitBtn.innerHTML = originalText;
+            submitBtn.disabled = false;
+          }
         }}>
           <div className="contact-form__row">
             <div className="contact-form__group">

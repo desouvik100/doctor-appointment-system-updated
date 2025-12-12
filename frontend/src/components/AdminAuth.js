@@ -113,7 +113,7 @@ function AdminAuth({ onLogin, onBack }) {
                 className="admin-auth__input"
                 value={formData.email}
                 onChange={handleChange}
-                placeholder="admin@healthsync.com"
+                placeholder="admin@healthsyncpro.in"
                 required
                 disabled={loading}
               />

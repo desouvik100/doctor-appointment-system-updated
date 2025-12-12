@@ -44,7 +44,7 @@ async function sendOtpEmail(to, otp, type = 'register') {
     from: `"HealthSync Healthcare" <${process.env.EMAIL_USER}>`,
     to,
     subject,
-    text: `${purpose}\n\nYour verification code is: ${otp}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nHealthSync - Your Healthcare Management Platform\nWebsite: https://healthsync.com\nSupport: support@healthsync.com\nPhone: +1 (555) 123-4567`,
+    text: `${purpose}\n\nYour verification code is: ${otp}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nHealthSync - Your Healthcare Management Platform\nWebsite: https://healthsyncpro.in\nSupport: support@healthsyncpro.in\nPhone: +91-7001268485`,
     html: `
       <!DOCTYPE html>
       <html lang="en">
@@ -132,9 +132,9 @@ async function sendOtpEmail(to, otp, type = 'register') {
             </div>
             <div class="support-section">
               <div class="support-title">Need Help? We're Here for You</div>
-              <div class="support-item">📧 support@healthsync.com</div>
-              <div class="support-item">📞 +1 (555) 123-4567</div>
-              <div class="support-item">🌐 healthsync.com</div>
+              <div class="support-item">📧 support@healthsyncpro.in</div>
+              <div class="support-item">📞 +91-7001268485</div>
+              <div class="support-item">🌐 healthsyncpro.in</div>
             </div>
             <div class="social-section">
               <div class="social-title">Connect With Us</div>

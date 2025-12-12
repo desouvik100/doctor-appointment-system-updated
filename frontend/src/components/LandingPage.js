@@ -547,7 +547,7 @@ const LandingPage = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode =
             <div className="landing-about__contact-info">
               <div className="landing-about__contact-item">
                 <i className="fas fa-envelope"></i>
-                <span>desouvik0000@gmail.com</span>
+                <span>info@healthsyncpro.in</span>
               </div>
               <div className="landing-about__contact-item">
                 <i className="fas fa-phone"></i>
@@ -615,7 +615,7 @@ const LandingPage = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode =
                 <div className="landing-contact__info-icon">📧</div>
                 <div>
                   <h4>Email Address</h4>
-                  <p>desouvik0000@gmail.com</p>
+                  <p>info@healthsyncpro.in</p>
                 </div>
               </div>
               

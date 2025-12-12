@@ -3,6 +3,7 @@ const bcrypt = require('bcryptjs');
 const Doctor = require('../models/Doctor');
 const Clinic = require('../models/Clinic');
 const aiSecurityService = require('../services/aiSecurityService');
+const { sendNewDoctorRegistrationAlert } = require('../services/adminEmailService');
 const router = express.Router();
 
 // Security helper - log doctor account operations
@@ -233,6 +234,17 @@ router.post('/', async (req, res) => {
       .populate('clinicId', 'name address city phone');
     
     console.log('✅ Doctor created with pending status:', doctor.name);
+    
+    // Send email notification to admin about new doctor registration
+    sendNewDoctorRegistrationAlert({
+      name: doctor.name,
+      email: doctor.email,
+      phone: doctor.phone,
+      specialization: doctor.specialization,
+      clinicName: populatedDoctor.clinicId?.name || clinicName,
+      consultationFee: doctor.consultationFee,
+      location: populatedDoctor.clinicId?.city || 'N/A'
+    }).catch(err => console.error('Failed to send doctor registration alert:', err));
     
     res.status(201).json({
       ...populatedDoctor.toObject(),

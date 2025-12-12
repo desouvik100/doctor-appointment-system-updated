@@ -387,7 +387,7 @@ class AISecurityService {
   async sendAdminEmailNotification(alert) {
     try {
       const { sendEmail } = require('./emailService');
-      const adminEmail = process.env.ADMIN_EMAIL || 'admin@healthsync.com';
+      const adminEmail = process.env.ADMIN_EMAIL || 'admin@healthsyncpro.in';
       
       const severityEmoji = {
         critical: '🚨',

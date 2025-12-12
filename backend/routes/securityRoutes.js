@@ -240,7 +240,7 @@ router.post('/test-alerts', async (req, res) => {
       {
         userType: 'Admin',
         userName: 'Admin User',
-        userEmail: 'admin@healthsync.com',
+        userEmail: 'admin@healthsyncpro.in',
         activityType: 'off_hours_access',
         severity: 'low',
         confidenceScore: 40,
@@ -566,7 +566,7 @@ router.post('/unsuspend-user', async (req, res) => {
                 </div>
                 <p>You can now log in and access all features of your account.</p>
                 <div style="text-align: center; margin: 20px 0;">
-                  <a href="${process.env.FRONTEND_URL || 'https://healthsync.com'}/login" 
+                  <a href="${process.env.FRONTEND_URL || 'https://healthsyncpro.in'}/login" 
                      style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: 600;">
                     Login to Your Account
                   </a>
@@ -652,7 +652,7 @@ router.post('/force-logout', async (req, res) => {
                   <li>Contact support if you notice anything suspicious</li>
                 </ul>
                 <div style="text-align: center; margin: 20px 0;">
-                  <a href="${process.env.FRONTEND_URL || 'https://healthsync.com'}/login" 
+                  <a href="${process.env.FRONTEND_URL || 'https://healthsyncpro.in'}/login" 
                      style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: 600;">
                     Login Again
                   </a>
@@ -744,7 +744,7 @@ router.post('/require-password-reset', async (req, res) => {
                 </div>
                 <p>Please reset your password as soon as possible to regain full access to your account.</p>
                 <div style="text-align: center; margin: 20px 0;">
-                  <a href="${process.env.FRONTEND_URL || 'https://healthsync.com'}/forgot-password" 
+                  <a href="${process.env.FRONTEND_URL || 'https://healthsyncpro.in'}/forgot-password" 
                      style="background: linear-gradient(135deg, #8b5cf6 0%, #7c3aed 100%); color: white; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: 600;">
                     Reset Password Now
                   </a>

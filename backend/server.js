@@ -4,6 +4,7 @@ const cors = require('cors');
 require('dotenv').config();
 const { initializeScheduler } = require('./services/appointmentScheduler');
 const { initializeMedicineReminders } = require('./services/medicineReminderService');
+const { initializeScheduledEmails } = require('./services/adminEmailService');
 const cacheService = require('./services/cacheService');
 const { securityMonitor, trackFailedLogin } = require('./middleware/securityMiddleware');
 
@@ -243,6 +244,7 @@ app.use('/api/export', require('./routes/exportRoutes'));
 app.use('/api/invoices', require('./routes/invoiceRoutes'));
 app.use('/api/wallet', require('./routes/walletRoutes'));
 app.use('/api/admin/email', require('./routes/adminEmailRoutes'));
+app.use('/api/contact', require('./routes/contactRoutes'));
 app.use('/api/security', require('./routes/securityRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes')); // AI-powered features
 app.use('/api/ai-health', require('./routes/aiHealthRoutes')); // Advanced AI health features
@@ -283,4 +285,7 @@ app.listen(PORT, async () => {
   
   // Initialize medicine reminder service
   initializeMedicineReminders();
+  
+  // Initialize admin email scheduled reports
+  initializeScheduledEmails();
 });

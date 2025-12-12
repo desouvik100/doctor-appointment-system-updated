@@ -1107,7 +1107,7 @@ function App() {
                   <div>
                     <h6 >Email</h6>
                     <p >
-                      Support: desouvik0000@gmail.com
+                      Support: support@healthsyncpro.in
                     </p>
                   </div>
                 </div>
@@ -1278,7 +1278,7 @@ function App() {
                   <h6>Contact Us</h6>
                   <p>
                     <i ></i> Phone: +91 7001268485<br />
-                    <i ></i> Email: desouvik0000@gmail.com
+                    <i ></i> Email: info@healthsyncpro.in
                   </p>
                 </div>
               </div>
