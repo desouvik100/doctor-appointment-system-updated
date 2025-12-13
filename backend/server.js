@@ -310,8 +310,31 @@ app.get('/api/health', (req, res) => {
   res.json({ 
     status: 'OK', 
     database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+    databaseName: mongoose.connection.name,
     timestamp: new Date().toISOString()
   });
+});
+
+// Debug: Check test user (temporary - remove after verification)
+app.get('/api/debug/test-user', async (req, res) => {
+  try {
+    const User = require('./models/User');
+    const user = await User.findOne({ email: 'test@healthsyncpro.in' });
+    if (!user) {
+      return res.json({ found: false, message: 'Test user not found in database' });
+    }
+    res.json({
+      found: true,
+      id: user._id,
+      email: user.email,
+      role: user.role,
+      isActive: user.isActive,
+      createdAt: user.createdAt,
+      databaseName: mongoose.connection.name
+    });
+  } catch (error) {
+    res.status(500).json({ error: error.message });
+  }
 });
 
 // 404 handler for undefined routes
