@@ -227,7 +227,12 @@ router.post('/', async (req, res) => {
       experience: experience || 0,
       qualification: qualification || 'MBBS',
       password: hashedPassword,
-      approvalStatus: 'pending' // New doctors need admin approval
+      approvalStatus: 'pending', // New doctors need admin approval
+      // Terms and conditions acceptance
+      termsAccepted: true,
+      termsAcceptedAt: new Date(),
+      privacyPolicyAccepted: true,
+      privacyPolicyAcceptedAt: new Date()
     });
 
     await doctor.save();

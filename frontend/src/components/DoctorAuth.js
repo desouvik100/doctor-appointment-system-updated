@@ -27,6 +27,10 @@ function DoctorAuth({ onLogin, onBack }) {
   const [clinics, setClinics] = useState([]);
   const [selectedClinicId, setSelectedClinicId] = useState("");
   const [socialLoading, setSocialLoading] = useState(null);
+  const [agreedToTerms, setAgreedToTerms] = useState(false);
+  const [agreedToPrivacy, setAgreedToPrivacy] = useState(false);
+  const [showTermsModal, setShowTermsModal] = useState(false);
+  const [showPrivacyModal, setShowPrivacyModal] = useState(false);
 
   // Load Google Sign-In script
   useEffect(() => {
@@ -214,6 +218,12 @@ function DoctorAuth({ onLogin, onBack }) {
       return;
     }
 
+    if (!agreedToTerms || !agreedToPrivacy) {
+      setError("You must agree to the Terms of Service and Privacy Policy to register");
+      setLoading(false);
+      return;
+    }
+
     try {
       const response = await axios.post("/api/doctors", {
         name: formData.name,
@@ -242,6 +252,8 @@ function DoctorAuth({ onLogin, onBack }) {
         qualification: ""
       });
       setSelectedClinicId("");
+      setAgreedToTerms(false);
+      setAgreedToPrivacy(false);
       
       // Switch to login after 3 seconds
       setTimeout(() => {
@@ -442,12 +454,21 @@ function DoctorAuth({ onLogin, onBack }) {
                 )}
               </button>
               
-              <div className="text-center mt-4 pt-3" style={{ borderTop: '1px solid #e2e8f0' }}>
+              <div className="text-center mt-4 pt-3 pb-2" style={{ borderTop: '1px solid #e2e8f0' }}>
                 <p style={{ color: '#1a202c', marginBottom: '12px' }}>New doctor? Join our network</p>
                 <button
                   type="button"
-                  className="btn btn-success px-4 py-2"
-                  style={{ fontSize: '16px', fontWeight: '600' }}
+                  className="btn px-4 py-2"
+                  style={{ 
+                    fontSize: '16px', 
+                    fontWeight: '600', 
+                    minWidth: '200px',
+                    backgroundColor: '#059669',
+                    color: '#ffffff',
+                    border: 'none',
+                    borderRadius: '8px',
+                    boxShadow: '0 2px 4px rgba(5, 150, 105, 0.3)'
+                  }}
                   onClick={() => setIsLogin(false)}
                 >
                   <i className="fas fa-user-plus me-2"></i>
@@ -634,7 +655,71 @@ function DoctorAuth({ onLogin, onBack }) {
                 </div>
               </div>
 
-              <button type="submit" className="btn btn-success w-100 py-2 mt-3" disabled={loading}>
+              {/* Terms and Conditions Section */}
+              <div className="mb-4 mt-4 p-3" style={{ backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
+                <h6 className="text-info mb-3"><i className="fas fa-file-contract me-2"></i>Legal Agreements</h6>
+                
+                <div className="form-check mb-3">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="termsCheckbox"
+                    checked={agreedToTerms}
+                    onChange={(e) => setAgreedToTerms(e.target.checked)}
+                    required
+                  />
+                  <label className="form-check-label" htmlFor="termsCheckbox">
+                    I agree to the{' '}
+                    <button
+                      type="button"
+                      className="btn btn-link p-0 text-primary"
+                      style={{ textDecoration: 'underline', verticalAlign: 'baseline' }}
+                      onClick={() => setShowTermsModal(true)}
+                    >
+                      Terms of Service
+                    </button>
+                    <span className="text-danger"> *</span>
+                  </label>
+                </div>
+
+                <div className="form-check mb-3">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="privacyCheckbox"
+                    checked={agreedToPrivacy}
+                    onChange={(e) => setAgreedToPrivacy(e.target.checked)}
+                    required
+                  />
+                  <label className="form-check-label" htmlFor="privacyCheckbox">
+                    I agree to the{' '}
+                    <button
+                      type="button"
+                      className="btn btn-link p-0 text-primary"
+                      style={{ textDecoration: 'underline', verticalAlign: 'baseline' }}
+                      onClick={() => setShowPrivacyModal(true)}
+                    >
+                      Privacy Policy
+                    </button>
+                    <span className="text-danger"> *</span>
+                  </label>
+                </div>
+
+                <div className="form-check">
+                  <input
+                    type="checkbox"
+                    className="form-check-input"
+                    id="credentialsCheckbox"
+                    required
+                  />
+                  <label className="form-check-label" htmlFor="credentialsCheckbox">
+                    I certify that all information provided is accurate and I hold valid medical credentials
+                    <span className="text-danger"> *</span>
+                  </label>
+                </div>
+              </div>
+
+              <button type="submit" className="btn btn-success w-100 py-2 mt-3" disabled={loading || !agreedToTerms || !agreedToPrivacy}>
                 {loading ? (
                   <><span className="spinner-border spinner-border-sm me-2"></span>Submitting...</>
                 ) : (
@@ -655,6 +740,129 @@ function DoctorAuth({ onLogin, onBack }) {
                 </button>
               </div>
             </form>
+          )}
+
+          {/* Terms Modal */}
+          {showTermsModal && (
+            <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+              <div className="modal-dialog modal-lg modal-dialog-scrollable">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title"><i className="fas fa-file-contract me-2"></i>Terms of Service</h5>
+                    <button type="button" className="btn-close" onClick={() => setShowTermsModal(false)}></button>
+                  </div>
+                  <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                    <h6>1. Doctor Registration Agreement</h6>
+                    <p>By registering as a healthcare provider on HealthSync Pro, you agree to:</p>
+                    <ul>
+                      <li>Provide accurate and verifiable professional credentials</li>
+                      <li>Maintain valid medical licenses and certifications</li>
+                      <li>Comply with all applicable healthcare regulations and laws</li>
+                      <li>Provide quality healthcare services to patients</li>
+                      <li>Maintain patient confidentiality and data privacy</li>
+                    </ul>
+                    
+                    <h6>2. Platform Usage</h6>
+                    <p>As a registered doctor, you agree to:</p>
+                    <ul>
+                      <li>Use the platform only for legitimate healthcare purposes</li>
+                      <li>Respond to patient appointments in a timely manner</li>
+                      <li>Keep your availability calendar updated</li>
+                      <li>Not share your account credentials with others</li>
+                    </ul>
+                    
+                    <h6>3. Fees and Payments</h6>
+                    <p>Platform fees and payment terms:</p>
+                    <ul>
+                      <li>Platform charges a service fee on each consultation</li>
+                      <li>Payments are processed securely through our payment partners</li>
+                      <li>Payouts are made according to the agreed schedule</li>
+                    </ul>
+                    
+                    <h6>4. Liability</h6>
+                    <p>You acknowledge that:</p>
+                    <ul>
+                      <li>You are solely responsible for the medical advice you provide</li>
+                      <li>HealthSync Pro is a technology platform and not a healthcare provider</li>
+                      <li>You maintain appropriate professional liability insurance</li>
+                    </ul>
+                    
+                    <h6>5. Termination</h6>
+                    <p>Either party may terminate this agreement with notice. HealthSync Pro reserves the right to suspend or terminate accounts that violate these terms.</p>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowTermsModal(false)}>Close</button>
+                    <button type="button" className="btn btn-primary" onClick={() => { setAgreedToTerms(true); setShowTermsModal(false); }}>
+                      <i className="fas fa-check me-2"></i>I Agree
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Privacy Modal */}
+          {showPrivacyModal && (
+            <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+              <div className="modal-dialog modal-lg modal-dialog-scrollable">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title"><i className="fas fa-shield-alt me-2"></i>Privacy Policy</h5>
+                    <button type="button" className="btn-close" onClick={() => setShowPrivacyModal(false)}></button>
+                  </div>
+                  <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
+                    <h6>1. Information We Collect</h6>
+                    <p>We collect the following information from healthcare providers:</p>
+                    <ul>
+                      <li>Personal identification (name, email, phone)</li>
+                      <li>Professional credentials and qualifications</li>
+                      <li>Clinic/practice information</li>
+                      <li>Bank details for payment processing</li>
+                    </ul>
+                    
+                    <h6>2. How We Use Your Information</h6>
+                    <ul>
+                      <li>To verify your professional credentials</li>
+                      <li>To display your profile to patients</li>
+                      <li>To process appointment bookings and payments</li>
+                      <li>To communicate important platform updates</li>
+                    </ul>
+                    
+                    <h6>3. Data Security</h6>
+                    <p>We implement industry-standard security measures:</p>
+                    <ul>
+                      <li>256-bit SSL encryption</li>
+                      <li>Secure data storage with encryption at rest</li>
+                      <li>Regular security audits</li>
+                      <li>Access controls and authentication</li>
+                    </ul>
+                    
+                    <h6>4. Data Sharing</h6>
+                    <p>Your information may be shared with:</p>
+                    <ul>
+                      <li>Patients who book appointments with you</li>
+                      <li>Payment processors for transaction handling</li>
+                      <li>Regulatory authorities when required by law</li>
+                    </ul>
+                    
+                    <h6>5. Your Rights</h6>
+                    <p>You have the right to:</p>
+                    <ul>
+                      <li>Access your personal data</li>
+                      <li>Correct inaccurate information</li>
+                      <li>Request deletion of your account</li>
+                      <li>Export your data</li>
+                    </ul>
+                  </div>
+                  <div className="modal-footer">
+                    <button type="button" className="btn btn-secondary" onClick={() => setShowPrivacyModal(false)}>Close</button>
+                    <button type="button" className="btn btn-primary" onClick={() => { setAgreedToPrivacy(true); setShowPrivacyModal(false); }}>
+                      <i className="fas fa-check me-2"></i>I Agree
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </div>
           )}
         </div>
       </div>

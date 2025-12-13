@@ -506,7 +506,12 @@ router.post('/receptionist/register', async (req, res) => {
       phone: phone || '',
       role: 'receptionist',
       approvalStatus: 'pending',
-      clinicName: clinicName
+      clinicName: clinicName,
+      // Terms and conditions acceptance
+      termsAccepted: true,
+      termsAcceptedAt: new Date(),
+      privacyPolicyAccepted: true,
+      privacyPolicyAcceptedAt: new Date()
     });
 
     try {

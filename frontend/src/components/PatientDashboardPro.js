@@ -289,34 +289,36 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       </aside>
 
       <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}`}>
-        <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-4 lg:px-6 h-16 flex items-center justify-between">
-          <div className="flex items-center gap-4">
+        <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-2 sm:px-4 lg:px-6 h-14 sm:h-16 flex items-center justify-between">
+          <div className="flex items-center gap-2 sm:gap-4">
             <button 
               type="button"
-              className="lg:hidden w-11 h-11 rounded-xl bg-sky-50 hover:bg-sky-100 flex items-center justify-center cursor-pointer active:scale-95 border border-sky-200" 
+              className="lg:hidden w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-sky-50 hover:bg-sky-100 flex items-center justify-center cursor-pointer active:scale-95 border border-sky-200" 
               style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
               onPointerDown={() => setMobileSidebarOpen(true)}
             >
-              <i className="fas fa-bars text-sky-600 text-lg"></i>
+              <i className="fas fa-bars text-sky-600 text-base sm:text-lg"></i>
             </button>
-            <div>
-              <h1 className="text-base font-semibold text-slate-800">Welcome back, {(currentUser?.name || 'User').split(' ')[0]}</h1>
-              <p className="text-xs text-slate-500">{userLocation?.city ? <><i className="fas fa-map-marker-alt text-sky-500 mr-1"></i>{userLocation.city}</> : 'Have a healthy day'}</p>
+            <div className="min-w-0">
+              <h1 className="text-sm sm:text-base font-semibold text-slate-800 truncate">Welcome back, {(currentUser?.name || 'User').split(' ')[0]}</h1>
+              <p className="text-[10px] sm:text-xs text-slate-500 truncate">{userLocation?.city ? <><i className="fas fa-map-marker-alt text-sky-500 mr-1"></i>{userLocation.city}</> : 'Have a healthy day'}</p>
             </div>
           </div>
-          <div className="flex items-center gap-2">
-            <button onClick={() => setActiveSection('doctors')} className="hidden sm:flex items-center gap-2 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors"><i className="fas fa-plus text-xs"></i>{t('bookNow')}</button>
-            <LanguageSelector />
-            <button onClick={handleUpdateLocation} disabled={updatingLocation} className="w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center"><i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'} text-slate-500 text-sm`}></i></button>
-            <button onClick={() => setShowNotifications(true)} className="relative w-9 h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center">
-              <i className="fas fa-bell text-slate-500 text-sm"></i>
+          <div className="flex items-center gap-1 sm:gap-2">
+            <button onClick={() => setActiveSection('doctors')} className="hidden md:flex items-center gap-2 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors"><i className="fas fa-plus text-xs"></i>{t('bookNow')}</button>
+            <div className="hidden sm:block">
+              <LanguageSelector />
+            </div>
+            <button onClick={handleUpdateLocation} disabled={updatingLocation} className="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 hover:bg-slate-200 items-center justify-center"><i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'} text-slate-500 text-xs sm:text-sm`}></i></button>
+            <button onClick={() => setShowNotifications(true)} className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center">
+              <i className="fas fa-bell text-slate-500 text-xs sm:text-sm"></i>
               {unreadNotifications > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{unreadNotifications}</span>}
             </button>
-            <button onClick={() => setShowProfileModal(true)} className="flex items-center gap-2 ml-2 hover:bg-slate-50 rounded-lg p-1.5 transition-colors">
+            <button onClick={() => setShowProfileModal(true)} className="flex items-center gap-2 hover:bg-slate-50 rounded-lg p-1 sm:p-1.5 transition-colors">
               <img 
                 src={getProfilePhotoUrl(currentUser) || getFallbackAvatarUrl(currentUser?.name)} 
                 alt="Profile" 
-                className="w-8 h-8 rounded-lg object-cover" 
+                className="w-7 h-7 sm:w-8 sm:h-8 rounded-lg object-cover" 
                 onError={(e) => { e.target.src = getFallbackAvatarUrl(currentUser?.name); }} 
               />
             </button>

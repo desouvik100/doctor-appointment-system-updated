@@ -1,22 +1,53 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import './MobileHeroSection.css';
 
-const MobileHeroSection = ({ user, onVideoConsult, onClinicVisit, onSmartMatch, onSearch }) => {
-  const [searchQuery, setSearchQuery] = useState('');
+const MobileHeroSection = ({ onVideoConsult, onClinicVisit, onSmartMatch, onSearch }) => {
+  const [taglineIndex, setTaglineIndex] = useState(0);
+  const [isTransitioning, setIsTransitioning] = useState(false);
+  
+  // Attractive rotating taglines
+  const taglines = [
+    "Care that comes to you, anytime",
+    "Expert doctors. Zero wait time.",
+    "Healing made simple & fast",
+    "Your wellness. Our priority.",
+    "Book in seconds. Heal faster.",
+    "Healthcare at your fingertips"
+  ];
+  
+  // Smooth transition between taglines every 3.5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsTransitioning(true);
+      setTimeout(() => {
+        setTaglineIndex((prev) => (prev + 1) % taglines.length);
+        setIsTransitioning(false);
+      }, 500); // Half second for fade out, then change
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [taglines.length]);
 
   return (
     <div className="mobile-hero-wrapper">
       {/* Header */}
       <div className="mobile-hero-header">
-        <div className="hero-logo">H</div>
-        <button className="hero-search-btn" onClick={() => onSearch?.(searchQuery)}>
+        <div className="hero-logo-animated">
+          <div className="logo-pulse-ring"></div>
+          <div className="logo-pulse-ring delay-1"></div>
+          <div className="logo-inner">
+            <i className="fas fa-heartbeat"></i>
+          </div>
+        </div>
+        <button className="hero-search-btn" onClick={() => onSearch?.('')}>
           <i className="fas fa-search"></i>
         </button>
       </div>
 
-      {/* Hero Text */}
+      {/* Hero Text - Smooth Animated Tagline */}
       <div className="hero-tagline">
-        <h1>Your health. Your time.<br />Your choice.</h1>
+        <div className={`tagline-slider ${isTransitioning ? 'fade-out' : 'fade-in'}`}>
+          <h1>{taglines[taglineIndex]}</h1>
+        </div>
       </div>
 
       {/* Service Cards */}

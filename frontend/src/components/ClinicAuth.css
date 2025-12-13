@@ -129,10 +129,12 @@
 .clinic-auth__right {
   flex: 1;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   padding: 2rem;
   background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+  overflow-y: auto;
+  max-height: 100vh;
 }
 
 .clinic-auth__form-container {
@@ -143,6 +145,7 @@
   border-radius: 1.5rem;
   box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.05), 0 10px 15px -3px rgba(0, 0, 0, 0.05);
   border: 1px solid #f1f5f9;
+  margin: 2rem 0;
 }
 
 /* Header */

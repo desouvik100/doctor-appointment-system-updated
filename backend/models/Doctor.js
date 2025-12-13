@@ -230,6 +230,23 @@ const doctorSchema = new mongoose.Schema(
     },
     rejectionReason: {
       type: String
+    },
+    // Terms and Conditions Acceptance
+    termsAccepted: {
+      type: Boolean,
+      default: false
+    },
+    termsAcceptedAt: {
+      type: Date,
+      default: null
+    },
+    privacyPolicyAccepted: {
+      type: Boolean,
+      default: false
+    },
+    privacyPolicyAcceptedAt: {
+      type: Date,
+      default: null
     }
   },
   { timestamps: true }
