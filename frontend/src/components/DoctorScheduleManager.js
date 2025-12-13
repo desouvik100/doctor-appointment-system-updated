@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
 import './DoctorScheduleManager.css';
+import ClockTimePicker from './ClockTimePicker';
 
 const DAYS = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
 const DAY_LABELS = {
@@ -440,16 +441,16 @@ const DoctorScheduleManager = ({ doctorId }) => {
                               {(slot.type === 'both' || !slot.type) && <i className="fas fa-layer-group" title="Both"></i>}
                             </div>
                             <div className="slot-times">
-                              <input
-                                type="time"
+                              <ClockTimePicker
                                 value={slot.startTime || '09:00'}
-                                onChange={(e) => handleSlotChange(day, actualIdx, 'startTime', e.target.value)}
+                                onChange={(val) => handleSlotChange(day, actualIdx, 'startTime', val)}
+                                label="Start"
                               />
-                              <span>to</span>
-                              <input
-                                type="time"
+                              <span className="slot-time-separator">to</span>
+                              <ClockTimePicker
                                 value={slot.endTime || '17:00'}
-                                onChange={(e) => handleSlotChange(day, actualIdx, 'endTime', e.target.value)}
+                                onChange={(val) => handleSlotChange(day, actualIdx, 'endTime', val)}
+                                label="End"
                               />
                             </div>
                             <div className="slot-options">

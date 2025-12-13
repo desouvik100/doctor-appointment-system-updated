@@ -182,6 +182,37 @@ const PatientDashboardPro = ({ user, onLogout }) => {
 
   useEffect(() => { fetchDoctors(); fetchClinics(); if (getUserId()) { fetchAppointments(); fetchUserLocation(); fetchFavorites(); fetchUnreadNotifications(); } }, [currentUser]);
 
+  // Auto-detect location on mobile when user logs in (since location button is hidden on mobile)
+  useEffect(() => {
+    const autoDetectLocation = async () => {
+      const userId = getUserId();
+      if (!userId) return;
+      
+      // Only auto-detect if location is not already set
+      if (userLocation?.latitude) return;
+      
+      // Check if we're on mobile (screen width < 640px)
+      const isMobile = window.innerWidth < 640;
+      if (!isMobile) return;
+      
+      // Small delay to let the dashboard load first
+      await new Promise(resolve => setTimeout(resolve, 1500));
+      
+      try {
+        const result = await trackUserLocation(userId);
+        if (result.success) {
+          setUserLocation(result.location);
+          toast.success(`📍 Location detected: ${result.location.city || 'Unknown'}`, { duration: 3000 });
+        }
+      } catch (error) {
+        // Silent fail - don't bother user if auto-detection fails
+        console.log('Auto location detection skipped:', error.message);
+      }
+    };
+    
+    autoDetectLocation();
+  }, [currentUser, userLocation?.latitude]);
+
   const fetchUnreadNotifications = async () => { const userId = getUserId(); if (!userId) return; try { const res = await axios.get(`/api/notifications/unread-count/${userId}`); setUnreadNotifications(res.data.unreadCount || 0); } catch { setUnreadNotifications(0); } };
   const fetchUserLocation = async () => { const userId = getUserId(); if (!userId) return; try { const loc = await getUserLocation(userId); if (loc?.latitude) setUserLocation(loc); } catch { /* no location */ } };
   const fetchDoctors = async () => { try { setLoading(true); const res = await axios.get('/api/doctors'); setDoctors(res.data); } catch { toast.error('Failed to load doctors'); } finally { setLoading(false); } };
@@ -309,7 +340,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
             <div className="hidden sm:block">
               <LanguageSelector />
             </div>
-            <button onClick={handleUpdateLocation} disabled={updatingLocation} className="hidden sm:flex w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 hover:bg-slate-200 items-center justify-center"><i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'} text-slate-500 text-xs sm:text-sm`}></i></button>
+            <button onClick={handleUpdateLocation} disabled={updatingLocation} className="flex w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-slate-100 hover:bg-slate-200 items-center justify-center" title="Update Location"><i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'} ${userLocation?.city ? 'text-sky-500' : 'text-slate-400'} text-xs sm:text-sm`}></i></button>
             <button onClick={() => setShowNotifications(true)} className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center">
               <i className="fas fa-bell text-slate-500 text-xs sm:text-sm"></i>
               {unreadNotifications > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{unreadNotifications}</span>}

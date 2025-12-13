@@ -32,7 +32,7 @@
 
 /* Header */
 .tracker-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   padding: 20px;
   display: flex;
   justify-content: space-between;
@@ -124,7 +124,7 @@
   width: 56px;
   height: 56px;
   border-radius: 14px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #0ea5e9, #14b8a6);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -161,21 +161,27 @@
 }
 
 /* Queue Position Card */
-.queue-position-card {
+.queue-tracker-content .queue-position-card {
   display: flex;
   align-items: center;
   gap: 20px;
   padding: 20px;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%) !important;
   border-radius: 20px;
-  color: white;
+  color: white !important;
+  min-height: 100px;
 }
 
-.position-circle {
+.queue-tracker-content .queue-position-card,
+.queue-tracker-content .queue-position-card * {
+  color: white !important;
+}
+
+.queue-tracker-content .position-circle {
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: rgba(255, 255, 255, 0.2);
+  background: rgba(255, 255, 255, 0.2) !important;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -183,94 +189,113 @@
   flex-shrink: 0;
 }
 
-.position-number {
+.queue-tracker-content .position-number {
   font-size: 2rem;
   font-weight: 800;
   line-height: 1;
+  color: white !important;
 }
 
-.position-label {
+.queue-tracker-content .position-label {
   font-size: 0.6rem;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   opacity: 0.9;
+  color: white !important;
 }
 
-.queue-stats {
+.queue-tracker-content .queue-stats {
   flex: 1;
   display: flex;
   flex-direction: column;
   gap: 8px;
 }
 
-.queue-stats .stat {
+.queue-tracker-content .queue-stats .stat {
   display: flex;
   align-items: center;
   gap: 10px;
   font-size: 0.9rem;
+  color: white !important;
 }
 
-.queue-stats .stat i {
+.queue-tracker-content .queue-stats .stat span {
+  color: white !important;
+}
+
+.queue-tracker-content .queue-stats .stat i {
   width: 20px;
   opacity: 0.8;
+  color: white !important;
 }
 
 /* Wait Estimate Card */
-.wait-estimate-card {
+.queue-tracker-content .wait-estimate-card {
   padding: 16px;
   border-radius: 16px;
   text-align: center;
+  min-height: 80px;
 }
 
-.wait-estimate-card.wait-now {
-  background: linear-gradient(135deg, #10b981, #059669);
-  color: white;
+.queue-tracker-content .wait-estimate-card,
+.queue-tracker-content .wait-estimate-card * {
+  color: white !important;
 }
 
-.wait-estimate-card.wait-short {
-  background: linear-gradient(135deg, #22c55e, #16a34a);
-  color: white;
+.queue-tracker-content .wait-estimate-card.wait-now {
+  background: linear-gradient(135deg, #10b981, #059669) !important;
 }
 
-.wait-estimate-card.wait-moderate {
-  background: linear-gradient(135deg, #f59e0b, #d97706);
-  color: white;
+.queue-tracker-content .wait-estimate-card.wait-short {
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important;
 }
 
-.wait-estimate-card.wait-long {
-  background: linear-gradient(135deg, #f97316, #ea580c);
-  color: white;
+.queue-tracker-content .wait-estimate-card.wait-moderate {
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important;
 }
 
-.wait-estimate-card.wait-very-long {
-  background: linear-gradient(135deg, #ef4444, #dc2626);
-  color: white;
+.queue-tracker-content .wait-estimate-card.wait-long {
+  background: linear-gradient(135deg, #f97316, #ea580c) !important;
 }
 
-.wait-badge {
+.queue-tracker-content .wait-estimate-card.wait-very-long {
+  background: linear-gradient(135deg, #ef4444, #dc2626) !important;
+}
+
+.queue-tracker-content .wait-badge {
   display: inline-block;
   padding: 6px 16px;
-  background: rgba(255, 255, 255, 0.25);
+  background: rgba(255, 255, 255, 0.25) !important;
   border-radius: 20px;
   font-size: 0.8rem;
   font-weight: 700;
   text-transform: uppercase;
   letter-spacing: 0.5px;
   margin-bottom: 12px;
+  color: white !important;
 }
 
-.wait-details {
+.queue-tracker-content .wait-details {
   display: flex;
   justify-content: center;
   gap: 24px;
 }
 
-.wait-time, .arrival-time {
+.queue-tracker-content .wait-time, 
+.queue-tracker-content .arrival-time {
   display: flex;
   align-items: center;
   gap: 8px;
   font-size: 0.95rem;
   font-weight: 500;
+  color: white !important;
+}
+
+.queue-tracker-content .wait-time span, 
+.queue-tracker-content .arrival-time span,
+.queue-tracker-content .wait-time i, 
+.queue-tracker-content .arrival-time i {
+  color: white !important;
 }
 
 /* Current Patient Card */
@@ -398,7 +423,7 @@
 
 .refresh-btn {
   padding: 8px 16px;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #0ea5e9, #14b8a6);
   border: none;
   border-radius: 10px;
   color: white;
@@ -413,7 +438,7 @@
 
 .refresh-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
 }
 
 /* Loading State */
@@ -426,7 +451,7 @@
   width: 60px;
   height: 60px;
   border-radius: 50%;
-  background: linear-gradient(135deg, #667eea, #764ba2);
+  background: linear-gradient(135deg, #0ea5e9, #14b8a6);
   margin: 0 auto 20px;
   animation: pulseLoader 1.5s infinite;
 }

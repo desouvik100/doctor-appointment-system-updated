@@ -3,6 +3,7 @@ import axios from '../api/config';
 import toast from 'react-hot-toast';
 import './CinemaStyleBooking.css';
 import LiveQueueTracker from './LiveQueueTracker';
+import PaymentSuccessReceipt from './PaymentSuccessReceipt';
 
 const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
   const [step, setStep] = useState(1); // 1: Type, 2: Date, 3: Details, 4: Confirm, 5: Success
@@ -33,6 +34,13 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
   // Live queue tracker modal state
   const [showLiveTracker, setShowLiveTracker] = useState(false);
 
+  // Payment states
+  const [paymentProcessing, setPaymentProcessing] = useState(false);
+  const [paymentError, setPaymentError] = useState(null);
+  const [paymentAttempts, setPaymentAttempts] = useState(0);
+  const [paymentDetails, setPaymentDetails] = useState(null);
+  const [showPaymentReceipt, setShowPaymentReceipt] = useState(false);
+
   // Common symptoms for quick selection
   const commonSymptoms = [
     'Fever', 'Cold & Cough', 'Headache', 'Body Pain', 
@@ -43,6 +51,14 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
   const slotDuration = queueInfo?.slotDuration || doctor?.consultationDuration || 30;
 
   const doctorId = doctor?._id || doctor?.id;
+
+  // Fee calculations
+  const consultationFee = doctor?.consultationFee || 500;
+  const convenienceFee = consultationType === 'video' ? Math.round(consultationFee * 0.02) : 0; // 2% for online
+  const platformFee = consultationType === 'video' ? 10 : 5; // Platform handling fee
+  const subtotal = consultationFee + convenienceFee + platformFee;
+  const gstAmount = Math.round((convenienceFee + platformFee) * 0.18); // 18% GST on fees only
+  const totalPayable = subtotal + gstAmount;
 
   useEffect(() => {
     fetchCalendar();
@@ -287,14 +303,23 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
       setBookedAppointment({
         ...response.data,
         queueNumber: response.data.queueNumber || queueNumber,
-        estimatedTime: response.data.estimatedTime || estimatedTime
+        estimatedTime: response.data.estimatedTime || estimatedTime,
+        date: selectedDate,
+        consultationType
       });
-      setBookingSuccess(true);
-      setShowConfetti(true);
-      setStep(5); // Success step
       
-      // Hide confetti after 3 seconds
-      setTimeout(() => setShowConfetti(false), 3000);
+      // Set payment details for receipt
+      setPaymentDetails({
+        transactionId: response.data.transactionId || `TXN${Date.now()}`,
+        amount: doctor?.consultationFee || 500,
+        method: 'UPI', // Can be dynamic based on actual payment method
+        status: 'SUCCESS',
+        timestamp: new Date().toISOString()
+      });
+      
+      setBookingSuccess(true);
+      setShowPaymentReceipt(true); // Show the new receipt modal
+      setStep(5); // Success step
       
     } catch (error) {
       console.error('Booking error:', error);
@@ -419,68 +444,136 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         <div className="cinema-booking-content">
           {/* Step 1: Consultation Type Selection - FIRST */}
           {step === 1 && (
-            <div className="type-selection-step">
+            <div className="type-selection-step mobile-optimized">
               <h3 className="step-title">
                 <i className="fas fa-stethoscope"></i>
                 Choose Consultation Type
               </h3>
-              <p className="step-subtitle">Select how you'd like to consult with the doctor</p>
+              <p className="step-subtitle">Tap to select how you'd like to consult</p>
               
-              <div className="type-selection-cards">
+              <div className="type-selection-cards mobile-cards">
+                {/* In-Clinic Visit Card */}
                 <div 
-                  className="type-selection-card clinic"
-                  onClick={() => handleTypeSelect('in_person')}
+                  className={`type-selection-card clinic mobile-card ${consultationType === 'in_person' ? 'selected' : ''}`}
+                  onClick={() => {
+                    // Haptic feedback for mobile
+                    if (navigator.vibrate) navigator.vibrate(10);
+                    setConsultationType('in_person');
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="In-Clinic Visit - Best for physical examination"
+                  aria-pressed={consultationType === 'in_person'}
+                  onKeyDown={(e) => e.key === 'Enter' && setConsultationType('in_person')}
                 >
-                  <div className="type-card-icon">
-                    <i className="fas fa-hospital"></i>
+                  {/* Selected checkmark */}
+                  <div className="selected-check mobile-check">
+                    <i className="fas fa-check"></i>
                   </div>
-                  <div className="type-card-content">
-                    <h4>In-Clinic Visit</h4>
-                    <p>Visit the clinic in person</p>
-                    <ul className="type-card-features">
-                      <li><i className="fas fa-check"></i> Physical examination</li>
-                      <li><i className="fas fa-check"></i> Lab tests on-site</li>
-                      <li><i className="fas fa-check"></i> Detailed consultation</li>
-                    </ul>
-                    <div className="type-card-info">
-                      <span><i className="fas fa-clock"></i> 9 AM - 7 PM</span>
-                      <span><i className="fas fa-user-clock"></i> ~30 min</span>
+                  
+                  <div className="mobile-card-header">
+                    <div className="type-card-icon mobile-icon">
+                      <i className="fas fa-hospital"></i>
+                    </div>
+                    <div className="mobile-card-title">
+                      <h4>In-Clinic Visit</h4>
+                      <span className="mobile-subtitle">Best for physical examination</span>
                     </div>
                   </div>
-                  <div className="type-card-arrow">
-                    <i className="fas fa-arrow-right"></i>
+                  
+                  <div className="mobile-card-details">
+                    <div className="mobile-info-row">
+                      <span className="mobile-info-item">
+                        <i className="fas fa-clock"></i> 9 AM - 7 PM
+                      </span>
+                      <span className="mobile-info-item">
+                        <i className="fas fa-hourglass-half"></i> ~{doctor?.consultationDuration || 30} min
+                      </span>
+                    </div>
+                    <ul className="mobile-features">
+                      <li><i className="fas fa-check-circle"></i> Physical exam & lab tests</li>
+                      <li><i className="fas fa-check-circle"></i> Detailed consultation</li>
+                    </ul>
                   </div>
                 </div>
 
+                {/* Online Consultation Card */}
                 <div 
-                  className="type-selection-card virtual"
-                  onClick={() => handleTypeSelect('online')}
+                  className={`type-selection-card virtual mobile-card ${consultationType === 'online' ? 'selected' : ''}`}
+                  onClick={() => {
+                    // Haptic feedback for mobile
+                    if (navigator.vibrate) navigator.vibrate(10);
+                    setConsultationType('online');
+                  }}
+                  role="button"
+                  tabIndex={0}
+                  aria-label="Online Consultation - Best for quick consultation"
+                  aria-pressed={consultationType === 'online'}
+                  onKeyDown={(e) => e.key === 'Enter' && setConsultationType('online')}
                 >
-                  <div className="type-card-icon">
-                    <i className="fas fa-video"></i>
+                  {/* Selected checkmark */}
+                  <div className="selected-check mobile-check">
+                    <i className="fas fa-check"></i>
                   </div>
-                  <div className="type-card-content">
-                    <h4>Online Consultation</h4>
-                    <p>Video call from anywhere</p>
-                    <ul className="type-card-features">
-                      <li><i className="fas fa-check"></i> No travel required</li>
-                      <li><i className="fas fa-check"></i> Shorter wait times</li>
-                      <li><i className="fas fa-check"></i> Get prescription online</li>
-                    </ul>
-                    <div className="type-card-info">
-                      <span><i className="fas fa-clock"></i> 8 AM - 8 PM</span>
-                      <span><i className="fas fa-user-clock"></i> ~20 min</span>
+                  
+                  <div className="mobile-card-header">
+                    <div className="type-card-icon mobile-icon">
+                      <i className="fas fa-video"></i>
+                    </div>
+                    <div className="mobile-card-title">
+                      <h4>Online Consultation</h4>
+                      <span className="mobile-subtitle">Best for quick consultation</span>
                     </div>
                   </div>
-                  <div className="type-card-arrow">
-                    <i className="fas fa-arrow-right"></i>
+                  
+                  <div className="mobile-card-details">
+                    <div className="mobile-info-row">
+                      <span className="mobile-info-item">
+                        <i className="fas fa-clock"></i> 8 AM - 8 PM
+                      </span>
+                      <span className="mobile-info-item">
+                        <i className="fas fa-hourglass-half"></i> ~20 min
+                      </span>
+                    </div>
+                    <ul className="mobile-features">
+                      <li><i className="fas fa-check-circle"></i> No travel required</li>
+                      <li><i className="fas fa-check-circle"></i> Get prescription online</li>
+                    </ul>
                   </div>
                 </div>
               </div>
 
-              <div className="type-selection-note">
+              <div className="type-selection-note mobile-note">
                 <i className="fas fa-info-circle"></i>
-                <span>Online and clinic appointments have separate queues. Choose based on your needs.</span>
+                <span>Separate queues for online & clinic visits</span>
+              </div>
+
+              {/* Sticky Continue Button for Mobile */}
+              <div className="mobile-sticky-footer">
+                <button 
+                  className={`proceed-btn type-continue-btn mobile-continue ${consultationType ? 'enabled' : ''}`}
+                  onClick={() => {
+                    if (consultationType) {
+                      if (navigator.vibrate) navigator.vibrate(15);
+                      setStep(2);
+                    }
+                  }}
+                  disabled={!consultationType}
+                >
+                  {consultationType ? (
+                    <>
+                      <span className="continue-text">
+                        Continue with {consultationType === 'online' ? 'Online' : 'Clinic Visit'}
+                      </span>
+                      <i className="fas fa-arrow-right"></i>
+                    </>
+                  ) : (
+                    <>
+                      <i className="fas fa-hand-pointer"></i>
+                      <span>Select an option above</span>
+                    </>
+                  )}
+                </button>
               </div>
             </div>
           )}
@@ -580,12 +673,12 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
                 <div className={`info-item type ${consultationType === 'online' ? 'virtual' : 'clinic'}`}>
                   <i className={`fas ${consultationType === 'online' ? 'fa-video' : 'fa-hospital'}`}></i>
                   <span>{consultationType === 'online' ? 'Online' : 'In-Clinic'}</span>
-                  <button onClick={() => setStep(1)} className="change-btn">Change</button>
+                  <button onClick={() => { setStep(1); setQueueInfo(null); setSelectedDate(null); }} className="change-btn">Change</button>
                 </div>
                 <div className="info-item date">
                   <i className="fas fa-calendar-check"></i>
                   <span>{formatDate(selectedDate)}</span>
-                  <button onClick={() => setStep(2)} className="change-btn">Change</button>
+                  <button onClick={() => { setStep(2); setQueueInfo(null); }} className="change-btn">Change</button>
                 </div>
               </div>
 
@@ -811,100 +904,188 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
             </div>
           )}
 
-          {/* Step 4: Confirmation */}
+          {/* Step 4: Mobile-Optimized Payment/Confirmation */}
           {step === 4 && (
-            <div className="confirmation-section">
-              <div className="booking-summary">
-                <h3><i className="fas fa-clipboard-check"></i> Booking Summary</h3>
+            <div className={`confirmation-section mobile-payment ${paymentProcessing ? 'processing' : ''}`}>
+              {/* Payment Processing Overlay */}
+              {paymentProcessing && (
+                <div className="payment-processing-overlay">
+                  <div className="payment-loader">
+                    <div className="loader-spinner"></div>
+                    <p>Processing Payment...</p>
+                    <span className="processing-hint">Please don't close this screen</span>
+                  </div>
+                </div>
+              )}
+
+              {/* Payment Error Banner */}
+              {paymentError && (
+                <div className="payment-error-banner">
+                  <i className="fas fa-exclamation-circle"></i>
+                  <div className="error-content">
+                    <strong>Payment Failed</strong>
+                    <p>{paymentError}</p>
+                  </div>
+                  <button 
+                    className="dismiss-error"
+                    onClick={() => setPaymentError(null)}
+                  >
+                    <i className="fas fa-times"></i>
+                  </button>
+                </div>
+              )}
+
+              <div className="booking-summary mobile-summary">
+                <h3><i className="fas fa-clipboard-check"></i> Confirm & Pay</h3>
                 
-                <div className="summary-card">
-                  <div className="summary-row">
-                    <span className="label"><i className="fas fa-user-md"></i> Doctor</span>
-                    <span className="value">Dr. {doctor?.name}</span>
+                {/* Compact Doctor Card */}
+                <div className="mobile-doctor-card">
+                  <div className="doctor-avatar-small">
+                    {doctor?.profilePhoto ? (
+                      <img src={doctor.profilePhoto} alt={doctor.name} />
+                    ) : (
+                      <i className="fas fa-user-md"></i>
+                    )}
                   </div>
-                  <div className="summary-row">
-                    <span className="label"><i className="fas fa-stethoscope"></i> Specialization</span>
-                    <span className="value">{doctor?.specialization}</span>
+                  <div className="doctor-info-compact">
+                    <h4>Dr. {doctor?.name}</h4>
+                    <span>{doctor?.specialization}</span>
                   </div>
+                </div>
+
+                {/* Appointment Details Card */}
+                <div className="summary-card mobile-card">
                   <div className="summary-row">
-                    <span className="label"><i className="fas fa-hospital"></i> Clinic</span>
-                    <span className="value">{doctor?.clinicId?.name || 'HealthSync Clinic'}</span>
+                    <span className="label"><i className={consultationType === 'online' ? 'fas fa-video' : 'fas fa-hospital'}></i> Type</span>
+                    <span className="value type-badge">
+                      {consultationType === 'online' ? '🎥 Online' : '🏥 In-Clinic'}
+                    </span>
                   </div>
                   <div className="summary-row highlight">
                     <span className="label"><i className="fas fa-calendar"></i> Date</span>
                     <span className="value">{formatDate(selectedDate)}</span>
                   </div>
                   <div className="summary-row highlight">
-                    <span className="label"><i className="fas fa-ticket-alt"></i> Queue Position</span>
-                    <span className="value">#{queueInfo?.nextQueueNumber || 1}</span>
-                  </div>
-                  <div className="summary-row highlight">
-                    <span className="label"><i className="fas fa-clock"></i> Estimated Time</span>
-                    <span className="value">{formatTime(calculateEstimatedTime(queueInfo?.nextQueueNumber || 1))}</span>
+                    <span className="label"><i className="fas fa-ticket-alt"></i> Queue #</span>
+                    <span className="value queue-number">#{queueInfo?.nextQueueNumber || 1}</span>
                   </div>
                   <div className="summary-row">
-                    <span className="label"><i className={consultationType === 'online' ? 'fas fa-video' : 'fas fa-hospital'}></i> Type</span>
-                    <span className="value">{consultationType === 'online' ? '🎥 Video Consultation' : '🏥 In-Person Visit'}</span>
+                    <span className="label"><i className="fas fa-clock"></i> Est. Time</span>
+                    <span className="value">{formatTime(calculateEstimatedTime(queueInfo?.nextQueueNumber || 1))}</span>
                   </div>
                 </div>
 
-                <div className="fee-breakdown">
+                {/* Fee Breakdown - Mobile Optimized */}
+                <div className="fee-breakdown mobile-fees">
                   <div className="fee-row">
                     <span>Consultation Fee</span>
-                    <span>₹{doctor?.consultationFee || 500}</span>
+                    <span>₹{consultationFee}</span>
                   </div>
+                  {convenienceFee > 0 && (
+                    <div className="fee-row">
+                      <span>Convenience Fee</span>
+                      <span>₹{convenienceFee}</span>
+                    </div>
+                  )}
+                  <div className="fee-row">
+                    <span>Platform Fee</span>
+                    <span>₹{platformFee}</span>
+                  </div>
+                  {gstAmount > 0 && (
+                    <div className="fee-row gst">
+                      <span>GST (18%)</span>
+                      <span>₹{gstAmount}</span>
+                    </div>
+                  )}
                   <div className="fee-row total">
-                    <span>Total</span>
-                    <span>₹{doctor?.consultationFee || 500}</span>
+                    <span>Total Payable</span>
+                    <span className="total-amount">₹{totalPayable}</span>
                   </div>
                 </div>
 
-                <div className="reason-preview">
-                  <span className="label">Reason for Visit:</span>
-                  <p>{selectedSymptoms.length > 0 ? `Symptoms: ${selectedSymptoms.join(', ')}. ` : ''}{reason}</p>
+                {/* Trust Signals */}
+                <div className="trust-signals">
+                  <div className="trust-item">
+                    <i className="fas fa-lock"></i>
+                    <span>Secure Payment</span>
+                  </div>
+                  <div className="trust-item">
+                    <i className="fas fa-shield-alt"></i>
+                    <span>100% Safe</span>
+                  </div>
                 </div>
 
-                <div className="email-notice">
-                  <i className="fas fa-envelope"></i>
-                  <p>Your estimated arrival time will be sent to your registered email after booking.</p>
+                {/* Confirmation Notice */}
+                <div className="payment-notice">
+                  <i className="fas fa-info-circle"></i>
+                  <span>Your appointment will be confirmed after successful payment</span>
                 </div>
               </div>
 
-              <div className="confirm-actions">
-                <button className="back-btn" onClick={() => setStep(3)}>
-                  <i className="fas fa-arrow-left"></i> Back
-                </button>
-                <button 
-                  className="confirm-btn"
-                  onClick={handleBooking}
-                  disabled={loading}
-                >
-                  {loading ? (
-                    <><i className="fas fa-spinner fa-spin"></i> Booking...</>
-                  ) : (
-                    <><i className="fas fa-check"></i> Confirm Booking</>
-                  )}
-                </button>
+              {/* Mobile Sticky Payment Footer */}
+              <div className="mobile-payment-footer">
+                <div className="payment-total-display">
+                  <span className="pay-label">TOTAL</span>
+                  <span className="pay-amount">₹{totalPayable}</span>
+                </div>
+                
+                <div className="payment-actions">
+                  <button 
+                    className="back-btn mobile-back"
+                    onClick={() => !paymentProcessing && setStep(3)}
+                    disabled={paymentProcessing}
+                  >
+                    <i className="fas fa-arrow-left"></i>
+                  </button>
+                  <button 
+                    className={`pay-now-btn ${paymentProcessing ? 'processing' : ''}`}
+                    onClick={async () => {
+                      if (paymentProcessing) return;
+                      
+                      // Haptic feedback
+                      if (navigator.vibrate) navigator.vibrate(15);
+                      
+                      setPaymentProcessing(true);
+                      setPaymentError(null);
+                      setPaymentAttempts(prev => prev + 1);
+                      
+                      try {
+                        // Simulate payment processing (replace with actual payment gateway)
+                        await handleBooking();
+                      } catch (error) {
+                        setPaymentError(
+                          error.message || 'Payment failed. Please try again.'
+                        );
+                        setPaymentProcessing(false);
+                      }
+                    }}
+                    disabled={paymentProcessing || loading}
+                  >
+                    {paymentProcessing || loading ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin"></i>
+                        <span>Processing...</span>
+                      </>
+                    ) : paymentError ? (
+                      <>
+                        <i className="fas fa-redo"></i>
+                        <span>Retry Payment</span>
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-lock"></i>
+                        <span>Pay ₹{totalPayable}</span>
+                      </>
+                    )}
+                  </button>
+                </div>
               </div>
             </div>
           )}
 
-          {/* Step 5: Success Animation */}
-          {step === 5 && bookingSuccess && (
-            <div className="success-section">
-              {/* Confetti Animation */}
-              {showConfetti && (
-                <div className="confetti-container">
-                  {[...Array(50)].map((_, i) => (
-                    <div key={i} className={`confetti confetti-${i % 6}`} style={{
-                      left: `${Math.random() * 100}%`,
-                      animationDelay: `${Math.random() * 0.5}s`,
-                      animationDuration: `${2 + Math.random() * 2}s`
-                    }} />
-                  ))}
-                </div>
-              )}
-              
+          {/* Step 5: Payment Success & Receipt - Using new component */}
+          {step === 5 && bookingSuccess && !showPaymentReceipt && (
+            <div className="success-section minimal">
               <div className="success-animation">
                 <div className="success-checkmark">
                   <div className="check-icon">
@@ -917,108 +1098,7 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
                 <h2>🎉 Booking Confirmed!</h2>
                 <p>Your appointment has been successfully booked</p>
               </div>
-
-              <div className="success-details">
-                <div className="success-card">
-                  <div className="success-row">
-                    <i className="fas fa-user-md"></i>
-                    <span>Dr. {doctor?.name}</span>
-                  </div>
-                  <div className="success-row">
-                    <i className="fas fa-calendar"></i>
-                    <span>{formatDate(selectedDate)}</span>
-                  </div>
-                  
-                  {/* Queue Token Display */}
-                  <div className="token-display">
-                    <span className="token-label">Your Queue Token</span>
-                    <span className="token-number">#{bookedAppointment?.queueNumber || queueInfo?.nextQueueNumber || 1}</span>
-                  </div>
-                  
-                  {/* Estimated Time Display */}
-                  <div className="estimated-arrival">
-                    <i className="fas fa-clock"></i>
-                    <div>
-                      <span className="arrival-label">Estimated Arrival Time</span>
-                      <span className="arrival-time">{formatTime(bookedAppointment?.estimatedTime || calculateEstimatedTime(queueInfo?.nextQueueNumber || 1))}</span>
-                    </div>
-                  </div>
-
-                  <div className="success-row">
-                    <i className={consultationType === 'online' ? 'fas fa-video' : 'fas fa-hospital'}></i>
-                    <span>{consultationType === 'online' ? 'Video Consultation' : 'In-Person Visit'}</span>
-                  </div>
-                </div>
-
-                <div className="success-tips">
-                  <h4><i className="fas fa-lightbulb"></i> What's Next?</h4>
-                  <ul>
-                    <li><i className="fas fa-envelope"></i> Confirmation email with estimated time sent to your email</li>
-                    <li><i className="fas fa-bell"></i> You'll receive a reminder before your appointment</li>
-                    <li><i className="fas fa-clock"></i> Please arrive 15 minutes before your estimated time</li>
-                    {consultationType === 'online' && (
-                      <li><i className="fas fa-video"></i> Video call link will be sent 15 minutes before</li>
-                    )}
-                    {consultationType === 'in_person' && (
-                      <li><i className="fas fa-map-marker-alt"></i> Bring your ID and any previous medical records</li>
-                    )}
-                  </ul>
-                </div>
-              </div>
-
-              {/* Share Options */}
-              <div className="share-section">
-                <p className="share-label">Share appointment details:</p>
-                <div className="share-buttons">
-                  <button 
-                    className="share-btn whatsapp"
-                    onClick={() => {
-                      const estTime = bookedAppointment?.estimatedTime || calculateEstimatedTime(queueInfo?.nextQueueNumber || 1);
-                      const text = `🏥 *Appointment Booked*\n\n👨‍⚕️ Doctor: Dr. ${doctor?.name}\n📅 Date: ${formatDate(selectedDate)}\n⏰ Time: ${formatTime(estTime)}\n🎫 Token: #${bookedAppointment?.queueNumber || queueInfo?.nextQueueNumber || 1}\n\nBooked via HealthSync Pro`;
-                      window.open(`https://wa.me/?text=${encodeURIComponent(text)}`, '_blank');
-                    }}
-                  >
-                    <i className="fab fa-whatsapp"></i>
-                  </button>
-                  <button 
-                    className="share-btn copy"
-                    onClick={() => {
-                      const estTime = bookedAppointment?.estimatedTime || calculateEstimatedTime(queueInfo?.nextQueueNumber || 1);
-                      const text = `Appointment Booked\nDoctor: Dr. ${doctor?.name}\nDate: ${formatDate(selectedDate)}\nTime: ${formatTime(estTime)}\nToken: #${bookedAppointment?.queueNumber || queueInfo?.nextQueueNumber || 1}`;
-                      navigator.clipboard.writeText(text);
-                      toast.success('Copied to clipboard!');
-                    }}
-                  >
-                    <i className="fas fa-copy"></i>
-                  </button>
-                </div>
-              </div>
-
-              {/* Live Queue Button - Prominent */}
-              <div className="live-queue-section">
-                <button 
-                  className="live-queue-btn"
-                  onClick={() => setShowLiveTracker(true)}
-                >
-                  <div className="live-indicator-btn">
-                    <span className="live-dot-btn"></span>
-                    LIVE
-                  </div>
-                  <i className="fas fa-users"></i>
-                  <span>View Live Queue Status</span>
-                  <i className="fas fa-arrow-right"></i>
-                </button>
-                <p className="live-queue-hint">See real-time queue position and when it's your turn</p>
-              </div>
-
               <div className="success-actions">
-                <button className="add-calendar-btn" onClick={() => {
-                  const estTime = bookedAppointment?.estimatedTime || calculateEstimatedTime(queueInfo?.nextQueueNumber || 1);
-                  const gcalUrl = `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${encodeURIComponent(`Doctor Appointment - Dr. ${doctor?.name}`)}&dates=${selectedDate.replace(/-/g, '')}T${estTime.replace(':', '')}00/${selectedDate.replace(/-/g, '')}T${estTime.replace(':', '')}30`;
-                  window.open(gcalUrl, '_blank');
-                }}>
-                  <i className="fas fa-calendar-plus"></i> Add to Calendar
-                </button>
                 <button className="done-btn" onClick={handleSuccessClose}>
                   <i className="fas fa-check"></i> Done
                 </button>
@@ -1039,6 +1119,24 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
             tokenNumber: bookedAppointment?.queueNumber || queueInfo?.nextQueueNumber
           }} 
           onClose={() => setShowLiveTracker(false)} 
+        />
+      )}
+      
+      {/* Payment Success & Receipt Modal */}
+      {showPaymentReceipt && bookedAppointment && (
+        <PaymentSuccessReceipt
+          appointment={bookedAppointment}
+          doctor={doctor}
+          paymentDetails={paymentDetails}
+          onClose={() => {
+            setShowPaymentReceipt(false);
+            handleSuccessClose();
+          }}
+          onViewAppointments={() => {
+            setShowPaymentReceipt(false);
+            handleSuccessClose();
+            // Navigate to appointments - this will be handled by parent
+          }}
         />
       )}
     </div>

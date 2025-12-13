@@ -70,6 +70,15 @@ const getStoredToken = async () => {
         const receptionist = JSON.parse(receptionistResult.value);
         if (receptionist.token) return receptionist.token;
       }
+      
+      const doctorResult = await Preferences.get({ key: 'doctor' });
+      if (doctorResult.value) {
+        const doctor = JSON.parse(doctorResult.value);
+        if (doctor.token) return doctor.token;
+      }
+      
+      const doctorTokenResult = await Preferences.get({ key: 'doctorToken' });
+      if (doctorTokenResult.value) return doctorTokenResult.value;
     } catch (e) {
       // Fall back to localStorage
     }
@@ -79,8 +88,10 @@ const getStoredToken = async () => {
   const user = JSON.parse(localStorage.getItem('user') || '{}');
   const admin = JSON.parse(localStorage.getItem('admin') || '{}');
   const receptionist = JSON.parse(localStorage.getItem('receptionist') || '{}');
+  const doctor = JSON.parse(localStorage.getItem('doctor') || '{}');
+  const doctorToken = localStorage.getItem('doctorToken');
   
-  return user.token || admin.token || receptionist.token;
+  return user.token || admin.token || receptionist.token || doctor.token || doctorToken;
 };
 
 // Add request interceptor to include auth token
@@ -164,6 +175,8 @@ axiosInstance.interceptors.response.use(
           await Preferences.remove({ key: 'user' });
           await Preferences.remove({ key: 'admin' });
           await Preferences.remove({ key: 'receptionist' });
+          await Preferences.remove({ key: 'doctor' });
+          await Preferences.remove({ key: 'doctorToken' });
         } catch (e) {
           // Fallback
         }
@@ -171,6 +184,8 @@ axiosInstance.interceptors.response.use(
       localStorage.removeItem('user');
       localStorage.removeItem('admin');
       localStorage.removeItem('receptionist');
+      localStorage.removeItem('doctor');
+      localStorage.removeItem('doctorToken');
       window.location.reload();
     }
     return Promise.reject(error);

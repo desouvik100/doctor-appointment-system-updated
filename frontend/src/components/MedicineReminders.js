@@ -183,9 +183,17 @@ const MedicineReminders = ({ userId, onClose }) => {
   };
 
   const formatTime = (hour, minute) => {
-    const h = hour % 12 || 12;
-    const ampm = hour < 12 ? 'AM' : 'PM';
-    return `${h}:${minute.toString().padStart(2, '0')} ${ampm}`;
+    // Handle case where hour is a string like "09:00"
+    if (typeof hour === 'string' && hour.includes(':')) {
+      const [h, m] = hour.split(':').map(Number);
+      const hour12 = h % 12 || 12;
+      const ampm = h < 12 ? 'AM' : 'PM';
+      return `${hour12}:${(m || 0).toString().padStart(2, '0')} ${ampm}`;
+    }
+    // Handle normal case with hour and minute as numbers
+    const h = (hour || 0) % 12 || 12;
+    const ampm = (hour || 0) < 12 ? 'AM' : 'PM';
+    return `${h}:${(minute || 0).toString().padStart(2, '0')} ${ampm}`;
   };
 
   const getCurrentTimeSlot = () => {
@@ -295,10 +303,12 @@ const MedicineReminders = ({ userId, onClose }) => {
                       <h4>{reminder.medicineName}</h4>
                       <p>{reminder.dosage} • {timings.find(t => t.value === reminder.timing)?.label}</p>
                       <div className="schedule-item__times">
-                        {reminder.times.map((time, idx) => {
+                        {reminder.times?.map((time, idx) => {
+                          // Handle both object {hour, minute} and string "HH:MM" formats
+                          const timeHour = typeof time === 'string' ? parseInt(time.split(':')[0]) : time?.hour;
                           const taken = reminder.dosesTaken?.some(d => 
                             d.status === 'taken' && 
-                            new Date(d.scheduledTime).getHours() === time.hour
+                            new Date(d.scheduledTime).getHours() === timeHour
                           );
                           return (
                             <span 
@@ -306,7 +316,7 @@ const MedicineReminders = ({ userId, onClose }) => {
                               className={`time-badge ${taken ? 'time-badge--taken' : ''}`}
                             >
                               {taken && <i className="fas fa-check"></i>}
-                              {formatTime(time.hour, time.minute)}
+                              {typeof time === 'string' ? formatTime(time) : formatTime(time?.hour, time?.minute)}
                             </span>
                           );
                         })}

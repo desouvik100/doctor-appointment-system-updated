@@ -208,6 +208,7 @@ function App() {
     parseAndSet("user", setUser, ["name", "email"]);
     parseAndSet("admin", setAdmin, ["name", "email"]);
     parseAndSet("receptionist", setReceptionist, ["name", "email"]);
+    parseAndSet("doctor", setDoctor, ["name", "email"]);
   }, []);
 
   const addNotification = useCallback((message, type = 'info') => {
@@ -1604,7 +1605,7 @@ function App() {
       {currentView === "dashboard" && (
         <>
           {/* USER MODE - Patient Dashboard */}
-          {user && !admin && !receptionist && (
+          {user && !admin && !receptionist && !doctor && (
             <Suspense fallback={
               <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
                 <div className="spinner-border text-primary mb-3"></div>
@@ -1649,6 +1650,25 @@ function App() {
             }>
               <DoctorDashboard doctor={doctor} onLogout={handleLogoutAll} />
             </Suspense>
+          )}
+
+          {/* Fallback - No user logged in but on dashboard view */}
+          {!user && !admin && !receptionist && !doctor && (
+            <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '100vh', background: 'white' }}>
+              <div className="text-center p-5" style={{ background: 'white', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
+                <i className="fas fa-user-circle fa-4x mb-3" style={{ color: '#667eea' }}></i>
+                <h4 style={{ color: '#1e293b' }}>Session Expired</h4>
+                <p className="text-muted mb-4">Please log in to continue</p>
+                <button 
+                  className="btn btn-lg"
+                  style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', border: 'none', padding: '12px 32px', borderRadius: '12px' }}
+                  onClick={() => setCurrentView("auth")}
+                >
+                  <i className="fas fa-sign-in-alt me-2"></i>
+                  Go to Login
+                </button>
+              </div>
+            </div>
           )}
         </>
       )}

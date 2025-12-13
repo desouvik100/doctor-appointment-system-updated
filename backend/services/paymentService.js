@@ -1,6 +1,7 @@
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
+const Payment = require('../models/Payment');
 const crypto = require('crypto');
 const { 
   USE_PAYU_PAYMENTS, 
@@ -11,6 +12,14 @@ const {
   FRONTEND_URL,
   BACKEND_URL
 } = require('../config/paymentConfig');
+
+// Import commission service for financial calculations
+let commissionService;
+try {
+  commissionService = require('./commissionService');
+} catch (e) {
+  console.log('⚠️ Commission service not available, using basic calculations');
+}
 
 // PayU configuration check
 const isPayUEnabled = USE_PAYU_PAYMENTS && PAYU_MERCHANT_KEY && PAYU_MERCHANT_SALT;
@@ -174,6 +183,23 @@ class PaymentService {
           paidAt: new Date()
         };
         await appointment.save();
+
+        // Create financial ledger entry for commission tracking
+        if (commissionService) {
+          try {
+            await commissionService.createLedgerEntry({
+              appointmentId: appointment._id,
+              doctorId: appointment.doctorId,
+              clinicId: appointment.clinicId,
+              userId: appointment.userId,
+              consultationType: appointment.consultationType || 'in_person',
+              consultationFee: appointment.doctorId?.consultationFee || parseFloat(payuResponse.udf4) || parseFloat(payuResponse.amount)
+            });
+            console.log(`✅ Financial ledger entry created for appointment ${appointmentId}`);
+          } catch (ledgerError) {
+            console.error('⚠️ Failed to create ledger entry:', ledgerError.message);
+          }
+        }
 
         return {
           success: true,

@@ -264,7 +264,7 @@ const LiveQueueTracker = ({ appointment, onClose }) => {
               )}
             </div>
             <div className="doctor-details">
-              <h3>Dr. {appointment.doctorId?.name || queueInfo?.doctorName || "Doctor"}</h3>
+              <h3>{(appointment.doctorId?.name || queueInfo?.doctorName || "Doctor").replace(/^Dr\.?\s*/i, 'Dr. ')}</h3>
               <p>{appointment.doctorId?.specialization}</p>
               <p className="clinic-name">
                 <i className="fas fa-hospital"></i>
@@ -292,54 +292,58 @@ const LiveQueueTracker = ({ appointment, onClose }) => {
           )}
 
           {/* Queue Position */}
-          <div className="queue-position-card">
-            <div className="position-circle">
-              <span className="position-number">
-                {queueInfo?.position ?? userQueueNumber}
-              </span>
-              <span className="position-label">Your Position</span>
-            </div>
-            <div className="queue-stats">
-              <div className="stat">
-                <i className="fas fa-ticket-alt"></i>
-                <span>Token #{queueInfo?.tokenNumber ?? userQueueNumber}</span>
+          {(queueInfo?.position || userQueueNumber) && (
+            <div className="queue-position-card">
+              <div className="position-circle">
+                <span className="position-number">
+                  {queueInfo?.position ?? userQueueNumber ?? 1}
+                </span>
+                <span className="position-label">Your Position</span>
               </div>
-              <div className="stat">
-                <i className="fas fa-users"></i>
-                <span>{queueInfo?.totalInQueue ?? 0} in queue</span>
-              </div>
-              <div className="stat">
-                <i className="fas fa-user-clock"></i>
-                <span>{queueInfo?.patientsAhead ?? 0} before you</span>
-              </div>
-              {queueInfo?.completedToday > 0 && (
-                <div className="stat completed">
-                  <i className="fas fa-check-circle"></i>
-                  <span>{queueInfo.completedToday} seen today</span>
+              <div className="queue-stats">
+                <div className="stat">
+                  <i className="fas fa-ticket-alt"></i>
+                  <span>Token #{queueInfo?.tokenNumber ?? userQueueNumber ?? 1}</span>
                 </div>
-              )}
+                <div className="stat">
+                  <i className="fas fa-users"></i>
+                  <span>{queueInfo?.totalInQueue ?? 0} in queue</span>
+                </div>
+                <div className="stat">
+                  <i className="fas fa-user-clock"></i>
+                  <span>{queueInfo?.patientsAhead ?? 0} before you</span>
+                </div>
+                {queueInfo?.completedToday > 0 && (
+                  <div className="stat completed">
+                    <i className="fas fa-check-circle"></i>
+                    <span>{queueInfo.completedToday} seen today</span>
+                  </div>
+                )}
+              </div>
             </div>
-          </div>
+          )}
 
           {/* Wait Time Estimate */}
-          <div className={`wait-estimate-card ${waitBadge.class}`}>
-            <div className="wait-badge">{waitBadge.text}</div>
-            <div className="wait-details">
-              <div className="wait-time">
-                <i className="fas fa-hourglass-half"></i>
-                <span>~{queueInfo?.estimatedWaitMinutes ?? 0} min wait</span>
-              </div>
-              <div className="arrival-time">
-                <i className="fas fa-clock"></i>
-                <span>
-                  Est. arrival:{" "}
-                  {queueInfo?.estimatedArrivalTime ||
-                    appointment?.estimatedArrivalTime ||
-                    "N/A"}
-                </span>
+          {(queueInfo?.estimatedWaitMinutes !== undefined || queueInfo?.estimatedArrivalTime || appointment?.estimatedArrivalTime) && (
+            <div className={`wait-estimate-card ${waitBadge.class}`}>
+              <div className="wait-badge">{waitBadge.text}</div>
+              <div className="wait-details">
+                <div className="wait-time">
+                  <i className="fas fa-hourglass-half"></i>
+                  <span>~{queueInfo?.estimatedWaitMinutes ?? 0} min wait</span>
+                </div>
+                <div className="arrival-time">
+                  <i className="fas fa-clock"></i>
+                  <span>
+                    Est. arrival:{" "}
+                    {queueInfo?.estimatedArrivalTime ||
+                      appointment?.estimatedArrivalTime ||
+                      "Calculating..."}
+                  </span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
           {/* Currently Seeing */}
           {queueInfo?.currentlySeeing && (

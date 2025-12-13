@@ -17,6 +17,15 @@ const paymentSchema = new mongoose.Schema(
       ref: "Doctor",
       required: true
     },
+    clinicId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Clinic"
+    },
+    consultationType: {
+      type: String,
+      enum: ["online", "in_person"],
+      default: "in_person"
+    },
     consultationFee: {
       type: Number,
       required: true
@@ -32,6 +41,39 @@ const paymentSchema = new mongoose.Schema(
     totalAmount: {
       type: Number,
       required: true
+    },
+    // ===== NEW: Detailed Financial Breakdown =====
+    financialBreakdown: {
+      // Platform commission details
+      platformCommission: {
+        type: {
+          type: String,
+          enum: ['percentage', 'flat']
+        },
+        rate: Number,
+        amount: Number
+      },
+      // GST on commission only (18%)
+      gstOnCommission: {
+        rate: Number,
+        amount: Number
+      },
+      // Payment gateway charges
+      paymentGatewayFee: {
+        feePercentage: Number,
+        feeAmount: Number,
+        gstOnFee: Number,
+        totalGatewayCharge: Number
+      },
+      // Net amounts
+      netDoctorPayout: Number,
+      netPlatformRevenue: Number,
+      platformGSTLiability: Number
+    },
+    // Reference to financial ledger entry
+    ledgerEntryId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "FinancialLedger"
     },
     paymentStatus: {
       type: String,

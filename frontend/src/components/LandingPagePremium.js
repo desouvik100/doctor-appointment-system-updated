@@ -12,6 +12,19 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
   const [activeFaq, setActiveFaq] = useState(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 769 : false);
+  const [taglineIndex, setTaglineIndex] = useState(0);
+  const [isTaglineTransitioning, setIsTaglineTransitioning] = useState(false);
+
+  // Attractive rotating taglines
+  const taglines = [
+    { en: "Your Health, Your Time, Your Choice", hi: "आपका स्वास्थ्य, आपका समय, आपकी पसंद", bn: "আপনার স্বাস্থ্য, আপনার সময়, আপনার পছন্দ" },
+    { en: "Care that comes to you, anytime", hi: "देखभाल जो आपके पास आती है, कभी भी", bn: "যত্ন যা আপনার কাছে আসে, যেকোনো সময়" },
+    { en: "Expert doctors. Zero wait time.", hi: "विशेषज्ञ डॉक्टर। शून्य प्रतीक्षा समय।", bn: "বিশেষজ্ঞ ডাক্তার। শূন্য অপেক্ষার সময়।" },
+    { en: "Healing made simple & fast", hi: "उपचार को सरल और तेज़ बनाया", bn: "নিরাময় সহজ এবং দ্রুত করা হয়েছে" },
+    { en: "Your wellness. Our priority.", hi: "आपकी सेहत। हमारी प्राथमिकता।", bn: "আপনার সুস্থতা। আমাদের অগ্রাধিকার।" },
+    { en: "Book in seconds. Heal faster.", hi: "सेकंड में बुक करें। तेज़ी से ठीक हों।", bn: "সেকেন্ডে বুক করুন। দ্রুত সুস্থ হন।" },
+    { en: "Healthcare at your fingertips", hi: "आपकी उंगलियों पर स्वास्थ्य सेवा", bn: "আপনার আঙুলের ডগায় স্বাস্থ্যসেবা" }
+  ];
 
   useEffect(() => {
     const handleScroll = () => {
@@ -35,6 +48,18 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
       window.removeEventListener('resize', handleResize);
     };
   }, []);
+
+  // Smooth tagline rotation every 3.5 seconds
+  useEffect(() => {
+    const interval = setInterval(() => {
+      setIsTaglineTransitioning(true);
+      setTimeout(() => {
+        setTaglineIndex((prev) => (prev + 1) % taglines.length);
+        setIsTaglineTransitioning(false);
+      }, 500);
+    }, 3500);
+    return () => clearInterval(interval);
+  }, [taglines.length]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -113,8 +138,14 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             </button>
             
             <button 
-              className="btn-premium btn-premium-secondary hide-mobile"
+              className="btn-premium hide-mobile"
               onClick={() => onNavigate('login')}
+              style={{
+                background: scrolled ? 'transparent' : 'rgba(255, 255, 255, 0.15)',
+                color: scrolled ? '#6366f1' : '#ffffff',
+                border: scrolled ? '2px solid #6366f1' : '2px solid rgba(255, 255, 255, 0.5)',
+                fontWeight: '600'
+              }}
             >
               {t('signIn')}
             </button>
@@ -187,14 +218,20 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               {t('aiHealthAssistant')}
             </div>
             
-            <h1 className="hero-premium__title">
-              {t('heroTitle')}<br />
-              <span>{t('heroTitleHighlight')}</span>
-            </h1>
-            
-            <p className="hero-premium__subtitle">
-              {t('heroSubtitle')}
-            </p>
+            {/* Rotating Hero Title */}
+            <div style={{ minHeight: '140px' }}>
+              <h1 
+                className="hero-premium__title"
+                style={{
+                  transition: 'opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
+                  opacity: isTaglineTransitioning ? 0 : 1,
+                  transform: isTaglineTransitioning ? 'translateY(-15px)' : 'translateY(0)',
+                  color: '#ffffff'
+                }}
+              >
+                {taglines[taglineIndex][language] || taglines[taglineIndex].en}
+              </h1>
+            </div>
             
             <div className="hero-premium__actions">
               <button 
