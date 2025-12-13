@@ -283,6 +283,13 @@ app.use('/api/ai-report', require('./routes/aiReportRoutes')); // AI medical rep
 app.use('/api/slots', require('./routes/slotRoutes')); // Separate Online & Clinic slot management
 app.use('/api/commission', require('./routes/commissionRoutes')); // Commission, GST & Payout system
 
+// ===== NEW DIFFERENTIATOR FEATURES =====
+app.use('/api/family-wallet', require('./routes/familyWalletRoutes')); // Family Health Wallet
+app.use('/api/health-reminders', require('./routes/healthReminderRoutes')); // Smart Health Reminders
+app.use('/api/emergency-sos', require('./routes/emergencySOSRoutes')); // Emergency SOS System
+app.use('/api/offline-queue', require('./routes/offlineQueueRoutes')); // Offline Queue Token System
+app.use('/api/doctor-referral', require('./routes/doctorReferralRoutes')); // Doctor Referral & Zero-Commission
+
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');
 console.log('Auth Routes:');

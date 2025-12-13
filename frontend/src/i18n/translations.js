@@ -223,6 +223,36 @@ const translations = {
     trustedBy: 'Trusted by:',
     certifiedCompliant: 'Certified & Compliant',
     step: 'Step',
+    
+    // New Features - Family Wallet
+    familyWallet: 'Family Health Wallet',
+    addMoney: 'Add Money',
+    walletBalance: 'Wallet Balance',
+    monthlyBudget: 'Monthly Budget',
+    budgetExceeded: 'Budget exceeded this month!',
+    taxReport: '80D Tax Report',
+    spendingAnalytics: 'Spending Analytics',
+    
+    // Emergency SOS
+    emergencySOS: 'Emergency SOS',
+    triggerSOS: 'Trigger SOS',
+    cancelSOS: 'Cancel SOS',
+    ambulanceOnWay: 'Ambulance is on the way!',
+    emergencyContacts: 'Emergency Contacts',
+    
+    // Health Reminders
+    healthReminders: 'Health Reminders',
+    dueSoon: 'Due Soon',
+    createReminder: 'Create Reminder',
+    snooze: 'Snooze',
+    markComplete: 'Mark Complete',
+    
+    // Doctor Referral
+    referAndEarn: 'Refer & Earn',
+    yourReferralCode: 'Your Referral Code',
+    freeAppointments: 'Free Appointments',
+    commissionSaved: 'Commission Saved',
+    shareOnWhatsApp: 'Share on WhatsApp',
   },
 
   hi: {

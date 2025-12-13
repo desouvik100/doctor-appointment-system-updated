@@ -1,0 +1,680 @@
+/* Family Health Wallet Styles */
+.family-wallet {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.family-wallet-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+}
+
+.family-wallet-loading .spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e5e7eb;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.wallet-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 24px;
+}
+
+.wallet-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wallet-title i {
+  font-size: 24px;
+  color: #3b82f6;
+}
+
+.wallet-title h2 {
+  margin: 0;
+  font-size: 20px;
+  color: #1e293b;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #64748b;
+  cursor: pointer;
+  padding: 8px;
+}
+
+/* Balance Card */
+.balance-card {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  border-radius: 16px;
+  padding: 24px;
+  color: white;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+}
+
+.balance-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.balance-label {
+  font-size: 14px;
+  opacity: 0.9;
+}
+
+.balance-amount {
+  font-size: 32px;
+  font-weight: 700;
+}
+
+.add-money-btn {
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  color: white;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.add-money-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Budget Section */
+.budget-section {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 20px;
+}
+
+.budget-header {
+  display: flex;
+  justify-content: space-between;
+  margin-bottom: 8px;
+  font-size: 14px;
+  color: #64748b;
+}
+
+.budget-progress {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+}
+
+.budget-fill {
+  height: 100%;
+  border-radius: 4px;
+  transition: width 0.3s ease;
+}
+
+.budget-warning {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+  color: #ef4444;
+  font-size: 13px;
+}
+
+/* Tabs */
+.wallet-tabs {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+  padding-bottom: 12px;
+  overflow-x: auto;
+}
+
+.wallet-tabs .tab {
+  background: none;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 14px;
+  color: #64748b;
+  white-space: nowrap;
+  transition: all 0.2s;
+}
+
+.wallet-tabs .tab.active {
+  background: #3b82f6;
+  color: white;
+}
+
+.wallet-tabs .tab:hover:not(.active) {
+  background: #f1f5f9;
+}
+
+/* Tab Content */
+.tab-content {
+  min-height: 300px;
+}
+
+/* Overview */
+.overview-content h3 {
+  font-size: 16px;
+  color: #1e293b;
+  margin-bottom: 16px;
+}
+
+.spending-cards {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.spending-card {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.spending-card i {
+  font-size: 20px;
+  color: #3b82f6;
+  width: 40px;
+  height: 40px;
+  background: #dbeafe;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.spending-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.spending-label {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.spending-value {
+  font-size: 16px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.member-spending {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.member-spending-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+/* Members */
+.members-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 16px;
+}
+
+.members-header h3 {
+  margin: 0;
+  font-size: 16px;
+}
+
+.add-member-btn {
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 13px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.members-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.member-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+}
+
+.member-avatar {
+  width: 48px;
+  height: 48px;
+  background: #dbeafe;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #3b82f6;
+  font-size: 20px;
+}
+
+.member-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.member-details .member-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.member-details .member-relationship {
+  font-size: 13px;
+  color: #64748b;
+  text-transform: capitalize;
+}
+
+.member-limits {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.no-members {
+  text-align: center;
+  padding: 40px;
+  color: #64748b;
+}
+
+.no-members i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.no-members button {
+  margin-top: 16px;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 10px 20px;
+  border-radius: 8px;
+  cursor: pointer;
+}
+
+/* Transactions */
+.transactions-content h3 {
+  margin-bottom: 16px;
+  font-size: 16px;
+}
+
+.transactions-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.transaction-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+}
+
+.txn-icon {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.transaction-item.credit .txn-icon {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.transaction-item.debit .txn-icon {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.txn-details {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.txn-description {
+  font-size: 14px;
+  color: #1e293b;
+}
+
+.txn-date {
+  font-size: 12px;
+  color: #64748b;
+}
+
+.txn-member {
+  font-size: 11px;
+  color: #3b82f6;
+}
+
+.txn-amount {
+  font-weight: 600;
+  font-size: 14px;
+}
+
+.txn-amount.credit {
+  color: #16a34a;
+}
+
+.txn-amount.debit {
+  color: #dc2626;
+}
+
+.no-transactions {
+  text-align: center;
+  padding: 40px;
+  color: #64748b;
+}
+
+.no-transactions i {
+  font-size: 48px;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+/* Tax Report */
+.tax-content h3 {
+  margin-bottom: 8px;
+  font-size: 16px;
+}
+
+.tax-year {
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 20px;
+}
+
+.tax-summary {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.tax-card {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px;
+  text-align: center;
+}
+
+.tax-card.highlight {
+  background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+  color: white;
+}
+
+.tax-label {
+  display: block;
+  font-size: 12px;
+  margin-bottom: 4px;
+}
+
+.tax-card:not(.highlight) .tax-label {
+  color: #64748b;
+}
+
+.tax-value {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.tax-content h4 {
+  font-size: 14px;
+  margin-bottom: 12px;
+  color: #1e293b;
+}
+
+.tax-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  margin-bottom: 20px;
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  padding: 10px 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.tax-note {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  padding: 12px;
+  background: #fef3c7;
+  border-radius: 8px;
+  font-size: 13px;
+  color: #92400e;
+  margin-bottom: 20px;
+}
+
+.download-report-btn {
+  width: 100%;
+  background: #3b82f6;
+  color: white;
+  border: none;
+  padding: 12px;
+  border-radius: 8px;
+  cursor: pointer;
+  font-weight: 500;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+}
+
+/* Modal */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.modal-content {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  width: 100%;
+  max-width: 400px;
+}
+
+.modal-content h3 {
+  margin: 0 0 20px 0;
+  font-size: 18px;
+  color: #1e293b;
+}
+
+.quick-amounts {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 8px;
+  margin-bottom: 16px;
+}
+
+.quick-amount {
+  padding: 10px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  background: white;
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.2s;
+}
+
+.quick-amount.selected,
+.quick-amount:hover {
+  background: #3b82f6;
+  color: white;
+  border-color: #3b82f6;
+}
+
+.amount-input {
+  display: flex;
+  align-items: center;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  padding: 12px;
+  margin-bottom: 20px;
+}
+
+.amount-input .currency {
+  font-size: 18px;
+  color: #64748b;
+  margin-right: 8px;
+}
+
+.amount-input input {
+  flex: 1;
+  border: none;
+  outline: none;
+  font-size: 18px;
+}
+
+.form-group {
+  margin-bottom: 16px;
+}
+
+.form-group label {
+  display: block;
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 6px;
+}
+
+.form-group input,
+.form-group select {
+  width: 100%;
+  padding: 10px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 14px;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 12px;
+}
+
+.modal-actions button {
+  flex: 1;
+  padding: 12px;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.cancel-btn {
+  background: #f1f5f9;
+  border: none;
+  color: #64748b;
+}
+
+.confirm-btn {
+  background: #3b82f6;
+  border: none;
+  color: white;
+}
+
+.confirm-btn:disabled {
+  background: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .family-wallet {
+    padding: 16px;
+    border-radius: 0;
+  }
+
+  .balance-card {
+    flex-direction: column;
+    text-align: center;
+    gap: 16px;
+  }
+
+  .spending-cards {
+    grid-template-columns: 1fr;
+  }
+
+  .tax-summary {
+    grid-template-columns: 1fr;
+  }
+
+  .member-card {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .member-limits {
+    align-items: center;
+  }
+}

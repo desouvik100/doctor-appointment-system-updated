@@ -1,0 +1,506 @@
+/* Emergency SOS Styles */
+.emergency-sos {
+  background: white;
+  border-radius: 16px;
+  padding: 24px;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.sos-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.sos-header i {
+  font-size: 28px;
+  color: #ef4444;
+}
+
+.sos-header h2 {
+  margin: 0;
+  flex: 1;
+  font-size: 22px;
+  color: #1e293b;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  font-size: 20px;
+  color: #64748b;
+  cursor: pointer;
+}
+
+.sos-description {
+  color: #64748b;
+  font-size: 14px;
+  margin-bottom: 20px;
+  line-height: 1.5;
+}
+
+.location-error {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #fef2f2;
+  border-radius: 8px;
+  color: #dc2626;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+.location-ready {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  background: #f0fdf4;
+  border-radius: 8px;
+  color: #16a34a;
+  font-size: 14px;
+  margin-bottom: 16px;
+}
+
+/* Emergency Types */
+.emergency-types {
+  margin-bottom: 24px;
+}
+
+.emergency-types h3 {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.type-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+}
+
+.type-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 12px 8px;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  background: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.type-btn i {
+  font-size: 20px;
+  color: var(--type-color, #64748b);
+}
+
+.type-btn span {
+  font-size: 11px;
+  color: #64748b;
+  text-align: center;
+}
+
+.type-btn.selected {
+  border-color: var(--type-color, #3b82f6);
+  background: color-mix(in srgb, var(--type-color, #3b82f6) 10%, white);
+}
+
+.type-btn:hover {
+  border-color: var(--type-color, #3b82f6);
+}
+
+/* SOS Trigger Button */
+.sos-trigger-btn {
+  width: 180px;
+  height: 180px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+  border: none;
+  color: white;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  margin: 30px auto;
+  cursor: pointer;
+  box-shadow: 0 8px 30px rgba(239, 68, 68, 0.4);
+  transition: all 0.3s;
+  animation: pulse-ring 2s infinite;
+}
+
+.sos-trigger-btn:hover:not(:disabled) {
+  transform: scale(1.05);
+  box-shadow: 0 12px 40px rgba(239, 68, 68, 0.5);
+}
+
+.sos-trigger-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  animation: none;
+}
+
+@keyframes pulse-ring {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.4);
+  }
+  70% {
+    box-shadow: 0 0 0 20px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.sos-text {
+  font-size: 42px;
+  font-weight: 800;
+  letter-spacing: 2px;
+}
+
+.sos-subtext {
+  font-size: 12px;
+  opacity: 0.9;
+  margin-top: 4px;
+}
+
+/* Countdown Overlay */
+.countdown-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.9);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 9999;
+}
+
+.countdown-content {
+  text-align: center;
+  color: white;
+}
+
+.countdown-number {
+  font-size: 120px;
+  font-weight: 800;
+  color: #ef4444;
+  animation: countdown-pulse 1s infinite;
+}
+
+@keyframes countdown-pulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.countdown-content p {
+  font-size: 18px;
+  margin: 20px 0;
+}
+
+.cancel-countdown-btn {
+  background: white;
+  color: #1e293b;
+  border: none;
+  padding: 14px 40px;
+  border-radius: 8px;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Emergency Numbers */
+.emergency-numbers {
+  margin-top: 30px;
+}
+
+.emergency-numbers h4 {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.numbers-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 10px;
+}
+
+.number-btn {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+  padding: 12px 8px;
+  border-radius: 12px;
+  text-decoration: none;
+  transition: all 0.2s;
+}
+
+.number-btn i {
+  font-size: 20px;
+}
+
+.number-btn span {
+  font-size: 18px;
+  font-weight: 700;
+}
+
+.number-btn small {
+  font-size: 10px;
+}
+
+.number-btn.ambulance {
+  background: #fef2f2;
+  color: #dc2626;
+}
+
+.number-btn.police {
+  background: #eff6ff;
+  color: #2563eb;
+}
+
+.number-btn.fire {
+  background: #fff7ed;
+  color: #ea580c;
+}
+
+.number-btn.universal {
+  background: #f0fdf4;
+  color: #16a34a;
+}
+
+.number-btn:hover {
+  transform: translateY(-2px);
+}
+
+/* SOS Note */
+.sos-note {
+  display: flex;
+  gap: 10px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  margin-top: 20px;
+}
+
+.sos-note i {
+  color: #3b82f6;
+  margin-top: 2px;
+}
+
+.sos-note p {
+  margin: 0;
+  font-size: 13px;
+  color: #64748b;
+  line-height: 1.5;
+}
+
+/* Active SOS Styles */
+.active-sos {
+  background: linear-gradient(135deg, #fef2f2 0%, #fee2e2 100%);
+}
+
+.active-sos .sos-header {
+  justify-content: center;
+  flex-direction: column;
+  text-align: center;
+}
+
+.sos-pulse {
+  width: 20px;
+  height: 20px;
+  background: #ef4444;
+  border-radius: 50%;
+  animation: sos-pulse 1.5s infinite;
+}
+
+@keyframes sos-pulse {
+  0% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    box-shadow: 0 0 0 15px rgba(239, 68, 68, 0);
+  }
+  100% {
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.sos-status-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px;
+  margin-top: 20px;
+}
+
+.status-badge {
+  display: inline-block;
+  padding: 6px 16px;
+  border-radius: 20px;
+  font-size: 12px;
+  font-weight: 600;
+  text-transform: uppercase;
+  margin-bottom: 16px;
+}
+
+.status-badge[data-status="triggered"] {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.status-badge[data-status="acknowledged"],
+.status-badge[data-status="ambulance_dispatched"] {
+  background: #dbeafe;
+  color: #1e40af;
+}
+
+.status-badge[data-status="ambulance_arrived"],
+.status-badge[data-status="patient_picked"] {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.ambulance-info {
+  background: #f8fafc;
+  border-radius: 12px;
+  padding: 16px;
+  margin-bottom: 16px;
+}
+
+.ambulance-info h3 {
+  margin: 0 0 12px 0;
+  font-size: 16px;
+}
+
+.info-row {
+  display: flex;
+  justify-content: space-between;
+  padding: 8px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.info-row:last-of-type {
+  border-bottom: none;
+}
+
+.info-row a {
+  color: #3b82f6;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.eta-badge {
+  background: #3b82f6;
+  color: white;
+  padding: 8px 16px;
+  border-radius: 8px;
+  text-align: center;
+  margin-top: 12px;
+  font-weight: 600;
+}
+
+/* Timeline */
+.timeline {
+  margin-top: 20px;
+}
+
+.timeline h4 {
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 12px;
+}
+
+.timeline-item {
+  display: flex;
+  gap: 12px;
+  padding: 8px 0;
+}
+
+.timeline-dot {
+  width: 12px;
+  height: 12px;
+  background: #3b82f6;
+  border-radius: 50%;
+  margin-top: 4px;
+}
+
+.timeline-content {
+  flex: 1;
+  display: flex;
+  justify-content: space-between;
+}
+
+.event-name {
+  text-transform: capitalize;
+  font-size: 14px;
+}
+
+.event-time {
+  font-size: 12px;
+  color: #64748b;
+}
+
+/* SOS Actions */
+.sos-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.call-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 14px;
+  background: #16a34a;
+  color: white;
+  border-radius: 10px;
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.cancel-sos-btn {
+  flex: 1;
+  padding: 14px;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 10px;
+  color: #64748b;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .emergency-sos {
+    padding: 16px;
+    border-radius: 0;
+  }
+
+  .type-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .numbers-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .sos-trigger-btn {
+    width: 150px;
+    height: 150px;
+  }
+
+  .sos-text {
+    font-size: 36px;
+  }
+}
