@@ -192,4 +192,86 @@ router.get('/status/:appointmentId', async (req, res) => {
   }
 });
 
+// Razorpay Webhook - for payment confirmations (backup verification)
+router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
+  try {
+    const crypto = require('crypto');
+    const webhookSecret = process.env.RAZORPAY_WEBHOOK_SECRET;
+    
+    // Verify webhook signature
+    const signature = req.headers['x-razorpay-signature'];
+    
+    if (webhookSecret && signature) {
+      const expectedSignature = crypto
+        .createHmac('sha256', webhookSecret)
+        .update(JSON.stringify(req.body))
+        .digest('hex');
+      
+      if (signature !== expectedSignature) {
+        console.error('❌ Webhook signature verification failed');
+        return res.status(400).json({ error: 'Invalid signature' });
+      }
+    }
+    
+    const event = req.body;
+    console.log('📥 Razorpay webhook received:', event.event);
+    
+    // Handle different webhook events
+    switch (event.event) {
+      case 'payment.captured':
+        const payment = event.payload.payment.entity;
+        const orderId = payment.order_id;
+        
+        // Find appointment by order ID and update status
+        const appointment = await Appointment.findOne({ razorpayOrderId: orderId });
+        if (appointment && appointment.paymentStatus !== 'completed') {
+          appointment.paymentStatus = 'completed';
+          appointment.status = 'confirmed';
+          appointment.razorpayPaymentId = payment.id;
+          appointment.paymentDetails = {
+            razorpayOrderId: orderId,
+            razorpayPaymentId: payment.id,
+            amount: payment.amount / 100,
+            currency: payment.currency,
+            method: payment.method,
+            status: 'captured',
+            paidAt: new Date()
+          };
+          await appointment.save();
+          console.log(`✅ Webhook: Payment confirmed for appointment ${appointment._id}`);
+        }
+        break;
+        
+      case 'payment.failed':
+        const failedPayment = event.payload.payment.entity;
+        const failedOrderId = failedPayment.order_id;
+        
+        const failedAppointment = await Appointment.findOne({ razorpayOrderId: failedOrderId });
+        if (failedAppointment && failedAppointment.status === 'pending_payment') {
+          failedAppointment.paymentStatus = 'failed';
+          failedAppointment.status = 'cancelled';
+          failedAppointment.cancellationReason = 'Payment failed';
+          failedAppointment.cancelledBy = 'system';
+          failedAppointment.cancelledAt = new Date();
+          await failedAppointment.save();
+          console.log(`❌ Webhook: Payment failed for appointment ${failedAppointment._id}`);
+        }
+        break;
+        
+      case 'refund.created':
+        const refund = event.payload.refund.entity;
+        console.log(`💰 Refund created: ${refund.id} for payment ${refund.payment_id}`);
+        break;
+        
+      default:
+        console.log(`📌 Unhandled webhook event: ${event.event}`);
+    }
+    
+    res.json({ status: 'ok' });
+  } catch (error) {
+    console.error('❌ Webhook error:', error);
+    res.status(500).json({ error: 'Webhook processing failed' });
+  }
+});
+
 module.exports = router;
