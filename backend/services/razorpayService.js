@@ -73,7 +73,13 @@ class RazorpayService {
         throw new Error('Unauthorized access to appointment');
       }
 
-      const paymentBreakdown = this.calculatePaymentBreakdown(appointment.doctorId.consultationFee);
+      // Ensure consultation fee is valid (minimum ₹1)
+      const consultationFee = appointment.doctorId?.consultationFee || 500;
+      if (consultationFee < 1) {
+        throw new Error('Invalid consultation fee');
+      }
+
+      const paymentBreakdown = this.calculatePaymentBreakdown(consultationFee);
       
       // Create Razorpay order
       const orderOptions = {
@@ -89,7 +95,10 @@ class RazorpayService {
         }
       };
 
-      console.log('📦 Creating Razorpay order:', orderOptions);
+      console.log('📦 Creating Razorpay order:', JSON.stringify(orderOptions, null, 2));
+      console.log('   Amount in paise:', orderOptions.amount);
+      console.log('   Key ID:', RAZORPAY_KEY_ID?.substring(0, 15) + '...');
+      
       const order = await razorpay.orders.create(orderOptions);
       console.log('✅ Razorpay order created:', order.id);
 
