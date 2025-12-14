@@ -10,6 +10,7 @@ import PrescriptionManager from "./PrescriptionManager";
 import SecurityWarningBanner from "./SecurityWarningBanner";
 import WalkInPatientModal from "./WalkInPatientModal";
 import DoctorSupport from "./DoctorSupport";
+import DoctorControls from "./DoctorControls";
 
 function DoctorDashboard({ doctor, onLogout }) {
   const [appointments, setAppointments] = useState([]);
@@ -25,6 +26,7 @@ function DoctorDashboard({ doctor, onLogout }) {
   const [showWalkInModal, setShowWalkInModal] = useState(false);
   const [queueFilter, setQueueFilter] = useState('all'); // all, virtual, in_clinic
   const [showSupport, setShowSupport] = useState(false);
+  const [showControls, setShowControls] = useState(false);
 
   // Get doctor ID (handle both id and _id)
   const doctorId = doctor.id || doctor._id;
@@ -295,6 +297,15 @@ function DoctorDashboard({ doctor, onLogout }) {
                   <div className="text-end me-3 d-none d-md-block">
                     <small style={{ opacity: 0.75 }}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</small>
                   </div>
+                  <button 
+                    className="btn btn-warning px-3" 
+                    onClick={() => setShowControls(true)} 
+                    style={{ borderRadius: '12px', fontWeight: 600 }}
+                    title="Doctor Controls"
+                  >
+                    <i className="fas fa-sliders-h"></i>
+                    <span className="d-none d-md-inline ms-2">Controls</span>
+                  </button>
                   <button 
                     className="btn btn-outline-light px-3" 
                     onClick={() => setShowSupport(true)} 
@@ -891,6 +902,15 @@ function DoctorDashboard({ doctor, onLogout }) {
       {/* Doctor Support Modal */}
       {showSupport && (
         <DoctorSupport onClose={() => setShowSupport(false)} />
+      )}
+
+      {/* Doctor Controls Modal */}
+      {showControls && (
+        <DoctorControls 
+          doctor={doctor} 
+          onClose={() => setShowControls(false)}
+          onUpdate={() => fetchQueue()}
+        />
       )}
     </div>
   );

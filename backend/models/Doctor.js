@@ -247,7 +247,31 @@ const doctorSchema = new mongoose.Schema(
     privacyPolicyAcceptedAt: {
       type: Date,
       default: null
-    }
+    },
+    // ===== BOOKING CONTROLS (Doctor Override) =====
+    bookingControls: {
+      onlineBookingPaused: { type: Boolean, default: false },
+      clinicBookingPaused: { type: Boolean, default: false },
+      pauseReason: { type: String, default: '' },
+      clinicPauseReason: { type: String, default: '' },
+      pausedUntil: { type: Date, default: null },
+      clinicPausedUntil: { type: Date, default: null },
+      onlinePausedAt: { type: Date, default: null },
+      clinicPausedAt: { type: Date, default: null }
+    },
+    // Blocked days (emergency leaves)
+    blockedDays: [{
+      date: { type: Date, required: true },
+      reason: { type: String, default: 'Emergency leave' },
+      createdAt: { type: Date, default: Date.now }
+    }],
+    // Extended hours for specific days
+    extendedHours: [{
+      date: { type: Date, required: true },
+      newEndTime: { type: String, required: true },
+      reason: { type: String, default: 'Extended hours' },
+      createdAt: { type: Date, default: Date.now }
+    }]
   },
   { timestamps: true }
 );
