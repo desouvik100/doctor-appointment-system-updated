@@ -9,6 +9,7 @@ import { exportAppointmentsToPDF } from "../utils/pdfExport";
 import PrescriptionManager from "./PrescriptionManager";
 import SecurityWarningBanner from "./SecurityWarningBanner";
 import WalkInPatientModal from "./WalkInPatientModal";
+import DoctorSupport from "./DoctorSupport";
 
 function DoctorDashboard({ doctor, onLogout }) {
   const [appointments, setAppointments] = useState([]);
@@ -23,6 +24,7 @@ function DoctorDashboard({ doctor, onLogout }) {
   const [prescriptionPatient, setPrescriptionPatient] = useState(null);
   const [showWalkInModal, setShowWalkInModal] = useState(false);
   const [queueFilter, setQueueFilter] = useState('all'); // all, virtual, in_clinic
+  const [showSupport, setShowSupport] = useState(false);
 
   // Get doctor ID (handle both id and _id)
   const doctorId = doctor.id || doctor._id;
@@ -293,6 +295,15 @@ function DoctorDashboard({ doctor, onLogout }) {
                   <div className="text-end me-3 d-none d-md-block">
                     <small style={{ opacity: 0.75 }}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</small>
                   </div>
+                  <button 
+                    className="btn btn-outline-light px-3" 
+                    onClick={() => setShowSupport(true)} 
+                    style={{ borderRadius: '12px', fontWeight: 600 }}
+                    title="Contact Admin Support"
+                  >
+                    <i className="fas fa-headset"></i>
+                    <span className="d-none d-md-inline ms-2">Support</span>
+                  </button>
                   <button className="btn btn-light px-4" onClick={onLogout} style={{ borderRadius: '12px', fontWeight: 600 }}>
                     <i className="fas fa-sign-out-alt me-2"></i>Logout
                   </button>
@@ -875,6 +886,11 @@ function DoctorDashboard({ doctor, onLogout }) {
             toast.success(`Walk-in patient added! Token #${newAppointment.queueNumber}`);
           }}
         />
+      )}
+
+      {/* Doctor Support Modal */}
+      {showSupport && (
+        <DoctorSupport onClose={() => setShowSupport(false)} />
       )}
     </div>
   );

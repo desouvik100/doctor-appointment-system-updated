@@ -282,6 +282,7 @@ app.use('/api/ai-health', require('./routes/aiHealthRoutes')); // Advanced AI he
 app.use('/api/ai-report', require('./routes/aiReportRoutes')); // AI medical report analyzer
 app.use('/api/slots', require('./routes/slotRoutes')); // Separate Online & Clinic slot management
 app.use('/api/commission', require('./routes/commissionRoutes')); // Commission, GST & Payout system
+app.use('/api/support', require('./routes/supportRoutes')); // Doctor-Admin Support Tickets
 
 // ===== NEW DIFFERENTIATOR FEATURES =====
 app.use('/api/family-wallet', require('./routes/familyWalletRoutes')); // Family Health Wallet
