@@ -140,3 +140,70 @@ export const requestRefund = async (appointmentId, reason) => {
     throw error;
   }
 };
+
+// Initiate payment - main entry point for payment flow
+export const initiatePayment = async (appointmentId, userId, onSuccess, onFailure) => {
+  try {
+    // Create order first
+    const orderData = await createOrder(appointmentId, userId);
+    
+    // If payments are disabled (test mode), auto-confirm
+    if (orderData.testMode) {
+      onSuccess({
+        success: true,
+        testMode: true,
+        message: orderData.message,
+        razorpay_order_id: 'test_order',
+        razorpay_payment_id: 'test_payment',
+        razorpay_signature: 'test_signature'
+      });
+      return;
+    }
+    
+    // Check if Razorpay script is loaded
+    if (!window.Razorpay) {
+      throw new Error('Razorpay SDK not loaded. Please refresh the page.');
+    }
+    
+    // Open Razorpay checkout
+    const options = {
+      key: orderData.keyId,
+      amount: orderData.amountInPaise,
+      currency: orderData.currency || 'INR',
+      name: 'HealthSync Pro',
+      description: `Consultation with ${orderData.notes?.doctorName || 'Doctor'}`,
+      order_id: orderData.orderId,
+      prefill: orderData.prefill || {},
+      notes: orderData.notes || {},
+      theme: {
+        color: '#667eea'
+      },
+      handler: function (response) {
+        // Payment successful - pass response to callback
+        onSuccess({
+          razorpay_order_id: response.razorpay_order_id,
+          razorpay_payment_id: response.razorpay_payment_id,
+          razorpay_signature: response.razorpay_signature,
+          method: 'Razorpay'
+        });
+      },
+      modal: {
+        ondismiss: function () {
+          onFailure(new Error('Payment cancelled'));
+        },
+        escape: true,
+        backdropclose: false
+      }
+    };
+
+    const razorpay = new window.Razorpay(options);
+    razorpay.on('payment.failed', function (response) {
+      onFailure(new Error(response.error.description || 'Payment failed'));
+    });
+    razorpay.open();
+    
+  } catch (error) {
+    console.error('Payment initiation error:', error);
+    onFailure(error);
+  }
+};

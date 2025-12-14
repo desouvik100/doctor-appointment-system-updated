@@ -4,6 +4,7 @@ import toast from 'react-hot-toast';
 import './CinemaStyleBooking.css';
 import LiveQueueTracker from './LiveQueueTracker';
 import PaymentSuccessReceipt from './PaymentSuccessReceipt';
+import { initiatePayment } from '../utils/razorpayService';
 
 const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
   const [step, setStep] = useState(1); // 1: Type, 2: Date, 3: Details, 4: Confirm, 5: Success
@@ -40,6 +41,8 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
   const [paymentAttempts, setPaymentAttempts] = useState(0);
   const [paymentDetails, setPaymentDetails] = useState(null);
   const [showPaymentReceipt, setShowPaymentReceipt] = useState(false);
+  const [paymentConfig, setPaymentConfig] = useState(null);
+  const [pendingAppointmentId, setPendingAppointmentId] = useState(null);
 
   // Common symptoms for quick selection
   const commonSymptoms = [
@@ -62,6 +65,16 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
 
   useEffect(() => {
     fetchCalendar();
+    // Fetch payment config on mount
+    const fetchPaymentConfig = async () => {
+      try {
+        const response = await axios.get('/api/payments/config');
+        setPaymentConfig(response.data);
+      } catch (error) {
+        console.error('Error fetching payment config:', error);
+      }
+    };
+    fetchPaymentConfig();
   }, [currentMonth]);
 
   useEffect(() => {
@@ -249,6 +262,58 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
     setStep(3);
   };
 
+  // Handle Razorpay payment success
+  const handlePaymentSuccess = async (paymentData) => {
+    try {
+      // Verify payment on backend
+      const verifyResponse = await axios.post('/api/payments/verify', {
+        razorpay_order_id: paymentData.razorpay_order_id,
+        razorpay_payment_id: paymentData.razorpay_payment_id,
+        razorpay_signature: paymentData.razorpay_signature,
+        appointmentId: pendingAppointmentId
+      });
+
+      if (verifyResponse.data.success) {
+        // Fetch the updated appointment
+        const appointmentResponse = await axios.get(`/api/appointments/${pendingAppointmentId}`);
+        
+        setBookedAppointment({
+          ...appointmentResponse.data,
+          date: selectedDate,
+          consultationType
+        });
+        
+        setPaymentDetails({
+          transactionId: paymentData.razorpay_payment_id,
+          amount: totalPayable,
+          method: paymentData.method || 'Online',
+          status: 'SUCCESS',
+          timestamp: new Date().toISOString()
+        });
+        
+        setBookingSuccess(true);
+        setShowPaymentReceipt(true);
+        setStep(5);
+        setPaymentProcessing(false);
+        
+        toast.success('Payment successful! Appointment confirmed.', { duration: 4000 });
+      } else {
+        throw new Error('Payment verification failed');
+      }
+    } catch (error) {
+      console.error('Payment verification error:', error);
+      setPaymentError('Payment verification failed. Please contact support.');
+      setPaymentProcessing(false);
+    }
+  };
+
+  // Handle Razorpay payment failure
+  const handlePaymentFailure = (error) => {
+    console.error('Payment failed:', error);
+    setPaymentError(error.message || 'Payment failed. Please try again.');
+    setPaymentProcessing(false);
+  };
+
   const handleBooking = async () => {
     // Build reason with symptoms if selected (both are optional now)
     let fullReason = '';
@@ -292,34 +357,50 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         consultationType,
         urgencyLevel,
         reminderPreference,
-        sendEstimatedTimeEmail: true
+        sendEstimatedTimeEmail: true,
+        paymentStatus: paymentConfig?.paymentsEnabled ? 'pending' : 'completed'
       };
       
       console.log('📋 Booking data:', bookingData);
       
       const response = await axios.post('/api/appointments/queue-booking', bookingData);
+      const appointmentId = response.data._id || response.data.id;
+      setPendingAppointmentId(appointmentId);
 
-      // Show success animation with confetti
-      setBookedAppointment({
-        ...response.data,
-        queueNumber: response.data.queueNumber || queueNumber,
-        estimatedTime: response.data.estimatedTime || estimatedTime,
-        date: selectedDate,
-        consultationType
-      });
-      
-      // Set payment details for receipt
-      setPaymentDetails({
-        transactionId: response.data.transactionId || `TXN${Date.now()}`,
-        amount: doctor?.consultationFee || 500,
-        method: 'UPI', // Can be dynamic based on actual payment method
-        status: 'SUCCESS',
-        timestamp: new Date().toISOString()
-      });
-      
-      setBookingSuccess(true);
-      setShowPaymentReceipt(true); // Show the new receipt modal
-      setStep(5); // Success step
+      // If payments are enabled, initiate Razorpay
+      if (paymentConfig?.paymentsEnabled) {
+        setLoading(false);
+        
+        // Initiate Razorpay payment
+        initiatePayment(
+          appointmentId,
+          user.id || user._id,
+          handlePaymentSuccess,
+          handlePaymentFailure
+        );
+      } else {
+        // Payments disabled - auto-confirm
+        setBookedAppointment({
+          ...response.data,
+          queueNumber: response.data.queueNumber || queueNumber,
+          estimatedTime: response.data.estimatedTime || estimatedTime,
+          date: selectedDate,
+          consultationType
+        });
+        
+        setPaymentDetails({
+          transactionId: response.data.transactionId || `TXN${Date.now()}`,
+          amount: totalPayable,
+          method: 'Free',
+          status: 'SUCCESS',
+          timestamp: new Date().toISOString()
+        });
+        
+        setBookingSuccess(true);
+        setShowPaymentReceipt(true);
+        setStep(5);
+        setPaymentProcessing(false);
+      }
       
     } catch (error) {
       console.error('Booking error:', error);
