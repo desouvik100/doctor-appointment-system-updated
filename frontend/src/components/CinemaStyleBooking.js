@@ -55,13 +55,10 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
 
   const doctorId = doctor?._id || doctor?.id;
 
-  // Fee calculations
+  // Fee calculations - 5% platform fee, no GST
   const consultationFee = doctor?.consultationFee || 500;
-  const convenienceFee = consultationType === 'video' ? Math.round(consultationFee * 0.02) : 0; // 2% for online
-  const platformFee = consultationType === 'video' ? 10 : 5; // Platform handling fee
-  const subtotal = consultationFee + convenienceFee + platformFee;
-  const gstAmount = Math.round((convenienceFee + platformFee) * 0.18); // 18% GST on fees only
-  const totalPayable = subtotal + gstAmount;
+  const platformFee = Math.round(consultationFee * 0.05); // 5% platform fee
+  const totalPayable = consultationFee + platformFee;
 
   useEffect(() => {
     fetchCalendar();
