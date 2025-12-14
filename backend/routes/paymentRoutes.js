@@ -19,7 +19,8 @@ router.get('/calculate/:appointmentId', verifyToken, async (req, res) => {
     
     res.json({
       success: true,
-      testMode: !USE_RAZORPAY_PAYMENTS,
+      paymentsEnabled: USE_RAZORPAY_PAYMENTS,
+      testMode: !USE_RAZORPAY_PAYMENTS, // Only true when payments are DISABLED
       appointmentId,
       doctorName: appointment.doctorId.name,
       ...breakdown

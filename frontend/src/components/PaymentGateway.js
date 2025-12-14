@@ -27,13 +27,13 @@ const PaymentGateway = ({ appointmentId, user, onPaymentSuccess, onPaymentCancel
       const response = await axios.get(`/api/payments/calculate/${appointmentId}`);
       setPaymentDetails(response.data);
       
-      // If in test mode, skip payment and auto-confirm
-      if (response.data.testMode) {
-        console.log('Test mode detected - skipping payment');
+      // If payments are disabled (not just test mode), skip payment and auto-confirm
+      if (!response.data.paymentsEnabled) {
+        console.log('Payments disabled - auto-confirming appointment');
         setTimeout(() => {
           onPaymentSuccess({
             testMode: true,
-            message: 'Test appointment - no payment required'
+            message: 'Payments disabled - appointment confirmed automatically'
           });
         }, 1500);
       }
@@ -62,9 +62,9 @@ const PaymentGateway = ({ appointmentId, user, onPaymentSuccess, onPaymentCancel
     return (
       <div className="flex flex-col items-center justify-center min-h-[300px] p-8">
         <div className="animate-spin rounded-full h-12 w-12 border-4 border-indigo-200 border-t-indigo-600 mb-4"></div>
-        {paymentDetails?.testMode && (
+        {!paymentDetails?.paymentsEnabled && (
           <div className="text-center">
-            <p className="text-green-600 font-medium">✅ Test Mode</p>
+            <p className="text-green-600 font-medium">✅ Payments Disabled</p>
             <p className="text-gray-500 text-sm">No payment required - auto-confirming...</p>
           </div>
         )}
@@ -72,12 +72,12 @@ const PaymentGateway = ({ appointmentId, user, onPaymentSuccess, onPaymentCancel
     );
   }
 
-  // Don't show payment UI in test mode
-  if (paymentDetails?.testMode) {
+  // Don't show payment UI only when payments are completely disabled
+  if (!paymentDetails?.paymentsEnabled) {
     return (
       <div className="flex flex-col items-center justify-center min-h-[200px] p-8 bg-green-50 rounded-xl">
         <div className="text-5xl mb-4">✅</div>
-        <h3 className="text-xl font-semibold text-green-700 mb-2">Test Mode Active</h3>
+        <h3 className="text-xl font-semibold text-green-700 mb-2">Payments Disabled</h3>
         <p className="text-green-600 text-center">Payment is disabled. Your appointment will be confirmed automatically.</p>
       </div>
     );
