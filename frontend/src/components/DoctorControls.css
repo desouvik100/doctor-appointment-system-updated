@@ -1,3 +1,10 @@
+/* Doctor Controls - Reset box-sizing */
+.doctor-controls-overlay *,
+.doctor-controls-overlay *::before,
+.doctor-controls-overlay *::after {
+  box-sizing: border-box;
+}
+
 .doctor-controls-overlay {
   position: fixed;
   top: 0;
@@ -269,6 +276,8 @@
   border-radius: 10px;
   font-size: 0.9rem;
   transition: all 0.2s;
+  box-sizing: border-box;
+  background: white;
 }
 
 .action-form input:focus,
@@ -327,7 +336,8 @@
 }
 
 .action-btn {
-  padding: 14px;
+  width: 100%;
+  padding: 14px 20px;
   border: none;
   border-radius: 10px;
   font-size: 0.95rem;
@@ -339,13 +349,33 @@
   gap: 8px;
   transition: all 0.2s;
   color: white;
+  box-sizing: border-box;
+  min-height: 50px;
+  text-align: center;
 }
 
-.action-btn.pause { background: #dc3545; }
-.action-btn.resume { background: #28a745; }
-.action-btn.danger { background: linear-gradient(135deg, #dc3545, #c82333); }
-.action-btn.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.action-btn.success { background: linear-gradient(135deg, #10b981, #059669); }
+.action-btn.pause { 
+  background: #dc3545 !important; 
+}
+
+.action-btn.resume { 
+  background: #28a745 !important; 
+}
+
+.action-btn.danger { 
+  background: linear-gradient(135deg, #dc3545, #c82333) !important; 
+  color: white !important;
+}
+
+.action-btn.warning { 
+  background: linear-gradient(135deg, #f59e0b, #d97706) !important; 
+  color: white !important;
+}
+
+.action-btn.success { 
+  background: linear-gradient(135deg, #10b981, #059669) !important; 
+  color: white !important;
+}
 
 .action-btn:hover:not(:disabled) {
   transform: translateY(-2px);
@@ -355,7 +385,8 @@
 .action-btn:disabled {
   opacity: 0.6;
   cursor: not-allowed;
-  transform: none;
+  transform: none !important;
+  box-shadow: none !important;
 }
 
 /* Mobile Responsive */

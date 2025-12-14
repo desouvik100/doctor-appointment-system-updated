@@ -17,7 +17,7 @@ const DoctorControls = ({ doctor, onClose, onUpdate }) => {
   const [rescheduleFrom, setRescheduleFrom] = useState('');
   const [rescheduleTo, setRescheduleTo] = useState('');
   
-  const [extendDate, setExtendDate] = useState('');
+  const [extendDate, setExtendDate] = useState(new Date().toISOString().split('T')[0]);
   const [extendTime, setExtendTime] = useState('21:00');
   
   const [pauseReason, setPauseReason] = useState('');
