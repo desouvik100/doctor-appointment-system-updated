@@ -261,18 +261,26 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
 
   // Handle Razorpay payment success
   const handlePaymentSuccess = async (paymentData) => {
+    console.log('🎉 Payment success callback received:', paymentData);
+    console.log('📋 Pending appointment ID:', pendingAppointmentId);
+    
     try {
       // Verify payment on backend
+      console.log('🔐 Verifying payment...');
       const verifyResponse = await axios.post('/api/payments/verify', {
         razorpay_order_id: paymentData.razorpay_order_id,
         razorpay_payment_id: paymentData.razorpay_payment_id,
         razorpay_signature: paymentData.razorpay_signature,
         appointmentId: pendingAppointmentId
       });
+      
+      console.log('✅ Verify response:', verifyResponse.data);
 
       if (verifyResponse.data.success) {
         // Fetch the updated appointment
+        console.log('📥 Fetching updated appointment...');
         const appointmentResponse = await axios.get(`/api/appointments/${pendingAppointmentId}`);
+        console.log('📋 Appointment data:', appointmentResponse.data);
         
         setBookedAppointment({
           ...appointmentResponse.data,
@@ -295,11 +303,13 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         
         toast.success('Payment successful! Appointment confirmed.', { duration: 4000 });
       } else {
-        throw new Error('Payment verification failed');
+        console.error('❌ Verification failed:', verifyResponse.data);
+        throw new Error(verifyResponse.data.message || 'Payment verification failed');
       }
     } catch (error) {
-      console.error('Payment verification error:', error);
-      setPaymentError('Payment verification failed. Please contact support.');
+      console.error('❌ Payment verification error:', error);
+      console.error('Error details:', error.response?.data);
+      setPaymentError(error.response?.data?.message || error.message || 'Payment verification failed. Please contact support.');
       setPaymentProcessing(false);
     }
   };
