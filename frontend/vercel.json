@@ -3,23 +3,27 @@
   "buildCommand": "npm run build",
   "outputDirectory": "build",
   "framework": "create-react-app",
+  "cleanUrls": true,
+  "trailingSlash": false,
   "headers": [
     {
       "source": "/sitemap.xml",
       "headers": [
-        { "key": "Content-Type", "value": "application/xml" }
+        { "key": "Content-Type", "value": "application/xml; charset=utf-8" },
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
       ]
     },
     {
       "source": "/robots.txt",
       "headers": [
-        { "key": "Content-Type", "value": "text/plain" }
+        { "key": "Content-Type", "value": "text/plain; charset=utf-8" }
       ]
     }
   ],
   "rewrites": [
-    { "source": "/sitemap.xml", "destination": "/sitemap.xml" },
-    { "source": "/robots.txt", "destination": "/robots.txt" },
-    { "source": "/((?!sitemap.xml|robots.txt|manifest.json|favicon.ico|logo.*|static/.*).*)", "destination": "/index.html" }
+    {
+      "source": "/((?!static|sitemap\\.xml|robots\\.txt|manifest\\.json|favicon\\.ico|logo|asset-manifest|precache).*)",
+      "destination": "/index.html"
+    }
   ]
 }
