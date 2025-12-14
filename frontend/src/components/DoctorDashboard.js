@@ -27,6 +27,7 @@ function DoctorDashboard({ doctor, onLogout }) {
   const [queueFilter, setQueueFilter] = useState('all'); // all, virtual, in_clinic
   const [showSupport, setShowSupport] = useState(false);
   const [showControls, setShowControls] = useState(false);
+  const [consultationTime, setConsultationTime] = useState(0);
 
   // Get doctor ID (handle both id and _id)
   const doctorId = doctor.id || doctor._id;
@@ -68,6 +69,28 @@ function DoctorDashboard({ doctor, onLogout }) {
       return () => clearInterval(interval);
     }
   }, [doctorId, fetchQueue]);
+
+  // Consultation timer - tracks time with current patient
+  useEffect(() => {
+    let timer;
+    if (currentPatient?.consultationStartedAt) {
+      const startTime = new Date(currentPatient.consultationStartedAt).getTime();
+      timer = setInterval(() => {
+        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        setConsultationTime(elapsed);
+      }, 1000);
+    } else {
+      setConsultationTime(0);
+    }
+    return () => clearInterval(timer);
+  }, [currentPatient]);
+
+  // Format consultation time as MM:SS
+  const formatConsultationTime = (seconds) => {
+    const mins = Math.floor(seconds / 60);
+    const secs = seconds % 60;
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
 
   const fetchAppointments = async () => {
     try {
@@ -265,137 +288,182 @@ function DoctorDashboard({ doctor, onLogout }) {
   }
 
   return (
-    <div className="container-fluid py-4" style={{ background: '#f8fafc', minHeight: '100vh' }}>
+    <article className="doctor-dashboard-container">
       {/* Security Warning Banner */}
       <SecurityWarningBanner userId={doctorId} />
       
-      {/* Header */}
-      <div className="row mb-4">
-        <div className="col-12">
-          <div className="card bg-gradient text-white" style={{ background: "linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%)", border: 'none', borderRadius: '20px' }}>
-            <div className="card-body py-4">
-              <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-                <div className="d-flex align-items-center">
-                  {doctor.profilePhoto ? (
-                    <img src={doctor.profilePhoto} alt={doctor.name} className="me-3" style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: '16px', border: "3px solid rgba(255,255,255,0.3)", boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }} />
-                  ) : (
-                    <div className="bg-white d-flex align-items-center justify-content-center me-3" style={{ width: "70px", height: "70px", borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }}>
-                      <i className="fas fa-user-md fa-2x" style={{ color: '#4f46e5' }}></i>
-                    </div>
-                  )}
-                  <div>
-                    <h4 className="mb-1 fw-bold" style={{ fontSize: '1.5rem' }}>Dr. {doctor.name}</h4>
-                    <p className="mb-0" style={{ opacity: 0.9, fontSize: '0.95rem' }}>
-                      <i className="fas fa-stethoscope me-2"></i>{doctor.specialization}
-                    </p>
-                    <p className="mb-0" style={{ opacity: 0.75, fontSize: '0.85rem' }}>
-                      <i className="fas fa-hospital me-2"></i>{doctor.clinicId?.name || "Independent Practice"}
-                    </p>
+      {/* Header - Doctor info + controls */}
+      <header className="doctor-dashboard-header">
+        <div className="card doctor-header-card text-white">
+          <div className="card-body py-4">
+            <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+              <div className="d-flex align-items-center">
+                {doctor.profilePhoto ? (
+                  <img src={doctor.profilePhoto} alt={doctor.name} className="me-3" style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: '16px', border: "3px solid rgba(255,255,255,0.3)", boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }} />
+                ) : (
+                  <div className="bg-white d-flex align-items-center justify-content-center me-3" style={{ width: "70px", height: "70px", borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }} aria-hidden="true">
+                    <i className="fas fa-user-md fa-2x" style={{ color: '#4f46e5' }}></i>
                   </div>
+                )}
+                <div>
+                  <h1 className="mb-1 fw-bold text-white" style={{ fontSize: '1.5rem' }}>Dr. {doctor.name}</h1>
+                  <p className="mb-0" style={{ opacity: 0.9, fontSize: '0.95rem' }}>
+                    <i className="fas fa-stethoscope me-2" aria-hidden="true"></i>{doctor.specialization}
+                  </p>
+                  <p className="mb-0" style={{ opacity: 0.75, fontSize: '0.85rem' }}>
+                    <i className="fas fa-hospital me-2" aria-hidden="true"></i>{doctor.clinicId?.name || "Independent Practice"}
+                  </p>
                 </div>
-                <div className="d-flex align-items-center gap-2">
-                  <div className="text-end me-3 d-none d-md-block">
-                    <small style={{ opacity: 0.75 }}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</small>
-                  </div>
-                  <button 
-                    className="btn btn-warning px-3" 
-                    onClick={() => setShowControls(true)} 
-                    style={{ borderRadius: '12px', fontWeight: 600 }}
-                    title="Doctor Controls"
-                  >
-                    <i className="fas fa-sliders-h"></i>
-                    <span className="d-none d-md-inline ms-2">Controls</span>
-                  </button>
-                  <button 
-                    className="btn btn-outline-light px-3" 
-                    onClick={() => setShowSupport(true)} 
-                    style={{ borderRadius: '12px', fontWeight: 600 }}
-                    title="Contact Admin Support"
-                  >
-                    <i className="fas fa-headset"></i>
-                    <span className="d-none d-md-inline ms-2">Support</span>
-                  </button>
-                  <button className="btn btn-light px-4" onClick={onLogout} style={{ borderRadius: '12px', fontWeight: 600 }}>
-                    <i className="fas fa-sign-out-alt me-2"></i>Logout
-                  </button>
-                </div>
+              </div>
+              <div className="d-flex align-items-center gap-2" role="toolbar" aria-label="Doctor actions">
+                <time className="text-end me-3 d-none d-md-block" dateTime={new Date().toISOString()}>
+                  <small style={{ opacity: 0.75 }}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</small>
+                </time>
+                <button 
+                  className="btn btn-warning px-3" 
+                  onClick={() => setShowControls(true)} 
+                  style={{ borderRadius: '12px', fontWeight: 600 }}
+                  title="Doctor Controls"
+                  aria-label="Open doctor controls panel"
+                >
+                  <i className="fas fa-sliders-h" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline ms-2">Controls</span>
+                </button>
+                <button 
+                  className="btn btn-outline-light px-3" 
+                  onClick={() => setShowSupport(true)} 
+                  style={{ borderRadius: '12px', fontWeight: 600 }}
+                  title="Contact Admin Support"
+                  aria-label="Open support chat"
+                >
+                  <i className="fas fa-headset" aria-hidden="true"></i>
+                  <span className="d-none d-md-inline ms-2">Support</span>
+                  <span className="support-live-indicator ms-2 d-none d-lg-inline-flex" aria-label="Support is live">
+                    <span className="dot" aria-hidden="true"></span>
+                    Live
+                  </span>
+                </button>
+                <button className="btn btn-light px-4" onClick={onLogout} style={{ borderRadius: '12px', fontWeight: 600 }} aria-label="Logout">
+                  <i className="fas fa-sign-out-alt me-2" aria-hidden="true"></i>Logout
+                </button>
               </div>
             </div>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Stats */}
-      <div className="row mb-4 g-3">
-        {[
-          { label: "Today", value: stats.today, icon: "calendar-day", gradient: "linear-gradient(135deg, #3b82f6, #1d4ed8)" },
-          { label: "Pending", value: stats.pending, icon: "hourglass-half", gradient: "linear-gradient(135deg, #f59e0b, #d97706)" },
-          { label: "Completed", value: stats.completed, icon: "check-circle", gradient: "linear-gradient(135deg, #10b981, #059669)" },
-          { label: "Total", value: stats.total, icon: "users", gradient: "linear-gradient(135deg, #8b5cf6, #6d28d9)" }
-        ].map((stat, i) => (
-          <div key={i} className="col-6 col-lg-3">
-            <div className="card h-100 border-0" style={{ borderRadius: '16px', overflow: 'hidden' }}>
-              <div className="card-body p-3">
-                <div className="d-flex align-items-center">
-                  <div className="d-flex align-items-center justify-content-center me-3" style={{ width: '50px', height: '50px', borderRadius: '14px', background: stat.gradient }}>
-                    <i className={`fas fa-${stat.icon} text-white`} style={{ fontSize: '1.2rem' }}></i>
-                  </div>
-                  <div>
-                    <h3 className="mb-0 fw-bold" style={{ fontSize: '1.75rem', color: '#1e293b' }}>{stat.value}</h3>
-                    <small className="text-muted" style={{ fontSize: '0.8rem' }}>{stat.label}</small>
+      {/* Stats Section */}
+      <section className="doctor-stats-section" aria-label="Dashboard statistics" style={{ marginBottom: '1.5rem' }}>
+        <div className="row g-3">
+          {[
+            { label: "Today", value: stats.today, icon: "calendar-day", gradient: "linear-gradient(135deg, #3b82f6, #1d4ed8)" },
+            { label: "Pending", value: stats.pending, icon: "hourglass-half", gradient: "linear-gradient(135deg, #f59e0b, #d97706)" },
+            { label: "Completed", value: stats.completed, icon: "check-circle", gradient: "linear-gradient(135deg, #10b981, #059669)" },
+            { label: "Total", value: stats.total, icon: "users", gradient: "linear-gradient(135deg, #8b5cf6, #6d28d9)" }
+          ].map((stat, i) => (
+            <div key={i} className="col-6 col-lg-3">
+              <div className="card h-100 border-0" style={{ borderRadius: '16px', overflow: 'hidden' }}>
+                <div className="card-body p-3">
+                  <div className="d-flex align-items-center">
+                    <div className="d-flex align-items-center justify-content-center me-3" style={{ width: '50px', height: '50px', borderRadius: '14px', background: stat.gradient }} aria-hidden="true">
+                      <i className={`fas fa-${stat.icon} text-white`} style={{ fontSize: '1.2rem' }}></i>
+                    </div>
+                    <div>
+                      <p className="mb-0 fw-bold" style={{ fontSize: '1.75rem', color: '#1e293b' }}>{stat.value}</p>
+                      <small className="text-muted" style={{ fontSize: '0.8rem' }}>{stat.label}</small>
+                    </div>
                   </div>
                 </div>
               </div>
             </div>
-          </div>
-        ))}
-      </div>
+          ))}
+        </div>
+      </section>
 
-      {/* Main Tabs */}
-      <div className="doctor-dashboard-tabs">
+      {/* Navigation Tabs - Queue is the HERO */}
+      <nav className="doctor-dashboard-tabs" aria-label="Dashboard navigation" role="tablist">
         <button 
-          className={`doctor-tab ${activeTab === 'queue' ? 'active' : ''}`}
+          className={`doctor-tab queue-hero ${activeTab === 'queue' ? 'active' : ''}`}
           onClick={() => setActiveTab('queue')}
+          role="tab"
+          aria-selected={activeTab === 'queue'}
+          aria-controls="queue-panel"
         >
-          <i className="fas fa-users"></i>
+          <i className="fas fa-users" aria-hidden="true"></i>
           <span>Queue</span>
-          {queue.length > 0 && <span className="badge bg-danger">{queue.length}</span>}
+          {queue.length > 0 && <span className="badge bg-danger" aria-label={`${queue.length} patients waiting`}>{queue.length}</span>}
         </button>
         <button 
           className={`doctor-tab ${activeTab === 'appointments' ? 'active' : ''}`}
           onClick={() => setActiveTab('appointments')}
+          role="tab"
+          aria-selected={activeTab === 'appointments'}
+          aria-controls="appointments-panel"
         >
-          <i className="fas fa-calendar-alt"></i>
-          <span>Appointments</span>
+          <i className="fas fa-calendar-alt" aria-hidden="true"></i>
+          <span>All Bookings</span>
         </button>
         <button 
           className={`doctor-tab ${activeTab === 'schedule' ? 'active' : ''}`}
           onClick={() => setActiveTab('schedule')}
+          role="tab"
+          aria-selected={activeTab === 'schedule'}
+          aria-controls="schedule-panel"
         >
-          <i className="fas fa-clock"></i>
+          <i className="fas fa-clock" aria-hidden="true"></i>
           <span>Schedule</span>
         </button>
         <button 
           className={`doctor-tab ${activeTab === 'wallet' ? 'active' : ''}`}
           onClick={() => setActiveTab('wallet')}
+          role="tab"
+          aria-selected={activeTab === 'wallet'}
+          aria-controls="wallet-panel"
         >
-          <i className="fas fa-wallet"></i>
+          <i className="fas fa-wallet" aria-hidden="true"></i>
           <span>Wallet</span>
         </button>
-      </div>
+      </nav>
 
       {/* Patient Queue Section */}
       {activeTab === 'queue' && (
-        <div className="row">
+        <div className="row" id="queue-panel" role="tabpanel" aria-labelledby="queue-tab">
+          {/* Daily Summary Section - Today at a Glance */}
+          <section className="col-12 mb-3" aria-label="Today at a glance">
+            <div className="daily-summary-card">
+              <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>
+                <i className="fas fa-chart-line me-2" aria-hidden="true"></i>Today at a Glance
+              </h2>
+              <div className="daily-summary-stats">
+                <div className="summary-stat seen">
+                  <div className="value" aria-label="Patients seen">{stats.completed}</div>
+                  <div className="label">Seen</div>
+                </div>
+                <div className="summary-stat pending">
+                  <div className="value" aria-label="Patients waiting">{queue.length}</div>
+                  <div className="label">Waiting</div>
+                </div>
+                <div className="summary-stat earnings">
+                  <div className="value" aria-label="Today's earnings">₹{(stats.completed * (doctor.consultationFee || 500)).toLocaleString()}</div>
+                  <div className="label">Earnings</div>
+                </div>
+                <div className="summary-stat avg-time">
+                  <div className="value" aria-label="Average consultation time">~{doctor.consultationDuration || 20}m</div>
+                  <div className="label">Avg Time</div>
+                </div>
+              </div>
+            </div>
+          </section>
+
           {/* Quick Actions Bar - Staff Friendly */}
           <div className="col-12 mb-3">
-            <div className="quick-actions-bar">
+            <div className="quick-actions-bar" role="toolbar" aria-label="Queue actions">
               <div className="quick-actions-left">
-                <h4 className="queue-title">
-                  <i className="fas fa-users"></i>
+                <h2 className="queue-title" style={{ fontSize: '1.25rem' }}>
+                  <i className="fas fa-users" aria-hidden="true"></i>
                   Today's Queue
-                  <span className="queue-count">{queue.length + (currentPatient ? 1 : 0)}</span>
-                </h4>
+                  <span className="queue-count" aria-label={`${queue.length + (currentPatient ? 1 : 0)} total patients`}>{queue.length + (currentPatient ? 1 : 0)}</span>
+                </h2>
               </div>
               <div className="quick-actions-right">
                 <button 
@@ -403,16 +471,18 @@ function DoctorDashboard({ doctor, onLogout }) {
                   onClick={fetchQueue}
                   disabled={queueLoading}
                   title="Refresh Queue"
+                  aria-label="Refresh queue"
                 >
-                  <i className={`fas fa-sync-alt ${queueLoading ? 'fa-spin' : ''}`}></i>
+                  <i className={`fas fa-sync-alt ${queueLoading ? 'fa-spin' : ''}`} aria-hidden="true"></i>
                 </button>
                 {queue.length > 0 && (
                   <button 
                     className="quick-btn quick-btn-notify"
                     onClick={notifyUpcomingPatients}
                     title="Notify Next 3 Patients"
+                    aria-label="Notify next 3 patients"
                   >
-                    <i className="fas fa-bell"></i>
+                    <i className="fas fa-bell" aria-hidden="true"></i>
                     <span>Notify</span>
                   </button>
                 )}
@@ -421,51 +491,56 @@ function DoctorDashboard({ doctor, onLogout }) {
                     className="quick-btn quick-btn-call"
                     onClick={callNextPatient}
                     title="Call First Patient"
+                    aria-label="Call next patient"
                   >
-                    <i className="fas fa-phone-alt"></i>
+                    <i className="fas fa-phone-alt" aria-hidden="true"></i>
                     <span>Call Next</span>
                   </button>
                 )}
                 <button 
                   className="quick-btn quick-btn-add"
                   onClick={() => setShowWalkInModal(true)}
+                  aria-label="Add walk-in patient"
                 >
-                  <i className="fas fa-user-plus"></i>
+                  <i className="fas fa-user-plus" aria-hidden="true"></i>
                   <span>Walk-In</span>
                 </button>
               </div>
             </div>
           </div>
 
-          {/* Queue Type Filter */}
+          {/* Queue Type Filter - Human Language */}
           <div className="col-12 mb-3">
-            <div className="queue-type-filter">
+            <div className="queue-type-filter" role="group" aria-label="Filter queue by type">
               <button 
                 className={`queue-filter-btn ${queueFilter === 'all' ? 'active' : ''}`}
                 onClick={() => setQueueFilter('all')}
+                aria-pressed={queueFilter === 'all'}
               >
-                <i className="fas fa-layer-group me-1"></i>
-                All ({queue.length})
+                <i className="fas fa-layer-group me-1" aria-hidden="true"></i>
+                All Patients ({queue.length})
               </button>
               <button 
                 className={`queue-filter-btn in-clinic ${queueFilter === 'in_clinic' ? 'active' : ''}`}
                 onClick={() => setQueueFilter('in_clinic')}
+                aria-pressed={queueFilter === 'in_clinic'}
               >
-                <i className="fas fa-hospital me-1"></i>
-                In-Clinic ({queue.filter(p => p.consultationType !== 'online').length})
+                <i className="fas fa-hospital me-1" aria-hidden="true"></i>
+                Clinic Queue ({queue.filter(p => p.consultationType !== 'online').length})
               </button>
               <button 
                 className={`queue-filter-btn virtual ${queueFilter === 'virtual' ? 'active' : ''}`}
                 onClick={() => setQueueFilter('virtual')}
+                aria-pressed={queueFilter === 'virtual'}
               >
-                <i className="fas fa-video me-1"></i>
-                Virtual ({queue.filter(p => p.consultationType === 'online').length})
+                <i className="fas fa-video me-1" aria-hidden="true"></i>
+                Online Consults ({queue.filter(p => p.consultationType === 'online').length})
               </button>
             </div>
           </div>
 
-          {/* Current Patient */}
-          <div className="col-lg-5 mb-4">
+          {/* Current Patient - Aside */}
+          <aside className="col-lg-5 mb-4" aria-label="Current patient in consultation">
             <div className="card doctor-current-patient-card">
               <div className="card-header bg-primary text-white">
                 <h5 className="mb-0">
@@ -486,26 +561,24 @@ function DoctorDashboard({ doctor, onLogout }) {
                         ? (currentPatient.walkInPatient?.name || 'Walk-In Patient')
                         : (currentPatient.userId?.name || 'Unknown Patient')}
                     </h4>
-                    {/* Booking Source Badge for Current Patient */}
-                    <div className="mb-2">
-                      {currentPatient.bookingSource === 'offline' || currentPatient.isWalkIn ? (
-                        <span className="badge bg-warning text-dark">
-                          <i className="fas fa-walking me-1"></i>Walk-In Patient
-                        </span>
-                      ) : currentPatient.bookingSource === 'receptionist' ? (
-                        <span className="badge text-white" style={{ background: '#9333ea' }}>
-                          <i className="fas fa-user-tie me-1"></i>Added by Receptionist
-                        </span>
-                      ) : currentPatient.bookingSource === 'phone' ? (
-                        <span className="badge bg-info">
-                          <i className="fas fa-phone me-1"></i>Phone Booking
-                        </span>
-                      ) : (
-                        <span className="badge bg-success">
-                          <i className="fas fa-globe me-1"></i>Online Booking
-                        </span>
-                      )}
+                    
+                    {/* Patient Type Badge */}
+                    <div className={`patient-type-badge ${currentPatient.consultationType === 'online' ? 'virtual' : 'clinic'}`}>
+                      <i className={`fas ${currentPatient.consultationType === 'online' ? 'fa-video' : 'fa-hospital'}`}></i>
+                      {currentPatient.consultationType === 'online' ? 'Online Consultation' : 'In-Clinic Visit'}
                     </div>
+
+                    {/* Consultation Timer */}
+                    <div className="consultation-timer">
+                      <i className="fas fa-stopwatch"></i>
+                      <span>{formatConsultationTime(consultationTime)} elapsed</span>
+                    </div>
+
+                    {/* Status Pill */}
+                    <div className="mb-2">
+                      <span className="status-pill in-consultation">In Consultation</span>
+                    </div>
+
                     <p className="text-muted mb-2">
                       <i className="fas fa-phone me-2"></i>
                       {currentPatient.isWalkIn 
@@ -514,78 +587,112 @@ function DoctorDashboard({ doctor, onLogout }) {
                     </p>
                     <div className="patient-details">
                       <span className="badge bg-info me-2">
-                        Token #{currentPatient.tokenNumber || '-'}
+                        Token #{currentPatient.tokenNumber || currentPatient.queueNumber || '-'}
                       </span>
                       <span className="badge bg-secondary">
-                        {formatTime(currentPatient.time)}
+                        {currentPatient.estimatedTime ? formatTime(currentPatient.estimatedTime) : (currentPatient.time ? formatTime(currentPatient.time) : '-')}
                       </span>
                     </div>
-                    <p className="mt-3 mb-2"><strong>Reason:</strong></p>
-                    <p className="text-muted">{currentPatient.reason}</p>
+                    {currentPatient.reason && (
+                      <>
+                        <p className="mt-3 mb-2"><strong>Reason:</strong></p>
+                        <p className="text-muted" style={{ fontSize: '0.85rem' }}>{currentPatient.reason}</p>
+                      </>
+                    )}
                     
-                    {/* Quick Action Buttons - Large Touch Targets */}
-                    <div className="current-patient-quick-actions">
-                      <button 
-                        className="action-btn-large action-btn-prescription"
-                        onClick={() => { setPrescriptionPatient(currentPatient); setShowPrescription(true); }}
-                      >
-                        <i className="fas fa-prescription"></i>
-                        <span>Prescription</span>
-                      </button>
-                      <button 
-                        className="action-btn-large action-btn-complete"
-                        onClick={completeCurrentPatient}
-                      >
-                        <i className="fas fa-check-circle"></i>
-                        <span>Complete</span>
-                      </button>
-                    </div>
-                    {currentPatient.consultationType === 'online' && currentPatient.googleMeetLink && (
-                      <div className="online-consultation-section mt-3">
+                    {/* Quick Action Buttons - Improved */}
+                    <div className="current-patient-actions">
+                      {currentPatient.consultationType === 'online' && currentPatient.googleMeetLink && (
                         <a 
                           href={currentPatient.googleMeetLink}
                           target="_blank"
                           rel="noopener noreferrer"
-                          className="action-btn-large w-100"
-                          style={{ background: 'linear-gradient(135deg, #1a73e8 0%, #4285f4 100%)', textDecoration: 'none' }}
+                          className="action-btn-primary"
+                          style={{ background: 'linear-gradient(135deg, #1a73e8 0%, #4285f4 100%)', textDecoration: 'none', color: 'white' }}
                         >
                           <i className="fas fa-video"></i>
-                          <span>Start Video Call</span>
+                          <span>Join Video Call</span>
                         </a>
+                      )}
+                      <div className="action-row">
+                        <button 
+                          className="action-btn-primary prescription"
+                          onClick={() => { setPrescriptionPatient(currentPatient); setShowPrescription(true); }}
+                        >
+                          <i className="fas fa-prescription"></i>
+                          Prescription
+                        </button>
+                        <button 
+                          className="action-btn-primary complete"
+                          onClick={completeCurrentPatient}
+                        >
+                          <i className="fas fa-check-circle"></i>
+                          Complete
+                        </button>
                       </div>
-                    )}
+                      <div className="action-row">
+                        <button 
+                          className="action-btn-primary back-to-waiting"
+                          onClick={() => updateAppointmentStatus(currentPatient._id, 'confirmed')}
+                        >
+                          <i className="fas fa-undo"></i>
+                          Back to Queue
+                        </button>
+                        <button 
+                          className="action-btn-primary cancel"
+                          onClick={() => markNoShow(currentPatient._id)}
+                        >
+                          <i className="fas fa-user-slash"></i>
+                          No Show
+                        </button>
+                      </div>
+                    </div>
                   </div>
                 ) : (
-                  <div className="text-center py-4">
-                    <i className="fas fa-user-clock fa-3x text-muted mb-3"></i>
-                    <p className="text-muted">No patient currently being seen</p>
-                    {queue.length > 0 && (
+                  <div className="current-patient-empty">
+                    <div className="empty-icon">
+                      <i className="fas fa-user-clock"></i>
+                    </div>
+                    <h5>No patient in consultation</h5>
+                    <p>
+                      {queue.length > 0 
+                        ? `${queue.length} patient${queue.length > 1 ? 's' : ''} waiting in queue`
+                        : 'Walk-ins and online bookings will appear here'
+                      }
+                    </p>
+                    {queue.length > 0 ? (
                       <button 
-                        className="btn btn-primary btn-lg mt-2"
+                        className="action-btn-primary complete"
                         onClick={callNextPatient}
+                        style={{ margin: '0 auto' }}
                       >
-                        <i className="fas fa-bell me-2"></i>
-                        Call First Patient
+                        <i className="fas fa-phone-alt"></i>
+                        Call Next Patient
                       </button>
+                    ) : (
+                      <div className="hint">
+                        <i className="fas fa-hand-point-right"></i>
+                        <span>Click "Walk-In" to add a patient</span>
+                      </div>
                     )}
                   </div>
                 )}
               </div>
             </div>
-          </div>
+          </aside>
 
-          {/* Waiting Queue */}
-          <div className="col-lg-7 mb-4">
+          {/* Waiting Queue - Main Content */}
+          <main className="col-lg-7 mb-4" aria-label="Patient waiting queue">
             <div className="card">
               <div className="card-header d-flex justify-content-between align-items-center">
-                <h5 className="mb-0">
-                  <i className={`fas ${queueFilter === 'virtual' ? 'fa-video' : queueFilter === 'in_clinic' ? 'fa-hospital' : 'fa-list-ol'} me-2`}></i>
+                <h3 className="mb-0" style={{ fontSize: '1.1rem' }}>
+                  <i className={`fas ${queueFilter === 'virtual' ? 'fa-video' : queueFilter === 'in_clinic' ? 'fa-hospital' : 'fa-list-ol'} me-2`} aria-hidden="true"></i>
                   {queueFilter === 'virtual' ? 'Virtual Queue' : queueFilter === 'in_clinic' ? 'In-Clinic Queue' : 'Waiting Queue'} ({
                     queueFilter === 'all' ? queue.length 
                     : queueFilter === 'virtual' ? queue.filter(p => p.consultationType === 'online').length
                     : queue.filter(p => p.consultationType !== 'online').length
                   })
-                </h5>
+                </h3>
                 <div>
                   <button 
                     className="btn btn-sm btn-outline-primary me-2"
@@ -737,16 +844,16 @@ function DoctorDashboard({ doctor, onLogout }) {
                 })()}
               </div>
             </div>
-          </div>
+          </main>
         </div>
       )}
 
       {/* Appointments Tab */}
       {activeTab === 'appointments' && (
-      <div className="card">
+      <main className="card" id="appointments-panel" role="tabpanel" aria-labelledby="appointments-tab">
         <div className="card-header">
           <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h5 className="mb-0"><i className="fas fa-calendar-alt me-2"></i>Appointments</h5>
+            <h2 className="mb-0" style={{ fontSize: '1.25rem' }}><i className="fas fa-calendar-alt me-2" aria-hidden="true"></i>Appointments</h2>
             <div className="d-flex align-items-center gap-2">
               <div className="btn-group btn-group-sm">
                 {["today", "upcoming", "completed", "all"].map(f => (
@@ -861,17 +968,21 @@ function DoctorDashboard({ doctor, onLogout }) {
             </div>
           )}
         </div>
-      </div>
+      </main>
       )}
 
       {/* Schedule Tab */}
       {activeTab === 'schedule' && (
-        <DoctorScheduleManager doctorId={doctorId} />
+        <main id="schedule-panel" role="tabpanel" aria-labelledby="schedule-tab">
+          <DoctorScheduleManager doctorId={doctorId} />
+        </main>
       )}
 
       {/* Wallet Tab */}
       {activeTab === 'wallet' && (
-        <DoctorWallet doctorId={doctorId} doctorName={doctor.name} />
+        <main id="wallet-panel" role="tabpanel" aria-labelledby="wallet-tab">
+          <DoctorWallet doctorId={doctorId} doctorName={doctor.name} />
+        </main>
       )}
 
       {/* Prescription Modal */}
@@ -912,7 +1023,7 @@ function DoctorDashboard({ doctor, onLogout }) {
           onUpdate={() => fetchQueue()}
         />
       )}
-    </div>
+    </article>
   );
 }
 

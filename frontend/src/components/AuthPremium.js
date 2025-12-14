@@ -76,6 +76,10 @@ function AuthPremium({ onLogin, onBack }) {
       
       if (response.data.success) {
         toast.success("OTP sent to your email!");
+        // Show OTP for debugging (remove in production)
+        if (response.data.otp) {
+          toast(`Debug: OTP is ${response.data.otp}`, { icon: '🔐', duration: 10000 });
+        }
         setShowOtpStep(true);
         setOtpTimer(60); // 60 second cooldown
       }

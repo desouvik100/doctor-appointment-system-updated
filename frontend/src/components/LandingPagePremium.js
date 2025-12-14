@@ -943,7 +943,10 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                 <span style={{ fontSize: '20px', fontWeight: '700', color: '#ffffff' }}>HealthSync</span>
               </div>
               <p style={{ fontSize: '14px', lineHeight: '1.7', maxWidth: '280px', color: '#94a3b8' }}>
-                Making quality healthcare accessible to everyone through technology and innovation.
+                HealthSync is a clinic-first healthcare platform for managing online and in-clinic doctor appointments with zero confusion.
+              </p>
+              <p style={{ fontSize: '12px', color: '#64748b', marginTop: '12px' }}>
+                <strong>HealthSync</strong> | healthsyncpro.in | Clinic Management Software
               </p>
             </div>
             

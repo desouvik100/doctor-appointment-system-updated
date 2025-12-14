@@ -218,7 +218,20 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
               color: answers.language === lang.code ? '#fff' : '#1e293b'
             }}
           >
-            <span style={{ fontSize: '32px' }}>{lang.flag}</span>
+            <div style={{ 
+              width: '48px', 
+              height: '48px', 
+              borderRadius: '12px', 
+              background: answers.language === lang.code ? 'rgba(255,255,255,0.2)' : lang.color || '#6366f1',
+              display: 'flex', 
+              alignItems: 'center', 
+              justifyContent: 'center',
+              fontSize: '18px',
+              fontWeight: '700',
+              color: answers.language === lang.code ? '#fff' : '#fff'
+            }}>
+              {lang.icon}
+            </div>
             <div style={{ textAlign: 'left' }}>
               <div style={{ fontSize: '18px', fontWeight: '600' }}>{lang.nativeName}</div>
               <div style={{ fontSize: '14px', opacity: 0.8 }}>{lang.name}</div>

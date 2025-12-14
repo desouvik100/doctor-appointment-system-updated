@@ -1,18 +1,18 @@
 const MedicalHero = ({ onGetStarted }) => {
   return (
-    <section className="hero-section">
+    <section className="hero-section" aria-label="HealthSync - Clinic Management Platform">
       <div className="container">
         <div className="row align-items-center min-vh-100">
           <div className="col-lg-6">
             <div className="hero-content">
               <h1 className="premium-title fade-in-up">
-                The Future of
-                <span className="text-gradient"> Healthcare</span>
-                <br />Management
+                Clinic-First
+                <span className="text-gradient"> Doctor Appointment</span>
+                <br />& Management Platform
               </h1>
               <p className="premium-subtitle fade-in-up">
-                Streamline your healthcare operations with our intelligent platform.
-                Connect patients, doctors, and administrators in one seamless ecosystem.
+                HealthSync is a clinic-first healthcare platform for managing online and in-clinic 
+                doctor appointments with zero confusion. Book appointments, manage queues, and streamline operations.
               </p>
 
               <div className="hero-stats fade-in-up">

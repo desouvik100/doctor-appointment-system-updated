@@ -1098,8 +1098,9 @@ router.post('/slot-booking', async (req, res) => {
   }
 });
 
-// Walk-in/Offline booking - For receptionists to add patients at clinic (with clinic isolation)
-router.post('/walk-in', verifyTokenWithRole(['receptionist', 'doctor', 'admin']), verifyClinicAccess('clinicId'), async (req, res) => {
+// Walk-in/Offline booking - For receptionists to add patients at clinic
+// Note: Clinic isolation is handled manually to support independent doctors
+router.post('/walk-in', verifyTokenWithRole(['receptionist', 'doctor', 'admin']), async (req, res) => {
   try {
     const { 
       doctorId, 
@@ -1126,6 +1127,24 @@ router.post('/walk-in', verifyTokenWithRole(['receptionist', 'doctor', 'admin'])
     // Either userId or walk-in patient details required
     if (!userId && !patientName) {
       return res.status(400).json({ message: 'Either user ID or patient name is required' });
+    }
+
+    // Manual clinic access check - allow independent doctors (no clinic)
+    const userRole = req.user?.role;
+    const userClinicId = req.user?.clinicId;
+    
+    if (userRole !== 'admin') {
+      // For doctors, verify they're adding to their own queue
+      if (userRole === 'doctor' && req.user.id !== doctorId) {
+        return res.status(403).json({ message: 'Doctors can only add patients to their own queue' });
+      }
+      
+      // For receptionists, verify clinic match (if clinic exists)
+      if (userRole === 'receptionist' && clinicId && userClinicId) {
+        if (userClinicId.toString() !== clinicId.toString()) {
+          return res.status(403).json({ message: 'Access denied - you can only add patients to your clinic' });
+        }
+      }
     }
 
     // Check if doctor exists
