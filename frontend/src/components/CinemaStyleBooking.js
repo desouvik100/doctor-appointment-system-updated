@@ -1060,7 +1060,7 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
                     <span>₹{consultationFee}</span>
                   </div>
                   <div className="fee-row">
-                    <span>Platform Fee (5%)</span>
+                    <span>Platform Fee</span>
                     <span>₹{platformFee}</span>
                   </div>
                   <div className="fee-row total">
