@@ -1059,22 +1059,10 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
                     <span>Consultation Fee</span>
                     <span>₹{consultationFee}</span>
                   </div>
-                  {convenienceFee > 0 && (
-                    <div className="fee-row">
-                      <span>Convenience Fee</span>
-                      <span>₹{convenienceFee}</span>
-                    </div>
-                  )}
                   <div className="fee-row">
-                    <span>Platform Fee</span>
+                    <span>Platform Fee (5%)</span>
                     <span>₹{platformFee}</span>
                   </div>
-                  {gstAmount > 0 && (
-                    <div className="fee-row gst">
-                      <span>GST (18%)</span>
-                      <span>₹{gstAmount}</span>
-                    </div>
-                  )}
                   <div className="fee-row total">
                     <span>Total Payable</span>
                     <span className="total-amount">₹{totalPayable}</span>
