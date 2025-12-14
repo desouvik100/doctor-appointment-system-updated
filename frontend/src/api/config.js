@@ -9,7 +9,7 @@ const isNative = Capacitor.isNativePlatform();
 // Change this IP to your computer's IP address for local development
 const LOCAL_DEV_IP = '192.168.0.8'; // Your computer's IP
 const LOCAL_DEV_URL = `http://${LOCAL_DEV_IP}:5005`;
-const PRODUCTION_URL = 'https://doctor-appointment-system-updated.onrender.com';
+const PRODUCTION_URL = 'https://doctor-appointment-system-updated-1.onrender.com';
 
 // Use local IP for development, production URL for release builds
 const API_BASE_URL = isNative
