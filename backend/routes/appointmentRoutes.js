@@ -788,6 +788,10 @@ router.post('/queue-booking', async (req, res) => {
     const platformFee = Math.round(consultationFee * 0.07);
     const totalAmount = consultationFee + gst + platformFee;
 
+    // Get payment status from request (for Razorpay integration)
+    const requestedPaymentStatus = req.body.paymentStatus || 'not_required';
+    const requestedStatus = req.body.status || 'confirmed';
+    
     const appointmentData = {
       userId,
       doctorId,
@@ -801,14 +805,14 @@ router.post('/queue-booking', async (req, res) => {
       consultationType: consultationType || 'in_person',
       urgencyLevel: urgencyLevel || 'normal',
       reminderPreference: reminderPreference || 'email',
-      status: 'confirmed',
-      paymentStatus: 'not_required',
+      status: requestedStatus, // Use requested status (pending_payment or confirmed)
+      paymentStatus: requestedPaymentStatus, // Use requested payment status
       payment: {
         consultationFee,
         gst,
         platformFee,
         totalAmount,
-        paymentStatus: 'not_required'
+        paymentStatus: requestedPaymentStatus
       }
     };
 
@@ -844,8 +848,8 @@ router.post('/queue-booking', async (req, res) => {
       console.error('❌ Token generation failed:', tokenError.message);
     }
 
-    // Send estimated time email (non-blocking)
-    if (sendEstimatedTimeEmail && user.email) {
+    // Send estimated time email (non-blocking) - only if not pending payment
+    if (sendEstimatedTimeEmail && user.email && requestedStatus !== 'pending_payment') {
       try {
         const { sendQueueBookingEmail } = require('../services/emailService');
         await sendQueueBookingEmail({

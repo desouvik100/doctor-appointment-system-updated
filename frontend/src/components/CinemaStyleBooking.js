@@ -305,10 +305,21 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
   };
 
   // Handle Razorpay payment failure
-  const handlePaymentFailure = (error) => {
+  const handlePaymentFailure = async (error) => {
     console.error('Payment failed:', error);
     setPaymentError(error.message || 'Payment failed. Please try again.');
     setPaymentProcessing(false);
+    
+    // Cancel the pending appointment if payment failed
+    if (pendingAppointmentId) {
+      try {
+        await axios.delete(`/api/appointments/${pendingAppointmentId}`);
+        console.log('Pending appointment cancelled due to payment failure');
+        setPendingAppointmentId(null);
+      } catch (cancelError) {
+        console.error('Failed to cancel pending appointment:', cancelError);
+      }
+    }
   };
 
   const handleBooking = async () => {
@@ -354,8 +365,9 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         consultationType,
         urgencyLevel,
         reminderPreference,
-        sendEstimatedTimeEmail: true,
-        paymentStatus: paymentConfig?.paymentsEnabled ? 'pending' : 'completed'
+        sendEstimatedTimeEmail: !paymentConfig?.paymentsEnabled, // Only send email if no payment required
+        paymentStatus: paymentConfig?.paymentsEnabled ? 'pending' : 'completed',
+        status: paymentConfig?.paymentsEnabled ? 'pending_payment' : 'confirmed'
       };
       
       console.log('📋 Booking data:', bookingData);
