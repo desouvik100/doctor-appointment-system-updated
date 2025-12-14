@@ -27,8 +27,8 @@ module.exports = {
   
   // Common settings
   CURRENCY: process.env.CURRENCY || 'INR',
-  PLATFORM_FEE_PERCENTAGE: parseFloat(process.env.PLATFORM_FEE_PERCENTAGE) || 7,
-  GST_PERCENTAGE: parseFloat(process.env.GST_PERCENTAGE) || 18,
+  PLATFORM_FEE_PERCENTAGE: parseFloat(process.env.PLATFORM_FEE_PERCENTAGE) || 5, // Default 5%
+  GST_PERCENTAGE: parseFloat(process.env.GST_PERCENTAGE) || 0, // Default 0%
   
   // Frontend URLs for redirect
   FRONTEND_URL: process.env.FRONTEND_URL || 'http://localhost:3000',

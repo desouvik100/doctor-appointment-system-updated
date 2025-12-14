@@ -28,8 +28,8 @@ if (isRazorpayEnabled) {
 class RazorpayService {
   constructor() {
     this.currency = 'INR';
-    this.platformFeePercentage = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE) || 7;
-    this.gstPercentage = parseFloat(process.env.GST_PERCENTAGE) || 18;
+    this.platformFeePercentage = parseFloat(process.env.PLATFORM_FEE_PERCENTAGE) || 5; // Default 5%
+    this.gstPercentage = parseFloat(process.env.GST_PERCENTAGE) || 0; // Default 0%
     this.useRazorpay = isRazorpayEnabled;
   }
 
