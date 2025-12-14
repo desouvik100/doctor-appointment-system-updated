@@ -259,10 +259,10 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
     setStep(3);
   };
 
-  // Handle Razorpay payment success
-  const handlePaymentSuccess = async (paymentData) => {
+  // Handle Razorpay payment success with appointmentId passed directly
+  const handlePaymentSuccessWithId = async (paymentData, appointmentId) => {
     console.log('🎉 Payment success callback received:', paymentData);
-    console.log('📋 Pending appointment ID:', pendingAppointmentId);
+    console.log('📋 Appointment ID:', appointmentId);
     
     try {
       // Verify payment on backend
@@ -271,7 +271,7 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         razorpay_order_id: paymentData.razorpay_order_id,
         razorpay_payment_id: paymentData.razorpay_payment_id,
         razorpay_signature: paymentData.razorpay_signature,
-        appointmentId: pendingAppointmentId
+        appointmentId: appointmentId
       });
       
       console.log('✅ Verify response:', verifyResponse.data);
@@ -279,7 +279,7 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
       if (verifyResponse.data.success) {
         // Fetch the updated appointment
         console.log('📥 Fetching updated appointment...');
-        const appointmentResponse = await axios.get(`/api/appointments/${pendingAppointmentId}`);
+        const appointmentResponse = await axios.get(`/api/appointments/${appointmentId}`);
         console.log('📋 Appointment data:', appointmentResponse.data);
         
         setBookedAppointment({
@@ -312,6 +312,11 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
       setPaymentError(error.response?.data?.message || error.message || 'Payment verification failed. Please contact support.');
       setPaymentProcessing(false);
     }
+  };
+  
+  // Legacy handler (uses state - may have timing issues)
+  const handlePaymentSuccess = async (paymentData) => {
+    return handlePaymentSuccessWithId(paymentData, pendingAppointmentId);
   };
 
   // Handle Razorpay payment failure
@@ -384,17 +389,19 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
       
       const response = await axios.post('/api/appointments/queue-booking', bookingData);
       const appointmentId = response.data._id || response.data.id;
+      console.log('✅ Appointment created with ID:', appointmentId);
       setPendingAppointmentId(appointmentId);
 
       // If payments are enabled, initiate Razorpay
       if (paymentConfig?.paymentsEnabled) {
         setLoading(false);
         
-        // Initiate Razorpay payment
+        // Initiate Razorpay payment with closure to capture appointmentId
         initiatePayment(
           appointmentId,
           user.id || user._id,
-          handlePaymentSuccess,
+          // Pass appointmentId directly to avoid state timing issues
+          (paymentData) => handlePaymentSuccessWithId(paymentData, appointmentId),
           handlePaymentFailure
         );
       } else {
