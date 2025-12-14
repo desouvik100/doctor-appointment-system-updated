@@ -2141,4 +2141,29 @@ router.get('/admin/stats', verifyTokenWithRole(['admin']), async (req, res) => {
   }
 });
 
+// Get single appointment by ID (MUST be at the end to avoid route conflicts)
+router.get('/:id', async (req, res) => {
+  try {
+    const { id } = req.params;
+    
+    if (!isValidObjectId(id)) {
+      return res.status(400).json({ success: false, message: 'Invalid appointment ID' });
+    }
+    
+    const appointment = await Appointment.findById(id)
+      .populate('userId', 'name email phone')
+      .populate('doctorId', 'name specialization consultationFee')
+      .populate('clinicId', 'name address');
+    
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    }
+    
+    res.json(appointment);
+  } catch (error) {
+    console.error('Error fetching appointment:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
+
 module.exports = router;
