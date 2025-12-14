@@ -259,8 +259,23 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         break;
         
       case 'refund.created':
+      case 'refund.processed':
         const refund = event.payload.refund.entity;
-        console.log(`💰 Refund created: ${refund.id} for payment ${refund.payment_id}`);
+        console.log(`💰 Refund ${event.event}: ${refund.id} for payment ${refund.payment_id}`);
+        
+        // Update appointment refund status
+        const refundAppointment = await Appointment.findOne({ razorpayPaymentId: refund.payment_id });
+        if (refundAppointment) {
+          refundAppointment.paymentStatus = 'refunded';
+          refundAppointment.refundDetails = {
+            refundId: refund.id,
+            amount: refund.amount / 100,
+            status: refund.status,
+            refundedAt: new Date()
+          };
+          await refundAppointment.save();
+          console.log(`✅ Refund updated for appointment ${refundAppointment._id}`);
+        }
         break;
         
       default:
