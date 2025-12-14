@@ -100,6 +100,54 @@ router.post('/verify', async (req, res) => {
       appointmentId
     });
     
+    // Send invoice email after successful payment
+    if (result.success && appointmentId) {
+      try {
+        const { generateAndSendInvoice } = require('../services/invoiceService');
+        
+        // Fetch populated appointment for invoice
+        const populatedAppointment = await Appointment.findById(appointmentId)
+          .populate('userId', 'name email phone')
+          .populate('doctorId', 'name specialization consultationFee email')
+          .populate('clinicId', 'name address');
+        
+        if (populatedAppointment && populatedAppointment.userId?.email) {
+          const paymentDetails = result.paymentDetails || populatedAppointment.paymentDetails;
+          const consultationFee = populatedAppointment.doctorId?.consultationFee || 500;
+          const platformFee = Math.round(consultationFee * 0.05); // 5% platform fee
+          const totalAmount = consultationFee + platformFee;
+          
+          const invoiceResult = await generateAndSendInvoice(
+            populatedAppointment,
+            populatedAppointment.userId,
+            populatedAppointment.doctorId,
+            populatedAppointment.clinicId,
+            {
+              consultationFee,
+              platformFee,
+              tax: 0,
+              totalAmount,
+              status: 'paid',
+              paymentMethod: paymentDetails?.method || 'Razorpay',
+              transactionId: razorpay_payment_id
+            }
+          );
+          
+          if (invoiceResult?.success) {
+            console.log(`✅ Invoice ${invoiceResult.invoiceNumber} sent to ${populatedAppointment.userId.email}`);
+            // Save invoice number to appointment
+            populatedAppointment.invoiceNumber = invoiceResult.invoiceNumber;
+            await populatedAppointment.save();
+          } else {
+            console.error('❌ Invoice sending failed:', invoiceResult?.error);
+          }
+        }
+      } catch (invoiceError) {
+        console.error('❌ Error sending invoice after payment:', invoiceError.message);
+        // Don't fail the payment verification if invoice fails
+      }
+    }
+    
     res.json({
       success: result.success,
       message: result.success ? 'Payment verified successfully' : 'Payment verification failed',
