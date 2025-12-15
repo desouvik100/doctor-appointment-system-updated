@@ -379,16 +379,43 @@ router.post('/clinic/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    // First check if receptionist exists (regardless of isActive status)
+    // Normalize email
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // First check if receptionist exists at all
+    const anyUser = await User.findOne({ 
+      email: normalizedEmail, 
+      role: 'receptionist'
+    });
+
+    // Check if user exists but is pending approval
+    if (anyUser && anyUser.approvalStatus === 'pending') {
+      console.log(`⏳ Receptionist login blocked: Pending approval - ${normalizedEmail}`);
+      return res.status(403).json({ 
+        message: 'Your account is pending admin approval. Please wait for confirmation.',
+        pending: true
+      });
+    }
+
+    // Check if user exists but is rejected
+    if (anyUser && anyUser.approvalStatus === 'rejected') {
+      console.log(`❌ Receptionist login blocked: Rejected - ${normalizedEmail}`);
+      return res.status(403).json({ 
+        message: 'Your account has been rejected. Please contact admin.',
+        rejected: true
+      });
+    }
+
+    // Now check for approved user
     const userCheck = await User.findOne({ 
-      email, 
+      email: normalizedEmail, 
       role: 'receptionist',
       approvalStatus: 'approved'
     });
     
     // Check if receptionist is suspended
     if (userCheck && userCheck.isActive === false) {
-      console.log(`🚫 Receptionist login blocked: Account suspended - ${email}`);
+      console.log(`🚫 Receptionist login blocked: Account suspended - ${normalizedEmail}`);
       return res.status(403).json({ 
         message: 'Your account has been suspended',
         reason: userCheck.suspendReason || 'Contact admin for more information',
@@ -487,15 +514,26 @@ router.post('/setup-admin', async (req, res) => {
 // Receptionist sign-up
 router.post('/receptionist/register', async (req, res) => {
   try {
-    const { name, email, password, phone, clinicName } = req.body;
+    const { name, email, password, phone, clinicName, emailVerified, otpToken } = req.body;
 
     // Validate required fields
     if (!name || !email || !password || !clinicName) {
       return res.status(400).json({ message: 'Name, email, password, and clinic name are required' });
     }
 
+    // IMPORTANT: Require email verification before registration
+    if (!emailVerified) {
+      return res.status(400).json({ 
+        message: 'Email verification is required. Please verify your email with OTP first.',
+        requiresOTP: true
+      });
+    }
+
+    // Normalize email
+    const normalizedEmail = email.toLowerCase().trim();
+
     // Check if user exists
-    const existingUser = await User.findOne({ email });
+    const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ message: 'User with this email already exists' });
     }
@@ -503,14 +541,15 @@ router.post('/receptionist/register', async (req, res) => {
     // Hash password
     const hashedPassword = await bcrypt.hash(password, 10);
 
-    // Create receptionist user with pending status
+    // Create receptionist user with pending status (requires admin approval)
     const user = new User({
       name,
-      email,
+      email: normalizedEmail,
       password: hashedPassword,
       phone: phone || '',
       role: 'receptionist',
-      approvalStatus: 'pending',
+      approvalStatus: 'pending', // MUST be approved by admin before login
+      emailVerified: true, // Email was verified via OTP
       clinicName: clinicName,
       // Terms and conditions acceptance
       termsAccepted: true,
