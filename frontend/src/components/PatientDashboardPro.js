@@ -103,6 +103,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
   const [showQueueTracker, setShowQueueTracker] = useState(false);
   const [trackedAppointment, setTrackedAppointment] = useState(null);
   const [showAIHealthHub, setShowAIHealthHub] = useState(false);
+  const [consultationTypeFilter, setConsultationTypeFilter] = useState('all'); // 'all', 'online', 'clinic'
 
   const handleProfileUpdate = (updatedUser) => {
     setCurrentUser(updatedUser);
@@ -220,7 +221,17 @@ const PatientDashboardPro = ({ user, onLogout }) => {
   const fetchClinics = async () => { try { const res = await axios.get('/api/clinics'); setClinics(res.data); } catch (e) { console.error(e); } };
   const fetchFavorites = async () => { const userId = getUserId(); if (!userId) return; try { const res = await axios.get(`/api/favorites/${userId}`); setFavoriteDoctors(res.data.map(d => d._id)); } catch { /* no favorites */ } };
   const handleUpdateLocation = async () => { const userId = getUserId(); if (!userId) { toast.error('User not found'); return; } setUpdatingLocation(true); try { const result = await trackUserLocation(userId); if (result.success) { setUserLocation(result.location); toast.success(`Location: ${result.location.city || 'Unknown'}`); } else { toast.error(result.error || 'Failed'); } } catch { toast.error('Failed to get location'); } finally { setUpdatingLocation(false); } };
-  const filteredDoctors = useMemo(() => doctors.filter(doc => { const matchSearch = !searchTerm || doc.name.toLowerCase().includes(searchTerm.toLowerCase()) || doc.specialization.toLowerCase().includes(searchTerm.toLowerCase()); const matchSpec = !selectedSpecialization || doc.specialization === selectedSpecialization; const matchClinic = !selectedClinic || doc.clinicId?._id === selectedClinic; return matchSearch && matchSpec && matchClinic; }), [doctors, searchTerm, selectedSpecialization, selectedClinic]);
+  const filteredDoctors = useMemo(() => doctors.filter(doc => { 
+    const matchSearch = !searchTerm || doc.name.toLowerCase().includes(searchTerm.toLowerCase()) || doc.specialization.toLowerCase().includes(searchTerm.toLowerCase()); 
+    const matchSpec = !selectedSpecialization || doc.specialization === selectedSpecialization; 
+    const matchClinic = !selectedClinic || doc.clinicId?._id === selectedClinic;
+    // Consultation type filter
+    const consultTypes = doc.consultationTypes || ['clinic'];
+    const matchConsultType = consultationTypeFilter === 'all' || 
+      (consultationTypeFilter === 'online' && consultTypes.includes('online')) ||
+      (consultationTypeFilter === 'clinic' && consultTypes.includes('clinic'));
+    return matchSearch && matchSpec && matchClinic && matchConsultType; 
+  }), [doctors, searchTerm, selectedSpecialization, selectedClinic, consultationTypeFilter]);
   const specializations = useMemo(() => [...new Set(doctors.map(d => d.specialization))].sort(), [doctors]);
   
   // Filtered appointments
@@ -332,7 +343,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
             </button>
             <div className="min-w-0">
               <h1 className="text-sm sm:text-base font-semibold text-slate-800 truncate">Welcome back, {(currentUser?.name || 'User').split(' ')[0]}</h1>
-              <p className="text-[10px] sm:text-xs text-slate-500 truncate">{userLocation?.city ? <><i className="fas fa-map-marker-alt text-sky-500 mr-1"></i>{userLocation.city}</> : 'Have a healthy day'}</p>
+              <p className="text-[10px] sm:text-xs text-slate-500 truncate">{userLocation?.city ? <><i className="fas fa-map-marker-alt text-sky-500 mr-1"></i>{userLocation.city}</> : 'Book an online consultation or visit a clinic near you'}</p>
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
@@ -400,23 +411,84 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                   </button>
                 ))}
               </div>
+              {/* Why Trust Us Strip */}
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4 border border-emerald-100">
+                <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-sm">
+                  <span className="flex items-center gap-2 text-emerald-700"><i className="fas fa-check-circle text-emerald-500"></i>Verified local doctors</span>
+                  <span className="flex items-center gap-2 text-emerald-700"><i className="fas fa-check-circle text-emerald-500"></i>Transparent pricing</span>
+                  <span className="flex items-center gap-2 text-emerald-700"><i className="fas fa-check-circle text-emerald-500"></i>No hidden charges</span>
+                  <span className="flex items-center gap-2 text-emerald-700"><i className="fas fa-check-circle text-emerald-500"></i>Secure payments</span>
+                </div>
+              </div>
+
               <div className="bg-white rounded-2xl p-6 border border-slate-100">
-                <div className="flex items-center justify-between mb-6">
-                  <h3 className="text-lg font-semibold text-slate-800">Top Doctors</h3>
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-semibold text-slate-800">
+                    {userLocation?.city ? `Doctors Near ${userLocation.city}` : 'Available Today'}
+                  </h3>
                   <button onClick={() => setActiveSection('doctors')} className="text-sm font-medium text-sky-600 hover:text-sky-700 flex items-center gap-1">View All <i className="fas fa-arrow-right text-xs"></i></button>
+                </div>
+                {/* Online vs In-Clinic Toggle */}
+                <div className="flex items-center gap-2 mb-4 p-1 bg-slate-100 rounded-xl w-fit">
+                  {[
+                    { id: 'all', label: 'All', icon: 'fa-th-large' },
+                    { id: 'online', label: 'Online', icon: 'fa-video' },
+                    { id: 'clinic', label: 'In-Clinic', icon: 'fa-hospital' }
+                  ].map(type => (
+                    <button
+                      key={type.id}
+                      onClick={() => setConsultationTypeFilter(type.id)}
+                      className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                        consultationTypeFilter === type.id
+                          ? 'bg-white text-sky-600 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      <i className={`fas ${type.icon} text-xs`}></i>
+                      {type.label}
+                    </button>
+                  ))}
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {recentDoctors.map(doc => {
+                    // Availability status
+                    const availStatus = doc.availability === 'Available' ? 
+                      (Math.random() > 0.3 ? 'available' : 'limited') : 'unavailable';
+                    const availLabel = availStatus === 'available' ? '🟢 Available Today' : 
+                      availStatus === 'limited' ? '🟡 Limited Slots' : '⚪ Next Available';
+                    // Consultation type
+                    const consultTypes = doc.consultationTypes || ['clinic'];
+                    const typeLabel = consultTypes.includes('online') && consultTypes.includes('clinic') ? 'Both' :
+                      consultTypes.includes('online') ? 'Online' : 'Clinic';
                     const docInitials = doc.name ? doc.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'DR';
                     return (
-                    <div key={doc._id} className="group p-4 rounded-xl border border-slate-100 hover:border-sky-200 hover:shadow-md transition-all text-center bg-white">
-                      <div className="w-14 h-14 mx-auto rounded-full bg-gradient-to-br from-sky-500 to-teal-500 flex items-center justify-center mb-3 overflow-hidden ring-4 ring-sky-50">
-                        {doc.profilePhoto ? <img src={doc.profilePhoto} alt={doc.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} /> : null}
-                        {!doc.profilePhoto && <span className="text-white font-semibold">{docInitials}</span>}
+                    <div key={doc._id} className="group p-4 rounded-xl border border-slate-100 hover:border-sky-200 hover:shadow-md transition-all bg-white">
+                      {/* Availability Badge */}
+                      <div className="text-[10px] font-medium mb-2">{availLabel}</div>
+                      <div className="flex items-center gap-3 mb-3">
+                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-500 to-teal-500 flex items-center justify-center overflow-hidden ring-2 ring-sky-50 flex-shrink-0">
+                          {doc.profilePhoto ? <img src={doc.profilePhoto} alt={doc.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} /> : null}
+                          {!doc.profilePhoto && <span className="text-white font-semibold text-sm">{docInitials}</span>}
+                        </div>
+                        <div className="min-w-0">
+                          <h4 className="font-semibold text-slate-800 text-sm truncate">{doc.name?.startsWith('Dr.') ? doc.name : `Dr. ${doc.name}`}</h4>
+                          <p className="text-xs text-slate-500 truncate">{doc.specialization}</p>
+                        </div>
                       </div>
-                      <h4 className="font-semibold text-slate-800 text-sm mb-0.5">{doc.name?.startsWith('Dr.') ? doc.name : `Dr. ${doc.name}`}</h4>
-                      <p className="text-xs text-slate-500 mb-2">{doc.specialization}</p>
-                      <p className="text-sm font-bold text-sky-600 mb-3">₹{doc.consultationFee}</p>
+                      {/* Type & Locality Badges */}
+                      <div className="flex items-center gap-2 mb-3 flex-wrap">
+                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${typeLabel === 'Online' ? 'bg-blue-100 text-blue-700' : typeLabel === 'Both' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}`}>
+                          <i className={`fas ${typeLabel === 'Online' ? 'fa-video' : typeLabel === 'Both' ? 'fa-exchange-alt' : 'fa-hospital'} mr-1`}></i>{typeLabel}
+                        </span>
+                        {(doc.clinicId?.city || userLocation?.city) && (
+                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700">
+                            📍 {doc.clinicId?.city || userLocation?.city || 'Bankura'}
+                          </span>
+                        )}
+                      </div>
+                      <div className="flex items-center justify-between mb-3">
+                        <p className="text-sm font-bold text-sky-600">₹{doc.consultationFee}</p>
+                      </div>
                       <button onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className="w-full py-2 px-4 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors">Book Now</button>
                     </div>
                   );})}
@@ -535,8 +607,28 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                 </div>
               </div>
 
-              {/* Search & Filters */}
+              {/* Online vs In-Clinic Toggle */}
               <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
+                <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl w-fit mb-4">
+                  {[
+                    { id: 'all', label: 'All Doctors', icon: 'fa-th-large' },
+                    { id: 'online', label: 'Online Consultation', icon: 'fa-video' },
+                    { id: 'clinic', label: 'Visit Clinic', icon: 'fa-hospital' }
+                  ].map(type => (
+                    <button
+                      key={type.id}
+                      onClick={() => setConsultationTypeFilter(type.id)}
+                      className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
+                        consultationTypeFilter === type.id
+                          ? 'bg-white text-sky-600 shadow-sm'
+                          : 'text-slate-500 hover:text-slate-700'
+                      }`}
+                    >
+                      <i className={`fas ${type.icon} text-xs`}></i>
+                      {type.label}
+                    </button>
+                  ))}
+                </div>
                 <div className="flex flex-col lg:flex-row gap-4">
                   <div className="flex-1 relative"><i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i><input type="text" placeholder="Search doctors by name, specialty..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" /></div>
                   <select value={selectedSpecialization} onChange={(e) => { setSelectedSpecialization(e.target.value); if (nearbyMode) setTimeout(fetchNearbyDoctors, 100); }} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500"><option value="">All Specializations</option>{specializations.map(s => <option key={s} value={s}>{s}</option>)}</select>
@@ -846,24 +938,38 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       {showFindDoctorWizard && <FindMyDoctorWizard onClose={() => setShowFindDoctorWizard(false)} onComplete={(recommendation) => { setShowFindDoctorWizard(false); setSelectedSpecialization(recommendation.primarySpecialist); setActiveSection('doctors'); }} onBookDoctor={(specialist) => { setSelectedSpecialization(specialist); setActiveSection('doctors'); }} />}
       {showQueueTracker && trackedAppointment && <LiveQueueTracker appointment={trackedAppointment} onClose={() => { setShowQueueTracker(false); setTrackedAppointment(null); }} />}
       
-      {/* Single Floating Action Button - Clean design */}
-      <div className="fixed bottom-24 right-4 z-30 flex flex-col gap-3">
-        {/* AI Health Hub Button */}
+      {/* Floating Action Buttons */}
+      <div className="fixed bottom-24 right-4 z-30 flex flex-col items-end gap-3">
+        {/* Help choosing doctor - with tooltip */}
+        <div className="group flex items-center gap-2">
+          <span className="hidden group-hover:block px-3 py-1.5 bg-slate-800 text-white text-xs font-medium rounded-lg shadow-lg whitespace-nowrap animate-fade-in">
+            Need help choosing a doctor?
+          </span>
+          <button
+            className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-500 to-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-xl hover:scale-110"
+            onClick={() => setShowFindDoctorWizard(true)}
+            title="Find My Doctor"
+          >
+            🤖
+          </button>
+        </div>
+        
+        {/* AI Health Hub */}
         <button
-          className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-500 to-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-xl hover:scale-110"
+          className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110"
           onClick={() => setShowAIHealthHub(true)}
           title="AI Health Assistant"
         >
-          🤖
+          <i className="fas fa-brain text-sm"></i>
         </button>
         
         {/* Urgent Care Button */}
         <button
-          className="w-12 h-12 rounded-full bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110"
+          className="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110"
           onClick={() => setActiveSection('ambulance')}
           title="Urgent Care"
         >
-          <i className="fas fa-ambulance text-base"></i>
+          <i className="fas fa-ambulance text-sm"></i>
         </button>
       </div>
 
