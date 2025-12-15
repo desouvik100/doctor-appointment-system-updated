@@ -1,5 +1,17 @@
 /* PatientDashboardPro - Minimal CSS for animations and custom styles */
 
+/* Override the landing page gradient background for dashboard */
+.min-h-screen.bg-slate-50 {
+  position: relative;
+  z-index: 1;
+  background-color: #f8fafc !important;
+}
+
+/* Dark mode dashboard background */
+[data-theme="dark"] .min-h-screen.bg-slate-50 {
+  background-color: #0f172a !important;
+}
+
 /* Fade in animation */
 @keyframes fadeIn {
   from { opacity: 0; transform: translateY(10px); }

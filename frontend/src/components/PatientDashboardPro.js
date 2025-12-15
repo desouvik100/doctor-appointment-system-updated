@@ -181,6 +181,16 @@ const PatientDashboardPro = ({ user, onLogout }) => {
 
   const getUserId = () => currentUser?.id || currentUser?._id;
 
+  // Override landing page gradient background for dashboard
+  useEffect(() => {
+    const originalBg = document.documentElement.style.background;
+    const theme = document.documentElement.getAttribute('data-theme');
+    document.documentElement.style.background = theme === 'dark' ? '#0f172a' : '#f8fafc';
+    return () => {
+      document.documentElement.style.background = originalBg;
+    };
+  }, []);
+
   useEffect(() => { fetchDoctors(); fetchClinics(); if (getUserId()) { fetchAppointments(); fetchUserLocation(); fetchFavorites(); fetchUnreadNotifications(); } }, [currentUser]);
 
   // Auto-detect location on mobile when user logs in (since location button is hidden on mobile)
