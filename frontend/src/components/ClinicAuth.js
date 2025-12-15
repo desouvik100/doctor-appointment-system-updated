@@ -275,7 +275,7 @@ function ClinicAuth({ onLogin, onBack }) {
   // Send OTP for email verification
   const sendOtp = async () => {
     setOtpLoading(true);
-    setError("");
+    setError(""); // Clear any previous error
     setSuccess(""); // Clear previous success message
     
     try {
@@ -291,11 +291,17 @@ function ClinicAuth({ onLogin, onBack }) {
       setCanResendOtp(false);
       setOtpTimer(60); // 60 seconds countdown
       setOtp(""); // Clear previous OTP input
+      setError(""); // Clear error again after successful send
       
-      // Show OTP for debugging (temporarily)
-      if (response.data.otp) {
-        setSuccess(`OTP sent! For testing: ${response.data.otp} (Check email if not received)`);
-        console.log('📧 Staff Registration OTP:', response.data.otp);
+      // Show OTP for debugging (temporarily) - IMPORTANT: Use the NEW OTP from response
+      const newOtp = response.data.otp;
+      if (newOtp) {
+        // Force update by setting empty first, then new value
+        setSuccess("");
+        setTimeout(() => {
+          setSuccess(`✅ NEW OTP sent! Code: ${newOtp} (Use this code)`);
+        }, 100);
+        console.log('📧 Staff Registration OTP:', newOtp);
       } else {
         setSuccess("OTP sent to your email. Please check your inbox.");
       }
