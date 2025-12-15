@@ -1,4 +1,4 @@
-import { useState, useEffect, useCallback } from "react";
+import { useState, useEffect, useCallback, useRef } from "react";
 import axios from "../api/config";
 import "./LiveQueueTracker.css";
 
@@ -8,6 +8,9 @@ const LiveQueueTracker = ({ appointment, onClose }) => {
   const [error, setError] = useState(null);
   const [lastUpdate, setLastUpdate] = useState(null);
   const [updateCount, setUpdateCount] = useState(0);
+  const [countdown, setCountdown] = useState(null);
+  const [showDetailedView, setShowDetailedView] = useState(false);
+  const countdownRef = useRef(null);
 
   const doctorId = appointment?.doctorId?._id || appointment?.doctorId;
   const userQueueNumber =
@@ -122,6 +125,57 @@ const LiveQueueTracker = ({ appointment, onClose }) => {
     const interval = setInterval(fetchSmartQueueStatus, 10000);
     return () => clearInterval(interval);
   }, [fetchSmartQueueStatus]);
+
+  // Countdown timer effect
+  useEffect(() => {
+    if (queueInfo?.estimatedWaitMinutes > 0) {
+      // Initialize countdown in seconds
+      setCountdown(queueInfo.estimatedWaitMinutes * 60);
+      
+      // Clear existing interval
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+      
+      // Start countdown
+      countdownRef.current = setInterval(() => {
+        setCountdown(prev => {
+          if (prev <= 1) {
+            clearInterval(countdownRef.current);
+            return 0;
+          }
+          return prev - 1;
+        });
+      }, 1000);
+    }
+    
+    return () => {
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+      }
+    };
+  }, [queueInfo?.estimatedWaitMinutes]);
+
+  // Format countdown to MM:SS or HH:MM:SS
+  const formatCountdown = (seconds) => {
+    if (!seconds || seconds <= 0) return "00:00";
+    const hrs = Math.floor(seconds / 3600);
+    const mins = Math.floor((seconds % 3600) / 60);
+    const secs = seconds % 60;
+    if (hrs > 0) {
+      return `${hrs}:${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+    }
+    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
+  };
+
+  // Calculate progress percentage
+  const getProgressPercentage = () => {
+    if (!queueInfo) return 0;
+    const total = queueInfo.totalInQueue + queueInfo.completedToday;
+    if (total === 0) return 0;
+    const completed = queueInfo.completedToday;
+    return Math.round((completed / total) * 100);
+  };
 
   const getStatusColor = (status) => {
     switch (status) {
@@ -323,10 +377,21 @@ const LiveQueueTracker = ({ appointment, onClose }) => {
             </div>
           )}
 
-          {/* Wait Time Estimate */}
+          {/* Wait Time Estimate with Countdown */}
           {(queueInfo?.estimatedWaitMinutes !== undefined || queueInfo?.estimatedArrivalTime || appointment?.estimatedArrivalTime) && (
             <div className={`wait-estimate-card ${waitBadge.class}`}>
               <div className="wait-badge">{waitBadge.text}</div>
+              
+              {/* Live Countdown Timer */}
+              {countdown !== null && countdown > 0 && (
+                <div className="countdown-display">
+                  <div className="countdown-timer">
+                    <span className="countdown-value">{formatCountdown(countdown)}</span>
+                    <span className="countdown-label">Estimated Wait</span>
+                  </div>
+                </div>
+              )}
+              
               <div className="wait-details">
                 <div className="wait-time">
                   <i className="fas fa-hourglass-half"></i>
@@ -335,15 +400,88 @@ const LiveQueueTracker = ({ appointment, onClose }) => {
                 <div className="arrival-time">
                   <i className="fas fa-clock"></i>
                   <span>
-                    Est. arrival:{" "}
+                    Est. time:{" "}
                     {queueInfo?.estimatedArrivalTime ||
                       appointment?.estimatedArrivalTime ||
                       "Calculating..."}
                   </span>
                 </div>
               </div>
+              
+              {/* Timing Breakdown Toggle */}
+              <button 
+                className="timing-details-toggle"
+                onClick={() => setShowDetailedView(!showDetailedView)}
+              >
+                <i className={`fas fa-chevron-${showDetailedView ? 'up' : 'down'}`}></i>
+                {showDetailedView ? 'Hide Details' : 'Show Timing Details'}
+              </button>
+              
+              {/* Detailed Timing Breakdown */}
+              {showDetailedView && queueInfo?.analysis && (
+                <div className="timing-breakdown">
+                  <div className="breakdown-item">
+                    <span className="breakdown-label">Avg. per patient</span>
+                    <span className="breakdown-value">{queueInfo.analysis.avgConsultationTime || queueInfo.slotDuration || 15} min</span>
+                  </div>
+                  <div className="breakdown-item">
+                    <span className="breakdown-label">Patients ahead</span>
+                    <span className="breakdown-value">{queueInfo.patientsAhead || 0}</span>
+                  </div>
+                  <div className="breakdown-item">
+                    <span className="breakdown-label">Base wait time</span>
+                    <span className="breakdown-value">{(queueInfo.patientsAhead || 0) * (queueInfo.analysis.avgConsultationTime || 15)} min</span>
+                  </div>
+                  {queueInfo.analysis.todayAvgTime && (
+                    <div className="breakdown-item highlight">
+                      <span className="breakdown-label">Today's actual avg</span>
+                      <span className="breakdown-value">{queueInfo.analysis.todayAvgTime} min</span>
+                    </div>
+                  )}
+                  {queueInfo.analysis.fastestToday && (
+                    <div className="breakdown-item">
+                      <span className="breakdown-label">Fastest today</span>
+                      <span className="breakdown-value">{queueInfo.analysis.fastestToday} min</span>
+                    </div>
+                  )}
+                  {queueInfo.analysis.slowestToday && (
+                    <div className="breakdown-item">
+                      <span className="breakdown-label">Slowest today</span>
+                      <span className="breakdown-value">{queueInfo.analysis.slowestToday} min</span>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           )}
+          
+          {/* Queue Progress Bar */}
+          <div className="queue-progress-section">
+            <div className="progress-header">
+              <span><i className="fas fa-tasks"></i> Today's Progress</span>
+              <span className="progress-percentage">{getProgressPercentage()}%</span>
+            </div>
+            <div className="progress-bar-container">
+              <div 
+                className="progress-bar-fill" 
+                style={{ width: `${getProgressPercentage()}%` }}
+              ></div>
+              <div 
+                className="progress-marker your-position"
+                style={{ 
+                  left: `${Math.min(95, ((queueInfo?.completedToday || 0) + (queueInfo?.patientsAhead || 0)) / 
+                    Math.max(1, (queueInfo?.totalInQueue || 0) + (queueInfo?.completedToday || 0)) * 100)}%` 
+                }}
+                title="Your position"
+              >
+                <i className="fas fa-user"></i>
+              </div>
+            </div>
+            <div className="progress-labels">
+              <span>{queueInfo?.completedToday || 0} completed</span>
+              <span>{queueInfo?.waitingCount || 0} waiting</span>
+            </div>
+          </div>
 
           {/* Currently Seeing */}
           {queueInfo?.currentlySeeing && (

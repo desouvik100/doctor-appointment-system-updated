@@ -709,3 +709,269 @@
     font-size: 0.8rem;
   }
 }
+
+
+/* ============================================
+   ENHANCED QUEUE TRACKER - COUNTDOWN & PROGRESS
+   ============================================ */
+
+/* Countdown Display */
+.countdown-display {
+  margin: 16px 0;
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  text-align: center;
+}
+
+.countdown-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.countdown-value {
+  font-size: 2.5rem;
+  font-weight: 800;
+  font-family: 'SF Mono', 'Roboto Mono', monospace;
+  letter-spacing: 2px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+  color: white !important;
+}
+
+.countdown-label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.8;
+  color: white !important;
+}
+
+/* Timing Details Toggle */
+.timing-details-toggle {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 10px;
+  margin-top: 12px;
+  background: rgba(255, 255, 255, 0.15);
+  border: none;
+  border-radius: 10px;
+  color: white;
+  font-size: 0.8rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.timing-details-toggle:hover {
+  background: rgba(255, 255, 255, 0.25);
+}
+
+/* Timing Breakdown */
+.timing-breakdown {
+  margin-top: 12px;
+  padding: 14px;
+  background: rgba(0, 0, 0, 0.15);
+  border-radius: 12px;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(-10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.breakdown-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+  font-size: 0.85rem;
+}
+
+.breakdown-item:last-child {
+  border-bottom: none;
+}
+
+.breakdown-item.highlight {
+  background: rgba(255, 255, 255, 0.1);
+  margin: 4px -14px;
+  padding: 10px 14px;
+  border-radius: 8px;
+  border-bottom: none;
+}
+
+.breakdown-label {
+  color: rgba(255, 255, 255, 0.8) !important;
+}
+
+.breakdown-value {
+  font-weight: 600;
+  color: white !important;
+}
+
+/* Queue Progress Section */
+.queue-progress-section {
+  padding: 16px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: 14px;
+  border: 1px solid #e2e8f0;
+}
+
+.progress-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 12px;
+  font-size: 0.85rem;
+  color: #475569;
+  font-weight: 500;
+}
+
+.progress-header i {
+  margin-right: 6px;
+  color: #0ea5e9;
+}
+
+.progress-percentage {
+  font-weight: 700;
+  color: #0ea5e9;
+}
+
+.progress-bar-container {
+  position: relative;
+  height: 12px;
+  background: #e2e8f0;
+  border-radius: 6px;
+  overflow: visible;
+  margin-bottom: 10px;
+}
+
+.progress-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #10b981, #0ea5e9);
+  border-radius: 6px;
+  transition: width 0.5s ease;
+  position: relative;
+}
+
+.progress-bar-fill::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 8px;
+  height: 8px;
+  background: white;
+  border-radius: 50%;
+  box-shadow: 0 0 0 3px #0ea5e9;
+}
+
+.progress-marker {
+  position: absolute;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 2;
+}
+
+.progress-marker.your-position {
+  width: 24px;
+  height: 24px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 0.6rem;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.4);
+  animation: bounce 2s infinite;
+}
+
+@keyframes bounce {
+  0%, 100% { transform: translate(-50%, -50%) scale(1); }
+  50% { transform: translate(-50%, -50%) scale(1.1); }
+}
+
+.progress-labels {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  color: #64748b;
+}
+
+/* Visual Queue Representation */
+.visual-queue {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 10px;
+  overflow-x: auto;
+  margin-top: 12px;
+}
+
+.queue-dot {
+  width: 24px;
+  height: 24px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 0.6rem;
+  font-weight: 600;
+  flex-shrink: 0;
+  transition: all 0.3s;
+}
+
+.queue-dot.completed {
+  background: #d1fae5;
+  color: #059669;
+}
+
+.queue-dot.current {
+  background: linear-gradient(135deg, #0ea5e9, #14b8a6);
+  color: white;
+  animation: pulseGlow 1.5s infinite;
+  transform: scale(1.2);
+}
+
+.queue-dot.waiting {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.queue-dot.you {
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  color: white;
+  box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.3);
+  transform: scale(1.15);
+}
+
+/* Responsive adjustments */
+@media (max-width: 480px) {
+  .countdown-value {
+    font-size: 2rem;
+  }
+  
+  .timing-breakdown {
+    padding: 10px;
+  }
+  
+  .breakdown-item {
+    font-size: 0.8rem;
+  }
+  
+  .progress-marker.your-position {
+    width: 20px;
+    height: 20px;
+    font-size: 0.5rem;
+  }
+}

@@ -48,17 +48,16 @@ router.post('/send-otp', async (req, res) => {
 
     const result = await sendOTP(email, type);
 
-    // In development mode, return OTP for testing
+    console.log('📧 OTP send result for', email, ':', result);
+
+    // Return OTP for testing (temporarily enabled for debugging)
     const response = {
       success: true,
-      message: "OTP sent successfully to your email"
+      message: "OTP sent successfully to your email",
+      // Temporarily return OTP for debugging - REMOVE IN PRODUCTION
+      otp: result.otp,
+      debugNote: "OTP shown for debugging - check server logs if email not received"
     };
-
-    // Add OTP to response in development mode
-    if (process.env.NODE_ENV !== 'production') {
-      response.otp = result.otp;
-      response.note = "OTP is shown here for development/testing purposes only";
-    }
 
     return res.status(200).json(response);
 

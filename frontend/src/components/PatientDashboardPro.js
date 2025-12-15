@@ -227,7 +227,18 @@ const PatientDashboardPro = ({ user, onLogout }) => {
   const fetchUnreadNotifications = async () => { const userId = getUserId(); if (!userId) return; try { const res = await axios.get(`/api/notifications/unread-count/${userId}`); setUnreadNotifications(res.data.unreadCount || 0); } catch { setUnreadNotifications(0); } };
   const fetchUserLocation = async () => { const userId = getUserId(); if (!userId) return; try { const loc = await getUserLocation(userId); if (loc?.latitude) setUserLocation(loc); } catch { /* no location */ } };
   const fetchDoctors = async () => { try { setLoading(true); const res = await axios.get('/api/doctors'); setDoctors(res.data); } catch { toast.error('Failed to load doctors'); } finally { setLoading(false); } };
-  const fetchAppointments = async () => { const userId = getUserId(); if (!userId) return; try { const res = await axios.get(`/api/appointments/user/${userId}`); setAppointments(res.data); } catch (e) { console.error(e); } };
+  const fetchAppointments = async () => { 
+    const userId = getUserId(); 
+    if (!userId) { console.log('No userId for fetchAppointments'); return; } 
+    try { 
+      console.log('Fetching appointments for userId:', userId);
+      const res = await axios.get(`/api/appointments/user/${userId}`); 
+      console.log('Appointments fetched:', res.data?.length || 0);
+      setAppointments(res.data || []); 
+    } catch (e) { 
+      console.error('Error fetching appointments:', e.response?.data || e.message); 
+    } 
+  };
   const fetchClinics = async () => { try { const res = await axios.get('/api/clinics'); setClinics(res.data); } catch (e) { console.error(e); } };
   const fetchFavorites = async () => { const userId = getUserId(); if (!userId) return; try { const res = await axios.get(`/api/favorites/${userId}`); setFavoriteDoctors(res.data.map(d => d._id)); } catch { /* no favorites */ } };
   const handleUpdateLocation = async () => { const userId = getUserId(); if (!userId) { toast.error('User not found'); return; } setUpdatingLocation(true); try { const result = await trackUserLocation(userId); if (result.success) { setUserLocation(result.location); toast.success(`Location: ${result.location.city || 'Unknown'}`); } else { toast.error(result.error || 'Failed'); } } catch { toast.error('Failed to get location'); } finally { setUpdatingLocation(false); } };
@@ -256,7 +267,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       const matchesType = appointmentTypeFilter === 'all' || apt.consultationType === appointmentTypeFilter;
       let matchesDate = true;
       if (appointmentDateFilter !== 'all' && apt.date) {
-        const aptDate = new Date(apt.date + 'T00:00:00');
+        const aptDate = new Date(apt.date);
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (appointmentDateFilter === 'today') {
@@ -285,7 +296,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
   const toggleFavorite = async (doctorId) => { const userId = getUserId(); if (!userId) return; try { const res = await axios.post(`/api/favorites/${userId}/toggle`, { doctorId }); if (res.data.isFavorite) { setFavoriteDoctors([...favoriteDoctors, doctorId]); toast.success('Added'); } else { setFavoriteDoctors(favoriteDoctors.filter(id => id !== doctorId)); toast.success('Removed'); } } catch { toast.error('Failed'); } };
   const upcomingAppointments = appointments.filter(apt => {
     if (!apt.date || apt.status === 'cancelled') return false;
-    const aptDate = new Date(apt.date + 'T00:00:00');
+    const aptDate = new Date(apt.date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     return aptDate >= today;
@@ -556,7 +567,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                           <p className="text-xs text-slate-500">{apt.doctorId?.specialization}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-medium text-slate-800">{apt.date ? new Date(apt.date + 'T00:00:00').toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : 'N/A'}</p>
+                          <p className="text-sm font-medium text-slate-800">{apt.date ? new Date(apt.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : 'N/A'}</p>
                           <p className="text-xs text-slate-500">{apt.time || 'N/A'}</p>
                         </div>
                         <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${apt.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700' : apt.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{apt.status}</span>
@@ -887,7 +898,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                         <div><h4 className="font-bold text-slate-800">{apt.doctorId?.name?.startsWith('Dr.') ? apt.doctorId.name : `Dr. ${apt.doctorId?.name || 'Unknown'}`}</h4><p className="text-sm text-slate-500">{apt.doctorId?.specialization}</p></div>
                       </div>
                       <div className="flex flex-wrap gap-4 text-sm text-slate-600 mb-4">
-                        <span><i className="fas fa-calendar text-sky-500 mr-2"></i>{apt.date ? new Date(apt.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</span>
+                        <span><i className="fas fa-calendar text-sky-500 mr-2"></i>{apt.date ? new Date(apt.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</span>
                         <span><i className="fas fa-clock text-sky-500 mr-2"></i>{apt.time || 'N/A'}</span>
                         <span><i className="fas fa-hospital text-sky-500 mr-2"></i>{apt.clinicId?.name || 'HealthSync'}</span>
                       </div>

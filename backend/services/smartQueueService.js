@@ -88,7 +88,9 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
       currentlySeeing: inProgress ? {
         tokenNumber: inProgress.queueNumber || inProgress.tokenNumber,
         startedAt: inProgress.consultationStartTime || inProgress.updatedAt,
-        patientName: inProgress.walkInPatient?.name || 'Patient'
+        patientName: inProgress.walkInPatient?.name || 'Patient',
+        elapsedMinutes: inProgress.consultationStartTime ? 
+          Math.round((Date.now() - new Date(inProgress.consultationStartTime)) / 60000) : null
       } : null,
       
       // Queue counts
@@ -106,6 +108,9 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
       estimatedArrivalTime: arrivalTimeStr,
       estimatedArrivalTimestamp: estimatedArrivalTime.toISOString(),
       
+      // Detailed timing breakdown
+      timingBreakdown: waitTimeResult.breakdown,
+      
       // Consultation analysis
       analysis: {
         avgConsultationTime: Math.round(effectiveAvgDuration),
@@ -114,7 +119,8 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
         slowestToday: consultationAnalysis.slowest,
         consultationsCompleted: completed.length,
         pattern: consultationAnalysis.pattern,
-        confidence: consultationAnalysis.confidence
+        confidence: consultationAnalysis.confidence,
+        sampleSize: consultationAnalysis.sampleSize || 0
       },
       
       // Status indicators
@@ -127,7 +133,10 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
       
       // Doctor info
       doctorName: doctor?.name,
-      slotDuration: defaultDuration
+      slotDuration: defaultDuration,
+      
+      // Server timestamp for sync
+      serverTime: new Date().toISOString()
     };
   } catch (error) {
     console.error('Error getting smart queue status:', error);
@@ -236,34 +245,42 @@ function analyzeConsultationPatterns(completedAppointments, doctorId) {
  */
 function calculateSmartWaitTime(position, avgDuration, analysis, currentInProgress) {
   if (position <= 0) {
-    return { estimatedMinutes: 0, confidence: 'high' };
+    return { estimatedMinutes: 0, confidence: 'high', breakdown: { position: 0 } };
   }
 
   let baseWait = (position - 1) * avgDuration;
+  let remainingForCurrent = 0;
   
   // If someone is currently being seen, estimate remaining time
   if (currentInProgress && currentInProgress.consultationStartTime) {
     const elapsedMinutes = (Date.now() - new Date(currentInProgress.consultationStartTime)) / 60000;
-    const remainingForCurrent = Math.max(0, avgDuration - elapsedMinutes);
+    remainingForCurrent = Math.max(0, avgDuration - elapsedMinutes);
     baseWait = remainingForCurrent + ((position - 1) * avgDuration);
   }
 
   // Adjust based on pattern
   let adjustmentFactor = 1.0;
+  let patternAdjustment = 'none';
   if (analysis.pattern === 'speeding_up') {
     adjustmentFactor = 0.9; // Doctor is getting faster
+    patternAdjustment = '-10%';
   } else if (analysis.pattern === 'slowing_down') {
     adjustmentFactor = 1.15; // Doctor is getting slower
+    patternAdjustment = '+15%';
   } else if (analysis.pattern === 'variable') {
     adjustmentFactor = 1.1; // Add buffer for unpredictability
+    patternAdjustment = '+10%';
   }
 
   // Time of day adjustment
   const hour = new Date().getHours();
+  let timeAdjustment = 'none';
   if (hour >= 12 && hour < 14) {
     adjustmentFactor *= 1.1; // Lunch time slowdown
+    timeAdjustment = '+10% (lunch)';
   } else if (hour >= 17) {
     adjustmentFactor *= 0.95; // End of day, often faster
+    timeAdjustment = '-5% (evening)';
   }
 
   // Add transition time between patients (1-2 min each)
@@ -275,7 +292,17 @@ function calculateSmartWaitTime(position, avgDuration, analysis, currentInProgre
     estimatedMinutes: Math.max(0, estimatedMinutes),
     confidence: analysis.confidence,
     adjustmentFactor,
-    baseWait: Math.round(baseWait)
+    baseWait: Math.round(baseWait),
+    breakdown: {
+      patientsAhead: position - 1,
+      avgPerPatient: Math.round(avgDuration),
+      currentPatientRemaining: Math.round(remainingForCurrent),
+      transitionTime: Math.round(transitionTime),
+      patternAdjustment,
+      timeAdjustment,
+      rawEstimate: Math.round(baseWait),
+      finalEstimate: Math.max(0, estimatedMinutes)
+    }
   };
 }
 
