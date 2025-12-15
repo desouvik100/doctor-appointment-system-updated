@@ -275,23 +275,25 @@ router.post('/admin/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
-    // Send login notification email to admin
-    try {
-      const nodemailer = require('nodemailer');
-      const transporter = nodemailer.createTransport({
-        service: 'gmail',
-        auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS,
-        },
-      });
+    // Send login notification email to admin (non-blocking)
+    const loginTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    const adminEmailAddr = process.env.ADMIN_EMAIL || user.email;
+    
+    // Fire and forget - don't wait for email
+    setImmediate(async () => {
+      try {
+        const nodemailer = require('nodemailer');
+        const transporter = nodemailer.createTransport({
+          service: 'gmail',
+          auth: {
+            user: process.env.EMAIL_USER,
+            pass: process.env.EMAIL_PASS,
+          },
+        });
 
-      const loginTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
-      const adminEmail = process.env.ADMIN_EMAIL || user.email;
-
-      await transporter.sendMail({
+        transporter.sendMail({
         from: `"HealthSync Pro Security" <${process.env.EMAIL_USER}>`,
-        to: adminEmail,
+        to: adminEmailAddr,
         subject: '🔐 Admin Login Alert - HealthSync Pro',
         html: `
           <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px;">
@@ -341,12 +343,15 @@ router.post('/admin/login', async (req, res) => {
           </div>
         `,
         text: `Admin Login Alert\n\nA successful admin login was detected.\n\nAdmin: ${user.name}\nEmail: ${user.email}\nTime: ${loginTime}\nIP: ${ipAddress || 'Unknown'}\n\nIf this wasn't you, please secure your account immediately.`
-      });
-      console.log(`📧 Admin login notification sent to ${adminEmail}`);
-    } catch (emailError) {
-      console.error('Failed to send admin login email:', emailError.message);
-      // Don't fail the login if email fails
-    }
+        }).then(() => {
+          console.log(`📧 Admin login notification sent to ${adminEmailAddr}`);
+        }).catch((emailError) => {
+          console.error('Failed to send admin login email:', emailError.message);
+        });
+      } catch (emailError) {
+        console.error('Failed to send admin login email:', emailError.message);
+      }
+    });
 
     res.json({
       token,
