@@ -276,16 +276,21 @@ function ClinicAuth({ onLogin, onBack }) {
   const sendOtp = async () => {
     setOtpLoading(true);
     setError("");
+    setSuccess(""); // Clear previous success message
     
     try {
+      const cleanEmail = formData.email.toLowerCase().trim();
+      console.log('📧 Sending OTP to:', cleanEmail);
+      
       const response = await axios.post("/api/otp/send-otp", { 
-        email: formData.email,
+        email: cleanEmail,
         type: 'staff-registration'
       });
       
       setOtpSent(true);
       setCanResendOtp(false);
       setOtpTimer(60); // 60 seconds countdown
+      setOtp(""); // Clear previous OTP input
       
       // Show OTP for debugging (temporarily)
       if (response.data.otp) {
@@ -310,6 +315,7 @@ function ClinicAuth({ onLogin, onBack }) {
     } catch (error) {
       console.error('❌ Send OTP error:', error.response?.data || error.message);
       setError(error.response?.data?.message || "Failed to send OTP. Please check your email address.");
+      setCanResendOtp(true); // Allow retry on error
     } finally {
       setOtpLoading(false);
     }
@@ -415,10 +421,16 @@ function ClinicAuth({ onLogin, onBack }) {
     setLoading(true);
     setError("");
     
+    // Trim and clean the OTP value
+    const cleanOtp = otp.toString().trim().replace(/\s/g, '');
+    const cleanEmail = formData.email.toLowerCase().trim();
+    
+    console.log('📧 Verifying OTP:', { email: cleanEmail, otp: cleanOtp, type: 'staff-registration' });
+    
     try {
       const response = await axios.post("/api/otp/verify-otp", {
-        email: formData.email,
-        otp: otp,
+        email: cleanEmail,
+        otp: cleanOtp,
         type: 'staff-registration'
       });
       

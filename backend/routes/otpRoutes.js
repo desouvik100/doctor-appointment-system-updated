@@ -30,8 +30,19 @@ router.post('/send-otp', async (req, res) => {
 
   try {
     const { email, type } = req.body;
+    
+    // Normalize email
+    const cleanEmail = email?.toLowerCase().trim();
+    const otpType = type || 'register';
 
-    if (!email) {
+    console.log('═══════════════════════════════════════');
+    console.log('📧 SEND OTP REQUEST');
+    console.log('Email (raw):', email);
+    console.log('Email (clean):', cleanEmail);
+    console.log('Type:', otpType);
+    console.log('═══════════════════════════════════════');
+
+    if (!cleanEmail) {
       return res.status(400).json({
         success: false,
         message: "Email is required"
@@ -39,16 +50,16 @@ router.post('/send-otp', async (req, res) => {
     }
 
     const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
+    if (!emailRegex.test(cleanEmail)) {
       return res.status(400).json({
         success: false,
         message: "Invalid email format"
       });
     }
 
-    const result = await sendOTP(email, type);
+    const result = await sendOTP(cleanEmail, otpType);
 
-    console.log('📧 OTP send result for', email, ':', result);
+    console.log('📧 OTP send result for', cleanEmail, ':', result);
 
     // Return OTP for testing (temporarily enabled for debugging)
     const response = {
@@ -82,22 +93,38 @@ router.post('/verify-otp', async (req, res) => {
 
   try {
     const { email, otp, type } = req.body;
+    
+    // Normalize email and use provided type or default
+    const cleanEmail = email?.toLowerCase().trim();
+    const otpType = type || 'register';
 
-    if (!email || !otp) {
+    console.log('═══════════════════════════════════════');
+    console.log('🔍 VERIFY OTP REQUEST');
+    console.log('Email (raw):', email);
+    console.log('Email (clean):', cleanEmail);
+    console.log('OTP:', otp);
+    console.log('Type:', otpType);
+    console.log('═══════════════════════════════════════');
+
+    if (!cleanEmail || !otp) {
       return res.status(400).json({
         success: false,
         message: "Email and OTP are required"
       });
     }
 
-    if (!/^\d{6}$/.test(otp)) {
+    // Clean the OTP - remove any spaces
+    const cleanOtp = otp.toString().trim().replace(/\s/g, '');
+    
+    if (!/^\d{6}$/.test(cleanOtp)) {
+      console.log('❌ OTP format invalid:', cleanOtp);
       return res.status(400).json({
         success: false,
         message: "OTP must be 6 digits"
       });
     }
 
-    const result = verifyOTP(email, otp, type);
+    const result = verifyOTP(cleanEmail, cleanOtp, otpType);
 
     if (result.success) {
       return res.status(200).json({

@@ -130,24 +130,24 @@ async function sendEmail({ to, subject, html, text }) {
     return { success: true, message: 'Email service not configured (development mode)' };
   }
 
-  // Try Resend first if Gmail is not working
-  if (useResend || !emailServiceReady) {
-    if (hasResend) {
-      try {
-        const result = await sendViaResend({ to, subject, html, text });
-        console.log('✅ Email sent via Resend');
-        console.log('📧 To:', to);
-        return result;
-      } catch (resendError) {
-        console.error('❌ Resend error:', resendError.message);
-        // Fall through to try Gmail
-      }
+  // Try Resend FIRST (more reliable for transactional emails)
+  if (hasResend) {
+    try {
+      console.log('📧 Attempting to send via Resend...');
+      const result = await sendViaResend({ to, subject, html, text });
+      console.log('✅ Email sent via Resend');
+      console.log('📧 To:', to);
+      return result;
+    } catch (resendError) {
+      console.error('❌ Resend error:', resendError.message);
+      // Fall through to try Gmail
     }
   }
 
-  // Try Gmail/Nodemailer
+  // Try Gmail/Nodemailer as fallback
   if (hasGmail && transporter) {
     try {
+      console.log('📧 Attempting to send via Gmail...');
       const mailOptions = {
         from: process.env.EMAIL_USER,
         to,
@@ -163,18 +163,6 @@ async function sendEmail({ to, subject, html, text }) {
       return { success: true, messageId: info.messageId, provider: 'gmail' };
     } catch (gmailError) {
       console.error('❌ Gmail error:', gmailError.message);
-      
-      // Try Resend as last resort
-      if (hasResend) {
-        try {
-          const result = await sendViaResend({ to, subject, html, text });
-          console.log('✅ Email sent via Resend (fallback)');
-          return result;
-        } catch (resendError) {
-          console.error('❌ Resend fallback also failed:', resendError.message);
-        }
-      }
-      
       throw gmailError;
     }
   }
@@ -190,20 +178,24 @@ async function sendOTP(email, type = 'register') {
     throw new Error('Email is required for OTP');
   }
 
-  console.log('🔔 sendOTP called for:', email, 'type:', type);
+  // Normalize email for consistent storage
+  const normalizedEmail = email.toLowerCase().trim();
+  
+  console.log('🔔 sendOTP called for:', normalizedEmail, 'type:', type);
 
   // Generate OTP FIRST before sending email
   const otp = generateOTP();
-  const key = `${email}|${type}`;
+  const key = `${normalizedEmail}|${type}`;
   const expiresAt = Date.now() + 10 * 60 * 1000; // 10 minutes
 
-  // Store OTP immediately
+  // Store OTP immediately with normalized email
   otpStore.set(key, { otp, expiresAt });
 
   console.log('═══════════════════════════════════════');
   console.log('🔐 OTP GENERATED');
-  console.log('Email:', email);
+  console.log('Email (normalized):', normalizedEmail);
   console.log('Type:', type);
+  console.log('Key:', key);
   console.log('OTP CODE:', otp);
   console.log('Valid for: 10 minutes');
   console.log('═══════════════════════════════════════');
@@ -490,17 +482,37 @@ async function sendOTP(email, type = 'register') {
 
 // ---- PUBLIC: verify OTP ----
 function verifyOTP(email, otp, type = 'register') {
-  const key = `${email}|${type}`;
+  // Normalize email and OTP
+  const normalizedEmail = email?.toLowerCase().trim();
+  const normalizedOtp = otp?.toString().trim();
+  const key = `${normalizedEmail}|${type}`;
+  
+  // Debug logging
+  console.log('═══════════════════════════════════════');
+  console.log('🔍 OTP VERIFICATION ATTEMPT');
+  console.log('Email (raw):', email);
+  console.log('Email (normalized):', normalizedEmail);
+  console.log('OTP (raw):', otp);
+  console.log('OTP (normalized):', normalizedOtp);
+  console.log('Type:', type);
+  console.log('Key:', key);
+  console.log('OTP Store keys:', Array.from(otpStore.keys()));
+  console.log('═══════════════════════════════════════');
+  
   const record = otpStore.get(key);
 
   if (!record) {
+    console.log('❌ No OTP record found for key:', key);
     return {
       success: false,
       message: 'No OTP found for this email. Please request a new one.',
     };
   }
 
+  console.log('📋 Found OTP record:', { storedOtp: record.otp, expiresAt: new Date(record.expiresAt).toISOString() });
+
   if (Date.now() > record.expiresAt) {
+    console.log('❌ OTP expired');
     otpStore.delete(key);
     return {
       success: false,
@@ -508,7 +520,9 @@ function verifyOTP(email, otp, type = 'register') {
     };
   }
 
-  if (record.otp !== otp) {
+  // Compare normalized OTPs
+  if (record.otp !== normalizedOtp) {
+    console.log('❌ OTP mismatch - stored:', record.otp, 'received:', normalizedOtp);
     return {
       success: false,
       message: 'Invalid OTP. Please try again.',
@@ -517,6 +531,7 @@ function verifyOTP(email, otp, type = 'register') {
 
   // OTP is valid; remove it so it cannot be reused
   otpStore.delete(key);
+  console.log('✅ OTP verified successfully');
 
   return {
     success: true,
