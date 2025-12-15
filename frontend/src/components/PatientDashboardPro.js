@@ -245,8 +245,8 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       const matchesStatus = appointmentStatusFilter === 'all' || apt.status === appointmentStatusFilter;
       const matchesType = appointmentTypeFilter === 'all' || apt.consultationType === appointmentTypeFilter;
       let matchesDate = true;
-      if (appointmentDateFilter !== 'all') {
-        const aptDate = new Date(apt.date);
+      if (appointmentDateFilter !== 'all' && apt.date) {
+        const aptDate = new Date(apt.date + 'T00:00:00');
         const today = new Date();
         today.setHours(0, 0, 0, 0);
         if (appointmentDateFilter === 'today') {
@@ -273,7 +273,13 @@ const PatientDashboardPro = ({ user, onLogout }) => {
   };
   const getUserInitials = () => (currentUser?.name || 'U').split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
   const toggleFavorite = async (doctorId) => { const userId = getUserId(); if (!userId) return; try { const res = await axios.post(`/api/favorites/${userId}/toggle`, { doctorId }); if (res.data.isFavorite) { setFavoriteDoctors([...favoriteDoctors, doctorId]); toast.success('Added'); } else { setFavoriteDoctors(favoriteDoctors.filter(id => id !== doctorId)); toast.success('Removed'); } } catch { toast.error('Failed'); } };
-  const upcomingAppointments = appointments.filter(apt => new Date(apt.date) >= new Date() && apt.status !== 'cancelled').slice(0, 3);
+  const upcomingAppointments = appointments.filter(apt => {
+    if (!apt.date || apt.status === 'cancelled') return false;
+    const aptDate = new Date(apt.date + 'T00:00:00');
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    return aptDate >= today;
+  }).slice(0, 3);
   const recentDoctors = doctors.slice(0, 4);
   const stats = { upcomingCount: upcomingAppointments.length, completedCount: appointments.filter(a => a.status === 'completed').length, favoritesCount: favoriteDoctors.length };
 
@@ -540,8 +546,8 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                           <p className="text-xs text-slate-500">{apt.doctorId?.specialization}</p>
                         </div>
                         <div className="text-right">
-                          <p className="text-sm font-medium text-slate-800">{new Date(apt.date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</p>
-                          <p className="text-xs text-slate-500">{apt.time}</p>
+                          <p className="text-sm font-medium text-slate-800">{apt.date ? new Date(apt.date + 'T00:00:00').toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : 'N/A'}</p>
+                          <p className="text-xs text-slate-500">{apt.time || 'N/A'}</p>
                         </div>
                         <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${apt.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700' : apt.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{apt.status}</span>
                         {/* Tap for Queue indicator */}
@@ -871,8 +877,8 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                         <div><h4 className="font-bold text-slate-800">{apt.doctorId?.name?.startsWith('Dr.') ? apt.doctorId.name : `Dr. ${apt.doctorId?.name || 'Unknown'}`}</h4><p className="text-sm text-slate-500">{apt.doctorId?.specialization}</p></div>
                       </div>
                       <div className="flex flex-wrap gap-4 text-sm text-slate-600 mb-4">
-                        <span><i className="fas fa-calendar text-sky-500 mr-2"></i>{new Date(apt.date).toLocaleDateString()}</span>
-                        <span><i className="fas fa-clock text-sky-500 mr-2"></i>{apt.time}</span>
+                        <span><i className="fas fa-calendar text-sky-500 mr-2"></i>{apt.date ? new Date(apt.date + 'T00:00:00').toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' }) : 'N/A'}</span>
+                        <span><i className="fas fa-clock text-sky-500 mr-2"></i>{apt.time || 'N/A'}</span>
                         <span><i className="fas fa-hospital text-sky-500 mr-2"></i>{apt.clinicId?.name || 'HealthSync'}</span>
                       </div>
                       {/* Track Queue Button - for all upcoming appointments */}
