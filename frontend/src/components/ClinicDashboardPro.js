@@ -27,9 +27,22 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
     name: '', email: '', phone: '', specialization: '', consultationFee: 500, experience: 0, qualification: 'MBBS'
   });
 
+  // Clinic day status
+  const [clinicDayOpen, setClinicDayOpen] = useState(() => {
+    const saved = localStorage.getItem('clinicDayOpen');
+    return saved ? JSON.parse(saved) : false;
+  });
+
+  const toggleClinicDay = () => {
+    const newStatus = !clinicDayOpen;
+    setClinicDayOpen(newStatus);
+    localStorage.setItem('clinicDayOpen', JSON.stringify(newStatus));
+    toast.success(newStatus ? '🟢 Clinic day started! Now accepting patients.' : '🔴 Clinic day closed. Queue locked.');
+  };
+
   const menuSections = [
     { titleKey: 'main', items: [
-      { id: 'overview', icon: 'fas fa-home', labelKey: 'overview' },
+      { id: 'overview', icon: 'fas fa-sun', labelKey: 'Today' },
       { id: 'appointments', icon: 'fas fa-calendar-check', labelKey: 'appointments' },
       { id: 'queue', icon: 'fas fa-list-ol', labelKey: 'todaysQueue' },
     ]},
@@ -264,10 +277,22 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {/* Start/Close Clinic Day Button */}
+            <button 
+              onClick={toggleClinicDay}
+              className={`px-4 py-2 rounded-xl text-sm font-semibold flex items-center gap-2 transition-all ${
+                clinicDayOpen 
+                  ? 'bg-red-50 text-red-600 hover:bg-red-100 border border-red-200' 
+                  : 'bg-emerald-50 text-emerald-600 hover:bg-emerald-100 border border-emerald-200'
+              }`}
+            >
+              <span className={`w-2 h-2 rounded-full ${clinicDayOpen ? 'bg-red-500' : 'bg-emerald-500'} animate-pulse`}></span>
+              {clinicDayOpen ? 'Close Clinic Day' : 'Start Clinic Day'}
+            </button>
             <div className="hidden sm:block px-4 py-2 bg-slate-100 rounded-xl text-sm text-slate-600">
               <i className="fas fa-calendar mr-2"></i>{new Date().toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' })}
             </div>
-            <button onClick={fetchAllData} className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center"><i className="fas fa-sync-alt text-slate-600"></i></button>
+            <button onClick={fetchAllData} className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center" title="Refresh"><i className="fas fa-sync-alt text-slate-600"></i></button>
           </div>
         </header>
 
@@ -277,15 +302,15 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
           {/* Overview Section */}
           {activeSection === 'overview' && (
             <div className="space-y-6">
-              {/* Stats Grid */}
+              {/* Stats Grid - Clickable */}
               <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                 {[
-                  { icon: 'fa-calendar-day', value: stats.todayCount, label: "Today's Appointments", color: 'from-blue-500 to-cyan-500', bg: 'bg-blue-50' },
-                  { icon: 'fa-clock', value: stats.pendingCount, label: 'Pending', color: 'from-amber-500 to-orange-500', bg: 'bg-amber-50' },
-                  { icon: 'fa-check-circle', value: stats.confirmedCount, label: 'Confirmed', color: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-50' },
-                  { icon: 'fa-user-md', value: `${stats.availableDoctors}/${stats.totalDoctors}`, label: 'Doctors Available', color: 'from-purple-500 to-pink-500', bg: 'bg-purple-50' },
+                  { icon: 'fa-calendar-day', value: stats.todayCount, label: "Today's Appointments", color: 'from-blue-500 to-cyan-500', bg: 'bg-blue-50', action: () => setActiveSection('queue') },
+                  { icon: 'fa-clock', value: stats.pendingCount, label: 'Pending', color: 'from-amber-500 to-orange-500', bg: 'bg-amber-50', action: () => { setActiveSection('appointments'); setFilter('pending'); } },
+                  { icon: 'fa-check-circle', value: stats.confirmedCount, label: 'Confirmed', color: 'from-emerald-500 to-teal-500', bg: 'bg-emerald-50', action: () => { setActiveSection('appointments'); setFilter('confirmed'); } },
+                  { icon: 'fa-user-md', value: `${stats.availableDoctors}/${stats.totalDoctors}`, label: 'Doctors Available', color: 'from-purple-500 to-pink-500', bg: 'bg-purple-50', action: () => setActiveSection('doctors') },
                 ].map((stat, i) => (
-                  <div key={i} className={`${stat.bg} rounded-2xl p-4 border border-slate-100 hover:shadow-md transition-all`}>
+                  <button key={i} onClick={stat.action} className={`${stat.bg} rounded-2xl p-4 border border-slate-100 hover:shadow-lg hover:scale-[1.02] transition-all cursor-pointer text-left w-full`}>
                     <div className="flex items-center gap-3">
                       <div className={`w-12 h-12 rounded-xl bg-gradient-to-br ${stat.color} flex items-center justify-center shadow`}>
                         <i className={`fas ${stat.icon} text-white`}></i>
@@ -295,19 +320,29 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
                         <p className="text-xs text-slate-500">{stat.label}</p>
                       </div>
                     </div>
-                  </div>
+                  </button>
                 ))}
               </div>
 
-              {/* Quick Actions */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                <h3 className="text-lg font-bold text-slate-800 mb-4">Quick Actions</h3>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+              {/* Clinic Actions */}
+              <section className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm" aria-label="Clinic Actions">
+                <h3 className="text-lg font-bold text-slate-800 mb-4">Clinic Actions</h3>
+                <div className="grid grid-cols-2 lg:grid-cols-5 gap-4">
+                  {/* Walk-In Patient - Primary Action */}
+                  <button 
+                    onClick={() => { setActiveSection('appointments'); toast.success('Add walk-in patient from appointments'); }}
+                    className="group flex flex-col items-center gap-3 p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 border-2 border-emerald-200 hover:border-emerald-300 hover:shadow-lg transition-all"
+                  >
+                    <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform">
+                      <i className="fas fa-user-plus text-white text-xl"></i>
+                    </div>
+                    <span className="text-sm font-semibold text-emerald-700">Walk-In Patient</span>
+                  </button>
                   {[
-                    { icon: 'fa-calendar-check', label: 'View Appointments', section: 'appointments', color: 'from-blue-500 to-cyan-600' },
-                    { icon: 'fa-list-ol', label: "Today's Queue", section: 'queue', color: 'from-emerald-500 to-teal-600' },
-                    { icon: 'fa-user-md', label: 'Manage Doctors', section: 'doctors', color: 'from-purple-500 to-pink-600' },
-                    { icon: 'fa-users', label: 'View Patients', section: 'patients', color: 'from-amber-500 to-orange-600' },
+                    { icon: 'fa-calendar-check', label: 'Appointments', section: 'appointments', color: 'from-blue-500 to-cyan-600' },
+                    { icon: 'fa-list-ol', label: "Today's Queue", section: 'queue', color: 'from-indigo-500 to-purple-600' },
+                    { icon: 'fa-user-md', label: 'Doctors', section: 'doctors', color: 'from-purple-500 to-pink-600' },
+                    { icon: 'fa-users', label: 'Patients', section: 'patients', color: 'from-amber-500 to-orange-600' },
                   ].map((action, i) => (
                     <button key={i} onClick={() => setActiveSection(action.section)} className="group flex flex-col items-center gap-3 p-5 rounded-xl bg-slate-50 hover:bg-white border-2 border-transparent hover:border-cyan-200 hover:shadow-lg transition-all">
                       <div className={`w-14 h-14 rounded-2xl bg-gradient-to-br ${action.color} flex items-center justify-center shadow-lg group-hover:scale-110 transition-transform`}>
@@ -317,55 +352,110 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
                     </button>
                   ))}
                 </div>
-              </div>
+              </section>
 
-              {/* Today's Appointments Preview */}
-              {todayAppointments.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                  <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-bold text-slate-800">Today's Appointments</h3>
-                    <button onClick={() => setActiveSection('queue')} className="text-sm font-medium text-cyan-600 hover:text-cyan-700">View Queue →</button>
+              {/* Today's Queue - Hero Section */}
+              <section className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm" aria-label="Today's Queue">
+                <div className="flex items-center justify-between mb-4">
+                  <div className="flex items-center gap-3">
+                    <h3 className="text-lg font-bold text-slate-800">Today's Queue</h3>
+                    {clinicDayOpen && <span className="px-2 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full">LIVE</span>}
                   </div>
-                  <div className="space-y-3">
-                    {todayAppointments.slice(0, 5).map(apt => (
-                      <div key={apt._id} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 hover:bg-cyan-50 transition-colors">
-                        <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
-                          <i className="fas fa-user text-white"></i>
+                  <button onClick={() => setActiveSection('queue')} className="text-sm font-medium text-cyan-600 hover:text-cyan-700">View Full Queue →</button>
+                </div>
+                
+                {todayAppointments.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 text-center bg-slate-50 rounded-xl">
+                    <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                      <i className="fas fa-calendar-day text-2xl text-slate-400"></i>
+                    </div>
+                    <h4 className="font-semibold text-slate-700 mb-2">No appointments today</h4>
+                    <p className="text-sm text-slate-500">{clinicDayOpen ? 'Ready to accept walk-in patients' : 'Start clinic day to begin accepting patients'}</p>
+                  </div>
+                ) : (
+                  <>
+                    {/* Queue Summary */}
+                    <div className="grid grid-cols-3 gap-4 mb-4 p-4 bg-gradient-to-r from-cyan-50 to-blue-50 rounded-xl">
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-cyan-700">{todayAppointments.filter(a => a.status === 'in_progress').length || '-'}</p>
+                        <p className="text-xs text-slate-600">Current</p>
+                      </div>
+                      <div className="text-center border-x border-slate-200">
+                        <p className="text-2xl font-bold text-amber-600">{todayAppointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length}</p>
+                        <p className="text-xs text-slate-600">Waiting</p>
+                      </div>
+                      <div className="text-center">
+                        <p className="text-2xl font-bold text-emerald-600">{todayAppointments.filter(a => a.status === 'completed').length}</p>
+                        <p className="text-xs text-slate-600">Completed</p>
+                      </div>
+                    </div>
+                    
+                    {/* Patient List */}
+                    <div className="space-y-3">
+                      {todayAppointments.slice(0, 5).map((apt, idx) => (
+                        <div key={apt._id} className={`flex items-center gap-4 p-4 rounded-xl transition-colors ${apt.status === 'in_progress' ? 'bg-cyan-50 border-2 border-cyan-200' : 'bg-slate-50 hover:bg-cyan-50'}`}>
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-sm font-bold ${apt.status === 'in_progress' ? 'bg-cyan-600 text-white' : 'bg-slate-200 text-slate-600'}`}>
+                            {apt.status === 'in_progress' ? <i className="fas fa-play"></i> : idx + 1}
+                          </div>
+                          <div className="w-10 h-10 rounded-xl bg-gradient-to-br from-cyan-500 to-blue-600 flex items-center justify-center">
+                            <i className="fas fa-user text-white text-sm"></i>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <h4 className="font-semibold text-slate-800">{apt.userId?.name || 'Unknown'}</h4>
+                            <p className="text-sm text-slate-500">Dr. {apt.doctorId?.name} • {formatTime(apt.time)}</p>
+                          </div>
+                          <span className={`px-3 py-1 rounded-full text-xs font-semibold ${
+                            apt.status === 'in_progress' ? 'bg-cyan-100 text-cyan-700' :
+                            apt.status === 'completed' ? 'bg-emerald-100 text-emerald-700' :
+                            apt.status === 'pending' ? 'bg-amber-100 text-amber-700' :
+                            'bg-slate-100 text-slate-700'
+                          }`}>{apt.status === 'in_progress' ? 'In Progress' : apt.status}</span>
                         </div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-semibold text-slate-800">{apt.userId?.name || 'Unknown'}</h4>
-                          <p className="text-sm text-slate-500">Dr. {apt.doctorId?.name} • {formatTime(apt.time)}</p>
+                      ))}
+                    </div>
+                  </>
+                )}
+              </section>
+
+              {/* Doctors Working Today */}
+              <section className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm" aria-label="Doctors Working Today">
+                <div className="flex items-center justify-between mb-4">
+                  <h3 className="text-lg font-bold text-slate-800">Doctors Working Today</h3>
+                  <button onClick={() => setActiveSection('doctors')} className="text-sm font-medium text-cyan-600 hover:text-cyan-700">Manage →</button>
+                </div>
+                {doctors.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-10 text-center bg-slate-50 rounded-xl">
+                    <div className="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mb-4">
+                      <i className="fas fa-user-md text-2xl text-slate-400"></i>
+                    </div>
+                    <h4 className="font-semibold text-slate-700 mb-2">No doctors added yet</h4>
+                    <p className="text-sm text-slate-500 mb-4">Add doctors to start accepting appointments</p>
+                    <button 
+                      onClick={() => { setActiveSection('doctors'); setShowDoctorModal(true); }}
+                      className="px-4 py-2 bg-cyan-600 text-white rounded-lg text-sm font-medium hover:bg-cyan-700 transition-colors"
+                    >
+                      <i className="fas fa-plus mr-2"></i>Add First Doctor
+                    </button>
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                    {doctors.slice(0, 4).map(doc => (
+                      <div key={doc._id} className={`p-4 rounded-xl border-2 ${doc.availability === 'Available' ? 'border-emerald-200 bg-emerald-50' : doc.availability === 'Busy' ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50'}`}>
+                        <div className="flex items-center gap-3 mb-2">
+                          <div className={`w-10 h-10 rounded-full ${doc.availability === 'Available' ? 'bg-emerald-500' : doc.availability === 'Busy' ? 'bg-red-500' : 'bg-amber-500'} flex items-center justify-center`}>
+                            <i className="fas fa-user-md text-white text-sm"></i>
+                          </div>
+                          <div className="flex-1 min-w-0">
+                            <p className="font-semibold text-slate-800 text-sm truncate">Dr. {doc.name}</p>
+                            <p className="text-xs text-slate-500">{doc.specialization}</p>
+                          </div>
                         </div>
-                        <span className={`px-3 py-1 rounded-full text-xs font-semibold bg-${getStatusColor(apt.status)}-100 text-${getStatusColor(apt.status)}-700`}>{apt.status}</span>
+                        <span className={`text-xs font-medium ${doc.availability === 'Available' ? 'text-emerald-600' : doc.availability === 'Busy' ? 'text-red-600' : 'text-amber-600'}`}>{doc.availability}</span>
                       </div>
                     ))}
                   </div>
-                </div>
-              )}
-
-              {/* Doctors Status */}
-              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
-                <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-bold text-slate-800">Doctors Status</h3>
-                  <button onClick={() => setActiveSection('doctors')} className="text-sm font-medium text-cyan-600 hover:text-cyan-700">Manage →</button>
-                </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
-                  {doctors.slice(0, 4).map(doc => (
-                    <div key={doc._id} className={`p-4 rounded-xl border-2 ${doc.availability === 'Available' ? 'border-emerald-200 bg-emerald-50' : doc.availability === 'Busy' ? 'border-red-200 bg-red-50' : 'border-amber-200 bg-amber-50'}`}>
-                      <div className="flex items-center gap-3 mb-2">
-                        <div className={`w-10 h-10 rounded-full ${doc.availability === 'Available' ? 'bg-emerald-500' : doc.availability === 'Busy' ? 'bg-red-500' : 'bg-amber-500'} flex items-center justify-center`}>
-                          <i className="fas fa-user-md text-white text-sm"></i>
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="font-semibold text-slate-800 text-sm truncate">Dr. {doc.name}</p>
-                          <p className="text-xs text-slate-500">{doc.specialization}</p>
-                        </div>
-                      </div>
-                      <span className={`text-xs font-medium ${doc.availability === 'Available' ? 'text-emerald-600' : doc.availability === 'Busy' ? 'text-red-600' : 'text-amber-600'}`}>{doc.availability}</span>
-                    </div>
-                  ))}
-                </div>
-              </div>
+                )}
+              </section>
             </div>
           )}
 
