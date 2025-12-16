@@ -131,6 +131,9 @@ function AdminDashboard({ admin, onLogout }) {
   const [clinics, setClinics] = useState([]);
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
+  
+  // Search state for users
+  const [userSearchQuery, setUserSearchQuery] = useState("");
 
   // Pending approvals state
   const [pendingStaff, setPendingStaff] = useState([]);
@@ -976,6 +979,62 @@ function AdminDashboard({ admin, onLogout }) {
                 </button>
               </div>
               
+              {/* Search Box */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ position: 'relative', maxWidth: '400px' }}>
+                  <i className="fas fa-search" style={{ 
+                    position: 'absolute', 
+                    left: '12px', 
+                    top: '50%', 
+                    transform: 'translateY(-50%)', 
+                    color: '#94a3b8' 
+                  }}></i>
+                  <input
+                    type="text"
+                    placeholder="Search by name or email..."
+                    value={userSearchQuery}
+                    onChange={(e) => setUserSearchQuery(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px 10px 38px',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                  />
+                  {userSearchQuery && (
+                    <button
+                      onClick={() => setUserSearchQuery("")}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: '#94a3b8',
+                        cursor: 'pointer',
+                        padding: '4px'
+                      }}
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                  )}
+                </div>
+                {userSearchQuery && (
+                  <small style={{ color: '#64748b', marginTop: '4px', display: 'block' }}>
+                    Found {users.filter(u => 
+                      u.name?.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+                      u.email?.toLowerCase().includes(userSearchQuery.toLowerCase())
+                    ).length} user(s)
+                  </small>
+                )}
+              </div>
+              
               <div className="admin-table-container">
                 <table className="admin-table">
                   <thead>
@@ -988,7 +1047,12 @@ function AdminDashboard({ admin, onLogout }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {users.map(user => (
+                    {users
+                      .filter(user => 
+                        user.name?.toLowerCase().includes(userSearchQuery.toLowerCase()) ||
+                        user.email?.toLowerCase().includes(userSearchQuery.toLowerCase())
+                      )
+                      .map(user => (
                       <tr key={user._id}>
                         <td>{user.name}</td>
                         <td>{user.email}</td>
