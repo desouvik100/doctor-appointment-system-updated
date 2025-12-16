@@ -236,7 +236,8 @@
 }
 
 .clinic-auth__input::placeholder {
-  color: #94a3b8;
+  color: #6b7280;
+  opacity: 1;
 }
 
 .clinic-auth__input:hover:not(:disabled) {
@@ -378,7 +379,8 @@
 }
 
 .clinic-auth__form .form-control::placeholder {
-  color: #94a3b8;
+  color: #6b7280;
+  opacity: 1;
 }
 
 .clinic-auth__form .form-control:hover:not(:disabled) {
