@@ -152,9 +152,11 @@ function ClinicAuth({ onLogin, onBack }) {
         profilePhoto: googleUser.picture
       });
 
-      localStorage.setItem("receptionist", JSON.stringify(response.data.user));
+      // Store user data WITH token for session persistence
+      const userData = { ...response.data.user, token: response.data.token };
+      localStorage.setItem("receptionist", JSON.stringify(userData));
       setSuccess(`Welcome back, ${response.data.user.name?.split(' ')[0]}!`);
-      setTimeout(() => onLogin(response.data.user), 500);
+      setTimeout(() => onLogin(userData), 500);
     } catch (error) {
       console.error('Staff Google sign-in API error:', error);
       if (error.response?.data?.needsRegistration) {
@@ -548,8 +550,10 @@ function ClinicAuth({ onLogin, onBack }) {
           email: formData.email,
           password: formData.password
         });
-        localStorage.setItem("receptionist", JSON.stringify(response.data.user));
-        onLogin(response.data.user);
+        // Store user data WITH token for session persistence
+        const userData = { ...response.data.user, token: response.data.token };
+        localStorage.setItem("receptionist", JSON.stringify(userData));
+        onLogin(userData);
       } else {
         // Show OTP verification step instead of direct registration
         setShowOtpVerification(true);

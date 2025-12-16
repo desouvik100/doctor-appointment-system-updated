@@ -454,7 +454,9 @@ router.post('/clinic/login', async (req, res) => {
         clinicId: user.clinicId,
         clinicName: user.clinicName,
         approvalStatus: user.approvalStatus,
-        profilePhoto: user.profilePhoto
+        profilePhoto: user.profilePhoto,
+        assignedDoctorId: user.assignedDoctorId || null,
+        department: user.department || null
       }
     });
   } catch (error) {

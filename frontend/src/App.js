@@ -205,10 +205,41 @@ function App() {
       }
     };
 
-    parseAndSet("user", setUser, ["name", "email"]);
-    parseAndSet("admin", setAdmin, ["name", "email"]);
-    parseAndSet("receptionist", setReceptionist, ["name", "email"]);
-    parseAndSet("doctor", setDoctor, ["name", "email"]);
+    let hasValidUser = false;
+    
+    const tryParse = (key, setter, keys) => {
+      const raw = localStorage.getItem(key);
+      if (!raw) return false;
+      try {
+        let parsed = JSON.parse(raw);
+        // Handle nested user object format: { token, user: {...} }
+        if (parsed.user && typeof parsed.user === 'object') {
+          parsed = { ...parsed.user, token: parsed.token };
+          localStorage.setItem(key, JSON.stringify(parsed)); // Update to flat format
+        }
+        if (isValidObject(parsed, keys)) {
+          setter(parsed);
+          return true;
+        } else {
+          localStorage.removeItem(key);
+          return false;
+        }
+      } catch {
+        localStorage.removeItem(key);
+        return false;
+      }
+    };
+
+    hasValidUser = tryParse("user", setUser, ["name", "email"]) || hasValidUser;
+    hasValidUser = tryParse("admin", setAdmin, ["name", "email"]) || hasValidUser;
+    hasValidUser = tryParse("receptionist", setReceptionist, ["name", "email"]) || hasValidUser;
+    hasValidUser = tryParse("doctor", setDoctor, ["name", "email"]) || hasValidUser;
+    
+    // If URL has #dashboard but no valid user, redirect to landing
+    if (!hasValidUser && window.location.hash === '#dashboard') {
+      window.history.replaceState({ view: 'landing' }, '', window.location.pathname);
+      setCurrentViewState('landing');
+    }
   }, []);
 
   const addNotification = useCallback((message, type = 'info') => {
