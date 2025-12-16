@@ -64,7 +64,9 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
 
   const fetchAppointments = async () => {
     try {
-      const response = await axios.get(`/api/receptionists/appointments/${receptionist.clinicId}`);
+      // If staff has assigned doctor, only fetch that doctor's appointments (department isolation)
+      const params = receptionist.assignedDoctorId ? `?assignedDoctorId=${receptionist.assignedDoctorId}` : '';
+      const response = await axios.get(`/api/receptionists/appointments/${receptionist.clinicId}${params}`);
       setAppointments(response.data);
     } catch (error) {
       console.error('Error fetching appointments:', error);
@@ -73,7 +75,9 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
 
   const fetchDoctors = async () => {
     try {
-      const response = await axios.get(`/api/receptionists/doctors/${receptionist.clinicId}`);
+      // If staff has assigned doctor, only fetch that doctor (department isolation)
+      const params = receptionist.assignedDoctorId ? `?assignedDoctorId=${receptionist.assignedDoctorId}` : '';
+      const response = await axios.get(`/api/receptionists/doctors/${receptionist.clinicId}${params}`);
       setDoctors(response.data);
     } catch (error) {
       console.error('Error fetching doctors:', error);
@@ -82,7 +86,9 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
 
   const fetchPatients = async () => {
     try {
-      const response = await axios.get(`/api/receptionists/patients/${receptionist.clinicId}`);
+      // If staff has assigned doctor, only fetch that doctor's patients
+      const params = receptionist.assignedDoctorId ? `?assignedDoctorId=${receptionist.assignedDoctorId}` : '';
+      const response = await axios.get(`/api/receptionists/patients/${receptionist.clinicId}${params}`);
       setPatients(response.data);
     } catch (error) {
       console.error('Error fetching patients:', error);

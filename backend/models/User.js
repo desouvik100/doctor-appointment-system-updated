@@ -46,6 +46,18 @@ const userSchema = new mongoose.Schema(
       ref: "Clinic",
       default: null,
     },
+    // For staff: assigned doctor (department-level isolation)
+    assignedDoctorId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "Doctor",
+      default: null,
+    },
+    // Department name for staff (e.g., "Gynecology OPD", "Eye OPD")
+    department: {
+      type: String,
+      trim: true,
+      default: null,
+    },
     isActive: { 
       type: Boolean, 
       default: true 

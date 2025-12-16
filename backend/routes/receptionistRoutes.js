@@ -124,11 +124,21 @@ router.post('/reset-password', async (req, res) => {
 });
 
 // Get appointments for receptionist's clinic (with clinic isolation)
+// If staff has assignedDoctorId, only show that doctor's appointments (department isolation)
 router.get('/appointments/:clinicId', verifyToken, verifyClinicAccess('clinicId'), async (req, res) => {
   try {
     const { clinicId } = req.params;
+    const { assignedDoctorId } = req.query; // Optional: filter by assigned doctor
     
-    const appointments = await Appointment.find({ clinicId })
+    // Build query
+    const query = { clinicId };
+    
+    // If staff has an assigned doctor, only show that doctor's appointments
+    if (assignedDoctorId) {
+      query.doctorId = assignedDoctorId;
+    }
+    
+    const appointments = await Appointment.find(query)
       .populate('userId', 'name email phone')
       .populate('doctorId', 'name specialization')
       .sort({ date: 1, time: 1 });
@@ -235,16 +245,57 @@ router.put('/:id/reject', async (req, res) => {
   }
 });
 
+// Assign staff to a specific doctor (admin only - for department isolation)
+router.put('/:id/assign-doctor', async (req, res) => {
+  try {
+    const { doctorId, department } = req.body;
+    
+    const user = await User.findById(req.params.id);
+    
+    if (!user || user.role !== 'receptionist') {
+      return res.status(404).json({ message: 'Staff not found' });
+    }
+
+    // Update assigned doctor and department
+    user.assignedDoctorId = doctorId || null;
+    user.department = department || null;
+    
+    await user.save();
+    
+    const populatedUser = await User.findById(user._id)
+      .populate('clinicId', 'name address city phone')
+      .populate('assignedDoctorId', 'name specialization');
+    
+    res.json({
+      message: doctorId ? 'Staff assigned to doctor successfully' : 'Staff assignment removed',
+      user: populatedUser
+    });
+  } catch (error) {
+    console.error('Error assigning staff to doctor:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // ==========================================
 // DOCTOR MANAGEMENT FOR CLINICS
 // ==========================================
 
 // Get doctors for a specific clinic (with clinic isolation)
+// If staff has assignedDoctorId, only show that doctor (department isolation)
 router.get('/doctors/:clinicId', verifyToken, verifyClinicAccess('clinicId'), async (req, res) => {
   try {
     const { clinicId } = req.params;
+    const { assignedDoctorId } = req.query; // Optional: filter by assigned doctor
     
-    const doctors = await Doctor.find({ clinicId, isActive: true })
+    // Build query
+    const query = { clinicId, isActive: true };
+    
+    // If staff has an assigned doctor, only show that doctor
+    if (assignedDoctorId) {
+      query._id = assignedDoctorId;
+    }
+    
+    const doctors = await Doctor.find(query)
       .sort({ name: 1 });
 
     res.json(doctors);
@@ -255,12 +306,20 @@ router.get('/doctors/:clinicId', verifyToken, verifyClinicAccess('clinicId'), as
 });
 
 // Get patients who have appointments at this clinic (with clinic isolation)
+// If staff has assignedDoctorId, only show that doctor's patients (department isolation)
 router.get('/patients/:clinicId', verifyToken, verifyClinicAccess('clinicId'), async (req, res) => {
   try {
     const { clinicId } = req.params;
+    const { assignedDoctorId } = req.query; // Optional: filter by assigned doctor
     
-    // Get all appointments for this clinic to find unique patients
-    const appointments = await Appointment.find({ clinicId })
+    // Build query
+    const query = { clinicId };
+    if (assignedDoctorId) {
+      query.doctorId = assignedDoctorId;
+    }
+    
+    // Get all appointments for this clinic/doctor to find unique patients
+    const appointments = await Appointment.find(query)
       .populate('userId', 'name email phone medicalHistory')
       .sort({ date: -1 });
 
