@@ -16,6 +16,7 @@
     "@capacitor/push-notifications": "^5.1.1",
     "@capacitor/splash-screen": "^5.0.7",
     "@capacitor/status-bar": "^5.0.7",
+    "@codetrix-studio/capacitor-google-auth": "^3.4.0-rc.4",
     "@stripe/react-stripe-js": "^2.4.0",
     "@stripe/stripe-js": "^2.2.0",
     "@testing-library/jest-dom": "^5.17.0",

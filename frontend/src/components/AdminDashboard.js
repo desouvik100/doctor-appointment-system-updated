@@ -1219,6 +1219,17 @@ function AdminDashboard({ admin, onLogout }) {
               <h1 className="admin-navbar__title">HealthSync Admin</h1>
             </div>
             
+            {/* Mobile Logout Button - Always visible on mobile */}
+            {onLogout && (
+              <button 
+                className="mobile-logout-btn" 
+                onClick={onLogout}
+                title="Logout"
+              >
+                <i className="fas fa-sign-out-alt"></i>
+              </button>
+            )}
+            
             <div className="admin-navbar__stats">
               <div className="admin-navbar__stat">
                 <div className="admin-navbar__stat-icon">

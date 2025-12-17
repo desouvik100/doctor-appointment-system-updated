@@ -745,12 +745,57 @@
   color: white !important;
 }
 
+/* Mobile Logout Button - Dedicated button for mobile */
+.mobile-logout-btn {
+  display: none;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: none;
+  background: #ef4444;
+  color: white;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  margin-left: auto;
+}
+
+.mobile-logout-btn:hover,
+.mobile-logout-btn:active {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
 @media (max-width: 768px) {
+  /* Show mobile logout button on mobile */
+  .mobile-logout-btn {
+    display: flex !important;
+  }
+  
+  /* Hide desktop logout button on mobile */
   .admin-logout-btn {
+    display: none !important;
+  }
+  
+  .admin-navbar__actions .btn { 
+    display: none;
+  }
+}
+
+@media (min-width: 769px) {
+  /* Hide mobile logout on desktop */
+  .mobile-logout-btn {
+    display: none !important;
+  }
+  
+  .admin-logout-btn {
+    display: flex !important;
     padding: 10px 14px !important;
     border-radius: 8px;
   }
-  .admin-logout-btn .logout-text { display: none; }
+  .admin-logout-btn .logout-text { display: inline; }
   .admin-logout-btn i { font-size: 1rem; }
 }
 

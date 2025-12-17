@@ -138,13 +138,21 @@ export const useMobileInit = (userId) => {
         return;
       }
 
-      try {
-        const { initPushNotifications } = await import('./pushNotifications');
-        await initPushNotifications(userId);
-        console.log('Push notifications initialized for user:', userId);
-      } catch (e) {
-        console.log('Push notifications not available:', e.message);
-      }
+      // Delay push notification init to avoid startup crashes
+      setTimeout(async () => {
+        try {
+          const { initPushNotifications } = await import('./pushNotifications');
+          const result = await initPushNotifications(userId);
+          if (result) {
+            console.log('Push notifications initialized for user:', userId);
+          } else {
+            console.log('Push notifications skipped or not available');
+          }
+        } catch (e) {
+          // Silently fail - don't crash the app
+          console.warn('Push notifications error (non-fatal):', e.message);
+        }
+      }, 3000); // Wait 3 seconds after app load
     };
 
     initPush();

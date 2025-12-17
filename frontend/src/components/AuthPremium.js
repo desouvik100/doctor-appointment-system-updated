@@ -249,12 +249,32 @@ function AuthPremium({ onLogin, onBack }) {
     }
   }, []);
 
-  // Handle Google Sign-In using OAuth2 popup
+  // Handle Google Sign-In using OAuth2 popup (web) or native (mobile)
   const handleGoogleSignIn = async () => {
-    // Check if running on mobile native app
+    // Check if running on mobile native app - use native Google Sign-In
     const { Capacitor } = await import('@capacitor/core');
     if (Capacitor.isNativePlatform()) {
-      toast.error('Google Sign-In is not available on mobile app. Please use email/password login.');
+      setSocialLoading('google');
+      try {
+        const { signInWithGoogle, initGoogleAuth } = await import('../mobile/googleAuth');
+        
+        // Initialize Google Auth first
+        await initGoogleAuth();
+        
+        // Perform sign-in
+        const googleUser = await signInWithGoogle();
+        
+        if (googleUser) {
+          await processGoogleUser(googleUser);
+        } else {
+          // User cancelled
+          setSocialLoading(null);
+        }
+      } catch (error) {
+        console.error('Native Google Sign-In error:', error);
+        toast.error('Google Sign-In failed. Please try email/password login.');
+        setSocialLoading(null);
+      }
       return;
     }
     
@@ -747,37 +767,34 @@ function AuthPremium({ onLogin, onBack }) {
           </form>
 
           {/* Divider - Hide on mobile */}
-          {!isNativeMobile && (
-            <div className="auth-premium__divider">
-              <span>{t('orContinueWith')}</span>
-            </div>
-          )}
+          {/* Divider */}
+          <div className="auth-premium__divider">
+            <span>{t('orContinueWith')}</span>
+          </div>
 
-          {/* Social Login - Hide on mobile native apps */}
-          {!isNativeMobile && (
-            <div style={{ display: 'flex', gap: '12px' }}>
-              <button 
-                className="btn-premium btn-premium-secondary" 
-                style={{ flex: 1 }}
-                onClick={handleGoogleSignIn}
-                disabled={socialLoading === 'google'}
-              >
-                {socialLoading === 'google' ? (
-                  <><i className="fas fa-spinner fa-spin"></i> {t('signingIn')}</>
-                ) : (
-                  <><i className="fab fa-google"></i> Google</>
-                )}
-              </button>
-              <button 
-                className="btn-premium btn-premium-secondary" 
-                style={{ flex: 1 }}
-                onClick={handleAppleSignIn}
-                disabled={socialLoading === 'apple'}
-              >
-                <i className="fab fa-apple"></i> Apple
-              </button>
-            </div>
-          )}
+          {/* Social Login - Show on all platforms */}
+          <div style={{ display: 'flex', gap: '12px' }}>
+            <button 
+              className="btn-premium btn-premium-secondary" 
+              style={{ flex: 1 }}
+              onClick={handleGoogleSignIn}
+              disabled={socialLoading === 'google'}
+            >
+              {socialLoading === 'google' ? (
+                <><i className="fas fa-spinner fa-spin"></i> {t('signingIn')}</>
+              ) : (
+                <><i className="fab fa-google"></i> Google</>
+              )}
+            </button>
+            <button 
+              className="btn-premium btn-premium-secondary" 
+              style={{ flex: 1 }}
+              onClick={handleAppleSignIn}
+              disabled={socialLoading === 'apple'}
+            >
+              <i className="fab fa-apple"></i> Apple
+            </button>
+          </div>
 
           {/* Footer */}
           <div className="auth-premium__footer">

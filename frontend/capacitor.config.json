@@ -31,6 +31,11 @@
     "PushNotifications": {
       "presentationOptions": ["badge", "sound", "alert"]
     },
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "477733520458-4i896u9abilk7n2cgodgdp0ohjiu2tt6.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    },
     "Keyboard": {
       "resize": "body",
       "resizeOnFullScreen": true

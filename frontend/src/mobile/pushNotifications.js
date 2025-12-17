@@ -1,29 +1,60 @@
 /**
  * Push Notifications - Firebase Cloud Messaging with Capacitor
  * Handles FCM registration and notification handling for mobile
+ * 
+ * NOTE: Requires google-services.json in android/app/ folder
+ * Get it from Firebase Console: Project Settings > Your Apps > Download google-services.json
  */
 
 import { Capacitor } from '@capacitor/core';
-import { PushNotifications } from '@capacitor/push-notifications';
+// import { PushNotifications } from '@capacitor/push-notifications';
 import axiosInstance from '../api/config';
 import { saveFCMToken, getFCMToken } from './authStorage';
+
+// Flag to enable/disable push notifications
+// google-services.json is now configured
+const PUSH_NOTIFICATIONS_ENABLED = true;
 
 /**
  * Initialize push notifications
  * Call this after user login
  */
 export const initPushNotifications = async (userId) => {
+  // Push notifications disabled until Firebase is configured
+  if (!PUSH_NOTIFICATIONS_ENABLED) {
+    console.log('Push notifications disabled - Firebase not configured');
+    return null;
+  }
+
   if (!Capacitor.isNativePlatform()) {
     console.log('Push notifications only available on native platforms');
     return null;
   }
 
   try {
-    // Request permission
-    const permStatus = await PushNotifications.requestPermissions();
+    // Dynamically import to avoid crash if not configured
+    const { PushNotifications } = await import('@capacitor/push-notifications');
     
-    if (permStatus.receive !== 'granted') {
-      console.log('Push notification permission denied');
+    // Check if PushNotifications is available
+    if (!PushNotifications || typeof PushNotifications.requestPermissions !== 'function') {
+      console.log('Push notifications not available on this device');
+      return null;
+    }
+
+    // Check current permission status first
+    const currentStatus = await PushNotifications.checkPermissions();
+    console.log('Current push permission status:', currentStatus);
+
+    // Only request if not already granted or denied permanently
+    if (currentStatus.receive === 'prompt' || currentStatus.receive === 'prompt-with-rationale') {
+      const permStatus = await PushNotifications.requestPermissions();
+      
+      if (permStatus.receive !== 'granted') {
+        console.log('Push notification permission denied');
+        return null;
+      }
+    } else if (currentStatus.receive === 'denied') {
+      console.log('Push notifications previously denied');
       return null;
     }
 
@@ -31,11 +62,12 @@ export const initPushNotifications = async (userId) => {
     await PushNotifications.register();
 
     // Set up listeners
-    setupPushListeners(userId);
+    setupPushListeners(userId, PushNotifications);
 
     return true;
   } catch (error) {
-    console.error('Push notification init error:', error);
+    // Don't crash the app if push notifications fail
+    console.warn('Push notification init error (non-fatal):', error.message || error);
     return null;
   }
 };
@@ -43,7 +75,7 @@ export const initPushNotifications = async (userId) => {
 /**
  * Set up push notification listeners
  */
-const setupPushListeners = (userId) => {
+const setupPushListeners = (userId, PushNotifications) => {
   // On registration success
   PushNotifications.addListener('registration', async (token) => {
     console.log('FCM Token:', token.value);
@@ -154,7 +186,8 @@ export const unregisterDevice = async (userId) => {
       });
     }
     
-    // Remove all listeners
+    // Remove all listeners - dynamically import
+    const { PushNotifications } = await import('@capacitor/push-notifications');
     await PushNotifications.removeAllListeners();
   } catch (error) {
     console.error('Failed to unregister device:', error);
