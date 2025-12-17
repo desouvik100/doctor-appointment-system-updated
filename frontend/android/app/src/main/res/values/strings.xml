@@ -5,5 +5,5 @@
     <string name="package_name">com.healthsync.app</string>
     <string name="custom_url_scheme">com.healthsync.app</string>
     <string name="default_notification_channel_id">default_channel</string>
-    <string name="server_client_id">477733520458-4i896u9abilk7n2cgodgdp0ohjiu2tt6.apps.googleusercontent.com</string>
+    <string name="server_client_id">477733520458-juhlgonpioe7tcjenocei4pcco4h9204.apps.googleusercontent.com</string>
 </resources>

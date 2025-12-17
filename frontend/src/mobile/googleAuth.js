@@ -5,8 +5,8 @@
 
 import { Capacitor } from '@capacitor/core';
 
-// Android OAuth Client ID from Google Cloud Console
-const ANDROID_CLIENT_ID = '477733520458-4i896u9abilk7n2cgodgdp0ohjiu2tt6.apps.googleusercontent.com';
+// Web OAuth Client ID from Google Cloud Console (required for Android native sign-in)
+const WEB_CLIENT_ID = '477733520458-juhlgonpioe7tcjenocei4pcco4h9204.apps.googleusercontent.com';
 
 /**
  * Initialize Google Auth (call once on app start)
@@ -21,7 +21,7 @@ export const initGoogleAuth = async () => {
     const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
     
     await GoogleAuth.initialize({
-      clientId: ANDROID_CLIENT_ID,
+      clientId: WEB_CLIENT_ID,
       scopes: ['profile', 'email'],
       grantOfflineAccess: true
     });
@@ -46,9 +46,10 @@ export const signInWithGoogle = async () => {
   try {
     const { GoogleAuth } = await import('@codetrix-studio/capacitor-google-auth');
     
+    console.log('🔐 Attempting Google Sign-In...');
     const user = await GoogleAuth.signIn();
     
-    console.log('✅ Google Sign-In successful:', user.email);
+    console.log('✅ Google Sign-In successful:', JSON.stringify(user, null, 2));
     
     return {
       email: user.email,
@@ -59,11 +60,25 @@ export const signInWithGoogle = async () => {
       accessToken: user.authentication?.accessToken
     };
   } catch (error) {
-    if (error.message?.includes('canceled') || error.message?.includes('cancelled')) {
+    // Log detailed error info
+    console.error('❌ Google Sign-In error details:', {
+      message: error.message,
+      code: error.code,
+      stack: error.stack,
+      fullError: JSON.stringify(error)
+    });
+    
+    if (error.message?.includes('canceled') || error.message?.includes('cancelled') || 
+        error.message?.includes('12501') || error.code === '12501') {
       console.log('Google Sign-In cancelled by user');
       return null;
     }
-    console.error('Google Sign-In error:', error);
+    
+    // Error 10 = Developer error (SHA-1 mismatch or wrong client ID)
+    if (error.message?.includes('10') || error.code === '10' || error.code === 10) {
+      console.error('❌ Developer Error (10): Check SHA-1 fingerprint and Web Client ID configuration');
+    }
+    
     throw error;
   }
 };
