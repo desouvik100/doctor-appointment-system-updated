@@ -4,25 +4,23 @@ import { Capacitor } from '@capacitor/core';
 // Detect if running on native mobile
 const isNative = Capacitor.isNativePlatform();
 
-// Configure axios defaults
-// For native apps on same WiFi, use local IP. For production, use deployed URL.
-// Change this IP to your computer's IP address for local development
-const LOCAL_DEV_IP = '192.168.1.113'; // Your computer's IP
-const LOCAL_DEV_URL = `http://${LOCAL_DEV_IP}:5005`;
+// Production Backend URL
 const PRODUCTION_URL = 'https://doctor-appointment-system-updated.onrender.com';
 
-// Use local IP for development, production URL for release builds
+// API Base URL - Always use production for mobile apps
 const API_BASE_URL = isNative
-  ? (process.env.REACT_APP_API_URL || PRODUCTION_URL) // Using production URL
+  ? PRODUCTION_URL
   : (process.env.REACT_APP_API_URL || (
       process.env.NODE_ENV === 'production' 
-        ? process.env.REACT_APP_BACKEND_URL || PRODUCTION_URL
+        ? PRODUCTION_URL
         : 'http://localhost:5005'
     ));
 
-console.log('API Base URL:', API_BASE_URL);
-console.log('Environment:', process.env.NODE_ENV);
-console.log('Platform:', Capacitor.getPlatform());
+// Log only in development
+if (process.env.NODE_ENV !== 'production') {
+  console.log('API Base URL:', API_BASE_URL);
+  console.log('Platform:', Capacitor.getPlatform());
+}
 
 // Create axios instance with base URL
 const axiosInstance = axios.create({

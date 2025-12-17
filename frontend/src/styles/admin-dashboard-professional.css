@@ -697,10 +697,61 @@
 
 @media (max-width: 768px) {
   .admin-dashboard__container { padding: 16px; }
-  .admin-navbar { padding: 12px 16px; }
+  .admin-navbar { padding: 12px 16px; flex-wrap: wrap; }
+  .admin-navbar__content { flex-wrap: wrap; gap: 12px; }
+  .admin-navbar__stats { display: none; }
+  .admin-navbar__actions { 
+    width: 100%; 
+    justify-content: flex-end;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  .admin-navbar__user { display: none; }
+  .admin-navbar__actions .btn { 
+    padding: 8px 12px; 
+    font-size: 0.8rem;
+  }
+  .admin-navbar__actions .btn span { display: none; }
   .admin-section { padding: 16px; }
-  .admin-tabs { padding: 4px; }
-  .admin-tab { padding: 8px 12px; font-size: 0.75rem; }
+  .admin-tabs { padding: 4px; overflow-x: auto; }
+  .admin-tab { padding: 8px 12px; font-size: 0.75rem; white-space: nowrap; }
+}
+
+@media (max-width: 480px) {
+  .admin-navbar { padding: 10px 12px; }
+  .admin-navbar__brand span { display: none; }
+  .admin-navbar__actions { gap: 6px; }
+  .admin-navbar__actions .btn { 
+    padding: 8px 10px; 
+    font-size: 0.75rem;
+    min-width: auto;
+  }
+  .admin-navbar__actions .btn span,
+  .admin-navbar__actions .btn .logout-text { display: none; }
+}
+
+/* Admin Logout Button - Always Visible */
+.admin-logout-btn {
+  display: flex !important;
+  align-items: center;
+  gap: 6px;
+  background: rgba(239, 68, 68, 0.1) !important;
+  border-color: #ef4444 !important;
+  color: #ef4444 !important;
+}
+
+.admin-logout-btn:hover {
+  background: #ef4444 !important;
+  color: white !important;
+}
+
+@media (max-width: 768px) {
+  .admin-logout-btn {
+    padding: 10px 14px !important;
+    border-radius: 8px;
+  }
+  .admin-logout-btn .logout-text { display: none; }
+  .admin-logout-btn i { font-size: 1rem; }
 }
 
 /* ========================================

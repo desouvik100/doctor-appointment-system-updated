@@ -1252,8 +1252,9 @@ function AdminDashboard({ admin, onLogout }) {
                 <i className="fas fa-sync-alt"></i> Refresh
               </button>
               {onLogout && (
-                <button className="btn btn-outline-light" onClick={onLogout}>
-                  <i className="fas fa-sign-out-alt"></i> Logout
+                <button className="btn btn-outline-light admin-logout-btn" onClick={onLogout}>
+                  <i className="fas fa-sign-out-alt"></i>
+                  <span className="logout-text">Logout</span>
                 </button>
               )}
             </div>
