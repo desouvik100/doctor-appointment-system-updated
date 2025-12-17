@@ -10,15 +10,23 @@
       "*.payu.in",
       "test.payu.in",
       "secure.payu.in",
-      "*.stripe.com"
+      "*.stripe.com",
+      "*.razorpay.com",
+      "api.razorpay.com",
+      "checkout.razorpay.com",
+      "*.healthsyncpro.in",
+      "healthsyncpro.in"
     ]
   },
   "plugins": {
     "SplashScreen": {
       "launchShowDuration": 2000,
-      "backgroundColor": "#4F46E5",
+      "launchAutoHide": true,
+      "backgroundColor": "#6366f1",
       "showSpinner": true,
-      "spinnerColor": "#ffffff"
+      "spinnerColor": "#ffffff",
+      "splashFullScreen": true,
+      "splashImmersive": true
     },
     "PushNotifications": {
       "presentationOptions": ["badge", "sound", "alert"]
@@ -26,12 +34,19 @@
     "Keyboard": {
       "resize": "body",
       "resizeOnFullScreen": true
+    },
+    "StatusBar": {
+      "style": "LIGHT",
+      "backgroundColor": "#6366f1"
     }
   },
   "android": {
-    "allowMixedContent": true
+    "allowMixedContent": true,
+    "captureInput": true,
+    "webContentsDebuggingEnabled": false
   },
   "ios": {
-    "contentInset": "automatic"
+    "contentInset": "automatic",
+    "scrollEnabled": true
   }
 }

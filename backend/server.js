@@ -77,11 +77,18 @@ app.use(cors({
     process.env.FRONTEND_URL,
     process.env.CORS_ORIGIN,
     'https://healthsyncpro.in',
-    'https://www.healthsyncpro.in'
+    'https://www.healthsyncpro.in',
+    // Capacitor mobile app origins
+    'capacitor://localhost',
+    'ionic://localhost',
+    'http://localhost',
+    'https://localhost',
+    // Android WebView
+    'file://'
   ].filter(Boolean),
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
-  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
 }));
 
 // Security headers for production
@@ -291,6 +298,11 @@ app.use('/api/health-reminders', require('./routes/healthReminderRoutes')); // S
 app.use('/api/emergency-sos', require('./routes/emergencySOSRoutes')); // Emergency SOS System
 app.use('/api/offline-queue', require('./routes/offlineQueueRoutes')); // Offline Queue Token System
 app.use('/api/doctor-referral', require('./routes/doctorReferralRoutes')); // Doctor Referral & Zero-Commission
+app.use('/api/audit', require('./routes/auditRoutes')); // Audit Log System
+app.use('/api/balance-sheet', require('./routes/balanceSheetRoutes')); // Balance Sheet
+app.use('/api/coupons', require('./routes/couponRoutes')); // Discount Coupons
+app.use('/api/medical-files', require('./routes/medicalFileRoutes')); // Medical File Upload (Cloudinary)
+app.use('/api/upload', require('./routes/uploadRoutes')); // All file uploads (profiles, docs, chat, etc.)
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');

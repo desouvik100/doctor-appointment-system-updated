@@ -3,6 +3,7 @@ const cron = require('node-cron');
 const Appointment = require('../models/Appointment');
 const { generateGoogleMeetLink } = require('./googleMeetService');
 const { sendAppointmentEmail } = require('./emailService');
+const { sendAppointmentReminderSMS } = require('./smsService');
 
 // Store scheduled jobs
 const scheduledJobs = new Map();
@@ -115,6 +116,17 @@ async function generateAndSendMeetLink(appointmentId) {
       console.log(`✅ Email sent to patient: ${appointment.userId.email}`);
     } catch (emailError) {
       console.error(`❌ Failed to send email to patient:`, emailError.message);
+    }
+
+    // Send SMS reminder to patient if they have a phone number
+    const reminderPref = appointment.reminderPreference || 'email';
+    if ((reminderPref === 'sms' || reminderPref === 'both') && appointment.userId?.phone) {
+      try {
+        await sendAppointmentReminderSMS(appointment, appointment.userId, appointment.doctorId);
+        console.log(`✅ SMS reminder sent to patient: ${appointment.userId.phone}`);
+      } catch (smsError) {
+        console.error(`❌ Failed to send SMS to patient:`, smsError.message);
+      }
     }
 
     // Send email to doctor

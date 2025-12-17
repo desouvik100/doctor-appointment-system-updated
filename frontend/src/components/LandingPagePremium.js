@@ -142,9 +142,11 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               onClick={() => onNavigate('login')}
               style={{
                 background: scrolled ? 'transparent' : 'rgba(255, 255, 255, 0.15)',
-                color: scrolled ? '#6366f1' : '#ffffff',
-                border: scrolled ? '2px solid #6366f1' : '2px solid rgba(255, 255, 255, 0.5)',
-                fontWeight: '600'
+                color: scrolled ? '#4f46e5' : '#ffffff',
+                border: scrolled ? '2px solid #4f46e5' : '2px solid rgba(255, 255, 255, 0.5)',
+                fontWeight: '700',
+                minWidth: '90px',
+                textShadow: 'none'
               }}
             >
               {t('signIn')}

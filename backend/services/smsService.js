@@ -45,7 +45,7 @@ function formatPhoneNumber(phone) {
   return cleaned;
 }
 
-// Send SMS via MSG91
+// Send SMS via MSG91 (using Send SMS API - works without DLT for testing)
 async function sendViaMSG91(phone, message) {
   if (!MSG91_AUTH_KEY || MSG91_AUTH_KEY.includes('your_')) {
     throw new Error('MSG91 not configured');
@@ -53,20 +53,24 @@ async function sendViaMSG91(phone, message) {
 
   const axios = require('axios');
   const formattedPhone = formatPhoneNumber(phone);
+  const mobileNumber = formattedPhone.replace('+', '');
 
-  const response = await axios.post('https://api.msg91.com/api/v5/flow/', {
-    template_id: MSG91_TEMPLATE_ID,
-    sender: MSG91_SENDER_ID,
-    mobiles: formattedPhone.replace('+', ''),
-    message: message
-  }, {
-    headers: {
-      'authkey': MSG91_AUTH_KEY,
-      'Content-Type': 'application/json'
+  // Force use simple Send SMS API for better delivery (bypass template requirement)
+  console.log('📱 Using MSG91 Simple SMS API for better delivery...');
+  
+  const response = await axios.get('https://api.msg91.com/api/sendhttp.php', {
+    params: {
+      authkey: MSG91_AUTH_KEY,
+      mobiles: mobileNumber,
+      message: message,
+      sender: MSG91_SENDER_ID,
+      route: '4', // Transactional route
+      country: '91'
     }
   });
-
-  return { success: true, provider: 'msg91', response: response.data };
+  
+  console.log('📱 MSG91 Simple API Response:', response.data);
+  return { success: true, provider: 'msg91-simple', response: response.data };
 }
 
 // Send SMS via Twilio
@@ -87,11 +91,17 @@ async function sendViaTwilio(phone, message) {
   return { success: true, provider: 'twilio', sid: result.sid };
 }
 
-// Send WhatsApp message via Twilio
+// Send WhatsApp message via Twilio or MSG91
 async function sendWhatsApp(phone, message) {
+  // Try MSG91 WhatsApp first (no monthly charges)
+  if (process.env.MSG91_WHATSAPP_AUTH_KEY && !process.env.MSG91_WHATSAPP_AUTH_KEY.includes('your_')) {
+    return await sendWhatsAppViaMSG91(phone, message);
+  }
+  
+  // Fallback to Twilio
   if (!twilioClient) {
     if (!initTwilio()) {
-      throw new Error('Twilio WhatsApp not configured');
+      throw new Error('WhatsApp not configured - add MSG91 or Twilio credentials');
     }
   }
 
@@ -103,6 +113,40 @@ async function sendWhatsApp(phone, message) {
   });
 
   return { success: true, provider: 'twilio-whatsapp', sid: result.sid };
+}
+
+// Send WhatsApp via MSG91 (No monthly charges)
+async function sendWhatsAppViaMSG91(phone, message) {
+  const MSG91_WHATSAPP_AUTH_KEY = process.env.MSG91_WHATSAPP_AUTH_KEY;
+  const MSG91_WHATSAPP_NUMBER = process.env.MSG91_WHATSAPP_NUMBER;
+  
+  if (!MSG91_WHATSAPP_AUTH_KEY) {
+    throw new Error('MSG91 WhatsApp not configured');
+  }
+
+  const axios = require('axios');
+  const formattedPhone = formatPhoneNumber(phone).replace('+', '');
+
+  const response = await axios.post('https://api.msg91.com/api/v5/whatsapp/whatsapp-outbound-message/', {
+    integrated_number: MSG91_WHATSAPP_NUMBER?.replace('+', ''),
+    content_type: 'text',
+    payload: {
+      messaging_product: 'whatsapp',
+      to: formattedPhone,
+      type: 'text',
+      text: {
+        body: message
+      }
+    }
+  }, {
+    headers: {
+      'authkey': MSG91_WHATSAPP_AUTH_KEY,
+      'Content-Type': 'application/json'
+    }
+  });
+
+  console.log('📱 MSG91 WhatsApp Response:', response.data);
+  return { success: true, provider: 'msg91-whatsapp', response: response.data };
 }
 
 // Main SMS sending function
@@ -171,7 +215,7 @@ async function sendPrescriptionReadySMS(phone, doctorName) {
   return await sendSMS(phone, message);
 }
 
-// Send WhatsApp appointment reminder
+// Send WhatsApp appointment reminder (Business Account)
 async function sendAppointmentReminderWhatsApp(appointment, patient, doctor) {
   const date = new Date(appointment.date).toLocaleDateString('en-IN', {
     weekday: 'long',
@@ -180,20 +224,59 @@ async function sendAppointmentReminderWhatsApp(appointment, patient, doctor) {
     year: 'numeric'
   });
 
-  const message = `🏥 *HealthSync Appointment Reminder*
+  const message = `🏥 *HealthSync* - Appointment Reminder
 
 Hello ${patient.name}!
 
-Your appointment details:
+Your appointment is scheduled:
 👨‍⚕️ *Doctor:* Dr. ${doctor.name}
-📋 *Specialization:* ${doctor.specialization}
+📋 *Specialty:* ${doctor.specialization}
 📅 *Date:* ${date}
 ⏰ *Time:* ${appointment.time}
-${appointment.consultationType === 'online' ? '🌐 *Type:* Online Consultation\n📱 Join via the HealthSync app' : '🏥 *Type:* In-Person Visit\n📍 Please arrive 10 minutes early'}
+🆔 *Booking ID:* ${appointment._id.toString().slice(-6).toUpperCase()}
+
+${appointment.consultationType === 'online' ? '🌐 *Online Consultation*\n📱 Join via HealthSync app 15 mins before' : '🏥 *In-Person Visit*\n📍 Please arrive 10 minutes early'}
 
 ${appointment.googleMeetLink ? `\n🔗 *Meeting Link:* ${appointment.googleMeetLink}` : ''}
 
-Thank you for choosing HealthSync! 💙`;
+Need help? Reply to this message.
+Reply STOP to opt out.
+
+*HealthSync* - Your Health, Our Priority 💙`;
+
+  return await sendWhatsApp(patient.phone, message);
+}
+
+// Send WhatsApp appointment confirmation (Business Account)
+async function sendAppointmentConfirmationWhatsApp(appointment, patient, doctor) {
+  const date = new Date(appointment.date).toLocaleDateString('en-IN', {
+    weekday: 'long',
+    day: 'numeric',
+    month: 'long',
+    year: 'numeric'
+  });
+
+  const message = `🏥 *HealthSync* - Booking Confirmed ✅
+
+Hello ${patient.name}!
+
+Your appointment has been successfully booked:
+
+👨‍⚕️ *Doctor:* Dr. ${doctor.name}
+📋 *Specialty:* ${doctor.specialization}
+📅 *Date:* ${date}
+⏰ *Time:* ${appointment.time}
+🆔 *Booking ID:* ${appointment._id.toString().slice(-6).toUpperCase()}
+💰 *Amount:* ₹${appointment.payment?.totalAmount || 'N/A'}
+
+${appointment.consultationType === 'online' ? '🌐 *Online Consultation*\nYou will receive meeting link 15 minutes before appointment' : '🏥 *In-Person Visit*\nPlease arrive 10 minutes early at the clinic'}
+
+📱 Manage your appointment via HealthSync app
+🔔 You will receive a reminder before your appointment
+
+Need to reschedule? Reply to this message.
+
+*HealthSync* - Your Health, Our Priority 💙`;
 
   return await sendWhatsApp(patient.phone, message);
 }
@@ -206,5 +289,6 @@ module.exports = {
   sendOTPSMS,
   sendPrescriptionReadySMS,
   sendAppointmentReminderWhatsApp,
+  sendAppointmentConfirmationWhatsApp,
   formatPhoneNumber
 };

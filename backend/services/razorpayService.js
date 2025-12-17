@@ -51,7 +51,7 @@ class RazorpayService {
   }
 
   // Create Razorpay Order
-  async createOrder(appointmentId, userId) {
+  async createOrder(appointmentId, userId, couponCode = null) {
     if (!this.useRazorpay) {
       return {
         testMode: true,
@@ -81,9 +81,42 @@ class RazorpayService {
 
       const paymentBreakdown = this.calculatePaymentBreakdown(consultationFee);
       
-      // Create Razorpay order
+      // Apply coupon discount if provided
+      let couponDiscount = 0;
+      let appliedCoupon = null;
+      
+      if (couponCode) {
+        try {
+          const Coupon = require('../models/Coupon');
+          const coupon = await Coupon.findOne({ code: couponCode.toUpperCase().trim() });
+          
+          if (coupon) {
+            const validation = coupon.isValid(userId, paymentBreakdown.total);
+            if (validation.valid) {
+              couponDiscount = coupon.calculateDiscount(paymentBreakdown.total);
+              appliedCoupon = {
+                code: coupon.code,
+                discountType: coupon.discountType,
+                discountValue: coupon.discountValue
+              };
+              console.log(`✅ Coupon ${couponCode} applied: ₹${couponDiscount} discount`);
+            } else {
+              console.log(`⚠️ Coupon ${couponCode} invalid: ${validation.message}`);
+            }
+          }
+        } catch (couponError) {
+          console.error('Error applying coupon:', couponError.message);
+          // Continue without coupon if there's an error
+        }
+      }
+      
+      // Calculate final amount after coupon discount
+      const finalAmount = Math.max(1, paymentBreakdown.total - couponDiscount); // Minimum ₹1
+      const finalAmountInPaise = finalAmount * 100;
+      
+      // Create Razorpay order with discounted amount
       const orderOptions = {
-        amount: paymentBreakdown.totalInPaise, // Amount in paise
+        amount: finalAmountInPaise, // Amount in paise (after discount)
         currency: this.currency,
         receipt: `apt_${appointmentId.slice(-10)}`,
         notes: {
@@ -91,29 +124,44 @@ class RazorpayService {
           userId: userId,
           doctorId: appointment.doctorId._id.toString(),
           doctorName: appointment.doctorId.name,
-          patientName: appointment.userId.name
+          patientName: appointment.userId.name,
+          couponCode: couponCode || '',
+          couponDiscount: couponDiscount
         }
       };
 
       console.log('📦 Creating Razorpay order:', JSON.stringify(orderOptions, null, 2));
-      console.log('   Amount in paise:', orderOptions.amount);
+      console.log('   Original amount:', paymentBreakdown.total);
+      console.log('   Coupon discount:', couponDiscount);
+      console.log('   Final amount in paise:', orderOptions.amount);
       console.log('   Key ID:', RAZORPAY_KEY_ID?.substring(0, 15) + '...');
       
       const order = await razorpay.orders.create(orderOptions);
       console.log('✅ Razorpay order created:', order.id);
 
-      // Update appointment with order ID
+      // Update appointment with order ID and coupon details
       appointment.razorpayOrderId = order.id;
       appointment.paymentStatus = 'pending';
+      if (appliedCoupon) {
+        appointment.couponApplied = appliedCoupon;
+        appointment.couponDiscount = couponDiscount;
+      }
       await appointment.save();
 
       return {
         success: true,
         orderId: order.id,
-        amount: paymentBreakdown.total,
-        amountInPaise: paymentBreakdown.totalInPaise,
+        amount: finalAmount,
+        amountInPaise: finalAmountInPaise,
+        originalAmount: paymentBreakdown.total,
+        couponDiscount: couponDiscount,
+        couponApplied: appliedCoupon,
         currency: this.currency,
-        breakdown: paymentBreakdown,
+        breakdown: {
+          ...paymentBreakdown,
+          couponDiscount: couponDiscount,
+          finalTotal: finalAmount
+        },
         keyId: RAZORPAY_KEY_ID,
         prefill: {
           name: appointment.userId.name,

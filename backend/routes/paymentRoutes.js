@@ -34,7 +34,7 @@ router.get('/calculate/:appointmentId', verifyToken, async (req, res) => {
 // Create Razorpay Order (authenticated users)
 router.post('/create-order', verifyToken, async (req, res) => {
   try {
-    const { appointmentId, userId } = req.body;
+    const { appointmentId, userId, couponCode } = req.body;
     
     if (!appointmentId || !userId) {
       return res.status(400).json({ message: 'Appointment ID and User ID are required' });
@@ -62,7 +62,7 @@ router.post('/create-order', verifyToken, async (req, res) => {
       });
     }
     
-    const orderData = await razorpayService.createOrder(appointmentId, userId);
+    const orderData = await razorpayService.createOrder(appointmentId, userId, couponCode);
     
     res.json({
       success: true,

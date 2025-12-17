@@ -54,6 +54,16 @@ const clinicSchema = new mongoose.Schema(
     description: { type: String },
     facilities: [{ type: String }], // ['Parking', 'Wheelchair Access', 'Pharmacy', etc.]
     specializations: [{ type: String }],
+    // Cloudinary Images
+    logo: { type: String }, // Cloudinary URL
+    logoPublicId: { type: String }, // For deletion
+    galleryPhotos: [{
+      url: { type: String },
+      publicId: { type: String },
+      uploadedAt: { type: Date, default: Date.now }
+    }],
+    
+    // Legacy fields (kept for backward compatibility)
     logoUrl: { type: String },
     images: [{ type: String }],
     

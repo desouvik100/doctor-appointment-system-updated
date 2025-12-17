@@ -10,9 +10,9 @@ import LanguageSelector from './LanguageSelector';
 // Google Client ID - Replace with your actual client ID from Google Cloud Console
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 
-// Debug: Log Google Client ID status (remove in production)
-if (process.env.NODE_ENV === 'development') {
-  console.log('Google Client ID configured:', GOOGLE_CLIENT_ID ? 'Yes (ID: ' + GOOGLE_CLIENT_ID.substring(0, 20) + '...)' : 'No');
+// Debug: Log Google Client ID status (only log if configured)
+if (process.env.NODE_ENV === 'development' && GOOGLE_CLIENT_ID) {
+  console.log('Google Client ID configured: Yes (ID: ' + GOOGLE_CLIENT_ID.substring(0, 20) + '...)');
 }
 
 // Inline styles for ECG animation
@@ -244,7 +244,7 @@ function AuthPremium({ onLogin, onBack }) {
     if (GOOGLE_CLIENT_ID) {
       loadGoogleScript();
     } else {
-      console.warn('⚠️ Google Client ID not configured');
+      // Silently set error - Google Sign-In will be disabled
       setGoogleScriptError('Google Sign-In not configured.');
     }
   }, []);

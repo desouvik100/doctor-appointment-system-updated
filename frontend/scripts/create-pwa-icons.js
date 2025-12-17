@@ -1,0 +1,200 @@
+/**
+ * Create PWA Icons Script
+ * Creates placeholder PNG icons for PWA
+ * 
+ * For production, replace these with properly designed icons
+ * 
+ * Run: node scripts/create-pwa-icons.js
+ */
+
+const fs = require('fs');
+const path = require('path');
+
+const iconsDir = path.join(__dirname, '../public/icons');
+
+// Ensure icons directory exists
+if (!fs.existsSync(iconsDir)) {
+  fs.mkdirSync(iconsDir, { recursive: true });
+  console.log('Created icons directory');
+}
+
+// Icon sizes needed
+const sizes = [16, 32, 72, 96, 128, 144, 152, 167, 180, 192, 384, 512];
+
+// Create a simple 1x1 pixel PNG (placeholder)
+// This is a minimal valid PNG file
+const createMinimalPNG = (size) => {
+  // PNG header and minimal IHDR chunk for a colored square
+  // This creates a valid but tiny PNG - replace with real icons for production
+  
+  // For now, we'll create an HTML file that can be used to generate icons
+  return null;
+};
+
+// Create an HTML page that generates icons using Canvas
+const generateIconsHtml = `<!DOCTYPE html>
+<html>
+<head>
+  <title>Generate PWA Icons</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 20px; background: #f5f5f5; }
+    .container { max-width: 800px; margin: 0 auto; }
+    h1 { color: #6366f1; }
+    .icon-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); gap: 20px; margin-top: 20px; }
+    .icon-item { background: white; padding: 15px; border-radius: 8px; text-align: center; box-shadow: 0 2px 4px rgba(0,0,0,0.1); }
+    .icon-item canvas { display: block; margin: 0 auto 10px; }
+    .icon-item a { display: inline-block; margin-top: 10px; padding: 8px 16px; background: #6366f1; color: white; text-decoration: none; border-radius: 4px; font-size: 12px; }
+    .icon-item a:hover { background: #4f46e5; }
+    .instructions { background: #e0e7ff; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    .download-all { background: #10b981; color: white; padding: 12px 24px; border: none; border-radius: 8px; font-size: 16px; cursor: pointer; margin-bottom: 20px; }
+    .download-all:hover { background: #059669; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🏥 HealthSync PWA Icon Generator</h1>
+    
+    <div class="instructions">
+      <strong>Instructions:</strong>
+      <ol>
+        <li>Click "Download All Icons" to get a ZIP file with all icons</li>
+        <li>Or click individual "Download" buttons for specific sizes</li>
+        <li>Place the downloaded icons in <code>frontend/public/icons/</code></li>
+      </ol>
+    </div>
+    
+    <button class="download-all" onclick="downloadAllIcons()">📦 Download All Icons</button>
+    
+    <div class="icon-grid" id="iconGrid"></div>
+  </div>
+
+  <script>
+    const sizes = [16, 32, 72, 96, 128, 144, 152, 167, 180, 192, 384, 512];
+    
+    function drawIcon(canvas, size) {
+      const ctx = canvas.getContext('2d');
+      canvas.width = size;
+      canvas.height = size;
+      
+      // Background gradient
+      const gradient = ctx.createLinearGradient(0, 0, size, size);
+      gradient.addColorStop(0, '#6366f1');
+      gradient.addColorStop(1, '#8b5cf6');
+      
+      // Rounded rectangle background
+      const radius = size * 0.2;
+      ctx.beginPath();
+      ctx.moveTo(radius, 0);
+      ctx.lineTo(size - radius, 0);
+      ctx.quadraticCurveTo(size, 0, size, radius);
+      ctx.lineTo(size, size - radius);
+      ctx.quadraticCurveTo(size, size, size - radius, size);
+      ctx.lineTo(radius, size);
+      ctx.quadraticCurveTo(0, size, 0, size - radius);
+      ctx.lineTo(0, radius);
+      ctx.quadraticCurveTo(0, 0, radius, 0);
+      ctx.closePath();
+      ctx.fillStyle = gradient;
+      ctx.fill();
+      
+      // ECG line
+      ctx.strokeStyle = 'white';
+      ctx.lineWidth = size * 0.05;
+      ctx.lineCap = 'round';
+      ctx.lineJoin = 'round';
+      
+      const centerY = size * 0.5;
+      const startX = size * 0.15;
+      const endX = size * 0.85;
+      
+      ctx.beginPath();
+      ctx.moveTo(startX, centerY);
+      ctx.lineTo(size * 0.3, centerY);
+      ctx.lineTo(size * 0.38, size * 0.3);
+      ctx.lineTo(size * 0.48, size * 0.7);
+      ctx.lineTo(size * 0.55, size * 0.4);
+      ctx.lineTo(size * 0.62, size * 0.6);
+      ctx.lineTo(size * 0.7, centerY);
+      ctx.lineTo(endX, centerY);
+      ctx.stroke();
+      
+      // Small heart
+      if (size >= 96) {
+        ctx.fillStyle = 'rgba(255,255,255,0.3)';
+        const heartSize = size * 0.15;
+        const heartX = size * 0.5;
+        const heartY = size * 0.75;
+        
+        ctx.beginPath();
+        ctx.moveTo(heartX, heartY + heartSize * 0.3);
+        ctx.bezierCurveTo(heartX - heartSize, heartY - heartSize * 0.3, heartX - heartSize, heartY - heartSize, heartX, heartY - heartSize * 0.5);
+        ctx.bezierCurveTo(heartX + heartSize, heartY - heartSize, heartX + heartSize, heartY - heartSize * 0.3, heartX, heartY + heartSize * 0.3);
+        ctx.fill();
+      }
+    }
+    
+    function createIconItem(size) {
+      const div = document.createElement('div');
+      div.className = 'icon-item';
+      
+      const canvas = document.createElement('canvas');
+      canvas.id = 'icon-' + size;
+      drawIcon(canvas, size);
+      
+      const label = document.createElement('p');
+      label.textContent = size + 'x' + size;
+      
+      const link = document.createElement('a');
+      link.textContent = 'Download';
+      link.href = '#';
+      link.onclick = (e) => {
+        e.preventDefault();
+        downloadIcon(size);
+      };
+      
+      div.appendChild(canvas);
+      div.appendChild(label);
+      div.appendChild(link);
+      
+      return div;
+    }
+    
+    function downloadIcon(size) {
+      const canvas = document.getElementById('icon-' + size);
+      const link = document.createElement('a');
+      link.download = 'icon-' + size + 'x' + size + '.png';
+      link.href = canvas.toDataURL('image/png');
+      link.click();
+    }
+    
+    async function downloadAllIcons() {
+      // Download each icon with a small delay
+      for (const size of sizes) {
+        downloadIcon(size);
+        await new Promise(r => setTimeout(r, 200));
+      }
+      alert('All icons downloaded! Move them to frontend/public/icons/');
+    }
+    
+    // Generate all icons
+    const grid = document.getElementById('iconGrid');
+    sizes.forEach(size => {
+      grid.appendChild(createIconItem(size));
+    });
+  </script>
+</body>
+</html>`;
+
+fs.writeFileSync(path.join(iconsDir, 'generate-icons.html'), generateIconsHtml);
+
+console.log(`
+✅ Icon generator created!
+
+To generate PWA icons:
+1. Open frontend/public/icons/generate-icons.html in your browser
+2. Click "Download All Icons" 
+3. The icons will be downloaded to your Downloads folder
+4. Move them to frontend/public/icons/
+
+Or use the SVG at frontend/public/icons/icon.svg with an online converter.
+`);

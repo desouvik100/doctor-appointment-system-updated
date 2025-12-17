@@ -1,19 +1,37 @@
 @echo off
-echo Starting Doctor Appointment System...
+title HealthSync - Doctor Appointment System
+color 0A
+echo.
+echo  ██╗  ██╗███████╗ █████╗ ██╗  ████████╗██╗  ██╗███████╗██╗   ██╗███╗   ██╗ ██████╗
+echo  ██║  ██║██╔════╝██╔══██╗██║  ╚══██╔══╝██║  ██║██╔════╝╚██╗ ██╔╝████╗  ██║██╔════╝
+echo  ███████║█████╗  ███████║██║     ██║   ███████║███████╗ ╚████╔╝ ██╔██╗ ██║██║     
+echo  ██╔══██║██╔══╝  ██╔══██║██║     ██║   ██╔══██║╚════██║  ╚██╔╝  ██║╚██╗██║██║     
+echo  ██║  ██║███████╗██║  ██║███████╗██║   ██║  ██║███████║   ██║   ██║ ╚████║╚██████╗
+echo  ╚═╝  ╚═╝╚══════╝╚═╝  ╚═╝╚══════╝╚═╝   ╚═╝  ╚═╝╚══════╝   ╚═╝   ╚═╝  ╚═══╝ ╚═════╝
+echo.
+echo  🏥 Doctor Appointment System - Starting...
+echo.
+
+echo [1/2] 🚀 Starting Backend Server (Port 5005)...
+start "HealthSync Backend" cmd /k "cd backend && echo Backend Server Starting... && npm run dev"
+
+echo [2/2] ⏳ Waiting 5 seconds for backend to initialize...
+timeout /t 5 /nobreak > nul
+
+echo [2/2] 🌐 Starting Frontend Server (Port 3001)...
+start "HealthSync Frontend" cmd /k "cd frontend && echo Frontend Server Starting... && npm start"
 
 echo.
-echo Starting Backend Server...
-start "Backend" cmd /k "cd backend && npm run dev"
-
-timeout /t 3 /nobreak > nul
-
+echo ✅ Both servers are starting up...
 echo.
-echo Starting Frontend Server...
-start "Frontend" cmd /k "cd frontend && npm start"
-
+echo 📋 Server Information:
+echo    🔧 Backend API: http://localhost:5005
+echo    🌐 Frontend UI: http://localhost:3001
 echo.
-echo Both servers are starting...
-echo Backend: http://localhost:5005
-echo Frontend: http://localhost:3000
+echo 💡 Tips:
+echo    - Wait for both servers to fully load
+echo    - Backend loads first, then frontend
+echo    - Frontend will auto-open in browser
 echo.
-pause
+echo Press any key to close this window...
+pause > nul

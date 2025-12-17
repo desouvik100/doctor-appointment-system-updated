@@ -30,7 +30,11 @@ const userSchema = new mongoose.Schema(
     },
     profilePhoto: {
       type: String,
-      default: null // URL or base64 string for profile picture
+      default: null // URL for profile picture (Cloudinary)
+    },
+    profilePhotoPublicId: {
+      type: String,
+      default: null // Cloudinary public ID for deletion
     },
     googleId: {
       type: String,

@@ -650,3 +650,76 @@ nav {
     height: -webkit-fill-available;
   }
 }
+
+/* ============================================
+   Mobile Navigation Enhancements
+   ============================================ */
+
+/* Ensure navbar collapse works properly on mobile */
+@media (max-width: 991.98px) {
+  .navbar-collapse {
+    background: rgba(255, 255, 255, 0.95);
+    backdrop-filter: blur(20px);
+    border-radius: 12px;
+    margin-top: 1rem;
+    padding: 1rem;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+  }
+  
+  .navbar-collapse .navbar-nav {
+    margin-bottom: 1rem;
+  }
+  
+  .navbar-collapse .navbar-nav .nav-link {
+    color: #1e293b !important;
+    padding: 0.75rem 1rem;
+    border-radius: 8px;
+    margin: 0.25rem 0;
+    transition: all 0.3s ease;
+  }
+  
+  .navbar-collapse .navbar-nav .nav-link:hover {
+    background: rgba(59, 130, 246, 0.1);
+    color: #3b82f6 !important;
+  }
+  
+  /* Mobile button styles */
+  .navbar-collapse .btn {
+    width: 100%;
+    margin: 0.5rem 0;
+    justify-content: center;
+  }
+}
+
+/* Hamburger button animation */
+.navbar-toggler {
+  position: relative;
+  transition: all 0.3s ease;
+}
+
+.navbar-toggler:focus {
+  box-shadow: none;
+  outline: none;
+}
+
+.navbar-toggler[aria-expanded="true"] {
+  transform: rotate(90deg);
+}
+
+/* Sign In button visibility improvements */
+.btn-sign-in {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+@media (max-width: 576px) {
+  .btn-sign-in {
+    font-size: 0.9rem;
+    padding: 0.5rem 1rem;
+  }
+  
+  .btn-sign-in .fas {
+    font-size: 0.8rem;
+  }
+}

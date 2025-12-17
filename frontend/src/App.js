@@ -28,6 +28,7 @@ import AuthPremium from "./components/AuthPremium";
 import CorporateWellness from "./components/CorporateWellness";
 import { TermsAndConditions, PrivacyPolicy, RefundPolicy, ContactUs, AboutUs } from "./components/LegalPages";
 import NetworkStatus from "./components/NetworkStatus";
+import PWAInstallBanner from "./components/PWAInstallBanner";
 import './styles/legal-pages.css';
 import './styles/mobile-enhancements.css';
 
@@ -384,6 +385,34 @@ function App() {
             }}>HealthSync</span>
           </span>
 
+          {/* Mobile hamburger button */}
+          <button 
+            className="navbar-toggler d-lg-none" 
+            type="button" 
+            data-bs-toggle="collapse" 
+            data-bs-target="#navbarNav" 
+            aria-controls="navbarNav" 
+            aria-expanded="false" 
+            aria-label="Toggle navigation"
+            style={{
+              border: 'none',
+              background: 'transparent',
+              color: '#ffffff',
+              fontSize: '1.5rem',
+              padding: '0.5rem',
+              borderRadius: '8px',
+              transition: 'all 0.3s ease'
+            }}
+            onMouseEnter={(e) => {
+              e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+            }}
+            onMouseLeave={(e) => {
+              e.target.style.background = 'transparent';
+            }}
+          >
+            <i className="fas fa-bars"></i>
+          </button>
+
           <div  id="navbarNav">
             <ul >
               {['home', 'features', 'about', 'contact'].map((section) => (
@@ -427,9 +456,42 @@ function App() {
             </ul>
 
             <div >
+              {/* Sign In Button */}
+              <button
+                className="btn btn-sign-in me-2 mb-2 mb-lg-0"
+                onClick={() => setCurrentView("auth")}
+                style={{
+                  borderRadius: '12px',
+                  background: 'transparent',
+                  color: '#ffffff',
+                  border: '2px solid rgba(255, 255, 255, 0.3)',
+                  fontWeight: '600',
+                  fontSize: '1rem',
+                  padding: '0.6rem 1.5rem',
+                  transition: 'all 0.3s ease',
+                  whiteSpace: 'nowrap',
+                  zIndex: 10
+                }}
+                onMouseEnter={(e) => {
+                  e.target.style.background = 'rgba(255, 255, 255, 0.1)';
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.5)';
+                  e.target.style.transform = 'translateY(-2px)';
+                  e.target.style.boxShadow = '0 4px 20px rgba(255, 255, 255, 0.2)';
+                }}
+                onMouseLeave={(e) => {
+                  e.target.style.background = 'transparent';
+                  e.target.style.borderColor = 'rgba(255, 255, 255, 0.3)';
+                  e.target.style.transform = 'translateY(0)';
+                  e.target.style.boxShadow = 'none';
+                }}
+              >
+                <i className="fas fa-sign-in-alt"></i>
+                Sign In
+              </button>
+
               {/* Get Started Button */}
               <button
-                
+                className="btn mb-2 mb-lg-0"
                 onClick={() => setCurrentView("auth")}
                 style={{
                   borderRadius: '16px',
@@ -1466,6 +1528,9 @@ function App() {
     <div>
       {/* Network Status Indicator */}
       <NetworkStatus />
+      
+      {/* PWA Install Banner */}
+      <PWAInstallBanner />
       
       {/* Global Toast Notifications */}
       <Toaster

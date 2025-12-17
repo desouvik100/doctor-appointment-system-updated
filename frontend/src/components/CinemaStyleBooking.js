@@ -44,6 +44,13 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
   const [paymentConfig, setPaymentConfig] = useState(null);
   const [pendingAppointmentId, setPendingAppointmentId] = useState(null);
 
+  // Coupon states
+  const [couponCode, setCouponCode] = useState('');
+  const [appliedCoupon, setAppliedCoupon] = useState(null);
+  const [couponDiscount, setCouponDiscount] = useState(0);
+  const [couponLoading, setCouponLoading] = useState(false);
+  const [couponError, setCouponError] = useState('');
+
   // Common symptoms for quick selection
   const commonSymptoms = [
     'Fever', 'Cold & Cough', 'Headache', 'Body Pain', 
@@ -58,7 +65,8 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
   // Fee calculations - 5% platform fee, no GST
   const consultationFee = doctor?.consultationFee || 500;
   const platformFee = Math.round(consultationFee * 0.05); // 5% platform fee
-  const totalPayable = consultationFee + platformFee;
+  const subtotal = consultationFee + platformFee;
+  const totalPayable = Math.max(0, subtotal - couponDiscount);
 
   useEffect(() => {
     fetchCalendar();
@@ -129,6 +137,40 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
       }
     };
   }, [selectedDate, step, bookingSuccess, doctorId, queueInfo]);
+
+  // Coupon validation
+  const validateCoupon = async () => {
+    if (!couponCode.trim()) {
+      setCouponError('Please enter a coupon code');
+      return;
+    }
+    setCouponLoading(true);
+    setCouponError('');
+    try {
+      const response = await axios.post('/api/coupons/validate', {
+        code: couponCode.trim(),
+        amount: subtotal
+      });
+      if (response.data.success) {
+        setAppliedCoupon(response.data.coupon);
+        setCouponDiscount(response.data.discount);
+        toast.success(`Coupon applied! You save ₹${response.data.discount}`);
+      }
+    } catch (error) {
+      setCouponError(error.response?.data?.message || 'Invalid coupon');
+      setAppliedCoupon(null);
+      setCouponDiscount(0);
+    } finally {
+      setCouponLoading(false);
+    }
+  };
+
+  const removeCoupon = () => {
+    setCouponCode('');
+    setAppliedCoupon(null);
+    setCouponDiscount(0);
+    setCouponError('');
+  };
 
   const fetchCalendar = async () => {
     try {
@@ -397,12 +439,14 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         setLoading(false);
         
         // Initiate Razorpay payment with closure to capture appointmentId
+        // Pass coupon code if applied to get discounted amount
         initiatePayment(
           appointmentId,
           user.id || user._id,
           // Pass appointmentId directly to avoid state timing issues
           (paymentData) => handlePaymentSuccessWithId(paymentData, appointmentId),
-          handlePaymentFailure
+          handlePaymentFailure,
+          appliedCoupon?.code || null
         );
       } else {
         // Payments disabled - auto-confirm
@@ -1082,6 +1126,43 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
                   </div>
                 </div>
 
+                {/* Coupon Code Section */}
+                <div className="coupon-section" style={{ marginBottom: '16px', padding: '12px', background: '#fef3c7', borderRadius: '12px', border: '1px dashed #f59e0b' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
+                    <i className="fas fa-tags" style={{ color: '#d97706' }}></i>
+                    <span style={{ fontWeight: 600, color: '#92400e', fontSize: '14px' }}>Have a coupon?</span>
+                  </div>
+                  {appliedCoupon ? (
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#dcfce7', padding: '10px 12px', borderRadius: '8px' }}>
+                      <div>
+                        <span style={{ fontWeight: 600, color: '#16a34a' }}>{appliedCoupon.code}</span>
+                        <span style={{ marginLeft: '8px', color: '#15803d', fontSize: '13px' }}>-₹{couponDiscount} off</span>
+                      </div>
+                      <button onClick={removeCoupon} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '12px' }}>
+                        <i className="fas fa-times"></i> Remove
+                      </button>
+                    </div>
+                  ) : (
+                    <div style={{ display: 'flex', gap: '8px' }}>
+                      <input
+                        type="text"
+                        placeholder="Enter coupon code"
+                        value={couponCode}
+                        onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(''); }}
+                        style={{ flex: 1, padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', textTransform: 'uppercase' }}
+                      />
+                      <button
+                        onClick={validateCoupon}
+                        disabled={couponLoading || !couponCode.trim()}
+                        style={{ padding: '10px 16px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', opacity: couponLoading ? 0.7 : 1 }}
+                      >
+                        {couponLoading ? '...' : 'Apply'}
+                      </button>
+                    </div>
+                  )}
+                  {couponError && <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '6px' }}>{couponError}</p>}
+                </div>
+
                 {/* Fee Breakdown - Mobile Optimized */}
                 <div className="fee-breakdown mobile-fees">
                   <div className="fee-row">
@@ -1089,9 +1170,15 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
                     <span>₹{consultationFee}</span>
                   </div>
                   <div className="fee-row">
-                    <span>Platform Fee</span>
+                    <span>Platform Fee (5%)</span>
                     <span>₹{platformFee}</span>
                   </div>
+                  {couponDiscount > 0 && (
+                    <div className="fee-row" style={{ color: '#16a34a' }}>
+                      <span><i className="fas fa-tag" style={{ marginRight: '4px' }}></i>Coupon Discount</span>
+                      <span>-₹{couponDiscount}</span>
+                    </div>
+                  )}
                   <div className="fee-row total">
                     <span>Total Payable</span>
                     <span className="total-amount">₹{totalPayable}</span>

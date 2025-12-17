@@ -209,6 +209,12 @@ router.put('/:id/approve', async (req, res) => {
 
     await user.save();
     
+    // Audit log
+    try {
+      const auditService = require('../services/auditService');
+      await auditService.staffApproved(user, req.user || { name: 'Admin', role: 'admin' }, req);
+    } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
+    
     const populatedUser = await User.findById(user._id)
       .populate('clinicId', 'name address city phone');
     
@@ -225,15 +231,22 @@ router.put('/:id/approve', async (req, res) => {
 // Reject receptionist (admin only)
 router.put('/:id/reject', async (req, res) => {
   try {
+    const { reason } = req.body;
     const user = await User.findByIdAndUpdate(
       req.params.id,
-      { approvalStatus: 'rejected' },
+      { approvalStatus: 'rejected', rejectionReason: reason },
       { new: true }
     );
     
     if (!user || user.role !== 'receptionist') {
       return res.status(404).json({ message: 'Receptionist not found' });
     }
+
+    // Audit log
+    try {
+      const auditService = require('../services/auditService');
+      await auditService.staffRejected(user, req.user || { name: 'Admin', role: 'admin' }, reason, req);
+    } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
 
     res.json({
       message: 'Receptionist rejected successfully',

@@ -480,6 +480,13 @@ router.post('/suspend-user', async (req, res) => {
       details: { action: 'manual_suspend', adminId }
     });
 
+    // Audit log
+    try {
+      const auditService = require('../services/auditService');
+      const admin = adminId ? await User.findById(adminId).select('name email role') : { name: 'System', role: 'admin' };
+      await auditService.userSuspended(user, admin, reason, req);
+    } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
+
     res.json({ success: true, message: 'User suspended and notified via email' });
   } catch (error) {
     console.error('Error suspending user:', error);
@@ -599,6 +606,13 @@ router.post('/unsuspend-user', async (req, res) => {
       description: `Account restored by admin`,
       details: { action: 'manual_unsuspend', adminId }
     });
+
+    // Audit log
+    try {
+      const auditService = require('../services/auditService');
+      const admin = adminId ? await User.findById(adminId).select('name email role') : { name: 'System', role: 'admin' };
+      await auditService.userActivated(user, admin, req);
+    } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
 
     res.json({ success: true, message: 'User unsuspended and notified via email' });
   } catch (error) {

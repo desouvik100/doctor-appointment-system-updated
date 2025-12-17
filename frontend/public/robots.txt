@@ -1,27 +1,63 @@
-# HealthSync - Robots.txt
+# HealthSync Pro - Robots.txt
 # https://healthsyncpro.in
 
 User-agent: *
 Allow: /
 
-# Sitemap
+# Sitemap location
 Sitemap: https://healthsyncpro.in/sitemap.xml
 
-# Disallow admin/private areas
+# ============================================
+# DISALLOW - Private/Admin Areas
+# ============================================
 Disallow: /api/
 Disallow: /admin/
 Disallow: /dashboard/
-Disallow: /*.json$
+Disallow: /patient/
+Disallow: /doctor/
+Disallow: /receptionist/
+Disallow: /settings/
+Disallow: /profile/
+Disallow: /appointments/
+Disallow: /prescriptions/
+Disallow: /medical-records/
+Disallow: /wallet/
+Disallow: /notifications/
 
-# Allow search engines to crawl important pages
+# ============================================
+# DISALLOW - Auth Pages (SEO Best Practice)
+# ============================================
+Disallow: /login
+Disallow: /register
+Disallow: /forgot-password
+Disallow: /reset-password
+Disallow: /verify-email
+Disallow: /verify-otp
+
+# ============================================
+# DISALLOW - Technical/System Files
+# ============================================
+Disallow: /*.json$
+Disallow: /*.js.map$
+Disallow: /static/js/*.map
+Disallow: /static/css/*.map
+
+# ============================================
+# ALLOW - Public SEO Pages
+# ============================================
 Allow: /
-Allow: /login
-Allow: /register
 Allow: /find-doctor
+Allow: /find-doctor/*
 Allow: /about
 Allow: /contact
 Allow: /for-doctors
 Allow: /for-clinics
+Allow: /privacy-policy
+Allow: /terms-of-service
+Allow: /blog
+Allow: /blog/*
+Allow: /health-articles
+Allow: /health-articles/*
 
-# Crawl delay for politeness
+# Crawl delay for server politeness
 Crawl-delay: 1

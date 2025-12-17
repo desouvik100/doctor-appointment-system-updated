@@ -117,6 +117,387 @@ const TabButton = ({ tab, activeTab, onClick, children }) => (
   </button>
 );
 
+// Audit Logs Section Component
+const AuditLogsSection = () => {
+  const [logs, setLogs] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [filter, setFilter] = useState({ action: '', startDate: '', endDate: '' });
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ total: 0, pages: 1 });
+
+  const actionLabels = {
+    appointment_created: { label: 'Appointment Created', color: '#10b981', icon: 'calendar-plus' },
+    appointment_rescheduled: { label: 'Appointment Rescheduled', color: '#f59e0b', icon: 'calendar-alt' },
+    appointment_cancelled: { label: 'Appointment Cancelled', color: '#ef4444', icon: 'calendar-times' },
+    appointment_completed: { label: 'Appointment Completed', color: '#10b981', icon: 'calendar-check' },
+    doctor_added: { label: 'Doctor Added', color: '#3b82f6', icon: 'user-md' },
+    doctor_removed: { label: 'Doctor Removed', color: '#ef4444', icon: 'user-minus' },
+    doctor_approved: { label: 'Doctor Approved', color: '#10b981', icon: 'user-check' },
+    doctor_rejected: { label: 'Doctor Rejected', color: '#ef4444', icon: 'user-times' },
+    staff_added: { label: 'Staff Added', color: '#3b82f6', icon: 'user-plus' },
+    staff_removed: { label: 'Staff Removed', color: '#ef4444', icon: 'user-minus' },
+    staff_approved: { label: 'Staff Approved', color: '#10b981', icon: 'user-check' },
+    staff_rejected: { label: 'Staff Rejected', color: '#ef4444', icon: 'user-times' },
+    user_suspended: { label: 'User Suspended', color: '#ef4444', icon: 'ban' },
+    user_activated: { label: 'User Activated', color: '#10b981', icon: 'check-circle' },
+    payment_received: { label: 'Payment Received', color: '#10b981', icon: 'rupee-sign' },
+    payment_refunded: { label: 'Payment Refunded', color: '#f59e0b', icon: 'undo' },
+    login_success: { label: 'Login', color: '#6366f1', icon: 'sign-in-alt' },
+    login_failed: { label: 'Failed Login', color: '#ef4444', icon: 'exclamation-triangle' }
+  };
+
+  const fetchLogs = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams({ page, limit: 30 });
+      if (filter.action) params.append('action', filter.action);
+      if (filter.startDate) params.append('startDate', filter.startDate);
+      if (filter.endDate) params.append('endDate', filter.endDate);
+      
+      const response = await axios.get(`/api/audit/logs?${params}`);
+      setLogs(response.data.logs || []);
+      setPagination(response.data.pagination || { total: 0, pages: 1 });
+    } catch (error) {
+      console.error('Error fetching audit logs:', error);
+      toast.error('Failed to load audit logs');
+    } finally {
+      setLoading(false);
+    }
+  }, [page, filter]);
+
+  useEffect(() => { fetchLogs(); }, [fetchLogs]);
+
+  const exportLogs = async () => {
+    try {
+      const params = new URLSearchParams();
+      if (filter.action) params.append('action', filter.action);
+      if (filter.startDate) params.append('startDate', filter.startDate);
+      if (filter.endDate) params.append('endDate', filter.endDate);
+      
+      window.open(`/api/audit/export?${params}`, '_blank');
+      toast.success('Exporting audit logs...');
+    } catch (error) {
+      toast.error('Export failed');
+    }
+  };
+
+  const formatDate = (date) => {
+    return new Date(date).toLocaleString('en-IN', {
+      day: '2-digit', month: 'short', year: 'numeric',
+      hour: '2-digit', minute: '2-digit'
+    });
+  };
+
+  return (
+    <>
+      <div className="admin-section__header">
+        <h2 className="admin-section__title">
+          <div className="admin-section__icon"><i className="fas fa-clipboard-list"></i></div>
+          Audit Logs
+        </h2>
+        <button className="btn btn-outline-primary btn-sm" onClick={exportLogs}>
+          <i className="fas fa-download me-1"></i> Export CSV
+        </button>
+      </div>
+      <p style={{ color: '#718096', fontSize: '14px', marginBottom: '20px' }}>
+        Track all critical actions: "Who did what, when, from where"
+      </p>
+
+      {/* Filters */}
+      <div style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap' }}>
+        <select
+          value={filter.action}
+          onChange={e => { setFilter({ ...filter, action: e.target.value }); setPage(1); }}
+          style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0', minWidth: '180px' }}
+        >
+          <option value="">All Actions</option>
+          {Object.entries(actionLabels).map(([key, { label }]) => (
+            <option key={key} value={key}>{label}</option>
+          ))}
+        </select>
+        <input
+          type="date"
+          value={filter.startDate}
+          onChange={e => { setFilter({ ...filter, startDate: e.target.value }); setPage(1); }}
+          style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+        />
+        <input
+          type="date"
+          value={filter.endDate}
+          onChange={e => { setFilter({ ...filter, endDate: e.target.value }); setPage(1); }}
+          style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+        />
+        {(filter.action || filter.startDate || filter.endDate) && (
+          <button
+            onClick={() => { setFilter({ action: '', startDate: '', endDate: '' }); setPage(1); }}
+            style={{ padding: '8px 16px', borderRadius: '8px', border: 'none', background: '#f1f5f9', cursor: 'pointer' }}
+          >
+            Clear Filters
+          </button>
+        )}
+      </div>
+
+      {/* Logs Table */}
+      {loading ? (
+        <div style={{ textAlign: 'center', padding: '40px' }}>
+          <div className="spinner-border text-primary"></div>
+        </div>
+      ) : logs.length === 0 ? (
+        <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+          <i className="fas fa-clipboard-list fa-3x mb-3" style={{ opacity: 0.3 }}></i>
+          <p>No audit logs found</p>
+        </div>
+      ) : (
+        <>
+          <div style={{ overflowX: 'auto' }}>
+            <table className="admin-table">
+              <thead>
+                <tr>
+                  <th>Time</th>
+                  <th>Action</th>
+                  <th>Performed By</th>
+                  <th>Target</th>
+                  <th>Details</th>
+                  <th>IP</th>
+                </tr>
+              </thead>
+              <tbody>
+                {logs.map(log => {
+                  const actionInfo = actionLabels[log.action] || { label: log.action, color: '#64748b', icon: 'info' };
+                  return (
+                    <tr key={log._id}>
+                      <td style={{ whiteSpace: 'nowrap', fontSize: '13px' }}>{formatDate(log.timestamp)}</td>
+                      <td>
+                        <span style={{
+                          display: 'inline-flex', alignItems: 'center', gap: '6px',
+                          padding: '4px 10px', borderRadius: '6px',
+                          background: `${actionInfo.color}15`, color: actionInfo.color,
+                          fontSize: '12px', fontWeight: 500
+                        }}>
+                          <i className={`fas fa-${actionInfo.icon}`}></i>
+                          {actionInfo.label}
+                        </span>
+                      </td>
+                      <td>
+                        <div style={{ fontSize: '13px', fontWeight: 500 }}>{log.performedBy?.name || 'System'}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b' }}>{log.performedBy?.role}</div>
+                      </td>
+                      <td>
+                        <div style={{ fontSize: '13px' }}>{log.target?.name || log.target?.email || '-'}</div>
+                        <div style={{ fontSize: '11px', color: '#64748b' }}>{log.target?.type}</div>
+                      </td>
+                      <td style={{ maxWidth: '200px', fontSize: '12px', color: '#64748b' }}>
+                        {log.details?.reason || (log.details?.before && log.details?.after ? 
+                          `${JSON.stringify(log.details.before)} → ${JSON.stringify(log.details.after)}` : '-')}
+                      </td>
+                      <td style={{ fontSize: '12px', color: '#64748b' }}>{log.metadata?.ipAddress || '-'}</td>
+                    </tr>
+                  );
+                })}
+              </tbody>
+            </table>
+          </div>
+
+          {/* Pagination */}
+          {pagination.pages > 1 && (
+            <div style={{ display: 'flex', justifyContent: 'center', gap: '8px', marginTop: '20px' }}>
+              <button
+                disabled={page === 1}
+                onClick={() => setPage(p => p - 1)}
+                style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: page === 1 ? 'not-allowed' : 'pointer' }}
+              >
+                Previous
+              </button>
+              <span style={{ padding: '8px 16px', color: '#64748b' }}>
+                Page {page} of {pagination.pages} ({pagination.total} logs)
+              </span>
+              <button
+                disabled={page >= pagination.pages}
+                onClick={() => setPage(p => p + 1)}
+                style={{ padding: '8px 16px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: page >= pagination.pages ? 'not-allowed' : 'pointer' }}
+              >
+                Next
+              </button>
+            </div>
+          )}
+        </>
+      )}
+    </>
+  );
+};
+
+// Balance Sheet Section Component
+const BalanceSheetSection = () => {
+  const [data, setData] = useState(null);
+  const [loading, setLoading] = useState(true);
+  const [period, setPeriod] = useState('month');
+
+  const fetchBalanceSheet = useCallback(async () => {
+    setLoading(true);
+    try {
+      const response = await axios.get(`/api/balance-sheet/summary?period=${period}`);
+      setData(response.data);
+    } catch (error) {
+      console.error('Error fetching balance sheet:', error);
+      toast.error('Failed to load balance sheet');
+    } finally {
+      setLoading(false);
+    }
+  }, [period]);
+
+  useEffect(() => { fetchBalanceSheet(); }, [fetchBalanceSheet]);
+
+  const exportCSV = () => {
+    window.open(`/api/balance-sheet/export?period=${period}`, '_blank');
+    toast.success('Exporting balance sheet...');
+  };
+
+  const formatCurrency = (amount) => `₹${(amount || 0).toLocaleString('en-IN')}`;
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '60px' }}>
+        <div className="spinner-border text-primary"></div>
+        <p style={{ marginTop: '10px', color: '#64748b' }}>Loading balance sheet...</p>
+      </div>
+    );
+  }
+
+  if (!data) return <p>No data available</p>;
+
+  const { summary, breakdown, appointments, trend } = data;
+
+  return (
+    <>
+      <div className="admin-section__header">
+        <h2 className="admin-section__title">
+          <div className="admin-section__icon"><i className="fas fa-balance-scale"></i></div>
+          Balance Sheet
+        </h2>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <select
+            value={period}
+            onChange={e => setPeriod(e.target.value)}
+            style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+          >
+            <option value="today">Today</option>
+            <option value="week">This Week</option>
+            <option value="month">This Month</option>
+            <option value="year">This Year</option>
+          </select>
+          <button className="btn btn-outline-primary btn-sm" onClick={exportCSV}>
+            <i className="fas fa-download me-1"></i> Export CSV
+          </button>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ background: '#f0fdf4', borderRadius: '12px', padding: '20px', border: '1px solid #bbf7d0' }}>
+          <div style={{ fontSize: '13px', color: '#16a34a', fontWeight: 500, marginBottom: '4px' }}>Total Revenue</div>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: '#15803d' }}>{formatCurrency(summary.totalRevenue)}</div>
+          <div style={{ fontSize: '12px', color: '#22c55e', marginTop: '4px' }}>{appointments.completed} completed appointments</div>
+        </div>
+        <div style={{ background: '#eff6ff', borderRadius: '12px', padding: '20px', border: '1px solid #bfdbfe' }}>
+          <div style={{ fontSize: '13px', color: '#2563eb', fontWeight: 500, marginBottom: '4px' }}>Platform Fees ({summary.platformFeePercent}%)</div>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: '#1d4ed8' }}>{formatCurrency(summary.platformFees)}</div>
+          <div style={{ fontSize: '12px', color: '#3b82f6', marginTop: '4px' }}>Your earnings</div>
+        </div>
+        <div style={{ background: '#fef3c7', borderRadius: '12px', padding: '20px', border: '1px solid #fde68a' }}>
+          <div style={{ fontSize: '13px', color: '#d97706', fontWeight: 500, marginBottom: '4px' }}>Doctor Payouts</div>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: '#b45309' }}>{formatCurrency(summary.doctorPayouts)}</div>
+          <div style={{ fontSize: '12px', color: '#f59e0b', marginTop: '4px' }}>95% to doctors</div>
+        </div>
+        <div style={{ background: summary.refunds > 0 ? '#fee2e2' : '#f8fafc', borderRadius: '12px', padding: '20px', border: `1px solid ${summary.refunds > 0 ? '#fecaca' : '#e2e8f0'}` }}>
+          <div style={{ fontSize: '13px', color: summary.refunds > 0 ? '#dc2626' : '#64748b', fontWeight: 500, marginBottom: '4px' }}>Refunds</div>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: summary.refunds > 0 ? '#b91c1c' : '#475569' }}>{formatCurrency(summary.refunds)}</div>
+          <div style={{ fontSize: '12px', color: '#94a3b8', marginTop: '4px' }}>{appointments.cancelled} cancelled</div>
+        </div>
+      </div>
+
+      {/* Net Revenue Highlight */}
+      <div style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', borderRadius: '12px', padding: '24px', marginBottom: '24px', color: 'white' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+          <div>
+            <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '4px' }}>Net Platform Revenue</div>
+            <div style={{ fontSize: '36px', fontWeight: 700 }}>{formatCurrency(summary.netRevenue)}</div>
+          </div>
+          <div style={{ textAlign: 'right' }}>
+            <div style={{ fontSize: '14px', opacity: 0.9 }}>Total Appointments</div>
+            <div style={{ fontSize: '24px', fontWeight: 600 }}>{appointments.total}</div>
+          </div>
+        </div>
+      </div>
+
+      {/* Breakdown Section */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px', marginBottom: '24px' }}>
+        {/* By Payment Method */}
+        <div style={{ background: 'white', borderRadius: '12px', padding: '20px', border: '1px solid #e2e8f0' }}>
+          <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginBottom: '16px' }}>
+            <i className="fas fa-credit-card me-2" style={{ color: '#6366f1' }}></i>By Payment Method
+          </h4>
+          {Object.entries(breakdown.byPaymentMethod || {}).length === 0 ? (
+            <p style={{ color: '#94a3b8', fontSize: '13px' }}>No data</p>
+          ) : (
+            Object.entries(breakdown.byPaymentMethod).map(([method, amount]) => (
+              <div key={method} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                <span style={{ textTransform: 'capitalize', color: '#475569' }}>{method.replace('_', ' ')}</span>
+                <span style={{ fontWeight: 600, color: '#1e293b' }}>{formatCurrency(amount)}</span>
+              </div>
+            ))
+          )}
+        </div>
+
+        {/* By Consultation Type */}
+        <div style={{ background: 'white', borderRadius: '12px', padding: '20px', border: '1px solid #e2e8f0' }}>
+          <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginBottom: '16px' }}>
+            <i className="fas fa-stethoscope me-2" style={{ color: '#10b981' }}></i>By Consultation Type
+          </h4>
+          {Object.entries(breakdown.byConsultationType || {}).length === 0 ? (
+            <p style={{ color: '#94a3b8', fontSize: '13px' }}>No data</p>
+          ) : (
+            Object.entries(breakdown.byConsultationType).map(([type, amount]) => (
+              <div key={type} style={{ display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: '1px solid #f1f5f9' }}>
+                <span style={{ color: '#475569' }}>{type === 'online' ? '🌐 Online' : '🏥 In-Person'}</span>
+                <span style={{ fontWeight: 600, color: '#1e293b' }}>{formatCurrency(amount)}</span>
+              </div>
+            ))
+          )}
+        </div>
+      </div>
+
+      {/* Top Doctors */}
+      {breakdown.topDoctors?.length > 0 && (
+        <div style={{ background: 'white', borderRadius: '12px', padding: '20px', border: '1px solid #e2e8f0' }}>
+          <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginBottom: '16px' }}>
+            <i className="fas fa-user-md me-2" style={{ color: '#f59e0b' }}></i>Top Earning Doctors
+          </h4>
+          <table className="admin-table">
+            <thead>
+              <tr>
+                <th>#</th>
+                <th>Doctor</th>
+                <th>Revenue</th>
+                <th>Payout (95%)</th>
+              </tr>
+            </thead>
+            <tbody>
+              {breakdown.topDoctors.map((doc, idx) => (
+                <tr key={doc.name}>
+                  <td style={{ fontWeight: 600, color: idx < 3 ? '#f59e0b' : '#64748b' }}>{idx + 1}</td>
+                  <td>{doc.name}</td>
+                  <td style={{ fontWeight: 500 }}>{formatCurrency(doc.revenue)}</td>
+                  <td style={{ color: '#16a34a' }}>{formatCurrency(doc.payout)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </table>
+        </div>
+      )}
+    </>
+  );
+};
+
 function AdminDashboard({ admin, onLogout }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [stats, setStats] = useState({
@@ -134,6 +515,9 @@ function AdminDashboard({ admin, onLogout }) {
   
   // Search state for users
   const [userSearchQuery, setUserSearchQuery] = useState("");
+  
+  // Search state for clinics
+  const [clinicSearchQuery, setClinicSearchQuery] = useState("");
 
   // Pending approvals state
   const [pendingStaff, setPendingStaff] = useState([]);
@@ -151,6 +535,12 @@ function AdminDashboard({ admin, onLogout }) {
   
   // Security alerts state
   const [securityAlertCount, setSecurityAlertCount] = useState(0);
+
+  // User appointments modal state
+  const [showUserAppointmentsModal, setShowUserAppointmentsModal] = useState(false);
+  const [selectedUserForAppointments, setSelectedUserForAppointments] = useState(null);
+  const [userAppointments, setUserAppointments] = useState([]);
+  const [loadingUserAppointments, setLoadingUserAppointments] = useState(false);
 
   // Modal states
   const [showUserModal, setShowUserModal] = useState(false);
@@ -489,6 +879,23 @@ function AdminDashboard({ admin, onLogout }) {
       role: user.role || "patient"
     });
     setShowUserModal(true);
+  };
+
+  // View user appointments
+  const handleViewUserAppointments = async (user) => {
+    setSelectedUserForAppointments(user);
+    setShowUserAppointmentsModal(true);
+    setLoadingUserAppointments(true);
+    try {
+      const response = await axios.get(`/api/appointments/user/${user._id}`);
+      setUserAppointments(response.data || []);
+    } catch (error) {
+      console.error('Error fetching user appointments:', error);
+      toast.error('Failed to load appointments');
+      setUserAppointments([]);
+    } finally {
+      setLoadingUserAppointments(false);
+    }
   };
 
   const handleSaveUser = async (e) => {
@@ -905,6 +1312,12 @@ function AdminDashboard({ admin, onLogout }) {
               <span className="admin-tab__badge" style={{ background: '#ef4444' }}>{securityAlertCount}</span>
             )}
           </TabButton>
+          <TabButton tab="audit" activeTab={activeTab} onClick={handleTabChange}>
+            <i className="fas fa-clipboard-list"></i> Audit Logs
+          </TabButton>
+          <TabButton tab="balance" activeTab={activeTab} onClick={handleTabChange}>
+            <i className="fas fa-balance-scale"></i> Balance Sheet
+          </TabButton>
         </div>
 
         {/* Content Sections */}
@@ -1060,6 +1473,22 @@ function AdminDashboard({ admin, onLogout }) {
                         <td>{user.phone || 'N/A'}</td>
                         <td>
                           <div className="admin-actions" style={{ display: 'flex', gap: '6px' }}>
+                            <button 
+                              style={{ 
+                                padding: '6px 10px', 
+                                background: '#dbeafe', 
+                                color: '#2563eb', 
+                                border: 'none', 
+                                borderRadius: '6px', 
+                                cursor: 'pointer',
+                                fontSize: '11px',
+                                fontWeight: '500'
+                              }}
+                              onClick={() => handleViewUserAppointments(user)}
+                              title="View Appointments"
+                            >
+                              <i className="fas fa-calendar-alt"></i>
+                            </button>
                             <button 
                               className="admin-action-btn admin-action-btn--edit"
                               onClick={() => handleEditUser(user)}
@@ -1279,6 +1708,63 @@ function AdminDashboard({ admin, onLogout }) {
                 </button>
               </div>
               
+              {/* Search Box */}
+              <div style={{ marginBottom: '16px' }}>
+                <div style={{ position: 'relative', maxWidth: '400px' }}>
+                  <i className="fas fa-search" style={{ 
+                    position: 'absolute', 
+                    left: '12px', 
+                    top: '50%', 
+                    transform: 'translateY(-50%)', 
+                    color: '#94a3b8' 
+                  }}></i>
+                  <input
+                    type="text"
+                    placeholder="Search by clinic name, city, or address..."
+                    value={clinicSearchQuery}
+                    onChange={(e) => setClinicSearchQuery(e.target.value)}
+                    style={{
+                      width: '100%',
+                      padding: '10px 12px 10px 38px',
+                      border: '1px solid #e2e8f0',
+                      borderRadius: '8px',
+                      fontSize: '14px',
+                      outline: 'none',
+                      transition: 'border-color 0.2s'
+                    }}
+                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                    onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
+                  />
+                  {clinicSearchQuery && (
+                    <button
+                      onClick={() => setClinicSearchQuery("")}
+                      style={{
+                        position: 'absolute',
+                        right: '12px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        background: 'none',
+                        border: 'none',
+                        color: '#94a3b8',
+                        cursor: 'pointer',
+                        padding: '4px'
+                      }}
+                    >
+                      <i className="fas fa-times"></i>
+                    </button>
+                  )}
+                </div>
+                {clinicSearchQuery && (
+                  <small style={{ color: '#64748b', marginTop: '4px', display: 'block' }}>
+                    Found {clinics.filter(c => 
+                      c.name?.toLowerCase().includes(clinicSearchQuery.toLowerCase()) ||
+                      c.city?.toLowerCase().includes(clinicSearchQuery.toLowerCase()) ||
+                      c.address?.toLowerCase().includes(clinicSearchQuery.toLowerCase())
+                    ).length} clinic(s)
+                  </small>
+                )}
+              </div>
+              
               <div className="admin-table-container">
                 <table className="admin-table">
                   <thead>
@@ -1294,7 +1780,13 @@ function AdminDashboard({ admin, onLogout }) {
                     </tr>
                   </thead>
                   <tbody>
-                    {clinics.map(clinic => (
+                    {clinics
+                      .filter(clinic => 
+                        clinic.name?.toLowerCase().includes(clinicSearchQuery.toLowerCase()) ||
+                        clinic.city?.toLowerCase().includes(clinicSearchQuery.toLowerCase()) ||
+                        clinic.address?.toLowerCase().includes(clinicSearchQuery.toLowerCase())
+                      )
+                      .map(clinic => (
                       <tr key={clinic._id}>
                         <td><strong>{clinic.name}</strong></td>
                         <td>
@@ -1801,6 +2293,16 @@ function AdminDashboard({ admin, onLogout }) {
               <SecurityMonitor adminId={admin?.id || admin?._id} />
             </>
           )}
+
+          {/* Audit Logs Section */}
+          {activeTab === "audit" && (
+            <AuditLogsSection />
+          )}
+
+          {/* Balance Sheet Section */}
+          {activeTab === "balance" && (
+            <BalanceSheetSection />
+          )}
         </div>
 
       </div>
@@ -2047,6 +2549,99 @@ function AdminDashboard({ admin, onLogout }) {
                 </button>
               </div>
             </form>
+          </div>
+        </div>
+      )}
+
+      {/* User Appointments Modal */}
+      {showUserAppointmentsModal && selectedUserForAppointments && (
+        <div className="modal-overlay" onClick={() => setShowUserAppointmentsModal(false)}>
+          <div className="modal-content modal-lg" onClick={e => e.stopPropagation()} style={{ maxWidth: '900px' }}>
+            <div className="modal-header">
+              <h3><i className="fas fa-calendar-alt"></i> Appointments - {selectedUserForAppointments.name}</h3>
+              <button className="modal-close" onClick={() => setShowUserAppointmentsModal(false)}>
+                <i className="fas fa-times"></i>
+              </button>
+            </div>
+            <div className="modal-body" style={{ maxHeight: '70vh', overflowY: 'auto' }}>
+              <div style={{ marginBottom: '16px', padding: '12px', background: '#f8fafc', borderRadius: '8px' }}>
+                <p style={{ margin: 0, fontSize: '14px', color: '#64748b' }}>
+                  <strong>Email:</strong> {selectedUserForAppointments.email} | 
+                  <strong> Phone:</strong> {selectedUserForAppointments.phone || 'N/A'} |
+                  <strong> Total:</strong> {userAppointments.length} appointments
+                </p>
+              </div>
+              
+              {loadingUserAppointments ? (
+                <div style={{ textAlign: 'center', padding: '40px' }}>
+                  <div className="spinner-border text-primary"></div>
+                  <p style={{ marginTop: '10px', color: '#64748b' }}>Loading appointments...</p>
+                </div>
+              ) : userAppointments.length === 0 ? (
+                <div style={{ textAlign: 'center', padding: '40px', color: '#64748b' }}>
+                  <i className="fas fa-calendar-times fa-3x mb-3" style={{ opacity: 0.3 }}></i>
+                  <p>No appointments found for this user</p>
+                </div>
+              ) : (
+                <table className="admin-table">
+                  <thead>
+                    <tr>
+                      <th>Date</th>
+                      <th>Time</th>
+                      <th>Doctor</th>
+                      <th>Type</th>
+                      <th>Status</th>
+                      <th>Amount</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {userAppointments.map(apt => (
+                      <tr key={apt._id}>
+                        <td>{new Date(apt.date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' })}</td>
+                        <td>{apt.time || apt.timeSlot || 'N/A'}</td>
+                        <td>{apt.doctorId?.name || apt.doctorName || 'N/A'}</td>
+                        <td>
+                          <span style={{
+                            padding: '3px 8px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            background: apt.consultationType === 'online' ? '#dbeafe' : '#f0fdf4',
+                            color: apt.consultationType === 'online' ? '#2563eb' : '#16a34a'
+                          }}>
+                            {apt.consultationType || 'In-Person'}
+                          </span>
+                        </td>
+                        <td>
+                          <span style={{
+                            padding: '3px 8px',
+                            borderRadius: '4px',
+                            fontSize: '11px',
+                            fontWeight: 500,
+                            background: apt.status === 'completed' ? '#dcfce7' : 
+                                       apt.status === 'cancelled' ? '#fee2e2' : 
+                                       apt.status === 'confirmed' ? '#dbeafe' : '#fef3c7',
+                            color: apt.status === 'completed' ? '#16a34a' : 
+                                  apt.status === 'cancelled' ? '#dc2626' : 
+                                  apt.status === 'confirmed' ? '#2563eb' : '#d97706'
+                          }}>
+                            {apt.status || 'Pending'}
+                          </span>
+                        </td>
+                        <td>₹{apt.amount || apt.consultationFee || 0}</td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              )}
+            </div>
+            <div className="modal-footer">
+              <button 
+                className="btn btn-secondary" 
+                onClick={() => setShowUserAppointmentsModal(false)}
+              >
+                Close
+              </button>
+            </div>
           </div>
         </div>
       )}

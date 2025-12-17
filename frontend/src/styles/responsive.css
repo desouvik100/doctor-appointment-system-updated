@@ -137,7 +137,7 @@ h3, .h3 {
 
 @media (min-width: 768px) {
   .hide-mobile {
-    display: block !important;
+    display: inline-flex !important;
   }
   
   .show-mobile {

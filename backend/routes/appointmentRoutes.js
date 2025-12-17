@@ -580,13 +580,24 @@ router.post('/', async (req, res) => {
           // Send email to patient immediately
           try {
             const populatedForEmail = await Appointment.findById(appointment._id)
-              .populate('userId', 'name email')
+              .populate('userId', 'name email phone')
               .populate('doctorId', 'name email specialization')
               .populate('clinicId', 'name address');
             
             await sendAppointmentEmail(populatedForEmail, 'patient');
             appointment.meetLinkSentToPatient = true;
             console.log(`✅ Email sent to patient: ${user.email}`);
+            
+            // Send SMS to patient if they have a phone number
+            if (user.phone) {
+              try {
+                const { sendAppointmentConfirmationSMS } = require('../services/smsService');
+                await sendAppointmentConfirmationSMS(appointment, user, doctor);
+                console.log(`✅ SMS sent to patient: ${user.phone}`);
+              } catch (smsError) {
+                console.error(`❌ Failed to send SMS to patient:`, smsError.message);
+              }
+            }
             
             // Send email to doctor - ALWAYS try if doctor has email
             if (doctor.email) {
@@ -855,26 +866,45 @@ router.post('/queue-booking', async (req, res) => {
       console.error('❌ Token generation failed:', tokenError.message);
     }
 
-    // Send estimated time email (non-blocking) - only if not pending payment
-    if (sendEstimatedTimeEmail && user.email && requestedStatus !== 'pending_payment') {
-      try {
-        const { sendQueueBookingEmail } = require('../services/emailService');
-        await sendQueueBookingEmail({
-          patientName: user.name,
-          patientEmail: user.email,
-          doctorName: doctor.name,
-          specialization: doctor.specialization,
-          clinicName: doctor.clinicId?.name || 'HealthSync Clinic',
-          date: appointmentDate.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
-          queueNumber,
-          estimatedTime: formatTimeForEmail(estimatedTime),
-          consultationType: consultationType || 'in_person',
-          tokenNumber: tokenResult?.token || `Q${queueNumber}`
-        });
-        console.log(`✅ Queue booking email sent to ${user.email}`);
-      } catch (emailError) {
-        console.error('❌ Error sending queue booking email:', emailError.message);
-        // Don't fail the booking if email fails
+    // Send notifications based on reminder preference - only if not pending payment
+    if (requestedStatus !== 'pending_payment') {
+      const userReminderPref = reminderPreference || 'email';
+      
+      // Send email if preference is 'email' or 'both'
+      if ((userReminderPref === 'email' || userReminderPref === 'both') && user.email && sendEstimatedTimeEmail) {
+        try {
+          const { sendQueueBookingEmail } = require('../services/emailService');
+          await sendQueueBookingEmail({
+            patientName: user.name,
+            patientEmail: user.email,
+            doctorName: doctor.name,
+            specialization: doctor.specialization,
+            clinicName: doctor.clinicId?.name || 'HealthSync Clinic',
+            date: appointmentDate.toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' }),
+            queueNumber,
+            estimatedTime: formatTimeForEmail(estimatedTime),
+            consultationType: consultationType || 'in_person',
+            tokenNumber: tokenResult?.token || `Q${queueNumber}`
+          });
+          console.log(`✅ Queue booking email sent to ${user.email}`);
+        } catch (emailError) {
+          console.error('❌ Error sending queue booking email:', emailError.message);
+        }
+      }
+      
+      // Send SMS if preference is 'sms' or 'both'
+      if ((userReminderPref === 'sms' || userReminderPref === 'both') && user.phone) {
+        try {
+          const { sendAppointmentConfirmationSMS } = require('../services/smsService');
+          await sendAppointmentConfirmationSMS(
+            { ...appointment.toObject(), time: estimatedTime },
+            user,
+            doctor
+          );
+          console.log(`✅ Queue booking SMS sent to ${user.phone}`);
+        } catch (smsError) {
+          console.error('❌ Error sending queue booking SMS:', smsError.message);
+        }
       }
     }
 
@@ -1563,6 +1593,12 @@ router.put('/:id/cancel', verifyToken, async (req, res) => {
     console.log(`   Reason: ${appointment.cancellationReason}`);
     console.log(`   Cancelled by: ${appointment.cancelledBy}`);
     
+    // Audit log
+    try {
+      const auditService = require('../services/auditService');
+      await auditService.appointmentCancelled(appointment, req.user, reason, req);
+    } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
+    
     res.json({
       success: true,
       message: 'Appointment cancelled successfully',
@@ -1859,6 +1895,12 @@ router.put('/:id/reschedule', async (req, res) => {
 
     await appointment.save();
 
+    // Audit log
+    try {
+      const auditService = require('../services/auditService');
+      await auditService.appointmentRescheduled(appointment, { date: oldDate, time: oldTime }, req.user || { name: 'System', role: 'system' }, reason, req);
+    } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
+
     res.json({ message: 'Appointment rescheduled successfully', appointment });
   } catch (error) {
     console.error('Error rescheduling appointment:', error);
@@ -1913,6 +1955,12 @@ router.put('/:id/reschedule', async (req, res) => {
     appointment.rescheduledAt = new Date();
     
     await appointment.save();
+
+    // Audit log
+    try {
+      const auditService = require('../services/auditService');
+      await auditService.appointmentRescheduled(appointment, { date: oldDate, time: oldTime }, req.user || { name: 'System', role: 'system' }, reason, req);
+    } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
 
     const updatedAppointment = await Appointment.findById(req.params.id)
       .populate('userId', 'name email phone')

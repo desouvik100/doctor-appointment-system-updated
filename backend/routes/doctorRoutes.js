@@ -340,6 +340,12 @@ router.put('/:id/approve', async (req, res) => {
     doctor.approvedAt = new Date();
     await doctor.save();
 
+    // Audit log
+    try {
+      const auditService = require('../services/auditService');
+      await auditService.doctorApproved(doctor, req.user || { name: 'Admin', role: 'admin' }, req);
+    } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
+
     const populatedDoctor = await Doctor.findById(doctor._id)
       .populate('clinicId', 'name address city phone');
 
@@ -366,6 +372,12 @@ router.put('/:id/reject', async (req, res) => {
     doctor.approvalStatus = 'rejected';
     doctor.rejectionReason = reason || 'No reason provided';
     await doctor.save();
+
+    // Audit log
+    try {
+      const auditService = require('../services/auditService');
+      await auditService.doctorRejected(doctor, req.user || { name: 'Admin', role: 'admin' }, reason, req);
+    } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
 
     res.json({
       message: 'Doctor rejected',

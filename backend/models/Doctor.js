@@ -187,6 +187,31 @@ const doctorSchema = new mongoose.Schema(
       type: String,
       default: null
     },
+    profilePhotoPublicId: {
+      type: String,
+      default: null
+    },
+    // Verification Documents (Cloudinary)
+    verificationDocs: {
+      license: {
+        url: String,
+        publicId: String,
+        uploadedAt: Date,
+        status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' }
+      },
+      degree: {
+        url: String,
+        publicId: String,
+        uploadedAt: Date,
+        status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' }
+      },
+      id_proof: {
+        url: String,
+        publicId: String,
+        uploadedAt: Date,
+        status: { type: String, enum: ['pending', 'approved', 'rejected'], default: 'pending' }
+      }
+    },
     bio: {
       type: String,
       trim: true

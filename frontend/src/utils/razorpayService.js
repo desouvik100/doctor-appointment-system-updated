@@ -23,11 +23,12 @@ export const calculatePayment = async (appointmentId) => {
 };
 
 // Create Razorpay order
-export const createOrder = async (appointmentId, userId) => {
+export const createOrder = async (appointmentId, userId, couponCode = null) => {
   try {
     const response = await axios.post('/api/payments/create-order', {
       appointmentId,
-      userId
+      userId,
+      couponCode
     });
     return response.data;
   } catch (error) {
@@ -142,10 +143,10 @@ export const requestRefund = async (appointmentId, reason) => {
 };
 
 // Initiate payment - main entry point for payment flow
-export const initiatePayment = async (appointmentId, userId, onSuccess, onFailure) => {
+export const initiatePayment = async (appointmentId, userId, onSuccess, onFailure, couponCode = null) => {
   try {
-    // Create order first
-    const orderData = await createOrder(appointmentId, userId);
+    // Create order first (with coupon if provided)
+    const orderData = await createOrder(appointmentId, userId, couponCode);
     
     // If payments are disabled (test mode), auto-confirm
     if (orderData.testMode) {
