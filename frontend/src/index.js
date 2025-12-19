@@ -14,8 +14,10 @@ window.addEventListener('unhandledrejection', function(event) {
   event.preventDefault();
 });
 
-// Register Service Worker for PWA
-if ('serviceWorker' in navigator) {
+// Register Service Worker for PWA (only on web, not in Capacitor native app)
+const isCapacitor = window.Capacitor && window.Capacitor.isNativePlatform && window.Capacitor.isNativePlatform();
+
+if ('serviceWorker' in navigator && !isCapacitor) {
   window.addEventListener('load', () => {
     navigator.serviceWorker.register('/service-worker.js')
       .then((registration) => {

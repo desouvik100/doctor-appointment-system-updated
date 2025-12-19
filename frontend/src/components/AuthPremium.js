@@ -381,12 +381,20 @@ function AuthPremium({ onLogin, onBack }) {
   // Process Google user data
   const processGoogleUser = async (googleUser) => {
     try {
+      // Handle both web and native Google Sign-In data formats
+      const email = googleUser.email;
+      const name = googleUser.name || googleUser.given_name + ' ' + (googleUser.family_name || '');
+      const googleId = googleUser.googleId || googleUser.sub || googleUser.id;
+      const profilePhoto = googleUser.profilePhoto || googleUser.picture || googleUser.imageUrl;
+      
+      console.log('📤 Sending Google user data:', { email, name, googleId, hasPhoto: !!profilePhoto });
+      
       // Try to login or register with Google
       const response = await axios.post('/api/auth/google-signin', {
-        email: googleUser.email,
-        name: googleUser.name || googleUser.given_name + ' ' + (googleUser.family_name || ''),
-        googleId: googleUser.sub || googleUser.id,
-        profilePhoto: googleUser.picture
+        email,
+        name,
+        googleId,
+        profilePhoto
       });
 
       const userData = {

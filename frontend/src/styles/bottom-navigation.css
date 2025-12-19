@@ -1,0 +1,200 @@
+/* ============================================
+   Bottom Navigation - Native Android Style
+   ============================================ */
+
+.bottom-nav-container {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  z-index: 1000;
+  background: transparent;
+  pointer-events: none;
+}
+
+.bottom-nav {
+  display: none;
+  background: #ffffff;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  padding: 6px 8px;
+  padding-bottom: calc(6px + env(safe-area-inset-bottom, 0px));
+  justify-content: space-around;
+  align-items: center;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.08);
+  pointer-events: auto;
+}
+
+/* Show only on mobile */
+@media (max-width: 1023px) {
+  .bottom-nav {
+    display: flex;
+  }
+}
+
+.bottom-nav-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 2px;
+  padding: 8px 12px;
+  min-width: 64px;
+  border: none;
+  background: transparent;
+  color: #64748b;
+  font-size: 10px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 200ms cubic-bezier(0.4, 0, 0.2, 1);
+  position: relative;
+  border-radius: 12px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.bottom-nav-item:active {
+  transform: scale(0.92);
+  background: rgba(14, 165, 233, 0.08);
+}
+
+.bottom-nav-item.active {
+  color: #0ea5e9;
+}
+
+.nav-icon-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+}
+
+.bottom-nav-item i {
+  font-size: 20px;
+  transition: transform 200ms ease, color 200ms ease;
+}
+
+.bottom-nav-item.active i {
+  transform: scale(1.1);
+}
+
+.nav-label {
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.2px;
+  transition: color 200ms ease;
+  white-space: nowrap;
+}
+
+.bottom-nav-item.active .nav-label {
+  font-weight: 600;
+}
+
+/* Active indicator pill */
+.nav-indicator {
+  position: absolute;
+  top: 4px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 32px;
+  height: 3px;
+  background: linear-gradient(90deg, #0ea5e9, #14b8a6);
+  border-radius: 2px;
+  animation: indicatorIn 200ms ease;
+}
+
+@keyframes indicatorIn {
+  from {
+    width: 0;
+    opacity: 0;
+  }
+  to {
+    width: 32px;
+    opacity: 1;
+  }
+}
+
+/* Notification badge */
+.nav-badge {
+  position: absolute;
+  top: -2px;
+  right: -6px;
+  min-width: 16px;
+  height: 16px;
+  padding: 0 4px;
+  background: linear-gradient(135deg, #ef4444, #dc2626);
+  color: white;
+  font-size: 9px;
+  font-weight: 700;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 6px rgba(239, 68, 68, 0.4);
+  animation: badgePulse 2s infinite;
+}
+
+@keyframes badgePulse {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Dark mode */
+html[data-theme="dark"] .bottom-nav {
+  background: #1e293b;
+  border-top-color: rgba(255, 255, 255, 0.06);
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.3);
+}
+
+html[data-theme="dark"] .bottom-nav-item {
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .bottom-nav-item.active {
+  color: #38bdf8;
+}
+
+html[data-theme="dark"] .bottom-nav-item:active {
+  background: rgba(56, 189, 248, 0.1);
+}
+
+/* Hide when keyboard is open */
+body.keyboard-open .bottom-nav-container {
+  display: none;
+}
+
+/* Landscape adjustments */
+@media (max-height: 500px) and (orientation: landscape) {
+  .bottom-nav {
+    padding: 4px 8px;
+  }
+  
+  .bottom-nav-item {
+    padding: 4px 8px;
+    min-width: 56px;
+  }
+  
+  .bottom-nav-item i {
+    font-size: 18px;
+  }
+  
+  .nav-label {
+    font-size: 9px;
+  }
+}
+
+/* Extra small screens */
+@media (max-width: 360px) {
+  .bottom-nav-item {
+    padding: 6px 8px;
+    min-width: 56px;
+  }
+  
+  .nav-label {
+    font-size: 9px;
+  }
+}

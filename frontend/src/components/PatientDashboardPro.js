@@ -3,6 +3,9 @@ import axios from '../api/config';
 import toast from 'react-hot-toast';
 import { useLanguage } from '../i18n/LanguageContext';
 import '../styles/premium-saas.css';
+import '../styles/skeleton-loaders.css';
+import '../styles/bottom-navigation.css';
+import '../styles/offline-indicator.css';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import { exportAppointmentsToPDF } from '../utils/pdfExport';
@@ -40,6 +43,11 @@ import SecurityWarningBanner from './SecurityWarningBanner';
 import LiveQueueTracker from './LiveQueueTracker';
 import AIHealthHub from './AIHealthHub';
 import MobileHeroSection from './MobileHeroSection';
+import BottomNavigation from './BottomNavigation';
+import OfflineIndicator from './OfflineIndicator';
+import { DoctorCardSkeleton, AppointmentCardSkeleton, PageSkeleton } from './SkeletonLoaders';
+import { successFeedback } from '../mobile/haptics';
+import { Capacitor } from '@capacitor/core';
 
 // Get profile photo URL - checks profilePhoto field, then generates fallback
 const getProfilePhotoUrl = (user) => {
@@ -323,7 +331,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
 
 
   return (
-    <div className="min-h-screen bg-slate-50 flex">
+    <div className="h-screen bg-slate-50 flex overflow-hidden">
       {/* Security Warning Banner */}
       <SecurityWarningBanner userId={getUserId()} />
       
@@ -374,7 +382,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
         </div>
       </aside>
 
-      <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}`}>
+      <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-hidden ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}`}>
         <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-2 sm:px-4 lg:px-6 h-14 sm:h-16 flex items-center justify-between">
           <div className="flex items-center gap-2 sm:gap-4">
             <button 
@@ -413,7 +421,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
             </button>
           </div>
         </header>
-        <div className="flex-1 p-4 lg:p-8 overflow-auto">
+        <div className="flex-1 p-4 lg:p-8 overflow-y-auto overflow-x-hidden has-bottom-nav" style={{ WebkitOverflowScrolling: 'touch' }}>
           {activeSection === 'overview' && (
             <div className="space-y-6">
 
@@ -1174,6 +1182,29 @@ const PatientDashboardPro = ({ user, onLogout }) => {
           onClose={() => setShowAIHealthHub(false)} 
         />
       )}
+
+      {/* Offline Indicator */}
+      <OfflineIndicator onRetry={() => {
+        fetchDoctors();
+        fetchAppointments();
+      }} />
+
+      {/* Bottom Navigation - Mobile Only */}
+      <BottomNavigation 
+        activeTab={activeSection === 'health' || activeSection === 'medical-history' || activeSection === 'lab-reports' || activeSection === 'checkup' || activeSection === 'health-analytics' ? 'health' : activeSection}
+        onTabChange={(tab) => {
+          if (Capacitor.isNativePlatform()) {
+            successFeedback();
+          }
+          if (tab === 'profile') {
+            setShowProfileModal(true);
+          } else {
+            setActiveSection(tab);
+          }
+          setMobileSidebarOpen(false);
+        }}
+        unreadNotifications={unreadNotifications}
+      />
     </div>
   );
 };

@@ -142,12 +142,12 @@ const EmailReminders = ({ userId, userEmail }) => {
           </div>
           <button
             onClick={() => togglePreference('emailReminders')}
-            className={`relative w-14 h-7 rounded-full transition-colors ${
+            className={`relative w-14 h-8 rounded-full transition-colors flex items-center ${
               preferences.emailReminders ? 'bg-indigo-600' : 'bg-slate-300'
             }`}
           >
-            <span className={`absolute top-1 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-              preferences.emailReminders ? 'left-8' : 'left-1'
+            <span className={`absolute w-6 h-6 bg-white rounded-full shadow-md transition-all duration-200 ${
+              preferences.emailReminders ? 'translate-x-7' : 'translate-x-1'
             }`}></span>
           </button>
         </div>
@@ -180,14 +180,14 @@ const EmailReminders = ({ userId, userEmail }) => {
                 <button
                   onClick={() => togglePreference(reminder.key)}
                   disabled={!preferences.emailReminders}
-                  className={`relative w-12 h-6 rounded-full transition-colors ${
+                  className={`relative w-12 h-7 rounded-full transition-colors flex items-center ${
                     preferences[reminder.key] && preferences.emailReminders
                       ? 'bg-indigo-600'
                       : 'bg-slate-300'
                   } ${!preferences.emailReminders ? 'opacity-50 cursor-not-allowed' : ''}`}
                 >
-                  <span className={`absolute top-0.5 w-5 h-5 bg-white rounded-full shadow transition-transform ${
-                    preferences[reminder.key] ? 'left-6' : 'left-0.5'
+                  <span className={`absolute w-5 h-5 bg-white rounded-full shadow-md transition-all duration-200 ${
+                    preferences[reminder.key] ? 'translate-x-6' : 'translate-x-1'
                   }`}></span>
                 </button>
               </div>

@@ -1,13 +1,94 @@
 package com.healthsync.app;
 
 import android.os.Bundle;
+import android.view.View;
+import android.view.WindowManager;
+import android.graphics.Color;
+import android.os.Build;
+import androidx.core.view.WindowCompat;
+import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
 import com.codetrixstudio.capacitor.GoogleAuth.GoogleAuth;
 
 public class MainActivity extends BridgeActivity {
     @Override
     public void onCreate(Bundle savedInstanceState) {
+        // Set up native-like window before super.onCreate
+        setupNativeWindow();
+        
         super.onCreate(savedInstanceState);
+        
+        // Register plugins
         registerPlugin(GoogleAuth.class);
+        
+        // Apply native enhancements after bridge is ready
+        applyNativeEnhancements();
+    }
+
+    private void setupNativeWindow() {
+        // Prevent white flash on startup
+        getWindow().setBackgroundDrawableResource(android.R.color.white);
+        
+        // Enable edge-to-edge display
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+            getWindow().setDecorFitsSystemWindows(false);
+        }
+        
+        // Keep screen on during important operations
+        getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    private void applyNativeEnhancements() {
+        // Set status bar color and style
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            getWindow().setStatusBarColor(Color.parseColor("#0ea5e9"));
+            
+            // Light status bar icons (white icons on colored background)
+            WindowInsetsControllerCompat windowInsetsController = 
+                WindowCompat.getInsetsController(getWindow(), getWindow().getDecorView());
+            if (windowInsetsController != null) {
+                windowInsetsController.setAppearanceLightStatusBars(false);
+                windowInsetsController.setAppearanceLightNavigationBars(true);
+            }
+        }
+        
+        // Set navigation bar color
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            getWindow().setNavigationBarColor(Color.WHITE);
+        }
+        
+        // Disable screenshots on sensitive screens (optional - can be toggled)
+        // getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
+    }
+
+    @Override
+    public void onResume() {
+        super.onResume();
+        // Re-apply native enhancements when app resumes
+        applyNativeEnhancements();
+    }
+
+    @Override
+    public void onBackPressed() {
+        // Let the web app handle back navigation first
+        if (getBridge() != null && getBridge().getWebView() != null) {
+            getBridge().getWebView().evaluateJavascript(
+                "(function() { " +
+                "  if (window.history.length > 1) { " +
+                "    window.history.back(); " +
+                "    return true; " +
+                "  } " +
+                "  return false; " +
+                "})();",
+                result -> {
+                    if (!"true".equals(result)) {
+                        // No history, let system handle it
+                        MainActivity.super.onBackPressed();
+                    }
+                }
+            );
+        } else {
+            super.onBackPressed();
+        }
     }
 }

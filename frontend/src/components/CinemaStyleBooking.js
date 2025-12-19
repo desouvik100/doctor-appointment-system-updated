@@ -1126,41 +1126,64 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
                   </div>
                 </div>
 
-                {/* Coupon Code Section */}
-                <div className="coupon-section" style={{ marginBottom: '16px', padding: '12px', background: '#fef3c7', borderRadius: '12px', border: '1px dashed #f59e0b' }}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                    <i className="fas fa-tags" style={{ color: '#d97706' }}></i>
+                {/* Coupon Code Section - Native Android Style */}
+                <div className="coupon-section" style={{ marginBottom: '16px', padding: '14px 16px', background: '#fffbeb', borderRadius: '12px', border: '1px solid #fcd34d' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                    <i className="fas fa-ticket-alt" style={{ color: '#d97706', fontSize: '16px' }}></i>
                     <span style={{ fontWeight: 600, color: '#92400e', fontSize: '14px' }}>Have a coupon?</span>
                   </div>
                   {appliedCoupon ? (
-                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#dcfce7', padding: '10px 12px', borderRadius: '8px' }}>
-                      <div>
+                    <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: '#dcfce7', padding: '12px 14px', borderRadius: '10px' }}>
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                        <i className="fas fa-check-circle" style={{ color: '#16a34a' }}></i>
                         <span style={{ fontWeight: 600, color: '#16a34a' }}>{appliedCoupon.code}</span>
-                        <span style={{ marginLeft: '8px', color: '#15803d', fontSize: '13px' }}>-₹{couponDiscount} off</span>
+                        <span style={{ color: '#15803d', fontSize: '13px' }}>-₹{couponDiscount} off</span>
                       </div>
-                      <button onClick={removeCoupon} style={{ background: 'none', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '12px' }}>
-                        <i className="fas fa-times"></i> Remove
+                      <button onClick={removeCoupon} style={{ background: '#fee2e2', border: 'none', color: '#dc2626', cursor: 'pointer', fontSize: '12px', padding: '6px 10px', borderRadius: '6px', fontWeight: 500 }}>
+                        Remove
                       </button>
                     </div>
                   ) : (
-                    <div style={{ display: 'flex', gap: '8px' }}>
+                    <div style={{ display: 'flex', gap: '10px', alignItems: 'stretch' }}>
                       <input
                         type="text"
-                        placeholder="Enter coupon code"
+                        placeholder="ENTER COUPON CODE"
                         value={couponCode}
                         onChange={(e) => { setCouponCode(e.target.value.toUpperCase()); setCouponError(''); }}
-                        style={{ flex: 1, padding: '10px 12px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', textTransform: 'uppercase' }}
+                        style={{ 
+                          flex: 1, 
+                          padding: '12px 14px', 
+                          border: '1.5px solid #e5e7eb', 
+                          borderRadius: '10px', 
+                          fontSize: '14px', 
+                          textTransform: 'uppercase',
+                          fontWeight: 500,
+                          letterSpacing: '0.5px',
+                          background: '#ffffff',
+                          minWidth: 0
+                        }}
                       />
                       <button
                         onClick={validateCoupon}
                         disabled={couponLoading || !couponCode.trim()}
-                        style={{ padding: '10px 16px', background: '#f59e0b', color: 'white', border: 'none', borderRadius: '8px', fontWeight: 600, cursor: 'pointer', opacity: couponLoading ? 0.7 : 1 }}
+                        style={{ 
+                          padding: '12px 20px', 
+                          background: couponLoading ? '#9ca3af' : '#f59e0b', 
+                          color: 'white', 
+                          border: 'none', 
+                          borderRadius: '10px', 
+                          fontWeight: 600, 
+                          cursor: couponLoading ? 'wait' : 'pointer',
+                          fontSize: '14px',
+                          whiteSpace: 'nowrap',
+                          minWidth: '70px'
+                        }}
                       >
                         {couponLoading ? '...' : 'Apply'}
                       </button>
                     </div>
                   )}
-                  {couponError && <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '6px' }}>{couponError}</p>}
+                  {couponError && <p style={{ color: '#dc2626', fontSize: '12px', marginTop: '8px', display: 'flex', alignItems: 'center', gap: '4px' }}><i className="fas fa-exclamation-circle"></i> {couponError}</p>}
                 </div>
 
                 {/* Fee Breakdown - Mobile Optimized */}

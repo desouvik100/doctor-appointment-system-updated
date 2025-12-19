@@ -1,6 +1,6 @@
 {
   "appId": "com.healthsync.app",
-  "appName": "HealthSync",
+  "appName": "HealthSync Pro",
   "webDir": "build",
   "bundledWebRuntime": false,
   "server": {
@@ -15,18 +15,22 @@
       "api.razorpay.com",
       "checkout.razorpay.com",
       "*.healthsyncpro.in",
-      "healthsyncpro.in"
+      "healthsyncpro.in",
+      "accounts.google.com",
+      "*.googleapis.com"
     ]
   },
   "plugins": {
     "SplashScreen": {
-      "launchShowDuration": 2000,
-      "launchAutoHide": true,
-      "backgroundColor": "#6366f1",
-      "showSpinner": true,
-      "spinnerColor": "#ffffff",
+      "launchShowDuration": 1200,
+      "launchAutoHide": false,
+      "launchFadeOutDuration": 300,
+      "backgroundColor": "#0ea5e9",
+      "showSpinner": false,
       "splashFullScreen": true,
-      "splashImmersive": true
+      "splashImmersive": true,
+      "androidScaleType": "CENTER_CROP",
+      "androidSplashResourceName": "splash_background"
     },
     "PushNotifications": {
       "presentationOptions": ["badge", "sound", "alert"]
@@ -38,20 +42,41 @@
     },
     "Keyboard": {
       "resize": "body",
-      "resizeOnFullScreen": true
+      "resizeOnFullScreen": true,
+      "style": "LIGHT"
     },
     "StatusBar": {
       "style": "LIGHT",
-      "backgroundColor": "#6366f1"
+      "backgroundColor": "#0ea5e9",
+      "overlaysWebView": false
+    },
+    "CapacitorHttp": {
+      "enabled": true
+    },
+    "App": {
+      "launchUrl": "healthsync://app"
     }
   },
   "android": {
     "allowMixedContent": true,
     "captureInput": true,
-    "webContentsDebuggingEnabled": false
+    "webContentsDebuggingEnabled": false,
+    "backgroundColor": "#ffffff",
+    "overScrollMode": "never",
+    "useLegacyBridge": false,
+    "appendUserAgent": "HealthSyncPro/1.0 Android",
+    "initialFocus": true,
+    "buildOptions": {
+      "keystorePath": null,
+      "keystorePassword": null,
+      "keystoreAlias": null,
+      "keystoreAliasPassword": null,
+      "releaseType": "APK"
+    }
   },
   "ios": {
     "contentInset": "automatic",
-    "scrollEnabled": true
+    "scrollEnabled": true,
+    "appendUserAgent": "HealthSyncPro/1.0 iOS"
   }
 }
