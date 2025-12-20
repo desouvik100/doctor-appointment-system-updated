@@ -185,6 +185,9 @@ export const useMobileInit = (userId) => {
       // Prevent context menu (long press)
       preventContextMenu();
 
+      // Request location permission on app startup
+      requestLocationOnStartup();
+
       initialized.current = true;
       console.log('✅ Native mobile experience ready');
     };
@@ -681,6 +684,66 @@ const handleDeepLink = async (url) => {
     }
   } catch (e) {
     console.error('Deep link error:', e);
+  }
+};
+
+/**
+ * Request location permission on app startup
+ */
+const requestLocationOnStartup = () => {
+  // Check if we've already asked for location
+  const locationAsked = localStorage.getItem('locationPermissionAsked');
+  
+  // Request location permission
+  if (navigator.geolocation) {
+    console.log('📍 Requesting location permission...');
+    
+    navigator.geolocation.getCurrentPosition(
+      async (position) => {
+        console.log('📍 Location granted:', position.coords.latitude, position.coords.longitude);
+        localStorage.setItem('locationPermissionAsked', 'true');
+        
+        // Store location in localStorage for quick access
+        const locationData = {
+          latitude: position.coords.latitude,
+          longitude: position.coords.longitude,
+          accuracy: position.coords.accuracy,
+          timestamp: Date.now()
+        };
+        localStorage.setItem('userLocation', JSON.stringify(locationData));
+        
+        // Try to get city name
+        try {
+          const response = await fetch(
+            `https://api.bigdatacloud.net/data/reverse-geocode-client?latitude=${position.coords.latitude}&longitude=${position.coords.longitude}&localityLanguage=en`
+          );
+          const data = await response.json();
+          if (data.city || data.locality) {
+            locationData.city = data.city || data.locality;
+            locationData.state = data.principalSubdivision;
+            localStorage.setItem('userLocation', JSON.stringify(locationData));
+            console.log('📍 Location city:', locationData.city);
+          }
+        } catch (e) {
+          console.log('Geocoding failed:', e.message);
+        }
+        
+        // Dispatch event for components to update
+        window.dispatchEvent(new CustomEvent('locationUpdated', { detail: locationData }));
+      },
+      (error) => {
+        console.log('📍 Location denied or error:', error.message);
+        localStorage.setItem('locationPermissionAsked', 'true');
+        
+        // Dispatch event even on error so UI can handle it
+        window.dispatchEvent(new CustomEvent('locationError', { detail: { error: error.message } }));
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
+    );
   }
 };
 

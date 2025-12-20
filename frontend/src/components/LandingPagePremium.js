@@ -141,12 +141,13 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               className="btn-premium hide-mobile"
               onClick={() => onNavigate('login')}
               style={{
-                background: scrolled ? 'transparent' : 'rgba(255, 255, 255, 0.15)',
-                color: scrolled ? '#4f46e5' : '#ffffff',
-                border: scrolled ? '2px solid #4f46e5' : '2px solid rgba(255, 255, 255, 0.5)',
+                background: scrolled ? 'transparent' : 'rgba(255, 255, 255, 0.95)',
+                color: scrolled ? '#4f46e5' : '#6366f1',
+                border: scrolled ? '2px solid #4f46e5' : '2px solid transparent',
                 fontWeight: '700',
                 minWidth: '90px',
-                textShadow: 'none'
+                textShadow: 'none',
+                boxShadow: scrolled ? 'none' : '0 2px 8px rgba(0,0,0,0.1)'
               }}
             >
               {t('signIn')}
@@ -165,7 +166,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               style={{ 
                 background: scrolled ? 'rgba(99, 102, 241, 0.1)' : 'rgba(255, 255, 255, 0.15)',
                 border: 'none', 
-                color: scrolled ? '#6366f1' : '#0f172a',
+                color: scrolled ? '#6366f1' : '#ffffff',
                 fontSize: '22px',
                 cursor: 'pointer',
                 padding: '10px 12px',
@@ -299,15 +300,24 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               India's #1 Clinic Appointment Platform
             </div>
             
-            {/* Rotating Hero Title */}
-            <div style={{ minHeight: '140px' }}>
+            {/* Rotating Hero Title - Fixed height to prevent layout shift */}
+            <div style={{ 
+              minHeight: isMobile ? '100px' : '160px',
+              height: isMobile ? '100px' : '160px',
+              display: 'flex',
+              alignItems: 'center',
+              overflow: 'hidden'
+            }}>
               <h1 
                 className="hero-premium__title"
                 style={{
                   transition: 'opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
                   opacity: isTaglineTransitioning ? 0 : 1,
                   transform: isTaglineTransitioning ? 'translateY(-15px)' : 'translateY(0)',
-                  color: '#ffffff'
+                  color: '#ffffff',
+                  margin: 0,
+                  fontSize: isMobile ? '1.75rem' : '3.5rem',
+                  lineHeight: 1.2
                 }}
               >
                 {taglines[taglineIndex][language] || taglines[taglineIndex].en}

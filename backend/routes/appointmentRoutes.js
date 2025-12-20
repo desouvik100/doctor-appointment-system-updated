@@ -15,6 +15,7 @@ const {
   isValidObjectId 
 } = require('../middleware/validateRequest');
 const { verifyClinicAccess, filterByClinic, verifyDoctorAccess } = require('../middleware/clinicIsolation');
+const cacheService = require('../services/cacheService');
 const router = express.Router();
 
 // Helper function to award loyalty points
@@ -277,6 +278,13 @@ router.get('/queue-info/:doctorId/:date', async (req, res) => {
     const { doctorId, date } = req.params;
     const { consultationType } = req.query; // Optional: 'in_person', 'online', 'virtual'
     
+    // Try cache first (10 second TTL - queue info changes frequently)
+    const cacheKey = `queue:${doctorId}:${date}:${consultationType || 'all'}`;
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+    
     // Get doctor's consultation settings
     const doctor = await Doctor.findById(doctorId).select('consultationDuration consultationSettings');
     
@@ -353,7 +361,7 @@ router.get('/queue-info/:doctorId/:date', async (req, res) => {
       ? `${estimatedHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`
       : null;
 
-    res.json({
+    const response = {
       success: true,
       currentQueueCount,
       nextQueueNumber,
@@ -374,7 +382,12 @@ router.get('/queue-info/:doctorId/:date', async (req, res) => {
         maxSlots: maxInClinicSlots,
         available: Math.max(0, maxInClinicSlots - inClinicAppointments)
       }
-    });
+    };
+    
+    // Cache for 10 seconds
+    await cacheService.set(cacheKey, response, 10);
+    
+    res.json(response);
 
   } catch (error) {
     console.error('Error fetching queue info:', error);

@@ -1,11 +1,11 @@
 package com.healthsync.app;
 
 import android.os.Bundle;
-import android.view.View;
 import android.view.WindowManager;
 import android.graphics.Color;
 import android.os.Build;
 import android.webkit.WebView;
+import android.webkit.WebSettings;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
@@ -25,6 +25,9 @@ public class MainActivity extends BridgeActivity {
         // Register plugins
         registerPlugin(GoogleAuth.class);
         
+        // Configure WebView settings for payments (without overriding clients)
+        configureWebViewSettings();
+        
         // Apply native enhancements after bridge is ready
         applyNativeEnhancements();
     }
@@ -40,6 +43,33 @@ public class MainActivity extends BridgeActivity {
         
         // Keep screen on during important operations
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
+    }
+
+    private void configureWebViewSettings() {
+        // Get the WebView from Capacitor bridge
+        WebView webView = getBridge().getWebView();
+        if (webView != null) {
+            WebSettings settings = webView.getSettings();
+            
+            // Enable JavaScript (required for Razorpay)
+            settings.setJavaScriptEnabled(true);
+            
+            // Enable DOM storage (required for Razorpay)
+            settings.setDomStorageEnabled(true);
+            
+            // Allow mixed content (http in https) - needed for some payment flows
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+                settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
+            }
+            
+            // Enable JavaScript to open windows (for Razorpay popup)
+            settings.setJavaScriptCanOpenWindowsAutomatically(true);
+            settings.setSupportMultipleWindows(true);
+            
+            // Enable file access
+            settings.setAllowFileAccess(true);
+            settings.setAllowContentAccess(true);
+        }
     }
 
     private void applyNativeEnhancements() {
@@ -60,9 +90,6 @@ public class MainActivity extends BridgeActivity {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
             getWindow().setNavigationBarColor(Color.WHITE);
         }
-        
-        // Disable screenshots on sensitive screens (optional - can be toggled)
-        // getWindow().setFlags(WindowManager.LayoutParams.FLAG_SECURE, WindowManager.LayoutParams.FLAG_SECURE);
     }
 
     @Override

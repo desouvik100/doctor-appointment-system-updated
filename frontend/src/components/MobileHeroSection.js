@@ -1,151 +1,192 @@
-import { useState, useEffect } from 'react';
+/**
+ * Mobile Hero Section - Swiggy/Zomato Style
+ * Conversion-focused, search-first, minimal UI
+ */
+
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 import { tapFeedback } from '../mobile/haptics';
 import './MobileHeroSection.css';
 
-const MobileHeroSection = ({ user, onVideoConsult, onClinicVisit, onSmartMatch, onSearch, doctorCounts = {} }) => {
-  const [greeting, setGreeting] = useState('Good morning');
+const MobileHeroSection = ({ 
+  user, 
+  onVideoConsult, 
+  onClinicVisit, 
+  onSmartMatch, 
+  onSearch, 
+  doctorCounts = {},
+  onSearchOpenChange
+}) => {
+  const [showFullSearch, setShowFullSearch] = useState(false);
+  const [searchQuery, setSearchQuery] = useState('');
   const isNative = Capacitor.isNativePlatform();
+  const searchInputRef = useRef(null);
+  const backListenerRef = useRef(null);
+
+  const popularSearches = ['Fever', 'Dentist', 'Skin', 'Eye', 'Child'];
 
   useEffect(() => {
-    const hour = new Date().getHours();
-    if (hour < 12) setGreeting('Good morning');
-    else if (hour < 17) setGreeting('Good afternoon');
-    else setGreeting('Good evening');
-  }, []);
+    onSearchOpenChange?.(showFullSearch);
+  }, [showFullSearch, onSearchOpenChange]);
 
-  const handleTap = (callback) => {
+  useEffect(() => {
+    if (!isNative || !showFullSearch) return;
+    
+    const handleBackButton = () => {
+      if (showFullSearch) {
+        setShowFullSearch(false);
+        setSearchQuery('');
+      }
+    };
+
+    if (backListenerRef.current) backListenerRef.current.remove();
+    backListenerRef.current = App.addListener('backButton', handleBackButton);
+    
+    return () => {
+      if (backListenerRef.current) {
+        backListenerRef.current.remove();
+        backListenerRef.current = null;
+      }
+    };
+  }, [showFullSearch, isNative]);
+
+  const handleTap = useCallback((callback) => {
     if (isNative) tapFeedback();
     callback?.();
+  }, [isNative]);
+
+  const openFullSearch = () => {
+    setShowFullSearch(true);
+    setTimeout(() => searchInputRef.current?.focus(), 100);
+  };
+
+  const closeFullSearch = () => {
+    setShowFullSearch(false);
+    setSearchQuery('');
+  };
+
+  const handleSearchSubmit = (query) => {
+    handleTap(() => onSearch?.(query));
+    closeFullSearch();
   };
 
   const specialties = [
-    { id: 'general', icon: 'fa-stethoscope', label: 'General', color: '#10b981', count: doctorCounts.general || 42 },
-    { id: 'dental', icon: 'fa-tooth', label: 'Dental', color: '#3b82f6', count: doctorCounts.dental || 18 },
-    { id: 'cardio', icon: 'fa-heartbeat', label: 'Heart', color: '#ef4444', count: doctorCounts.cardio || 12 },
-    { id: 'ortho', icon: 'fa-bone', label: 'Ortho', color: '#f59e0b', count: doctorCounts.ortho || 15 },
-    { id: 'skin', icon: 'fa-hand-sparkles', label: 'Skin', color: '#ec4899', count: doctorCounts.skin || 22 },
-    { id: 'eye', icon: 'fa-eye', label: 'Eye', color: '#8b5cf6', count: doctorCounts.eye || 9 },
-    { id: 'child', icon: 'fa-baby', label: 'Pediatric', color: '#06b6d4', count: doctorCounts.child || 14 },
-    { id: 'neuro', icon: 'fa-brain', label: 'Neuro', color: '#6366f1', count: doctorCounts.neuro || 7 },
-  ];
-
-  const quickActions = [
-    { id: 'video', icon: 'fa-video', label: 'Video Consult', subtitle: 'Talk to doctor now', colorClass: 'action-card-purple', action: onVideoConsult },
-    { id: 'clinic', icon: 'fa-hospital', label: 'Book Visit', subtitle: 'In-clinic appointment', colorClass: 'action-card-green', action: onClinicVisit },
+    { id: 'general', icon: 'fa-stethoscope', label: 'General', color: '#10b981' },
+    { id: 'dental', icon: 'fa-tooth', label: 'Dental', color: '#3b82f6' },
+    { id: 'skin', icon: 'fa-hand-sparkles', label: 'Skin', color: '#ec4899' },
+    { id: 'eye', icon: 'fa-eye', label: 'Eye', color: '#8b5cf6' },
+    { id: 'child', icon: 'fa-baby', label: 'Child', color: '#06b6d4' },
+    { id: 'ortho', icon: 'fa-bone', label: 'Ortho', color: '#f59e0b' },
   ];
 
   return (
-    <div className="swiggy-hero">
-      {/* Gradient Header with Contextual Greeting */}
-      <div className="swiggy-header">
-        <div className="header-content">
-          <div className="greeting-section">
-            <p className="greeting-text">{greeting} 👋</p>
-            <h1 className="user-name">{user?.name?.split(' ')[0] || 'there'}</h1>
-            <p className="greeting-subtitle">🩺 Book your appointment in under 30 seconds</p>
-          </div>
-        </div>
+    <div className="hs-home">
+      {/* Hero Section - Search First */}
+      <div className="hs-hero">
+        <p className="hs-tagline">Skip the queue. Book instantly.</p>
         
-        {/* Search Bar with Helper Text */}
-        <div className="search-bar" onClick={() => handleTap(() => onSearch?.(''))}>
-          <i className="fas fa-search search-icon"></i>
-          <span className="search-placeholder">Search doctors, specialties...</span>
-          <div className="search-mic">
-            <i className="fas fa-microphone"></i>
-          </div>
+        {/* Primary Search Bar */}
+        <div className="hs-search-bar" onClick={openFullSearch}>
+          <i className="fas fa-search"></i>
+          <span>Search doctors, symptoms...</span>
         </div>
-        <p className="search-hint">Try: fever, skin problem, dentist</p>
-      </div>
 
-      {/* Quick Action Cards */}
-      <div className="quick-actions">
-        {quickActions.map((action) => (
-          <div 
-            key={action.id}
-            className={`action-card ${action.colorClass}`}
-            onClick={() => handleTap(action.action)}
-          >
-            <div className="action-icon">
-              <i className={`fas ${action.icon}`}></i>
-            </div>
-            <div className="action-text">
-              <span className="action-label">{action.label}</span>
-              <span className="action-subtitle">{action.subtitle}</span>
-            </div>
-            <i className="fas fa-chevron-right action-arrow"></i>
-          </div>
-        ))}
-      </div>
-
-      {/* AI Smart Match - Enhanced */}
-      <div className="ai-banner" onClick={() => handleTap(onSmartMatch)}>
-        <div className="ai-glow"></div>
-        <div className="ai-content">
-          <div className="ai-icon-wrap">
-            <i className="fas fa-magic"></i>
-            <span className="ai-badge">AI</span>
-          </div>
-          <div className="ai-text">
-            <div className="ai-title-row">
-              <span className="ai-title">Find Your Perfect Doctor</span>
-              <span className="ai-time-badge">⚡ 1 min</span>
-            </div>
-            <span className="ai-desc">AI-powered matching · No signup · Free</span>
-          </div>
-        </div>
-        <div className="ai-arrow pulse-arrow">
-          <i className="fas fa-arrow-right"></i>
+        {/* Trust Row - Compact */}
+        <div className="hs-trust-row">
+          <span><i className="fas fa-check-circle"></i> Verified</span>
+          <span><i className="fas fa-bolt"></i> Instant</span>
+          <span><i className="fas fa-shield-alt"></i> Secure</span>
         </div>
       </div>
 
-      {/* Specialties with Counts & Scroll Hint */}
-      <div className="specialties-section">
-        <div className="section-header">
-          <h2>Browse by Specialty</h2>
-          <span className="scroll-hint">Swipe →</span>
-        </div>
-        <div className="specialties-scroll">
+      {/* Quick Actions */}
+      <div className="hs-actions">
+        <button className="hs-action-btn primary" onClick={() => handleTap(onClinicVisit)}>
+          <i className="fas fa-calendar-check"></i>
+          <span>Book Appointment</span>
+        </button>
+        <button className="hs-action-btn secondary" onClick={() => handleTap(onVideoConsult)}>
+          <i className="fas fa-video"></i>
+          <span>Video Consult</span>
+        </button>
+      </div>
+
+      {/* Specialties Grid */}
+      <div className="hs-specialties">
+        <h3>Browse by Specialty</h3>
+        <div className="hs-spec-grid">
           {specialties.map((spec) => (
-            <div 
+            <button 
               key={spec.id} 
-              className="specialty-chip"
+              className="hs-spec-item"
               onClick={() => handleTap(() => onSearch?.(spec.label))}
             >
-              <div className="specialty-icon" style={{ backgroundColor: `${spec.color}15`, color: spec.color }}>
+              <div className="hs-spec-icon" style={{ background: `${spec.color}15`, color: spec.color }}>
                 <i className={`fas ${spec.icon}`}></i>
               </div>
-              <span className="specialty-label">{spec.label}</span>
-              <span className="specialty-count">({spec.count})</span>
-            </div>
+              <span>{spec.label}</span>
+            </button>
           ))}
-          <div className="scroll-fade"></div>
         </div>
       </div>
 
-      {/* Enhanced Trust Indicators */}
-      <div className="trust-strip">
-        <div className="trust-item">
-          <i className="fas fa-check-circle"></i>
-          <span>Verified Doctors</span>
+      {/* AI Smart Match - Minimal */}
+      <button className="hs-ai-card" onClick={() => handleTap(onSmartMatch)}>
+        <div className="hs-ai-left">
+          <i className="fas fa-magic"></i>
+          <div>
+            <strong>Find the right doctor</strong>
+            <span>AI-powered • 1 min</span>
+          </div>
         </div>
-        <div className="trust-divider"></div>
-        <div className="trust-item">
-          <i className="fas fa-clock"></i>
-          <span>Available Today</span>
-        </div>
-        <div className="trust-divider"></div>
-        <div className="trust-item">
-          <i className="fas fa-star"></i>
-          <span>Highly Rated</span>
-        </div>
-      </div>
+        <i className="fas fa-chevron-right"></i>
+      </button>
 
-      {/* Security Footer */}
-      <div className="security-footer">
-        <i className="fas fa-lock"></i>
-        <span>Your data is secured & encrypted</span>
-      </div>
+      {/* Full Screen Search */}
+      {showFullSearch && (
+        <div className="hs-fullsearch">
+          <div className="hs-search-header">
+            <button className="hs-back" onClick={closeFullSearch}>
+              <i className="fas fa-arrow-left"></i>
+            </button>
+            <div className="hs-search-input">
+              <i className="fas fa-search"></i>
+              <input
+                ref={searchInputRef}
+                type="text"
+                placeholder="Search doctors, symptoms..."
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+                onKeyDown={(e) => e.key === 'Enter' && searchQuery && handleSearchSubmit(searchQuery)}
+              />
+              {searchQuery && (
+                <button onClick={() => setSearchQuery('')}>
+                  <i className="fas fa-times"></i>
+                </button>
+              )}
+            </div>
+          </div>
+          <div className="hs-search-body">
+            <p className="hs-search-label">Popular</p>
+            <div className="hs-search-chips">
+              {popularSearches.map((term, i) => (
+                <button key={i} onClick={() => handleSearchSubmit(term)}>{term}</button>
+              ))}
+            </div>
+            <p className="hs-search-label">Specialties</p>
+            <div className="hs-search-list">
+              {specialties.map((spec) => (
+                <button key={spec.id} onClick={() => handleSearchSubmit(spec.label)}>
+                  <i className={`fas ${spec.icon}`} style={{ color: spec.color }}></i>
+                  <span>{spec.label}</span>
+                  <i className="fas fa-chevron-right"></i>
+                </button>
+              ))}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 };

@@ -1538,43 +1538,58 @@ function App() {
       {/* PWA Install Banner */}
       <PWAInstallBanner />
       
-      {/* Global Toast Notifications */}
+      {/* Global Toast Notifications - Native Android Style */}
       <Toaster
         position="top-center"
         reverseOrder={false}
         containerStyle={{
-          top: 'calc(16px + env(safe-area-inset-top, 24px))',
+          top: 'calc(12px + env(safe-area-inset-top, 0px))',
           zIndex: 99999,
         }}
         toastOptions={{
-          duration: 4000,
+          duration: 3000,
           style: {
-            background: '#fff',
-            color: '#1e293b',
-            padding: '16px',
-            borderRadius: '12px',
-            boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
-            fontWeight: '600',
-            maxWidth: '90vw',
+            background: '#1e293b',
+            color: '#ffffff',
+            padding: '14px 18px',
+            borderRadius: '14px',
+            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
+            fontWeight: '500',
+            fontSize: '14px',
+            maxWidth: '92vw',
+            minWidth: '280px',
+            border: 'none',
           },
           success: {
-            duration: 3000,
+            duration: 2500,
             iconTheme: {
               primary: '#10b981',
-              secondary: '#fff',
+              secondary: '#ffffff',
             },
             style: {
-              border: '2px solid #10b981',
+              background: '#065f46',
+              color: '#ffffff',
             },
           },
           error: {
             duration: 4000,
             iconTheme: {
-              primary: '#ef4444',
-              secondary: '#fff',
+              primary: '#fecaca',
+              secondary: '#991b1b',
             },
             style: {
-              border: '2px solid #ef4444',
+              background: '#991b1b',
+              color: '#ffffff',
+            },
+          },
+          loading: {
+            iconTheme: {
+              primary: '#0ea5e9',
+              secondary: '#ffffff',
+            },
+            style: {
+              background: '#0c4a6e',
+              color: '#ffffff',
             },
           },
         }}

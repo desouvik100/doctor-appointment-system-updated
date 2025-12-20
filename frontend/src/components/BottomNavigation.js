@@ -1,15 +1,58 @@
 /**
- * Bottom Navigation - Modern Swiggy/Ola Style
+ * Bottom Navigation - Material 3 Style with Strong Active States
+ * Thumb-friendly spacing, badge counts, always visible
  */
 
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Capacitor } from '@capacitor/core';
+import { App } from '@capacitor/app';
 import { tapFeedback } from '../mobile/haptics';
 import '../styles/bottom-navigation.css';
 
-const BottomNavigation = ({ activeTab, onTabChange, unreadNotifications = 0, upcomingBookings = 0, onMenuAction }) => {
+const BottomNavigation = ({ activeTab, onTabChange, unreadNotifications = 0, upcomingBookings = 0, onMenuAction, isSearchOpen = false }) => {
   const isNative = Capacitor.isNativePlatform();
   const [showMenu, setShowMenu] = useState(false);
+  const listenerRef = useRef(null);
+
+  // Handle Android back button
+  useEffect(() => {
+    if (!isNative) return;
+    
+    const handleBackButton = () => {
+      // If search is open, let MobileHeroSection handle it
+      if (isSearchOpen) {
+        return;
+      }
+      
+      if (showMenu) {
+        setShowMenu(false);
+        return;
+      }
+      
+      if (activeTab !== 'overview') {
+        onTabChange('overview');
+        return;
+      }
+      
+      // On home with nothing open, exit app
+      App.exitApp();
+    };
+
+    // Remove previous listener if exists
+    if (listenerRef.current) {
+      listenerRef.current.remove();
+    }
+    
+    // Add new listener
+    listenerRef.current = App.addListener('backButton', handleBackButton);
+    
+    return () => {
+      if (listenerRef.current) {
+        listenerRef.current.remove();
+        listenerRef.current = null;
+      }
+    };
+  }, [showMenu, activeTab, onTabChange, isNative, isSearchOpen]);
 
   const tabs = [
     { id: 'overview', icon: 'fas fa-home', activeIcon: 'fas fa-home', label: 'Home', badge: 0 },

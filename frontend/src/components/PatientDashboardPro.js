@@ -115,6 +115,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
   const [consultationTypeFilter, setConsultationTypeFilter] = useState('all'); // 'all', 'online', 'clinic'
   const [showQuickSearch, setShowQuickSearch] = useState(false);
   const [quickSearchTerm, setQuickSearchTerm] = useState('');
+  const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); // Track mobile search state for back button
 
   const handleProfileUpdate = (updatedUser) => {
     setCurrentUser(updatedUser);
@@ -447,11 +448,13 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                       setShowQuickSearch(true);
                     }
                   }}
+                  onSearchOpenChange={setIsMobileSearchOpen}
                 />
               </div>
 
-              {/* Desktop Stats - Modern Startup Style */}
-              <div className="hidden lg:grid grid-cols-4 gap-4">
+              {/* Desktop Stats - Modern Startup Style - Only render on desktop */}
+              {!Capacitor.isNativePlatform() && (
+                <div className="hidden lg:grid grid-cols-4 gap-4">
                 {[
                   { icon: 'fa-calendar-check', value: stats.totalBookings, label: 'Bookings Made', color: 'sky' },
                   { icon: 'fa-smile-beam', value: stats.happyPatients, label: 'Happy Patients', color: 'emerald' },
@@ -472,6 +475,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                   </div>
                 ))}
               </div>
+              )}
               {/* Why Trust Us Strip */}
               <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4 border border-emerald-100">
                 <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-sm">
@@ -510,47 +514,108 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                     </button>
                   ))}
                 </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
+                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {recentDoctors.map(doc => {
                     // Availability status
                     const availStatus = doc.availability === 'Available' ? 
                       (Math.random() > 0.3 ? 'available' : 'limited') : 'unavailable';
-                    const availLabel = availStatus === 'available' ? '🟢 Available Today' : 
-                      availStatus === 'limited' ? '🟡 Limited Slots' : '⚪ Next Available';
+                    const availLabel = availStatus === 'available' ? 'Available' : 
+                      availStatus === 'limited' ? 'Limited' : 'Unavailable';
                     // Consultation type
                     const consultTypes = doc.consultationTypes || ['clinic'];
                     const typeLabel = consultTypes.includes('online') && consultTypes.includes('clinic') ? 'Both' :
                       consultTypes.includes('online') ? 'Online' : 'Clinic';
                     const docInitials = doc.name ? doc.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'DR';
+                    const rating = doc.rating || (4 + Math.random() * 0.9).toFixed(1);
                     return (
-                    <div key={doc._id} className="group p-4 rounded-xl border border-slate-100 hover:border-sky-200 hover:shadow-md transition-all bg-white">
-                      {/* Availability Badge */}
-                      <div className="text-[10px] font-medium mb-2">{availLabel}</div>
-                      <div className="flex items-center gap-3 mb-3">
-                        <div className="w-12 h-12 rounded-full bg-gradient-to-br from-sky-500 to-teal-500 flex items-center justify-center overflow-hidden ring-2 ring-sky-50 flex-shrink-0">
-                          {doc.profilePhoto ? <img src={doc.profilePhoto} alt={doc.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} /> : null}
-                          {!doc.profilePhoto && <span className="text-white font-semibold text-sm">{docInitials}</span>}
+                    <div 
+                      key={doc._id} 
+                      className="doctor-card-mobile"
+                      onClick={() => { setSelectedDoctor(doc); setShowDoctorProfile(true); }}
+                      style={{ 
+                        padding: '12px',
+                        borderRadius: '16px',
+                        border: '1px solid #e2e8f0',
+                        background: '#ffffff',
+                        cursor: 'pointer',
+                        transition: 'all 0.2s ease',
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                      }}
+                    >
+                      {/* Photo and Name */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
+                        <div style={{ 
+                          width: '48px', 
+                          height: '48px', 
+                          borderRadius: '12px', 
+                          background: 'linear-gradient(135deg, #0ea5e9, #14b8a6)',
+                          display: 'flex',
+                          alignItems: 'center',
+                          justifyContent: 'center',
+                          overflow: 'hidden',
+                          flexShrink: 0,
+                          position: 'relative'
+                        }}>
+                          {doc.profilePhoto ? (
+                            <img src={doc.profilePhoto} alt={doc.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
+                          ) : (
+                            <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px' }}>{docInitials}</span>
+                          )}
+                          {availStatus === 'available' && (
+                            <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '14px', height: '14px', background: '#10b981', borderRadius: '50%', border: '2px solid #fff' }}></div>
+                          )}
                         </div>
-                        <div className="min-w-0">
-                          <h4 className="font-semibold text-slate-800 text-sm truncate">{doc.name?.startsWith('Dr.') ? doc.name : `Dr. ${doc.name}`}</h4>
-                          <p className="text-xs text-slate-500 truncate">{doc.specialization}</p>
+                        <div style={{ flex: 1, minWidth: 0 }}>
+                          <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                            {doc.name?.startsWith('Dr.') ? doc.name : `Dr. ${doc.name}`}
+                          </h4>
+                          <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doc.specialization}</p>
                         </div>
                       </div>
-                      {/* Type & Locality Badges */}
-                      <div className="flex items-center gap-2 mb-3 flex-wrap">
-                        <span className={`px-2 py-0.5 rounded-full text-[10px] font-medium ${typeLabel === 'Online' ? 'bg-blue-100 text-blue-700' : typeLabel === 'Both' ? 'bg-purple-100 text-purple-700' : 'bg-slate-100 text-slate-600'}`}>
-                          <i className={`fas ${typeLabel === 'Online' ? 'fa-video' : typeLabel === 'Both' ? 'fa-exchange-alt' : 'fa-hospital'} mr-1`}></i>{typeLabel}
+                      
+                      {/* Rating and Experience */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
+                        <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: 600, color: '#1e293b' }}>
+                          <i className="fas fa-star" style={{ color: '#f59e0b', fontSize: '10px' }}></i>
+                          {rating}
                         </span>
-                        {(doc.clinicId?.city || userLocation?.city) && (
-                          <span className="px-2 py-0.5 rounded-full text-[10px] font-medium bg-emerald-50 text-emerald-700">
-                            📍 {doc.clinicId?.city || userLocation?.city || 'Bankura'}
-                          </span>
-                        )}
+                        <span style={{ fontSize: '11px', color: '#94a3b8' }}>•</span>
+                        <span style={{ fontSize: '11px', color: '#64748b' }}>{doc.experience || '5+'}y exp</span>
+                        <span style={{ 
+                          marginLeft: 'auto',
+                          padding: '3px 8px', 
+                          borderRadius: '6px', 
+                          fontSize: '9px', 
+                          fontWeight: 600,
+                          background: availStatus === 'available' ? '#dcfce7' : availStatus === 'limited' ? '#fef3c7' : '#f1f5f9',
+                          color: availStatus === 'available' ? '#166534' : availStatus === 'limited' ? '#92400e' : '#64748b'
+                        }}>
+                          {availLabel}
+                        </span>
                       </div>
-                      <div className="flex items-center justify-between mb-3">
-                        <p className="text-sm font-bold text-sky-600">₹{doc.consultationFee}</p>
+                      
+                      {/* Fee and Book */}
+                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
+                        <div>
+                          <p style={{ fontSize: '16px', fontWeight: 700, color: '#0ea5e9', margin: 0 }}>₹{doc.consultationFee || 500}</p>
+                        </div>
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setSelectedDoctor(doc); setShowBookingModal(true); }} 
+                          style={{
+                            padding: '8px 14px',
+                            background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                            color: '#fff',
+                            border: 'none',
+                            borderRadius: '10px',
+                            fontSize: '12px',
+                            fontWeight: 600,
+                            cursor: 'pointer',
+                            boxShadow: '0 2px 8px rgba(14,165,233,0.3)'
+                          }}
+                        >
+                          Book
+                        </button>
                       </div>
-                      <button onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className="w-full py-2 px-4 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors">Book Now</button>
                     </div>
                   );})}
                 </div>
@@ -1100,6 +1165,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       <BottomNavigation 
         activeTab={activeSection === 'health' || activeSection === 'medical-history' || activeSection === 'lab-reports' || activeSection === 'checkup' || activeSection === 'health-analytics' ? 'health' : activeSection}
         upcomingBookings={upcomingAppointments.length}
+        isSearchOpen={isMobileSearchOpen}
         onTabChange={(tab) => {
           if (Capacitor.isNativePlatform()) {
             successFeedback();

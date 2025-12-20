@@ -1,322 +1,459 @@
 /* ============================================
-   Mobile Doctor Card - Practo/Swiggy Style
+   Swiggy/Zomato Style Doctor Card
+   Shimmer loading, ripple effects, thumb-friendly
    ============================================ */
 
-.mobile-doctor-card {
-  background: #ffffff !important;
-  border-radius: 16px !important;
-  padding: 16px !important;
-  margin-bottom: 12px !important;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
-  border: 1px solid #f1f5f9 !important;
-  width: 100% !important;
-  box-sizing: border-box !important;
-  overflow: hidden !important;
-  display: block !important;
+/* ===== Shimmer Animation ===== */
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
 }
 
-/* Top Section */
-.mobile-doctor-card .doctor-card-top {
-  display: flex !important;
-  flex-direction: row !important;
-  gap: 12px !important;
-  margin-bottom: 12px !important;
-  width: 100% !important;
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e8e8e8 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
 
-.mobile-doctor-card .doctor-photo-section {
-  position: relative !important;
-  flex-shrink: 0 !important;
+/* ===== Skeleton Loader ===== */
+.doctor-card-skeleton {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
 }
 
-.mobile-doctor-card .doctor-photo {
-  width: 64px !important;
-  height: 64px !important;
-  min-width: 64px !important;
-  min-height: 64px !important;
-  border-radius: 12px !important;
-  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%) !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  overflow: hidden !important;
-  flex-shrink: 0 !important;
+.skeleton-header {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 16px;
 }
 
-.mobile-doctor-card .doctor-photo img {
-  width: 100% !important;
-  height: 100% !important;
-  object-fit: cover !important;
+.skeleton-photo {
+  width: 72px;
+  height: 72px;
+  border-radius: 16px;
+  flex-shrink: 0;
 }
 
-.mobile-doctor-card .doctor-initials {
-  color: white !important;
-  font-size: 20px !important;
-  font-weight: 700 !important;
+.skeleton-info {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-top: 4px;
 }
 
-.mobile-doctor-card .online-badge {
-  position: absolute !important;
-  bottom: 0 !important;
-  right: 0 !important;
-  width: 14px !important;
-  height: 14px !important;
-  background: #10b981 !important;
-  border: 2px solid white !important;
-  border-radius: 50% !important;
+.skeleton-line {
+  height: 14px;
+  border-radius: 7px;
 }
 
-.mobile-doctor-card .doctor-info {
-  flex: 1 !important;
-  min-width: 0 !important;
-  overflow: hidden !important;
+.skeleton-line.w-70 { width: 70%; }
+.skeleton-line.w-50 { width: 50%; }
+.skeleton-line.w-40 { width: 40%; }
+
+.skeleton-stats {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 16px;
 }
 
-.mobile-doctor-card .doctor-name-row {
-  display: flex !important;
-  align-items: flex-start !important;
-  justify-content: space-between !important;
-  gap: 8px !important;
-  width: 100% !important;
+.skeleton-stat {
+  flex: 1;
+  height: 48px;
+  border-radius: 10px;
 }
 
-.mobile-doctor-card .doctor-name {
-  font-size: 15px !important;
-  font-weight: 700 !important;
-  color: #1e293b !important;
-  margin: 0 !important;
-  line-height: 1.3 !important;
-  word-wrap: break-word !important;
-  overflow-wrap: break-word !important;
+.skeleton-actions {
+  display: flex;
+  gap: 10px;
 }
 
-.mobile-doctor-card .favorite-btn {
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 28px !important;
-  border-radius: 8px !important;
-  border: none !important;
-  background: #fef2f2 !important;
-  color: #fca5a5 !important;
-  font-size: 12px !important;
-  cursor: pointer !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  flex-shrink: 0 !important;
-  padding: 0 !important;
+.skeleton-btn {
+  flex: 1;
+  height: 44px;
+  border-radius: 10px;
 }
 
-.mobile-doctor-card .favorite-btn.active {
-  background: #fee2e2 !important;
-  color: #ef4444 !important;
+.skeleton-btn.primary {
+  flex: 1.5;
 }
 
-.mobile-doctor-card .doctor-specialty {
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  color: #0ea5e9 !important;
-  margin: 2px 0 !important;
+/* ===== Main Card ===== */
+.swiggy-doctor-card {
+  background: #ffffff;
+  border-radius: 16px;
+  padding: 16px;
+  margin-bottom: 12px;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  position: relative;
+  overflow: hidden;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
 }
 
-.mobile-doctor-card .doctor-clinic {
-  font-size: 11px !important;
-  color: #64748b !important;
-  display: flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  white-space: nowrap !important;
-  overflow: hidden !important;
-  text-overflow: ellipsis !important;
-  margin: 0 !important;
+.swiggy-doctor-card:active {
+  transform: scale(0.98);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
 }
 
-.mobile-doctor-card .doctor-clinic i {
-  font-size: 9px !important;
-  color: #94a3b8 !important;
-  flex-shrink: 0 !important;
+/* Ripple Effect */
+.ripple-effect {
+  position: absolute;
+  border-radius: 50%;
+  background: rgba(14, 165, 233, 0.2);
+  transform: translate(-50%, -50%) scale(0);
+  animation: ripple 0.5s ease-out;
+  pointer-events: none;
+  width: 200px;
+  height: 200px;
 }
 
-/* Stats Row */
-.mobile-doctor-card .doctor-stats {
-  display: flex !important;
-  align-items: center !important;
-  justify-content: space-between !important;
-  padding: 10px 0 !important;
-  border-top: 1px solid #f1f5f9 !important;
-  border-bottom: 1px solid #f1f5f9 !important;
-  margin-bottom: 10px !important;
-  gap: 4px !important;
+@keyframes ripple {
+  to {
+    transform: translate(-50%, -50%) scale(4);
+    opacity: 0;
+  }
 }
 
-.mobile-doctor-card .stat-item {
-  display: flex !important;
-  align-items: center !important;
-  gap: 6px !important;
-  flex: 1 !important;
-  min-width: 0 !important;
+/* ===== Card Header ===== */
+.card-header {
+  display: flex;
+  gap: 14px;
+  margin-bottom: 14px;
 }
 
-.mobile-doctor-card .stat-icon {
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 28px !important;
-  border-radius: 8px !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  font-size: 10px !important;
-  flex-shrink: 0 !important;
+.photo-container {
+  position: relative;
+  width: 72px;
+  height: 72px;
+  flex-shrink: 0;
 }
 
-.mobile-doctor-card .stat-icon.rating {
-  background: #fef3c7 !important;
-  color: #f59e0b !important;
+.photo-placeholder {
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  background: linear-gradient(135deg, #0ea5e9, #14b8a6);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: white;
+  font-size: 20px;
+  font-weight: 700;
 }
 
-.mobile-doctor-card .stat-icon.experience {
-  background: #d1fae5 !important;
-  color: #10b981 !important;
+.doctor-photo {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  border-radius: 16px;
+  object-fit: cover;
+  opacity: 0;
+  transition: opacity 0.3s ease;
 }
 
-.mobile-doctor-card .stat-icon.fee {
-  background: #e0e7ff !important;
-  color: #6366f1 !important;
+.doctor-photo.loaded {
+  opacity: 1;
 }
 
-.mobile-doctor-card .stat-text {
-  display: flex !important;
-  flex-direction: column !important;
-  min-width: 0 !important;
+.available-dot {
+  position: absolute;
+  bottom: 2px;
+  right: 2px;
+  width: 14px;
+  height: 14px;
+  background: #10b981;
+  border-radius: 50%;
+  border: 3px solid #ffffff;
+  box-shadow: 0 2px 4px rgba(16, 185, 129, 0.4);
 }
 
-.mobile-doctor-card .stat-value {
-  font-size: 12px !important;
-  font-weight: 700 !important;
-  color: #1e293b !important;
-  line-height: 1.2 !important;
-  white-space: nowrap !important;
+.doctor-info {
+  flex: 1;
+  min-width: 0;
 }
 
-.mobile-doctor-card .stat-label {
-  font-size: 9px !important;
-  color: #94a3b8 !important;
-  font-weight: 500 !important;
-  white-space: nowrap !important;
+.name-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 4px;
 }
 
-.mobile-doctor-card .stat-divider {
-  width: 1px !important;
-  height: 24px !important;
-  background: #e2e8f0 !important;
-  flex-shrink: 0 !important;
+.doctor-name {
+  font-size: 16px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+  line-height: 1.3;
 }
 
-/* Consultation Types */
-.mobile-doctor-card .consultation-types {
-  display: flex !important;
-  gap: 6px !important;
-  margin-bottom: 12px !important;
-  flex-wrap: wrap !important;
+.fav-btn {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  border: none;
+  background: #f1f5f9;
+  color: #94a3b8;
+  font-size: 14px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.2s ease;
+  flex-shrink: 0;
 }
 
-.mobile-doctor-card .consult-type {
-  display: flex !important;
-  align-items: center !important;
-  gap: 4px !important;
-  padding: 4px 10px !important;
-  border-radius: 16px !important;
-  font-size: 10px !important;
-  font-weight: 600 !important;
+.fav-btn:active {
+  transform: scale(0.9);
 }
 
-.mobile-doctor-card .consult-type.online {
-  background: #eff6ff !important;
-  color: #3b82f6 !important;
+.fav-btn.active {
+  background: #fef2f2;
+  color: #ef4444;
 }
 
-.mobile-doctor-card .consult-type.clinic {
-  background: #f0fdf4 !important;
-  color: #22c55e !important;
+.specialty {
+  font-size: 13px;
+  color: #0ea5e9;
+  font-weight: 600;
+  margin: 0 0 4px;
 }
 
-.mobile-doctor-card .consult-type i {
-  font-size: 9px !important;
+.clinic {
+  font-size: 12px;
+  color: #64748b;
+  margin: 0;
+  display: flex;
+  align-items: center;
+  gap: 5px;
 }
 
-/* Action Buttons */
-.mobile-doctor-card .doctor-actions {
-  display: flex !important;
-  gap: 8px !important;
-  width: 100% !important;
+.clinic i {
+  font-size: 10px;
+  color: #94a3b8;
 }
 
-.mobile-doctor-card .action-btn {
-  flex: 1 !important;
-  display: flex !important;
-  align-items: center !important;
-  justify-content: center !important;
-  gap: 6px !important;
-  padding: 10px 12px !important;
-  border-radius: 10px !important;
-  font-size: 12px !important;
-  font-weight: 600 !important;
-  border: none !important;
-  cursor: pointer !important;
-  -webkit-tap-highlight-color: transparent !important;
+/* ===== Stats Row ===== */
+.stats-row {
+  display: flex;
+  align-items: center;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 12px;
+  margin-bottom: 12px;
 }
 
-.mobile-doctor-card .action-btn:active {
-  transform: scale(0.97) !important;
+.stat {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-.mobile-doctor-card .action-btn.secondary {
-  background: #f1f5f9 !important;
-  color: #475569 !important;
+.stat-icon {
+  width: 32px;
+  height: 32px;
+  border-radius: 8px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
 }
 
-.mobile-doctor-card .action-btn.primary {
-  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%) !important;
-  color: white !important;
+.stat-icon.green {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
 }
 
-.mobile-doctor-card .action-btn.primary.disabled {
-  background: #e2e8f0 !important;
-  color: #94a3b8 !important;
-  cursor: not-allowed !important;
+.stat-icon.blue {
+  background: rgba(59, 130, 246, 0.1);
+  color: #3b82f6;
 }
 
-.mobile-doctor-card .action-btn i {
-  font-size: 11px !important;
+.stat-icon.purple {
+  background: rgba(139, 92, 246, 0.1);
+  color: #8b5cf6;
 }
 
-/* Dark Mode */
-html[data-theme="dark"] .mobile-doctor-card {
-  background: #1e293b !important;
-  border-color: #334155 !important;
+.stat-content {
+  display: flex;
+  flex-direction: column;
 }
 
-html[data-theme="dark"] .mobile-doctor-card .doctor-name {
-  color: #f1f5f9 !important;
+.stat-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
 }
 
-html[data-theme="dark"] .mobile-doctor-card .doctor-clinic {
-  color: #94a3b8 !important;
+.stat-label {
+  font-size: 9px;
+  color: #94a3b8;
+  font-weight: 500;
 }
 
-html[data-theme="dark"] .mobile-doctor-card .doctor-stats {
-  border-color: #334155 !important;
+.stat-divider {
+  width: 1px;
+  height: 28px;
+  background: #e2e8f0;
+  margin: 0 8px;
 }
 
-html[data-theme="dark"] .mobile-doctor-card .stat-value {
-  color: #f1f5f9 !important;
+/* ===== Consultation Tags ===== */
+.consult-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-bottom: 14px;
 }
 
-html[data-theme="dark"] .mobile-doctor-card .stat-divider {
-  background: #475569 !important;
+.tag {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  padding: 5px 10px;
+  border-radius: 16px;
+  font-size: 10px;
+  font-weight: 600;
 }
 
-html[data-theme="dark"] .mobile-doctor-card .action-btn.secondary {
-  background: #334155 !important;
-  color: #cbd5e1 !important;
+.tag i {
+  font-size: 9px;
+}
+
+.tag.online {
+  background: rgba(99, 102, 241, 0.1);
+  color: #6366f1;
+}
+
+.tag.clinic {
+  background: rgba(14, 165, 233, 0.1);
+  color: #0ea5e9;
+}
+
+.tag.available {
+  background: rgba(16, 185, 129, 0.1);
+  color: #10b981;
+}
+
+/* ===== Action Buttons ===== */
+.action-row {
+  display: flex;
+  gap: 10px;
+}
+
+.action-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 12px 16px;
+  border-radius: 10px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  transition: all 0.15s ease;
+}
+
+.action-btn:active {
+  transform: scale(0.96);
+}
+
+.action-btn i {
+  font-size: 12px;
+}
+
+.action-btn.secondary {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.action-btn.secondary:active {
+  background: #e2e8f0;
+}
+
+.action-btn.primary {
+  flex: 1.5;
+  background: linear-gradient(135deg, #0ea5e9, #14b8a6);
+  color: #ffffff;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
+}
+
+.action-btn.primary:active {
+  box-shadow: 0 2px 6px rgba(14, 165, 233, 0.2);
+}
+
+.action-btn.primary.disabled {
+  background: #e2e8f0;
+  color: #94a3b8;
+  box-shadow: none;
+  cursor: not-allowed;
+}
+
+/* ===== Dark Mode ===== */
+html[data-theme="dark"] .doctor-card-skeleton,
+html[data-theme="dark"] .swiggy-doctor-card {
+  background: #1e293b;
+}
+
+html[data-theme="dark"] .shimmer {
+  background: linear-gradient(90deg, #334155 25%, #475569 50%, #334155 75%);
+  background-size: 200% 100%;
+}
+
+html[data-theme="dark"] .photo-placeholder {
+  background: linear-gradient(135deg, #0ea5e9, #14b8a6);
+}
+
+html[data-theme="dark"] .doctor-name {
+  color: #f1f5f9;
+}
+
+html[data-theme="dark"] .clinic {
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .stats-row {
+  background: #0f172a;
+}
+
+html[data-theme="dark"] .stat-value {
+  color: #f1f5f9;
+}
+
+html[data-theme="dark"] .stat-divider {
+  background: #334155;
+}
+
+html[data-theme="dark"] .fav-btn {
+  background: #334155;
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] .action-btn.secondary {
+  background: #334155;
+  color: #cbd5e1;
+}
+
+/* ===== Reduced Motion ===== */
+@media (prefers-reduced-motion: reduce) {
+  .shimmer,
+  .ripple-effect,
+  .swiggy-doctor-card,
+  .action-btn {
+    animation: none !important;
+    transition: none !important;
+  }
 }

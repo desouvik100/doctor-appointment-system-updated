@@ -6,6 +6,7 @@ const aiSecurityService = require('../services/aiSecurityService');
 const { sendNewDoctorRegistrationAlert } = require('../services/adminEmailService');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const { verifyClinicAccess, verifyDoctorAccess } = require('../middleware/clinicIsolation');
+const cacheService = require('../services/cacheService');
 const router = express.Router();
 
 // Security helper - log doctor account operations
@@ -76,6 +77,15 @@ router.get('/', async (req, res) => {
       sortOrder = 'asc'
     } = req.query;
 
+    // Create cache key from query params
+    const cacheKey = `doctors:list:${JSON.stringify(req.query)}`;
+    
+    // Try to get from cache first (30 second TTL for doctor list)
+    const cached = await cacheService.get(cacheKey);
+    if (cached) {
+      return res.json(cached);
+    }
+
     const query = { isActive: true };
 
     // Apply filters
@@ -102,6 +112,9 @@ router.get('/', async (req, res) => {
     if (city) {
       doctors = doctors.filter(d => d.clinicId?.city?.toLowerCase().includes(city.toLowerCase()));
     }
+    
+    // Cache the result for 30 seconds
+    await cacheService.set(cacheKey, doctors, 30);
     
     res.json(doctors);
   } catch (error) {
