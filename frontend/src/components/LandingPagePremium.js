@@ -543,7 +543,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                   border: '4px solid rgba(255,255,255,0.3)'
                 }}>
                   <img 
-                    src="https://media.istockphoto.com/id/2187596922/photo/portrait-of-happy-smiling-healthcare-team-looking-at-camera.jpg?s=2048x2048&w=is&k=20&c=qqyAW8F9M4bSbfmtfCPPQOGh-rtREBn7RvBlGr9ZS0k="
+                    src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&h=1000&fit=crop&crop=face"
                     alt="Medical Team"
                     style={{
                       width: '100%',
