@@ -1,0 +1,31 @@
+{
+  "appId": "com.healthsync.app",
+  "appName": "HealthSync Pro",
+  "webDir": "build",
+  "bundledWebRuntime": false,
+  "server": {
+    "url": "http://192.168.29.78:3001",
+    "cleartext": true,
+    "androidScheme": "http",
+    "allowNavigation": [
+      "accounts.google.com",
+      "*.googleapis.com"
+    ]
+  },
+  "plugins": {
+    "SplashScreen": {
+      "launchShowDuration": 500,
+      "launchAutoHide": true,
+      "backgroundColor": "#0ea5e9"
+    },
+    "GoogleAuth": {
+      "scopes": ["profile", "email"],
+      "serverClientId": "477733520458-juhlgonpioe7tcjenocei4pcco4h9204.apps.googleusercontent.com",
+      "forceCodeForRefreshToken": true
+    }
+  },
+  "android": {
+    "allowMixedContent": true,
+    "webContentsDebuggingEnabled": true
+  }
+}

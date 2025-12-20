@@ -1,21 +1,85 @@
 {
   "short_name": "HealthSync",
-  "name": "HealthSync - Clinic Management & Doctor Appointments",
-  "description": "Clinic-first healthcare platform for managing online and in-clinic doctor appointments with zero confusion.",
+  "name": "HealthSync — Clinic Appointment & Patient Management Platform",
+  "description": "India's clinic-first healthcare platform. Book doctor appointments online, manage clinic queues, patient records & scheduling. Smart healthcare software for clinics - not a fitness tracker app.",
   "icons": [
     {
       "src": "favicon.ico",
       "sizes": "64x64 32x32 24x24 16x16",
       "type": "image/x-icon"
+    },
+    {
+      "src": "logo192.png",
+      "type": "image/png",
+      "sizes": "192x192",
+      "purpose": "any maskable"
+    },
+    {
+      "src": "logo512.png",
+      "type": "image/png",
+      "sizes": "512x512",
+      "purpose": "any maskable"
     }
   ],
-  "start_url": "/",
+  "start_url": "/?source=pwa",
   "scope": "/",
   "display": "standalone",
   "theme_color": "#0ea5e9",
   "background_color": "#f8fafc",
   "orientation": "portrait-primary",
-  "categories": ["health", "medical", "productivity"],
+  "categories": ["health", "medical", "productivity", "business"],
   "lang": "en-IN",
-  "prefer_related_applications": false
+  "dir": "ltr",
+  "prefer_related_applications": false,
+  "iarc_rating_id": "",
+  "shortcuts": [
+    {
+      "name": "Book Appointment",
+      "short_name": "Book",
+      "description": "Book a doctor appointment",
+      "url": "/patient/dashboard?action=book",
+      "icons": [{ "src": "favicon.ico", "sizes": "96x96" }]
+    },
+    {
+      "name": "My Appointments",
+      "short_name": "Appointments",
+      "description": "View your appointments",
+      "url": "/patient/dashboard",
+      "icons": [{ "src": "favicon.ico", "sizes": "96x96" }]
+    },
+    {
+      "name": "Find Doctors",
+      "short_name": "Doctors",
+      "description": "Search for doctors",
+      "url": "/doctors",
+      "icons": [{ "src": "favicon.ico", "sizes": "96x96" }]
+    }
+  ],
+  "screenshots": [
+    {
+      "src": "screenshot-wide.png",
+      "sizes": "1280x720",
+      "type": "image/png",
+      "form_factor": "wide",
+      "label": "HealthSync Dashboard"
+    },
+    {
+      "src": "screenshot-mobile.png",
+      "sizes": "750x1334",
+      "type": "image/png",
+      "form_factor": "narrow",
+      "label": "HealthSync Mobile App"
+    }
+  ],
+  "related_applications": [
+    {
+      "platform": "play",
+      "url": "https://play.google.com/store/apps/details?id=com.healthsync.app",
+      "id": "com.healthsync.app"
+    }
+  ],
+  "handle_links": "preferred",
+  "launch_handler": {
+    "client_mode": "navigate-existing"
+  }
 }

@@ -870,3 +870,85 @@ html[data-theme="dark"] .app-card-subtitle {
 html[data-theme="dark"] .app-card-footer {
   border-top-color: #334155;
 }
+
+
+/* ============================================
+   Auth Page Mobile Fixes
+   ============================================ */
+
+/* Auth page safe area handling */
+.auth-premium {
+  padding-top: var(--safe-area-top) !important;
+  padding-top: env(safe-area-inset-top, 24px) !important;
+  min-height: 100vh;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* Mobile auth container */
+@media (max-width: 768px) {
+  .auth-premium__left {
+    padding: 24px 20px !important;
+    padding-top: calc(24px + env(safe-area-inset-top, 24px)) !important;
+    align-items: flex-start !important;
+    overflow-y: auto;
+  }
+  
+  .auth-premium__form-container {
+    width: 100%;
+    max-width: 100%;
+    padding-bottom: 40px;
+  }
+  
+  .auth-premium__logo {
+    margin-bottom: 32px;
+  }
+  
+  .auth-premium__title {
+    font-size: 24px;
+  }
+  
+  .auth-premium__subtitle {
+    font-size: 14px;
+    margin-bottom: 24px;
+  }
+}
+
+/* Toast notifications - ensure visible on mobile */
+.Toastify__toast-container {
+  top: calc(16px + env(safe-area-inset-top, 24px)) !important;
+  padding: 0 16px !important;
+  z-index: 99999 !important;
+}
+
+.Toastify__toast-container--top-center,
+.Toastify__toast-container--top-right,
+.Toastify__toast-container--top-left {
+  top: calc(16px + env(safe-area-inset-top, 24px)) !important;
+}
+
+/* React Hot Toast - ensure visible */
+[data-sonner-toaster],
+.sonner-toast-wrapper,
+div[role="status"][aria-live="polite"] {
+  top: calc(16px + env(safe-area-inset-top, 24px)) !important;
+  z-index: 99999 !important;
+}
+
+/* Hot toast container fix */
+div[style*="position: fixed"][style*="z-index: 9999"] {
+  top: calc(16px + env(safe-area-inset-top, 24px)) !important;
+}
+
+/* Ensure error messages are visible */
+.auth-premium .error-message,
+.auth-premium [class*="error"],
+.auth-premium [class*="toast"] {
+  margin-top: 8px;
+  z-index: 99999;
+}
+
+/* Back button positioning */
+.auth-premium button[style*="margin-bottom: 24px"] {
+  margin-top: 8px !important;
+}

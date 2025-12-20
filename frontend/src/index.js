@@ -1,6 +1,7 @@
 import React from 'react';
 import ReactDOM from 'react-dom/client';
 import './index.css';
+import './styles/accessibility.css'; // Global accessibility styles
 import App from './App';
 
 // Global error handler to prevent app crashes on mobile

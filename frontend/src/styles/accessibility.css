@@ -1,0 +1,316 @@
+/* ============================================
+   GLOBAL ACCESSIBILITY STYLES
+   HealthSync - Clinic Appointment Platform
+   ============================================ */
+
+/* Skip to main content link */
+.skip-to-main {
+  position: absolute;
+  top: -100px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: #0ea5e9;
+  color: white;
+  padding: 12px 24px;
+  border-radius: 0 0 12px 12px;
+  font-weight: 600;
+  text-decoration: none;
+  z-index: 100000;
+  transition: top 0.3s ease;
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
+}
+
+.skip-to-main:focus {
+  top: 0;
+  outline: none;
+}
+
+/* Screen reader only content */
+.sr-only,
+.visually-hidden {
+  position: absolute !important;
+  width: 1px !important;
+  height: 1px !important;
+  padding: 0 !important;
+  margin: -1px !important;
+  overflow: hidden !important;
+  clip: rect(0, 0, 0, 0) !important;
+  white-space: nowrap !important;
+  border: 0 !important;
+}
+
+/* Focus visible - Global */
+*:focus-visible {
+  outline: 3px solid #0ea5e9;
+  outline-offset: 2px;
+}
+
+/* Remove outline for mouse users */
+*:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Button focus states */
+button:focus-visible,
+[role="button"]:focus-visible {
+  outline: 3px solid #0ea5e9;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(14, 165, 233, 0.2);
+}
+
+/* Link focus states */
+a:focus-visible {
+  outline: 3px solid #0ea5e9;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Input focus states */
+input:focus-visible,
+textarea:focus-visible,
+select:focus-visible {
+  outline: 3px solid #0ea5e9;
+  outline-offset: 0;
+  border-color: #0ea5e9;
+}
+
+/* Card/Interactive element focus */
+[role="button"]:focus-visible,
+[tabindex="0"]:focus-visible {
+  outline: 3px solid #0ea5e9;
+  outline-offset: 2px;
+}
+
+/* ============================================
+   HIGH CONTRAST MODE SUPPORT
+   ============================================ */
+
+@media (prefers-contrast: high) {
+  /* Increase border widths */
+  button,
+  input,
+  textarea,
+  select {
+    border-width: 2px !important;
+  }
+  
+  /* Ensure text is readable */
+  body {
+    color: #000000;
+    background: #ffffff;
+  }
+  
+  /* Stronger focus indicators */
+  *:focus-visible {
+    outline-width: 4px !important;
+    outline-style: solid !important;
+  }
+  
+  /* Links should be underlined */
+  a {
+    text-decoration: underline !important;
+  }
+  
+  /* Badges need borders */
+  .badge,
+  .nav-badge,
+  .status-badge {
+    border: 2px solid currentColor !important;
+  }
+}
+
+/* ============================================
+   REDUCED MOTION SUPPORT
+   ============================================ */
+
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  
+  /* Disable parallax and scroll effects */
+  .parallax,
+  [data-parallax] {
+    transform: none !important;
+  }
+  
+  /* Disable auto-playing animations */
+  .animate-pulse,
+  .animate-bounce,
+  .animate-spin,
+  .heartbeat-logo,
+  .pulse-dot {
+    animation: none !important;
+  }
+}
+
+/* ============================================
+   TOUCH TARGET SIZES (WCAG 2.5.5)
+   ============================================ */
+
+@media (pointer: coarse) {
+  /* Minimum 44x44px touch targets */
+  button,
+  [role="button"],
+  a,
+  input[type="checkbox"],
+  input[type="radio"],
+  select {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  /* Increase spacing between interactive elements */
+  .btn + .btn,
+  button + button {
+    margin-left: 8px;
+  }
+}
+
+/* ============================================
+   COLOR CONTRAST IMPROVEMENTS
+   ============================================ */
+
+/* Ensure placeholder text has sufficient contrast */
+::placeholder {
+  color: #6b7280;
+  opacity: 1;
+}
+
+/* Disabled state should still be readable */
+:disabled,
+[disabled],
+.disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Error states */
+.error,
+.invalid,
+[aria-invalid="true"] {
+  border-color: #dc2626 !important;
+}
+
+.error-message,
+.invalid-feedback {
+  color: #dc2626;
+  font-weight: 500;
+}
+
+/* Success states */
+.success,
+.valid,
+[aria-invalid="false"] {
+  border-color: #16a34a;
+}
+
+/* ============================================
+   FORM ACCESSIBILITY
+   ============================================ */
+
+/* Required field indicator */
+.required::after,
+label[required]::after {
+  content: " *";
+  color: #dc2626;
+  font-weight: bold;
+}
+
+/* Form group spacing */
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+/* Label styling */
+label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: #374151;
+}
+
+/* Help text */
+.help-text,
+.form-text {
+  font-size: 0.875rem;
+  color: #6b7280;
+  margin-top: 0.25rem;
+}
+
+/* ============================================
+   LIVE REGIONS FOR SCREEN READERS
+   ============================================ */
+
+[aria-live="polite"],
+[aria-live="assertive"] {
+  position: relative;
+}
+
+/* Toast/notification announcements */
+[aria-live="polite"] {
+  border: 2px solid #0ea5e9;
+  padding: 1rem;
+  margin: 1rem 0;
+  border-radius: 0.5rem;
+}
+/* Loading states */
+[aria-busy="true"] {
+  cursor: wait;
+}
+
+/* ============================================
+   DARK MODE ACCESSIBILITY
+   ============================================ */
+
+html[data-theme="dark"] {
+  /* Ensure sufficient contrast in dark mode */
+  --text-primary: #f1f5f9;
+  --text-secondary: #94a3b8;
+  --bg-primary: #0f172a;
+  --bg-secondary: #1e293b;
+  --border-color: #334155;
+}
+
+html[data-theme="dark"] ::placeholder {
+  color: #94a3b8;
+}
+
+html[data-theme="dark"] label {
+  color: #e2e8f0;
+}
+
+html[data-theme="dark"] .help-text {
+  color: #94a3b8;
+}
+
+/* ============================================
+   PRINT ACCESSIBILITY
+   ============================================ */
+
+@media print {
+  /* Ensure links show URLs */
+  a[href]::after {
+    content: " (" attr(href) ")";
+    font-size: 0.8em;
+    color: #666;
+  }
+  
+  /* Don't print decorative elements */
+  [aria-hidden="true"],
+  .decorative,
+  .no-print {
+    display: none !important;
+  }
+  
+  /* Ensure sufficient contrast for printing */
+  body {
+    color: #000 !important;
+    background: #fff !important;
+  }
+}

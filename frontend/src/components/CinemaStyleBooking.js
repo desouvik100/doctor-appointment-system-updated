@@ -68,6 +68,14 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
   const subtotal = consultationFee + platformFee;
   const totalPayable = Math.max(0, subtotal - couponDiscount);
 
+  // Add body class when modal opens to hide bottom nav
+  useEffect(() => {
+    document.body.classList.add('booking-modal-open');
+    return () => {
+      document.body.classList.remove('booking-modal-open');
+    };
+  }, []);
+
   useEffect(() => {
     fetchCalendar();
     // Fetch payment config on mount
@@ -534,8 +542,19 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
   };
 
   return (
-    <div className="cinema-booking-overlay" onClick={onClose}>
-      <div className="cinema-booking-modal" onClick={e => e.stopPropagation()}>
+    <div 
+      className="cinema-booking-overlay" 
+      onClick={onClose}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="booking-modal-title"
+      aria-describedby="booking-modal-desc"
+    >
+      <div 
+        className="cinema-booking-modal" 
+        onClick={e => e.stopPropagation()}
+        role="document"
+      >
         {/* Header */}
         <div className="cinema-booking-header">
           <div className="doctor-info">
@@ -551,45 +570,62 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
               </div>
             )}
             <div>
-              <h2>Book Appointment</h2>
-              <p>Dr. {doctor?.name} • {doctor?.specialization}</p>
+              <h2 id="booking-modal-title">Book Appointment</h2>
+              <p id="booking-modal-desc">Dr. {doctor?.name} • {doctor?.specialization}</p>
             </div>
           </div>
-          <button className="close-btn" onClick={onClose}>
-            <i className="fas fa-times"></i>
+          <button 
+            className="close-btn" 
+            onClick={onClose}
+            aria-label="Close booking modal"
+            title="Close"
+          >
+            <i className="fas fa-times" aria-hidden="true"></i>
           </button>
         </div>
 
         {/* Progress Steps - Updated for type-first booking */}
-        <div className="booking-progress">
-          <div className={`progress-step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'completed' : ''}`}>
-            <div className="step-icon">
+        <nav className="booking-progress" aria-label="Booking progress">
+          <div 
+            className={`progress-step ${step >= 1 ? 'active' : ''} ${step > 1 ? 'completed' : ''}`}
+            aria-current={step === 1 ? 'step' : undefined}
+          >
+            <div className="step-icon" aria-hidden="true">
               {step > 1 ? <i className="fas fa-check"></i> : <i className="fas fa-stethoscope"></i>}
             </div>
             <span>Type</span>
           </div>
-          <div className="progress-line"></div>
-          <div className={`progress-step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'completed' : ''}`}>
-            <div className="step-icon">
+          <div className="progress-line" aria-hidden="true"></div>
+          <div 
+            className={`progress-step ${step >= 2 ? 'active' : ''} ${step > 2 ? 'completed' : ''}`}
+            aria-current={step === 2 ? 'step' : undefined}
+          >
+            <div className="step-icon" aria-hidden="true">
               {step > 2 ? <i className="fas fa-check"></i> : <i className="fas fa-calendar"></i>}
             </div>
             <span>Date</span>
           </div>
-          <div className="progress-line"></div>
-          <div className={`progress-step ${step >= 3 ? 'active' : ''} ${step > 3 ? 'completed' : ''}`}>
-            <div className="step-icon">
+          <div className="progress-line" aria-hidden="true"></div>
+          <div 
+            className={`progress-step ${step >= 3 ? 'active' : ''} ${step > 3 ? 'completed' : ''}`}
+            aria-current={step === 3 ? 'step' : undefined}
+          >
+            <div className="step-icon" aria-hidden="true">
               {step > 3 ? <i className="fas fa-check"></i> : <i className="fas fa-clipboard"></i>}
             </div>
             <span>Details</span>
           </div>
-          <div className="progress-line"></div>
-          <div className={`progress-step ${step >= 4 ? 'active' : ''} ${step > 4 ? 'completed' : ''}`}>
-            <div className="step-icon">
+          <div className="progress-line" aria-hidden="true"></div>
+          <div 
+            className={`progress-step ${step >= 4 ? 'active' : ''} ${step > 4 ? 'completed' : ''}`}
+            aria-current={step === 4 ? 'step' : undefined}
+          >
+            <div className="step-icon" aria-hidden="true">
               {step > 4 ? <i className="fas fa-check"></i> : <i className="fas fa-check-circle"></i>}
             </div>
             <span>Confirm</span>
           </div>
-        </div>
+        </nav>
 
         {/* Content */}
         <div className="cinema-booking-content">
@@ -698,34 +734,9 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
                 <i className="fas fa-info-circle"></i>
                 <span>Separate queues for online & clinic visits</span>
               </div>
-
-              {/* Sticky Continue Button for Mobile */}
-              <div className="mobile-sticky-footer">
-                <button 
-                  className={`proceed-btn type-continue-btn mobile-continue ${consultationType ? 'enabled' : ''}`}
-                  onClick={() => {
-                    if (consultationType) {
-                      if (navigator.vibrate) navigator.vibrate(15);
-                      setStep(2);
-                    }
-                  }}
-                  disabled={!consultationType}
-                >
-                  {consultationType ? (
-                    <>
-                      <span className="continue-text">
-                        Continue with {consultationType === 'online' ? 'Online' : 'Clinic Visit'}
-                      </span>
-                      <i className="fas fa-arrow-right"></i>
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-hand-pointer"></i>
-                      <span>Select an option above</span>
-                    </>
-                  )}
-                </button>
-              </div>
+              
+              {/* Spacer for fixed footer */}
+              <div className="footer-spacer" style={{ height: '100px' }}></div>
             </div>
           )}
 
@@ -1311,6 +1322,34 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
             </div>
           )}
         </div>
+        
+        {/* Global Sticky Footer for Step 1 */}
+        {step === 1 && (
+          <div className="booking-footer-fixed">
+            <button 
+              className={`booking-continue-btn ${consultationType ? 'enabled' : ''}`}
+              onClick={() => {
+                if (consultationType) {
+                  if (navigator.vibrate) navigator.vibrate(15);
+                  setStep(2);
+                }
+              }}
+              disabled={!consultationType}
+            >
+              {consultationType ? (
+                <>
+                  <span>Continue with {consultationType === 'online' ? 'Online' : 'Clinic Visit'}</span>
+                  <i className="fas fa-arrow-right"></i>
+                </>
+              ) : (
+                <>
+                  <i className="fas fa-hand-pointer"></i>
+                  <span>Select an option above</span>
+                </>
+              )}
+            </button>
+          </div>
+        )}
       </div>
       
       {/* Live Queue Tracker Modal */}

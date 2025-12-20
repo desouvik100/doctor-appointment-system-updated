@@ -975,3 +975,109 @@
     font-size: 0.5rem;
   }
 }
+
+
+/* ============================================
+   CONSULTATION IN PROGRESS - ELAPSED TIME
+   ============================================ */
+
+.consultation-active-card {
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  border-radius: 16px;
+  padding: 20px;
+  margin-bottom: 16px;
+  color: white;
+  animation: pulseGreen 2s infinite;
+}
+
+@keyframes pulseGreen {
+  0%, 100% { box-shadow: 0 4px 20px rgba(16, 185, 129, 0.4); }
+  50% { box-shadow: 0 4px 30px rgba(16, 185, 129, 0.6); }
+}
+
+.active-badge {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 20px;
+  font-size: 0.85rem;
+  font-weight: 600;
+  margin-bottom: 16px;
+}
+
+.active-badge .pulse-dot {
+  width: 10px;
+  height: 10px;
+  background: #fff;
+  border-radius: 50%;
+  animation: pulse 1s infinite;
+}
+
+.elapsed-display {
+  padding: 20px;
+  background: rgba(255, 255, 255, 0.15);
+  border-radius: 16px;
+  text-align: center;
+  margin-bottom: 16px;
+}
+
+.elapsed-timer {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 4px;
+}
+
+.elapsed-value {
+  font-size: 3rem;
+  font-weight: 800;
+  font-family: 'SF Mono', 'Roboto Mono', monospace;
+  letter-spacing: 3px;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.2);
+}
+
+.elapsed-label {
+  font-size: 0.75rem;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  opacity: 0.9;
+}
+
+.consultation-info {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.consultation-info .info-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 14px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 10px;
+  font-size: 0.9rem;
+}
+
+.consultation-info .info-item i {
+  font-size: 1rem;
+  opacity: 0.9;
+}
+
+/* Mobile adjustments for elapsed time */
+@media (max-width: 480px) {
+  .elapsed-value {
+    font-size: 2.5rem;
+  }
+  
+  .consultation-active-card {
+    padding: 16px;
+  }
+  
+  .elapsed-display {
+    padding: 16px;
+  }
+}

@@ -4007,3 +4007,303 @@
 .success-section .success-checkmark {
   animation: payment-success 0.5s ease forwards;
 }
+
+
+/* Mobile Full Screen Modal Fix */
+@media (max-width: 768px) {
+  .cinema-booking-overlay {
+    padding: 0 !important;
+    align-items: flex-start !important;
+  }
+  
+  .cinema-booking-modal {
+    max-width: 100% !important;
+    max-height: 100vh !important;
+    height: 100vh !important;
+    border-radius: 0 !important;
+    margin: 0 !important;
+    display: flex !important;
+    flex-direction: column !important;
+  }
+  
+  .cinema-booking-content {
+    flex: 1 !important;
+    overflow-y: auto !important;
+    -webkit-overflow-scrolling: touch;
+    padding-bottom: 120px !important;
+    min-height: 0 !important;
+  }
+  
+  .cinema-booking-header {
+    position: sticky;
+    top: 0;
+    z-index: 10;
+    padding-top: env(safe-area-inset-top, 16px);
+    flex-shrink: 0;
+  }
+  
+  /* Ensure sticky footer is visible */
+  .mobile-sticky-footer {
+    position: fixed !important;
+    bottom: 0 !important;
+    left: 0 !important;
+    right: 0 !important;
+    z-index: 1001 !important;
+    background: #ffffff !important;
+    padding: 16px 20px !important;
+    padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+    box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+    border-top: 1px solid #e2e8f0 !important;
+  }
+  
+  .mobile-sticky-footer .proceed-btn,
+  .mobile-sticky-footer .type-continue-btn {
+    display: flex !important;
+    width: 100% !important;
+    min-height: 56px !important;
+    padding: 16px 24px !important;
+    font-size: 16px !important;
+    font-weight: 600 !important;
+    border-radius: 14px !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 10px !important;
+  }
+  
+  .mobile-sticky-footer .type-continue-btn:not(.enabled) {
+    background: #e2e8f0 !important;
+    color: #64748b !important;
+    border: none !important;
+  }
+  
+  .mobile-sticky-footer .type-continue-btn.enabled {
+    background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%) !important;
+    color: white !important;
+    border: none !important;
+    box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4) !important;
+  }
+  
+  /* Hide bottom nav when booking modal is open */
+  body.booking-modal-open .bottom-navigation,
+  body.booking-modal-open .native-bottom-nav {
+    display: none !important;
+  }
+}
+
+
+/* Global Booking Footer - Outside content for better positioning */
+.booking-footer-fixed {
+  position: fixed !important;
+  bottom: 0 !important;
+  left: 0 !important;
+  right: 0 !important;
+  z-index: 1100 !important;
+  background: #ffffff !important;
+  padding: 16px 20px !important;
+  padding-bottom: calc(20px + env(safe-area-inset-bottom, 0px)) !important;
+  box-shadow: 0 -4px 20px rgba(0, 0, 0, 0.15) !important;
+  border-top: 1px solid #e2e8f0 !important;
+}
+
+.booking-continue-btn {
+  display: flex;
+  width: 100%;
+  min-height: 56px;
+  padding: 16px 24px;
+  font-size: 16px;
+  font-weight: 600;
+  border-radius: 14px;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.booking-continue-btn:not(.enabled) {
+  background: #e2e8f0;
+  color: #64748b;
+}
+
+.booking-continue-btn.enabled {
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+  color: white;
+  box-shadow: 0 4px 15px rgba(14, 165, 233, 0.4);
+}
+
+.booking-continue-btn.enabled:active {
+  transform: scale(0.98);
+}
+
+
+/* ============================================
+   ACCESSIBILITY IMPROVEMENTS
+   ============================================ */
+
+/* Focus visible styles for keyboard navigation */
+.cinema-booking-modal *:focus-visible {
+  outline: 3px solid #0ea5e9;
+  outline-offset: 2px;
+  border-radius: 4px;
+}
+
+/* Remove default outline, use focus-visible instead */
+.cinema-booking-modal *:focus:not(:focus-visible) {
+  outline: none;
+}
+
+/* Close button focus */
+.close-btn:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Type selection cards focus */
+.type-selection-card:focus-visible {
+  outline: 3px solid #0ea5e9;
+  outline-offset: 3px;
+  transform: scale(1.02);
+}
+
+/* Calendar cell focus */
+.calendar-cell:focus-visible {
+  outline: 3px solid #0ea5e9;
+  outline-offset: 2px;
+  transform: scale(1.05);
+}
+
+.calendar-cell.available:focus-visible {
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.4);
+}
+
+/* Symptom chip focus */
+.symptom-chip:focus-visible {
+  outline: 3px solid #0ea5e9;
+  outline-offset: 2px;
+}
+
+/* Urgency button focus */
+.urgency-btn:focus-visible {
+  outline: 3px solid currentColor;
+  outline-offset: 2px;
+}
+
+/* Reminder option focus */
+.reminder-option:focus-visible {
+  outline: 3px solid #0ea5e9;
+  outline-offset: 2px;
+}
+
+/* Proceed/Confirm button focus */
+.proceed-btn:focus-visible,
+.confirm-btn:focus-visible,
+.back-btn:focus-visible,
+.booking-continue-btn:focus-visible {
+  outline: 3px solid #ffffff;
+  outline-offset: 2px;
+  box-shadow: 0 0 0 6px rgba(14, 165, 233, 0.3);
+}
+
+/* Skip link for accessibility */
+.skip-link {
+  position: absolute;
+  top: -40px;
+  left: 0;
+  background: #0ea5e9;
+  color: white;
+  padding: 8px 16px;
+  z-index: 10000;
+  text-decoration: none;
+  font-weight: 600;
+  border-radius: 0 0 8px 0;
+  transition: top 0.3s;
+}
+
+.skip-link:focus {
+  top: 0;
+}
+
+/* Screen reader only text */
+.sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .type-selection-card {
+    border-width: 3px;
+  }
+  
+  .type-selection-card.selected {
+    border-width: 4px;
+  }
+  
+  .calendar-cell.available {
+    border-width: 2px;
+  }
+  
+  .proceed-btn,
+  .confirm-btn {
+    border: 2px solid currentColor;
+  }
+}
+
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .cinema-booking-overlay,
+  .cinema-booking-modal,
+  .type-selection-card,
+  .calendar-cell,
+  .proceed-btn,
+  .confirm-btn,
+  * {
+    animation: none !important;
+    transition: none !important;
+  }
+}
+
+/* Ensure sufficient color contrast */
+.step-subtitle,
+.mobile-subtitle {
+  color: #475569; /* Darker for better contrast */
+}
+
+.type-selection-note {
+  color: #334155; /* Darker for better contrast */
+}
+
+/* Larger touch targets for mobile accessibility */
+@media (max-width: 768px) {
+  .symptom-chip {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .urgency-btn {
+    min-height: 48px;
+  }
+  
+  .reminder-option {
+    min-height: 48px;
+  }
+  
+  .calendar-cell {
+    min-height: 44px;
+    min-width: 44px;
+  }
+  
+  .close-btn {
+    min-width: 44px;
+    min-height: 44px;
+  }
+}

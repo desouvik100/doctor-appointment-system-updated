@@ -45,6 +45,7 @@ import AIHealthHub from './AIHealthHub';
 import MobileHeroSection from './MobileHeroSection';
 import BottomNavigation from './BottomNavigation';
 import OfflineIndicator from './OfflineIndicator';
+import MobileDoctorCard from './MobileDoctorCard';
 import { DoctorCardSkeleton, AppointmentCardSkeleton, PageSkeleton } from './SkeletonLoaders';
 import { successFeedback } from '../mobile/haptics';
 import { Capacitor } from '@capacitor/core';
@@ -399,7 +400,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
-            <button onClick={() => setShowQuickSearch(true)} className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 hover:bg-sky-100 hover:text-sky-600 flex items-center justify-center transition-colors" title="Quick Search">
+            <button onClick={() => setShowQuickSearch(true)} className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 hover:bg-sky-100 hover:text-sky-600 items-center justify-center transition-colors ${activeSection === 'overview' ? 'hidden lg:flex' : 'flex'}`} title="Quick Search">
               <i className="fas fa-search text-slate-500 hover:text-sky-600 text-xs sm:text-sm"></i>
             </button>
             <button onClick={() => setActiveSection('doctors')} className="hidden md:flex items-center gap-2 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors"><i className="fas fa-plus text-xs"></i>{t('bookNow')}</button>
@@ -439,8 +440,12 @@ const PatientDashboardPro = ({ user, onLogout }) => {
                   }}
                   onSmartMatch={() => setShowFindDoctorWizard(true)}
                   onSearch={(query) => {
-                    setSearchTerm(query);
-                    setActiveSection('doctors');
+                    if (query) {
+                      setSearchTerm(query);
+                      setActiveSection('doctors');
+                    } else {
+                      setShowQuickSearch(true);
+                    }
                   }}
                 />
               </div>
@@ -762,115 +767,17 @@ const PatientDashboardPro = ({ user, onLogout }) => {
               {loading ? (<div className="flex flex-col items-center justify-center py-20"><div className="w-12 h-12 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin mb-4"></div><p className="text-slate-500">Loading...</p></div>
               ) : filteredDoctors.length === 0 ? (<div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-user-md text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">No doctors found</h3><p className="text-slate-500">Try adjusting your filters</p></div>
               ) : (
-                <div className="space-y-4">
-                  {(nearbyMode ? doctors : filteredDoctors).map(doc => {
-                    const docInitials = doc.name ? doc.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'DR';
-                    // Generate mock availability data (in production, fetch from API)
-                    const mockRating = doc.rating || (4 + Math.random()).toFixed(1);
-                    const mockReviews = doc.reviewCount || Math.floor(50 + Math.random() * 200);
-                    const mockPatients = doc.patientCount || Math.floor(200 + Math.random() * 500);
-                    const availabilityStatus = doc.availability === 'Available' ? 
-                      (Math.random() > 0.3 ? 'available' : 'limited') : 'busy';
-                    const nextSlotOnline = '5:30 PM';
-                    const nextSlotClinic = '7:00 PM';
-                    
-                    return (
-                    <div key={doc._id} className="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm hover:shadow-xl hover:border-sky-200 hover:-translate-y-1 transition-all duration-300 group">
-                      <div className="flex flex-col lg:flex-row lg:items-start gap-4">
-                        {/* Doctor Avatar with Availability Badge */}
-                        <div className="flex items-start gap-4 flex-1">
-                          <div className="relative flex-shrink-0">
-                            <div className="w-20 h-20 rounded-2xl bg-gradient-to-br from-sky-500 to-teal-500 flex items-center justify-center overflow-hidden ring-4 ring-white shadow-lg group-hover:ring-sky-100 transition-all">
-                              {doc.profilePhoto ? <img src={doc.profilePhoto} alt={doc.name} className="w-full h-full object-cover" onError={(e) => { e.target.style.display = 'none'; }} /> : null}
-                              {!doc.profilePhoto && <span className="text-white text-xl font-bold">{docInitials}</span>}
-                            </div>
-                            {/* Availability Badge */}
-                            <div className={`absolute -bottom-1 -right-1 w-6 h-6 rounded-full border-2 border-white flex items-center justify-center ${
-                              availabilityStatus === 'available' ? 'bg-emerald-500' : 
-                              availabilityStatus === 'limited' ? 'bg-amber-500' : 'bg-red-500'
-                            }`}>
-                              <i className={`fas text-white text-[8px] ${
-                                availabilityStatus === 'available' ? 'fa-check' : 
-                                availabilityStatus === 'limited' ? 'fa-clock' : 'fa-times'
-                              }`}></i>
-                            </div>
-                          </div>
-                          
-                          <div className="flex-1 min-w-0">
-                            <div className="flex items-center gap-2 flex-wrap">
-                              <h4 className="font-bold text-slate-800 text-lg">{doc.name?.startsWith('Dr.') ? doc.name : `Dr. ${doc.name}`}</h4>
-                              {doc.isVerified && <span className="px-2 py-0.5 bg-blue-100 text-blue-700 text-[10px] font-semibold rounded-full"><i className="fas fa-check-circle mr-1"></i>Verified</span>}
-                            </div>
-                            <p className="text-sm text-sky-600 font-semibold">{doc.specialization}</p>
-                            <p className="text-sm text-slate-500 mt-0.5"><i className="fas fa-hospital text-xs mr-1"></i>{doc.clinicId?.name || 'Independent Practice'}</p>
-                            
-                            {/* Rating & Patient Count */}
-                            <div className="flex items-center gap-4 mt-2 flex-wrap">
-                              <div className="flex items-center gap-1 bg-amber-50 px-2 py-1 rounded-lg">
-                                <i className="fas fa-star text-amber-500 text-xs"></i>
-                                <span className="text-sm font-bold text-amber-700">{mockRating}</span>
-                                <span className="text-xs text-amber-600">({mockReviews})</span>
-                              </div>
-                              <div className="flex items-center gap-1 text-slate-500 text-sm">
-                                <i className="fas fa-users text-sky-400 text-xs"></i>
-                                <span>{mockPatients}+ patients</span>
-                              </div>
-                              {doc.experience && <div className="flex items-center gap-1 text-slate-500 text-sm">
-                                <i className="fas fa-award text-emerald-500 text-xs"></i>
-                                <span>{doc.experience} yrs exp</span>
-                              </div>}
-                            </div>
-                            
-                            {nearbyMode && doc.distanceText && <p className="text-xs text-emerald-600 font-medium mt-2 bg-emerald-50 inline-block px-2 py-1 rounded-lg"><i className="fas fa-route mr-1"></i>{doc.distanceText}</p>}
-                          </div>
-                        </div>
-                        
-                        {/* Price & Availability Section */}
-                        <div className="lg:text-right space-y-2">
-                          <div>
-                            <p className="text-2xl font-bold text-slate-800">₹{doc.consultationFee}</p>
-                            <p className="text-xs text-slate-500">per consultation</p>
-                          </div>
-                          
-                          {/* Next Available Slots */}
-                          {doc.availability === 'Available' && (
-                            <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-3 border border-emerald-100 mt-2">
-                              <p className="text-xs font-semibold text-emerald-700 mb-1.5"><i className="fas fa-bolt mr-1"></i>Next Available</p>
-                              <div className="space-y-1">
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="text-slate-600"><i className="fas fa-video text-blue-500 mr-1"></i>Online</span>
-                                  <span className="font-semibold text-emerald-700">{nextSlotOnline}</span>
-                                </div>
-                                <div className="flex items-center justify-between text-xs">
-                                  <span className="text-slate-600"><i className="fas fa-hospital text-green-500 mr-1"></i>Clinic</span>
-                                  <span className="font-semibold text-emerald-700">{nextSlotClinic}</span>
-                                </div>
-                              </div>
-                            </div>
-                          )}
-                        </div>
-                      </div>
-                      
-                      {/* Action Buttons */}
-                      <div className="flex items-center gap-2 mt-4 pt-4 border-t border-slate-100 flex-wrap">
-                        <button onClick={() => toggleFavorite(doc._id)} className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${favoriteDoctors.includes(doc._id) ? 'bg-rose-100 text-rose-500 scale-110' : 'bg-slate-100 text-slate-400 hover:bg-rose-50 hover:text-rose-500 hover:scale-105'}`} title="Add to Favorites">
-                          <i className={favoriteDoctors.includes(doc._id) ? 'fas fa-heart' : 'far fa-heart'}></i>
-                        </button>
-                        <button onClick={() => { setSelectedDoctor(doc); setShowDoctorProfile(true); }} className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-medium bg-slate-100 text-slate-600 hover:bg-slate-200 hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
-                          <i className="fas fa-user-md text-sm"></i>
-                          <span>View Profile</span>
-                        </button>
-                        <button onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className="flex-1 sm:flex-none px-4 py-2.5 rounded-xl font-medium bg-sky-100 text-sky-700 hover:bg-sky-200 hover:scale-[1.02] transition-all flex items-center justify-center gap-2">
-                          <i className="fas fa-calendar-check text-sm"></i>
-                          <span>Next Available</span>
-                        </button>
-                        <button disabled={doc.availability !== 'Available'} onClick={() => { setSelectedDoctor(doc); setShowBookingModal(true); }} className={`flex-1 sm:flex-none px-6 py-2.5 rounded-xl font-semibold transition-all flex items-center justify-center gap-2 ${doc.availability === 'Available' ? 'bg-gradient-to-r from-sky-500 to-teal-500 text-white hover:shadow-lg hover:scale-[1.02] animate-pulse-subtle' : 'bg-slate-100 text-slate-400 cursor-not-allowed'}`}>
-                          <i className="fas fa-bolt text-sm"></i>
-                          <span>{doc.availability === 'Available' ? 'Book Now' : 'Unavailable'}</span>
-                        </button>
-                      </div>
-                    </div>
-                  );})}
+                <div className="space-y-3">
+                  {(nearbyMode ? doctors : filteredDoctors).map(doc => (
+                    <MobileDoctorCard
+                      key={doc._id}
+                      doctor={doc}
+                      isFavorite={favoriteDoctors.includes(doc._id)}
+                      onFavoriteToggle={toggleFavorite}
+                      onViewProfile={(d) => { setSelectedDoctor(d); setShowDoctorProfile(true); }}
+                      onBookNow={(d) => { setSelectedDoctor(d); setShowBookingModal(true); }}
+                    />
+                  ))}
                 </div>
               )}
             </div>
@@ -1192,16 +1099,79 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       {/* Bottom Navigation - Mobile Only */}
       <BottomNavigation 
         activeTab={activeSection === 'health' || activeSection === 'medical-history' || activeSection === 'lab-reports' || activeSection === 'checkup' || activeSection === 'health-analytics' ? 'health' : activeSection}
+        upcomingBookings={upcomingAppointments.length}
         onTabChange={(tab) => {
           if (Capacitor.isNativePlatform()) {
             successFeedback();
           }
-          if (tab === 'profile') {
-            setShowProfileModal(true);
-          } else {
-            setActiveSection(tab);
-          }
+          // Close all modals when switching tabs
+          setShowProfileModal(false);
+          setShowNotifications(false);
+          setShowFindDoctorWizard(false);
+          setShowQuickSearch(false);
+          setShowQueueTracker(false);
+          setShowAIHealthHub(false);
           setMobileSidebarOpen(false);
+          setActiveSection(tab);
+        }}
+        onMenuAction={(action) => {
+          if (Capacitor.isNativePlatform()) {
+            successFeedback();
+          }
+          // Close all modals first
+          setShowProfileModal(false);
+          setShowNotifications(false);
+          setShowFindDoctorWizard(false);
+          setShowQuickSearch(false);
+          setShowQueueTracker(false);
+          setShowAIHealthHub(false);
+          setMobileSidebarOpen(false);
+          
+          // Handle menu actions
+          switch (action) {
+            case 'profile':
+              setShowProfileModal(true);
+              break;
+            case 'wallet':
+              setActiveSection('wallet');
+              break;
+            case 'transactions':
+              setActiveSection('transactions');
+              break;
+            case 'medical-history':
+              setActiveSection('medical-history');
+              break;
+            case 'lab-reports':
+              setActiveSection('lab-reports');
+              break;
+            case 'medicine-reminder':
+              setActiveSection('medicine-reminder');
+              break;
+            case 'insurance':
+              setActiveSection('insurance');
+              break;
+            case 'emergency':
+              setActiveSection('emergency');
+              break;
+            case 'referrals':
+              setActiveSection('referrals');
+              break;
+            case 'loyalty':
+              setActiveSection('loyalty');
+              break;
+            case 'health-tips':
+              setActiveSection('health-tips');
+              break;
+            case 'settings':
+              setShowProfileModal(true);
+              break;
+            case 'logout':
+              onLogout();
+              break;
+            default:
+              setActiveSection(action);
+              break;
+          }
         }}
         unreadNotifications={unreadNotifications}
       />

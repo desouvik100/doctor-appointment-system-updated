@@ -10,7 +10,9 @@ const LiveQueueTracker = ({ appointment, onClose }) => {
   const [updateCount, setUpdateCount] = useState(0);
   const [countdown, setCountdown] = useState(null);
   const [showDetailedView, setShowDetailedView] = useState(false);
+  const [elapsedTime, setElapsedTime] = useState(0); // Elapsed time in seconds for in-progress appointments
   const countdownRef = useRef(null);
+  const elapsedRef = useRef(null);
 
   const doctorId = appointment?.doctorId?._id || appointment?.doctorId;
   const userQueueNumber =
@@ -126,9 +128,9 @@ const LiveQueueTracker = ({ appointment, onClose }) => {
     return () => clearInterval(interval);
   }, [fetchSmartQueueStatus]);
 
-  // Countdown timer effect
+  // Countdown timer effect for waiting
   useEffect(() => {
-    if (queueInfo?.estimatedWaitMinutes > 0) {
+    if (queueInfo?.estimatedWaitMinutes > 0 && queueInfo?.appointmentStatus !== 'in_progress') {
       // Initialize countdown in seconds
       setCountdown(queueInfo.estimatedWaitMinutes * 60);
       
@@ -154,7 +156,51 @@ const LiveQueueTracker = ({ appointment, onClose }) => {
         clearInterval(countdownRef.current);
       }
     };
-  }, [queueInfo?.estimatedWaitMinutes]);
+  }, [queueInfo?.estimatedWaitMinutes, queueInfo?.appointmentStatus]);
+
+  // Elapsed time counter for in-progress appointments
+  useEffect(() => {
+    if (queueInfo?.appointmentStatus === 'in_progress' || appointment?.status === 'in_progress') {
+      // Clear countdown if running
+      if (countdownRef.current) {
+        clearInterval(countdownRef.current);
+        setCountdown(null);
+      }
+      
+      // Calculate initial elapsed time from appointment start
+      const startTime = appointment?.startedAt || appointment?.actualStartTime;
+      if (startTime) {
+        const startDate = new Date(startTime);
+        const now = new Date();
+        const initialElapsed = Math.floor((now - startDate) / 1000);
+        setElapsedTime(Math.max(0, initialElapsed));
+      } else {
+        setElapsedTime(0);
+      }
+      
+      // Clear existing elapsed interval
+      if (elapsedRef.current) {
+        clearInterval(elapsedRef.current);
+      }
+      
+      // Start elapsed time counter
+      elapsedRef.current = setInterval(() => {
+        setElapsedTime(prev => prev + 1);
+      }, 1000);
+    } else {
+      // Clear elapsed timer if not in progress
+      if (elapsedRef.current) {
+        clearInterval(elapsedRef.current);
+        setElapsedTime(0);
+      }
+    }
+    
+    return () => {
+      if (elapsedRef.current) {
+        clearInterval(elapsedRef.current);
+      }
+    };
+  }, [queueInfo?.appointmentStatus, appointment?.status, appointment?.startedAt, appointment?.actualStartTime]);
 
   // Format countdown to MM:SS or HH:MM:SS
   const formatCountdown = (seconds) => {
@@ -377,8 +423,37 @@ const LiveQueueTracker = ({ appointment, onClose }) => {
             </div>
           )}
 
-          {/* Wait Time Estimate with Countdown */}
-          {(queueInfo?.estimatedWaitMinutes !== undefined || queueInfo?.estimatedArrivalTime || appointment?.estimatedArrivalTime) && (
+          {/* Consultation In Progress - Elapsed Time */}
+          {(queueInfo?.appointmentStatus === 'in_progress' || appointment?.status === 'in_progress') && (
+            <div className="consultation-active-card">
+              <div className="active-badge">
+                <span className="pulse-dot"></span>
+                🩺 Consultation In Progress
+              </div>
+              
+              <div className="elapsed-display">
+                <div className="elapsed-timer">
+                  <span className="elapsed-value">{formatCountdown(elapsedTime)}</span>
+                  <span className="elapsed-label">Time Elapsed</span>
+                </div>
+              </div>
+              
+              <div className="consultation-info">
+                <div className="info-item">
+                  <i className="fas fa-user-md"></i>
+                  <span>You're with the doctor now</span>
+                </div>
+                <div className="info-item">
+                  <i className="fas fa-clock"></i>
+                  <span>Avg. consultation: ~{queueInfo?.slotDuration || 15} min</span>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Wait Time Estimate with Countdown - Only show when NOT in progress */}
+          {queueInfo?.appointmentStatus !== 'in_progress' && appointment?.status !== 'in_progress' && 
+           (queueInfo?.estimatedWaitMinutes !== undefined || queueInfo?.estimatedArrivalTime || appointment?.estimatedArrivalTime) && (
             <div className={`wait-estimate-card ${waitBadge.class}`}>
               <div className="wait-badge">{waitBadge.text}</div>
               

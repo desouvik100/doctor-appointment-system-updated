@@ -2445,3 +2445,299 @@ section {
 .animation-delay-300 { animation-delay: 300ms; }
 .animation-delay-400 { animation-delay: 400ms; }
 .animation-delay-500 { animation-delay: 500ms; }
+
+/* ============================================
+   DOCTOR SEARCH BAR - HERO SECTION
+   ============================================ */
+
+/* Mobile menu z-index fix */
+.mobile-menu-dropdown {
+  z-index: 100001 !important;
+}
+
+.hero-search-bar {
+  background: rgba(255, 255, 255, 0.95);
+  border-radius: 16px;
+  padding: 8px;
+  margin-bottom: 24px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.15);
+  max-width: 600px;
+}
+
+.hero-search-bar input:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(99, 102, 241, 0.2);
+}
+
+/* Mobile responsive search bar - inline style overrides */
+@media (max-width: 768px) {
+  /* Hero search bar mobile layout */
+  .hero-premium .hero-premium__content > div[style*="background: rgba(255, 255, 255, 0.95)"] {
+    padding: 12px !important;
+    margin: 0 -8px 24px -8px !important;
+    border-radius: 12px !important;
+    width: calc(100% + 16px) !important;
+    max-width: none !important;
+  }
+  
+  .hero-premium .hero-premium__content > div[style*="background: rgba(255, 255, 255, 0.95)"] > div:first-child {
+    flex-direction: column !important;
+    gap: 10px !important;
+  }
+  
+  .hero-premium .hero-premium__content > div[style*="background: rgba(255, 255, 255, 0.95)"] select {
+    width: 100% !important;
+    min-width: unset !important;
+  }
+  
+  .hero-premium .hero-premium__content > div[style*="background: rgba(255, 255, 255, 0.95)"] button {
+    width: 100% !important;
+  }
+  
+  /* Quick tags mobile */
+  .hero-premium .hero-premium__content > div[style*="background: rgba(255, 255, 255, 0.95)"] > div:last-child {
+    justify-content: center !important;
+  }
+  
+  .hero-premium .hero-premium__content > div[style*="background: rgba(255, 255, 255, 0.95)"] > div:last-child button {
+    font-size: 11px !important;
+    padding: 5px 10px !important;
+  }
+}
+
+/* ============================================
+   PRICING COMPARISON TABLE
+   ============================================ */
+.pricing-comparison-table {
+  overflow-x: auto;
+}
+
+.pricing-comparison-table table {
+  min-width: 600px;
+}
+
+@media (max-width: 768px) {
+  .pricing-comparison-table {
+    margin: 0 -16px;
+    padding: 0 16px;
+  }
+  
+  .pricing-comparison-table th,
+  .pricing-comparison-table td {
+    padding: 12px 16px !important;
+    font-size: 13px !important;
+  }
+}
+
+/* ============================================
+   MICRO-INTERACTIONS & PULSE ANIMATIONS
+   ============================================ */
+
+/* Live pulse animation for online indicators */
+@keyframes livePulse {
+  0%, 100% { 
+    opacity: 1; 
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
+  }
+  50% { 
+    opacity: 0.8; 
+    transform: scale(1.2);
+    box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
+  }
+}
+
+.live-indicator {
+  animation: livePulse 2s ease-in-out infinite;
+}
+
+/* Ripple effect for buttons */
+@keyframes ripple {
+  0% {
+    transform: scale(1);
+    opacity: 0.4;
+  }
+  100% {
+    transform: scale(2.5);
+    opacity: 0;
+  }
+}
+
+.btn-ripple {
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-ripple::after {
+  content: '';
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  top: 0;
+  left: 0;
+  background: radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%);
+  transform: scale(0);
+  opacity: 0;
+}
+
+.btn-ripple:active::after {
+  animation: ripple 0.6s ease-out;
+}
+
+/* Heartbeat animation for health-related elements */
+@keyframes heartbeat {
+  0%, 100% { transform: scale(1); }
+  14% { transform: scale(1.1); }
+  28% { transform: scale(1); }
+  42% { transform: scale(1.1); }
+  70% { transform: scale(1); }
+}
+
+.heartbeat {
+  animation: heartbeat 2s ease-in-out infinite;
+}
+
+/* Glow effect for active/live elements */
+@keyframes glowPulse {
+  0%, 100% {
+    box-shadow: 0 0 5px rgba(34, 197, 94, 0.3), 0 0 10px rgba(34, 197, 94, 0.2);
+  }
+  50% {
+    box-shadow: 0 0 15px rgba(34, 197, 94, 0.5), 0 0 25px rgba(34, 197, 94, 0.3);
+  }
+}
+
+.glow-pulse {
+  animation: glowPulse 2s ease-in-out infinite;
+}
+
+/* Bounce animation for attention-grabbing elements */
+@keyframes bounce {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-8px); }
+}
+
+.bounce {
+  animation: bounce 2s ease-in-out infinite;
+}
+
+/* Shake animation for notifications/alerts */
+@keyframes shake {
+  0%, 100% { transform: translateX(0); }
+  10%, 30%, 50%, 70%, 90% { transform: translateX(-2px); }
+  20%, 40%, 60%, 80% { transform: translateX(2px); }
+}
+
+.shake {
+  animation: shake 0.5s ease-in-out;
+}
+
+/* Scale on hover for interactive cards */
+.hover-scale {
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+}
+
+.hover-scale:hover {
+  transform: scale(1.02);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+}
+
+/* Subtle float animation */
+@keyframes subtleFloat {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-5px); }
+}
+
+.subtle-float {
+  animation: subtleFloat 3s ease-in-out infinite;
+}
+
+/* Number counter animation */
+@keyframes countUp {
+  from { opacity: 0; transform: translateY(10px); }
+  to { opacity: 1; transform: translateY(0); }
+}
+
+.count-up {
+  animation: countUp 0.5s ease-out forwards;
+}
+
+/* Badge pop animation */
+@keyframes badgePop {
+  0% { transform: scale(0); opacity: 0; }
+  50% { transform: scale(1.2); }
+  100% { transform: scale(1); opacity: 1; }
+}
+
+.badge-pop {
+  animation: badgePop 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55) forwards;
+}
+
+/* Typing cursor animation */
+@keyframes blink {
+  0%, 50% { opacity: 1; }
+  51%, 100% { opacity: 0; }
+}
+
+.typing-cursor::after {
+  content: '|';
+  animation: blink 1s infinite;
+  margin-left: 2px;
+}
+
+/* Progress bar animation */
+@keyframes progressFill {
+  from { width: 0; }
+}
+
+.progress-animate {
+  animation: progressFill 1s ease-out forwards;
+}
+
+/* Skeleton loading animation */
+@keyframes skeletonShimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+.skeleton-shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.5s infinite;
+}
+
+/* Notification dot pulse */
+@keyframes notificationPulse {
+  0% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0.7);
+  }
+  70% {
+    transform: scale(1);
+    box-shadow: 0 0 0 10px rgba(239, 68, 68, 0);
+  }
+  100% {
+    transform: scale(1);
+    box-shadow: 0 0 0 0 rgba(239, 68, 68, 0);
+  }
+}
+
+.notification-pulse {
+  animation: notificationPulse 2s infinite;
+}
+
+/* Reduced motion preference */
+@media (prefers-reduced-motion: reduce) {
+  .live-indicator,
+  .heartbeat,
+  .glow-pulse,
+  .bounce,
+  .subtle-float,
+  .notification-pulse {
+    animation: none;
+  }
+  
+  .hover-scale:hover {
+    transform: none;
+  }
+}

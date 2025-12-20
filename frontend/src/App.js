@@ -1527,6 +1527,11 @@ function App() {
   return (
     <LanguageProvider>
     <div>
+      {/* Skip to main content - Accessibility */}
+      <a href="#main-content" className="skip-to-main">
+        Skip to main content
+      </a>
+      
       {/* Network Status Indicator */}
       <NetworkStatus />
       
@@ -1535,8 +1540,12 @@ function App() {
       
       {/* Global Toast Notifications */}
       <Toaster
-        position="top-right"
+        position="top-center"
         reverseOrder={false}
+        containerStyle={{
+          top: 'calc(16px + env(safe-area-inset-top, 24px))',
+          zIndex: 99999,
+        }}
         toastOptions={{
           duration: 4000,
           style: {
@@ -1546,6 +1555,7 @@ function App() {
             borderRadius: '12px',
             boxShadow: '0 10px 30px rgba(0, 0, 0, 0.15)',
             fontWeight: '600',
+            maxWidth: '90vw',
           },
           success: {
             duration: 3000,
@@ -1700,12 +1710,14 @@ function App() {
       )}
 
       {currentView === "dashboard" && (
-        <>
+        <main id="main-content" role="main">
           {/* USER MODE - Patient Dashboard */}
           {user && !admin && !receptionist && !doctor && (
             <Suspense fallback={
               <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
-                <div className="spinner-border text-primary mb-3"></div>
+                <div className="spinner-border text-primary mb-3" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
                 <p className="text-muted">Loading Patient Dashboard...</p>
               </div>
             }>
@@ -1717,7 +1729,9 @@ function App() {
           {admin && !user && !receptionist && (
             <Suspense fallback={
               <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
-                <div className="spinner-border text-primary mb-3"></div>
+                <div className="spinner-border text-primary mb-3" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
                 <p className="text-muted">Loading Admin Dashboard...</p>
               </div>
             }>
@@ -1729,7 +1743,9 @@ function App() {
           {receptionist && !user && !admin && !doctor && (
             <Suspense fallback={
               <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
-                <div className="spinner-border text-primary mb-3"></div>
+                <div className="spinner-border text-primary mb-3" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
                 <p className="text-muted">Loading Clinic Dashboard...</p>
               </div>
             }>
@@ -1741,7 +1757,9 @@ function App() {
           {doctor && !user && !admin && !receptionist && (
             <Suspense fallback={
               <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
-                <div className="spinner-border text-primary mb-3"></div>
+                <div className="spinner-border text-primary mb-3" role="status">
+                  <span className="visually-hidden">Loading...</span>
+                </div>
                 <p className="text-muted">Loading Doctor Dashboard...</p>
               </div>
             }>
@@ -1753,21 +1771,22 @@ function App() {
           {!user && !admin && !receptionist && !doctor && (
             <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '100vh', background: 'white' }}>
               <div className="text-center p-5" style={{ background: 'white', borderRadius: '20px', boxShadow: '0 10px 40px rgba(0,0,0,0.1)' }}>
-                <i className="fas fa-user-circle fa-4x mb-3" style={{ color: '#667eea' }}></i>
+                <i className="fas fa-user-circle fa-4x mb-3" style={{ color: '#667eea' }} aria-hidden="true"></i>
                 <h4 style={{ color: '#1e293b' }}>Session Expired</h4>
                 <p className="text-muted mb-4">Please log in to continue</p>
                 <button 
                   className="btn btn-lg"
                   style={{ background: 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)', color: 'white', border: 'none', padding: '12px 32px', borderRadius: '12px' }}
                   onClick={() => setCurrentView("auth")}
+                  aria-label="Go to login page"
                 >
-                  <i className="fas fa-sign-in-alt me-2"></i>
+                  <i className="fas fa-sign-in-alt me-2" aria-hidden="true"></i>
                   Go to Login
                 </button>
               </div>
             </div>
           )}
-        </>
+        </main>
       )}
 
 

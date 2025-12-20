@@ -1,18 +1,31 @@
 {
   "project_info": {
-    "project_number": "703204659246",
-    "project_id": "healthsync-611cc",
-    "storage_bucket": "healthsync-611cc.firebasestorage.app"
+    "project_number": "477733520458",
+    "project_id": "healthsync-pro",
+    "storage_bucket": "healthsync-pro.appspot.com"
   },
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:703204659246:android:9f95cc54e47a6bcd598fbf",
+        "mobilesdk_app_id": "1:477733520458:android:healthsyncapp",
         "android_client_info": {
           "package_name": "com.healthsync.app"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "477733520458-4i896u9abilk7n2cgodgdp0ohjiu2tt6.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.healthsync.app",
+            "certificate_hash": "0ed45134dbc99cae90f484d4cb102cf0bfbe6515"
+          }
+        },
+        {
+          "client_id": "477733520458-juhlgonpioe7tcjenocei4pcco4h9204.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "AIzaSyDTOvAUYx4DKxLTFf7WQ0XS5ITmWJJMqYk"
@@ -20,7 +33,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "477733520458-juhlgonpioe7tcjenocei4pcco4h9204.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
         }
       }
     }

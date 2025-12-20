@@ -33,32 +33,32 @@ const translations = {
     settings: 'Settings',
     notifications: 'Notifications',
     
-    // Landing Page
-    heroTitle: 'Healthcare appointments,',
-    heroTitleHighlight: 'simplified.',
-    heroSubtitle: 'Book video consultations or in-clinic visits with verified doctors. Get AI-powered health guidance, smart scheduling, and seamless care management.',
-    getStarted: 'Get Started',
-    startForFree: 'Start for free',
-    watchDemo: 'Watch demo',
+    // Landing Page - SEO Optimized
+    heroTitle: 'Clinic Appointment & Patient Management',
+    heroTitleHighlight: 'Platform',
+    heroSubtitle: 'India\'s clinic-first healthcare platform. Book doctor appointments online, manage clinic queues, patient records & scheduling. Smart healthcare software for clinics - not a fitness tracker app.',
+    getStarted: 'Get Started Free',
+    startForFree: 'Book Appointment',
+    watchDemo: 'See How It Works',
     features: 'Features',
     howItWorks: 'How it Works',
     pricing: 'Pricing',
     security: 'Security',
     faq: 'FAQ',
     
-    // Features
-    videoConsultations: 'Video Consultations',
-    videoConsultationsDesc: 'HD video calls with automatic Google Meet links',
-    inClinicVisits: 'In-Clinic Visits',
-    inClinicVisitsDesc: 'Book in-person appointments with queue management',
-    smartScheduling: 'Smart Scheduling',
-    smartSchedulingDesc: 'Real-time availability with 1-minute precision',
+    // Features - SEO Keywords
+    videoConsultations: 'Online Video Consultation',
+    videoConsultationsDesc: 'HD video calls with doctors. Book online consultation from anywhere in India.',
+    inClinicVisits: 'In-Clinic Appointments',
+    inClinicVisitsDesc: 'Book in-person clinic visits with smart queue management. No more waiting.',
+    smartScheduling: 'Smart Queue Management',
+    smartSchedulingDesc: 'Real-time queue updates. Know your exact appointment time.',
     aiHealthAssistant: 'AI Health Assistant',
-    aiHealthAssistantDesc: '24/7 symptom checker and health guidance',
-    securePrivate: 'Secure & Private',
-    securePrivateDesc: 'HIPAA compliant with end-to-end encryption',
-    mobileReady: 'Mobile Ready',
-    mobileReadyDesc: 'Book appointments anywhere, anytime',
+    aiHealthAssistantDesc: '24/7 symptom checker and health guidance powered by AI.',
+    securePrivate: 'Secure Patient Records',
+    securePrivateDesc: 'HIPAA compliant patient management with end-to-end encryption.',
+    mobileReady: 'Mobile App Ready',
+    mobileReadyDesc: 'Book doctor appointments on mobile. Available on Android & iOS.',
     
     // Dashboard
     bookNow: 'Book Now',
@@ -75,7 +75,7 @@ const translations = {
     
     // Stats
     happyPatients: 'Happy Patients',
-    expertDoctors: 'Expert Doctors',
+    expertDoctors: 'Verified Doctors',
     userRating: 'User Rating',
     partnerClinics: 'Partner Clinics',
     verifiedDoctors: 'Verified Doctors',

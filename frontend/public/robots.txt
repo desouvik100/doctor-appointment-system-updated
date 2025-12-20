@@ -1,63 +1,34 @@
-# HealthSync Pro - Robots.txt
+# HealthSync - Clinic Appointment & Patient Management Platform
 # https://healthsyncpro.in
 
 User-agent: *
 Allow: /
 
+# Allow search engines to crawl all pages
+Allow: /doctors
+Allow: /book
+Allow: /login
+Allow: /register
+
+# Disallow admin and private areas
+Disallow: /admin/*
+Disallow: /api/*
+Disallow: /patient/dashboard
+Disallow: /doctor/dashboard
+Disallow: /receptionist/*
+
 # Sitemap location
 Sitemap: https://healthsyncpro.in/sitemap.xml
 
-# ============================================
-# DISALLOW - Private/Admin Areas
-# ============================================
-Disallow: /api/
-Disallow: /admin/
-Disallow: /dashboard/
-Disallow: /patient/
-Disallow: /doctor/
-Disallow: /receptionist/
-Disallow: /settings/
-Disallow: /profile/
-Disallow: /appointments/
-Disallow: /prescriptions/
-Disallow: /medical-records/
-Disallow: /wallet/
-Disallow: /notifications/
+# Crawl delay for politeness
+Crawl-delay: 1
 
-# ============================================
-# DISALLOW - Auth Pages (SEO Best Practice)
-# ============================================
-Disallow: /login
-Disallow: /register
-Disallow: /forgot-password
-Disallow: /reset-password
-Disallow: /verify-email
-Disallow: /verify-otp
-
-# ============================================
-# DISALLOW - Technical/System Files
-# ============================================
-Disallow: /*.json$
-Disallow: /*.js.map$
-Disallow: /static/js/*.map
-Disallow: /static/css/*.map
-
-# ============================================
-# ALLOW - Public SEO Pages
-# ============================================
+# Google specific
+User-agent: Googlebot
 Allow: /
-Allow: /find-doctor
-Allow: /find-doctor/*
-Allow: /about
-Allow: /contact
-Allow: /for-doctors
-Allow: /for-clinics
-Allow: /privacy-policy
-Allow: /terms-of-service
-Allow: /blog
-Allow: /blog/*
-Allow: /health-articles
-Allow: /health-articles/*
+Crawl-delay: 0
 
-# Crawl delay for server politeness
+# Bing specific
+User-agent: Bingbot
+Allow: /
 Crawl-delay: 1

@@ -272,7 +272,14 @@ function AuthPremium({ onLogin, onBack }) {
         }
       } catch (error) {
         console.error('Native Google Sign-In error:', error);
-        toast.error('Google Sign-In failed. Please try email/password login.');
+        // Show helpful error message
+        let errorMsg = 'Google Sign-In unavailable. Please use email login.';
+        if (error.message?.includes('timeout')) {
+          errorMsg = 'Sign-in timed out. Try again.';
+        } else if (error.message?.includes('network') || error.message?.includes('Network')) {
+          errorMsg = 'Network error. Check your connection.';
+        }
+        toast.error(errorMsg, { duration: 4000 });
         setSocialLoading(null);
       }
       return;
@@ -488,11 +495,18 @@ function AuthPremium({ onLogin, onBack }) {
         onLogin(userData, "patient");
       }
     } catch (error) {
+      console.error('Login error:', error);
       // Handle suspended account
       if (error.response?.status === 403 && error.response?.data?.suspended) {
         toast.error(`Account Suspended: ${error.response?.data?.reason || 'Contact admin for assistance'}`);
+      } else if (error.response?.data?.message) {
+        toast.error(error.response.data.message);
+      } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        toast.error('Connection timeout. Please try again.');
+      } else if (!error.response) {
+        toast.error('Network error. Check your internet connection.');
       } else {
-        toast.error(error.response?.data?.message || "Something went wrong");
+        toast.error('Login failed. Please check your credentials.');
       }
     } finally {
       setLoading(false);
@@ -784,7 +798,7 @@ function AuthPremium({ onLogin, onBack }) {
           <div style={{ display: 'flex', gap: '12px' }}>
             <button 
               className="btn-premium btn-premium-secondary" 
-              style={{ flex: 1 }}
+              style={{ flex: 1, opacity: isNativeMobile ? 0.6 : 1 }}
               onClick={handleGoogleSignIn}
               disabled={socialLoading === 'google'}
             >
@@ -796,13 +810,18 @@ function AuthPremium({ onLogin, onBack }) {
             </button>
             <button 
               className="btn-premium btn-premium-secondary" 
-              style={{ flex: 1 }}
+              style={{ flex: 1, opacity: 0.6 }}
               onClick={handleAppleSignIn}
               disabled={socialLoading === 'apple'}
             >
               <i className="fab fa-apple"></i> Apple
             </button>
           </div>
+          {isNativeMobile && (
+            <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', marginTop: '8px' }}>
+              Social login coming soon. Please use email/password.
+            </p>
+          )}
 
           {/* Footer */}
           <div className="auth-premium__footer">

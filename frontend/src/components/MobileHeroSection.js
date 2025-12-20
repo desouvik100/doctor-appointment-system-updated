@@ -1,105 +1,150 @@
 import { useState, useEffect } from 'react';
+import { Capacitor } from '@capacitor/core';
+import { tapFeedback } from '../mobile/haptics';
 import './MobileHeroSection.css';
 
-const MobileHeroSection = ({ onVideoConsult, onClinicVisit, onSmartMatch, onSearch }) => {
-  const [taglineIndex, setTaglineIndex] = useState(0);
-  const [isTransitioning, setIsTransitioning] = useState(false);
-  
-  // Attractive rotating taglines
-  const taglines = [
-    "Care that comes to you, anytime",
-    "Expert doctors. Zero wait time.",
-    "Healing made simple & fast",
-    "Your wellness. Our priority.",
-    "Book in seconds. Heal faster.",
-    "Healthcare at your fingertips"
-  ];
-  
-  // Smooth transition between taglines every 3.5 seconds
+const MobileHeroSection = ({ user, onVideoConsult, onClinicVisit, onSmartMatch, onSearch, doctorCounts = {} }) => {
+  const [greeting, setGreeting] = useState('Good morning');
+  const isNative = Capacitor.isNativePlatform();
+
   useEffect(() => {
-    const interval = setInterval(() => {
-      setIsTransitioning(true);
-      setTimeout(() => {
-        setTaglineIndex((prev) => (prev + 1) % taglines.length);
-        setIsTransitioning(false);
-      }, 500); // Half second for fade out, then change
-    }, 3500);
-    return () => clearInterval(interval);
-  }, [taglines.length]);
+    const hour = new Date().getHours();
+    if (hour < 12) setGreeting('Good morning');
+    else if (hour < 17) setGreeting('Good afternoon');
+    else setGreeting('Good evening');
+  }, []);
+
+  const handleTap = (callback) => {
+    if (isNative) tapFeedback();
+    callback?.();
+  };
+
+  const specialties = [
+    { id: 'general', icon: 'fa-stethoscope', label: 'General', color: '#10b981', count: doctorCounts.general || 42 },
+    { id: 'dental', icon: 'fa-tooth', label: 'Dental', color: '#3b82f6', count: doctorCounts.dental || 18 },
+    { id: 'cardio', icon: 'fa-heartbeat', label: 'Heart', color: '#ef4444', count: doctorCounts.cardio || 12 },
+    { id: 'ortho', icon: 'fa-bone', label: 'Ortho', color: '#f59e0b', count: doctorCounts.ortho || 15 },
+    { id: 'skin', icon: 'fa-hand-sparkles', label: 'Skin', color: '#ec4899', count: doctorCounts.skin || 22 },
+    { id: 'eye', icon: 'fa-eye', label: 'Eye', color: '#8b5cf6', count: doctorCounts.eye || 9 },
+    { id: 'child', icon: 'fa-baby', label: 'Pediatric', color: '#06b6d4', count: doctorCounts.child || 14 },
+    { id: 'neuro', icon: 'fa-brain', label: 'Neuro', color: '#6366f1', count: doctorCounts.neuro || 7 },
+  ];
+
+  const quickActions = [
+    { id: 'video', icon: 'fa-video', label: 'Video Consult', subtitle: 'Talk to doctor now', colorClass: 'action-card-purple', action: onVideoConsult },
+    { id: 'clinic', icon: 'fa-hospital', label: 'Book Visit', subtitle: 'In-clinic appointment', colorClass: 'action-card-green', action: onClinicVisit },
+  ];
 
   return (
-    <div className="mobile-hero-wrapper">
-      {/* Header */}
-      <div className="mobile-hero-header">
-        <div className="hero-logo-animated">
-          <div className="logo-pulse-ring"></div>
-          <div className="logo-pulse-ring delay-1"></div>
-          <div className="logo-inner">
-            <i className="fas fa-heartbeat"></i>
+    <div className="swiggy-hero">
+      {/* Gradient Header with Contextual Greeting */}
+      <div className="swiggy-header">
+        <div className="header-content">
+          <div className="greeting-section">
+            <p className="greeting-text">{greeting} 👋</p>
+            <h1 className="user-name">{user?.name?.split(' ')[0] || 'there'}</h1>
+            <p className="greeting-subtitle">🩺 Book your appointment in under 30 seconds</p>
           </div>
-        </div>
-        <button className="hero-search-btn" onClick={() => onSearch?.('')}>
-          <i className="fas fa-search"></i>
-        </button>
-      </div>
-
-      {/* Hero Text - Smooth Animated Tagline */}
-      <div className="hero-tagline">
-        <div className={`tagline-slider ${isTransitioning ? 'fade-out' : 'fade-in'}`}>
-          <h1>{taglines[taglineIndex]}</h1>
-        </div>
-      </div>
-
-      {/* Service Cards */}
-      <div className="hero-service-cards">
-        <div className="hero-service-card" onClick={onVideoConsult}>
-          <div className="hero-service-icon">
-            <svg viewBox="0 0 80 80" fill="none">
-              <circle cx="40" cy="28" r="16" fill="#b8d4ce"/>
-              <rect x="24" y="44" width="32" height="32" rx="6" fill="#87bdb0"/>
-              <circle cx="40" cy="26" r="8" fill="#fff"/>
-              <rect x="36" y="24" width="8" height="4" rx="1" fill="#2d7a6d"/>
-            </svg>
-          </div>
-          <span className="hero-service-label">Video<br/>Consultation</span>
         </div>
         
-        <div className="hero-service-card" onClick={onClinicVisit}>
-          <div className="hero-service-icon">
-            <svg viewBox="0 0 80 80" fill="none">
-              <rect x="16" y="28" width="48" height="44" rx="6" fill="#b8d4ce"/>
-              <rect x="28" y="12" width="24" height="20" rx="4" fill="#87bdb0"/>
-              <rect x="36" y="40" width="8" height="32" fill="#fff"/>
-              <rect x="28" y="48" width="24" height="8" fill="#fff"/>
-            </svg>
+        {/* Search Bar with Helper Text */}
+        <div className="search-bar" onClick={() => handleTap(() => onSearch?.(''))}>
+          <i className="fas fa-search search-icon"></i>
+          <span className="search-placeholder">Search doctors, specialties...</span>
+          <div className="search-mic">
+            <i className="fas fa-microphone"></i>
           </div>
-          <span className="hero-service-label">Clinic<br/>Visit</span>
+        </div>
+        <p className="search-hint">Try: fever, skin problem, dentist</p>
+      </div>
+
+      {/* Quick Action Cards */}
+      <div className="quick-actions">
+        {quickActions.map((action) => (
+          <div 
+            key={action.id}
+            className={`action-card ${action.colorClass}`}
+            onClick={() => handleTap(action.action)}
+          >
+            <div className="action-icon">
+              <i className={`fas ${action.icon}`}></i>
+            </div>
+            <div className="action-text">
+              <span className="action-label">{action.label}</span>
+              <span className="action-subtitle">{action.subtitle}</span>
+            </div>
+            <i className="fas fa-chevron-right action-arrow"></i>
+          </div>
+        ))}
+      </div>
+
+      {/* AI Smart Match - Enhanced */}
+      <div className="ai-banner" onClick={() => handleTap(onSmartMatch)}>
+        <div className="ai-glow"></div>
+        <div className="ai-content">
+          <div className="ai-icon-wrap">
+            <i className="fas fa-magic"></i>
+            <span className="ai-badge">AI</span>
+          </div>
+          <div className="ai-text">
+            <div className="ai-title-row">
+              <span className="ai-title">Find Your Perfect Doctor</span>
+              <span className="ai-time-badge">⚡ 1 min</span>
+            </div>
+            <span className="ai-desc">AI-powered matching · No signup · Free</span>
+          </div>
+        </div>
+        <div className="ai-arrow pulse-arrow">
+          <i className="fas fa-arrow-right"></i>
         </div>
       </div>
 
-      {/* Smart Doctor Match */}
-      <div className="hero-smart-match" onClick={onSmartMatch}>
-        <div className="smart-match-icon-wrap">
-          <i className="fas fa-robot"></i>
+      {/* Specialties with Counts & Scroll Hint */}
+      <div className="specialties-section">
+        <div className="section-header">
+          <h2>Browse by Specialty</h2>
+          <span className="scroll-hint">Swipe →</span>
         </div>
-        <span className="smart-match-text">Smart Doctor Match</span>
-        <i className="fas fa-chevron-right smart-match-chevron"></i>
+        <div className="specialties-scroll">
+          {specialties.map((spec) => (
+            <div 
+              key={spec.id} 
+              className="specialty-chip"
+              onClick={() => handleTap(() => onSearch?.(spec.label))}
+            >
+              <div className="specialty-icon" style={{ backgroundColor: `${spec.color}15`, color: spec.color }}>
+                <i className={`fas ${spec.icon}`}></i>
+              </div>
+              <span className="specialty-label">{spec.label}</span>
+              <span className="specialty-count">({spec.count})</span>
+            </div>
+          ))}
+          <div className="scroll-fade"></div>
+        </div>
       </div>
 
-      {/* Quick Stats */}
-      <div className="hero-stats-row">
-        <div className="hero-stat">
-          <span className="stat-number">500+</span>
-          <span className="stat-label">Doctors</span>
+      {/* Enhanced Trust Indicators */}
+      <div className="trust-strip">
+        <div className="trust-item">
+          <i className="fas fa-check-circle"></i>
+          <span>Verified Doctors</span>
         </div>
-        <div className="hero-stat">
-          <span className="stat-number">10K+</span>
-          <span className="stat-label">Patients</span>
+        <div className="trust-divider"></div>
+        <div className="trust-item">
+          <i className="fas fa-clock"></i>
+          <span>Available Today</span>
         </div>
-        <div className="hero-stat">
-          <span className="stat-number">4.9</span>
-          <span className="stat-label">Rating</span>
+        <div className="trust-divider"></div>
+        <div className="trust-item">
+          <i className="fas fa-star"></i>
+          <span>Highly Rated</span>
         </div>
+      </div>
+
+      {/* Security Footer */}
+      <div className="security-footer">
+        <i className="fas fa-lock"></i>
+        <span>Your data is secured & encrypted</span>
       </div>
     </div>
   );

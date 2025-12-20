@@ -5,6 +5,7 @@ import android.view.View;
 import android.view.WindowManager;
 import android.graphics.Color;
 import android.os.Build;
+import android.webkit.WebView;
 import androidx.core.view.WindowCompat;
 import androidx.core.view.WindowInsetsControllerCompat;
 import com.getcapacitor.BridgeActivity;
@@ -15,6 +16,9 @@ public class MainActivity extends BridgeActivity {
     public void onCreate(Bundle savedInstanceState) {
         // Set up native-like window before super.onCreate
         setupNativeWindow();
+        
+        // Enable WebView debugging for development
+        WebView.setWebContentsDebuggingEnabled(true);
         
         super.onCreate(savedInstanceState);
         
@@ -29,9 +33,9 @@ public class MainActivity extends BridgeActivity {
         // Prevent white flash on startup
         getWindow().setBackgroundDrawableResource(android.R.color.white);
         
-        // Enable edge-to-edge display
+        // Don't use edge-to-edge - let system bars have their space
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-            getWindow().setDecorFitsSystemWindows(false);
+            getWindow().setDecorFitsSystemWindows(true);
         }
         
         // Keep screen on during important operations

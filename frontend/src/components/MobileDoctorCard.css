@@ -1,0 +1,322 @@
+/* ============================================
+   Mobile Doctor Card - Practo/Swiggy Style
+   ============================================ */
+
+.mobile-doctor-card {
+  background: #ffffff !important;
+  border-radius: 16px !important;
+  padding: 16px !important;
+  margin-bottom: 12px !important;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06) !important;
+  border: 1px solid #f1f5f9 !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: hidden !important;
+  display: block !important;
+}
+
+/* Top Section */
+.mobile-doctor-card .doctor-card-top {
+  display: flex !important;
+  flex-direction: row !important;
+  gap: 12px !important;
+  margin-bottom: 12px !important;
+  width: 100% !important;
+}
+
+.mobile-doctor-card .doctor-photo-section {
+  position: relative !important;
+  flex-shrink: 0 !important;
+}
+
+.mobile-doctor-card .doctor-photo {
+  width: 64px !important;
+  height: 64px !important;
+  min-width: 64px !important;
+  min-height: 64px !important;
+  border-radius: 12px !important;
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%) !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  overflow: hidden !important;
+  flex-shrink: 0 !important;
+}
+
+.mobile-doctor-card .doctor-photo img {
+  width: 100% !important;
+  height: 100% !important;
+  object-fit: cover !important;
+}
+
+.mobile-doctor-card .doctor-initials {
+  color: white !important;
+  font-size: 20px !important;
+  font-weight: 700 !important;
+}
+
+.mobile-doctor-card .online-badge {
+  position: absolute !important;
+  bottom: 0 !important;
+  right: 0 !important;
+  width: 14px !important;
+  height: 14px !important;
+  background: #10b981 !important;
+  border: 2px solid white !important;
+  border-radius: 50% !important;
+}
+
+.mobile-doctor-card .doctor-info {
+  flex: 1 !important;
+  min-width: 0 !important;
+  overflow: hidden !important;
+}
+
+.mobile-doctor-card .doctor-name-row {
+  display: flex !important;
+  align-items: flex-start !important;
+  justify-content: space-between !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.mobile-doctor-card .doctor-name {
+  font-size: 15px !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  margin: 0 !important;
+  line-height: 1.3 !important;
+  word-wrap: break-word !important;
+  overflow-wrap: break-word !important;
+}
+
+.mobile-doctor-card .favorite-btn {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  border-radius: 8px !important;
+  border: none !important;
+  background: #fef2f2 !important;
+  color: #fca5a5 !important;
+  font-size: 12px !important;
+  cursor: pointer !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  flex-shrink: 0 !important;
+  padding: 0 !important;
+}
+
+.mobile-doctor-card .favorite-btn.active {
+  background: #fee2e2 !important;
+  color: #ef4444 !important;
+}
+
+.mobile-doctor-card .doctor-specialty {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  color: #0ea5e9 !important;
+  margin: 2px 0 !important;
+}
+
+.mobile-doctor-card .doctor-clinic {
+  font-size: 11px !important;
+  color: #64748b !important;
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  white-space: nowrap !important;
+  overflow: hidden !important;
+  text-overflow: ellipsis !important;
+  margin: 0 !important;
+}
+
+.mobile-doctor-card .doctor-clinic i {
+  font-size: 9px !important;
+  color: #94a3b8 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Stats Row */
+.mobile-doctor-card .doctor-stats {
+  display: flex !important;
+  align-items: center !important;
+  justify-content: space-between !important;
+  padding: 10px 0 !important;
+  border-top: 1px solid #f1f5f9 !important;
+  border-bottom: 1px solid #f1f5f9 !important;
+  margin-bottom: 10px !important;
+  gap: 4px !important;
+}
+
+.mobile-doctor-card .stat-item {
+  display: flex !important;
+  align-items: center !important;
+  gap: 6px !important;
+  flex: 1 !important;
+  min-width: 0 !important;
+}
+
+.mobile-doctor-card .stat-icon {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  border-radius: 8px !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  font-size: 10px !important;
+  flex-shrink: 0 !important;
+}
+
+.mobile-doctor-card .stat-icon.rating {
+  background: #fef3c7 !important;
+  color: #f59e0b !important;
+}
+
+.mobile-doctor-card .stat-icon.experience {
+  background: #d1fae5 !important;
+  color: #10b981 !important;
+}
+
+.mobile-doctor-card .stat-icon.fee {
+  background: #e0e7ff !important;
+  color: #6366f1 !important;
+}
+
+.mobile-doctor-card .stat-text {
+  display: flex !important;
+  flex-direction: column !important;
+  min-width: 0 !important;
+}
+
+.mobile-doctor-card .stat-value {
+  font-size: 12px !important;
+  font-weight: 700 !important;
+  color: #1e293b !important;
+  line-height: 1.2 !important;
+  white-space: nowrap !important;
+}
+
+.mobile-doctor-card .stat-label {
+  font-size: 9px !important;
+  color: #94a3b8 !important;
+  font-weight: 500 !important;
+  white-space: nowrap !important;
+}
+
+.mobile-doctor-card .stat-divider {
+  width: 1px !important;
+  height: 24px !important;
+  background: #e2e8f0 !important;
+  flex-shrink: 0 !important;
+}
+
+/* Consultation Types */
+.mobile-doctor-card .consultation-types {
+  display: flex !important;
+  gap: 6px !important;
+  margin-bottom: 12px !important;
+  flex-wrap: wrap !important;
+}
+
+.mobile-doctor-card .consult-type {
+  display: flex !important;
+  align-items: center !important;
+  gap: 4px !important;
+  padding: 4px 10px !important;
+  border-radius: 16px !important;
+  font-size: 10px !important;
+  font-weight: 600 !important;
+}
+
+.mobile-doctor-card .consult-type.online {
+  background: #eff6ff !important;
+  color: #3b82f6 !important;
+}
+
+.mobile-doctor-card .consult-type.clinic {
+  background: #f0fdf4 !important;
+  color: #22c55e !important;
+}
+
+.mobile-doctor-card .consult-type i {
+  font-size: 9px !important;
+}
+
+/* Action Buttons */
+.mobile-doctor-card .doctor-actions {
+  display: flex !important;
+  gap: 8px !important;
+  width: 100% !important;
+}
+
+.mobile-doctor-card .action-btn {
+  flex: 1 !important;
+  display: flex !important;
+  align-items: center !important;
+  justify-content: center !important;
+  gap: 6px !important;
+  padding: 10px 12px !important;
+  border-radius: 10px !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  border: none !important;
+  cursor: pointer !important;
+  -webkit-tap-highlight-color: transparent !important;
+}
+
+.mobile-doctor-card .action-btn:active {
+  transform: scale(0.97) !important;
+}
+
+.mobile-doctor-card .action-btn.secondary {
+  background: #f1f5f9 !important;
+  color: #475569 !important;
+}
+
+.mobile-doctor-card .action-btn.primary {
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%) !important;
+  color: white !important;
+}
+
+.mobile-doctor-card .action-btn.primary.disabled {
+  background: #e2e8f0 !important;
+  color: #94a3b8 !important;
+  cursor: not-allowed !important;
+}
+
+.mobile-doctor-card .action-btn i {
+  font-size: 11px !important;
+}
+
+/* Dark Mode */
+html[data-theme="dark"] .mobile-doctor-card {
+  background: #1e293b !important;
+  border-color: #334155 !important;
+}
+
+html[data-theme="dark"] .mobile-doctor-card .doctor-name {
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] .mobile-doctor-card .doctor-clinic {
+  color: #94a3b8 !important;
+}
+
+html[data-theme="dark"] .mobile-doctor-card .doctor-stats {
+  border-color: #334155 !important;
+}
+
+html[data-theme="dark"] .mobile-doctor-card .stat-value {
+  color: #f1f5f9 !important;
+}
+
+html[data-theme="dark"] .mobile-doctor-card .stat-divider {
+  background: #475569 !important;
+}
+
+html[data-theme="dark"] .mobile-doctor-card .action-btn.secondary {
+  background: #334155 !important;
+  color: #cbd5e1 !important;
+}
