@@ -12,6 +12,7 @@ import com.getcapacitor.BridgeActivity;
 import com.codetrixstudio.capacitor.GoogleAuth.GoogleAuth;
 
 public class MainActivity extends BridgeActivity {
+    
     @Override
     public void onCreate(Bundle savedInstanceState) {
         // Set up native-like window before super.onCreate
@@ -25,8 +26,8 @@ public class MainActivity extends BridgeActivity {
         // Register plugins
         registerPlugin(GoogleAuth.class);
         
-        // Configure WebView settings for payments (without overriding clients)
-        configureWebViewSettings();
+        // Configure WebView settings for payments - ONLY settings, no client override
+        configureWebViewForPayments();
         
         // Apply native enhancements after bridge is ready
         applyNativeEnhancements();
@@ -45,7 +46,7 @@ public class MainActivity extends BridgeActivity {
         getWindow().addFlags(WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
     }
 
-    private void configureWebViewSettings() {
+    private void configureWebViewForPayments() {
         // Get the WebView from Capacitor bridge
         WebView webView = getBridge().getWebView();
         if (webView != null) {
@@ -57,6 +58,9 @@ public class MainActivity extends BridgeActivity {
             // Enable DOM storage (required for Razorpay)
             settings.setDomStorageEnabled(true);
             
+            // Database storage
+            settings.setDatabaseEnabled(true);
+            
             // Allow mixed content (http in https) - needed for some payment flows
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
                 settings.setMixedContentMode(WebSettings.MIXED_CONTENT_ALWAYS_ALLOW);
@@ -64,11 +68,29 @@ public class MainActivity extends BridgeActivity {
             
             // Enable JavaScript to open windows (for Razorpay popup)
             settings.setJavaScriptCanOpenWindowsAutomatically(true);
-            settings.setSupportMultipleWindows(true);
+            settings.setSupportMultipleWindows(false); // Keep false to avoid popup issues
             
             // Enable file access
             settings.setAllowFileAccess(true);
             settings.setAllowContentAccess(true);
+            
+            // Enable caching
+            settings.setCacheMode(WebSettings.LOAD_DEFAULT);
+            
+            // Enable zoom (may help with payment UI)
+            settings.setSupportZoom(true);
+            settings.setBuiltInZoomControls(true);
+            settings.setDisplayZoomControls(false);
+            
+            // Load images
+            settings.setLoadsImagesAutomatically(true);
+            settings.setBlockNetworkImage(false);
+            
+            // Media playback
+            settings.setMediaPlaybackRequiresUserGesture(false);
+            
+            // DO NOT set custom WebChromeClient or WebViewClient
+            // Let Capacitor handle these to avoid breaking Razorpay
         }
     }
 

@@ -240,6 +240,230 @@ router.get('/status/:appointmentId', async (req, res) => {
   }
 });
 
+// Razorpay Callback - for Android app redirect flow
+router.get('/razorpay-callback', async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, appointmentId } = req.query;
+    
+    console.log('📱 Razorpay callback received:', { razorpay_order_id, razorpay_payment_id, appointmentId });
+    
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature) {
+      // Redirect to app with error
+      return res.redirect(`healthsync://payment-failed?error=Missing payment details&appointmentId=${appointmentId || ''}`);
+    }
+    
+    // Verify the payment
+    const result = await razorpayService.verifyPayment({
+      razorpay_order_id,
+      razorpay_payment_id,
+      razorpay_signature,
+      appointmentId
+    });
+    
+    if (result.success) {
+      // Redirect to app with success
+      const successUrl = `healthsync://payment-success?razorpay_order_id=${razorpay_order_id}&razorpay_payment_id=${razorpay_payment_id}&razorpay_signature=${razorpay_signature}&appointmentId=${appointmentId || ''}`;
+      console.log('✅ Payment verified, redirecting to:', successUrl);
+      return res.redirect(successUrl);
+    } else {
+      return res.redirect(`healthsync://payment-failed?error=Payment verification failed&appointmentId=${appointmentId || ''}`);
+    }
+  } catch (error) {
+    console.error('❌ Razorpay callback error:', error);
+    return res.redirect(`healthsync://payment-failed?error=${encodeURIComponent(error.message)}&appointmentId=${req.query.appointmentId || ''}`);
+  }
+});
+
+// Razorpay Cancel - for Android app redirect flow
+router.get('/razorpay-cancel', async (req, res) => {
+  const { appointmentId } = req.query;
+  console.log('📱 Razorpay payment cancelled for appointment:', appointmentId);
+  return res.redirect(`healthsync://payment-failed?error=Payment cancelled by user&appointmentId=${appointmentId || ''}`);
+});
+
+// Mobile Payment Page - serves a full-page Razorpay checkout for Android
+router.get('/mobile-checkout/:orderId', async (req, res) => {
+  try {
+    const { orderId } = req.params;
+    const { appointmentId, amount, name, email, contact, doctorName } = req.query;
+    
+    console.log('📱 Mobile checkout page requested for order:', orderId);
+    
+    const html = `
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>HealthSync Payment</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+    .card {
+      background: white;
+      border-radius: 20px;
+      padding: 30px;
+      max-width: 400px;
+      width: 100%;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+      text-align: center;
+    }
+    .logo {
+      font-size: 28px;
+      font-weight: 700;
+      color: #0ea5e9;
+      margin-bottom: 20px;
+    }
+    .amount {
+      font-size: 36px;
+      font-weight: 700;
+      color: #1e293b;
+      margin: 20px 0;
+    }
+    .doctor {
+      color: #64748b;
+      font-size: 16px;
+      margin-bottom: 30px;
+    }
+    .pay-btn {
+      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+      color: white;
+      border: none;
+      padding: 18px 40px;
+      font-size: 18px;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+      margin-bottom: 15px;
+      transition: transform 0.2s;
+    }
+    .pay-btn:active { transform: scale(0.98); }
+    .cancel-btn {
+      background: transparent;
+      color: #64748b;
+      border: 2px solid #e2e8f0;
+      padding: 14px 40px;
+      font-size: 16px;
+      border-radius: 12px;
+      cursor: pointer;
+      width: 100%;
+    }
+    .loading {
+      display: none;
+      color: #64748b;
+      margin-top: 20px;
+    }
+    .spinner {
+      width: 40px;
+      height: 40px;
+      border: 4px solid #e2e8f0;
+      border-top-color: #0ea5e9;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 10px;
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+    .secure {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      color: #22c55e;
+      font-size: 14px;
+      margin-top: 20px;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <div class="logo">🏥 HealthSync Pro</div>
+    <div class="doctor">Consultation with ${decodeURIComponent(doctorName || 'Doctor')}</div>
+    <div class="amount">₹${parseInt(amount || 0) / 100}</div>
+    <button class="pay-btn" onclick="startPayment()">Pay Now</button>
+    <button class="cancel-btn" onclick="cancelPayment()">Cancel</button>
+    <div class="loading" id="loading">
+      <div class="spinner"></div>
+      <p>Processing payment...</p>
+    </div>
+    <div class="secure">🔒 Secured by Razorpay</div>
+  </div>
+  
+  <script src="https://checkout.razorpay.com/v1/checkout.js"></script>
+  <script>
+    const orderId = '${orderId}';
+    const appointmentId = '${appointmentId}';
+    const keyId = '${RAZORPAY_KEY_ID}';
+    
+    function startPayment() {
+      document.getElementById('loading').style.display = 'block';
+      
+      const options = {
+        key: keyId,
+        amount: ${amount || 0},
+        currency: 'INR',
+        name: 'HealthSync Pro',
+        description: 'Consultation with ${decodeURIComponent(doctorName || 'Doctor')}',
+        order_id: orderId,
+        prefill: {
+          name: '${decodeURIComponent(name || '')}',
+          email: '${decodeURIComponent(email || '')}',
+          contact: '${decodeURIComponent(contact || '')}'
+        },
+        theme: { color: '#0ea5e9' },
+        handler: function(response) {
+          // Payment successful - redirect to app
+          const successUrl = 'healthsync://payment-success?' +
+            'razorpay_order_id=' + response.razorpay_order_id +
+            '&razorpay_payment_id=' + response.razorpay_payment_id +
+            '&razorpay_signature=' + response.razorpay_signature +
+            '&appointmentId=' + appointmentId;
+          window.location.href = successUrl;
+        },
+        modal: {
+          ondismiss: function() {
+            document.getElementById('loading').style.display = 'none';
+          }
+        }
+      };
+      
+      const rzp = new Razorpay(options);
+      rzp.on('payment.failed', function(response) {
+        window.location.href = 'healthsync://payment-failed?error=' + 
+          encodeURIComponent(response.error.description) + 
+          '&appointmentId=' + appointmentId;
+      });
+      rzp.open();
+    }
+    
+    function cancelPayment() {
+      window.location.href = 'healthsync://payment-failed?error=Payment cancelled&appointmentId=' + appointmentId;
+    }
+    
+    // Auto-start payment after a short delay
+    setTimeout(startPayment, 500);
+  </script>
+</body>
+</html>
+    `;
+    
+    res.setHeader('Content-Type', 'text/html');
+    res.send(html);
+  } catch (error) {
+    console.error('❌ Mobile checkout error:', error);
+    res.redirect(`healthsync://payment-failed?error=${encodeURIComponent(error.message)}`);
+  }
+});
+
 // Razorpay Webhook - for payment confirmations (backup verification)
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   try {

@@ -1538,58 +1538,67 @@ function App() {
       {/* PWA Install Banner */}
       <PWAInstallBanner />
       
-      {/* Global Toast Notifications - Native Android Style */}
+      {/* Global Toast Notifications - Modern Native Style */}
       <Toaster
         position="top-center"
         reverseOrder={false}
+        gutter={12}
         containerStyle={{
-          top: 'calc(12px + env(safe-area-inset-top, 0px))',
-          zIndex: 99999,
+          top: 'calc(16px + env(safe-area-inset-top, 0px))',
+          zIndex: 99999999,
         }}
         toastOptions={{
           duration: 3000,
           style: {
-            background: '#1e293b',
+            background: 'rgba(15, 23, 42, 0.95)',
             color: '#ffffff',
-            padding: '14px 18px',
-            borderRadius: '14px',
-            boxShadow: '0 8px 32px rgba(0, 0, 0, 0.25)',
-            fontWeight: '500',
-            fontSize: '14px',
-            maxWidth: '92vw',
-            minWidth: '280px',
-            border: 'none',
+            padding: '16px 20px',
+            borderRadius: '16px',
+            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.2)',
+            fontWeight: '600',
+            fontSize: '15px',
+            maxWidth: '90vw',
+            minWidth: '200px',
+            backdropFilter: 'blur(12px)',
+            WebkitBackdropFilter: 'blur(12px)',
+            border: '1px solid rgba(255, 255, 255, 0.1)',
+            display: 'flex',
+            alignItems: 'center',
+            gap: '12px',
           },
           success: {
             duration: 2500,
             iconTheme: {
-              primary: '#10b981',
+              primary: '#22c55e',
               secondary: '#ffffff',
             },
             style: {
-              background: '#065f46',
+              background: 'linear-gradient(135deg, rgba(22, 163, 74, 0.95) 0%, rgba(21, 128, 61, 0.95) 100%)',
               color: '#ffffff',
+              border: '1px solid rgba(34, 197, 94, 0.3)',
             },
           },
           error: {
             duration: 4000,
             iconTheme: {
-              primary: '#fecaca',
-              secondary: '#991b1b',
+              primary: '#ffffff',
+              secondary: '#dc2626',
             },
             style: {
-              background: '#991b1b',
+              background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.95) 0%, rgba(185, 28, 28, 0.95) 100%)',
               color: '#ffffff',
+              border: '1px solid rgba(248, 113, 113, 0.3)',
             },
           },
           loading: {
             iconTheme: {
-              primary: '#0ea5e9',
+              primary: '#60a5fa',
               secondary: '#ffffff',
             },
             style: {
-              background: '#0c4a6e',
+              background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.95) 0%, rgba(29, 78, 216, 0.95) 100%)',
               color: '#ffffff',
+              border: '1px solid rgba(96, 165, 250, 0.3)',
             },
           },
         }}

@@ -4,6 +4,7 @@ import { useState, useEffect } from 'react';
 import '../styles/premium-saas.css';
 import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSelector from './LanguageSelector';
+import { Capacitor } from '@capacitor/core';
 
 const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode = () => {} }) => {
   const { t, language } = useLanguage();
@@ -12,8 +13,19 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
   const [activeFaq, setActiveFaq] = useState(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 769 : false);
+  const [isNativeApp, setIsNativeApp] = useState(false);
   const [taglineIndex, setTaglineIndex] = useState(0);
   const [isTaglineTransitioning, setIsTaglineTransitioning] = useState(false);
+
+  // Detect native Android/iOS app
+  useEffect(() => {
+    try {
+      const platform = Capacitor.getPlatform();
+      setIsNativeApp(platform === 'android' || platform === 'ios');
+    } catch (e) {
+      setIsNativeApp(false);
+    }
+  }, []);
 
   // SEO-optimized rotating taglines - Clinic Appointment & Patient Management
   const taglines = [
@@ -238,72 +250,103 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             left: 0,
             right: 0,
             bottom: 0,
-            zIndex: 999999,
-            pointerEvents: 'auto'
+            zIndex: 99999999,
+            pointerEvents: 'auto',
+            isolation: 'isolate'
           }}
         >
           {/* Backdrop */}
           <div 
             onClick={() => setMobileMenuOpen(false)}
             style={{
-              position: 'absolute',
+              position: 'fixed',
               top: 0,
               left: 0,
               right: 0,
               bottom: 0,
-              background: 'rgba(0,0,0,0.6)',
-              backdropFilter: 'blur(4px)',
-              WebkitBackdropFilter: 'blur(4px)'
+              background: 'rgba(0,0,0,0.7)',
+              backdropFilter: 'blur(8px)',
+              WebkitBackdropFilter: 'blur(8px)',
+              zIndex: 1
             }}
           />
           {/* Menu Content */}
           <div 
             style={{
-              position: 'absolute',
-              top: scrolled ? '56px' : '64px',
-              left: 0,
-              right: 0,
-              background: darkMode ? '#0f172a' : '#ffffff',
-              padding: '20px 24px',
-              boxShadow: '0 20px 60px rgba(0,0,0,0.3)',
-              maxHeight: 'calc(100vh - 80px)',
+              position: 'fixed',
+              top: '70px',
+              left: '16px',
+              right: '16px',
+              background: darkMode ? '#1e293b' : '#ffffff',
+              padding: '24px',
+              boxShadow: '0 25px 80px rgba(0,0,0,0.4)',
+              borderRadius: '20px',
+              maxHeight: 'calc(100vh - 120px)',
               overflowY: 'auto',
-              animation: 'slideDown 0.2s ease-out'
+              animation: 'slideDown 0.25s ease-out',
+              zIndex: 2
             }}
           >
             <style>{`
               @keyframes slideDown {
-                from { opacity: 0; transform: translateY(-10px); }
-                to { opacity: 1; transform: translateY(0); }
+                from { opacity: 0; transform: translateY(-20px) scale(0.95); }
+                to { opacity: 1; transform: translateY(0) scale(1); }
               }
             `}</style>
-            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
-              <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', display: 'block' }}>{t('features')}</a>
-              <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', display: 'block' }}>{t('howItWorks')}</a>
-              <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', display: 'block' }}>{t('pricing')}</a>
-              <a href="#security" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', display: 'block' }}>{t('security')}</a>
-              <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', display: 'block' }}>{t('faq')}</a>
-              <div style={{ height: '1px', background: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', margin: '12px 0' }} />
-              <button onClick={() => { onNavigate('login'); setMobileMenuOpen(false); }} style={{ padding: '14px', background: 'transparent', border: '2px solid #6366f1', color: '#6366f1', borderRadius: '10px', fontWeight: '700', fontSize: '16px', cursor: 'pointer', width: '100%' }}>{t('signIn')}</button>
-              <button onClick={() => { onNavigate('register'); setMobileMenuOpen(false); }} style={{ padding: '14px', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', border: 'none', color: '#fff', borderRadius: '10px', fontWeight: '700', fontSize: '16px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)', width: '100%' }}>{t('getStarted')}</button>
+            {/* Close button */}
+            <button
+              onClick={() => setMobileMenuOpen(false)}
+              style={{
+                position: 'absolute',
+                top: '16px',
+                right: '16px',
+                width: '36px',
+                height: '36px',
+                borderRadius: '50%',
+                border: 'none',
+                background: darkMode ? 'rgba(255,255,255,0.1)' : '#f1f5f9',
+                color: darkMode ? '#fff' : '#64748b',
+                fontSize: '18px',
+                cursor: 'pointer',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center'
+              }}
+            >
+              <i className="fas fa-times"></i>
+            </button>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '24px' }}>
+              <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ padding: '16px 20px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '17px', borderRadius: '12px', background: darkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', display: 'block' }}>{t('features')}</a>
+              <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} style={{ padding: '16px 20px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '17px', borderRadius: '12px', background: darkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', display: 'block' }}>{t('howItWorks')}</a>
+              <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ padding: '16px 20px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '17px', borderRadius: '12px', background: darkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', display: 'block' }}>{t('pricing')}</a>
+              <a href="#security" onClick={() => setMobileMenuOpen(false)} style={{ padding: '16px 20px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '17px', borderRadius: '12px', background: darkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', display: 'block' }}>{t('security')}</a>
+              <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '16px 20px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '17px', borderRadius: '12px', background: darkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', display: 'block' }}>{t('faq')}</a>
+              <div style={{ height: '1px', background: darkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0', margin: '16px 0' }} />
+              <button onClick={() => { onNavigate('login'); setMobileMenuOpen(false); }} style={{ padding: '16px', background: 'transparent', border: '2px solid #6366f1', color: '#6366f1', borderRadius: '12px', fontWeight: '700', fontSize: '17px', cursor: 'pointer', width: '100%' }}>{t('signIn')}</button>
+              <button onClick={() => { onNavigate('register'); setMobileMenuOpen(false); }} style={{ padding: '16px', background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', border: 'none', color: '#fff', borderRadius: '12px', fontWeight: '700', fontSize: '17px', cursor: 'pointer', boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)', width: '100%' }}>{t('getStarted')}</button>
             </div>
           </div>
         </div>
       )}
 
       {/* Hero Section */}
-      <section className="hero-premium">
+      <section className="hero-premium" style={isNativeApp ? { paddingTop: '80px', minHeight: '100vh' } : {}}>
         <div className="hero-premium__container">
           <div className="hero-premium__content animate-slide-up">
-            <div className="hero-premium__badge">
-              <i className="fas fa-hospital" style={{ fontSize: '12px' }}></i>
-              India's #1 Clinic Appointment Platform
+            {/* Native App: Simplified badge */}
+            <div className="hero-premium__badge" style={isNativeApp ? { 
+              fontSize: '14px', 
+              padding: '10px 20px',
+              marginBottom: '16px'
+            } : {}}>
+              <i className="fas fa-hospital" style={{ fontSize: isNativeApp ? '14px' : '12px' }}></i>
+              {isNativeApp ? 'Book Doctors Instantly' : "India's #1 Clinic Appointment Platform"}
             </div>
             
             {/* Rotating Hero Title - Fixed height to prevent layout shift */}
             <div style={{ 
-              minHeight: isMobile ? '100px' : '160px',
-              height: isMobile ? '100px' : '160px',
+              minHeight: isNativeApp ? '80px' : (isMobile ? '100px' : '160px'),
+              height: isNativeApp ? '80px' : (isMobile ? '100px' : '160px'),
               display: 'flex',
               alignItems: 'center',
               overflow: 'hidden'
@@ -341,14 +384,101 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               className="hero-search-container"
               style={{
                 background: 'rgba(255, 255, 255, 0.95)',
-                borderRadius: '16px',
-                padding: isMobile ? '12px' : '8px',
+                borderRadius: isMobile ? '20px' : '16px',
+                padding: isMobile ? '16px' : '8px',
                 marginBottom: '24px',
                 boxShadow: '0 20px 40px rgba(0, 0, 0, 0.15)',
                 maxWidth: '600px',
                 width: '100%'
               }}>
-              <div style={{ display: 'flex', gap: isMobile ? '10px' : '8px', alignItems: 'center', flexDirection: isMobile ? 'column' : 'row' }}>
+              {/* Mobile: Compact single-line search */}
+              {isMobile ? (
+                <div style={{ display: 'flex', flexDirection: 'column', gap: '12px' }}>
+                  {/* Search input with integrated button */}
+                  <div style={{ position: 'relative', width: '100%' }}>
+                    <i className="fas fa-search" style={{ 
+                      position: 'absolute', 
+                      left: '16px', 
+                      top: '50%', 
+                      transform: 'translateY(-50%)', 
+                      color: '#94a3b8',
+                      fontSize: '16px',
+                      zIndex: 1
+                    }}></i>
+                    <input 
+                      type="text"
+                      placeholder="Search doctors or specialties..."
+                      onClick={() => onNavigate('register')}
+                      readOnly
+                      style={{
+                        width: '100%',
+                        padding: '16px 100px 16px 48px',
+                        border: '2px solid #e2e8f0',
+                        borderRadius: '14px',
+                        fontSize: '15px',
+                        color: '#0f172a',
+                        background: '#ffffff',
+                        outline: 'none',
+                        boxSizing: 'border-box',
+                        cursor: 'pointer'
+                      }}
+                    />
+                    <button 
+                      onClick={() => onNavigate('register')}
+                      style={{
+                        position: 'absolute',
+                        right: '6px',
+                        top: '50%',
+                        transform: 'translateY(-50%)',
+                        padding: '10px 20px',
+                        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                        color: '#ffffff',
+                        border: 'none',
+                        borderRadius: '10px',
+                        fontSize: '14px',
+                        fontWeight: '600',
+                        cursor: 'pointer'
+                      }}
+                    >
+                      Search
+                    </button>
+                  </div>
+                  {/* Quick specialty chips - horizontal scroll */}
+                  <div style={{ 
+                    display: 'flex', 
+                    gap: '8px', 
+                    overflowX: 'auto',
+                    paddingBottom: '4px',
+                    WebkitOverflowScrolling: 'touch',
+                    scrollbarWidth: 'none',
+                    msOverflowStyle: 'none'
+                  }}>
+                    {['🏥 General', '🦷 Dental', '👶 Pediatric', '💊 Cardio', '🩺 Ortho'].map((tag, i) => (
+                      <button 
+                        key={i}
+                        onClick={() => onNavigate('register')}
+                        style={{
+                          padding: '8px 14px',
+                          background: i === 0 ? '#6366f1' : '#f1f5f9',
+                          border: 'none',
+                          borderRadius: '20px',
+                          fontSize: '13px',
+                          fontWeight: '500',
+                          color: i === 0 ? '#fff' : '#475569',
+                          cursor: 'pointer',
+                          whiteSpace: 'nowrap',
+                          flexShrink: 0
+                        }}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                /* Desktop: Original layout */
+                <>
+              <div style={{ display: 'flex', gap: '8px', alignItems: 'center', flexDirection: 'row' }}>
                 <div style={{ flex: 1, position: 'relative', width: '100%' }}>
                   <i className="fas fa-search" style={{ 
                     position: 'absolute', 
@@ -367,7 +497,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                       padding: '14px 16px 14px 48px',
                       border: 'none',
                       borderRadius: '10px',
-                      fontSize: isMobile ? '14px' : '15px',
+                      fontSize: '15px',
                       color: '#0f172a',
                       background: '#f8fafc',
                       outline: 'none',
@@ -386,8 +516,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                   background: '#f8fafc',
                   cursor: 'pointer',
                   outline: 'none',
-                  minWidth: isMobile ? '100%' : '140px',
-                  width: isMobile ? '100%' : 'auto'
+                  minWidth: '140px'
                 }}>
                   <option value="">{language === 'bn' ? 'বিশেষজ্ঞতা' : language === 'hi' ? 'विशेषज्ञता' : 'Specialty'}</option>
                   <option value="general">General Physician</option>
@@ -409,8 +538,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                     fontWeight: '600',
                     cursor: 'pointer',
                     whiteSpace: 'nowrap',
-                    boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)',
-                    width: isMobile ? '100%' : 'auto'
+                    boxShadow: '0 4px 14px rgba(99, 102, 241, 0.4)'
                   }}
                 >
                   <i className="fas fa-search" style={{ marginRight: '8px' }}></i>
@@ -418,7 +546,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                 </button>
               </div>
               {/* Quick specialty tags */}
-              <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap', padding: '0 8px', justifyContent: isMobile ? 'center' : 'flex-start' }}>
+              <div style={{ display: 'flex', gap: '8px', marginTop: '12px', flexWrap: 'wrap', padding: '0 8px' }}>
                 {['General Physician', 'Dentist', 'Pediatrician', 'Dermatologist'].map((tag, i) => (
                   <button 
                     key={i}
@@ -440,22 +568,33 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                   </button>
                 ))}
               </div>
+                </>
+              )}
             </div>
 
-            <div className="hero-premium__actions">
+            <div className="hero-premium__actions" style={isNativeApp ? { 
+              flexDirection: 'column', 
+              gap: '16px',
+              width: '100%',
+              maxWidth: '400px'
+            } : {}}>
               <button 
                 className="btn-premium btn-premium-lg"
                 onClick={() => onNavigate('register')}
                 style={{ 
                   background: '#ffffff', 
                   color: '#6366f1',
-                  fontWeight: '600',
-                  padding: '16px 32px',
-                  fontSize: '16px'
+                  fontWeight: '700',
+                  padding: isNativeApp ? '18px 32px' : '16px 32px',
+                  fontSize: isNativeApp ? '18px' : '16px',
+                  width: isNativeApp ? '100%' : 'auto',
+                  minHeight: isNativeApp ? '56px' : 'auto',
+                  borderRadius: isNativeApp ? '14px' : '12px',
+                  boxShadow: isNativeApp ? '0 8px 24px rgba(99, 102, 241, 0.3)' : 'none'
                 }}
               >
                 <i className="fas fa-calendar-plus" style={{ marginRight: '8px' }}></i>
-                Book Appointment
+                {isNativeApp ? 'Book Now' : 'Book Appointment'}
               </button>
               <button 
                 className="btn-premium btn-premium-lg"
@@ -464,32 +603,89 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                   background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
                   color: '#ffffff',
                   border: 'none',
-                  padding: '16px 32px',
-                  fontSize: '16px'
+                  padding: isNativeApp ? '18px 32px' : '16px 32px',
+                  fontSize: isNativeApp ? '18px' : '16px',
+                  width: isNativeApp ? '100%' : 'auto',
+                  minHeight: isNativeApp ? '56px' : 'auto',
+                  borderRadius: isNativeApp ? '14px' : '12px',
+                  boxShadow: isNativeApp ? '0 8px 24px rgba(16, 185, 129, 0.3)' : 'none'
                 }}
               >
-                <i className="fas fa-user-md" style={{ marginRight: '8px' }}></i>
-                {language === 'bn' ? 'ডাক্তার খুঁজুন' : language === 'hi' ? 'डॉक्टर खोजें' : 'Find Doctors'}
+                <i className="fas fa-video" style={{ marginRight: '8px' }}></i>
+                {isNativeApp ? 'Video Consult' : (language === 'bn' ? 'ডাক্তার খুঁজুন' : language === 'hi' ? 'डॉक्टर खोजें' : 'Find Doctors')}
               </button>
             </div>
             
-            <div className="hero-premium__stats">
+            {/* Stats - Compact on native app */}
+            <div className="hero-premium__stats" style={isNativeApp ? {
+              marginTop: '24px',
+              gap: '16px',
+              justifyContent: 'center'
+            } : {}}>
               <div className="hero-premium__stat">
-                <div className="hero-premium__stat-value">500+</div>
-                <div className="hero-premium__stat-label">{t('verifiedDoctors')}</div>
+                <div className="hero-premium__stat-value" style={isNativeApp ? { fontSize: '24px' } : {}}>500+</div>
+                <div className="hero-premium__stat-label" style={isNativeApp ? { fontSize: '11px' } : {}}>{isNativeApp ? 'Doctors' : t('verifiedDoctors')}</div>
               </div>
               <div className="hero-premium__stat">
-                <div className="hero-premium__stat-value">50K+</div>
-                <div className="hero-premium__stat-label">{t('happyPatients')}</div>
+                <div className="hero-premium__stat-value" style={isNativeApp ? { fontSize: '24px' } : {}}>50K+</div>
+                <div className="hero-premium__stat-label" style={isNativeApp ? { fontSize: '11px' } : {}}>{isNativeApp ? 'Patients' : t('happyPatients')}</div>
               </div>
               <div className="hero-premium__stat">
-                <div className="hero-premium__stat-value">99.9%</div>
-                <div className="hero-premium__stat-label">{t('uptime')}</div>
+                <div className="hero-premium__stat-value" style={isNativeApp ? { fontSize: '24px' } : {}}>4.9★</div>
+                <div className="hero-premium__stat-label" style={isNativeApp ? { fontSize: '11px' } : {}}>{isNativeApp ? 'Rating' : t('uptime')}</div>
               </div>
             </div>
 
-            {/* Trust Badges */}
-            <div style={{ 
+            {/* Native App Quick Actions */}
+            {isNativeApp && (
+              <div style={{
+                marginTop: '32px',
+                display: 'grid',
+                gridTemplateColumns: 'repeat(3, 1fr)',
+                gap: '12px',
+                width: '100%',
+                maxWidth: '400px'
+              }}>
+                {[
+                  { icon: 'fa-stethoscope', label: 'General', color: '#6366f1' },
+                  { icon: 'fa-tooth', label: 'Dental', color: '#10b981' },
+                  { icon: 'fa-baby', label: 'Pediatric', color: '#f59e0b' }
+                ].map((item, i) => (
+                  <button
+                    key={i}
+                    onClick={() => onNavigate('register')}
+                    style={{
+                      display: 'flex',
+                      flexDirection: 'column',
+                      alignItems: 'center',
+                      gap: '8px',
+                      padding: '16px 12px',
+                      background: 'rgba(255,255,255,0.15)',
+                      border: '1px solid rgba(255,255,255,0.2)',
+                      borderRadius: '16px',
+                      cursor: 'pointer',
+                      transition: 'all 0.2s ease'
+                    }}
+                  >
+                    <div style={{
+                      width: '44px',
+                      height: '44px',
+                      background: item.color,
+                      borderRadius: '12px',
+                      display: 'flex',
+                      alignItems: 'center',
+                      justifyContent: 'center'
+                    }}>
+                      <i className={`fas ${item.icon}`} style={{ color: '#fff', fontSize: '18px' }}></i>
+                    </div>
+                    <span style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>{item.label}</span>
+                  </button>
+                ))}
+              </div>
+            )}
+
+            {/* Trust Badges - Hide on native app for cleaner look */}
+            {!isNativeApp && <div style={{ 
               display: 'flex', 
               alignItems: 'center', 
               gap: '24px',
@@ -510,10 +706,10 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                   }}>{name}</div>
                 ))}
               </div>
-            </div>
+            </div>}
           </div>
-          
-          <div className="hero-premium__visual animate-slide-up stagger-2">
+          {/* Visual section - Hide on native app for faster load */}
+          {!isNativeApp && <div className="hero-premium__visual animate-slide-up stagger-2">
             {/* Doctor Image with Floating Elements */}
             <div style={{ 
               position: 'relative', 
@@ -716,7 +912,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                   <div style={{ fontSize: '11px', color: '#64748b' }}>3 patients ahead</div>
                 </div>
               </div>            </div>
-          </div>
+          </div>}
         </div>
 
         {/* Pulse Animation Styles */}

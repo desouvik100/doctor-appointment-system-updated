@@ -1,5 +1,11 @@
 import axios from '../api/config';
 import { Capacitor } from '@capacitor/core';
+import { Browser } from '@capacitor/browser';
+import { App } from '@capacitor/app';
+
+// Backend URL for payment callbacks
+const BACKEND_URL = process.env.REACT_APP_API_URL || 'https://doctor-appointment-system-updated.onrender.com';
+const FRONTEND_URL = window.location.origin;
 
 // Get Razorpay configuration
 export const getRazorpayConfig = async () => {
@@ -227,6 +233,49 @@ const loadRazorpayScript = () => {
   });
 };
 
+// Store pending payment callbacks for Android deep link handling
+let pendingPaymentCallbacks = null;
+
+// Setup deep link listener for payment callbacks (Android)
+const setupPaymentDeepLinkListener = () => {
+  if (Capacitor.isNativePlatform()) {
+    App.addListener('appUrlOpen', async ({ url }) => {
+      console.log('=== DEEP LINK RECEIVED ===');
+      console.log('URL:', url);
+      
+      if (url.includes('payment-callback') || url.includes('payment-success') || url.includes('payment-failed')) {
+        // Close the browser
+        try {
+          await Browser.close();
+        } catch (e) {
+          console.log('Browser already closed');
+        }
+        
+        // Parse the URL
+        const urlObj = new URL(url);
+        const params = new URLSearchParams(urlObj.search);
+        
+        if (pendingPaymentCallbacks) {
+          if (url.includes('payment-success') || params.get('status') === 'success') {
+            pendingPaymentCallbacks.onSuccess({
+              razorpay_order_id: params.get('razorpay_order_id'),
+              razorpay_payment_id: params.get('razorpay_payment_id'),
+              razorpay_signature: params.get('razorpay_signature'),
+              method: 'Razorpay'
+            });
+          } else {
+            pendingPaymentCallbacks.onFailure(new Error(params.get('error') || 'Payment failed or cancelled'));
+          }
+          pendingPaymentCallbacks = null;
+        }
+      }
+    });
+  }
+};
+
+// Initialize deep link listener
+setupPaymentDeepLinkListener();
+
 // Initiate payment - main entry point for payment flow
 export const initiatePayment = async (appointmentId, userId, onSuccess, onFailure, couponCode = null) => {
   try {
@@ -259,6 +308,55 @@ export const initiatePayment = async (appointmentId, userId, onSuccess, onFailur
       return;
     }
     
+    // For Android native app, use external browser with hosted checkout page
+    if (isNative && platform === 'android') {
+      console.log('Using external browser for Android payment...');
+      
+      // Store callbacks for deep link handling
+      pendingPaymentCallbacks = { onSuccess, onFailure };
+      
+      // Build URL for mobile checkout page hosted on backend
+      const checkoutParams = new URLSearchParams({
+        appointmentId: appointmentId,
+        amount: orderData.amountInPaise,
+        name: orderData.prefill?.name || '',
+        email: orderData.prefill?.email || '',
+        contact: orderData.prefill?.contact || '',
+        doctorName: orderData.notes?.doctorName || 'Doctor'
+      });
+      
+      // Use our backend's mobile checkout page
+      const checkoutUrl = `${BACKEND_URL}/api/payments/mobile-checkout/${orderData.orderId}?${checkoutParams.toString()}`;
+      
+      console.log('Opening mobile checkout URL:', checkoutUrl);
+      
+      // Open in external browser
+      await Browser.open({ 
+        url: checkoutUrl,
+        presentationStyle: 'fullscreen',
+        toolbarColor: '#0ea5e9'
+      });
+      
+      // Set up a listener for when browser closes (user cancelled)
+      const browserListener = await Browser.addListener('browserFinished', () => {
+        console.log('Browser closed by user');
+        // Don't immediately fail - wait a bit for deep link
+        setTimeout(() => {
+          if (pendingPaymentCallbacks) {
+            // If callbacks still pending after 2 seconds, assume cancelled
+            pendingPaymentCallbacks.onFailure(new Error('Payment cancelled'));
+            pendingPaymentCallbacks = null;
+          }
+        }, 2000);
+        browserListener.remove();
+      });
+      
+      return;
+    }
+    
+    // For web/iOS, use standard Razorpay popup
+    console.log('Using standard Razorpay popup...');
+    
     // Ensure Razorpay script is loaded
     console.log('Checking Razorpay SDK...');
     try {
@@ -275,9 +373,9 @@ export const initiatePayment = async (appointmentId, userId, onSuccess, onFailur
       throw new Error('Razorpay SDK not loaded. Please refresh and try again.');
     }
     
-    console.log('Razorpay SDK version:', window.Razorpay.version || 'unknown');
+    console.log('Razorpay SDK available:', !!window.Razorpay);
     
-    // Build Razorpay options - optimized for Android WebView
+    // Build Razorpay options
     const options = {
       key: orderData.keyId,
       amount: orderData.amountInPaise,
@@ -311,57 +409,32 @@ export const initiatePayment = async (appointmentId, userId, onSuccess, onFailur
         confirm_close: true,
         animation: true
       },
-      // Retry configuration
       retry: {
         enabled: true,
         max_count: 3
       },
-      // Send SMS hash for auto-read OTP (Android)
-      send_sms_hash: isNative && platform === 'android',
-      // Allow remember customer
       remember_customer: true,
-      // Callback URL for redirect-based flows (important for some Android WebViews)
-      callback_url: window.location.origin + '/payment-callback',
-      // Redirect mode - set to false to use popup mode
       redirect: false
     };
 
-    console.log('Razorpay options:', JSON.stringify(options, null, 2));
+    console.log('Razorpay options prepared');
     
-    // Create Razorpay instance
-    console.log('Creating Razorpay instance...');
-    const razorpay = new window.Razorpay(options);
-    
-    // Add payment failed handler
-    razorpay.on('payment.failed', function (response) {
-      console.error('=== PAYMENT FAILED ===');
-      console.error('Error:', response.error);
-      onFailure(new Error(response.error.description || 'Payment failed'));
-    });
-    
-    // Open the checkout - with slight delay for Android WebView
-    console.log('Opening Razorpay checkout...');
-    
-    if (isNative && platform === 'android') {
-      // Small delay for Android WebView to ensure DOM is ready
-      setTimeout(() => {
-        console.log('Opening Razorpay (Android delayed)...');
-        try {
-          razorpay.open();
-          console.log('Razorpay.open() called successfully');
-        } catch (openError) {
-          console.error('Error calling razorpay.open():', openError);
-          onFailure(new Error('Failed to open payment gateway. Please try again.'));
-        }
-      }, 300);
-    } else {
-      try {
-        razorpay.open();
-        console.log('Razorpay.open() called successfully');
-      } catch (openError) {
-        console.error('Error calling razorpay.open():', openError);
-        onFailure(new Error('Failed to open payment gateway. Please try again.'));
-      }
+    try {
+      const razorpay = new window.Razorpay(options);
+      
+      razorpay.on('payment.failed', function (response) {
+        console.error('=== PAYMENT FAILED ===');
+        console.error('Error:', response.error);
+        onFailure(new Error(response.error.description || 'Payment failed'));
+      });
+      
+      console.log('Opening Razorpay checkout...');
+      razorpay.open();
+      console.log('Razorpay.open() called successfully');
+      
+    } catch (instanceError) {
+      console.error('Error creating Razorpay instance:', instanceError);
+      onFailure(new Error('Failed to initialize payment. Please try again.'));
     }
     
   } catch (error) {
