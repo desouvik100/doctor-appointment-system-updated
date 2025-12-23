@@ -1,0 +1,175 @@
+/**
+ * Series Thumbnail Navigator Styles
+ */
+
+.series-navigator {
+  background: #1a1a2e;
+  border-radius: 8px;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.series-navigator.vertical {
+  width: 120px;
+  height: 100%;
+}
+
+.series-navigator.horizontal {
+  width: 100%;
+  height: 140px;
+  flex-direction: row;
+}
+
+.series-header {
+  padding: 8px 12px;
+  background: #16213e;
+  border-bottom: 1px solid #0f3460;
+}
+
+.series-count {
+  font-size: 12px;
+  color: #94a3b8;
+  font-weight: 500;
+}
+
+.series-list {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.series-navigator.horizontal .series-list {
+  flex-direction: row;
+  overflow-x: auto;
+  overflow-y: hidden;
+}
+
+.series-item {
+  background: #16213e;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  padding: 6px;
+}
+
+.series-item:hover {
+  background: #1f2937;
+  border-color: #3b82f6;
+}
+
+.series-item:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.3);
+}
+
+.series-item.selected {
+  background: #1e3a5f;
+  border-color: #3b82f6;
+}
+
+.thumbnail-container {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 1;
+  background: #0f0f1a;
+  border-radius: 4px;
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.series-navigator.horizontal .thumbnail-container {
+  width: 80px;
+  height: 80px;
+}
+
+.series-thumbnail {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.thumbnail-loading,
+.thumbnail-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 100%;
+  height: 100%;
+  color: #64748b;
+}
+
+.thumbnail-loading i {
+  font-size: 20px;
+}
+
+.thumbnail-placeholder i {
+  font-size: 24px;
+}
+
+.image-count-badge {
+  position: absolute;
+  bottom: 4px;
+  right: 4px;
+  background: rgba(0, 0, 0, 0.75);
+  color: #fff;
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  font-weight: 600;
+}
+
+.series-info {
+  margin-top: 6px;
+  text-align: center;
+}
+
+.series-number {
+  font-size: 11px;
+  font-weight: 600;
+  color: #e2e8f0;
+}
+
+.series-description {
+  font-size: 10px;
+  color: #94a3b8;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 100%;
+}
+
+.series-modality {
+  font-size: 10px;
+  color: #3b82f6;
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* Scrollbar styling */
+.series-list::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+.series-list::-webkit-scrollbar-track {
+  background: #0f0f1a;
+  border-radius: 3px;
+}
+
+.series-list::-webkit-scrollbar-thumb {
+  background: #3b82f6;
+  border-radius: 3px;
+}
+
+.series-list::-webkit-scrollbar-thumb:hover {
+  background: #2563eb;
+}
