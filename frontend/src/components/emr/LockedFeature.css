@@ -1,0 +1,255 @@
+/**
+ * LockedFeature Styles
+ * Styles for feature gating UI components
+ * Requirements: Task 16.2
+ */
+
+/* Inline Badge */
+.locked-feature-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 20px;
+  height: 20px;
+  font-size: 12px;
+  cursor: pointer;
+  opacity: 0.7;
+  transition: opacity 0.2s;
+}
+
+.locked-feature-badge:hover {
+  opacity: 1;
+}
+
+/* Inline Locked Feature */
+.locked-feature-inline {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 14px;
+  background: linear-gradient(135deg, #fef3c7, #fef9c3);
+  border: 1px solid #fde68a;
+  border-radius: 8px;
+}
+
+.locked-inline-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: #92400e;
+}
+
+.locked-inline-content .locked-icon {
+  font-size: 14px;
+}
+
+.locked-inline-content .locked-text strong {
+  color: #78350f;
+}
+
+.locked-inline-upgrade {
+  padding: 6px 14px;
+  background: linear-gradient(135deg, #f59e0b, #d97706);
+  border: none;
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.locked-inline-upgrade:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.3);
+}
+
+/* Card Locked Feature */
+.locked-feature-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 32px 24px;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border: 2px dashed #cbd5e1;
+  border-radius: 16px;
+  text-align: center;
+}
+
+.locked-card-icon {
+  position: relative;
+  width: 64px;
+  height: 64px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-bottom: 16px;
+}
+
+.locked-card-icon .feature-icon {
+  font-size: 40px;
+  opacity: 0.4;
+  filter: grayscale(0.5);
+}
+
+.locked-card-icon .lock-overlay {
+  position: absolute;
+  bottom: -4px;
+  right: -4px;
+  font-size: 24px;
+  background: white;
+  border-radius: 50%;
+  padding: 2px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.locked-card-content {
+  margin-bottom: 20px;
+}
+
+.locked-card-title {
+  margin: 0 0 8px 0;
+  font-size: 18px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.locked-card-description {
+  margin: 0 0 16px 0;
+  font-size: 14px;
+  color: #64748b;
+  max-width: 300px;
+}
+
+.locked-card-plan {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  padding: 12px 16px;
+  background: white;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+}
+
+.locked-card-plan .plan-label {
+  font-size: 11px;
+  font-weight: 500;
+  color: #94a3b8;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.locked-card-plan .plan-name {
+  font-size: 15px;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.locked-card-plan .plan-price {
+  font-size: 13px;
+  color: #10b981;
+  font-weight: 500;
+}
+
+.current-plan-note {
+  margin: 12px 0 0 0;
+  font-size: 12px;
+  color: #64748b;
+}
+
+.current-plan-note strong {
+  color: #475569;
+}
+
+.locked-card-upgrade {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 24px;
+  background: linear-gradient(135deg, #10b981, #059669);
+  border: none;
+  border-radius: 10px;
+  font-size: 14px;
+  font-weight: 600;
+  color: white;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.locked-card-upgrade:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(16, 185, 129, 0.3);
+}
+
+.locked-card-upgrade .upgrade-icon {
+  font-size: 16px;
+}
+
+/* Disabled state for locked buttons/items */
+.feature-locked {
+  position: relative;
+  opacity: 0.6;
+  cursor: not-allowed;
+  pointer-events: none;
+}
+
+.feature-locked::after {
+  content: '🔒';
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  transform: translateY(-50%);
+  font-size: 12px;
+}
+
+/* Menu item locked state */
+.menu-item-locked {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.menu-item-locked .lock-badge {
+  padding: 2px 8px;
+  background: #fef3c7;
+  border: 1px solid #fde68a;
+  border-radius: 4px;
+  font-size: 10px;
+  font-weight: 600;
+  color: #92400e;
+  text-transform: uppercase;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .locked-feature-inline {
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .locked-inline-content {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .locked-feature-card {
+    padding: 24px 16px;
+  }
+
+  .locked-card-description {
+    max-width: 100%;
+  }
+}
+
+/* Animation */
+@keyframes lockPulse {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.1); }
+}
+
+.locked-feature-card:hover .lock-overlay {
+  animation: lockPulse 0.6s ease-in-out;
+}

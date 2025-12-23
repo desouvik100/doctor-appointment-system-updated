@@ -1,0 +1,398 @@
+/* Systematic History Summary Styles */
+
+.sh-summary {
+  background: white;
+  border-radius: 12px;
+  overflow: hidden;
+}
+
+.sh-summary-empty {
+  padding: 20px;
+  text-align: center;
+  color: #94a3b8;
+}
+
+/* Compact View */
+.sh-summary-compact {
+  padding: 16px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.sh-summary-compact:hover {
+  background: #f8fafc;
+}
+
+.compact-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.compact-icon {
+  font-size: 20px;
+}
+
+.compact-title {
+  font-weight: 600;
+  color: #1e293b;
+  flex: 1;
+}
+
+.compact-badge {
+  padding: 4px 10px;
+  background: #0ea5e9;
+  color: white;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+}
+
+.expand-icon {
+  color: #94a3b8;
+  font-size: 12px;
+}
+
+.compact-complaint {
+  margin: 8px 0 12px;
+  font-size: 14px;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+.compact-systems {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.compact-system-chip {
+  padding: 4px 10px;
+  background: #f1f5f9;
+  border-radius: 6px;
+  font-size: 12px;
+  color: #475569;
+}
+
+/* Expanded View */
+.sh-summary-expanded {
+  padding: 20px;
+}
+
+.sh-summary-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.sh-summary-header h3 {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.header-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.print-btn, .collapse-btn {
+  padding: 8px 12px;
+  background: #f1f5f9;
+  border: none;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #475569;
+  cursor: pointer;
+}
+
+.print-btn:hover, .collapse-btn:hover {
+  background: #e2e8f0;
+}
+
+/* Sections */
+.sh-summary-section {
+  margin-bottom: 20px;
+}
+
+.sh-summary-section h4 {
+  font-size: 13px;
+  font-weight: 600;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin: 0 0 12px;
+}
+
+.sh-summary-section p {
+  margin: 0;
+  font-size: 15px;
+  color: #1e293b;
+  line-height: 1.5;
+}
+
+/* Chief Complaint */
+.chief-complaint {
+  padding: 16px;
+  background: #f0f9ff;
+  border-radius: 10px;
+  border-left: 4px solid #0ea5e9;
+}
+
+/* Systems Review */
+.systems-grid {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.sh-summary-row {
+  display: flex;
+  align-items: flex-start;
+  padding: 12px;
+  background: #f8fafc;
+  border-radius: 8px;
+  gap: 12px;
+}
+
+.sh-summary-row.has-symptoms {
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+}
+
+.sh-summary-system {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 140px;
+}
+
+.system-icon {
+  font-size: 18px;
+}
+
+.system-name {
+  font-weight: 600;
+  color: #475569;
+  font-size: 14px;
+}
+
+.sh-summary-status {
+  flex: 1;
+}
+
+.no-symptoms {
+  color: #94a3b8;
+  font-size: 14px;
+}
+
+.symptoms-list {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.symptom-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+}
+
+.symptom-name {
+  font-weight: 500;
+  color: #1e293b;
+  font-size: 14px;
+}
+
+.symptom-duration {
+  font-size: 12px;
+  color: #64748b;
+  padding: 2px 8px;
+  background: white;
+  border-radius: 4px;
+}
+
+.symptom-severity {
+  font-size: 11px;
+  font-weight: 600;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 4px;
+}
+
+/* Past History */
+.history-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.history-tag {
+  padding: 6px 12px;
+  background: #e0e7ff;
+  color: #4338ca;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+/* Medications */
+.medications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.medication-item {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.medication-item .med-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.medication-item .med-dosage,
+.medication-item .med-freq {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Allergies */
+.allergies-section {
+  background: #fef2f2;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #fecaca;
+}
+
+.allergies-section h4 {
+  color: #dc2626;
+}
+
+.allergies-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.allergy-tag {
+  padding: 6px 12px;
+  border-radius: 6px;
+  font-size: 13px;
+  font-weight: 500;
+}
+
+.allergy-tag.drug {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.allergy-tag.food {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.allergy-tag.other {
+  background: #f3e8ff;
+  color: #9333ea;
+}
+
+/* AI Recommendations */
+.ai-recommendations {
+  background: #f0fdf4;
+  padding: 16px;
+  border-radius: 10px;
+  border: 1px solid #bbf7d0;
+}
+
+.recommendations-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.recommendation-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.rec-spec {
+  font-weight: 600;
+  color: #1e293b;
+  font-size: 15px;
+}
+
+.rec-confidence {
+  padding: 3px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  font-weight: 600;
+  color: white;
+}
+
+.rec-reason {
+  font-size: 13px;
+  color: #64748b;
+}
+
+/* Footer */
+.sh-summary-footer {
+  display: flex;
+  justify-content: space-between;
+  padding-top: 16px;
+  margin-top: 16px;
+  border-top: 1px solid #e2e8f0;
+  font-size: 12px;
+  color: #94a3b8;
+}
+
+/* Print Styles */
+@media print {
+  .sh-summary {
+    box-shadow: none;
+    border: 1px solid #e2e8f0;
+  }
+  
+  .header-actions {
+    display: none;
+  }
+  
+  .sh-summary-row {
+    break-inside: avoid;
+  }
+}
+
+/* Mobile */
+@media (max-width: 480px) {
+  .sh-summary-expanded {
+    padding: 16px;
+  }
+  
+  .sh-summary-row {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .sh-summary-system {
+    min-width: auto;
+  }
+  
+  .symptom-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 4px;
+  }
+}

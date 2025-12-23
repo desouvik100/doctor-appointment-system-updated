@@ -1,0 +1,174 @@
+/**
+ * DiagnosisPrompt Styles
+ * Styles for diagnosis prompt before visit completion
+ * Requirements: 10.4
+ */
+
+.diagnosis-prompt {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+/* Header */
+.prompt-header {
+  display: flex;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: linear-gradient(135deg, #f8fafc, #f1f5f9);
+  border-radius: 0.75rem 0.75rem 0 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.header-icon {
+  font-size: 2rem;
+  line-height: 1;
+}
+
+.header-content {
+  flex: 1;
+}
+
+.prompt-title {
+  margin: 0 0 0.25rem 0;
+  font-size: 1.125rem;
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.prompt-subtitle {
+  margin: 0;
+  font-size: 0.875rem;
+  color: #64748b;
+  line-height: 1.4;
+}
+
+/* Current Diagnoses */
+.current-diagnoses {
+  padding: 1rem;
+  background: white;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Coder Section */
+.coder-section {
+  padding: 1rem;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+/* Add More Button */
+.add-more-btn {
+  display: block;
+  width: 100%;
+  padding: 0.875rem;
+  background: white;
+  border: 2px dashed #cbd5e1;
+  border-radius: 0;
+  color: #64748b;
+  font-size: 0.9375rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.add-more-btn:hover {
+  background: #f8fafc;
+  border-color: #3b82f6;
+  color: #3b82f6;
+}
+
+/* Actions */
+.prompt-actions {
+  display: flex;
+  gap: 0.75rem;
+  padding: 1rem;
+  background: white;
+  border-radius: 0 0 0.75rem 0.75rem;
+}
+
+.skip-btn,
+.complete-btn {
+  flex: 1;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 0.5rem;
+  font-size: 0.9375rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.skip-btn {
+  background: #f1f5f9;
+  color: #475569;
+}
+
+.skip-btn:hover {
+  background: #e2e8f0;
+}
+
+.complete-btn {
+  background: #10b981;
+  color: white;
+}
+
+.complete-btn:hover:not(:disabled) {
+  background: #059669;
+}
+
+.complete-btn.disabled,
+.complete-btn:disabled {
+  background: #cbd5e1;
+  color: #94a3b8;
+  cursor: not-allowed;
+}
+
+/* Warning Banner */
+.warning-banner {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1rem;
+  background: #fffbeb;
+  border-top: 1px solid #fde68a;
+  border-radius: 0 0 0.75rem 0.75rem;
+  font-size: 0.8125rem;
+  color: #92400e;
+}
+
+.warning-icon {
+  font-size: 1rem;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .prompt-header {
+    flex-direction: column;
+    text-align: center;
+  }
+  
+  .header-icon {
+    font-size: 2.5rem;
+  }
+  
+  .prompt-actions {
+    flex-direction: column;
+  }
+}
+
+/* Animation */
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.diagnosis-prompt {
+  animation: slideIn 0.3s ease-out;
+}

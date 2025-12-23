@@ -6,6 +6,19 @@ import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import { exportAppointmentsToPDF } from '../utils/pdfExport';
+import { VitalsRecorder, VitalsTrends, MedicalHistorySummary, MedicalHistoryForm } from './emr';
+
+// Helper function to format address (handles both string and object)
+const formatAddress = (address) => {
+  if (!address) return '';
+  if (typeof address === 'string') return address;
+  if (typeof address === 'object') {
+    return [address.street, address.city, address.state, address.country, address.pincode]
+      .filter(Boolean)
+      .join(', ');
+  }
+  return '';
+};
 
 const ClinicDashboardPro = ({ receptionist, onLogout }) => {
   const { t } = useLanguage();
@@ -33,6 +46,377 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
     return saved ? JSON.parse(saved) : false;
   });
 
+  // EMR Patient Registration state
+  const [emrPatientForm, setEmrPatientForm] = useState({
+    name: '', phone: '', email: '', doctorId: '', age: '', gender: 'male', address: ''
+  });
+  const [emrRegistering, setEmrRegistering] = useState(false);
+  const [selectedEmrPatient, setSelectedEmrPatient] = useState(null);
+  const [emrPatientView, setEmrPatientView] = useState('list'); // list, register, details, appointments
+  const [patientVisits, setPatientVisits] = useState([]);
+  const [patientPrescriptions, setPatientPrescriptions] = useState([]);
+  const [patientAppointments, setPatientAppointments] = useState([]);
+  const [loadingPatientDetails, setLoadingPatientDetails] = useState(false);
+  const [loadingPatientAppointments, setLoadingPatientAppointments] = useState(false);
+
+  // EMR Vitals state
+  const [showVitalsRecorder, setShowVitalsRecorder] = useState(false);
+  const [showVitalsTrends, setShowVitalsTrends] = useState(false);
+  const [lastVitals, setLastVitals] = useState(null);
+  const [loadingVitals, setLoadingVitals] = useState(false);
+
+  // EMR Medical History state
+  const [showMedicalHistoryForm, setShowMedicalHistoryForm] = useState(false);
+
+  // EMR Prescription state
+  const [selectedPatientForPrescription, setSelectedPatientForPrescription] = useState(null);
+  const [prescriptionForm, setPrescriptionForm] = useState({
+    diagnosis: '', medicines: [], instructions: '', followUpDate: '', followUpNotes: ''
+  });
+  const [newMedicine, setNewMedicine] = useState({
+    name: '', dosage: '', frequency: '', duration: '', timing: 'after_food', notes: ''
+  });
+  const [medicineSearch, setMedicineSearch] = useState('');
+  const [medicineSearchResults, setMedicineSearchResults] = useState([]);
+  const [prescriptions, setPrescriptions] = useState([]);
+  const [savingPrescription, setSavingPrescription] = useState(false);
+  const [prescriptionView, setPrescriptionView] = useState('list'); // 'list', 'create', 'view'
+  const [selectedPrescription, setSelectedPrescription] = useState(null);
+
+  // Register EMR walk-in patient
+  const handleEmrPatientRegister = async (e) => {
+    e.preventDefault();
+    if (!emrPatientForm.name || !emrPatientForm.phone) {
+      toast.error('Name and phone are required');
+      return;
+    }
+    
+    setEmrRegistering(true);
+    try {
+      const response = await axios.post('/api/emr/patients/walk-in', {
+        ...emrPatientForm,
+        clinicId: receptionist.clinicId
+      });
+      
+      if (response.data.success) {
+        toast.success('Patient registered successfully!');
+        setEmrPatientForm({ name: '', phone: '', email: '', doctorId: '', age: '', gender: 'male', address: '' });
+        fetchPatients(); // Refresh patient list
+      }
+    } catch (error) {
+      console.error('Error registering patient:', error);
+      toast.error(error.response?.data?.message || 'Failed to register patient');
+    } finally {
+      setEmrRegistering(false);
+    }
+  };
+
+  // Fetch patient details (visits and prescriptions)
+  const fetchPatientDetails = async (patient) => {
+    setLoadingPatientDetails(true);
+    setSelectedEmrPatient(patient);
+    setEmrPatientView('details');
+    
+    try {
+      const patientId = patient._id || patient.userId?._id;
+      
+      // Fetch visits and prescriptions in parallel
+      const [visitsRes, prescriptionsRes] = await Promise.allSettled([
+        axios.get(`/api/emr/visits/patient/${patientId}`),
+        axios.get(`/api/prescriptions/patient/${patientId}`)
+      ]);
+      
+      if (visitsRes.status === 'fulfilled' && visitsRes.value.data.success) {
+        setPatientVisits(visitsRes.value.data.visits || []);
+      } else {
+        setPatientVisits([]);
+      }
+      
+      if (prescriptionsRes.status === 'fulfilled') {
+        const rxData = prescriptionsRes.value.data;
+        setPatientPrescriptions(rxData.prescriptions || rxData || []);
+      } else {
+        setPatientPrescriptions([]);
+      }
+    } catch (error) {
+      console.error('Error fetching patient details:', error);
+      toast.error('Failed to load patient details');
+    } finally {
+      setLoadingPatientDetails(false);
+    }
+  };
+
+  // Fetch patient appointments
+  const fetchPatientAppointments = async (patient) => {
+    setLoadingPatientAppointments(true);
+    setSelectedEmrPatient(patient);
+    setEmrPatientView('appointments');
+    setPatientAppointments([]);
+    
+    try {
+      const patientId = patient._id || patient.userId?._id || patient.id;
+      console.log('Fetching appointments for patient:', patient.name, 'ID:', patientId);
+      
+      if (!patientId) {
+        console.error('No patient ID found:', patient);
+        toast.error('Invalid patient ID');
+        setLoadingPatientAppointments(false);
+        return;
+      }
+      
+      const response = await axios.get(`/api/appointments/user/${patientId}`);
+      console.log('Appointments response:', response.data);
+      
+      if (Array.isArray(response.data)) {
+        setPatientAppointments(response.data);
+      } else if (response.data.appointments) {
+        setPatientAppointments(response.data.appointments);
+      }
+    } catch (error) {
+      console.error('Error fetching patient appointments:', error.response?.data || error.message);
+      toast.error('Failed to load appointments');
+      setPatientAppointments([]);
+    } finally {
+      setLoadingPatientAppointments(false);
+    }
+  };
+
+  // Fetch last recorded vitals for a patient
+  const fetchLastVitals = async (patientId) => {
+    if (!patientId) return;
+    setLoadingVitals(true);
+    try {
+      const response = await axios.get(`/api/emr/patients/${patientId}/vitals/trends`, {
+        params: { days: 30, clinicId: receptionist.clinicId }
+      });
+      if (response.data.success && response.data.trends?.length > 0) {
+        // Get the most recent vitals entry
+        const latest = response.data.trends[response.data.trends.length - 1];
+        setLastVitals(latest);
+      } else {
+        setLastVitals(null);
+      }
+    } catch (error) {
+      console.error('Error fetching last vitals:', error);
+      setLastVitals(null);
+    } finally {
+      setLoadingVitals(false);
+    }
+  };
+
+  // Handle saving vitals from VitalsRecorder
+  const handleSaveVitals = async (vitalsData) => {
+    try {
+      const patientId = selectedEmrPatient?._id;
+      if (!patientId) {
+        toast.error('No patient selected');
+        return;
+      }
+      
+      // Create a visit first if needed, or use existing visit
+      const visitResponse = await axios.post('/api/emr/visits', {
+        patientId,
+        clinicId: receptionist.clinicId,
+        doctorId: doctors[0]?._id,
+        visitType: 'walk-in',
+        chiefComplaint: 'Vitals recording'
+      });
+      
+      const visitId = visitResponse.data.visit?._id || visitResponse.data._id;
+      
+      // Record vitals for the visit
+      await axios.post(`/api/emr/visits/${visitId}/vitals`, vitalsData);
+      
+      toast.success('Vitals recorded successfully!');
+      setShowVitalsRecorder(false);
+      fetchLastVitals(patientId);
+    } catch (error) {
+      console.error('Error saving vitals:', error);
+      toast.error(error.response?.data?.message || 'Failed to save vitals');
+    }
+  };
+
+  // Common medicines for autocomplete
+  const commonMedicines = [
+    'Paracetamol 500mg', 'Paracetamol 650mg', 'Ibuprofen 400mg', 'Ibuprofen 200mg',
+    'Amoxicillin 500mg', 'Amoxicillin 250mg', 'Azithromycin 500mg', 'Azithromycin 250mg',
+    'Cetirizine 10mg', 'Levocetirizine 5mg', 'Omeprazole 20mg', 'Pantoprazole 40mg',
+    'Metformin 500mg', 'Metformin 850mg', 'Amlodipine 5mg', 'Amlodipine 10mg',
+    'Atorvastatin 10mg', 'Atorvastatin 20mg', 'Vitamin D3 60000IU', 'Vitamin B12',
+    'Calcium + Vitamin D3', 'Iron + Folic Acid', 'Dolo 650', 'Crocin', 'Combiflam'
+  ];
+
+  const frequencyOptions = [
+    { value: 'OD', label: 'Once daily (OD)' },
+    { value: 'BD', label: 'Twice daily (BD)' },
+    { value: 'TDS', label: 'Three times daily (TDS)' },
+    { value: 'QID', label: 'Four times daily (QID)' },
+    { value: 'SOS', label: 'As needed (SOS)' },
+    { value: 'HS', label: 'At bedtime (HS)' }
+  ];
+
+  const timingOptions = [
+    { value: 'before_food', label: 'Before food' },
+    { value: 'after_food', label: 'After food' },
+    { value: 'with_food', label: 'With food' },
+    { value: 'empty_stomach', label: 'Empty stomach' },
+    { value: 'any_time', label: 'Any time' }
+  ];
+
+  // Search medicines
+  const handleMedicineSearch = (query) => {
+    setMedicineSearch(query);
+    if (query.length < 2) {
+      setMedicineSearchResults([]);
+      return;
+    }
+    const results = commonMedicines.filter(m => 
+      m.toLowerCase().includes(query.toLowerCase())
+    );
+    setMedicineSearchResults(results);
+  };
+
+  // Add medicine to prescription
+  const addMedicineToPrescription = () => {
+    if (!newMedicine.name) {
+      toast.error('Medicine name is required');
+      return;
+    }
+    setPrescriptionForm(prev => ({
+      ...prev,
+      medicines: [...prev.medicines, { ...newMedicine, id: Date.now() }]
+    }));
+    setNewMedicine({ name: '', dosage: '', frequency: '', duration: '', timing: 'after_food', notes: '' });
+    setMedicineSearch('');
+    setMedicineSearchResults([]);
+  };
+
+  // Remove medicine from prescription
+  const removeMedicineFromPrescription = (id) => {
+    setPrescriptionForm(prev => ({
+      ...prev,
+      medicines: prev.medicines.filter(m => m.id !== id)
+    }));
+  };
+
+  // Save prescription
+  const handleSavePrescription = async () => {
+    if (!selectedPatientForPrescription) {
+      toast.error('Please select a patient');
+      return;
+    }
+    if (prescriptionForm.medicines.length === 0) {
+      toast.error('Add at least one medicine');
+      return;
+    }
+    
+    // Get patient ID - handle different formats
+    const patientId = selectedPatientForPrescription._id || selectedPatientForPrescription.id;
+    if (!patientId) {
+      toast.error('Invalid patient selection');
+      console.error('Patient object:', selectedPatientForPrescription);
+      return;
+    }
+    
+    // Get doctor ID
+    const doctorId = doctors[0]?._id || doctors[0]?.id;
+    if (!doctorId) {
+      toast.error('No doctor available for prescription');
+      return;
+    }
+
+    setSavingPrescription(true);
+    try {
+      const payload = {
+        clinicId: receptionist.clinicId,
+        patientId: patientId,
+        doctorId: doctorId,
+        diagnosis: prescriptionForm.diagnosis,
+        symptoms: prescriptionForm.symptoms,
+        medicines: prescriptionForm.medicines,
+        advice: prescriptionForm.instructions || prescriptionForm.advice,
+        followUpDate: prescriptionForm.followUpDate,
+        followUpInstructions: prescriptionForm.followUpNotes
+      };
+      
+      console.log('Saving prescription with payload:', payload);
+
+      const response = await axios.post('/api/prescriptions', payload);
+      if (response.data) {
+        toast.success('Prescription saved successfully!');
+        setPrescriptionForm({ diagnosis: '', symptoms: '', medicines: [], instructions: '', followUpDate: '', followUpNotes: '' });
+        setSelectedPatientForPrescription(null);
+        setPrescriptionView('list');
+        fetchPrescriptions();
+      }
+    } catch (error) {
+      console.error('Error saving prescription:', error);
+      toast.error(error.response?.data?.message || 'Failed to save prescription');
+    } finally {
+      setSavingPrescription(false);
+    }
+  };
+
+  // Fetch prescriptions for clinic
+  const fetchPrescriptions = async () => {
+    try {
+      console.log('Fetching prescriptions for clinicId:', receptionist.clinicId);
+      const response = await axios.get(`/api/prescriptions/clinic/${receptionist.clinicId}`);
+      console.log('Prescription response:', response.data);
+      if (response.data.success && response.data.prescriptions) {
+        setPrescriptions(response.data.prescriptions.map(p => {
+          // Handle address - could be string or object
+          let addressStr = '';
+          if (p.patientId?.address) {
+            if (typeof p.patientId.address === 'string') {
+              addressStr = p.patientId.address;
+            } else if (typeof p.patientId.address === 'object') {
+              // Address is an object, format it
+              const addr = p.patientId.address;
+              addressStr = [addr.street, addr.city, addr.state, addr.country, addr.pincode].filter(Boolean).join(', ');
+            }
+          }
+          
+          return {
+            ...p,
+            patientName: p.patientId?.name || 'Unknown Patient',
+            patientPhone: p.patientId?.phone || '',
+            patientEmail: p.patientId?.email || '',
+            patientAge: p.patientId?.age || '',
+            patientGender: p.patientId?.gender || '',
+            patientAddress: addressStr
+          };
+        }));
+      } else if (Array.isArray(response.data)) {
+        // Handle if response is direct array
+        setPrescriptions(response.data.map(p => {
+          let addressStr = '';
+          if (p.patientId?.address) {
+            if (typeof p.patientId.address === 'string') {
+              addressStr = p.patientId.address;
+            } else if (typeof p.patientId.address === 'object') {
+              const addr = p.patientId.address;
+              addressStr = [addr.street, addr.city, addr.state, addr.country, addr.pincode].filter(Boolean).join(', ');
+            }
+          }
+          
+          return {
+            ...p,
+            patientName: p.patientId?.name || 'Unknown Patient',
+            patientPhone: p.patientId?.phone || '',
+            patientEmail: p.patientId?.email || '',
+            patientAge: p.patientId?.age || '',
+            patientGender: p.patientId?.gender || '',
+            patientAddress: addressStr
+          };
+        }));
+      }
+    } catch (error) {
+      console.error('Error fetching prescriptions:', error.response?.data || error.message);
+      setPrescriptions([]);
+    }
+  };
+
   const toggleClinicDay = () => {
     const newStatus = !clinicDayOpen;
     setClinicDayOpen(newStatus);
@@ -50,11 +434,21 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
       { id: 'doctors', icon: 'fas fa-user-md', labelKey: 'doctors' },
       { id: 'patients', icon: 'fas fa-users', labelKey: 'patients' },
     ]},
+    { titleKey: 'EMR', items: [
+      { id: 'emr', icon: 'fas fa-notes-medical', labelKey: 'EMR System' },
+    ]},
   ];
 
   useEffect(() => {
     fetchAllData();
   }, [receptionist]);
+
+  // Fetch prescriptions when EMR prescriptions section is opened
+  useEffect(() => {
+    if (activeSection === 'emr-prescriptions') {
+      fetchPrescriptions();
+    }
+  }, [activeSection]);
 
   const fetchAllData = async () => {
     setLoading(true);
@@ -86,10 +480,33 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
 
   const fetchPatients = async () => {
     try {
-      // If staff has assigned doctor, only fetch that doctor's patients
+      // Fetch patients from both receptionist route (appointment-based) and EMR route (walk-in)
       const params = receptionist.assignedDoctorId ? `?assignedDoctorId=${receptionist.assignedDoctorId}` : '';
-      const response = await axios.get(`/api/receptionists/patients/${receptionist.clinicId}${params}`);
-      setPatients(response.data);
+      
+      // Try to get patients from both sources
+      const [receptionistResponse, emrResponse] = await Promise.allSettled([
+        axios.get(`/api/receptionists/patients/${receptionist.clinicId}${params}`),
+        axios.get(`/api/emr/patients/clinic/${receptionist.clinicId}`)
+      ]);
+      
+      // Combine patients from both sources
+      const receptionistPatients = receptionistResponse.status === 'fulfilled' ? receptionistResponse.value.data : [];
+      const emrPatients = emrResponse.status === 'fulfilled' && emrResponse.value.data.success ? emrResponse.value.data.patients : [];
+      
+      // Merge and deduplicate by _id, and format address
+      const patientMap = new Map();
+      [...receptionistPatients, ...emrPatients].forEach(p => {
+        if (p._id && !patientMap.has(p._id)) {
+          // Format address if it's an object
+          const formattedPatient = {
+            ...p,
+            address: formatAddress(p.address)
+          };
+          patientMap.set(p._id, formattedPatient);
+        }
+      });
+      
+      setPatients(Array.from(patientMap.values()));
     } catch (error) {
       console.error('Error fetching patients:', error);
     }
@@ -721,6 +1138,1248 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
               </div>
             </div>
           )}
+
+          {/* EMR Section */}
+          {activeSection === 'emr' && (
+            <div className="space-y-6">
+              <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                <div className="flex items-center gap-4 mb-6">
+                  <div className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-500 to-emerald-600 flex items-center justify-center shadow-lg">
+                    <i className="fas fa-notes-medical text-white text-2xl"></i>
+                  </div>
+                  <div>
+                    <h2 className="text-2xl font-bold text-slate-800">EMR System</h2>
+                    <p className="text-slate-500">Electronic Medical Records for your clinic</p>
+                  </div>
+                </div>
+
+                {/* EMR Feature Cards */}
+                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                  {/* Subscription Plans */}
+                  <button onClick={() => setActiveSection('emr-plans')} className="group p-5 rounded-xl bg-gradient-to-br from-indigo-50 to-purple-50 border-2 border-indigo-100 hover:border-indigo-300 hover:shadow-lg transition-all text-left">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-indigo-500 to-purple-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <i className="fas fa-crown text-white"></i>
+                    </div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Subscription Plans</h3>
+                    <p className="text-sm text-slate-500">View and manage your EMR subscription</p>
+                  </button>
+
+                  {/* Patient Registration */}
+                  <button onClick={() => setActiveSection('emr-patients')} className="group p-5 rounded-xl bg-gradient-to-br from-emerald-50 to-teal-50 border-2 border-emerald-100 hover:border-emerald-300 hover:shadow-lg transition-all text-left">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <i className="fas fa-user-plus text-white"></i>
+                    </div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Patient Registration</h3>
+                    <p className="text-sm text-slate-500">Register walk-in patients</p>
+                  </button>
+
+                  {/* Visit History */}
+                  <button onClick={() => setActiveSection('emr-visits')} className="group p-5 rounded-xl bg-gradient-to-br from-blue-50 to-cyan-50 border-2 border-blue-100 hover:border-blue-300 hover:shadow-lg transition-all text-left">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-500 to-cyan-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <i className="fas fa-history text-white"></i>
+                    </div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Visit History</h3>
+                    <p className="text-sm text-slate-500">View patient visit records</p>
+                  </button>
+
+                  {/* Vitals Recording */}
+                  <button onClick={() => setActiveSection('emr-vitals')} className="group p-5 rounded-xl bg-gradient-to-br from-red-50 to-pink-50 border-2 border-red-100 hover:border-red-300 hover:shadow-lg transition-all text-left">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <i className="fas fa-heartbeat text-white"></i>
+                    </div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Vitals & Trends</h3>
+                    <p className="text-sm text-slate-500">Record vitals and view trends</p>
+                  </button>
+
+                  {/* Prescriptions */}
+                  <button onClick={() => setActiveSection('emr-prescriptions')} className="group p-5 rounded-xl bg-gradient-to-br from-amber-50 to-orange-50 border-2 border-amber-100 hover:border-amber-300 hover:shadow-lg transition-all text-left">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <i className="fas fa-prescription text-white"></i>
+                    </div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Prescriptions</h3>
+                    <p className="text-sm text-slate-500">Create and manage prescriptions</p>
+                  </button>
+
+                  {/* Reports */}
+                  <button onClick={() => setActiveSection('emr-reports')} className="group p-5 rounded-xl bg-gradient-to-br from-rose-50 to-pink-50 border-2 border-rose-100 hover:border-rose-300 hover:shadow-lg transition-all text-left">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-rose-500 to-pink-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <i className="fas fa-file-medical text-white"></i>
+                    </div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Medical Reports</h3>
+                    <p className="text-sm text-slate-500">View uploaded patient reports</p>
+                  </button>
+
+                  {/* Analytics (Advanced) */}
+                  <button onClick={() => setActiveSection('emr-analytics')} className="group p-5 rounded-xl bg-gradient-to-br from-violet-50 to-fuchsia-50 border-2 border-violet-100 hover:border-violet-300 hover:shadow-lg transition-all text-left">
+                    <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-fuchsia-600 flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+                      <i className="fas fa-chart-line text-white"></i>
+                    </div>
+                    <h3 className="font-semibold text-slate-800 mb-1">Analytics</h3>
+                    <p className="text-sm text-slate-500">Clinic performance insights</p>
+                  </button>
+                </div>
+
+                {/* Quick Info */}
+                <div className="mt-6 p-4 bg-gradient-to-r from-teal-50 to-emerald-50 rounded-xl border border-teal-100">
+                  <div className="flex items-start gap-3">
+                    <div className="w-10 h-10 rounded-lg bg-teal-100 flex items-center justify-center flex-shrink-0">
+                      <i className="fas fa-info-circle text-teal-600"></i>
+                    </div>
+                    <div>
+                      <h4 className="font-semibold text-slate-800 mb-1">EMR Module</h4>
+                      <p className="text-sm text-slate-600">
+                        The EMR system helps you manage patient records, prescriptions, and clinical data efficiently. 
+                        Subscribe to a plan to unlock all features.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* EMR Sub-screens */}
+          {activeSection.startsWith('emr-') && (
+            <div className="space-y-6">
+              {/* Back Button */}
+              <button 
+                onClick={() => setActiveSection('emr')} 
+                className="flex items-center gap-2 text-slate-600 hover:text-slate-800 transition-colors"
+              >
+                <i className="fas fa-arrow-left"></i>
+                <span>Back to EMR</span>
+              </button>
+
+              {/* EMR Plans */}
+              {activeSection === 'emr-plans' && (
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                  <h2 className="text-xl font-bold text-slate-800 mb-4">
+                    <i className="fas fa-crown text-indigo-500 mr-2"></i>
+                    Subscription Plans
+                  </h2>
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    {[
+                      { name: 'Basic', price: '₹999/mo', features: ['Patient Registration', 'Visit History', 'Basic Prescriptions', 'Report Uploads'], color: 'emerald' },
+                      { name: 'Standard', price: '₹1,999/mo', features: ['All Basic features', 'Doctor Notes', 'Follow-up Scheduling', 'Medication History', 'Patient Timeline'], color: 'blue', popular: true },
+                      { name: 'Advanced', price: '₹3,999/mo', features: ['All Standard features', 'EMR Dashboard', 'Analytics & Reports', 'Audit Logs', 'Staff Management', 'Data Export'], color: 'purple' }
+                    ].map((plan) => (
+                      <div key={plan.name} className={`p-5 rounded-xl border-2 ${plan.popular ? `border-${plan.color}-400 bg-${plan.color}-50` : 'border-slate-200'} relative`}>
+                        {plan.popular && <span className="absolute -top-3 left-1/2 -translate-x-1/2 px-3 py-1 bg-blue-500 text-white text-xs font-semibold rounded-full">Popular</span>}
+                        <h3 className="text-lg font-bold text-slate-800">{plan.name}</h3>
+                        <p className="text-2xl font-bold text-slate-800 my-2">{plan.price}</p>
+                        <ul className="space-y-2 mt-4">
+                          {plan.features.map((f, i) => (
+                            <li key={i} className="flex items-center gap-2 text-sm text-slate-600">
+                              <i className={`fas fa-check text-${plan.color}-500`}></i>{f}
+                            </li>
+                          ))}
+                        </ul>
+                        <button className={`w-full mt-4 py-2 rounded-lg font-medium ${plan.popular ? 'bg-blue-500 text-white' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
+                          {plan.popular ? 'Current Plan' : 'Select Plan'}
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* EMR Patients */}
+              {activeSection === 'emr-patients' && (
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                  {/* Header with view toggle */}
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-slate-800">
+                      <i className="fas fa-users text-emerald-500 mr-2"></i>
+                      Patient Records
+                    </h2>
+                    <div className="flex gap-2">
+                      {(emrPatientView === 'details' || emrPatientView === 'appointments') && (
+                        <button 
+                          onClick={() => { setEmrPatientView('list'); setSelectedEmrPatient(null); }}
+                          className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200"
+                        >
+                          <i className="fas fa-arrow-left mr-2"></i>Back to List
+                        </button>
+                      )}
+                      {emrPatientView === 'list' && (
+                        <button 
+                          onClick={() => setEmrPatientView('register')}
+                          className="px-4 py-2 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600"
+                        >
+                          <i className="fas fa-user-plus mr-2"></i>Register New
+                        </button>
+                      )}
+                      {emrPatientView === 'register' && (
+                        <button 
+                          onClick={() => setEmrPatientView('list')}
+                          className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200"
+                        >
+                          <i className="fas fa-list mr-2"></i>View All Patients
+                        </button>
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Patient List View */}
+                  {emrPatientView === 'list' && (
+                    <div>
+                      {/* Search */}
+                      <div className="relative mb-4">
+                        <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                        <input 
+                          type="text" 
+                          placeholder="Search patients by name, phone, or email..." 
+                          value={searchTerm}
+                          onChange={(e) => setSearchTerm(e.target.value)}
+                          className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500" 
+                        />
+                      </div>
+
+                      {/* Patient Count */}
+                      <p className="text-sm text-slate-500 mb-4">
+                        {filteredPatients.length} patient{filteredPatients.length !== 1 ? 's' : ''} found
+                      </p>
+
+                      {/* Patient Cards */}
+                      {filteredPatients.length === 0 ? (
+                        <div className="text-center py-10 bg-slate-50 rounded-xl">
+                          <i className="fas fa-users text-4xl text-slate-300 mb-3"></i>
+                          <p className="text-slate-500 mb-4">No patients found</p>
+                          <button 
+                            onClick={() => setEmrPatientView('register')}
+                            className="px-4 py-2 bg-emerald-500 text-white rounded-lg font-medium hover:bg-emerald-600"
+                          >
+                            Register First Patient
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                          {filteredPatients.map(patient => (
+                            <div 
+                              key={patient._id} 
+                              className="p-4 bg-gradient-to-br from-slate-50 to-white rounded-xl border border-slate-200 hover:border-emerald-300 hover:shadow-md transition-all cursor-pointer"
+                              onClick={() => fetchPatientDetails(patient)}
+                            >
+                              <div className="flex items-start gap-3">
+                                <div className="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                                  {patient.name?.charAt(0)?.toUpperCase() || 'P'}
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h3 className="font-semibold text-slate-800 truncate">{patient.name || 'Unknown'}</h3>
+                                  <p className="text-sm text-slate-500 truncate">
+                                    <i className="fas fa-phone text-xs mr-1"></i>
+                                    {patient.phone || 'No phone'}
+                                  </p>
+                                  {patient.email && (
+                                    <p className="text-xs text-slate-400 truncate">
+                                      <i className="fas fa-envelope text-xs mr-1"></i>
+                                      {patient.email}
+                                    </p>
+                                  )}
+                                </div>
+                              </div>
+                              <div className="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between text-xs text-slate-500">
+                                <span>
+                                  {patient.age && <><i className="fas fa-birthday-cake mr-1"></i>{patient.age} yrs</>}
+                                  {patient.gender && <span className="ml-2 capitalize">{patient.gender}</span>}
+                                </span>
+                                <span className="text-emerald-600 font-medium">
+                                  View Details <i className="fas fa-chevron-right ml-1"></i>
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Patient Details View */}
+                  {emrPatientView === 'details' && selectedEmrPatient && (
+                    <div>
+                      {loadingPatientDetails ? (
+                        <div className="text-center py-10">
+                          <i className="fas fa-spinner fa-spin text-3xl text-emerald-500 mb-3"></i>
+                          <p className="text-slate-500">Loading patient details...</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-6">
+                          {/* Patient Info Card */}
+                          <div className="p-5 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
+                            <div className="flex items-start gap-4">
+                              <div className="w-16 h-16 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-2xl flex-shrink-0">
+                                {selectedEmrPatient.name?.charAt(0)?.toUpperCase() || 'P'}
+                              </div>
+                              <div className="flex-1">
+                                <h3 className="text-xl font-bold text-slate-800">{selectedEmrPatient.name}</h3>
+                                <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3">
+                                  <div>
+                                    <p className="text-xs text-slate-500">Phone</p>
+                                    <p className="font-medium text-slate-700">{selectedEmrPatient.phone || 'N/A'}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-slate-500">Email</p>
+                                    <p className="font-medium text-slate-700 truncate">{selectedEmrPatient.email || 'N/A'}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-slate-500">Age</p>
+                                    <p className="font-medium text-slate-700">{selectedEmrPatient.age ? `${selectedEmrPatient.age} years` : 'N/A'}</p>
+                                  </div>
+                                  <div>
+                                    <p className="text-xs text-slate-500">Gender</p>
+                                    <p className="font-medium text-slate-700 capitalize">{selectedEmrPatient.gender || 'N/A'}</p>
+                                  </div>
+                                </div>
+                                {selectedEmrPatient.address && (
+                                  <div className="mt-3">
+                                    <p className="text-xs text-slate-500">Address</p>
+                                    <p className="font-medium text-slate-700">
+                                      {formatAddress(selectedEmrPatient.address) || 'N/A'}
+                                    </p>
+                                  </div>
+                                )}
+                              </div>
+                            </div>
+                            <div className="flex gap-2 mt-4 pt-4 border-t border-emerald-200">
+                              <button 
+                                onClick={() => { setSelectedPatientForPrescription(selectedEmrPatient); setActiveSection('emr-prescriptions'); setPrescriptionView('create'); }}
+                                className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600"
+                              >
+                                <i className="fas fa-prescription mr-2"></i>New Prescription
+                              </button>
+                              <button 
+                                onClick={() => fetchPatientAppointments(selectedEmrPatient)}
+                                className="px-4 py-2 bg-blue-500 text-white rounded-lg text-sm font-medium hover:bg-blue-600"
+                              >
+                                <i className="fas fa-calendar-alt mr-2"></i>View Appointments
+                              </button>
+                              <button 
+                                onClick={() => setShowMedicalHistoryForm(true)}
+                                className="px-4 py-2 bg-purple-500 text-white rounded-lg text-sm font-medium hover:bg-purple-600"
+                              >
+                                <i className="fas fa-notes-medical mr-2"></i>Medical History
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Medical History Summary */}
+                          <MedicalHistorySummary
+                            patientId={selectedEmrPatient._id}
+                            clinicId={receptionist.clinicId}
+                            onViewFullHistory={() => setShowMedicalHistoryForm(true)}
+                          />
+
+                          {/* Visit History */}
+                          <div className="bg-white rounded-xl border border-slate-200 p-4">
+                            <h4 className="font-semibold text-slate-800 mb-3">
+                              <i className="fas fa-history text-blue-500 mr-2"></i>
+                              Visit History ({patientVisits.length})
+                            </h4>
+                            {patientVisits.length === 0 ? (
+                              <p className="text-slate-500 text-sm py-4 text-center bg-slate-50 rounded-lg">No visit records found</p>
+                            ) : (
+                              <div className="space-y-2 max-h-64 overflow-y-auto">
+                                {patientVisits.map((visit, idx) => (
+                                  <div key={visit._id || idx} className="p-3 bg-slate-50 rounded-lg">
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-medium text-slate-700">
+                                        {new Date(visit.visitDate || visit.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                      </span>
+                                      <span className={`px-2 py-0.5 rounded text-xs font-medium ${visit.status === 'completed' ? 'bg-green-100 text-green-700' : 'bg-blue-100 text-blue-700'}`}>
+                                        {visit.status || 'Completed'}
+                                      </span>
+                                    </div>
+                                    {visit.chiefComplaint && <p className="text-sm text-slate-600 mt-1">{visit.chiefComplaint}</p>}
+                                    {visit.doctorId?.name && <p className="text-xs text-slate-500 mt-1">Dr. {visit.doctorId.name}</p>}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Prescriptions */}
+                          <div className="bg-white rounded-xl border border-slate-200 p-4">
+                            <h4 className="font-semibold text-slate-800 mb-3">
+                              <i className="fas fa-prescription text-amber-500 mr-2"></i>
+                              Prescriptions ({patientPrescriptions.length})
+                            </h4>
+                            {patientPrescriptions.length === 0 ? (
+                              <p className="text-slate-500 text-sm py-4 text-center bg-slate-50 rounded-lg">No prescriptions found</p>
+                            ) : (
+                              <div className="space-y-2 max-h-64 overflow-y-auto">
+                                {patientPrescriptions.map((rx, idx) => (
+                                  <div key={rx._id || idx} className="p-3 bg-amber-50 rounded-lg border border-amber-100">
+                                    <div className="flex items-center justify-between">
+                                      <span className="font-medium text-slate-700">
+                                        {new Date(rx.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                                      </span>
+                                      <span className="text-xs text-amber-700 font-medium">
+                                        {rx.medicines?.length || 0} medicine{(rx.medicines?.length || 0) !== 1 ? 's' : ''}
+                                      </span>
+                                    </div>
+                                    {rx.diagnosis && <p className="text-sm text-slate-600 mt-1"><strong>Diagnosis:</strong> {rx.diagnosis}</p>}
+                                    {rx.medicines && rx.medicines.length > 0 && (
+                                      <div className="mt-2 text-xs text-slate-500">
+                                        {rx.medicines.slice(0, 3).map((m, i) => (
+                                          <span key={i} className="inline-block bg-white px-2 py-0.5 rounded mr-1 mb-1">{m.name}</span>
+                                        ))}
+                                        {rx.medicines.length > 3 && <span className="text-slate-400">+{rx.medicines.length - 3} more</span>}
+                                      </div>
+                                    )}
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Patient Appointments View */}
+                  {emrPatientView === 'appointments' && selectedEmrPatient && (
+                    <div>
+                      {/* Patient Header */}
+                      <div className="p-4 bg-gradient-to-br from-blue-50 to-indigo-50 rounded-xl border border-blue-200 mb-4">
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-full bg-gradient-to-br from-blue-500 to-indigo-600 flex items-center justify-center text-white font-bold text-lg">
+                            {selectedEmrPatient.name?.charAt(0)?.toUpperCase() || 'P'}
+                          </div>
+                          <div>
+                            <h3 className="font-bold text-slate-800">{selectedEmrPatient.name}</h3>
+                            <p className="text-sm text-slate-500">{selectedEmrPatient.phone}</p>
+                          </div>
+                        </div>
+                      </div>
+
+                      <h4 className="font-semibold text-slate-800 mb-3">
+                        <i className="fas fa-calendar-alt text-blue-500 mr-2"></i>
+                        Appointments ({patientAppointments.length})
+                      </h4>
+
+                      {loadingPatientAppointments ? (
+                        <div className="text-center py-10">
+                          <i className="fas fa-spinner fa-spin text-3xl text-blue-500 mb-3"></i>
+                          <p className="text-slate-500">Loading appointments...</p>
+                        </div>
+                      ) : patientAppointments.length === 0 ? (
+                        <div className="text-center py-10 bg-slate-50 rounded-xl">
+                          <i className="fas fa-calendar-times text-4xl text-slate-300 mb-3"></i>
+                          <p className="text-slate-500">No appointments found for this patient</p>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {patientAppointments.map((apt, idx) => (
+                            <div key={apt._id || idx} className={`p-4 rounded-xl border ${
+                              apt.status === 'completed' ? 'bg-green-50 border-green-200' :
+                              apt.status === 'cancelled' ? 'bg-red-50 border-red-200' :
+                              apt.status === 'in_progress' ? 'bg-blue-50 border-blue-200' :
+                              'bg-white border-slate-200'
+                            }`}>
+                              <div className="flex items-start justify-between">
+                                <div>
+                                  <p className="font-semibold text-slate-800">
+                                    {new Date(apt.date).toLocaleDateString('en-IN', { weekday: 'short', day: 'numeric', month: 'short', year: 'numeric' })}
+                                    <span className="text-slate-500 font-normal ml-2">{apt.time}</span>
+                                  </p>
+                                  <p className="text-sm text-slate-600 mt-1">
+                                    <i className="fas fa-user-md mr-1"></i>
+                                    Dr. {apt.doctorId?.name || 'Unknown'}
+                                    {apt.doctorId?.specialization && <span className="text-slate-400 ml-1">({apt.doctorId.specialization})</span>}
+                                  </p>
+                                  {apt.reason && (
+                                    <p className="text-sm text-slate-500 mt-1">
+                                      <i className="fas fa-notes-medical mr-1"></i>
+                                      {apt.reason}
+                                    </p>
+                                  )}
+                                  {apt.consultationType && (
+                                    <p className="text-xs text-slate-400 mt-1">
+                                      <i className={`fas ${apt.consultationType === 'online' ? 'fa-video' : 'fa-hospital'} mr-1`}></i>
+                                      {apt.consultationType === 'online' ? 'Online Consultation' : 'In-Clinic Visit'}
+                                    </p>
+                                  )}
+                                </div>
+                                <span className={`px-3 py-1 rounded-full text-xs font-medium ${
+                                  apt.status === 'completed' ? 'bg-green-100 text-green-700' :
+                                  apt.status === 'cancelled' ? 'bg-red-100 text-red-700' :
+                                  apt.status === 'in_progress' ? 'bg-blue-100 text-blue-700' :
+                                  apt.status === 'confirmed' ? 'bg-indigo-100 text-indigo-700' :
+                                  'bg-amber-100 text-amber-700'
+                                }`}>
+                                  {apt.status?.replace('_', ' ') || 'Pending'}
+                                </span>
+                              </div>
+                              {apt.tokenNumber && (
+                                <div className="mt-2 pt-2 border-t border-slate-100">
+                                  <span className="text-xs text-slate-500">Token: #{apt.tokenNumber}</span>
+                                </div>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      )}
+
+                      {/* Back to Details Button */}
+                      <button 
+                        onClick={() => fetchPatientDetails(selectedEmrPatient)}
+                        className="mt-4 px-4 py-2 bg-slate-100 text-slate-700 rounded-lg text-sm font-medium hover:bg-slate-200"
+                      >
+                        <i className="fas fa-arrow-left mr-2"></i>Back to Patient Details
+                      </button>
+                    </div>
+                  )}
+
+                  {/* Register New Patient View */}
+                  {emrPatientView === 'register' && (
+                    <div>
+                      <p className="text-slate-500 mb-4">Register walk-in patients for your clinic.</p>
+                      <form onSubmit={handleEmrPatientRegister}>
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <input 
+                            type="text" 
+                            placeholder="Patient Name *" 
+                            value={emrPatientForm.name}
+                            onChange={(e) => setEmrPatientForm({...emrPatientForm, name: e.target.value})}
+                            required
+                            className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" 
+                          />
+                          <input 
+                            type="tel" 
+                            placeholder="Phone Number *" 
+                            value={emrPatientForm.phone}
+                            onChange={(e) => setEmrPatientForm({...emrPatientForm, phone: e.target.value})}
+                            required
+                            className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" 
+                          />
+                          <input 
+                            type="email" 
+                            placeholder="Email (optional)" 
+                            value={emrPatientForm.email}
+                            onChange={(e) => setEmrPatientForm({...emrPatientForm, email: e.target.value})}
+                            className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" 
+                          />
+                          <input 
+                            type="number" 
+                            placeholder="Age" 
+                            value={emrPatientForm.age}
+                            onChange={(e) => setEmrPatientForm({...emrPatientForm, age: e.target.value})}
+                            className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none" 
+                          />
+                          <select 
+                            value={emrPatientForm.gender}
+                            onChange={(e) => setEmrPatientForm({...emrPatientForm, gender: e.target.value})}
+                            className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                          >
+                            <option value="male">Male</option>
+                            <option value="female">Female</option>
+                            <option value="other">Other</option>
+                          </select>
+                          <select 
+                            value={emrPatientForm.doctorId}
+                            onChange={(e) => setEmrPatientForm({...emrPatientForm, doctorId: e.target.value})}
+                            className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none"
+                          >
+                            <option value="">Select Doctor (optional)</option>
+                            {doctors.map(d => <option key={d._id} value={d._id}>Dr. {d.name}</option>)}
+                          </select>
+                          <input 
+                            type="text" 
+                            placeholder="Address (optional)" 
+                            value={emrPatientForm.address}
+                            onChange={(e) => setEmrPatientForm({...emrPatientForm, address: e.target.value})}
+                            className="px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-emerald-500 outline-none md:col-span-2" 
+                          />
+                        </div>
+                        <button 
+                          type="submit"
+                          disabled={emrRegistering}
+                          className="mt-4 px-6 py-3 bg-emerald-500 text-white rounded-xl font-medium hover:bg-emerald-600 disabled:opacity-50 disabled:cursor-not-allowed"
+                        >
+                          {emrRegistering ? (
+                            <><i className="fas fa-spinner fa-spin mr-2"></i>Registering...</>
+                          ) : (
+                            <><i className="fas fa-plus mr-2"></i>Register Patient</>
+                          )}
+                        </button>
+                      </form>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* EMR Visits */}
+              {activeSection === 'emr-visits' && (
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                  <h2 className="text-xl font-bold text-slate-800 mb-4">
+                    <i className="fas fa-history text-blue-500 mr-2"></i>
+                    Visit History
+                  </h2>
+                  <p className="text-slate-500">View and manage patient visit records.</p>
+                  <div className="mt-4 text-center py-10 bg-slate-50 rounded-xl">
+                    <i className="fas fa-clipboard-list text-4xl text-slate-300 mb-3"></i>
+                    <p className="text-slate-500">No visits recorded yet</p>
+                  </div>
+                </div>
+              )}
+
+              {/* EMR Prescriptions */}
+              {activeSection === 'emr-prescriptions' && (
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                  <div className="flex items-center justify-between mb-4">
+                    <h2 className="text-xl font-bold text-slate-800">
+                      <i className="fas fa-prescription text-amber-500 mr-2"></i>
+                      Prescriptions
+                    </h2>
+                    {prescriptionView === 'list' && (
+                      <button 
+                        onClick={() => setPrescriptionView('create')}
+                        className="px-4 py-2 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:shadow-lg transition-all"
+                      >
+                        <i className="fas fa-plus mr-2"></i>New Prescription
+                      </button>
+                    )}
+                    {prescriptionView !== 'list' && (
+                      <button 
+                        onClick={() => { setPrescriptionView('list'); setSelectedPatientForPrescription(null); }}
+                        className="px-4 py-2 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200"
+                      >
+                        <i className="fas fa-arrow-left mr-2"></i>Back to List
+                      </button>
+                    )}
+                  </div>
+
+                  {/* Prescription List View */}
+                  {prescriptionView === 'list' && (
+                    <div>
+                      {prescriptions.length === 0 ? (
+                        <div className="text-center py-10 bg-slate-50 rounded-xl">
+                          <i className="fas fa-file-prescription text-4xl text-slate-300 mb-3"></i>
+                          <p className="text-slate-500 mb-4">No prescriptions yet</p>
+                          <button 
+                            onClick={() => setPrescriptionView('create')}
+                            className="px-4 py-2 bg-amber-500 text-white rounded-lg font-medium hover:bg-amber-600"
+                          >
+                            Create First Prescription
+                          </button>
+                        </div>
+                      ) : (
+                        <div className="space-y-3">
+                          {prescriptions.map((rx) => (
+                            <div key={rx._id} className="p-4 bg-slate-50 rounded-xl hover:bg-amber-50 transition-colors">
+                              <div className="flex items-center justify-between">
+                                <div>
+                                  <p className="font-semibold text-slate-800">{rx.patientName || 'Unknown Patient'}</p>
+                                  <p className="text-sm text-slate-500">{rx.diagnosis || 'No diagnosis'}</p>
+                                  <p className="text-xs text-slate-400 mt-1">
+                                    {rx.medicines?.length || 0} medicines • {new Date(rx.createdAt).toLocaleDateString()}
+                                  </p>
+                                </div>
+                                <button 
+                                  onClick={() => { setSelectedPrescription(rx); setPrescriptionView('view'); }}
+                                  className="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium hover:bg-amber-200"
+                                >
+                                  View
+                                </button>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* Create Prescription View */}
+                  {prescriptionView === 'create' && (
+                    <div className="space-y-6">
+                      {/* Patient Selection */}
+                      {!selectedPatientForPrescription ? (
+                        <div>
+                          <h3 className="font-semibold text-slate-800 mb-3">Select Patient</h3>
+                          <div className="relative mb-4">
+                            <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
+                            <input 
+                              type="text" 
+                              placeholder="Search patients..." 
+                              value={searchTerm}
+                              onChange={(e) => setSearchTerm(e.target.value)}
+                              className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-amber-500" 
+                            />
+                          </div>
+                          <div className="grid grid-cols-1 md:grid-cols-2 gap-3 max-h-64 overflow-y-auto">
+                            {filteredPatients.map(patient => (
+                              <button 
+                                key={patient._id}
+                                onClick={() => setSelectedPatientForPrescription(patient)}
+                                className="flex items-center gap-3 p-3 bg-slate-50 rounded-xl hover:bg-amber-50 hover:border-amber-200 border-2 border-transparent transition-all text-left"
+                              >
+                                <div className="w-10 h-10 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold">
+                                  {patient.name?.charAt(0) || 'P'}
+                                </div>
+                                <div>
+                                  <p className="font-semibold text-slate-800">{patient.name}</p>
+                                  <p className="text-xs text-slate-500">{patient.phone || patient.email}</p>
+                                </div>
+                              </button>
+                            ))}
+                          </div>
+                          {filteredPatients.length === 0 && (
+                            <p className="text-center text-slate-500 py-4">No patients found. Register a patient first.</p>
+                          )}
+                        </div>
+                      ) : (
+                        <div>
+                          {/* Selected Patient Info */}
+                          <div className="flex items-center justify-between p-4 bg-amber-50 rounded-xl border border-amber-200 mb-6">
+                            <div className="flex items-center gap-3">
+                              <div className="w-12 h-12 rounded-full bg-gradient-to-br from-amber-500 to-orange-600 flex items-center justify-center text-white font-bold text-lg">
+                                {selectedPatientForPrescription.name?.charAt(0) || 'P'}
+                              </div>
+                              <div>
+                                <p className="font-semibold text-slate-800">{selectedPatientForPrescription.name}</p>
+                                <p className="text-sm text-slate-500">{selectedPatientForPrescription.phone || selectedPatientForPrescription.email}</p>
+                              </div>
+                            </div>
+                            <button 
+                              onClick={() => setSelectedPatientForPrescription(null)}
+                              className="text-slate-400 hover:text-slate-600"
+                            >
+                              <i className="fas fa-times"></i> Change
+                            </button>
+                          </div>
+
+                          {/* Diagnosis */}
+                          <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Diagnosis</label>
+                            <textarea
+                              value={prescriptionForm.diagnosis}
+                              onChange={(e) => setPrescriptionForm({ ...prescriptionForm, diagnosis: e.target.value })}
+                              placeholder="Enter diagnosis..."
+                              rows="2"
+                              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                            />
+                          </div>
+
+                          {/* Add Medicine */}
+                          <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">Add Medicines</label>
+                            <div className="relative mb-3">
+                              <input
+                                type="text"
+                                value={medicineSearch}
+                                onChange={(e) => handleMedicineSearch(e.target.value)}
+                                placeholder="Search medicine..."
+                                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                              />
+                              {medicineSearchResults.length > 0 && (
+                                <div className="absolute z-10 w-full mt-1 bg-white border border-slate-200 rounded-xl shadow-lg max-h-40 overflow-y-auto">
+                                  {medicineSearchResults.map((med, idx) => (
+                                    <button
+                                      key={idx}
+                                      onClick={() => {
+                                        setNewMedicine({ ...newMedicine, name: med });
+                                        setMedicineSearch(med);
+                                        setMedicineSearchResults([]);
+                                      }}
+                                      className="w-full px-4 py-2 text-left hover:bg-amber-50 text-sm"
+                                    >
+                                      {med}
+                                    </button>
+                                  ))}
+                                </div>
+                              )}
+                            </div>
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mb-3">
+                              <input
+                                type="text"
+                                value={newMedicine.name}
+                                onChange={(e) => setNewMedicine({ ...newMedicine, name: e.target.value })}
+                                placeholder="Medicine name"
+                                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                              />
+                              <input
+                                type="text"
+                                value={newMedicine.dosage}
+                                onChange={(e) => setNewMedicine({ ...newMedicine, dosage: e.target.value })}
+                                placeholder="Dosage (e.g., 500mg)"
+                                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                              />
+                              <select
+                                value={newMedicine.frequency}
+                                onChange={(e) => setNewMedicine({ ...newMedicine, frequency: e.target.value })}
+                                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                              >
+                                <option value="">Frequency</option>
+                                {frequencyOptions.map(opt => (
+                                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                              </select>
+                              <input
+                                type="text"
+                                value={newMedicine.duration}
+                                onChange={(e) => setNewMedicine({ ...newMedicine, duration: e.target.value })}
+                                placeholder="Duration (e.g., 5 days)"
+                                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                              />
+                            </div>
+                            <div className="flex gap-3 items-center">
+                              <select
+                                value={newMedicine.timing}
+                                onChange={(e) => setNewMedicine({ ...newMedicine, timing: e.target.value })}
+                                className="px-3 py-2 border border-slate-200 rounded-lg text-sm focus:ring-2 focus:ring-amber-500 outline-none"
+                              >
+                                {timingOptions.map(opt => (
+                                  <option key={opt.value} value={opt.value}>{opt.label}</option>
+                                ))}
+                              </select>
+                              <button
+                                onClick={addMedicineToPrescription}
+                                className="px-4 py-2 bg-amber-500 text-white rounded-lg text-sm font-medium hover:bg-amber-600"
+                              >
+                                <i className="fas fa-plus mr-1"></i>Add
+                              </button>
+                            </div>
+                          </div>
+
+                          {/* Medicine List */}
+                          <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">
+                              Medicines ({prescriptionForm.medicines.length})
+                            </label>
+                            {prescriptionForm.medicines.length === 0 ? (
+                              <p className="text-sm text-slate-400 py-3 text-center bg-slate-50 rounded-lg">No medicines added yet</p>
+                            ) : (
+                              <div className="space-y-2">
+                                {prescriptionForm.medicines.map((med, idx) => (
+                                  <div key={med.id} className="flex items-center justify-between p-3 bg-slate-50 rounded-lg">
+                                    <div>
+                                      <span className="font-medium text-slate-800">{idx + 1}. {med.name}</span>
+                                      {med.dosage && <span className="text-slate-500 ml-2">{med.dosage}</span>}
+                                      <div className="text-xs text-slate-500 mt-1">
+                                        {med.frequency && <span className="mr-2">{med.frequency}</span>}
+                                        {med.duration && <span className="mr-2">× {med.duration}</span>}
+                                        {med.timing && <span>({timingOptions.find(t => t.value === med.timing)?.label})</span>}
+                                      </div>
+                                    </div>
+                                    <button
+                                      onClick={() => removeMedicineFromPrescription(med.id)}
+                                      className="text-red-500 hover:text-red-700"
+                                    >
+                                      <i className="fas fa-trash"></i>
+                                    </button>
+                                  </div>
+                                ))}
+                              </div>
+                            )}
+                          </div>
+
+                          {/* Instructions */}
+                          <div className="mb-4">
+                            <label className="block text-sm font-medium text-slate-700 mb-2">General Instructions</label>
+                            <textarea
+                              value={prescriptionForm.instructions}
+                              onChange={(e) => setPrescriptionForm({ ...prescriptionForm, instructions: e.target.value })}
+                              placeholder="Diet, lifestyle, precautions..."
+                              rows="2"
+                              className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                            />
+                          </div>
+
+                          {/* Follow-up */}
+                          <div className="grid grid-cols-2 gap-4 mb-6">
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-2">Follow-up Date</label>
+                              <input
+                                type="date"
+                                value={prescriptionForm.followUpDate}
+                                onChange={(e) => setPrescriptionForm({ ...prescriptionForm, followUpDate: e.target.value })}
+                                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                              />
+                            </div>
+                            <div>
+                              <label className="block text-sm font-medium text-slate-700 mb-2">Follow-up Notes</label>
+                              <input
+                                type="text"
+                                value={prescriptionForm.followUpNotes}
+                                onChange={(e) => setPrescriptionForm({ ...prescriptionForm, followUpNotes: e.target.value })}
+                                placeholder="Follow-up instructions..."
+                                className="w-full px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-amber-500 outline-none"
+                              />
+                            </div>
+                          </div>
+
+                          {/* Save Button */}
+                          <button
+                            onClick={handleSavePrescription}
+                            disabled={savingPrescription}
+                            className="w-full py-3 bg-gradient-to-r from-amber-500 to-orange-600 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 disabled:cursor-not-allowed"
+                          >
+                            {savingPrescription ? (
+                              <><i className="fas fa-spinner fa-spin mr-2"></i>Saving...</>
+                            ) : (
+                              <><i className="fas fa-save mr-2"></i>Save Prescription</>
+                            )}
+                          </button>
+                        </div>
+                      )}
+                    </div>
+                  )}
+
+                  {/* View Prescription */}
+                  {prescriptionView === 'view' && selectedPrescription && (
+                    <div className="space-y-4">
+                      {/* Patient Details Card */}
+                      <div className="p-5 bg-gradient-to-br from-emerald-50 to-teal-50 rounded-xl border border-emerald-200">
+                        <div className="flex items-start gap-4">
+                          <div className="w-14 h-14 rounded-full bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center text-white font-bold text-xl flex-shrink-0">
+                            {selectedPrescription.patientName?.charAt(0)?.toUpperCase() || 'P'}
+                          </div>
+                          <div className="flex-1">
+                            <h3 className="text-lg font-bold text-slate-800">{selectedPrescription.patientName || 'Unknown Patient'}</h3>
+                            <p className="text-sm text-slate-500 mb-2">
+                              <i className="fas fa-calendar-alt mr-1"></i>
+                              Prescription Date: {new Date(selectedPrescription.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}
+                            </p>
+                            
+                            {/* Patient Contact Details */}
+                            <div className="grid grid-cols-2 md:grid-cols-4 gap-3 mt-3 pt-3 border-t border-emerald-200">
+                              <div>
+                                <p className="text-xs text-slate-500">Phone</p>
+                                <p className="font-medium text-slate-700 text-sm">
+                                  {selectedPrescription.patientId?.phone || selectedPrescription.patientPhone || 'N/A'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-slate-500">Email</p>
+                                <p className="font-medium text-slate-700 text-sm truncate">
+                                  {selectedPrescription.patientId?.email || selectedPrescription.patientEmail || 'N/A'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-slate-500">Age</p>
+                                <p className="font-medium text-slate-700 text-sm">
+                                  {selectedPrescription.patientId?.age || selectedPrescription.patientAge || 'N/A'}
+                                  {(selectedPrescription.patientId?.age || selectedPrescription.patientAge) && ' years'}
+                                </p>
+                              </div>
+                              <div>
+                                <p className="text-xs text-slate-500">Gender</p>
+                                <p className="font-medium text-slate-700 text-sm capitalize">
+                                  {selectedPrescription.patientId?.gender || selectedPrescription.patientGender || 'N/A'}
+                                </p>
+                              </div>
+                            </div>
+                            
+                            {/* Address if available */}
+                            {selectedPrescription.patientAddress && (
+                              <div className="mt-2">
+                                <p className="text-xs text-slate-500">Address</p>
+                                <p className="font-medium text-slate-700 text-sm">
+                                  {selectedPrescription.patientAddress}
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        </div>
+                      </div>
+
+                      {/* Diagnosis */}
+                      {selectedPrescription.diagnosis && (
+                        <div>
+                          <h4 className="font-medium text-slate-700 mb-1">Diagnosis</h4>
+                          <p className="text-slate-600 bg-slate-50 p-3 rounded-lg">{selectedPrescription.diagnosis}</p>
+                        </div>
+                      )}
+                      
+                      {/* Medicines */}
+                      <div>
+                        <h4 className="font-medium text-slate-700 mb-2">Medicines</h4>
+                        <div className="space-y-2">
+                          {selectedPrescription.medicines?.map((med, idx) => (
+                            <div key={idx} className="p-3 bg-slate-50 rounded-lg">
+                              <span className="font-medium">{idx + 1}. {med.name}</span>
+                              {med.dosage && <span className="text-slate-500 ml-2">{med.dosage}</span>}
+                              <div className="text-xs text-slate-500 mt-1">
+                                {med.frequency} {med.duration && `× ${med.duration}`} {med.timing && `(${med.timing})`}
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                      
+                      {/* Instructions */}
+                      {selectedPrescription.instructions && (
+                        <div>
+                          <h4 className="font-medium text-slate-700 mb-1">Instructions</h4>
+                          <p className="text-slate-600 bg-slate-50 p-3 rounded-lg">{selectedPrescription.instructions}</p>
+                        </div>
+                      )}
+                      
+                      {/* Follow-up */}
+                      {selectedPrescription.followUpDate && (
+                        <div className="p-3 bg-blue-50 rounded-lg border border-blue-200">
+                          <p className="text-sm text-blue-700">
+                            <i className="fas fa-calendar-check mr-2"></i>
+                            Follow-up: {new Date(selectedPrescription.followUpDate).toLocaleDateString()}
+                          </p>
+                        </div>
+                      )}
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* EMR Reports */}
+              {activeSection === 'emr-reports' && (
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                  <h2 className="text-xl font-bold text-slate-800 mb-4">
+                    <i className="fas fa-file-medical text-rose-500 mr-2"></i>
+                    Medical Reports
+                  </h2>
+                  <p className="text-slate-500">View uploaded patient reports and documents.</p>
+                  <div className="mt-4 text-center py-10 bg-slate-50 rounded-xl">
+                    <i className="fas fa-folder-open text-4xl text-slate-300 mb-3"></i>
+                    <p className="text-slate-500">No reports uploaded yet</p>
+                  </div>
+                </div>
+              )}
+
+              {/* EMR Analytics */}
+              {activeSection === 'emr-analytics' && (
+                <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                  <h2 className="text-xl font-bold text-slate-800 mb-4">
+                    <i className="fas fa-chart-line text-violet-500 mr-2"></i>
+                    Analytics & Reports
+                  </h2>
+                  <p className="text-slate-500">View clinic performance insights and statistics.</p>
+                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 mt-4">
+                    {[
+                      { label: 'Total Patients', value: patients.length, icon: 'fa-users', color: 'blue' },
+                      { label: 'Total Visits', value: '0', icon: 'fa-calendar-check', color: 'emerald' },
+                      { label: 'Prescriptions', value: '0', icon: 'fa-prescription', color: 'amber' },
+                      { label: 'Revenue', value: '₹0', icon: 'fa-rupee-sign', color: 'purple' }
+                    ].map((stat, i) => (
+                      <div key={i} className={`p-4 rounded-xl bg-${stat.color}-50 border border-${stat.color}-100`}>
+                        <i className={`fas ${stat.icon} text-${stat.color}-500 mb-2`}></i>
+                        <p className="text-2xl font-bold text-slate-800">{stat.value}</p>
+                        <p className="text-sm text-slate-500">{stat.label}</p>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* EMR Vitals */}
+              {activeSection === 'emr-vitals' && (
+                <div className="space-y-6">
+                  <div className="bg-white rounded-2xl p-6 border border-slate-100 shadow-sm">
+                    <h2 className="text-xl font-bold text-slate-800 mb-4">
+                      <i className="fas fa-heartbeat text-red-500 mr-2"></i>
+                      Vitals Recording & Trends
+                    </h2>
+                    <p className="text-slate-500 mb-6">Record patient vitals and view historical trends.</p>
+                    
+                    {/* Patient Selection */}
+                    <div className="mb-6">
+                      <label className="block text-sm font-medium text-slate-700 mb-2">Select Patient</label>
+                      <select 
+                        className="w-full md:w-1/2 px-4 py-3 border border-slate-200 rounded-xl focus:ring-2 focus:ring-red-500 focus:border-red-500"
+                        value={selectedEmrPatient?._id || ''}
+                        onChange={(e) => {
+                          const patient = patients.find(p => p._id === e.target.value);
+                          setSelectedEmrPatient(patient || null);
+                          if (patient) {
+                            fetchLastVitals(patient._id);
+                          } else {
+                            setLastVitals(null);
+                          }
+                        }}
+                      >
+                        <option value="">-- Select a patient --</option>
+                        {patients.map(patient => (
+                          <option key={patient._id} value={patient._id}>
+                            {patient.name} - {patient.phone}
+                          </option>
+                        ))}
+                      </select>
+                    </div>
+
+                    {selectedEmrPatient ? (
+                      <div className="space-y-6">
+                        {/* Patient Info */}
+                        <div className="p-4 bg-slate-50 rounded-xl border border-slate-200">
+                          <div className="flex items-center gap-4">
+                            <div className="w-12 h-12 rounded-full bg-gradient-to-br from-red-500 to-pink-600 flex items-center justify-center text-white font-bold text-lg">
+                              {selectedEmrPatient.name?.charAt(0).toUpperCase()}
+                            </div>
+                            <div>
+                              <h3 className="font-semibold text-slate-800">{selectedEmrPatient.name}</h3>
+                              <p className="text-sm text-slate-500">
+                                {selectedEmrPatient.phone} • {selectedEmrPatient.age ? `${selectedEmrPatient.age} yrs` : 'Age N/A'} • {selectedEmrPatient.gender || 'N/A'}
+                              </p>
+                            </div>
+                          </div>
+                        </div>
+
+                        {/* Vitals Action Cards */}
+                        <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+                          {/* Record Vitals Card */}
+                          <div className="p-6 bg-gradient-to-br from-red-50 to-pink-50 rounded-xl border border-red-100">
+                            <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                              <i className="fas fa-edit text-red-500"></i>
+                              Record New Vitals
+                            </h3>
+                            <p className="text-sm text-slate-600 mb-4">
+                              Record blood pressure, pulse, temperature, SpO2, and other vital signs.
+                            </p>
+                            <button 
+                              className="px-4 py-2 bg-red-500 text-white rounded-lg font-medium hover:bg-red-600 transition-colors"
+                              onClick={() => setShowVitalsRecorder(true)}
+                            >
+                              <i className="fas fa-plus mr-2"></i>
+                              Record Vitals
+                            </button>
+                          </div>
+
+                          {/* View Trends Card */}
+                          <div className="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl border border-blue-100">
+                            <h3 className="font-semibold text-slate-800 mb-4 flex items-center gap-2">
+                              <i className="fas fa-chart-line text-blue-500"></i>
+                              View Vitals Trends
+                            </h3>
+                            <p className="text-sm text-slate-600 mb-4">
+                              View historical trends with charts showing normal ranges.
+                            </p>
+                            <button 
+                              className="px-4 py-2 bg-blue-500 text-white rounded-lg font-medium hover:bg-blue-600 transition-colors"
+                              onClick={() => setShowVitalsTrends(true)}
+                            >
+                              <i className="fas fa-chart-area mr-2"></i>
+                              View Trends
+                            </button>
+                          </div>
+                        </div>
+
+                        {/* Quick Vitals Summary */}
+                        <div className="p-4 bg-white rounded-xl border border-slate-200">
+                          <h4 className="font-medium text-slate-700 mb-3">
+                            Last Recorded Vitals
+                            {loadingVitals && <i className="fas fa-spinner fa-spin ml-2 text-slate-400"></i>}
+                          </h4>
+                          <div className="grid grid-cols-2 md:grid-cols-4 lg:grid-cols-6 gap-3">
+                            {[
+                              { label: 'BP', value: lastVitals?.bloodPressure ? `${lastVitals.bloodPressure.systolic}/${lastVitals.bloodPressure.diastolic}` : '--/--', unit: 'mmHg', icon: '🩺' },
+                              { label: 'Pulse', value: lastVitals?.pulse?.value || '--', unit: 'bpm', icon: '💓' },
+                              { label: 'Temp', value: lastVitals?.temperature?.value || '--', unit: lastVitals?.temperature?.unit || '°F', icon: '🌡️' },
+                              { label: 'SpO2', value: lastVitals?.spo2?.value || '--', unit: '%', icon: '🫁' },
+                              { label: 'RR', value: lastVitals?.respiratoryRate?.value || '--', unit: '/min', icon: '🌬️' },
+                              { label: 'Sugar', value: lastVitals?.bloodSugar?.value || '--', unit: 'mg/dL', icon: '🩸' }
+                            ].map((vital, i) => (
+                              <div key={i} className="p-3 bg-slate-50 rounded-lg text-center">
+                                <span className="text-lg">{vital.icon}</span>
+                                <p className="text-lg font-bold text-slate-800">{vital.value}</p>
+                                <p className="text-xs text-slate-500">{vital.label} ({vital.unit})</p>
+                              </div>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-12 text-slate-500">
+                        <i className="fas fa-user-circle text-6xl text-slate-300 mb-4"></i>
+                        <p>Select a patient to record or view vitals</p>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* VitalsRecorder Modal */}
+                  {showVitalsRecorder && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+                      <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="sticky top-0 bg-white p-4 border-b border-slate-200 flex items-center justify-between z-10">
+                          <h3 className="text-xl font-bold text-slate-800">
+                            <i className="fas fa-heartbeat text-red-500 mr-2"></i>
+                            Record Vitals - {selectedEmrPatient?.name}
+                          </h3>
+                          <button 
+                            onClick={() => setShowVitalsRecorder(false)} 
+                            className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center"
+                          >
+                            <i className="fas fa-times text-slate-600"></i>
+                          </button>
+                        </div>
+                        <div className="p-4">
+                          <VitalsRecorder
+                            patientId={selectedEmrPatient?._id}
+                            onSave={handleSaveVitals}
+                            onCancel={() => setShowVitalsRecorder(false)}
+                            initialVitals={lastVitals}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* VitalsTrends Modal */}
+                  {showVitalsTrends && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+                      <div className="bg-white rounded-2xl w-full max-w-5xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="sticky top-0 bg-white p-4 border-b border-slate-200 flex items-center justify-between z-10">
+                          <h3 className="text-xl font-bold text-slate-800">
+                            <i className="fas fa-chart-line text-blue-500 mr-2"></i>
+                            Vitals Trends - {selectedEmrPatient?.name}
+                          </h3>
+                          <button 
+                            onClick={() => setShowVitalsTrends(false)} 
+                            className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center"
+                          >
+                            <i className="fas fa-times text-slate-600"></i>
+                          </button>
+                        </div>
+                        <div className="p-4">
+                          <VitalsTrends
+                            patientId={selectedEmrPatient?._id}
+                            clinicId={receptionist.clinicId}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+
+                  {/* MedicalHistoryForm Modal */}
+                  {showMedicalHistoryForm && selectedEmrPatient && (
+                    <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4 overflow-y-auto">
+                      <div className="bg-white rounded-2xl w-full max-w-4xl shadow-2xl max-h-[90vh] overflow-y-auto">
+                        <div className="sticky top-0 bg-white p-4 border-b border-slate-200 flex items-center justify-between z-10">
+                          <h3 className="text-xl font-bold text-slate-800">
+                            <i className="fas fa-notes-medical text-purple-500 mr-2"></i>
+                            Medical History - {selectedEmrPatient?.name}
+                          </h3>
+                          <button 
+                            onClick={() => setShowMedicalHistoryForm(false)} 
+                            className="w-10 h-10 rounded-xl bg-slate-100 hover:bg-slate-200 flex items-center justify-center"
+                          >
+                            <i className="fas fa-times text-slate-600"></i>
+                          </button>
+                        </div>
+                        <div className="p-4">
+                          <MedicalHistoryForm
+                            patientId={selectedEmrPatient?._id}
+                            clinicId={receptionist.clinicId}
+                            onSave={() => {
+                              setShowMedicalHistoryForm(false);
+                              toast.success('Medical history saved successfully!');
+                            }}
+                            onCancel={() => setShowMedicalHistoryForm(false)}
+                          />
+                        </div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Footer */}
@@ -777,7 +2436,7 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
       {/* Mobile Bottom Nav */}
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 py-2 z-40">
         <div className="flex items-center justify-around">
-          {[{ id: 'overview', icon: 'fa-home', label: 'Home' }, { id: 'appointments', icon: 'fa-calendar', label: 'Appointments' }, { id: 'queue', icon: 'fa-list-ol', label: 'Queue' }, { id: 'doctors', icon: 'fa-user-md', label: 'Doctors' }].map(item => (
+          {[{ id: 'overview', icon: 'fa-home', label: 'Home' }, { id: 'appointments', icon: 'fa-calendar', label: 'Appointments' }, { id: 'queue', icon: 'fa-list-ol', label: 'Queue' }, { id: 'emr', icon: 'fa-notes-medical', label: 'EMR' }].map(item => (
             <button key={item.id} onClick={() => setActiveSection(item.id)} className={`flex flex-col items-center gap-1 px-3 py-2 rounded-xl ${activeSection === item.id ? 'text-cyan-600 bg-cyan-50' : 'text-slate-400'}`}><i className={`fas ${item.icon}`}></i><span className="text-xs font-medium">{item.label}</span></button>
           ))}
         </div>

@@ -31,6 +31,14 @@ function DoctorAuth({ onLogin, onBack }) {
   const [agreedToPrivacy, setAgreedToPrivacy] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
+  
+  // Forgot password states
+  const [showForgotPassword, setShowForgotPassword] = useState(false);
+  const [forgotEmail, setForgotEmail] = useState("");
+  const [forgotOtp, setForgotOtp] = useState("");
+  const [newPassword, setNewPassword] = useState("");
+  const [forgotStep, setForgotStep] = useState(1); // 1: email, 2: otp, 3: new password
+  const [forgotLoading, setForgotLoading] = useState(false);
 
   // Load Google Sign-In script
   useEffect(() => {
@@ -147,10 +155,12 @@ function DoctorAuth({ onLogin, onBack }) {
         profilePhoto: googleUser.picture
       });
 
-      localStorage.setItem("doctor", JSON.stringify(response.data.doctor));
+      // Store doctor with token for axios interceptor
+      const doctorWithToken = { ...response.data.doctor, token: response.data.token };
+      localStorage.setItem("doctor", JSON.stringify(doctorWithToken));
       localStorage.setItem("doctorToken", response.data.token);
       setSuccess(`Welcome back, Dr. ${response.data.doctor.name?.split(' ')[0]}!`);
-      setTimeout(() => onLogin(response.data.doctor), 500);
+      setTimeout(() => onLogin(doctorWithToken), 500);
     } catch (error) {
       console.error('Doctor Google sign-in API error:', error);
       if (error.response?.data?.needsRegistration) {
@@ -175,9 +185,11 @@ function DoctorAuth({ onLogin, onBack }) {
 
     try {
       const response = await axios.post("/api/auth/doctor/login", formData);
-      localStorage.setItem("doctor", JSON.stringify(response.data.doctor));
+      // Store doctor with token for axios interceptor
+      const doctorWithToken = { ...response.data.doctor, token: response.data.token };
+      localStorage.setItem("doctor", JSON.stringify(doctorWithToken));
       localStorage.setItem("doctorToken", response.data.token);
-      onLogin(response.data.doctor);
+      onLogin(doctorWithToken);
     } catch (error) {
       if (error.response?.status === 403 && error.response?.data?.suspended) {
         setError(`Account Suspended: ${error.response?.data?.reason || 'Contact admin for assistance'}`);
@@ -290,6 +302,79 @@ function DoctorAuth({ onLogin, onBack }) {
       setError(error.response?.data?.message || "Failed to set password");
     } finally {
       setLoading(false);
+    }
+  };
+
+  // Forgot Password - Send OTP
+  const handleForgotSendOtp = async () => {
+    if (!forgotEmail) {
+      setError("Please enter your email");
+      return;
+    }
+    setForgotLoading(true);
+    setError("");
+    try {
+      const response = await axios.post("/api/auth/doctor/forgot-password", { email: forgotEmail });
+      if (response.data.success) {
+        setSuccess("OTP sent to your email!");
+        setForgotStep(2);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to send OTP");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // Forgot Password - Verify OTP
+  const handleForgotVerifyOtp = async () => {
+    if (!forgotOtp || forgotOtp.length !== 6) {
+      setError("Please enter a valid 6-digit OTP");
+      return;
+    }
+    setForgotLoading(true);
+    setError("");
+    try {
+      const response = await axios.post("/api/auth/doctor/verify-reset-otp", { 
+        email: forgotEmail, 
+        otp: forgotOtp 
+      });
+      if (response.data.success) {
+        setSuccess("OTP verified! Set your new password.");
+        setForgotStep(3);
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Invalid OTP");
+    } finally {
+      setForgotLoading(false);
+    }
+  };
+
+  // Forgot Password - Reset Password
+  const handleResetPassword = async () => {
+    if (!newPassword || newPassword.length < 6) {
+      setError("Password must be at least 6 characters");
+      return;
+    }
+    setForgotLoading(true);
+    setError("");
+    try {
+      const response = await axios.post("/api/auth/doctor/reset-password", { 
+        email: forgotEmail, 
+        newPassword 
+      });
+      if (response.data.success) {
+        setSuccess("Password reset successfully! You can now login.");
+        setShowForgotPassword(false);
+        setForgotStep(1);
+        setForgotEmail("");
+        setForgotOtp("");
+        setNewPassword("");
+      }
+    } catch (err) {
+      setError(err.response?.data?.message || "Failed to reset password");
+    } finally {
+      setForgotLoading(false);
     }
   };
 
@@ -431,6 +516,22 @@ function DoctorAuth({ onLogin, onBack }) {
               <button type="submit" className="btn btn-primary w-100" disabled={loading}>
                 {loading ? <><span className="spinner-border spinner-border-sm me-2"></span>Logging in...</> : "Login"}
               </button>
+
+              {/* Forgot Password Link */}
+              <div className="text-center mt-2">
+                <button
+                  type="button"
+                  className="btn btn-link btn-sm text-muted"
+                  onClick={() => {
+                    setShowForgotPassword(true);
+                    setError("");
+                    setSuccess("");
+                  }}
+                >
+                  <i className="fas fa-key me-1"></i>
+                  Forgot Password?
+                </button>
+              </div>
 
               {/* Divider */}
               <div className="d-flex align-items-center my-3">
@@ -859,6 +960,145 @@ function DoctorAuth({ onLogin, onBack }) {
                     <button type="button" className="btn btn-primary" onClick={() => { setAgreedToPrivacy(true); setShowPrivacyModal(false); }}>
                       <i className="fas fa-check me-2"></i>I Agree
                     </button>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+
+          {/* Forgot Password Modal */}
+          {showForgotPassword && (
+            <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+              <div className="modal-dialog modal-dialog-centered">
+                <div className="modal-content">
+                  <div className="modal-header">
+                    <h5 className="modal-title">
+                      <i className="fas fa-key me-2"></i>
+                      {forgotStep === 1 && "Reset Password"}
+                      {forgotStep === 2 && "Verify OTP"}
+                      {forgotStep === 3 && "Set New Password"}
+                    </h5>
+                    <button 
+                      type="button" 
+                      className="btn-close" 
+                      onClick={() => {
+                        setShowForgotPassword(false);
+                        setForgotStep(1);
+                        setForgotEmail("");
+                        setForgotOtp("");
+                        setNewPassword("");
+                        setError("");
+                        setSuccess("");
+                      }}
+                    ></button>
+                  </div>
+                  <div className="modal-body">
+                    {error && <div className="alert alert-danger py-2">{error}</div>}
+                    {success && <div className="alert alert-success py-2">{success}</div>}
+
+                    {forgotStep === 1 && (
+                      <div>
+                        <p className="text-muted mb-3">Enter your registered email to receive a verification code.</p>
+                        <div className="mb-3">
+                          <label className="form-label">Email Address</label>
+                          <div className="input-group">
+                            <span className="input-group-text"><i className="fas fa-envelope"></i></span>
+                            <input
+                              type="email"
+                              className="form-control"
+                              value={forgotEmail}
+                              onChange={(e) => setForgotEmail(e.target.value)}
+                              placeholder="doctor@clinic.com"
+                            />
+                          </div>
+                        </div>
+                        <button 
+                          className="btn btn-primary w-100" 
+                          onClick={handleForgotSendOtp}
+                          disabled={forgotLoading}
+                        >
+                          {forgotLoading ? (
+                            <><span className="spinner-border spinner-border-sm me-2"></span>Sending...</>
+                          ) : (
+                            <><i className="fas fa-paper-plane me-2"></i>Send OTP</>
+                          )}
+                        </button>
+                      </div>
+                    )}
+
+                    {forgotStep === 2 && (
+                      <div>
+                        <p className="text-muted mb-3">Enter the 6-digit OTP sent to {forgotEmail}</p>
+                        <div className="mb-3">
+                          <label className="form-label">OTP Code</label>
+                          <div className="input-group">
+                            <span className="input-group-text"><i className="fas fa-shield-alt"></i></span>
+                            <input
+                              type="text"
+                              className="form-control"
+                              value={forgotOtp}
+                              onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
+                              placeholder="Enter 6-digit OTP"
+                              maxLength={6}
+                            />
+                          </div>
+                        </div>
+                        <button 
+                          className="btn btn-primary w-100" 
+                          onClick={handleForgotVerifyOtp}
+                          disabled={forgotLoading}
+                        >
+                          {forgotLoading ? (
+                            <><span className="spinner-border spinner-border-sm me-2"></span>Verifying...</>
+                          ) : (
+                            <><i className="fas fa-check me-2"></i>Verify OTP</>
+                          )}
+                        </button>
+                        <button 
+                          className="btn btn-link w-100 mt-2" 
+                          onClick={() => setForgotStep(1)}
+                        >
+                          <i className="fas fa-arrow-left me-1"></i>Back
+                        </button>
+                      </div>
+                    )}
+
+                    {forgotStep === 3 && (
+                      <div>
+                        <p className="text-muted mb-3">Create a new password for your account.</p>
+                        <div className="mb-3">
+                          <label className="form-label">New Password</label>
+                          <div className="input-group">
+                            <span className="input-group-text"><i className="fas fa-lock"></i></span>
+                            <input
+                              type={showPassword ? "text" : "password"}
+                              className="form-control"
+                              value={newPassword}
+                              onChange={(e) => setNewPassword(e.target.value)}
+                              placeholder="Min 6 characters"
+                            />
+                            <button
+                              type="button"
+                              className="btn btn-outline-secondary"
+                              onClick={() => setShowPassword(!showPassword)}
+                            >
+                              <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
+                            </button>
+                          </div>
+                        </div>
+                        <button 
+                          className="btn btn-success w-100" 
+                          onClick={handleResetPassword}
+                          disabled={forgotLoading}
+                        >
+                          {forgotLoading ? (
+                            <><span className="spinner-border spinner-border-sm me-2"></span>Resetting...</>
+                          ) : (
+                            <><i className="fas fa-check me-2"></i>Reset Password</>
+                          )}
+                        </button>
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

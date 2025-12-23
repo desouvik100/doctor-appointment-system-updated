@@ -1,0 +1,524 @@
+/**
+ * EMR Clinical UI Styles
+ * Clean, professional clinical design
+ * No ads or marketplace elements
+ * Tablet and desktop optimized
+ * Requirements: 8.1, 8.2, 8.3
+ */
+
+/* ===== CSS Variables ===== */
+:root {
+  /* Clinical Color Palette */
+  --emr-primary: #3b82f6;
+  --emr-primary-dark: #2563eb;
+  --emr-primary-light: #dbeafe;
+  
+  --emr-success: #10b981;
+  --emr-success-dark: #059669;
+  --emr-success-light: #dcfce7;
+  
+  --emr-warning: #f59e0b;
+  --emr-warning-dark: #d97706;
+  --emr-warning-light: #fef3c7;
+  
+  --emr-danger: #ef4444;
+  --emr-danger-dark: #dc2626;
+  --emr-danger-light: #fee2e2;
+  
+  --emr-info: #06b6d4;
+  --emr-info-light: #cffafe;
+  
+  /* Neutral Colors */
+  --emr-bg: #f8fafc;
+  --emr-bg-card: #ffffff;
+  --emr-border: #e2e8f0;
+  --emr-border-light: #f1f5f9;
+  
+  --emr-text-primary: #1a1a2e;
+  --emr-text-secondary: #64748b;
+  --emr-text-muted: #94a3b8;
+  
+  /* Plan Colors */
+  --emr-plan-basic: #10b981;
+  --emr-plan-standard: #3b82f6;
+  --emr-plan-advanced: #8b5cf6;
+  
+  /* Spacing */
+  --emr-spacing-xs: 4px;
+  --emr-spacing-sm: 8px;
+  --emr-spacing-md: 16px;
+  --emr-spacing-lg: 24px;
+  --emr-spacing-xl: 32px;
+  
+  /* Border Radius */
+  --emr-radius-sm: 6px;
+  --emr-radius-md: 10px;
+  --emr-radius-lg: 16px;
+  --emr-radius-xl: 20px;
+  
+  /* Shadows */
+  --emr-shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.05);
+  --emr-shadow-md: 0 4px 6px rgba(0, 0, 0, 0.07);
+  --emr-shadow-lg: 0 10px 25px rgba(0, 0, 0, 0.1);
+  
+  /* Typography */
+  --emr-font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+  --emr-font-mono: 'SF Mono', Monaco, 'Cascadia Code', monospace;
+}
+
+/* ===== Base EMR Layout ===== */
+.emr-container {
+  display: flex;
+  min-height: 100vh;
+  background: var(--emr-bg);
+  font-family: var(--emr-font-family);
+}
+
+.emr-main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.emr-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: var(--emr-spacing-lg);
+}
+
+/* ===== Clinical Card ===== */
+.emr-card {
+  background: var(--emr-bg-card);
+  border-radius: var(--emr-radius-lg);
+  border: 1px solid var(--emr-border);
+  box-shadow: var(--emr-shadow-sm);
+  overflow: hidden;
+}
+
+.emr-card-header {
+  padding: var(--emr-spacing-md) var(--emr-spacing-lg);
+  border-bottom: 1px solid var(--emr-border-light);
+  background: linear-gradient(180deg, #fafbfc 0%, #fff 100%);
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.emr-card-title {
+  margin: 0;
+  font-size: 1.1rem;
+  font-weight: 600;
+  color: var(--emr-text-primary);
+  display: flex;
+  align-items: center;
+  gap: var(--emr-spacing-sm);
+}
+
+.emr-card-body {
+  padding: var(--emr-spacing-lg);
+}
+
+.emr-card-footer {
+  padding: var(--emr-spacing-md) var(--emr-spacing-lg);
+  border-top: 1px solid var(--emr-border-light);
+  background: var(--emr-bg);
+}
+
+/* ===== Clinical Buttons ===== */
+.emr-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--emr-spacing-sm);
+  padding: 10px 18px;
+  border-radius: var(--emr-radius-md);
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  border: none;
+  text-decoration: none;
+}
+
+.emr-btn-primary {
+  background: linear-gradient(135deg, var(--emr-primary) 0%, var(--emr-primary-dark) 100%);
+  color: white;
+}
+
+.emr-btn-primary:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(59, 130, 246, 0.3);
+}
+
+.emr-btn-success {
+  background: linear-gradient(135deg, var(--emr-success) 0%, var(--emr-success-dark) 100%);
+  color: white;
+}
+
+.emr-btn-success:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
+}
+
+.emr-btn-outline {
+  background: white;
+  border: 1px solid var(--emr-border);
+  color: var(--emr-text-secondary);
+}
+
+.emr-btn-outline:hover {
+  background: var(--emr-bg);
+  border-color: var(--emr-primary);
+  color: var(--emr-primary);
+}
+
+.emr-btn-ghost {
+  background: transparent;
+  color: var(--emr-text-secondary);
+}
+
+.emr-btn-ghost:hover {
+  background: var(--emr-bg);
+}
+
+.emr-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+  transform: none !important;
+}
+
+/* ===== Clinical Form Elements ===== */
+.emr-input,
+.emr-select,
+.emr-textarea {
+  width: 100%;
+  padding: 12px 14px;
+  border: 1px solid var(--emr-border);
+  border-radius: var(--emr-radius-md);
+  font-size: 0.95rem;
+  font-family: inherit;
+  background: white;
+  transition: border-color 0.2s, box-shadow 0.2s;
+}
+
+.emr-input:focus,
+.emr-select:focus,
+.emr-textarea:focus {
+  outline: none;
+  border-color: var(--emr-primary);
+  box-shadow: 0 0 0 3px var(--emr-primary-light);
+}
+
+.emr-input::placeholder {
+  color: var(--emr-text-muted);
+}
+
+.emr-label {
+  display: block;
+  margin-bottom: var(--emr-spacing-sm);
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--emr-text-secondary);
+}
+
+.emr-form-group {
+  margin-bottom: var(--emr-spacing-lg);
+}
+
+/* ===== Clinical Badges ===== */
+.emr-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+
+.emr-badge-success {
+  background: var(--emr-success-light);
+  color: #166534;
+}
+
+.emr-badge-warning {
+  background: var(--emr-warning-light);
+  color: #92400e;
+}
+
+.emr-badge-danger {
+  background: var(--emr-danger-light);
+  color: #991b1b;
+}
+
+.emr-badge-info {
+  background: var(--emr-info-light);
+  color: #0e7490;
+}
+
+.emr-badge-neutral {
+  background: var(--emr-border-light);
+  color: var(--emr-text-secondary);
+}
+
+/* ===== Clinical Tables ===== */
+.emr-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.emr-table th,
+.emr-table td {
+  padding: 12px 16px;
+  text-align: left;
+  border-bottom: 1px solid var(--emr-border-light);
+}
+
+.emr-table th {
+  font-weight: 600;
+  font-size: 0.85rem;
+  color: var(--emr-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  background: var(--emr-bg);
+}
+
+.emr-table tr:hover {
+  background: var(--emr-bg);
+}
+
+/* ===== Clinical Alerts ===== */
+.emr-alert {
+  padding: 12px 16px;
+  border-radius: var(--emr-radius-md);
+  display: flex;
+  align-items: flex-start;
+  gap: var(--emr-spacing-sm);
+}
+
+.emr-alert-success {
+  background: var(--emr-success-light);
+  color: #166534;
+  border: 1px solid #bbf7d0;
+}
+
+.emr-alert-warning {
+  background: var(--emr-warning-light);
+  color: #92400e;
+  border: 1px solid #fde68a;
+}
+
+.emr-alert-danger {
+  background: var(--emr-danger-light);
+  color: #991b1b;
+  border: 1px solid #fecaca;
+}
+
+.emr-alert-info {
+  background: var(--emr-primary-light);
+  color: #1e40af;
+  border: 1px solid #bfdbfe;
+}
+
+/* ===== Medical Data Display ===== */
+.emr-vitals-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: var(--emr-spacing-md);
+}
+
+.emr-vital-item {
+  padding: var(--emr-spacing-md);
+  background: var(--emr-bg);
+  border-radius: var(--emr-radius-md);
+  text-align: center;
+}
+
+.emr-vital-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: var(--emr-text-primary);
+}
+
+.emr-vital-label {
+  font-size: 0.8rem;
+  color: var(--emr-text-muted);
+  margin-top: 4px;
+}
+
+.emr-vital-unit {
+  font-size: 0.9rem;
+  color: var(--emr-text-secondary);
+}
+
+/* ===== Medical Codes ===== */
+.emr-code {
+  font-family: var(--emr-font-mono);
+  padding: 2px 8px;
+  background: var(--emr-primary-light);
+  color: var(--emr-primary-dark);
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+}
+
+.emr-icd-code {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+/* ===== Patient Info Display ===== */
+.emr-patient-header {
+  display: flex;
+  align-items: center;
+  gap: var(--emr-spacing-md);
+  padding: var(--emr-spacing-lg);
+  background: linear-gradient(135deg, var(--emr-bg) 0%, white 100%);
+  border-radius: var(--emr-radius-lg);
+  border: 1px solid var(--emr-border);
+}
+
+.emr-patient-avatar {
+  width: 64px;
+  height: 64px;
+  border-radius: var(--emr-radius-md);
+  background: var(--emr-primary-light);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.75rem;
+  overflow: hidden;
+}
+
+.emr-patient-avatar img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.emr-patient-info h3 {
+  margin: 0;
+  font-size: 1.25rem;
+  color: var(--emr-text-primary);
+}
+
+.emr-patient-meta {
+  display: flex;
+  gap: var(--emr-spacing-md);
+  margin-top: 4px;
+  font-size: 0.9rem;
+  color: var(--emr-text-secondary);
+}
+
+/* ===== Loading States ===== */
+.emr-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: var(--emr-text-secondary);
+}
+
+.emr-spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid var(--emr-border);
+  border-top-color: var(--emr-primary);
+  border-radius: 50%;
+  animation: emr-spin 0.8s linear infinite;
+}
+
+@keyframes emr-spin {
+  to { transform: rotate(360deg); }
+}
+
+/* ===== Empty States ===== */
+.emr-empty {
+  text-align: center;
+  padding: 60px 20px;
+  color: var(--emr-text-secondary);
+}
+
+.emr-empty-icon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: var(--emr-spacing-md);
+  opacity: 0.5;
+}
+
+/* ===== Tablet Optimization ===== */
+@media (min-width: 768px) and (max-width: 1024px) {
+  .emr-content {
+    padding: var(--emr-spacing-md);
+  }
+  
+  .emr-card-body {
+    padding: var(--emr-spacing-md);
+  }
+  
+  /* Larger touch targets for tablets */
+  .emr-btn {
+    padding: 12px 20px;
+    min-height: 44px;
+  }
+  
+  .emr-input,
+  .emr-select {
+    padding: 14px 16px;
+    min-height: 48px;
+  }
+}
+
+/* ===== Desktop Optimization ===== */
+@media (min-width: 1024px) {
+  .emr-content {
+    max-width: 1400px;
+    margin: 0 auto;
+  }
+}
+
+/* ===== Print Styles ===== */
+@media print {
+  .emr-sidebar,
+  .emr-btn,
+  .emr-card-footer {
+    display: none !important;
+  }
+  
+  .emr-card {
+    box-shadow: none;
+    border: 1px solid #ddd;
+  }
+  
+  .emr-content {
+    padding: 0;
+  }
+}
+
+/* ===== Accessibility ===== */
+.emr-btn:focus-visible,
+.emr-input:focus-visible,
+.emr-select:focus-visible {
+  outline: 2px solid var(--emr-primary);
+  outline-offset: 2px;
+}
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .emr-card {
+    border-width: 2px;
+  }
+  .emr-btn {
+    border: 2px solid currentColor;
+  }
+}
+/* Reduced motion support */
+@media (prefers-reduced-motion: reduce) {
+  .emr-btn,
+  .emr-input,
+  .emr-spinner {
+    transition: none;
+    animation: none;
+  }
+}

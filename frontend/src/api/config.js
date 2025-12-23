@@ -173,25 +173,32 @@ axiosInstance.interceptors.response.use(
     }
     
     if (error.response?.status === 401) {
-      // Clear invalid tokens
-      if (isNative) {
-        try {
-          const { Preferences } = await import('@capacitor/preferences');
-          await Preferences.remove({ key: 'user' });
-          await Preferences.remove({ key: 'admin' });
-          await Preferences.remove({ key: 'receptionist' });
-          await Preferences.remove({ key: 'doctor' });
-          await Preferences.remove({ key: 'doctorToken' });
-        } catch (e) {
-          // Fallback
+      // Only clear tokens and reload if user was actually logged in
+      const hasUser = localStorage.getItem('user') || localStorage.getItem('admin') || 
+                      localStorage.getItem('receptionist') || localStorage.getItem('doctor');
+      
+      if (hasUser) {
+        console.log('🔒 401 Unauthorized - clearing tokens');
+        // Clear invalid tokens
+        if (isNative) {
+          try {
+            const { Preferences } = await import('@capacitor/preferences');
+            await Preferences.remove({ key: 'user' });
+            await Preferences.remove({ key: 'admin' });
+            await Preferences.remove({ key: 'receptionist' });
+            await Preferences.remove({ key: 'doctor' });
+            await Preferences.remove({ key: 'doctorToken' });
+          } catch (e) {
+            // Fallback
+          }
         }
+        localStorage.removeItem('user');
+        localStorage.removeItem('admin');
+        localStorage.removeItem('receptionist');
+        localStorage.removeItem('doctor');
+        localStorage.removeItem('doctorToken');
+        window.location.reload();
       }
-      localStorage.removeItem('user');
-      localStorage.removeItem('admin');
-      localStorage.removeItem('receptionist');
-      localStorage.removeItem('doctor');
-      localStorage.removeItem('doctorToken');
-      window.location.reload();
     }
     return Promise.reject(error);
   }

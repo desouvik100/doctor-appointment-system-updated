@@ -1,0 +1,144 @@
+/**
+ * Subscription Badge Styles
+ */
+
+.subscription-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border-radius: 20px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+  background: #f1f5f9;
+  border: 1px solid #e2e8f0;
+}
+
+.subscription-badge:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+/* Plan Colors */
+.subscription-badge.basic {
+  background: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 100%);
+  border-color: #7dd3fc;
+}
+
+.subscription-badge.standard {
+  background: linear-gradient(135deg, #ede9fe 0%, #ddd6fe 100%);
+  border-color: #a78bfa;
+}
+
+.subscription-badge.advanced {
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-color: #fbbf24;
+}
+
+/* Status Colors */
+.subscription-badge.active .badge-status {
+  color: #10b981;
+}
+
+.subscription-badge.warning {
+  animation: pulse-warning 2s infinite;
+}
+
+.subscription-badge.warning .badge-status {
+  color: #f59e0b;
+  font-weight: 700;
+}
+
+.subscription-badge.expired {
+  background: linear-gradient(135deg, #fee2e2 0%, #fecaca 100%);
+  border-color: #f87171;
+}
+
+.subscription-badge.expired .badge-status {
+  color: #ef4444;
+  font-weight: 700;
+}
+
+/* No Subscription */
+.subscription-badge.no-subscription {
+  background: #fef3c7;
+  border-color: #fbbf24;
+}
+
+/* Badge Elements */
+.badge-icon {
+  font-size: 16px;
+}
+
+.badge-plan {
+  color: #1e293b;
+}
+
+.badge-divider {
+  color: #94a3b8;
+}
+
+.badge-status {
+  font-size: 12px;
+}
+
+.badge-text {
+  color: #92400e;
+}
+
+/* Compact Mode */
+.subscription-badge.compact {
+  padding: 6px 10px;
+  gap: 4px;
+}
+
+.subscription-badge.compact .badge-icon {
+  font-size: 14px;
+}
+
+.badge-alert {
+  width: 16px;
+  height: 16px;
+  background: #ef4444;
+  color: #fff;
+  border-radius: 50%;
+  font-size: 10px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: pulse-alert 1s infinite;
+}
+
+/* Animations */
+@keyframes pulse-warning {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(245, 158, 11, 0.4);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(245, 158, 11, 0);
+  }
+}
+
+@keyframes pulse-alert {
+  0%, 100% {
+    transform: scale(1);
+  }
+  50% {
+    transform: scale(1.1);
+  }
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .subscription-badge {
+    padding: 6px 12px;
+    font-size: 12px;
+  }
+
+  .badge-icon {
+    font-size: 14px;
+  }
+}

@@ -11,6 +11,41 @@ import SecurityWarningBanner from "./SecurityWarningBanner";
 import WalkInPatientModal from "./WalkInPatientModal";
 import DoctorSupport from "./DoctorSupport";
 import DoctorControls from "./DoctorControls";
+import SystematicHistorySummary from "./systematic-history/SystematicHistorySummary";
+
+// Simple component to show systematic history status for appointments
+const SystematicHistoryIndicator = ({ appointmentId }) => {
+  const [hasHistory, setHasHistory] = useState(null);
+  
+  useEffect(() => {
+    const checkHistory = async () => {
+      try {
+        const response = await axios.get(`/api/systematic-history/appointment/${appointmentId}`);
+        setHasHistory(response.data.success && response.data.history);
+      } catch (error) {
+        setHasHistory(false);
+      }
+    };
+    
+    if (appointmentId) {
+      checkHistory();
+    }
+  }, [appointmentId]);
+  
+  if (hasHistory === null) {
+    return <span className="text-muted">...</span>;
+  }
+  
+  return hasHistory ? (
+    <span className="badge bg-success" title="Systematic history available">
+      <i className="fas fa-clipboard-check"></i>
+    </span>
+  ) : (
+    <span className="badge bg-light text-muted" title="No systematic history">
+      <i className="fas fa-clipboard"></i>
+    </span>
+  );
+};
 
 function DoctorDashboard({ doctor, onLogout }) {
   const [appointments, setAppointments] = useState([]);
@@ -28,6 +63,48 @@ function DoctorDashboard({ doctor, onLogout }) {
   const [showSupport, setShowSupport] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [consultationTime, setConsultationTime] = useState(0);
+  
+  // EMR State
+  const [emrSubscription, setEmrSubscription] = useState(null);
+  const [emrLoading, setEmrLoading] = useState(false);
+  const [emrPatients, setEmrPatients] = useState([]);
+  const [emrPrescriptions, setEmrPrescriptions] = useState([]);
+  
+  // Systematic History State
+  const [systematicHistory, setSystematicHistory] = useState(null);
+  const [historyLoading, setHistoryLoading] = useState(false);
+
+  // Fetch systematic history for current patient
+  const fetchSystematicHistory = async (appointmentId) => {
+    if (!appointmentId) {
+      setSystematicHistory(null);
+      return;
+    }
+    
+    try {
+      setHistoryLoading(true);
+      const response = await axios.get(`/api/systematic-history/appointment/${appointmentId}`);
+      if (response.data.success && response.data.history) {
+        setSystematicHistory(response.data.history);
+      } else {
+        setSystematicHistory(null);
+      }
+    } catch (error) {
+      console.error('Error fetching systematic history:', error);
+      setSystematicHistory(null);
+    } finally {
+      setHistoryLoading(false);
+    }
+  };
+
+  // Fetch systematic history when current patient changes
+  useEffect(() => {
+    if (currentPatient?._id) {
+      fetchSystematicHistory(currentPatient._id);
+    } else {
+      setSystematicHistory(null);
+    }
+  }, [currentPatient]);
 
   // Get doctor ID (handle both id and _id)
   const doctorId = doctor.id || doctor._id;
@@ -50,6 +127,11 @@ function DoctorDashboard({ doctor, onLogout }) {
         return a.time.localeCompare(b.time);
       });
       
+      // Debug: Log the in_progress patient's consultationStartTime
+      if (inProgress) {
+        console.log('📋 Current patient consultationStartTime:', inProgress.consultationStartTime);
+      }
+      
       setCurrentPatient(inProgress || null);
       setQueue(waiting);
     } catch (error) {
@@ -63,6 +145,7 @@ function DoctorDashboard({ doctor, onLogout }) {
     if (doctorId) {
       fetchAppointments();
       fetchQueue();
+      fetchEmrSubscription();
       
       // Auto-refresh queue every 30 seconds
       const interval = setInterval(fetchQueue, 30000);
@@ -70,13 +153,120 @@ function DoctorDashboard({ doctor, onLogout }) {
     }
   }, [doctorId, fetchQueue]);
 
+  // Fetch EMR subscription for the clinic
+  const fetchEmrSubscription = async () => {
+    // Handle different formats of clinicId (populated object, ObjectId string, or nested _id)
+    let clinicId = null;
+    if (doctor.clinicId) {
+      if (typeof doctor.clinicId === 'object' && doctor.clinicId._id) {
+        clinicId = doctor.clinicId._id;
+      } else if (typeof doctor.clinicId === 'string') {
+        clinicId = doctor.clinicId;
+      } else if (doctor.clinicId.$oid) {
+        // Handle MongoDB extended JSON format
+        clinicId = doctor.clinicId.$oid;
+      }
+    }
+    
+    console.log('📋 EMR: Doctor object:', doctor);
+    console.log('📋 EMR: Doctor clinicId raw:', doctor.clinicId);
+    console.log('📋 EMR: Extracted clinicId:', clinicId);
+    
+    if (!clinicId) {
+      console.log('📋 EMR: No clinicId found, skipping subscription fetch');
+      setEmrLoading(false);
+      return;
+    }
+    
+    try {
+      setEmrLoading(true);
+      console.log('📋 EMR: Fetching subscription for clinic:', clinicId);
+      const response = await axios.get(`/api/emr/subscription/${clinicId}`);
+      console.log('📋 EMR: Subscription response:', response.data);
+      if (response.data.success && response.data.subscription) {
+        setEmrSubscription(response.data.subscription);
+        console.log('📋 EMR: Subscription set:', response.data.subscription.plan);
+      } else {
+        console.log('📋 EMR: No subscription in response');
+        setEmrSubscription(null);
+      }
+    } catch (error) {
+      console.log('📋 EMR: Error fetching subscription:', error.response?.data || error.message);
+      setEmrSubscription(null);
+    } finally {
+      setEmrLoading(false);
+    }
+  };
+
+  // Fetch EMR patients for the clinic
+  const fetchEmrPatients = async () => {
+    // Handle different formats of clinicId
+    let clinicId = null;
+    if (doctor.clinicId) {
+      if (typeof doctor.clinicId === 'object' && doctor.clinicId._id) {
+        clinicId = doctor.clinicId._id;
+      } else if (typeof doctor.clinicId === 'string') {
+        clinicId = doctor.clinicId;
+      } else if (doctor.clinicId.$oid) {
+        clinicId = doctor.clinicId.$oid;
+      }
+    }
+    
+    if (!clinicId) return;
+    
+    try {
+      const response = await axios.get(`/api/emr/patients/clinic/${clinicId}`);
+      if (response.data.success) {
+        setEmrPatients(response.data.patients || []);
+      }
+    } catch (error) {
+      console.error('Error fetching EMR patients:', error);
+    }
+  };
+
+  // Fetch EMR prescriptions for the clinic
+  const fetchEmrPrescriptions = async () => {
+    // Handle different formats of clinicId
+    let clinicId = null;
+    if (doctor.clinicId) {
+      if (typeof doctor.clinicId === 'object' && doctor.clinicId._id) {
+        clinicId = doctor.clinicId._id;
+      } else if (typeof doctor.clinicId === 'string') {
+        clinicId = doctor.clinicId;
+      } else if (doctor.clinicId.$oid) {
+        clinicId = doctor.clinicId.$oid;
+      }
+    }
+    
+    if (!clinicId) return;
+    
+    try {
+      const response = await axios.get(`/api/prescriptions/clinic/${clinicId}`);
+      if (response.data.success) {
+        setEmrPrescriptions(response.data.prescriptions || []);
+      }
+    } catch (error) {
+      console.error('Error fetching prescriptions:', error);
+    }
+  };
+
+  // Load EMR data when EMR tab is selected
+  useEffect(() => {
+    if (activeTab === 'emr' && emrSubscription) {
+      fetchEmrPatients();
+      fetchEmrPrescriptions();
+    }
+  }, [activeTab, emrSubscription]);
+
   // Consultation timer - tracks time with current patient
   useEffect(() => {
     let timer;
-    if (currentPatient?.consultationStartedAt) {
-      const startTime = new Date(currentPatient.consultationStartedAt).getTime();
+    // Check both field names for compatibility
+    const startTime = currentPatient?.consultationStartedAt || currentPatient?.consultationStartTime;
+    if (startTime) {
+      const startTimeMs = new Date(startTime).getTime();
       timer = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+        const elapsed = Math.floor((Date.now() - startTimeMs) / 1000);
         setConsultationTime(elapsed);
       }, 1000);
     } else {
@@ -140,8 +330,16 @@ function DoctorDashboard({ doctor, onLogout }) {
 
   const updateAppointmentStatus = async (appointmentId, status) => {
     try {
-      await axios.put(`/api/appointments/${appointmentId}/status`, { status });
+      const response = await axios.put(`/api/appointments/${appointmentId}/status`, { status });
       toast.success(`Appointment ${status === 'in_progress' ? 'started' : status}`);
+      
+      // If starting consultation, immediately set current patient with consultationStartTime
+      // This ensures the timer starts right away without waiting for fetchQueue
+      if (status === 'in_progress' && response.data) {
+        console.log('📋 Setting current patient with consultationStartTime:', response.data.consultationStartTime);
+        setCurrentPatient(response.data);
+      }
+      
       fetchAppointments();
       fetchQueue();
     } catch (error) {
@@ -423,6 +621,18 @@ function DoctorDashboard({ doctor, onLogout }) {
           <i className="fas fa-wallet" aria-hidden="true"></i>
           <span>Wallet</span>
         </button>
+        <button 
+          className={`doctor-tab ${activeTab === 'emr' ? 'active' : ''}`}
+          onClick={() => setActiveTab('emr')}
+          role="tab"
+          aria-selected={activeTab === 'emr'}
+          aria-controls="emr-panel"
+          style={{ background: emrSubscription ? 'linear-gradient(135deg, #10b981, #059669)' : undefined }}
+        >
+          <i className="fas fa-notes-medical" aria-hidden="true"></i>
+          <span>EMR</span>
+          {emrSubscription && <span className="badge bg-success ms-1" style={{ fontSize: '0.6rem' }}>Active</span>}
+        </button>
       </nav>
 
       {/* Patient Queue Section */}
@@ -598,6 +808,58 @@ function DoctorDashboard({ doctor, onLogout }) {
                         <p className="mt-3 mb-2"><strong>Reason:</strong></p>
                         <p className="text-muted" style={{ fontSize: '0.85rem' }}>{currentPatient.reason}</p>
                       </>
+                    )}
+                    
+                    {/* Systematic History Summary */}
+                    {historyLoading ? (
+                      <div className="mt-3 text-center">
+                        <div className="spinner-border spinner-border-sm text-primary"></div>
+                        <small className="text-muted ms-2">Loading history...</small>
+                      </div>
+                    ) : systematicHistory ? (
+                      <div className="mt-3">
+                        <SystematicHistorySummary 
+                          history={systematicHistory}
+                          compact={true}
+                          expandable={true}
+                          onPrint={() => {
+                            const printWindow = window.open('', '_blank');
+                            printWindow.document.write(`
+                              <html>
+                                <head>
+                                  <title>Systematic History - ${currentPatient.userId?.name || currentPatient.walkInPatient?.name || 'Patient'}</title>
+                                  <style>
+                                    body { font-family: Arial, sans-serif; margin: 20px; }
+                                    .header { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
+                                    .system-row { margin: 10px 0; padding: 8px; border-left: 3px solid #007bff; }
+                                    .symptom { background: #f8f9fa; padding: 4px 8px; margin: 2px; border-radius: 4px; display: inline-block; }
+                                    .allergy { background: #fff3cd; border: 1px solid #ffeaa7; padding: 4px 8px; margin: 2px; border-radius: 4px; }
+                                  </style>
+                                </head>
+                                <body>
+                                  <div class="header">
+                                    <h2>Systematic History Summary</h2>
+                                    <p><strong>Patient:</strong> ${currentPatient.userId?.name || currentPatient.walkInPatient?.name || 'Unknown'}</p>
+                                    <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
+                                    <p><strong>Doctor:</strong> Dr. ${doctor.name}</p>
+                                  </div>
+                                  <div id="history-content"></div>
+                                </body>
+                              </html>
+                            `);
+                            // Add the systematic history content here
+                            printWindow.document.close();
+                            printWindow.print();
+                          }}
+                        />
+                      </div>
+                    ) : (
+                      <div className="mt-3">
+                        <div className="alert alert-info" style={{ fontSize: '0.85rem', padding: '0.5rem' }}>
+                          <i className="fas fa-info-circle me-2"></i>
+                          No systematic history available for this patient
+                        </div>
+                      </div>
                     )}
                     
                     {/* Quick Action Buttons - Improved */}
@@ -791,6 +1053,7 @@ function DoctorDashboard({ doctor, onLogout }) {
                                 <i className="fas fa-clock me-1"></i>
                                 Est. ~{estimatedWaitMinutes} min ({estimatedTimeStr})
                               </span>
+                              <SystematicHistoryIndicator appointmentId={patient._id} />
                             </div>
                           </div>
                           <div className="queue-patient-type">
@@ -887,6 +1150,7 @@ function DoctorDashboard({ doctor, onLogout }) {
                     <th>Time</th>
                     <th>Type</th>
                     <th>Reason</th>
+                    <th>History</th>
                     <th>Status</th>
                     <th>Actions</th>
                   </tr>
@@ -925,6 +1189,9 @@ function DoctorDashboard({ doctor, onLogout }) {
                         )}
                       </td>
                       <td><small>{apt.reason}</small></td>
+                      <td>
+                        <SystematicHistoryIndicator appointmentId={apt._id} />
+                      </td>
                       <td>{getStatusBadge(apt.status)}</td>
                       <td>
                         {/* Meet Link for Online Appointments - Doctor joins as Host */}
@@ -985,13 +1252,236 @@ function DoctorDashboard({ doctor, onLogout }) {
         </main>
       )}
 
+      {/* EMR Tab */}
+      {activeTab === 'emr' && (
+        <main id="emr-panel" role="tabpanel" aria-labelledby="emr-tab">
+          {emrLoading ? (
+            <div className="text-center py-5">
+              <div className="spinner-border text-primary"></div>
+              <p className="mt-2">Loading EMR...</p>
+            </div>
+          ) : !emrSubscription ? (
+            <div className="card">
+              <div className="card-body text-center py-5">
+                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
+                  <i className="fas fa-lock text-white" style={{ fontSize: '2rem' }}></i>
+                </div>
+                <h3 className="mb-3">EMR Not Available</h3>
+                <p className="text-muted mb-4">
+                  Your clinic doesn't have an active EMR subscription.<br />
+                  Contact your clinic administrator to enable EMR features.
+                </p>
+                <div className="alert alert-info" style={{ maxWidth: '500px', margin: '0 auto' }}>
+                  <i className="fas fa-info-circle me-2"></i>
+                  EMR features include patient records, prescriptions, visit history, and more.
+                </div>
+              </div>
+            </div>
+          ) : (
+            <div className="row">
+              {/* EMR Subscription Info */}
+              <div className="col-12 mb-4">
+                <div className="card" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white' }}>
+                  <div className="card-body">
+                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+                      <div>
+                        <h5 className="mb-1">
+                          <i className="fas fa-crown me-2"></i>
+                          EMR {emrSubscription.plan?.charAt(0).toUpperCase() + emrSubscription.plan?.slice(1)} Plan
+                        </h5>
+                        <p className="mb-0 opacity-75">
+                          <i className="fas fa-hospital me-2"></i>
+                          {doctor.clinicId?.name || 'Your Clinic'}
+                        </p>
+                      </div>
+                      <div className="text-end">
+                        <span className="badge bg-white text-success px-3 py-2">
+                          <i className="fas fa-check-circle me-1"></i>
+                          Active
+                        </span>
+                        <p className="mb-0 mt-2 opacity-75" style={{ fontSize: '0.85rem' }}>
+                          Expires: {new Date(emrSubscription.expiryDate).toLocaleDateString()}
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* EMR Quick Stats */}
+              <div className="col-12 mb-4">
+                <div className="row g-3">
+                  <div className="col-6 col-md-3">
+                    <div className="card h-100">
+                      <div className="card-body text-center">
+                        <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
+                          <i className="fas fa-users text-white"></i>
+                        </div>
+                        <h4 className="mb-0">{emrPatients.length}</h4>
+                        <small className="text-muted">Patients</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md-3">
+                    <div className="card h-100">
+                      <div className="card-body text-center">
+                        <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
+                          <i className="fas fa-prescription text-white"></i>
+                        </div>
+                        <h4 className="mb-0">{emrPrescriptions.length}</h4>
+                        <small className="text-muted">Prescriptions</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md-3">
+                    <div className="card h-100">
+                      <div className="card-body text-center">
+                        <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
+                          <i className="fas fa-calendar-check text-white"></i>
+                        </div>
+                        <h4 className="mb-0">{stats.completed}</h4>
+                        <small className="text-muted">Visits Today</small>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="col-6 col-md-3">
+                    <div className="card h-100">
+                      <div className="card-body text-center">
+                        <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
+                          <i className="fas fa-file-medical text-white"></i>
+                        </div>
+                        <h4 className="mb-0">{emrSubscription.daysRemaining || '-'}</h4>
+                        <small className="text-muted">Days Left</small>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Patients */}
+              <div className="col-md-6 mb-4">
+                <div className="card h-100">
+                  <div className="card-header d-flex justify-content-between align-items-center">
+                    <h6 className="mb-0"><i className="fas fa-users me-2"></i>Recent Patients</h6>
+                    <button className="btn btn-sm btn-outline-primary" onClick={fetchEmrPatients}>
+                      <i className="fas fa-sync-alt"></i>
+                    </button>
+                  </div>
+                  <div className="card-body p-0">
+                    {emrPatients.length === 0 ? (
+                      <div className="text-center py-4">
+                        <i className="fas fa-user-plus fa-2x text-muted mb-2"></i>
+                        <p className="text-muted mb-0">No patients registered yet</p>
+                      </div>
+                    ) : (
+                      <div className="list-group list-group-flush">
+                        {emrPatients.slice(0, 5).map(patient => (
+                          <div key={patient._id} className="list-group-item d-flex align-items-center">
+                            <div className="me-3" style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
+                              {patient.name?.charAt(0) || 'P'}
+                            </div>
+                            <div className="flex-grow-1">
+                              <h6 className="mb-0">{patient.name}</h6>
+                              <small className="text-muted">{patient.phone || patient.email}</small>
+                            </div>
+                            <span className="badge bg-light text-dark">{patient.gender || '-'}</span>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Recent Prescriptions */}
+              <div className="col-md-6 mb-4">
+                <div className="card h-100">
+                  <div className="card-header d-flex justify-content-between align-items-center">
+                    <h6 className="mb-0"><i className="fas fa-prescription me-2"></i>Recent Prescriptions</h6>
+                    <button className="btn btn-sm btn-outline-primary" onClick={fetchEmrPrescriptions}>
+                      <i className="fas fa-sync-alt"></i>
+                    </button>
+                  </div>
+                  <div className="card-body p-0">
+                    {emrPrescriptions.length === 0 ? (
+                      <div className="text-center py-4">
+                        <i className="fas fa-file-prescription fa-2x text-muted mb-2"></i>
+                        <p className="text-muted mb-0">No prescriptions yet</p>
+                      </div>
+                    ) : (
+                      <div className="list-group list-group-flush">
+                        {emrPrescriptions.slice(0, 5).map(rx => (
+                          <div key={rx._id} className="list-group-item">
+                            <div className="d-flex justify-content-between align-items-start">
+                              <div>
+                                <h6 className="mb-1">{rx.patientId?.name || 'Unknown Patient'}</h6>
+                                <small className="text-muted">{rx.diagnosis || 'No diagnosis'}</small>
+                              </div>
+                              <small className="text-muted">{new Date(rx.createdAt).toLocaleDateString()}</small>
+                            </div>
+                            <div className="mt-1">
+                              <span className="badge bg-info me-1">{rx.medicines?.length || 0} medicines</span>
+                              {rx.followUpDate && (
+                                <span className="badge bg-warning text-dark">
+                                  <i className="fas fa-calendar me-1"></i>
+                                  Follow-up: {new Date(rx.followUpDate).toLocaleDateString()}
+                                </span>
+                              )}
+                            </div>
+                          </div>
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* EMR Features Info */}
+              <div className="col-12">
+                <div className="card">
+                  <div className="card-header">
+                    <h6 className="mb-0"><i className="fas fa-info-circle me-2"></i>Available EMR Features</h6>
+                  </div>
+                  <div className="card-body">
+                    <div className="row g-3">
+                      {[
+                        { icon: 'fa-user-plus', label: 'Patient Registration', desc: 'Register walk-in patients', available: true },
+                        { icon: 'fa-prescription', label: 'Prescriptions', desc: 'Create digital prescriptions', available: true },
+                        { icon: 'fa-history', label: 'Visit History', desc: 'Track patient visits', available: emrSubscription.plan !== 'basic' },
+                        { icon: 'fa-notes-medical', label: 'Doctor Notes', desc: 'Add clinical notes', available: emrSubscription.plan !== 'basic' },
+                        { icon: 'fa-chart-line', label: 'Analytics', desc: 'View clinic analytics', available: emrSubscription.plan === 'advanced' },
+                        { icon: 'fa-file-export', label: 'Data Export', desc: 'Export patient data', available: emrSubscription.plan === 'advanced' }
+                      ].map((feature, i) => (
+                        <div key={i} className="col-6 col-md-4">
+                          <div className={`p-3 rounded-3 ${feature.available ? 'bg-light' : 'bg-light opacity-50'}`}>
+                            <div className="d-flex align-items-center">
+                              <i className={`fas ${feature.icon} me-2 ${feature.available ? 'text-primary' : 'text-muted'}`}></i>
+                              <div>
+                                <strong className={feature.available ? '' : 'text-muted'}>{feature.label}</strong>
+                                {!feature.available && <span className="badge bg-secondary ms-2" style={{ fontSize: '0.6rem' }}>Upgrade</span>}
+                                <br />
+                                <small className="text-muted">{feature.desc}</small>
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          )}
+        </main>
+      )}
+
       {/* Prescription Modal */}
       {showPrescription && prescriptionPatient && (
         <PrescriptionManager
           doctorId={doctorId}
           doctorName={doctor.name}
-          patientId={prescriptionPatient.userId?._id}
-          patientName={prescriptionPatient.userId?.name || 'Patient'}
+          patientId={prescriptionPatient.userId?._id || prescriptionPatient.userId || prescriptionPatient.walkInPatient?._id || prescriptionPatient.patientId}
+          patientName={prescriptionPatient.userId?.name || prescriptionPatient.walkInPatient?.name || prescriptionPatient.patientName || 'Patient'}
           appointmentId={prescriptionPatient._id}
           onClose={() => { setShowPrescription(false); setPrescriptionPatient(null); }}
           onSave={() => { setShowPrescription(false); setPrescriptionPatient(null); toast.success('Prescription saved!'); }}

@@ -197,7 +197,55 @@ const userSchema = new mongoose.Schema(
     privacyPolicyAcceptedAt: {
       type: Date,
       default: null
-    }
+    },
+    // Walk-in Patient Fields (EMR)
+    registrationType: {
+      type: String,
+      enum: ['online', 'walk_in'],
+      default: 'online'
+    },
+    // Clinics where this patient is registered
+    registeredClinics: [{
+      clinicId: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'Clinic'
+      },
+      clinicPatientId: String, // Clinic's internal patient ID
+      registeredAt: {
+        type: Date,
+        default: Date.now
+      },
+      registeredBy: {
+        type: mongoose.Schema.Types.ObjectId,
+        ref: 'User'
+      },
+      lastVisit: Date
+    }],
+    // Patient demographics for EMR
+    age: Number,
+    gender: {
+      type: String,
+      enum: ['male', 'female', 'other']
+    },
+    dateOfBirth: Date,
+    address: {
+      street: String,
+      city: String,
+      state: String,
+      pincode: String,
+      country: { type: String, default: 'India' }
+    },
+    bloodGroup: {
+      type: String,
+      enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'Unknown']
+    },
+    emergencyContact: {
+      name: String,
+      phone: String,
+      relationship: String
+    },
+    allergies: [String],
+    chronicConditions: [String]
   },
   { timestamps: true }
 );
@@ -209,5 +257,7 @@ userSchema.index({ role: 1, isActive: 1 });
 userSchema.index({ clinicId: 1 });
 userSchema.index({ googleId: 1 }, { sparse: true });
 userSchema.index({ 'loginLocation.city': 1 });
+userSchema.index({ 'registeredClinics.clinicId': 1 });
+userSchema.index({ 'registeredClinics.clinicPatientId': 1 });
 
 module.exports = mongoose.model('User', userSchema);

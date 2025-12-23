@@ -39,8 +39,8 @@ const medicineSchema = new mongoose.Schema({
 const prescriptionSchema = new mongoose.Schema({
   appointmentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Appointment',
-    required: true
+    ref: 'Appointment'
+    // Not required - prescriptions can be created without appointments (walk-ins, EMR)
   },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -59,7 +59,7 @@ const prescriptionSchema = new mongoose.Schema({
   prescriptionNumber: {
     type: String,
     unique: true,
-    required: true
+    sparse: true // Allow null/undefined, but enforce uniqueness when present
   },
   diagnosis: {
     type: String,

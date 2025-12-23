@@ -1,0 +1,372 @@
+{
+  "categories": [
+    {
+      "id": "hematology",
+      "name": "Hematology",
+      "description": "Blood cell counts and related tests"
+    },
+    {
+      "id": "biochemistry",
+      "name": "Biochemistry",
+      "description": "Blood chemistry and metabolic tests"
+    },
+    {
+      "id": "immunology",
+      "name": "Immunology",
+      "description": "Immune system and antibody tests"
+    },
+    {
+      "id": "microbiology",
+      "name": "Microbiology",
+      "description": "Bacterial, viral, and fungal tests"
+    },
+    {
+      "id": "endocrinology",
+      "name": "Endocrinology",
+      "description": "Hormone and endocrine function tests"
+    },
+    {
+      "id": "cardiology",
+      "name": "Cardiology",
+      "description": "Heart and cardiovascular tests"
+    },
+    {
+      "id": "urine",
+      "name": "Urine Analysis",
+      "description": "Urine tests and urinalysis"
+    }
+  ],
+  "tests": [
+    {
+      "code": "CBC",
+      "name": "Complete Blood Count",
+      "category": "hematology",
+      "description": "Comprehensive blood cell analysis including RBC, WBC, platelets",
+      "turnaroundTime": 4,
+      "turnaroundUnit": "hours",
+      "sampleType": "Blood",
+      "sampleVolume": "3ml",
+      "fasting": false,
+      "referenceRanges": {
+        "hemoglobin": {
+          "male": "13.5-17.5 g/dL",
+          "female": "12.0-15.5 g/dL"
+        },
+        "wbc": "4.0-11.0 x10³/μL",
+        "platelets": "150-450 x10³/μL"
+      },
+      "components": [
+        "Hemoglobin",
+        "Hematocrit",
+        "RBC Count",
+        "WBC Count",
+        "Platelet Count",
+        "MCV",
+        "MCH",
+        "MCHC",
+        "RDW"
+      ]
+    },
+    {
+      "code": "BMP",
+      "name": "Basic Metabolic Panel",
+      "category": "biochemistry",
+      "description": "Essential blood chemistry tests",
+      "turnaroundTime": 2,
+      "turnaroundUnit": "hours",
+      "sampleType": "Blood",
+      "sampleVolume": "2ml",
+      "fasting": true,
+      "referenceRanges": {
+        "glucose": "70-100 mg/dL",
+        "sodium": "136-145 mEq/L",
+        "potassium": "3.5-5.0 mEq/L",
+        "chloride": "98-107 mEq/L",
+        "creatinine": "0.6-1.2 mg/dL"
+      },
+      "components": [
+        "Glucose",
+        "Sodium",
+        "Potassium",
+        "Chloride",
+        "BUN",
+        "Creatinine",
+        "CO2"
+      ]
+    },
+    {
+      "code": "CMP",
+      "name": "Comprehensive Metabolic Panel",
+      "category": "biochemistry",
+      "description": "Extended blood chemistry panel including liver function",
+      "turnaroundTime": 3,
+      "turnaroundUnit": "hours",
+      "sampleType": "Blood",
+      "sampleVolume": "3ml",
+      "fasting": true,
+      "referenceRanges": {
+        "glucose": "70-100 mg/dL",
+        "albumin": "3.5-5.0 g/dL",
+        "totalProtein": "6.0-8.3 g/dL",
+        "alt": "7-56 U/L",
+        "ast": "10-40 U/L"
+      },
+      "components": [
+        "Glucose",
+        "Sodium",
+        "Potassium",
+        "Chloride",
+        "BUN",
+        "Creatinine",
+        "CO2",
+        "Albumin",
+        "Total Protein",
+        "ALT",
+        "AST",
+        "Bilirubin Total",
+        "Alkaline Phosphatase"
+      ]
+    },
+    {
+      "code": "LIPID",
+      "name": "Lipid Panel",
+      "category": "biochemistry",
+      "description": "Cholesterol and lipid analysis",
+      "turnaroundTime": 4,
+      "turnaroundUnit": "hours",
+      "sampleType": "Blood",
+      "sampleVolume": "2ml",
+      "fasting": true,
+      "referenceRanges": {
+        "totalCholesterol": "<200 mg/dL",
+        "ldl": "<100 mg/dL",
+        "hdl": ">40 mg/dL (male), >50 mg/dL (female)",
+        "triglycerides": "<150 mg/dL"
+      },
+      "components": [
+        "Total Cholesterol",
+        "LDL Cholesterol",
+        "HDL Cholesterol",
+        "Triglycerides",
+        "Non-HDL Cholesterol"
+      ]
+    },
+    {
+      "code": "TSH",
+      "name": "Thyroid Stimulating Hormone",
+      "category": "endocrinology",
+      "description": "Primary thyroid function test",
+      "turnaroundTime": 6,
+      "turnaroundUnit": "hours",
+      "sampleType": "Blood",
+      "sampleVolume": "2ml",
+      "fasting": false,
+      "referenceRanges": {
+        "tsh": "0.4-4.0 mIU/L"
+      },
+      "components": [
+        "TSH"
+      ]
+    },
+    {
+      "code": "T3T4",
+      "name": "Thyroid Function Panel",
+      "category": "endocrinology",
+      "description": "Complete thyroid hormone assessment",
+      "turnaroundTime": 8,
+      "turnaroundUnit": "hours",
+      "sampleType": "Blood",
+      "sampleVolume": "3ml",
+      "fasting": false,
+      "referenceRanges": {
+        "tsh": "0.4-4.0 mIU/L",
+        "t3": "80-200 ng/dL",
+        "t4": "5.0-12.0 μg/dL"
+      },
+      "components": [
+        "TSH",
+        "Free T3",
+        "Free T4",
+        "Total T3",
+        "Total T4"
+      ]
+    },
+    {
+      "code": "HBA1C",
+      "name": "Hemoglobin A1c",
+      "category": "biochemistry",
+      "description": "3-month average blood sugar control",
+      "turnaroundTime": 4,
+      "turnaroundUnit": "hours",
+      "sampleType": "Blood",
+      "sampleVolume": "2ml",
+      "fasting": false,
+      "referenceRanges": {
+        "hba1c": "<5.7% (normal), 5.7-6.4% (prediabetes), ≥6.5% (diabetes)"
+      },
+      "components": [
+        "HbA1c"
+      ]
+    },
+    {
+      "code": "URINE",
+      "name": "Complete Urine Analysis",
+      "category": "urine",
+      "description": "Comprehensive urine examination",
+      "turnaroundTime": 2,
+      "turnaroundUnit": "hours",
+      "sampleType": "Urine",
+      "sampleVolume": "10ml",
+      "fasting": false,
+      "referenceRanges": {
+        "protein": "Negative to trace",
+        "glucose": "Negative",
+        "ketones": "Negative",
+        "blood": "Negative"
+      },
+      "components": [
+        "Color",
+        "Clarity",
+        "Specific Gravity",
+        "pH",
+        "Protein",
+        "Glucose",
+        "Ketones",
+        "Blood",
+        "Leukocyte Esterase",
+        "Nitrites",
+        "Microscopic Examination"
+      ]
+    },
+    {
+      "code": "ESR",
+      "name": "Erythrocyte Sedimentation Rate",
+      "category": "hematology",
+      "description": "Inflammation marker",
+      "turnaroundTime": 1,
+      "turnaroundUnit": "hours",
+      "sampleType": "Blood",
+      "sampleVolume": "2ml",
+      "fasting": false,
+      "referenceRanges": {
+        "esr": "Male: <15 mm/hr, Female: <20 mm/hr"
+      },
+      "components": [
+        "ESR"
+      ]
+    },
+    {
+      "code": "CRP",
+      "name": "C-Reactive Protein",
+      "category": "immunology",
+      "description": "Acute phase inflammatory marker",
+      "turnaroundTime": 3,
+      "turnaroundUnit": "hours",
+      "sampleType": "Blood",
+      "sampleVolume": "2ml",
+      "fasting": false,
+      "referenceRanges": {
+        "crp": "<3.0 mg/L"
+      },
+      "components": [
+        "CRP"
+      ]
+    },
+    {
+      "code": "VITAMIN_D",
+      "name": "Vitamin D (25-OH)",
+      "category": "endocrinology",
+      "description": "Vitamin D status assessment",
+      "turnaroundTime": 24,
+      "turnaroundUnit": "hours",
+      "sampleType": "Blood",
+      "sampleVolume": "2ml",
+      "fasting": false,
+      "referenceRanges": {
+        "vitaminD": "30-100 ng/mL"
+      },
+      "components": [
+        "25-Hydroxyvitamin D"
+      ]
+    },
+    {
+      "code": "B12",
+      "name": "Vitamin B12",
+      "category": "endocrinology",
+      "description": "B12 deficiency assessment",
+      "turnaroundTime": 6,
+      "turnaroundUnit": "hours",
+      "sampleType": "Blood",
+      "sampleVolume": "2ml",
+      "fasting": false,
+      "referenceRanges": {
+        "b12": "200-900 pg/mL"
+      },
+      "components": [
+        "Vitamin B12"
+      ]
+    }
+  ],
+  "panels": [
+    {
+      "id": "diabetic_panel",
+      "name": "Diabetic Panel",
+      "description": "Comprehensive diabetes monitoring",
+      "tests": ["HBA1C", "BMP", "LIPID", "URINE"],
+      "turnaroundTime": 8,
+      "turnaroundUnit": "hours",
+      "fasting": true,
+      "indication": "Diabetes monitoring and management"
+    },
+    {
+      "id": "cardiac_panel",
+      "name": "Cardiac Risk Panel",
+      "description": "Heart disease risk assessment",
+      "tests": ["LIPID", "CRP", "BMP"],
+      "turnaroundTime": 6,
+      "turnaroundUnit": "hours",
+      "fasting": true,
+      "indication": "Cardiovascular risk evaluation"
+    },
+    {
+      "id": "annual_checkup",
+      "name": "Annual Health Checkup",
+      "description": "Comprehensive annual screening",
+      "tests": ["CBC", "CMP", "LIPID", "TSH", "URINE", "HBA1C"],
+      "turnaroundTime": 24,
+      "turnaroundUnit": "hours",
+      "fasting": true,
+      "indication": "Routine health screening"
+    },
+    {
+      "id": "thyroid_panel",
+      "name": "Thyroid Function Panel",
+      "description": "Complete thyroid assessment",
+      "tests": ["T3T4"],
+      "turnaroundTime": 8,
+      "turnaroundUnit": "hours",
+      "fasting": false,
+      "indication": "Thyroid disorder evaluation"
+    },
+    {
+      "id": "anemia_panel",
+      "name": "Anemia Workup",
+      "description": "Comprehensive anemia evaluation",
+      "tests": ["CBC", "B12", "VITAMIN_D", "ESR"],
+      "turnaroundTime": 24,
+      "turnaroundUnit": "hours",
+      "fasting": false,
+      "indication": "Anemia investigation"
+    },
+    {
+      "id": "infection_panel",
+      "name": "Infection Screening",
+      "description": "Basic infection markers",
+      "tests": ["CBC", "ESR", "CRP", "URINE"],
+      "turnaroundTime": 4,
+      "turnaroundUnit": "hours",
+      "fasting": false,
+      "indication": "Infection evaluation"
+    }
+  ]
+}

@@ -1,0 +1,66 @@
+/**
+ * EMR Components Index
+ * Export all EMR-related components
+ */
+
+// Navigation & UI
+export { default as EMRSidebar } from './EMRSidebar';
+export { default as LockedScreen } from './LockedScreen';
+export { default as SubscriptionBadge } from './SubscriptionBadge';
+export { default as EMRFooter } from './EMRFooter';
+
+// Basic Plan Screens
+export { default as PatientRegistration } from './PatientRegistration';
+export { default as VisitHistory } from './VisitHistory';
+export { default as SystematicHistoryEMR } from './SystematicHistoryEMR';
+export { default as BasicPrescription } from './BasicPrescription';
+export { default as UploadedReports } from './UploadedReports';
+
+// Standard Plan Screens
+export { default as DoctorNotes } from './DoctorNotes';
+export { default as FollowUpScheduling } from './FollowUpScheduling';
+export { default as MedicationHistory } from './MedicationHistory';
+export { default as PatientTimeline } from './PatientTimeline';
+
+// Advanced Plan Screens
+export { default as EMRDashboard } from './EMRDashboard';
+export { default as AnalyticsReports } from './AnalyticsReports';
+export { default as AuditLogs } from './AuditLogs';
+export { default as StaffManagement } from './StaffManagement';
+export { default as DataExport } from './DataExport';
+
+// Subscription Management Screens
+export { default as SubscriptionPlans } from './SubscriptionPlans';
+export { default as SubscriptionCheckout } from './SubscriptionCheckout';
+export { default as SubscriptionStatus } from './SubscriptionStatus';
+
+// Clinical Features
+export { default as VitalsRecorder } from './VitalsRecorder';
+export { default as VitalsTrends } from './VitalsTrends';
+export { default as MedicalHistoryForm } from './MedicalHistoryForm';
+export { default as MedicalHistorySummary, AllergyBadge, ConditionBadge, MedicationBadge, CriticalAlertsBanner } from './MedicalHistorySummary';
+export { default as LabOrderForm } from './LabOrderForm';
+export { default as LabOrderTracker } from './LabOrderTracker';
+export { default as LabRequisitionPrint } from './LabRequisitionPrint';
+export { default as DiagnosisCoder } from './DiagnosisCoder';
+export { default as DiagnosisList } from './DiagnosisList';
+export { default as DiagnosisPrompt, useDiagnosisPrompt } from './DiagnosisPrompt';
+export { default as DrugInteractionChecker } from './DrugInteractionChecker';
+export { default as AllergyAlert, AllergyAlertBanner, AllergyAlertList } from './AllergyAlert';
+export { default as InteractionOverrideModal } from './InteractionOverrideModal';
+
+// Voice Input
+export { default as VoiceInput, VoiceTextArea, useVoiceInput } from './VoiceInput';
+
+// Feature Gating
+export { default as LockedFeature, useFeatureAccess, withFeatureAccess } from './LockedFeature';
+export { 
+  EMR_FEATURES, 
+  isFeatureAvailable, 
+  getFeaturesForPlan, 
+  getLockedFeatures,
+  getRequiredPlanForFeature,
+  PLAN_HIERARCHY,
+  PLAN_NAMES,
+  PLAN_PRICING
+} from './featureFlags';

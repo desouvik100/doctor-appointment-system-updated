@@ -957,7 +957,11 @@ router.post('/doctor/reset-password', async (req, res) => {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
 
-    const doctor = await Doctor.findOne({ email: email.toLowerCase().trim() });
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // OTP was already verified in verify-reset-otp endpoint, no need to verify again
+
+    const doctor = await Doctor.findOne({ email: normalizedEmail });
 
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
@@ -974,6 +978,72 @@ router.post('/doctor/reset-password', async (req, res) => {
   } catch (error) {
     console.error('Doctor reset password error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Doctor Forgot Password - Send OTP
+router.post('/doctor/forgot-password', async (req, res) => {
+  try {
+    const { email } = req.body;
+
+    if (!email) {
+      return res.status(400).json({ success: false, message: 'Email is required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if doctor exists
+    const doctor = await Doctor.findOne({ email: normalizedEmail });
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'No doctor account found with this email' });
+    }
+
+    // Send OTP
+    const { sendOTP } = require('../services/emailService');
+    const result = await sendOTP(normalizedEmail, 'doctor-password-reset');
+
+    console.log(`✅ Doctor password reset OTP sent to: ${normalizedEmail}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'OTP sent to your email'
+    });
+
+  } catch (error) {
+    console.error('❌ Doctor forgot password error:', error);
+    res.status(500).json({ success: false, message: 'Failed to send OTP', error: error.message });
+  }
+});
+
+// Doctor Verify Reset OTP
+router.post('/doctor/verify-reset-otp', async (req, res) => {
+  try {
+    const { email, otp } = req.body;
+
+    if (!email || !otp) {
+      return res.status(400).json({ success: false, message: 'Email and OTP are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Verify OTP
+    const { verifyOTP } = require('../services/emailService');
+    const verification = verifyOTP(normalizedEmail, otp, 'doctor-password-reset');
+
+    if (!verification.success) {
+      return res.status(400).json({ success: false, message: verification.message });
+    }
+
+    console.log(`✅ Doctor reset OTP verified for: ${normalizedEmail}`);
+
+    res.status(200).json({
+      success: true,
+      message: 'OTP verified successfully'
+    });
+
+  } catch (error) {
+    console.error('❌ Doctor verify reset OTP error:', error);
+    res.status(500).json({ success: false, message: 'Failed to verify OTP', error: error.message });
   }
 });
 

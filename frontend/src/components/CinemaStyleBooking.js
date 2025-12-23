@@ -5,6 +5,7 @@ import './CinemaStyleBooking.css';
 import LiveQueueTracker from './LiveQueueTracker';
 import PaymentSuccessReceipt from './PaymentSuccessReceipt';
 import { initiatePayment } from '../utils/razorpayService';
+import { SystematicHistoryForm } from './systematic-history';
 
 const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
   const [step, setStep] = useState(1); // 1: Type, 2: Date, 3: Details, 4: Confirm, 5: Success
@@ -51,6 +52,12 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
   const [couponLoading, setCouponLoading] = useState(false);
   const [couponError, setCouponError] = useState('');
 
+  // Systematic History states
+  const [showSystematicHistory, setShowSystematicHistory] = useState(false);
+  const [systematicHistoryData, setSystematicHistoryData] = useState(null);
+  const [aiRecommendations, setAiRecommendations] = useState(null);
+  const [previousHistory, setPreviousHistory] = useState(null);
+
   // Common symptoms for quick selection
   const commonSymptoms = [
     'Fever', 'Cold & Cough', 'Headache', 'Body Pain', 
@@ -88,6 +95,22 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
       }
     };
     fetchPaymentConfig();
+    
+    // Fetch previous systematic history for pre-fill
+    const fetchPreviousHistory = async () => {
+      if (user?.id || user?._id) {
+        try {
+          const response = await axios.get(`/api/systematic-history/user/${user.id || user._id}/latest`);
+          if (response.data.success && response.data.history) {
+            setPreviousHistory(response.data.history);
+          }
+        } catch (error) {
+          // No previous history, that's fine
+          console.log('No previous systematic history found');
+        }
+      }
+    };
+    fetchPreviousHistory();
   }, [currentMonth]);
 
   useEffect(() => {
@@ -432,7 +455,8 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         reminderPreference,
         sendEstimatedTimeEmail: !paymentConfig?.paymentsEnabled, // Only send email if no payment required
         paymentStatus: paymentConfig?.paymentsEnabled ? 'pending' : 'completed',
-        status: paymentConfig?.paymentsEnabled ? 'pending_payment' : 'confirmed'
+        status: paymentConfig?.paymentsEnabled ? 'pending_payment' : 'confirmed',
+        systematicHistoryId: systematicHistoryData?._id || null
       };
       
       console.log('📋 Booking data:', bookingData);
@@ -1055,6 +1079,85 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
                     <span>Both</span>
                   </label>
                 </div>
+              </div>
+
+              {/* Systematic History Section - Clinical Grade Feature */}
+              <div className="systematic-history-section">
+                <div 
+                  className={`sh-toggle-card ${showSystematicHistory ? 'expanded' : ''} ${systematicHistoryData ? 'completed' : ''}`}
+                  onClick={() => !systematicHistoryData && setShowSystematicHistory(!showSystematicHistory)}
+                >
+                  <div className="sh-toggle-header">
+                    <div className="sh-toggle-icon">
+                      {systematicHistoryData ? (
+                        <i className="fas fa-check-circle" style={{ color: '#10b981' }}></i>
+                      ) : (
+                        <i className="fas fa-clipboard-list" style={{ color: '#0ea5e9' }}></i>
+                      )}
+                    </div>
+                    <div className="sh-toggle-content">
+                      <h4>📋 Detailed Health History</h4>
+                      <p>
+                        {systematicHistoryData 
+                          ? 'Health history completed - Doctor will see your symptoms'
+                          : 'Help your doctor prepare better (Optional, 2-3 min)'}
+                      </p>
+                    </div>
+                    <div className="sh-toggle-action">
+                      {systematicHistoryData ? (
+                        <button 
+                          className="sh-edit-btn"
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSystematicHistoryData(null);
+                            setShowSystematicHistory(true);
+                          }}
+                        >
+                          <i className="fas fa-edit"></i> Edit
+                        </button>
+                      ) : (
+                        <i className={`fas fa-chevron-${showSystematicHistory ? 'up' : 'down'}`}></i>
+                      )}
+                    </div>
+                  </div>
+                  
+                  {/* AI Recommendations Badge */}
+                  {aiRecommendations && aiRecommendations.length > 0 && (
+                    <div className="sh-ai-badge">
+                      <i className="fas fa-robot"></i>
+                      <span>AI suggests: {aiRecommendations[0].specialization}</span>
+                    </div>
+                  )}
+                  
+                  {/* Benefits when collapsed */}
+                  {!showSystematicHistory && !systematicHistoryData && (
+                    <div className="sh-benefits">
+                      <span><i className="fas fa-check"></i> Faster consultation</span>
+                      <span><i className="fas fa-check"></i> Better diagnosis</span>
+                      <span><i className="fas fa-check"></i> AI doctor matching</span>
+                    </div>
+                  )}
+                </div>
+                
+                {/* Expanded Systematic History Form */}
+                {showSystematicHistory && !systematicHistoryData && (
+                  <div className="sh-form-container">
+                    <SystematicHistoryForm
+                      userId={user?.id || user?._id}
+                      appointmentId={null}
+                      previousHistory={previousHistory}
+                      onComplete={(history, recommendations) => {
+                        setSystematicHistoryData(history);
+                        setAiRecommendations(recommendations);
+                        setShowSystematicHistory(false);
+                        toast.success('Health history saved! Doctor will see this.', { duration: 3000 });
+                      }}
+                      onSkip={() => {
+                        setShowSystematicHistory(false);
+                      }}
+                    />
+                  </div>
+                )}
               </div>
 
               <button 

@@ -70,17 +70,29 @@ router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
 // Get appointments by user ID (authenticated users only)
 router.get('/user/:userId', verifyToken, async (req, res) => {
   try {
-    // Ensure user can only access their own appointments (unless admin)
+    // Ensure user can only access their own appointments (unless admin/receptionist)
     // Compare as strings to handle ObjectId vs string comparison
     const tokenUserId = req.user.id?.toString() || req.user._id?.toString();
     const requestedUserId = req.params.userId?.toString();
     
-    if (req.user.role !== 'admin' && tokenUserId !== requestedUserId) {
-      console.log('Access denied - token userId:', tokenUserId, 'requested userId:', requestedUserId);
+    // Allow admin, receptionist, and the user themselves
+    const isAllowed = req.user.role === 'admin' || 
+                      req.user.role === 'receptionist' || 
+                      req.user.role === 'doctor' ||
+                      tokenUserId === requestedUserId;
+    
+    if (!isAllowed) {
+      console.log('Access denied - token userId:', tokenUserId, 'requested userId:', requestedUserId, 'role:', req.user.role);
       return res.status(403).json({ success: false, message: 'Access denied' });
     }
     
-    const appointments = await Appointment.find({ userId: req.params.userId })
+    // Build query - for receptionist, filter by their clinic
+    const query = { userId: req.params.userId };
+    if (req.user.role === 'receptionist' && req.user.clinicId) {
+      query.clinicId = req.user.clinicId;
+    }
+    
+    const appointments = await Appointment.find(query)
       .populate('doctorId', 'name specialization profilePhoto')
       .populate('clinicId', 'name address')
       .sort({ date: -1 });

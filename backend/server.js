@@ -33,7 +33,7 @@ app.use((req, res, next) => {
 // Simple rate limiting (in-memory)
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const RATE_LIMIT_MAX = 100; // 100 requests per minute per IP
+const RATE_LIMIT_MAX = 300; // 300 requests per minute per IP (increased for development)
 
 app.use((req, res, next) => {
   const ip = req.ip || req.connection.remoteAddress;
@@ -291,6 +291,8 @@ app.use('/api/slots', require('./routes/slotRoutes')); // Separate Online & Clin
 app.use('/api/commission', require('./routes/commissionRoutes')); // Commission, GST & Payout system
 app.use('/api/support', require('./routes/supportRoutes')); // Doctor-Admin Support Tickets
 app.use('/api/doctor-control', require('./routes/doctorControlRoutes')); // Doctor Override & Emergency Controls
+app.use('/api/systematic-history', require('./routes/systematicHistoryRoutes')); // Systematic History for clinical-grade consultations
+app.use('/api/emr', require('./routes/emrRoutes')); // EMR Subscription Module for Clinics
 
 // ===== NEW DIFFERENTIATOR FEATURES =====
 app.use('/api/family-wallet', require('./routes/familyWalletRoutes')); // Family Health Wallet

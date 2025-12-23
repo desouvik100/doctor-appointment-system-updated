@@ -4307,3 +4307,215 @@
     min-height: 44px;
   }
 }
+
+/* ===== Systematic History Section in Booking Flow ===== */
+.systematic-history-section {
+  margin-top: 20px;
+  margin-bottom: 16px;
+}
+
+.sh-toggle-card {
+  background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+  border: 2px solid #bae6fd;
+  border-radius: 16px;
+  padding: 16px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.sh-toggle-card:hover:not(.completed) {
+  border-color: #0ea5e9;
+  box-shadow: 0 4px 20px rgba(14, 165, 233, 0.15);
+}
+
+.sh-toggle-card.expanded {
+  border-color: #0ea5e9;
+  background: linear-gradient(135deg, #e0f2fe 0%, #cffafe 100%);
+}
+
+.sh-toggle-card.completed {
+  background: linear-gradient(135deg, #ecfdf5 0%, #d1fae5 100%);
+  border-color: #6ee7b7;
+  cursor: default;
+}
+
+.sh-toggle-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.sh-toggle-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: white;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+}
+
+.sh-toggle-content {
+  flex: 1;
+  min-width: 0;
+}
+
+.sh-toggle-content h4 {
+  margin: 0 0 4px;
+  font-size: 1rem;
+  font-weight: 600;
+  color: #0c4a6e;
+}
+
+.sh-toggle-content p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.sh-toggle-action {
+  flex-shrink: 0;
+}
+
+.sh-toggle-action i {
+  color: #0ea5e9;
+  font-size: 1rem;
+  transition: transform 0.3s ease;
+}
+
+.sh-toggle-card.expanded .sh-toggle-action i.fa-chevron-down {
+  transform: rotate(180deg);
+}
+
+.sh-edit-btn {
+  padding: 8px 14px;
+  background: white;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  color: #374151;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  transition: all 0.2s;
+}
+
+.sh-edit-btn:hover {
+  background: #f9fafb;
+  border-color: #9ca3af;
+}
+
+.sh-ai-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 12px;
+  padding: 6px 12px;
+  background: linear-gradient(135deg, #fef3c7 0%, #fde68a 100%);
+  border-radius: 20px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.sh-ai-badge i {
+  color: #d97706;
+}
+
+.sh-benefits {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(14, 165, 233, 0.2);
+}
+
+.sh-benefits span {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.78rem;
+  color: #0369a1;
+  background: rgba(255, 255, 255, 0.6);
+  padding: 4px 10px;
+  border-radius: 12px;
+}
+
+.sh-benefits span i {
+  color: #10b981;
+  font-size: 0.7rem;
+}
+
+.sh-form-container {
+  margin-top: 16px;
+  padding: 16px;
+  background: white;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.08);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+/* Mobile optimizations for systematic history */
+@media (max-width: 768px) {
+  .sh-toggle-card {
+    padding: 14px;
+  }
+  
+  .sh-toggle-header {
+    gap: 10px;
+  }
+  
+  .sh-toggle-icon {
+    width: 40px;
+    height: 40px;
+    font-size: 1.1rem;
+  }
+  
+  .sh-toggle-content h4 {
+    font-size: 0.95rem;
+  }
+  
+  .sh-toggle-content p {
+    font-size: 0.8rem;
+  }
+  
+  .sh-benefits {
+    gap: 6px;
+  }
+  
+  .sh-benefits span {
+    font-size: 0.72rem;
+    padding: 3px 8px;
+  }
+  
+  .sh-form-container {
+    padding: 12px;
+    max-height: 50vh;
+  }
+}
+
+@media (max-width: 480px) {
+  .sh-toggle-header {
+    flex-wrap: wrap;
+  }
+  
+  .sh-toggle-action {
+    width: 100%;
+    margin-top: 10px;
+    display: flex;
+    justify-content: flex-end;
+  }
+  
+  .sh-edit-btn {
+    width: 100%;
+    justify-content: center;
+  }
+}

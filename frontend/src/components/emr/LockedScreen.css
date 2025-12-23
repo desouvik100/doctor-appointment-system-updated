@@ -1,0 +1,235 @@
+/**
+ * Locked Screen Styles
+ */
+
+.locked-screen {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #f8fafc 0%, #e2e8f0 100%);
+  padding: 20px;
+}
+
+.locked-screen__content {
+  max-width: 480px;
+  width: 100%;
+  text-align: center;
+}
+
+/* Lock Icon */
+.locked-screen__icon {
+  width: 80px;
+  height: 80px;
+  margin: 0 auto 24px;
+  background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 8px 24px rgba(251, 191, 36, 0.3);
+}
+
+.locked-screen__icon svg {
+  width: 40px;
+  height: 40px;
+  color: #fff;
+}
+
+/* Title */
+.locked-screen__title {
+  font-size: 28px;
+  font-weight: 700;
+  color: #1e293b;
+  margin-bottom: 12px;
+}
+
+/* Description */
+.locked-screen__description {
+  font-size: 16px;
+  color: #64748b;
+  margin-bottom: 16px;
+  line-height: 1.6;
+}
+
+.plan-highlight {
+  color: #6366f1;
+  font-weight: 600;
+}
+
+/* Current Plan */
+.locked-screen__current {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f1f5f9;
+  border-radius: 20px;
+  font-size: 14px;
+  color: #64748b;
+  margin-bottom: 32px;
+}
+
+.current-plan {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+/* Upgrade Card */
+.locked-screen__upgrade-card {
+  background: #fff;
+  border-radius: 16px;
+  padding: 32px;
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.08);
+  margin-bottom: 24px;
+  text-align: left;
+}
+
+.upgrade-card__header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 24px;
+  padding-bottom: 20px;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.upgrade-card__header h3 {
+  font-size: 20px;
+  font-weight: 700;
+  color: #1e293b;
+  margin: 0;
+}
+
+.upgrade-card__price {
+  text-align: right;
+}
+
+.upgrade-card__price .price {
+  font-size: 24px;
+  font-weight: 700;
+  color: #6366f1;
+}
+
+.upgrade-card__price .period {
+  font-size: 14px;
+  color: #94a3b8;
+  display: block;
+}
+
+/* Features List */
+.upgrade-card__features {
+  list-style: none;
+  padding: 0;
+  margin: 0 0 24px 0;
+}
+
+.upgrade-card__features li {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 10px 0;
+  font-size: 15px;
+  color: #475569;
+}
+
+.check-icon {
+  width: 20px;
+  height: 20px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: #fff;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 12px;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+/* Upgrade Button */
+.upgrade-card__button {
+  width: 100%;
+  padding: 14px 24px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: none;
+  border-radius: 12px;
+  color: #fff;
+  font-size: 16px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.upgrade-card__button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+}
+
+/* Compare Plans */
+.locked-screen__compare {
+  background: none;
+  border: none;
+  color: #6366f1;
+  font-size: 15px;
+  font-weight: 600;
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: all 0.2s;
+}
+
+.locked-screen__compare:hover {
+  color: #4f46e5;
+  text-decoration: underline;
+}
+
+/* Back Button */
+.locked-screen__back {
+  display: block;
+  margin: 24px auto 0;
+  background: none;
+  border: none;
+  color: #64748b;
+  font-size: 14px;
+  cursor: pointer;
+  padding: 8px 16px;
+  transition: all 0.2s;
+}
+
+.locked-screen__back:hover {
+  color: #1e293b;
+}
+
+/* Responsive */
+@media (max-width: 480px) {
+  .locked-screen__content {
+    padding: 0 16px;
+  }
+
+  .locked-screen__icon {
+    width: 64px;
+    height: 64px;
+  }
+
+  .locked-screen__icon svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .locked-screen__title {
+    font-size: 24px;
+  }
+
+  .locked-screen__upgrade-card {
+    padding: 24px;
+  }
+
+  .upgrade-card__header {
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  .upgrade-card__price {
+    text-align: left;
+  }
+}

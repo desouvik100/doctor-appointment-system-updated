@@ -211,7 +211,7 @@ async function sendOTP(email, type = 'register') {
     subject = 'HealthSync - Staff Registration Verification';
     purpose = 'You are receiving this email because you requested to register as a staff member on HealthSync.';
     actionText = 'Complete your staff registration by entering this verification code:';
-  } else if (type === 'reset' || type === 'password-reset') {
+  } else if (type === 'reset' || type === 'password-reset' || type === 'doctor-password-reset') {
     subject = 'HealthSync - Password Reset Request';
     purpose = 'You are receiving this email because you requested to reset your password on HealthSync.';
     actionText = 'Reset your password by entering this verification code:';

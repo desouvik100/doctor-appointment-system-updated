@@ -1,0 +1,342 @@
+/**
+ * EMR Sidebar Styles
+ * Clean, clinical design for healthcare software
+ */
+
+.emr-sidebar {
+  width: 260px;
+  height: 100vh;
+  background: linear-gradient(180deg, #1e293b 0%, #0f172a 100%);
+  display: flex;
+  flex-direction: column;
+  transition: width 0.3s ease;
+  position: fixed;
+  left: 0;
+  top: 0;
+  z-index: 100;
+  box-shadow: 4px 0 20px rgba(0, 0, 0, 0.15);
+}
+
+.emr-sidebar.collapsed {
+  width: 70px;
+}
+
+/* Header */
+.emr-sidebar__header {
+  padding: 20px 16px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.emr-sidebar__logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logo-icon {
+  font-size: 28px;
+}
+
+.logo-text {
+  font-size: 18px;
+  font-weight: 700;
+  color: #fff;
+  letter-spacing: -0.5px;
+}
+
+.emr-sidebar__toggle {
+  background: rgba(255, 255, 255, 0.1);
+  border: none;
+  color: #94a3b8;
+  width: 28px;
+  height: 28px;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+}
+
+.emr-sidebar__toggle:hover {
+  background: rgba(255, 255, 255, 0.15);
+  color: #fff;
+}
+
+.emr-sidebar.collapsed .emr-sidebar__toggle {
+  margin: 0 auto;
+}
+
+/* Navigation */
+.emr-sidebar__nav {
+  flex: 1;
+  padding: 16px 12px;
+  overflow-y: auto;
+  scrollbar-width: thin;
+  scrollbar-color: rgba(255, 255, 255, 0.2) transparent;
+}
+
+.emr-sidebar__nav::-webkit-scrollbar {
+  width: 4px;
+}
+
+.emr-sidebar__nav::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 2px;
+}
+
+.emr-sidebar__item {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 12px 14px;
+  background: transparent;
+  border: none;
+  border-radius: 10px;
+  color: #94a3b8;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  margin-bottom: 4px;
+  text-align: left;
+}
+
+.emr-sidebar__item:hover {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+}
+
+.emr-sidebar__item.active {
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  color: #fff;
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+}
+
+.emr-sidebar__item.locked {
+  opacity: 0.6;
+}
+
+.emr-sidebar__item.locked:hover {
+  opacity: 0.8;
+  background: rgba(251, 191, 36, 0.1);
+}
+
+.item-icon {
+  font-size: 18px;
+  min-width: 24px;
+  text-align: center;
+}
+
+.item-label {
+  flex: 1;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.item-badge {
+  font-size: 10px;
+  padding: 2px 6px;
+  background: rgba(251, 191, 36, 0.2);
+  color: #fbbf24;
+  border-radius: 4px;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Collapsed state */
+.emr-sidebar.collapsed .emr-sidebar__item {
+  justify-content: center;
+  padding: 12px;
+}
+
+.emr-sidebar.collapsed .item-label,
+.emr-sidebar.collapsed .item-badge {
+  display: none;
+}
+
+/* Divider */
+.emr-sidebar__divider {
+  padding: 16px 14px 8px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.emr-sidebar__divider::before,
+.emr-sidebar__divider::after {
+  content: '';
+  flex: 1;
+  height: 1px;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.emr-sidebar__divider span {
+  font-size: 11px;
+  color: #64748b;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  white-space: nowrap;
+}
+
+.emr-sidebar.collapsed .emr-sidebar__divider {
+  padding: 16px 8px 8px;
+}
+
+.emr-sidebar.collapsed .emr-sidebar__divider span {
+  display: none;
+}
+
+/* Subscription Status */
+.emr-sidebar__subscription {
+  margin: 12px;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.emr-sidebar__subscription.warning {
+  background: rgba(251, 191, 36, 0.1);
+  border-color: rgba(251, 191, 36, 0.3);
+}
+
+.emr-sidebar__subscription.expired {
+  background: rgba(239, 68, 68, 0.1);
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.subscription-plan {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.plan-icon {
+  font-size: 16px;
+}
+
+.plan-name {
+  font-size: 14px;
+  font-weight: 600;
+  color: #fff;
+}
+
+.subscription-status {
+  margin-bottom: 12px;
+}
+
+.status-days {
+  font-size: 13px;
+  color: #10b981;
+}
+
+.status-days.warning {
+  color: #fbbf24;
+}
+
+.status-expired {
+  font-size: 13px;
+  color: #ef4444;
+  font-weight: 600;
+}
+
+.subscription-renew {
+  width: 100%;
+  padding: 8px 12px;
+  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.subscription-renew:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+}
+
+.emr-sidebar__subscription.expired .subscription-renew {
+  background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
+}
+
+/* Footer */
+.emr-sidebar__footer {
+  padding: 16px;
+  border-top: 1px solid rgba(255, 255, 255, 0.1);
+  text-align: center;
+}
+
+.powered-by {
+  font-size: 11px;
+  color: #475569;
+}
+
+/* Loading */
+.emr-sidebar__loading {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.emr-sidebar__loading .spinner {
+  width: 24px;
+  height: 24px;
+  border: 2px solid rgba(255, 255, 255, 0.1);
+  border-top-color: #6366f1;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .emr-sidebar {
+    width: 100%;
+    height: auto;
+    position: relative;
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .emr-sidebar.collapsed {
+    width: 100%;
+  }
+
+  .emr-sidebar__header {
+    width: 100%;
+    padding: 12px 16px;
+  }
+
+  .emr-sidebar__nav {
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+    gap: 8px;
+    padding: 12px;
+  }
+
+  .emr-sidebar__item {
+    flex: 0 0 auto;
+    padding: 10px 16px;
+    margin-bottom: 0;
+  }
+
+  .emr-sidebar__subscription,
+  .emr-sidebar__footer {
+    display: none;
+  }
+}

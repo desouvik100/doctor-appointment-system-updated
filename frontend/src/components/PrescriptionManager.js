@@ -1,6 +1,7 @@
-import { useState } from 'react';
+import { useState, useCallback } from 'react';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
+import { useVoiceInput } from './emr/VoiceInput';
 
 const PrescriptionManager = ({ doctorId, doctorName, patientId, patientName, appointmentId, onClose, onSave }) => {
   const [prescription, setPrescription] = useState({
@@ -13,6 +14,34 @@ const PrescriptionManager = ({ doctorId, doctorName, patientId, patientName, app
   });
   const [saving, setSaving] = useState(false);
   const [newTest, setNewTest] = useState('');
+  const [activeVoiceField, setActiveVoiceField] = useState(null);
+
+  // Voice input hook
+  const { isListening, transcript, isSupported, start, stop } = useVoiceInput({
+    language: 'en-IN',
+    continuous: true,
+    enableCommands: true,
+    onResult: useCallback((text) => {
+      if (activeVoiceField === 'diagnosis') {
+        setPrescription(prev => ({ ...prev, diagnosis: prev.diagnosis + (prev.diagnosis ? ' ' : '') + text }));
+      } else if (activeVoiceField === 'symptoms') {
+        setPrescription(prev => ({ ...prev, symptoms: prev.symptoms + (prev.symptoms ? ' ' : '') + text }));
+      } else if (activeVoiceField === 'advice') {
+        setPrescription(prev => ({ ...prev, advice: prev.advice + (prev.advice ? ' ' : '') + text }));
+      }
+    }, [activeVoiceField])
+  });
+
+  const toggleVoice = (field) => {
+    if (isListening && activeVoiceField === field) {
+      stop();
+      setActiveVoiceField(null);
+    } else {
+      if (isListening) stop();
+      setActiveVoiceField(field);
+      setTimeout(() => start(), 100);
+    }
+  };
 
   const addMedicine = () => {
     setPrescription(prev => ({
@@ -206,23 +235,69 @@ const PrescriptionManager = ({ doctorId, doctorName, patientId, patientName, app
           {/* Diagnosis & Symptoms */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Diagnosis *</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-slate-700">Diagnosis *</label>
+                {isSupported && (
+                  <button
+                    type="button"
+                    onClick={() => toggleVoice('diagnosis')}
+                    className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 transition-all ${
+                      isListening && activeVoiceField === 'diagnosis'
+                        ? 'bg-red-100 text-red-600 animate-pulse'
+                        : 'bg-slate-100 text-slate-600 hover:bg-indigo-100 hover:text-indigo-600'
+                    }`}
+                  >
+                    {isListening && activeVoiceField === 'diagnosis' ? '⏹️ Stop' : '🎤 Speak'}
+                  </button>
+                )}
+              </div>
+              {isListening && activeVoiceField === 'diagnosis' && (
+                <div className="text-xs text-red-500 mb-1 flex items-center gap-1">
+                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                  Listening... {transcript}
+                </div>
+              )}
               <input
                 type="text"
                 value={prescription.diagnosis}
                 onChange={(e) => setPrescription(prev => ({ ...prev, diagnosis: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="Enter diagnosis"
+                className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                  isListening && activeVoiceField === 'diagnosis' ? 'border-red-300 bg-red-50' : 'border-slate-200'
+                }`}
+                placeholder="Enter diagnosis or click 🎤 to speak"
               />
             </div>
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Symptoms</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-slate-700">Symptoms</label>
+                {isSupported && (
+                  <button
+                    type="button"
+                    onClick={() => toggleVoice('symptoms')}
+                    className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 transition-all ${
+                      isListening && activeVoiceField === 'symptoms'
+                        ? 'bg-red-100 text-red-600 animate-pulse'
+                        : 'bg-slate-100 text-slate-600 hover:bg-indigo-100 hover:text-indigo-600'
+                    }`}
+                  >
+                    {isListening && activeVoiceField === 'symptoms' ? '⏹️ Stop' : '🎤 Speak'}
+                  </button>
+                )}
+              </div>
+              {isListening && activeVoiceField === 'symptoms' && (
+                <div className="text-xs text-red-500 mb-1 flex items-center gap-1">
+                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                  Listening... {transcript}
+                </div>
+              )}
               <input
                 type="text"
                 value={prescription.symptoms}
                 onChange={(e) => setPrescription(prev => ({ ...prev, symptoms: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 focus:ring-2 focus:ring-indigo-500 focus:border-transparent"
-                placeholder="Enter symptoms"
+                className={`w-full px-4 py-3 rounded-xl border focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                  isListening && activeVoiceField === 'symptoms' ? 'border-red-300 bg-red-50' : 'border-slate-200'
+                }`}
+                placeholder="Enter symptoms or click 🎤 to speak"
               />
             </div>
           </div>
@@ -323,13 +398,36 @@ const PrescriptionManager = ({ doctorId, doctorName, patientId, patientName, app
           {/* Advice & Follow-up */}
           <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label className="block text-sm font-medium text-slate-700 mb-2">Advice</label>
+              <div className="flex items-center justify-between mb-2">
+                <label className="text-sm font-medium text-slate-700">Advice</label>
+                {isSupported && (
+                  <button
+                    type="button"
+                    onClick={() => toggleVoice('advice')}
+                    className={`px-3 py-1 rounded-full text-xs font-medium flex items-center gap-1 transition-all ${
+                      isListening && activeVoiceField === 'advice'
+                        ? 'bg-red-100 text-red-600 animate-pulse'
+                        : 'bg-slate-100 text-slate-600 hover:bg-indigo-100 hover:text-indigo-600'
+                    }`}
+                  >
+                    {isListening && activeVoiceField === 'advice' ? '⏹️ Stop' : '🎤 Speak'}
+                  </button>
+                )}
+              </div>
+              {isListening && activeVoiceField === 'advice' && (
+                <div className="text-xs text-red-500 mb-1 flex items-center gap-1">
+                  <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse"></span>
+                  Listening... {transcript}
+                </div>
+              )}
               <textarea
                 value={prescription.advice}
                 onChange={(e) => setPrescription(prev => ({ ...prev, advice: e.target.value }))}
-                className="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm resize-none"
+                className={`w-full px-4 py-3 rounded-xl border text-sm resize-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent ${
+                  isListening && activeVoiceField === 'advice' ? 'border-red-300 bg-red-50' : 'border-slate-200'
+                }`}
                 rows={3}
-                placeholder="General advice for patient"
+                placeholder="General advice or click 🎤 to speak"
               />
             </div>
             <div>

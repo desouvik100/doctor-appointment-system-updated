@@ -1,0 +1,511 @@
+/**
+ * Systematic History EMR Screen Styles
+ * Doctor-facing clinical history viewer
+ */
+
+.systematic-history-emr {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  overflow: hidden;
+}
+
+/* Header */
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 20px 24px;
+  border-bottom: 1px solid #e8ecef;
+  background: linear-gradient(135deg, #f8fafc 0%, #fff 100%);
+}
+
+.history-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #1a1a2e;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.header-icon {
+  font-size: 1.5rem;
+}
+
+.header-actions {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+}
+
+.btn-edit {
+  padding: 8px 16px;
+  background: #f0f9ff;
+  color: #0369a1;
+  border: 1px solid #bae6fd;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-edit:hover {
+  background: #e0f2fe;
+}
+
+.btn-close {
+  width: 36px;
+  height: 36px;
+  border: none;
+  background: #f1f5f9;
+  border-radius: 8px;
+  font-size: 1.25rem;
+  cursor: pointer;
+  color: #64748b;
+}
+
+/* Loading */
+.history-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #3b82f6;
+  border-radius: 50%;
+  animation: spin 0.8s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+/* No History */
+.no-history {
+  text-align: center;
+  padding: 60px 20px;
+  color: #64748b;
+}
+
+.no-history-icon {
+  font-size: 4rem;
+  display: block;
+  margin-bottom: 16px;
+  opacity: 0.5;
+}
+
+.no-history h3 {
+  margin: 0 0 8px;
+  color: #1a1a2e;
+}
+
+/* Content */
+.history-content {
+  padding: 24px;
+}
+
+/* Meta Info */
+.history-meta {
+  display: flex;
+  gap: 16px;
+  font-size: 0.8rem;
+  color: #64748b;
+  margin-bottom: 20px;
+  padding-bottom: 16px;
+  border-bottom: 1px solid #e8ecef;
+}
+
+/* Sections */
+.history-section {
+  margin-bottom: 24px;
+}
+
+.history-section h4 {
+  margin: 0 0 12px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: #374151;
+}
+
+.chief-complaint {
+  background: #fef3c7;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #f59e0b;
+}
+
+.chief-complaint p {
+  margin: 0;
+  color: #92400e;
+  font-size: 1rem;
+}
+
+/* Systems List */
+.systems-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.history-system {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.system-header {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px 16px;
+  background: #f8fafc;
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.system-header:hover {
+  background: #f1f5f9;
+}
+
+.system-icon {
+  font-size: 1.25rem;
+}
+
+.system-name {
+  flex: 1;
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.symptom-count {
+  background: #3b82f6;
+  color: white;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.expand-icon {
+  color: #64748b;
+  font-size: 0.75rem;
+  transition: transform 0.2s;
+}
+
+.expand-icon.expanded {
+  transform: rotate(180deg);
+}
+
+.system-symptoms {
+  padding: 12px 16px;
+  background: white;
+  border-top: 1px solid #e2e8f0;
+}
+
+.symptom-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 8px 0;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.symptom-item:last-child {
+  border-bottom: none;
+}
+
+.symptom-name {
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.symptom-details {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.severity-badge {
+  padding: 4px 10px;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+}
+
+.severity-badge.mild {
+  background: #dcfce7;
+  color: #166534;
+}
+
+.severity-badge.moderate {
+  background: #fef3c7;
+  color: #92400e;
+}
+
+.severity-badge.severe {
+  background: #fee2e2;
+  color: #dc2626;
+}
+
+.duration {
+  font-size: 0.8rem;
+  color: #64748b;
+}
+
+.no-symptoms {
+  color: #64748b;
+  font-style: italic;
+  padding: 16px;
+  text-align: center;
+}
+
+/* Condition Tags */
+.condition-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.condition-tag {
+  padding: 6px 12px;
+  background: #e0f2fe;
+  color: #0369a1;
+  border-radius: 16px;
+  font-size: 0.85rem;
+}
+
+/* Medications */
+.medications-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.medication-item {
+  display: flex;
+  gap: 12px;
+  padding: 10px 14px;
+  background: #f8fafc;
+  border-radius: 8px;
+}
+
+.med-name {
+  font-weight: 500;
+  color: #1a1a2e;
+}
+
+.med-dosage {
+  color: #64748b;
+  font-size: 0.9rem;
+}
+
+/* Allergies */
+.allergies-section {
+  background: #fef2f2;
+  padding: 16px;
+  border-radius: 8px;
+  border: 1px solid #fecaca;
+}
+
+.allergy-tags {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.allergy-tag {
+  padding: 6px 12px;
+  background: white;
+  border: 1px solid #fecaca;
+  color: #dc2626;
+  border-radius: 16px;
+  font-size: 0.85rem;
+}
+
+.allergy-tag.drug {
+  background: #fef2f2;
+}
+
+.allergy-tag.food {
+  background: #fff7ed;
+  border-color: #fed7aa;
+  color: #c2410c;
+}
+
+/* Doctor Notes */
+.doctor-notes {
+  background: #f0fdf4;
+  padding: 16px;
+  border-radius: 8px;
+  border-left: 4px solid #22c55e;
+}
+
+.doctor-notes p {
+  margin: 0;
+  color: #166534;
+  white-space: pre-wrap;
+}
+
+/* Edit Mode */
+.history-edit {
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+
+.edit-section {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.edit-section label {
+  font-weight: 500;
+  color: #374151;
+}
+
+.edit-section textarea {
+  padding: 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  font-size: 0.95rem;
+  resize: vertical;
+  font-family: inherit;
+}
+
+.edit-section textarea:focus {
+  outline: none;
+  border-color: #3b82f6;
+  box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.edit-system {
+  border: 1px solid #e2e8f0;
+  border-radius: 8px;
+  margin-bottom: 12px;
+}
+
+.edit-system-header {
+  padding: 10px 14px;
+  background: #f8fafc;
+  font-weight: 500;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.edit-symptoms {
+  padding: 12px;
+}
+
+.edit-symptom-row {
+  display: flex;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.edit-symptom-row input {
+  flex: 1;
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+}
+
+.edit-symptom-row select {
+  padding: 8px 12px;
+  border: 1px solid #e2e8f0;
+  border-radius: 6px;
+  background: white;
+}
+
+.btn-remove {
+  width: 32px;
+  height: 32px;
+  border: none;
+  background: #fee2e2;
+  color: #dc2626;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1.25rem;
+}
+
+.edit-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding-top: 16px;
+  border-top: 1px solid #e2e8f0;
+}
+
+.btn-cancel {
+  padding: 10px 20px;
+  background: #f1f5f9;
+  color: #64748b;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-save {
+  padding: 10px 20px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-weight: 500;
+  cursor: pointer;
+}
+
+.btn-save:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Alert */
+.alert {
+  padding: 12px 16px;
+  border-radius: 8px;
+  margin: 0 24px 16px;
+}
+
+.alert-error {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .history-header {
+    flex-direction: column;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .history-meta {
+    flex-direction: column;
+    gap: 4px;
+  }
+
+  .symptom-item {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 8px;
+  }
+
+  .edit-symptom-row {
+    flex-wrap: wrap;
+  }
+
+  .edit-symptom-row input {
+    width: 100%;
+  }
+}

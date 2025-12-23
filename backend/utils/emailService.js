@@ -30,7 +30,7 @@ async function sendOtpEmail(to, otp, type = 'register') {
     subject = 'HealthSync - Verify Your Registration';
     purpose = 'You are receiving this email because you requested to create a new account on HealthSync.';
     actionText = 'Complete your registration by entering this verification code:';
-  } else if (type === 'reset' || type === 'password-reset') {
+  } else if (type === 'reset' || type === 'password-reset' || type === 'doctor-password-reset') {
     subject = 'HealthSync - Password Reset Request';
     purpose = 'You are receiving this email because you requested to reset your password on HealthSync.';
     actionText = 'Reset your password by entering this verification code:';

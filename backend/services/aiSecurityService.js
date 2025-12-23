@@ -12,15 +12,15 @@ const userLocations = new Map();
 const THRESHOLDS = {
   MAX_FAILED_LOGINS: 5,           // Max failed logins before alert
   FAILED_LOGIN_WINDOW: 15 * 60000, // 15 minutes
-  MAX_ACTIONS_PER_MINUTE: 60,     // Rate limit
-  BULK_ACCESS_THRESHOLD: 50,      // Records accessed in short time
+  MAX_ACTIONS_PER_MINUTE: 200,    // Rate limit (increased from 60)
+  BULK_ACCESS_THRESHOLD: 100,     // Records accessed in short time (increased from 50)
   OFF_HOURS_START: 23,            // 11 PM
   OFF_HOURS_END: 5,               // 5 AM
   RAPID_ACTION_WINDOW: 60000,     // 1 minute
-  MAX_EXPORTS_PER_HOUR: 10,
+  MAX_EXPORTS_PER_HOUR: 20,       // Increased from 10
   SUSPICIOUS_PAYMENT_AMOUNT: 50000, // ₹50,000
-  AUTO_SUSPEND_VIOLATIONS: 3,     // Violations before auto-suspend
-  IP_BLOCK_THRESHOLD: 10,         // Failed attempts before IP block
+  AUTO_SUSPEND_VIOLATIONS: 5,     // Violations before auto-suspend (increased from 3)
+  IP_BLOCK_THRESHOLD: 15,         // Failed attempts before IP block (increased from 10)
   IP_BLOCK_DURATION: 3600000,     // 1 hour IP block
   SUSPEND_DURATION: 86400000,     // 24 hour suspension
   GEO_ANOMALY_DISTANCE: 500       // km - suspicious if login from >500km away

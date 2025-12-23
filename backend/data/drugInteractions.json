@@ -1,0 +1,490 @@
+{
+  "version": "1.0.0",
+  "lastUpdated": "2024-12-23",
+  "drugClasses": [
+    {
+      "id": "nsaid",
+      "name": "NSAIDs",
+      "description": "Non-steroidal anti-inflammatory drugs",
+      "drugs": ["ibuprofen", "naproxen", "aspirin", "diclofenac", "indomethacin", "ketorolac", "meloxicam", "celecoxib", "piroxicam"]
+    },
+    {
+      "id": "anticoagulant",
+      "name": "Anticoagulants",
+      "description": "Blood thinning medications",
+      "drugs": ["warfarin", "heparin", "enoxaparin", "rivaroxaban", "apixaban", "dabigatran", "edoxaban"]
+    },
+    {
+      "id": "antiplatelet",
+      "name": "Antiplatelet Agents",
+      "description": "Platelet aggregation inhibitors",
+      "drugs": ["aspirin", "clopidogrel", "prasugrel", "ticagrelor", "dipyridamole"]
+    },
+    {
+      "id": "ace_inhibitor",
+      "name": "ACE Inhibitors",
+      "description": "Angiotensin-converting enzyme inhibitors",
+      "drugs": ["lisinopril", "enalapril", "ramipril", "captopril", "benazepril", "fosinopril", "quinapril"]
+    },
+    {
+      "id": "arb",
+      "name": "ARBs",
+      "description": "Angiotensin II receptor blockers",
+      "drugs": ["losartan", "valsartan", "irbesartan", "candesartan", "olmesartan", "telmisartan"]
+    },
+    {
+      "id": "beta_blocker",
+      "name": "Beta Blockers",
+      "description": "Beta-adrenergic blocking agents",
+      "drugs": ["metoprolol", "atenolol", "propranolol", "carvedilol", "bisoprolol", "nebivolol", "labetalol"]
+    },
+    {
+      "id": "calcium_channel_blocker",
+      "name": "Calcium Channel Blockers",
+      "description": "Calcium channel blocking agents",
+      "drugs": ["amlodipine", "diltiazem", "verapamil", "nifedipine", "felodipine"]
+    },
+    {
+      "id": "statin",
+      "name": "Statins",
+      "description": "HMG-CoA reductase inhibitors",
+      "drugs": ["atorvastatin", "simvastatin", "rosuvastatin", "pravastatin", "lovastatin", "fluvastatin"]
+    },
+    {
+      "id": "ssri",
+      "name": "SSRIs",
+      "description": "Selective serotonin reuptake inhibitors",
+      "drugs": ["fluoxetine", "sertraline", "paroxetine", "citalopram", "escitalopram", "fluvoxamine"]
+    },
+    {
+      "id": "snri",
+      "name": "SNRIs",
+      "description": "Serotonin-norepinephrine reuptake inhibitors",
+      "drugs": ["venlafaxine", "duloxetine", "desvenlafaxine", "milnacipran"]
+    },
+    {
+      "id": "maoi",
+      "name": "MAOIs",
+      "description": "Monoamine oxidase inhibitors",
+      "drugs": ["phenelzine", "tranylcypromine", "isocarboxazid", "selegiline"]
+    },
+    {
+      "id": "tricyclic_antidepressant",
+      "name": "Tricyclic Antidepressants",
+      "description": "Tricyclic antidepressant medications",
+      "drugs": ["amitriptyline", "nortriptyline", "imipramine", "desipramine", "doxepin", "clomipramine"]
+    },
+    {
+      "id": "benzodiazepine",
+      "name": "Benzodiazepines",
+      "description": "Benzodiazepine sedatives",
+      "drugs": ["diazepam", "lorazepam", "alprazolam", "clonazepam", "midazolam", "temazepam"]
+    },
+    {
+      "id": "opioid",
+      "name": "Opioids",
+      "description": "Opioid analgesics",
+      "drugs": ["morphine", "oxycodone", "hydrocodone", "fentanyl", "codeine", "tramadol", "methadone", "hydromorphone"]
+    },
+    {
+      "id": "fluoroquinolone",
+      "name": "Fluoroquinolones",
+      "description": "Fluoroquinolone antibiotics",
+      "drugs": ["ciprofloxacin", "levofloxacin", "moxifloxacin", "ofloxacin", "norfloxacin"]
+    },
+    {
+      "id": "macrolide",
+      "name": "Macrolides",
+      "description": "Macrolide antibiotics",
+      "drugs": ["azithromycin", "clarithromycin", "erythromycin"]
+    },
+    {
+      "id": "potassium_sparing_diuretic",
+      "name": "Potassium-Sparing Diuretics",
+      "description": "Diuretics that spare potassium",
+      "drugs": ["spironolactone", "eplerenone", "amiloride", "triamterene"]
+    },
+    {
+      "id": "loop_diuretic",
+      "name": "Loop Diuretics",
+      "description": "Loop diuretic medications",
+      "drugs": ["furosemide", "bumetanide", "torsemide"]
+    },
+    {
+      "id": "thiazide_diuretic",
+      "name": "Thiazide Diuretics",
+      "description": "Thiazide diuretic medications",
+      "drugs": ["hydrochlorothiazide", "chlorthalidone", "indapamide", "metolazone"]
+    },
+    {
+      "id": "ppi",
+      "name": "Proton Pump Inhibitors",
+      "description": "Proton pump inhibitor medications",
+      "drugs": ["omeprazole", "esomeprazole", "pantoprazole", "lansoprazole", "rabeprazole"]
+    },
+    {
+      "id": "antidiabetic",
+      "name": "Antidiabetic Agents",
+      "description": "Diabetes medications",
+      "drugs": ["metformin", "glipizide", "glyburide", "glimepiride", "sitagliptin", "pioglitazone"]
+    },
+    {
+      "id": "insulin",
+      "name": "Insulins",
+      "description": "Insulin preparations",
+      "drugs": ["insulin regular", "insulin lispro", "insulin aspart", "insulin glargine", "insulin detemir", "insulin degludec"]
+    }
+  ],
+  "interactions": [
+    {
+      "id": "warfarin_nsaid",
+      "drug1": "warfarin",
+      "drug1Class": "anticoagulant",
+      "drug2Class": "nsaid",
+      "severity": "major",
+      "mechanism": "NSAIDs inhibit platelet function and may cause GI bleeding. Combined with warfarin's anticoagulant effect, bleeding risk is significantly increased.",
+      "clinicalEffect": "Increased risk of serious bleeding, particularly gastrointestinal hemorrhage",
+      "recommendation": "Avoid combination if possible. If necessary, use lowest effective NSAID dose for shortest duration. Monitor INR closely and watch for signs of bleeding.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "warfarin_aspirin",
+      "drug1": "warfarin",
+      "drug1Class": "anticoagulant",
+      "drug2": "aspirin",
+      "drug2Class": "antiplatelet",
+      "severity": "major",
+      "mechanism": "Aspirin inhibits platelet aggregation and may cause GI erosion. Combined anticoagulant and antiplatelet effects significantly increase bleeding risk.",
+      "clinicalEffect": "Substantially increased risk of major bleeding events",
+      "recommendation": "Use combination only when clearly indicated (e.g., mechanical heart valve). Use lowest effective aspirin dose. Monitor closely for bleeding.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "ace_arb",
+      "drug1Class": "ace_inhibitor",
+      "drug2Class": "arb",
+      "severity": "major",
+      "mechanism": "Dual blockade of the renin-angiotensin system increases risk of hypotension, hyperkalemia, and renal impairment.",
+      "clinicalEffect": "Increased risk of hypotension, syncope, hyperkalemia, and acute kidney injury",
+      "recommendation": "Avoid combination. Choose one agent from either class.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "ace_potassium_diuretic",
+      "drug1Class": "ace_inhibitor",
+      "drug2Class": "potassium_sparing_diuretic",
+      "severity": "major",
+      "mechanism": "Both ACE inhibitors and potassium-sparing diuretics can increase serum potassium levels.",
+      "clinicalEffect": "Risk of severe hyperkalemia, potentially causing cardiac arrhythmias",
+      "recommendation": "Monitor potassium levels closely. Consider alternative diuretic. Avoid in patients with renal impairment.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "ssri_maoi",
+      "drug1Class": "ssri",
+      "drug2Class": "maoi",
+      "severity": "contraindicated",
+      "mechanism": "Combined serotonergic effects can cause dangerous accumulation of serotonin.",
+      "clinicalEffect": "Serotonin syndrome - potentially fatal condition with hyperthermia, rigidity, autonomic instability, mental status changes",
+      "recommendation": "CONTRAINDICATED. Allow 14-day washout period between MAOI and SSRI. Allow 5 weeks washout after fluoxetine before starting MAOI.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "snri_maoi",
+      "drug1Class": "snri",
+      "drug2Class": "maoi",
+      "severity": "contraindicated",
+      "mechanism": "Combined serotonergic and noradrenergic effects can cause dangerous neurotransmitter accumulation.",
+      "clinicalEffect": "Serotonin syndrome and hypertensive crisis",
+      "recommendation": "CONTRAINDICATED. Allow 14-day washout period between medications.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "opioid_benzodiazepine",
+      "drug1Class": "opioid",
+      "drug2Class": "benzodiazepine",
+      "severity": "major",
+      "mechanism": "Both drug classes cause CNS depression. Combined effects are synergistic, not just additive.",
+      "clinicalEffect": "Profound sedation, respiratory depression, coma, and death",
+      "recommendation": "Avoid combination when possible. If necessary, use lowest effective doses of both. FDA black box warning applies.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "metformin_contrast",
+      "drug1": "metformin",
+      "drug1Class": "antidiabetic",
+      "drug2": "iodinated contrast",
+      "severity": "major",
+      "mechanism": "Iodinated contrast can cause acute kidney injury, leading to metformin accumulation and lactic acidosis.",
+      "clinicalEffect": "Risk of lactic acidosis, particularly in patients with renal impairment",
+      "recommendation": "Hold metformin before contrast procedures. Resume 48 hours after procedure if renal function is stable.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "statin_macrolide",
+      "drug1Class": "statin",
+      "drug2Class": "macrolide",
+      "severity": "major",
+      "mechanism": "Macrolides inhibit CYP3A4, reducing statin metabolism and increasing statin levels.",
+      "clinicalEffect": "Increased risk of myopathy and rhabdomyolysis",
+      "recommendation": "Avoid simvastatin and lovastatin with macrolides. Use pravastatin or rosuvastatin as alternatives. Monitor for muscle pain.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "fluoroquinolone_nsaid",
+      "drug1Class": "fluoroquinolone",
+      "drug2Class": "nsaid",
+      "severity": "moderate",
+      "mechanism": "Both drug classes can lower seizure threshold. Combined effect may be synergistic.",
+      "clinicalEffect": "Increased risk of CNS stimulation and seizures",
+      "recommendation": "Use with caution, especially in patients with seizure history. Monitor for CNS effects.",
+      "documentation": "moderate"
+    },
+    {
+      "id": "beta_blocker_calcium_blocker",
+      "drug1Class": "beta_blocker",
+      "drug2": "verapamil",
+      "drug2Class": "calcium_channel_blocker",
+      "severity": "major",
+      "mechanism": "Both agents depress cardiac conduction and contractility.",
+      "clinicalEffect": "Risk of severe bradycardia, heart block, and heart failure",
+      "recommendation": "Avoid combination with verapamil or diltiazem. Dihydropyridine CCBs (amlodipine) are safer alternatives.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "beta_blocker_diltiazem",
+      "drug1Class": "beta_blocker",
+      "drug2": "diltiazem",
+      "drug2Class": "calcium_channel_blocker",
+      "severity": "major",
+      "mechanism": "Both agents depress cardiac conduction and contractility.",
+      "clinicalEffect": "Risk of severe bradycardia, heart block, and heart failure",
+      "recommendation": "Avoid combination. Use dihydropyridine CCBs (amlodipine) as safer alternatives.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "digoxin_amiodarone",
+      "drug1": "digoxin",
+      "drug2": "amiodarone",
+      "severity": "major",
+      "mechanism": "Amiodarone inhibits P-glycoprotein and reduces digoxin clearance.",
+      "clinicalEffect": "Digoxin toxicity - nausea, visual disturbances, cardiac arrhythmias",
+      "recommendation": "Reduce digoxin dose by 50% when starting amiodarone. Monitor digoxin levels closely.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "lithium_nsaid",
+      "drug1": "lithium",
+      "drug2Class": "nsaid",
+      "severity": "major",
+      "mechanism": "NSAIDs reduce renal lithium clearance by inhibiting prostaglandin synthesis.",
+      "clinicalEffect": "Lithium toxicity - tremor, confusion, seizures, cardiac arrhythmias",
+      "recommendation": "Avoid combination if possible. If necessary, monitor lithium levels closely and reduce dose as needed.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "lithium_ace",
+      "drug1": "lithium",
+      "drug2Class": "ace_inhibitor",
+      "severity": "major",
+      "mechanism": "ACE inhibitors reduce renal lithium clearance.",
+      "clinicalEffect": "Lithium toxicity",
+      "recommendation": "Monitor lithium levels closely. May need to reduce lithium dose.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "methotrexate_nsaid",
+      "drug1": "methotrexate",
+      "drug2Class": "nsaid",
+      "severity": "major",
+      "mechanism": "NSAIDs reduce renal clearance of methotrexate and may displace it from protein binding.",
+      "clinicalEffect": "Methotrexate toxicity - bone marrow suppression, mucositis, hepatotoxicity",
+      "recommendation": "Avoid combination with high-dose methotrexate. Use with caution in low-dose therapy. Monitor blood counts.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "clopidogrel_ppi",
+      "drug1": "clopidogrel",
+      "drug1Class": "antiplatelet",
+      "drug2Class": "ppi",
+      "severity": "moderate",
+      "mechanism": "Some PPIs (especially omeprazole) inhibit CYP2C19, reducing conversion of clopidogrel to active metabolite.",
+      "clinicalEffect": "Reduced antiplatelet effect, potentially increased cardiovascular events",
+      "recommendation": "Use pantoprazole or H2 blockers as alternatives. Avoid omeprazole and esomeprazole.",
+      "documentation": "moderate"
+    },
+    {
+      "id": "ssri_nsaid",
+      "drug1Class": "ssri",
+      "drug2Class": "nsaid",
+      "severity": "moderate",
+      "mechanism": "SSRIs inhibit platelet serotonin uptake, impairing platelet aggregation. NSAIDs also affect platelet function.",
+      "clinicalEffect": "Increased risk of GI bleeding",
+      "recommendation": "Use with caution. Consider gastroprotection with PPI. Monitor for signs of bleeding.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "ssri_anticoagulant",
+      "drug1Class": "ssri",
+      "drug2Class": "anticoagulant",
+      "severity": "moderate",
+      "mechanism": "SSRIs impair platelet function, adding to anticoagulant bleeding risk.",
+      "clinicalEffect": "Increased risk of bleeding",
+      "recommendation": "Monitor closely for bleeding. Consider gastroprotection.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "tramadol_ssri",
+      "drug1": "tramadol",
+      "drug1Class": "opioid",
+      "drug2Class": "ssri",
+      "severity": "major",
+      "mechanism": "Tramadol has serotonergic activity. Combined with SSRIs, serotonin levels may become excessive.",
+      "clinicalEffect": "Risk of serotonin syndrome and increased seizure risk",
+      "recommendation": "Use with caution. Monitor for serotonin syndrome symptoms. Consider alternative analgesics.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "potassium_ace",
+      "drug1": "potassium supplements",
+      "drug2Class": "ace_inhibitor",
+      "severity": "moderate",
+      "mechanism": "ACE inhibitors reduce aldosterone, decreasing potassium excretion.",
+      "clinicalEffect": "Risk of hyperkalemia",
+      "recommendation": "Monitor potassium levels. Avoid routine potassium supplementation unless documented deficiency.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "insulin_beta_blocker",
+      "drug1Class": "insulin",
+      "drug2Class": "beta_blocker",
+      "severity": "moderate",
+      "mechanism": "Beta blockers can mask hypoglycemia symptoms (tachycardia, tremor) and impair glucose recovery.",
+      "clinicalEffect": "Masked hypoglycemia symptoms, prolonged hypoglycemia",
+      "recommendation": "Use cardioselective beta blockers. Educate patient about hypoglycemia symptoms. Monitor blood glucose closely.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "sulfonylurea_fluoroquinolone",
+      "drug1": "glipizide",
+      "drug1Class": "antidiabetic",
+      "drug2Class": "fluoroquinolone",
+      "severity": "moderate",
+      "mechanism": "Fluoroquinolones can affect insulin release and glucose metabolism.",
+      "clinicalEffect": "Risk of hypoglycemia or hyperglycemia",
+      "recommendation": "Monitor blood glucose closely during fluoroquinolone therapy.",
+      "documentation": "moderate"
+    },
+    {
+      "id": "glyburide_fluoroquinolone",
+      "drug1": "glyburide",
+      "drug1Class": "antidiabetic",
+      "drug2Class": "fluoroquinolone",
+      "severity": "moderate",
+      "mechanism": "Fluoroquinolones can affect insulin release and glucose metabolism.",
+      "clinicalEffect": "Risk of hypoglycemia or hyperglycemia",
+      "recommendation": "Monitor blood glucose closely during fluoroquinolone therapy.",
+      "documentation": "moderate"
+    },
+    {
+      "id": "theophylline_fluoroquinolone",
+      "drug1": "theophylline",
+      "drug2Class": "fluoroquinolone",
+      "severity": "major",
+      "mechanism": "Ciprofloxacin inhibits CYP1A2, reducing theophylline metabolism.",
+      "clinicalEffect": "Theophylline toxicity - nausea, vomiting, seizures, arrhythmias",
+      "recommendation": "Reduce theophylline dose by 30-50%. Monitor theophylline levels. Consider alternative antibiotic.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "sildenafil_nitrate",
+      "drug1": "sildenafil",
+      "drug2": "nitroglycerin",
+      "severity": "contraindicated",
+      "mechanism": "Both agents cause vasodilation through nitric oxide pathway.",
+      "clinicalEffect": "Severe, potentially fatal hypotension",
+      "recommendation": "CONTRAINDICATED. Do not use within 24 hours of each other (48 hours for tadalafil).",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "tadalafil_nitrate",
+      "drug1": "tadalafil",
+      "drug2": "nitroglycerin",
+      "severity": "contraindicated",
+      "mechanism": "Both agents cause vasodilation through nitric oxide pathway.",
+      "clinicalEffect": "Severe, potentially fatal hypotension",
+      "recommendation": "CONTRAINDICATED. Do not use within 48 hours of each other.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "vardenafil_nitrate",
+      "drug1": "vardenafil",
+      "drug2": "nitroglycerin",
+      "severity": "contraindicated",
+      "mechanism": "Both agents cause vasodilation through nitric oxide pathway.",
+      "clinicalEffect": "Severe, potentially fatal hypotension",
+      "recommendation": "CONTRAINDICATED. Do not use within 24 hours of each other.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "allopurinol_azathioprine",
+      "drug1": "allopurinol",
+      "drug2": "azathioprine",
+      "severity": "major",
+      "mechanism": "Allopurinol inhibits xanthine oxidase, blocking azathioprine metabolism.",
+      "clinicalEffect": "Severe bone marrow suppression",
+      "recommendation": "Reduce azathioprine dose by 75% if combination necessary. Monitor blood counts closely.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "carbamazepine_macrolide",
+      "drug1": "carbamazepine",
+      "drug2Class": "macrolide",
+      "severity": "major",
+      "mechanism": "Macrolides inhibit CYP3A4, reducing carbamazepine metabolism.",
+      "clinicalEffect": "Carbamazepine toxicity - dizziness, ataxia, nystagmus, drowsiness",
+      "recommendation": "Avoid combination. Use azithromycin (minimal interaction) if macrolide needed.",
+      "documentation": "well-documented"
+    },
+    {
+      "id": "phenytoin_fluconazole",
+      "drug1": "phenytoin",
+      "drug2": "fluconazole",
+      "severity": "major",
+      "mechanism": "Fluconazole inhibits CYP2C9, reducing phenytoin metabolism.",
+      "clinicalEffect": "Phenytoin toxicity - nystagmus, ataxia, confusion",
+      "recommendation": "Monitor phenytoin levels. May need to reduce phenytoin dose.",
+      "documentation": "well-documented"
+    }
+  ],
+  "severityLevels": {
+    "contraindicated": {
+      "level": 1,
+      "name": "Contraindicated",
+      "description": "The drugs should never be used together due to risk of serious harm",
+      "color": "#DC2626",
+      "action": "Do not dispense without override and documented clinical justification"
+    },
+    "major": {
+      "level": 2,
+      "name": "Major",
+      "description": "The interaction may be life-threatening or cause permanent damage",
+      "color": "#EA580C",
+      "action": "Avoid combination. If necessary, close monitoring required"
+    },
+    "moderate": {
+      "level": 3,
+      "name": "Moderate",
+      "description": "The interaction may cause deterioration in patient's condition",
+      "color": "#CA8A04",
+      "action": "Use with caution. Monitor patient and adjust therapy as needed"
+    },
+    "minor": {
+      "level": 4,
+      "name": "Minor",
+      "description": "The interaction has limited clinical significance",
+      "color": "#16A34A",
+      "action": "Be aware. Usually no action required"
+    }
+  }
+}
