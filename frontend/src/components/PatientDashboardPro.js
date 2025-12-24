@@ -1,6 +1,7 @@
-import { useState, useEffect, useMemo } from 'react';
+import { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
+import { Capacitor } from '@capacitor/core';
 import { useLanguage } from '../i18n/LanguageContext';
 import '../styles/premium-saas.css';
 import '../styles/skeleton-loaders.css';
@@ -28,6 +29,7 @@ import HealthCheckup from './HealthCheckup';
 import { trackUserLocation, getUserLocation } from '../utils/locationService';
 import MedicineReminder from './MedicineReminder';
 import HealthAnalytics from './HealthAnalytics';
+import PullToRefresh from './PullToRefresh';
 import EmergencyContacts from './EmergencyContacts';
 import HealthInsurance from './HealthInsurance';
 import ReferralRewards from './ReferralRewards';
@@ -48,7 +50,6 @@ import OfflineIndicator from './OfflineIndicator';
 import MobileDoctorCard from './MobileDoctorCard';
 import { DoctorCardSkeleton, AppointmentCardSkeleton, PageSkeleton } from './SkeletonLoaders';
 import { successFeedback } from '../mobile/haptics';
-import { Capacitor } from '@capacitor/core';
 
 // Get profile photo URL - checks profilePhoto field, then generates fallback
 const getProfilePhotoUrl = (user) => {
@@ -255,6 +256,18 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
   const fetchClinics = async () => { try { const res = await axios.get('/api/clinics'); setClinics(res.data); } catch (e) { console.error(e); } };
   const fetchFavorites = async () => { const userId = getUserId(); if (!userId) return; try { const res = await axios.get(`/api/favorites/${userId}`); setFavoriteDoctors(res.data.map(d => d._id)); } catch { /* no favorites */ } };
   const handleUpdateLocation = async () => { const userId = getUserId(); if (!userId) { toast.error('User not found'); return; } setUpdatingLocation(true); try { const result = await trackUserLocation(userId); if (result.success) { setUserLocation(result.location); toast.success(`Location: ${result.location.city || 'Unknown'}`); } else { toast.error(result.error || 'Failed'); } } catch { toast.error('Failed to get location'); } finally { setUpdatingLocation(false); } };
+  
+  // Pull to refresh handler - refreshes all dashboard data from backend
+  const handleRefresh = useCallback(async () => {
+    console.log('🔄 Pull to refresh triggered - PatientDashboardPro');
+    await Promise.all([
+      fetchDoctors(),
+      fetchAppointments(),
+      fetchFavorites(),
+      fetchUnreadNotifications()
+    ]);
+  }, []);
+
   const filteredDoctors = useMemo(() => doctors.filter(doc => { 
     const matchSearch = !searchTerm || doc.name.toLowerCase().includes(searchTerm.toLowerCase()) || doc.specialization.toLowerCase().includes(searchTerm.toLowerCase()); 
     const matchSpec = !selectedSpecialization || doc.specialization === selectedSpecialization; 
@@ -433,6 +446,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
             </button>
           </div>
         </header>
+        <PullToRefresh onRefresh={handleRefresh} enabled={Capacitor.isNativePlatform()}>
         <div className="flex-1 p-4 lg:p-8 overflow-y-auto overflow-x-hidden has-bottom-nav" style={{ WebkitOverflowScrolling: 'touch' }}>
           {activeSection === 'overview' && (
             <div className="space-y-6">
@@ -1009,6 +1023,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
             <p>© 2024 HealthSync. All rights reserved.</p>
           </div>
         </footer>
+        </PullToRefresh>
       </main>
       <nav className="lg:hidden fixed bottom-0 left-0 right-0 bg-white border-t border-slate-200 px-2 py-2 z-40">
         <div className="flex items-center justify-around">

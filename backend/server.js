@@ -293,6 +293,7 @@ app.use('/api/support', require('./routes/supportRoutes')); // Doctor-Admin Supp
 app.use('/api/doctor-control', require('./routes/doctorControlRoutes')); // Doctor Override & Emergency Controls
 app.use('/api/systematic-history', require('./routes/systematicHistoryRoutes')); // Systematic History for clinical-grade consultations
 app.use('/api/emr', require('./routes/emrRoutes')); // EMR Subscription Module for Clinics
+app.use('/api/emr-advanced', require('./routes/emrAdvancedRoutes')); // Offline, Templates, Protocols, FHIR
 app.use('/api/imaging', require('./routes/imagingRoutes')); // DICOM Imaging & Telemedicine
 
 // ===== NEW DIFFERENTIATOR FEATURES =====

@@ -3,10 +3,11 @@
  * Startup-style mobile UI for patient dashboard
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { Capacitor } from '@capacitor/core';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
+import PullToRefresh from './PullToRefresh';
 
 const MobilePatientHome = ({ user, onNavigate, onLogout }) => {
   const [loading, setLoading] = useState(true);
@@ -14,12 +15,9 @@ const MobilePatientHome = ({ user, onNavigate, onLogout }) => {
   const [stats, setStats] = useState({ upcoming: 0, completed: 0, prescriptions: 0 });
   const isNative = Capacitor.isNativePlatform();
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, []);
-
-  const fetchDashboardData = async () => {
+  const fetchDashboardData = useCallback(async () => {
     try {
+      setLoading(true);
       const [apptRes] = await Promise.all([
         axios.get('/api/appointments/user').catch(() => ({ data: [] }))
       ]);
@@ -38,7 +36,17 @@ const MobilePatientHome = ({ user, onNavigate, onLogout }) => {
     } finally {
       setLoading(false);
     }
-  };
+  }, []);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
+  // Pull to refresh handler - refreshes data from backend
+  const handleRefresh = useCallback(async () => {
+    console.log('🔄 Pull to refresh triggered');
+    await fetchDashboardData();
+  }, [fetchDashboardData]);
 
   const getGreeting = () => {
     const hour = new Date().getHours();
@@ -56,7 +64,8 @@ const MobilePatientHome = ({ user, onNavigate, onLogout }) => {
 
 
   return (
-    <div className="m-app m-content-with-nav">
+    <PullToRefresh onRefresh={handleRefresh} enabled={isNative}>
+      <div className="m-app m-content-with-nav">
       {/* Header */}
       <header className="m-header">
         <div>
@@ -289,6 +298,7 @@ const MobilePatientHome = ({ user, onNavigate, onLogout }) => {
         Book
       </button>
     </div>
+    </PullToRefresh>
   );
 };
 
