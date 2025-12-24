@@ -6,6 +6,7 @@ import './styles/landing-page-pro.css';
 import './styles/admin-dashboard-professional.css';
 import './styles/admin-dashboard-pro.css';
 import './styles/native-android.css';
+import './styles/modern-mobile-ui.css';
 import toast, { Toaster } from 'react-hot-toast';
 
 // Language/i18n

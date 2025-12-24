@@ -795,32 +795,41 @@ function AuthPremium({ onLogin, onBack }) {
           </div>
 
           {/* Social Login - Show on all platforms */}
-          <div style={{ display: 'flex', gap: '12px' }}>
-            <button 
-              className="btn-premium btn-premium-secondary" 
-              style={{ flex: 1, opacity: isNativeMobile ? 0.6 : 1 }}
-              onClick={handleGoogleSignIn}
-              disabled={socialLoading === 'google'}
-            >
-              {socialLoading === 'google' ? (
-                <><i className="fas fa-spinner fa-spin"></i> {t('signingIn')}</>
-              ) : (
-                <><i className="fab fa-google"></i> Google</>
-              )}
-            </button>
-            <button 
-              className="btn-premium btn-premium-secondary" 
-              style={{ flex: 1, opacity: 0.6 }}
-              onClick={handleAppleSignIn}
-              disabled={socialLoading === 'apple'}
-            >
-              <i className="fab fa-apple"></i> Apple
-            </button>
-          </div>
-          {isNativeMobile && (
-            <p style={{ fontSize: '12px', color: '#94a3b8', textAlign: 'center', marginTop: '8px' }}>
-              Social login coming soon. Please use email/password.
-            </p>
+          {!isNativeMobile ? (
+            <div style={{ display: 'flex', gap: '12px' }}>
+              <button 
+                className="btn-premium btn-premium-secondary" 
+                style={{ flex: 1 }}
+                onClick={handleGoogleSignIn}
+                disabled={socialLoading === 'google'}
+              >
+                {socialLoading === 'google' ? (
+                  <><i className="fas fa-spinner fa-spin"></i> {t('signingIn')}</>
+                ) : (
+                  <><i className="fab fa-google"></i> Google</>
+                )}
+              </button>
+              <button 
+                className="btn-premium btn-premium-secondary" 
+                style={{ flex: 1, opacity: 0.6 }}
+                onClick={handleAppleSignIn}
+                disabled={socialLoading === 'apple'}
+              >
+                <i className="fab fa-apple"></i> Apple
+              </button>
+            </div>
+          ) : (
+            <div style={{ 
+              padding: '14px 16px', 
+              background: 'linear-gradient(135deg, rgba(14, 165, 233, 0.08) 0%, rgba(20, 184, 166, 0.08) 100%)',
+              borderRadius: '12px',
+              textAlign: 'center'
+            }}>
+              <p style={{ fontSize: '13px', color: '#64748b', margin: 0 }}>
+                <i className="fas fa-mobile-alt" style={{ marginRight: '8px', color: '#0ea5e9' }}></i>
+                Use email & password for secure mobile login
+              </p>
+            </div>
           )}
 
           {/* Footer */}
