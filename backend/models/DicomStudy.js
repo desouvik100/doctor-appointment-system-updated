@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const dicomStudySchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
-  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
+  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic' }, // Optional for patient uploads
   visitId: { type: mongoose.Schema.Types.ObjectId, ref: 'EMRVisit' },
   
   // DICOM UIDs
@@ -10,7 +10,7 @@ const dicomStudySchema = new mongoose.Schema({
   accessionNumber: String,
   
   // Study Information
-  studyDate: { type: Date, required: true },
+  studyDate: { type: Date, default: Date.now }, // Default to now if not in DICOM
   studyTime: String,
   studyDescription: String,
   

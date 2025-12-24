@@ -92,11 +92,22 @@ const DoctorDashboard = React.lazy(() =>
   }))
 );
 
+const ImagingDashboard = React.lazy(() =>
+  import("./pages/ImagingDashboard").catch(() => ({
+    default: () => (
+      <div className="container py-4">
+        <h4>Imaging Dashboard</h4>
+        <p>Loading imaging features...</p>
+      </div>
+    )
+  }))
+);
+
 function App() {
   // Initialize view from URL hash or default to landing
   const getInitialView = () => {
     const hash = window.location.hash.slice(1); // Remove #
-    const validViews = ['landing', 'auth', 'dashboard', 'corporate'];
+    const validViews = ['landing', 'auth', 'dashboard', 'corporate', 'imaging'];
     return validViews.includes(hash) ? hash : 'landing';
   };
 
@@ -1745,7 +1756,11 @@ function App() {
                 <p className="text-muted">Loading Patient Dashboard...</p>
               </div>
             }>
-              <PatientDashboard user={user} onLogout={handleLogoutAll} />
+              <PatientDashboard 
+                user={user} 
+                onLogout={handleLogoutAll} 
+                onNavigate={(view) => setCurrentView(view)}
+              />
             </Suspense>
           )}
 
@@ -1787,7 +1802,11 @@ function App() {
                 <p className="text-muted">Loading Doctor Dashboard...</p>
               </div>
             }>
-              <DoctorDashboard doctor={doctor} onLogout={handleLogoutAll} />
+              <DoctorDashboard 
+                doctor={doctor} 
+                onLogout={handleLogoutAll} 
+                onNavigate={(view) => setCurrentView(view)}
+              />
             </Suspense>
           )}
 
@@ -1810,6 +1829,25 @@ function App() {
               </div>
             </div>
           )}
+        </main>
+      )}
+
+      {/* IMAGING VIEW - Advanced Medical Imaging */}
+      {currentView === "imaging" && (
+        <main id="main-content" role="main">
+          <Suspense fallback={
+            <div className="d-flex flex-column align-items-center justify-content-center" style={{ minHeight: '50vh' }}>
+              <div className="spinner-border text-primary mb-3" role="status">
+                <span className="visually-hidden">Loading...</span>
+              </div>
+              <p className="text-muted">Loading Imaging Dashboard...</p>
+            </div>
+          }>
+            <ImagingDashboard 
+              user={user || doctor} 
+              onBack={() => setCurrentView("dashboard")} 
+            />
+          </Suspense>
         </main>
       )}
 

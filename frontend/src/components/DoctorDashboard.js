@@ -12,6 +12,7 @@ import WalkInPatientModal from "./WalkInPatientModal";
 import DoctorSupport from "./DoctorSupport";
 import DoctorControls from "./DoctorControls";
 import SystematicHistorySummary from "./systematic-history/SystematicHistorySummary";
+import { ProfessionalDicomViewer } from "./imaging";
 
 // Simple component to show systematic history status for appointments
 const SystematicHistoryIndicator = ({ appointmentId }) => {
@@ -73,6 +74,14 @@ function DoctorDashboard({ doctor, onLogout }) {
   // Systematic History State
   const [systematicHistory, setSystematicHistory] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
+  
+  // Imaging State
+  const [imagingPatients, setImagingPatients] = useState([]);
+  const [selectedImagingPatient, setSelectedImagingPatient] = useState(null);
+  const [imagingStudies, setImagingStudies] = useState([]);
+  const [imagingLoading, setImagingLoading] = useState(false);
+  const [showImagingViewer, setShowImagingViewer] = useState(false);
+  const [selectedStudy, setSelectedStudy] = useState(null);
 
   // Fetch systematic history for current patient
   const fetchSystematicHistory = async (appointmentId) => {
@@ -257,6 +266,70 @@ function DoctorDashboard({ doctor, onLogout }) {
       fetchEmrPrescriptions();
     }
   }, [activeTab, emrSubscription]);
+
+  // Fetch patients with imaging studies
+  const fetchImagingPatients = async () => {
+    try {
+      setImagingLoading(true);
+      // Get all patients who have had appointments with this doctor
+      const response = await axios.get(`/api/appointments/doctor/${doctorId}`);
+      const appointments = response.data || [];
+      
+      // Get unique patients
+      const patientMap = new Map();
+      appointments.forEach(apt => {
+        const patient = apt.userId;
+        if (patient && patient._id && !patientMap.has(patient._id)) {
+          patientMap.set(patient._id, {
+            _id: patient._id,
+            name: patient.name,
+            email: patient.email,
+            phone: patient.phone
+          });
+        }
+      });
+      
+      setImagingPatients(Array.from(patientMap.values()));
+    } catch (error) {
+      console.error('Error fetching imaging patients:', error);
+    } finally {
+      setImagingLoading(false);
+    }
+  };
+
+  // Fetch imaging studies for a patient
+  const fetchPatientImagingStudies = async (patientId) => {
+    try {
+      setImagingLoading(true);
+      const response = await axios.get(`/api/imaging/patients/${patientId}/studies`);
+      if (response.data.success) {
+        setImagingStudies(response.data.data || []);
+      } else {
+        setImagingStudies([]);
+      }
+    } catch (error) {
+      console.error('Error fetching imaging studies:', error);
+      setImagingStudies([]);
+    } finally {
+      setImagingLoading(false);
+    }
+  };
+
+  // Load imaging patients when imaging tab is selected
+  useEffect(() => {
+    if (activeTab === 'imaging') {
+      fetchImagingPatients();
+    }
+  }, [activeTab]);
+
+  // Fetch studies when patient is selected
+  useEffect(() => {
+    if (selectedImagingPatient) {
+      fetchPatientImagingStudies(selectedImagingPatient._id);
+    } else {
+      setImagingStudies([]);
+    }
+  }, [selectedImagingPatient]);
 
   // Consultation timer - tracks time with current patient
   useEffect(() => {
@@ -632,6 +705,17 @@ function DoctorDashboard({ doctor, onLogout }) {
           <i className="fas fa-notes-medical" aria-hidden="true"></i>
           <span>EMR</span>
           {emrSubscription && <span className="badge bg-success ms-1" style={{ fontSize: '0.6rem' }}>Active</span>}
+        </button>
+        <button 
+          className={`doctor-tab ${activeTab === 'imaging' ? 'active' : ''}`}
+          onClick={() => setActiveTab('imaging')}
+          role="tab"
+          aria-selected={activeTab === 'imaging'}
+          aria-controls="imaging-panel"
+          style={{ background: activeTab === 'imaging' ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : undefined }}
+        >
+          <i className="fas fa-x-ray" aria-hidden="true"></i>
+          <span>Imaging</span>
         </button>
       </nav>
 
@@ -1473,6 +1557,165 @@ function DoctorDashboard({ doctor, onLogout }) {
             </div>
           )}
         </main>
+      )}
+
+      {/* Imaging Tab */}
+      {activeTab === 'imaging' && (
+        <main id="imaging-panel" role="tabpanel" aria-labelledby="imaging-tab">
+          <div className="card border-0 shadow-sm" style={{ borderRadius: '16px' }}>
+            <div className="card-header bg-white border-0 py-3" style={{ borderRadius: '16px 16px 0 0' }}>
+              <div className="d-flex justify-content-between align-items-center">
+                <h5 className="mb-0">
+                  <i className="fas fa-x-ray me-2 text-primary"></i>
+                  Patient Medical Imaging (DICOM)
+                </h5>
+              </div>
+            </div>
+            <div className="card-body">
+              {imagingLoading ? (
+                <div className="text-center py-5">
+                  <div className="spinner-border text-primary"></div>
+                  <p className="mt-2">Loading...</p>
+                </div>
+              ) : (
+                <div className="row">
+                  {/* Patient List */}
+                  <div className="col-md-4">
+                    <h6 className="mb-3">
+                      <i className="fas fa-users me-2"></i>
+                      Select Patient
+                    </h6>
+                    <div className="list-group" style={{ maxHeight: '400px', overflowY: 'auto' }}>
+                      {imagingPatients.length === 0 ? (
+                        <div className="text-center text-muted py-4">
+                          <i className="fas fa-user-slash fa-2x mb-2"></i>
+                          <p>No patients found</p>
+                        </div>
+                      ) : (
+                        imagingPatients.map(patient => (
+                          <button
+                            key={patient._id}
+                            className={`list-group-item list-group-item-action ${selectedImagingPatient?._id === patient._id ? 'active' : ''}`}
+                            onClick={() => setSelectedImagingPatient(patient)}
+                          >
+                            <div className="d-flex align-items-center">
+                              <div className="me-3">
+                                <i className="fas fa-user-circle fa-2x text-secondary"></i>
+                              </div>
+                              <div>
+                                <strong>{patient.name}</strong>
+                                <br />
+                                <small className="text-muted">{patient.phone || patient.email}</small>
+                              </div>
+                            </div>
+                          </button>
+                        ))
+                      )}
+                    </div>
+                  </div>
+
+                  {/* Studies List */}
+                  <div className="col-md-8">
+                    {selectedImagingPatient ? (
+                      <>
+                        <h6 className="mb-3">
+                          <i className="fas fa-images me-2"></i>
+                          Imaging Studies for {selectedImagingPatient.name}
+                        </h6>
+                        {imagingStudies.length === 0 ? (
+                          <div className="text-center text-muted py-5">
+                            <i className="fas fa-x-ray fa-3x mb-3"></i>
+                            <p>No imaging studies found for this patient</p>
+                            <small>Patient can upload DICOM files from their dashboard</small>
+                          </div>
+                        ) : (
+                          <div className="row g-3">
+                            {imagingStudies.map(study => (
+                              <div key={study._id} className="col-md-6">
+                                <div 
+                                  className="card h-100 border cursor-pointer hover-shadow"
+                                  style={{ cursor: 'pointer', transition: 'all 0.2s' }}
+                                  onClick={() => {
+                                    setSelectedStudy({
+                                      studyId: study._id,
+                                      studyInstanceUID: study.studyInstanceUID,
+                                      series: study.series || [],
+                                      studyDate: study.studyDate,
+                                      modality: study.modality,
+                                      studyDescription: study.studyDescription,
+                                      dicomPatientName: study.dicomPatientName,
+                                      totalImages: study.totalImages,
+                                      totalSeries: study.totalSeries
+                                    });
+                                    setShowImagingViewer(true);
+                                  }}
+                                >
+                                  <div className="card-body">
+                                    <div className="d-flex align-items-start">
+                                      <div className="me-3">
+                                        <div 
+                                          className="d-flex align-items-center justify-content-center"
+                                          style={{ 
+                                            width: '50px', 
+                                            height: '50px', 
+                                            borderRadius: '12px',
+                                            background: 'linear-gradient(135deg, #0ea5e9, #0284c7)'
+                                          }}
+                                        >
+                                          <i className="fas fa-x-ray text-white fa-lg"></i>
+                                        </div>
+                                      </div>
+                                      <div className="flex-grow-1">
+                                        <h6 className="mb-1">{study.modality || 'Unknown'}</h6>
+                                        <p className="text-muted mb-1 small">
+                                          {study.studyDescription || 'No description'}
+                                        </p>
+                                        <div className="d-flex gap-2 flex-wrap">
+                                          <span className="badge bg-light text-dark">
+                                            <i className="fas fa-calendar me-1"></i>
+                                            {study.studyDate ? new Date(study.studyDate).toLocaleDateString() : 'Unknown date'}
+                                          </span>
+                                          <span className="badge bg-light text-dark">
+                                            <i className="fas fa-images me-1"></i>
+                                            {study.totalImages || 0} images
+                                          </span>
+                                        </div>
+                                      </div>
+                                      <div>
+                                        <i className="fas fa-chevron-right text-muted"></i>
+                                      </div>
+                                    </div>
+                                  </div>
+                                </div>
+                              </div>
+                            ))}
+                          </div>
+                        )}
+                      </>
+                    ) : (
+                      <div className="text-center text-muted py-5">
+                        <i className="fas fa-hand-pointer fa-3x mb-3"></i>
+                        <p>Select a patient to view their imaging studies</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
+            </div>
+          </div>
+        </main>
+      )}
+
+      {/* Professional DICOM Viewer Modal */}
+      {showImagingViewer && selectedStudy && (
+        <ProfessionalDicomViewer
+          study={selectedStudy}
+          patientId={selectedImagingPatient?._id}
+          onBack={() => {
+            setShowImagingViewer(false);
+            setSelectedStudy(null);
+          }}
+        />
       )}
 
       {/* Prescription Modal */}

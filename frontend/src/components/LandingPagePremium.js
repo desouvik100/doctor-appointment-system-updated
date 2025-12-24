@@ -97,9 +97,9 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
     { icon: 'fa-video', titleKey: 'videoConsultations', descKey: 'videoConsultationsDesc' },
     { icon: 'fa-hospital', titleKey: 'inClinicVisits', descKey: 'inClinicVisitsDesc' },
     { icon: 'fa-calendar-check', titleKey: 'smartScheduling', descKey: 'smartSchedulingDesc' },
+    { icon: 'fa-x-ray', titleKey: 'medicalImagingFeature', descKey: 'medicalImagingFeatureDesc' },
     { icon: 'fa-robot', titleKey: 'aiHealthAssistant', descKey: 'aiHealthAssistantDesc' },
     { icon: 'fa-shield-alt', titleKey: 'securePrivate', descKey: 'securePrivateDesc' },
-    { icon: 'fa-mobile-alt', titleKey: 'mobileReady', descKey: 'mobileReadyDesc' },
   ];
 
   const pricingPlans = [
@@ -1010,6 +1010,191 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               </p>
             </div>
           ))}
+        </div>
+      </section>
+
+      {/* Medical Imaging Benefits Section */}
+      <section style={{ padding: '100px 24px', background: darkMode ? '#0a0a0a' : '#ffffff', position: 'relative', zIndex: 10 }}>
+        <div style={{ maxWidth: '1280px', margin: '0 auto' }}>
+          <div style={{ textAlign: 'center', marginBottom: '64px' }}>
+            <span style={{ 
+              display: 'inline-block',
+              padding: '8px 16px',
+              background: darkMode ? 'rgba(14, 165, 233, 0.1)' : 'rgba(14, 165, 233, 0.1)',
+              color: '#0ea5e9',
+              borderRadius: '20px',
+              fontSize: '14px',
+              fontWeight: '600',
+              marginBottom: '16px'
+            }}>
+              <i className="fas fa-x-ray" style={{ marginRight: '8px' }}></i>
+              NEW FEATURE
+            </span>
+            <h2 style={{ 
+              fontSize: isMobile ? '1.75rem' : '2.5rem', 
+              fontWeight: '700', 
+              color: darkMode ? '#ffffff' : '#0f172a',
+              marginBottom: '16px'
+            }}>
+              Medical Imaging Made Simple
+            </h2>
+            <p style={{ 
+              color: darkMode ? '#a3a3a3' : '#64748b', 
+              fontSize: '18px',
+              maxWidth: '600px',
+              margin: '0 auto'
+            }}>
+              Store all your CT, MRI, X-Ray scans in one place. Share with any doctor instantly.
+            </p>
+          </div>
+
+          {/* Benefits Grid */}
+          <div style={{ 
+            display: 'grid', 
+            gridTemplateColumns: isMobile ? '1fr' : 'repeat(3, 1fr)', 
+            gap: '24px',
+            marginBottom: '48px'
+          }}>
+            {[
+              { icon: 'fa-cloud-upload-alt', title: 'All Scans in One Place', desc: 'Upload CT, MRI, X-Ray from any hospital. Access anytime, anywhere.' },
+              { icon: 'fa-share-alt', title: 'Share Instantly', desc: 'Share your scans with specialists for second opinions in seconds.' },
+              { icon: 'fa-compact-disc', title: 'No More Lost CDs', desc: 'Say goodbye to physical CDs and films. Everything is digital and secure.' },
+              { icon: 'fa-history', title: 'Complete History', desc: 'Your imaging history preserved forever, even if you change hospitals.' },
+              { icon: 'fa-rupee-sign', title: 'Save Money', desc: 'Avoid unnecessary repeat scans. Doctors can view your previous images.' },
+              { icon: 'fa-shield-alt', title: 'Secure & Private', desc: 'HIPAA compliant. You control who sees your medical images.' }
+            ].map((benefit, index) => (
+              <div 
+                key={index}
+                style={{
+                  padding: '32px',
+                  background: darkMode ? '#111111' : '#f8fafc',
+                  borderRadius: '16px',
+                  border: `1px solid ${darkMode ? '#222222' : '#e2e8f0'}`,
+                  transition: 'all 0.3s ease'
+                }}
+              >
+                <div style={{
+                  width: '56px',
+                  height: '56px',
+                  borderRadius: '12px',
+                  background: 'linear-gradient(135deg, #0ea5e9, #06b6d4)',
+                  display: 'flex',
+                  alignItems: 'center',
+                  justifyContent: 'center',
+                  marginBottom: '20px'
+                }}>
+                  <i className={`fas ${benefit.icon}`} style={{ fontSize: '24px', color: '#fff' }}></i>
+                </div>
+                <h4 style={{ 
+                  fontSize: '18px', 
+                  fontWeight: '600', 
+                  color: darkMode ? '#ffffff' : '#0f172a',
+                  marginBottom: '8px'
+                }}>
+                  {benefit.title}
+                </h4>
+                <p style={{ 
+                  color: darkMode ? '#a3a3a3' : '#64748b', 
+                  fontSize: '14px',
+                  lineHeight: '1.6',
+                  margin: 0
+                }}>
+                  {benefit.desc}
+                </p>
+              </div>
+            ))}
+          </div>
+
+          {/* Before/After Comparison */}
+          <div style={{
+            background: darkMode ? 'linear-gradient(135deg, #0f172a, #1e293b)' : 'linear-gradient(135deg, #0f172a, #1e293b)',
+            borderRadius: '24px',
+            padding: isMobile ? '32px 24px' : '48px',
+            color: '#fff'
+          }}>
+            <h3 style={{ textAlign: 'center', fontSize: '1.5rem', fontWeight: '600', marginBottom: '32px' }}>
+              See the Difference
+            </h3>
+            <div style={{ 
+              display: 'grid', 
+              gridTemplateColumns: isMobile ? '1fr' : '1fr auto 1fr', 
+              gap: '32px',
+              alignItems: 'center'
+            }}>
+              {/* Before */}
+              <div style={{ 
+                background: 'rgba(239, 68, 68, 0.1)', 
+                borderRadius: '16px', 
+                padding: '24px',
+                border: '1px solid rgba(239, 68, 68, 0.2)'
+              }}>
+                <h4 style={{ color: '#ef4444', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <i className="fas fa-times-circle"></i> Without HealthSync
+                </h4>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {[
+                    'Carry CDs to every doctor',
+                    'CDs get lost or damaged',
+                    'Repeat scans at new hospitals',
+                    'Pay ₹5000+ for repeat MRI',
+                    'Extra radiation exposure'
+                  ].map((item, i) => (
+                    <li key={i} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      marginBottom: '12px',
+                      color: 'rgba(255,255,255,0.8)',
+                      fontSize: '14px'
+                    }}>
+                      <i className="fas fa-minus" style={{ color: '#ef4444', fontSize: '10px' }}></i>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+
+              {/* Arrow */}
+              {!isMobile && (
+                <div style={{ textAlign: 'center' }}>
+                  <i className="fas fa-arrow-right" style={{ fontSize: '32px', color: '#0ea5e9' }}></i>
+                </div>
+              )}
+
+              {/* After */}
+              <div style={{ 
+                background: 'rgba(34, 197, 94, 0.1)', 
+                borderRadius: '16px', 
+                padding: '24px',
+                border: '1px solid rgba(34, 197, 94, 0.2)'
+              }}>
+                <h4 style={{ color: '#22c55e', marginBottom: '16px', display: 'flex', alignItems: 'center', gap: '8px' }}>
+                  <i className="fas fa-check-circle"></i> With HealthSync
+                </h4>
+                <ul style={{ listStyle: 'none', padding: 0, margin: 0 }}>
+                  {[
+                    'All scans in your pocket',
+                    'Share with any doctor instantly',
+                    'No repeat scans needed',
+                    'Save thousands of rupees',
+                    'Complete imaging history'
+                  ].map((item, i) => (
+                    <li key={i} style={{ 
+                      display: 'flex', 
+                      alignItems: 'center', 
+                      gap: '8px', 
+                      marginBottom: '12px',
+                      color: 'rgba(255,255,255,0.8)',
+                      fontSize: '14px'
+                    }}>
+                      <i className="fas fa-check" style={{ color: '#22c55e', fontSize: '10px' }}></i>
+                      {item}
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            </div>
+          </div>
         </div>
       </section>
 

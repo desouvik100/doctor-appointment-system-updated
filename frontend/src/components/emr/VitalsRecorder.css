@@ -394,3 +394,11 @@
     border-width: 3px;
   }
 }
+
+
+/* Smart Alert Section */
+.smart-alert-section {
+  margin-top: 24px;
+  padding-top: 24px;
+  border-top: 1px solid var(--emr-border-light, #f1f5f9);
+}

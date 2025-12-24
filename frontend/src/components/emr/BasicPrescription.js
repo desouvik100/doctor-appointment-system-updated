@@ -9,6 +9,7 @@ import axios from '../../api/config';
 import DrugInteractionChecker from './DrugInteractionChecker';
 import { AllergyAlertBanner } from './AllergyAlert';
 import InteractionOverrideModal from './InteractionOverrideModal';
+import EPrescribeForm from './EPrescribeForm';
 import { useVoiceInput } from './VoiceInput';
 import './BasicPrescription.css';
 
@@ -16,7 +17,9 @@ const BasicPrescription = ({
   clinicId, 
   visitId, 
   patientId, 
+  patient,
   doctorId,
+  prescriber,
   existingPrescription,
   patientAllergies = [],
   currentMedications = [],
@@ -30,6 +33,7 @@ const BasicPrescription = ({
   const [medicineSearch, setMedicineSearch] = useState('');
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
+  const [showEPrescribe, setShowEPrescribe] = useState(false);
 
   // Drug interaction state
   const [showInteractionChecker, setShowInteractionChecker] = useState(false);
@@ -580,6 +584,14 @@ const BasicPrescription = ({
           </button>
         )}
         <button 
+          className="btn-e-prescribe"
+          onClick={() => setShowEPrescribe(true)}
+          disabled={prescription.medicines.length === 0}
+          title="Send prescription electronically to pharmacy"
+        >
+          📤 E-Prescribe
+        </button>
+        <button 
           className="btn-primary" 
           onClick={handleSave}
           disabled={saveButtonState.disabled}
@@ -587,6 +599,29 @@ const BasicPrescription = ({
           {saveButtonState.text}
         </button>
       </div>
+
+      {/* E-Prescribe Modal */}
+      {showEPrescribe && (
+        <div className="e-prescribe-overlay">
+          <div className="e-prescribe-modal">
+            <EPrescribeForm
+              patientId={patientId}
+              patient={patient}
+              prescriberId={doctorId}
+              prescriber={prescriber}
+              clinicId={clinicId}
+              existingMedications={prescription.medicines}
+              onSubmit={(result) => {
+                setShowEPrescribe(false);
+                setSuccess(result.transmitted 
+                  ? 'Prescription sent to pharmacy!' 
+                  : 'E-Prescription saved successfully!');
+              }}
+              onCancel={() => setShowEPrescribe(false)}
+            />
+          </div>
+        </div>
+      )}
 
       {/* Drug Interaction Checker Modal */}
       {showInteractionChecker && prescription.medicines.length > 0 && (

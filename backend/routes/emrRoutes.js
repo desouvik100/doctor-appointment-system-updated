@@ -19,6 +19,13 @@ const {
   getScreensForRole 
 } = require('../config/emrConfig');
 
+// Helper function to check if user has access to patient data
+// Allows: admin, doctor, staff, receptionist, or the patient themselves
+const hasPatientAccess = (userRole, userId, patientId) => {
+  const allowedRoles = ['admin', 'doctor', 'staff', 'receptionist'];
+  return allowedRoles.includes(userRole) || userId === patientId;
+};
+
 // ===== SUBSCRIPTION ROUTES =====
 
 /**
@@ -1705,8 +1712,8 @@ router.get('/patients/:patientId/lab-orders', verifyToken, async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (userRole !== 'admin' && patientId !== userId) {
-      // Check if user is a doctor who has treated this patient
+    if (!hasPatientAccess(userRole, userId, patientId)) {
+      // Check if user has access via EMRVisit
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -1900,8 +1907,8 @@ router.post('/patients/:patientId/history', verifyToken, async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (userRole !== 'admin' && patientId !== userId) {
-      // Check if user is a doctor/staff who has access to this patient
+    if (!hasPatientAccess(userRole, userId, patientId)) {
+      // Check if user has access via EMRVisit
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -1948,8 +1955,9 @@ router.get('/patients/:patientId/history', verifyToken, async (req, res) => {
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (userRole !== 'admin' && patientId !== userId) {
-      // Check if user is a doctor/staff who has access to this patient
+    // Allow access for: admin, the patient themselves, doctors, staff/receptionists
+    if (userRole !== 'admin' && userRole !== 'doctor' && userRole !== 'staff' && userRole !== 'receptionist' && patientId !== userId) {
+      // For other roles, check if user has access via EMRVisit
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -2008,7 +2016,7 @@ router.put('/patients/:patientId/history/allergies', verifyToken, async (req, re
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (userRole !== 'admin' && patientId !== userId) {
+    if (!hasPatientAccess(userRole, userId, patientId)) {
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -2056,7 +2064,7 @@ router.put('/patients/:patientId/history/conditions', verifyToken, async (req, r
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (userRole !== 'admin' && patientId !== userId) {
+    if (!hasPatientAccess(userRole, userId, patientId)) {
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -2104,7 +2112,7 @@ router.put('/patients/:patientId/history/family-history', verifyToken, async (re
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (userRole !== 'admin' && patientId !== userId) {
+    if (!hasPatientAccess(userRole, userId, patientId)) {
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -2152,7 +2160,7 @@ router.put('/patients/:patientId/history/surgical-history', verifyToken, async (
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (userRole !== 'admin' && patientId !== userId) {
+    if (!hasPatientAccess(userRole, userId, patientId)) {
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -2200,7 +2208,7 @@ router.put('/patients/:patientId/history/medications', verifyToken, async (req, 
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (userRole !== 'admin' && patientId !== userId) {
+    if (!hasPatientAccess(userRole, userId, patientId)) {
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -2248,7 +2256,7 @@ router.put('/patients/:patientId/history/social-history', verifyToken, async (re
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (userRole !== 'admin' && patientId !== userId) {
+    if (!hasPatientAccess(userRole, userId, patientId)) {
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -2294,7 +2302,7 @@ router.get('/patients/:patientId/history/critical-summary', verifyToken, async (
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (userRole !== 'admin' && patientId !== userId) {
+    if (!hasPatientAccess(userRole, userId, patientId)) {
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -2340,7 +2348,7 @@ router.get('/patients/:patientId/history/summary', verifyToken, async (req, res)
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (userRole !== 'admin' && patientId !== userId) {
+    if (!hasPatientAccess(userRole, userId, patientId)) {
       const hasAccess = await EMRVisit.findOne({
         patientId,
         $or: [
@@ -2376,6 +2384,65 @@ router.get('/patients/:patientId/history/summary', verifyToken, async (req, res)
 // ===== WALK-IN PATIENT ROUTES =====
 
 const WalkInPatientService = require('../services/walkInPatientService');
+
+// ===== VISIT ROUTES =====
+
+/**
+ * POST /api/emr/visits
+ * Create a new visit for a patient
+ */
+router.post('/visits', verifyToken, async (req, res) => {
+  try {
+    const { patientId, clinicId, doctorId, visitType, chiefComplaint } = req.body;
+
+    if (!patientId || !clinicId) {
+      return res.status(400).json({
+        success: false,
+        message: 'patientId and clinicId are required'
+      });
+    }
+
+    // Get a doctor for the clinic if not provided
+    let assignedDoctorId = doctorId;
+    if (!assignedDoctorId) {
+      const Doctor = require('../models/Doctor');
+      const clinicDoctor = await Doctor.findOne({ clinicId, isActive: true }).select('_id');
+      if (clinicDoctor) {
+        assignedDoctorId = clinicDoctor._id;
+      } else {
+        // Use a placeholder or the user creating the visit
+        assignedDoctorId = req.user.id;
+      }
+    }
+
+    const visit = new EMRVisit({
+      patientId,
+      clinicId,
+      doctorId: assignedDoctorId,
+      visitType: visitType === 'walk-in' ? 'walk_in' : (visitType || 'walk_in'),
+      chiefComplaint: chiefComplaint || '',
+      visitDate: new Date(),
+      status: 'waiting',
+      checkInTime: new Date(),
+      createdBy: req.user.id
+    });
+
+    await visit.save();
+
+    res.status(201).json({
+      success: true,
+      message: 'Visit created successfully',
+      visit
+    });
+  } catch (error) {
+    console.error('Error creating visit:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error creating visit',
+      error: error.message
+    });
+  }
+});
 
 // ===== VITALS ROUTES =====
 
@@ -2493,8 +2560,8 @@ router.get('/patients/:patientId/vitals/trends', verifyToken, async (req, res) =
     const userId = req.user.id;
     const userRole = req.user.role;
     
-    if (userRole !== 'admin' && patientId !== userId) {
-      // Check if user is a doctor who has treated this patient
+    if (!hasPatientAccess(userRole, userId, patientId)) {
+      // Check if user has access via EMRVisit
       const hasAccess = await EMRVisit.findOne({
         patientId,
         doctorId: userId

@@ -68,7 +68,7 @@ const getFallbackAvatarUrl = (name, bgColor = '0ea5e9') => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=${bgColor}&color=fff&size=100&bold=true`;
 };
 
-const PatientDashboardPro = ({ user, onLogout }) => {
+const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
   // Ensure user has id field (handle id, _id, or userId from different sources)
   const normalizedUser = user ? { 
     ...user, 
@@ -166,6 +166,7 @@ const PatientDashboardPro = ({ user, onLogout }) => {
       { id: 'health', icon: 'fas fa-heartbeat', labelKey: 'healthProfile' },
       { id: 'medical-history', icon: 'fas fa-history', labelKey: 'medicalHistory' },
       { id: 'lab-reports', icon: 'fas fa-flask', labelKey: 'labReportsMenu' },
+      { id: 'imaging', icon: 'fas fa-x-ray', labelKey: 'medicalImaging', external: true },
       { id: 'checkup', icon: 'fas fa-stethoscope', labelKey: 'healthCheckup' },
       { id: 'health-analytics', icon: 'fas fa-chart-line', labelKey: 'analytics' },
     ]},
@@ -355,7 +356,16 @@ const PatientDashboardPro = ({ user, onLogout }) => {
               <h3 className={`text-xs font-semibold text-slate-500 uppercase tracking-wider mb-2 px-3 ${mobileSidebarOpen || !sidebarCollapsed ? 'opacity-100' : 'opacity-0 h-0 mb-0'}`}>{t(section.titleKey)}</h3>
               <div className="space-y-1">
                 {section.items.map(item => (
-                  <button key={item.id} onClick={() => { if (item.id === 'find-my-doctor') { setShowFindDoctorWizard(true); } else { setActiveSection(item.id); } setMobileSidebarOpen(false); }} title={t(item.labelKey)} className={`w-full flex items-center ${mobileSidebarOpen || !sidebarCollapsed ? 'gap-3 px-3' : 'justify-center px-0'} py-2.5 rounded-xl text-sm font-medium transition-all ${activeSection === item.id ? 'bg-gradient-to-r from-sky-500 to-teal-500 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
+                  <button key={item.id} onClick={() => { 
+                    if (item.id === 'find-my-doctor') { 
+                      setShowFindDoctorWizard(true); 
+                    } else if (item.external && onNavigate) {
+                      onNavigate(item.id);
+                    } else { 
+                      setActiveSection(item.id); 
+                    } 
+                    setMobileSidebarOpen(false); 
+                  }} title={t(item.labelKey)} className={`w-full flex items-center ${mobileSidebarOpen || !sidebarCollapsed ? 'gap-3 px-3' : 'justify-center px-0'} py-2.5 rounded-xl text-sm font-medium transition-all ${activeSection === item.id ? 'bg-gradient-to-r from-sky-500 to-teal-500 text-white shadow-lg' : 'text-slate-400 hover:text-white hover:bg-slate-700/50'}`}>
                     <i className={`${item.icon} ${mobileSidebarOpen || !sidebarCollapsed ? 'w-5' : 'w-full text-lg'} text-center`}></i>
                     <span className={`whitespace-nowrap transition-all ${mobileSidebarOpen || !sidebarCollapsed ? 'opacity-100' : 'opacity-0 w-0 hidden'}`}>{t(item.labelKey)}</span>
                   </button>

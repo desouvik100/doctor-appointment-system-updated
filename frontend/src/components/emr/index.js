@@ -46,6 +46,10 @@ export { default as DiagnosisCoder } from './DiagnosisCoder';
 export { default as DiagnosisList } from './DiagnosisList';
 export { default as DiagnosisPrompt, useDiagnosisPrompt } from './DiagnosisPrompt';
 export { default as DrugInteractionChecker } from './DrugInteractionChecker';
+export { default as RxNormDrugSearch } from './RxNormDrugSearch';
+export { default as DocumentGenerator, LabRequisitionButton, ClinicalSummaryButton, DischargeSummaryButton, ReferralLetterButton } from './DocumentGenerator';
+export { default as SmartAlertPanel } from './SmartAlertPanel';
+export { default as EPrescribeForm } from './EPrescribeForm';
 export { default as AllergyAlert, AllergyAlertBanner, AllergyAlertList } from './AllergyAlert';
 export { default as InteractionOverrideModal } from './InteractionOverrideModal';
 

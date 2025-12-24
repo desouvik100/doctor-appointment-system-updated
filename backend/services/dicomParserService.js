@@ -5,6 +5,14 @@
 
 const dicomParser = require('dicom-parser');
 
+// Try to load canvas, but don't fail if not available
+let createCanvas = null;
+try {
+  createCanvas = require('canvas').createCanvas;
+} catch (e) {
+  console.log('Canvas not available, DICOM to image conversion disabled');
+}
+
 // DICOM Tag definitions
 const DICOM_TAGS = {
   // Patient Information
@@ -339,6 +347,124 @@ module.exports = {
   extractMetadata,
   parseDate,
   formatPatientName,
+  convertDicomToImage,
   DICOM_TAGS,
   VALID_MODALITIES
 };
+
+/**
+ * Convert DICOM pixel data to a PNG buffer
+ * @param {Buffer} fileBuffer - The DICOM file buffer
+ * @returns {Object} { success, imageBuffer, width, height }
+ */
+function convertDicomToImage(fileBuffer) {
+  // If canvas is not available, skip conversion
+  if (!createCanvas) {
+    return { success: false, error: 'Canvas not available' };
+  }
+  
+  try {
+    const byteArray = new Uint8Array(fileBuffer);
+    const dataSet = dicomParser.parseDicom(byteArray);
+    
+    const rows = dataSet.uint16(DICOM_TAGS.Rows);
+    const columns = dataSet.uint16(DICOM_TAGS.Columns);
+    
+    if (!rows || !columns) {
+      return { success: false, error: 'Missing image dimensions' };
+    }
+    
+    const bitsAllocated = dataSet.uint16(DICOM_TAGS.BitsAllocated) || 16;
+    const pixelRepresentation = dataSet.uint16('x00280103') || 0;
+    const photometricInterpretation = dataSet.string('x00280004') || 'MONOCHROME2';
+    
+    // Get window center/width
+    let windowCenter = dataSet.intString(DICOM_TAGS.WindowCenter);
+    let windowWidth = dataSet.intString(DICOM_TAGS.WindowWidth);
+    
+    if (typeof windowCenter === 'string' && windowCenter.includes('\\')) {
+      windowCenter = parseFloat(windowCenter.split('\\')[0]);
+    }
+    if (typeof windowWidth === 'string' && windowWidth.includes('\\')) {
+      windowWidth = parseFloat(windowWidth.split('\\')[0]);
+    }
+    
+    // Get pixel data
+    const pixelDataElement = dataSet.elements.x7fe00010;
+    if (!pixelDataElement) {
+      return { success: false, error: 'No pixel data found' };
+    }
+    
+    const pixelData = new Uint8Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length);
+    
+    // Create canvas
+    const canvas = createCanvas(columns, rows);
+    const ctx = canvas.getContext('2d');
+    const imageData = ctx.createImageData(columns, rows);
+    
+    // Convert pixel data
+    let minPixel = Infinity;
+    let maxPixel = -Infinity;
+    const pixelValues = [];
+    
+    if (bitsAllocated === 16) {
+      const pixelData16 = new Int16Array(pixelData.buffer, pixelData.byteOffset, pixelData.length / 2);
+      for (let i = 0; i < pixelData16.length && i < rows * columns; i++) {
+        let value = pixelRepresentation === 1 ? pixelData16[i] : (pixelData16[i] & 0xFFFF);
+        pixelValues.push(value);
+        if (value < minPixel) minPixel = value;
+        if (value > maxPixel) maxPixel = value;
+      }
+    } else if (bitsAllocated === 8) {
+      for (let i = 0; i < pixelData.length && i < rows * columns; i++) {
+        pixelValues.push(pixelData[i]);
+        if (pixelData[i] < minPixel) minPixel = pixelData[i];
+        if (pixelData[i] > maxPixel) maxPixel = pixelData[i];
+      }
+    }
+    
+    // Auto-window if not available
+    if (!windowCenter || !windowWidth || isNaN(windowCenter) || isNaN(windowWidth)) {
+      windowCenter = (minPixel + maxPixel) / 2;
+      windowWidth = maxPixel - minPixel || 1;
+    }
+    
+    const windowMin = windowCenter - windowWidth / 2;
+    const windowMax = windowCenter + windowWidth / 2;
+    
+    // Apply window/level
+    for (let i = 0; i < pixelValues.length; i++) {
+      let value = pixelValues[i];
+      
+      if (value <= windowMin) {
+        value = 0;
+      } else if (value >= windowMax) {
+        value = 255;
+      } else {
+        value = Math.round(((value - windowMin) / windowWidth) * 255);
+      }
+      
+      if (photometricInterpretation === 'MONOCHROME1') {
+        value = 255 - value;
+      }
+      
+      const idx = i * 4;
+      imageData.data[idx] = value;
+      imageData.data[idx + 1] = value;
+      imageData.data[idx + 2] = value;
+      imageData.data[idx + 3] = 255;
+    }
+    
+    ctx.putImageData(imageData, 0, 0);
+    
+    return {
+      success: true,
+      imageBuffer: canvas.toBuffer('image/png'),
+      width: columns,
+      height: rows
+    };
+  } catch (error) {
+    console.error('DICOM to image conversion error:', error.message);
+    return { success: false, error: error.message };
+  }
+}

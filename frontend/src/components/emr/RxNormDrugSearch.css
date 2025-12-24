@@ -1,0 +1,189 @@
+/* RxNorm Drug Search Component Styles */
+
+.rxnorm-drug-search {
+  position: relative;
+  width: 100%;
+}
+
+.search-input-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.drug-search-input {
+  width: 100%;
+  padding: 10px 12px;
+  padding-right: 100px;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  transition: all 0.2s ease;
+}
+
+.drug-search-input:focus {
+  outline: none;
+  border-color: #667eea;
+  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+}
+
+.drug-search-input.has-selection {
+  border-color: #10b981;
+  background-color: #f0fdf4;
+}
+
+.drug-search-input:disabled {
+  background-color: #f3f4f6;
+  cursor: not-allowed;
+}
+
+.search-spinner {
+  position: absolute;
+  right: 12px;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.validation-icon {
+  position: absolute;
+  right: 40px;
+  font-size: 16px;
+}
+
+.validation-icon.valid {
+  color: #10b981;
+}
+
+.validation-icon.invalid {
+  color: #f59e0b;
+}
+
+.validation-icon.validating {
+  animation: pulse 1s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.rxcui-badge {
+  position: absolute;
+  right: 70px;
+  font-size: 10px;
+  color: #6b7280;
+  background: #f3f4f6;
+  padding: 2px 6px;
+  border-radius: 4px;
+}
+
+.suggestions-dropdown {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: white;
+  border: 1px solid #e5e7eb;
+  border-radius: 8px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+  max-height: 300px;
+  overflow-y: auto;
+  z-index: 1000;
+}
+
+.suggestion-item {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid #f3f4f6;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  transition: background-color 0.15s ease;
+}
+
+.suggestion-item:last-of-type {
+  border-bottom: none;
+}
+
+.suggestion-item:hover {
+  background-color: #f0f9ff;
+}
+
+.drug-name {
+  font-weight: 500;
+  color: #1f2937;
+}
+
+.drug-rxcui {
+  font-size: 11px;
+  color: #6b7280;
+}
+
+.drug-class {
+  font-size: 11px;
+  color: #667eea;
+  background: #eff6ff;
+  padding: 2px 6px;
+  border-radius: 4px;
+  display: inline-block;
+  margin-top: 2px;
+}
+
+.dropdown-footer {
+  padding: 8px 12px;
+  background: #f9fafb;
+  border-top: 1px solid #e5e7eb;
+  text-align: center;
+}
+
+.dropdown-footer small {
+  color: #9ca3af;
+  font-size: 10px;
+}
+
+.search-hint {
+  font-size: 12px;
+  color: #9ca3af;
+  margin-top: 4px;
+  padding-left: 4px;
+}
+
+/* Dark mode support */
+@media (prefers-color-scheme: dark) {
+  .drug-search-input {
+    background-color: #1f2937;
+    border-color: #374151;
+    color: #f9fafb;
+  }
+
+  .drug-search-input:focus {
+    border-color: #667eea;
+  }
+
+  .suggestions-dropdown {
+    background: #1f2937;
+    border-color: #374151;
+  }
+
+  .suggestion-item {
+    border-color: #374151;
+  }
+
+  .suggestion-item:hover {
+    background-color: #374151;
+  }
+
+  .drug-name {
+    color: #f9fafb;
+  }
+
+  .dropdown-footer {
+    background: #111827;
+    border-color: #374151;
+  }
+}

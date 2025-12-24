@@ -5,12 +5,16 @@
 
 const cloudinary = require('cloudinary').v2;
 const DicomStudy = require('../models/DicomStudy');
-const { parseDicomFile, parseMultipleDicomFiles, validateDicomFile } = require('./dicomParserService');
+const { parseDicomFile, parseMultipleDicomFiles, validateDicomFile, convertDicomToImage } = require('./dicomParserService');
 const { validatePatientById } = require('./patientValidationService');
 const { v4: uuidv4 } = require('uuid');
 
-// Configure Cloudinary (should be done in app initialization)
-// cloudinary.config is expected to be set via environment variables
+// Configure Cloudinary from environment variables
+cloudinary.config({
+  cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
+  api_key: process.env.CLOUDINARY_API_KEY,
+  api_secret: process.env.CLOUDINARY_API_SECRET
+});
 
 /**
  * Upload a single DICOM file
@@ -35,12 +39,45 @@ async function uploadDicomFile(fileBuffer, options = {}) {
   
   const { metadata } = parseResult;
   
-  // Generate unique filename
+  // Convert DICOM to viewable PNG
+  const imageConversion = convertDicomToImage(fileBuffer);
+  let viewableImageUrl = null;
+  
+  if (imageConversion.success) {
+    try {
+      // Upload PNG version for viewing
+      const pngFilename = `${metadata.image.sopInstanceUID || uuidv4()}.png`;
+      const pngPath = `${folder}_images/${clinicId}/${patientId}/${metadata.study.studyInstanceUID}/${pngFilename}`;
+      
+      const pngUploadResult = await new Promise((resolve, reject) => {
+        const uploadStream = cloudinary.uploader.upload_stream(
+          {
+            resource_type: 'image',
+            public_id: pngPath,
+            folder: `${folder}_images`,
+            tags: ['dicom-image', metadata.series.modality]
+          },
+          (error, result) => {
+            if (error) reject(error);
+            else resolve(result);
+          }
+        );
+        uploadStream.end(imageConversion.imageBuffer);
+      });
+      
+      viewableImageUrl = pngUploadResult.secure_url;
+    } catch (pngError) {
+      console.error('Failed to upload PNG version:', pngError.message);
+      // Continue without viewable image
+    }
+  }
+  
+  // Generate unique filename for raw DICOM
   const filename = `${metadata.image.sopInstanceUID || uuidv4()}.dcm`;
   const uploadPath = `${folder}/${clinicId}/${patientId}/${metadata.study.studyInstanceUID}/${filename}`;
   
   try {
-    // Upload to Cloudinary as raw file
+    // Upload raw DICOM to Cloudinary as raw file
     const uploadResult = await new Promise((resolve, reject) => {
       const uploadStream = cloudinary.uploader.upload_stream(
         {
@@ -65,7 +102,8 @@ async function uploadDicomFile(fileBuffer, options = {}) {
     
     return {
       success: true,
-      url: uploadResult.secure_url,
+      url: viewableImageUrl || uploadResult.secure_url, // Prefer viewable PNG
+      rawUrl: uploadResult.secure_url, // Keep raw DICOM URL
       publicId: uploadResult.public_id,
       metadata: metadata,
       size: fileBuffer.length
@@ -138,6 +176,14 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
     throw new Error('Failed to upload any DICOM files');
   }
   
+  // Helper to sanitize numeric values (handle NaN)
+  const sanitizeNumber = (value, defaultValue = null) => {
+    if (value === undefined || value === null || Number.isNaN(value)) {
+      return defaultValue;
+    }
+    return value;
+  };
+  
   // Organize images by series
   const seriesMap = new Map();
   
@@ -147,9 +193,9 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
     if (!seriesMap.has(seriesUID)) {
       seriesMap.set(seriesUID, {
         seriesInstanceUID: seriesUID,
-        seriesNumber: result.metadata.series.seriesNumber,
-        seriesDescription: result.metadata.series.seriesDescription,
-        modality: result.metadata.series.modality,
+        seriesNumber: sanitizeNumber(result.metadata.series.seriesNumber, 1),
+        seriesDescription: result.metadata.series.seriesDescription || '',
+        modality: result.metadata.series.modality || 'OT',
         numberOfImages: 0,
         images: []
       });
@@ -159,16 +205,16 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
     series.numberOfImages++;
     series.images.push({
       sopInstanceUID: result.metadata.image.sopInstanceUID,
-      instanceNumber: result.metadata.image.instanceNumber,
+      instanceNumber: sanitizeNumber(result.metadata.image.instanceNumber, series.numberOfImages),
       imageUrl: result.url,
-      rows: result.metadata.image.rows,
-      columns: result.metadata.image.columns,
-      bitsAllocated: result.metadata.image.bitsAllocated,
+      rows: sanitizeNumber(result.metadata.image.rows, 512),
+      columns: sanitizeNumber(result.metadata.image.columns, 512),
+      bitsAllocated: sanitizeNumber(result.metadata.image.bitsAllocated, 16),
       pixelSpacing: result.metadata.image.pixelSpacing,
-      windowCenter: result.metadata.image.windowCenter,
-      windowWidth: result.metadata.image.windowWidth,
-      sliceLocation: result.metadata.image.sliceLocation,
-      sliceThickness: result.metadata.image.sliceThickness
+      windowCenter: sanitizeNumber(result.metadata.image.windowCenter),
+      windowWidth: sanitizeNumber(result.metadata.image.windowWidth),
+      sliceLocation: sanitizeNumber(result.metadata.image.sliceLocation),
+      sliceThickness: sanitizeNumber(result.metadata.image.sliceThickness)
     });
   });
   
@@ -177,40 +223,54 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
     series.images.sort((a, b) => (a.instanceNumber || 0) - (b.instanceNumber || 0));
   });
   
-  // Create study record in database
-  const studyRecord = new DicomStudy({
-    patientId: patientId,
-    clinicId: clinicId,
-    visitId: visitId,
-    
-    studyInstanceUID: study.studyInstanceUID,
-    accessionNumber: study.accessionNumber,
-    studyDate: study.studyDate,
-    studyTime: study.studyTime,
-    studyDescription: study.studyDescription,
-    
-    dicomPatientId: study.patient.patientId,
-    dicomPatientName: study.patient.patientName,
-    patientBirthDate: study.patient.birthDate,
-    patientSex: study.patient.sex,
-    
-    modality: study.modality,
-    bodyPartExamined: study.bodyPartExamined,
-    
-    institutionName: study.institution?.institutionName,
-    referringPhysician: study.institution?.referringPhysician,
-    
-    series: Array.from(seriesMap.values()),
-    
-    totalImages: uploadResults.length,
-    totalSeries: seriesMap.size,
-    storageSize: uploadResults.reduce((sum, r) => sum + (r.size || 0), 0),
-    
-    patientIdValidated: patientValidation?.isMatch || false,
-    patientIdMismatchAcknowledged: acknowledgedMismatch
-  });
+  // Create study record in database (or update if exists)
+  let studyRecord;
+  const existingStudy = await DicomStudy.findOne({ studyInstanceUID: study.studyInstanceUID });
   
-  await studyRecord.save();
+  if (existingStudy) {
+    // Update existing study with new images
+    existingStudy.series = Array.from(seriesMap.values());
+    existingStudy.totalImages = uploadResults.length;
+    existingStudy.totalSeries = seriesMap.size;
+    existingStudy.storageSize = uploadResults.reduce((sum, r) => sum + (r.size || 0), 0);
+    await existingStudy.save();
+    studyRecord = existingStudy;
+  } else {
+    // Create new study
+    studyRecord = new DicomStudy({
+      patientId: patientId,
+      clinicId: clinicId,
+      visitId: visitId,
+      
+      studyInstanceUID: study.studyInstanceUID,
+      accessionNumber: study.accessionNumber,
+      studyDate: study.studyDate,
+      studyTime: study.studyTime,
+      studyDescription: study.studyDescription,
+      
+      dicomPatientId: study.patient.patientId,
+      dicomPatientName: study.patient.patientName,
+      patientBirthDate: study.patient.birthDate,
+      patientSex: study.patient.sex,
+      
+      modality: study.modality,
+      bodyPartExamined: study.bodyPartExamined,
+      
+      institutionName: study.institution?.institutionName,
+      referringPhysician: study.institution?.referringPhysician,
+      
+      series: Array.from(seriesMap.values()),
+      
+      totalImages: uploadResults.length,
+      totalSeries: seriesMap.size,
+      storageSize: uploadResults.reduce((sum, r) => sum + (r.size || 0), 0),
+      
+      patientIdValidated: patientValidation?.isMatch || false,
+      patientIdMismatchAcknowledged: acknowledgedMismatch
+    });
+    
+    await studyRecord.save();
+  }
   
   return {
     success: true,
@@ -266,7 +326,7 @@ async function getStudyByUID(studyInstanceUID) {
  * @returns {Promise<Array>} List of studies
  */
 async function getPatientImagingHistory(patientId, options = {}) {
-  const { limit = 50, modality, startDate, endDate, includeReports = false } = options;
+  const { limit = 50, modality, startDate, endDate, includeReports = false, includeSeries = true } = options;
   
   const query = { patientId };
   
@@ -281,6 +341,9 @@ async function getPatientImagingHistory(patientId, options = {}) {
   }
   
   let projection = 'studyInstanceUID studyDate modality bodyPartExamined studyDescription totalImages totalSeries';
+  if (includeSeries) {
+    projection += ' series';
+  }
   if (includeReports) {
     projection += ' reports';
   }

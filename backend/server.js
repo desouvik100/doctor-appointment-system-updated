@@ -306,6 +306,10 @@ app.use('/api/balance-sheet', require('./routes/balanceSheetRoutes')); // Balanc
 app.use('/api/coupons', require('./routes/couponRoutes')); // Discount Coupons
 app.use('/api/medical-files', require('./routes/medicalFileRoutes')); // Medical File Upload (Cloudinary)
 app.use('/api/upload', require('./routes/uploadRoutes')); // All file uploads (profiles, docs, chat, etc.)
+app.use('/api/drugs', require('./routes/drugInteractionRoutes')); // Real-time Drug Interaction API (RxNorm)
+app.use('/api/pdf', require('./routes/pdfRoutes')); // PDF Generation (Lab Requisitions, Clinical Summaries)
+app.use('/api/smart-alerts', require('./routes/smartAlertRoutes')); // ML-based Patient Deterioration Prediction
+app.use('/api/e-prescribe', require('./routes/ePrescribingRoutes')); // E-Prescribing Integration
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');

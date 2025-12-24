@@ -5,6 +5,7 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
+import SmartAlertPanel from './SmartAlertPanel';
 import './VitalsRecorder.css';
 
 // Validation ranges matching backend
@@ -27,7 +28,7 @@ const VITAL_RANGES = {
   }
 };
 
-const VitalsRecorder = ({ visitId, patientId, onSave, onCancel, initialVitals = null }) => {
+const VitalsRecorder = ({ visitId, patientId, patient, onSave, onCancel, initialVitals = null }) => {
   const [vitals, setVitals] = useState({
     bloodPressure: { systolic: '', diastolic: '' },
     pulse: { value: '' },
@@ -42,6 +43,8 @@ const VitalsRecorder = ({ visitId, patientId, onSave, onCancel, initialVitals = 
   const [validation, setValidation] = useState({ errors: {}, warnings: {}, criticals: {} });
   const [bmi, setBmi] = useState(null);
   const [saving, setSaving] = useState(false);
+  const [showSmartAlert, setShowSmartAlert] = useState(false);
+  const [savedVitals, setSavedVitals] = useState(null);
 
   // Initialize with existing vitals
   useEffect(() => {
@@ -292,6 +295,19 @@ const VitalsRecorder = ({ visitId, patientId, onSave, onCancel, initialVitals = 
         if (vitalsData[key] === undefined) delete vitalsData[key];
       });
 
+      // Format vitals for SmartAlertPanel
+      const formattedVitals = {
+        bloodPressure: vitals.bloodPressure.systolic ? `${vitals.bloodPressure.systolic}/${vitals.bloodPressure.diastolic}` : undefined,
+        heartRate: vitals.pulse.value || undefined,
+        pulse: vitals.pulse.value || undefined,
+        temperature: vitals.temperature.value || undefined,
+        spo2: vitals.spo2.value || undefined,
+        respiratoryRate: vitals.respiratoryRate.value || undefined
+      };
+      
+      setSavedVitals(formattedVitals);
+      setShowSmartAlert(true);
+
       if (onSave) {
         await onSave(vitalsData);
       }
@@ -538,6 +554,18 @@ const VitalsRecorder = ({ visitId, patientId, onSave, onCancel, initialVitals = 
           <span className={`bmi-value ${bmiCategory?.class || ''}`}>
             {bmi} - {bmiCategory?.label}
           </span>
+        </div>
+      )}
+
+      {/* Smart Alert Panel - ML-based deterioration prediction */}
+      {showSmartAlert && savedVitals && (
+        <div className="smart-alert-section">
+          <SmartAlertPanel
+            patientId={patientId}
+            patient={patient}
+            vitals={savedVitals}
+            compact={false}
+          />
         </div>
       )}
 
