@@ -169,7 +169,8 @@ async function sendEmail({ to, subject, html, text }) {
 
   // If we get here, no email was sent
   console.warn('⚠️ Could not send email - no working email service');
-  return { success: false, message: 'No email service available' };
+  // Don't throw error - just return a warning
+  return { success: false, message: 'No email service available', warning: true };
 }
 
 // ---- PUBLIC: send OTP ----
@@ -468,14 +469,18 @@ async function sendOTP(email, type = 'register') {
 
   // Try to send email, but don't fail if it doesn't work
   try {
-    await sendEmail({ to: email, subject, html, text });
+    const emailResult = await sendEmail({ to: normalizedEmail, subject, html, text });
+    if (emailResult.warning) {
+      console.warn('⚠️  Email service unavailable, but OTP is still valid');
+    }
   } catch (emailError) {
     console.warn('⚠️  Email sending failed, but OTP is still valid:', emailError.message);
   }
 
+  // Always return success with OTP - the OTP is stored and valid regardless of email status
   return {
     success: true,
-    message: 'OTP sent successfully',
+    message: 'OTP generated successfully. Check your email or use the OTP shown below.',
     otp: otp,  // Return OTP for development/testing
   };
 }

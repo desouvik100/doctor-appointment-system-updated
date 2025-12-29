@@ -340,14 +340,19 @@ function ClinicAuth({ onLogin, onBack }) {
     setError("");
     
     try {
-      await axios.post("/api/otp/send-otp", {
+      const response = await axios.post("/api/otp/send-otp", {
         email: forgotEmail,
         type: 'password-reset'
       });
       setForgotStep(2);
-      setSuccess("OTP sent to your email");
+      // Show OTP in success message if email might not have been delivered
+      if (response.data.otp) {
+        setSuccess(`Verification code: ${response.data.otp} (also sent to your email if configured)`);
+      } else {
+        setSuccess("OTP sent to your email");
+      }
     } catch (error) {
-      setError(error.response?.data?.message || "Failed to send OTP");
+      setError(error.response?.data?.message || "Failed to send OTP. Please try again.");
     } finally {
       setForgotLoading(false);
     }

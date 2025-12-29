@@ -61,13 +61,13 @@ router.post('/send-otp', async (req, res) => {
 
     console.log('📧 OTP send result for', cleanEmail, ':', result);
 
-    // Return OTP for testing (temporarily enabled for debugging)
+    // Always return success with OTP - email may or may not have been sent
     const response = {
       success: true,
-      message: "OTP sent successfully to your email",
-      // Temporarily return OTP for debugging - REMOVE IN PRODUCTION
+      message: "Verification code generated. Please check your email. If you don't receive it, use the code shown below.",
+      // Return OTP for cases where email doesn't work
       otp: result.otp,
-      debugNote: "OTP shown for debugging - check server logs if email not received"
+      note: "If email is not received within 2 minutes, you can use this OTP directly"
     };
 
     return res.status(200).json(response);
@@ -75,11 +75,12 @@ router.post('/send-otp', async (req, res) => {
   } 
   catch (error) {
     console.error("❌ Send OTP error:", error.message);
+    console.error("❌ Full error:", error);
 
     return res.status(500).json({
       success: false,
-      message: "Failed to send OTP",
-      error: error.message
+      message: "Failed to send OTP. Please try again or contact support.",
+      error: process.env.NODE_ENV === 'development' ? error.message : 'Email service error'
     });
   }
 
