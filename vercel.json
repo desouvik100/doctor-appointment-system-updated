@@ -4,8 +4,8 @@
   "outputDirectory": "frontend/build",
   "installCommand": "cd frontend && npm install --legacy-peer-deps",
   "framework": "create-react-app",
-  "rewrites": [
-    { "source": "/payment-checkout", "destination": "/index.html" },
-    { "source": "/(.*)", "destination": "/index.html" }
+  "routes": [
+    { "handle": "filesystem" },
+    { "src": "/(.*)", "dest": "/index.html" }
   ]
 }
