@@ -31,6 +31,7 @@ import CorporateWellness from "./components/CorporateWellness";
 import { TermsAndConditions, PrivacyPolicy, RefundPolicy, ContactUs, AboutUs } from "./components/LegalPages";
 import NetworkStatus from "./components/NetworkStatus";
 import PWAInstallBanner from "./components/PWAInstallBanner";
+import PaymentCheckout from "./components/PaymentCheckout";
 import './styles/legal-pages.css';
 import './styles/mobile-enhancements.css';
 
@@ -105,8 +106,12 @@ const ImagingDashboard = React.lazy(() =>
 );
 
 function App() {
-  // Initialize view from URL hash or default to landing
+  // Initialize view from URL hash or path for payment checkout
   const getInitialView = () => {
+    // Check for payment-checkout path first (for Android app payments)
+    if (window.location.pathname === '/payment-checkout') {
+      return 'payment-checkout';
+    }
     const hash = window.location.hash.slice(1); // Remove #
     const validViews = ['landing', 'auth', 'dashboard', 'corporate', 'imaging'];
     return validViews.includes(hash) ? hash : 'landing';
@@ -1711,6 +1716,11 @@ function App() {
       )}
       {currentView === "about-us" && (
         <AboutUs onBack={() => setCurrentView('landing')} />
+      )}
+
+      {/* Payment Checkout - for Android app payments */}
+      {currentView === "payment-checkout" && (
+        <PaymentCheckout />
       )}
 
       {currentView === "auth" && (
