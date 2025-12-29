@@ -253,4 +253,85 @@ router.get('/nearby-clinics/:userId', async (req, res) => {
   }
 });
 
+// Search doctors by coordinates (for location search feature)
+router.get('/doctors-by-coordinates', async (req, res) => {
+  try {
+    const { lat, lng, maxDistance = 50, specialization } = req.query;
+
+    if (!lat || !lng) {
+      return res.status(400).json({ 
+        message: 'Latitude and longitude are required' 
+      });
+    }
+
+    const searchLat = parseFloat(lat);
+    const searchLng = parseFloat(lng);
+
+    console.log('📍 Searching doctors by coordinates:', { searchLat, searchLng, maxDistance, specialization });
+
+    // Get all clinics with coordinates
+    const clinics = await Clinic.find({ 
+      latitude: { $exists: true, $ne: null, $ne: 0 },
+      longitude: { $exists: true, $ne: null, $ne: 0 }
+    });
+    
+    console.log('🏥 Found clinics with coordinates:', clinics.length);
+
+    // Calculate distance for each clinic
+    const nearbyClinics = clinics
+      .map(clinic => ({
+        ...clinic.toObject(),
+        distance: calculateDistance(searchLat, searchLng, clinic.latitude, clinic.longitude)
+      }))
+      .filter(clinic => clinic.distance <= parseFloat(maxDistance))
+      .sort((a, b) => a.distance - b.distance);
+
+    console.log('🏥 Nearby clinics within', maxDistance, 'km:', nearbyClinics.length);
+
+    if (nearbyClinics.length === 0) {
+      return res.json({
+        totalFound: 0,
+        maxDistance: parseFloat(maxDistance),
+        doctors: [],
+        message: 'No clinics found in this area'
+      });
+    }
+
+    const nearbyClinicIds = nearbyClinics.map(c => c._id);
+
+    // Get doctors from nearby clinics
+    const doctorQuery = { 
+      clinicId: { $in: nearbyClinicIds }
+    };
+    
+    if (specialization) {
+      doctorQuery.specialization = specialization;
+    }
+
+    const doctors = await Doctor.find(doctorQuery)
+      .populate('clinicId', 'name address city latitude longitude');
+
+    // Add distance to each doctor
+    const doctorsWithDistance = doctors.map(doctor => {
+      const clinic = nearbyClinics.find(c => c._id.toString() === doctor.clinicId?._id?.toString());
+      return {
+        ...doctor.toObject(),
+        distance: clinic ? clinic.distance : null,
+        distanceText: clinic ? `${clinic.distance.toFixed(1)} km away` : 'Distance unknown'
+      };
+    }).sort((a, b) => (a.distance || 999) - (b.distance || 999));
+
+    console.log('👨‍⚕️ Found doctors:', doctorsWithDistance.length);
+
+    res.json({
+      totalFound: doctorsWithDistance.length,
+      maxDistance: parseFloat(maxDistance),
+      doctors: doctorsWithDistance
+    });
+  } catch (error) {
+    console.error('Error searching doctors by coordinates:', error);
+    res.status(500).json({ message: 'Error searching doctors', error: error.message });
+  }
+});
+
 module.exports = router;

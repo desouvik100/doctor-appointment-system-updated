@@ -118,6 +118,9 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
   const [showQuickSearch, setShowQuickSearch] = useState(false);
   const [quickSearchTerm, setQuickSearchTerm] = useState('');
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); // Track mobile search state for back button
+  const [locationSearch, setLocationSearch] = useState(''); // Search doctors by city/area
+  const [searchedLocation, setSearchedLocation] = useState(null); // Geocoded location from search
+  const [locationSearchLoading, setLocationSearchLoading] = useState(false);
   
   // Cancel appointment modal state
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -261,6 +264,76 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
   const fetchClinics = async () => { try { const res = await axios.get('/api/clinics'); setClinics(res.data); } catch (e) { console.error(e); } };
   const fetchFavorites = async () => { const userId = getUserId(); if (!userId) return; try { const res = await axios.get(`/api/favorites/${userId}`); setFavoriteDoctors(res.data.map(d => d._id)); } catch { /* no favorites */ } };
   const handleUpdateLocation = async () => { const userId = getUserId(); if (!userId) { toast.error('User not found'); return; } setUpdatingLocation(true); try { const result = await trackUserLocation(userId); if (result.success) { setUserLocation(result.location); toast.success(`Location: ${result.location.city || 'Unknown'}`); } else { toast.error(result.error || 'Failed'); } } catch { toast.error('Failed to get location'); } finally { setUpdatingLocation(false); } };
+
+  // Search doctors by location (city/area name)
+  const searchDoctorsByLocation = async (locationName) => {
+    if (!locationName || locationName.trim().length < 2) {
+      toast.error('Please enter a valid location');
+      return;
+    }
+    
+    setLocationSearchLoading(true);
+    try {
+      // Use OpenStreetMap Nominatim for geocoding (free, no API key needed)
+      const geocodeResponse = await fetch(
+        `https://nominatim.openstreetmap.org/search?format=json&q=${encodeURIComponent(locationName)},India&limit=1`,
+        { headers: { 'User-Agent': 'HealthSyncPro/1.0' } }
+      );
+      const geocodeData = await geocodeResponse.json();
+      
+      if (!geocodeData || geocodeData.length === 0) {
+        toast.error('Location not found. Try a different city or area name.');
+        setLocationSearchLoading(false);
+        return;
+      }
+      
+      const { lat, lon, display_name } = geocodeData[0];
+      const searchLat = parseFloat(lat);
+      const searchLon = parseFloat(lon);
+      
+      // Extract city name from display_name
+      const cityName = display_name.split(',')[0];
+      
+      setSearchedLocation({
+        latitude: searchLat,
+        longitude: searchLon,
+        city: cityName,
+        displayName: display_name
+      });
+      
+      // Fetch doctors near this location
+      const params = new URLSearchParams({ 
+        lat: searchLat.toString(),
+        lng: searchLon.toString(),
+        maxDistance: maxDistance.toString()
+      });
+      if (selectedSpecialization) params.append('specialization', selectedSpecialization);
+      
+      const response = await axios.get(`/api/location/doctors-by-coordinates?${params}`);
+      
+      if (response.data.doctors && response.data.doctors.length > 0) {
+        setDoctors(response.data.doctors);
+        setNearbyMode(true);
+        toast.success(`Found ${response.data.doctors.length} doctors near ${cityName}`);
+      } else {
+        toast.info(`No doctors found near ${cityName}. Showing all doctors.`);
+        fetchDoctors();
+      }
+    } catch (error) {
+      console.error('Location search error:', error);
+      toast.error('Failed to search location. Please try again.');
+    } finally {
+      setLocationSearchLoading(false);
+    }
+  };
+
+  // Clear location search and show all doctors
+  const clearLocationSearch = () => {
+    setLocationSearch('');
+    setSearchedLocation(null);
+    setNearbyMode(false);
+    fetchDoctors();
+  };
   
   // Pull to refresh handler - refreshes all dashboard data from backend
   const handleRefresh = useCallback(async () => {
@@ -1085,6 +1158,53 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                     </select>
                   )}
                 </div>
+                
+                {/* Location Search - Search doctors by city/area */}
+                <div className="flex flex-col sm:flex-row gap-3 mt-4 pt-4 border-t border-slate-100">
+                  <div className="flex-1 relative">
+                    <i className="fas fa-map-marker-alt absolute left-4 top-1/2 -translate-y-1/2 text-emerald-500"></i>
+                    <input 
+                      type="text" 
+                      placeholder="Search by city or area (e.g., Mumbai, Kolkata, Bankura)" 
+                      value={locationSearch} 
+                      onChange={(e) => setLocationSearch(e.target.value)}
+                      onKeyPress={(e) => e.key === 'Enter' && searchDoctorsByLocation(locationSearch)}
+                      className="w-full pl-11 pr-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500 placeholder-emerald-400" 
+                    />
+                  </div>
+                  <button 
+                    onClick={() => searchDoctorsByLocation(locationSearch)}
+                    disabled={locationSearchLoading || !locationSearch.trim()}
+                    className="px-6 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 text-white rounded-xl text-sm font-medium flex items-center justify-center gap-2 hover:shadow-lg transition-all disabled:opacity-50 disabled:cursor-not-allowed"
+                  >
+                    {locationSearchLoading ? (
+                      <>
+                        <i className="fas fa-spinner fa-spin"></i>
+                        Searching...
+                      </>
+                    ) : (
+                      <>
+                        <i className="fas fa-search-location"></i>
+                        Search Location
+                      </>
+                    )}
+                  </button>
+                  {searchedLocation && (
+                    <button 
+                      onClick={clearLocationSearch}
+                      className="px-4 py-3 bg-slate-100 text-slate-600 rounded-xl text-sm font-medium flex items-center gap-2 hover:bg-slate-200 transition-all"
+                    >
+                      <i className="fas fa-times"></i>
+                      Clear
+                    </button>
+                  )}
+                </div>
+                {searchedLocation && (
+                  <div className="mt-3 flex items-center gap-2 text-sm text-emerald-600 bg-emerald-50 px-4 py-2 rounded-lg">
+                    <i className="fas fa-map-pin"></i>
+                    <span>Showing doctors near <strong>{searchedLocation.city}</strong></span>
+                  </div>
+                )}
               </div>
               <div className="flex items-center justify-between">
                 <p className="text-sm text-slate-500 font-medium">{nearbyMode ? doctors.length : filteredDoctors.length} doctors found {nearbyMode && userLocation?.city && <span className="text-sky-600">near {userLocation.city}</span>}</p>
