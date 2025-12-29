@@ -3,10 +3,13 @@ import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { App } from '@capacitor/app';
 
-// Backend URL for payment callbacks - always use production for mobile
-const BACKEND_URL = Capacitor.isNativePlatform() 
-  ? 'https://doctor-appointment-system-updated.onrender.com'
-  : (process.env.REACT_APP_API_URL || 'https://doctor-appointment-system-updated.onrender.com');
+// Backend URL for API calls
+const API_BACKEND_URL = process.env.REACT_APP_API_URL || 'https://doctor-appointment-system-updated.onrender.com';
+
+// For mobile payments, use the verified domain (healthsyncpro.in) to avoid Razorpay domain issues
+const PAYMENT_CHECKOUT_URL = Capacitor.isNativePlatform() 
+  ? 'https://healthsyncpro.in'  // Verified with Razorpay
+  : window.location.origin;
 
 // Get Razorpay configuration
 export const getRazorpayConfig = async () => {
@@ -446,7 +449,7 @@ export const initiatePayment = async (appointmentId, userId, onSuccess, onFailur
         doctorName: orderData.notes?.doctorName || 'Doctor'
       });
       
-      const checkoutUrl = `${BACKEND_URL}/api/payments/mobile-checkout/${orderData.orderId}?${checkoutParams.toString()}`;
+      const checkoutUrl = `${PAYMENT_CHECKOUT_URL}/api/payments/mobile-checkout/${orderData.orderId}?${checkoutParams.toString()}`;
       
       console.log('Opening mobile checkout URL:', checkoutUrl);
       
