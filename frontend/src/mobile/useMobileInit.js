@@ -688,15 +688,15 @@ const handleDeepLink = async (url) => {
 };
 
 /**
- * Request location permission on app startup
+ * Request location permission on app startup with live animation
  */
 const requestLocationOnStartup = () => {
-  // Check if we've already asked for location
-  const locationAsked = localStorage.getItem('locationPermissionAsked');
-  
   // Request location permission
   if (navigator.geolocation) {
-    console.log('📍 Requesting location permission...');
+    console.log('📍 Auto-detecting location on app startup...');
+    
+    // Show location detection animation
+    showLocationDetectionAnimation();
     
     navigator.geolocation.getCurrentPosition(
       async (position) => {
@@ -723,9 +723,13 @@ const requestLocationOnStartup = () => {
             locationData.state = data.principalSubdivision;
             localStorage.setItem('userLocation', JSON.stringify(locationData));
             console.log('📍 Location city:', locationData.city);
+            
+            // Show success animation with city name
+            showLocationSuccessAnimation(locationData.city);
           }
         } catch (e) {
           console.log('Geocoding failed:', e.message);
+          hideLocationAnimation();
         }
         
         // Dispatch event for components to update
@@ -734,16 +738,182 @@ const requestLocationOnStartup = () => {
       (error) => {
         console.log('📍 Location denied or error:', error.message);
         localStorage.setItem('locationPermissionAsked', 'true');
+        hideLocationAnimation();
         
         // Dispatch event even on error so UI can handle it
         window.dispatchEvent(new CustomEvent('locationError', { detail: { error: error.message } }));
       },
       {
         enableHighAccuracy: true,
-        timeout: 10000,
+        timeout: 15000,
         maximumAge: 0
       }
     );
+  }
+};
+
+/**
+ * Show location detection animation overlay
+ */
+const showLocationDetectionAnimation = () => {
+  // Remove existing if any
+  const existing = document.getElementById('location-detection-overlay');
+  if (existing) existing.remove();
+  
+  const overlay = document.createElement('div');
+  overlay.id = 'location-detection-overlay';
+  overlay.innerHTML = `
+    <div class="location-anim-content">
+      <div class="location-anim-icon">
+        <div class="location-pulse-ring"></div>
+        <div class="location-pulse-ring delay-1"></div>
+        <div class="location-pulse-ring delay-2"></div>
+        <i class="fas fa-map-marker-alt"></i>
+      </div>
+      <p class="location-anim-text">Detecting your location...</p>
+      <p class="location-anim-subtext">Finding nearby doctors</p>
+    </div>
+  `;
+  overlay.style.cssText = `
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(15, 23, 42, 0.95);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    z-index: 99999;
+    animation: fadeIn 300ms ease;
+  `;
+  
+  // Add styles
+  const style = document.createElement('style');
+  style.id = 'location-anim-styles';
+  style.textContent = `
+    .location-anim-content {
+      text-align: center;
+      color: white;
+    }
+    .location-anim-icon {
+      position: relative;
+      width: 100px;
+      height: 100px;
+      margin: 0 auto 24px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .location-anim-icon i {
+      font-size: 40px;
+      color: #22d3ee;
+      z-index: 1;
+      animation: bounce 1s ease infinite;
+    }
+    .location-pulse-ring {
+      position: absolute;
+      width: 100%;
+      height: 100%;
+      border: 3px solid #22d3ee;
+      border-radius: 50%;
+      animation: pulse-ring 1.5s ease-out infinite;
+      opacity: 0;
+    }
+    .location-pulse-ring.delay-1 { animation-delay: 0.5s; }
+    .location-pulse-ring.delay-2 { animation-delay: 1s; }
+    @keyframes pulse-ring {
+      0% { transform: scale(0.5); opacity: 0.8; }
+      100% { transform: scale(1.5); opacity: 0; }
+    }
+    @keyframes bounce {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    .location-anim-text {
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 0 8px;
+      letter-spacing: -0.3px;
+    }
+    .location-anim-subtext {
+      font-size: 14px;
+      color: rgba(255,255,255,0.6);
+      margin: 0;
+    }
+    .location-success-icon {
+      width: 80px;
+      height: 80px;
+      background: linear-gradient(135deg, #10b981, #059669);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      animation: scaleIn 400ms cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+    .location-success-icon i {
+      font-size: 36px;
+      color: white;
+    }
+    @keyframes scaleIn {
+      0% { transform: scale(0); }
+      100% { transform: scale(1); }
+    }
+    .location-city-name {
+      font-size: 24px;
+      font-weight: 800;
+      color: #22d3ee;
+      margin: 0 0 4px;
+      animation: fadeInUp 400ms ease 200ms both;
+    }
+    @keyframes fadeInUp {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+  `;
+  
+  if (!document.getElementById('location-anim-styles')) {
+    document.head.appendChild(style);
+  }
+  document.body.appendChild(overlay);
+};
+
+/**
+ * Show location success animation
+ */
+const showLocationSuccessAnimation = (cityName) => {
+  const overlay = document.getElementById('location-detection-overlay');
+  if (!overlay) return;
+  
+  const content = overlay.querySelector('.location-anim-content');
+  if (content) {
+    content.innerHTML = `
+      <div class="location-success-icon">
+        <i class="fas fa-check"></i>
+      </div>
+      <p class="location-city-name">${cityName}</p>
+      <p class="location-anim-subtext">Location detected</p>
+    `;
+  }
+  
+  // Auto-hide after showing success
+  setTimeout(() => {
+    overlay.style.animation = 'fadeOut 300ms ease forwards';
+    setTimeout(() => overlay.remove(), 300);
+  }, 1200);
+};
+
+/**
+ * Hide location animation
+ */
+const hideLocationAnimation = () => {
+  const overlay = document.getElementById('location-detection-overlay');
+  if (overlay) {
+    overlay.style.animation = 'fadeOut 300ms ease forwards';
+    setTimeout(() => overlay.remove(), 300);
   }
 };
 

@@ -12,9 +12,14 @@ const liveQueueData = new Map(); // doctorId -> { currentToken, lastUpdateTime, 
  */
 async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
   try {
-    // Parse date correctly
-    const [year, month, day] = date.split('-').map(Number);
-    const queryDate = new Date(year, month - 1, day);
+    // Parse date correctly - handle both YYYY-MM-DD and Date objects
+    let queryDate;
+    if (typeof date === 'string') {
+      const [year, month, day] = date.split('-').map(Number);
+      queryDate = new Date(year, month - 1, day);
+    } else {
+      queryDate = new Date(date);
+    }
     queryDate.setHours(0, 0, 0, 0);
     
     const startOfDay = new Date(queryDate);
@@ -24,19 +29,26 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
     // Get all appointments for this doctor today
     const allAppointments = await Appointment.find({
       doctorId,
-      date: { $gte: startOfDay, $lte: endOfDay }
-    }).sort({ queueNumber: 1, tokenNumber: 1 });
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: { $nin: ['cancelled'] } // Exclude cancelled appointments
+    }).sort({ queueNumber: 1, tokenNumber: 1, time: 1 });
 
     // Separate by status
     const completed = allAppointments.filter(a => a.status === 'completed');
     const inProgress = allAppointments.find(a => a.status === 'in_progress');
     const waiting = allAppointments.filter(a => 
-      ['pending', 'confirmed'].includes(a.status)
-    ).sort((a, b) => (a.queueNumber || a.tokenNumber || 0) - (b.queueNumber || b.tokenNumber || 0));
+      ['pending', 'confirmed', 'scheduled'].includes(a.status)
+    ).sort((a, b) => {
+      const aToken = a.queueNumber || a.tokenNumber || 0;
+      const bToken = b.queueNumber || b.tokenNumber || 0;
+      return aToken - bToken;
+    });
 
-    // Calculate real-time metrics
-    const currentToken = inProgress?.queueNumber || inProgress?.tokenNumber || 
-                         (completed.length > 0 ? Math.max(...completed.map(c => c.queueNumber || c.tokenNumber || 0)) : 0);
+    // Calculate real-time metrics - use queueNumber OR tokenNumber
+    const getToken = (apt) => apt?.queueNumber || apt?.tokenNumber || 0;
+    
+    const currentToken = inProgress ? getToken(inProgress) : 
+                         (completed.length > 0 ? Math.max(...completed.map(c => getToken(c))) : 0);
     
     // Analyze consultation patterns from today's completed appointments
     const consultationAnalysis = analyzeConsultationPatterns(completed, doctorId);
@@ -49,13 +61,29 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
     const effectiveAvgDuration = consultationAnalysis.avgDuration || defaultDuration;
     
     // Calculate user's position and wait time
-    const userPosition = userQueueNumber ? 
-      Math.max(0, userQueueNumber - currentToken) : 
-      waiting.length + 1;
+    let userPosition = 0;
+    let patientsAhead = 0;
+    
+    if (userQueueNumber) {
+      // Find how many waiting patients are ahead of user
+      patientsAhead = waiting.filter(apt => getToken(apt) < userQueueNumber).length;
+      
+      // If someone is in progress, add 1 to position
+      userPosition = patientsAhead + (inProgress ? 1 : 0) + 1;
+      
+      // If user's turn is current (in_progress), position is 0
+      if (inProgress && getToken(inProgress) === userQueueNumber) {
+        userPosition = 0;
+        patientsAhead = 0;
+      }
+    } else {
+      userPosition = waiting.length + 1;
+      patientsAhead = waiting.length;
+    }
     
     // Smart wait time calculation
     const waitTimeResult = calculateSmartWaitTime(
-      userPosition,
+      patientsAhead + 1, // position for calculation
       effectiveAvgDuration,
       consultationAnalysis,
       inProgress
@@ -81,14 +109,18 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
       inProgress: !!inProgress
     });
 
+    // Check if it's user's turn
+    const isYourTurn = userQueueNumber && inProgress && getToken(inProgress) === userQueueNumber;
+    const isNextInLine = userQueueNumber && !inProgress && waiting.length > 0 && getToken(waiting[0]) === userQueueNumber;
+
     return {
       success: true,
       // Current queue state
       currentToken,
       currentlySeeing: inProgress ? {
-        tokenNumber: inProgress.queueNumber || inProgress.tokenNumber,
+        tokenNumber: getToken(inProgress),
         startedAt: inProgress.consultationStartTime || inProgress.updatedAt,
-        patientName: inProgress.walkInPatient?.name || 'Patient',
+        patientName: inProgress.walkInPatient?.name || inProgress.patientName || 'Patient',
         elapsedMinutes: inProgress.consultationStartTime ? 
           Math.round((Date.now() - new Date(inProgress.consultationStartTime)) / 60000) : null
       } : null,
@@ -99,13 +131,13 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
       waitingCount: waiting.length,
       
       // User's position
-      userPosition,
+      userPosition: isYourTurn ? 0 : userPosition,
       userQueueNumber,
-      patientsAhead: Math.max(0, userPosition - 1),
+      patientsAhead: isYourTurn ? 0 : patientsAhead,
       
       // Time predictions
-      estimatedWaitMinutes: waitTimeResult.estimatedMinutes,
-      estimatedArrivalTime: arrivalTimeStr,
+      estimatedWaitMinutes: isYourTurn ? 0 : waitTimeResult.estimatedMinutes,
+      estimatedArrivalTime: isYourTurn ? 'Now' : arrivalTimeStr,
       estimatedArrivalTimestamp: estimatedArrivalTime.toISOString(),
       
       // Detailed timing breakdown
@@ -124,12 +156,15 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
       },
       
       // Status indicators
-      isYourTurn: userPosition === 1 && !inProgress,
-      isAlmostTurn: userPosition <= 2,
+      isYourTurn: isYourTurn || isNextInLine,
+      isAlmostTurn: patientsAhead <= 1,
       shouldLeaveNow: waitTimeResult.estimatedMinutes <= 15,
       
       // Recommendations
-      recommendation: getRecommendation(waitTimeResult.estimatedMinutes, userPosition),
+      recommendation: getRecommendation(
+        isYourTurn ? 0 : waitTimeResult.estimatedMinutes, 
+        isYourTurn ? 1 : userPosition
+      ),
       
       // Doctor info
       doctorName: doctor?.name,

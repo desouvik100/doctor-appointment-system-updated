@@ -1,7 +1,7 @@
 // frontend/src/components/CancelAppointmentModal.js
-// Modal for cancelling appointments with reason
+// Modal for cancelling appointments with refund policy preview
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
 import './CancelAppointmentModal.css';
@@ -27,6 +27,50 @@ const CancelAppointmentModal = ({
   const [customReason, setCustomReason] = useState('');
   const [notifyOther, setNotifyOther] = useState(true);
   const [loading, setLoading] = useState(false);
+  const [refundPreview, setRefundPreview] = useState(null);
+  const [loadingRefund, setLoadingRefund] = useState(false);
+
+  // Check if payment was completed (check both root level and nested payment object)
+  const isPaymentCompleted = appointment?.paymentStatus === 'completed' || 
+                              appointment?.payment?.paymentStatus === 'completed';
+
+  // Debug logging
+  useEffect(() => {
+    if (isOpen && appointment) {
+      console.log('🔍 CancelAppointmentModal Debug:');
+      console.log('  - appointment._id:', appointment._id);
+      console.log('  - appointment.paymentStatus:', appointment.paymentStatus);
+      console.log('  - appointment.payment:', appointment.payment);
+      console.log('  - appointment.payment?.paymentStatus:', appointment.payment?.paymentStatus);
+      console.log('  - isPaymentCompleted:', isPaymentCompleted);
+    }
+  }, [isOpen, appointment, isPaymentCompleted]);
+
+  // Fetch refund preview when modal opens
+  useEffect(() => {
+    if (isOpen && appointment?._id && isPaymentCompleted) {
+      console.log('📡 Fetching refund preview...');
+      fetchRefundPreview();
+    }
+  }, [isOpen, appointment, isPaymentCompleted]);
+
+  const fetchRefundPreview = async () => {
+    setLoadingRefund(true);
+    try {
+      console.log('📡 Calling API: /api/refunds/preview/' + appointment._id);
+      const response = await axios.get(`/api/refunds/preview/${appointment._id}?cancelledBy=${userType}`);
+      console.log('📡 API Response:', response.data);
+      if (response.data.success) {
+        setRefundPreview(response.data.preview);
+        console.log('✅ Refund preview set:', response.data.preview);
+      }
+    } catch (error) {
+      console.error('❌ Error fetching refund preview:', error);
+      console.error('❌ Error response:', error.response?.data);
+    } finally {
+      setLoadingRefund(false);
+    }
+  };
 
   if (!isOpen || !appointment) return null;
 
@@ -46,12 +90,28 @@ const CancelAppointmentModal = ({
         reason,
         cancelledBy: userType,
         notifyPatient: userType === 'doctor' ? notifyOther : true,
-        notifyDoctor: userType === 'patient' ? notifyOther : true
+        notifyDoctor: userType === 'patient' ? notifyOther : true,
+        processRefund: true
       });
 
       if (response.data.success) {
-        toast.success('Appointment cancelled successfully');
-        onCancelled?.(response.data.appointment);
+        // Show refund info in success message
+        let successMsg = 'Appointment cancelled successfully';
+        if (response.data.refund?.processed || response.data.refund?.pending) {
+          const refundAmount = response.data.refund.amount || 0;
+          if (refundAmount > 0) {
+            if (response.data.refund.pending) {
+              successMsg += `. Refund of ₹${refundAmount} will be credited to your account within 5-7 business days.`;
+            } else {
+              successMsg += `. Refund of ₹${refundAmount} has been processed.`;
+            }
+          }
+          if (response.data.refund.walletCredit > 0) {
+            successMsg += ` ₹${response.data.refund.walletCredit} added to your wallet as compensation.`;
+          }
+        }
+        toast.success(successMsg, { duration: 6000 });
+        onCancelled?.(response.data.appointment, response.data.refund);
         onClose();
       }
     } catch (error) {
@@ -84,6 +144,28 @@ const CancelAppointmentModal = ({
     ? `Dr. ${appointment.doctorId?.name}` 
     : appointment.userId?.name || 'Patient';
 
+  const getRefundPolicyBadge = () => {
+    if (!refundPreview) return null;
+    
+    const { policyApplied, refundPercentage } = refundPreview;
+    
+    switch (policyApplied) {
+      case 'full_refund':
+        return { color: 'green', icon: '✓', text: '100% Refund' };
+      case 'partial_refund':
+        return { color: 'orange', icon: '⚠', text: '50% Refund' };
+      case 'no_refund':
+      case 'no_show':
+        return { color: 'red', icon: '✗', text: 'No Refund' };
+      case 'doctor_cancelled':
+        return { color: 'green', icon: '✓', text: 'Full Refund + Credit' };
+      default:
+        return null;
+    }
+  };
+
+  const badge = getRefundPolicyBadge();
+
   return (
     <div className="cancel-modal-overlay" onClick={(e) => e.target === e.currentTarget && !loading && onClose()}>
       <div className="cancel-modal">
@@ -108,6 +190,98 @@ const CancelAppointmentModal = ({
             <i className="fas fa-clock"></i>
             <span>{formatTime(appointment.time)}</span>
           </div>
+        </div>
+
+        {/* Refund Policy Preview - Always show this section */}
+        <div className="cancel-modal__refund-section">
+          <div className="cancel-modal__refund-header">
+            <i className="fas fa-rupee-sign"></i>
+            <span>Refund Information</span>
+          </div>
+          
+          {!isPaymentCompleted ? (
+            <div className="cancel-modal__refund-info">
+              <p>💡 No payment was made for this appointment. No refund applicable.</p>
+            </div>
+          ) : loadingRefund ? (
+              <div className="cancel-modal__refund-loading">
+                <i className="fas fa-spinner fa-spin"></i>
+                <span>Calculating refund...</span>
+              </div>
+            ) : refundPreview ? (
+              <div className="cancel-modal__refund-details">
+                {badge && (
+                  <div className={`cancel-modal__refund-badge cancel-modal__refund-badge--${badge.color}`}>
+                    <span className="badge-icon">{badge.icon}</span>
+                    <span className="badge-text">{badge.text}</span>
+                  </div>
+                )}
+                
+                <div className="cancel-modal__refund-breakdown">
+                  {refundPreview.originalAmount > 0 && (
+                    <div className="refund-row">
+                      <span>Amount Paid</span>
+                      <span>₹{refundPreview.originalAmount}</span>
+                    </div>
+                  )}
+                  
+                  {refundPreview.gatewayFeeDeducted > 0 && (
+                    <div className="refund-row refund-row--deduction">
+                      <span>Gateway Fee</span>
+                      <span>-₹{refundPreview.gatewayFeeDeducted}</span>
+                    </div>
+                  )}
+                  
+                  {refundPreview.platformRetained > 0 && (
+                    <div className="refund-row refund-row--deduction">
+                      <span>Late Cancellation Fee</span>
+                      <span>-₹{refundPreview.platformRetained}</span>
+                    </div>
+                  )}
+                  
+                  <div className="refund-row refund-row--total">
+                    <span>Refund Amount</span>
+                    <span className={refundPreview.refundAmount > 0 ? 'text-green' : 'text-red'}>
+                      ₹{refundPreview.refundAmount}
+                    </span>
+                  </div>
+                  
+                  {refundPreview.walletCredit > 0 && (
+                    <div className="refund-row refund-row--bonus">
+                      <span>+ Wallet Credit (Compensation)</span>
+                      <span className="text-green">₹{refundPreview.walletCredit}</span>
+                    </div>
+                  )}
+                </div>
+                
+                <div className="cancel-modal__refund-reason">
+                  <i className="fas fa-info-circle"></i>
+                  <span>{refundPreview.reason}</span>
+                </div>
+                
+                {refundPreview.hoursUntilAppointment !== undefined && (
+                  <div className="cancel-modal__time-info">
+                    <i className="fas fa-hourglass-half"></i>
+                    <span>
+                      {refundPreview.hoursUntilAppointment > 0 
+                        ? `${Math.round(refundPreview.hoursUntilAppointment)} hours until appointment`
+                        : 'Appointment time has passed'}
+                    </span>
+                  </div>
+                )}
+                
+                {refundPreview.refundAmount > 0 && (
+                  <div className="cancel-modal__refund-timeline">
+                    <i className="fas fa-clock"></i>
+                    <span>Refund will be credited to your original payment method within 5-7 business days</span>
+                  </div>
+                )}
+              </div>
+            ) : (
+              <div className="cancel-modal__refund-info">
+                <p>Refund will be processed based on our cancellation policy.</p>
+              </div>
+            )}
         </div>
 
         <div className="cancel-modal__reasons">
@@ -186,6 +360,7 @@ const CancelAppointmentModal = ({
               <>
                 <i className="fas fa-times"></i>
                 Cancel Appointment
+                {refundPreview?.refundAmount > 0 && ` (₹${refundPreview.refundAmount} refund)`}
               </>
             )}
           </button>

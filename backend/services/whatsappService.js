@@ -1,445 +1,423 @@
 /**
  * WhatsApp Integration Service
- * Requirement 1: WhatsApp-First Booking System
+ * Supports multiple providers: WhatsApp Business API, Twilio, or direct wa.me links
  * 
- * Uses WhatsApp Business API (Meta Cloud API)
- * For production, you need:
- * 1. Meta Business Account
- * 2. WhatsApp Business API access
- * 3. Verified phone number
+ * For production, configure one of:
+ * 1. WhatsApp Business API (Meta) - Best for high volume
+ * 2. Twilio WhatsApp API - Easy setup
+ * 3. wa.me links - Free, opens WhatsApp with pre-filled message
  */
 
 const axios = require('axios');
 
+// Configuration
+const WHATSAPP_CONFIG = {
+  provider: process.env.WHATSAPP_PROVIDER || 'walink', // 'meta', 'twilio', 'walink'
+  
+  // Meta WhatsApp Business API
+  meta: {
+    phoneNumberId: process.env.WHATSAPP_PHONE_NUMBER_ID,
+    accessToken: process.env.WHATSAPP_ACCESS_TOKEN,
+    apiVersion: 'v18.0'
+  },
+  
+  // Twilio WhatsApp
+  twilio: {
+    accountSid: process.env.TWILIO_ACCOUNT_SID,
+    authToken: process.env.TWILIO_AUTH_TOKEN,
+    fromNumber: process.env.TWILIO_WHATSAPP_NUMBER // format: whatsapp:+14155238886
+  },
+  
+  // Clinic WhatsApp number for wa.me links
+  clinicNumber: process.env.CLINIC_WHATSAPP_NUMBER || '+919876543210'
+};
+
 class WhatsAppService {
-  constructor() {
-    this.apiUrl = process.env.WHATSAPP_API_URL || 'https://graph.facebook.com/v18.0';
-    this.phoneNumberId = process.env.WHATSAPP_PHONE_NUMBER_ID;
-    this.accessToken = process.env.WHATSAPP_ACCESS_TOKEN;
-    this.isEnabled = !!(this.phoneNumberId && this.accessToken);
+  
+  /**
+   * Send message via configured provider
+   */
+  async sendMessage(phoneNumber, message, options = {}) {
+    const provider = WHATSAPP_CONFIG.provider;
     
-    if (!this.isEnabled) {
-      console.log('⚠️  WhatsApp service not configured - running in mock mode');
+    // Normalize phone number (remove spaces, add country code if needed)
+    const normalizedPhone = this.normalizePhoneNumber(phoneNumber);
+    
+    console.log(`📱 Sending WhatsApp message via ${provider} to ${normalizedPhone}`);
+    
+    switch (provider) {
+      case 'meta':
+        return this.sendViaMeta(normalizedPhone, message, options);
+      case 'twilio':
+        return this.sendViaTwilio(normalizedPhone, message, options);
+      case 'walink':
+      default:
+        return this.generateWaLink(normalizedPhone, message, options);
     }
   }
-
+  
   /**
-   * Send a text message
+   * Normalize phone number to international format
    */
-  async sendTextMessage(to, message) {
-    if (!this.isEnabled) {
-      console.log(`[WhatsApp Mock] To: ${to}, Message: ${message}`);
-      return { success: true, mock: true };
-    }
-
-    try {
-      const response = await axios.post(
-        `${this.apiUrl}/${this.phoneNumberId}/messages`,
-        {
-          messaging_product: 'whatsapp',
-          to: this.formatPhoneNumber(to),
-          type: 'text',
-          text: { body: message }
-        },
-        {
-          headers: {
-            'Authorization': `Bearer ${this.accessToken}`,
-            'Content-Type': 'application/json'
-          }
-        }
-      );
-      
-      return { success: true, messageId: response.data.messages[0].id };
-    } catch (error) {
-      console.error('WhatsApp send error:', error.response?.data || error.message);
-      return { success: false, error: error.message };
-    }
-  }
-
-  /**
-   * Send booking confirmation
-   */
-  async sendBookingConfirmation(to, bookingDetails) {
-    const { patientName, doctorName, date, time, tokenNumber, clinicName, consultationType } = bookingDetails;
+  normalizePhoneNumber(phone) {
+    if (!phone) return '';
     
-    const message = `🏥 *HealthSyncPro - Booking Confirmed*
-
-✅ Your appointment is confirmed!
-
-👤 Patient: ${patientName}
-👨‍⚕️ Doctor: Dr. ${doctorName}
-📅 Date: ${date}
-⏰ Time: ${time}
-🎫 Token: ${tokenNumber || 'Will be assigned'}
-🏥 Clinic: ${clinicName}
-📱 Type: ${consultationType === 'video' ? 'Video Consultation' : 'In-Clinic Visit'}
-
-${consultationType === 'video' ? '📹 Video link will be sent 15 minutes before appointment.' : '📍 Please arrive 10 minutes early.'}
-
-To reschedule or cancel, reply with:
-• RESCHEDULE
-• CANCEL
-
-Thank you for choosing HealthSyncPro! 🙏`;
-
-    return await this.sendTextMessage(to, message);
-  }
-
-  /**
-   * Send appointment reminder
-   */
-  async sendAppointmentReminder(to, reminderDetails) {
-    const { patientName, doctorName, date, time, hoursUntil, clinicName, consultationType } = reminderDetails;
+    // Remove all non-digit characters except +
+    let cleaned = phone.replace(/[^\d+]/g, '');
     
-    const message = `⏰ *Appointment Reminder*
-
-Hi ${patientName}!
-
-Your appointment is in *${hoursUntil} hour(s)*:
-
-👨‍⚕️ Doctor: Dr. ${doctorName}
-📅 Date: ${date}
-⏰ Time: ${time}
-🏥 ${clinicName}
-
-${consultationType === 'video' 
-  ? '📹 Join link: Will be sent 15 min before'
-  : '📍 Please arrive 10 minutes early'}
-
-Reply CONFIRM to confirm your attendance.
-Reply CANCEL to cancel.
-
-- HealthSyncPro`;
-
-    return await this.sendTextMessage(to, message);
-  }
-
-  /**
-   * Send queue update
-   */
-  async sendQueueUpdate(to, queueDetails) {
-    const { patientName, tokenNumber, position, estimatedWait, doctorName } = queueDetails;
-    
-    let message;
-    
-    if (position === 0) {
-      message = `🔔 *Your Turn Now!*
-
-Hi ${patientName}!
-
-🎫 Token: ${tokenNumber}
-👨‍⚕️ Dr. ${doctorName} is ready for you.
-
-Please proceed to the consultation room.
-
-- HealthSyncPro`;
-    } else if (position <= 3) {
-      message = `⏳ *Almost Your Turn*
-
-Hi ${patientName}!
-
-🎫 Token: ${tokenNumber}
-📊 Position: ${position} patient(s) ahead
-⏱️ Est. Wait: ~${estimatedWait} minutes
-
-Please be ready!
-
-- HealthSyncPro`;
-    } else {
-      message = `📊 *Queue Update*
-
-Hi ${patientName}!
-
-🎫 Token: ${tokenNumber}
-📊 Position: ${position}
-⏱️ Est. Wait: ~${estimatedWait} minutes
-
-We'll notify you when it's almost your turn.
-
-- HealthSyncPro`;
-    }
-
-    return await this.sendTextMessage(to, message);
-  }
-
-  /**
-   * Send payment link
-   */
-  async sendPaymentLink(to, paymentDetails) {
-    const { patientName, amount, doctorName, paymentLink, orderId } = paymentDetails;
-    
-    const message = `💳 *Payment Request*
-
-Hi ${patientName}!
-
-Please complete payment for your appointment:
-
-👨‍⚕️ Doctor: Dr. ${doctorName}
-💰 Amount: ₹${amount}
-🔗 Order ID: ${orderId}
-
-Pay securely here:
-${paymentLink}
-
-⚠️ Link expires in 30 minutes.
-
-- HealthSyncPro`;
-
-    return await this.sendTextMessage(to, message);
-  }
-
-  /**
-   * Send prescription
-   */
-  async sendPrescription(to, prescriptionDetails) {
-    const { patientName, doctorName, date, medicines, downloadLink } = prescriptionDetails;
-    
-    let medicineList = medicines.map((m, i) => 
-      `${i + 1}. ${m.name} - ${m.dosage} (${m.duration})`
-    ).join('\n');
-    
-    const message = `📋 *E-Prescription*
-
-Hi ${patientName}!
-
-Your prescription from Dr. ${doctorName}:
-📅 Date: ${date}
-
-*Medicines:*
-${medicineList}
-
-📥 Download PDF: ${downloadLink}
-
-⚠️ Please consult your doctor before making any changes.
-
-- HealthSyncPro`;
-
-    return await this.sendTextMessage(to, message);
-  }
-
-  /**
-   * Send doctor availability for booking
-   */
-  async sendDoctorAvailability(to, availabilityDetails) {
-    const { patientName, doctorName, specialization, slots, date } = availabilityDetails;
-    
-    let slotList = slots.map((s, i) => 
-      `${i + 1}. ${s.time} - ${s.type === 'video' ? '📹 Video' : '🏥 Clinic'}`
-    ).join('\n');
-    
-    const message = `👨‍⚕️ *Available Slots*
-
-Hi ${patientName}!
-
-Dr. ${doctorName} (${specialization})
-📅 ${date}
-
-*Available Slots:*
-${slotList}
-
-Reply with slot number to book.
-Example: "1" for first slot
-
-- HealthSyncPro`;
-
-    return await this.sendTextMessage(to, message);
-  }
-
-  /**
-   * Send cancellation confirmation
-   */
-  async sendCancellationConfirmation(to, details) {
-    const { patientName, doctorName, date, time, refundAmount } = details;
-    
-    const message = `❌ *Appointment Cancelled*
-
-Hi ${patientName}!
-
-Your appointment has been cancelled:
-
-👨‍⚕️ Doctor: Dr. ${doctorName}
-📅 Date: ${date}
-⏰ Time: ${time}
-
-${refundAmount > 0 
-  ? `💰 Refund of ₹${refundAmount} will be processed in 5-7 business days.`
-  : ''}
-
-To book a new appointment, reply BOOK.
-
-- HealthSyncPro`;
-
-    return await this.sendTextMessage(to, message);
-  }
-
-  /**
-   * Send health reminder
-   */
-  async sendHealthReminder(to, reminderDetails) {
-    const { patientName, reminderType, title, description, actionLink } = reminderDetails;
-    
-    const icons = {
-      'checkup': '🩺',
-      'vaccination': '💉',
-      'lab_test': '🧪',
-      'medicine_refill': '💊',
-      'follow_up': '📅'
-    };
-    
-    const message = `${icons[reminderType] || '🔔'} *Health Reminder*
-
-Hi ${patientName}!
-
-*${title}*
-${description}
-
-${actionLink ? `📲 Take action: ${actionLink}` : 'Reply BOOK to schedule an appointment.'}
-
-Stay healthy! 💪
-
-- HealthSyncPro`;
-
-    return await this.sendTextMessage(to, message);
-  }
-
-  /**
-   * Send emergency SOS alert to contacts
-   */
-  async sendEmergencyAlert(to, emergencyDetails) {
-    const { patientName, patientPhone, emergencyType, location, mapLink } = emergencyDetails;
-    
-    const message = `🚨 *EMERGENCY ALERT*
-
-${patientName} has triggered an emergency SOS!
-
-📞 Phone: ${patientPhone}
-🆘 Type: ${emergencyType}
-📍 Location: ${location}
-
-🗺️ Map: ${mapLink}
-
-Please contact them immediately or call emergency services.
-
-- HealthSyncPro Emergency System`;
-
-    return await this.sendTextMessage(to, message);
-  }
-
-  /**
-   * Send wallet low balance alert
-   */
-  async sendWalletAlert(to, walletDetails) {
-    const { patientName, balance, threshold } = walletDetails;
-    
-    const message = `💰 *Low Wallet Balance*
-
-Hi ${patientName}!
-
-Your Family Health Wallet balance is low:
-
-💳 Current Balance: ₹${balance}
-⚠️ Alert Threshold: ₹${threshold}
-
-Add money to continue booking appointments seamlessly.
-
-Reply TOPUP to add money.
-
-- HealthSyncPro`;
-
-    return await this.sendTextMessage(to, message);
-  }
-
-  /**
-   * Process incoming WhatsApp message (webhook)
-   */
-  async processIncomingMessage(message) {
-    const { from, text, type } = message;
-    const body = text?.body?.toUpperCase().trim();
-    
-    // Command handlers
-    const commands = {
-      'BOOK': this.handleBookCommand,
-      'CANCEL': this.handleCancelCommand,
-      'RESCHEDULE': this.handleRescheduleCommand,
-      'CONFIRM': this.handleConfirmCommand,
-      'STATUS': this.handleStatusCommand,
-      'HELP': this.handleHelpCommand,
-      'TOPUP': this.handleTopupCommand
-    };
-    
-    const handler = commands[body];
-    if (handler) {
-      return await handler.call(this, from);
+    // If starts with 0, assume Indian number
+    if (cleaned.startsWith('0')) {
+      cleaned = '91' + cleaned.substring(1);
     }
     
-    // Check if it's a slot selection (number)
-    if (/^\d+$/.test(body)) {
-      return await this.handleSlotSelection(from, parseInt(body));
-    }
-    
-    // Default response
-    return await this.sendHelpMessage(from);
-  }
-
-  async handleBookCommand(from) {
-    // This would integrate with your booking system
-    const message = `📅 *Book Appointment*
-
-To book an appointment, please tell us:
-
-1. Doctor name or specialization
-2. Preferred date
-3. Video or In-clinic
-
-Example: "Cardiologist, tomorrow, video"
-
-Or visit: https://healthsyncpro.in/book
-
-- HealthSyncPro`;
-
-    return await this.sendTextMessage(from, message);
-  }
-
-  async handleHelpCommand(from) {
-    return await this.sendHelpMessage(from);
-  }
-
-  async sendHelpMessage(to) {
-    const message = `🏥 *HealthSyncPro Help*
-
-Available commands:
-
-📅 BOOK - Book new appointment
-❌ CANCEL - Cancel appointment
-🔄 RESCHEDULE - Reschedule appointment
-✅ CONFIRM - Confirm appointment
-📊 STATUS - Check appointment status
-💰 TOPUP - Add money to wallet
-
-Or visit: https://healthsyncpro.in
-
-Need help? Call: 1800-XXX-XXXX
-
-- HealthSyncPro`;
-
-    return await this.sendTextMessage(to, message);
-  }
-
-  /**
-   * Format phone number for WhatsApp API
-   */
-  formatPhoneNumber(phone) {
-    // Remove all non-digits
-    let cleaned = phone.replace(/\D/g, '');
-    
-    // Add India country code if not present
-    if (cleaned.length === 10) {
+    // If no country code, assume India (+91)
+    if (!cleaned.startsWith('+') && !cleaned.startsWith('91') && cleaned.length === 10) {
       cleaned = '91' + cleaned;
     }
     
+    // Remove + if present for API calls
+    cleaned = cleaned.replace('+', '');
+    
     return cleaned;
+  }
+  
+  /**
+   * Send via Meta WhatsApp Business API
+   */
+  async sendViaMeta(phone, message, options = {}) {
+    const { phoneNumberId, accessToken, apiVersion } = WHATSAPP_CONFIG.meta;
+    
+    if (!phoneNumberId || !accessToken) {
+      console.log('⚠️ Meta WhatsApp not configured, generating wa.me link instead');
+      return this.generateWaLink(phone, message, options);
+    }
+    
+    try {
+      const url = `https://graph.facebook.com/${apiVersion}/${phoneNumberId}/messages`;
+      
+      const payload = {
+        messaging_product: 'whatsapp',
+        to: phone,
+        type: 'text',
+        text: { body: message }
+      };
+      
+      // If template message
+      if (options.template) {
+        payload.type = 'template';
+        payload.template = options.template;
+        delete payload.text;
+      }
+      
+      const response = await axios.post(url, payload, {
+        headers: {
+          'Authorization': `Bearer ${accessToken}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      console.log('✅ WhatsApp message sent via Meta API');
+      return {
+        success: true,
+        provider: 'meta',
+        messageId: response.data.messages?.[0]?.id,
+        phone: phone
+      };
+      
+    } catch (error) {
+      console.error('❌ Meta WhatsApp API error:', error.response?.data || error.message);
+      // Fallback to wa.me link
+      return this.generateWaLink(phone, message, options);
+    }
+  }
+  
+  /**
+   * Send via Twilio WhatsApp API
+   */
+  async sendViaTwilio(phone, message, options = {}) {
+    const { accountSid, authToken, fromNumber } = WHATSAPP_CONFIG.twilio;
+    
+    if (!accountSid || !authToken || !fromNumber) {
+      console.log('⚠️ Twilio not configured, generating wa.me link instead');
+      return this.generateWaLink(phone, message, options);
+    }
+    
+    try {
+      const url = `https://api.twilio.com/2010-04-01/Accounts/${accountSid}/Messages.json`;
+      
+      const params = new URLSearchParams();
+      params.append('From', fromNumber);
+      params.append('To', `whatsapp:+${phone}`);
+      params.append('Body', message);
+      
+      // Add media if provided (for prescriptions, reports)
+      if (options.mediaUrl) {
+        params.append('MediaUrl', options.mediaUrl);
+      }
+      
+      const response = await axios.post(url, params, {
+        auth: {
+          username: accountSid,
+          password: authToken
+        }
+      });
+      
+      console.log('✅ WhatsApp message sent via Twilio');
+      return {
+        success: true,
+        provider: 'twilio',
+        messageId: response.data.sid,
+        phone: phone
+      };
+      
+    } catch (error) {
+      console.error('❌ Twilio WhatsApp API error:', error.response?.data || error.message);
+      return this.generateWaLink(phone, message, options);
+    }
+  }
+  
+  /**
+   * Generate wa.me link (free, works without API)
+   */
+  generateWaLink(phone, message, options = {}) {
+    const encodedMessage = encodeURIComponent(message);
+    const waLink = `https://wa.me/${phone}?text=${encodedMessage}`;
+    
+    console.log('📎 Generated wa.me link');
+    return {
+      success: true,
+      provider: 'walink',
+      link: waLink,
+      phone: phone,
+      message: message,
+      requiresManualSend: true
+    };
+  }
+  
+  // ==================== MESSAGE TEMPLATES ====================
+  
+  /**
+   * Send Prescription via WhatsApp
+   */
+  async sendPrescription(patientPhone, prescriptionData) {
+    const { patientName, doctorName, clinicName, date, medicines, diagnosis, advice } = prescriptionData;
+    
+    let message = `🏥 *${clinicName || 'HealthSync'}*\n`;
+    message += `━━━━━━━━━━━━━━━\n`;
+    message += `📋 *PRESCRIPTION*\n\n`;
+    message += `👤 Patient: ${patientName}\n`;
+    message += `👨‍⚕️ Doctor: Dr. ${doctorName}\n`;
+    message += `📅 Date: ${new Date(date).toLocaleDateString('en-IN')}\n\n`;
+    
+    if (diagnosis) {
+      message += `🔍 *Diagnosis:* ${diagnosis}\n\n`;
+    }
+    
+    message += `💊 *Medicines:*\n`;
+    medicines.forEach((med, index) => {
+      message += `${index + 1}. *${med.name}* ${med.strength || ''}\n`;
+      message += `   📌 ${med.dosage} - ${med.frequency}\n`;
+      message += `   ⏱️ ${med.duration}\n`;
+      if (med.instructions) {
+        message += `   📝 ${med.instructions}\n`;
+      }
+      message += `\n`;
+    });
+    
+    if (advice) {
+      message += `📝 *Advice:*\n${advice}\n\n`;
+    }
+    
+    message += `━━━━━━━━━━━━━━━\n`;
+    message += `🔗 View full prescription on HealthSync app\n`;
+    message += `📞 For queries, contact clinic`;
+    
+    return this.sendMessage(patientPhone, message, { type: 'prescription' });
+  }
+  
+  /**
+   * Send Appointment Reminder
+   */
+  async sendAppointmentReminder(patientPhone, appointmentData) {
+    const { patientName, doctorName, clinicName, date, time, consultationType, tokenNumber } = appointmentData;
+    
+    const appointmentDate = new Date(date);
+    const formattedDate = appointmentDate.toLocaleDateString('en-IN', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long',
+      year: 'numeric'
+    });
+    
+    let message = `🏥 *${clinicName || 'HealthSync'}*\n`;
+    message += `━━━━━━━━━━━━━━━\n`;
+    message += `📅 *APPOINTMENT REMINDER*\n\n`;
+    message += `Hello ${patientName}! 👋\n\n`;
+    message += `Your appointment is scheduled:\n\n`;
+    message += `👨‍⚕️ Doctor: Dr. ${doctorName}\n`;
+    message += `📆 Date: ${formattedDate}\n`;
+    message += `⏰ Time: ${time}\n`;
+    message += `📍 Type: ${consultationType === 'online' ? '🖥️ Online Consultation' : '🏥 In-Person Visit'}\n`;
+    
+    if (tokenNumber) {
+      message += `🎫 Token: ${tokenNumber}\n`;
+    }
+    
+    message += `\n━━━━━━━━━━━━━━━\n`;
+    
+    if (consultationType === 'online') {
+      message += `💡 Join link will be shared before appointment\n`;
+    } else {
+      message += `💡 Please arrive 10 mins early\n`;
+      message += `📄 Carry previous reports if any\n`;
+    }
+    
+    message += `\n❌ To cancel/reschedule, visit the app`;
+    
+    return this.sendMessage(patientPhone, message, { type: 'reminder' });
+  }
+  
+  /**
+   * Send Appointment Confirmation
+   */
+  async sendAppointmentConfirmation(patientPhone, appointmentData) {
+    const { patientName, doctorName, clinicName, date, time, consultationType, tokenNumber, amount } = appointmentData;
+    
+    const appointmentDate = new Date(date);
+    const formattedDate = appointmentDate.toLocaleDateString('en-IN', {
+      weekday: 'short',
+      day: 'numeric',
+      month: 'short'
+    });
+    
+    let message = `✅ *Appointment Confirmed!*\n\n`;
+    message += `🏥 ${clinicName || 'HealthSync'}\n`;
+    message += `━━━━━━━━━━━━━━━\n\n`;
+    message += `👤 ${patientName}\n`;
+    message += `👨‍⚕️ Dr. ${doctorName}\n`;
+    message += `📅 ${formattedDate} at ${time}\n`;
+    message += `📍 ${consultationType === 'online' ? 'Online' : 'In-Person'}\n`;
+    
+    if (tokenNumber) {
+      message += `🎫 Token: *${tokenNumber}*\n`;
+    }
+    
+    if (amount) {
+      message += `💰 Amount: ₹${amount}\n`;
+    }
+    
+    message += `\n━━━━━━━━━━━━━━━\n`;
+    message += `📱 Manage on HealthSync app`;
+    
+    return this.sendMessage(patientPhone, message, { type: 'confirmation' });
+  }
+  
+  /**
+   * Send Lab Report Ready Notification
+   */
+  async sendLabReportReady(patientPhone, reportData) {
+    const { patientName, testName, clinicName, reportDate, reportUrl } = reportData;
+    
+    let message = `🏥 *${clinicName || 'HealthSync'}*\n`;
+    message += `━━━━━━━━━━━━━━━\n`;
+    message += `🔬 *LAB REPORT READY*\n\n`;
+    message += `Hello ${patientName}! 👋\n\n`;
+    message += `Your lab report is ready:\n\n`;
+    message += `📋 Test: ${testName}\n`;
+    message += `📅 Date: ${new Date(reportDate).toLocaleDateString('en-IN')}\n\n`;
+    message += `━━━━━━━━━━━━━━━\n`;
+    message += `📥 View/Download from HealthSync app\n`;
+    
+    if (reportUrl) {
+      message += `🔗 Or click: ${reportUrl}\n`;
+    }
+    
+    message += `\n💡 Consult your doctor for interpretation`;
+    
+    return this.sendMessage(patientPhone, message, { 
+      type: 'lab_report',
+      mediaUrl: reportUrl 
+    });
+  }
+  
+  /**
+   * Send Payment Receipt
+   */
+  async sendPaymentReceipt(patientPhone, paymentData) {
+    const { patientName, amount, paymentId, serviceName, clinicName, date } = paymentData;
+    
+    let message = `🏥 *${clinicName || 'HealthSync'}*\n`;
+    message += `━━━━━━━━━━━━━━━\n`;
+    message += `✅ *PAYMENT RECEIPT*\n\n`;
+    message += `Thank you ${patientName}! 🙏\n\n`;
+    message += `💰 Amount: *₹${amount}*\n`;
+    message += `📋 For: ${serviceName}\n`;
+    message += `📅 Date: ${new Date(date).toLocaleDateString('en-IN')}\n`;
+    message += `🔖 Receipt ID: ${paymentId}\n\n`;
+    message += `━━━━━━━━━━━━━━━\n`;
+    message += `📱 View details on HealthSync app`;
+    
+    return this.sendMessage(patientPhone, message, { type: 'receipt' });
+  }
+  
+  /**
+   * Send Follow-up Reminder
+   */
+  async sendFollowUpReminder(patientPhone, followUpData) {
+    const { patientName, doctorName, clinicName, followUpDate, reason } = followUpData;
+    
+    const fDate = new Date(followUpDate);
+    const formattedDate = fDate.toLocaleDateString('en-IN', {
+      weekday: 'long',
+      day: 'numeric',
+      month: 'long'
+    });
+    
+    let message = `🏥 *${clinicName || 'HealthSync'}*\n`;
+    message += `━━━━━━━━━━━━━━━\n`;
+    message += `🔔 *FOLLOW-UP REMINDER*\n\n`;
+    message += `Hello ${patientName}! 👋\n\n`;
+    message += `Dr. ${doctorName} has recommended a follow-up visit.\n\n`;
+    message += `📅 Suggested Date: ${formattedDate}\n`;
+    
+    if (reason) {
+      message += `📝 Reason: ${reason}\n`;
+    }
+    
+    message += `\n━━━━━━━━━━━━━━━\n`;
+    message += `📱 Book now on HealthSync app\n`;
+    message += `💡 Regular follow-ups ensure better health outcomes`;
+    
+    return this.sendMessage(patientPhone, message, { type: 'followup' });
+  }
+  
+  /**
+   * Send Queue Update
+   */
+  async sendQueueUpdate(patientPhone, queueData) {
+    const { patientName, tokenNumber, currentToken, estimatedWait, doctorName } = queueData;
+    
+    let message = `🎫 *Queue Update*\n\n`;
+    message += `Hello ${patientName}!\n\n`;
+    message += `Your Token: *${tokenNumber}*\n`;
+    message += `Now Serving: *${currentToken}*\n`;
+    message += `⏱️ Est. Wait: ~${estimatedWait} mins\n\n`;
+    message += `👨‍⚕️ Dr. ${doctorName}\n\n`;
+    message += `💡 We'll notify when it's almost your turn`;
+    
+    return this.sendMessage(patientPhone, message, { type: 'queue' });
+  }
+  
+  /**
+   * Send Custom Message
+   */
+  async sendCustomMessage(patientPhone, customMessage, clinicName = 'HealthSync') {
+    let message = `🏥 *${clinicName}*\n`;
+    message += `━━━━━━━━━━━━━━━\n\n`;
+    message += customMessage;
+    
+    return this.sendMessage(patientPhone, message, { type: 'custom' });
   }
 }
 
-// Export singleton instance
 module.exports = new WhatsAppService();

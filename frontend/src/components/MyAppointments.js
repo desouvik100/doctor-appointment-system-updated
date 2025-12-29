@@ -2,6 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "../api/config";
 import toast from 'react-hot-toast';
 import OnlineConsultation from './OnlineConsultation';
+import CancelAppointmentModal from './CancelAppointmentModal';
 import './MyAppointments.css';
 
 function MyAppointments({ user }) {
@@ -12,6 +13,8 @@ function MyAppointments({ user }) {
   const [selectedAppointment, setSelectedAppointment] = useState(null);
   const [queueInfo, setQueueInfo] = useState(null);
   const [queueLoading, setQueueLoading] = useState(false);
+  const [cancelModalOpen, setCancelModalOpen] = useState(false);
+  const [appointmentToCancel, setAppointmentToCancel] = useState(null);
 
   useEffect(() => {
     fetchAppointments();
@@ -40,20 +43,15 @@ function MyAppointments({ user }) {
     ['completed', 'cancelled'].includes(apt.status)
   );
 
-  const handleCancelAppointment = async (appointmentId) => {
-    if (!window.confirm("Are you sure you want to cancel this appointment?")) {
-      return;
-    }
+  const handleCancelAppointment = (appointment) => {
+    setAppointmentToCancel(appointment);
+    setCancelModalOpen(true);
+  };
 
-    try {
-      console.log("Cancelling appointment:", appointmentId);
-      await axios.put(`/api/appointments/${appointmentId}`, { status: "cancelled" });
-      fetchAppointments();
-      toast.success("Appointment cancelled successfully");
-    } catch (error) {
-      console.error("Error cancelling appointment:", error);
-      toast.error("Failed to cancel appointment");
-    }
+  const handleCancelComplete = (cancelledAppointment, refundInfo) => {
+    fetchAppointments();
+    setCancelModalOpen(false);
+    setAppointmentToCancel(null);
   };
 
   const getStatusBadge = (status) => {
@@ -259,9 +257,12 @@ function MyAppointments({ user }) {
           </button>
         )}
         
-        {appointment.status === "pending" && (
+        {(appointment.status === "pending" || appointment.status === "confirmed") && (
           <button
-            onClick={() => handleCancelAppointment(appointment._id)}
+            onClick={(e) => {
+              e.stopPropagation();
+              handleCancelAppointment(appointment);
+            }}
             className="btn-cancel"
           >
             <i className="fas fa-times"></i>
@@ -442,6 +443,18 @@ function MyAppointments({ user }) {
           </div>
         </div>
       )}
+
+      {/* Cancel Appointment Modal with Refund Preview */}
+      <CancelAppointmentModal
+        isOpen={cancelModalOpen}
+        onClose={() => {
+          setCancelModalOpen(false);
+          setAppointmentToCancel(null);
+        }}
+        appointment={appointmentToCancel}
+        onCancelled={handleCancelComplete}
+        userType="patient"
+      />
     </div>
   );
 }

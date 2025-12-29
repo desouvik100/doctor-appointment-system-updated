@@ -55,13 +55,14 @@ const VitalsTrends = ({ patientId, clinicId }) => {
     setLoading(true);
     setError('');
     try {
-      const period = TIME_PERIODS.find(p => p.value === selectedPeriod);
       const response = await axios.get(`/api/emr/patients/${patientId}/vitals/trends`, {
-        params: { days: period.days, clinicId }
+        params: { period: selectedPeriod, clinicId }
       });
       
       if (response.data.success) {
-        setTrendsData(response.data.trends || []);
+        // Backend returns { trends: { data: [...], period, totalReadings, summary } }
+        const trendsResponse = response.data.trends;
+        setTrendsData(trendsResponse?.data || []);
       } else {
         setError(response.data.message || 'Failed to load trends');
       }

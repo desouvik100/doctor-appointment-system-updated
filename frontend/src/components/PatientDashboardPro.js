@@ -48,6 +48,7 @@ import MobileHeroSection from './MobileHeroSection';
 import BottomNavigation from './BottomNavigation';
 import OfflineIndicator from './OfflineIndicator';
 import MobileDoctorCard from './MobileDoctorCard';
+import CancelAppointmentModal from './CancelAppointmentModal';
 import { DoctorCardSkeleton, AppointmentCardSkeleton, PageSkeleton } from './SkeletonLoaders';
 import { successFeedback } from '../mobile/haptics';
 
@@ -117,6 +118,10 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
   const [showQuickSearch, setShowQuickSearch] = useState(false);
   const [quickSearchTerm, setQuickSearchTerm] = useState('');
   const [isMobileSearchOpen, setIsMobileSearchOpen] = useState(false); // Track mobile search state for back button
+  
+  // Cancel appointment modal state
+  const [showCancelModal, setShowCancelModal] = useState(false);
+  const [appointmentToCancel, setAppointmentToCancel] = useState(null);
 
   const handleProfileUpdate = (updatedUser) => {
     setCurrentUser(updatedUser);
@@ -408,11 +413,58 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
       </aside>
 
       <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-hidden ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}`}>
-        <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-2 sm:px-4 lg:px-6 h-14 sm:h-16 flex items-center justify-between">
+        {/* Mobile Header - Minimal: Location + Profile Only */}
+        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 lg:px-6 h-14 sm:h-16 flex items-center justify-between lg:hidden">
+          <div className="flex items-center gap-3 flex-1 min-w-0">
+            {/* Location with live animation */}
+            <button 
+              onClick={handleUpdateLocation} 
+              disabled={updatingLocation}
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 transition-all min-w-0 flex-1 max-w-[200px]"
+            >
+              <div className={`relative ${updatingLocation ? 'animate-pulse' : ''}`}>
+                <i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-map-marker-alt'} text-cyan-600 text-sm`}></i>
+                {userLocation?.city && !updatingLocation && (
+                  <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
+                )}
+              </div>
+              <div className="min-w-0 text-left">
+                <p className="text-[10px] text-slate-400 font-medium">Location</p>
+                <p className="text-xs font-semibold text-slate-700 truncate">
+                  {updatingLocation ? 'Detecting...' : userLocation?.city || 'Tap to detect'}
+                </p>
+              </div>
+              <i className="fas fa-chevron-down text-slate-400 text-[10px] ml-auto"></i>
+            </button>
+          </div>
+          <div className="flex items-center gap-2">
+            {/* Notifications */}
+            <button onClick={() => setShowNotifications(true)} className="relative w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-all">
+              <i className="fas fa-bell text-slate-500 text-sm"></i>
+              {unreadNotifications > 0 && (
+                <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-bounce">
+                  {unreadNotifications > 9 ? '9+' : unreadNotifications}
+                </span>
+              )}
+            </button>
+            {/* Profile Picture */}
+            <button onClick={() => setShowProfileModal(true)} className="w-10 h-10 rounded-xl overflow-hidden border-2 border-cyan-200 hover:border-cyan-400 transition-all">
+              <img 
+                src={getProfilePhotoUrl(currentUser) || getFallbackAvatarUrl(currentUser?.name)} 
+                alt="Profile" 
+                className="w-full h-full object-cover" 
+                onError={(e) => { e.target.src = getFallbackAvatarUrl(currentUser?.name); }} 
+              />
+            </button>
+          </div>
+        </header>
+
+        {/* Desktop Header - Full */}
+        <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-3 sm:px-4 lg:px-6 h-14 sm:h-16 items-center justify-between hidden lg:flex">
           <div className="flex items-center gap-2 sm:gap-4">
             <button 
               type="button"
-              className="lg:hidden w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-sky-50 hover:bg-sky-100 flex items-center justify-center cursor-pointer active:scale-95 border border-sky-200" 
+              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-sky-50 hover:bg-sky-100 flex items-center justify-center cursor-pointer active:scale-95 border border-sky-200" 
               style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
               onPointerDown={() => setMobileSidebarOpen(true)}
             >
@@ -540,17 +592,18 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                 </div>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
                   {recentDoctors.map(doc => {
-                    // Availability status
-                    const availStatus = doc.availability === 'Available' ? 
-                      (Math.random() > 0.3 ? 'available' : 'limited') : 'unavailable';
-                    const availLabel = availStatus === 'available' ? 'Available' : 
-                      availStatus === 'limited' ? 'Limited' : 'Unavailable';
+                    // Availability status - use actual data
+                    const isAvailable = doc.availability === 'Available' || doc.isAvailable;
+                    const availStatus = isAvailable ? 'available' : 'unavailable';
                     // Consultation type
                     const consultTypes = doc.consultationTypes || ['clinic'];
-                    const typeLabel = consultTypes.includes('online') && consultTypes.includes('clinic') ? 'Both' :
-                      consultTypes.includes('online') ? 'Online' : 'Clinic';
                     const docInitials = doc.name ? doc.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'DR';
-                    const rating = doc.rating || (4 + Math.random() * 0.9).toFixed(1);
+                    // Use actual data or sensible defaults
+                    const rating = doc.rating || doc.averageRating || 4.5;
+                    const avgWaitTime = doc.avgWaitTime || doc.averageWaitTime || 15;
+                    const distance = doc.distance ? doc.distance.toFixed(1) : (userLocation?.latitude ? '2.5' : null);
+                    const isVerified = doc.isVerified !== false;
+                    const reviewCount = doc.reviewCount || doc.totalReviews || 0;
                     return (
                     <div 
                       key={doc._id} 
@@ -563,9 +616,32 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                         background: '#ffffff',
                         cursor: 'pointer',
                         transition: 'all 0.2s ease',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)'
+                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
+                        position: 'relative'
                       }}
                     >
+                      {/* Verified Badge - Top Right */}
+                      {isVerified && (
+                        <div style={{
+                          position: 'absolute',
+                          top: '8px',
+                          right: '8px',
+                          background: 'linear-gradient(135deg, #10b981, #059669)',
+                          color: '#fff',
+                          padding: '3px 8px',
+                          borderRadius: '12px',
+                          fontSize: '9px',
+                          fontWeight: '700',
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '3px',
+                          boxShadow: '0 2px 6px rgba(16,185,129,0.3)'
+                        }}>
+                          <i className="fas fa-check-circle" style={{ fontSize: '8px' }}></i>
+                          Verified
+                        </div>
+                      )}
+                      
                       {/* Photo and Name */}
                       <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
                         <div style={{ 
@@ -590,32 +666,69 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                           )}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
-                          <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
+                          <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '50px' }}>
                             {doc.name?.startsWith('Dr.') ? doc.name : `Dr. ${doc.name}`}
                           </h4>
                           <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doc.specialization}</p>
                         </div>
                       </div>
                       
-                      {/* Rating and Experience */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '10px' }}>
-                        <span style={{ display: 'flex', alignItems: 'center', gap: '3px', fontSize: '11px', fontWeight: 600, color: '#1e293b' }}>
-                          <i className="fas fa-star" style={{ color: '#f59e0b', fontSize: '10px' }}></i>
-                          {rating}
-                        </span>
-                        <span style={{ fontSize: '11px', color: '#94a3b8' }}>•</span>
-                        <span style={{ fontSize: '11px', color: '#64748b' }}>{doc.experience || '5+'}y exp</span>
+                      {/* Rating, Experience, Reviews */}
+                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
                         <span style={{ 
-                          marginLeft: 'auto',
-                          padding: '3px 8px', 
-                          borderRadius: '6px', 
-                          fontSize: '9px', 
-                          fontWeight: 600,
-                          background: availStatus === 'available' ? '#dcfce7' : availStatus === 'limited' ? '#fef3c7' : '#f1f5f9',
-                          color: availStatus === 'available' ? '#166534' : availStatus === 'limited' ? '#92400e' : '#64748b'
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '3px', 
+                          fontSize: '11px', 
+                          fontWeight: 600, 
+                          color: '#fff',
+                          background: '#10b981',
+                          padding: '2px 6px',
+                          borderRadius: '4px'
                         }}>
-                          {availLabel}
+                          <i className="fas fa-star" style={{ fontSize: '9px' }}></i>
+                          {typeof rating === 'number' ? rating.toFixed(1) : rating}
                         </span>
+                        {reviewCount > 0 && <span style={{ fontSize: '10px', color: '#64748b' }}>({reviewCount})</span>}
+                        <span style={{ fontSize: '10px', color: '#94a3b8' }}>•</span>
+                        <span style={{ fontSize: '10px', color: '#64748b' }}>{doc.experience || '5+'}y</span>
+                      </div>
+                      
+                      {/* Trust Signals Row - Wait Time & Distance */}
+                      <div style={{ 
+                        display: 'flex', 
+                        alignItems: 'center', 
+                        gap: '8px', 
+                        marginBottom: '10px',
+                        padding: '6px 8px',
+                        background: '#f8fafc',
+                        borderRadius: '8px'
+                      }}>
+                        <span style={{ 
+                          display: 'flex', 
+                          alignItems: 'center', 
+                          gap: '4px', 
+                          fontSize: '10px', 
+                          color: '#64748b'
+                        }}>
+                          <i className="fas fa-clock" style={{ color: '#f59e0b', fontSize: '9px' }}></i>
+                          ~{avgWaitTime} min wait
+                        </span>
+                        {distance && (
+                          <>
+                            <span style={{ fontSize: '10px', color: '#cbd5e1' }}>|</span>
+                            <span style={{ 
+                              display: 'flex', 
+                              alignItems: 'center', 
+                              gap: '4px', 
+                              fontSize: '10px', 
+                              color: '#64748b'
+                            }}>
+                              <i className="fas fa-map-marker-alt" style={{ color: '#0ea5e9', fontSize: '9px' }}></i>
+                              {distance} km
+                            </span>
+                          </>
+                        )}
                       </div>
                       
                       {/* Fee and Book */}
@@ -627,17 +740,18 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                           onClick={(e) => { e.stopPropagation(); setSelectedDoctor(doc); setShowBookingModal(true); }} 
                           style={{
                             padding: '8px 14px',
-                            background: 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                            background: isAvailable ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : '#94a3b8',
                             color: '#fff',
                             border: 'none',
                             borderRadius: '10px',
                             fontSize: '12px',
                             fontWeight: 600,
-                            cursor: 'pointer',
-                            boxShadow: '0 2px 8px rgba(14,165,233,0.3)'
+                            cursor: isAvailable ? 'pointer' : 'not-allowed',
+                            boxShadow: isAvailable ? '0 2px 8px rgba(14,165,233,0.3)' : 'none'
                           }}
+                          disabled={!isAvailable}
                         >
-                          Book
+                          {isAvailable ? 'Book' : 'Unavailable'}
                         </button>
                       </div>
                     </div>
@@ -678,29 +792,133 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                     <button onClick={() => setActiveSection('appointments')} className="text-sm font-medium text-sky-600 hover:text-sky-700 flex items-center gap-1">View All <i className="fas fa-arrow-right text-xs"></i></button>
                   </div>
                   <div className="space-y-3">
-                    {upcomingAppointments.map(apt => (
+                    {upcomingAppointments.map((apt, index) => {
+                      // Use actual queue data from appointment or calculate based on token
+                      const queuePosition = apt.queuePosition || apt.tokenNumber || apt.queueNumber || (index + 1);
+                      const avgConsultTime = apt.doctorId?.consultationDuration || 15;
+                      const estimatedWait = apt.estimatedWaitMinutes || (Math.max(0, queuePosition - 1) * avgConsultTime);
+                      const statusColors = {
+                        confirmed: { bg: '#dcfce7', text: '#166534', border: '#86efac' },
+                        pending: { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' },
+                        'pending payment': { bg: '#fef3c7', text: '#92400e', border: '#fcd34d' },
+                        in_progress: { bg: '#dbeafe', text: '#1e40af', border: '#93c5fd' },
+                        cancelled: { bg: '#fee2e2', text: '#991b1b', border: '#fca5a5' }
+                      };
+                      const statusStyle = statusColors[apt.status] || statusColors.pending;
+                      
+                      return (
                       <div 
                         key={apt._id} 
-                        className="flex items-center gap-4 p-4 rounded-xl border border-slate-100 hover:border-sky-200 hover:shadow-md transition-all cursor-pointer group"
+                        className="relative overflow-hidden rounded-xl border-2 hover:shadow-lg transition-all cursor-pointer group"
+                        style={{ borderColor: statusStyle.border }}
                         onClick={() => { setTrackedAppointment(apt); setShowQueueTracker(true); }}
                       >
-                        <div className="w-10 h-10 rounded-lg bg-sky-50 flex items-center justify-center group-hover:bg-sky-100 transition-colors"><i className="fas fa-user-md text-sky-600"></i></div>
-                        <div className="flex-1 min-w-0">
-                          <h4 className="font-medium text-slate-800 text-sm">{apt.doctorId?.name?.startsWith('Dr.') ? apt.doctorId.name : `Dr. ${apt.doctorId?.name || 'Unknown'}`}</h4>
-                          <p className="text-xs text-slate-500">{apt.doctorId?.specialization}</p>
+                        {/* Queue Position Badge - Prominent */}
+                        <div style={{
+                          position: 'absolute',
+                          top: 0,
+                          right: 0,
+                          background: apt.status === 'in_progress' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                          color: '#fff',
+                          padding: '8px 16px',
+                          borderBottomLeftRadius: '16px',
+                          display: 'flex',
+                          flexDirection: 'column',
+                          alignItems: 'center',
+                          boxShadow: '0 4px 12px rgba(14,165,233,0.3)'
+                        }}>
+                          <span style={{ fontSize: '10px', opacity: 0.9 }}>{apt.status === 'in_progress' ? 'Your Turn' : 'Queue'}</span>
+                          <span style={{ fontSize: '24px', fontWeight: 800, lineHeight: 1 }}>
+                            {apt.status === 'in_progress' ? '🎉' : `#${queuePosition}`}
+                          </span>
                         </div>
-                        <div className="text-right">
-                          <p className="text-sm font-medium text-slate-800">{apt.date ? new Date(apt.date).toLocaleDateString('en-IN', { month: 'short', day: 'numeric' }) : 'N/A'}</p>
-                          <p className="text-xs text-slate-500">{apt.time || 'N/A'}</p>
+                        
+                        <div className="p-4">
+                          <div className="flex items-start gap-4">
+                            <div className="w-12 h-12 rounded-xl bg-sky-50 flex items-center justify-center group-hover:bg-sky-100 transition-colors flex-shrink-0">
+                              <i className="fas fa-user-md text-sky-600 text-lg"></i>
+                            </div>
+                            <div className="flex-1 min-w-0 pr-20">
+                              <h4 className="font-semibold text-slate-800">{apt.doctorId?.name?.startsWith('Dr.') ? apt.doctorId.name : `Dr. ${apt.doctorId?.name || 'Unknown'}`}</h4>
+                              <p className="text-sm text-slate-500">{apt.doctorId?.specialization}</p>
+                              
+                              {/* Date & Time */}
+                              <div className="flex items-center gap-3 mt-2">
+                                <span className="text-sm font-medium text-slate-700">
+                                  <i className="fas fa-calendar-alt text-sky-500 mr-1"></i>
+                                  {apt.date ? new Date(apt.date).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' }) : 'N/A'}
+                                </span>
+                                <span className="text-sm font-medium text-slate-700">
+                                  <i className="fas fa-clock text-sky-500 mr-1"></i>
+                                  {apt.time || 'N/A'}
+                                </span>
+                              </div>
+                              
+                              {/* Estimated Wait Time - Only show if not in progress */}
+                              {apt.status !== 'in_progress' && apt.status !== 'completed' && (
+                                <div style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  marginTop: '8px',
+                                  padding: '4px 10px',
+                                  background: estimatedWait <= 15 ? '#dcfce7' : '#fef3c7',
+                                  borderRadius: '8px',
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                  color: estimatedWait <= 15 ? '#166534' : '#92400e'
+                                }}>
+                                  <i className="fas fa-hourglass-half" style={{ fontSize: '10px' }}></i>
+                                  {estimatedWait <= 0 ? 'Your turn soon!' : `Est. wait: ~${estimatedWait} mins`}
+                                </div>
+                              )}
+                              
+                              {/* In Progress indicator */}
+                              {apt.status === 'in_progress' && (
+                                <div style={{
+                                  display: 'inline-flex',
+                                  alignItems: 'center',
+                                  gap: '6px',
+                                  marginTop: '8px',
+                                  padding: '4px 10px',
+                                  background: '#dcfce7',
+                                  borderRadius: '8px',
+                                  fontSize: '12px',
+                                  fontWeight: 600,
+                                  color: '#166534'
+                                }}>
+                                  <span className="animate-pulse">●</span>
+                                  Consultation in progress
+                                </div>
+                              )}
+                            </div>
+                          </div>
+                          
+                          {/* Status & Action Row */}
+                          <div className="flex items-center justify-between mt-4 pt-3 border-t border-slate-100">
+                            <span style={{
+                              padding: '4px 12px',
+                              borderRadius: '8px',
+                              fontSize: '12px',
+                              fontWeight: 600,
+                              background: statusStyle.bg,
+                              color: statusStyle.text,
+                              textTransform: 'capitalize'
+                            }}>
+                              {apt.status === 'in_progress' ? 'In Progress' : apt.status}
+                            </span>
+                            
+                            <button 
+                              className="flex items-center gap-2 px-4 py-2 bg-sky-50 text-sky-600 rounded-lg text-sm font-semibold hover:bg-sky-100 transition-colors"
+                              onClick={(e) => { e.stopPropagation(); setTrackedAppointment(apt); setShowQueueTracker(true); }}
+                            >
+                              <i className="fas fa-broadcast-tower text-xs animate-pulse"></i>
+                              Live Queue
+                            </button>
+                          </div>
                         </div>
-                        <span className={`px-2.5 py-1 rounded-md text-xs font-medium ${apt.status === 'confirmed' ? 'bg-emerald-50 text-emerald-700' : apt.status === 'pending' ? 'bg-amber-50 text-amber-700' : 'bg-slate-100 text-slate-600'}`}>{apt.status}</span>
-                        {/* Tap for Queue indicator */}
-                        <span className="px-2 py-1 rounded-md text-xs font-medium bg-sky-100 text-sky-700 flex items-center gap-1 animate-pulse">
-                          <i className="fas fa-hand-pointer text-[10px]"></i>
-                          Queue
-                        </span>
                       </div>
-                    ))}
+                    );})}
                   </div>
                 </div>
               )}
@@ -740,6 +958,25 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                   </div>
                 </div>
               )}
+
+              {/* Made in India Footer - Mobile Only */}
+              <div className="lg:hidden mt-8 mb-4">
+                <div className="text-center py-8 px-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl relative overflow-hidden">
+                  {/* Background Pattern */}
+                  <div className="absolute inset-0 opacity-30" style={{
+                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23cbd5e1' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
+                  }}></div>
+                  <div className="relative z-10">
+                    <p className="text-3xl font-extrabold italic text-slate-300 dark:text-slate-600 mb-3">#HealthSync</p>
+                    <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5">
+                      <span className="text-lg">🇮🇳</span>
+                      <span>Made with</span>
+                      <span className="text-red-500 animate-pulse">❤️</span>
+                      <span>in India</span>
+                    </p>
+                  </div>
+                </div>
+              </div>
             </div>
           )}
           {activeSection === 'doctors' && (
@@ -988,6 +1225,15 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                         </button>
                       )}
                       {apt.consultationType === 'online' && apt.googleMeetLink && <button onClick={(e) => { e.stopPropagation(); window.open(apt.googleMeetLink, '_blank'); }} className="w-full py-2.5 bg-gradient-to-r from-blue-500 to-cyan-500 text-white font-medium rounded-xl hover:shadow-lg"><i className="fas fa-video mr-2"></i>Join Meeting</button>}
+                      {/* Cancel Appointment Button */}
+                      {(apt.status === 'confirmed' || apt.status === 'pending') && (
+                        <button 
+                          onClick={(e) => { e.stopPropagation(); setAppointmentToCancel(apt); setShowCancelModal(true); }} 
+                          className="w-full py-2.5 bg-gradient-to-r from-red-500 to-rose-500 text-white font-medium rounded-xl hover:shadow-lg mt-2"
+                        >
+                          <i className="fas fa-times mr-2"></i>Cancel Appointment
+                        </button>
+                      )}
                       {apt.status === 'completed' && <button onClick={(e) => { e.stopPropagation(); setReviewAppointment(apt); setShowReviewModal(true); }} className="w-full py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-medium rounded-xl hover:shadow-lg mt-2"><i className="fas fa-star mr-2"></i>Write Review</button>}
                     </div>
                   ))}
@@ -1041,6 +1287,15 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
       {showProfileModal && <UserProfileModal user={currentUser} onClose={() => setShowProfileModal(false)} onUpdate={handleProfileUpdate} />}
       {showFindDoctorWizard && <FindMyDoctorWizard onClose={() => setShowFindDoctorWizard(false)} onComplete={(recommendation) => { setShowFindDoctorWizard(false); setSelectedSpecialization(recommendation.primarySpecialist); setActiveSection('doctors'); }} onBookDoctor={(specialist) => { setSelectedSpecialization(specialist); setActiveSection('doctors'); }} />}
       {showQueueTracker && trackedAppointment && <LiveQueueTracker appointment={trackedAppointment} onClose={() => { setShowQueueTracker(false); setTrackedAppointment(null); }} />}
+      
+      {/* Cancel Appointment Modal with Refund Preview */}
+      <CancelAppointmentModal
+        isOpen={showCancelModal}
+        onClose={() => { setShowCancelModal(false); setAppointmentToCancel(null); }}
+        appointment={appointmentToCancel}
+        onCancelled={() => { fetchAppointments(); setShowCancelModal(false); setAppointmentToCancel(null); }}
+        userType="patient"
+      />
       
       {/* Quick Search Modal */}
       {showQuickSearch && (
@@ -1252,6 +1507,34 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
               break;
             case 'health-tips':
               setActiveSection('health-tips');
+              break;
+            case 'imaging':
+              if (onNavigate) onNavigate('imaging');
+              else setActiveSection('imaging');
+              break;
+            case 'checkup':
+              setActiveSection('checkup');
+              break;
+            case 'health-analytics':
+              setActiveSection('health-analytics');
+              break;
+            case 'ai-assistant':
+              setActiveSection('ai-assistant');
+              break;
+            case 'quick-tools':
+              setActiveSection('quick-tools');
+              break;
+            case 'calculators':
+              setActiveSection('calculators');
+              break;
+            case 'ambulance':
+              setActiveSection('ambulance');
+              break;
+            case 'second-opinion':
+              setActiveSection('second-opinion');
+              break;
+            case 'email-reminders':
+              setActiveSection('email-reminders');
               break;
             case 'settings':
               setShowProfileModal(true);

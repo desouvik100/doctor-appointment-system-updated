@@ -11,6 +11,7 @@ import { AllergyAlertBanner } from './AllergyAlert';
 import InteractionOverrideModal from './InteractionOverrideModal';
 import EPrescribeForm from './EPrescribeForm';
 import { useVoiceInput } from './VoiceInput';
+import WhatsAppIntegration from './WhatsAppIntegration';
 import './BasicPrescription.css';
 
 const BasicPrescription = ({ 
@@ -34,6 +35,8 @@ const BasicPrescription = ({
   const [searchResults, setSearchResults] = useState([]);
   const [searching, setSearching] = useState(false);
   const [showEPrescribe, setShowEPrescribe] = useState(false);
+  const [showWhatsApp, setShowWhatsApp] = useState(false);
+  const [savedPrescriptionId, setSavedPrescriptionId] = useState(existingPrescription?._id || null);
 
   // Drug interaction state
   const [showInteractionChecker, setShowInteractionChecker] = useState(false);
@@ -319,6 +322,15 @@ const BasicPrescription = ({
               title="Check drug interactions"
             >
               🔍 Check Interactions
+            </button>
+          )}
+          {savedPrescriptionId && patient?.phone && (
+            <button 
+              className="btn-whatsapp"
+              onClick={() => setShowWhatsApp(true)}
+              title="Send via WhatsApp"
+            >
+              <i className="fab fa-whatsapp"></i> WhatsApp
             </button>
           )}
           <button className="btn-print" onClick={handlePrint}>
@@ -653,6 +665,28 @@ const BasicPrescription = ({
         onOverride={handleOverride}
         onCancel={() => setOverrideModal({ isOpen: false, interaction: null })}
       />
+
+      {/* WhatsApp Send Modal */}
+      {showWhatsApp && (
+        <div className="whatsapp-overlay">
+          <WhatsAppIntegration
+            type="prescription"
+            data={{
+              prescriptionId: savedPrescriptionId,
+              doctorName: prescriber?.name || 'Doctor',
+              medicines: prescription.medicines,
+              diagnosis: prescription.diagnosis
+            }}
+            patientPhone={patient?.phone || ''}
+            patientName={patient?.name || 'Patient'}
+            onSuccess={() => {
+              setShowWhatsApp(false);
+              setSuccess('Prescription sent via WhatsApp!');
+            }}
+            onClose={() => setShowWhatsApp(false)}
+          />
+        </div>
+      )}
     </div>
   );
 };

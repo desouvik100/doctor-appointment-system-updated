@@ -1,0 +1,589 @@
+/**
+ * Lab Tests Screen
+ */
+
+import React, { useState } from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  TextInput,
+} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import { colors, shadows } from '../../theme/colors';
+import { typography, spacing, borderRadius } from '../../theme/typography';
+import Card from '../../components/common/Card';
+
+const LabTestsScreen = ({ navigation }) => {
+  const [searchQuery, setSearchQuery] = useState('');
+  const [cart, setCart] = useState([]);
+
+  const popularTests = [
+    { id: '1', name: 'Complete Blood Count (CBC)', price: 299, originalPrice: 450, discount: '33%', icon: '🩸' },
+    { id: '2', name: 'Thyroid Profile (T3, T4, TSH)', price: 499, originalPrice: 800, discount: '38%', icon: '🦋' },
+    { id: '3', name: 'Lipid Profile', price: 399, originalPrice: 600, discount: '33%', icon: '❤️' },
+    { id: '4', name: 'Liver Function Test (LFT)', price: 449, originalPrice: 700, discount: '36%', icon: '🫁' },
+    { id: '5', name: 'Kidney Function Test (KFT)', price: 399, originalPrice: 650, discount: '39%', icon: '🫘' },
+    { id: '6', name: 'HbA1c (Diabetes)', price: 349, originalPrice: 500, discount: '30%', icon: '🍬' },
+  ];
+
+  const healthPackages = [
+    {
+      id: 'basic',
+      name: 'Basic Health Checkup',
+      tests: 45,
+      price: 999,
+      originalPrice: 2500,
+      discount: '60%',
+      includes: ['CBC', 'Lipid Profile', 'Liver Function', 'Kidney Function', 'Thyroid'],
+      popular: true,
+    },
+    {
+      id: 'comprehensive',
+      name: 'Comprehensive Health Package',
+      tests: 78,
+      price: 1999,
+      originalPrice: 5000,
+      discount: '60%',
+      includes: ['All Basic Tests', 'Vitamin Panel', 'Hormone Tests', 'Cancer Markers'],
+      popular: false,
+    },
+    {
+      id: 'senior',
+      name: 'Senior Citizen Package',
+      tests: 92,
+      price: 2499,
+      originalPrice: 6500,
+      discount: '62%',
+      includes: ['Full Body Checkup', 'Heart Health', 'Bone Health', 'Eye & Ear Tests'],
+      popular: false,
+    },
+  ];
+
+  const addToCart = (item) => {
+    if (!cart.find(c => c.id === item.id)) {
+      setCart([...cart, item]);
+    }
+  };
+
+  const removeFromCart = (itemId) => {
+    setCart(cart.filter(c => c.id !== itemId));
+  };
+
+  const isInCart = (itemId) => cart.some(c => c.id === itemId);
+
+  return (
+    <View style={styles.container}>
+      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+
+      {/* Header */}
+      <View style={styles.header}>
+        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+          <Text style={styles.backIcon}>←</Text>
+        </TouchableOpacity>
+        <Text style={styles.headerTitle}>Lab Tests</Text>
+        <TouchableOpacity style={styles.cartBtn}>
+          <Text style={styles.cartIcon}>🛒</Text>
+          {cart.length > 0 && (
+            <View style={styles.cartBadge}>
+              <Text style={styles.cartBadgeText}>{cart.length}</Text>
+            </View>
+          )}
+        </TouchableOpacity>
+      </View>
+
+      {/* Search */}
+      <View style={styles.searchContainer}>
+        <View style={styles.searchBar}>
+          <Text style={styles.searchIcon}>🔍</Text>
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search tests, packages..."
+            placeholderTextColor={colors.textMuted}
+            value={searchQuery}
+            onChangeText={setSearchQuery}
+          />
+        </View>
+      </View>
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        {/* Banner */}
+        <LinearGradient
+          colors={['#10B981', '#059669']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.banner}
+        >
+          <View style={styles.bannerContent}>
+            <Text style={styles.bannerTitle}>Home Sample Collection</Text>
+            <Text style={styles.bannerSubtitle}>Free pickup • Reports in 24hrs</Text>
+            <View style={styles.bannerBadge}>
+              <Text style={styles.bannerBadgeText}>SAFE & HYGIENIC</Text>
+            </View>
+          </View>
+          <Text style={styles.bannerEmoji}>🧪</Text>
+        </LinearGradient>
+
+        {/* Health Packages */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeader}>
+            <Text style={styles.sectionTitle}>Health Packages</Text>
+            <TouchableOpacity>
+              <Text style={styles.seeAll}>View All</Text>
+            </TouchableOpacity>
+          </View>
+
+          <ScrollView horizontal showsHorizontalScrollIndicator={false}>
+            {healthPackages.map((pkg) => (
+              <Card key={pkg.id} variant="gradient" style={styles.packageCard}>
+                {pkg.popular && (
+                  <View style={styles.popularBadge}>
+                    <Text style={styles.popularText}>POPULAR</Text>
+                  </View>
+                )}
+                <Text style={styles.packageName}>{pkg.name}</Text>
+                <Text style={styles.packageTests}>{pkg.tests} Tests Included</Text>
+                
+                <View style={styles.packageIncludes}>
+                  {pkg.includes.slice(0, 3).map((item, idx) => (
+                    <Text key={idx} style={styles.includeItem}>✓ {item}</Text>
+                  ))}
+                  {pkg.includes.length > 3 && (
+                    <Text style={styles.moreTests}>+{pkg.includes.length - 3} more</Text>
+                  )}
+                </View>
+
+                <View style={styles.priceRow}>
+                  <View>
+                    <Text style={styles.originalPrice}>₹{pkg.originalPrice}</Text>
+                    <Text style={styles.price}>₹{pkg.price}</Text>
+                  </View>
+                  <View style={styles.discountBadge}>
+                    <Text style={styles.discountText}>{pkg.discount} OFF</Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity
+                  style={[styles.addBtn, isInCart(pkg.id) && styles.addedBtn]}
+                  onPress={() => isInCart(pkg.id) ? removeFromCart(pkg.id) : addToCart(pkg)}
+                >
+                  <Text style={[styles.addBtnText, isInCart(pkg.id) && styles.addedBtnText]}>
+                    {isInCart(pkg.id) ? '✓ Added' : 'Add to Cart'}
+                  </Text>
+                </TouchableOpacity>
+              </Card>
+            ))}
+          </ScrollView>
+        </View>
+
+        {/* Popular Tests */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Popular Tests</Text>
+          
+          {popularTests.map((test) => (
+            <Card key={test.id} variant="default" style={styles.testCard}>
+              <View style={styles.testRow}>
+                <View style={styles.testIcon}>
+                  <Text style={styles.testEmoji}>{test.icon}</Text>
+                </View>
+                <View style={styles.testInfo}>
+                  <Text style={styles.testName}>{test.name}</Text>
+                  <View style={styles.testPriceRow}>
+                    <Text style={styles.testOriginalPrice}>₹{test.originalPrice}</Text>
+                    <Text style={styles.testPrice}>₹{test.price}</Text>
+                    <View style={styles.testDiscount}>
+                      <Text style={styles.testDiscountText}>{test.discount} OFF</Text>
+                    </View>
+                  </View>
+                </View>
+                <TouchableOpacity
+                  style={[styles.testAddBtn, isInCart(test.id) && styles.testAddedBtn]}
+                  onPress={() => isInCart(test.id) ? removeFromCart(test.id) : addToCart(test)}
+                >
+                  <Text style={[styles.testAddBtnText, isInCart(test.id) && styles.testAddedBtnText]}>
+                    {isInCart(test.id) ? '✓' : '+'}
+                  </Text>
+                </TouchableOpacity>
+              </View>
+            </Card>
+          ))}
+        </View>
+      </ScrollView>
+
+      {/* Cart Footer */}
+      {cart.length > 0 && (
+        <View style={styles.cartFooter}>
+          <View style={styles.cartInfo}>
+            <Text style={styles.cartItems}>{cart.length} items</Text>
+            <Text style={styles.cartTotal}>
+              ₹{cart.reduce((sum, item) => sum + item.price, 0)}
+            </Text>
+          </View>
+          <TouchableOpacity style={styles.checkoutBtn}>
+            <LinearGradient
+              colors={colors.gradientPrimary}
+              style={styles.checkoutBtnGradient}
+            >
+              <Text style={styles.checkoutBtnText}>Book Now</Text>
+              <Text style={styles.checkoutArrow}>→</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      )}
+    </View>
+  );
+};
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.lg,
+  },
+  backBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  backIcon: {
+    fontSize: 20,
+    color: colors.textPrimary,
+  },
+  headerTitle: {
+    ...typography.headlineMedium,
+    color: colors.textPrimary,
+  },
+  cartBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  cartIcon: {
+    fontSize: 20,
+  },
+  cartBadge: {
+    position: 'absolute',
+    top: -4,
+    right: -4,
+    backgroundColor: colors.primary,
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  cartBadgeText: {
+    ...typography.labelSmall,
+    color: colors.textInverse,
+    fontSize: 10,
+  },
+  searchContainer: {
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+  },
+  searchBar: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.lg,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  searchIcon: {
+    fontSize: 18,
+    marginRight: spacing.md,
+  },
+  searchInput: {
+    flex: 1,
+    ...typography.bodyLarge,
+    color: colors.textPrimary,
+    paddingVertical: spacing.md,
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
+  banner: {
+    marginHorizontal: spacing.xl,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  bannerContent: {
+    flex: 1,
+  },
+  bannerTitle: {
+    ...typography.headlineMedium,
+    color: colors.textInverse,
+    marginBottom: spacing.xs,
+  },
+  bannerSubtitle: {
+    ...typography.bodyMedium,
+    color: 'rgba(255,255,255,0.8)',
+    marginBottom: spacing.md,
+  },
+  bannerBadge: {
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs,
+    borderRadius: borderRadius.full,
+    alignSelf: 'flex-start',
+  },
+  bannerBadgeText: {
+    ...typography.labelSmall,
+    color: colors.textInverse,
+    fontWeight: '600',
+  },
+  bannerEmoji: {
+    fontSize: 48,
+  },
+  section: {
+    marginBottom: spacing.xl,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+  },
+  sectionTitle: {
+    ...typography.headlineSmall,
+    color: colors.textPrimary,
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+  },
+  seeAll: {
+    ...typography.labelMedium,
+    color: colors.primary,
+  },
+  packageCard: {
+    width: 280,
+    marginLeft: spacing.xl,
+    padding: spacing.lg,
+  },
+  popularBadge: {
+    position: 'absolute',
+    top: spacing.md,
+    right: spacing.md,
+    backgroundColor: colors.accent,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  popularText: {
+    ...typography.labelSmall,
+    color: colors.textInverse,
+    fontSize: 10,
+    fontWeight: '700',
+  },
+  packageName: {
+    ...typography.headlineSmall,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  packageTests: {
+    ...typography.bodyMedium,
+    color: colors.primary,
+    marginBottom: spacing.md,
+  },
+  packageIncludes: {
+    marginBottom: spacing.md,
+  },
+  includeItem: {
+    ...typography.bodySmall,
+    color: colors.textSecondary,
+    marginBottom: 2,
+  },
+  moreTests: {
+    ...typography.labelSmall,
+    color: colors.primary,
+    marginTop: spacing.xs,
+  },
+  priceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
+  },
+  originalPrice: {
+    ...typography.bodySmall,
+    color: colors.textMuted,
+    textDecorationLine: 'line-through',
+  },
+  price: {
+    ...typography.headlineMedium,
+    color: colors.textPrimary,
+  },
+  discountBadge: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 2,
+    borderRadius: borderRadius.sm,
+  },
+  discountText: {
+    ...typography.labelSmall,
+    color: colors.success,
+    fontWeight: '600',
+  },
+  addBtn: {
+    backgroundColor: colors.primary,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+  },
+  addedBtn: {
+    backgroundColor: colors.success,
+  },
+  addBtnText: {
+    ...typography.buttonSmall,
+    color: colors.textInverse,
+  },
+  addedBtnText: {
+    color: colors.textInverse,
+  },
+  testCard: {
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    padding: spacing.md,
+  },
+  testRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  testIcon: {
+    width: 48,
+    height: 48,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.surfaceLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  testEmoji: {
+    fontSize: 24,
+  },
+  testInfo: {
+    flex: 1,
+  },
+  testName: {
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
+    fontWeight: '500',
+    marginBottom: spacing.xs,
+  },
+  testPriceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  testOriginalPrice: {
+    ...typography.labelSmall,
+    color: colors.textMuted,
+    textDecorationLine: 'line-through',
+    marginRight: spacing.sm,
+  },
+  testPrice: {
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
+    fontWeight: '600',
+    marginRight: spacing.sm,
+  },
+  testDiscount: {
+    backgroundColor: 'rgba(16, 185, 129, 0.15)',
+    paddingHorizontal: spacing.xs,
+    paddingVertical: 1,
+    borderRadius: borderRadius.sm,
+  },
+  testDiscountText: {
+    ...typography.labelSmall,
+    color: colors.success,
+    fontSize: 10,
+  },
+  testAddBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  testAddedBtn: {
+    backgroundColor: colors.success,
+  },
+  testAddBtnText: {
+    fontSize: 20,
+    color: colors.textInverse,
+    fontWeight: '300',
+  },
+  testAddedBtnText: {
+    fontSize: 16,
+  },
+  cartFooter: {
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    backgroundColor: colors.backgroundCard,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.lg,
+    borderTopWidth: 1,
+    borderTopColor: colors.surfaceBorder,
+    ...shadows.large,
+  },
+  cartInfo: {},
+  cartItems: {
+    ...typography.labelSmall,
+    color: colors.textMuted,
+  },
+  cartTotal: {
+    ...typography.headlineMedium,
+    color: colors.textPrimary,
+  },
+  checkoutBtn: {
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  checkoutBtnGradient: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
+  },
+  checkoutBtnText: {
+    ...typography.button,
+    color: colors.textInverse,
+    marginRight: spacing.sm,
+  },
+  checkoutArrow: {
+    fontSize: 18,
+    color: colors.textInverse,
+  },
+});
+
+export default LabTestsScreen;

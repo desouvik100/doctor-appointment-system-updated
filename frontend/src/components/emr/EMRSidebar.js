@@ -55,6 +55,7 @@ const EMRSidebar = ({
     audit_logs: '🔍',
     staff_management: '👥',
     data_export: '📤',
+    whatsapp: '💬',
     // Clinical Features
     vitals_recorder: '❤️',
     vitals_trends: '📈',
@@ -79,6 +80,7 @@ const EMRSidebar = ({
     audit_logs: 'Audit Logs',
     staff_management: 'Staff',
     data_export: 'Export',
+    whatsapp: 'WhatsApp',
     // Clinical Features
     vitals_recorder: 'Vitals Recording',
     vitals_trends: 'Vitals Trends',

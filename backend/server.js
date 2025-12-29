@@ -289,12 +289,14 @@ app.use('/api/ai-health', require('./routes/aiHealthRoutes')); // Advanced AI he
 app.use('/api/ai-report', require('./routes/aiReportRoutes')); // AI medical report analyzer
 app.use('/api/slots', require('./routes/slotRoutes')); // Separate Online & Clinic slot management
 app.use('/api/commission', require('./routes/commissionRoutes')); // Commission, GST & Payout system
+app.use('/api/refunds', require('./routes/refundRoutes')); // Refund Policy & Processing
 app.use('/api/support', require('./routes/supportRoutes')); // Doctor-Admin Support Tickets
 app.use('/api/doctor-control', require('./routes/doctorControlRoutes')); // Doctor Override & Emergency Controls
 app.use('/api/systematic-history', require('./routes/systematicHistoryRoutes')); // Systematic History for clinical-grade consultations
 app.use('/api/emr', require('./routes/emrRoutes')); // EMR Subscription Module for Clinics
 app.use('/api/emr-advanced', require('./routes/emrAdvancedRoutes')); // Offline, Templates, Protocols, FHIR
 app.use('/api/imaging', require('./routes/imagingRoutes')); // DICOM Imaging & Telemedicine
+app.use('/api/whatsapp', require('./routes/whatsappRoutes')); // WhatsApp Integration for patient engagement
 
 // ===== NEW DIFFERENTIATOR FEATURES =====
 app.use('/api/family-wallet', require('./routes/familyWalletRoutes')); // Family Health Wallet

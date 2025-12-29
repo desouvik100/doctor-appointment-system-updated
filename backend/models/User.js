@@ -245,7 +245,39 @@ const userSchema = new mongoose.Schema(
       relationship: String
     },
     allergies: [String],
-    chronicConditions: [String]
+    chronicConditions: [String],
+    
+    // Wallet for refunds and credits
+    walletBalance: {
+      type: Number,
+      default: 0,
+      min: 0
+    },
+    walletHistory: [{
+      type: {
+        type: String,
+        enum: ['credit', 'debit', 'refund', 'compensation'],
+        required: true
+      },
+      amount: {
+        type: Number,
+        required: true
+      },
+      description: String,
+      referenceId: {
+        type: mongoose.Schema.Types.ObjectId,
+        refPath: 'walletHistory.referenceModel'
+      },
+      referenceModel: {
+        type: String,
+        enum: ['Appointment', 'Payment', 'Refund']
+      },
+      balanceAfter: Number,
+      createdAt: {
+        type: Date,
+        default: Date.now
+      }
+    }]
   },
   { timestamps: true }
 );

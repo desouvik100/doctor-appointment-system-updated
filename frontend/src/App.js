@@ -1550,56 +1550,56 @@ function App() {
       {/* PWA Install Banner */}
       <PWAInstallBanner />
       
-      {/* Global Toast Notifications - Modern Native Style */}
+      {/* Global Toast Notifications - Mobile Optimized */}
       <Toaster
-        position="top-center"
+        position="bottom-center"
         reverseOrder={false}
-        gutter={12}
+        gutter={8}
         containerStyle={{
-          top: 'calc(16px + env(safe-area-inset-top, 0px))',
+          bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))',
           zIndex: 99999999,
         }}
         toastOptions={{
-          duration: 3000,
+          duration: 2000,
           style: {
-            background: 'rgba(15, 23, 42, 0.95)',
+            background: 'rgba(15, 23, 42, 0.92)',
             color: '#ffffff',
-            padding: '16px 20px',
-            borderRadius: '16px',
-            boxShadow: '0 12px 40px rgba(0, 0, 0, 0.35), 0 4px 12px rgba(0, 0, 0, 0.2)',
-            fontWeight: '600',
-            fontSize: '15px',
-            maxWidth: '90vw',
-            minWidth: '200px',
-            backdropFilter: 'blur(12px)',
-            WebkitBackdropFilter: 'blur(12px)',
-            border: '1px solid rgba(255, 255, 255, 0.1)',
+            padding: '12px 16px',
+            borderRadius: '12px',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
+            fontWeight: '500',
+            fontSize: '14px',
+            maxWidth: '85vw',
+            minWidth: '160px',
+            backdropFilter: 'blur(8px)',
+            WebkitBackdropFilter: 'blur(8px)',
+            border: '1px solid rgba(255, 255, 255, 0.08)',
             display: 'flex',
             alignItems: 'center',
-            gap: '12px',
+            gap: '10px',
           },
           success: {
-            duration: 2500,
+            duration: 1800,
             iconTheme: {
               primary: '#22c55e',
               secondary: '#ffffff',
             },
             style: {
-              background: 'linear-gradient(135deg, rgba(22, 163, 74, 0.95) 0%, rgba(21, 128, 61, 0.95) 100%)',
+              background: 'rgba(22, 163, 74, 0.92)',
               color: '#ffffff',
-              border: '1px solid rgba(34, 197, 94, 0.3)',
+              border: '1px solid rgba(34, 197, 94, 0.2)',
             },
           },
           error: {
-            duration: 4000,
+            duration: 2500,
             iconTheme: {
               primary: '#ffffff',
               secondary: '#dc2626',
             },
             style: {
-              background: 'linear-gradient(135deg, rgba(220, 38, 38, 0.95) 0%, rgba(185, 28, 28, 0.95) 100%)',
+              background: 'rgba(220, 38, 38, 0.92)',
               color: '#ffffff',
-              border: '1px solid rgba(248, 113, 113, 0.3)',
+              border: '1px solid rgba(248, 113, 113, 0.2)',
             },
           },
           loading: {
@@ -1608,9 +1608,9 @@ function App() {
               secondary: '#ffffff',
             },
             style: {
-              background: 'linear-gradient(135deg, rgba(37, 99, 235, 0.95) 0%, rgba(29, 78, 216, 0.95) 100%)',
+              background: 'rgba(37, 99, 235, 0.92)',
               color: '#ffffff',
-              border: '1px solid rgba(96, 165, 250, 0.3)',
+              border: '1px solid rgba(96, 165, 250, 0.2)',
             },
           },
         }}

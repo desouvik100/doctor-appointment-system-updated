@@ -2594,11 +2594,18 @@ router.get('/patients/:patientId/vitals/trends', verifyToken, async (req, res) =
         startDate.setMonth(startDate.getMonth() - 6);
     }
     
-    // Query visits with vitals
+    // Query visits with vitals - check for any vital sign data, not just recordedAt
     const visits = await EMRVisit.find({
       patientId,
       visitDate: { $gte: startDate },
-      'vitalSigns.recordedAt': { $exists: true }
+      $or: [
+        { 'vitalSigns.recordedAt': { $exists: true } },
+        { 'vitalSigns.bloodPressure.systolic': { $exists: true } },
+        { 'vitalSigns.pulse.value': { $exists: true } },
+        { 'vitalSigns.temperature.value': { $exists: true } },
+        { 'vitalSigns.spo2.value': { $exists: true } },
+        { 'vitalSigns.weight.value': { $exists: true } }
+      ]
     })
     .select('visitDate vitalSigns')
     .sort({ visitDate: -1 })

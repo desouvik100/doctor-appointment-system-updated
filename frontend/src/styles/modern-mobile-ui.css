@@ -1,57 +1,58 @@
 /* ============================================
    Modern Startup Mobile UI - HealthSync Pro
    Inspired by: Revolut, Uber, Airbnb, Stripe
+   UPDATED: Better spacing, improved theme colors
    ============================================ */
 
 /* ===== CSS Variables - Modern Design System ===== */
 :root {
-  /* Primary Palette - Vibrant Healthcare Blue */
-  --m-primary: #0066FF;
-  --m-primary-light: #3385FF;
-  --m-primary-dark: #0052CC;
-  --m-primary-bg: rgba(0, 102, 255, 0.08);
+  /* Primary Palette - Refined Healthcare Teal/Blue */
+  --m-primary: #0891B2;
+  --m-primary-light: #22D3EE;
+  --m-primary-dark: #0E7490;
+  --m-primary-bg: rgba(8, 145, 178, 0.1);
   
-  /* Accent Colors */
-  --m-success: #00C853;
-  --m-success-bg: rgba(0, 200, 83, 0.1);
-  --m-warning: #FF9500;
-  --m-warning-bg: rgba(255, 149, 0, 0.1);
-  --m-danger: #FF3B30;
-  --m-danger-bg: rgba(255, 59, 48, 0.1);
-  --m-info: #5856D6;
-  --m-info-bg: rgba(88, 86, 214, 0.1);
+  /* Accent Colors - Softer, more pleasant */
+  --m-success: #10B981;
+  --m-success-bg: rgba(16, 185, 129, 0.12);
+  --m-warning: #F59E0B;
+  --m-warning-bg: rgba(245, 158, 11, 0.12);
+  --m-danger: #EF4444;
+  --m-danger-bg: rgba(239, 68, 68, 0.12);
+  --m-info: #6366F1;
+  --m-info-bg: rgba(99, 102, 241, 0.12);
   
-  /* Neutral Palette */
-  --m-bg: #F8F9FA;
+  /* Neutral Palette - Warmer tones */
+  --m-bg: #F8FAFC;
   --m-surface: #FFFFFF;
   --m-surface-elevated: #FFFFFF;
-  --m-text: #1A1A1A;
-  --m-text-secondary: #6B7280;
-  --m-text-tertiary: #9CA3AF;
-  --m-border: #E5E7EB;
-  --m-border-light: #F3F4F6;
-  --m-divider: #F0F0F0;
+  --m-text: #0F172A;
+  --m-text-secondary: #64748B;
+  --m-text-tertiary: #94A3B8;
+  --m-border: #E2E8F0;
+  --m-border-light: #F1F5F9;
+  --m-divider: #E2E8F0;
   
-  /* Shadows - Soft & Modern */
-  --m-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
-  --m-shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
-  --m-shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
-  --m-shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
-  --m-shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
+  /* Shadows - Softer & Modern */
+  --m-shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.03);
+  --m-shadow-sm: 0 2px 6px rgba(0, 0, 0, 0.05);
+  --m-shadow-md: 0 4px 12px rgba(0, 0, 0, 0.07);
+  --m-shadow-lg: 0 8px 24px rgba(0, 0, 0, 0.1);
+  --m-shadow-xl: 0 16px 40px rgba(0, 0, 0, 0.12);
   
   /* Radii */
   --m-radius-sm: 8px;
   --m-radius-md: 12px;
   --m-radius-lg: 16px;
-  --m-radius-xl: 24px;
+  --m-radius-xl: 20px;
   --m-radius-full: 9999px;
   
-  /* Spacing */
-  --m-space-xs: 4px;
-  --m-space-sm: 8px;
-  --m-space-md: 16px;
-  --m-space-lg: 24px;
-  --m-space-xl: 32px;
+  /* Spacing - INCREASED for better component separation */
+  --m-space-xs: 6px;
+  --m-space-sm: 12px;
+  --m-space-md: 20px;
+  --m-space-lg: 28px;
+  --m-space-xl: 40px;
   
   /* Typography */
   --m-font: 'SF Pro Display', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
@@ -64,17 +65,21 @@
   --m-spring: 500ms cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
-/* Dark Mode Variables */
+/* Dark Mode Variables - Improved contrast */
 html[data-theme="dark"] {
-  --m-bg: #0A0A0A;
-  --m-surface: #141414;
-  --m-surface-elevated: #1C1C1E;
-  --m-text: #FFFFFF;
-  --m-text-secondary: #8E8E93;
-  --m-text-tertiary: #636366;
-  --m-border: #2C2C2E;
-  --m-border-light: #1C1C1E;
-  --m-divider: #2C2C2E;
+  --m-primary: #22D3EE;
+  --m-primary-light: #67E8F9;
+  --m-primary-dark: #0891B2;
+  --m-primary-bg: rgba(34, 211, 238, 0.15);
+  --m-bg: #0F172A;
+  --m-surface: #1E293B;
+  --m-surface-elevated: #334155;
+  --m-text: #F8FAFC;
+  --m-text-secondary: #94A3B8;
+  --m-text-tertiary: #64748B;
+  --m-border: #334155;
+  --m-border-light: #1E293B;
+  --m-divider: #334155;
 }
 
 
@@ -203,11 +208,11 @@ html[data-theme="dark"] {
   pointer-events: none;
 }
 
-/* ===== Modern Quick Actions Grid ===== */
+/* ===== Modern Quick Actions Grid - IMPROVED SPACING ===== */
 .m-quick-actions {
   display: grid;
   grid-template-columns: repeat(4, 1fr);
-  gap: 12px;
+  gap: 16px;
   padding: 20px;
 }
 
@@ -215,14 +220,14 @@ html[data-theme="dark"] {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 8px;
-  padding: 16px 8px;
+  gap: 10px;
+  padding: 18px 10px;
   background: var(--m-surface);
   border-radius: var(--m-radius-lg);
   border: none;
   cursor: pointer;
   transition: all var(--m-transition);
-  box-shadow: var(--m-shadow-xs);
+  box-shadow: var(--m-shadow-sm);
 }
 
 .m-quick-action:active {
@@ -256,17 +261,17 @@ html[data-theme="dark"] {
 }
 
 
-/* ===== Modern Section Headers ===== */
+/* ===== Modern Section Headers - IMPROVED SPACING ===== */
 .m-section {
   padding: 0 20px;
-  margin-bottom: 24px;
+  margin-bottom: 28px;
 }
 
 .m-section-header {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  margin-bottom: 16px;
+  margin-bottom: 18px;
 }
 
 .m-section-title {
@@ -294,14 +299,15 @@ html[data-theme="dark"] {
   background: var(--m-primary-bg);
 }
 
-/* ===== Modern Cards ===== */
+/* ===== Modern Cards - IMPROVED SPACING ===== */
 .m-card {
   background: var(--m-surface);
   border-radius: var(--m-radius-xl);
-  padding: 20px;
+  padding: 22px;
   box-shadow: var(--m-shadow-sm);
   transition: all var(--m-transition);
   border: 1px solid var(--m-border-light);
+  margin-bottom: 16px;
 }
 
 .m-card:active {
@@ -316,8 +322,8 @@ html[data-theme="dark"] {
 .m-card-header {
   display: flex;
   align-items: flex-start;
-  gap: 14px;
-  margin-bottom: 16px;
+  gap: 16px;
+  margin-bottom: 18px;
 }
 
 .m-card-avatar {
@@ -563,7 +569,7 @@ html[data-theme="dark"] {
   padding: 0 5px;
 }
 
-/* ===== Modern List Items ===== */
+/* ===== Modern List Items - IMPROVED SPACING ===== */
 .m-list {
   background: var(--m-surface);
   border-radius: var(--m-radius-xl);
@@ -574,8 +580,8 @@ html[data-theme="dark"] {
 .m-list-item {
   display: flex;
   align-items: center;
-  gap: 14px;
-  padding: 16px 20px;
+  gap: 16px;
+  padding: 18px 20px;
   background: transparent;
   border: none;
   width: 100%;
@@ -631,18 +637,18 @@ html[data-theme="dark"] {
 }
 
 
-/* ===== Modern Stats Cards ===== */
+/* ===== Modern Stats Cards - IMPROVED SPACING ===== */
 .m-stats-grid {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
-  gap: 12px;
+  gap: 16px;
   padding: 0 20px;
 }
 
 .m-stat-card {
   background: var(--m-surface);
   border-radius: var(--m-radius-lg);
-  padding: 16px;
+  padding: 18px;
   box-shadow: var(--m-shadow-xs);
   border: 1px solid var(--m-border-light);
 }
@@ -1590,5 +1596,246 @@ html[data-theme="dark"] .m-glass {
     margin-top: 24px;
     padding-top: 24px;
     border-top: 1px solid var(--m-divider);
+  }
+}
+
+
+/* ===== MOBILE COMPONENT SPACING IMPROVEMENTS ===== */
+@media (max-width: 640px) {
+  /* Increase spacing between all major sections */
+  .space-y-6 > * + * {
+    margin-top: 24px !important;
+  }
+  
+  /* Doctor cards grid - better spacing */
+  .grid.grid-cols-2 {
+    gap: 16px !important;
+  }
+  
+  /* Quick action cards */
+  .m-quick-action {
+    padding: 16px 12px !important;
+    gap: 10px !important;
+  }
+  
+  /* Card internal spacing */
+  .bg-white.rounded-2xl {
+    padding: 20px !important;
+    margin-bottom: 16px !important;
+  }
+  
+  /* List items spacing */
+  .space-y-3 > * + * {
+    margin-top: 14px !important;
+  }
+  
+  /* Button spacing in cards */
+  .flex.gap-4 {
+    gap: 12px !important;
+  }
+  
+  /* Appointment cards */
+  .m-appointment-card {
+    padding: 18px !important;
+    margin-bottom: 14px !important;
+  }
+  
+  /* Doctor card mobile */
+  .doctor-card-mobile {
+    padding: 16px !important;
+    margin-bottom: 12px !important;
+  }
+  
+  /* Stats grid */
+  .m-stats-grid,
+  .m-health-grid {
+    gap: 14px !important;
+  }
+  
+  /* Form groups */
+  .m-form-group {
+    margin-bottom: 22px !important;
+  }
+  
+  /* Bottom navigation spacing from content */
+  .has-bottom-nav {
+    padding-bottom: calc(85px + env(safe-area-inset-bottom, 0px)) !important;
+  }
+  
+  /* Chip/pill spacing */
+  .m-chips {
+    gap: 10px !important;
+  }
+  
+  /* Section padding */
+  .m-section {
+    margin-bottom: 26px !important;
+  }
+  
+  /* Header spacing */
+  .m-header {
+    padding: 14px 20px !important;
+  }
+  
+  /* Hero section */
+  .m-hero {
+    padding: 26px 20px 34px !important;
+  }
+}
+
+/* ===== IMPROVED THEME COLORS FOR MOBILE ===== */
+@media (max-width: 640px) {
+  /* Primary gradient - softer, more pleasant */
+  .bg-gradient-to-r.from-sky-500 {
+    background: linear-gradient(135deg, #0891B2 0%, #14B8A6 100%) !important;
+  }
+  
+  /* Success colors */
+  .bg-emerald-50 {
+    background: rgba(16, 185, 129, 0.1) !important;
+  }
+  
+  /* Card backgrounds - slightly warmer */
+  .bg-white {
+    background: #FFFFFF !important;
+  }
+  
+  /* Text colors - better contrast */
+  .text-slate-800 {
+    color: #1E293B !important;
+  }
+  
+  .text-slate-500 {
+    color: #64748B !important;
+  }
+  
+  /* Primary button colors */
+  .bg-sky-600 {
+    background: #0891B2 !important;
+  }
+  
+  .bg-sky-600:hover,
+  .hover\:bg-sky-700:hover {
+    background: #0E7490 !important;
+  }
+  
+  /* Accent highlights */
+  .text-sky-600 {
+    color: #0891B2 !important;
+  }
+  
+  .text-sky-500 {
+    color: #06B6D4 !important;
+  }
+}
+
+/* ===== MORE MENU BUTTON STYLES ===== */
+.more-menu-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  background: var(--m-surface);
+  border: 1px solid var(--m-border);
+  color: var(--m-text);
+  font-size: 20px;
+  cursor: pointer;
+  transition: all var(--m-transition-fast);
+}
+
+.more-menu-btn:active {
+  transform: scale(0.95);
+  background: var(--m-bg);
+}
+
+/* More menu sheet */
+.more-menu-sheet {
+  position: fixed;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  background: var(--m-surface);
+  border-radius: 24px 24px 0 0;
+  max-height: 80vh;
+  z-index: 201;
+  animation: slideUp 300ms ease-out;
+  padding-bottom: env(safe-area-inset-bottom, 20px);
+}
+
+.more-menu-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+  padding: 20px;
+}
+
+.more-menu-item {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 8px;
+  background: var(--m-bg);
+  border-radius: 16px;
+  border: none;
+  cursor: pointer;
+  transition: all var(--m-transition-fast);
+}
+
+.more-menu-item:active {
+  transform: scale(0.95);
+  background: var(--m-border);
+}
+
+.more-menu-item-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 20px;
+}
+
+.more-menu-item-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--m-text-secondary);
+  text-align: center;
+  line-height: 1.3;
+}
+
+/* ===== GOOGLE SIGN-IN MOBILE FIX ===== */
+@media (max-width: 640px) {
+  /* Make Google Sign-In button more prominent on mobile */
+  .auth-premium button[class*="google"],
+  .auth-premium .google-signin-btn {
+    width: 100% !important;
+    padding: 14px 20px !important;
+    font-size: 15px !important;
+    font-weight: 600 !important;
+    border-radius: 12px !important;
+    background: #FFFFFF !important;
+    border: 1.5px solid #E2E8F0 !important;
+    color: #1E293B !important;
+    display: flex !important;
+    align-items: center !important;
+    justify-content: center !important;
+    gap: 12px !important;
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08) !important;
+  }
+  
+  .auth-premium button[class*="google"]:active,
+  .auth-premium .google-signin-btn:active {
+    transform: scale(0.98) !important;
+    background: #F8FAFC !important;
+  }
+  
+  .auth-premium button[class*="google"] i,
+  .auth-premium .google-signin-btn i {
+    font-size: 18px !important;
+    color: #EA4335 !important;
   }
 }

@@ -63,20 +63,49 @@ const BottomNavigation = ({ activeTab, onTabChange, unreadNotifications = 0, upc
   ];
 
   const menuItems = [
-    { id: 'profile', icon: 'fas fa-user-circle', label: 'My Profile', color: '#3b82f6' },
-    { id: 'wallet', icon: 'fas fa-wallet', label: 'Wallet', color: '#10b981' },
-    { id: 'transactions', icon: 'fas fa-receipt', label: 'Transactions', color: '#8b5cf6' },
-    { id: 'medical-history', icon: 'fas fa-history', label: 'Medical History', color: '#06b6d4' },
-    { id: 'lab-reports', icon: 'fas fa-flask', label: 'Lab Reports', color: '#f59e0b' },
-    { id: 'medicine-reminder', icon: 'fas fa-pills', label: 'Reminders', color: '#ec4899' },
-    { id: 'insurance', icon: 'fas fa-shield-alt', label: 'Insurance', color: '#14b8a6' },
-    { id: 'emergency', icon: 'fas fa-phone-alt', label: 'Emergency', color: '#ef4444' },
-    { id: 'referrals', icon: 'fas fa-gift', label: 'Refer & Earn', color: '#f97316' },
-    { id: 'loyalty', icon: 'fas fa-coins', label: 'Loyalty Points', color: '#eab308' },
-    { id: 'health-tips', icon: 'fas fa-lightbulb', label: 'Health Tips', color: '#84cc16' },
-    { id: 'settings', icon: 'fas fa-cog', label: 'Settings', color: '#64748b' },
-    { id: 'logout', icon: 'fas fa-sign-out-alt', label: 'Logout', danger: true }
+    // Section: Care
+    { section: 'Care', items: [
+      { id: 'ai-assistant', icon: 'fas fa-robot', label: 'AI Assistant', color: '#ec4899' },
+      { id: 'second-opinion', icon: 'fas fa-user-md', label: 'Second Opinion', color: '#7c3aed' },
+      { id: 'checkup', icon: 'fas fa-stethoscope', label: 'Health Checkup', color: '#14b8a6' },
+    ]},
+    // Section: Records
+    { section: 'Records', items: [
+      { id: 'medical-history', icon: 'fas fa-history', label: 'Medical History', color: '#06b6d4' },
+      { id: 'lab-reports', icon: 'fas fa-flask', label: 'Lab Reports', color: '#f59e0b' },
+      { id: 'imaging', icon: 'fas fa-x-ray', label: 'Medical Imaging', color: '#6366f1' },
+      { id: 'health-analytics', icon: 'fas fa-chart-line', label: 'Analytics', color: '#8b5cf6' },
+    ]},
+    // Section: Emergency
+    { section: 'Emergency', items: [
+      { id: 'ambulance', icon: 'fas fa-ambulance', label: 'Ambulance', color: '#ef4444' },
+      { id: 'emergency', icon: 'fas fa-phone-alt', label: 'Emergency', color: '#dc2626' },
+      { id: 'insurance', icon: 'fas fa-shield-alt', label: 'Insurance', color: '#14b8a6' },
+    ]},
+    // Section: Tools
+    { section: 'Tools', items: [
+      { id: 'medicine-reminder', icon: 'fas fa-pills', label: 'Reminders', color: '#ec4899' },
+      { id: 'quick-tools', icon: 'fas fa-tools', label: 'Quick Tools', color: '#64748b' },
+      { id: 'calculators', icon: 'fas fa-calculator', label: 'Calculators', color: '#0ea5e9' },
+      { id: 'health-tips', icon: 'fas fa-lightbulb', label: 'Health Tips', color: '#84cc16' },
+    ]},
+    // Section: Rewards
+    { section: 'Rewards', items: [
+      { id: 'wallet', icon: 'fas fa-wallet', label: 'Wallet', color: '#10b981' },
+      { id: 'transactions', icon: 'fas fa-receipt', label: 'Transactions', color: '#8b5cf6' },
+      { id: 'referrals', icon: 'fas fa-gift', label: 'Refer & Earn', color: '#f97316' },
+      { id: 'loyalty', icon: 'fas fa-coins', label: 'Loyalty Points', color: '#eab308' },
+    ]},
+    // Section: Account
+    { section: 'Account', items: [
+      { id: 'profile', icon: 'fas fa-user-circle', label: 'My Profile', color: '#3b82f6' },
+      { id: 'email-reminders', icon: 'fas fa-envelope', label: 'Email Alerts', color: '#0891b2' },
+      { id: 'settings', icon: 'fas fa-cog', label: 'Settings', color: '#64748b' },
+    ]},
   ];
+
+  // Flatten for backward compatibility
+  const flatMenuItems = menuItems.flatMap(section => section.items);
 
   const handleTabClick = (tabId) => {
     if (isNative) tapFeedback();
@@ -102,7 +131,7 @@ const BottomNavigation = ({ activeTab, onTabChange, unreadNotifications = 0, upc
 
   return (
     <>
-      {/* Menu Overlay - Modern Bottom Sheet */}
+      {/* Menu Overlay - Modern Bottom Sheet with Sections */}
       {showMenu && (
         <div 
           className="menu-overlay" 
@@ -115,25 +144,49 @@ const BottomNavigation = ({ activeTab, onTabChange, unreadNotifications = 0, upc
             className="menu-sheet" 
             onClick={(e) => e.stopPropagation()}
             role="menu"
+            style={{ maxHeight: '85vh' }}
           >
             <div className="menu-handle" aria-hidden="true"></div>
             <div className="menu-header">
               <span id="menu-title">More Options</span>
             </div>
-            <div className="menu-grid" role="group" aria-labelledby="menu-title">
-              {menuItems.filter(item => !item.danger).map((item) => (
-                <button
-                  key={item.id}
-                  className="menu-grid-item"
-                  onClick={() => handleMenuItemClick(item.id)}
-                  role="menuitem"
-                  aria-label={item.label}
-                >
-                  <div className="menu-grid-icon" style={{ backgroundColor: `${item.color}15`, color: item.color }} aria-hidden="true">
-                    <i className={item.icon}></i>
+            <div style={{ overflowY: 'auto', maxHeight: 'calc(85vh - 140px)', paddingBottom: '20px' }}>
+              {menuItems.map((section, sectionIndex) => (
+                <div key={section.section} style={{ marginBottom: '16px' }}>
+                  {/* Section Header */}
+                  <div style={{
+                    padding: '8px 20px',
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '8px'
+                  }}>
+                    <span style={{
+                      fontSize: '11px',
+                      fontWeight: '700',
+                      color: '#64748b',
+                      textTransform: 'uppercase',
+                      letterSpacing: '0.5px'
+                    }}>{section.section}</span>
+                    <div style={{ flex: 1, height: '1px', background: '#e2e8f0' }}></div>
                   </div>
-                  <span>{item.label}</span>
-                </button>
+                  {/* Section Items */}
+                  <div className="menu-grid" role="group" style={{ padding: '0 12px' }}>
+                    {section.items.map((item) => (
+                      <button
+                        key={item.id}
+                        className="menu-grid-item"
+                        onClick={() => handleMenuItemClick(item.id)}
+                        role="menuitem"
+                        aria-label={item.label}
+                      >
+                        <div className="menu-grid-icon" style={{ backgroundColor: `${item.color}15`, color: item.color }} aria-hidden="true">
+                          <i className={item.icon}></i>
+                        </div>
+                        <span>{item.label}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
               ))}
             </div>
             <div className="menu-footer">

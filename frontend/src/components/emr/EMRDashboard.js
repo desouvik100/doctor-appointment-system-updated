@@ -78,6 +78,7 @@ const EMRDashboard = ({ clinicId, onNavigate }) => {
     { id: 'lab_orders', icon: '🧪', label: 'Lab Orders', screen: 'lab_orders' },
     { id: 'medical_history', icon: '📋', label: 'Medical History', screen: 'medical_history' },
     { id: 'diagnosis_coding', icon: '🏥', label: 'ICD-10 Coding', screen: 'diagnosis_coding' },
+    { id: 'whatsapp', icon: '💬', label: 'WhatsApp', screen: 'whatsapp', highlight: true },
     { id: 'analytics_reports', icon: '📈', label: 'View Analytics', screen: 'analytics_reports' },
     { id: 'staff_management', icon: '👥', label: 'Manage Staff', screen: 'staff_management' },
     { id: 'data_export', icon: '📤', label: 'Export Data', screen: 'data_export' }

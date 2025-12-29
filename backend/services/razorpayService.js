@@ -7,6 +7,7 @@ const {
   RAZORPAY_KEY_ID, 
   RAZORPAY_KEY_SECRET,
   RAZORPAY_MODE,
+  IS_LIVE_MODE,
   FRONTEND_URL
 } = require('../config/paymentConfig');
 
@@ -19,10 +20,19 @@ if (isRazorpayEnabled) {
     key_id: RAZORPAY_KEY_ID,
     key_secret: RAZORPAY_KEY_SECRET
   });
-  console.log(`✅ Razorpay payments ENABLED (${RAZORPAY_MODE} mode)`);
-  console.log(`   Key ID: ${RAZORPAY_KEY_ID.substring(0, 12)}...`);
+  
+  // Clear logging for live vs test mode
+  if (IS_LIVE_MODE) {
+    console.log('💳 Razorpay LIVE payments ENABLED');
+    console.log(`   Key: ${RAZORPAY_KEY_ID.substring(0, 15)}...`);
+    console.log('   ⚠️  REAL MONEY TRANSACTIONS ACTIVE');
+  } else {
+    console.log(`✅ Razorpay TEST payments ENABLED`);
+    console.log(`   Key: ${RAZORPAY_KEY_ID.substring(0, 15)}...`);
+    console.log('   💡 Use test cards for payments');
+  }
 } else {
-  console.log('⚠️  Razorpay payments DISABLED - Running in test mode');
+  console.log('⚠️  Razorpay payments DISABLED - Running in mock mode');
 }
 
 class RazorpayService {
@@ -368,6 +378,7 @@ class RazorpayService {
       paymentsEnabled: Boolean(this.useRazorpay),
       keyId: this.useRazorpay ? RAZORPAY_KEY_ID : null,
       testMode: RAZORPAY_MODE === 'test',
+      liveMode: IS_LIVE_MODE,
       currency: this.currency,
       platformFeePercentage: this.platformFeePercentage,
       gstPercentage: this.gstPercentage

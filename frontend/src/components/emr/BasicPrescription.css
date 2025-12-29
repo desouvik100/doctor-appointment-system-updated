@@ -668,3 +668,45 @@
     padding: 0;
   }
 }
+
+
+/* WhatsApp Button */
+.btn-whatsapp {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 16px;
+  background: #25D366;
+  color: white;
+  border: none;
+  border-radius: 8px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.btn-whatsapp:hover {
+  background: #128C7E;
+  transform: translateY(-1px);
+}
+
+.btn-whatsapp i {
+  font-size: 1.1rem;
+}
+
+/* WhatsApp Overlay */
+.whatsapp-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}

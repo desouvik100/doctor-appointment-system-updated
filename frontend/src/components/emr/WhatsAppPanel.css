@@ -1,0 +1,517 @@
+/* WhatsApp Panel Styles */
+
+.whatsapp-panel {
+  background: #fff;
+  border-radius: 16px;
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05);
+  overflow: hidden;
+}
+
+/* Header */
+.wa-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 20px 24px;
+  background: linear-gradient(135deg, #25D366 0%, #128C7E 100%);
+  color: white;
+}
+
+.wa-header-title {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.wa-header-title i {
+  font-size: 1.8rem;
+}
+
+.wa-header-title h2 {
+  margin: 0;
+  font-size: 1.3rem;
+  font-weight: 600;
+}
+
+.wa-bulk-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.3);
+  border-radius: 10px;
+  color: white;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.wa-bulk-btn:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Stats */
+.wa-stats {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+  padding: 20px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.wa-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 15px;
+  padding: 16px;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+}
+
+.stat-icon {
+  width: 50px;
+  height: 50px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.3rem;
+}
+
+.stat-icon.today {
+  background: #dcfce7;
+  color: #16a34a;
+}
+
+.stat-icon.tomorrow {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.stat-icon.pending {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.stat-info {
+  display: flex;
+  flex-direction: column;
+}
+
+.stat-value {
+  font-size: 1.5rem;
+  font-weight: 700;
+  color: #1e293b;
+}
+
+.stat-label {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* Tabs */
+.wa-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 12px 24px;
+  background: #f8fafc;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.wa-tab {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 20px;
+  background: transparent;
+  border: none;
+  border-radius: 8px;
+  color: #64748b;
+  font-size: 0.9rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.wa-tab:hover {
+  background: #e2e8f0;
+  color: #1e293b;
+}
+
+.wa-tab.active {
+  background: #25D366;
+  color: white;
+}
+
+/* Content */
+.wa-content {
+  padding: 24px;
+  min-height: 400px;
+}
+
+.wa-loading {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  padding: 60px;
+  color: #64748b;
+}
+
+.wa-loading i {
+  font-size: 2rem;
+  color: #25D366;
+}
+
+/* Appointments List */
+.wa-appointments-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.wa-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 8px;
+}
+
+.wa-list-header h3 {
+  margin: 0;
+  font-size: 1.1rem;
+  color: #1e293b;
+}
+
+.send-all-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #25D366;
+  border: none;
+  border-radius: 8px;
+  color: white;
+  font-size: 0.85rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.send-all-btn:hover {
+  background: #128C7E;
+}
+
+/* Appointment Card */
+.wa-appointment-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  background: #f8fafc;
+  border-radius: 12px;
+  border: 1px solid #e2e8f0;
+  transition: all 0.2s;
+}
+
+.wa-appointment-card:hover {
+  border-color: #25D366;
+  box-shadow: 0 2px 8px rgba(37, 211, 102, 0.1);
+}
+
+.wa-apt-info {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.wa-apt-patient {
+  display: flex;
+  flex-direction: column;
+}
+
+.patient-name {
+  font-weight: 600;
+  color: #1e293b;
+}
+
+.patient-phone {
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.wa-apt-details {
+  display: flex;
+  gap: 16px;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+.wa-apt-details span {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.wa-apt-details i {
+  color: #94a3b8;
+}
+
+.wa-apt-actions {
+  display: flex;
+  gap: 8px;
+}
+
+.wa-action-btn {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1rem;
+  transition: all 0.2s;
+}
+
+.wa-action-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.wa-action-btn.reminder {
+  background: #fef3c7;
+  color: #d97706;
+}
+
+.wa-action-btn.reminder:hover:not(:disabled) {
+  background: #fde68a;
+}
+
+.wa-action-btn.queue {
+  background: #dbeafe;
+  color: #2563eb;
+}
+
+.wa-action-btn.queue:hover:not(:disabled) {
+  background: #bfdbfe;
+}
+
+.wa-action-btn.whatsapp {
+  background: #dcfce7;
+  color: #25D366;
+}
+
+.wa-action-btn.whatsapp:hover:not(:disabled) {
+  background: #bbf7d0;
+}
+
+/* Empty State */
+.wa-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 60px;
+  color: #94a3b8;
+}
+
+.wa-empty i {
+  font-size: 3rem;
+  margin-bottom: 16px;
+}
+
+.wa-empty p {
+  margin: 0;
+  font-size: 1rem;
+}
+
+/* Quick Send */
+.wa-quick-send {
+  display: flex;
+  justify-content: center;
+}
+
+/* Templates */
+.wa-templates h3 {
+  margin: 0 0 20px 0;
+  color: #1e293b;
+}
+
+.template-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 16px;
+}
+
+.template-card {
+  padding: 20px;
+  background: #f8fafc;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
+  cursor: pointer;
+  transition: all 0.2s;
+  text-align: center;
+}
+
+.template-card:hover {
+  border-color: #25D366;
+  background: #f0fdf4;
+  transform: translateY(-2px);
+}
+
+.template-icon {
+  font-size: 2rem;
+  margin-bottom: 12px;
+}
+
+.template-card h4 {
+  margin: 0 0 8px 0;
+  color: #1e293b;
+  font-size: 1rem;
+}
+
+.template-card p {
+  margin: 0;
+  font-size: 0.85rem;
+  color: #64748b;
+}
+
+/* Modal */
+.wa-modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: 20px;
+}
+
+.wa-modal {
+  max-width: 500px;
+  width: 100%;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .wa-stats {
+    grid-template-columns: 1fr;
+  }
+
+  .wa-tabs {
+    overflow-x: auto;
+    padding: 12px 16px;
+  }
+
+  .wa-tab {
+    white-space: nowrap;
+    padding: 8px 16px;
+    font-size: 0.85rem;
+  }
+
+  .template-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .wa-appointment-card {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+
+  .wa-apt-actions {
+    width: 100%;
+    justify-content: flex-end;
+  }
+
+  .wa-panel-header {
+    flex-direction: column;
+    gap: 12px;
+    text-align: center;
+  }
+}
+
+@media (max-width: 480px) {
+  .template-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* Dark Mode */
+@media (prefers-color-scheme: dark) {
+  .whatsapp-panel {
+    background: #1e293b;
+  }
+
+  .wa-stats {
+    background: #0f172a;
+    border-color: #334155;
+  }
+
+  .wa-stat-card {
+    background: #1e293b;
+  }
+
+  .stat-value {
+    color: #f1f5f9;
+  }
+
+  .wa-tabs {
+    background: #0f172a;
+    border-color: #334155;
+  }
+
+  .wa-tab {
+    color: #94a3b8;
+  }
+
+  .wa-tab:hover {
+    background: #334155;
+    color: #f1f5f9;
+  }
+
+  .wa-content {
+    background: #1e293b;
+  }
+
+  .wa-list-header h3 {
+    color: #f1f5f9;
+  }
+
+  .wa-appointment-card {
+    background: #0f172a;
+    border-color: #334155;
+  }
+
+  .patient-name {
+    color: #f1f5f9;
+  }
+
+  .wa-templates h3 {
+    color: #f1f5f9;
+  }
+
+  .template-card {
+    background: #0f172a;
+    border-color: #334155;
+  }
+
+  .template-card:hover {
+    background: #064e3b;
+  }
+
+  .template-card h4 {
+    color: #f1f5f9;
+  }
+}

@@ -53,6 +53,10 @@ export { default as EPrescribeForm } from './EPrescribeForm';
 export { default as AllergyAlert, AllergyAlertBanner, AllergyAlertList } from './AllergyAlert';
 export { default as InteractionOverrideModal } from './InteractionOverrideModal';
 
+// WhatsApp Integration
+export { default as WhatsAppIntegration, WhatsAppQuickButton, WhatsAppBulkSend } from './WhatsAppIntegration';
+export { default as WhatsAppPanel } from './WhatsAppPanel';
+
 // Voice Input
 export { default as VoiceInput, VoiceTextArea, useVoiceInput } from './VoiceInput';
 

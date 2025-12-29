@@ -244,7 +244,26 @@ const appointmentSchema = new mongoose.Schema(
       reason: String,
       status: String,
       requestedAt: Date,
-      refundedAt: Date
+      refundedAt: Date,
+      processedAt: Date,
+      error: String
+    },
+    // Refund policy tracking
+    refundPolicy: {
+      policyApplied: {
+        type: String,
+        enum: ['no_payment', 'full_refund', 'partial_refund', 'no_show', 'doctor_cancelled', 'no_refund']
+      },
+      calculatedAt: Date,
+      hoursBeforeAppointment: Number,
+      originalAmount: Number,
+      refundPercentage: Number,
+      refundAmount: Number,
+      gatewayFeeDeducted: Number,
+      platformRetained: Number,
+      walletCreditAmount: Number,
+      walletCreditProcessed: Boolean,
+      reason: String
     },
     // Legacy payment structure (for backward compatibility)
     payment: {

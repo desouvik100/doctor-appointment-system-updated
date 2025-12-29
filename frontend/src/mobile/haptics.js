@@ -1,74 +1,83 @@
 /**
  * Haptic Feedback Utility for Native Android Feel
- * Provides subtle vibration feedback for user interactions
+ * Provides MINIMAL vibration feedback for important actions only
+ * Reduced haptics for better user experience
  */
 
 import { Capacitor } from '@capacitor/core';
 
+// Global haptic settings - can be disabled by user
+let hapticsEnabled = true;
+
 // Haptic feedback types
 export const HapticType = {
-  LIGHT: 'light',      // Button tap
-  MEDIUM: 'medium',    // Selection change
+  LIGHT: 'light',      // Button tap - DISABLED (too frequent)
+  MEDIUM: 'medium',    // Selection change - DISABLED
   HEAVY: 'heavy',      // Important action
   SUCCESS: 'success',  // Booking confirmed, payment success
-  WARNING: 'warning',  // Alert
+  WARNING: 'warning',  // Alert - DISABLED
   ERROR: 'error',      // Error occurred
-  SELECTION: 'selection' // List item selection
+  SELECTION: 'selection' // List item selection - DISABLED
 };
 
-// Vibration patterns (in milliseconds)
+// Vibration patterns (in milliseconds) - REDUCED
 const PATTERNS = {
-  light: [10],
-  medium: [20],
-  heavy: [30],
-  success: [10, 50, 10, 50, 30],
-  warning: [30, 100, 30],
-  error: [50, 100, 50, 100, 50],
-  selection: [5]
+  light: [5],      // Reduced from 10
+  medium: [10],    // Reduced from 20
+  heavy: [15],     // Reduced from 30
+  success: [10, 30, 10],  // Simplified pattern
+  warning: [15],   // Simplified
+  error: [20, 50, 20],    // Simplified
+  selection: [3]   // Reduced from 5
+};
+
+// Types that should trigger haptics (only important ones)
+const ENABLED_TYPES = ['success', 'error', 'heavy'];
+
+/**
+ * Enable or disable haptics globally
+ */
+export const setHapticsEnabled = (enabled) => {
+  hapticsEnabled = enabled;
 };
 
 /**
- * Trigger haptic feedback
+ * Check if haptics are enabled
+ */
+export const isHapticsEnabled = () => hapticsEnabled;
+
+/**
+ * Trigger haptic feedback - ONLY for important actions
  * @param {string} type - Type of haptic feedback
  */
 export const triggerHaptic = async (type = HapticType.LIGHT) => {
-  // Only on native platform
-  if (!Capacitor.isNativePlatform()) return;
+  // Skip if haptics disabled or not on native platform
+  if (!hapticsEnabled || !Capacitor.isNativePlatform()) return;
+  
+  // Only trigger for important feedback types
+  if (!ENABLED_TYPES.includes(type)) return;
 
   try {
     // Try Capacitor Haptics plugin first
     const { Haptics, ImpactStyle, NotificationType } = await import('@capacitor/haptics');
     
     switch (type) {
-      case HapticType.LIGHT:
-        await Haptics.impact({ style: ImpactStyle.Light });
-        break;
-      case HapticType.MEDIUM:
-        await Haptics.impact({ style: ImpactStyle.Medium });
-        break;
       case HapticType.HEAVY:
-        await Haptics.impact({ style: ImpactStyle.Heavy });
+        await Haptics.impact({ style: ImpactStyle.Light }); // Downgraded from Heavy
         break;
       case HapticType.SUCCESS:
         await Haptics.notification({ type: NotificationType.Success });
         break;
-      case HapticType.WARNING:
-        await Haptics.notification({ type: NotificationType.Warning });
-        break;
       case HapticType.ERROR:
         await Haptics.notification({ type: NotificationType.Error });
         break;
-      case HapticType.SELECTION:
-        await Haptics.selectionStart();
-        await Haptics.selectionChanged();
-        await Haptics.selectionEnd();
-        break;
       default:
-        await Haptics.impact({ style: ImpactStyle.Light });
+        // Skip other types
+        break;
     }
   } catch (e) {
-    // Fallback to Web Vibration API
-    if ('vibrate' in navigator) {
+    // Fallback to Web Vibration API - minimal
+    if ('vibrate' in navigator && ENABLED_TYPES.includes(type)) {
       const pattern = PATTERNS[type] || PATTERNS.light;
       navigator.vibrate(pattern);
     }
@@ -88,24 +97,30 @@ export const vibratePattern = (pattern) => {
 };
 
 /**
- * Quick tap feedback - use for button presses
+ * Quick tap feedback - DISABLED to reduce haptic overuse
  */
-export const tapFeedback = () => triggerHaptic(HapticType.LIGHT);
+export const tapFeedback = () => {
+  // Disabled - too frequent, annoying users
+  // triggerHaptic(HapticType.LIGHT);
+};
 
 /**
- * Success feedback - use for successful actions
+ * Success feedback - use for successful actions (ENABLED)
  */
 export const successFeedback = () => triggerHaptic(HapticType.SUCCESS);
 
 /**
- * Error feedback - use for errors
+ * Error feedback - use for errors (ENABLED)
  */
 export const errorFeedback = () => triggerHaptic(HapticType.ERROR);
 
 /**
- * Selection feedback - use for list selections
+ * Selection feedback - DISABLED to reduce haptic overuse
  */
-export const selectionFeedback = () => triggerHaptic(HapticType.SELECTION);
+export const selectionFeedback = () => {
+  // Disabled - too frequent
+  // triggerHaptic(HapticType.SELECTION);
+};
 
 export default {
   triggerHaptic,
@@ -114,5 +129,7 @@ export default {
   successFeedback,
   errorFeedback,
   selectionFeedback,
+  setHapticsEnabled,
+  isHapticsEnabled,
   HapticType
 };

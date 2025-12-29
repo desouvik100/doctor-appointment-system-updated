@@ -3,9 +3,10 @@ import { Capacitor } from '@capacitor/core';
 import { Browser } from '@capacitor/browser';
 import { App } from '@capacitor/app';
 
-// Backend URL for payment callbacks
-const BACKEND_URL = process.env.REACT_APP_API_URL || 'https://doctor-appointment-system-updated.onrender.com';
-const FRONTEND_URL = window.location.origin;
+// Backend URL for payment callbacks - always use production for mobile
+const BACKEND_URL = Capacitor.isNativePlatform() 
+  ? 'https://doctor-appointment-system-updated.onrender.com'
+  : (process.env.REACT_APP_API_URL || 'https://doctor-appointment-system-updated.onrender.com');
 
 // Get Razorpay configuration
 export const getRazorpayConfig = async () => {
@@ -192,7 +193,7 @@ const loadRazorpayScript = () => {
   return new Promise((resolve, reject) => {
     // Check if already loaded
     if (window.Razorpay) {
-      console.log('Razorpay SDK already loaded');
+      console.log('✅ Razorpay SDK already loaded');
       resolve(true);
       return;
     }
@@ -200,76 +201,194 @@ const loadRazorpayScript = () => {
     // Check if script tag exists but not loaded yet
     const existingScript = document.querySelector('script[src*="razorpay"]');
     if (existingScript) {
-      console.log('Razorpay script tag exists, waiting for load...');
+      console.log('⏳ Razorpay script tag exists, waiting for load...');
       // Wait for it to load
       let attempts = 0;
       const checkInterval = setInterval(() => {
         attempts++;
         if (window.Razorpay) {
           clearInterval(checkInterval);
-          console.log('Razorpay SDK loaded after waiting');
+          console.log('✅ Razorpay SDK loaded after waiting');
           resolve(true);
-        } else if (attempts > 50) { // 5 seconds max
+        } else if (attempts > 100) { // 10 seconds max
           clearInterval(checkInterval);
-          reject(new Error('Razorpay SDK load timeout'));
+          console.error('❌ Razorpay SDK load timeout');
+          // Remove failed script and try again
+          existingScript.remove();
+          loadRazorpayScriptFresh().then(resolve).catch(reject);
         }
       }, 100);
       return;
     }
     
-    console.log('Loading Razorpay script dynamically...');
+    loadRazorpayScriptFresh().then(resolve).catch(reject);
+  });
+};
+
+// Fresh load of Razorpay script
+const loadRazorpayScriptFresh = () => {
+  return new Promise((resolve, reject) => {
+    console.log('📦 Loading Razorpay script dynamically...');
     const script = document.createElement('script');
     script.src = 'https://checkout.razorpay.com/v1/checkout.js';
     script.async = true;
+    script.crossOrigin = 'anonymous';
+    
     script.onload = () => {
-      console.log('Razorpay script loaded successfully');
-      resolve(true);
+      // Wait a bit for Razorpay to initialize
+      setTimeout(() => {
+        if (window.Razorpay) {
+          console.log('✅ Razorpay script loaded successfully');
+          resolve(true);
+        } else {
+          console.error('❌ Razorpay object not available after script load');
+          reject(new Error('Razorpay SDK failed to initialize'));
+        }
+      }, 500);
     };
+    
     script.onerror = (e) => {
-      console.error('Failed to load Razorpay script:', e);
-      reject(new Error('Failed to load Razorpay SDK'));
+      console.error('❌ Failed to load Razorpay script:', e);
+      reject(new Error('Failed to load Razorpay SDK. Please check your internet connection.'));
     };
-    document.body.appendChild(script);
+    
+    document.head.appendChild(script);
   });
 };
 
 // Store pending payment callbacks for Android deep link handling
 let pendingPaymentCallbacks = null;
+let pendingAppointmentId = null;
+let paymentCheckInterval = null;
 
 // Setup deep link listener for payment callbacks (Android)
 const setupPaymentDeepLinkListener = () => {
   if (Capacitor.isNativePlatform()) {
+    console.log('📱 Setting up payment deep link listener...');
+    
     App.addListener('appUrlOpen', async ({ url }) => {
       console.log('=== DEEP LINK RECEIVED ===');
       console.log('URL:', url);
+      
+      // Clear any pending check interval
+      if (paymentCheckInterval) {
+        clearInterval(paymentCheckInterval);
+        paymentCheckInterval = null;
+      }
       
       if (url.includes('payment-callback') || url.includes('payment-success') || url.includes('payment-failed')) {
         // Close the browser
         try {
           await Browser.close();
+          console.log('Browser closed');
         } catch (e) {
-          console.log('Browser already closed');
+          console.log('Browser close error (may already be closed):', e.message);
         }
         
-        // Parse the URL
-        const urlObj = new URL(url);
-        const params = new URLSearchParams(urlObj.search);
+        // Parse the URL - handle both URL formats
+        let params;
+        try {
+          // Try parsing as full URL first
+          const urlObj = new URL(url);
+          params = new URLSearchParams(urlObj.search);
+        } catch {
+          // Fallback: parse query string after ?
+          const queryStart = url.indexOf('?');
+          if (queryStart !== -1) {
+            params = new URLSearchParams(url.substring(queryStart + 1));
+          } else {
+            params = new URLSearchParams();
+          }
+        }
+        
+        const isSuccess = url.includes('payment-success') || params.get('status') === 'success';
+        const isVerified = params.get('verified') === 'true';
+        const appointmentId = params.get('appointmentId') || pendingAppointmentId;
+        const errorMsg = params.get('error');
+        
+        console.log('Payment result:', { isSuccess, isVerified, appointmentId, errorMsg });
         
         if (pendingPaymentCallbacks) {
-          if (url.includes('payment-success') || params.get('status') === 'success') {
+          if (isSuccess) {
+            console.log('✅ Calling onSuccess callback');
             pendingPaymentCallbacks.onSuccess({
-              razorpay_order_id: params.get('razorpay_order_id'),
-              razorpay_payment_id: params.get('razorpay_payment_id'),
-              razorpay_signature: params.get('razorpay_signature'),
-              method: 'Razorpay'
+              razorpay_order_id: params.get('razorpay_order_id') || 'verified',
+              razorpay_payment_id: params.get('razorpay_payment_id') || 'verified',
+              razorpay_signature: params.get('razorpay_signature') || 'verified',
+              method: 'Razorpay',
+              verified: isVerified,
+              appointmentId: appointmentId
             });
           } else {
-            pendingPaymentCallbacks.onFailure(new Error(params.get('error') || 'Payment failed or cancelled'));
+            console.log('❌ Calling onFailure callback');
+            pendingPaymentCallbacks.onFailure(new Error(errorMsg || 'Payment failed or cancelled'));
           }
           pendingPaymentCallbacks = null;
+          pendingAppointmentId = null;
+        } else {
+          // No pending callbacks - dispatch event for app to handle
+          console.log('No pending callbacks, dispatching event');
+          window.dispatchEvent(new CustomEvent('paymentComplete', {
+            detail: {
+              success: isSuccess,
+              verified: isVerified,
+              appointmentId: appointmentId,
+              error: errorMsg
+            }
+          }));
         }
       }
     });
+    
+    // Also listen for app resume to check payment status
+    App.addListener('appStateChange', async ({ isActive }) => {
+      console.log('App state changed:', isActive ? 'active' : 'background');
+      
+      if (isActive && pendingAppointmentId && pendingPaymentCallbacks) {
+        console.log('App resumed with pending payment, checking status...');
+        
+        // Give a moment for deep link to fire first
+        setTimeout(async () => {
+          if (pendingPaymentCallbacks && pendingAppointmentId) {
+            // Check payment status from backend
+            try {
+              console.log('Checking payment status for:', pendingAppointmentId);
+              const response = await axios.get(`/api/payments/status/${pendingAppointmentId}`);
+              console.log('Payment status response:', response.data);
+              
+              if (response.data?.paymentStatus === 'completed') {
+                console.log('✅ Payment was completed while app was in background');
+                
+                // Close browser if still open
+                try {
+                  await Browser.close();
+                } catch (e) {
+                  // Ignore
+                }
+                
+                pendingPaymentCallbacks.onSuccess({
+                  method: 'Razorpay',
+                  verified: true,
+                  fromResume: true,
+                  appointmentId: pendingAppointmentId
+                });
+                pendingPaymentCallbacks = null;
+                pendingAppointmentId = null;
+                
+                if (paymentCheckInterval) {
+                  clearInterval(paymentCheckInterval);
+                  paymentCheckInterval = null;
+                }
+              }
+            } catch (e) {
+              console.log('Could not check payment status:', e.message);
+            }
+          }
+        }, 2000);
+      }
+    });
+    
+    console.log('✅ Payment deep link listener setup complete');
   }
 };
 
@@ -308,14 +427,16 @@ export const initiatePayment = async (appointmentId, userId, onSuccess, onFailur
       return;
     }
     
-    // For Android native app, use external browser with hosted checkout page
+    // For Android native app - use external browser for reliable payment
+    // WebView has issues with Razorpay SDK in Capacitor apps
     if (isNative && platform === 'android') {
-      console.log('Using external browser for Android payment...');
+      console.log('📱 Android detected - using external browser for payment...');
       
-      // Store callbacks for deep link handling
+      // Store callbacks and appointmentId for handling
       pendingPaymentCallbacks = { onSuccess, onFailure };
+      pendingAppointmentId = appointmentId;
       
-      // Build URL for mobile checkout page hosted on backend
+      // Open external browser with mobile checkout page (most reliable method)
       const checkoutParams = new URLSearchParams({
         appointmentId: appointmentId,
         amount: orderData.amountInPaise,
@@ -325,29 +446,119 @@ export const initiatePayment = async (appointmentId, userId, onSuccess, onFailur
         doctorName: orderData.notes?.doctorName || 'Doctor'
       });
       
-      // Use our backend's mobile checkout page
       const checkoutUrl = `${BACKEND_URL}/api/payments/mobile-checkout/${orderData.orderId}?${checkoutParams.toString()}`;
       
       console.log('Opening mobile checkout URL:', checkoutUrl);
       
-      // Open in external browser
-      await Browser.open({ 
-        url: checkoutUrl,
-        presentationStyle: 'fullscreen',
-        toolbarColor: '#0ea5e9'
-      });
+      try {
+        await Browser.open({ 
+          url: checkoutUrl,
+          presentationStyle: 'fullscreen',
+          toolbarColor: '#0ea5e9',
+          windowName: '_blank'
+        });
+        console.log('✅ Browser opened successfully');
+      } catch (browserError) {
+        console.error('❌ Failed to open browser:', browserError);
+        pendingPaymentCallbacks = null;
+        pendingAppointmentId = null;
+        onFailure(new Error('Could not open payment page. Please try again.'));
+        return;
+      }
       
-      // Set up a listener for when browser closes (user cancelled)
+      // Start periodic check for payment completion (backup for deep link)
+      if (paymentCheckInterval) {
+        clearInterval(paymentCheckInterval);
+      }
+      
+      let checkCount = 0;
+      const maxChecks = 60; // Check for up to 5 minutes (every 5 seconds)
+      
+      paymentCheckInterval = setInterval(async () => {
+        checkCount++;
+        
+        if (checkCount >= maxChecks) {
+          console.log('Max payment checks reached, stopping');
+          clearInterval(paymentCheckInterval);
+          paymentCheckInterval = null;
+          return;
+        }
+        
+        if (!pendingPaymentCallbacks || !pendingAppointmentId) {
+          console.log('No pending payment, stopping checks');
+          clearInterval(paymentCheckInterval);
+          paymentCheckInterval = null;
+          return;
+        }
+        
+        try {
+          const response = await axios.get(`/api/payments/status/${pendingAppointmentId}`);
+          
+          if (response.data?.paymentStatus === 'completed') {
+            console.log('✅ Payment completed (detected via polling)');
+            
+            clearInterval(paymentCheckInterval);
+            paymentCheckInterval = null;
+            
+            // Close browser
+            try {
+              await Browser.close();
+            } catch (e) {
+              // Ignore
+            }
+            
+            if (pendingPaymentCallbacks) {
+              pendingPaymentCallbacks.onSuccess({
+                method: 'Razorpay',
+                verified: true,
+                fromPolling: true,
+                appointmentId: pendingAppointmentId
+              });
+              pendingPaymentCallbacks = null;
+              pendingAppointmentId = null;
+            }
+          }
+        } catch (e) {
+          // Silent fail - will retry
+        }
+      }, 5000); // Check every 5 seconds
+      
+      // Set up a listener for when browser closes
       const browserListener = await Browser.addListener('browserFinished', () => {
         console.log('Browser closed by user');
-        // Don't immediately fail - wait a bit for deep link
-        setTimeout(() => {
-          if (pendingPaymentCallbacks) {
-            // If callbacks still pending after 2 seconds, assume cancelled
-            pendingPaymentCallbacks.onFailure(new Error('Payment cancelled'));
+        
+        // Don't immediately fail - give time for deep link or status check
+        setTimeout(async () => {
+          if (pendingPaymentCallbacks && pendingAppointmentId) {
+            // One final check before failing
+            try {
+              const response = await axios.get(`/api/payments/status/${pendingAppointmentId}`);
+              if (response.data?.paymentStatus === 'completed') {
+                console.log('✅ Payment was actually completed');
+                pendingPaymentCallbacks.onSuccess({
+                  method: 'Razorpay',
+                  verified: true,
+                  fromBrowserClose: true,
+                  appointmentId: pendingAppointmentId
+                });
+              } else {
+                console.log('Payment not completed, treating as cancelled');
+                pendingPaymentCallbacks.onFailure(new Error('Payment cancelled'));
+              }
+            } catch (e) {
+              pendingPaymentCallbacks.onFailure(new Error('Payment cancelled'));
+            }
+            
             pendingPaymentCallbacks = null;
+            pendingAppointmentId = null;
+            
+            if (paymentCheckInterval) {
+              clearInterval(paymentCheckInterval);
+              paymentCheckInterval = null;
+            }
           }
-        }, 2000);
+        }, 3000);
+        
         browserListener.remove();
       });
       

@@ -1542,7 +1542,7 @@ router.put('/:id', verifyToken, async (req, res) => {
 // Cancel appointment with reason and notification (authenticated users only)
 router.put('/:id/cancel', verifyToken, async (req, res) => {
   try {
-    const { reason, cancelledBy, notifyPatient = true, notifyDoctor = true } = req.body;
+    const { reason, cancelledBy, notifyPatient = true, notifyDoctor = true, processRefund = true } = req.body;
     
     const appointment = await Appointment.findById(req.params.id)
       .populate('userId', 'name email phone')
@@ -1558,6 +1558,23 @@ router.put('/:id/cancel', verifyToken, async (req, res) => {
       return res.status(400).json({ 
         message: `Cannot cancel an appointment that is already ${appointment.status}` 
       });
+    }
+    
+    // Process refund based on policy
+    let refundResult = null;
+    if (processRefund && appointment.paymentStatus === 'completed') {
+      try {
+        const refundPolicyService = require('../services/refundPolicyService');
+        refundResult = await refundPolicyService.processRefund(
+          appointment._id,
+          cancelledBy || 'patient',
+          reason || 'Appointment cancelled'
+        );
+        console.log(`💰 Refund processed: ${JSON.stringify(refundResult.refundCalculation)}`);
+      } catch (refundError) {
+        console.error('❌ Refund processing error:', refundError.message);
+        // Continue with cancellation even if refund fails
+      }
     }
     
     // Update appointment with cancellation details
@@ -1582,7 +1599,9 @@ router.put('/:id/cancel', verifyToken, async (req, res) => {
           appointmentDate: appointment.date,
           appointmentTime: appointment.time,
           reason: appointment.cancellationReason,
-          cancelledBy: appointment.cancelledBy
+          cancelledBy: appointment.cancelledBy,
+          refundAmount: refundResult?.refundCalculation?.refundAmount,
+          walletCredit: refundResult?.refundCalculation?.walletCredit
         });
         notifications.push({ type: 'patient', sent: true });
         console.log(`📧 Cancellation email sent to patient: ${appointment.userId.email}`);
@@ -1628,7 +1647,15 @@ router.put('/:id/cancel', verifyToken, async (req, res) => {
       success: true,
       message: 'Appointment cancelled successfully',
       appointment,
-      notifications
+      notifications,
+      refund: refundResult ? {
+        processed: refundResult.refundProcessed,
+        amount: refundResult.refundCalculation?.refundAmount,
+        percentage: refundResult.refundCalculation?.refundPercentage,
+        policy: refundResult.refundCalculation?.policyApplied,
+        walletCredit: refundResult.refundCalculation?.walletCredit,
+        walletCreditProcessed: refundResult.walletCreditProcessed
+      } : null
     });
     
   } catch (error) {
