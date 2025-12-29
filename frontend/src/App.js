@@ -108,13 +108,19 @@ const ImagingDashboard = React.lazy(() =>
 function App() {
   // Initialize view from URL hash or path for payment checkout
   const getInitialView = () => {
-    // Check for payment-checkout path first (for Android app payments)
+    // Check for payment-checkout in hash (for Android app payments)
+    // Format: /#/payment-checkout?params or #payment-checkout
+    const hash = window.location.hash;
+    if (hash.includes('payment-checkout')) {
+      return 'payment-checkout';
+    }
+    // Check for path-based route as fallback
     if (window.location.pathname === '/payment-checkout') {
       return 'payment-checkout';
     }
-    const hash = window.location.hash.slice(1); // Remove #
+    const hashView = hash.slice(1); // Remove #
     const validViews = ['landing', 'auth', 'dashboard', 'corporate', 'imaging'];
-    return validViews.includes(hash) ? hash : 'landing';
+    return validViews.includes(hashView) ? hashView : 'landing';
   };
 
   const [currentView, setCurrentViewState] = useState(getInitialView);

@@ -1,9 +1,19 @@
 import React, { useEffect, useState, useCallback } from 'react';
 
 const PaymentCheckout = () => {
-  // Parse URL parameters manually (no React Router)
+  // Parse URL parameters from hash or search (no React Router)
   const getParams = () => {
-    const params = new URLSearchParams(window.location.search);
+    // Try hash first: /#/payment-checkout?orderId=xxx
+    const hash = window.location.hash;
+    let queryString = '';
+    
+    if (hash.includes('?')) {
+      queryString = hash.split('?')[1];
+    } else {
+      queryString = window.location.search.slice(1);
+    }
+    
+    const params = new URLSearchParams(queryString);
     return {
       orderId: params.get('orderId'),
       appointmentId: params.get('appointmentId'),

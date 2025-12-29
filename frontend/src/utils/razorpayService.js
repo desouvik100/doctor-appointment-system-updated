@@ -447,7 +447,7 @@ export const initiatePayment = async (appointmentId, userId, onSuccess, onFailur
         doctorName: orderData.notes?.doctorName || 'Doctor'
       });
       
-      const checkoutUrl = `${PAYMENT_CHECKOUT_URL}/payment-checkout?orderId=${orderData.orderId}&appointmentId=${appointmentId}&amount=${orderData.amountInPaise}&name=${encodeURIComponent(orderData.prefill?.name || '')}&email=${encodeURIComponent(orderData.prefill?.email || '')}&contact=${encodeURIComponent(orderData.prefill?.contact || '')}&doctorName=${encodeURIComponent(orderData.notes?.doctorName || 'Doctor')}&keyId=${encodeURIComponent(orderData.keyId)}`;
+      const checkoutUrl = `${PAYMENT_CHECKOUT_URL}/#/payment-checkout?orderId=${orderData.orderId}&appointmentId=${appointmentId}&amount=${orderData.amountInPaise}&name=${encodeURIComponent(orderData.prefill?.name || '')}&email=${encodeURIComponent(orderData.prefill?.email || '')}&contact=${encodeURIComponent(orderData.prefill?.contact || '')}&doctorName=${encodeURIComponent(orderData.notes?.doctorName || 'Doctor')}&keyId=${encodeURIComponent(orderData.keyId)}`;
       
       console.log('Opening mobile checkout URL:', checkoutUrl);
       
