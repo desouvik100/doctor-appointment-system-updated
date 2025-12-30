@@ -259,7 +259,7 @@ router.post('/:id/transfer-bed', verifyTokenWithRole(['admin', 'receptionist', '
 });
 
 // Discharge patient
-router.post('/:id/discharge', verifyTokenWithRole(['admin', 'doctor', 'clinic']), async (req, res) => {
+router.post('/:id/discharge', verifyTokenWithRole(['admin', 'doctor', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const {
       dischargeType, dischargeCondition, dischargeSummary, finalDiagnosis
