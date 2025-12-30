@@ -8,7 +8,7 @@ const router = express.Router();
  * GET /api/audit/logs
  * Get audit logs with filtering (Admin only)
  */
-router.get('/logs', authenticate, checkRole('admin'), async (req, res) => {
+router.get('/logs', authenticate, checkRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const {
       action,
@@ -86,7 +86,7 @@ router.get('/logs/target/:targetId', authenticate, async (req, res) => {
  * GET /api/audit/stats
  * Get audit statistics for dashboard (Admin only)
  */
-router.get('/stats', authenticate, checkRole('admin'), async (req, res) => {
+router.get('/stats', authenticate, checkRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { days = 7 } = req.query;
     const startDate = new Date();
@@ -139,7 +139,7 @@ router.get('/stats', authenticate, checkRole('admin'), async (req, res) => {
  * GET /api/audit/export
  * Export audit logs as CSV (Admin only)
  */
-router.get('/export', authenticate, checkRole('admin'), async (req, res) => {
+router.get('/export', authenticate, checkRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { startDate, endDate, action } = req.query;
     
