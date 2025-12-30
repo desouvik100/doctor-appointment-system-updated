@@ -334,6 +334,14 @@ app.use('/api/beds', require('./routes/bedRoutes')); // Bed Management & Allocat
 app.use('/api/lab-results', require('./routes/labReportRoutes')); // Lab Reports & Results
 app.use('/api/imaging-reports', require('./routes/imagingRoutes')); // Imaging/Radiology Reports
 
+// ===== ENTERPRISE HOSPITAL FEATURES =====
+app.use('/api/insurance', require('./routes/insuranceRoutes')); // Insurance & TPA Integration
+app.use('/api/branches', require('./routes/multiBranchRoutes')); // Multi-Branch Management
+app.use('/api/inventory', require('./routes/vendorRoutes')); // Vendor & Purchase Orders
+app.use('/api/compliance', require('./routes/complianceRoutes')); // NABH/JCI Compliance
+app.use('/api/staff-management', require('./routes/staffManagementRoutes')); // Attendance & Leave
+app.use('/api/feedback', require('./routes/feedbackRoutes')); // Patient Feedback & NPS
+
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');
 console.log('Auth Routes:');
