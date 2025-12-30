@@ -413,7 +413,7 @@ router.post('/clinic/login', async (req, res) => {
       approvalStatus: 'approved'
     });
     
-    // Check if receptionist is suspended
+    // Check if receptionist is suspended (isActive explicitly set to false)
     if (userCheck && userCheck.isActive === false) {
       console.log(`🚫 Receptionist login blocked: Account suspended - ${normalizedEmail}`);
       return res.status(403).json({ 
@@ -423,8 +423,8 @@ router.post('/clinic/login', async (req, res) => {
       });
     }
 
-    // Find active receptionist user
-    const user = userCheck && userCheck.isActive ? userCheck : null;
+    // Find active receptionist user (isActive is true or undefined/null - default is true)
+    const user = userCheck && userCheck.isActive !== false ? userCheck : null;
     
     if (!user) {
       return res.status(400).json({ message: 'Invalid receptionist credentials or account not approved' });
