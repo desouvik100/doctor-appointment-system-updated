@@ -190,8 +190,8 @@ const MultiBranchSection = ({ clinicId, organizationId }) => {
                   <input type="text" value={form.branchName} onChange={e => setForm({...form, branchName: e.target.value})} required className="w-full px-4 py-2.5 border border-slate-200 rounded-xl" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-slate-700 mb-1">Branch Code *</label>
-                  <input type="text" value={form.branchCode} onChange={e => setForm({...form, branchCode: e.target.value.toUpperCase()})} required placeholder="e.g., MUM-001" className="w-full px-4 py-2.5 border border-slate-200 rounded-xl" />
+                  <label className="block text-sm font-medium text-slate-700 mb-1">Branch Code <span className="text-slate-400 font-normal">(auto-generated if empty)</span></label>
+                  <input type="text" value={form.branchCode} onChange={e => setForm({...form, branchCode: e.target.value.toUpperCase()})} placeholder="e.g., MUM-001 or leave blank" className="w-full px-4 py-2.5 border border-slate-200 rounded-xl" />
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-slate-700 mb-1">Branch Type</label>
