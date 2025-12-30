@@ -16,7 +16,7 @@ const queueTokenSchema = new mongoose.Schema({
   // Token details
   tokenNumber: {
     type: String,
-    required: true
+    required: false // Will be auto-generated in pre-save hook
   },
   
   tokenType: {
