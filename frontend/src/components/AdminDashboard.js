@@ -498,6 +498,393 @@ const BalanceSheetSection = () => {
   );
 };
 
+// Billing & Expenses Section Component
+const BillingExpensesSection = () => {
+  const [bills, setBills] = useState([]);
+  const [expenses, setExpenses] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [activeSubTab, setActiveSubTab] = useState('overview');
+  const [dateRange, setDateRange] = useState({ start: '', end: '' });
+  const [showAddExpense, setShowAddExpense] = useState(false);
+  const [newExpense, setNewExpense] = useState({ category: '', description: '', amount: '', date: new Date().toISOString().split('T')[0] });
+  const [summary, setSummary] = useState({ totalRevenue: 0, totalExpenses: 0, netProfit: 0, pendingPayments: 0 });
+
+  const expenseCategories = [
+    { value: 'salary', label: 'Staff Salary', icon: 'users', color: '#6366f1' },
+    { value: 'rent', label: 'Office Rent', icon: 'building', color: '#f59e0b' },
+    { value: 'utilities', label: 'Utilities', icon: 'bolt', color: '#10b981' },
+    { value: 'marketing', label: 'Marketing', icon: 'bullhorn', color: '#ec4899' },
+    { value: 'software', label: 'Software/Tech', icon: 'laptop', color: '#3b82f6' },
+    { value: 'maintenance', label: 'Maintenance', icon: 'tools', color: '#8b5cf6' },
+    { value: 'supplies', label: 'Office Supplies', icon: 'box', color: '#14b8a6' },
+    { value: 'legal', label: 'Legal/Compliance', icon: 'gavel', color: '#f97316' },
+    { value: 'insurance', label: 'Insurance', icon: 'shield-alt', color: '#06b6d4' },
+    { value: 'other', label: 'Other', icon: 'ellipsis-h', color: '#64748b' }
+  ];
+
+  const fetchData = useCallback(async () => {
+    setLoading(true);
+    try {
+      const params = new URLSearchParams();
+      if (dateRange.start) params.append('startDate', dateRange.start);
+      if (dateRange.end) params.append('endDate', dateRange.end);
+
+      const [billsRes, expensesRes, summaryRes] = await Promise.all([
+        axios.get(`/api/admin/billing/all?${params}`).catch(() => ({ data: { bills: [] } })),
+        axios.get(`/api/admin/expenses?${params}`).catch(() => ({ data: { expenses: [] } })),
+        axios.get(`/api/admin/financial-summary?${params}`).catch(() => ({ data: {} }))
+      ]);
+
+      setBills(billsRes.data.bills || []);
+      setExpenses(expensesRes.data.expenses || []);
+      setSummary({
+        totalRevenue: summaryRes.data.totalRevenue || 0,
+        totalExpenses: summaryRes.data.totalExpenses || 0,
+        netProfit: summaryRes.data.netProfit || 0,
+        pendingPayments: summaryRes.data.pendingPayments || 0
+      });
+    } catch (error) {
+      console.error('Error fetching billing data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [dateRange]);
+
+  useEffect(() => { fetchData(); }, [fetchData]);
+
+  const handleAddExpense = async () => {
+    if (!newExpense.category || !newExpense.amount) {
+      toast.error('Please fill in required fields');
+      return;
+    }
+    try {
+      await axios.post('/api/admin/expenses', newExpense);
+      toast.success('Expense added successfully');
+      setShowAddExpense(false);
+      setNewExpense({ category: '', description: '', amount: '', date: new Date().toISOString().split('T')[0] });
+      fetchData();
+    } catch (error) {
+      toast.error('Failed to add expense');
+    }
+  };
+
+  const formatCurrency = (amount) => `₹${(amount || 0).toLocaleString('en-IN')}`;
+  const formatDate = (date) => new Date(date).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+
+  if (loading) {
+    return (
+      <div style={{ textAlign: 'center', padding: '60px' }}>
+        <div className="spinner-border text-primary"></div>
+        <p style={{ marginTop: '10px', color: '#64748b' }}>Loading billing data...</p>
+      </div>
+    );
+  }
+
+  return (
+    <>
+      <div className="admin-section__header">
+        <h2 className="admin-section__title">
+          <div className="admin-section__icon"><i className="fas fa-file-invoice-dollar"></i></div>
+          Billing & Expenses
+        </h2>
+        <div style={{ display: 'flex', gap: '10px' }}>
+          <input type="date" value={dateRange.start} onChange={e => setDateRange({ ...dateRange, start: e.target.value })} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+          <input type="date" value={dateRange.end} onChange={e => setDateRange({ ...dateRange, end: e.target.value })} style={{ padding: '8px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }} />
+          <button className="btn btn-primary btn-sm" onClick={() => setShowAddExpense(true)}>
+            <i className="fas fa-plus me-1"></i> Add Expense
+          </button>
+        </div>
+      </div>
+
+      {/* Summary Cards */}
+      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
+        <div style={{ background: '#f0fdf4', borderRadius: '12px', padding: '20px', border: '1px solid #bbf7d0' }}>
+          <div style={{ fontSize: '13px', color: '#16a34a', fontWeight: 500, marginBottom: '4px' }}>
+            <i className="fas fa-arrow-up me-1"></i>Total Revenue
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: '#15803d' }}>{formatCurrency(summary.totalRevenue)}</div>
+        </div>
+        <div style={{ background: '#fef2f2', borderRadius: '12px', padding: '20px', border: '1px solid #fecaca' }}>
+          <div style={{ fontSize: '13px', color: '#dc2626', fontWeight: 500, marginBottom: '4px' }}>
+            <i className="fas fa-arrow-down me-1"></i>Total Expenses
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: '#b91c1c' }}>{formatCurrency(summary.totalExpenses)}</div>
+        </div>
+        <div style={{ background: summary.netProfit >= 0 ? '#eff6ff' : '#fef2f2', borderRadius: '12px', padding: '20px', border: `1px solid ${summary.netProfit >= 0 ? '#bfdbfe' : '#fecaca'}` }}>
+          <div style={{ fontSize: '13px', color: summary.netProfit >= 0 ? '#2563eb' : '#dc2626', fontWeight: 500, marginBottom: '4px' }}>
+            <i className={`fas fa-${summary.netProfit >= 0 ? 'chart-line' : 'chart-line-down'} me-1`}></i>Net Profit
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: summary.netProfit >= 0 ? '#1d4ed8' : '#b91c1c' }}>{formatCurrency(summary.netProfit)}</div>
+        </div>
+        <div style={{ background: '#fef3c7', borderRadius: '12px', padding: '20px', border: '1px solid #fde68a' }}>
+          <div style={{ fontSize: '13px', color: '#d97706', fontWeight: 500, marginBottom: '4px' }}>
+            <i className="fas fa-clock me-1"></i>Pending Payments
+          </div>
+          <div style={{ fontSize: '28px', fontWeight: 700, color: '#b45309' }}>{formatCurrency(summary.pendingPayments)}</div>
+        </div>
+      </div>
+
+      {/* Sub Tabs */}
+      <div style={{ display: 'flex', gap: '8px', marginBottom: '20px', borderBottom: '1px solid #e2e8f0', paddingBottom: '12px' }}>
+        {['overview', 'invoices', 'expenses', 'reports'].map(tab => (
+          <button
+            key={tab}
+            onClick={() => setActiveSubTab(tab)}
+            style={{
+              padding: '8px 16px', borderRadius: '8px', border: 'none',
+              background: activeSubTab === tab ? '#6366f1' : '#f1f5f9',
+              color: activeSubTab === tab ? 'white' : '#64748b',
+              fontWeight: 500, cursor: 'pointer', textTransform: 'capitalize'
+            }}
+          >
+            {tab}
+          </button>
+        ))}
+      </div>
+
+      {/* Overview Tab */}
+      {activeSubTab === 'overview' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '20px' }}>
+          {/* Expense by Category */}
+          <div style={{ background: 'white', borderRadius: '12px', padding: '20px', border: '1px solid #e2e8f0' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginBottom: '16px' }}>
+              <i className="fas fa-chart-pie me-2" style={{ color: '#6366f1' }}></i>Expenses by Category
+            </h4>
+            {expenseCategories.map(cat => {
+              const catExpenses = expenses.filter(e => e.category === cat.value);
+              const total = catExpenses.reduce((sum, e) => sum + (e.amount || 0), 0);
+              if (total === 0) return null;
+              return (
+                <div key={cat.value} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
+                    <div style={{ width: '32px', height: '32px', borderRadius: '8px', background: `${cat.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                      <i className={`fas fa-${cat.icon}`} style={{ color: cat.color, fontSize: '14px' }}></i>
+                    </div>
+                    <span style={{ color: '#475569' }}>{cat.label}</span>
+                  </div>
+                  <span style={{ fontWeight: 600, color: '#1e293b' }}>{formatCurrency(total)}</span>
+                </div>
+              );
+            })}
+            {expenses.length === 0 && <p style={{ color: '#94a3b8', fontSize: '13px', textAlign: 'center', padding: '20px' }}>No expenses recorded</p>}
+          </div>
+
+          {/* Recent Transactions */}
+          <div style={{ background: 'white', borderRadius: '12px', padding: '20px', border: '1px solid #e2e8f0' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginBottom: '16px' }}>
+              <i className="fas fa-exchange-alt me-2" style={{ color: '#10b981' }}></i>Recent Transactions
+            </h4>
+            {[...bills.slice(0, 3).map(b => ({ ...b, type: 'income' })), ...expenses.slice(0, 3).map(e => ({ ...e, type: 'expense' }))]
+              .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
+              .slice(0, 6)
+              .map((item, idx) => (
+                <div key={idx} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '10px 0', borderBottom: '1px solid #f1f5f9' }}>
+                  <div>
+                    <div style={{ fontSize: '13px', fontWeight: 500, color: '#1e293b' }}>
+                      {item.type === 'income' ? (item.patientName || 'Payment') : (item.description || item.category)}
+                    </div>
+                    <div style={{ fontSize: '11px', color: '#94a3b8' }}>{formatDate(item.createdAt || item.date)}</div>
+                  </div>
+                  <span style={{ fontWeight: 600, color: item.type === 'income' ? '#16a34a' : '#dc2626' }}>
+                    {item.type === 'income' ? '+' : '-'}{formatCurrency(item.amount || item.grandTotal)}
+                  </span>
+                </div>
+              ))}
+            {bills.length === 0 && expenses.length === 0 && <p style={{ color: '#94a3b8', fontSize: '13px', textAlign: 'center', padding: '20px' }}>No transactions yet</p>}
+          </div>
+        </div>
+      )}
+
+      {/* Invoices Tab */}
+      {activeSubTab === 'invoices' && (
+        <div style={{ background: 'white', borderRadius: '12px', padding: '20px', border: '1px solid #e2e8f0' }}>
+          <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginBottom: '16px' }}>All Invoices</h4>
+          {bills.length === 0 ? (
+            <p style={{ color: '#94a3b8', textAlign: 'center', padding: '40px' }}>No invoices found</p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Invoice #</th>
+                    <th>Patient</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                    <th>Status</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {bills.map(bill => (
+                    <tr key={bill._id}>
+                      <td style={{ fontWeight: 500 }}>{bill.billNumber || bill._id?.slice(-6)}</td>
+                      <td>{bill.patientName || bill.patientId?.name || '-'}</td>
+                      <td>{formatDate(bill.createdAt || bill.billDate)}</td>
+                      <td style={{ fontWeight: 600 }}>{formatCurrency(bill.grandTotal || bill.amount)}</td>
+                      <td>
+                        <span style={{
+                          padding: '4px 10px', borderRadius: '6px', fontSize: '12px', fontWeight: 500,
+                          background: bill.status === 'paid' || bill.status === 'finalized' ? '#dcfce7' : bill.status === 'pending' ? '#fef3c7' : '#fee2e2',
+                          color: bill.status === 'paid' || bill.status === 'finalized' ? '#16a34a' : bill.status === 'pending' ? '#d97706' : '#dc2626'
+                        }}>
+                          {bill.status || 'pending'}
+                        </span>
+                      </td>
+                    </tr>
+                  ))}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Expenses Tab */}
+      {activeSubTab === 'expenses' && (
+        <div style={{ background: 'white', borderRadius: '12px', padding: '20px', border: '1px solid #e2e8f0' }}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
+            <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', margin: 0 }}>All Expenses</h4>
+            <button className="btn btn-outline-primary btn-sm" onClick={() => setShowAddExpense(true)}>
+              <i className="fas fa-plus me-1"></i> Add Expense
+            </button>
+          </div>
+          {expenses.length === 0 ? (
+            <p style={{ color: '#94a3b8', textAlign: 'center', padding: '40px' }}>No expenses recorded. Click "Add Expense" to start tracking.</p>
+          ) : (
+            <div style={{ overflowX: 'auto' }}>
+              <table className="admin-table">
+                <thead>
+                  <tr>
+                    <th>Category</th>
+                    <th>Description</th>
+                    <th>Date</th>
+                    <th>Amount</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {expenses.map(expense => {
+                    const cat = expenseCategories.find(c => c.value === expense.category) || expenseCategories[expenseCategories.length - 1];
+                    return (
+                      <tr key={expense._id}>
+                        <td>
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
+                            <div style={{ width: '28px', height: '28px', borderRadius: '6px', background: `${cat.color}15`, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                              <i className={`fas fa-${cat.icon}`} style={{ color: cat.color, fontSize: '12px' }}></i>
+                            </div>
+                            {cat.label}
+                          </div>
+                        </td>
+                        <td>{expense.description || '-'}</td>
+                        <td>{formatDate(expense.date)}</td>
+                        <td style={{ fontWeight: 600, color: '#dc2626' }}>{formatCurrency(expense.amount)}</td>
+                      </tr>
+                    );
+                  })}
+                </tbody>
+              </table>
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Reports Tab */}
+      {activeSubTab === 'reports' && (
+        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '16px' }}>
+          <div style={{ background: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: '#eff6ff', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <i className="fas fa-file-pdf" style={{ fontSize: '24px', color: '#3b82f6' }}></i>
+            </div>
+            <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>Revenue Report</h4>
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>Download detailed revenue breakdown</p>
+            <button className="btn btn-outline-primary btn-sm" onClick={() => window.open('/api/balance-sheet/export?period=month', '_blank')}>
+              <i className="fas fa-download me-1"></i> Download PDF
+            </button>
+          </div>
+          <div style={{ background: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: '#fef3c7', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <i className="fas fa-file-excel" style={{ fontSize: '24px', color: '#f59e0b' }}></i>
+            </div>
+            <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>Expense Report</h4>
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>Export all expenses to Excel</p>
+            <button className="btn btn-outline-warning btn-sm" onClick={() => toast.info('Export feature coming soon')}>
+              <i className="fas fa-download me-1"></i> Export CSV
+            </button>
+          </div>
+          <div style={{ background: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
+            <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
+              <i className="fas fa-chart-bar" style={{ fontSize: '24px', color: '#10b981' }}></i>
+            </div>
+            <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>P&L Statement</h4>
+            <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>Profit & Loss analysis</p>
+            <button className="btn btn-outline-success btn-sm" onClick={() => toast.info('P&L report coming soon')}>
+              <i className="fas fa-eye me-1"></i> View Report
+            </button>
+          </div>
+        </div>
+      )}
+
+      {/* Add Expense Modal */}
+      {showAddExpense && (
+        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 1000 }}>
+          <div style={{ background: 'white', borderRadius: '16px', padding: '24px', width: '100%', maxWidth: '450px', margin: '20px' }}>
+            <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px' }}>
+              <h3 style={{ fontSize: '18px', fontWeight: 600, color: '#1e293b', margin: 0 }}>Add New Expense</h3>
+              <button onClick={() => setShowAddExpense(false)} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}>&times;</button>
+            </div>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: '16px' }}>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#475569', marginBottom: '6px' }}>Category *</label>
+                <select
+                  value={newExpense.category}
+                  onChange={e => setNewExpense({ ...newExpense, category: e.target.value })}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                >
+                  <option value="">Select category</option>
+                  {expenseCategories.map(cat => (
+                    <option key={cat.value} value={cat.value}>{cat.label}</option>
+                  ))}
+                </select>
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#475569', marginBottom: '6px' }}>Description</label>
+                <input
+                  type="text"
+                  value={newExpense.description}
+                  onChange={e => setNewExpense({ ...newExpense, description: e.target.value })}
+                  placeholder="e.g., Monthly office rent"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#475569', marginBottom: '6px' }}>Amount (₹) *</label>
+                <input
+                  type="number"
+                  value={newExpense.amount}
+                  onChange={e => setNewExpense({ ...newExpense, amount: e.target.value })}
+                  placeholder="0"
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                />
+              </div>
+              <div>
+                <label style={{ display: 'block', fontSize: '13px', fontWeight: 500, color: '#475569', marginBottom: '6px' }}>Date</label>
+                <input
+                  type="date"
+                  value={newExpense.date}
+                  onChange={e => setNewExpense({ ...newExpense, date: e.target.value })}
+                  style={{ width: '100%', padding: '10px 12px', borderRadius: '8px', border: '1px solid #e2e8f0' }}
+                />
+              </div>
+              <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
+                <button onClick={() => setShowAddExpense(false)} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>Cancel</button>
+                <button onClick={handleAddExpense} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: '#6366f1', color: 'white', fontWeight: 500, cursor: 'pointer' }}>Add Expense</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
+    </>
+  );
+};
+
 function AdminDashboard({ admin, onLogout }) {
   const [activeTab, setActiveTab] = useState("overview");
   const [stats, setStats] = useState({
@@ -1326,6 +1713,9 @@ function AdminDashboard({ admin, onLogout }) {
           </TabButton>
           <TabButton tab="audit" activeTab={activeTab} onClick={handleTabChange}>
             <i className="fas fa-clipboard-list"></i> Audit Logs
+          </TabButton>
+          <TabButton tab="billing" activeTab={activeTab} onClick={handleTabChange}>
+            <i className="fas fa-file-invoice-dollar"></i> Billing & Expenses
           </TabButton>
           <TabButton tab="balance" activeTab={activeTab} onClick={handleTabChange}>
             <i className="fas fa-balance-scale"></i> Balance Sheet
@@ -2309,6 +2699,11 @@ function AdminDashboard({ admin, onLogout }) {
           {/* Audit Logs Section */}
           {activeTab === "audit" && (
             <AuditLogsSection />
+          )}
+
+          {/* Billing & Expenses Section */}
+          {activeTab === "billing" && (
+            <BillingExpensesSection />
           )}
 
           {/* Balance Sheet Section */}

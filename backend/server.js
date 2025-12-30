@@ -287,6 +287,7 @@ app.use('/api/export', require('./routes/exportRoutes'));
 app.use('/api/invoices', require('./routes/invoiceRoutes'));
 app.use('/api/wallet', require('./routes/walletRoutes'));
 app.use('/api/admin/email', require('./routes/adminEmailRoutes'));
+app.use('/api/admin', require('./routes/adminBillingRoutes')); // Admin Billing & Expenses
 app.use('/api/contact', require('./routes/contactRoutes'));
 app.use('/api/security', require('./routes/securityRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes')); // AI-powered features
