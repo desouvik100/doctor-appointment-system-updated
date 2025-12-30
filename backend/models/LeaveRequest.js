@@ -22,12 +22,12 @@ const leaveRequestSchema = new mongoose.Schema({
   // Duration
   startDate: { type: Date, required: true },
   endDate: { type: Date, required: true },
-  totalDays: { type: Number, required: true },
+  totalDays: { type: Number },
   isHalfDay: { type: Boolean, default: false },
   halfDayType: { type: String, enum: ['first_half', 'second_half'] },
   
   // Reason
-  reason: { type: String, required: true },
+  reason: { type: String },
   
   // Documents (for sick leave, etc.)
   documents: [{
