@@ -8,7 +8,7 @@ const ComplianceChecklist = require('../models/ComplianceChecklist');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 
 // Create checklist
-router.post('/checklists', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.post('/checklists', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const checklist = new ComplianceChecklist({ ...req.body, preparedBy: req.user?.userId });
     await checklist.save();
@@ -73,7 +73,7 @@ router.put('/checklists/:id/item', verifyTokenWithRole(['admin', 'clinic', 'rece
 });
 
 // Submit for review
-router.post('/checklists/:id/submit', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.post('/checklists/:id/submit', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const checklist = await ComplianceChecklist.findByIdAndUpdate(
       req.params.id,

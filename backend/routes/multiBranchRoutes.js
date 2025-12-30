@@ -9,7 +9,7 @@ const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const mongoose = require('mongoose');
 
 // Create branch
-router.post('/branches', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.post('/branches', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const branch = new HospitalBranch({ ...req.body, createdBy: req.user?.userId });
     await branch.save();
@@ -50,7 +50,7 @@ router.get('/branches/:id', verifyToken, async (req, res) => {
 });
 
 // Update branch
-router.put('/branches/:id', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.put('/branches/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const branch = await HospitalBranch.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json({ success: true, branch });

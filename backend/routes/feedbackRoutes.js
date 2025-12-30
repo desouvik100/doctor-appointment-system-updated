@@ -148,7 +148,7 @@ router.get('/doctor/:doctorId', verifyToken, async (req, res) => {
 });
 
 // Respond to feedback
-router.post('/:id/respond', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.post('/:id/respond', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { responseText } = req.body;
     const feedback = await PatientFeedback.findByIdAndUpdate(
@@ -169,7 +169,7 @@ router.post('/:id/respond', verifyTokenWithRole(['admin', 'clinic']), async (req
 });
 
 // Resolve complaint
-router.post('/:id/resolve', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.post('/:id/resolve', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { resolution } = req.body;
     const feedback = await PatientFeedback.findByIdAndUpdate(

@@ -11,7 +11,7 @@ const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 // ===== VENDOR ROUTES =====
 
 // Create vendor
-router.post('/vendors', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.post('/vendors', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const vendor = new Vendor({ ...req.body, createdBy: req.user?.userId });
     await vendor.save();
@@ -49,7 +49,7 @@ router.get('/vendors/:id', verifyToken, async (req, res) => {
 });
 
 // Update vendor
-router.put('/vendors/:id', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.put('/vendors/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const vendor = await Vendor.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json({ success: true, vendor });
@@ -107,7 +107,7 @@ router.get('/purchase-orders/:id', verifyToken, async (req, res) => {
 });
 
 // Update PO
-router.put('/purchase-orders/:id', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.put('/purchase-orders/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const po = await PurchaseOrder.findByIdAndUpdate(
       req.params.id,
@@ -121,7 +121,7 @@ router.put('/purchase-orders/:id', verifyTokenWithRole(['admin', 'clinic']), asy
 });
 
 // Approve PO
-router.post('/purchase-orders/:id/approve', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.post('/purchase-orders/:id/approve', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { approvalNotes } = req.body;
     const po = await PurchaseOrder.findByIdAndUpdate(
