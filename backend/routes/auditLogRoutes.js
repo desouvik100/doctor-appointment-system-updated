@@ -28,8 +28,63 @@ const logAction = async (req, res, next) => {
   next();
 };
 
+// Get audit logs (general endpoint - uses clinicId from token if available)
+router.get('/', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
+  try {
+    const { 
+      page = 1, 
+      limit = 50, 
+      entityType, 
+      action, 
+      userId, 
+      startDate, 
+      endDate,
+      severity,
+      clinicId: queryClinicId
+    } = req.query;
+
+    // Use clinicId from query or from user's token
+    const clinicId = queryClinicId || req.user?.clinicId;
+    
+    const query = {};
+    if (clinicId) query.clinicId = clinicId;
+    if (entityType) query.entityType = entityType;
+    if (action) query.action = action;
+    if (userId) query.userId = userId;
+    if (severity) query.severity = severity;
+    
+    if (startDate || endDate) {
+      query.timestamp = {};
+      if (startDate) query.timestamp.$gte = new Date(startDate);
+      if (endDate) query.timestamp.$lte = new Date(endDate);
+    }
+
+    const logs = await AuditLog.find(query)
+      .sort({ timestamp: -1 })
+      .skip((page - 1) * limit)
+      .limit(parseInt(limit))
+      .populate('userId', 'name email role');
+
+    const total = await AuditLog.countDocuments(query);
+
+    res.json({
+      success: true,
+      logs,
+      pagination: {
+        page: parseInt(page),
+        limit: parseInt(limit),
+        total,
+        pages: Math.ceil(total / limit)
+      }
+    });
+  } catch (error) {
+    console.error('Error fetching audit logs:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 // Get audit logs for clinic (Admin only)
-router.get('/clinic/:clinicId', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.get('/clinic/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { clinicId } = req.params;
     const { 
@@ -96,7 +151,7 @@ router.get('/entity/:entityType/:entityId', verifyToken, async (req, res) => {
 });
 
 // Get user activity log
-router.get('/user/:userId', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.get('/user/:userId', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { userId } = req.params;
     const { days = 30 } = req.query;
@@ -110,8 +165,40 @@ router.get('/user/:userId', verifyTokenWithRole(['admin', 'clinic']), async (req
   }
 });
 
-// Get audit summary/stats
-router.get('/stats/:clinicId', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+// Get audit summary/stats (general - uses clinicId from token)
+router.get('/stats', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
+  try {
+    const clinicId = req.query.clinicId || req.user?.clinicId;
+    const { days = 7 } = req.query;
+
+    const startDate = new Date();
+    startDate.setDate(startDate.getDate() - parseInt(days));
+
+    const matchQuery = { timestamp: { $gte: startDate } };
+    if (clinicId) {
+      matchQuery.clinicId = require('mongoose').Types.ObjectId(clinicId);
+    }
+
+    const stats = await AuditLog.aggregate([
+      { $match: matchQuery },
+      {
+        $group: {
+          _id: '$action',
+          count: { $sum: 1 }
+        }
+      },
+      { $sort: { count: -1 } }
+    ]);
+
+    res.json({ success: true, stats });
+  } catch (error) {
+    console.error('Error fetching audit stats:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get audit summary/stats for specific clinic
+router.get('/stats/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { clinicId } = req.params;
     const { days = 7 } = req.query;

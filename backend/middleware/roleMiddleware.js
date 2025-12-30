@@ -31,14 +31,18 @@ const authenticate = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
     req.user = decoded;
-    req.userId = decoded.id || decoded.userId || decoded._id;
+    req.userId = decoded.userId || decoded.id || decoded._id;
     req.userRole = decoded.role || 'patient';
     req.clinicId = decoded.clinicId || null;
     
+    // Debug log for troubleshooting
+    console.log('Auth middleware - Role:', req.userRole, 'UserId:', req.userId);
+    
     next();
   } catch (error) {
+    console.error('Auth middleware error:', error.message);
     if (error.name === 'TokenExpiredError') {
       return res.status(401).json({
         success: false,
