@@ -70,6 +70,14 @@ export { default as IPDSection } from './IPDSection';
 export { default as AuditLogSection } from './AuditLogSection';
 export { default as BedManagementSection } from './BedManagementSection';
 
+// Enterprise Hospital Features
+export { default as InsuranceClaimsSection } from './InsuranceClaimsSection';
+export { default as MultiBranchSection } from './MultiBranchSection';
+export { default as VendorManagementSection } from './VendorManagementSection';
+export { default as ComplianceSection } from './ComplianceSection';
+export { default as StaffAttendanceSection } from './StaffAttendanceSection';
+export { default as PatientFeedbackSection } from './PatientFeedbackSection';
+
 // Feature Gating
 export { default as LockedFeature, useFeatureAccess, withFeatureAccess } from './LockedFeature';
 export { 

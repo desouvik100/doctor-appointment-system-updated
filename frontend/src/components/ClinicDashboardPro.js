@@ -6,7 +6,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import { exportAppointmentsToPDF } from '../utils/pdfExport';
-import { VitalsRecorder, VitalsTrends, MedicalHistorySummary, MedicalHistoryForm, PharmacySection, BillingSection, StaffScheduleSection, ClinicAnalyticsSection, AdvancedQueueSection, IPDSection, AuditLogSection, BedManagementSection } from './emr';
+import { VitalsRecorder, VitalsTrends, MedicalHistorySummary, MedicalHistoryForm, PharmacySection, BillingSection, StaffScheduleSection, ClinicAnalyticsSection, AdvancedQueueSection, IPDSection, AuditLogSection, BedManagementSection, InsuranceClaimsSection, MultiBranchSection, VendorManagementSection, ComplianceSection, StaffAttendanceSection, PatientFeedbackSection } from './emr';
 
 // Helper function to format address (handles both string and object)
 const formatAddress = (address) => {
@@ -491,6 +491,14 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
       { id: 'staff', icon: 'fas fa-user-clock', labelKey: 'Staff Schedule' },
       { id: 'analytics', icon: 'fas fa-chart-bar', labelKey: 'Analytics' },
       { id: 'audit-logs', icon: 'fas fa-history', labelKey: 'Audit Logs' },
+    ]},
+    { titleKey: 'Enterprise', items: [
+      { id: 'insurance', icon: 'fas fa-file-invoice-dollar', labelKey: 'Insurance Claims' },
+      { id: 'multi-branch', icon: 'fas fa-sitemap', labelKey: 'Multi-Branch' },
+      { id: 'vendors', icon: 'fas fa-truck', labelKey: 'Vendors & PO' },
+      { id: 'compliance', icon: 'fas fa-shield-alt', labelKey: 'Compliance' },
+      { id: 'attendance', icon: 'fas fa-user-clock', labelKey: 'Attendance' },
+      { id: 'feedback', icon: 'fas fa-comment-dots', labelKey: 'Patient Feedback' },
     ]},
   ];
 
@@ -2562,6 +2570,31 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
           {/* Audit Logs Section */}
           {activeSection === 'audit-logs' && (
             <AuditLogSection clinicId={receptionist.clinicId} />
+          )}
+
+          {/* Enterprise Features */}
+          {activeSection === 'insurance' && (
+            <InsuranceClaimsSection clinicId={receptionist.clinicId} />
+          )}
+
+          {activeSection === 'multi-branch' && (
+            <MultiBranchSection clinicId={receptionist.clinicId} organizationId={receptionist.clinicId} />
+          )}
+
+          {activeSection === 'vendors' && (
+            <VendorManagementSection clinicId={receptionist.clinicId} />
+          )}
+
+          {activeSection === 'compliance' && (
+            <ComplianceSection clinicId={receptionist.clinicId} />
+          )}
+
+          {activeSection === 'attendance' && (
+            <StaffAttendanceSection clinicId={receptionist.clinicId} />
+          )}
+
+          {activeSection === 'feedback' && (
+            <PatientFeedbackSection clinicId={receptionist.clinicId} />
           )}
         </div>
 
