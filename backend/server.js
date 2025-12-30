@@ -2,6 +2,7 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
+// v2.1.0 - Bed Management & Bulk Create API
 const { initializeScheduler } = require('./services/appointmentScheduler');
 const { initializeMedicineReminders } = require('./services/medicineReminderService');
 const { initializeScheduledEmails } = require('./services/adminEmailService');
