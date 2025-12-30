@@ -29,14 +29,14 @@ const VendorManagementSection = ({ clinicId }) => {
 
   const fetchVendors = async () => {
     try {
-      const res = await axios.get(`/api/vendors/vendors/clinic/${clinicId}`);
+      const res = await axios.get(`/api/inventory/vendors/clinic/${clinicId}`);
       setVendors(res.data.vendors || []);
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
   const fetchPurchaseOrders = async () => {
     try {
-      const res = await axios.get(`/api/vendors/purchase-orders/clinic/${clinicId}`);
+      const res = await axios.get(`/api/inventory/purchase-orders/clinic/${clinicId}`);
       setPurchaseOrders(res.data.purchaseOrders || []);
     } catch (err) { console.error(err); }
   };
@@ -44,7 +44,7 @@ const VendorManagementSection = ({ clinicId }) => {
   const handleVendorSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/vendors/vendors', { ...vendorForm, clinicId });
+      await axios.post('/api/inventory/vendors', { ...vendorForm, clinicId });
       toast.success('Vendor created successfully');
       setShowVendorModal(false);
       setVendorForm({ name: '', vendorCode: '', email: '', phone: '', gstNumber: '', categories: [], paymentTerms: 'net_30' });
@@ -56,7 +56,7 @@ const VendorManagementSection = ({ clinicId }) => {
     e.preventDefault();
     if (poForm.items.length === 0) { toast.error('Add at least one item'); return; }
     try {
-      await axios.post('/api/vendors/purchase-orders', { ...poForm, clinicId });
+      await axios.post('/api/inventory/purchase-orders', { ...poForm, clinicId });
       toast.success('Purchase order created');
       setShowPOModal(false);
       setPOForm({ vendorId: '', items: [], expectedDeliveryDate: '', notes: '', priority: 'normal' });
@@ -72,7 +72,7 @@ const VendorManagementSection = ({ clinicId }) => {
 
   const approvePO = async (id) => {
     try {
-      await axios.post(`/api/vendors/purchase-orders/${id}/approve`);
+      await axios.post(`/api/inventory/purchase-orders/${id}/approve`);
       toast.success('PO approved');
       fetchPurchaseOrders();
     } catch (err) { toast.error('Failed to approve'); }

@@ -21,14 +21,14 @@ const MultiBranchSection = ({ clinicId, organizationId }) => {
 
   const fetchBranches = async () => {
     try {
-      const res = await axios.get(`/api/multi-branch/branches/organization/${organizationId || clinicId}`);
+      const res = await axios.get(`/api/branches/branches/organization/${organizationId || clinicId}`);
       setBranches(res.data.branches || []);
     } catch (err) { console.error(err); } finally { setLoading(false); }
   };
 
   const fetchDashboard = async () => {
     try {
-      const res = await axios.get(`/api/multi-branch/dashboard/${organizationId || clinicId}`);
+      const res = await axios.get(`/api/branches/dashboard/${organizationId || clinicId}`);
       setDashboard(res.data.dashboard);
     } catch (err) { console.error(err); }
   };
@@ -36,7 +36,7 @@ const MultiBranchSection = ({ clinicId, organizationId }) => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await axios.post('/api/multi-branch/branches', { ...form, organizationId: organizationId || clinicId });
+      await axios.post('/api/branches/branches', { ...form, organizationId: organizationId || clinicId, organizationName: 'Care Hospital' });
       toast.success('Branch created successfully');
       setShowModal(false);
       setForm({ branchName: '', branchCode: '', branchType: 'hospital', city: '', state: '', address: '', phone: '', email: '', totalBeds: 0, operatingHours: { open: '08:00', close: '20:00' } });
