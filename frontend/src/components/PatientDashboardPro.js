@@ -129,15 +129,22 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
 
   // Fetch doctor online status
   const fetchDoctorOnlineStatus = async () => {
-    if (doctors.length === 0) return;
+    if (!doctors || doctors.length === 0) return;
     try {
-      const doctorIds = doctors.map(d => d._id).join(',');
+      // Filter out any invalid IDs
+      const validDoctors = doctors.filter(d => d._id && /^[0-9a-fA-F]{24}$/.test(d._id));
+      if (validDoctors.length === 0) return;
+      
+      const doctorIds = validDoctors.map(d => d._id).join(',');
       const res = await axios.get(`/api/doctors/online-status?doctorIds=${doctorIds}`);
       if (res.data.success) {
         setDoctorOnlineStatus(res.data.status);
       }
     } catch (error) {
-      console.error('Error fetching online status:', error);
+      // Silently fail - don't spam console with errors
+      if (error.response?.status !== 500) {
+        console.error('Error fetching online status:', error);
+      }
     }
   };
 

@@ -817,12 +817,25 @@ router.get('/online-status', async (req, res) => {
   try {
     const { doctorIds } = req.query;
     
+    // If no doctorIds provided, return empty status
+    if (!doctorIds || doctorIds.trim() === '') {
+      return res.json({ success: true, status: {} });
+    }
+    
     // Consider doctor offline if no heartbeat in last 2 minutes
     const offlineThreshold = new Date(Date.now() - 2 * 60 * 1000);
     
     let query = { isActive: true };
     if (doctorIds) {
-      const ids = doctorIds.split(',');
+      const ids = doctorIds.split(',').filter(id => {
+        // Validate ObjectId format
+        return id && /^[0-9a-fA-F]{24}$/.test(id.trim());
+      });
+      
+      if (ids.length === 0) {
+        return res.json({ success: true, status: {} });
+      }
+      
       query._id = { $in: ids };
     }
     
