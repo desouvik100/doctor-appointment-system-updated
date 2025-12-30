@@ -763,4 +763,114 @@ router.get('/:id/calendar', async (req, res) => {
   }
 });
 
+// ===== ONLINE STATUS ROUTES =====
+
+// Update doctor online status (heartbeat)
+router.post('/:id/heartbeat', verifyToken, async (req, res) => {
+  try {
+    const doctor = await Doctor.findByIdAndUpdate(
+      req.params.id,
+      { 
+        isOnline: true, 
+        lastActiveAt: new Date(),
+        onlineStatusUpdatedAt: new Date()
+      },
+      { new: true }
+    );
+    
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+    
+    res.json({ success: true, isOnline: true });
+  } catch (error) {
+    console.error('Error updating heartbeat:', error);
+    res.status(500).json({ success: false, message: 'Failed to update status' });
+  }
+});
+
+// Set doctor offline
+router.post('/:id/go-offline', verifyToken, async (req, res) => {
+  try {
+    const doctor = await Doctor.findByIdAndUpdate(
+      req.params.id,
+      { 
+        isOnline: false,
+        onlineStatusUpdatedAt: new Date()
+      },
+      { new: true }
+    );
+    
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+    
+    res.json({ success: true, isOnline: false });
+  } catch (error) {
+    console.error('Error setting offline:', error);
+    res.status(500).json({ success: false, message: 'Failed to update status' });
+  }
+});
+
+// Get online status of multiple doctors
+router.get('/online-status', async (req, res) => {
+  try {
+    const { doctorIds } = req.query;
+    
+    // Consider doctor offline if no heartbeat in last 2 minutes
+    const offlineThreshold = new Date(Date.now() - 2 * 60 * 1000);
+    
+    let query = { isActive: true };
+    if (doctorIds) {
+      const ids = doctorIds.split(',');
+      query._id = { $in: ids };
+    }
+    
+    const doctors = await Doctor.find(query)
+      .select('_id name isOnline lastActiveAt')
+      .lean();
+    
+    // Check if doctor is truly online (had heartbeat within threshold)
+    const statusMap = {};
+    doctors.forEach(doc => {
+      const isReallyOnline = doc.isOnline && doc.lastActiveAt && new Date(doc.lastActiveAt) > offlineThreshold;
+      statusMap[doc._id] = {
+        isOnline: isReallyOnline,
+        lastActiveAt: doc.lastActiveAt
+      };
+    });
+    
+    res.json({ success: true, status: statusMap });
+  } catch (error) {
+    console.error('Error fetching online status:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch status' });
+  }
+});
+
+// Get single doctor online status
+router.get('/:id/online-status', async (req, res) => {
+  try {
+    const doctor = await Doctor.findById(req.params.id)
+      .select('isOnline lastActiveAt name')
+      .lean();
+    
+    if (!doctor) {
+      return res.status(404).json({ success: false, message: 'Doctor not found' });
+    }
+    
+    // Consider offline if no heartbeat in last 2 minutes
+    const offlineThreshold = new Date(Date.now() - 2 * 60 * 1000);
+    const isReallyOnline = doctor.isOnline && doctor.lastActiveAt && new Date(doctor.lastActiveAt) > offlineThreshold;
+    
+    res.json({ 
+      success: true, 
+      isOnline: isReallyOnline,
+      lastActiveAt: doctor.lastActiveAt
+    });
+  } catch (error) {
+    console.error('Error fetching online status:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch status' });
+  }
+});
+
 module.exports = router;

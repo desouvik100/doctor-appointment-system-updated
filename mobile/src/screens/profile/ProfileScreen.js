@@ -13,19 +13,14 @@ import {
   Switch,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../../theme/colors';
+import { colors } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
+import { useUser } from '../../context/UserContext';
 
 const ProfileScreen = ({ navigation }) => {
-  const user = {
-    name: 'Alex Johnson',
-    email: 'alex.johnson@email.com',
-    phone: '+1 (555) 123-4567',
-    bloodType: 'O+',
-    memberSince: 'Jan 2024',
-  };
+  const { user, logout } = useUser();
 
   const menuSections = [
     {

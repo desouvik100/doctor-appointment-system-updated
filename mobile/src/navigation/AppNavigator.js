@@ -14,12 +14,14 @@ import LabTestsScreen from '../screens/services/LabTestsScreen';
 import MedicineScreen from '../screens/services/MedicineScreen';
 import RecordsScreen from '../screens/services/RecordsScreen';
 import EmergencyScreen from '../screens/services/EmergencyScreen';
+import MedicalImagingScreen from '../screens/services/MedicalImagingScreen';
 import { colors } from '../theme/colors';
+import { UserProvider, useUser } from '../context/UserContext';
 
 const Stack = createStackNavigator();
 
-const AppNavigator = () => {
-  const isLoggedIn = true; // Set to true to skip login for now
+const AppContent = () => {
+  const { isLoggedIn } = useUser();
 
   return (
     <NavigationContainer
@@ -51,8 +53,17 @@ const AppNavigator = () => {
         <Stack.Screen name="Medicine" component={MedicineScreen} />
         <Stack.Screen name="Records" component={RecordsScreen} />
         <Stack.Screen name="Emergency" component={EmergencyScreen} />
+        <Stack.Screen name="MedicalImaging" component={MedicalImagingScreen} />
       </Stack.Navigator>
     </NavigationContainer>
+  );
+};
+
+const AppNavigator = () => {
+  return (
+    <UserProvider>
+      <AppContent />
+    </UserProvider>
   );
 };
 

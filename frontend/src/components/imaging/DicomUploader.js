@@ -84,17 +84,15 @@ const DicomUploader = ({ patientId, clinicId, onUploadComplete, onError }) => {
       return;
     }
 
-    if (!patientId) {
-      alert('Patient ID is required');
-      return;
-    }
-
     setUploading(true);
     setProgress(0);
 
     try {
       const formData = new FormData();
-      formData.append('patientId', patientId);
+      // Use patientId if available, otherwise let backend generate one
+      if (patientId) {
+        formData.append('patientId', patientId);
+      }
       if (clinicId) {
         formData.append('clinicId', clinicId);
       }

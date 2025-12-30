@@ -121,10 +121,34 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
   const [locationSearch, setLocationSearch] = useState(''); // Search doctors by city/area
   const [searchedLocation, setSearchedLocation] = useState(null); // Geocoded location from search
   const [locationSearchLoading, setLocationSearchLoading] = useState(false);
+  const [doctorOnlineStatus, setDoctorOnlineStatus] = useState({}); // Track real-time online status
   
   // Cancel appointment modal state
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [appointmentToCancel, setAppointmentToCancel] = useState(null);
+
+  // Fetch doctor online status
+  const fetchDoctorOnlineStatus = async () => {
+    if (doctors.length === 0) return;
+    try {
+      const doctorIds = doctors.map(d => d._id).join(',');
+      const res = await axios.get(`/api/doctors/online-status?doctorIds=${doctorIds}`);
+      if (res.data.success) {
+        setDoctorOnlineStatus(res.data.status);
+      }
+    } catch (error) {
+      console.error('Error fetching online status:', error);
+    }
+  };
+
+  // Fetch online status when doctors change and periodically
+  useEffect(() => {
+    if (doctors.length > 0) {
+      fetchDoctorOnlineStatus();
+      const interval = setInterval(fetchDoctorOnlineStatus, 30000); // Every 30 seconds
+      return () => clearInterval(interval);
+    }
+  }, [doctors]);
 
   const handleProfileUpdate = (updatedUser) => {
     setCurrentUser(updatedUser);
@@ -667,6 +691,9 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                   {recentDoctors.map(doc => {
                     // Availability status - use actual data
                     const isAvailable = doc.availability === 'Available' || doc.isAvailable;
+                    // Check real-time online status
+                    const onlineStatus = doctorOnlineStatus[doc._id];
+                    const isReallyOnline = onlineStatus?.isOnline === true;
                     const availStatus = isAvailable ? 'available' : 'unavailable';
                     // Consultation type
                     const consultTypes = doc.consultationTypes || ['clinic'];
@@ -735,7 +762,17 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                             <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px' }}>{docInitials}</span>
                           )}
                           {availStatus === 'available' && (
-                            <div style={{ position: 'absolute', bottom: '-2px', right: '-2px', width: '14px', height: '14px', background: '#10b981', borderRadius: '50%', border: '2px solid #fff' }}></div>
+                            <div style={{ 
+                              position: 'absolute', 
+                              bottom: '-2px', 
+                              right: '-2px', 
+                              width: '14px', 
+                              height: '14px', 
+                              background: isReallyOnline ? '#10b981' : '#94a3b8', 
+                              borderRadius: '50%', 
+                              border: '2px solid #fff',
+                              animation: isReallyOnline ? 'pulse-online 2s infinite' : 'none'
+                            }}></div>
                           )}
                         </div>
                         <div style={{ flex: 1, minWidth: 0 }}>
@@ -1032,20 +1069,126 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                 </div>
               )}
 
-              {/* Made in India Footer - Mobile Only */}
+              {/* Made in India Footer - Mobile Only - Rapido Style */}
               <div className="lg:hidden mt-8 mb-4">
-                <div className="text-center py-8 px-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl relative overflow-hidden">
-                  {/* Background Pattern */}
-                  <div className="absolute inset-0 opacity-30" style={{
-                    backgroundImage: `url("data:image/svg+xml,%3Csvg width='60' height='60' viewBox='0 0 60 60' xmlns='http://www.w3.org/2000/svg'%3E%3Cg fill='none' fill-rule='evenodd'%3E%3Cg fill='%23cbd5e1' fill-opacity='0.2'%3E%3Cpath d='M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E")`
-                  }}></div>
+                <div className="text-center py-10 px-4 bg-slate-50 dark:bg-slate-800/50 rounded-2xl relative overflow-hidden">
+                  {/* Healthcare Line Art Background Pattern */}
+                  <div className="absolute inset-0 opacity-[0.08]">
+                    <svg width="100%" height="100%" xmlns="http://www.w3.org/2000/svg">
+                      <defs>
+                        <pattern id="healthcarePattern" x="0" y="0" width="400" height="400" patternUnits="userSpaceOnUse">
+                          {/* Stethoscope */}
+                          <g transform="translate(20, 20)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <circle cx="15" cy="35" r="8"/>
+                            <path d="M15 27 V15 Q15 5 25 5 H35 Q45 5 45 15 V20"/>
+                            <circle cx="45" cy="23" r="3"/>
+                          </g>
+                          {/* Hospital Building */}
+                          <g transform="translate(100, 30)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <rect x="0" y="10" width="50" height="40" rx="2"/>
+                            <rect x="15" y="0" width="20" height="15"/>
+                            <path d="M22 5 V12 M18 8.5 H27"/>
+                            <rect x="8" y="25" width="10" height="12"/>
+                            <rect x="32" y="25" width="10" height="12"/>
+                          </g>
+                          {/* Ambulance */}
+                          <g transform="translate(200, 40)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <rect x="0" y="10" width="45" height="25" rx="3"/>
+                            <path d="M45 20 H55 L60 30 V35 H45"/>
+                            <circle cx="12" cy="38" r="5"/>
+                            <circle cx="50" cy="38" r="5"/>
+                            <path d="M20 18 V28 M15 23 H25"/>
+                          </g>
+                          {/* Doctor */}
+                          <g transform="translate(300, 20)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <circle cx="20" cy="12" r="10"/>
+                            <path d="M5 50 Q5 30 20 28 Q35 30 35 50"/>
+                            <path d="M15 35 V42 M25 35 V42"/>
+                            <circle cx="20" cy="8" r="3"/>
+                          </g>
+                          {/* Heart with Pulse */}
+                          <g transform="translate(30, 120)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <path d="M25 15 C25 5 15 0 10 8 C5 0 -5 5 -5 15 C-5 25 10 35 25 45 C40 35 55 25 55 15 C55 5 45 0 40 8 C35 0 25 5 25 15"/>
+                            <path d="M5 25 L15 25 L20 15 L25 35 L30 20 L35 25 L45 25"/>
+                          </g>
+                          {/* Medicine Bottle */}
+                          <g transform="translate(120, 130)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <rect x="5" y="15" width="30" height="40" rx="3"/>
+                            <rect x="10" y="5" width="20" height="12" rx="2"/>
+                            <path d="M15 30 H25 M15 40 H25"/>
+                          </g>
+                          {/* Syringe */}
+                          <g transform="translate(200, 120)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <rect x="10" y="5" width="8" height="40" rx="1"/>
+                            <path d="M10 15 H5 M10 25 H5 M10 35 H5"/>
+                            <path d="M14 45 V55"/>
+                            <rect x="8" y="0" width="12" height="8" rx="1"/>
+                          </g>
+                          {/* Wheelchair */}
+                          <g transform="translate(280, 130)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <circle cx="15" cy="45" r="10"/>
+                            <circle cx="45" cy="45" r="6"/>
+                            <path d="M15 35 V15 H35 V35"/>
+                            <path d="M35 25 H50 L45 45"/>
+                          </g>
+                          {/* DNA Helix */}
+                          <g transform="translate(50, 220)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <path d="M10 0 Q25 15 10 30 Q-5 45 10 60"/>
+                            <path d="M30 0 Q15 15 30 30 Q45 45 30 60"/>
+                            <path d="M10 10 H30 M10 30 H30 M10 50 H30"/>
+                          </g>
+                          {/* Microscope */}
+                          <g transform="translate(130, 230)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <ellipse cx="20" cy="55" rx="20" ry="5"/>
+                            <path d="M20 50 V30"/>
+                            <path d="M10 30 H30"/>
+                            <path d="M20 30 L30 10"/>
+                            <circle cx="32" cy="6" r="5"/>
+                          </g>
+                          {/* Clinic/Cross */}
+                          <g transform="translate(220, 220)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <rect x="0" y="0" width="50" height="50" rx="8"/>
+                            <path d="M25 12 V38 M12 25 H38"/>
+                          </g>
+                          {/* Patient Bed */}
+                          <g transform="translate(300, 230)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <rect x="0" y="20" width="60" height="20" rx="2"/>
+                            <circle cx="8" cy="45" r="5"/>
+                            <circle cx="52" cy="45" r="5"/>
+                            <path d="M0 25 Q-5 10 10 10 H20"/>
+                          </g>
+                          {/* Pills */}
+                          <g transform="translate(30, 320)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <ellipse cx="15" cy="15" rx="12" ry="6" transform="rotate(-30 15 15)"/>
+                            <ellipse cx="40" cy="20" rx="10" ry="5" transform="rotate(20 40 20)"/>
+                            <circle cx="60" cy="10" r="8"/>
+                          </g>
+                          {/* Blood Drop */}
+                          <g transform="translate(130, 320)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <path d="M20 5 Q35 25 35 35 Q35 50 20 50 Q5 50 5 35 Q5 25 20 5"/>
+                          </g>
+                          {/* Thermometer */}
+                          <g transform="translate(200, 310)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <rect x="10" y="0" width="10" height="40" rx="5"/>
+                            <circle cx="15" cy="50" r="10"/>
+                          </g>
+                          {/* Health Shield */}
+                          <g transform="translate(280, 310)" stroke="#64748b" strokeWidth="1.5" fill="none">
+                            <path d="M25 5 L45 12 V30 Q45 50 25 55 Q5 50 5 30 V12 L25 5"/>
+                            <path d="M25 20 V40 M15 30 H35"/>
+                          </g>
+                        </pattern>
+                      </defs>
+                      <rect width="100%" height="100%" fill="url(#healthcarePattern)"/>
+                    </svg>
+                  </div>
                   <div className="relative z-10">
-                    <p className="text-3xl font-extrabold italic text-slate-300 dark:text-slate-600 mb-3">#HealthSync</p>
-                    <p className="text-sm font-semibold text-slate-500 dark:text-slate-400 flex items-center justify-center gap-1.5">
-                      <span className="text-lg">🇮🇳</span>
+                    <p className="text-4xl font-extrabold italic text-slate-300 dark:text-slate-600 mb-4">#HealthSync</p>
+                    <p className="text-sm font-medium text-slate-600 dark:text-slate-400 flex items-center justify-center gap-2">
                       <span>Made with</span>
-                      <span className="text-red-500 animate-pulse">❤️</span>
+                      <span className="text-red-500">❤️</span>
                       <span>in India</span>
+                      <span className="text-lg">🇮🇳</span>
                     </p>
                   </div>
                 </div>
@@ -1512,7 +1655,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
         </div>
       )}
       
-      {/* Floating Action Buttons */}
+      {/* Floating Action Buttons - Rapido Style Line Art */}
       <div className="fixed bottom-24 right-4 z-30 flex flex-col items-end gap-3">
         {/* Help choosing doctor - with tooltip */}
         <div className="group flex items-center gap-2">
@@ -1520,30 +1663,52 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
             Need help choosing a doctor?
           </span>
           <button
-            className="w-12 h-12 rounded-full bg-gradient-to-r from-teal-500 to-sky-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center text-xl hover:scale-110"
+            className="w-14 h-14 rounded-2xl bg-gradient-to-br from-teal-400 to-teal-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-105"
             onClick={() => setShowFindDoctorWizard(true)}
             title="Find My Doctor"
+            style={{ boxShadow: '0 8px 24px rgba(20, 184, 166, 0.35)' }}
           >
-            🤖
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+              <rect x="3" y="11" width="18" height="10" rx="2"/>
+              <circle cx="12" cy="5" r="3"/>
+              <path d="M8 15h.01M16 15h.01"/>
+              <path d="M9 18h6"/>
+              <path d="M5 8l2-2M19 8l-2-2"/>
+            </svg>
           </button>
         </div>
         
         {/* AI Health Hub */}
         <button
-          className="w-10 h-10 rounded-full bg-gradient-to-r from-purple-500 to-indigo-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110"
+          className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-violet-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-105"
           onClick={() => setShowAIHealthHub(true)}
           title="AI Health Assistant"
+          style={{ boxShadow: '0 8px 24px rgba(139, 92, 246, 0.35)' }}
         >
-          <i className="fas fa-brain text-sm"></i>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/>
+            <path d="M16 10c2.5 1 4 3.5 4 6v4H4v-4c0-2.5 1.5-5 4-6"/>
+            <circle cx="9" cy="13" r="1"/>
+            <circle cx="15" cy="13" r="1"/>
+            <path d="M9 17s1.5 1 3 1 3-1 3-1"/>
+          </svg>
         </button>
         
         {/* Urgent Care Button */}
         <button
-          className="w-10 h-10 rounded-full bg-gradient-to-r from-red-500 to-rose-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-110"
+          className="w-12 h-12 rounded-2xl bg-gradient-to-br from-red-400 to-red-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-105"
           onClick={() => setActiveSection('ambulance')}
           title="Urgent Care"
+          style={{ boxShadow: '0 8px 24px rgba(239, 68, 68, 0.35)' }}
         >
-          <i className="fas fa-ambulance text-sm"></i>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M3 13h2l2-4h6l2 4h6v4a1 1 0 0 1-1 1h-1"/>
+            <path d="M3 17v-4"/>
+            <circle cx="7" cy="18" r="2"/>
+            <circle cx="17" cy="18" r="2"/>
+            <path d="M9 18h6"/>
+            <path d="M13 5v4M11 7h4"/>
+          </svg>
         </button>
       </div>
 
@@ -1669,6 +1834,21 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
         }}
         unreadNotifications={unreadNotifications}
       />
+      
+      {/* CSS for online status animation */}
+      <style>{`
+        @keyframes pulse-online {
+          0% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.7);
+          }
+          70% {
+            box-shadow: 0 0 0 6px rgba(16, 185, 129, 0);
+          }
+          100% {
+            box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
+          }
+        }
+      `}</style>
     </div>
   );
 };

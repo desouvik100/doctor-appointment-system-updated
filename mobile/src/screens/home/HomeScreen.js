@@ -13,14 +13,17 @@ import {
   Dimensions,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../../theme/colors';
+import { colors } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
+import { useUser } from '../../context/UserContext';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
+  const { user } = useUser();
+
   const upcomingAppointment = {
     doctor: 'Dr. Sarah Wilson',
     specialty: 'Cardiologist',
@@ -38,6 +41,7 @@ const HomeScreen = ({ navigation }) => {
   const moreServices = [
     { id: 'meds', icon: '💊', label: 'Medicine', color: colors.info, screen: 'Medicine' },
     { id: 'records', icon: '📋', label: 'Records', color: colors.accent, screen: 'Records' },
+    { id: 'imaging', icon: '🩻', label: 'Imaging', color: '#6366f1', screen: 'MedicalImaging' },
     { id: 'emergency', icon: '🚑', label: 'Emergency', color: colors.error, screen: 'Emergency' },
   ];
 
@@ -60,10 +64,10 @@ const HomeScreen = ({ navigation }) => {
         <View style={styles.header}>
           <View style={styles.headerLeft}>
             <Text style={styles.greeting}>Good morning 👋</Text>
-            <Text style={styles.userName}>Alex Johnson</Text>
+            <Text style={styles.userName}>{user?.name || 'User'}</Text>
           </View>
           <TouchableOpacity>
-            <Avatar name="Alex Johnson" size="large" showBorder />
+            <Avatar name={user?.name || 'User'} size="large" showBorder />
           </TouchableOpacity>
         </View>
 
@@ -365,12 +369,14 @@ const styles = StyleSheet.create({
   quickActions: {
     flexDirection: 'row',
     justifyContent: 'space-between',
+    flexWrap: 'wrap',
     marginTop: spacing.md,
     marginBottom: spacing.md,
   },
   quickAction: {
     alignItems: 'center',
-    width: (width - spacing.xl * 2 - spacing.lg * 2) / 3,
+    width: (width - spacing.xl * 2 - spacing.md * 3) / 4,
+    marginBottom: spacing.sm,
   },
   quickActionIcon: {
     width: 56,

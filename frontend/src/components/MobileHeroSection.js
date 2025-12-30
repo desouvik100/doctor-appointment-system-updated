@@ -169,12 +169,20 @@ const MobileHeroSection = ({
     closeFullSearch();
   };
 
-  // Top 4 specialties + View All (reduced from 6)
+  // Vast specialties - soft pastel modern colors
   const specialties = [
-    { id: 'general', icon: 'fa-stethoscope', label: 'General', color: '#10b981' },
+    { id: 'general', icon: 'fa-stethoscope', label: 'General', color: '#22c55e' },
     { id: 'dental', icon: 'fa-tooth', label: 'Dental', color: '#3b82f6' },
-    { id: 'skin', icon: 'fa-hand-sparkles', label: 'Skin', color: '#ec4899' },
+    { id: 'skin', icon: 'fa-hand-sparkles', label: 'Skin', color: '#f43f5e' },
     { id: 'child', icon: 'fa-baby', label: 'Child', color: '#06b6d4' },
+    { id: 'eye', icon: 'fa-eye', label: 'Eye', color: '#8b5cf6' },
+    { id: 'ortho', icon: 'fa-bone', label: 'Bones', color: '#f97316' },
+    { id: 'heart', icon: 'fa-heartbeat', label: 'Heart', color: '#ef4444' },
+    { id: 'neuro', icon: 'fa-brain', label: 'Neuro', color: '#a855f7' },
+    { id: 'ent', icon: 'fa-head-side-cough', label: 'ENT', color: '#14b8a6' },
+    { id: 'gynec', icon: 'fa-venus', label: 'Gynec', color: '#ec4899' },
+    { id: 'gastro', icon: 'fa-stomach', label: 'Stomach', color: '#eab308' },
+    { id: 'kidney', icon: 'fa-kidneys', label: 'Kidney', color: '#6366f1' },
   ];
 
   const allSpecialties = [
@@ -201,10 +209,10 @@ const MobileHeroSection = ({
           style={{
             width: '100%',
             padding: '18px 24px',
-            background: 'linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%)',
+            background: 'linear-gradient(135deg, #fff 0%, #fff 100%)',
             border: 'none',
             borderRadius: '16px',
-            color: '#fff',
+            color: '#fc8019',
             fontSize: '17px',
             fontWeight: '700',
             display: 'flex',
@@ -212,7 +220,7 @@ const MobileHeroSection = ({
             justifyContent: 'center',
             gap: '12px',
             marginBottom: '12px',
-            boxShadow: '0 8px 24px rgba(14, 165, 233, 0.35)',
+            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.15)',
             cursor: 'pointer',
             transition: 'all 0.2s ease'
           }}
@@ -220,7 +228,8 @@ const MobileHeroSection = ({
           <i className="fas fa-calendar-check" style={{ fontSize: '20px' }}></i>
           Book Clinic Visit
           <span style={{ 
-            background: 'rgba(255,255,255,0.2)', 
+            background: '#fc8019', 
+            color: '#fff',
             padding: '4px 10px', 
             borderRadius: '20px', 
             fontSize: '12px',
@@ -237,8 +246,8 @@ const MobileHeroSection = ({
           style={{
             width: '100%',
             padding: '14px 20px',
-            background: '#f8fafc',
-            border: '2px solid #e2e8f0',
+            background: '#fff',
+            border: 'none',
             borderRadius: '14px',
             color: '#475569',
             fontSize: '15px',
@@ -248,10 +257,11 @@ const MobileHeroSection = ({
             justifyContent: 'center',
             gap: '10px',
             marginBottom: '16px',
-            cursor: 'pointer'
+            cursor: 'pointer',
+            boxShadow: '0 4px 12px rgba(0, 0, 0, 0.08)'
           }}
         >
-          <i className="fas fa-video" style={{ color: '#0ea5e9' }}></i>
+          <i className="fas fa-video" style={{ color: '#fc8019' }}></i>
           Video Consult from Home
         </button>
         
@@ -263,10 +273,36 @@ const MobileHeroSection = ({
       </div>
 
       {/* Trust Strip - Compact */}
-      <div className="hs-trust-row" style={{ marginTop: '12px', marginBottom: '8px' }}>
-        <span><i className="fas fa-check-circle"></i> Verified</span>
-        <span><i className="fas fa-bolt"></i> Instant</span>
-        <span><i className="fas fa-shield-alt"></i> Secure</span>
+      <div style={{ 
+        display: 'flex', 
+        justifyContent: 'center', 
+        gap: '24px', 
+        marginTop: '16px', 
+        marginBottom: '8px',
+        padding: '0 16px'
+      }}>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <div style={{ 
+            width: '28px', 
+            height: '28px', 
+            borderRadius: '50%', 
+            background: '#fbbf24', 
+            display: 'flex', 
+            alignItems: 'center', 
+            justifyContent: 'center' 
+          }}>
+            <i className="fas fa-check" style={{ color: '#fff', fontSize: '12px' }}></i>
+          </div>
+          <span style={{ color: '#64748b', fontSize: '13px', fontWeight: '600' }}>Verified</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <i className="fas fa-bolt" style={{ color: '#fbbf24', fontSize: '20px' }}></i>
+          <span style={{ color: '#64748b', fontSize: '13px', fontWeight: '600' }}>Instant</span>
+        </div>
+        <div style={{ display: 'flex', alignItems: 'center', gap: '6px' }}>
+          <i className="fas fa-shield-alt" style={{ color: '#fbbf24', fontSize: '20px' }}></i>
+          <span style={{ color: '#64748b', fontSize: '13px', fontWeight: '600' }}>Secure</span>
+        </div>
       </div>
 
       {/* Specialties - Top 4 + View All */}
@@ -317,11 +353,6 @@ const MobileHeroSection = ({
         </div>
         <i className="fas fa-chevron-right"></i>
       </button>
-
-      {/* Animated Healthcare Illustration - Smaller */}
-      <div style={{ transform: 'scale(0.85)', transformOrigin: 'center top', marginTop: '-10px' }}>
-        <HealthcareIllustration />
-      </div>
 
       {/* Full Screen Search */}
       {showFullSearch && (

@@ -1,89 +1,89 @@
 const mongoose = require('mongoose');
 
 const auditLogSchema = new mongoose.Schema({
-  // What happened
-  action: {
-    type: String,
-    required: true,
-    enum: [
-      // Appointments
-      'appointment_created', 'appointment_rescheduled', 'appointment_cancelled', 'appointment_completed',
-      // Doctors
-      'doctor_added', 'doctor_removed', 'doctor_schedule_updated', 'doctor_approved', 'doctor_rejected',
-      // Staff
-      'staff_added', 'staff_removed', 'staff_approved', 'staff_rejected', 'staff_role_changed',
-      // Prescriptions
-      'prescription_created', 'prescription_updated',
-      // Payments
-      'payment_received', 'payment_refunded', 'payment_status_changed',
-      // Clinic operations
-      'clinic_day_opened', 'clinic_day_closed',
-      // User management
-      'user_suspended', 'user_activated', 'user_deleted',
-      // Security
-      'login_success', 'login_failed', 'password_reset'
-    ],
-    index: true
-  },
-  
-  // Who did it
-  performedBy: {
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    name: String,
-    email: String,
-    role: { type: String, enum: ['admin', 'doctor', 'receptionist', 'patient', 'system'] }
-  },
+  // Who performed the action
+  userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
+  userName: { type: String, required: true },
+  userRole: { type: String, enum: ['admin', 'doctor', 'nurse', 'receptionist', 'billing', 'clinic'], required: true },
   
   // What was affected
-  target: {
-    type: { type: String, enum: ['appointment', 'doctor', 'staff', 'patient', 'prescription', 'payment', 'clinic', 'user'] },
-    id: mongoose.Schema.Types.ObjectId,
-    name: String,
-    email: String
+  entityType: { 
+    type: String, 
+    enum: ['patient', 'prescription', 'appointment', 'bill', 'admission', 'discharge', 'lab_report', 'imaging', 'vitals', 'bed', 'inventory', 'user', 'settings'],
+    required: true 
+  },
+  entityId: { type: mongoose.Schema.Types.ObjectId, required: true },
+  entityName: { type: String }, // Human readable name (e.g., patient name)
+  
+  // What action was performed
+  action: { 
+    type: String, 
+    enum: ['create', 'read', 'update', 'delete', 'lock', 'unlock', 'sign', 'print', 'export', 'upload', 'download', 'admit', 'discharge', 'transfer'],
+    required: true 
+  },
+  
+  // Details of the change
+  changes: {
+    before: { type: mongoose.Schema.Types.Mixed }, // Previous values
+    after: { type: mongoose.Schema.Types.Mixed },  // New values
+    fields: [{ type: String }] // List of changed fields
   },
   
   // Context
-  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', index: true },
+  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic' },
+  ipAddress: { type: String },
+  userAgent: { type: String },
+  sessionId: { type: String },
   
-  // Details of the change
-  details: {
-    before: mongoose.Schema.Types.Mixed,
-    after: mongoose.Schema.Types.Mixed,
-    reason: String,
-    notes: String
-  },
+  // Additional metadata
+  description: { type: String }, // Human readable description
+  severity: { type: String, enum: ['low', 'medium', 'high', 'critical'], default: 'low' },
   
-  // Where it happened
-  metadata: {
-    ipAddress: String,
-    userAgent: String,
-    source: { type: String, enum: ['web', 'mobile', 'api', 'system'], default: 'web' }
-  },
-  
-  // When
-  timestamp: { type: Date, default: Date.now, index: true }
+  // Timestamps
+  timestamp: { type: Date, default: Date.now }
 }, {
   timestamps: false // We use our own timestamp field
 });
 
-// Compound indexes for common queries
+// Indexes for efficient querying
 auditLogSchema.index({ clinicId: 1, timestamp: -1 });
-auditLogSchema.index({ 'performedBy.userId': 1, timestamp: -1 });
-auditLogSchema.index({ 'target.id': 1, timestamp: -1 });
+auditLogSchema.index({ userId: 1, timestamp: -1 });
+auditLogSchema.index({ entityType: 1, entityId: 1 });
 auditLogSchema.index({ action: 1, timestamp: -1 });
+auditLogSchema.index({ timestamp: -1 });
 
-// Static method to create audit log entry
+// Static method to log an action
 auditLogSchema.statics.log = async function(data) {
   try {
-    const entry = new this(data);
-    await entry.save();
-    console.log(`📋 Audit: ${data.action} by ${data.performedBy?.name || 'System'}`);
-    return entry;
+    const log = new this(data);
+    await log.save();
+    return log;
   } catch (error) {
-    console.error('❌ Audit log error:', error.message);
-    // Don't throw - audit logging should never break the main flow
+    console.error('Audit log error:', error);
+    // Don't throw - audit logging should not break main functionality
     return null;
   }
+};
+
+// Static method to get logs for an entity
+auditLogSchema.statics.getEntityHistory = async function(entityType, entityId, limit = 50) {
+  return this.find({ entityType, entityId })
+    .sort({ timestamp: -1 })
+    .limit(limit)
+    .populate('userId', 'name email');
+};
+
+// Static method to get user activity
+auditLogSchema.statics.getUserActivity = async function(userId, days = 30) {
+  const startDate = new Date();
+  startDate.setDate(startDate.getDate() - days);
+  
+  return this.find({ 
+    userId, 
+    timestamp: { $gte: startDate } 
+  })
+    .sort({ timestamp: -1 })
+    .limit(500);
 };
 
 module.exports = mongoose.model('AuditLog', auditLogSchema);

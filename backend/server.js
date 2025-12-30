@@ -112,6 +112,10 @@ app.use((req, res, next) => {
 });
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Serve uploaded files statically
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, 'uploads')));
+
 // Global input sanitization for XSS prevention
 app.use(sanitizeInputs);
 
@@ -313,6 +317,20 @@ app.use('/api/drugs', require('./routes/drugInteractionRoutes')); // Real-time D
 app.use('/api/pdf', require('./routes/pdfRoutes')); // PDF Generation (Lab Requisitions, Clinical Summaries)
 app.use('/api/smart-alerts', require('./routes/smartAlertRoutes')); // ML-based Patient Deterioration Prediction
 app.use('/api/e-prescribe', require('./routes/ePrescribingRoutes')); // E-Prescribing Integration
+
+// ===== EMR HOSPITAL SUBSCRIPTION FEATURES =====
+app.use('/api/pharmacy', require('./routes/pharmacyRoutes')); // Pharmacy/Inventory Management
+app.use('/api/clinic-billing', require('./routes/billingRoutes')); // Clinic Billing & Revenue
+app.use('/api/staff-schedule', require('./routes/staffScheduleRoutes')); // Staff Scheduling & Attendance
+app.use('/api/clinic-analytics', require('./routes/clinicAnalyticsRoutes')); // Clinic Analytics & Reports
+app.use('/api/advanced-queue', require('./routes/advancedQueueRoutes')); // Advanced Queue Management
+
+// ===== HOSPITAL EMR COMPLIANCE FEATURES =====
+app.use('/api/audit-logs', require('./routes/auditLogRoutes')); // Audit Trail & Compliance Logs
+app.use('/api/ipd', require('./routes/ipdRoutes')); // IPD Admission, Discharge, Transfer
+app.use('/api/beds', require('./routes/bedRoutes')); // Bed Management & Allocation
+app.use('/api/lab-results', require('./routes/labReportRoutes')); // Lab Reports & Results
+app.use('/api/imaging-reports', require('./routes/imagingRoutes')); // Imaging/Radiology Reports
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');

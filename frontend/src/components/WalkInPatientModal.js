@@ -8,6 +8,7 @@ const WalkInPatientModal = ({ doctor, onClose, onSuccess }) => {
   const [formData, setFormData] = useState({
     patientName: '',
     patientPhone: '',
+    patientEmail: '',
     patientAge: '',
     patientGender: '',
     reason: '',
@@ -71,6 +72,7 @@ const WalkInPatientModal = ({ doctor, onClose, onSuccess }) => {
         // New walk-in patient
         bookingData.patientName = formData.patientName;
         bookingData.patientPhone = formData.patientPhone || searchPhone;
+        bookingData.patientEmail = formData.patientEmail;
         bookingData.patientAge = formData.patientAge ? parseInt(formData.patientAge) : null;
         bookingData.patientGender = formData.patientGender;
       }
@@ -168,6 +170,18 @@ const WalkInPatientModal = ({ doctor, onClose, onSuccess }) => {
                     placeholder="Phone number"
                     value={formData.patientPhone || searchPhone}
                     onChange={(e) => setFormData({...formData, patientPhone: e.target.value})}
+                  />
+                </div>
+              </div>
+
+              <div className="form-row">
+                <div className="form-group full-width">
+                  <label>Email</label>
+                  <input
+                    type="email"
+                    placeholder="patient@email.com (for sending prescription)"
+                    value={formData.patientEmail}
+                    onChange={(e) => setFormData({...formData, patientEmail: e.target.value})}
                   />
                 </div>
               </div>

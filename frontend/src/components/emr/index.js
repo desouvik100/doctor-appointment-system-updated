@@ -60,6 +60,16 @@ export { default as WhatsAppPanel } from './WhatsAppPanel';
 // Voice Input
 export { default as VoiceInput, VoiceTextArea, useVoiceInput } from './VoiceInput';
 
+// Hospital EMR Features
+export { default as PharmacySection } from './PharmacySection';
+export { default as BillingSection } from './BillingSection';
+export { default as StaffScheduleSection } from './StaffScheduleSection';
+export { default as ClinicAnalyticsSection } from './ClinicAnalyticsSection';
+export { default as AdvancedQueueSection } from './AdvancedQueueSection';
+export { default as IPDSection } from './IPDSection';
+export { default as AuditLogSection } from './AuditLogSection';
+export { default as BedManagementSection } from './BedManagementSection';
+
 // Feature Gating
 export { default as LockedFeature, useFeatureAccess, withFeatureAccess } from './LockedFeature';
 export { 

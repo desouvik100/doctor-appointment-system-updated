@@ -296,7 +296,11 @@ const doctorSchema = new mongoose.Schema(
       newEndTime: { type: String, required: true },
       reason: { type: String, default: 'Extended hours' },
       createdAt: { type: Date, default: Date.now }
-    }]
+    }],
+    // Online Status Tracking
+    isOnline: { type: Boolean, default: false },
+    lastActiveAt: { type: Date, default: null },
+    onlineStatusUpdatedAt: { type: Date, default: null }
   },
   { timestamps: true }
 );

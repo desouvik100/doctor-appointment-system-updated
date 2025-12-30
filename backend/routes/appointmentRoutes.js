@@ -1172,6 +1172,7 @@ router.post('/walk-in', verifyTokenWithRole(['receptionist', 'doctor', 'admin'])
       // Walk-in patient details (no app account needed)
       patientName,
       patientPhone,
+      patientEmail,
       patientAge,
       patientGender,
       // Optional - if patient has account
@@ -1282,6 +1283,7 @@ router.post('/walk-in', verifyTokenWithRole(['receptionist', 'doctor', 'admin'])
       appointmentData.walkInPatient = {
         name: patientName,
         phone: patientPhone,
+        email: patientEmail,
         age: patientAge,
         gender: patientGender
       };

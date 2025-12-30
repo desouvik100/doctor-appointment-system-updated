@@ -222,6 +222,10 @@
   margin-bottom: 16px;
 }
 
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
 .form-group label {
   display: block;
   font-weight: 500;

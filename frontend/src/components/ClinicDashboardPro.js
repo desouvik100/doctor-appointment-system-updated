@@ -6,7 +6,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import { exportAppointmentsToPDF } from '../utils/pdfExport';
-import { VitalsRecorder, VitalsTrends, MedicalHistorySummary, MedicalHistoryForm } from './emr';
+import { VitalsRecorder, VitalsTrends, MedicalHistorySummary, MedicalHistoryForm, PharmacySection, BillingSection, StaffScheduleSection, ClinicAnalyticsSection, AdvancedQueueSection, IPDSection, AuditLogSection, BedManagementSection } from './emr';
 
 // Helper function to format address (handles both string and object)
 const formatAddress = (address) => {
@@ -82,6 +82,7 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
   const [savingPrescription, setSavingPrescription] = useState(false);
   const [prescriptionView, setPrescriptionView] = useState('list'); // 'list', 'create', 'view'
   const [selectedPrescription, setSelectedPrescription] = useState(null);
+  const [sendingPrescription, setSendingPrescription] = useState({ email: false, whatsapp: false });
 
   // Register EMR walk-in patient
   const handleEmrPatientRegister = async (e) => {
@@ -417,6 +418,52 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
     }
   };
 
+  // Send prescription via Email
+  const handleSendPrescriptionEmail = async (prescriptionId, email) => {
+    if (!email) {
+      toast.error('Patient email not available');
+      return;
+    }
+    setSendingPrescription(prev => ({ ...prev, email: true }));
+    try {
+      const response = await axios.post(`/api/prescriptions/${prescriptionId}/send-email`, { email });
+      if (response.data.success) {
+        toast.success('Prescription sent to email successfully!');
+      } else {
+        toast.error(response.data.message || 'Failed to send email');
+      }
+    } catch (error) {
+      console.error('Error sending prescription email:', error);
+      toast.error(error.response?.data?.message || 'Failed to send prescription via email');
+    } finally {
+      setSendingPrescription(prev => ({ ...prev, email: false }));
+    }
+  };
+
+  // Send prescription via WhatsApp
+  const handleSendPrescriptionWhatsApp = async (prescriptionId, phone) => {
+    if (!phone) {
+      toast.error('Patient phone not available');
+      return;
+    }
+    setSendingPrescription(prev => ({ ...prev, whatsapp: true }));
+    try {
+      const response = await axios.post(`/api/prescriptions/${prescriptionId}/send-whatsapp`, { phone });
+      if (response.data.success && response.data.whatsappUrl) {
+        // Open WhatsApp in new tab
+        window.open(response.data.whatsappUrl, '_blank');
+        toast.success('WhatsApp opened with prescription message!');
+      } else {
+        toast.error(response.data.message || 'Failed to generate WhatsApp link');
+      }
+    } catch (error) {
+      console.error('Error sending prescription via WhatsApp:', error);
+      toast.error(error.response?.data?.message || 'Failed to send prescription via WhatsApp');
+    } finally {
+      setSendingPrescription(prev => ({ ...prev, whatsapp: false }));
+    }
+  };
+
   const toggleClinicDay = () => {
     const newStatus = !clinicDayOpen;
     setClinicDayOpen(newStatus);
@@ -436,6 +483,14 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
     ]},
     { titleKey: 'EMR', items: [
       { id: 'emr', icon: 'fas fa-notes-medical', labelKey: 'EMR System' },
+      { id: 'advanced-queue', icon: 'fas fa-users-cog', labelKey: 'Queue Manager' },
+      { id: 'pharmacy', icon: 'fas fa-pills', labelKey: 'Pharmacy' },
+      { id: 'billing', icon: 'fas fa-file-invoice-dollar', labelKey: 'Billing' },
+      { id: 'ipd', icon: 'fas fa-procedures', labelKey: 'IPD Management' },
+      { id: 'beds', icon: 'fas fa-bed', labelKey: 'Bed Management' },
+      { id: 'staff', icon: 'fas fa-user-clock', labelKey: 'Staff Schedule' },
+      { id: 'analytics', icon: 'fas fa-chart-bar', labelKey: 'Analytics' },
+      { id: 'audit-logs', icon: 'fas fa-history', labelKey: 'Audit Logs' },
     ]},
   ];
 
@@ -1775,12 +1830,33 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
                                     {rx.medicines?.length || 0} medicines • {new Date(rx.createdAt).toLocaleDateString()}
                                   </p>
                                 </div>
-                                <button 
-                                  onClick={() => { setSelectedPrescription(rx); setPrescriptionView('view'); }}
-                                  className="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium hover:bg-amber-200"
-                                >
-                                  View
-                                </button>
+                                <div className="flex items-center gap-2">
+                                  {/* Quick Send Buttons */}
+                                  {(rx.patientId?.phone || rx.patientPhone) && (
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); handleSendPrescriptionWhatsApp(rx._id, rx.patientId?.phone || rx.patientPhone); }}
+                                      className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                                      title="Send via WhatsApp"
+                                    >
+                                      <i className="fab fa-whatsapp"></i>
+                                    </button>
+                                  )}
+                                  {(rx.patientId?.email || rx.patientEmail) && (
+                                    <button 
+                                      onClick={(e) => { e.stopPropagation(); handleSendPrescriptionEmail(rx._id, rx.patientId?.email || rx.patientEmail); }}
+                                      className="p-2 bg-blue-100 text-blue-600 rounded-lg hover:bg-blue-200 transition-colors"
+                                      title="Send via Email"
+                                    >
+                                      <i className="fas fa-envelope"></i>
+                                    </button>
+                                  )}
+                                  <button 
+                                    onClick={() => { setSelectedPrescription(rx); setPrescriptionView('view'); }}
+                                    className="px-3 py-1.5 bg-amber-100 text-amber-700 rounded-lg text-sm font-medium hover:bg-amber-200"
+                                  >
+                                    View
+                                  </button>
+                                </div>
                               </div>
                             </div>
                           ))}
@@ -2124,6 +2200,57 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
                           </p>
                         </div>
                       )}
+
+                      {/* Send Prescription Actions */}
+                      <div className="flex flex-wrap gap-3 pt-4 mt-4 border-t border-slate-200">
+                        <button
+                          onClick={() => handleSendPrescriptionEmail(
+                            selectedPrescription._id,
+                            selectedPrescription.patientId?.email || selectedPrescription.patientEmail
+                          )}
+                          disabled={sendingPrescription.email || !(selectedPrescription.patientId?.email || selectedPrescription.patientEmail)}
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${
+                            selectedPrescription.patientId?.email || selectedPrescription.patientEmail
+                              ? 'bg-gradient-to-r from-blue-500 to-indigo-600 text-white hover:shadow-lg hover:shadow-blue-500/25'
+                              : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          }`}
+                        >
+                          {sendingPrescription.email ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <i className="fas fa-envelope"></i>
+                          )}
+                          <span>Send via Email</span>
+                        </button>
+
+                        <button
+                          onClick={() => handleSendPrescriptionWhatsApp(
+                            selectedPrescription._id,
+                            selectedPrescription.patientId?.phone || selectedPrescription.patientPhone
+                          )}
+                          disabled={sendingPrescription.whatsapp || !(selectedPrescription.patientId?.phone || selectedPrescription.patientPhone)}
+                          className={`flex items-center gap-2 px-4 py-2.5 rounded-xl font-medium transition-all ${
+                            selectedPrescription.patientId?.phone || selectedPrescription.patientPhone
+                              ? 'bg-gradient-to-r from-green-500 to-emerald-600 text-white hover:shadow-lg hover:shadow-green-500/25'
+                              : 'bg-slate-100 text-slate-400 cursor-not-allowed'
+                          }`}
+                        >
+                          {sendingPrescription.whatsapp ? (
+                            <div className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin"></div>
+                          ) : (
+                            <i className="fab fa-whatsapp"></i>
+                          )}
+                          <span>Send via WhatsApp</span>
+                        </button>
+
+                        <button
+                          onClick={() => window.print()}
+                          className="flex items-center gap-2 px-4 py-2.5 bg-slate-100 text-slate-700 rounded-xl font-medium hover:bg-slate-200 transition-all"
+                        >
+                          <i className="fas fa-print"></i>
+                          <span>Print</span>
+                        </button>
+                      </div>
                     </div>
                   )}
                 </div>
@@ -2379,6 +2506,62 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
                 </div>
               )}
             </div>
+          )}
+
+          {/* Advanced Queue Section */}
+          {activeSection === 'advanced-queue' && (
+            <AdvancedQueueSection 
+              clinicId={receptionist.clinicId} 
+              clinicName={receptionist.clinicName}
+              doctors={doctors} 
+            />
+          )}
+
+          {/* Pharmacy Section */}
+          {activeSection === 'pharmacy' && (
+            <PharmacySection clinicId={receptionist.clinicId} />
+          )}
+
+          {/* Billing Section */}
+          {activeSection === 'billing' && (
+            <BillingSection 
+              clinicId={receptionist.clinicId} 
+              clinicName={receptionist.clinicName}
+              clinicAddress={receptionist.clinicAddress}
+              clinicPhone={receptionist.clinicPhone}
+              patients={patients} 
+              doctors={doctors} 
+            />
+          )}
+
+          {/* Staff Schedule Section */}
+          {activeSection === 'staff' && (
+            <StaffScheduleSection clinicId={receptionist.clinicId} />
+          )}
+
+          {/* Analytics Section */}
+          {activeSection === 'analytics' && (
+            <ClinicAnalyticsSection clinicId={receptionist.clinicId} />
+          )}
+
+          {/* IPD Management Section */}
+          {activeSection === 'ipd' && (
+            <IPDSection 
+              clinicId={receptionist.clinicId} 
+              clinicName={receptionist.clinicName}
+              doctors={doctors}
+              patients={patients}
+            />
+          )}
+
+          {/* Bed Management Section */}
+          {activeSection === 'beds' && (
+            <BedManagementSection clinicId={receptionist.clinicId} />
+          )}
+
+          {/* Audit Logs Section */}
+          {activeSection === 'audit-logs' && (
+            <AuditLogSection clinicId={receptionist.clinicId} />
           )}
         </div>
 

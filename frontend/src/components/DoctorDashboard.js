@@ -162,6 +162,39 @@ function DoctorDashboard({ doctor, onLogout }) {
     }
   }, [doctorId, fetchQueue]);
 
+  // Send heartbeat to indicate doctor is online
+  useEffect(() => {
+    if (!doctorId) return;
+    
+    // Send initial heartbeat
+    const sendHeartbeat = async () => {
+      try {
+        await axios.post(`/api/doctors/${doctorId}/heartbeat`);
+      } catch (error) {
+        console.error('Heartbeat error:', error);
+      }
+    };
+    
+    sendHeartbeat();
+    
+    // Send heartbeat every 30 seconds
+    const heartbeatInterval = setInterval(sendHeartbeat, 30000);
+    
+    // Set offline when leaving
+    const handleBeforeUnload = () => {
+      navigator.sendBeacon(`/api/doctors/${doctorId}/go-offline`);
+    };
+    
+    window.addEventListener('beforeunload', handleBeforeUnload);
+    
+    return () => {
+      clearInterval(heartbeatInterval);
+      window.removeEventListener('beforeunload', handleBeforeUnload);
+      // Try to set offline when component unmounts
+      axios.post(`/api/doctors/${doctorId}/go-offline`).catch(() => {});
+    };
+  }, [doctorId]);
+
   // Fetch EMR subscription for the clinic
   const fetchEmrSubscription = async () => {
     // Handle different formats of clinicId (populated object, ObjectId string, or nested _id)
@@ -1725,6 +1758,8 @@ function DoctorDashboard({ doctor, onLogout }) {
           doctorName={doctor.name}
           patientId={prescriptionPatient.userId?._id || prescriptionPatient.userId || prescriptionPatient.walkInPatient?._id || prescriptionPatient.patientId}
           patientName={prescriptionPatient.userId?.name || prescriptionPatient.walkInPatient?.name || prescriptionPatient.patientName || 'Patient'}
+          patientEmail={prescriptionPatient.userId?.email || prescriptionPatient.walkInPatient?.email || prescriptionPatient.patientEmail || ''}
+          patientPhone={prescriptionPatient.userId?.phone || prescriptionPatient.walkInPatient?.phone || prescriptionPatient.patientPhone || prescriptionPatient.phone || ''}
           appointmentId={prescriptionPatient._id}
           onClose={() => { setShowPrescription(false); setPrescriptionPatient(null); }}
           onSave={() => { setShowPrescription(false); setPrescriptionPatient(null); toast.success('Prescription saved!'); }}

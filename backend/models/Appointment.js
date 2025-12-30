@@ -85,6 +85,7 @@ const appointmentSchema = new mongoose.Schema(
     walkInPatient: {
       name: { type: String, trim: true },
       phone: { type: String, trim: true },
+      email: { type: String, trim: true },
       age: { type: Number },
       gender: { type: String, enum: ['male', 'female', 'other'] }
     },
