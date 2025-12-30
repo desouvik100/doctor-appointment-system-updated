@@ -189,7 +189,7 @@ router.get('/leave/clinic/:clinicId', verifyToken, async (req, res) => {
 });
 
 // Approve/Reject leave
-router.post('/leave/:id/action', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.post('/leave/:id/action', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { action, comments } = req.body; // action: 'approve' or 'reject'
     const updates = {
@@ -200,12 +200,17 @@ router.post('/leave/:id/action', verifyTokenWithRole(['admin', 'clinic']), async
     if (action === 'reject') updates.rejectionReason = comments;
 
     const leave = await LeaveRequest.findByIdAndUpdate(req.params.id, updates, { new: true });
+    
+    if (!leave) {
+      return res.status(404).json({ success: false, message: 'Leave request not found' });
+    }
 
     // If approved, mark attendance as on_leave
-    if (action === 'approve') {
+    if (action === 'approve' && leave.startDate && leave.endDate) {
       const dates = [];
       let current = new Date(leave.startDate);
-      while (current <= leave.endDate) {
+      const endDate = new Date(leave.endDate);
+      while (current <= endDate) {
         dates.push(new Date(current));
         current.setDate(current.getDate() + 1);
       }
