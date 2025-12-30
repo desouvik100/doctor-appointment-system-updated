@@ -247,7 +247,7 @@ router.post('/:id/cancel-reservation', verifyTokenWithRole(['admin', 'receptioni
 });
 
 // Delete bed (soft delete)
-router.delete('/:id', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
+router.delete('/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const bed = await Bed.findById(req.params.id);
 
