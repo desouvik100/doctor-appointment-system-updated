@@ -23,7 +23,10 @@ router.post('/branches', verifyTokenWithRole(['admin', 'clinic', 'receptionist']
 router.get('/branches/organization/:orgId', verifyToken, async (req, res) => {
   try {
     const { status } = req.query;
-    const query = { organizationId: req.params.orgId };
+    const orgId = mongoose.Types.ObjectId.isValid(req.params.orgId) 
+      ? new mongoose.Types.ObjectId(req.params.orgId) 
+      : req.params.orgId;
+    const query = { organizationId: orgId };
     if (status) query.status = status;
 
     const branches = await HospitalBranch.find(query)
@@ -63,7 +66,10 @@ router.put('/branches/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionis
 router.get('/analytics/comparison/:orgId', verifyToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;
-    const branches = await HospitalBranch.find({ organizationId: req.params.orgId, isActive: true });
+    const orgId = mongoose.Types.ObjectId.isValid(req.params.orgId) 
+      ? new mongoose.Types.ObjectId(req.params.orgId) 
+      : req.params.orgId;
+    const branches = await HospitalBranch.find({ organizationId: orgId, isActive: true });
 
     // In production, aggregate data from appointments, billing, etc.
     const comparison = branches.map(branch => ({
@@ -90,7 +96,10 @@ router.get('/analytics/comparison/:orgId', verifyToken, async (req, res) => {
 // Get centralized dashboard
 router.get('/dashboard/:orgId', verifyToken, async (req, res) => {
   try {
-    const branches = await HospitalBranch.find({ organizationId: req.params.orgId, isActive: true });
+    const orgId = mongoose.Types.ObjectId.isValid(req.params.orgId) 
+      ? new mongoose.Types.ObjectId(req.params.orgId) 
+      : req.params.orgId;
+    const branches = await HospitalBranch.find({ organizationId: orgId, isActive: true });
     
     const dashboard = {
       totalBranches: branches.length,
