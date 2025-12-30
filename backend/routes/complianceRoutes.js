@@ -217,4 +217,112 @@ router.get('/templates/nabh', verifyToken, async (req, res) => {
   }
 });
 
+// Get template by type (generic route)
+router.get('/templates/:type', verifyToken, async (req, res) => {
+  try {
+    const { type } = req.params;
+    let template;
+    
+    switch(type) {
+      case 'jci':
+        template = {
+          checklistType: 'jci',
+          checklistName: 'JCI Accreditation Standards',
+          categories: [
+            {
+              categoryName: 'International Patient Safety Goals (IPSG)',
+              categoryCode: 'IPSG',
+              items: [
+                { requirement: 'Identify patients correctly', standard: 'IPSG.1', priority: 'critical' },
+                { requirement: 'Improve effective communication', standard: 'IPSG.2', priority: 'critical' },
+                { requirement: 'Improve safety of high-alert medications', standard: 'IPSG.3', priority: 'critical' }
+              ]
+            },
+            {
+              categoryName: 'Access to Care and Continuity of Care (ACC)',
+              categoryCode: 'ACC',
+              items: [
+                { requirement: 'Admission process is standardized', standard: 'ACC.1', priority: 'major' },
+                { requirement: 'Discharge planning begins at admission', standard: 'ACC.2', priority: 'major' }
+              ]
+            }
+          ]
+        };
+        break;
+      case 'iso':
+        template = {
+          checklistType: 'iso',
+          checklistName: 'ISO 9001:2015 Quality Management',
+          categories: [
+            {
+              categoryName: 'Quality Management System',
+              categoryCode: 'QMS',
+              items: [
+                { requirement: 'Quality policy is documented', standard: 'QMS.4.1', priority: 'major' },
+                { requirement: 'Quality objectives are measurable', standard: 'QMS.6.2', priority: 'major' },
+                { requirement: 'Document control procedures exist', standard: 'QMS.7.5', priority: 'major' }
+              ]
+            },
+            {
+              categoryName: 'Leadership',
+              categoryCode: 'LEAD',
+              items: [
+                { requirement: 'Top management demonstrates commitment', standard: 'LEAD.5.1', priority: 'major' },
+                { requirement: 'Customer focus is maintained', standard: 'LEAD.5.1.2', priority: 'major' }
+              ]
+            }
+          ]
+        };
+        break;
+      case 'hipaa':
+        template = {
+          checklistType: 'hipaa',
+          checklistName: 'HIPAA Compliance Checklist',
+          categories: [
+            {
+              categoryName: 'Privacy Rule',
+              categoryCode: 'PRIV',
+              items: [
+                { requirement: 'Notice of Privacy Practices provided', standard: 'PRIV.1', priority: 'critical' },
+                { requirement: 'Patient authorization for disclosures', standard: 'PRIV.2', priority: 'critical' },
+                { requirement: 'Minimum necessary standard applied', standard: 'PRIV.3', priority: 'major' }
+              ]
+            },
+            {
+              categoryName: 'Security Rule',
+              categoryCode: 'SEC',
+              items: [
+                { requirement: 'Risk analysis conducted', standard: 'SEC.1', priority: 'critical' },
+                { requirement: 'Access controls implemented', standard: 'SEC.2', priority: 'critical' },
+                { requirement: 'Audit controls in place', standard: 'SEC.3', priority: 'major' }
+              ]
+            }
+          ]
+        };
+        break;
+      case 'custom':
+        template = {
+          checklistType: 'custom',
+          checklistName: 'Custom Compliance Checklist',
+          categories: [
+            {
+              categoryName: 'General Requirements',
+              categoryCode: 'GEN',
+              items: [
+                { requirement: 'Add your custom requirement', standard: 'GEN.1', priority: 'major' }
+              ]
+            }
+          ]
+        };
+        break;
+      default:
+        return res.status(404).json({ success: false, message: 'Template not found' });
+    }
+    
+    res.json({ success: true, template });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
 module.exports = router;
