@@ -337,6 +337,7 @@ app.use('/api/imaging-reports', require('./routes/imagingRoutes')); // Imaging/R
 // ===== ENTERPRISE HOSPITAL FEATURES =====
 app.use('/api/insurance', require('./routes/insuranceRoutes')); // Insurance & TPA Integration
 app.use('/api/branches', require('./routes/multiBranchRoutes')); // Multi-Branch Management
+app.use('/api/branch-staff', require('./routes/branchStaffRoutes')); // Branch Staff Management
 app.use('/api/inventory', require('./routes/vendorRoutes')); // Vendor & Purchase Orders
 app.use('/api/compliance', require('./routes/complianceRoutes')); // NABH/JCI Compliance
 app.use('/api/staff-management', require('./routes/staffManagementRoutes')); // Attendance & Leave

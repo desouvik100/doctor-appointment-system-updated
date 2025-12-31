@@ -77,6 +77,7 @@ export { default as VendorManagementSection } from './VendorManagementSection';
 export { default as ComplianceSection } from './ComplianceSection';
 export { default as StaffAttendanceSection } from './StaffAttendanceSection';
 export { default as PatientFeedbackSection } from './PatientFeedbackSection';
+export { default as StaffAnalyticsSection } from './StaffAnalyticsSection';
 
 // Feature Gating
 export { default as LockedFeature, useFeatureAccess, withFeatureAccess } from './LockedFeature';

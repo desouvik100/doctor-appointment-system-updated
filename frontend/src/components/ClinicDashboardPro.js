@@ -6,7 +6,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import { exportAppointmentsToPDF } from '../utils/pdfExport';
-import { VitalsRecorder, VitalsTrends, MedicalHistorySummary, MedicalHistoryForm, PharmacySection, BillingSection, StaffScheduleSection, ClinicAnalyticsSection, AdvancedQueueSection, IPDSection, AuditLogSection, BedManagementSection, InsuranceClaimsSection, MultiBranchSection, VendorManagementSection, ComplianceSection, StaffAttendanceSection, PatientFeedbackSection } from './emr';
+import { VitalsRecorder, VitalsTrends, MedicalHistorySummary, MedicalHistoryForm, PharmacySection, BillingSection, StaffScheduleSection, ClinicAnalyticsSection, AdvancedQueueSection, IPDSection, AuditLogSection, BedManagementSection, InsuranceClaimsSection, MultiBranchSection, VendorManagementSection, ComplianceSection, StaffAttendanceSection, PatientFeedbackSection, StaffAnalyticsSection } from './emr';
 
 // Helper function to format address (handles both string and object)
 const formatAddress = (address) => {
@@ -32,6 +32,10 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
   const [selectedQueueDoctor, setSelectedQueueDoctor] = useState('all');
+  
+  // Staff presence state for real-time check-in/out indicator
+  const [staffPresence, setStaffPresence] = useState([]);
+  const [showPresenceWidget, setShowPresenceWidget] = useState(true);
   
   // Doctor modal state
   const [showDoctorModal, setShowDoctorModal] = useState(false);
@@ -498,13 +502,30 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
       { id: 'vendors', icon: 'fas fa-truck', labelKey: 'Vendors & PO' },
       { id: 'compliance', icon: 'fas fa-shield-alt', labelKey: 'Compliance' },
       { id: 'attendance', icon: 'fas fa-user-clock', labelKey: 'Attendance' },
+      { id: 'staff-analytics', icon: 'fas fa-chart-line', labelKey: 'Staff Analytics' },
       { id: 'feedback', icon: 'fas fa-comment-dots', labelKey: 'Patient Feedback' },
     ]},
   ];
 
   useEffect(() => {
     fetchAllData();
+    fetchStaffPresence();
+    
+    // Poll for real-time presence updates every 30 seconds
+    const presenceInterval = setInterval(fetchStaffPresence, 30000);
+    return () => clearInterval(presenceInterval);
   }, [receptionist]);
+
+  // Fetch staff presence/check-in status
+  const fetchStaffPresence = async () => {
+    try {
+      const res = await axios.get(`/api/branch-staff/presence/${receptionist.clinicId}`);
+      setStaffPresence(res.data.presence || []);
+    } catch (err) {
+      console.error('Error fetching staff presence:', err);
+      setStaffPresence([]);
+    }
+  };
 
   // Fetch prescriptions when EMR prescriptions section is opened
   useEffect(() => {
@@ -704,6 +725,113 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-200 via-gray-100 to-zinc-200 flex">
+      {/* Real-Time Staff Presence Widget */}
+      <div className="fixed bottom-6 right-6 z-40">
+        <div className={`bg-white rounded-2xl shadow-2xl border border-slate-200 transition-all duration-300 ${showPresenceWidget ? 'w-80' : 'w-14'}`}>
+          {/* Toggle Button */}
+          <button 
+            onClick={() => setShowPresenceWidget(!showPresenceWidget)}
+            className="absolute -top-2 -left-2 w-8 h-8 bg-gradient-to-br from-emerald-500 to-teal-600 rounded-full flex items-center justify-center text-white shadow-lg hover:scale-110 transition-transform"
+            title={showPresenceWidget ? 'Minimize' : 'Show Staff Presence'}
+          >
+            <i className={`fas fa-${showPresenceWidget ? 'minus' : 'users'} text-xs`}></i>
+          </button>
+          
+          {showPresenceWidget ? (
+            <>
+              {/* Header */}
+              <div className="p-4 border-b border-slate-100">
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2">
+                    <div className="w-2 h-2 bg-emerald-500 rounded-full animate-pulse"></div>
+                    <h4 className="font-semibold text-slate-800 text-sm">Live Staff Status</h4>
+                  </div>
+                  <div className="flex items-center gap-2 text-xs">
+                    <span className="flex items-center gap-1 text-emerald-600">
+                      <span className="w-2 h-2 bg-emerald-500 rounded-full"></span>
+                      {staffPresence.filter(s => s.isCheckedIn).length} In
+                    </span>
+                    <span className="flex items-center gap-1 text-slate-400">
+                      <span className="w-2 h-2 bg-slate-300 rounded-full"></span>
+                      {staffPresence.filter(s => !s.isCheckedIn).length} Out
+                    </span>
+                  </div>
+                </div>
+              </div>
+              
+              {/* Staff List */}
+              <div className="max-h-64 overflow-y-auto p-2">
+                {staffPresence.length > 0 ? (
+                  <div className="space-y-1">
+                    {staffPresence.slice(0, 10).map(staff => (
+                      <div 
+                        key={staff._id} 
+                        className={`flex items-center gap-3 p-2 rounded-xl transition-colors ${staff.isCheckedIn ? 'bg-emerald-50' : 'bg-slate-50'}`}
+                      >
+                        <div className="relative">
+                          <div className={`w-8 h-8 rounded-full flex items-center justify-center text-white text-xs font-medium ${staff.isCheckedIn ? 'bg-gradient-to-br from-emerald-500 to-teal-600' : 'bg-slate-400'}`}>
+                            {staff.name?.charAt(0)?.toUpperCase()}
+                          </div>
+                          <span className={`absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white ${staff.isCheckedIn ? 'bg-emerald-500' : 'bg-slate-300'}`}></span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-medium text-slate-800 truncate">{staff.name}</p>
+                          <p className="text-xs text-slate-500 truncate">
+                            <span className="capitalize">{staff.role?.replace('_', ' ')}</span>
+                            {staff.specialization && <span className="text-slate-400"> • {staff.specialization}</span>}
+                          </p>
+                        </div>
+                        <div className="text-right">
+                          <span className={`text-xs font-medium ${staff.isCheckedIn ? 'text-emerald-600' : 'text-slate-400'}`}>
+                            {staff.isCheckedIn ? 'Checked In' : 'Out'}
+                          </span>
+                          {staff.lastActivity && (
+                            <p className="text-[10px] text-slate-400">
+                              {new Date(staff.lastActivity).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    ))}
+                    {staffPresence.length > 10 && (
+                      <p className="text-center text-xs text-slate-400 py-2">+{staffPresence.length - 10} more staff</p>
+                    )}
+                  </div>
+                ) : (
+                  <div className="text-center py-6 text-slate-400">
+                    <i className="fas fa-user-clock text-2xl mb-2"></i>
+                    <p className="text-xs">No staff presence data</p>
+                  </div>
+                )}
+              </div>
+              
+              {/* Footer */}
+              <div className="p-3 border-t border-slate-100 bg-slate-50 rounded-b-2xl">
+                <div className="flex items-center justify-between text-xs text-slate-500">
+                  <span><i className="fas fa-sync-alt mr-1"></i>Updates every 30s</span>
+                  <button 
+                    onClick={fetchStaffPresence}
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    Refresh Now
+                  </button>
+                </div>
+              </div>
+            </>
+          ) : (
+            /* Collapsed State - Just show count */
+            <div className="p-3 flex flex-col items-center">
+              <div className="relative">
+                <i className="fas fa-users text-slate-600 text-lg"></i>
+                <span className="absolute -top-1 -right-2 w-4 h-4 bg-emerald-500 rounded-full text-white text-[10px] flex items-center justify-center font-bold">
+                  {staffPresence.filter(s => s.isCheckedIn).length}
+                </span>
+              </div>
+            </div>
+          )}
+        </div>
+      </div>
+
       {/* Mobile Overlay */}
       {mobileSidebarOpen && <div className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 lg:hidden" onClick={() => setMobileSidebarOpen(false)} />}
       
@@ -2595,6 +2723,10 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
 
           {activeSection === 'feedback' && (
             <PatientFeedbackSection clinicId={receptionist.clinicId} />
+          )}
+
+          {activeSection === 'staff-analytics' && (
+            <StaffAnalyticsSection clinicId={receptionist.clinicId} organizationId={receptionist.clinicId} />
           )}
         </div>
 

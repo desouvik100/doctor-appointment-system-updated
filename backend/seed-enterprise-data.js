@@ -11,6 +11,9 @@ const Vendor = require('./models/Vendor');
 const PurchaseOrder = require('./models/PurchaseOrder');
 const ComplianceChecklist = require('./models/ComplianceChecklist');
 const PatientFeedback = require('./models/PatientFeedback');
+const BranchStaff = require('./models/BranchStaff');
+const User = require('./models/User');
+const bcrypt = require('bcryptjs');
 
 const MONGODB_URI = process.env.MONGODB_URI || 'mongodb://localhost:27017/healthsync';
 
@@ -107,7 +110,6 @@ async function seedData() {
     let claims = [];
     if (existingClaims === 0) {
       // Get a patient ID from the database
-      const User = require('./models/User');
       const patient = await User.findOne({ role: 'patient' });
       const patientId = patient?._id || clinicId; // fallback to clinicId if no patient
       
@@ -486,6 +488,75 @@ async function seedData() {
       console.log(`⏭️ Skipped - ${existingFeedback} feedbacks already exist`);
     }
 
+    // 7. Seed Branch Staff (with user accounts)
+    console.log('\n👥 Creating Branch Staff...');
+    const existingBranchStaff = await BranchStaff.countDocuments({ organizationId: clinicId });
+    let branchStaffList = [];
+    if (existingBranchStaff === 0 && branches.length > 0) {
+      const hashedPassword = await bcrypt.hash('Branch@123', 10);
+      
+      // Create staff users and branch staff records
+      const staffData = [
+        { name: 'Priya Mukherjee', email: 'priya.saltlake@carehospital.com', role: 'branch_manager', branchIndex: 1, department: 'Administration' },
+        { name: 'Amit Das', email: 'amit.saltlake@carehospital.com', role: 'receptionist', branchIndex: 1, department: 'OPD' },
+        { name: 'Sunita Roy', email: 'sunita.howrah@carehospital.com', role: 'branch_admin', branchIndex: 2, department: 'Administration' },
+        { name: 'Ravi Kumar', email: 'ravi.howrah@carehospital.com', role: 'receptionist', branchIndex: 2, department: 'OPD' },
+        { name: 'Neha Sharma', email: 'neha.newtown@carehospital.com', role: 'lab_tech', branchIndex: 3, department: 'Laboratory' },
+        { name: 'Vikram Singh', email: 'vikram.newtown@carehospital.com', role: 'receptionist', branchIndex: 3, department: 'Reception' }
+      ];
+
+      for (const staff of staffData) {
+        // Check if user already exists
+        let user = await User.findOne({ email: staff.email });
+        if (!user) {
+          user = await User.create({
+            name: staff.name,
+            email: staff.email,
+            password: hashedPassword,
+            phone: '9876543' + Math.floor(Math.random() * 1000).toString().padStart(3, '0'),
+            role: 'receptionist',
+            clinicId: clinicId,
+            branchId: branches[staff.branchIndex]._id,
+            department: staff.department,
+            isActive: true
+          });
+        }
+
+        // Create branch staff record
+        const branchStaff = await BranchStaff.create({
+          userId: user._id,
+          branchId: branches[staff.branchIndex]._id,
+          organizationId: clinicId,
+          name: staff.name,
+          email: staff.email,
+          phone: user.phone,
+          role: staff.role,
+          department: staff.department,
+          permissions: {
+            canManageStaff: staff.role === 'branch_admin' || staff.role === 'branch_manager',
+            canManagePatients: true,
+            canManageAppointments: true,
+            canManageBilling: staff.role === 'branch_admin' || staff.role === 'branch_manager',
+            canViewReports: staff.role !== 'receptionist',
+            canManageInventory: staff.role === 'branch_admin'
+          },
+          isActive: true
+        });
+        branchStaffList.push(branchStaff);
+      }
+
+      // Update branch staff counts
+      for (let i = 1; i < branches.length; i++) {
+        const count = branchStaffList.filter(s => s.branchId.toString() === branches[i]._id.toString()).length;
+        await HospitalBranch.findByIdAndUpdate(branches[i]._id, { staffCount: count });
+      }
+
+      console.log(`✅ Created ${branchStaffList.length} branch staff members`);
+      console.log('   Staff can login with email and password: Branch@123');
+    } else {
+      console.log(`⏭️ Skipped - ${existingBranchStaff} branch staff already exist`);
+    }
+
     console.log('\n✨ Enterprise data seeding completed successfully!');
     console.log('\nSummary:');
     console.log(`  - ${branches.length} Hospital Branches`);
@@ -494,6 +565,13 @@ async function seedData() {
     console.log(`  - ${pos.length} Purchase Orders`);
     console.log(`  - ${checklists.length} Compliance Checklists`);
     console.log(`  - ${feedbacks.length} Patient Feedbacks`);
+    console.log(`  - ${branchStaffList.length} Branch Staff Members`);
+    
+    if (branchStaffList.length > 0) {
+      console.log('\n📧 Branch Staff Login Credentials:');
+      console.log('   Password for all: Branch@123');
+      branchStaffList.forEach(s => console.log(`   - ${s.email} (${s.role})`));
+    }
 
   } catch (error) {
     console.error('Error seeding data:', error);

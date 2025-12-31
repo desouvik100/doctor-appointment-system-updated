@@ -50,6 +50,12 @@ const userSchema = new mongoose.Schema(
       ref: "Clinic",
       default: null,
     },
+    // Branch assignment for multi-branch staff
+    branchId: {
+      type: mongoose.Schema.Types.ObjectId,
+      ref: "HospitalBranch",
+      default: null,
+    },
     // For staff: assigned doctor (department-level isolation)
     assignedDoctorId: {
       type: mongoose.Schema.Types.ObjectId,
