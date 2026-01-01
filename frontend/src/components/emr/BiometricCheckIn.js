@@ -1,28 +1,45 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
+import { Capacitor } from '@capacitor/core';
 
 /**
  * Biometric Check-In Component
- * Uses WebAuthn API for fingerprint/face recognition
+ * Uses WebAuthn API for web and native biometric for Android/iOS
  */
 const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isCheckedIn }) => {
   const [biometricSupported, setBiometricSupported] = useState(false);
   const [biometricRegistered, setBiometricRegistered] = useState(false);
   const [loading, setLoading] = useState(false);
   const [showSetup, setShowSetup] = useState(false);
+  const [isNative, setIsNative] = useState(false);
 
   useEffect(() => {
-    checkBiometricSupport();
+    const native = Capacitor.isNativePlatform();
+    setIsNative(native);
+    checkBiometricSupport(native);
     checkBiometricRegistration();
   }, [staffId]);
 
-  const checkBiometricSupport = async () => {
-    if (window.PublicKeyCredential) {
+  const checkBiometricSupport = async (native) => {
+    if (native) {
+      // Native Android/iOS - use native biometric
       try {
-        const available = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
-        setBiometricSupported(available);
+        const { NativeBiometric } = await import('capacitor-native-biometric');
+        const result = await NativeBiometric.isAvailable();
+        setBiometricSupported(result.isAvailable);
       } catch (err) {
+        console.log('Native biometric not available:', err);
         setBiometricSupported(false);
+      }
+    } else {
+      // Web - use WebAuthn
+      if (window.PublicKeyCredential) {
+        try {
+          const available = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
+          setBiometricSupported(available);
+        } catch (err) {
+          setBiometricSupported(false);
+        }
       }
     }
   };
@@ -39,10 +56,58 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
     return array;
   };
 
-  // Register biometric credential
+  // Native biometric authentication (Android/iOS)
+  const authenticateNativeBiometric = async (action) => {
+    setLoading(true);
+    try {
+      const { NativeBiometric } = await import('capacitor-native-biometric');
+      
+      const result = await NativeBiometric.verifyIdentity({
+        reason: action === 'checkin' ? 'Verify to Check In' : 'Verify to Check Out',
+        title: 'Biometric Authentication',
+        subtitle: 'HealthSync Attendance',
+        description: `Use fingerprint or face to ${action === 'checkin' ? 'check in' : 'check out'}`,
+      });
+
+      if (result) {
+        // Mark as registered on first successful auth
+        if (!biometricRegistered) {
+          localStorage.setItem(`biometric_${staffId}`, 'native');
+          setBiometricRegistered(true);
+        }
+        
+        if (action === 'checkin') {
+          onCheckIn && onCheckIn('biometric');
+          toast.success('Biometric verified! Checked in successfully.');
+        } else {
+          onCheckOut && onCheckOut('biometric');
+          toast.success('Biometric verified! Checked out successfully.');
+        }
+      }
+    } catch (err) {
+      console.error('Native biometric error:', err);
+      if (err.message?.includes('cancel') || err.code === 'BIOMETRIC_DISMISSED') {
+        toast.error('Biometric verification cancelled');
+      } else if (err.code === 'BIOMETRIC_NOT_ENROLLED') {
+        toast.error('No biometric enrolled on device. Please set up fingerprint in device settings.');
+      } else {
+        toast.error('Biometric verification failed');
+      }
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  // Register biometric credential (WebAuthn for web)
   const registerBiometric = async () => {
     if (!biometricSupported) {
       toast.error('Biometric not supported on this device');
+      return;
+    }
+
+    if (isNative) {
+      // For native, just verify once to "register"
+      await authenticateNativeBiometric('checkin');
       return;
     }
 
@@ -62,8 +127,8 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
           displayName: staffName || 'Staff Member'
         },
         pubKeyCredParams: [
-          { alg: -7, type: "public-key" },  // ES256
-          { alg: -257, type: "public-key" } // RS256
+          { alg: -7, type: "public-key" },
+          { alg: -257, type: "public-key" }
         ],
         authenticatorSelection: {
           authenticatorAttachment: "platform",
@@ -79,19 +144,16 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
       });
 
       if (credential) {
-        // Store credential ID locally
         const credentialId = btoa(String.fromCharCode(...new Uint8Array(credential.rawId)));
         localStorage.setItem(`biometric_${staffId}`, credentialId);
         setBiometricRegistered(true);
         setShowSetup(false);
-        toast.success('Biometric registered successfully! You can now use fingerprint/face to check in.');
+        toast.success('Biometric registered successfully!');
       }
     } catch (err) {
       console.error('Biometric registration error:', err);
       if (err.name === 'NotAllowedError') {
         toast.error('Biometric registration was cancelled');
-      } else if (err.name === 'SecurityError') {
-        toast.error('Security error. Please use HTTPS.');
       } else {
         toast.error('Failed to register biometric');
       }
@@ -100,8 +162,13 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
     }
   };
 
-  // Authenticate with biometric
+  // Authenticate with biometric (WebAuthn for web)
   const authenticateBiometric = async (action) => {
+    if (isNative) {
+      await authenticateNativeBiometric(action);
+      return;
+    }
+
     if (!biometricRegistered) {
       toast.error('Please register biometric first');
       setShowSetup(true);
@@ -129,7 +196,6 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
       });
 
       if (assertion) {
-        // Biometric verified successfully
         if (action === 'checkin') {
           onCheckIn && onCheckIn('biometric');
           toast.success('Biometric verified! Checked in successfully.');
@@ -180,7 +246,7 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
           <div>
             <h3 className="font-semibold text-slate-800">Biometric Check-In</h3>
             <p className="text-xs text-slate-500">
-              {biometricRegistered ? 'Use fingerprint or face to check in/out' : 'Set up biometric for quick check-in'}
+              {isNative ? 'Use fingerprint or face' : (biometricRegistered ? 'Use fingerprint or face to check in/out' : 'Set up biometric for quick check-in')}
             </p>
           </div>
         </div>
@@ -191,10 +257,10 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
         )}
       </div>
 
-      {!biometricRegistered || showSetup ? (
+      {!isNative && (!biometricRegistered || showSetup) ? (
         <div className="space-y-3">
           <p className="text-sm text-slate-600">
-            Register your fingerprint or face ID for secure and quick attendance marking.
+            Register your fingerprint or face ID for secure attendance.
           </p>
           <button
             onClick={registerBiometric}
@@ -202,22 +268,13 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
             className="w-full py-3 bg-gradient-to-r from-violet-500 to-purple-600 text-white rounded-xl font-medium hover:shadow-lg disabled:opacity-50 flex items-center justify-center gap-2"
           >
             {loading ? (
-              <>
-                <i className="fas fa-spinner fa-spin"></i>
-                Setting up...
-              </>
+              <><i className="fas fa-spinner fa-spin"></i> Setting up...</>
             ) : (
-              <>
-                <i className="fas fa-fingerprint"></i>
-                Register Biometric
-              </>
+              <><i className="fas fa-fingerprint"></i> Register Biometric</>
             )}
           </button>
           {biometricRegistered && (
-            <button
-              onClick={() => setShowSetup(false)}
-              className="w-full py-2 text-slate-600 text-sm hover:text-slate-800"
-            >
+            <button onClick={() => setShowSetup(false)} className="w-full py-2 text-slate-600 text-sm">
               Cancel
             </button>
           )}
@@ -229,53 +286,31 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
               onClick={() => authenticateBiometric('checkin')}
               disabled={loading || isCheckedIn}
               className={`py-3 rounded-xl font-medium flex items-center justify-center gap-2 ${
-                isCheckedIn 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-green-500 text-white hover:bg-green-600'
+                isCheckedIn ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-500 text-white hover:bg-green-600'
               }`}
             >
-              {loading ? (
-                <i className="fas fa-spinner fa-spin"></i>
-              ) : (
-                <>
-                  <i className="fas fa-fingerprint"></i>
-                  Check In
-                </>
-              )}
+              {loading ? <i className="fas fa-spinner fa-spin"></i> : <><i className="fas fa-fingerprint"></i> Check In</>}
             </button>
             <button
               onClick={() => authenticateBiometric('checkout')}
               disabled={loading || !isCheckedIn}
               className={`py-3 rounded-xl font-medium flex items-center justify-center gap-2 ${
-                !isCheckedIn 
-                  ? 'bg-gray-100 text-gray-400 cursor-not-allowed' 
-                  : 'bg-red-500 text-white hover:bg-red-600'
+                !isCheckedIn ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-red-500 text-white hover:bg-red-600'
               }`}
             >
-              {loading ? (
-                <i className="fas fa-spinner fa-spin"></i>
-              ) : (
-                <>
-                  <i className="fas fa-fingerprint"></i>
-                  Check Out
-                </>
-              )}
+              {loading ? <i className="fas fa-spinner fa-spin"></i> : <><i className="fas fa-fingerprint"></i> Check Out</>}
             </button>
           </div>
-          <div className="flex justify-between items-center pt-2 border-t border-violet-200">
-            <button
-              onClick={() => setShowSetup(true)}
-              className="text-xs text-violet-600 hover:text-violet-700"
-            >
-              <i className="fas fa-sync-alt mr-1"></i>Re-register
-            </button>
-            <button
-              onClick={removeBiometric}
-              className="text-xs text-red-500 hover:text-red-600"
-            >
-              <i className="fas fa-trash mr-1"></i>Remove Biometric
-            </button>
-          </div>
+          {!isNative && (
+            <div className="flex justify-between items-center pt-2 border-t border-violet-200">
+              <button onClick={() => setShowSetup(true)} className="text-xs text-violet-600 hover:text-violet-700">
+                <i className="fas fa-sync-alt mr-1"></i>Re-register
+              </button>
+              <button onClick={removeBiometric} className="text-xs text-red-500 hover:text-red-600">
+                <i className="fas fa-trash mr-1"></i>Remove Biometric
+              </button>
+            </div>
+          )}
         </div>
       )}
     </div>
