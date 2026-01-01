@@ -45,48 +45,98 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
 
   const fetchCurrentUser = async () => {
     try {
-      // Try multiple sources to get current user ID
-      const receptionist = localStorage.getItem('receptionist');
-      const user = localStorage.getItem('user');
-      const token = localStorage.getItem('token');
+      const { Capacitor } = await import('@capacitor/core');
+      const isNative = Capacitor.isNativePlatform();
       
       let userId = null;
       
-      // First try receptionist data (most common for clinic dashboard)
-      if (receptionist) {
-        const data = JSON.parse(receptionist);
-        userId = data.id || data._id || data.userId;
-        console.log('Got userId from receptionist:', userId);
-      }
-      
-      // Try user data
-      if (!userId && user) {
-        const data = JSON.parse(user);
-        userId = data.id || data._id || data.userId;
-        console.log('Got userId from user:', userId);
-      }
-      
-      // Try token as fallback
-      if (!userId && token) {
+      // For native apps, check Capacitor Preferences first
+      if (isNative) {
         try {
-          const payload = JSON.parse(atob(token.split('.')[1]));
-          userId = payload.userId || payload.id || payload._id;
-          console.log('Got userId from token:', userId);
+          const { Preferences } = await import('@capacitor/preferences');
+          
+          // Try receptionist data
+          const receptionistResult = await Preferences.get({ key: 'receptionist' });
+          if (receptionistResult.value) {
+            const data = JSON.parse(receptionistResult.value);
+            userId = data.id || data._id || data.userId;
+            console.log('Got userId from Preferences receptionist:', userId);
+            
+            // Also try token if no direct ID
+            if (!userId && data.token) {
+              try {
+                const payload = JSON.parse(atob(data.token.split('.')[1]));
+                userId = payload.userId || payload.id || payload._id;
+                console.log('Got userId from Preferences receptionist token:', userId);
+              } catch (e) {
+                console.error('Error parsing receptionist token:', e);
+              }
+            }
+          }
+          
+          // Try user data
+          if (!userId) {
+            const userResult = await Preferences.get({ key: 'user' });
+            if (userResult.value) {
+              const data = JSON.parse(userResult.value);
+              userId = data.id || data._id || data.userId;
+              console.log('Got userId from Preferences user:', userId);
+              
+              if (!userId && data.token) {
+                try {
+                  const payload = JSON.parse(atob(data.token.split('.')[1]));
+                  userId = payload.userId || payload.id || payload._id;
+                  console.log('Got userId from Preferences user token:', userId);
+                } catch (e) {
+                  console.error('Error parsing user token:', e);
+                }
+              }
+            }
+          }
         } catch (e) {
-          console.error('Error parsing token:', e);
+          console.log('Capacitor Preferences not available, falling back to localStorage');
         }
       }
       
-      // Also try to get from receptionist token
-      if (!userId && receptionist) {
-        const data = JSON.parse(receptionist);
-        if (data.token) {
+      // Fallback to localStorage (for web or if Preferences failed)
+      if (!userId) {
+        const receptionist = localStorage.getItem('receptionist');
+        const user = localStorage.getItem('user');
+        const token = localStorage.getItem('token');
+        
+        // First try receptionist data (most common for clinic dashboard)
+        if (receptionist) {
+          const data = JSON.parse(receptionist);
+          userId = data.id || data._id || data.userId;
+          console.log('Got userId from localStorage receptionist:', userId);
+          
+          // Also try to get from receptionist token
+          if (!userId && data.token) {
+            try {
+              const payload = JSON.parse(atob(data.token.split('.')[1]));
+              userId = payload.userId || payload.id || payload._id;
+              console.log('Got userId from localStorage receptionist token:', userId);
+            } catch (e) {
+              console.error('Error parsing receptionist token:', e);
+            }
+          }
+        }
+        
+        // Try user data
+        if (!userId && user) {
+          const data = JSON.parse(user);
+          userId = data.id || data._id || data.userId;
+          console.log('Got userId from localStorage user:', userId);
+        }
+        
+        // Try token as fallback
+        if (!userId && token) {
           try {
-            const payload = JSON.parse(atob(data.token.split('.')[1]));
+            const payload = JSON.parse(atob(token.split('.')[1]));
             userId = payload.userId || payload.id || payload._id;
-            console.log('Got userId from receptionist token:', userId);
+            console.log('Got userId from localStorage token:', userId);
           } catch (e) {
-            console.error('Error parsing receptionist token:', e);
+            console.error('Error parsing token:', e);
           }
         }
       }
@@ -95,7 +145,7 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
         setCurrentUserId(userId);
         console.log('Set currentUserId:', userId);
       } else {
-        console.warn('Could not determine current user ID');
+        console.warn('Could not determine current user ID from any source');
       }
     } catch (err) { 
       console.error('Error getting current user:', err); 
@@ -133,26 +183,55 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
   };
 
   const handleCheckIn = async (staffId, method = 'manual') => {
-    console.log('Checking in:', { clinicId, staffId, method });
-    const res = await axios.post('/api/staff-management/attendance/check-in', { clinicId, staffId, checkInMethod: method });
-    console.log('Check-in response:', res.data);
-    // Only show toast for manual check-in (biometric shows its own toast)
-    if (method === 'manual') {
-      toast.success('Checked in successfully');
+    console.log('=== handleCheckIn START ===');
+    console.log('Checking in with:', { clinicId, staffId, method });
+    console.log('clinicId type:', typeof clinicId);
+    console.log('staffId type:', typeof staffId);
+    
+    try {
+      const requestData = { clinicId, staffId, checkInMethod: method };
+      console.log('Request data:', JSON.stringify(requestData));
+      
+      const res = await axios.post('/api/staff-management/attendance/check-in', requestData);
+      console.log('Check-in response:', res.data);
+      console.log('=== handleCheckIn SUCCESS ===');
+      
+      // Only show toast for manual check-in (biometric shows its own toast)
+      if (method === 'manual') {
+        toast.success('Checked in successfully');
+      }
+      fetchAttendance();
+      return res.data;
+    } catch (error) {
+      console.error('=== handleCheckIn ERROR ===');
+      console.error('Error:', error);
+      console.error('Error response:', error.response?.data);
+      console.error('Error status:', error.response?.status);
+      throw error; // Re-throw so BiometricCheckIn can handle it
     }
-    fetchAttendance();
-    return res.data;
   };
 
   const handleCheckOut = async (staffId, method = 'manual') => {
-    console.log('Checking out:', { clinicId, staffId, method });
-    const res = await axios.post('/api/staff-management/attendance/check-out', { clinicId, staffId, checkOutMethod: method });
-    // Only show toast for manual check-out (biometric shows its own toast)
-    if (method === 'manual') {
-      toast.success('Checked out successfully');
+    console.log('=== handleCheckOut START ===');
+    console.log('Checking out with:', { clinicId, staffId, method });
+    
+    try {
+      const res = await axios.post('/api/staff-management/attendance/check-out', { clinicId, staffId, checkOutMethod: method });
+      console.log('Check-out response:', res.data);
+      console.log('=== handleCheckOut SUCCESS ===');
+      
+      // Only show toast for manual check-out (biometric shows its own toast)
+      if (method === 'manual') {
+        toast.success('Checked out successfully');
+      }
+      fetchAttendance();
+      return res.data;
+    } catch (error) {
+      console.error('=== handleCheckOut ERROR ===');
+      console.error('Error:', error);
+      console.error('Error response:', error.response?.data);
+      throw error;
     }
-    fetchAttendance();
-    return res.data;
   };
 
   // Get current user's attendance status
@@ -260,19 +339,27 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
             staffName="You"
             isCheckedIn={!!getCurrentUserAttendance()?.checkInTime && !getCurrentUserAttendance()?.checkOutTime}
             onCheckIn={async (method) => {
+              console.log('BiometricCheckIn onCheckIn called with method:', method);
+              console.log('currentUserId:', currentUserId, 'clinicId:', clinicId);
               if (!currentUserId) {
                 throw new Error('User not identified. Please log in again.');
               }
               if (!clinicId) {
                 throw new Error('Clinic not identified. Please log in again.');
               }
-              return await handleCheckIn(currentUserId, method);
+              console.log('Calling handleCheckIn...');
+              const result = await handleCheckIn(currentUserId, method);
+              console.log('handleCheckIn result:', result);
+              return result;
             }}
             onCheckOut={async (method) => {
+              console.log('BiometricCheckIn onCheckOut called with method:', method);
               if (!currentUserId) {
                 throw new Error('User not identified. Please log in again.');
               }
-              return await handleCheckOut(currentUserId, method);
+              const result = await handleCheckOut(currentUserId, method);
+              console.log('handleCheckOut result:', result);
+              return result;
             }}
           />
         ) : (

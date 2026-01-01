@@ -22,8 +22,8 @@ const staffAttendanceSchema = new mongoose.Schema({
   // Check In/Out
   checkInTime: { type: Date },
   checkOutTime: { type: Date },
-  checkInMethod: { type: String, enum: ['biometric', 'manual', 'app', 'qr_code', 'face_recognition'], default: 'manual' },
-  checkOutMethod: { type: String, enum: ['biometric', 'manual', 'app', 'qr_code', 'face_recognition'] },
+  checkInMethod: { type: String, enum: ['biometric', 'manual', 'app', 'qr_code', 'face_recognition', 'gps'], default: 'manual' },
+  checkOutMethod: { type: String, enum: ['biometric', 'manual', 'app', 'qr_code', 'face_recognition', 'gps'] },
   checkInLocation: { lat: Number, lng: Number, address: String },
   checkOutLocation: { lat: Number, lng: Number, address: String },
   

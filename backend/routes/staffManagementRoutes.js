@@ -94,25 +94,40 @@ router.post('/attendance/check-in', verifyToken, async (req, res) => {
   try {
     const { clinicId, staffId, shiftType, checkInMethod, location } = req.body;
     
-    console.log('Check-in request:', { clinicId, staffId, checkInMethod });
+    console.log('Check-in request received:', { clinicId, staffId, checkInMethod, location });
+    console.log('Request body:', JSON.stringify(req.body));
     
     if (!clinicId || !staffId) {
+      console.log('Missing required fields - clinicId:', clinicId, 'staffId:', staffId);
       return res.status(400).json({ success: false, message: 'clinicId and staffId are required' });
     }
+
+    // Convert to ObjectId if they're strings
+    const clinicObjectId = mongoose.Types.ObjectId.isValid(clinicId) ? new mongoose.Types.ObjectId(clinicId) : clinicId;
+    const staffObjectId = mongoose.Types.ObjectId.isValid(staffId) ? new mongoose.Types.ObjectId(staffId) : staffId;
+    
+    console.log('Converted IDs - clinicId:', clinicObjectId, 'staffId:', staffObjectId);
     
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
-    let attendance = await StaffAttendance.findOne({ clinicId, staffId, date: today });
+    let attendance = await StaffAttendance.findOne({ 
+      clinicId: clinicObjectId, 
+      staffId: staffObjectId, 
+      date: today 
+    });
+    
+    console.log('Existing attendance record:', attendance ? attendance._id : 'none');
     
     if (attendance && attendance.checkInTime) {
       return res.status(400).json({ success: false, message: 'Already checked in today' });
     }
 
     if (!attendance) {
+      console.log('Creating new attendance record');
       attendance = new StaffAttendance({
-        clinicId,
-        staffId,
+        clinicId: clinicObjectId,
+        staffId: staffObjectId,
         date: today,
         shiftType: shiftType || 'general',
         checkInTime: new Date(),
@@ -122,6 +137,7 @@ router.post('/attendance/check-in', verifyToken, async (req, res) => {
         markedBy: req.user?.userId
       });
     } else {
+      console.log('Updating existing attendance record');
       attendance.checkInTime = new Date();
       attendance.checkInMethod = checkInMethod || 'manual';
       attendance.checkInLocation = location;
@@ -140,7 +156,7 @@ router.post('/attendance/check-in', verifyToken, async (req, res) => {
     }
 
     await attendance.save();
-    console.log('Check-in saved:', attendance._id);
+    console.log('Attendance saved successfully:', attendance._id, 'checkInTime:', attendance.checkInTime);
     res.json({ success: true, attendance, message: 'Checked in successfully' });
   } catch (error) {
     console.error('Check-in error:', error);

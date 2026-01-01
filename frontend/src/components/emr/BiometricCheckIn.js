@@ -59,45 +59,68 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
   // Native biometric authentication (Android/iOS)
   const authenticateNativeBiometric = async (action) => {
     setLoading(true);
+    console.log('Starting native biometric authentication for:', action);
+    
     try {
       const { NativeBiometric } = await import('capacitor-native-biometric');
+      console.log('NativeBiometric imported successfully');
       
-      const result = await NativeBiometric.verifyIdentity({
+      // Add timeout for biometric verification
+      const timeoutPromise = new Promise((_, reject) => {
+        setTimeout(() => reject(new Error('Biometric verification timed out')), 30000);
+      });
+      
+      const verifyPromise = NativeBiometric.verifyIdentity({
         reason: action === 'checkin' ? 'Verify to Check In' : 'Verify to Check Out',
         title: 'Biometric Authentication',
         subtitle: 'HealthSync Attendance',
         description: `Use fingerprint or face to ${action === 'checkin' ? 'check in' : 'check out'}`,
       });
+      
+      console.log('Waiting for biometric verification...');
+      const result = await Promise.race([verifyPromise, timeoutPromise]);
+      console.log('Biometric verification result:', result);
 
-      if (result) {
-        // Mark as registered on first successful auth
-        if (!biometricRegistered) {
-          localStorage.setItem(`biometric_${staffId}`, 'native');
-          setBiometricRegistered(true);
-        }
-        
-        // Call the callback and wait for it to complete before showing success
-        // The callback should handle the API call and throw on failure
-        if (action === 'checkin') {
-          if (onCheckIn) {
-            try {
-              await onCheckIn('biometric');
-              toast.success('Biometric verified! Checked in successfully.');
-            } catch (apiErr) {
-              console.error('Check-in API error:', apiErr);
-              toast.error(apiErr.message || 'Biometric verified but check-in failed. Please try again.');
-            }
+      // NativeBiometric.verifyIdentity returns void on success, throws on failure
+      // So if we get here without an error, it was successful
+      
+      // Mark as registered on first successful auth
+      if (!biometricRegistered) {
+        localStorage.setItem(`biometric_${staffId}`, 'native');
+        setBiometricRegistered(true);
+      }
+      
+      // Call the callback and wait for it to complete before showing success
+      console.log('Biometric verified, calling API...');
+      if (action === 'checkin') {
+        if (onCheckIn) {
+          try {
+            const apiResult = await onCheckIn('biometric');
+            console.log('Biometric check-in API result:', apiResult);
+            toast.success('Biometric verified! Checked in successfully.');
+          } catch (apiErr) {
+            console.error('Check-in API error:', apiErr);
+            const errorMsg = apiErr.response?.data?.message || apiErr.message || 'Biometric verified but check-in failed. Please try again.';
+            toast.error(errorMsg);
           }
         } else {
-          if (onCheckOut) {
-            try {
-              await onCheckOut('biometric');
-              toast.success('Biometric verified! Checked out successfully.');
-            } catch (apiErr) {
-              console.error('Check-out API error:', apiErr);
-              toast.error(apiErr.message || 'Biometric verified but check-out failed. Please try again.');
-            }
+          console.warn('onCheckIn callback not provided');
+          toast.error('Check-in handler not configured');
+        }
+      } else {
+        if (onCheckOut) {
+          try {
+            const apiResult = await onCheckOut('biometric');
+            console.log('Biometric check-out API result:', apiResult);
+            toast.success('Biometric verified! Checked out successfully.');
+          } catch (apiErr) {
+            console.error('Check-out API error:', apiErr);
+            const errorMsg = apiErr.response?.data?.message || apiErr.message || 'Biometric verified but check-out failed. Please try again.';
+            toast.error(errorMsg);
           }
+        } else {
+          console.warn('onCheckOut callback not provided');
+          toast.error('Check-out handler not configured');
         }
       }
     } catch (err) {
