@@ -385,7 +385,7 @@ router.post('/clinic/login', async (req, res) => {
     // First check if receptionist exists at all
     const anyUser = await User.findOne({ 
       email: normalizedEmail, 
-      role: 'receptionist'
+      role: { $in: ['receptionist', 'clinic'] }
     });
 
     // Check if user exists but is pending approval
@@ -409,7 +409,7 @@ router.post('/clinic/login', async (req, res) => {
     // Now check for approved user
     const userCheck = await User.findOne({ 
       email: normalizedEmail, 
-      role: 'receptionist',
+      role: { $in: ['receptionist', 'clinic'] },
       approvalStatus: 'approved'
     });
     
@@ -456,7 +456,8 @@ router.post('/clinic/login', async (req, res) => {
         approvalStatus: user.approvalStatus,
         profilePhoto: user.profilePhoto,
         assignedDoctorId: user.assignedDoctorId || null,
-        department: user.department || null
+        department: user.department || null,
+        emrPlan: user.emrPlan || 'basic'
       }
     });
   } catch (error) {
@@ -1223,8 +1224,8 @@ router.post('/clinic/google-signin', async (req, res) => {
 
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if staff user exists
-    let user = await User.findOne({ email: normalizedEmail, role: 'receptionist' });
+    // Check if staff user exists (receptionist or clinic role)
+    let user = await User.findOne({ email: normalizedEmail, role: { $in: ['receptionist', 'clinic'] } });
 
     if (user) {
       // Staff exists - check approval status
@@ -1279,7 +1280,8 @@ router.post('/clinic/google-signin', async (req, res) => {
           clinicId: user.clinicId,
           clinicName: user.clinicName,
           approvalStatus: user.approvalStatus,
-          profilePhoto: user.profilePhoto
+          profilePhoto: user.profilePhoto,
+          emrPlan: user.emrPlan || 'basic'
         }
       });
     } else {

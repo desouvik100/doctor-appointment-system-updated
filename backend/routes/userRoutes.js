@@ -33,6 +33,34 @@ const logAccountOperation = async (req, action, targetUser, details = {}) => {
   }
 };
 
+// Get current logged-in user info
+router.get('/me', verifyToken, async (req, res) => {
+  try {
+    const user = await User.findById(req.user.userId)
+      .select('name email phone role clinicId clinicName emrPlan profilePhoto department');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({
+      id: user._id,
+      name: user.name,
+      email: user.email,
+      phone: user.phone,
+      role: user.role,
+      clinicId: user.clinicId,
+      clinicName: user.clinicName,
+      emrPlan: user.emrPlan || 'basic',
+      profilePhoto: user.profilePhoto,
+      department: user.department
+    });
+  } catch (error) {
+    console.error('Error fetching current user:', error);
+    res.status(500).json({ message: 'Server error' });
+  }
+});
+
 // Search user by phone (for walk-in patient lookup)
 router.get('/search', async (req, res) => {
   try {

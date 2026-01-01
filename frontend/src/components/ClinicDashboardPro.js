@@ -6,7 +6,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import { exportAppointmentsToPDF } from '../utils/pdfExport';
-import { VitalsRecorder, VitalsTrends, MedicalHistorySummary, MedicalHistoryForm, PharmacySection, BillingSection, StaffScheduleSection, ClinicAnalyticsSection, AdvancedQueueSection, IPDSection, AuditLogSection, BedManagementSection, InsuranceClaimsSection, MultiBranchSection, VendorManagementSection, ComplianceSection, StaffAttendanceSection, PatientFeedbackSection, StaffAnalyticsSection } from './emr';
+import { VitalsRecorder, VitalsTrends, MedicalHistorySummary, MedicalHistoryForm, PharmacySection, BillingSection, StaffScheduleSection, ClinicAnalyticsSection, AdvancedQueueSection, IPDSection, AuditLogSection, BedManagementSection, InsuranceClaimsSection, MultiBranchSection, VendorManagementSection, ComplianceSection, StaffAttendanceSection, PatientFeedbackSection, StaffAnalyticsSection, NotificationBell } from './emr';
 
 // Helper function to format address (handles both string and object)
 const formatAddress = (address) => {
@@ -32,6 +32,7 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
   const [searchTerm, setSearchTerm] = useState('');
   const [filter, setFilter] = useState('all');
   const [selectedQueueDoctor, setSelectedQueueDoctor] = useState('all');
+  const [emrPlan, setEmrPlan] = useState(receptionist?.emrPlan || 'basic');
   
   // Staff presence state for real-time check-in/out indicator
   const [staffPresence, setStaffPresence] = useState([]);
@@ -510,11 +511,31 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
   useEffect(() => {
     fetchAllData();
     fetchStaffPresence();
+    fetchEmrPlan();
     
     // Poll for real-time presence updates every 30 seconds
     const presenceInterval = setInterval(fetchStaffPresence, 30000);
     return () => clearInterval(presenceInterval);
   }, [receptionist]);
+
+  // Fetch EMR plan from server (in case localStorage is outdated)
+  const fetchEmrPlan = async () => {
+    try {
+      const res = await axios.get(`/api/users/me`);
+      if (res.data?.emrPlan) {
+        setEmrPlan(res.data.emrPlan);
+        // Update localStorage
+        const stored = localStorage.getItem('receptionist');
+        if (stored) {
+          const data = JSON.parse(stored);
+          data.emrPlan = res.data.emrPlan;
+          localStorage.setItem('receptionist', JSON.stringify(data));
+        }
+      }
+    } catch (err) {
+      console.error('Error fetching EMR plan:', err);
+    }
+  };
 
   // Fetch staff presence/check-in status
   const fetchStaffPresence = async () => {
@@ -891,6 +912,8 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
             </div>
           </div>
           <div className="flex items-center gap-3">
+            {/* Notification Bell */}
+            <NotificationBell />
             {/* Start/Close Clinic Day Button */}
             <button 
               onClick={toggleClinicDay}
@@ -2718,7 +2741,7 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
           )}
 
           {activeSection === 'attendance' && (
-            <StaffAttendanceSection clinicId={receptionist.clinicId} />
+            <StaffAttendanceSection clinicId={receptionist.clinicId} subscriptionPlan={emrPlan} />
           )}
 
           {activeSection === 'feedback' && (

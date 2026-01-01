@@ -7,8 +7,85 @@ const express = require('express');
 const router = express.Router();
 const StaffAttendance = require('../models/StaffAttendance');
 const LeaveRequest = require('../models/LeaveRequest');
+const User = require('../models/User');
+const StaffNotification = require('../models/StaffNotification');
+const bcrypt = require('bcryptjs');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const mongoose = require('mongoose');
+
+// ===== STAFF ROUTES =====
+
+// Add new staff member to clinic
+router.post('/staff/add', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
+  try {
+    const { clinicId, name, email, phone, role, department, password } = req.body;
+
+    // Check if user already exists
+    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    if (existingUser) {
+      return res.status(400).json({ success: false, message: 'User with this email already exists' });
+    }
+
+    // Hash password
+    const hashedPassword = await bcrypt.hash(password || 'Staff@123', 10);
+
+    // Create new user
+    const user = new User({
+      name,
+      email: email.toLowerCase(),
+      phone,
+      password: hashedPassword,
+      role: role || 'receptionist',
+      clinicId,
+      department,
+      isActive: true
+    });
+    await user.save();
+
+    // Create initial attendance record for today
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+
+    const attendance = new StaffAttendance({
+      clinicId,
+      staffId: user._id,
+      date: today,
+      status: 'absent',
+      markedBy: req.user?.userId
+    });
+    await attendance.save();
+
+    res.status(201).json({
+      success: true,
+      message: `Staff ${name} added successfully`,
+      staff: {
+        _id: user._id,
+        name: user.name,
+        email: user.email,
+        phone: user.phone,
+        role: user.role,
+        department: user.department
+      }
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get all staff for a clinic
+router.get('/staff/clinic/:clinicId', verifyToken, async (req, res) => {
+  try {
+    const staff = await User.find({
+      clinicId: req.params.clinicId,
+      role: { $in: ['receptionist', 'nurse', 'technician', 'pharmacist', 'accountant', 'manager'] },
+      isActive: true
+    }).select('name email phone role department createdAt');
+
+    res.json({ success: true, staff, count: staff.length });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
 
 // ===== ATTENDANCE ROUTES =====
 
@@ -258,6 +335,114 @@ router.get('/leave/balance/:staffId', verifyToken, async (req, res) => {
     });
 
     res.json({ success: true, balance, year });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// ===== NOTIFICATION ROUTES =====
+
+// Send notification to staff (come to hospital, urgent, etc.)
+router.post('/notification/send', verifyToken, async (req, res) => {
+  try {
+    const { clinicId, recipientId, type, title, message, priority } = req.body;
+
+    // Get sender info
+    const sender = await User.findById(req.user?.userId);
+
+    const notification = new StaffNotification({
+      clinicId,
+      recipientId,
+      senderId: req.user?.userId,
+      senderName: sender?.name || 'Admin',
+      type: type || 'general',
+      title,
+      message,
+      priority: priority || 'normal',
+      actionRequired: type === 'come_to_hospital'
+    });
+
+    await notification.save();
+
+    res.status(201).json({
+      success: true,
+      notification,
+      message: 'Notification sent successfully'
+    });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get notifications for current user
+router.get('/notifications/my', verifyToken, async (req, res) => {
+  try {
+    const { unreadOnly, limit = 20 } = req.query;
+    const query = { recipientId: req.user?.userId };
+    
+    if (unreadOnly === 'true') {
+      query.isRead = false;
+    }
+
+    const notifications = await StaffNotification.find(query)
+      .sort({ createdAt: -1 })
+      .limit(parseInt(limit));
+
+    const unreadCount = await StaffNotification.countDocuments({ 
+      recipientId: req.user?.userId, 
+      isRead: false 
+    });
+
+    res.json({ success: true, notifications, unreadCount });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Mark notification as read
+router.post('/notification/:id/read', verifyToken, async (req, res) => {
+  try {
+    const notification = await StaffNotification.findByIdAndUpdate(
+      req.params.id,
+      { isRead: true, readAt: new Date() },
+      { new: true }
+    );
+
+    res.json({ success: true, notification });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Mark all notifications as read
+router.post('/notifications/read-all', verifyToken, async (req, res) => {
+  try {
+    await StaffNotification.updateMany(
+      { recipientId: req.user?.userId, isRead: false },
+      { isRead: true, readAt: new Date() }
+    );
+
+    res.json({ success: true, message: 'All notifications marked as read' });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Acknowledge action (e.g., confirm coming to hospital)
+router.post('/notification/:id/acknowledge', verifyToken, async (req, res) => {
+  try {
+    const notification = await StaffNotification.findByIdAndUpdate(
+      req.params.id,
+      { 
+        actionTaken: true, 
+        actionTakenAt: new Date(),
+        isRead: true,
+        readAt: new Date()
+      },
+      { new: true }
+    );
+
+    res.json({ success: true, notification, message: 'Action acknowledged' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

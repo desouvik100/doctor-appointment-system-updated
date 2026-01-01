@@ -13,7 +13,7 @@ const API_BASE_URL = isNative
   : (process.env.REACT_APP_API_URL || (
       process.env.NODE_ENV === 'production' 
         ? PRODUCTION_URL
-        : 'http://localhost:5005'
+        : 'http://192.168.29.78:5005'
     ));
 
 // Log only in development

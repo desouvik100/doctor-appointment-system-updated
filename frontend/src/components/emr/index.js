@@ -78,6 +78,9 @@ export { default as ComplianceSection } from './ComplianceSection';
 export { default as StaffAttendanceSection } from './StaffAttendanceSection';
 export { default as PatientFeedbackSection } from './PatientFeedbackSection';
 export { default as StaffAnalyticsSection } from './StaffAnalyticsSection';
+export { default as NotificationBell } from './NotificationBell';
+export { default as BiometricCheckIn } from './BiometricCheckIn';
+export { default as LocationCheckIn } from './LocationCheckIn';
 
 // Feature Gating
 export { default as LockedFeature, useFeatureAccess, withFeatureAccess } from './LockedFeature';

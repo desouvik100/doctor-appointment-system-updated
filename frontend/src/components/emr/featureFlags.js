@@ -157,6 +157,62 @@ export const EMR_FEATURES = {
     description: 'Export patient data to PDF/CSV',
     requiredPlan: 'advanced',
     icon: '📤'
+  },
+  staffAttendance: {
+    id: 'staffAttendance',
+    name: 'Staff Attendance',
+    description: 'Track staff check-in/out and attendance',
+    requiredPlan: 'basic',
+    icon: '⏰'
+  },
+  staffNotifications: {
+    id: 'staffNotifications',
+    name: 'Staff Notifications',
+    description: 'Send notifications to staff (come to hospital, urgent)',
+    requiredPlan: 'basic',
+    icon: '🔔'
+  },
+  addStaff: {
+    id: 'addStaff',
+    name: 'Add Staff',
+    description: 'Add new staff members to clinic',
+    requiredPlan: 'basic',
+    icon: '➕'
+  },
+  leaveManagement: {
+    id: 'leaveManagement',
+    name: 'Leave Management',
+    description: 'Apply and manage staff leave requests',
+    requiredPlan: 'basic',
+    icon: '🏖️'
+  },
+  staffAnalytics: {
+    id: 'staffAnalytics',
+    name: 'Staff Analytics',
+    description: 'Advanced staff attendance analytics and reports',
+    requiredPlan: 'advanced',
+    icon: '📊'
+  },
+  multiBranch: {
+    id: 'multiBranch',
+    name: 'Multi-Branch Management',
+    description: 'Manage multiple hospital branches',
+    requiredPlan: 'advanced',
+    icon: '🏢'
+  },
+  biometricCheckIn: {
+    id: 'biometricCheckIn',
+    name: 'Biometric Check-In',
+    description: 'Fingerprint and Face ID attendance',
+    requiredPlan: 'basic',
+    icon: '👆'
+  },
+  gpsLocationCheckIn: {
+    id: 'gpsLocationCheckIn',
+    name: 'GPS Location Check-In',
+    description: 'Verify staff location during check-in',
+    requiredPlan: 'basic',
+    icon: '📍'
   }
 };
 
