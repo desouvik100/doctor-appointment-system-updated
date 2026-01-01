@@ -93,6 +93,13 @@ router.get('/staff/clinic/:clinicId', verifyToken, async (req, res) => {
 router.post('/attendance/check-in', verifyToken, async (req, res) => {
   try {
     const { clinicId, staffId, shiftType, checkInMethod, location } = req.body;
+    
+    console.log('Check-in request:', { clinicId, staffId, checkInMethod });
+    
+    if (!clinicId || !staffId) {
+      return res.status(400).json({ success: false, message: 'clinicId and staffId are required' });
+    }
+    
     const today = new Date();
     today.setHours(0, 0, 0, 0);
 
@@ -107,16 +114,16 @@ router.post('/attendance/check-in', verifyToken, async (req, res) => {
         clinicId,
         staffId,
         date: today,
-        shiftType,
+        shiftType: shiftType || 'general',
         checkInTime: new Date(),
-        checkInMethod,
+        checkInMethod: checkInMethod || 'manual',
         checkInLocation: location,
         status: 'present',
         markedBy: req.user?.userId
       });
     } else {
       attendance.checkInTime = new Date();
-      attendance.checkInMethod = checkInMethod;
+      attendance.checkInMethod = checkInMethod || 'manual';
       attendance.checkInLocation = location;
       attendance.status = 'present';
     }
@@ -133,8 +140,10 @@ router.post('/attendance/check-in', verifyToken, async (req, res) => {
     }
 
     await attendance.save();
+    console.log('Check-in saved:', attendance._id);
     res.json({ success: true, attendance, message: 'Checked in successfully' });
   } catch (error) {
+    console.error('Check-in error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

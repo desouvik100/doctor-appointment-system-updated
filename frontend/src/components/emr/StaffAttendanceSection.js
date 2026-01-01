@@ -45,18 +45,61 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
 
   const fetchCurrentUser = async () => {
     try {
-      // Get current user from token or receptionist data
-      const token = localStorage.getItem('token');
+      // Try multiple sources to get current user ID
       const receptionist = localStorage.getItem('receptionist');
+      const user = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
       
-      if (token) {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        setCurrentUserId(payload.userId);
-      } else if (receptionist) {
+      let userId = null;
+      
+      // First try receptionist data (most common for clinic dashboard)
+      if (receptionist) {
         const data = JSON.parse(receptionist);
-        setCurrentUserId(data.id || data._id);
+        userId = data.id || data._id || data.userId;
+        console.log('Got userId from receptionist:', userId);
       }
-    } catch (err) { console.error('Error getting current user:', err); }
+      
+      // Try user data
+      if (!userId && user) {
+        const data = JSON.parse(user);
+        userId = data.id || data._id || data.userId;
+        console.log('Got userId from user:', userId);
+      }
+      
+      // Try token as fallback
+      if (!userId && token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          userId = payload.userId || payload.id || payload._id;
+          console.log('Got userId from token:', userId);
+        } catch (e) {
+          console.error('Error parsing token:', e);
+        }
+      }
+      
+      // Also try to get from receptionist token
+      if (!userId && receptionist) {
+        const data = JSON.parse(receptionist);
+        if (data.token) {
+          try {
+            const payload = JSON.parse(atob(data.token.split('.')[1]));
+            userId = payload.userId || payload.id || payload._id;
+            console.log('Got userId from receptionist token:', userId);
+          } catch (e) {
+            console.error('Error parsing receptionist token:', e);
+          }
+        }
+      }
+      
+      if (userId) {
+        setCurrentUserId(userId);
+        console.log('Set currentUserId:', userId);
+      } else {
+        console.warn('Could not determine current user ID');
+      }
+    } catch (err) { 
+      console.error('Error getting current user:', err); 
+    }
   };
 
   const fetchAttendance = async () => {
@@ -91,14 +134,20 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
 
   const handleCheckIn = async (staffId, method = 'manual') => {
     try {
-      await axios.post('/api/staff-management/attendance/check-in', { clinicId, staffId, checkInMethod: method });
+      console.log('Checking in:', { clinicId, staffId, method });
+      const res = await axios.post('/api/staff-management/attendance/check-in', { clinicId, staffId, checkInMethod: method });
+      console.log('Check-in response:', res.data);
       toast.success('Checked in successfully');
       fetchAttendance();
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed to check in'); }
+    } catch (err) { 
+      console.error('Check-in error:', err.response?.data || err);
+      toast.error(err.response?.data?.message || 'Failed to check in'); 
+    }
   };
 
   const handleCheckOut = async (staffId, method = 'manual') => {
     try {
+      console.log('Checking out:', { clinicId, staffId, method });
       await axios.post('/api/staff-management/attendance/check-out', { clinicId, staffId, checkOutMethod: method });
       toast.success('Checked out successfully');
       fetchAttendance();
@@ -204,8 +253,20 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
             staffId={currentUserId || 'guest'}
             staffName="You"
             isCheckedIn={!!getCurrentUserAttendance()?.checkInTime && !getCurrentUserAttendance()?.checkOutTime}
-            onCheckIn={(method) => currentUserId && handleCheckIn(currentUserId, method)}
-            onCheckOut={(method) => currentUserId && handleCheckOut(currentUserId, method)}
+            onCheckIn={(method) => {
+              if (!currentUserId) {
+                toast.error('User not identified. Please log in again.');
+                return;
+              }
+              handleCheckIn(currentUserId, method);
+            }}
+            onCheckOut={(method) => {
+              if (!currentUserId) {
+                toast.error('User not identified. Please log in again.');
+                return;
+              }
+              handleCheckOut(currentUserId, method);
+            }}
           />
         ) : (
           <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
@@ -228,8 +289,20 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
           <LocationCheckIn
             clinicLocation={{ lat: 22.5726, lng: 88.3639, name: 'Clinic', radius: 200 }}
             isCheckedIn={!!getCurrentUserAttendance()?.checkInTime && !getCurrentUserAttendance()?.checkOutTime}
-            onCheckIn={(method, location) => currentUserId && handleCheckInWithLocation(currentUserId, method, location)}
-            onCheckOut={(method, location) => currentUserId && handleCheckOutWithLocation(currentUserId, method, location)}
+            onCheckIn={(method, location) => {
+              if (!currentUserId) {
+                toast.error('User not identified. Please log in again.');
+                return;
+              }
+              handleCheckInWithLocation(currentUserId, method, location);
+            }}
+            onCheckOut={(method, location) => {
+              if (!currentUserId) {
+                toast.error('User not identified. Please log in again.');
+                return;
+              }
+              handleCheckOutWithLocation(currentUserId, method, location);
+            }}
           />
         ) : (
           <div className="bg-slate-50 rounded-xl p-4 border border-slate-200">
