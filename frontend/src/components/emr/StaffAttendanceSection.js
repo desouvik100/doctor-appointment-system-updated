@@ -246,6 +246,11 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
 
   return (
     <div className="space-y-6">
+      {/* Debug info */}
+      <div className="bg-yellow-50 border border-yellow-200 rounded-lg p-2 text-xs text-yellow-800">
+        clinicId: {clinicId || 'null'} | userId: {currentUserId || 'null'}
+      </div>
+      
       {/* Biometric & Location Check-In Section */}
       <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
         {canUseBiometric ? (
@@ -256,6 +261,10 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
             onCheckIn={(method) => {
               if (!currentUserId) {
                 toast.error('User not identified. Please log in again.');
+                return;
+              }
+              if (!clinicId) {
+                toast.error('Clinic not identified. Please log in again.');
                 return;
               }
               handleCheckIn(currentUserId, method);
