@@ -133,25 +133,26 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
   };
 
   const handleCheckIn = async (staffId, method = 'manual') => {
-    try {
-      console.log('Checking in:', { clinicId, staffId, method });
-      const res = await axios.post('/api/staff-management/attendance/check-in', { clinicId, staffId, checkInMethod: method });
-      console.log('Check-in response:', res.data);
+    console.log('Checking in:', { clinicId, staffId, method });
+    const res = await axios.post('/api/staff-management/attendance/check-in', { clinicId, staffId, checkInMethod: method });
+    console.log('Check-in response:', res.data);
+    // Only show toast for manual check-in (biometric shows its own toast)
+    if (method === 'manual') {
       toast.success('Checked in successfully');
-      fetchAttendance();
-    } catch (err) { 
-      console.error('Check-in error:', err.response?.data || err);
-      toast.error(err.response?.data?.message || 'Failed to check in'); 
     }
+    fetchAttendance();
+    return res.data;
   };
 
   const handleCheckOut = async (staffId, method = 'manual') => {
-    try {
-      console.log('Checking out:', { clinicId, staffId, method });
-      await axios.post('/api/staff-management/attendance/check-out', { clinicId, staffId, checkOutMethod: method });
+    console.log('Checking out:', { clinicId, staffId, method });
+    const res = await axios.post('/api/staff-management/attendance/check-out', { clinicId, staffId, checkOutMethod: method });
+    // Only show toast for manual check-out (biometric shows its own toast)
+    if (method === 'manual') {
       toast.success('Checked out successfully');
-      fetchAttendance();
-    } catch (err) { toast.error(err.response?.data?.message || 'Failed to check out'); }
+    }
+    fetchAttendance();
+    return res.data;
   };
 
   // Get current user's attendance status
@@ -258,23 +259,20 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
             staffId={currentUserId || 'guest'}
             staffName="You"
             isCheckedIn={!!getCurrentUserAttendance()?.checkInTime && !getCurrentUserAttendance()?.checkOutTime}
-            onCheckIn={(method) => {
+            onCheckIn={async (method) => {
               if (!currentUserId) {
-                toast.error('User not identified. Please log in again.');
-                return;
+                throw new Error('User not identified. Please log in again.');
               }
               if (!clinicId) {
-                toast.error('Clinic not identified. Please log in again.');
-                return;
+                throw new Error('Clinic not identified. Please log in again.');
               }
-              handleCheckIn(currentUserId, method);
+              return await handleCheckIn(currentUserId, method);
             }}
-            onCheckOut={(method) => {
+            onCheckOut={async (method) => {
               if (!currentUserId) {
-                toast.error('User not identified. Please log in again.');
-                return;
+                throw new Error('User not identified. Please log in again.');
               }
-              handleCheckOut(currentUserId, method);
+              return await handleCheckOut(currentUserId, method);
             }}
           />
         ) : (
@@ -455,14 +453,26 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
                     <td className="py-3 px-4">
                       <div className="flex gap-2">
                         <button 
-                          onClick={() => handleCheckIn(record.staffId?._id)} 
+                          onClick={async () => {
+                            try {
+                              await handleCheckIn(record.staffId?._id);
+                            } catch (err) {
+                              toast.error(err.response?.data?.message || 'Failed to check in');
+                            }
+                          }} 
                           disabled={record.checkInTime}
                           className={`px-3 py-1 rounded-lg text-sm ${record.checkInTime ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-green-50 text-green-600 hover:bg-green-100'}`}
                         >
                           Check In
                         </button>
                         <button 
-                          onClick={() => handleCheckOut(record.staffId?._id)} 
+                          onClick={async () => {
+                            try {
+                              await handleCheckOut(record.staffId?._id);
+                            } catch (err) {
+                              toast.error(err.response?.data?.message || 'Failed to check out');
+                            }
+                          }} 
                           disabled={!record.checkInTime || record.checkOutTime}
                           className={`px-3 py-1 rounded-lg text-sm ${!record.checkInTime || record.checkOutTime ? 'bg-gray-100 text-gray-400 cursor-not-allowed' : 'bg-red-50 text-red-600 hover:bg-red-100'}`}
                         >

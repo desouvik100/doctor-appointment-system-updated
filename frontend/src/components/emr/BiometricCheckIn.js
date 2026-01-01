@@ -76,12 +76,28 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
           setBiometricRegistered(true);
         }
         
+        // Call the callback and wait for it to complete before showing success
+        // The callback should handle the API call and throw on failure
         if (action === 'checkin') {
-          onCheckIn && onCheckIn('biometric');
-          toast.success('Biometric verified! Checked in successfully.');
+          if (onCheckIn) {
+            try {
+              await onCheckIn('biometric');
+              toast.success('Biometric verified! Checked in successfully.');
+            } catch (apiErr) {
+              console.error('Check-in API error:', apiErr);
+              toast.error(apiErr.message || 'Biometric verified but check-in failed. Please try again.');
+            }
+          }
         } else {
-          onCheckOut && onCheckOut('biometric');
-          toast.success('Biometric verified! Checked out successfully.');
+          if (onCheckOut) {
+            try {
+              await onCheckOut('biometric');
+              toast.success('Biometric verified! Checked out successfully.');
+            } catch (apiErr) {
+              console.error('Check-out API error:', apiErr);
+              toast.error(apiErr.message || 'Biometric verified but check-out failed. Please try again.');
+            }
+          }
         }
       }
     } catch (err) {
