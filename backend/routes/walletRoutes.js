@@ -2,8 +2,10 @@ const express = require('express');
 const router = express.Router();
 const DoctorWallet = require('../models/DoctorWallet');
 const Doctor = require('../models/Doctor');
+const User = require('../models/User');
 const Appointment = require('../models/Appointment');
 const aiSecurityService = require('../services/aiSecurityService');
+const { verifyToken } = require('../middleware/auth');
 
 // Security helper - log financial operations
 const logFinancialActivity = async (req, action, details) => {
@@ -27,6 +29,200 @@ const logFinancialActivity = async (req, action, details) => {
     console.error('Security logging error:', error);
   }
 };
+
+// ============ PATIENT WALLET ROUTES ============
+
+// Get patient wallet balance
+router.get('/balance', async (req, res) => {
+  try {
+    // Check for auth token
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      // Return zero balance for unauthenticated users
+      return res.json({
+        success: true,
+        balance: 0,
+        currency: 'INR'
+      });
+    }
+
+    // Verify token manually
+    const jwt = require('jsonwebtoken');
+    const token = authHeader.split(' ')[1];
+    
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    } catch (tokenError) {
+      return res.json({
+        success: true,
+        balance: 0,
+        currency: 'INR'
+      });
+    }
+
+    const userId = decoded.userId || decoded.id;
+    const user = await User.findById(userId).select('walletBalance walletHistory name');
+    
+    if (!user) {
+      return res.json({
+        success: true,
+        balance: 0,
+        currency: 'INR'
+      });
+    }
+    
+    res.json({
+      success: true,
+      balance: user.walletBalance || 0,
+      currency: 'INR'
+    });
+  } catch (error) {
+    console.error('Error fetching wallet balance:', error);
+    res.json({
+      success: true,
+      balance: 0,
+      currency: 'INR'
+    });
+  }
+});
+
+// Get patient wallet transactions
+router.get('/transactions', verifyToken, async (req, res) => {
+  try {
+    const { page = 1, limit = 20 } = req.query;
+    const user = await User.findById(req.user.id).select('walletHistory walletBalance');
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    const transactions = (user.walletHistory || [])
+      .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+    
+    const startIndex = (page - 1) * limit;
+    const paginatedTransactions = transactions.slice(startIndex, startIndex + parseInt(limit));
+    
+    res.json({
+      success: true,
+      transactions: paginatedTransactions,
+      total: transactions.length,
+      page: parseInt(page),
+      totalPages: Math.ceil(transactions.length / limit),
+      currentBalance: user.walletBalance || 0
+    });
+  } catch (error) {
+    console.error('Error fetching wallet transactions:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Add money to patient wallet (placeholder - integrate with payment gateway)
+router.post('/add', verifyToken, async (req, res) => {
+  try {
+    const { amount, paymentMethod } = req.body;
+    
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid amount' });
+    }
+    
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    const newBalance = (user.walletBalance || 0) + amount;
+    
+    user.walletBalance = newBalance;
+    user.walletHistory.push({
+      type: 'credit',
+      amount,
+      description: `Added via ${paymentMethod || 'payment gateway'}`,
+      balanceAfter: newBalance,
+      createdAt: new Date()
+    });
+    
+    await user.save();
+    
+    res.json({
+      success: true,
+      message: `₹${amount} added to wallet`,
+      balance: newBalance
+    });
+  } catch (error) {
+    console.error('Error adding money to wallet:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Pay from wallet
+router.post('/pay', verifyToken, async (req, res) => {
+  try {
+    const { amount, appointmentId } = req.body;
+    
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Invalid amount' });
+    }
+    
+    const user = await User.findById(req.user.id);
+    
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+    
+    if ((user.walletBalance || 0) < amount) {
+      return res.status(400).json({ success: false, message: 'Insufficient wallet balance' });
+    }
+    
+    const newBalance = user.walletBalance - amount;
+    
+    user.walletBalance = newBalance;
+    user.walletHistory.push({
+      type: 'debit',
+      amount: -amount,
+      description: appointmentId ? `Payment for appointment` : 'Wallet payment',
+      referenceId: appointmentId,
+      referenceModel: appointmentId ? 'Appointment' : undefined,
+      balanceAfter: newBalance,
+      createdAt: new Date()
+    });
+    
+    await user.save();
+    
+    res.json({
+      success: true,
+      message: `₹${amount} paid from wallet`,
+      balance: newBalance
+    });
+  } catch (error) {
+    console.error('Error paying from wallet:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+// Get loyalty points (placeholder)
+router.get('/loyalty-points', async (req, res) => {
+  try {
+    // Placeholder - integrate with loyalty system
+    res.json({
+      success: true,
+      points: 0,
+      pointsValue: 0,
+      tier: 'Bronze'
+    });
+  } catch (error) {
+    console.error('Error fetching loyalty points:', error);
+    res.json({
+      success: true,
+      points: 0,
+      pointsValue: 0,
+      tier: 'Bronze'
+    });
+  }
+});
+
+// ============ DOCTOR WALLET ROUTES ============
 
 // Get doctor's wallet
 router.get('/doctor/:doctorId', async (req, res) => {

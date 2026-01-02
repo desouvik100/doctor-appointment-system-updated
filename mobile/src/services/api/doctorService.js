@@ -11,7 +11,7 @@ const FAVORITES_KEY = 'favorites';
  * Search doctors with filters
  */
 export const searchDoctors = async (params = {}) => {
-  const response = await apiClient.get('/doctors/search', { params });
+  const response = await apiClient.get('/doctors', { params });
   return response.data;
 };
 
