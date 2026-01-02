@@ -67,6 +67,84 @@ router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
   }
 });
 
+// Get current user's appointments (patient-friendly endpoint)
+router.get('/my', async (req, res) => {
+  try {
+    // Check for auth token
+    const authHeader = req.headers.authorization;
+    if (!authHeader || !authHeader.startsWith('Bearer ')) {
+      return res.json({ success: true, data: [], message: 'Not authenticated' });
+    }
+
+    // Verify token
+    const jwt = require('jsonwebtoken');
+    const token = authHeader.split(' ')[1];
+    
+    let decoded;
+    try {
+      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    } catch (tokenError) {
+      return res.json({ success: true, data: [], message: 'Invalid token' });
+    }
+
+    const userId = decoded.userId || decoded.id;
+    if (!userId) {
+      return res.json({ success: true, data: [], message: 'No user ID in token' });
+    }
+
+    const { status } = req.query;
+    const query = { userId };
+    
+    // Filter by status if provided
+    if (status === 'upcoming') {
+      query.date = { $gte: new Date() };
+      query.status = { $in: ['pending', 'confirmed', 'checked-in'] };
+    } else if (status === 'past') {
+      query.date = { $lt: new Date() };
+    } else if (status === 'cancelled') {
+      query.status = 'cancelled';
+    }
+
+    const appointments = await Appointment.find(query)
+      .populate('doctorId', 'name specialization profilePhoto consultationFee')
+      .populate('clinicId', 'name address city')
+      .sort({ date: status === 'past' ? -1 : 1 })
+      .limit(20);
+
+    // Format response
+    const formattedAppointments = appointments.map(app => ({
+      _id: app._id,
+      id: app._id,
+      date: app.date,
+      time: app.time,
+      status: app.status,
+      type: app.consultationType || 'clinic',
+      reason: app.reason,
+      doctor: app.doctorId ? {
+        _id: app.doctorId._id,
+        name: app.doctorId.name,
+        specialization: app.doctorId.specialization,
+        photo: app.doctorId.profilePhoto,
+        fee: app.doctorId.consultationFee
+      } : null,
+      clinic: app.clinicId ? {
+        _id: app.clinicId._id,
+        name: app.clinicId.name,
+        address: app.clinicId.address,
+        city: app.clinicId.city
+      } : null,
+      queueNumber: app.queueNumber,
+      meetingLink: app.meetingLink,
+      joinCode: app.joinCode
+    }));
+
+    res.json({ success: true, data: formattedAppointments });
+  } catch (error) {
+    console.error('Error fetching user appointments:', error);
+    res.json({ success: true, data: [], message: error.message });
+  }
+});
+
 // Get appointments by user ID (authenticated users only)
 router.get('/user/:userId', verifyToken, async (req, res) => {
   try {

@@ -8,7 +8,7 @@ import apiClient from './apiClient';
  * Get user's appointments
  */
 export const getAppointments = async (params = {}) => {
-  const response = await apiClient.get('/appointments', { params });
+  const response = await apiClient.get('/appointments/my', { params });
   return response.data;
 };
 
@@ -16,7 +16,7 @@ export const getAppointments = async (params = {}) => {
  * Get upcoming appointments
  */
 export const getUpcomingAppointments = async () => {
-  const response = await apiClient.get('/appointments', { 
+  const response = await apiClient.get('/appointments/my', { 
     params: { status: 'upcoming' } 
   });
   return response.data;
