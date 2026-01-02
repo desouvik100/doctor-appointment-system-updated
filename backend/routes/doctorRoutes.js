@@ -133,6 +133,52 @@ router.get('/specializations/list', async (req, res) => {
   }
 });
 
+// Get online status of multiple doctors (MUST be before /:id route)
+router.get('/online-status', async (req, res) => {
+  try {
+    const { doctorIds } = req.query;
+    
+    // If no doctorIds provided, return empty status
+    if (!doctorIds || doctorIds.trim() === '') {
+      return res.json({ success: true, status: {} });
+    }
+    
+    // Consider doctor offline if no heartbeat in last 2 minutes
+    const offlineThreshold = new Date(Date.now() - 2 * 60 * 1000);
+    
+    let query = { isActive: true };
+    const ids = doctorIds.split(',').filter(id => {
+      // Validate ObjectId format
+      return id && /^[0-9a-fA-F]{24}$/.test(id.trim());
+    });
+    
+    if (ids.length === 0) {
+      return res.json({ success: true, status: {} });
+    }
+    
+    query._id = { $in: ids };
+    
+    const doctors = await Doctor.find(query)
+      .select('_id name isOnline lastActiveAt')
+      .lean();
+    
+    // Check if doctor is truly online (had heartbeat within threshold)
+    const statusMap = {};
+    doctors.forEach(doc => {
+      const isReallyOnline = doc.isOnline && doc.lastActiveAt && new Date(doc.lastActiveAt) > offlineThreshold;
+      statusMap[doc._id] = {
+        isOnline: isReallyOnline,
+        lastActiveAt: doc.lastActiveAt
+      };
+    });
+    
+    res.json({ success: true, status: statusMap });
+  } catch (error) {
+    console.error('Error fetching online status:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch status' });
+  }
+});
+
 // Get doctor by ID
 router.get('/:id', async (req, res) => {
   try {
@@ -809,54 +855,6 @@ router.post('/:id/go-offline', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Error setting offline:', error);
     res.status(500).json({ success: false, message: 'Failed to update status' });
-  }
-});
-
-// Get online status of multiple doctors
-router.get('/online-status', async (req, res) => {
-  try {
-    const { doctorIds } = req.query;
-    
-    // If no doctorIds provided, return empty status
-    if (!doctorIds || doctorIds.trim() === '') {
-      return res.json({ success: true, status: {} });
-    }
-    
-    // Consider doctor offline if no heartbeat in last 2 minutes
-    const offlineThreshold = new Date(Date.now() - 2 * 60 * 1000);
-    
-    let query = { isActive: true };
-    if (doctorIds) {
-      const ids = doctorIds.split(',').filter(id => {
-        // Validate ObjectId format
-        return id && /^[0-9a-fA-F]{24}$/.test(id.trim());
-      });
-      
-      if (ids.length === 0) {
-        return res.json({ success: true, status: {} });
-      }
-      
-      query._id = { $in: ids };
-    }
-    
-    const doctors = await Doctor.find(query)
-      .select('_id name isOnline lastActiveAt')
-      .lean();
-    
-    // Check if doctor is truly online (had heartbeat within threshold)
-    const statusMap = {};
-    doctors.forEach(doc => {
-      const isReallyOnline = doc.isOnline && doc.lastActiveAt && new Date(doc.lastActiveAt) > offlineThreshold;
-      statusMap[doc._id] = {
-        isOnline: isReallyOnline,
-        lastActiveAt: doc.lastActiveAt
-      };
-    });
-    
-    res.json({ success: true, status: statusMap });
-  } catch (error) {
-    console.error('Error fetching online status:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch status' });
   }
 });
 
