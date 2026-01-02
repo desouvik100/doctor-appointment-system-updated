@@ -7,7 +7,8 @@
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
-  <meta name="theme-color" content="#6366f1" />
+  <meta name="theme-color" content="#6366f1" media="(prefers-color-scheme: light)" />
+  <meta name="theme-color" content="#1e1b4b" media="(prefers-color-scheme: dark)" />
   <meta name="color-scheme" content="light dark" />
   
   <!-- SEO Meta Tags - Optimized for India Healthcare Market -->
@@ -235,15 +236,35 @@
   
   <link rel="manifest" href="%PUBLIC_URL%/manifest.json" />
   
-  <!-- PWA Icons -->
+  <!-- PWA Icons - Multiple Sizes -->
+  <link rel="icon" type="image/png" sizes="16x16" href="%PUBLIC_URL%/icons/icon-16.png" />
+  <link rel="icon" type="image/png" sizes="32x32" href="%PUBLIC_URL%/icons/icon-32.png" />
+  <link rel="icon" type="image/png" sizes="48x48" href="%PUBLIC_URL%/icons/icon-48.png" />
   <link rel="icon" href="%PUBLIC_URL%/favicon.ico" />
-  <link rel="apple-touch-icon" href="%PUBLIC_URL%/favicon.ico" />
   
-  <!-- iOS PWA Meta Tags -->
+  <!-- iOS PWA Meta Tags - Full Native Experience -->
   <meta name="apple-mobile-web-app-title" content="HealthSync" />
+  <link rel="apple-touch-icon" href="%PUBLIC_URL%/icons/apple-touch-icon.png" />
+  <link rel="apple-touch-icon" sizes="152x152" href="%PUBLIC_URL%/icons/icon-152.png" />
+  <link rel="apple-touch-icon" sizes="180x180" href="%PUBLIC_URL%/icons/icon-180.png" />
+  <link rel="apple-touch-icon" sizes="167x167" href="%PUBLIC_URL%/icons/icon-167.png" />
+  
+  <!-- iOS Splash Screens -->
+  <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/splash/splash-640x1136.png" media="(device-width: 320px) and (device-height: 568px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/splash/splash-750x1334.png" media="(device-width: 375px) and (device-height: 667px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/splash/splash-1242x2208.png" media="(device-width: 414px) and (device-height: 736px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/splash/splash-1125x2436.png" media="(device-width: 375px) and (device-height: 812px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/splash/splash-1242x2688.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/splash/splash-828x1792.png" media="(device-width: 414px) and (device-height: 896px) and (-webkit-device-pixel-ratio: 2)" />
+  <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/splash/splash-1170x2532.png" media="(device-width: 390px) and (device-height: 844px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/splash/splash-1284x2778.png" media="(device-width: 428px) and (device-height: 926px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/splash/splash-1179x2556.png" media="(device-width: 393px) and (device-height: 852px) and (-webkit-device-pixel-ratio: 3)" />
+  <link rel="apple-touch-startup-image" href="%PUBLIC_URL%/splash/splash-1290x2796.png" media="(device-width: 430px) and (device-height: 932px) and (-webkit-device-pixel-ratio: 3)" />
   
   <!-- MS Tile -->
-  <meta name="msapplication-TileColor" content="#0ea5e9" />
+  <meta name="msapplication-TileColor" content="#6366f1" />
+  <meta name="msapplication-TileImage" content="%PUBLIC_URL%/icons/icon-144.png" />
+  <meta name="msapplication-config" content="%PUBLIC_URL%/browserconfig.xml" />
   <!-- Bootstrap CSS -->
   <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.2/dist/css/bootstrap.min.css" rel="stylesheet" integrity="sha384-T3c6CoIi6uLrA9TneNEoa7RxnatzjcDSCmG1MXxSR1GAsXEV/Dwwykc2MPK8M2HN" crossorigin="anonymous">
   <!-- Font Awesome -->

@@ -6,7 +6,7 @@ import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSelector from './LanguageSelector';
 import { Capacitor } from '@capacitor/core';
 
-const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode = () => {} }) => {
+  const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode = () => {} }) => {
   const { t, language } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -25,6 +25,16 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
     } catch (e) {
       setIsNativeApp(false);
     }
+  }, []);
+  
+  // Close any open overlays/menus when asked globally (e.g., after logout)
+  useEffect(() => {
+    const handler = () => {
+      setMobileMenuOpen(false);
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    };
+    window.addEventListener('hs:close-overlays', handler);
+    return () => window.removeEventListener('hs:close-overlays', handler);
   }, []);
 
   // SEO-optimized rotating taglines - Clinic Appointment & Patient Management
@@ -357,7 +367,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
                   transition: 'opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
                   opacity: isTaglineTransitioning ? 0 : 1,
                   transform: isTaglineTransitioning ? 'translateY(-15px)' : 'translateY(0)',
-                  color: '#ffffff',
+                  color: '#0f172a',
                   margin: 0,
                   fontSize: isMobile ? '1.75rem' : '3.5rem',
                   lineHeight: 1.2
@@ -370,13 +380,13 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             {/* Clear Value Proposition */}
             <p style={{ 
               fontSize: '18px', 
-              color: 'rgba(255,255,255,0.85)', 
+              color: '#64748b', 
               lineHeight: '1.7', 
               maxWidth: '600px',
               marginBottom: '32px'
             }}>
               Book doctor appointments online in 30 seconds. Real-time queue tracking. 
-              Video consultations from home. <strong style={{ color: '#ffffff' }}>No more waiting in long queues.</strong>
+              Video consultations from home. <strong style={{ color: '#0f172a' }}>No more waiting in long queues.</strong>
             </p>
             
             {/* Doctor Search Bar */}

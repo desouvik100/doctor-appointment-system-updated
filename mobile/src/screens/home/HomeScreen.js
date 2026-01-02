@@ -1,8 +1,8 @@
 /**
- * Home Screen - Modern Dashboard
+ * Home Screen - Modern Dashboard with Pull-to-Refresh
  */
 
-import React from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -10,183 +10,173 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
+  RefreshControl,
   Dimensions,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
 import { useUser } from '../../context/UserContext';
+import { useTheme } from '../../context/ThemeContext';
+import { 
+  QuickActions, 
+  UpcomingAppointments, 
+  WalletSummary, 
+  HealthTips 
+} from './components';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
   const { user } = useUser();
+  const { colors, isDarkMode } = useTheme();
+  const [refreshing, setRefreshing] = useState(false);
+  const [dashboardData, setDashboardData] = useState({
+    appointments: [
+      {
+        id: '1',
+        doctorName: 'Dr. Sarah Wilson',
+        specialty: 'Cardiologist',
+        dateTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
+        type: 'video',
+      },
+      {
+        id: '2',
+        doctorName: 'Dr. Michael Chen',
+        specialty: 'General Physician',
+        dateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
+        type: 'in-person',
+      },
+    ],
+    walletBalance: 2500.00,
+    loyaltyPoints: 1250,
+    healthMetrics: [
+      { label: 'Heart Rate', value: '72', unit: 'bpm', icon: '❤️', trend: 'stable' },
+      { label: 'Blood Pressure', value: '120/80', unit: 'mmHg', icon: '🩺', trend: 'good' },
+      { label: 'Sleep', value: '7.5', unit: 'hrs', icon: '😴', trend: 'up' },
+      { label: 'Steps', value: '8,432', unit: 'steps', icon: '👟', trend: 'up' },
+    ],
+  });
 
-  const upcomingAppointment = {
-    doctor: 'Dr. Sarah Wilson',
-    specialty: 'Cardiologist',
-    date: 'Today',
-    time: '2:30 PM',
-    type: 'Video Consultation',
+  const getGreeting = () => {
+    const hour = new Date().getHours();
+    if (hour < 12) return 'Good morning';
+    if (hour < 17) return 'Good afternoon';
+    return 'Good evening';
   };
 
-  const quickActions = [
-    { id: 'book', icon: '📅', label: 'Book\nAppointment', color: colors.primary, screen: 'Booking' },
-    { id: 'video', icon: '📹', label: 'Video\nConsult', color: colors.secondary, screen: 'VideoConsult' },
-    { id: 'lab', icon: '🧪', label: 'Lab Tests', color: colors.warning, screen: 'LabTests' },
-  ];
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+    } catch (error) {
+      console.error('Error refreshing dashboard:', error);
+    } finally {
+      setRefreshing(false);
+    }
+  }, []);
 
-  const moreServices = [
-    { id: 'meds', icon: '💊', label: 'Medicine', color: colors.info, screen: 'Medicine' },
-    { id: 'records', icon: '📋', label: 'Records', color: colors.accent, screen: 'Records' },
-    { id: 'imaging', icon: '🩻', label: 'Imaging', color: '#6366f1', screen: 'MedicalImaging' },
-    { id: 'emergency', icon: '🚑', label: 'Emergency', color: colors.error, screen: 'Emergency' },
-  ];
+  const handleJoinCall = (appointment) => {
+    navigation.navigate('VideoConsult', { appointmentId: appointment.id });
+  };
 
-  const healthMetrics = [
-    { label: 'Heart Rate', value: '72', unit: 'bpm', icon: '❤️', trend: 'stable' },
-    { label: 'Blood Pressure', value: '120/80', unit: 'mmHg', icon: '🩺', trend: 'good' },
-    { label: 'Sleep', value: '7.5', unit: 'hrs', icon: '😴', trend: 'up' },
-    { label: 'Steps', value: '8,432', unit: 'steps', icon: '👟', trend: 'up' },
-  ];
+  const handleReschedule = (appointment) => {
+    navigation.navigate('Reschedule', { appointment });
+  };
+
+  const handleAddMoney = () => {
+    navigation.navigate('Wallet', { action: 'addMoney' });
+  };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
       
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+            progressBackgroundColor={colors.surface}
+          />
+        }
       >
         {/* Header */}
         <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={styles.greeting}>Good morning 👋</Text>
-            <Text style={styles.userName}>{user?.name || 'User'}</Text>
+            <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()} 👋</Text>
+            <Text style={[styles.userName, { color: colors.textPrimary }]}>{user?.name || 'User'}</Text>
           </View>
-          <TouchableOpacity>
+          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
             <Avatar name={user?.name || 'User'} size="large" showBorder />
           </TouchableOpacity>
         </View>
 
         {/* Search Bar */}
-        <TouchableOpacity style={styles.searchBar}>
+        <TouchableOpacity 
+          style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
+          onPress={() => navigation.navigate('DoctorSearch')}
+        >
           <Text style={styles.searchIcon}>🔍</Text>
-          <Text style={styles.searchPlaceholder}>Search doctors, symptoms...</Text>
+          <Text style={[styles.searchPlaceholder, { color: colors.textMuted }]}>Search doctors, symptoms...</Text>
         </TouchableOpacity>
 
-        {/* Upcoming Appointment Card */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Upcoming Appointment</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAll}>See all</Text>
-            </TouchableOpacity>
-          </View>
-
-          <LinearGradient
-            colors={colors.gradientPrimary}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 1 }}
-            style={[styles.appointmentCard, shadows.glow]}
-          >
-            <View style={styles.appointmentHeader}>
-              <View style={styles.appointmentInfo}>
-                <Avatar name={upcomingAppointment.doctor} size="large" />
-                <View style={styles.doctorInfo}>
-                  <Text style={styles.doctorName}>{upcomingAppointment.doctor}</Text>
-                  <Text style={styles.specialty}>{upcomingAppointment.specialty}</Text>
-                </View>
-              </View>
-              <View style={styles.appointmentBadge}>
-                <Text style={styles.badgeText}>📹 Video</Text>
-              </View>
-            </View>
-
-            <View style={styles.appointmentDetails}>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailIcon}>📅</Text>
-                <Text style={styles.detailText}>{upcomingAppointment.date}</Text>
-              </View>
-              <View style={styles.detailItem}>
-                <Text style={styles.detailIcon}>⏰</Text>
-                <Text style={styles.detailText}>{upcomingAppointment.time}</Text>
-              </View>
-            </View>
-
-            <View style={styles.appointmentActions}>
-              <TouchableOpacity style={styles.actionBtn}>
-                <Text style={styles.actionBtnText}>Reschedule</Text>
-              </TouchableOpacity>
-              <TouchableOpacity style={[styles.actionBtn, styles.actionBtnPrimary]}>
-                <Text style={styles.actionBtnTextPrimary}>Join Call</Text>
-              </TouchableOpacity>
-            </View>
-          </LinearGradient>
-        </View>
+        {/* Upcoming Appointments */}
+        <UpcomingAppointments
+          appointments={dashboardData.appointments}
+          navigation={navigation}
+          onJoinCall={handleJoinCall}
+          onReschedule={handleReschedule}
+        />
 
         {/* Quick Actions */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Quick Actions</Text>
-          <View style={styles.quickActions}>
-            {quickActions.map((action) => (
-              <TouchableOpacity 
-                key={action.id} 
-                style={styles.quickAction}
-                onPress={() => navigation.navigate(action.screen)}
-              >
-                <View style={[styles.quickActionIcon, { backgroundColor: `${action.color}20` }]}>
-                  <Text style={styles.quickActionEmoji}>{action.icon}</Text>
-                </View>
-                <Text style={styles.quickActionLabel}>{action.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
-          <View style={styles.quickActions}>
-            {moreServices.map((action) => (
-              <TouchableOpacity 
-                key={action.id} 
-                style={styles.quickAction}
-                onPress={() => navigation.navigate(action.screen)}
-              >
-                <View style={[styles.quickActionIcon, { backgroundColor: `${action.color}20` }]}>
-                  <Text style={styles.quickActionEmoji}>{action.icon}</Text>
-                </View>
-                <Text style={styles.quickActionLabel}>{action.label}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+        <QuickActions navigation={navigation} />
+
+        {/* Wallet Summary */}
+        <WalletSummary
+          balance={dashboardData.walletBalance}
+          loyaltyPoints={dashboardData.loyaltyPoints}
+          navigation={navigation}
+          onAddMoney={handleAddMoney}
+        />
+
+        {/* Health Tips - Full width, no padding */}
+        <View style={styles.healthTipsWrapper}>
+          <HealthTips />
         </View>
 
         {/* Health Metrics */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Health Overview</Text>
-            <TouchableOpacity>
-              <Text style={styles.seeAll}>Details</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Health Overview</Text>
+            <TouchableOpacity onPress={() => navigation.navigate('Records')}>
+              <Text style={[styles.seeAll, { color: colors.primary }]}>Details</Text>
             </TouchableOpacity>
           </View>
 
           <View style={styles.metricsGrid}>
-            {healthMetrics.map((metric, index) => (
-              <Card key={index} variant="gradient" style={styles.metricCard}>
+            {dashboardData.healthMetrics.map((metric, index) => (
+              <Card key={index} variant="gradient" style={[styles.metricCard, { backgroundColor: colors.surface }]}>
                 <View style={styles.metricHeader}>
                   <Text style={styles.metricIcon}>{metric.icon}</Text>
                   <View style={[
                     styles.trendBadge,
+                    { backgroundColor: colors.surfaceLight },
                     metric.trend === 'up' && styles.trendUp,
                     metric.trend === 'down' && styles.trendDown,
                   ]}>
-                    <Text style={styles.trendText}>
+                    <Text style={[styles.trendText, { color: colors.textSecondary }]}>
                       {metric.trend === 'up' ? '↑' : metric.trend === 'down' ? '↓' : '→'}
                     </Text>
                   </View>
                 </View>
-                <Text style={styles.metricValue}>{metric.value}</Text>
-                <Text style={styles.metricUnit}>{metric.unit}</Text>
-                <Text style={styles.metricLabel}>{metric.label}</Text>
+                <Text style={[styles.metricValue, { color: colors.textPrimary }]}>{metric.value}</Text>
+                <Text style={[styles.metricUnit, { color: colors.textMuted }]}>{metric.unit}</Text>
+                <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>{metric.label}</Text>
               </Card>
             ))}
           </View>
@@ -195,13 +185,13 @@ const HomeScreen = ({ navigation }) => {
         {/* Recent Activity */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Recent Activity</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
             <TouchableOpacity>
-              <Text style={styles.seeAll}>View all</Text>
+              <Text style={[styles.seeAll, { color: colors.primary }]}>View all</Text>
             </TouchableOpacity>
           </View>
 
-          <Card variant="default">
+          <Card variant="default" style={{ backgroundColor: colors.surface }}>
             {[
               { icon: '💊', title: 'Medication Reminder', desc: 'Metformin 500mg taken', time: '2h ago' },
               { icon: '📋', title: 'Lab Results Ready', desc: 'Blood work results available', time: '5h ago' },
@@ -209,16 +199,16 @@ const HomeScreen = ({ navigation }) => {
             ].map((item, index) => (
               <TouchableOpacity key={index} style={[
                 styles.activityItem,
-                index < 2 && styles.activityItemBorder,
+                index < 2 && [styles.activityItemBorder, { borderBottomColor: colors.divider }],
               ]}>
-                <View style={styles.activityIcon}>
+                <View style={[styles.activityIcon, { backgroundColor: colors.surfaceLight }]}>
                   <Text style={styles.activityEmoji}>{item.icon}</Text>
                 </View>
                 <View style={styles.activityContent}>
-                  <Text style={styles.activityTitle}>{item.title}</Text>
-                  <Text style={styles.activityDesc}>{item.desc}</Text>
+                  <Text style={[styles.activityTitle, { color: colors.textPrimary }]}>{item.title}</Text>
+                  <Text style={[styles.activityDesc, { color: colors.textSecondary }]}>{item.desc}</Text>
                 </View>
-                <Text style={styles.activityTime}>{item.time}</Text>
+                <Text style={[styles.activityTime, { color: colors.textMuted }]}>{item.time}</Text>
               </TouchableOpacity>
             ))}
           </Card>
@@ -231,7 +221,6 @@ const HomeScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,
@@ -247,23 +236,19 @@ const styles = StyleSheet.create({
   headerLeft: {},
   greeting: {
     ...typography.bodyLarge,
-    color: colors.textSecondary,
   },
   userName: {
     ...typography.headlineLarge,
-    color: colors.textPrimary,
     marginTop: spacing.xs,
   },
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md + 2,
     marginBottom: spacing.xxl,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
   },
   searchIcon: {
     fontSize: 18,
@@ -271,7 +256,9 @@ const styles = StyleSheet.create({
   },
   searchPlaceholder: {
     ...typography.bodyLarge,
-    color: colors.textMuted,
+  },
+  healthTipsWrapper: {
+    marginHorizontal: -spacing.xl,
   },
   section: {
     marginBottom: spacing.xxl,
@@ -284,115 +271,9 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.headlineSmall,
-    color: colors.textPrimary,
   },
   seeAll: {
     ...typography.labelMedium,
-    color: colors.primary,
-  },
-  appointmentCard: {
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-  },
-  appointmentHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-    marginBottom: spacing.lg,
-  },
-  appointmentInfo: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  doctorInfo: {
-    marginLeft: spacing.md,
-  },
-  doctorName: {
-    ...typography.headlineSmall,
-    color: colors.textInverse,
-  },
-  specialty: {
-    ...typography.bodyMedium,
-    color: 'rgba(0,0,0,0.6)',
-    marginTop: 2,
-  },
-  appointmentBadge: {
-    backgroundColor: 'rgba(255,255,255,0.25)',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  badgeText: {
-    ...typography.labelSmall,
-    color: colors.textInverse,
-  },
-  appointmentDetails: {
-    flexDirection: 'row',
-    gap: spacing.xl,
-    marginBottom: spacing.lg,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  detailIcon: {
-    fontSize: 16,
-    marginRight: spacing.sm,
-  },
-  detailText: {
-    ...typography.bodyMedium,
-    color: colors.textInverse,
-    fontWeight: '500',
-  },
-  appointmentActions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  actionBtn: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.2)',
-  },
-  actionBtnPrimary: {
-    backgroundColor: colors.textInverse,
-  },
-  actionBtnText: {
-    ...typography.buttonSmall,
-    color: colors.textInverse,
-  },
-  actionBtnTextPrimary: {
-    ...typography.buttonSmall,
-    color: colors.primary,
-  },
-  quickActions: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    flexWrap: 'wrap',
-    marginTop: spacing.md,
-    marginBottom: spacing.md,
-  },
-  quickAction: {
-    alignItems: 'center',
-    width: (width - spacing.xl * 2 - spacing.md * 3) / 4,
-    marginBottom: spacing.sm,
-  },
-  quickActionIcon: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.sm,
-  },
-  quickActionEmoji: {
-    fontSize: 24,
-  },
-  quickActionLabel: {
-    ...typography.labelMedium,
-    color: colors.textSecondary,
-    textAlign: 'center',
   },
   metricsGrid: {
     flexDirection: 'row',
@@ -413,7 +294,6 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   trendBadge: {
-    backgroundColor: colors.surfaceLight,
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: borderRadius.full,
@@ -426,20 +306,16 @@ const styles = StyleSheet.create({
   },
   trendText: {
     fontSize: 12,
-    color: colors.textSecondary,
   },
   metricValue: {
     ...typography.displaySmall,
-    color: colors.textPrimary,
   },
   metricUnit: {
     ...typography.labelSmall,
-    color: colors.textMuted,
     marginTop: -4,
   },
   metricLabel: {
     ...typography.labelMedium,
-    color: colors.textSecondary,
     marginTop: spacing.sm,
   },
   activityItem: {
@@ -449,13 +325,11 @@ const styles = StyleSheet.create({
   },
   activityItemBorder: {
     borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
   },
   activityIcon: {
     width: 40,
     height: 40,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.surfaceLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
@@ -468,17 +342,14 @@ const styles = StyleSheet.create({
   },
   activityTitle: {
     ...typography.bodyMedium,
-    color: colors.textPrimary,
     fontWeight: '500',
   },
   activityDesc: {
     ...typography.bodySmall,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   activityTime: {
     ...typography.labelSmall,
-    color: colors.textMuted,
   },
 });
 

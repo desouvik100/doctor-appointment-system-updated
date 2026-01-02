@@ -2,13 +2,15 @@ const express = require('express');
 const mongoose = require('mongoose');
 const cors = require('cors');
 require('dotenv').config();
-// v2.1.0 - Bed Management & Bulk Create API
+// v2.2.0 - Enhanced Security Features
 const { initializeScheduler } = require('./services/appointmentScheduler');
 const { initializeMedicineReminders } = require('./services/medicineReminderService');
 const { initializeScheduledEmails } = require('./services/adminEmailService');
 const cacheService = require('./services/cacheService');
 const { securityMonitor, trackFailedLogin } = require('./middleware/securityMiddleware');
 const { sanitizeInputs } = require('./middleware/validateRequest');
+const { errorMiddleware, requestLoggerMiddleware } = require('./services/errorLoggingService');
+const backupService = require('./services/backupService');
 
 const app = express();
 
@@ -126,6 +128,9 @@ app.use((req, res, next) => {
   res.set('X-Response-Time', Date.now().toString());
   next();
 });
+
+// Request logging middleware for centralized logging
+app.use(requestLoggerMiddleware());
 
 // MongoDB connection with optimized settings for high load
 const connectDB = async () => {
@@ -245,6 +250,7 @@ console.log('🛡️ AI Security monitoring enabled');
 
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
+app.use('/api/auth/token', require('./routes/authTokenRoutes')); // Token refresh & session management
 app.use('/api/users', require('./routes/userRoutes'));
 app.use('/api/doctors', require('./routes/doctorRoutes'));
 app.use('/api/appointments', require('./routes/appointmentRoutes'));
@@ -343,6 +349,10 @@ app.use('/api/compliance', require('./routes/complianceRoutes')); // NABH/JCI Co
 app.use('/api/staff-management', require('./routes/staffManagementRoutes')); // Attendance & Leave
 app.use('/api/feedback', require('./routes/feedbackRoutes')); // Patient Feedback & NPS
 
+// ===== ENHANCED SECURITY FEATURES =====
+app.use('/api/secure-files', require('./routes/secureFilesRoutes')); // Signed URL file access
+app.use('/api/security-admin', require('./routes/securityAdminRoutes')); // Security admin dashboard
+
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');
 console.log('Auth Routes:');
@@ -399,20 +409,8 @@ app.use((req, res) => {
   });
 });
 
-// Global error handler
-app.use((err, req, res, next) => {
-  console.error('🔴 Unhandled Error:', err.message);
-  console.error('Stack:', err.stack);
-  
-  // Don't leak error details in production
-  const isDev = process.env.NODE_ENV !== 'production';
-  
-  res.status(err.status || 500).json({
-    success: false,
-    message: isDev ? err.message : 'Internal server error',
-    ...(isDev && { stack: err.stack })
-  });
-});
+// Global error handler - use centralized error logging
+app.use(errorMiddleware());
 
 // Graceful shutdown handler
 process.on('SIGTERM', async () => {
@@ -441,4 +439,8 @@ app.listen(PORT, async () => {
   
   // Initialize admin email scheduled reports
   initializeScheduledEmails();
+  
+  // Start scheduled database backups
+  backupService.startScheduledBackups();
+  console.log('💾 Database backup scheduler initialized');
 });

@@ -1,0 +1,383 @@
+﻿> Task :gradle-plugin:compileKotlin UP-TO-DATE
+> Task :gradle-plugin:compileJava NO-SOURCE
+> Task :gradle-plugin:pluginDescriptors UP-TO-DATE
+> Task :gradle-plugin:processResources UP-TO-DATE
+> Task :gradle-plugin:classes UP-TO-DATE
+> Task :gradle-plugin:jar UP-TO-DATE
+> Task :gradle-plugin:inspectClassesForKotlinIC UP-TO-DATE
+
+> Configure project :react-native-firebase_app
+:react-native-firebase_app package.json found at D:\Startup-Project\doctor-appointment-system\mobile\node_modules\@react-native-firebase\app\package.json
+:react-native-firebase_app:firebase.bom using default value: 32.8.1
+:react-native-firebase_app:play.play-services-auth using default value: 21.0.0
+:react-native-firebase_app package.json found at D:\Startup-Project\doctor-appointment-system\mobile\node_modules\@react-native-firebase\app\package.json
+:react-native-firebase_app:version set from package.json: 19.3.0 (19,3,0 - 19003000)
+:react-native-firebase_app:android.compileSdk using custom value: 35
+:react-native-firebase_app:android.targetSdk using custom value: 35
+:react-native-firebase_app:android.minSdk using custom value: 21
+:react-native-firebase_app:reactNativeAndroidDir D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-native\android
+
+> Configure project :react-native-firebase_messaging
+:react-native-firebase_messaging package.json found at D:\Startup-Project\doctor-appointment-system\mobile\node_modules\@react-native-firebase\messaging\package.json
+:react-native-firebase_app package.json found at D:\Startup-Project\doctor-appointment-system\mobile\node_modules\@react-native-firebase\app\package.json
+:react-native-firebase_messaging:firebase.bom using default value: 32.8.1
+:react-native-firebase_messaging package.json found at D:\Startup-Project\doctor-appointment-system\mobile\node_modules\@react-native-firebase\messaging\package.json
+:react-native-firebase_messaging:version set from package.json: 19.3.0 (19,3,0 - 19003000)
+:react-native-firebase_messaging:android.compileSdk using custom value: 35
+:react-native-firebase_messaging:android.targetSdk using custom value: 35
+:react-native-firebase_messaging:android.minSdk using custom value: 21
+:react-native-firebase_messaging:reactNativeAndroidDir D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-native\android
+
+> Configure project :react-native-reanimated
+Android gradle plugin: 8.6.0
+Gradle: 8.7
+
+> Configure project :react-native-vision-camera
+[VisionCamera] react-native-worklets-core not found, Frame Processors disabled!
+
+> Task :react-native-maps:preBuild UP-TO-DATE
+> Task :react-native-maps:preDebugBuild UP-TO-DATE
+> Task :react-native-maps:generateDebugBuildConfig UP-TO-DATE
+> Task :react-native-maps:generateDebugResValues UP-TO-DATE
+> Task :react-native-maps:generateDebugResources UP-TO-DATE
+> Task :react-native-maps:packageDebugResources UP-TO-DATE
+> Task :react-native-maps:parseDebugLocalResources UP-TO-DATE
+> Task :react-native-maps:generateDebugRFile UP-TO-DATE
+> Task :react-native-maps:compileDebugKotlin NO-SOURCE
+> Task :react-native-maps:javaPreCompileDebug UP-TO-DATE
+
+> Task :react-native-maps:compileDebugJavaWithJavac
+.\gradlew : D:\Startup-Project\doctor-appointment-system\mobile\node_mod
+ules\react-native-maps\android\src\main\java\com\facebook\react\viewmana
+gers\RNMapsCalloutManagerInterface.java:13: error: cannot find symbol
+At line:1 char:1
++ .\gradlew :react-native-maps:compileDebugJavaWithJavac 2>&1 | Out-Fil 
+...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (D:\Startup-Proj...not find 
+    symbol:String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+import com.facebook.react.uimanager.ViewManagerWithGeneratedInterface;
+                                   ^
+  symbol:   class ViewManagerWithGeneratedInterface
+  location: package com.facebook.react.uimanager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsC
+alloutManagerInterface.java:15: error: cannot find symbol
+public interface RNMapsCalloutManagerInterface<T extends View> extends 
+ViewManagerWithGeneratedInterface {
+                                                                       ^
+  symbol: class ViewManagerWithGeneratedInterface
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsC
+ircleManagerInterface.java:15: error: cannot find symbol
+import com.facebook.react.uimanager.ViewManagerWithGeneratedInterface;
+                                   ^
+  symbol:   class ViewManagerWithGeneratedInterface
+  location: package com.facebook.react.uimanager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsC
+ircleManagerInterface.java:17: error: cannot find symbol
+public interface RNMapsCircleManagerInterface<T extends View> extends 
+ViewManagerWithGeneratedInterface {
+                                                                      ^
+  symbol: class ViewManagerWithGeneratedInterface
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsG
+ooglePolygonManagerInterface.java:15: error: cannot find symbol
+import com.facebook.react.uimanager.ViewManagerWithGeneratedInterface;
+                                   ^
+  symbol:   class ViewManagerWithGeneratedInterface
+  location: package com.facebook.react.uimanager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsG
+ooglePolygonManagerInterface.java:17: error: cannot find symbol
+public interface RNMapsGooglePolygonManagerInterface<T extends View> 
+extends ViewManagerWithGeneratedInterface {
+                                                                        
+     ^
+  symbol: class ViewManagerWithGeneratedInterface
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsM
+apViewManagerInterface.java:16: error: cannot find symbol
+import com.facebook.react.uimanager.ViewManagerWithGeneratedInterface;
+                                   ^
+  symbol:   class ViewManagerWithGeneratedInterface
+  location: package com.facebook.react.uimanager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsM
+apViewManagerInterface.java:18: error: cannot find symbol
+public interface RNMapsMapViewManagerInterface<T extends View> extends 
+ViewManagerWithGeneratedInterface {
+                                                                       ^
+  symbol: class ViewManagerWithGeneratedInterface
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsM
+arkerManagerInterface.java:15: error: cannot find symbol
+import com.facebook.react.uimanager.ViewManagerWithGeneratedInterface;
+                                   ^
+  symbol:   class ViewManagerWithGeneratedInterface
+  location: package com.facebook.react.uimanager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsM
+arkerManagerInterface.java:17: error: cannot find symbol
+public interface RNMapsMarkerManagerInterface<T extends View> extends 
+ViewManagerWithGeneratedInterface {
+                                                                      ^
+  symbol: class ViewManagerWithGeneratedInterface
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsO
+verlayManagerInterface.java:15: error: cannot find symbol
+import com.facebook.react.uimanager.ViewManagerWithGeneratedInterface;
+                                   ^
+  symbol:   class ViewManagerWithGeneratedInterface
+  location: package com.facebook.react.uimanager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsO
+verlayManagerInterface.java:17: error: cannot find symbol
+public interface RNMapsOverlayManagerInterface<T extends View> extends 
+ViewManagerWithGeneratedInterface {
+                                                                       ^
+  symbol: class ViewManagerWithGeneratedInterface
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsP
+olylineManagerInterface.java:15: error: cannot find symbol
+import com.facebook.react.uimanager.ViewManagerWithGeneratedInterface;
+                                   ^
+  symbol:   class ViewManagerWithGeneratedInterface
+  location: package com.facebook.react.uimanager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsP
+olylineManagerInterface.java:17: error: cannot find symbol
+public interface RNMapsPolylineManagerInterface<T extends View> extends 
+ViewManagerWithGeneratedInterface {
+                                                                        
+^
+  symbol: class ViewManagerWithGeneratedInterface
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsU
+rlTileManagerInterface.java:14: error: cannot find symbol
+import com.facebook.react.uimanager.ViewManagerWithGeneratedInterface;
+                                   ^
+  symbol:   class ViewManagerWithGeneratedInterface
+  location: package com.facebook.react.uimanager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsU
+rlTileManagerInterface.java:16: error: cannot find symbol
+public interface RNMapsUrlTileManagerInterface<T extends View> extends 
+ViewManagerWithGeneratedInterface {
+                                                                       ^
+  symbol: class ViewManagerWithGeneratedInterface
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsW
+MSTileManagerInterface.java:14: error: cannot find symbol
+import com.facebook.react.uimanager.ViewManagerWithGeneratedInterface;
+                                   ^
+  symbol:   class ViewManagerWithGeneratedInterface
+  location: package com.facebook.react.uimanager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\facebook\react\viewmanagers\RNMapsW
+MSTileManagerInterface.java:16: error: cannot find symbol
+public interface RNMapsWMSTileManagerInterface<T extends View> extends 
+ViewManagerWithGeneratedInterface {
+                                                                       ^
+  symbol: class ViewManagerWithGeneratedInterface
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\maps\MapsPackage.java:6: 
+error: cannot find symbol
+import com.facebook.react.BaseReactPackage;
+                         ^
+  symbol:   class BaseReactPackage
+  location: package com.facebook.react
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\maps\MapsPackage.java:28: 
+error: cannot find symbol
+public class MapsPackage extends BaseReactPackage implements 
+ReactPackage {
+                                 ^
+  symbol: class BaseReactPackage
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\maps\MapUIBlock.java:7: 
+error: cannot find symbol
+import com.facebook.react.fabric.interop.UIBlockViewResolver;
+                                        ^
+  symbol:   class UIBlockViewResolver
+  location: package com.facebook.react.fabric.interop
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\maps\MapUIBlock.java:64: 
+error: cannot find symbol
+interface UIBlockInterface extends UIBlock, 
+com.facebook.react.fabric.interop.UIBlock  {}
+                                                                        
+     ^
+  symbol:   class UIBlock
+  location: package com.facebook.react.fabric.interop
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\maps\MapUIBlock.java:35: 
+error: cannot find symbol
+    public void execute(UIBlockViewResolver uiBlockViewResolver) {
+                        ^
+  symbol:   class UIBlockViewResolver
+  location: class MapUIBlock
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\maps\MapUIBlock.java:39: 
+error: cannot find symbol
+    private void executeImpl(NativeViewHierarchyManager nvhm, 
+UIBlockViewResolver uiBlockViewResolver) {
+                                                              ^
+  symbol:   class UIBlockViewResolver
+  location: class MapUIBlock
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\fabric\CalloutManager.java:2
+4: error: constructor ViewGroupManager in class ViewGroupManager<T> 
+cannot be applied to given types;
+        super(context);
+        ^
+  required: no arguments
+  found:    ReactApplicationContext
+  reason: actual and formal argument lists differ in length
+  where T is a type-variable:
+    T extends ViewGroup declared in class ViewGroupManager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\fabric\CircleManager.java:22
+: error: constructor ViewGroupManager in class ViewGroupManager<T> 
+cannot be applied to given types;
+        super(context);
+        ^
+  required: no arguments
+  found:    ReactApplicationContext
+  reason: actual and formal argument lists differ in length
+  where T is a type-variable:
+    T extends ViewGroup declared in class ViewGroupManager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\fabric\MapViewManager.java:5
+2: error: constructor ViewGroupManager in class ViewGroupManager<T> 
+cannot be applied to given types;
+        super(context);
+        ^
+  required: no arguments
+  found:    ReactApplicationContext
+  reason: actual and formal argument lists differ in length
+  where T is a type-variable:
+    T extends ViewGroup declared in class ViewGroupManager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\fabric\MapViewManager.java:2
+68: error: cannot find symbol
+            MapsInitializer.initialize(getReactApplicationContext(), 
+renderer, r -> Log.d("AirMapRenderer", "Init with renderer: " + r));
+                                       ^
+  symbol:   method getReactApplicationContext()
+  location: class MapViewManager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\fabric\MarkerManager.java:33
+: error: constructor ViewGroupManager in class ViewGroupManager<T> 
+cannot be applied to given types;
+        super(context);
+        ^
+  required: no arguments
+  found:    ReactApplicationContext
+  reason: actual and formal argument lists differ in length
+  where T is a type-variable:
+    T extends ViewGroup declared in class ViewGroupManager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\fabric\OverlayManager.java:2
+4: error: constructor ViewGroupManager in class ViewGroupManager<T> 
+cannot be applied to given types;
+        super(context);
+        ^
+  required: no arguments
+  found:    ReactApplicationContext
+  reason: actual and formal argument lists differ in length
+  where T is a type-variable:
+    T extends ViewGroup declared in class ViewGroupManager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\fabric\PolygonManager.java:2
+3: error: constructor ViewGroupManager in class ViewGroupManager<T> 
+cannot be applied to given types;
+        super(context);
+        ^
+  required: no arguments
+  found:    ReactApplicationContext
+  reason: actual and formal argument lists differ in length
+  where T is a type-variable:
+    T extends ViewGroup declared in class ViewGroupManager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\fabric\PolylineManager.java:
+28: error: constructor ViewGroupManager in class ViewGroupManager<T> 
+cannot be applied to given types;
+        super(context);
+        ^
+  required: no arguments
+  found:    ReactApplicationContext
+  reason: actual and formal argument lists differ in length
+  where T is a type-variable:
+    T extends ViewGroup declared in class ViewGroupManager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\fabric\UrlTileManager.java:2
+4: error: constructor ViewGroupManager in class ViewGroupManager<T> 
+cannot be applied to given types;
+        super(context);
+        ^
+  required: no arguments
+  found:    ReactApplicationContext
+  reason: actual and formal argument lists differ in length
+  where T is a type-variable:
+    T extends ViewGroup declared in class ViewGroupManager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\fabric\WMSTileManager.java:2
+3: error: constructor ViewGroupManager in class ViewGroupManager<T> 
+cannot be applied to given types;
+        super(context);
+        ^
+  required: no arguments
+  found:    ReactApplicationContext
+  reason: actual and formal argument lists differ in length
+  where T is a type-variable:
+    T extends ViewGroup declared in class ViewGroupManager
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\maps\MapsPackage.java:28: 
+error: MapsPackage is not abstract and does not override abstract 
+method createNativeModules(ReactApplicationContext) in ReactPackage
+public class MapsPackage extends BaseReactPackage implements 
+ReactPackage {
+       ^
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\maps\MapsPackage.java:83: 
+error: method does not override or implement a method from a supertype
+  @Override
+  ^
+D:\Startup-Project\doctor-appointment-system\mobile\node_modules\react-n
+ative-maps\android\src\main\java\com\rnmaps\maps\MapUIBlock.java:56: 
+error: cannot find symbol
+            ((FabricUIManager) uiManager).addUIBlock(this);
+                                         ^
+  symbol:   method addUIBlock(MapUIBlock)
+  location: class FabricUIManager
+Note: Some input files use or override a deprecated API.
+Note: Recompile with -Xlint:deprecation for details.
+Note: Some input files use unchecked or unsafe operations.
+Note: Recompile with -Xlint:unchecked for details.
+37 errors
+
+> Task :react-native-maps:compileDebugJavaWithJavac FAILED
+
+FAILURE: Build failed with an exception.
+
+* What went wrong:
+Execution failed for task 
+':react-native-maps:compileDebugJavaWithJavac'.
+> Compilation failed; see the compiler error output for details.
+
+* Try:
+> Run with --info option to get more log output.
+> Run with --scan to get full insights.
+
+Deprecated Gradle features were used in this build, making it incompatible with Gradle 9.0.
+
+You can use '--warning-mode all' to show the individual deprecation warnings and determine if they come from your own scripts or plugins.
+
+For more on this, please refer to https://docs.gradle.org/8.7/userguide/command_line_interface.html#sec:command_line_warnings in the Gradle documentation.
+
+BUILD FAILED in 59s
+13 actionable tasks: 1 executed, 12 up-to-date

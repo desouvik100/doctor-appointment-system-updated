@@ -25,9 +25,8 @@ import { useUser } from '../../context/UserContext';
 
 const { width } = Dimensions.get('window');
 
-// API base URL - adjust based on your environment
-const API_BASE_URL = 'http://10.0.2.2:5000/api'; // Android emulator
-// const API_BASE_URL = 'http://localhost:5000/api'; // iOS simulator
+// API base URL - Production
+const API_BASE_URL = 'https://doctor-appointment-system-updated.onrender.com/api';
 
 const MedicalImagingScreen = ({ navigation }) => {
   const { user } = useUser();

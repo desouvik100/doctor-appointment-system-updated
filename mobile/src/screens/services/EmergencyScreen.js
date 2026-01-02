@@ -16,6 +16,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { colors, shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
+import whatsappService from '../../services/whatsappService';
 
 const EmergencyScreen = ({ navigation }) => {
   const [sosActive, setSosActive] = useState(false);
@@ -66,7 +67,17 @@ const EmergencyScreen = ({ navigation }) => {
 
   const handleSOS = () => {
     setSosActive(true);
-    // In real app, this would trigger emergency protocols
+    // Send WhatsApp SOS with location
+    const mockLocation = {
+      latitude: 22.5726,
+      longitude: 88.3639,
+      address: 'Kolkata, West Bengal, India'
+    };
+    const userInfo = {
+      name: 'HealthSync User',
+      phone: '+91 9876543210'
+    };
+    whatsappService.sendEmergencySOS(mockLocation, userInfo);
     setTimeout(() => setSosActive(false), 3000);
   };
 

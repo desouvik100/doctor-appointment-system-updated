@@ -1,8 +1,8 @@
 /**
- * Login Screen - Modern Startup Design
+ * Login Screen - Modern Startup Design with Biometric Authentication
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -12,25 +12,105 @@ import {
   StatusBar,
   KeyboardAvoidingView,
   Platform,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
+import { authService } from '../../services/api';
+import { useUser } from '../../context/UserContext';
+import biometricService from '../../services/biometricService';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [biometricLoading, setBiometricLoading] = useState(false);
+  const [biometricAvailable, setBiometricAvailable] = useState(false);
+  const [biometricType, setBiometricType] = useState(null);
+  const [hasStoredCredentials, setHasStoredCredentials] = useState(false);
+  const { login } = useUser();
+
+  useEffect(() => {
+    checkBiometricAvailability();
+  }, []);
+
+  const checkBiometricAvailability = async () => {
+    const { available, biometryName } = await biometricService.isBiometricAvailable();
+    setBiometricAvailable(available);
+    setBiometricType(biometryName);
+    
+    if (available) {
+      const hasCredentials = await biometricService.hasStoredCredentials();
+      setHasStoredCredentials(hasCredentials);
+    }
+  };
 
   const handleLogin = async () => {
+    if (!email.trim() || !password) {
+      Alert.alert('Error', 'Please enter email and password');
+      return;
+    }
+
     setLoading(true);
-    // API call here
-    setTimeout(() => {
+    try {
+      const { user, token } = await authService.login({
+        email: email.trim().toLowerCase(),
+        password,
+      });
+      await login(user, token);
+      
+      // Offer to enable biometric login if available and not already set up
+      if (biometricAvailable && !hasStoredCredentials) {
+        Alert.alert(
+          `Enable ${biometricType}?`,
+          `Would you like to use ${biometricType} for faster sign-in next time?`,
+          [
+            { text: 'Not Now', style: 'cancel', onPress: () => navigation.replace('Main') },
+            { 
+              text: 'Enable', 
+              onPress: async () => {
+                try {
+                  await biometricService.enableBiometricLogin(email.trim().toLowerCase(), password);
+                  navigation.replace('Main');
+                } catch (error) {
+                  navigation.replace('Main');
+                }
+              }
+            },
+          ]
+        );
+      } else {
+        navigation.replace('Main');
+      }
+    } catch (error) {
+      const message = error.response?.data?.message || 'Login failed. Please check your credentials.';
+      Alert.alert('Login Failed', message);
+    } finally {
       setLoading(false);
+    }
+  };
+
+  const handleBiometricLogin = async () => {
+    setBiometricLoading(true);
+    try {
+      const credentials = await biometricService.biometricLogin();
+      
+      const { user, token } = await authService.login({
+        email: credentials.email,
+        password: credentials.password,
+      });
+      await login(user, token);
       navigation.replace('Main');
-    }, 1500);
+    } catch (error) {
+      if (error.message !== 'Biometric authentication failed') {
+        Alert.alert('Login Failed', 'Unable to sign in with biometrics. Please use your password.');
+      }
+    } finally {
+      setBiometricLoading(false);
+    }
   };
 
   return (
@@ -95,7 +175,10 @@ const LoginScreen = ({ navigation }) => {
                 secureTextEntry
               />
 
-              <TouchableOpacity style={styles.forgotPassword}>
+              <TouchableOpacity 
+                style={styles.forgotPassword}
+                onPress={() => navigation.navigate('ForgotPassword')}
+              >
                 <Text style={styles.forgotText}>Forgot password?</Text>
               </TouchableOpacity>
 
@@ -106,6 +189,24 @@ const LoginScreen = ({ navigation }) => {
                 fullWidth
                 size="large"
               />
+
+              {/* Biometric Login Button */}
+              {biometricAvailable && hasStoredCredentials && (
+                <TouchableOpacity
+                  style={styles.biometricButton}
+                  onPress={handleBiometricLogin}
+                  disabled={biometricLoading}
+                >
+                  <View style={styles.biometricIconContainer}>
+                    <Text style={styles.biometricIcon}>
+                      {biometricType === 'Face ID' ? '👤' : '👆'}
+                    </Text>
+                  </View>
+                  <Text style={styles.biometricText}>
+                    {biometricLoading ? 'Authenticating...' : `Sign in with ${biometricType}`}
+                  </Text>
+                </TouchableOpacity>
+              )}
 
               {/* Divider */}
               <View style={styles.divider}>
@@ -229,6 +330,28 @@ const styles = StyleSheet.create({
   forgotText: {
     ...typography.labelMedium,
     color: colors.primary,
+  },
+  biometricButton: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    marginTop: spacing.md,
+    backgroundColor: colors.surface,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  biometricIconContainer: {
+    marginRight: spacing.sm,
+  },
+  biometricIcon: {
+    fontSize: 20,
+  },
+  biometricText: {
+    ...typography.bodyMedium,
+    color: colors.textPrimary,
+    fontWeight: '500',
   },
   divider: {
     flexDirection: 'row',

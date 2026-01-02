@@ -4,6 +4,8 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { clearAuthTokens } from '../services/api/apiClient';
+import biometricService from '../services/biometricService';
 
 const UserContext = createContext();
 
@@ -31,21 +33,6 @@ export const UserProvider = ({ children }) => {
       if (userData && token) {
         const parsedUser = JSON.parse(userData);
         setUser({ ...parsedUser, token });
-      } else {
-        // Set demo user for development
-        const demoUser = {
-          id: '6507f1f4e4b0d03d109c5f2a', // Demo patient ID
-          _id: '6507f1f4e4b0d03d109c5f2a',
-          name: 'Alex Johnson',
-          email: 'alex.johnson@email.com',
-          phone: '+1234567890',
-          bloodType: 'O+',
-          memberSince: '2023',
-          token: 'demo-token'
-        };
-        setUser(demoUser);
-        await AsyncStorage.setItem('user', JSON.stringify(demoUser));
-        await AsyncStorage.setItem('token', 'demo-token');
       }
     } catch (error) {
       console.error('Error loading user:', error);
@@ -66,11 +53,47 @@ export const UserProvider = ({ children }) => {
 
   const logout = async () => {
     try {
+      // Clear user state
       setUser(null);
+      
+      // Clear auth tokens from secure storage
+      await clearAuthTokens();
+      
+      // Clear user data
       await AsyncStorage.removeItem('user');
       await AsyncStorage.removeItem('token');
+      await AsyncStorage.removeItem('userData');
+      
+      // Clear all cached data
+      const keys = await AsyncStorage.getAllKeys();
+      const keysToRemove = keys.filter(key => 
+        key.startsWith('cache_') || 
+        key.startsWith('offline_') ||
+        key === 'appointments' ||
+        key === 'favorites' ||
+        key === 'familyMembers' ||
+        key === 'notifications' ||
+        key === 'recentSearches'
+      );
+      
+      if (keysToRemove.length > 0) {
+        await AsyncStorage.multiRemove(keysToRemove);
+      }
+      
+      // Note: We don't clear biometric credentials on logout
+      // User can still use biometrics to log back in
     } catch (error) {
       console.error('Error logging out:', error);
+    }
+  };
+
+  const logoutAndClearBiometrics = async () => {
+    try {
+      await logout();
+      // Also clear biometric credentials
+      await biometricService.disableBiometricLogin();
+    } catch (error) {
+      console.error('Error clearing biometrics:', error);
     }
   };
 
@@ -91,6 +114,7 @@ export const UserProvider = ({ children }) => {
         loading,
         login,
         logout,
+        logoutAndClearBiometrics,
         updateUser,
         isLoggedIn: !!user
       }}
