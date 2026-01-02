@@ -333,20 +333,12 @@ function App() {
     setAdmin(null);
     setReceptionist(null);
     setDoctor(null);
-    setLoginType('patient');
-    setActiveSection('home');
     localStorage.removeItem("user");
     localStorage.removeItem("admin");
     localStorage.removeItem("receptionist");
     localStorage.removeItem("doctor");
     localStorage.removeItem("doctorToken");
-    localStorage.removeItem("token");
     setCurrentView("landing", true); // Replace history on logout
-    scrollToTop();
-    // Ensure any open overlays/menus are closed by dispatching a global event
-    try {
-      window.dispatchEvent(new CustomEvent('hs:close-overlays'));
-    } catch {}
     toast.success('Logged out successfully');
   };
 

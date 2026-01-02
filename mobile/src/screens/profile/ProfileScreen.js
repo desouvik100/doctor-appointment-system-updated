@@ -14,7 +14,7 @@ import {
   Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { shadows } from '../../theme/colors';
+import { colors, shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
@@ -25,7 +25,6 @@ import whatsappService from '../../services/whatsappService';
 const ProfileScreen = ({ navigation }) => {
   const { user, logout, loading } = useUser();
   const { isDarkMode, toggleTheme, colors } = useTheme();
-  const styles = React.useMemo(() => createStyles(colors), [colors]);
 
   const handleLogout = () => {
     Alert.alert(
@@ -266,224 +265,223 @@ const ProfileScreen = ({ navigation }) => {
 };
 
 
-const createStyles = (colors) =>
-  StyleSheet.create({
-    container: {
-      flex: 1,
-      backgroundColor: colors.background,
-    },
-    scrollContent: {
-      paddingBottom: 100,
-    },
-    header: {
-      flexDirection: 'row',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      paddingHorizontal: spacing.xl,
-      paddingTop: spacing.xxl,
-      paddingBottom: spacing.lg,
-    },
-    headerTitle: {
-      ...typography.displaySmall,
-      color: colors.textPrimary,
-    },
-    settingsBtn: {
-      width: 44,
-      height: 44,
-      borderRadius: borderRadius.lg,
-      backgroundColor: colors.surface,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 1,
-      borderColor: colors.surfaceBorder,
-    },
-    settingsIcon: {
-      fontSize: 20,
-    },
-    profileCard: {
-      marginHorizontal: spacing.xl,
-      borderRadius: borderRadius.xxl,
-      padding: spacing.xxl,
-      alignItems: 'center',
-      borderWidth: 1,
-      borderColor: colors.surfaceBorder,
-      marginBottom: spacing.xxl,
-    },
-    profileTop: {
-      position: 'relative',
-      marginBottom: spacing.lg,
-    },
-    editAvatarBtn: {
-      position: 'absolute',
-      bottom: 0,
-      right: -4,
-      width: 32,
-      height: 32,
-      borderRadius: 16,
-      backgroundColor: colors.primary,
-      alignItems: 'center',
-      justifyContent: 'center',
-      borderWidth: 3,
-      borderColor: colors.backgroundCard,
-    },
-    editAvatarIcon: {
-      fontSize: 14,
-    },
-    userName: {
-      ...typography.headlineLarge,
-      color: colors.textPrimary,
-      marginBottom: spacing.xs,
-    },
-    userEmail: {
-      ...typography.bodyMedium,
-      color: colors.textSecondary,
-      marginBottom: spacing.xl,
-    },
-    profileStats: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      marginBottom: spacing.xl,
-    },
-    statBox: {
-      alignItems: 'center',
-      paddingHorizontal: spacing.lg,
-    },
-    statValue: {
-      ...typography.headlineSmall,
-      color: colors.textPrimary,
-      marginBottom: 2,
-    },
-    statLabel: {
-      ...typography.labelSmall,
-      color: colors.textMuted,
-    },
-    statDivider: {
-      width: 1,
-      height: 32,
-      backgroundColor: colors.divider,
-    },
-    editProfileBtn: {
-      paddingHorizontal: spacing.xxl,
-      paddingVertical: spacing.md,
-      borderRadius: borderRadius.full,
-      borderWidth: 1,
-      borderColor: colors.primary,
-    },
-    editProfileText: {
-      ...typography.buttonSmall,
-      color: colors.primary,
-    },
-    quickActions: {
-      flexDirection: 'row',
-      justifyContent: 'space-around',
-      paddingHorizontal: spacing.xl,
-      marginBottom: spacing.xxl,
-    },
-    quickAction: {
-      alignItems: 'center',
-    },
-    quickActionIcon: {
-      width: 56,
-      height: 56,
-      borderRadius: borderRadius.lg,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginBottom: spacing.sm,
-      ...shadows.small,
-    },
-    quickActionEmoji: {
-      fontSize: 24,
-    },
-    quickActionLabel: {
-      ...typography.labelSmall,
-      color: colors.textSecondary,
-      textAlign: 'center',
-    },
-    menuSection: {
-      paddingHorizontal: spacing.xl,
-      marginBottom: spacing.xl,
-    },
-    sectionTitle: {
-      ...typography.labelMedium,
-      color: colors.textMuted,
-      marginBottom: spacing.md,
-      marginLeft: spacing.xs,
-      textTransform: 'uppercase',
-      letterSpacing: 1,
-    },
-    menuItem: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'space-between',
-      paddingVertical: spacing.md,
-      paddingHorizontal: spacing.lg,
-    },
-    menuItemLeft: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    menuIcon: {
-      width: 36,
-      height: 36,
-      borderRadius: borderRadius.md,
-      backgroundColor: colors.surfaceLight,
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginRight: spacing.md,
-    },
-    menuIconText: {
-      fontSize: 18,
-    },
-    menuLabel: {
-      ...typography.bodyLarge,
-      color: colors.textPrimary,
-    },
-    menuItemRight: {
-      flexDirection: 'row',
-      alignItems: 'center',
-    },
-    menuValue: {
-      ...typography.bodyMedium,
-      color: colors.textMuted,
-      marginRight: spacing.sm,
-    },
-    menuArrow: {
-      fontSize: 20,
-      color: colors.textMuted,
-      fontWeight: '300',
-    },
-    menuDivider: {
-      height: 1,
-      backgroundColor: colors.divider,
-      marginLeft: 60,
-    },
-    logoutBtn: {
-      flexDirection: 'row',
-      alignItems: 'center',
-      justifyContent: 'center',
-      marginHorizontal: spacing.xl,
-      marginTop: spacing.lg,
-      paddingVertical: spacing.lg,
-      borderRadius: borderRadius.lg,
-      backgroundColor: 'rgba(239, 68, 68, 0.1)',
-      borderWidth: 1,
-      borderColor: 'rgba(239, 68, 68, 0.3)',
-    },
-    logoutIcon: {
-      fontSize: 18,
-      marginRight: spacing.sm,
-    },
-    logoutText: {
-      ...typography.button,
-      color: colors.error,
-    },
-    version: {
-      ...typography.labelSmall,
-      color: colors.textMuted,
-      textAlign: 'center',
-      marginTop: spacing.xl,
-      marginBottom: spacing.xl,
-    },
-  });
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.lg,
+  },
+  headerTitle: {
+    ...typography.displaySmall,
+    color: colors.textPrimary,
+  },
+  settingsBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  settingsIcon: {
+    fontSize: 20,
+  },
+  profileCard: {
+    marginHorizontal: spacing.xl,
+    borderRadius: borderRadius.xxl,
+    padding: spacing.xxl,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    marginBottom: spacing.xxl,
+  },
+  profileTop: {
+    position: 'relative',
+    marginBottom: spacing.lg,
+  },
+  editAvatarBtn: {
+    position: 'absolute',
+    bottom: 0,
+    right: -4,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: colors.backgroundCard,
+  },
+  editAvatarIcon: {
+    fontSize: 14,
+  },
+  userName: {
+    ...typography.headlineLarge,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  userEmail: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+    marginBottom: spacing.xl,
+  },
+  profileStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  statBox: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  statValue: {
+    ...typography.headlineSmall,
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  statLabel: {
+    ...typography.labelSmall,
+    color: colors.textMuted,
+  },
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: colors.divider,
+  },
+  editProfileBtn: {
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  editProfileText: {
+    ...typography.buttonSmall,
+    color: colors.primary,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.xxl,
+  },
+  quickAction: {
+    alignItems: 'center',
+  },
+  quickActionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+    ...shadows.small,
+  },
+  quickActionEmoji: {
+    fontSize: 24,
+  },
+  quickActionLabel: {
+    ...typography.labelSmall,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  menuSection: {
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.xl,
+  },
+  sectionTitle: {
+    ...typography.labelMedium,
+    color: colors.textMuted,
+    marginBottom: spacing.md,
+    marginLeft: spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.surfaceLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  menuIconText: {
+    fontSize: 18,
+  },
+  menuLabel: {
+    ...typography.bodyLarge,
+    color: colors.textPrimary,
+  },
+  menuItemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuValue: {
+    ...typography.bodyMedium,
+    color: colors.textMuted,
+    marginRight: spacing.sm,
+  },
+  menuArrow: {
+    fontSize: 20,
+    color: colors.textMuted,
+    fontWeight: '300',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: colors.divider,
+    marginLeft: 60,
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.lg,
+    paddingVertical: spacing.lg,
+    borderRadius: borderRadius.lg,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  logoutIcon: {
+    fontSize: 18,
+    marginRight: spacing.sm,
+  },
+  logoutText: {
+    ...typography.button,
+    color: colors.error,
+  },
+  version: {
+    ...typography.labelSmall,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: spacing.xl,
+    marginBottom: spacing.xl,
+  },
+});
 
 export default ProfileScreen;

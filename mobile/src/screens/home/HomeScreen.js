@@ -2,7 +2,7 @@
  * Home Screen - Modern Dashboard with Pull-to-Refresh
  */
 
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -24,6 +24,9 @@ import {
   WalletSummary, 
   HealthTips 
 } from './components';
+import { getUpcomingAppointments } from '../../services/api/appointmentService';
+import { getBalance, getLoyaltyPoints } from '../../services/api/walletService';
+import { getVitalsHistory, getTimeline } from '../../services/api/healthRecordService';
 
 const { width } = Dimensions.get('window');
 
@@ -31,31 +34,18 @@ const HomeScreen = ({ navigation }) => {
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
-    appointments: [
-      {
-        id: '1',
-        doctorName: 'Dr. Sarah Wilson',
-        specialty: 'Cardiologist',
-        dateTime: new Date(Date.now() + 2 * 60 * 60 * 1000).toISOString(),
-        type: 'video',
-      },
-      {
-        id: '2',
-        doctorName: 'Dr. Michael Chen',
-        specialty: 'General Physician',
-        dateTime: new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString(),
-        type: 'in-person',
-      },
-    ],
-    walletBalance: 2500.00,
-    loyaltyPoints: 1250,
+    appointments: [],
+    walletBalance: 0,
+    loyaltyPoints: 0,
     healthMetrics: [
-      { label: 'Heart Rate', value: '72', unit: 'bpm', icon: '❤️', trend: 'stable' },
-      { label: 'Blood Pressure', value: '120/80', unit: 'mmHg', icon: '🩺', trend: 'good' },
-      { label: 'Sleep', value: '7.5', unit: 'hrs', icon: '😴', trend: 'up' },
-      { label: 'Steps', value: '8,432', unit: 'steps', icon: '👟', trend: 'up' },
+      { label: 'Heart Rate', value: '--', unit: 'bpm', icon: '❤️', trend: 'stable' },
+      { label: 'Blood Pressure', value: '--/--', unit: 'mmHg', icon: '🩺', trend: 'good' },
+      { label: 'Sleep', value: '--', unit: 'hrs', icon: '😴', trend: 'up' },
+      { label: 'Steps', value: '--', unit: 'steps', icon: '👟', trend: 'up' },
     ],
+    recentActivity: []
   });
 
   const getGreeting = () => {
@@ -65,16 +55,100 @@ const HomeScreen = ({ navigation }) => {
     return 'Good evening';
   };
 
+  const fetchDashboardData = useCallback(async () => {
+    if (!user?.id) {
+      setLoading(false);
+      setRefreshing(false);
+      return;
+    }
+
+    try {
+      const [appointmentsData, balanceData, loyaltyData, vitalsData, timelineData] = await Promise.all([
+        getUpcomingAppointments().catch(err => {
+          console.error('Error fetching appointments:', err);
+          return [];
+        }),
+        getBalance().catch(err => {
+          console.error('Error fetching balance:', err);
+          return { balance: 0 };
+        }),
+        getLoyaltyPoints().catch(err => {
+          // Error logged in service for critical failures, otherwise suppressed
+          return { points: 0 };
+        }),
+        getVitalsHistory(user.id).catch(err => {
+          console.error('Error fetching vitals:', err);
+          return { data: [] };
+        }),
+        getTimeline(user.id).catch(err => {
+          console.error('Error fetching timeline:', err);
+          return { timeline: [] };
+        })
+      ]);
+
+      const rawAppointments = Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData.data || []);
+      
+      const formattedAppointments = rawAppointments.map(app => ({
+        id: app._id || app.id,
+        doctorName: app.doctor?.name || 'Unknown Doctor',
+        specialty: app.doctor?.specialization || 'General',
+        dateTime: app.date || app.appointmentDate,
+        type: app.type || 'video',
+      }));
+
+      // Process Vitals
+      // Note: This logic depends on the actual structure of vitalsData from backend
+      // Assuming vitalsData.data is an array of vital records
+      const rawVitals = vitalsData?.data || []; 
+      
+      // Default metrics
+      let metrics = [
+        { label: 'Heart Rate', value: '--', unit: 'bpm', icon: '❤️', trend: 'stable' },
+        { label: 'Blood Pressure', value: '--/--', unit: 'mmHg', icon: '🩺', trend: 'good' },
+        { label: 'Weight', value: '--', unit: 'kg', icon: '⚖️', trend: 'stable' },
+        { label: 'Temperature', value: '--', unit: '°C', icon: '🌡️', trend: 'stable' },
+      ];
+
+      // If we have data, try to extract latest values
+      // This is a simplified extraction
+      if (rawVitals.length > 0) {
+        // Example: logic to parse vitals would go here
+      }
+
+      // Process Timeline
+      const rawTimeline = timelineData?.timeline || [];
+      const activities = rawTimeline.slice(0, 5).map(item => ({
+        icon: item.icon || '📌',
+        title: item.title || 'Activity',
+        desc: item.description || item.subtitle || '',
+        time: item.date ? new Date(item.date).toLocaleDateString() : 'Recent'
+      }));
+
+      setDashboardData(prev => ({
+        ...prev,
+        appointments: formattedAppointments,
+        walletBalance: balanceData.balance || 0,
+        loyaltyPoints: loyaltyData.points || 0,
+        healthMetrics: metrics,
+        recentActivity: activities
+      }));
+
+    } catch (error) {
+      console.error('Error fetching dashboard data:', error);
+    } finally {
+      setLoading(false);
+    }
+  }, [user?.id]);
+
+  useEffect(() => {
+    fetchDashboardData();
+  }, [fetchDashboardData]);
+
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    try {
-      await new Promise(resolve => setTimeout(resolve, 1000));
-    } catch (error) {
-      console.error('Error refreshing dashboard:', error);
-    } finally {
-      setRefreshing(false);
-    }
-  }, []);
+    await fetchDashboardData();
+    setRefreshing(false);
+  }, [fetchDashboardData]);
 
   const handleJoinCall = (appointment) => {
     navigation.navigate('VideoConsult', { appointmentId: appointment.id });
@@ -192,14 +266,10 @@ const HomeScreen = ({ navigation }) => {
           </View>
 
           <Card variant="default" style={{ backgroundColor: colors.surface }}>
-            {[
-              { icon: '💊', title: 'Medication Reminder', desc: 'Metformin 500mg taken', time: '2h ago' },
-              { icon: '📋', title: 'Lab Results Ready', desc: 'Blood work results available', time: '5h ago' },
-              { icon: '✅', title: 'Appointment Completed', desc: 'Dr. Michael Chen - General', time: 'Yesterday' },
-            ].map((item, index) => (
+            {dashboardData.recentActivity?.map((item, index) => (
               <TouchableOpacity key={index} style={[
                 styles.activityItem,
-                index < 2 && [styles.activityItemBorder, { borderBottomColor: colors.divider }],
+                index < (dashboardData.recentActivity?.length || 0) - 1 && [styles.activityItemBorder, { borderBottomColor: colors.divider }],
               ]}>
                 <View style={[styles.activityIcon, { backgroundColor: colors.surfaceLight }]}>
                   <Text style={styles.activityEmoji}>{item.icon}</Text>

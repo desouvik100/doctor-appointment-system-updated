@@ -1,8 +1,8 @@
 /**
- * Doctors Screen - Find & Book Doctors
+ * Doctors Screen - Find & Book Doctors (Connected to Production API)
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -13,141 +13,162 @@ import {
   TextInput,
   FlatList,
   Dimensions,
+  ActivityIndicator,
+  RefreshControl,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
+import { doctorService } from '../../services/api';
 
 const { width } = Dimensions.get('window');
 
 const DoctorsScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState(null);
+  const [doctors, setDoctors] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
+  const [error, setError] = useState(null);
 
   const specialties = [
-    { id: 'all', label: 'All', icon: '🏥' },
-    { id: 'cardio', label: 'Cardiology', icon: '❤️' },
-    { id: 'derma', label: 'Dermatology', icon: '🧴' },
-    { id: 'neuro', label: 'Neurology', icon: '🧠' },
-    { id: 'ortho', label: 'Orthopedics', icon: '🦴' },
-    { id: 'pedia', label: 'Pediatrics', icon: '👶' },
-    { id: 'psych', label: 'Psychiatry', icon: '🧘' },
+    { id: 'all', label: 'All', icon: '🏥', value: null },
+    { id: 'cardio', label: 'Cardiology', icon: '❤️', value: 'Cardiology' },
+    { id: 'derma', label: 'Dermatology', icon: '🧴', value: 'Dermatology' },
+    { id: 'neuro', label: 'Neurology', icon: '🧠', value: 'Neurology' },
+    { id: 'ortho', label: 'Orthopedics', icon: '🦴', value: 'Orthopedics' },
+    { id: 'pedia', label: 'Pediatrics', icon: '👶', value: 'Pediatrics' },
+    { id: 'general', label: 'General', icon: '👨‍⚕️', value: 'General Physician' },
   ];
 
-  const doctors = [
-    {
-      id: '1',
-      name: 'Dr. Sarah Wilson',
-      specialty: 'Cardiologist',
-      hospital: 'City Heart Center',
-      rating: 4.9,
-      reviews: 234,
-      experience: '12 years',
-      fee: '$150',
-      available: true,
-      nextSlot: 'Today, 3:00 PM',
-    },
-    {
-      id: '2',
-      name: 'Dr. Michael Chen',
-      specialty: 'General Physician',
-      hospital: 'HealthFirst Clinic',
-      rating: 4.8,
-      reviews: 189,
-      experience: '8 years',
-      fee: '$80',
-      available: true,
-      nextSlot: 'Tomorrow, 10:00 AM',
-    },
-    {
-      id: '3',
-      name: 'Dr. Emily Parker',
-      specialty: 'Dermatologist',
-      hospital: 'Skin Care Institute',
-      rating: 4.7,
-      reviews: 156,
-      experience: '10 years',
-      fee: '$120',
-      available: false,
-      nextSlot: 'Dec 30, 2:00 PM',
-    },
-    {
-      id: '4',
-      name: 'Dr. James Rodriguez',
-      specialty: 'Neurologist',
-      hospital: 'Brain & Spine Center',
-      rating: 4.9,
-      reviews: 312,
-      experience: '15 years',
-      fee: '$200',
-      available: true,
-      nextSlot: 'Today, 5:30 PM',
-    },
-  ];
+  const fetchDoctors = useCallback(async () => {
+    try {
+      setError(null);
+      const params = {};
+      
+      if (searchQuery.trim()) {
+        params.search = searchQuery.trim();
+      }
+      
+      if (selectedSpecialty) {
+        const specialty = specialties.find(s => s.id === selectedSpecialty);
+        if (specialty?.value) {
+          params.specialization = specialty.value;
+        }
+      }
+
+      const response = await doctorService.searchDoctors(params);
+      setDoctors(response.doctors || response.data || response || []);
+    } catch (err) {
+      console.error('Error fetching doctors:', err);
+      setError('Failed to load doctors. Please try again.');
+      setDoctors([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [searchQuery, selectedSpecialty]);
+
+  useEffect(() => {
+    fetchDoctors();
+  }, [fetchDoctors]);
+
+  const onRefresh = useCallback(() => {
+    setRefreshing(true);
+    fetchDoctors();
+  }, [fetchDoctors]);
+
+  const handleSearch = () => {
+    setLoading(true);
+    fetchDoctors();
+  };
 
   const renderDoctorCard = ({ item }) => (
-    <Card variant="gradient" style={styles.doctorCard} onPress={() => {}}>
-      <View style={styles.cardTop}>
-        <Avatar name={item.name} size="xlarge" showBorder />
-        <View style={styles.doctorInfo}>
-          <Text style={styles.doctorName}>{item.name}</Text>
-          <Text style={styles.specialty}>{item.specialty}</Text>
-          <Text style={styles.hospital}>{item.hospital}</Text>
-          
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statIcon}>⭐</Text>
-              <Text style={styles.statValue}>{item.rating}</Text>
-              <Text style={styles.statLabel}>({item.reviews})</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statIcon}>🎓</Text>
-              <Text style={styles.statValue}>{item.experience}</Text>
-            </View>
-          </View>
-        </View>
-      </View>
-
-      <View style={styles.cardBottom}>
-        <View style={styles.feeSection}>
-          <Text style={styles.feeLabel}>Consultation Fee</Text>
-          <Text style={styles.feeValue}>{item.fee}</Text>
-        </View>
-        
-        <View style={styles.slotSection}>
-          <View style={[
-            styles.availabilityBadge,
-            item.available ? styles.availableNow : styles.availableLater,
-          ]}>
-            <View style={[
-              styles.availabilityDot,
-              { backgroundColor: item.available ? colors.success : colors.warning },
-            ]} />
-            <Text style={styles.availabilityText}>
-              {item.available ? 'Available' : 'Next Available'}
-            </Text>
-          </View>
-          <Text style={styles.nextSlot}>{item.nextSlot}</Text>
-        </View>
-      </View>
-
+    <Card variant="gradient" style={styles.doctorCard}>
       <TouchableOpacity 
-        style={styles.bookBtn}
-        onPress={() => navigation.navigate('Booking', { doctor: item })}
+        activeOpacity={0.9}
+        onPress={() => navigation.navigate('DoctorProfile', { doctorId: item._id })}
       >
-        <LinearGradient
-          colors={colors.gradientPrimary}
-          start={{ x: 0, y: 0 }}
-          end={{ x: 1, y: 0 }}
-          style={styles.bookBtnGradient}
+        <View style={styles.cardTop}>
+          <Avatar 
+            name={item.name} 
+            size="xlarge" 
+            showBorder 
+            source={item.photo ? { uri: item.photo } : null}
+          />
+          <View style={styles.doctorInfo}>
+            <Text style={styles.doctorName}>{item.name}</Text>
+            <Text style={styles.specialty}>{item.specialization || item.specialty}</Text>
+            <Text style={styles.hospital}>{item.hospital || item.clinic || 'HealthSync Clinic'}</Text>
+            
+            <View style={styles.statsRow}>
+              <View style={styles.statItem}>
+                <Text style={styles.statIcon}>⭐</Text>
+                <Text style={styles.statValue}>{item.rating || '4.5'}</Text>
+                <Text style={styles.statLabel}>({item.reviewCount || item.reviews || 0})</Text>
+              </View>
+              <View style={styles.statDivider} />
+              <View style={styles.statItem}>
+                <Text style={styles.statIcon}>🎓</Text>
+                <Text style={styles.statValue}>{item.experience || '5'} yrs</Text>
+              </View>
+            </View>
+          </View>
+        </View>
+
+        <View style={styles.cardBottom}>
+          <View style={styles.feeSection}>
+            <Text style={styles.feeLabel}>Consultation Fee</Text>
+            <Text style={styles.feeValue}>₹{item.fee || item.consultationFee || 500}</Text>
+          </View>
+          
+          <View style={styles.slotSection}>
+            <View style={[
+              styles.availabilityBadge,
+              item.isAvailable !== false ? styles.availableNow : styles.availableLater,
+            ]}>
+              <View style={[
+                styles.availabilityDot,
+                { backgroundColor: item.isAvailable !== false ? colors.success : colors.warning },
+              ]} />
+              <Text style={styles.availabilityText}>
+                {item.isAvailable !== false ? 'Available' : 'Busy'}
+              </Text>
+            </View>
+            <Text style={styles.nextSlot}>{item.nextAvailable || 'Book Now'}</Text>
+          </View>
+        </View>
+
+        <TouchableOpacity 
+          style={styles.bookBtn}
+          onPress={() => navigation.navigate('Booking', { doctor: item })}
         >
-          <Text style={styles.bookBtnText}>Book Appointment</Text>
-        </LinearGradient>
+          <LinearGradient
+            colors={colors.gradientPrimary}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.bookBtnGradient}
+          >
+            <Text style={styles.bookBtnText}>Book Appointment</Text>
+          </LinearGradient>
+        </TouchableOpacity>
       </TouchableOpacity>
     </Card>
+  );
+
+  const renderEmptyState = () => (
+    <View style={styles.emptyState}>
+      <Text style={styles.emptyIcon}>👨‍⚕️</Text>
+      <Text style={styles.emptyTitle}>No Doctors Found</Text>
+      <Text style={styles.emptyText}>
+        {error || 'Try adjusting your search or filters'}
+      </Text>
+      <TouchableOpacity style={styles.retryBtn} onPress={onRefresh}>
+        <Text style={styles.retryText}>Retry</Text>
+      </TouchableOpacity>
+    </View>
   );
 
   return (
@@ -172,9 +193,11 @@ const DoctorsScreen = ({ navigation }) => {
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
             onChangeText={setSearchQuery}
+            onSubmitEditing={handleSearch}
+            returnKeyType="search"
           />
           {searchQuery.length > 0 && (
-            <TouchableOpacity onPress={() => setSearchQuery('')}>
+            <TouchableOpacity onPress={() => { setSearchQuery(''); handleSearch(); }}>
               <Text style={styles.clearIcon}>✕</Text>
             </TouchableOpacity>
           )}
@@ -195,9 +218,10 @@ const DoctorsScreen = ({ navigation }) => {
                 styles.specialtyChip,
                 selectedSpecialty === specialty.id && styles.specialtyChipActive,
               ]}
-              onPress={() => setSelectedSpecialty(
-                selectedSpecialty === specialty.id ? null : specialty.id
-              )}
+              onPress={() => {
+                setSelectedSpecialty(selectedSpecialty === specialty.id ? null : specialty.id);
+                setLoading(true);
+              }}
             >
               {selectedSpecialty === specialty.id ? (
                 <LinearGradient
@@ -222,7 +246,9 @@ const DoctorsScreen = ({ navigation }) => {
 
       {/* Results Count */}
       <View style={styles.resultsHeader}>
-        <Text style={styles.resultsCount}>{doctors.length} doctors found</Text>
+        <Text style={styles.resultsCount}>
+          {loading ? 'Loading...' : `${doctors.length} doctors found`}
+        </Text>
         <TouchableOpacity style={styles.sortBtn}>
           <Text style={styles.sortText}>Sort by: Rating</Text>
           <Text style={styles.sortIcon}>▼</Text>
@@ -230,13 +256,29 @@ const DoctorsScreen = ({ navigation }) => {
       </View>
 
       {/* Doctors List */}
-      <FlatList
-        data={doctors}
-        renderItem={renderDoctorCard}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-      />
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading doctors...</Text>
+        </View>
+      ) : (
+        <FlatList
+          data={doctors}
+          renderItem={renderDoctorCard}
+          keyExtractor={(item) => item._id || item.id || Math.random().toString()}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          ListEmptyComponent={renderEmptyState}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              tintColor={colors.primary}
+              colors={[colors.primary]}
+            />
+          }
+        />
+      )}
     </View>
   );
 };
@@ -365,6 +407,16 @@ const styles = StyleSheet.create({
     color: colors.primary,
     marginLeft: spacing.xs,
   },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+    marginTop: spacing.md,
+  },
   listContent: {
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.huge,
@@ -484,6 +536,37 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   bookBtnText: {
+    ...typography.button,
+    color: colors.textInverse,
+  },
+  emptyState: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.huge,
+  },
+  emptyIcon: {
+    fontSize: 64,
+    marginBottom: spacing.lg,
+  },
+  emptyTitle: {
+    ...typography.headlineMedium,
+    color: colors.textPrimary,
+    marginBottom: spacing.sm,
+  },
+  emptyText: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+    textAlign: 'center',
+    marginBottom: spacing.lg,
+  },
+  retryBtn: {
+    backgroundColor: colors.primary,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+  },
+  retryText: {
     ...typography.button,
     color: colors.textInverse,
   },

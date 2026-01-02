@@ -8,7 +8,8 @@ import apiClient from './apiClient';
  * Get medical timeline
  */
 export const getTimeline = async (patientId, params = {}) => {
-  const response = await apiClient.get(`/patients/${patientId}/timeline`, { params });
+  // Use export route which generates timeline
+  const response = await apiClient.get(`/export/timeline/${patientId}`, { params });
   return response.data;
 };
 
@@ -68,7 +69,8 @@ export const getPrescriptionById = async (prescriptionId) => {
  * Get vitals history
  */
 export const getVitalsHistory = async (patientId, params = {}) => {
-  const response = await apiClient.get(`/patients/${patientId}/vitals`, { params });
+  // Use EMR trends route
+  const response = await apiClient.get(`/emr/patients/${patientId}/vitals/trends`, { params });
   return response.data;
 };
 
