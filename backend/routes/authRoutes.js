@@ -1861,6 +1861,190 @@ router.post('/clinic/google-signin', async (req, res) => {
   }
 });
 
+// ==========================================
+// FACEBOOK SIGN-IN
+// ==========================================
+
+/**
+ * @swagger
+ * /auth/facebook-signin:
+ *   post:
+ *     summary: Facebook Sign-In for patients
+ *     description: Authenticates or registers a patient using Facebook OAuth
+ *     tags: [Auth]
+ */
+router.post('/facebook-signin', async (req, res) => {
+  try {
+    const { email, name, facebookId, profilePhoto, accessToken } = req.body;
+
+    if (!email || !facebookId) {
+      return res.status(400).json({ message: 'Email and Facebook ID are required' });
+    }
+
+    const normalizedEmail = email.toLowerCase().trim();
+
+    // Check if user exists
+    let user = await User.findOne({ email: normalizedEmail, role: 'patient' });
+    let isNewUser = false;
+
+    if (user) {
+      // User exists - update Facebook ID if not set
+      if (!user.facebookId) {
+        user.facebookId = facebookId;
+      }
+      if (profilePhoto && !user.profilePhoto) {
+        user.profilePhoto = profilePhoto;
+      }
+      await user.save();
+    } else {
+      // Create new user
+      isNewUser = true;
+      user = new User({
+        name: name || 'Facebook User',
+        email: normalizedEmail,
+        facebookId: facebookId,
+        profilePhoto: profilePhoto,
+        role: 'patient',
+        password: await bcrypt.hash(facebookId + Date.now(), 10), // Random password for social users
+        isVerified: true
+      });
+      await user.save();
+
+      // Award signup bonus
+      try {
+        const loyalty = new LoyaltyPoints({ userId: user._id });
+        loyalty.addPoints(100, 'Welcome bonus: 100 points for signing up!', 'signup', user._id);
+        await loyalty.save();
+      } catch (loyaltyError) {
+        console.error('Error creating loyalty account:', loyaltyError);
+      }
+    }
+
+    // Generate token
+    const token = jwt.sign(
+      { userId: user._id, role: user.role, clinicId: user.clinicId || null },
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '24h' }
+    );
+
+    console.log(`✅ Facebook sign-in successful for: ${normalizedEmail} (${isNewUser ? 'new user' : 'existing user'})`);
+
+    res.json({
+      token,
+      isNewUser,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        profilePhoto: user.profilePhoto,
+        clinicId: user.clinicId || null
+      }
+    });
+  } catch (error) {
+    console.error('Facebook sign-in error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// ==========================================
+// APPLE SIGN-IN
+// ==========================================
+
+/**
+ * @swagger
+ * /auth/apple-signin:
+ *   post:
+ *     summary: Apple Sign-In for patients (iOS only)
+ *     description: Authenticates or registers a patient using Apple Sign-In
+ *     tags: [Auth]
+ */
+router.post('/apple-signin', async (req, res) => {
+  try {
+    const { email, name, appleId, identityToken } = req.body;
+
+    if (!appleId) {
+      return res.status(400).json({ message: 'Apple ID is required' });
+    }
+
+    // Apple may not provide email on subsequent sign-ins, so we need to handle that
+    let user = await User.findOne({ appleId: appleId, role: 'patient' });
+    let isNewUser = false;
+
+    if (user) {
+      // User exists - update name if provided and not set
+      if (name && !user.name) {
+        user.name = name;
+      }
+      await user.save();
+    } else if (email) {
+      // Check if user exists with this email
+      user = await User.findOne({ email: email.toLowerCase().trim(), role: 'patient' });
+      
+      if (user) {
+        // Link Apple ID to existing account
+        user.appleId = appleId;
+        if (name && !user.name) {
+          user.name = name;
+        }
+        await user.save();
+      } else {
+        // Create new user
+        isNewUser = true;
+        user = new User({
+          name: name || 'Apple User',
+          email: email.toLowerCase().trim(),
+          appleId: appleId,
+          role: 'patient',
+          password: await bcrypt.hash(appleId + Date.now(), 10),
+          isVerified: true
+        });
+        await user.save();
+
+        // Award signup bonus
+        try {
+          const loyalty = new LoyaltyPoints({ userId: user._id });
+          loyalty.addPoints(100, 'Welcome bonus: 100 points for signing up!', 'signup', user._id);
+          await loyalty.save();
+        } catch (loyaltyError) {
+          console.error('Error creating loyalty account:', loyaltyError);
+        }
+      }
+    } else {
+      return res.status(400).json({ 
+        message: 'Email is required for first-time Apple Sign-In. Please allow email access in Apple Sign-In settings.' 
+      });
+    }
+
+    // Generate token
+    const token = jwt.sign(
+      { userId: user._id, role: user.role, clinicId: user.clinicId || null },
+      process.env.JWT_SECRET || 'fallback_secret',
+      { expiresIn: '24h' }
+    );
+
+    console.log(`✅ Apple sign-in successful for: ${user.email} (${isNewUser ? 'new user' : 'existing user'})`);
+
+    res.json({
+      token,
+      isNewUser,
+      user: {
+        id: user._id,
+        name: user.name,
+        email: user.email,
+        role: user.role,
+        phone: user.phone,
+        profilePhoto: user.profilePhoto,
+        clinicId: user.clinicId || null
+      }
+    });
+  } catch (error) {
+    console.error('Apple sign-in error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // ============================================
 // TEST EMAIL ENDPOINT (for debugging)
 // ============================================

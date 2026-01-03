@@ -40,6 +40,14 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null // Google OAuth ID for social login
     },
+    facebookId: {
+      type: String,
+      default: null // Facebook OAuth ID for social login
+    },
+    appleId: {
+      type: String,
+      default: null // Apple Sign-In ID for social login
+    },
     role: {
       type: String,
       enum: ["patient", "admin", "receptionist"],

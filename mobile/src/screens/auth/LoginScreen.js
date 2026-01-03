@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, shadows } from '../../theme/colors';
@@ -22,6 +23,7 @@ import Input from '../../components/common/Input';
 import authService from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
 import biometricService from '../../services/biometricService';
+import socialAuthService from '../../services/socialAuthService';
 
 const LoginScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -31,6 +33,7 @@ const LoginScreen = ({ navigation }) => {
   const [biometricAvailable, setBiometricAvailable] = useState(false);
   const [biometricType, setBiometricType] = useState(null);
   const [hasStoredCredentials, setHasStoredCredentials] = useState(false);
+  const [socialLoading, setSocialLoading] = useState(null); // 'google' | 'facebook' | 'apple' | null
   const { login } = useUser();
 
   useEffect(() => {
@@ -122,6 +125,77 @@ const LoginScreen = ({ navigation }) => {
       }
     } finally {
       setBiometricLoading(false);
+    }
+  };
+
+  const handleGoogleSignIn = async () => {
+    setSocialLoading('google');
+    try {
+      const { user, token, isNewUser } = await socialAuthService.signInWithGoogle();
+      await login(user, token);
+      
+      if (isNewUser) {
+        Alert.alert('Welcome!', 'Your account has been created successfully.', [
+          { text: 'OK', onPress: () => navigation.replace('Main') }
+        ]);
+      } else {
+        navigation.replace('Main');
+      }
+    } catch (error) {
+      if (error.message !== 'Sign in cancelled') {
+        Alert.alert('Google Sign-In Failed', error.message || 'Unable to sign in with Google. Please try again.');
+      }
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  const handleFacebookSignIn = async () => {
+    setSocialLoading('facebook');
+    try {
+      const { user, token, isNewUser } = await socialAuthService.signInWithFacebook();
+      await login(user, token);
+      
+      if (isNewUser) {
+        Alert.alert('Welcome!', 'Your account has been created successfully.', [
+          { text: 'OK', onPress: () => navigation.replace('Main') }
+        ]);
+      } else {
+        navigation.replace('Main');
+      }
+    } catch (error) {
+      if (error.message !== 'Sign in cancelled') {
+        Alert.alert('Facebook Sign-In Failed', error.message || 'Unable to sign in with Facebook. Please try again.');
+      }
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  const handleAppleSignIn = async () => {
+    if (Platform.OS !== 'ios') {
+      Alert.alert('Not Available', 'Apple Sign-In is only available on iOS devices.');
+      return;
+    }
+    
+    setSocialLoading('apple');
+    try {
+      const { user, token, isNewUser } = await socialAuthService.signInWithApple();
+      await login(user, token);
+      
+      if (isNewUser) {
+        Alert.alert('Welcome!', 'Your account has been created successfully.', [
+          { text: 'OK', onPress: () => navigation.replace('Main') }
+        ]);
+      } else {
+        navigation.replace('Main');
+      }
+    } catch (error) {
+      if (error.message !== 'Sign in cancelled') {
+        Alert.alert('Apple Sign-In Failed', error.message || 'Unable to sign in with Apple. Please try again.');
+      }
+    } finally {
+      setSocialLoading(null);
     }
   };
 
@@ -229,14 +303,38 @@ const LoginScreen = ({ navigation }) => {
 
               {/* Social Login */}
               <View style={styles.socialButtons}>
-                <TouchableOpacity style={styles.socialBtn}>
-                  <Text style={styles.socialIcon}>G</Text>
+                <TouchableOpacity 
+                  style={[styles.socialBtn, socialLoading === 'google' && styles.socialBtnLoading]}
+                  onPress={handleGoogleSignIn}
+                  disabled={socialLoading !== null}
+                >
+                  {socialLoading === 'google' ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <Text style={styles.socialIcon}>G</Text>
+                  )}
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.socialBtn}>
-                  <Text style={styles.socialIcon}>f</Text>
+                <TouchableOpacity 
+                  style={[styles.socialBtn, socialLoading === 'facebook' && styles.socialBtnLoading]}
+                  onPress={handleFacebookSignIn}
+                  disabled={socialLoading !== null}
+                >
+                  {socialLoading === 'facebook' ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <Text style={[styles.socialIcon, { color: '#1877F2' }]}>f</Text>
+                  )}
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.socialBtn}>
-                  <Text style={styles.socialIcon}>🍎</Text>
+                <TouchableOpacity 
+                  style={[styles.socialBtn, socialLoading === 'apple' && styles.socialBtnLoading]}
+                  onPress={handleAppleSignIn}
+                  disabled={socialLoading !== null}
+                >
+                  {socialLoading === 'apple' ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <Text style={styles.socialIcon}>🍎</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -394,6 +492,9 @@ const styles = StyleSheet.create({
     borderColor: colors.surfaceBorder,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  socialBtnLoading: {
+    opacity: 0.7,
   },
   socialIcon: {
     fontSize: 20,

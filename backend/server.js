@@ -282,6 +282,7 @@ app.use('/api/chatbot', require('./routes/chatbotRoutes'));
 app.use('/api/token', require('./routes/tokenRoutes'));
 app.use('/api/otp', require('./routes/otpRoutes'));
 app.use('/api/google', require('./routes/googleRoutes'));
+app.use('/api/whatsapp', require('./routes/whatsappRoutes'));
 app.use('/api/consultations', require('./routes/consultationRoutes'));
 app.use('/api/location', require('./routes/locationRoutes'));
 app.use('/api/family', require('./routes/familyRoutes'));

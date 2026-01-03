@@ -10,11 +10,13 @@
     "lint": "eslint ."
   },
   "dependencies": {
+    "@invertase/react-native-apple-authentication": "^2.5.0",
     "@react-native-async-storage/async-storage": "^1.24.0",
     "@react-native-community/geolocation": "^3.2.1",
     "@react-native-community/netinfo": "^11.3.1",
     "@react-native-firebase/app": "^19.0.1",
     "@react-native-firebase/messaging": "^19.0.1",
+    "@react-native-google-signin/google-signin": "^16.1.1",
     "@react-navigation/bottom-tabs": "^6.5.11",
     "@react-navigation/native": "^6.1.9",
     "@react-navigation/stack": "^6.3.20",
@@ -26,6 +28,7 @@
     "react-native-biometrics": "^3.0.1",
     "react-native-camera": "^4.2.1",
     "react-native-document-picker": "^9.1.1",
+    "react-native-fbsdk-next": "^13.4.1",
     "react-native-fs": "^2.20.0",
     "react-native-gesture-handler": "^2.14.0",
     "react-native-image-picker": "^7.1.0",

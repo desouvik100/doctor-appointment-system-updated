@@ -13,6 +13,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, shadows } from '../../theme/colors';
@@ -20,6 +21,8 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { authService } from '../../services/api';
+import socialAuthService from '../../services/socialAuthService';
+import { useUser } from '../../context/UserContext';
 
 const RegisterScreen = ({ navigation }) => {
   const [formData, setFormData] = useState({
@@ -31,6 +34,8 @@ const RegisterScreen = ({ navigation }) => {
   });
   const [errors, setErrors] = useState({});
   const [loading, setLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState(null);
+  const { login } = useUser();
 
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -116,6 +121,46 @@ const RegisterScreen = ({ navigation }) => {
       Alert.alert('Registration Failed', message);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const handleGoogleSignUp = async () => {
+    setSocialLoading('google');
+    try {
+      const { user, token, isNewUser } = await socialAuthService.signInWithGoogle();
+      await login(user, token);
+      
+      Alert.alert(
+        isNewUser ? 'Welcome!' : 'Welcome Back!', 
+        isNewUser ? 'Your account has been created successfully.' : 'You have been signed in.',
+        [{ text: 'OK', onPress: () => navigation.replace('Main') }]
+      );
+    } catch (error) {
+      if (error.message !== 'Sign in cancelled') {
+        Alert.alert('Google Sign-Up Failed', error.message || 'Unable to sign up with Google. Please try again.');
+      }
+    } finally {
+      setSocialLoading(null);
+    }
+  };
+
+  const handleFacebookSignUp = async () => {
+    setSocialLoading('facebook');
+    try {
+      const { user, token, isNewUser } = await socialAuthService.signInWithFacebook();
+      await login(user, token);
+      
+      Alert.alert(
+        isNewUser ? 'Welcome!' : 'Welcome Back!', 
+        isNewUser ? 'Your account has been created successfully.' : 'You have been signed in.',
+        [{ text: 'OK', onPress: () => navigation.replace('Main') }]
+      );
+    } catch (error) {
+      if (error.message !== 'Sign in cancelled') {
+        Alert.alert('Facebook Sign-Up Failed', error.message || 'Unable to sign up with Facebook. Please try again.');
+      }
+    } finally {
+      setSocialLoading(null);
     }
   };
 
@@ -232,11 +277,27 @@ const RegisterScreen = ({ navigation }) => {
 
               {/* Social Sign Up */}
               <View style={styles.socialButtons}>
-                <TouchableOpacity style={styles.socialBtn}>
-                  <Text style={styles.socialIcon}>G</Text>
+                <TouchableOpacity 
+                  style={[styles.socialBtn, socialLoading === 'google' && styles.socialBtnLoading]}
+                  onPress={handleGoogleSignUp}
+                  disabled={socialLoading !== null}
+                >
+                  {socialLoading === 'google' ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <Text style={styles.socialIcon}>G</Text>
+                  )}
                 </TouchableOpacity>
-                <TouchableOpacity style={styles.socialBtn}>
-                  <Text style={styles.socialIcon}>f</Text>
+                <TouchableOpacity 
+                  style={[styles.socialBtn, socialLoading === 'facebook' && styles.socialBtnLoading]}
+                  onPress={handleFacebookSignUp}
+                  disabled={socialLoading !== null}
+                >
+                  {socialLoading === 'facebook' ? (
+                    <ActivityIndicator size="small" color={colors.primary} />
+                  ) : (
+                    <Text style={[styles.socialIcon, { color: '#1877F2' }]}>f</Text>
+                  )}
                 </TouchableOpacity>
               </View>
             </View>
@@ -362,6 +423,9 @@ const styles = StyleSheet.create({
     borderColor: colors.surfaceBorder,
     alignItems: 'center',
     justifyContent: 'center',
+  },
+  socialBtnLoading: {
+    opacity: 0.7,
   },
   socialIcon: {
     fontSize: 20,

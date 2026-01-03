@@ -14,9 +14,9 @@ android {
     buildToolsVersion rootProject.ext.buildToolsVersion
     compileSdk rootProject.ext.compileSdkVersion
 
-    namespace "com.healthsync"
+    namespace "com.healthsync.app"
     defaultConfig {
-        applicationId "com.healthsync"
+        applicationId "com.healthsync.app"
         minSdkVersion rootProject.ext.minSdkVersion
         targetSdkVersion rootProject.ext.targetSdkVersion
         versionCode 1

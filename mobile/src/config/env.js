@@ -19,10 +19,16 @@ export const API_URL = __DEV__ ? DEV_API_URL : PROD_API_URL;
 // API timeout in milliseconds
 export const API_TIMEOUT = 120000; // 120 seconds for Render cold starts
 
+// Social Auth Configuration
+export const GOOGLE_WEB_CLIENT_ID = '477733520458-juhlgonpioe7tcjenocei4pcco4h9204.apps.googleusercontent.com';
+export const FACEBOOK_APP_ID = 'YOUR_FACEBOOK_APP_ID';
+
 // Other config
 export const CONFIG = {
   API_URL,
   API_TIMEOUT,
+  GOOGLE_WEB_CLIENT_ID,
+  FACEBOOK_APP_ID,
   // Feature flags
   ENABLE_LOGGING: __DEV__,
   ENABLE_ANALYTICS: !__DEV__,
