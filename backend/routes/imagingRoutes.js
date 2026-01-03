@@ -6,6 +6,40 @@ const fs = require('fs');
 const ImagingReport = require('../models/ImagingReport');
 const AuditLog = require('../models/AuditLog');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
+const { convertDicomToImage } = require('../services/dicomParserService');
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     ImagingReport:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         patientId:
+ *           type: string
+ *         patientName:
+ *           type: string
+ *         imagingType:
+ *           type: string
+ *           enum: [X-Ray, CT Scan, MRI, Ultrasound, PET Scan, Mammography, Fluoroscopy, Angiography]
+ *         bodyPart:
+ *           type: string
+ *         status:
+ *           type: string
+ *           enum: [ordered, scheduled, in-progress, completed, cancelled]
+ *         priority:
+ *           type: string
+ *           enum: [routine, urgent, stat]
+ *         findings:
+ *           type: string
+ *         impression:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ */
 
 // Configure multer for DICOM file uploads
 const uploadDir = path.join(__dirname, '../uploads/imaging');
@@ -68,7 +102,125 @@ const logAudit = async (req, action, entityId, entityName, changes = {}, severit
   }
 };
 
-// Create imaging order
+/**
+ * @swagger
+ * /imaging/render/{patientId}/{filename}:
+ *   get:
+ *     summary: Render DICOM file as PNG image
+ *     description: Converts a DICOM file to PNG for viewing in browsers/mobile apps
+ *     tags: [Imaging]
+ *     parameters:
+ *       - in: path
+ *         name: patientId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: path
+ *         name: filename
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: PNG image
+ *         content:
+ *           image/png:
+ *             schema:
+ *               type: string
+ *               format: binary
+ *       404:
+ *         description: File not found
+ *       500:
+ *         description: Conversion error
+ */
+router.get('/render/:patientId/:filename', async (req, res) => {
+  try {
+    const { patientId, filename } = req.params;
+    
+    // Build file path
+    let filePath = path.join(uploadDir, patientId, filename);
+    
+    // Check if file exists in patient folder
+    if (!fs.existsSync(filePath)) {
+      // Try temp folder
+      filePath = path.join(uploadDir, 'temp', filename);
+    }
+    
+    if (!fs.existsSync(filePath)) {
+      return res.status(404).json({ success: false, message: 'File not found' });
+    }
+    
+    // Check if it's a DICOM file
+    const ext = path.extname(filename).toLowerCase();
+    if (ext === '.dcm' || ext === '.dicom' || ext === '') {
+      // Convert DICOM to PNG
+      const fileBuffer = fs.readFileSync(filePath);
+      const result = convertDicomToImage(fileBuffer);
+      
+      if (result.success) {
+        res.set('Content-Type', 'image/png');
+        res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+        return res.send(result.imageBuffer);
+      } else {
+        // If conversion fails, return error
+        return res.status(500).json({ 
+          success: false, 
+          message: 'Failed to convert DICOM file',
+          error: result.error 
+        });
+      }
+    } else {
+      // For non-DICOM files (jpg, png), serve directly
+      res.sendFile(filePath);
+    }
+  } catch (error) {
+    console.error('Error rendering image:', error);
+    res.status(500).json({ success: false, message: error.message });
+  }
+});
+
+/**
+ * @swagger
+ * /imaging/order:
+ *   post:
+ *     summary: Create imaging order
+ *     description: Creates a new imaging order for a patient
+ *     tags: [Imaging]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - patientId
+ *               - imagingType
+ *             properties:
+ *               patientId:
+ *                 type: string
+ *               patientName:
+ *                 type: string
+ *               imagingType:
+ *                 type: string
+ *               bodyPart:
+ *                 type: string
+ *               priority:
+ *                 type: string
+ *                 enum: [routine, urgent, stat]
+ *               clinicalHistory:
+ *                 type: string
+ *               indication:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Imaging order created
+ *       400:
+ *         description: Validation error
+ *       401:
+ *         description: Unauthorized
+ */
 router.post('/order', verifyTokenWithRole(['admin', 'doctor', 'clinic']), async (req, res) => {
   try {
     const {
