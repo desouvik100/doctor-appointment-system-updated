@@ -12,10 +12,10 @@ This implementation plan covers three interconnected features: standardizing the
     - Implement standardized error transformation
     - Add token refresh logic on 401 responses
     - _Requirements: 1.2, 1.4, 1.6_
-  - [ ]* 1.2 Write property test for Authorization header attachment
+  - [x]* 1.2 Write property test for Authorization header attachment
     - **Property 1: Authorization Header Attachment**
     - **Validates: Requirements 1.2**
-  - [ ]* 1.3 Write property test for error response consistency
+  - [x]* 1.3 Write property test for error response consistency
     - **Property 2: Error Response Consistency**
     - **Validates: Requirements 1.4, 5.1, 5.2**
 

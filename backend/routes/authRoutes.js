@@ -366,8 +366,8 @@ router.post('/login', async (req, res) => {
       });
     }
 
-    // Find active user
-    const user = userCheck && userCheck.isActive ? userCheck : null;
+    // Find active user (isActive defaults to true, so check for !== false)
+    const user = userCheck && userCheck.isActive !== false ? userCheck : null;
     if (!user) {
       console.log(`❌ Login failed: User not found for email: ${normalizedEmail}`);
       // Track failed login attempt
@@ -479,9 +479,10 @@ router.post('/admin/login', async (req, res) => {
       });
     }
 
-    // Find active admin user
-    const user = userCheck && userCheck.isActive ? userCheck : null;
+    // Find active admin user (isActive defaults to true, so check for !== false)
+    const user = userCheck && userCheck.isActive !== false ? userCheck : null;
     if (!user) {
+      console.log(`❌ Admin login failed: User not found or inactive - ${email}`);
       await aiSecurityService.trackFailedLogin(email, ipAddress, userAgent);
       return res.status(400).json({ message: 'Invalid admin credentials' });
     }
