@@ -3,7 +3,78 @@ const router = express.Router();
 const Notification = require('../models/Notification');
 const Appointment = require('../models/Appointment');
 
-// Get notifications for a user
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Notification:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         userId:
+ *           type: string
+ *         title:
+ *           type: string
+ *         message:
+ *           type: string
+ *         type:
+ *           type: string
+ *           enum: [appointment, reminder, system, promotion]
+ *         isRead:
+ *           type: boolean
+ *         readAt:
+ *           type: string
+ *           format: date-time
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ */
+
+/**
+ * @swagger
+ * /notifications/{userId}:
+ *   get:
+ *     summary: Get notifications for a user
+ *     description: Retrieves paginated notifications for a specific user
+ *     tags: [Notifications]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *       - in: query
+ *         name: unreadOnly
+ *         schema:
+ *           type: boolean
+ *     responses:
+ *       200:
+ *         description: List of notifications
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 notifications:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Notification'
+ *                 total:
+ *                   type: number
+ *                 unreadCount:
+ *                   type: number
+ */
 router.get('/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -26,7 +97,22 @@ router.get('/:userId', async (req, res) => {
   }
 });
 
-// Mark notification as read
+/**
+ * @swagger
+ * /notifications/{id}/read:
+ *   put:
+ *     summary: Mark notification as read
+ *     tags: [Notifications]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Notification marked as read
+ */
 router.put('/:id/read', async (req, res) => {
   try {
     await Notification.findByIdAndUpdate(req.params.id, { isRead: true, readAt: new Date() });
@@ -36,7 +122,22 @@ router.put('/:id/read', async (req, res) => {
   }
 });
 
-// Mark all notifications as read
+/**
+ * @swagger
+ * /notifications/read-all/{userId}:
+ *   put:
+ *     summary: Mark all notifications as read
+ *     tags: [Notifications]
+ *     parameters:
+ *       - in: path
+ *         name: userId
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: All notifications marked as read
+ */
 router.put('/read-all/:userId', async (req, res) => {
   try {
     await Notification.updateMany(
@@ -49,7 +150,37 @@ router.put('/read-all/:userId', async (req, res) => {
   }
 });
 
-// Create notification
+/**
+ * @swagger
+ * /notifications:
+ *   post:
+ *     summary: Create a notification
+ *     tags: [Notifications]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - userId
+ *               - title
+ *               - message
+ *             properties:
+ *               userId:
+ *                 type: string
+ *               title:
+ *                 type: string
+ *               message:
+ *                 type: string
+ *               type:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Notification created
+ */
 router.post('/', async (req, res) => {
   try {
     const notification = new Notification(req.body);

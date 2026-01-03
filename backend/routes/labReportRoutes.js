@@ -4,6 +4,40 @@ const LabReport = require('../models/LabReport');
 const AuditLog = require('../models/AuditLog');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     LabReport:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         patientId:
+ *           type: string
+ *         patientName:
+ *           type: string
+ *         testCategory:
+ *           type: string
+ *         testName:
+ *           type: string
+ *         testCode:
+ *           type: string
+ *         sampleType:
+ *           type: string
+ *         status:
+ *           type: string
+ *           enum: [ordered, sample_collected, processing, completed, cancelled]
+ *         priority:
+ *           type: string
+ *           enum: [routine, urgent, stat]
+ *         results:
+ *           type: object
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ */
+
 // Helper to log audit
 const logAudit = async (req, action, entityId, entityName, changes = {}, severity = 'low') => {
   try {
@@ -27,7 +61,44 @@ const logAudit = async (req, action, entityId, entityName, changes = {}, severit
   }
 };
 
-// Create lab order
+/**
+ * @swagger
+ * /lab-reports/order:
+ *   post:
+ *     summary: Create a lab order
+ *     description: Creates a new lab test order for a patient
+ *     tags: [Lab Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - patientId
+ *               - testName
+ *             properties:
+ *               patientId:
+ *                 type: string
+ *               patientName:
+ *                 type: string
+ *               testCategory:
+ *                 type: string
+ *               testName:
+ *                 type: string
+ *               sampleType:
+ *                 type: string
+ *               priority:
+ *                 type: string
+ *                 enum: [routine, urgent, stat]
+ *     responses:
+ *       201:
+ *         description: Lab order created
+ *       401:
+ *         description: Unauthorized
+ */
 router.post('/order', verifyTokenWithRole(['admin', 'doctor', 'nurse', 'clinic']), async (req, res) => {
   try {
     const {
@@ -66,7 +137,46 @@ router.post('/order', verifyTokenWithRole(['admin', 'doctor', 'nurse', 'clinic']
   }
 });
 
-// Get lab reports for clinic
+/**
+ * @swagger
+ * /lab-reports/clinic/{clinicId}:
+ *   get:
+ *     summary: Get lab reports for a clinic
+ *     tags: [Lab Reports]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: clinicId
+ *         required: true
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: testCategory
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: patientId
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 50
+ *     responses:
+ *       200:
+ *         description: List of lab reports
+ */
 router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;

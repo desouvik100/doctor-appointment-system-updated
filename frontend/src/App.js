@@ -12,6 +12,9 @@ import toast, { Toaster } from 'react-hot-toast';
 // Language/i18n
 import { LanguageProvider } from './i18n/LanguageContext';
 
+// Real-time Socket connection
+import { SocketProvider } from './contexts/SocketContext';
+
 // Mobile/Capacitor initialization
 import { useMobileInit } from './mobile/useMobileInit';
 
@@ -1549,6 +1552,7 @@ function App() {
 
   return (
     <LanguageProvider>
+    <SocketProvider>
     <div>
       {/* Skip to main content - Accessibility */}
       <a href="#main-content" className="skip-to-main">
@@ -1870,6 +1874,7 @@ function App() {
 
 
     </div>
+    </SocketProvider>
     </LanguageProvider>
   );
 }

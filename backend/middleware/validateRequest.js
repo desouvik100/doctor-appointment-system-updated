@@ -79,35 +79,36 @@ const validateAppointmentBooking = (req, res, next) => {
 
   // Required fields
   if (!userId || !isValidObjectId(userId)) {
-    errors.push('Valid userId is required');
+    errors.push({ field: 'userId', message: 'Valid userId is required' });
   }
   if (!doctorId || !isValidObjectId(doctorId)) {
-    errors.push('Valid doctorId is required');
+    errors.push({ field: 'doctorId', message: 'Valid doctorId is required' });
   }
   if (!clinicId || !isValidObjectId(clinicId)) {
-    errors.push('Valid clinicId is required');
+    errors.push({ field: 'clinicId', message: 'Valid clinicId is required' });
   }
   if (!date) {
-    errors.push('Date is required');
+    errors.push({ field: 'date', message: 'Date is required' });
   } else {
     const appointmentDate = new Date(date);
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (appointmentDate < today) {
-      errors.push('Cannot book appointments in the past');
+      errors.push({ field: 'date', message: 'Cannot book appointments in the past' });
     }
   }
   if (!time) {
-    errors.push('Time is required');
+    errors.push({ field: 'time', message: 'Time is required' });
   }
   if (!consultationType || !['in_person', 'online'].includes(consultationType)) {
-    errors.push('Valid consultationType (in_person or online) is required');
+    errors.push({ field: 'consultationType', message: 'Valid consultationType (in_person or online) is required' });
   }
 
   if (errors.length > 0) {
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
+      code: 'VALIDATION_ERROR',
       errors
     });
   }
@@ -123,22 +124,23 @@ const validateUserRegistration = (req, res, next) => {
   const errors = [];
 
   if (!name || name.trim().length < 2) {
-    errors.push('Name must be at least 2 characters');
+    errors.push({ field: 'name', message: 'Name must be at least 2 characters' });
   }
   if (!email || !isValidEmail(email)) {
-    errors.push('Valid email is required');
+    errors.push({ field: 'email', message: 'Valid email is required' });
   }
   if (!phone || !isValidPhone(phone)) {
-    errors.push('Valid 10-digit phone number is required');
+    errors.push({ field: 'phone', message: 'Valid 10-digit phone number is required' });
   }
   if (!password || password.length < 6) {
-    errors.push('Password must be at least 6 characters');
+    errors.push({ field: 'password', message: 'Password must be at least 6 characters' });
   }
 
   if (errors.length > 0) {
     return res.status(400).json({
       success: false,
       message: 'Validation failed',
+      code: 'VALIDATION_ERROR',
       errors
     });
   }
@@ -155,7 +157,9 @@ const validateObjectIdParam = (paramName) => {
     if (!id || !isValidObjectId(id)) {
       return res.status(400).json({
         success: false,
-        message: `Invalid ${paramName} format`
+        message: `Invalid ${paramName} format`,
+        code: 'VALIDATION_ERROR',
+        errors: [{ field: paramName, message: `Invalid ${paramName} format` }]
       });
     }
     next();

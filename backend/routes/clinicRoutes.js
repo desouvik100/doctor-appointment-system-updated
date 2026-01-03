@@ -3,7 +3,50 @@ const Clinic = require('../models/Clinic');
 const Doctor = require('../models/Doctor');
 const router = express.Router();
 
-// Get all clinics
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Clinic:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         name:
+ *           type: string
+ *         address:
+ *           type: string
+ *         city:
+ *           type: string
+ *         state:
+ *           type: string
+ *         phone:
+ *           type: string
+ *         email:
+ *           type: string
+ *         timings:
+ *           type: object
+ *         isActive:
+ *           type: boolean
+ */
+
+/**
+ * @swagger
+ * /clinics:
+ *   get:
+ *     summary: Get all clinics
+ *     description: Retrieves a list of all active clinics
+ *     tags: [Clinics]
+ *     responses:
+ *       200:
+ *         description: List of clinics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Clinic'
+ */
 router.get('/', async (req, res) => {
   try {
     const clinics = await Clinic.find({ isActive: true }).sort({ name: 1 });
@@ -14,7 +57,28 @@ router.get('/', async (req, res) => {
   }
 });
 
-// Get clinic by ID
+/**
+ * @swagger
+ * /clinics/{id}:
+ *   get:
+ *     summary: Get clinic by ID
+ *     tags: [Clinics]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Clinic details
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Clinic'
+ *       404:
+ *         description: Clinic not found
+ */
 router.get('/:id', async (req, res) => {
   try {
     const clinic = await Clinic.findById(req.params.id);
@@ -30,7 +94,35 @@ router.get('/:id', async (req, res) => {
   }
 });
 
-// Get clinic with doctors
+/**
+ * @swagger
+ * /clinics/{id}/doctors:
+ *   get:
+ *     summary: Get clinic with its doctors
+ *     tags: [Clinics]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: Clinic with doctors list
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 clinic:
+ *                   $ref: '#/components/schemas/Clinic'
+ *                 doctors:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Doctor'
+ *       404:
+ *         description: Clinic not found
+ */
 router.get('/:id/doctors', async (req, res) => {
   try {
     const clinic = await Clinic.findById(req.params.id);
@@ -54,7 +146,35 @@ router.get('/:id/doctors', async (req, res) => {
   }
 });
 
-// Find clinics near a location
+/**
+ * @swagger
+ * /clinics/nearby/{lat}/{lng}:
+ *   get:
+ *     summary: Find clinics near a location
+ *     tags: [Clinics]
+ *     parameters:
+ *       - in: path
+ *         name: lat
+ *         required: true
+ *         schema:
+ *           type: number
+ *         description: Latitude
+ *       - in: path
+ *         name: lng
+ *         required: true
+ *         schema:
+ *           type: number
+ *         description: Longitude
+ *       - in: query
+ *         name: maxDistance
+ *         schema:
+ *           type: number
+ *           default: 10
+ *         description: Maximum distance in km
+ *     responses:
+ *       200:
+ *         description: List of nearby clinics
+ */
 router.get('/nearby/:lat/:lng', async (req, res) => {
   try {
     const { lat, lng } = req.params;

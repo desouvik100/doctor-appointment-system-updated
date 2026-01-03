@@ -6,6 +6,53 @@ const aiSecurityService = require('../services/aiSecurityService');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const router = express.Router();
 
+/**
+ * @swagger
+ * /users/me:
+ *   get:
+ *     summary: Get current logged-in user
+ *     description: Returns the profile of the currently authenticated user
+ *     tags: [Users]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: User profile
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/User'
+ *       401:
+ *         description: Unauthorized
+ *       404:
+ *         description: User not found
+ */
+
+/**
+ * @swagger
+ * /users/search:
+ *   get:
+ *     summary: Search user by phone or email
+ *     description: Search for a user by phone number or email (for walk-in patient lookup)
+ *     tags: [Users]
+ *     parameters:
+ *       - in: query
+ *         name: phone
+ *         schema:
+ *           type: string
+ *       - in: query
+ *         name: email
+ *         schema:
+ *           type: string
+ *     responses:
+ *       200:
+ *         description: User found
+ *       400:
+ *         description: Phone or email required
+ *       404:
+ *         description: User not found
+ */
+
 // Security helper - log account operations
 const logAccountOperation = async (req, action, targetUser, details = {}) => {
   try {

@@ -2,8 +2,111 @@ const express = require('express');
 const router = express.Router();
 const Prescription = require('../models/Prescription');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
+const { emitPrescriptionCreated, emitPrescriptionUpdated } = require('../services/socketManager');
 
-// Create prescription (doctors, admin, receptionist, clinic staff)
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Prescription:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         prescriptionNumber:
+ *           type: string
+ *         patientId:
+ *           type: string
+ *         doctorId:
+ *           type: string
+ *         clinicId:
+ *           type: string
+ *         diagnosis:
+ *           type: string
+ *         symptoms:
+ *           type: array
+ *           items:
+ *             type: string
+ *         medicines:
+ *           type: array
+ *           items:
+ *             type: object
+ *             properties:
+ *               name:
+ *                 type: string
+ *               dosage:
+ *                 type: string
+ *               frequency:
+ *                 type: string
+ *               duration:
+ *                 type: string
+ *               timing:
+ *                 type: string
+ *               instructions:
+ *                 type: string
+ *         notes:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ */
+
+/**
+ * @swagger
+ * /prescriptions:
+ *   post:
+ *     summary: Create a prescription
+ *     description: Creates a new prescription. Doctors, admin, receptionist, and clinic staff only.
+ *     tags: [Prescriptions]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - patientId
+ *               - doctorId
+ *             properties:
+ *               patientId:
+ *                 type: string
+ *               doctorId:
+ *                 type: string
+ *               clinicId:
+ *                 type: string
+ *               appointmentId:
+ *                 type: string
+ *               diagnosis:
+ *                 type: string
+ *               symptoms:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *               medicines:
+ *                 type: array
+ *                 items:
+ *                   type: object
+ *               notes:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Prescription created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 prescription:
+ *                   $ref: '#/components/schemas/Prescription'
+ *       400:
+ *         description: Missing required fields
+ *       401:
+ *         description: Unauthorized
+ */
 router.post('/', verifyTokenWithRole(['doctor', 'admin', 'receptionist', 'clinic']), async (req, res) => {
   try {
     console.log('📝 Creating prescription, body:', JSON.stringify(req.body, null, 2));
@@ -69,6 +172,10 @@ router.post('/', verifyTokenWithRole(['doctor', 'admin', 'receptionist', 'clinic
     const prescription = new Prescription(transformedBody);
     await prescription.save();
     console.log('✅ Prescription saved:', prescription._id);
+    
+    // Emit socket event for real-time sync
+    emitPrescriptionCreated(prescription);
+    
     res.status(201).json({ success: true, prescription });
   } catch (error) {
     console.error('❌ Error creating prescription:', error);

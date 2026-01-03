@@ -3,6 +3,7 @@ import axios from '../api/config';
 import toast from 'react-hot-toast';
 import { Capacitor } from '@capacitor/core';
 import { useLanguage } from '../i18n/LanguageContext';
+import { useAppointmentUpdates, useWalletUpdates, useNotificationUpdates } from '../hooks/useRealTimeUpdates';
 import '../styles/premium-saas.css';
 import '../styles/skeleton-loaders.css';
 import '../styles/bottom-navigation.css';
@@ -126,6 +127,32 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
   // Cancel appointment modal state
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [appointmentToCancel, setAppointmentToCancel] = useState(null);
+  
+  // Flag to trigger appointment refresh from real-time updates
+  const [appointmentRefreshTrigger, setAppointmentRefreshTrigger] = useState(0);
+
+  // Real-time updates via Socket.IO
+  const handleAppointmentUpdate = useCallback((action, appointment) => {
+    if (action === 'created' || action === 'updated') {
+      // Trigger a refresh of appointments
+      setAppointmentRefreshTrigger(prev => prev + 1);
+    } else if (action === 'cancelled') {
+      setAppointments(prev => prev.filter(a => a._id !== appointment?._id));
+    }
+  }, []);
+
+  const handleWalletUpdate = useCallback((transaction, balance) => {
+    // Wallet updates are handled by toast in the hook
+  }, []);
+
+  const handleNotificationUpdate = useCallback((notification) => {
+    setUnreadNotifications(prev => prev + 1);
+  }, []);
+
+  // Subscribe to real-time updates
+  useAppointmentUpdates(handleAppointmentUpdate);
+  useWalletUpdates(handleWalletUpdate);
+  useNotificationUpdates(handleNotificationUpdate);
 
   // Fetch doctor online status
   const fetchDoctorOnlineStatus = async () => {
@@ -245,6 +272,13 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
   }, []);
 
   useEffect(() => { fetchDoctors(); fetchClinics(); if (getUserId()) { fetchAppointments(); fetchUserLocation(); fetchFavorites(); fetchUnreadNotifications(); } }, [currentUser]);
+
+  // Refresh appointments when triggered by real-time updates
+  useEffect(() => {
+    if (appointmentRefreshTrigger > 0 && getUserId()) {
+      fetchAppointments();
+    }
+  }, [appointmentRefreshTrigger]);
 
   // Auto-detect location on mobile when user logs in (since location button is hidden on mobile)
   useEffect(() => {

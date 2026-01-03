@@ -27,12 +27,15 @@ import {
 import { getUpcomingAppointments } from '../../services/api/appointmentService';
 import { getBalance, getLoyaltyPoints } from '../../services/api/walletService';
 import { getVitalsHistory, getTimeline } from '../../services/api/healthRecordService';
+import { useSocket, SOCKET_EVENTS } from '../../context/SocketContext';
+import { devLog, devError, isValid } from '../../utils/errorHandler';
 
 const { width } = Dimensions.get('window');
 
 const HomeScreen = ({ navigation }) => {
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
+  const { subscribe, isConnected } = useSocket();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
@@ -56,35 +59,41 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const fetchDashboardData = useCallback(async () => {
-    if (!user?.id) {
+    // GUARD: Don't fetch if user is not ready
+    if (!isValid(user?.id)) {
+      devLog('🏠 [HomeScreen] No user.id - skipping fetch');
       setLoading(false);
       setRefreshing(false);
       return;
     }
 
+    devLog('🏠 [HomeScreen] Starting API calls for user:', user.id);
+
     try {
       const [appointmentsData, balanceData, loyaltyData, vitalsData, timelineData] = await Promise.all([
         getUpcomingAppointments().catch(err => {
-          console.error('Error fetching appointments:', err);
+          devError('Appointments API failed:', err?.message);
           return [];
         }),
         getBalance().catch(err => {
-          console.error('Error fetching balance:', err);
+          devError('Balance API failed:', err?.message);
           return { balance: 0 };
         }),
         getLoyaltyPoints().catch(err => {
-          // Error logged in service for critical failures, otherwise suppressed
+          devError('Loyalty API failed:', err?.message);
           return { points: 0 };
         }),
         getVitalsHistory(user.id).catch(err => {
-          console.error('Error fetching vitals:', err);
+          devError('Vitals API failed:', err?.message);
           return { data: [] };
         }),
         getTimeline(user.id).catch(err => {
-          console.error('Error fetching timeline:', err);
+          devError('Timeline API failed:', err?.message);
           return { timeline: [] };
         })
       ]);
+      
+      devLog('✅ [HomeScreen] API responses received');
 
       const rawAppointments = Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData.data || []);
       
@@ -134,7 +143,7 @@ const HomeScreen = ({ navigation }) => {
       }));
 
     } catch (error) {
-      console.error('Error fetching dashboard data:', error);
+      devError('Error fetching dashboard data:', error?.message);
     } finally {
       setLoading(false);
     }
@@ -143,6 +152,85 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => {
     fetchDashboardData();
   }, [fetchDashboardData]);
+
+  // Socket event listeners for real-time updates
+  useEffect(() => {
+    if (!isConnected) return;
+
+    // Listen for appointment events
+    const unsubAppointmentCreated = subscribe(SOCKET_EVENTS.APPOINTMENT_CREATED, (data) => {
+      devLog('🔔 [HomeScreen] New appointment created:', data);
+      // Add new appointment to the list
+      if (data.appointment) {
+        setDashboardData(prev => ({
+          ...prev,
+          appointments: [
+            {
+              id: data.appointment._id || data.appointment.id,
+              doctorName: data.appointment.doctor?.name || 'Unknown Doctor',
+              specialty: data.appointment.doctor?.specialization || 'General',
+              dateTime: data.appointment.date || data.appointment.appointmentDate,
+              type: data.appointment.type || 'video',
+            },
+            ...prev.appointments,
+          ],
+        }));
+      }
+    });
+
+    const unsubAppointmentUpdated = subscribe(SOCKET_EVENTS.APPOINTMENT_UPDATED, (data) => {
+      devLog('🔔 [HomeScreen] Appointment updated:', data);
+      // Update existing appointment
+      if (data.appointment) {
+        setDashboardData(prev => ({
+          ...prev,
+          appointments: prev.appointments.map(apt => 
+            apt.id === (data.appointment._id || data.appointment.id)
+              ? {
+                  ...apt,
+                  doctorName: data.appointment.doctor?.name || apt.doctorName,
+                  specialty: data.appointment.doctor?.specialization || apt.specialty,
+                  dateTime: data.appointment.date || data.appointment.appointmentDate || apt.dateTime,
+                  type: data.appointment.type || apt.type,
+                }
+              : apt
+          ),
+        }));
+      }
+    });
+
+    const unsubAppointmentCancelled = subscribe(SOCKET_EVENTS.APPOINTMENT_CANCELLED, (data) => {
+      devLog('🔔 [HomeScreen] Appointment cancelled:', data);
+      // Remove cancelled appointment
+      const cancelledId = data.appointmentId || data.appointment?._id || data.appointment?.id;
+      if (cancelledId) {
+        setDashboardData(prev => ({
+          ...prev,
+          appointments: prev.appointments.filter(apt => apt.id !== cancelledId),
+        }));
+      }
+    });
+
+    // Listen for wallet events
+    const unsubWalletTransaction = subscribe(SOCKET_EVENTS.WALLET_TRANSACTION, (data) => {
+      devLog('🔔 [HomeScreen] Wallet transaction:', data);
+      // Update wallet balance
+      if (data.balance !== undefined) {
+        setDashboardData(prev => ({
+          ...prev,
+          walletBalance: data.balance,
+        }));
+      }
+    });
+
+    // Cleanup subscriptions
+    return () => {
+      unsubAppointmentCreated();
+      unsubAppointmentUpdated();
+      unsubAppointmentCancelled();
+      unsubWalletTransaction();
+    };
+  }, [isConnected, subscribe]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);

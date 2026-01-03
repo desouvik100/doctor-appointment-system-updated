@@ -94,8 +94,9 @@ const FilterPanel = ({
     onClear?.();
   };
 
-  const renderChip = (label, isSelected, onPress) => (
+  const renderChip = (label, isSelected, onPress, key) => (
     <TouchableOpacity
+      key={key}
       style={[styles.chip, isSelected && styles.chipSelected]}
       onPress={onPress}
     >
@@ -139,13 +140,14 @@ const FilterPanel = ({
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Specialization</Text>
               <View style={styles.chipContainer}>
-                {SPECIALIZATIONS.map((spec) => (
+                {SPECIALIZATIONS.map((spec) => 
                   renderChip(
                     spec,
                     localFilters.specialization === spec,
                     () => updateFilter('specialization', spec),
+                    `spec-${spec}`,
                   )
-                ))}
+                )}
               </View>
             </View>
 
@@ -157,11 +159,13 @@ const FilterPanel = ({
                   'Male',
                   localFilters.gender === 'male',
                   () => updateFilter('gender', 'male'),
+                  'gender-male',
                 )}
                 {renderChip(
                   'Female',
                   localFilters.gender === 'female',
                   () => updateFilter('gender', 'female'),
+                  'gender-female',
                 )}
               </View>
             </View>
@@ -170,13 +174,14 @@ const FilterPanel = ({
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Experience</Text>
               <View style={styles.chipContainer}>
-                {EXPERIENCE_OPTIONS.map((opt) => (
+                {EXPERIENCE_OPTIONS.map((opt) => 
                   renderChip(
                     opt.label,
                     localFilters.experience === opt.value,
                     () => updateFilter('experience', opt.value),
+                    `exp-${opt.label}`,
                   )
-                ))}
+                )}
               </View>
             </View>
 
@@ -184,13 +189,14 @@ const FilterPanel = ({
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Consultation Fee</Text>
               <View style={styles.chipContainer}>
-                {FEE_OPTIONS.map((opt) => (
+                {FEE_OPTIONS.map((opt) => 
                   renderChip(
                     opt.label,
                     localFilters.maxFee === opt.value,
                     () => updateFilter('maxFee', opt.value),
+                    `fee-${opt.label}`,
                   )
-                ))}
+                )}
               </View>
             </View>
 
@@ -198,13 +204,14 @@ const FilterPanel = ({
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Rating</Text>
               <View style={styles.chipContainer}>
-                {RATING_OPTIONS.map((opt) => (
+                {RATING_OPTIONS.map((opt) => 
                   renderChip(
                     opt.label,
                     localFilters.rating === opt.value,
                     () => updateFilter('rating', opt.value),
+                    `rating-${opt.label}`,
                   )
-                ))}
+                )}
               </View>
             </View>
 
@@ -212,13 +219,14 @@ const FilterPanel = ({
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Availability</Text>
               <View style={styles.chipContainer}>
-                {AVAILABILITY_OPTIONS.map((opt) => (
+                {AVAILABILITY_OPTIONS.map((opt) => 
                   renderChip(
                     opt.label,
                     localFilters.availability === opt.value,
                     () => updateFilter('availability', opt.value),
+                    `avail-${opt.label}`,
                   )
-                ))}
+                )}
               </View>
             </View>
           </ScrollView>

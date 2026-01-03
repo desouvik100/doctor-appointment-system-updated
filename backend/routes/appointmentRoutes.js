@@ -16,7 +16,46 @@ const {
 } = require('../middleware/validateRequest');
 const { verifyClinicAccess, filterByClinic, verifyDoctorAccess } = require('../middleware/clinicIsolation');
 const cacheService = require('../services/cacheService');
+const { 
+  emitAppointmentCreated, 
+  emitAppointmentUpdated, 
+  emitAppointmentCancelled 
+} = require('../services/socketManager');
 const router = express.Router();
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Appointment:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         userId:
+ *           type: string
+ *         doctorId:
+ *           type: string
+ *         clinicId:
+ *           type: string
+ *         date:
+ *           type: string
+ *           format: date
+ *         time:
+ *           type: string
+ *         status:
+ *           type: string
+ *           enum: [pending, confirmed, checked-in, completed, cancelled]
+ *         consultationType:
+ *           type: string
+ *           enum: [online, clinic]
+ *         reason:
+ *           type: string
+ *         queueNumber:
+ *           type: number
+ *         meetingLink:
+ *           type: string
+ */
 
 // Helper function to award loyalty points
 const awardLoyaltyPoints = async (userId, action, referenceId, customPoints = null, description = null) => {
@@ -51,7 +90,29 @@ const awardLoyaltyPoints = async (userId, action, referenceId, customPoints = nu
   }
 };
 
-// Get all appointments (admin only)
+/**
+ * @swagger
+ * /appointments:
+ *   get:
+ *     summary: Get all appointments (admin only)
+ *     description: Retrieves all appointments in the system. Admin access required.
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: List of appointments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Appointment'
+ *       401:
+ *         description: Unauthorized
+ *       403:
+ *         description: Admin access required
+ */
 router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const appointments = await Appointment.find()
@@ -67,7 +128,37 @@ router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
   }
 });
 
-// Get current user's appointments (patient-friendly endpoint)
+/**
+ * @swagger
+ * /appointments/my:
+ *   get:
+ *     summary: Get current user's appointments
+ *     description: Retrieves appointments for the authenticated patient
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: status
+ *         schema:
+ *           type: string
+ *           enum: [upcoming, past, cancelled]
+ *         description: Filter by appointment status
+ *     responses:
+ *       200:
+ *         description: List of user's appointments
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 data:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/Appointment'
+ */
 router.get('/my', async (req, res) => {
   try {
     // Check for auth token
@@ -520,7 +611,63 @@ router.get('/my-queue/:appointmentId', async (req, res) => {
   }
 });
 
-// Create new appointment (with payment calculation) - uses atomic operation to prevent double booking
+/**
+ * @swagger
+ * /appointments:
+ *   post:
+ *     summary: Create a new appointment
+ *     description: Books a new appointment with a doctor. Uses atomic operation to prevent double booking.
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - doctorId
+ *               - date
+ *               - time
+ *             properties:
+ *               doctorId:
+ *                 type: string
+ *               date:
+ *                 type: string
+ *                 format: date
+ *               time:
+ *                 type: string
+ *               consultationType:
+ *                 type: string
+ *                 enum: [online, clinic]
+ *               reason:
+ *                 type: string
+ *               patientName:
+ *                 type: string
+ *               patientPhone:
+ *                 type: string
+ *               familyMemberId:
+ *                 type: string
+ *     responses:
+ *       201:
+ *         description: Appointment created successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 appointment:
+ *                   $ref: '#/components/schemas/Appointment'
+ *                 queueNumber:
+ *                   type: number
+ *       400:
+ *         description: Slot not available or validation error
+ *       401:
+ *         description: Unauthorized
+ */
 router.post('/', async (req, res) => {
   const session = await mongoose.startSession();
   
@@ -769,6 +916,9 @@ router.post('/', async (req, res) => {
     } catch (invoiceError) {
       console.error('❌ Invoice sending failed:', invoiceError.message);
     }
+    
+    // Emit socket event for real-time sync
+    emitAppointmentCreated(populatedAppointment);
     
     res.status(201).json({
       ...populatedAppointment.toObject(),
@@ -1027,6 +1177,9 @@ router.post('/queue-booking', async (req, res) => {
 
     console.log(`✅ Queue booking completed successfully for appointment ${appointment._id}`);
 
+    // Emit socket event for real-time sync
+    emitAppointmentCreated(populatedAppointment);
+
     res.status(201).json({
       success: true,
       ...populatedAppointment.toObject(),
@@ -1207,6 +1360,9 @@ router.post('/slot-booking', async (req, res) => {
       .populate('clinicId', 'name address');
 
     console.log(`✅ Slot-based booking completed: ${appointment._id} (${slotType})`);
+
+    // Emit socket event for real-time sync
+    emitAppointmentCreated(populatedAppointment);
 
     res.status(201).json({
       success: true,
@@ -1474,7 +1630,49 @@ function formatTimeForEmail(time) {
   return `${hour12}:${minutes} ${ampm}`;
 }
 
-// Update appointment status (doctors/receptionists/admin only)
+/**
+ * @swagger
+ * /appointments/{id}/status:
+ *   put:
+ *     summary: Update appointment status
+ *     description: Updates the status of an appointment. Doctors, receptionists, and admins only.
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Appointment ID
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - status
+ *             properties:
+ *               status:
+ *                 type: string
+ *                 enum: [pending, confirmed, checked-in, completed, cancelled]
+ *     responses:
+ *       200:
+ *         description: Status updated successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 appointment:
+ *                   $ref: '#/components/schemas/Appointment'
+ *       404:
+ *         description: Appointment not found
+ */
 router.put('/:id/status', verifyTokenWithRole(['doctor', 'receptionist', 'admin']), async (req, res) => {
   try {
     const { status } = req.body;
@@ -1612,6 +1810,9 @@ router.put('/:id', verifyToken, async (req, res) => {
       return res.status(404).json({ message: 'Appointment not found' });
     }
 
+    // Emit socket event for real-time sync
+    emitAppointmentUpdated(appointment);
+
     res.json(appointment);
   } catch (error) {
     console.error('Error updating appointment:', error);
@@ -1619,7 +1820,48 @@ router.put('/:id', verifyToken, async (req, res) => {
   }
 });
 
-// Cancel appointment with reason and notification (authenticated users only)
+/**
+ * @swagger
+ * /appointments/{id}/cancel:
+ *   put:
+ *     summary: Cancel an appointment
+ *     description: Cancels an appointment with optional reason. Triggers refund if applicable.
+ *     tags: [Appointments]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Appointment ID
+ *     requestBody:
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             properties:
+ *               reason:
+ *                 type: string
+ *                 description: Cancellation reason
+ *     responses:
+ *       200:
+ *         description: Appointment cancelled successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 appointment:
+ *                   $ref: '#/components/schemas/Appointment'
+ *                 refund:
+ *                   type: object
+ *       404:
+ *         description: Appointment not found
+ */
 router.put('/:id/cancel', verifyToken, async (req, res) => {
   try {
     const { reason, cancelledBy, notifyPatient = true, notifyDoctor = true, processRefund = true } = req.body;
@@ -1716,6 +1958,9 @@ router.put('/:id/cancel', verifyToken, async (req, res) => {
     console.log(`❌ Appointment ${appointment._id} cancelled:`);
     console.log(`   Reason: ${appointment.cancellationReason}`);
     console.log(`   Cancelled by: ${appointment.cancelledBy}`);
+    
+    // Emit socket event for real-time sync
+    emitAppointmentCancelled(appointment);
     
     // Audit log
     try {

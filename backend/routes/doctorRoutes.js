@@ -9,6 +9,43 @@ const { verifyClinicAccess, verifyDoctorAccess } = require('../middleware/clinic
 const cacheService = require('../services/cacheService');
 const router = express.Router();
 
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     Doctor:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         name:
+ *           type: string
+ *         email:
+ *           type: string
+ *           format: email
+ *         phone:
+ *           type: string
+ *         specialization:
+ *           type: string
+ *         qualification:
+ *           type: string
+ *         experience:
+ *           type: number
+ *         consultationFee:
+ *           type: number
+ *         rating:
+ *           type: number
+ *         availability:
+ *           type: string
+ *           enum: [Available, Busy, On Leave]
+ *         profilePhoto:
+ *           type: string
+ *         clinicId:
+ *           type: string
+ *         isActive:
+ *           type: boolean
+ */
+
 // Security helper - log doctor account operations
 const logDoctorOperation = async (req, action, doctor, details = {}) => {
   try {
@@ -29,7 +66,35 @@ const logDoctorOperation = async (req, action, doctor, details = {}) => {
   }
 };
 
-// Get doctors summary (statistics)
+/**
+ * @swagger
+ * /doctors/summary:
+ *   get:
+ *     summary: Get doctors statistics
+ *     description: Returns summary statistics about doctors
+ *     tags: [Doctors]
+ *     responses:
+ *       200:
+ *         description: Doctor statistics
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 totalDoctors:
+ *                   type: number
+ *                 availableDoctors:
+ *                   type: number
+ *                 bySpecialization:
+ *                   type: array
+ *                   items:
+ *                     type: object
+ *                     properties:
+ *                       specialization:
+ *                         type: string
+ *                       count:
+ *                         type: number
+ */
 router.get('/summary', async (req, res) => {
   try {
     const totalDoctors = await Doctor.countDocuments({ isActive: true });
@@ -62,7 +127,70 @@ router.get('/summary', async (req, res) => {
   }
 });
 
-// Get all doctors with filters
+/**
+ * @swagger
+ * /doctors:
+ *   get:
+ *     summary: Get all doctors with filters
+ *     description: Retrieves a list of doctors with optional filtering and sorting
+ *     tags: [Doctors]
+ *     parameters:
+ *       - in: query
+ *         name: specialization
+ *         schema:
+ *           type: string
+ *         description: Filter by specialization
+ *       - in: query
+ *         name: city
+ *         schema:
+ *           type: string
+ *         description: Filter by city
+ *       - in: query
+ *         name: minFee
+ *         schema:
+ *           type: number
+ *         description: Minimum consultation fee
+ *       - in: query
+ *         name: maxFee
+ *         schema:
+ *           type: number
+ *         description: Maximum consultation fee
+ *       - in: query
+ *         name: minRating
+ *         schema:
+ *           type: number
+ *         description: Minimum rating
+ *       - in: query
+ *         name: availability
+ *         schema:
+ *           type: string
+ *           enum: [Available, Busy, On Leave]
+ *       - in: query
+ *         name: search
+ *         schema:
+ *           type: string
+ *         description: Search by name
+ *       - in: query
+ *         name: sortBy
+ *         schema:
+ *           type: string
+ *           default: name
+ *       - in: query
+ *         name: sortOrder
+ *         schema:
+ *           type: string
+ *           enum: [asc, desc]
+ *           default: asc
+ *     responses:
+ *       200:
+ *         description: List of doctors
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: array
+ *               items:
+ *                 $ref: '#/components/schemas/Doctor'
+ */
 router.get('/', async (req, res) => {
   try {
     const { 

@@ -95,3 +95,25 @@ temp-backend/
 
 # Windows specific
 desktop.ini
+
+
+# Android build files (NEVER commit these)
+mobile/android/.gradle/
+mobile/android/app/build/
+mobile/android/build/
+**/android/.gradle/
+**/android/app/build/
+**/android/build/
+*.apk
+*.aab
+
+# iOS build files
+mobile/ios/build/
+mobile/ios/Pods/
+**/ios/build/
+**/ios/Pods/
+
+# React Native
+.expo/
+.expo-shared/
+*.hprof

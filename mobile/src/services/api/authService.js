@@ -9,6 +9,7 @@ import apiClient, {
   getAuthToken 
 } from './apiClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import * as Keychain from 'react-native-keychain';
 
 const USER_KEY = 'userData';
 
@@ -115,7 +116,6 @@ export const logout = async () => {
   
   // Clear biometric credentials
   try {
-    const Keychain = require('react-native-keychain');
     await Keychain.resetGenericPassword({ service: 'healthsync_credentials' });
   } catch (error) {
     // Biometric credentials may not exist

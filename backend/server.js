@@ -1,6 +1,9 @@
 const express = require('express');
+const http = require('http');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const swaggerUi = require('swagger-ui-express');
+const { swaggerSpec } = require('./config/swagger');
 require('dotenv').config();
 // v2.2.0 - Enhanced Security Features
 const { initializeScheduler } = require('./services/appointmentScheduler');
@@ -11,8 +14,10 @@ const { securityMonitor, trackFailedLogin } = require('./middleware/securityMidd
 const { sanitizeInputs } = require('./middleware/validateRequest');
 const { errorMiddleware, requestLoggerMiddleware } = require('./services/errorLoggingService');
 const backupService = require('./services/backupService');
+const { initializeSocket } = require('./services/socketManager');
 
 const app = express();
+const server = http.createServer(app);
 
 // ===== PERFORMANCE OPTIMIZATIONS =====
 
@@ -248,6 +253,22 @@ app.use('/api/auth', trackFailedLogin);
 
 console.log('🛡️ AI Security monitoring enabled');
 
+// ===== SWAGGER API DOCUMENTATION =====
+app.use('/api/docs', swaggerUi.serve, swaggerUi.setup(swaggerSpec, {
+  explorer: true,
+  customCss: '.swagger-ui .topbar { display: none }',
+  customSiteTitle: 'HealthSync API Documentation'
+}));
+
+// JSON endpoint for OpenAPI spec (must be before swagger-ui routes)
+app.get('/api/openapi.json', (req, res) => {
+  res.setHeader('Content-Type', 'application/json');
+  res.send(swaggerSpec);
+});
+
+console.log('📚 Swagger docs available at /api/docs');
+console.log('📄 OpenAPI JSON spec at /api/openapi.json');
+
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/auth/token', require('./routes/authTokenRoutes')); // Token refresh & session management
@@ -426,10 +447,18 @@ process.on('SIGINT', async () => {
 });
 
 const PORT = process.env.PORT || 5005;
-app.listen(PORT, async () => {
+
+// Initialize Socket.IO with HTTP server
+const io = initializeSocket(server);
+
+// Make io available to routes via app.locals
+app.locals.io = io;
+
+server.listen(PORT, async () => {
   console.log(`Server running on port ${PORT}`);
   console.log(`Health check available at http://localhost:${PORT}/api/health`);
   console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`🔌 Socket.IO ready for real-time connections`);
   
   // Initialize appointment scheduler after server starts
   await initializeScheduler();

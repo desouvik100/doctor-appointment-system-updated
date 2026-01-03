@@ -7,7 +7,46 @@ const LoyaltyPoints = require('../models/LoyaltyPoints');
 
 const router = express.Router();
 
-// Send OTP for registration
+/**
+ * @swagger
+ * /auth/send-registration-otp:
+ *   post:
+ *     summary: Send OTP for registration
+ *     description: Sends a one-time password to the user's email for registration verification
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *                 example: user@example.com
+ *     responses:
+ *       200:
+ *         description: OTP sent successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/OTPResponse'
+ *       400:
+ *         description: Email already exists or validation error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error400'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error500'
+ */
 router.post('/send-registration-otp', async (req, res) => {
   try {
     const { email } = req.body;
@@ -43,7 +82,50 @@ router.post('/send-registration-otp', async (req, res) => {
   }
 });
 
-// Verify OTP for registration
+/**
+ * @swagger
+ * /auth/verify-registration-otp:
+ *   post:
+ *     summary: Verify registration OTP
+ *     description: Verifies the OTP sent to user's email during registration
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               otp:
+ *                 type: string
+ *                 example: "123456"
+ *     responses:
+ *       200:
+ *         description: OTP verified successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 message:
+ *                   type: string
+ *                 verified:
+ *                   type: boolean
+ *       400:
+ *         description: Invalid or expired OTP
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error400'
+ */
 router.post('/verify-registration-otp', async (req, res) => {
   try {
     const { email, otp } = req.body;
@@ -76,7 +158,62 @@ router.post('/verify-registration-otp', async (req, res) => {
   }
 });
 
-// Register (requires OTP verification first)
+/**
+ * @swagger
+ * /auth/register:
+ *   post:
+ *     summary: Register a new patient user
+ *     description: Creates a new patient account. Requires OTP verification first.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *               - otpVerified
+ *             properties:
+ *               name:
+ *                 type: string
+ *                 example: John Doe
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *               phone:
+ *                 type: string
+ *               role:
+ *                 type: string
+ *                 default: patient
+ *               otpVerified:
+ *                 type: boolean
+ *                 description: Must be true after OTP verification
+ *     responses:
+ *       201:
+ *         description: User registered successfully
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/RegisterResponse'
+ *       400:
+ *         description: Validation error or user already exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error400'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error500'
+ */
 router.post('/register', async (req, res) => {
   try {
     const { name, email, password, phone, role, otpVerified } = req.body;
@@ -153,7 +290,54 @@ router.post('/register', async (req, res) => {
   }
 });
 
-// Login
+/**
+ * @swagger
+ * /auth/login:
+ *   post:
+ *     summary: Patient login
+ *     description: Authenticates a patient user and returns a JWT token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
+ *       400:
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error400'
+ *       403:
+ *         description: Account suspended
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error403'
+ *       500:
+ *         description: Server error
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error500'
+ */
 router.post('/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -228,7 +412,48 @@ router.post('/login', async (req, res) => {
   }
 });
 
-// Admin login
+/**
+ * @swagger
+ * /auth/admin/login:
+ *   post:
+ *     summary: Admin login
+ *     description: Authenticates an admin user and returns a JWT token. Sends login notification email.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/LoginResponse'
+ *       400:
+ *         description: Invalid credentials
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error400'
+ *       403:
+ *         description: Account suspended
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error403'
+ */
 router.post('/admin/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -369,7 +594,66 @@ router.post('/admin/login', async (req, res) => {
   }
 });
 
-// Clinic/Receptionist login
+/**
+ * @swagger
+ * /auth/clinic/login:
+ *   post:
+ *     summary: Clinic/Receptionist login
+ *     description: Authenticates a receptionist or clinic staff user. Requires admin approval.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     clinicId:
+ *                       type: string
+ *                     clinicName:
+ *                       type: string
+ *                     approvalStatus:
+ *                       type: string
+ *                     emrPlan:
+ *                       type: string
+ *       400:
+ *         description: Invalid credentials
+ *       403:
+ *         description: Account pending approval, rejected, or suspended
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error403'
+ */
 router.post('/clinic/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -466,11 +750,94 @@ router.post('/clinic/login', async (req, res) => {
   }
 });
 
-// Test route to verify receptionist routes are accessible
+/**
+ * @swagger
+ * /auth/receptionist/test:
+ *   get:
+ *     summary: Test receptionist routes
+ *     description: Simple endpoint to verify receptionist routes are accessible
+ *     tags: [Auth]
+ *     responses:
+ *       200:
+ *         description: Routes working
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ */
 router.get('/receptionist/test', (req, res) => {
   res.json({ message: 'Receptionist routes are working' });
 });
 
+/**
+ * @swagger
+ * /auth/receptionist/register:
+ *   post:
+ *     summary: Register a new receptionist
+ *     description: Creates a new receptionist account. Requires email verification and admin approval.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *               - clinicName
+ *               - emailVerified
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *               phone:
+ *                 type: string
+ *               clinicName:
+ *                 type: string
+ *               emailVerified:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Registration submitted, pending admin approval
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 message:
+ *                   type: string
+ *                 user:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     role:
+ *                       type: string
+ *                     approvalStatus:
+ *                       type: string
+ *                     clinicName:
+ *                       type: string
+ *       400:
+ *         description: Validation error or email not verified
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/Error400'
+ */
 // One-time admin setup route (use once then remove)
 router.post('/setup-admin', async (req, res) => {
   try {
@@ -514,6 +881,46 @@ router.post('/setup-admin', async (req, res) => {
   }
 });
 
+/**
+ * @swagger
+ * /auth/receptionist/register:
+ *   post:
+ *     summary: Register a new receptionist
+ *     description: Creates a new receptionist account. Requires email verification and admin approval.
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - name
+ *               - email
+ *               - password
+ *               - clinicName
+ *               - emailVerified
+ *             properties:
+ *               name:
+ *                 type: string
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *                 minLength: 6
+ *               phone:
+ *                 type: string
+ *               clinicName:
+ *                 type: string
+ *               emailVerified:
+ *                 type: boolean
+ *     responses:
+ *       201:
+ *         description: Registration submitted, pending admin approval
+ *       400:
+ *         description: Validation error or email not verified
+ */
 // Receptionist sign-up
 router.post('/receptionist/register', async (req, res) => {
   try {
@@ -608,7 +1015,35 @@ router.post('/receptionist/register', async (req, res) => {
   }
 });
 
-// Forgot Password - Send OTP for password reset
+/**
+ * @swagger
+ * /auth/forgot-password:
+ *   post:
+ *     summary: Request password reset
+ *     description: Sends a password reset OTP to the user's email
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *     responses:
+ *       200:
+ *         description: OTP sent if account exists
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/OTPResponse'
+ *       500:
+ *         description: Server error
+ */
 router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
@@ -714,7 +1149,44 @@ router.post('/clinic/reset-password', async (req, res) => {
   }
 });
 
-// Reset Password (after OTP verification)
+/**
+ * @swagger
+ * /auth/reset-password:
+ *   post:
+ *     summary: Reset password with OTP
+ *     description: Resets user password after OTP verification
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - otp
+ *               - newPassword
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               otp:
+ *                 type: string
+ *               newPassword:
+ *                 type: string
+ *                 minLength: 6
+ *     responses:
+ *       200:
+ *         description: Password reset successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/OTPResponse'
+ *       400:
+ *         description: Invalid OTP or validation error
+ *       404:
+ *         description: User not found
+ */
 router.post('/reset-password', async (req, res) => {
   try {
     const { email, otp, newPassword } = req.body;
@@ -806,7 +1278,56 @@ router.post('/reset-password', async (req, res) => {
 // DOCTOR AUTHENTICATION
 // ==========================================
 
-// Doctor Login
+/**
+ * @swagger
+ * /auth/doctor/login:
+ *   post:
+ *     summary: Doctor login
+ *     description: Authenticates a doctor and returns a JWT token
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - password
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               password:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Login successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 doctor:
+ *                   type: object
+ *                   properties:
+ *                     id:
+ *                       type: string
+ *                     name:
+ *                       type: string
+ *                     email:
+ *                       type: string
+ *                     specialization:
+ *                       type: string
+ *                     clinicId:
+ *                       type: string
+ *       400:
+ *         description: Invalid credentials or needs password setup
+ *       403:
+ *         description: Account suspended or pending approval
+ */
 router.post('/doctor/login', async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -1052,7 +1573,49 @@ router.post('/doctor/verify-reset-otp', async (req, res) => {
 // GOOGLE SIGN-IN
 // ==========================================
 
-// Google Sign-In for Patients (login or register)
+/**
+ * @swagger
+ * /auth/google-signin:
+ *   post:
+ *     summary: Google Sign-In for patients
+ *     description: Authenticates or registers a patient using Google OAuth
+ *     tags: [Auth]
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             type: object
+ *             required:
+ *               - email
+ *               - googleId
+ *             properties:
+ *               email:
+ *                 type: string
+ *                 format: email
+ *               name:
+ *                 type: string
+ *               googleId:
+ *                 type: string
+ *               profilePhoto:
+ *                 type: string
+ *     responses:
+ *       200:
+ *         description: Sign-in successful
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 token:
+ *                   type: string
+ *                 isNewUser:
+ *                   type: boolean
+ *                 user:
+ *                   $ref: '#/components/schemas/User'
+ *       400:
+ *         description: Missing required fields
+ */
 router.post('/google-signin', async (req, res) => {
   try {
     const { email, name, googleId, profilePhoto } = req.body;

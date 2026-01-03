@@ -107,6 +107,10 @@ export const UserProvider = ({ children }) => {
     }
   };
 
+  const refreshUser = async () => {
+    await loadUser();
+  };
+
   return (
     <UserContext.Provider
       value={{
@@ -116,6 +120,7 @@ export const UserProvider = ({ children }) => {
         logout,
         logoutAndClearBiometrics,
         updateUser,
+        refreshUser,
         isLoggedIn: !!user
       }}
     >

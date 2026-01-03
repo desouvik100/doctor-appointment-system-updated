@@ -19,7 +19,7 @@ import { colors, shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import { authService } from '../../services/api';
+import authService from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
 import biometricService from '../../services/biometricService';
 
@@ -86,7 +86,19 @@ const LoginScreen = ({ navigation }) => {
         navigation.replace('Main');
       }
     } catch (error) {
-      const message = error.response?.data?.message || 'Login failed. Please check your credentials.';
+      console.log('Login error:', error);
+      let message = 'Login failed. Please check your credentials.';
+      
+      if (error.statusCode === 0) {
+        message = 'Network error. Please check your internet connection and try again.';
+      } else if (error.statusCode === 401) {
+        message = 'Invalid email or password.';
+      } else if (error.message) {
+        message = error.message;
+      } else if (error.response?.data?.message) {
+        message = error.response.data.message;
+      }
+      
       Alert.alert('Login Failed', message);
     } finally {
       setLoading(false);

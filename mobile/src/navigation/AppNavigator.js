@@ -29,8 +29,17 @@ import MedicineScreen from '../screens/services/MedicineScreen';
 import RecordsScreen from '../screens/services/RecordsScreen';
 import EmergencyScreen from '../screens/services/EmergencyScreen';
 import MedicalImagingScreen from '../screens/services/MedicalImagingScreen';
+import EditProfileScreen from '../screens/profile/EditProfileScreen';
+import RewardsScreen from '../screens/profile/RewardsScreen';
+import PaymentMethodsScreen from '../screens/profile/PaymentMethodsScreen';
+import HealthReportsScreen from '../screens/profile/HealthReportsScreen';
+import FamilyMembersScreen from '../screens/profile/FamilyMembersScreen';
+import MedicalTimelineScreen from '../screens/profile/MedicalTimelineScreen';
+import InsuranceScreen from '../screens/profile/InsuranceScreen';
+import AuthGate from '../components/AuthGate';
 import { UserProvider, useUser } from '../context/UserContext';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
+import { SocketProvider } from '../context/SocketContext';
 
 const Stack = createStackNavigator();
 
@@ -85,6 +94,13 @@ const AppContent = () => {
         <Stack.Screen name="Records" component={RecordsScreen} />
         <Stack.Screen name="Emergency" component={EmergencyScreen} />
         <Stack.Screen name="MedicalImaging" component={MedicalImagingScreen} />
+        <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+        <Stack.Screen name="Rewards" component={RewardsScreen} />
+        <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
+        <Stack.Screen name="HealthReports" component={HealthReportsScreen} />
+        <Stack.Screen name="FamilyMembers" component={FamilyMembersScreen} />
+        <Stack.Screen name="MedicalTimeline" component={MedicalTimelineScreen} />
+        <Stack.Screen name="Insurance" component={InsuranceScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );
@@ -94,7 +110,11 @@ const AppNavigator = () => {
   return (
     <ThemeProvider>
       <UserProvider>
-        <AppContent />
+        <SocketProvider>
+          <AuthGate>
+            <AppContent />
+          </AuthGate>
+        </SocketProvider>
       </UserProvider>
     </ThemeProvider>
   );

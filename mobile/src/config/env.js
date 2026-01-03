@@ -1,0 +1,31 @@
+/**
+ * Environment Configuration
+ * Change API_URL based on your setup:
+ * - Android Emulator: http://10.0.2.2:5005
+ * - iOS Simulator: http://localhost:5005
+ * - Real Device: http://YOUR_PC_IP:5005
+ * - Production: https://your-api.com
+ */
+
+// For development - using production API
+const DEV_API_URL = 'https://doctor-appointment-system-updated.onrender.com/api';
+
+// For production
+const PROD_API_URL = 'https://doctor-appointment-system-updated.onrender.com/api';
+
+// Export based on environment
+export const API_URL = __DEV__ ? DEV_API_URL : PROD_API_URL;
+
+// API timeout in milliseconds
+export const API_TIMEOUT = 120000; // 120 seconds for Render cold starts
+
+// Other config
+export const CONFIG = {
+  API_URL,
+  API_TIMEOUT,
+  // Feature flags
+  ENABLE_LOGGING: __DEV__,
+  ENABLE_ANALYTICS: !__DEV__,
+};
+
+export default CONFIG;

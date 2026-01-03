@@ -341,6 +341,7 @@ class ErrorLoggingService {
 
   /**
    * Express error handling middleware
+   * Returns standardized error responses with field-specific validation errors
    */
   errorMiddleware() {
     return (err, req, res, next) => {
@@ -350,16 +351,51 @@ class ErrorLoggingService {
       // Determine status code
       const statusCode = err.statusCode || err.status || 500;
 
-      // Send response
-      res.status(statusCode).json({
+      // Build standardized error response
+      const errorResponse = {
         success: false,
-        message: process.env.NODE_ENV === 'production' 
+        message: process.env.NODE_ENV === 'production' && statusCode === 500
           ? 'An error occurred' 
           : err.message,
-        code: err.code || 'INTERNAL_ERROR',
-        ...(process.env.NODE_ENV !== 'production' && { stack: err.stack })
-      });
+        code: err.code || this.getErrorCode(statusCode),
+      };
+
+      // Add field-specific validation errors if present
+      if (err.errors && Array.isArray(err.errors)) {
+        errorResponse.errors = err.errors;
+      } else if (err.name === 'ValidationError' && err.errors) {
+        // Handle Mongoose validation errors
+        errorResponse.errors = Object.keys(err.errors).map(field => ({
+          field,
+          message: err.errors[field].message
+        }));
+        errorResponse.code = 'VALIDATION_ERROR';
+      }
+
+      // Add stack trace in development
+      if (process.env.NODE_ENV !== 'production') {
+        errorResponse.stack = err.stack;
+      }
+
+      res.status(statusCode).json(errorResponse);
     };
+  }
+
+  /**
+   * Get error code based on status code
+   */
+  getErrorCode(statusCode) {
+    const codes = {
+      400: 'BAD_REQUEST',
+      401: 'UNAUTHORIZED',
+      403: 'FORBIDDEN',
+      404: 'NOT_FOUND',
+      409: 'CONFLICT',
+      422: 'UNPROCESSABLE_ENTITY',
+      429: 'TOO_MANY_REQUESTS',
+      500: 'INTERNAL_ERROR',
+    };
+    return codes[statusCode] || 'UNKNOWN_ERROR';
   }
 
   /**

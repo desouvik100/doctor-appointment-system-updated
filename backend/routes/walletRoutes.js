@@ -6,6 +6,40 @@ const User = require('../models/User');
 const Appointment = require('../models/Appointment');
 const aiSecurityService = require('../services/aiSecurityService');
 const { verifyToken } = require('../middleware/auth');
+const { emitWalletTransaction } = require('../services/socketManager');
+
+/**
+ * @swagger
+ * components:
+ *   schemas:
+ *     WalletBalance:
+ *       type: object
+ *       properties:
+ *         success:
+ *           type: boolean
+ *         balance:
+ *           type: number
+ *         currency:
+ *           type: string
+ *           default: INR
+ *     WalletTransaction:
+ *       type: object
+ *       properties:
+ *         _id:
+ *           type: string
+ *         type:
+ *           type: string
+ *           enum: [credit, debit]
+ *         amount:
+ *           type: number
+ *         description:
+ *           type: string
+ *         reference:
+ *           type: string
+ *         createdAt:
+ *           type: string
+ *           format: date-time
+ */
 
 // Security helper - log financial operations
 const logFinancialActivity = async (req, action, details) => {
@@ -32,7 +66,23 @@ const logFinancialActivity = async (req, action, details) => {
 
 // ============ PATIENT WALLET ROUTES ============
 
-// Get patient wallet balance
+/**
+ * @swagger
+ * /wallet/balance:
+ *   get:
+ *     summary: Get patient wallet balance
+ *     description: Returns the current wallet balance for the authenticated patient
+ *     tags: [Wallet]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Wallet balance
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/WalletBalance'
+ */
 router.get('/balance', async (req, res) => {
   try {
     // Check for auth token
@@ -87,7 +137,47 @@ router.get('/balance', async (req, res) => {
   }
 });
 
-// Get patient wallet transactions
+/**
+ * @swagger
+ * /wallet/transactions:
+ *   get:
+ *     summary: Get wallet transactions
+ *     description: Returns paginated list of wallet transactions for the authenticated user
+ *     tags: [Wallet]
+ *     security:
+ *       - bearerAuth: []
+ *     parameters:
+ *       - in: query
+ *         name: page
+ *         schema:
+ *           type: integer
+ *           default: 1
+ *       - in: query
+ *         name: limit
+ *         schema:
+ *           type: integer
+ *           default: 20
+ *     responses:
+ *       200:
+ *         description: List of transactions
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 success:
+ *                   type: boolean
+ *                 transactions:
+ *                   type: array
+ *                   items:
+ *                     $ref: '#/components/schemas/WalletTransaction'
+ *                 balance:
+ *                   type: number
+ *                 pagination:
+ *                   type: object
+ *       401:
+ *         description: Unauthorized
+ */
 router.get('/transactions', verifyToken, async (req, res) => {
   try {
     const { page = 1, limit = 20 } = req.query;
@@ -145,6 +235,13 @@ router.post('/add', verifyToken, async (req, res) => {
     
     await user.save();
     
+    // Emit socket event for real-time sync
+    emitWalletTransaction(req.user.id, {
+      type: 'credit',
+      amount,
+      description: `Added via ${paymentMethod || 'payment gateway'}`,
+    }, newBalance);
+    
     res.json({
       success: true,
       message: `₹${amount} added to wallet`,
@@ -189,6 +286,14 @@ router.post('/pay', verifyToken, async (req, res) => {
     });
     
     await user.save();
+    
+    // Emit socket event for real-time sync
+    emitWalletTransaction(req.user.id, {
+      type: 'debit',
+      amount: -amount,
+      description: appointmentId ? `Payment for appointment` : 'Wallet payment',
+      referenceId: appointmentId,
+    }, newBalance);
     
     res.json({
       success: true,
