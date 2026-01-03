@@ -136,6 +136,7 @@ const logAudit = async (req, action, entityId, entityName, changes = {}, severit
 router.get('/render/:patientId/:filename', async (req, res) => {
   try {
     const { patientId, filename } = req.params;
+    const { invert } = req.query; // Support invert parameter
     
     // Build file path
     let filePath = path.join(uploadDir, patientId, filename);
@@ -155,11 +156,11 @@ router.get('/render/:patientId/:filename', async (req, res) => {
     if (ext === '.dcm' || ext === '.dicom' || ext === '') {
       // Convert DICOM to PNG
       const fileBuffer = fs.readFileSync(filePath);
-      const result = convertDicomToImage(fileBuffer);
+      const result = convertDicomToImage(fileBuffer, { invert: invert === '1' });
       
       if (result.success) {
         res.set('Content-Type', 'image/png');
-        res.set('Cache-Control', 'public, max-age=86400'); // Cache for 24 hours
+        res.set('Cache-Control', invert ? 'no-cache' : 'public, max-age=86400');
         return res.send(result.imageBuffer);
       } else {
         // If conversion fails, return error

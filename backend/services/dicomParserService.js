@@ -355,9 +355,12 @@ module.exports = {
 /**
  * Convert DICOM pixel data to a PNG buffer
  * @param {Buffer} fileBuffer - The DICOM file buffer
+ * @param {Object} options - Conversion options { invert: boolean }
  * @returns {Object} { success, imageBuffer, width, height }
  */
-function convertDicomToImage(fileBuffer) {
+function convertDicomToImage(fileBuffer, options = {}) {
+  const { invert = false } = options;
+  
   // If canvas is not available, skip conversion
   if (!createCanvas) {
     return { success: false, error: 'Canvas not available' };
@@ -445,6 +448,11 @@ function convertDicomToImage(fileBuffer) {
       }
       
       if (photometricInterpretation === 'MONOCHROME1') {
+        value = 255 - value;
+      }
+      
+      // Apply invert if requested
+      if (invert) {
         value = 255 - value;
       }
       
