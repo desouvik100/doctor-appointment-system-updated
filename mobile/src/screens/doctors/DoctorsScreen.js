@@ -21,7 +21,7 @@ import { colors, shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
-import { doctorService } from '../../services/api';
+import doctorService from '../../services/api/doctorService';
 
 const { width } = Dimensions.get('window');
 
