@@ -71,16 +71,10 @@ const AdminLoginScreen = ({ navigation }) => {
 
     setLoading(true);
     try {
-      const { user, token } = await authService.login({
+      const { user, token } = await authService.adminLogin({
         email: email.trim().toLowerCase(),
         password,
       });
-      
-      if (user.role !== 'admin' && user.role !== 'superadmin') {
-        Alert.alert('Access Denied', 'This account does not have admin privileges.');
-        setLoading(false);
-        return;
-      }
       
       await login(user, token);
       navigation.replace('Main');

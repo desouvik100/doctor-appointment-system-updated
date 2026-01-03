@@ -30,6 +30,38 @@ export const login = async (credentials) => {
 };
 
 /**
+ * Admin login - uses separate admin endpoint
+ */
+export const adminLogin = async (credentials) => {
+  const response = await apiClient.post('/auth/admin/login', credentials);
+  const { token, refreshToken, user } = response.data;
+  
+  await saveAuthToken(token);
+  if (refreshToken) {
+    await saveRefreshToken(refreshToken);
+  }
+  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  
+  return { token, user };
+};
+
+/**
+ * Clinic/Receptionist login
+ */
+export const clinicLogin = async (credentials) => {
+  const response = await apiClient.post('/auth/clinic/login', credentials);
+  const { token, refreshToken, user } = response.data;
+  
+  await saveAuthToken(token);
+  if (refreshToken) {
+    await saveRefreshToken(refreshToken);
+  }
+  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  
+  return { token, user };
+};
+
+/**
  * Register new user
  */
 export const register = async (userData) => {
@@ -180,6 +212,8 @@ export const registerDeviceToken = async (deviceToken) => {
 
 export default {
   login,
+  adminLogin,
+  clinicLogin,
   register,
   sendOTP,
   verifyOTP,
