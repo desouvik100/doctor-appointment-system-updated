@@ -15,6 +15,7 @@ import {
   PanResponder,
   Linking,
   Alert,
+  ScrollView,
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/typography';
@@ -50,8 +51,17 @@ const DicomViewer = ({
   const [activePreset, setActivePreset] = useState('default');
   const [imageLoadSuccess, setImageLoadSuccess] = useState(false);
   const [imageLoadFailed, setImageLoadFailed] = useState(false);
+  const [invert, setInvert] = useState(false);
+  const [flipH, setFlipH] = useState(false);
+  const [flipV, setFlipV] = useState(false);
   
   const lastPan = useRef({ x: 0, y: 0 });
+  const currentPan = useRef({ x: 0, y: 0 });
+
+  // Update ref when pan changes
+  React.useEffect(() => {
+    currentPan.current = pan;
+  }, [pan]);
 
   // Debug: log the image URL
   React.useEffect(() => {
@@ -70,7 +80,7 @@ const DicomViewer = ({
       onStartShouldSetPanResponder: () => true,
       onMoveShouldSetPanResponder: () => true,
       onPanResponderGrant: () => {
-        lastPan.current = { ...pan };
+        lastPan.current = { ...currentPan.current };
       },
       onPanResponderMove: (_, gestureState) => {
         setPan({
@@ -81,11 +91,47 @@ const DicomViewer = ({
     })
   ).current;
 
-  const handleZoomIn = () => setZoom(prev => Math.min(prev + 0.25, 4.0));
-  const handleZoomOut = () => setZoom(prev => Math.max(prev - 0.25, 0.25));
-  const handleRotate = () => setRotation(prev => (prev + 90) % 360);
-  const handleReset = () => { setZoom(1.0); setPan({ x: 0, y: 0 }); setRotation(0); };
-  const handleFitToScreen = () => { setZoom(1.0); setPan({ x: 0, y: 0 }); };
+  const handleZoomIn = () => {
+    console.log('Zoom In pressed, current:', zoom);
+    setZoom(prev => Math.min(prev + 0.25, 4.0));
+  };
+  const handleZoomOut = () => {
+    console.log('Zoom Out pressed, current:', zoom);
+    setZoom(prev => Math.max(prev - 0.25, 0.25));
+  };
+  const handleRotate = () => {
+    console.log('Rotate pressed, current:', rotation);
+    setRotation(prev => (prev + 90) % 360);
+  };
+  const handleReset = () => { 
+    console.log('Reset pressed');
+    setZoom(1.0); 
+    setPan({ x: 0, y: 0 }); 
+    setRotation(0); 
+    setInvert(false);
+    setFlipH(false);
+    setFlipV(false);
+    setActivePreset('default');
+  };
+  const handleFitToScreen = () => { 
+    console.log('Fit to Screen pressed');
+    setZoom(1.0); 
+    setPan({ x: 0, y: 0 }); 
+  };
+  const handleInvert = () => setInvert(prev => !prev);
+  const handleFlipH = () => setFlipH(prev => !prev);
+  const handleFlipV = () => setFlipV(prev => !prev);
+
+  // Handle preset selection - in a real DICOM viewer this would adjust window/level
+  const handlePresetSelect = (preset) => {
+    setActivePreset(preset);
+    // For now, just toggle invert for bone preset to simulate different window
+    if (preset === 'bone') {
+      setInvert(true);
+    } else {
+      setInvert(false);
+    }
+  };
 
   const handleOpenInBrowser = async () => {
     // Open the web app's imaging dashboard
@@ -125,34 +171,51 @@ const DicomViewer = ({
     <View style={styles.container}>
       {showToolbar && (
         <View style={styles.toolbar}>
-          <View style={styles.toolbarLeft}>
-            <TouchableOpacity style={styles.toolbarBtn} onPress={onClose}>
-              <Text style={styles.toolbarIcon}>{'<'}</Text>
-            </TouchableOpacity>
-          </View>
+          <TouchableOpacity style={styles.backBtn} activeOpacity={0.6} onPress={onClose}>
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
           
-          <View style={styles.toolbarCenter}>
-            <TouchableOpacity style={styles.toolbarBtn} onPress={handleZoomOut}>
-              <Text style={styles.toolbarIcon}>-</Text>
+          <ScrollView 
+            horizontal 
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.toolbarScroll}
+          >
+            <TouchableOpacity style={styles.toolbarBtn} activeOpacity={0.6} onPress={() => handleZoomOut()}>
+              <Text style={styles.toolbarIcon}>−</Text>
             </TouchableOpacity>
-            <Text style={styles.zoomText}>{Math.round(zoom * 100)}%</Text>
-            <TouchableOpacity style={styles.toolbarBtn} onPress={handleZoomIn}>
+            <View style={styles.zoomDisplay}>
+              <Text style={styles.zoomText}>{Math.round(zoom * 100)}%</Text>
+            </View>
+            <TouchableOpacity style={styles.toolbarBtn} activeOpacity={0.6} onPress={() => handleZoomIn()}>
               <Text style={styles.toolbarIcon}>+</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.toolbarBtn} onPress={handleRotate}>
-              <Text style={styles.toolbarIcon}>R</Text>
+            
+            <View style={styles.toolbarDivider} />
+            
+            <TouchableOpacity style={styles.toolbarBtn} activeOpacity={0.6} onPress={() => handleRotate()}>
+              <Text style={styles.toolbarIcon}>↻</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.toolbarBtn} onPress={handleFitToScreen}>
-              <Text style={styles.toolbarIcon}>F</Text>
+            <TouchableOpacity style={[styles.toolbarBtn, flipH && styles.toolbarBtnActive]} activeOpacity={0.6} onPress={() => handleFlipH()}>
+              <Text style={styles.toolbarIcon}>⇆</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.toolbarBtn} onPress={handleReset}>
-              <Text style={styles.toolbarIcon}>X</Text>
+            <TouchableOpacity style={[styles.toolbarBtn, flipV && styles.toolbarBtnActive]} activeOpacity={0.6} onPress={() => handleFlipV()}>
+              <Text style={styles.toolbarIcon}>⇅</Text>
             </TouchableOpacity>
-          </View>
+            
+            <View style={styles.toolbarDivider} />
+            
+            <TouchableOpacity style={[styles.toolbarBtn, invert && styles.toolbarBtnActive]} activeOpacity={0.6} onPress={() => handleInvert()}>
+              <Text style={styles.toolbarIcon}>◑</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.toolbarBtn} activeOpacity={0.6} onPress={() => handleFitToScreen()}>
+              <Text style={styles.toolbarIcon}>⊡</Text>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.toolbarBtn} activeOpacity={0.6} onPress={() => handleReset()}>
+              <Text style={styles.toolbarIcon}>↺</Text>
+            </TouchableOpacity>
+          </ScrollView>
           
-          <View style={styles.toolbarRight}>
-            <Text style={styles.modalityText}>{metadata.modality || 'IMG'}</Text>
-          </View>
+          <Text style={styles.modalityText}>{metadata.modality || 'IMG'}</Text>
         </View>
       )}
 
@@ -167,24 +230,28 @@ const DicomViewer = ({
           )}
 
           {showImage && !showNoImageOverlay && (
-            <Image
-              source={{ uri: imageUrl }}
-              style={[
-                styles.image,
-                {
-                  transform: [
-                    { translateX: pan.x },
-                    { translateY: pan.y },
-                    { scale: zoom },
-                    { rotate: `${rotation}deg` },
-                  ],
-                },
-              ]}
-              resizeMode="contain"
-              onLoadStart={() => setIsLoading(true)}
-              onLoad={handleImageLoad}
-              onError={handleImageError}
-            />
+            <View style={styles.imageWrapper}>
+              <Image
+                source={{ uri: invert ? `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}invert=1&t=${Date.now()}` : imageUrl }}
+                style={[
+                  styles.image,
+                  {
+                    transform: [
+                      { translateX: pan.x },
+                      { translateY: pan.y },
+                      { scale: zoom },
+                      { rotate: `${rotation}deg` },
+                      { scaleX: flipH ? -1 : 1 },
+                      { scaleY: flipV ? -1 : 1 },
+                    ],
+                  },
+                ]}
+                resizeMode="contain"
+                onLoadStart={() => setIsLoading(true)}
+                onLoad={handleImageLoad}
+                onError={handleImageError}
+              />
+            </View>
           )}
         </View>
 
@@ -258,7 +325,7 @@ const DicomViewer = ({
             <TouchableOpacity
               key={key}
               style={[styles.presetBtn, activePreset === key && styles.presetBtnActive]}
-              onPress={() => setActivePreset(key)}
+              onPress={() => handlePresetSelect(key)}
             >
               <Text style={[styles.presetLabel, activePreset === key && styles.presetLabelActive]}>
                 {preset.label}
@@ -276,31 +343,62 @@ const styles = StyleSheet.create({
   toolbar: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.md,
+    paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
     paddingTop: spacing.xl,
-    backgroundColor: 'rgba(0,0,0,0.8)',
+    backgroundColor: 'rgba(0,0,0,0.95)',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
   },
-  toolbarLeft: { flexDirection: 'row', alignItems: 'center' },
-  toolbarCenter: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
-  toolbarRight: { flexDirection: 'row', alignItems: 'center' },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.md,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  backIcon: { fontSize: 18, color: '#fff', fontWeight: '600' },
+  toolbarScroll: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingRight: spacing.sm,
+  },
   toolbarBtn: {
     width: 36,
     height: 36,
     borderRadius: borderRadius.md,
-    backgroundColor: 'rgba(255,255,255,0.1)',
+    backgroundColor: 'rgba(255,255,255,0.15)',
     alignItems: 'center',
     justifyContent: 'center',
+    marginHorizontal: 2,
   },
-  toolbarIcon: { fontSize: 16, color: '#fff', fontWeight: '600' },
-  zoomText: { color: '#fff', fontSize: 12, minWidth: 45, textAlign: 'center' },
-  modalityText: { color: colors.primary, fontSize: 14, fontWeight: '600' },
-  viewerContainer: { flex: 1, backgroundColor: '#000', alignItems: 'center', justifyContent: 'center' },
-  panArea: { ...StyleSheet.absoluteFillObject, alignItems: 'center', justifyContent: 'center' },
-  image: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT - 200 },
+  toolbarBtnActive: {
+    backgroundColor: colors.primary,
+  },
+  toolbarIcon: { fontSize: 18, color: '#fff', fontWeight: '600' },
+  toolbarDivider: {
+    width: 1,
+    height: 24,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    marginHorizontal: spacing.sm,
+  },
+  zoomDisplay: {
+    paddingHorizontal: spacing.sm,
+    minWidth: 50,
+  },
+  zoomText: { color: '#fff', fontSize: 12, textAlign: 'center' },
+  modalityText: { color: colors.primary, fontSize: 12, fontWeight: '600', marginLeft: spacing.sm },
+  viewerContainer: { flex: 1, backgroundColor: '#000' },
+  panArea: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  imageWrapper: { 
+    flex: 1, 
+    alignItems: 'center', 
+    justifyContent: 'center',
+    width: '100%',
+  },
+  image: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT - 220 },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.8)',
