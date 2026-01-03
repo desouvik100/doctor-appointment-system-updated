@@ -40,7 +40,18 @@ export const getDoctorReviews = async (doctorId, params = {}) => {
 };
 
 /**
- * Get doctor available slots
+ * Get doctor available slots for a specific date
+ * Same API as web: GET /api/doctors/:id/available-slots?date=
+ */
+export const getAvailableSlots = async (doctorId, date) => {
+  const response = await apiClient.get(`/doctors/${doctorId}/available-slots`, {
+    params: { date }
+  });
+  return response.data;
+};
+
+/**
+ * Get doctor available slots (alias)
  */
 export const getDoctorSlots = async (doctorId, date) => {
   const response = await apiClient.get(`/doctors/${doctorId}/slots`, { 
@@ -53,7 +64,7 @@ export const getDoctorSlots = async (doctorId, date) => {
  * Get specializations list
  */
 export const getSpecializations = async () => {
-  const response = await apiClient.get('/doctors/specializations');
+  const response = await apiClient.get('/doctors/specializations/list');
   return response.data;
 };
 
@@ -159,6 +170,7 @@ export default {
   getDoctorProfile,
   getDoctorReviews,
   getDoctorSlots,
+  getAvailableSlots,
   getSpecializations,
   getNearbyDoctors,
   getRecommendedDoctors,

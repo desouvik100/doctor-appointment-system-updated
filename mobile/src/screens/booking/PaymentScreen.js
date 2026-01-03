@@ -19,8 +19,10 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';
 import apiClient from '../../services/api/apiClient';
+import { useUser } from '../../context/UserContext';
 
 const PaymentScreen = ({ navigation, route }) => {
+  const { user } = useUser();
   const { 
     doctor, 
     date, 
@@ -119,6 +121,18 @@ const PaymentScreen = ({ navigation, route }) => {
   };
 
   const handlePayment = async () => {
+    // Validate required data
+    if (!appointmentId) {
+      Alert.alert('Error', 'Appointment information missing. Please try booking again.');
+      return;
+    }
+
+    const userId = user?.id || user?._id || user?.userId;
+    if (!userId) {
+      Alert.alert('Error', 'User session invalid. Please login again.');
+      return;
+    }
+
     setLoading(true);
     
     try {
@@ -126,29 +140,55 @@ const PaymentScreen = ({ navigation, route }) => {
       const orderResponse = await apiClient.post('/payments/create-order', {
         amount: totalAmount,
         appointmentId,
+        userId,
         paymentMethod: selectedPayment,
         couponCode: appliedCoupon?.code,
       });
 
       if (orderResponse.data.success) {
-        // For wallet payment, process directly
-        if (selectedPayment === 'wallet') {
-          const paymentResponse = await apiClient.post('/payments/process-wallet', {
-            orderId: orderResponse.data.orderId,
-            appointmentId,
-          });
-          
-          if (paymentResponse.data.success) {
-            Alert.alert('Success', 'Payment successful!', [
-              { text: 'OK', onPress: () => navigation.navigate('BookingConfirmation', {
+        // Check if test mode (Razorpay disabled)
+        if (orderResponse.data.testMode) {
+          Alert.alert('Success', 'Appointment confirmed!', [
+            { text: 'OK', onPress: () => navigation.navigate('BookingConfirmation', {
+              booking: {
+                id: appointmentId,
                 doctor,
                 date,
                 time,
                 queueNumber,
                 consultationType,
                 patient,
-                appointmentId,
-                paymentId: paymentResponse.data.paymentId,
+                amount: totalAmount,
+                paymentMethod: selectedPayment,
+              }
+            })}
+          ]);
+          return;
+        }
+
+        // For wallet payment, process directly
+        if (selectedPayment === 'wallet') {
+          const paymentResponse = await apiClient.post('/payments/process-wallet', {
+            orderId: orderResponse.data.orderId,
+            appointmentId,
+            userId,
+          });
+          
+          if (paymentResponse.data.success) {
+            Alert.alert('Success', 'Payment successful!', [
+              { text: 'OK', onPress: () => navigation.navigate('BookingConfirmation', {
+                booking: {
+                  id: appointmentId,
+                  doctor,
+                  date,
+                  time,
+                  queueNumber,
+                  consultationType,
+                  patient,
+                  amount: totalAmount,
+                  paymentMethod: selectedPayment,
+                  paymentId: paymentResponse.data.paymentId,
+                }
               })}
             ]);
           }
@@ -159,14 +199,18 @@ const PaymentScreen = ({ navigation, route }) => {
             { text: 'OK', onPress: () => {
               // Simulate successful payment for demo
               navigation.navigate('BookingConfirmation', {
-                doctor,
-                date,
-                time,
-                queueNumber,
-                consultationType,
-                patient,
-                appointmentId,
-                paymentId: orderResponse.data.orderId,
+                booking: {
+                  id: appointmentId,
+                  doctor,
+                  date,
+                  time,
+                  queueNumber,
+                  consultationType,
+                  patient,
+                  amount: totalAmount,
+                  paymentMethod: selectedPayment,
+                  paymentId: orderResponse.data.orderId,
+                }
               });
             }}
           ]);

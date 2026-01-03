@@ -130,6 +130,13 @@ const ConfirmationScreen = ({ navigation, route }) => {
               <Text style={styles.detailLabel}>Patient</Text>
               <Text style={styles.detailValue}>{booking?.patient?.name}</Text>
             </View>
+            {booking?.queueNumber && (
+              <View style={styles.detailItem}>
+                <Text style={styles.detailIcon}>🎫</Text>
+                <Text style={styles.detailLabel}>Token</Text>
+                <Text style={styles.detailValue}>#{booking.queueNumber}</Text>
+              </View>
+            )}
           </View>
         </Card>
 
@@ -139,23 +146,23 @@ const ConfirmationScreen = ({ navigation, route }) => {
           <Text style={styles.qrSubtitle}>Show this at the clinic for quick check-in</Text>
           
           <View style={styles.qrContainer}>
-            <QRCode
-              value={JSON.stringify({
-                bookingId: booking?.id,
-                patientId: booking?.patient?.id,
-                doctorId: booking?.doctor?.id,
-                date: booking?.date,
-                time: booking?.time,
-              })}
-              size={180}
-              backgroundColor="white"
-              color={colors.background}
-            />
+            {booking?.id ? (
+              <QRCode
+                value={`HEALTHSYNC:${booking.id}`}
+                size={180}
+                backgroundColor="white"
+                color={colors.background}
+              />
+            ) : (
+              <View style={styles.qrPlaceholder}>
+                <Text style={styles.qrPlaceholderText}>QR Code</Text>
+              </View>
+            )}
           </View>
           
           <View style={styles.bookingIdRow}>
             <Text style={styles.bookingIdLabel}>Booking ID</Text>
-            <Text style={styles.bookingIdValue}>{booking?.id}</Text>
+            <Text style={styles.bookingIdValue}>{booking?.id || 'N/A'}</Text>
           </View>
         </Card>
 
@@ -230,6 +237,11 @@ const styles = StyleSheet.create({
   qrContainer: {
     padding: spacing.lg, backgroundColor: 'white', borderRadius: borderRadius.lg, marginBottom: spacing.lg,
   },
+  qrPlaceholder: {
+    width: 180, height: 180, backgroundColor: colors.surface, borderRadius: borderRadius.md,
+    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.surfaceBorder,
+  },
+  qrPlaceholderText: { ...typography.bodyMedium, color: colors.textMuted },
   bookingIdRow: { flexDirection: 'row', alignItems: 'center' },
   bookingIdLabel: { ...typography.labelMedium, color: colors.textMuted, marginRight: spacing.sm },
   bookingIdValue: { ...typography.bodyMedium, color: colors.primary, fontWeight: '600' },

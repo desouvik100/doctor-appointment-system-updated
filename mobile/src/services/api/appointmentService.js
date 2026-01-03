@@ -89,6 +89,26 @@ export const getAvailableSlots = async (doctorId, date) => {
 };
 
 /**
+ * Check time availability (same as web: POST /api/appointments/check-availability)
+ */
+export const checkAvailability = async (doctorId, date, time) => {
+  const response = await apiClient.post('/appointments/check-availability', {
+    doctorId,
+    date,
+    time
+  });
+  return response.data;
+};
+
+/**
+ * Get booked times for a doctor on a date (same as web)
+ */
+export const getBookedTimes = async (doctorId, date) => {
+  const response = await apiClient.get(`/appointments/booked-times/${doctorId}/${date}`);
+  return response.data;
+};
+
+/**
  * Add appointment to calendar
  */
 export const getCalendarEvent = (appointment) => {
@@ -131,6 +151,8 @@ export default {
   checkIn,
   checkInWithQR,
   getAvailableSlots,
+  checkAvailability,
+  getBookedTimes,
   getCalendarEvent,
   getAppointmentHistory,
   rateAppointment,

@@ -80,14 +80,30 @@ const AdminLoginScreen = ({ navigation }) => {
       navigation.replace('Main');
     } catch (error) {
       let message = 'Login failed. Please check your credentials.';
+      let title = 'Login Failed';
+      
+      // Check for network/connection errors
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        message = 'Server is waking up (free tier). Please wait 30-60 seconds and try again.';
+        title = 'Server Starting Up';
+        message = 'The server is waking up (free tier hosting). Please wait 30-60 seconds and try again.';
+      } else if (error.code === 'ERR_NETWORK' || !error.response) {
+        title = 'Connection Error';
+        message = 'Cannot connect to server. The server may be starting up. Please wait a moment and try again.';
+      } else if (error.response?.status === 400) {
+        message = error.response.data?.message || 'Invalid admin credentials. Please check your email and password.';
+      } else if (error.response?.status === 403) {
+        message = error.response.data?.message || 'Your admin account has been suspended.';
       } else if (error.response?.data?.message) {
         message = error.response.data.message;
-      } else if (!error.response) {
-        message = 'Cannot connect to server. It may be starting up. Please try again in a moment.';
       }
-      Alert.alert('Login Failed', message);
+      
+      Alert.alert(title, message, [
+        { text: 'OK' },
+        { 
+          text: 'Retry', 
+          onPress: () => setTimeout(handleLogin, 1000) 
+        }
+      ]);
     } finally {
       setLoading(false);
     }

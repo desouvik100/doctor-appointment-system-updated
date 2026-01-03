@@ -77,8 +77,14 @@ const DicomViewer = ({
 
   const panResponder = useRef(
     PanResponder.create({
-      onStartShouldSetPanResponder: () => true,
-      onMoveShouldSetPanResponder: () => true,
+      onStartShouldSetPanResponder: (evt, gestureState) => {
+        // Only capture pan if it's a drag (not a tap)
+        return Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5;
+      },
+      onMoveShouldSetPanResponder: (evt, gestureState) => {
+        // Only capture pan if there's significant movement
+        return Math.abs(gestureState.dx) > 5 || Math.abs(gestureState.dy) > 5;
+      },
       onPanResponderGrant: () => {
         lastPan.current = { ...currentPan.current };
       },
@@ -118,7 +124,11 @@ const DicomViewer = ({
     setZoom(1.0); 
     setPan({ x: 0, y: 0 }); 
   };
-  const handleInvert = () => setInvert(prev => !prev);
+  const handleInvert = () => {
+    setInvert(prev => !prev);
+    // Note: True color inversion requires native image processing
+    // The visual effect is simulated with an overlay
+  };
   const handleFlipH = () => setFlipH(prev => !prev);
   const handleFlipV = () => setFlipV(prev => !prev);
 
@@ -171,7 +181,12 @@ const DicomViewer = ({
     <View style={styles.container}>
       {showToolbar && (
         <View style={styles.toolbar}>
-          <TouchableOpacity style={styles.backBtn} activeOpacity={0.6} onPress={onClose}>
+          <TouchableOpacity 
+            style={styles.backBtn} 
+            activeOpacity={0.6} 
+            onPress={onClose}
+            hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+          >
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
           
@@ -179,38 +194,79 @@ const DicomViewer = ({
             horizontal 
             showsHorizontalScrollIndicator={false}
             contentContainerStyle={styles.toolbarScroll}
+            keyboardShouldPersistTaps="handled"
           >
-            <TouchableOpacity style={styles.toolbarBtn} activeOpacity={0.6} onPress={() => handleZoomOut()}>
+            <TouchableOpacity 
+              style={styles.toolbarBtn} 
+              activeOpacity={0.6} 
+              onPress={handleZoomOut}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
               <Text style={styles.toolbarIcon}>−</Text>
             </TouchableOpacity>
             <View style={styles.zoomDisplay}>
               <Text style={styles.zoomText}>{Math.round(zoom * 100)}%</Text>
             </View>
-            <TouchableOpacity style={styles.toolbarBtn} activeOpacity={0.6} onPress={() => handleZoomIn()}>
+            <TouchableOpacity 
+              style={styles.toolbarBtn} 
+              activeOpacity={0.6} 
+              onPress={handleZoomIn}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
               <Text style={styles.toolbarIcon}>+</Text>
             </TouchableOpacity>
             
             <View style={styles.toolbarDivider} />
             
-            <TouchableOpacity style={styles.toolbarBtn} activeOpacity={0.6} onPress={() => handleRotate()}>
+            <TouchableOpacity 
+              style={styles.toolbarBtn} 
+              activeOpacity={0.6} 
+              onPress={handleRotate}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
               <Text style={styles.toolbarIcon}>↻</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.toolbarBtn, flipH && styles.toolbarBtnActive]} activeOpacity={0.6} onPress={() => handleFlipH()}>
+            <TouchableOpacity 
+              style={[styles.toolbarBtn, flipH && styles.toolbarBtnActive]} 
+              activeOpacity={0.6} 
+              onPress={handleFlipH}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
               <Text style={styles.toolbarIcon}>⇆</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={[styles.toolbarBtn, flipV && styles.toolbarBtnActive]} activeOpacity={0.6} onPress={() => handleFlipV()}>
+            <TouchableOpacity 
+              style={[styles.toolbarBtn, flipV && styles.toolbarBtnActive]} 
+              activeOpacity={0.6} 
+              onPress={handleFlipV}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
               <Text style={styles.toolbarIcon}>⇅</Text>
             </TouchableOpacity>
             
             <View style={styles.toolbarDivider} />
             
-            <TouchableOpacity style={[styles.toolbarBtn, invert && styles.toolbarBtnActive]} activeOpacity={0.6} onPress={() => handleInvert()}>
+            <TouchableOpacity 
+              style={[styles.toolbarBtn, invert && styles.toolbarBtnActive]} 
+              activeOpacity={0.6} 
+              onPress={handleInvert}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
               <Text style={styles.toolbarIcon}>◑</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.toolbarBtn} activeOpacity={0.6} onPress={() => handleFitToScreen()}>
+            <TouchableOpacity 
+              style={styles.toolbarBtn} 
+              activeOpacity={0.6} 
+              onPress={handleFitToScreen}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
               <Text style={styles.toolbarIcon}>⊡</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.toolbarBtn} activeOpacity={0.6} onPress={() => handleReset()}>
+            <TouchableOpacity 
+              style={styles.toolbarBtn} 
+              activeOpacity={0.6} 
+              onPress={handleReset}
+              hitSlop={{ top: 8, bottom: 8, left: 4, right: 4 }}
+            >
               <Text style={styles.toolbarIcon}>↺</Text>
             </TouchableOpacity>
           </ScrollView>
@@ -232,7 +288,7 @@ const DicomViewer = ({
           {showImage && !showNoImageOverlay && (
             <View style={styles.imageWrapper}>
               <Image
-                source={{ uri: invert ? `${imageUrl}${imageUrl.includes('?') ? '&' : '?'}invert=1&t=${Date.now()}` : imageUrl }}
+                source={{ uri: imageUrl }}
                 style={[
                   styles.image,
                   {
@@ -251,6 +307,10 @@ const DicomViewer = ({
                 onLoad={handleImageLoad}
                 onError={handleImageError}
               />
+              {/* Invert overlay - simulates color inversion */}
+              {invert && (
+                <View style={styles.invertOverlay} pointerEvents="none" />
+              )}
             </View>
           )}
         </View>
@@ -349,6 +409,8 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(0,0,0,0.95)',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
+    zIndex: 10,
+    elevation: 10,
   },
   backBtn: {
     width: 36,
@@ -399,6 +461,10 @@ const styles = StyleSheet.create({
     width: '100%',
   },
   image: { width: SCREEN_WIDTH, height: SCREEN_HEIGHT - 220 },
+  invertOverlay: {
+    ...StyleSheet.absoluteFillObject,
+    backgroundColor: 'rgba(255,255,255,0.85)',
+  },
   loadingOverlay: {
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.8)',

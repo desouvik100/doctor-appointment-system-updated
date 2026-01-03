@@ -267,7 +267,14 @@ class SocketManager {
     this._removeAppStateListener();
     
     if (this.socket) {
-      this.socket.disconnect();
+      try {
+        this.socket.disconnect();
+      } catch (error) {
+        // Ignore "property is not configurable" error from Hermes
+        if (!error.message?.includes('not configurable')) {
+          console.log('🔌 [Socket] Disconnect error:', error.message);
+        }
+      }
       this.socket = null;
     }
     
