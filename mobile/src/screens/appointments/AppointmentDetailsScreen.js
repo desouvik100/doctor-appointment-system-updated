@@ -1,8 +1,9 @@
 /**
  * AppointmentDetailsScreen - Full appointment details with actions
+ * Connected to real API
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -11,6 +12,7 @@ import {
   TouchableOpacity,
   StatusBar,
   Alert,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import QRCode from 'react-native-qrcode-svg';
@@ -21,48 +23,124 @@ import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
 import CancelModal from './components/CancelModal';
 import QueueTracker from './components/QueueTracker';
+import { getAppointmentById, cancelAppointment, checkIn } from '../../services/api/appointmentService';
+import dayjs from 'dayjs';
 
 const AppointmentDetailsScreen = ({ navigation, route }) => {
-  const { appointment } = route.params || {};
+  const { appointment, appointmentId } = route.params || {};
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showQR, setShowQR] = useState(false);
+  const [loading, setLoading] = useState(!appointment);
+  const [appointmentData, setAppointmentData] = useState(null);
 
-  // Mock appointment data
-  const appointmentData = appointment || {
-    id: 'APT123456',
-    doctor: { name: 'Dr. Sarah Wilson', specialty: 'Cardiologist', fee: 500 },
-    date: '2026-01-05',
-    time: '2:30 PM',
-    type: 'clinic',
-    status: 'confirmed',
-    patient: { name: 'John Doe', relation: 'Self' },
-    queuePosition: 3,
-    estimatedWait: 15,
-    clinicAddress: '123 Medical Center Drive, Suite 400',
+  useEffect(() => {
+    if (appointment) {
+      // Format the passed appointment data
+      setAppointmentData(formatAppointment(appointment));
+    } else if (appointmentId) {
+      // Fetch from API
+      fetchAppointment();
+    }
+  }, [appointment, appointmentId]);
+
+  const fetchAppointment = async () => {
+    try {
+      setLoading(true);
+      const response = await getAppointmentById(appointmentId);
+      const apt = response?.data || response;
+      setAppointmentData(formatAppointment(apt));
+    } catch (error) {
+      Alert.alert('Error', 'Failed to load appointment details');
+      navigation.goBack();
+    } finally {
+      setLoading(false);
+    }
   };
 
+  const formatAppointment = (apt) => ({
+    id: apt._id || apt.id,
+    doctor: {
+      name: apt.doctorName || apt.doctor?.name || 'Doctor',
+      specialty: apt.specialty || apt.doctor?.specialty || 'Specialist',
+      fee: apt.fee || apt.doctor?.fee || apt.doctor?.consultationFee || 500,
+      photo: apt.doctorPhoto || apt.doctor?.profilePhoto,
+    },
+    date: apt.date || apt.appointmentDate,
+    time: apt.time || apt.timeSlot || apt.estimatedTime || dayjs(apt.appointmentDate).format('h:mm A'),
+    type: apt.consultationType === 'online' || apt.type === 'video' ? 'video' : 'clinic',
+    status: apt.status || 'pending',
+    patient: {
+      name: apt.patientName || apt.patient?.name || 'Patient',
+      id: apt.userId || apt.patient?._id,
+    },
+    queuePosition: apt.queueNumber || apt.queuePosition || 1,
+    estimatedWait: apt.estimatedWait || 15,
+    clinicAddress: apt.clinicAddress || apt.clinic?.address || 'Clinic Address',
+    clinicName: apt.clinicName || apt.clinic?.name,
+    reason: apt.reason,
+    paymentStatus: apt.paymentStatus || 'pending',
+  });
+
   const formatDate = (dateStr) => {
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' });
+    return dayjs(dateStr).format('dddd, MMMM D, YYYY');
   };
 
   const handleReschedule = () => {
-    navigation.navigate('Reschedule', { appointment: appointmentData });
+    navigation.navigate('SlotSelection', { 
+      doctor: {
+        _id: appointmentData.doctor?.id,
+        name: appointmentData.doctor?.name,
+        specialty: appointmentData.doctor?.specialty,
+      },
+      rescheduleAppointmentId: appointmentData.id,
+    });
   };
 
-  const handleCancel = (reason) => {
-    setShowCancelModal(false);
-    Alert.alert('Appointment Cancelled', 'Your appointment has been cancelled. Refund will be processed within 3-5 business days.');
-    navigation.goBack();
+  const handleCancel = async (reason) => {
+    try {
+      await cancelAppointment(appointmentData.id, reason);
+      setShowCancelModal(false);
+      Alert.alert('Appointment Cancelled', 'Your appointment has been cancelled. Refund will be processed within 3-5 business days.');
+      navigation.goBack();
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to cancel appointment');
+    }
   };
 
   const handleJoinCall = () => {
-    navigation.navigate('VideoConsult', { appointmentId: appointmentData.id });
+    navigation.navigate('VideoCall', { 
+      appointmentId: appointmentData.id,
+      doctorName: appointmentData.doctor?.name,
+    });
   };
 
-  const handleCheckIn = () => {
-    Alert.alert('Check-in Successful', 'You have been checked in. Please wait for your turn.');
+  const handleCheckIn = async () => {
+    try {
+      await checkIn(appointmentData.id);
+      Alert.alert('Check-in Successful', 'You have been checked in. Please wait for your turn.');
+      fetchAppointment(); // Refresh data
+    } catch (error) {
+      Alert.alert('Error', error.message || 'Failed to check in');
+    }
   };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={styles.loadingText}>Loading appointment...</Text>
+      </View>
+    );
+  }
+
+  if (!appointmentData) {
+    return (
+      <View style={[styles.container, styles.loadingContainer]}>
+        <Text style={styles.errorText}>Appointment not found</Text>
+        <Button title="Go Back" onPress={() => navigation.goBack()} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -239,6 +317,20 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  loadingContainer: { 
+    alignItems: 'center', 
+    justifyContent: 'center' 
+  },
+  loadingText: { 
+    ...typography.bodyMedium, 
+    color: colors.textSecondary, 
+    marginTop: spacing.md 
+  },
+  errorText: { 
+    ...typography.bodyLarge, 
+    color: colors.error, 
+    marginBottom: spacing.lg 
+  },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg,

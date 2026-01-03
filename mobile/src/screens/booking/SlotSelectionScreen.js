@@ -654,7 +654,6 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     </View>
   );
 };
-</View>
 
 
 const styles = StyleSheet.create({

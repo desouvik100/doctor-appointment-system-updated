@@ -1,25 +1,34 @@
 /**
  * Appointments Screen - Book & Manage
+ * Connected to real API
  */
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
   TouchableOpacity,
   StatusBar,
   FlatList,
+  RefreshControl,
+  ActivityIndicator,
+  Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors, shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
+import { getAppointments, cancelAppointment } from '../../services/api/appointmentService';
+import { devLog, devError } from '../../utils/errorHandler';
+import dayjs from 'dayjs';
 
 const AppointmentsScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('upcoming');
+  const [appointments, setAppointments] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [refreshing, setRefreshing] = useState(false);
 
   const tabs = [
     { id: 'upcoming', label: 'Upcoming' },
@@ -27,44 +36,117 @@ const AppointmentsScreen = ({ navigation }) => {
     { id: 'cancelled', label: 'Cancelled' },
   ];
 
-  const appointments = [
-    {
-      id: '1',
-      doctor: 'Dr. Sarah Wilson',
-      specialty: 'Cardiologist',
-      date: 'Dec 28, 2025',
-      time: '2:30 PM',
-      type: 'video',
-      status: 'confirmed',
-      avatar: null,
-    },
-    {
-      id: '2',
-      doctor: 'Dr. Michael Chen',
-      specialty: 'General Physician',
-      date: 'Dec 30, 2025',
-      time: '10:00 AM',
-      type: 'clinic',
-      status: 'pending',
-      avatar: null,
-    },
-    {
-      id: '3',
-      doctor: 'Dr. Emily Parker',
-      specialty: 'Dermatologist',
-      date: 'Jan 2, 2026',
-      time: '4:00 PM',
-      type: 'video',
-      status: 'confirmed',
-      avatar: null,
-    },
-  ];
+  const fetchAppointments = useCallback(async (showLoader = true) => {
+    if (showLoader) setLoading(true);
+    
+    try {
+      devLog('📅 [AppointmentsScreen] Fetching appointments...');
+      const response = await getAppointments({ status: activeTab });
+      
+      const appointmentsList = Array.isArray(response) 
+        ? response 
+        : (response?.data || response?.appointments || []);
+      
+      // Format appointments for display
+      const formattedAppointments = appointmentsList.map(apt => ({
+        id: apt._id || apt.id,
+        doctor: apt.doctorName || apt.doctor?.name || 'Doctor',
+        doctorId: apt.doctorId || apt.doctor?._id,
+        specialty: apt.specialty || apt.doctor?.specialty || 'Specialist',
+        date: dayjs(apt.date || apt.appointmentDate).format('MMM D, YYYY'),
+        time: apt.time || apt.timeSlot || dayjs(apt.appointmentDate).format('h:mm A'),
+        type: apt.consultationType || apt.type || 'clinic',
+        status: apt.status || 'pending',
+        avatar: apt.doctorPhoto || apt.doctor?.profilePhoto || null,
+        clinicName: apt.clinicName || apt.clinic?.name,
+        clinicAddress: apt.clinicAddress || apt.clinic?.address,
+        rawData: apt,
+      }));
+      
+      setAppointments(formattedAppointments);
+      devLog(`✅ [AppointmentsScreen] Loaded ${formattedAppointments.length} appointments`);
+    } catch (error) {
+      devError('❌ [AppointmentsScreen] Failed to fetch appointments:', error);
+      setAppointments([]);
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }, [activeTab]);
+
+  useEffect(() => {
+    fetchAppointments();
+  }, [fetchAppointments]);
+
+  // Refresh when screen comes into focus
+  useEffect(() => {
+    const unsubscribe = navigation.addListener('focus', () => {
+      fetchAppointments(false);
+    });
+    return unsubscribe;
+  }, [navigation, fetchAppointments]);
+
+  const onRefresh = () => {
+    setRefreshing(true);
+    fetchAppointments(false);
+  };
+
+  const handleCancelAppointment = (appointmentId) => {
+    Alert.alert(
+      'Cancel Appointment',
+      'Are you sure you want to cancel this appointment?',
+      [
+        { text: 'No', style: 'cancel' },
+        {
+          text: 'Yes, Cancel',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await cancelAppointment(appointmentId, 'Cancelled by patient');
+              Alert.alert('Success', 'Appointment cancelled successfully');
+              fetchAppointments();
+            } catch (error) {
+              Alert.alert('Error', error.message || 'Failed to cancel appointment');
+            }
+          },
+        },
+      ]
+    );
+  };
+
+  const handleReschedule = (appointment) => {
+    navigation.navigate('SlotSelection', {
+      doctor: {
+        _id: appointment.doctorId,
+        name: appointment.doctor,
+        specialty: appointment.specialty,
+      },
+      rescheduleAppointmentId: appointment.id,
+    });
+  };
+
+  const handleJoinCall = (appointment) => {
+    navigation.navigate('VideoCall', {
+      appointmentId: appointment.id,
+      doctorName: appointment.doctor,
+    });
+  };
+
+  const handleViewDetails = (appointment) => {
+    navigation.navigate('AppointmentDetails', {
+      appointment: appointment.rawData,
+    });
+  };
 
   const renderAppointmentCard = ({ item }) => (
-    <Card variant="gradient" style={styles.appointmentCard} onPress={() => {}}>
+    <Card 
+      variant="gradient" 
+      style={styles.appointmentCard} 
+      onPress={() => handleViewDetails(item)}
+    >
       <View style={styles.cardHeader}>
         <View style={styles.doctorRow}>
-          <Avatar name={item.doctor} size="large" />
+          <Avatar name={item.doctor} size="large" source={item.avatar} />
           <View style={styles.doctorDetails}>
             <Text style={styles.doctorName}>{item.doctor}</Text>
             <Text style={styles.specialty}>{item.specialty}</Text>
@@ -73,14 +155,20 @@ const AppointmentsScreen = ({ navigation }) => {
         <View style={[
           styles.statusBadge,
           item.status === 'confirmed' && styles.statusConfirmed,
+          item.status === 'completed' && styles.statusCompleted,
           item.status === 'pending' && styles.statusPending,
+          item.status === 'cancelled' && styles.statusCancelled,
         ]}>
           <Text style={[
             styles.statusText,
             item.status === 'confirmed' && styles.statusTextConfirmed,
+            item.status === 'completed' && styles.statusTextCompleted,
             item.status === 'pending' && styles.statusTextPending,
+            item.status === 'cancelled' && styles.statusTextCancelled,
           ]}>
-            {item.status === 'confirmed' ? '✓ Confirmed' : '⏳ Pending'}
+            {item.status === 'confirmed' ? '✓ Confirmed' : 
+             item.status === 'completed' ? '✓ Completed' :
+             item.status === 'cancelled' ? '✗ Cancelled' : '⏳ Pending'}
           </Text>
         </View>
       </View>
@@ -106,35 +194,39 @@ const AppointmentsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={styles.cardActions}>
-        <TouchableOpacity style={styles.secondaryBtn}>
-          <Text style={styles.secondaryBtnText}>Reschedule</Text>
-        </TouchableOpacity>
-        {item.type === 'video' && item.status === 'confirmed' && (
-          <TouchableOpacity style={styles.primaryBtn}>
-            <LinearGradient
-              colors={colors.gradientPrimary}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.primaryBtnGradient}
-            >
-              <Text style={styles.primaryBtnText}>Join Call</Text>
-            </LinearGradient>
+      {activeTab === 'upcoming' && item.status !== 'cancelled' && (
+        <View style={styles.cardActions}>
+          <TouchableOpacity 
+            style={styles.secondaryBtn}
+            onPress={() => handleReschedule(item)}
+          >
+            <Text style={styles.secondaryBtnText}>Reschedule</Text>
           </TouchableOpacity>
-        )}
-        {item.type === 'clinic' && (
-          <TouchableOpacity style={styles.primaryBtn}>
-            <LinearGradient
-              colors={colors.gradientPrimary}
-              start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
-              style={styles.primaryBtnGradient}
+          {item.type === 'video' && item.status === 'confirmed' && (
+            <TouchableOpacity 
+              style={styles.primaryBtn}
+              onPress={() => handleJoinCall(item)}
             >
-              <Text style={styles.primaryBtnText}>Get Directions</Text>
-            </LinearGradient>
-          </TouchableOpacity>
-        )}
-      </View>
+              <LinearGradient
+                colors={colors.gradientPrimary}
+                start={{ x: 0, y: 0 }}
+                end={{ x: 1, y: 0 }}
+                style={styles.primaryBtnGradient}
+              >
+                <Text style={styles.primaryBtnText}>Join Call</Text>
+              </LinearGradient>
+            </TouchableOpacity>
+          )}
+          {item.type === 'clinic' && (
+            <TouchableOpacity 
+              style={styles.cancelBtn}
+              onPress={() => handleCancelAppointment(item.id)}
+            >
+              <Text style={styles.cancelBtnText}>Cancel</Text>
+            </TouchableOpacity>
+          )}
+        </View>
+      )}
     </Card>
   );
 
@@ -181,23 +273,47 @@ const AppointmentsScreen = ({ navigation }) => {
         ))}
       </View>
 
-      {/* Appointments List */}
-      <FlatList
-        data={appointments}
-        renderItem={renderAppointmentCard}
-        keyExtractor={(item) => item.id}
-        contentContainerStyle={styles.listContent}
-        showsVerticalScrollIndicator={false}
-        ListEmptyComponent={
-          <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>📅</Text>
-            <Text style={styles.emptyTitle}>No appointments</Text>
-            <Text style={styles.emptyDesc}>
-              You don't have any {activeTab} appointments
-            </Text>
-          </View>
-        }
-      />
+      {/* Loading State */}
+      {loading ? (
+        <View style={styles.loadingContainer}>
+          <ActivityIndicator size="large" color={colors.primary} />
+          <Text style={styles.loadingText}>Loading appointments...</Text>
+        </View>
+      ) : (
+        /* Appointments List */
+        <FlatList
+          data={appointments}
+          renderItem={renderAppointmentCard}
+          keyExtractor={(item) => item.id}
+          contentContainerStyle={styles.listContent}
+          showsVerticalScrollIndicator={false}
+          refreshControl={
+            <RefreshControl
+              refreshing={refreshing}
+              onRefresh={onRefresh}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
+            />
+          }
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyIcon}>📅</Text>
+              <Text style={styles.emptyTitle}>No appointments</Text>
+              <Text style={styles.emptyDesc}>
+                You don't have any {activeTab} appointments
+              </Text>
+              {activeTab === 'upcoming' && (
+                <TouchableOpacity 
+                  style={styles.bookNowBtn}
+                  onPress={() => navigation.navigate('Booking')}
+                >
+                  <Text style={styles.bookNowText}>Book Now</Text>
+                </TouchableOpacity>
+              )}
+            </View>
+          }
+        />
+      )}
 
       {/* Floating Book Button */}
       <TouchableOpacity 
@@ -215,6 +331,7 @@ const AppointmentsScreen = ({ navigation }) => {
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -275,6 +392,16 @@ const styles = StyleSheet.create({
     height: 3,
     borderRadius: 2,
   },
+  loadingContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  loadingText: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+    marginTop: spacing.md,
+  },
   listContent: {
     paddingHorizontal: spacing.xl,
     paddingBottom: 120,
@@ -315,8 +442,14 @@ const styles = StyleSheet.create({
   statusConfirmed: {
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
   },
+  statusCompleted: {
+    backgroundColor: 'rgba(59, 130, 246, 0.15)',
+  },
   statusPending: {
     backgroundColor: 'rgba(245, 158, 11, 0.15)',
+  },
+  statusCancelled: {
+    backgroundColor: 'rgba(239, 68, 68, 0.15)',
   },
   statusText: {
     ...typography.labelSmall,
@@ -325,8 +458,14 @@ const styles = StyleSheet.create({
   statusTextConfirmed: {
     color: colors.success,
   },
+  statusTextCompleted: {
+    color: colors.info,
+  },
   statusTextPending: {
     color: colors.warning,
+  },
+  statusTextCancelled: {
+    color: colors.error,
   },
   cardDivider: {
     height: 1,
@@ -387,6 +526,19 @@ const styles = StyleSheet.create({
     ...typography.buttonSmall,
     color: colors.textSecondary,
   },
+  cancelBtn: {
+    flex: 1,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.error,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+  },
+  cancelBtnText: {
+    ...typography.buttonSmall,
+    color: colors.error,
+  },
   primaryBtn: {
     flex: 1,
     borderRadius: borderRadius.lg,
@@ -417,6 +569,17 @@ const styles = StyleSheet.create({
     ...typography.bodyMedium,
     color: colors.textSecondary,
     textAlign: 'center',
+  },
+  bookNowBtn: {
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.md,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.lg,
+  },
+  bookNowText: {
+    ...typography.button,
+    color: colors.textInverse,
   },
   floatingBtn: {
     position: 'absolute',
