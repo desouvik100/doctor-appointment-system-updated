@@ -138,6 +138,29 @@ router.post('/verify', async (req, res) => {
             // Save invoice number to appointment
             populatedAppointment.invoiceNumber = invoiceResult.invoiceNumber;
             await populatedAppointment.save();
+            
+            // Send WhatsApp payment confirmation
+            if (populatedAppointment.userId?.phone) {
+              try {
+                const whatsappService = require('../services/whatsappService');
+                const appointmentDate = new Date(populatedAppointment.date).toLocaleDateString('en-IN', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                });
+                await whatsappService.sendPaymentConfirmation(populatedAppointment.userId.phone, {
+                  patientName: populatedAppointment.userId.name,
+                  amount: totalAmount,
+                  transactionId: razorpay_payment_id,
+                  appointmentDate: appointmentDate,
+                  doctorName: populatedAppointment.doctorId?.name
+                });
+                console.log(`✅ WhatsApp payment confirmation sent to ${populatedAppointment.userId.phone}`);
+              } catch (whatsappError) {
+                console.error('❌ WhatsApp payment confirmation failed:', whatsappError.message);
+              }
+            }
           } else {
             console.error('❌ Invoice sending failed:', invoiceResult?.error);
           }

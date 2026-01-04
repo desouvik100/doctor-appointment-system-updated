@@ -847,6 +847,28 @@ router.post('/', async (req, res) => {
               } catch (smsError) {
                 console.error(`❌ Failed to send SMS to patient:`, smsError.message);
               }
+              
+              // Send WhatsApp notification
+              try {
+                const whatsappService = require('../services/whatsappService');
+                const appointmentDate = new Date(appointment.date).toLocaleDateString('en-IN', {
+                  weekday: 'long',
+                  year: 'numeric',
+                  month: 'long',
+                  day: 'numeric'
+                });
+                await whatsappService.sendAppointmentConfirmation(user.phone, {
+                  patientName: user.name,
+                  doctorName: doctor.name,
+                  date: appointmentDate,
+                  time: appointment.time,
+                  clinicName: populatedForEmail.clinicId?.name || 'HealthSync Clinic',
+                  appointmentId: appointment._id.toString().slice(-8).toUpperCase()
+                });
+                console.log(`✅ WhatsApp sent to patient: ${user.phone}`);
+              } catch (whatsappError) {
+                console.error(`❌ Failed to send WhatsApp to patient:`, whatsappError.message);
+              }
             }
             
             // Send email to doctor - ALWAYS try if doctor has email
@@ -1157,6 +1179,28 @@ router.post('/queue-booking', async (req, res) => {
           console.log(`✅ Queue booking SMS sent to ${user.phone}`);
         } catch (smsError) {
           console.error('❌ Error sending queue booking SMS:', smsError.message);
+        }
+        
+        // Send WhatsApp notification
+        try {
+          const whatsappService = require('../services/whatsappService');
+          const formattedDate = appointmentDate.toLocaleDateString('en-IN', {
+            weekday: 'long',
+            year: 'numeric',
+            month: 'long',
+            day: 'numeric'
+          });
+          await whatsappService.sendAppointmentConfirmation(user.phone, {
+            patientName: user.name,
+            doctorName: doctor.name,
+            date: formattedDate,
+            time: estimatedTime || 'Queue-based',
+            clinicName: doctor.clinicId?.name || 'HealthSync Clinic',
+            appointmentId: appointment._id.toString().slice(-8).toUpperCase()
+          });
+          console.log(`✅ WhatsApp sent to patient: ${user.phone}`);
+        } catch (whatsappError) {
+          console.error('❌ Failed to send WhatsApp to patient:', whatsappError.message);
         }
       }
     }
