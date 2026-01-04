@@ -22,7 +22,7 @@ export const API_TIMEOUT = 120000; // 120 seconds for Render cold starts
 // Social Auth Configuration
 // Google OAuth Web Client ID from Google Cloud Console
 export const GOOGLE_WEB_CLIENT_ID = '703204659246-q2jpikuoqkjsmsvbsrtfp3bcoush4h3r.apps.googleusercontent.com';
-export const FACEBOOK_APP_ID = 'YOUR_FACEBOOK_APP_ID';
+export const FACEBOOK_APP_ID = '757040944108773';
 
 // Other config
 export const CONFIG = {
