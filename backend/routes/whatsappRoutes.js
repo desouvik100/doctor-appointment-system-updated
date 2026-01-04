@@ -168,6 +168,23 @@ router.post('/send-test', async (req, res) => {
   }
 });
 
+// Test endpoint using hello_world template (pre-approved)
+router.post('/send-template-test', async (req, res) => {
+  try {
+    const { phone } = req.body;
+
+    if (!phone) {
+      return res.status(400).json({ success: false, message: 'Phone is required' });
+    }
+
+    // Use hello_world template which is pre-approved
+    const result = await whatsappService.sendTemplateMessage(phone, 'hello_world', 'en_US');
+    res.json(result);
+  } catch (error) {
+    res.status(500).json({ success: false, error: error.message });
+  }
+});
+
 // Check WhatsApp configuration status
 router.get('/status', (req, res) => {
   const configured = whatsappService.isWhatsAppConfigured();
