@@ -107,6 +107,12 @@ mobile/android/build/
 *.apk
 *.aab
 
+# Android signing (NEVER commit these)
+mobile/android/keystore.properties
+mobile/android/app/*.keystore
+!mobile/android/app/debug.keystore
+*.jks
+
 # iOS build files
 mobile/ios/build/
 mobile/ios/Pods/

@@ -1,8 +1,8 @@
 /**
- * MedicalTimelineScreen - Chronological health events timeline
+ * MedicalTimelineScreen - Chronological health events timeline with API integration
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
   Text,
@@ -11,15 +11,23 @@ import {
   TouchableOpacity,
   StatusBar,
   RefreshControl,
+  ActivityIndicator,
 } from 'react-native';
 import { colors } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
+import { useUser } from '../../context/UserContext';
+import apiClient from '../../services/api/apiClient';
 
 const MedicalTimelineScreen = ({ navigation }) => {
+  const { user } = useUser();
   const [activeFilter, setActiveFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
+  const [loading, setLoading] = useState(true);
   const [events, setEvents] = useState([]);
+  const [page, setPage] = useState(1);
+  const [hasMore, setHasMore] = useState(true);
+  const [loadingMore, setLoadingMore] = useState(false);
 
   const filters = [
     { id: 'all', label: 'All' },
@@ -29,33 +37,51 @@ const MedicalTimelineScreen = ({ navigation }) => {
     { id: 'vitals', label: 'Vitals' },
   ];
 
-  // Mock data
-  const mockEvents = [
-    { id: '1', type: 'appointment', title: 'Consultation with Dr. Sarah Wilson', subtitle: 'Cardiologist', date: '2026-01-02', icon: '👨‍⚕️' },
-    { id: '2', type: 'prescription', title: 'Prescription Added', subtitle: 'Metformin 500mg, Aspirin 75mg', date: '2026-01-02', icon: '💊' },
-    { id: '3', type: 'report', title: 'Blood Test Results', subtitle: 'Complete Blood Count', date: '2025-12-28', icon: '🔬' },
-    { id: '4', type: 'vitals', title: 'Vitals Recorded', subtitle: 'BP: 120/80, HR: 72 bpm', date: '2025-12-28', icon: '❤️' },
-    { id: '5', type: 'appointment', title: 'Consultation with Dr. Michael Chen', subtitle: 'General Physician', date: '2025-12-20', icon: '👨‍⚕️' },
-    { id: '6', type: 'report', title: 'X-Ray Report', subtitle: 'Chest X-Ray - Normal', date: '2025-12-15', icon: '📋' },
-  ];
+  const fetchTimeline = useCallback(async (pageNum = 1, filter = activeFilter) => {
+    if (!user?._id) return;
+    
+    try {
+      const response = await apiClient.get(`/health/timeline/${user._id}`, {
+        params: { filter, page: pageNum, limit: 20 }
+      });
+      
+      const { events: newEvents, pagination } = response.data;
+      
+      if (pageNum === 1) {
+        setEvents(newEvents || []);
+      } else {
+        setEvents(prev => [...prev, ...(newEvents || [])]);
+      }
+      
+      setHasMore(pagination?.page < pagination?.pages);
+      setPage(pageNum);
+    } catch (error) {
+      console.error('Error fetching timeline:', error);
+      // Keep existing events on error
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+      setLoadingMore(false);
+    }
+  }, [user?._id, activeFilter]);
 
   useEffect(() => {
-    loadEvents();
-  }, [activeFilter]);
+    setLoading(true);
+    setPage(1);
+    fetchTimeline(1, activeFilter);
+  }, [activeFilter, user?._id]);
 
-  const loadEvents = () => {
-    let filtered = mockEvents;
-    if (activeFilter !== 'all') {
-      filtered = mockEvents.filter(e => e.type === activeFilter.slice(0, -1));
-    }
-    setEvents(filtered);
+  const onRefresh = () => {
+    setRefreshing(true);
+    setPage(1);
+    fetchTimeline(1, activeFilter);
   };
 
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await new Promise(r => setTimeout(r, 1000));
-    loadEvents();
-    setRefreshing(false);
+  const loadMore = () => {
+    if (!loadingMore && hasMore) {
+      setLoadingMore(true);
+      fetchTimeline(page + 1, activeFilter);
+    }
   };
 
   const formatDate = (dateStr) => {
@@ -65,24 +91,54 @@ const MedicalTimelineScreen = ({ navigation }) => {
     if (diff === 0) return 'Today';
     if (diff === 1) return 'Yesterday';
     if (diff < 7) return `${diff} days ago`;
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: d.getFullYear() !== today.getFullYear() ? 'numeric' : undefined });
+  };
+
+  const getTypeIcon = (type) => {
+    const icons = {
+      appointment: '👨‍⚕️',
+      prescription: '💊',
+      report: '🔬',
+      vitals: '❤️',
+      lab: '🧪',
+      imaging: '📷',
+    };
+    return icons[type] || '📋';
   };
 
   const handleEventPress = (event) => {
     switch (event.type) {
       case 'appointment':
-        navigation.navigate('AppointmentDetails', { appointmentId: event.id });
+        if (event.referenceId) {
+          navigation.navigate('AppointmentDetails', { appointmentId: event.referenceId });
+        }
         break;
       case 'prescription':
-        navigation.navigate('PrescriptionView', { prescriptionId: event.id });
+        if (event.referenceId) {
+          navigation.navigate('PrescriptionView', { prescriptionId: event.referenceId });
+        }
         break;
       case 'report':
-        navigation.navigate('ReportView', { reportId: event.id });
+        if (event.referenceId) {
+          navigation.navigate('ReportView', { reportId: event.referenceId });
+        }
         break;
       case 'vitals':
         navigation.navigate('VitalsHistory');
         break;
     }
+  };
+
+  const getTypeColor = (type) => {
+    const colorMap = { 
+      appointment: '#10B981', 
+      prescription: '#F59E0B', 
+      report: '#3B82F6', 
+      vitals: '#EF4444',
+      lab: '#8B5CF6',
+      imaging: '#EC4899',
+    };
+    return colorMap[type] || colors.primary;
   };
 
   const renderEvent = ({ item, index }) => (
@@ -91,23 +147,60 @@ const MedicalTimelineScreen = ({ navigation }) => {
         <View style={[styles.dot, { backgroundColor: getTypeColor(item.type) }]} />
         {index < events.length - 1 && <View style={styles.line} />}
       </View>
-      <Card variant="default" style={styles.eventCard} onPress={() => handleEventPress(item)}>
-        <View style={styles.eventHeader}>
-          <Text style={styles.eventIcon}>{item.icon}</Text>
-          <View style={styles.eventInfo}>
-            <Text style={styles.eventTitle}>{item.title}</Text>
-            <Text style={styles.eventSubtitle}>{item.subtitle}</Text>
+      <TouchableOpacity 
+        style={styles.eventCardWrapper}
+        onPress={() => handleEventPress(item)}
+        activeOpacity={0.7}
+      >
+        <Card variant="default" style={styles.eventCard}>
+          <View style={styles.eventHeader}>
+            <Text style={styles.eventIcon}>{item.icon || getTypeIcon(item.type)}</Text>
+            <View style={styles.eventInfo}>
+              <Text style={styles.eventTitle} numberOfLines={2}>{item.title}</Text>
+              <Text style={styles.eventSubtitle} numberOfLines={1}>{item.subtitle}</Text>
+            </View>
+            <View style={styles.eventRight}>
+              <Text style={styles.eventDate}>{formatDate(item.date)}</Text>
+              {item.metadata?.status && (
+                <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.metadata.status) + '20' }]}>
+                  <Text style={[styles.statusText, { color: getStatusColor(item.metadata.status) }]}>
+                    {item.metadata.status}
+                  </Text>
+                </View>
+              )}
+            </View>
           </View>
-          <Text style={styles.eventDate}>{formatDate(item.date)}</Text>
-        </View>
-      </Card>
+        </Card>
+      </TouchableOpacity>
     </View>
   );
 
-  const getTypeColor = (type) => {
-    const colors_map = { appointment: '#10B981', prescription: '#F59E0B', report: '#3B82F6', vitals: '#EF4444' };
-    return colors_map[type] || colors.primary;
+  const getStatusColor = (status) => {
+    const statusColors = {
+      completed: '#10B981',
+      confirmed: '#3B82F6',
+      pending: '#F59E0B',
+      cancelled: '#EF4444',
+    };
+    return statusColors[status?.toLowerCase()] || colors.textMuted;
   };
+
+  const renderFooter = () => {
+    if (!loadingMore) return null;
+    return (
+      <View style={styles.footerLoader}>
+        <ActivityIndicator size="small" color={colors.primary} />
+      </View>
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, styles.centered]}>
+        <ActivityIndicator size="large" color={colors.primary} />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -138,13 +231,24 @@ const MedicalTimelineScreen = ({ navigation }) => {
       <FlatList
         data={events}
         renderItem={renderEvent}
-        keyExtractor={item => item.id}
+        keyExtractor={(item, index) => item._id || item.referenceId || `event-${index}`}
         contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+        refreshControl={
+          <RefreshControl 
+            refreshing={refreshing} 
+            onRefresh={onRefresh} 
+            tintColor={colors.primary}
+            colors={[colors.primary]}
+          />
+        }
+        onEndReached={loadMore}
+        onEndReachedThreshold={0.3}
+        ListFooterComponent={renderFooter}
         ListEmptyComponent={
           <View style={styles.empty}>
             <Text style={styles.emptyIcon}>📋</Text>
             <Text style={styles.emptyText}>No records found</Text>
+            <Text style={styles.emptySubtext}>Your medical history will appear here</Text>
           </View>
         }
       />
@@ -154,6 +258,7 @@ const MedicalTimelineScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
+  centered: { justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
   backBtn: { width: 44, height: 44, borderRadius: borderRadius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
   backIcon: { fontSize: 20, color: colors.textPrimary },
@@ -169,16 +274,22 @@ const styles = StyleSheet.create({
   timelineLeft: { width: 24, alignItems: 'center' },
   dot: { width: 12, height: 12, borderRadius: 6, marginTop: spacing.lg },
   line: { width: 2, flex: 1, backgroundColor: colors.divider, marginTop: spacing.xs },
-  eventCard: { flex: 1, marginLeft: spacing.md, padding: spacing.md },
+  eventCardWrapper: { flex: 1, marginLeft: spacing.md },
+  eventCard: { padding: spacing.md },
   eventHeader: { flexDirection: 'row', alignItems: 'center' },
   eventIcon: { fontSize: 24, marginRight: spacing.md },
   eventInfo: { flex: 1 },
   eventTitle: { ...typography.bodyMedium, color: colors.textPrimary, fontWeight: '500' },
-  eventSubtitle: { ...typography.labelSmall, color: colors.textMuted },
+  eventSubtitle: { ...typography.labelSmall, color: colors.textMuted, marginTop: 2 },
+  eventRight: { alignItems: 'flex-end' },
   eventDate: { ...typography.labelSmall, color: colors.textMuted },
+  statusBadge: { marginTop: 4, paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: borderRadius.sm },
+  statusText: { ...typography.labelSmall, fontSize: 10, textTransform: 'capitalize' },
   empty: { alignItems: 'center', paddingVertical: spacing.huge },
   emptyIcon: { fontSize: 48, marginBottom: spacing.md },
-  emptyText: { ...typography.bodyMedium, color: colors.textMuted },
+  emptyText: { ...typography.bodyLarge, color: colors.textMuted },
+  emptySubtext: { ...typography.bodySmall, color: colors.textMuted, marginTop: spacing.xs },
+  footerLoader: { paddingVertical: spacing.lg, alignItems: 'center' },
 });
 
 export default MedicalTimelineScreen;

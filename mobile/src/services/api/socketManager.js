@@ -398,23 +398,23 @@ class SocketManager {
    * @private
    */
   _handleReconnect() {
-    // Disabled - don't auto-reconnect to avoid spamming logs
-    // Uncomment to enable auto-reconnection
-    /*
     if (this.reconnectAttempts >= RECONNECT_CONFIG.maxAttempts) {
-      console.log('🔌 [Socket] Max reconnect attempts reached');
+      if (__DEV__) {
+        console.log('🔌 [Socket] Max reconnect attempts reached');
+      }
       return;
     }
 
     const delay = getReconnectDelay(this.reconnectAttempts);
-    console.log(`🔌 [Socket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${RECONNECT_CONFIG.maxAttempts})`);
+    if (__DEV__) {
+      console.log(`🔌 [Socket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${RECONNECT_CONFIG.maxAttempts})`);
+    }
 
     this._clearReconnectTimer();
     this.reconnectTimer = setTimeout(async () => {
       this.reconnectAttempts++;
       await this.connect();
     }, delay);
-    */
   }
 
   /**
@@ -433,21 +433,19 @@ class SocketManager {
    * @private
    */
   _setupAppStateListener() {
-    // Disabled - don't auto-reconnect on app foreground
-    // Uncomment to enable
-    /*
     if (this.appStateSubscription) return;
 
     this.appStateSubscription = AppState.addEventListener('change', async (nextAppState) => {
       if (this.lastAppState.match(/inactive|background/) && nextAppState === 'active') {
-        console.log('🔌 [Socket] App came to foreground');
+        if (__DEV__) {
+          console.log('🔌 [Socket] App came to foreground');
+        }
         if (!this.isConnected && !this.isConnecting) {
           await this.connect();
         }
       }
       this.lastAppState = nextAppState;
     });
-    */
   }
 
   /**

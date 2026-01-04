@@ -72,8 +72,8 @@ router.post('/send-registration-otp', async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'OTP sent to your email. Please verify to complete registration.',
-      // Return OTP for debugging (remove in production after testing)
-      otp: result.otp
+      // Only return OTP in development mode for testing
+      ...(process.env.NODE_ENV === 'development' && { otp: result.otp })
     });
 
   } catch (error) {

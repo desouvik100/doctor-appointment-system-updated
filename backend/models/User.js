@@ -291,6 +291,68 @@ const userSchema = new mongoose.Schema(
         type: Date,
         default: Date.now
       }
+    }],
+    
+    // Insurance Policies
+    insurancePolicies: [{
+      provider: { type: String, required: true },
+      policyNumber: { type: String, required: true },
+      type: { type: String, default: 'Health Insurance' },
+      coverageAmount: { type: Number, default: 0 },
+      startDate: { type: Date },
+      expiryDate: { type: Date },
+      holderName: { type: String },
+      relationship: { type: String, default: 'self' },
+      tpaName: { type: String },
+      groupPolicyNumber: { type: String },
+      employerId: { type: String },
+      documents: [{
+        name: String,
+        url: String,
+        uploadedAt: { type: Date, default: Date.now }
+      }],
+      isActive: { type: Boolean, default: true },
+      createdAt: { type: Date, default: Date.now }
+    }],
+    
+    // Vitals History
+    vitalsHistory: [{
+      type: { 
+        type: String, 
+        enum: ['bp', 'hr', 'temp', 'spo2', 'weight', 'sugar', 'height', 'bmi'],
+        required: true 
+      },
+      value: { type: String, required: true },
+      unit: { type: String },
+      systolic: { type: Number }, // For BP
+      diastolic: { type: Number }, // For BP
+      numericValue: { type: Number }, // For other vitals
+      status: { 
+        type: String, 
+        enum: ['normal', 'high', 'low', 'critical'],
+        default: 'normal'
+      },
+      notes: { type: String },
+      recordedBy: { type: String, default: 'self' }, // 'self', 'doctor', 'clinic'
+      recordedAt: { type: Date, default: Date.now },
+      source: { type: String, default: 'manual' } // 'manual', 'device', 'clinic'
+    }],
+    
+    // Medical Timeline Events
+    medicalTimeline: [{
+      type: { 
+        type: String, 
+        enum: ['appointment', 'prescription', 'report', 'vitals', 'vaccination', 'surgery', 'diagnosis'],
+        required: true 
+      },
+      title: { type: String, required: true },
+      subtitle: { type: String },
+      description: { type: String },
+      date: { type: Date, default: Date.now },
+      referenceId: { type: mongoose.Schema.Types.ObjectId },
+      referenceModel: { type: String },
+      metadata: { type: mongoose.Schema.Types.Mixed },
+      icon: { type: String }
     }]
   },
   { timestamps: true }

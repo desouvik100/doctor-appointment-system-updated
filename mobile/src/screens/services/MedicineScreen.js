@@ -18,9 +18,28 @@ import { colors, shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 
-const MedicineScreen = ({ navigation }) => {
+const MedicineScreen = ({ navigation, route }) => {
+  const { prescription } = route.params || {};
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState([]);
+
+  // If coming from prescription, pre-populate cart with prescribed medicines
+  React.useEffect(() => {
+    if (prescription?.medicines?.length > 0) {
+      const prescribedItems = prescription.medicines.map((med, index) => ({
+        id: `rx-${index}`,
+        name: med.name,
+        brand: 'Prescribed',
+        price: 0, // Price to be determined
+        originalPrice: 0,
+        quantity: med.dosage || 'As prescribed',
+        icon: '💊',
+        qty: 1,
+        isPrescribed: true,
+      }));
+      setCart(prescribedItems);
+    }
+  }, [prescription]);
 
   const categories = [
     { id: 'all', label: 'All', icon: '💊' },

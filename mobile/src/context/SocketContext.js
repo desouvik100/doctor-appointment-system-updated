@@ -124,17 +124,11 @@ export const SocketProvider = ({ children }) => {
   }, []);
 
   // Auto-connect when user logs in
-  // Disabled for now due to Render free tier WebSocket limitations
   useEffect(() => {
-    // Socket connection disabled - uncomment to enable real-time updates
-    // if (isLoggedIn && user?.token) {
-    //   connect();
-    // } else if (!isLoggedIn) {
-    //   disconnect();
-    // }
-
-    // Just disconnect on logout
-    if (!isLoggedIn) {
+    // Enable socket connection for real-time updates
+    if (isLoggedIn && user?.token) {
+      connect();
+    } else if (!isLoggedIn) {
       disconnect();
     }
 
@@ -143,7 +137,7 @@ export const SocketProvider = ({ children }) => {
       unsubscribersRef.current.forEach(unsub => unsub());
       unsubscribersRef.current = [];
     };
-  }, [isLoggedIn, user?.token, disconnect]);
+  }, [isLoggedIn, user?.token, connect, disconnect]);
 
   // Setup internal event listeners
   useEffect(() => {
