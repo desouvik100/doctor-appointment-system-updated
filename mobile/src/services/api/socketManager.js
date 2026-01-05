@@ -67,10 +67,16 @@ export const SOCKET_EVENTS = {
 
 // Reconnection configuration with exponential backoff
 const RECONNECT_CONFIG = {
-  maxAttempts: __DEV__ ? 10 : 5,  // Fewer attempts in production
-  initialDelay: 2000,      // 2 seconds
-  maxDelay: 60000,         // 60 seconds
-  multiplier: 2,
+  maxAttempts: 15,         // More attempts for mobile networks
+  initialDelay: 1000,      // 1 second
+  maxDelay: 30000,         // 30 seconds max
+  multiplier: 1.5,
+};
+
+// Heartbeat configuration to keep connection alive
+const HEARTBEAT_CONFIG = {
+  interval: 25000,         // Send ping every 25 seconds
+  timeout: 10000,          // Wait 10 seconds for pong
 };
 
 /**
@@ -97,6 +103,8 @@ class SocketManager {
     this.isConnecting = false;
     this.reconnectAttempts = 0;
     this.reconnectTimer = null;
+    this.heartbeatTimer = null;
+    this.heartbeatTimeout = null;
     this.eventListeners = new Map();
     this.subscribedRooms = new Set();
     this.appStateSubscription = null;
@@ -104,6 +112,7 @@ class SocketManager {
     this.userId = null;
     this.userType = null;
     this.clinicId = null;
+    this.authToken = null;
   }
 
   /**
@@ -129,6 +138,7 @@ class SocketManager {
       return false;
     }
 
+    this.authToken = authToken;
     this.isConnecting = true;
     this.reconnectAttempts = 0;
 
@@ -140,9 +150,14 @@ class SocketManager {
         this.socket = io(socketUrl, {
           auth: { token: authToken },
           transports: ['websocket', 'polling'],
-          reconnection: false, // We handle reconnection manually
+          reconnection: true,
+          reconnectionAttempts: 5,
+          reconnectionDelay: 1000,
+          reconnectionDelayMax: 5000,
           timeout: 20000,
           forceNew: true,
+          pingInterval: 25000,
+          pingTimeout: 10000,
         });
 
         // Connection successful
@@ -152,6 +167,7 @@ class SocketManager {
           this.isConnecting = false;
           this.reconnectAttempts = 0;
           this._clearReconnectTimer();
+          this._startHeartbeat();
           this._setupAppStateListener();
           resolve(true);
         });
@@ -187,12 +203,29 @@ class SocketManager {
         this.socket.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
           console.log('🔌 [Socket] Disconnected:', reason);
           this.isConnected = false;
+          this._stopHeartbeat();
           this._emitToListeners(SOCKET_EVENTS.DISCONNECT, { reason });
           
           // Auto-reconnect unless intentional disconnect
           if (reason !== 'io client disconnect') {
             this._handleReconnect();
           }
+        });
+
+        // Handle reconnect events from socket.io
+        this.socket.on('reconnect', (attemptNumber) => {
+          console.log('🔌 [Socket] Reconnected after', attemptNumber, 'attempts');
+          this.isConnected = true;
+          this._startHeartbeat();
+        });
+
+        this.socket.on('reconnect_attempt', (attemptNumber) => {
+          console.log('🔌 [Socket] Reconnect attempt:', attemptNumber);
+        });
+
+        this.socket.on('reconnect_failed', () => {
+          console.log('🔌 [Socket] Reconnect failed, trying manual reconnect');
+          this._handleReconnect();
         });
 
         // Error handling
@@ -264,6 +297,7 @@ class SocketManager {
   disconnect() {
     console.log('🔌 [Socket] Disconnecting...');
     this._clearReconnectTimer();
+    this._stopHeartbeat();
     this._removeAppStateListener();
     
     if (this.socket) {
@@ -285,6 +319,7 @@ class SocketManager {
     this.userId = null;
     this.userType = null;
     this.clinicId = null;
+    this.authToken = null;
   }
 
   /**
@@ -398,22 +433,27 @@ class SocketManager {
    * @private
    */
   _handleReconnect() {
+    if (this.isConnecting) {
+      return;
+    }
+
     if (this.reconnectAttempts >= RECONNECT_CONFIG.maxAttempts) {
-      if (__DEV__) {
-        console.log('🔌 [Socket] Max reconnect attempts reached');
-      }
+      console.log('🔌 [Socket] Max reconnect attempts reached, will retry on app foreground');
+      this.reconnectAttempts = 0; // Reset for next foreground event
       return;
     }
 
     const delay = getReconnectDelay(this.reconnectAttempts);
-    if (__DEV__) {
-      console.log(`🔌 [Socket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${RECONNECT_CONFIG.maxAttempts})`);
-    }
+    console.log(`🔌 [Socket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${RECONNECT_CONFIG.maxAttempts})`);
 
     this._clearReconnectTimer();
     this.reconnectTimer = setTimeout(async () => {
       this.reconnectAttempts++;
-      await this.connect();
+      if (this.authToken) {
+        await this.connect(this.authToken);
+      } else {
+        await this.connect();
+      }
     }, delay);
   }
 
@@ -425,6 +465,41 @@ class SocketManager {
     if (this.reconnectTimer) {
       clearTimeout(this.reconnectTimer);
       this.reconnectTimer = null;
+    }
+  }
+
+  /**
+   * Start heartbeat to keep connection alive
+   * @private
+   */
+  _startHeartbeat() {
+    this._stopHeartbeat();
+    
+    this.heartbeatTimer = setInterval(() => {
+      if (this.isConnected && this.socket) {
+        // Socket.io handles ping/pong automatically, but we can check connection
+        if (!this.socket.connected) {
+          console.log('🔌 [Socket] Heartbeat detected disconnection');
+          this.isConnected = false;
+          this._stopHeartbeat();
+          this._handleReconnect();
+        }
+      }
+    }, HEARTBEAT_CONFIG.interval);
+  }
+
+  /**
+   * Stop heartbeat timer
+   * @private
+   */
+  _stopHeartbeat() {
+    if (this.heartbeatTimer) {
+      clearInterval(this.heartbeatTimer);
+      this.heartbeatTimer = null;
+    }
+    if (this.heartbeatTimeout) {
+      clearTimeout(this.heartbeatTimeout);
+      this.heartbeatTimeout = null;
     }
   }
 
