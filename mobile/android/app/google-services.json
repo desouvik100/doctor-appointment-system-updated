@@ -14,14 +14,6 @@
       },
       "oauth_client": [
         {
-          "client_id": "703204659246-903fiib6d06eltj9qo7atppq816d0iok.apps.googleusercontent.com",
-          "client_type": 1,
-          "android_info": {
-            "package_name": "com.healthsync.app",
-            "certificate_hash": "5e8f16062ea3cd2c4a0d547876baa6f38cabf625"
-          }
-        },
-        {
           "client_id": "703204659246-q2jpikuoqkjsmsvbsrtfp3bcoush4h3r.apps.googleusercontent.com",
           "client_type": 3
         }
