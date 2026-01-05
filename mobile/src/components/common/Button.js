@@ -6,8 +6,9 @@
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, View, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../../theme/colors';
+import { shadows } from '../../theme/colors';
 import { typography, borderRadius, spacing } from '../../theme/typography';
+import { useTheme } from '../../context/ThemeContext';
 
 const Button = ({
   title,
@@ -21,6 +22,8 @@ const Button = ({
   fullWidth = false,
   style,
 }) => {
+  const { colors } = useTheme();
+
   const getGradient = () => {
     if (disabled) return [colors.surfaceLight, colors.surface];
     switch (variant) {
@@ -112,7 +115,7 @@ const Button = ({
       style={[
         styles.button,
         getSizeStyles(),
-        variant === 'outline' && styles.outline,
+        variant === 'outline' && [styles.outline, { borderColor: colors.primary }],
         variant === 'ghost' && styles.ghost,
         disabled && styles.disabled,
         fullWidth && styles.fullWidth,
@@ -139,7 +142,6 @@ const styles = StyleSheet.create({
   outline: {
     backgroundColor: 'transparent',
     borderWidth: 1.5,
-    borderColor: colors.primary,
   },
   ghost: {
     backgroundColor: 'transparent',

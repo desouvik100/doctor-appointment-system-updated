@@ -16,15 +16,17 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../../theme/colors';
+import { shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import { authService } from '../../services/api';
 import socialAuthService from '../../services/socialAuthService';
 import { useUser } from '../../context/UserContext';
+import { useTheme } from '../../context/ThemeContext';
 
 const RegisterScreen = ({ navigation }) => {
+  const { colors } = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -165,8 +167,8 @@ const RegisterScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
       
       {/* Background gradient orbs */}
       <View style={styles.orbContainer}>
@@ -192,13 +194,13 @@ const RegisterScreen = ({ navigation }) => {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity 
-              style={styles.backButton}
+              style={[styles.backButton, { backgroundColor: colors.surface }]}
               onPress={() => navigation.goBack()}
             >
-              <Text style={styles.backIcon}>←</Text>
+              <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
             </TouchableOpacity>
-            <Text style={styles.headerTitle}>Create Account</Text>
-            <Text style={styles.headerSubtitle}>Join HealthSync today</Text>
+            <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Create Account</Text>
+            <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Join HealthSync today</Text>
           </View>
 
           {/* Registration Form */}
@@ -252,11 +254,11 @@ const RegisterScreen = ({ navigation }) => {
               />
 
               <View style={styles.termsContainer}>
-                <Text style={styles.termsText}>
+                <Text style={[styles.termsText, { color: colors.textSecondary }]}>
                   By signing up, you agree to our{' '}
-                  <Text style={styles.termsLink}>Terms of Service</Text>
+                  <Text style={[styles.termsLink, { color: colors.primary }]}>Terms of Service</Text>
                   {' '}and{' '}
-                  <Text style={styles.termsLink}>Privacy Policy</Text>
+                  <Text style={[styles.termsLink, { color: colors.primary }]}>Privacy Policy</Text>
                 </Text>
               </View>
 
@@ -270,26 +272,26 @@ const RegisterScreen = ({ navigation }) => {
 
               {/* Divider */}
               <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>or sign up with</Text>
-                <View style={styles.dividerLine} />
+                <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
+                <Text style={[styles.dividerText, { color: colors.textMuted }]}>or sign up with</Text>
+                <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
               </View>
 
               {/* Social Sign Up */}
               <View style={styles.socialButtons}>
                 <TouchableOpacity 
-                  style={[styles.socialBtn, socialLoading === 'google' && styles.socialBtnLoading]}
+                  style={[styles.socialBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }, socialLoading === 'google' && styles.socialBtnLoading]}
                   onPress={handleGoogleSignUp}
                   disabled={socialLoading !== null}
                 >
                   {socialLoading === 'google' ? (
                     <ActivityIndicator size="small" color={colors.primary} />
                   ) : (
-                    <Text style={styles.socialIcon}>G</Text>
+                    <Text style={[styles.socialIcon, { color: colors.textPrimary }]}>G</Text>
                   )}
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.socialBtn, socialLoading === 'facebook' && styles.socialBtnLoading]}
+                  style={[styles.socialBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }, socialLoading === 'facebook' && styles.socialBtnLoading]}
                   onPress={handleFacebookSignUp}
                   disabled={socialLoading !== null}
                 >
@@ -305,9 +307,9 @@ const RegisterScreen = ({ navigation }) => {
 
           {/* Sign In Link */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Already have an account? </Text>
+            <Text style={[styles.footerText, { color: colors.textSecondary }]}>Already have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>
-              <Text style={styles.signInLink}>Sign In</Text>
+              <Text style={[styles.signInLink, { color: colors.primary }]}>Sign In</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -319,7 +321,6 @@ const RegisterScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   orbContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -357,23 +358,19 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
   },
   backIcon: {
     fontSize: 20,
-    color: colors.textPrimary,
   },
   headerTitle: {
     ...typography.headlineLarge,
-    color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   headerSubtitle: {
     ...typography.bodyLarge,
-    color: colors.textSecondary,
   },
   formContainer: {
     flex: 1,
@@ -386,12 +383,10 @@ const styles = StyleSheet.create({
   },
   termsText: {
     ...typography.bodySmall,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },
   termsLink: {
-    color: colors.primary,
     fontWeight: '500',
   },
   divider: {
@@ -402,11 +397,9 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.divider,
   },
   dividerText: {
     ...typography.labelMedium,
-    color: colors.textMuted,
     marginHorizontal: spacing.lg,
   },
   socialButtons: {
@@ -418,9 +411,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: borderRadius.lg,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -429,7 +420,6 @@ const styles = StyleSheet.create({
   },
   socialIcon: {
     fontSize: 20,
-    color: colors.textPrimary,
     fontWeight: '600',
   },
   footer: {
@@ -439,11 +429,9 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
   },
   signInLink: {
     ...typography.bodyMedium,
-    color: colors.primary,
     fontWeight: '600',
   },
 });

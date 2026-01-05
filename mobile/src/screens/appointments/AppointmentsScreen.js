@@ -16,15 +16,17 @@ import {
   Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../../theme/colors';
+import { shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
 import { getAppointments, cancelAppointment } from '../../services/api/appointmentService';
 import { devLog, devError } from '../../utils/errorHandler';
+import { useTheme } from '../../context/ThemeContext';
 import dayjs from 'dayjs';
 
 const AppointmentsScreen = ({ navigation }) => {
+  const { colors } = useTheme();
   const [activeTab, setActiveTab] = useState('upcoming');
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -148,12 +150,13 @@ const AppointmentsScreen = ({ navigation }) => {
         <View style={styles.doctorRow}>
           <Avatar name={item.doctor} size="large" source={item.avatar} />
           <View style={styles.doctorDetails}>
-            <Text style={styles.doctorName}>{item.doctor}</Text>
-            <Text style={styles.specialty}>{item.specialty}</Text>
+            <Text style={[styles.doctorName, { color: colors.textPrimary }]}>{item.doctor}</Text>
+            <Text style={[styles.specialty, { color: colors.textSecondary }]}>{item.specialty}</Text>
           </View>
         </View>
         <View style={[
           styles.statusBadge,
+          { backgroundColor: colors.surfaceLight },
           item.status === 'confirmed' && styles.statusConfirmed,
           item.status === 'completed' && styles.statusCompleted,
           item.status === 'pending' && styles.statusPending,
@@ -161,10 +164,11 @@ const AppointmentsScreen = ({ navigation }) => {
         ]}>
           <Text style={[
             styles.statusText,
-            item.status === 'confirmed' && styles.statusTextConfirmed,
-            item.status === 'completed' && styles.statusTextCompleted,
-            item.status === 'pending' && styles.statusTextPending,
-            item.status === 'cancelled' && styles.statusTextCancelled,
+            { color: colors.textSecondary },
+            item.status === 'confirmed' && { color: colors.success },
+            item.status === 'completed' && { color: colors.info },
+            item.status === 'pending' && { color: colors.warning },
+            item.status === 'cancelled' && { color: colors.error },
           ]}>
             {item.status === 'confirmed' ? '✓ Confirmed' : 
              item.status === 'completed' ? '✓ Completed' :
@@ -173,22 +177,22 @@ const AppointmentsScreen = ({ navigation }) => {
         </View>
       </View>
 
-      <View style={styles.cardDivider} />
+      <View style={[styles.cardDivider, { backgroundColor: colors.divider }]} />
 
       <View style={styles.cardDetails}>
         <View style={styles.detailRow}>
           <View style={styles.detailItem}>
             <Text style={styles.detailIcon}>📅</Text>
-            <Text style={styles.detailText}>{item.date}</Text>
+            <Text style={[styles.detailText, { color: colors.textSecondary }]}>{item.date}</Text>
           </View>
           <View style={styles.detailItem}>
             <Text style={styles.detailIcon}>⏰</Text>
-            <Text style={styles.detailText}>{item.time}</Text>
+            <Text style={[styles.detailText, { color: colors.textSecondary }]}>{item.time}</Text>
           </View>
         </View>
-        <View style={styles.typeTag}>
+        <View style={[styles.typeTag, { backgroundColor: colors.surfaceLight }]}>
           <Text style={styles.typeIcon}>{item.type === 'video' ? '📹' : '🏥'}</Text>
-          <Text style={styles.typeText}>
+          <Text style={[styles.typeText, { color: colors.textSecondary }]}>
             {item.type === 'video' ? 'Video Call' : 'Clinic Visit'}
           </Text>
         </View>
@@ -197,10 +201,10 @@ const AppointmentsScreen = ({ navigation }) => {
       {activeTab === 'upcoming' && item.status !== 'cancelled' && (
         <View style={styles.cardActions}>
           <TouchableOpacity 
-            style={styles.secondaryBtn}
+            style={[styles.secondaryBtn, { borderColor: colors.surfaceBorder }]}
             onPress={() => handleReschedule(item)}
           >
-            <Text style={styles.secondaryBtnText}>Reschedule</Text>
+            <Text style={[styles.secondaryBtnText, { color: colors.textSecondary }]}>Reschedule</Text>
           </TouchableOpacity>
           {item.type === 'video' && item.status === 'confirmed' && (
             <TouchableOpacity 
@@ -213,16 +217,16 @@ const AppointmentsScreen = ({ navigation }) => {
                 end={{ x: 1, y: 0 }}
                 style={styles.primaryBtnGradient}
               >
-                <Text style={styles.primaryBtnText}>Join Call</Text>
+                <Text style={[styles.primaryBtnText, { color: colors.textInverse }]}>Join Call</Text>
               </LinearGradient>
             </TouchableOpacity>
           )}
           {item.type === 'clinic' && (
             <TouchableOpacity 
-              style={styles.cancelBtn}
+              style={[styles.cancelBtn, { borderColor: colors.error }]}
               onPress={() => handleCancelAppointment(item.id)}
             >
-              <Text style={styles.cancelBtnText}>Cancel</Text>
+              <Text style={[styles.cancelBtnText, { color: colors.error }]}>Cancel</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -231,18 +235,18 @@ const AppointmentsScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Appointments</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Appointments</Text>
         <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('Booking')}>
           <LinearGradient
             colors={colors.gradientPrimary}
             style={styles.addBtnGradient}
           >
-            <Text style={styles.addBtnIcon}>+</Text>
+            <Text style={[styles.addBtnIcon, { color: colors.textInverse }]}>+</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -257,7 +261,8 @@ const AppointmentsScreen = ({ navigation }) => {
           >
             <Text style={[
               styles.tabText,
-              activeTab === tab.id && styles.tabTextActive,
+              { color: colors.textMuted },
+              activeTab === tab.id && { color: colors.textPrimary, fontWeight: '600' },
             ]}>
               {tab.label}
             </Text>
@@ -277,7 +282,7 @@ const AppointmentsScreen = ({ navigation }) => {
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading appointments...</Text>
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading appointments...</Text>
         </View>
       ) : (
         /* Appointments List */
@@ -298,16 +303,16 @@ const AppointmentsScreen = ({ navigation }) => {
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>📅</Text>
-              <Text style={styles.emptyTitle}>No appointments</Text>
-              <Text style={styles.emptyDesc}>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No appointments</Text>
+              <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>
                 You don't have any {activeTab} appointments
               </Text>
               {activeTab === 'upcoming' && (
                 <TouchableOpacity 
-                  style={styles.bookNowBtn}
+                  style={[styles.bookNowBtn, { backgroundColor: colors.primary }]}
                   onPress={() => navigation.navigate('Booking')}
                 >
-                  <Text style={styles.bookNowText}>Book Now</Text>
+                  <Text style={[styles.bookNowText, { color: colors.textInverse }]}>Book Now</Text>
                 </TouchableOpacity>
               )}
             </View>
@@ -325,7 +330,7 @@ const AppointmentsScreen = ({ navigation }) => {
           style={styles.floatingBtnGradient}
         >
           <Text style={styles.floatingBtnIcon}>📅</Text>
-          <Text style={styles.floatingBtnText}>Book Appointment</Text>
+          <Text style={[styles.floatingBtnText, { color: colors.textInverse }]}>Book Appointment</Text>
         </LinearGradient>
       </TouchableOpacity>
     </View>
@@ -336,7 +341,6 @@ const AppointmentsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -348,7 +352,6 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...typography.displaySmall,
-    color: colors.textPrimary,
   },
   addBtn: {
     ...shadows.small,
@@ -362,7 +365,6 @@ const styles = StyleSheet.create({
   },
   addBtnIcon: {
     fontSize: 24,
-    color: colors.textInverse,
     fontWeight: '300',
   },
   tabsContainer: {
@@ -378,11 +380,6 @@ const styles = StyleSheet.create({
   tabActive: {},
   tabText: {
     ...typography.bodyLarge,
-    color: colors.textMuted,
-  },
-  tabTextActive: {
-    color: colors.textPrimary,
-    fontWeight: '600',
   },
   tabIndicator: {
     position: 'absolute',
@@ -399,7 +396,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
     marginTop: spacing.md,
   },
   listContent: {
@@ -426,18 +422,15 @@ const styles = StyleSheet.create({
   },
   doctorName: {
     ...typography.headlineSmall,
-    color: colors.textPrimary,
   },
   specialty: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
     marginTop: 2,
   },
   statusBadge: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
-    backgroundColor: colors.surfaceLight,
   },
   statusConfirmed: {
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
@@ -453,23 +446,13 @@ const styles = StyleSheet.create({
   },
   statusText: {
     ...typography.labelSmall,
-    color: colors.textSecondary,
   },
-  statusTextConfirmed: {
-    color: colors.success,
-  },
-  statusTextCompleted: {
-    color: colors.info,
-  },
-  statusTextPending: {
-    color: colors.warning,
-  },
-  statusTextCancelled: {
-    color: colors.error,
-  },
+  statusTextConfirmed: {},
+  statusTextCompleted: {},
+  statusTextPending: {},
+  statusTextCancelled: {},
   cardDivider: {
     height: 1,
-    backgroundColor: colors.divider,
     marginVertical: spacing.lg,
   },
   cardDetails: {
@@ -492,12 +475,10 @@ const styles = StyleSheet.create({
   },
   detailText: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
   },
   typeTag: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surfaceLight,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
@@ -508,7 +489,6 @@ const styles = StyleSheet.create({
   },
   typeText: {
     ...typography.labelSmall,
-    color: colors.textSecondary,
   },
   cardActions: {
     flexDirection: 'row',
@@ -520,11 +500,9 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
   },
   secondaryBtnText: {
     ...typography.buttonSmall,
-    color: colors.textSecondary,
   },
   cancelBtn: {
     flex: 1,
@@ -532,12 +510,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     alignItems: 'center',
     borderWidth: 1,
-    borderColor: colors.error,
     backgroundColor: 'rgba(239, 68, 68, 0.1)',
   },
   cancelBtnText: {
     ...typography.buttonSmall,
-    color: colors.error,
   },
   primaryBtn: {
     flex: 1,
@@ -550,7 +526,6 @@ const styles = StyleSheet.create({
   },
   primaryBtnText: {
     ...typography.buttonSmall,
-    color: colors.textInverse,
   },
   emptyState: {
     alignItems: 'center',
@@ -562,24 +537,20 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...typography.headlineMedium,
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   emptyDesc: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
     textAlign: 'center',
   },
   bookNowBtn: {
     marginTop: spacing.lg,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
-    backgroundColor: colors.primary,
     borderRadius: borderRadius.lg,
   },
   bookNowText: {
     ...typography.button,
-    color: colors.textInverse,
   },
   floatingBtn: {
     position: 'absolute',
@@ -601,7 +572,6 @@ const styles = StyleSheet.create({
   },
   floatingBtnText: {
     ...typography.button,
-    color: colors.textInverse,
   },
 });
 

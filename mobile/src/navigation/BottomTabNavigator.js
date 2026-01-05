@@ -6,8 +6,9 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../theme/colors';
+import { shadows } from '../theme/colors';
 import { typography, spacing, borderRadius } from '../theme/typography';
+import { useTheme } from '../context/ThemeContext';
 
 import HomeScreen from '../screens/home/HomeScreen';
 import AppointmentsScreen from '../screens/appointments/AppointmentsScreen';
@@ -17,7 +18,7 @@ import ProfileScreen from '../screens/profile/ProfileScreen';
 const Tab = createBottomTabNavigator();
 const { width } = Dimensions.get('window');
 
-const TabIcon = ({ icon, label, focused }) => (
+const TabIcon = ({ icon, label, focused, colors }) => (
   <View style={styles.tabItem}>
     {focused ? (
       <LinearGradient
@@ -31,16 +32,18 @@ const TabIcon = ({ icon, label, focused }) => (
         <Text style={[styles.tabIcon, styles.inactiveIcon]}>{icon}</Text>
       </View>
     )}
-    <Text style={[styles.tabLabel, focused && styles.tabLabelActive]}>
+    <Text style={[styles.tabLabel, { color: colors.textMuted }, focused && { color: colors.primary, fontWeight: '600' }]}>
       {label}
     </Text>
   </View>
 );
 
 const CustomTabBar = ({ state, descriptors, navigation }) => {
+  const { colors } = useTheme();
+  
   return (
     <View style={styles.tabBarContainer}>
-      <View style={styles.tabBar}>
+      <View style={[styles.tabBar, { backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder }]}>
         {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
           const isFocused = state.index === index;
@@ -78,6 +81,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
                 icon={getIcon()}
                 label={route.name}
                 focused={isFocused}
+                colors={colors}
               />
             </TouchableOpacity>
           );
@@ -112,12 +116,10 @@ const styles = StyleSheet.create({
   },
   tabBar: {
     flexDirection: 'row',
-    backgroundColor: colors.backgroundCard,
     borderRadius: borderRadius.xxl,
     paddingVertical: spacing.sm,
     paddingHorizontal: spacing.md,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
     ...shadows.large,
   },
   tabButton: {
@@ -154,11 +156,6 @@ const styles = StyleSheet.create({
   },
   tabLabel: {
     ...typography.labelSmall,
-    color: colors.textMuted,
-  },
-  tabLabelActive: {
-    color: colors.primary,
-    fontWeight: '600',
   },
 });
 

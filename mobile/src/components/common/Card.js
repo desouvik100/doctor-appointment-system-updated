@@ -5,8 +5,9 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../../theme/colors';
+import { shadows } from '../../theme/colors';
 import { borderRadius, spacing } from '../../theme/typography';
+import { useTheme } from '../../context/ThemeContext';
 
 const Card = ({
   children,
@@ -15,6 +16,8 @@ const Card = ({
   style,
   padding = 'medium',
 }) => {
+  const { colors, isDarkMode } = useTheme();
+
   const getPadding = () => {
     switch (padding) {
       case 'none': return 0;
@@ -26,9 +29,12 @@ const Card = ({
 
   const cardStyle = [
     styles.card,
-    { padding: getPadding() },
-    variant === 'elevated' && [styles.elevated, shadows.medium],
-    variant === 'glass' && styles.glass,
+    { padding: getPadding(), backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder },
+    variant === 'elevated' && [styles.elevated, shadows.medium, { backgroundColor: colors.backgroundElevated }],
+    variant === 'glass' && [styles.glass, { 
+      backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.7)' : 'rgba(255, 255, 255, 0.7)',
+      borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+    }],
     style,
   ];
 
@@ -42,7 +48,7 @@ const Card = ({
           colors={colors.gradientCard}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.card, { padding: getPadding() }, shadows.small, style]}
+          style={[styles.card, { padding: getPadding(), borderColor: colors.surfaceBorder }, shadows.small, style]}
         >
           {children}
         </LinearGradient>
@@ -59,17 +65,12 @@ const Card = ({
 
 const styles = StyleSheet.create({
   card: {
-    backgroundColor: colors.backgroundCard,
     borderRadius: borderRadius.xl,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
   },
   elevated: {
-    backgroundColor: colors.backgroundElevated,
   },
   glass: {
-    backgroundColor: 'rgba(26, 31, 46, 0.7)',
-    borderColor: 'rgba(255, 255, 255, 0.1)',
   },
 });
 

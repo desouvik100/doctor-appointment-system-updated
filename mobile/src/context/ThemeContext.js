@@ -96,8 +96,8 @@ export const lightColors = {
 const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
-  const [isDarkMode, setIsDarkMode] = useState(true);
-  const [colors, setColors] = useState(darkColors);
+  const [isDarkMode, setIsDarkMode] = useState(false);
+  const [colors, setColors] = useState(lightColors);
 
   useEffect(() => {
     loadTheme();

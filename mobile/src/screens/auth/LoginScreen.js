@@ -16,16 +16,18 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../../theme/colors';
+import { shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import authService from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
+import { useTheme } from '../../context/ThemeContext';
 import biometricService from '../../services/biometricService';
 import socialAuthService from '../../services/socialAuthService';
 
 const LoginScreen = ({ navigation }) => {
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -200,8 +202,8 @@ const LoginScreen = ({ navigation }) => {
   };
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
       
       {/* Background gradient orbs */}
       <View style={styles.orbContainer}>
@@ -231,17 +233,17 @@ const LoginScreen = ({ navigation }) => {
                 colors={colors.gradientPrimary}
                 style={styles.logoGradient}
               >
-                <Text style={styles.logoIcon}>+</Text>
+                <Text style={[styles.logoIcon, { color: colors.textInverse }]}>+</Text>
               </LinearGradient>
             </View>
-            <Text style={styles.appName}>HealthSync</Text>
-            <Text style={styles.tagline}>Your health, simplified</Text>
+            <Text style={[styles.appName, { color: colors.textPrimary }]}>HealthSync</Text>
+            <Text style={[styles.tagline, { color: colors.textSecondary }]}>Your health, simplified</Text>
           </View>
 
           {/* Login Form */}
           <View style={styles.formContainer}>
-            <Text style={styles.welcomeText}>Welcome back</Text>
-            <Text style={styles.subtitle}>Sign in to continue</Text>
+            <Text style={[styles.welcomeText, { color: colors.textPrimary }]}>Welcome back</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Sign in to continue</Text>
 
             <View style={styles.form}>
               <Input
@@ -265,7 +267,7 @@ const LoginScreen = ({ navigation }) => {
                 style={styles.forgotPassword}
                 onPress={() => navigation.navigate('ForgotPassword')}
               >
-                <Text style={styles.forgotText}>Forgot password?</Text>
+                <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot password?</Text>
               </TouchableOpacity>
 
               <Button
@@ -279,7 +281,7 @@ const LoginScreen = ({ navigation }) => {
               {/* Biometric Login Button */}
               {biometricAvailable && hasStoredCredentials && (
                 <TouchableOpacity
-                  style={styles.biometricButton}
+                  style={[styles.biometricButton, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
                   onPress={handleBiometricLogin}
                   disabled={biometricLoading}
                 >
@@ -288,7 +290,7 @@ const LoginScreen = ({ navigation }) => {
                       {biometricType === 'Face ID' ? '👤' : '👆'}
                     </Text>
                   </View>
-                  <Text style={styles.biometricText}>
+                  <Text style={[styles.biometricText, { color: colors.textPrimary }]}>
                     {biometricLoading ? 'Authenticating...' : `Sign in with ${biometricType}`}
                   </Text>
                 </TouchableOpacity>
@@ -296,26 +298,26 @@ const LoginScreen = ({ navigation }) => {
 
               {/* Divider */}
               <View style={styles.divider}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerText}>or continue with</Text>
-                <View style={styles.dividerLine} />
+                <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
+                <Text style={[styles.dividerText, { color: colors.textMuted }]}>or continue with</Text>
+                <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
               </View>
 
               {/* Social Login */}
               <View style={styles.socialButtons}>
                 <TouchableOpacity 
-                  style={[styles.socialBtn, socialLoading === 'google' && styles.socialBtnLoading]}
+                  style={[styles.socialBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }, socialLoading === 'google' && styles.socialBtnLoading]}
                   onPress={handleGoogleSignIn}
                   disabled={socialLoading !== null}
                 >
                   {socialLoading === 'google' ? (
                     <ActivityIndicator size="small" color={colors.primary} />
                   ) : (
-                    <Text style={styles.socialIcon}>G</Text>
+                    <Text style={[styles.socialIcon, { color: colors.textPrimary }]}>G</Text>
                   )}
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.socialBtn, socialLoading === 'facebook' && styles.socialBtnLoading]}
+                  style={[styles.socialBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }, socialLoading === 'facebook' && styles.socialBtnLoading]}
                   onPress={handleFacebookSignIn}
                   disabled={socialLoading !== null}
                 >
@@ -326,7 +328,7 @@ const LoginScreen = ({ navigation }) => {
                   )}
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.socialBtn, socialLoading === 'apple' && styles.socialBtnLoading]}
+                  style={[styles.socialBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }, socialLoading === 'apple' && styles.socialBtnLoading]}
                   onPress={handleAppleSignIn}
                   disabled={socialLoading !== null}
                 >
@@ -342,9 +344,9 @@ const LoginScreen = ({ navigation }) => {
 
           {/* Sign Up Link */}
           <View style={styles.footer}>
-            <Text style={styles.footerText}>Don't have an account? </Text>
+            <Text style={[styles.footerText, { color: colors.textSecondary }]}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.signUpLink}>Sign Up</Text>
+              <Text style={[styles.signUpLink, { color: colors.primary }]}>Sign Up</Text>
             </TouchableOpacity>
           </View>
         </ScrollView>
@@ -356,7 +358,6 @@ const LoginScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   orbContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -405,28 +406,23 @@ const styles = StyleSheet.create({
   logoIcon: {
     fontSize: 36,
     fontWeight: 'bold',
-    color: colors.textInverse,
   },
   appName: {
     ...typography.displayMedium,
-    color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   tagline: {
     ...typography.bodyLarge,
-    color: colors.textSecondary,
   },
   formContainer: {
     flex: 1,
   },
   welcomeText: {
     ...typography.headlineLarge,
-    color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   subtitle: {
     ...typography.bodyLarge,
-    color: colors.textSecondary,
     marginBottom: spacing.xxl,
   },
   form: {
@@ -439,7 +435,6 @@ const styles = StyleSheet.create({
   },
   forgotText: {
     ...typography.labelMedium,
-    color: colors.primary,
   },
   biometricButton: {
     flexDirection: 'row',
@@ -447,10 +442,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     paddingVertical: spacing.md,
     marginTop: spacing.md,
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
   },
   biometricIconContainer: {
     marginRight: spacing.sm,
@@ -460,7 +453,6 @@ const styles = StyleSheet.create({
   },
   biometricText: {
     ...typography.bodyMedium,
-    color: colors.textPrimary,
     fontWeight: '500',
   },
   divider: {
@@ -471,11 +463,9 @@ const styles = StyleSheet.create({
   dividerLine: {
     flex: 1,
     height: 1,
-    backgroundColor: colors.divider,
   },
   dividerText: {
     ...typography.labelMedium,
-    color: colors.textMuted,
     marginHorizontal: spacing.lg,
   },
   socialButtons: {
@@ -487,9 +477,7 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: borderRadius.lg,
-    backgroundColor: colors.surface,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -498,7 +486,6 @@ const styles = StyleSheet.create({
   },
   socialIcon: {
     fontSize: 20,
-    color: colors.textPrimary,
     fontWeight: '600',
   },
   footer: {
@@ -508,11 +495,9 @@ const styles = StyleSheet.create({
   },
   footerText: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
   },
   signUpLink: {
     ...typography.bodyMedium,
-    color: colors.primary,
     fontWeight: '600',
   },
 });

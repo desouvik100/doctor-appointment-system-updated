@@ -4,8 +4,8 @@
 
 import React, { useState } from 'react';
 import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { colors } from '../../theme/colors';
 import { typography, borderRadius, spacing } from '../../theme/typography';
+import { useTheme } from '../../context/ThemeContext';
 
 const Input = ({
   label,
@@ -25,6 +25,7 @@ const Input = ({
   editable = true,
   style,
 }) => {
+  const { colors } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -36,14 +37,14 @@ const Input = ({
 
   return (
     <View style={[styles.container, style]}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>}
       
       <View style={[
         styles.inputWrapper,
-        { borderColor: getBorderColor() },
-        isFocused && styles.focused,
+        { borderColor: getBorderColor(), backgroundColor: colors.surface },
+        isFocused && [styles.focused, { backgroundColor: colors.backgroundCard }],
         error && styles.errorBorder,
-        !editable && styles.disabled,
+        !editable && [styles.disabled, { backgroundColor: colors.surfaceLight }],
         multiline && { height: 24 * numberOfLines + spacing.lg * 2 },
       ]}>
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
@@ -51,6 +52,7 @@ const Input = ({
         <TextInput
           style={[
             styles.input,
+            { color: colors.textPrimary },
             multiline && styles.multiline,
             leftIcon && { paddingLeft: 0 },
           ]}
@@ -73,7 +75,7 @@ const Input = ({
             onPress={() => setShowPassword(!showPassword)}
             style={styles.rightIcon}
           >
-            <Text style={styles.toggleText}>{showPassword ? 'Hide' : 'Show'}</Text>
+            <Text style={[styles.toggleText, { color: colors.primary }]}>{showPassword ? 'Hide' : 'Show'}</Text>
           </TouchableOpacity>
         )}
         
@@ -89,7 +91,7 @@ const Input = ({
       </View>
       
       {(error || helper) && (
-        <Text style={[styles.helper, error && styles.errorText]}>
+        <Text style={[styles.helper, { color: colors.textMuted }, error && { color: colors.error }]}>
           {error || helper}
         </Text>
       )}
@@ -103,32 +105,26 @@ const styles = StyleSheet.create({
   },
   label: {
     ...typography.labelMedium,
-    color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
   inputWrapper: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     borderWidth: 1.5,
     paddingHorizontal: spacing.lg,
   },
   focused: {
-    backgroundColor: colors.backgroundCard,
     borderWidth: 2,
   },
   errorBorder: {
-    borderColor: colors.error,
   },
   disabled: {
     opacity: 0.6,
-    backgroundColor: colors.surfaceLight,
   },
   input: {
     flex: 1,
     ...typography.bodyLarge,
-    color: colors.textPrimary,
     paddingVertical: spacing.md + 2,
   },
   multiline: {
@@ -144,16 +140,11 @@ const styles = StyleSheet.create({
   },
   toggleText: {
     ...typography.labelMedium,
-    color: colors.primary,
   },
   helper: {
     ...typography.bodySmall,
-    color: colors.textMuted,
     marginTop: spacing.xs,
     marginLeft: spacing.xs,
-  },
-  errorText: {
-    color: colors.error,
   },
 });
 

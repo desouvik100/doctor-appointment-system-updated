@@ -17,15 +17,17 @@ import {
   RefreshControl,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../../theme/colors';
+import { shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
 import doctorService from '../../services/api/doctorService';
+import { useTheme } from '../../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
 
 const DoctorsScreen = ({ navigation }) => {
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [selectedSpecialty, setSelectedSpecialty] = useState(null);
   const [doctors, setDoctors] = useState([]);
@@ -172,23 +174,23 @@ const DoctorsScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={styles.headerTitle}>Find Doctors</Text>
-        <TouchableOpacity style={styles.filterBtn}>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Find Doctors</Text>
+        <TouchableOpacity style={[styles.filterBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
           <Text style={styles.filterIcon}>⚙️</Text>
         </TouchableOpacity>
       </View>
 
       {/* Search Bar */}
       <View style={styles.searchContainer}>
-        <View style={styles.searchBar}>
+        <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: colors.textPrimary }]}
             placeholder="Search doctors, specialties..."
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
@@ -198,7 +200,7 @@ const DoctorsScreen = ({ navigation }) => {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => { setSearchQuery(''); handleSearch(); }}>
-              <Text style={styles.clearIcon}>✕</Text>
+              <Text style={[styles.clearIcon, { color: colors.textMuted }]}>✕</Text>
             </TouchableOpacity>
           )}
         </View>
@@ -216,6 +218,7 @@ const DoctorsScreen = ({ navigation }) => {
               key={specialty.id}
               style={[
                 styles.specialtyChip,
+                { backgroundColor: colors.surface, borderColor: colors.surfaceBorder },
                 selectedSpecialty === specialty.id && styles.specialtyChipActive,
               ]}
               onPress={() => {
@@ -231,12 +234,12 @@ const DoctorsScreen = ({ navigation }) => {
                   style={styles.specialtyChipGradient}
                 >
                   <Text style={styles.specialtyIcon}>{specialty.icon}</Text>
-                  <Text style={styles.specialtyLabelActive}>{specialty.label}</Text>
+                  <Text style={[styles.specialtyLabelActive, { color: colors.textInverse }]}>{specialty.label}</Text>
                 </LinearGradient>
               ) : (
                 <>
                   <Text style={styles.specialtyIcon}>{specialty.icon}</Text>
-                  <Text style={styles.specialtyLabel}>{specialty.label}</Text>
+                  <Text style={[styles.specialtyLabel, { color: colors.textSecondary }]}>{specialty.label}</Text>
                 </>
               )}
             </TouchableOpacity>
@@ -246,12 +249,12 @@ const DoctorsScreen = ({ navigation }) => {
 
       {/* Results Count */}
       <View style={styles.resultsHeader}>
-        <Text style={styles.resultsCount}>
+        <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
           {loading ? 'Loading...' : `${doctors.length} doctors found`}
         </Text>
         <TouchableOpacity style={styles.sortBtn}>
-          <Text style={styles.sortText}>Sort by: Rating</Text>
-          <Text style={styles.sortIcon}>▼</Text>
+          <Text style={[styles.sortText, { color: colors.primary }]}>Sort by: Rating</Text>
+          <Text style={[styles.sortIcon, { color: colors.primary }]}>▼</Text>
         </TouchableOpacity>
       </View>
 
@@ -259,16 +262,98 @@ const DoctorsScreen = ({ navigation }) => {
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Loading doctors...</Text>
+          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading doctors...</Text>
         </View>
       ) : (
         <FlatList
           data={doctors}
-          renderItem={renderDoctorCard}
+          renderItem={({ item }) => (
+            <Card variant="gradient" style={styles.doctorCard}>
+              <TouchableOpacity 
+                activeOpacity={0.9}
+                onPress={() => navigation.navigate('DoctorProfile', { doctorId: item._id })}
+              >
+                <View style={styles.cardTop}>
+                  <Avatar 
+                    name={item.name} 
+                    size="xlarge" 
+                    showBorder 
+                    source={item.photo ? { uri: item.photo } : null}
+                  />
+                  <View style={styles.doctorInfo}>
+                    <Text style={[styles.doctorName, { color: colors.textPrimary }]}>{item.name}</Text>
+                    <Text style={[styles.specialty, { color: colors.primary }]}>{item.specialization || item.specialty}</Text>
+                    <Text style={[styles.hospital, { color: colors.textSecondary }]}>{item.hospital || item.clinic || 'HealthSync Clinic'}</Text>
+                    
+                    <View style={styles.statsRow}>
+                      <View style={styles.statItem}>
+                        <Text style={styles.statIcon}>⭐</Text>
+                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>{item.rating || '4.5'}</Text>
+                        <Text style={[styles.statLabel, { color: colors.textMuted }]}>({item.reviewCount || item.reviews || 0})</Text>
+                      </View>
+                      <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
+                      <View style={styles.statItem}>
+                        <Text style={styles.statIcon}>🎓</Text>
+                        <Text style={[styles.statValue, { color: colors.textPrimary }]}>{item.experience || '5'} yrs</Text>
+                      </View>
+                    </View>
+                  </View>
+                </View>
+
+                <View style={[styles.cardBottom, { borderTopColor: colors.divider }]}>
+                  <View style={styles.feeSection}>
+                    <Text style={[styles.feeLabel, { color: colors.textMuted }]}>Consultation Fee</Text>
+                    <Text style={[styles.feeValue, { color: colors.textPrimary }]}>₹{item.fee || item.consultationFee || 500}</Text>
+                  </View>
+                  
+                  <View style={styles.slotSection}>
+                    <View style={[
+                      styles.availabilityBadge,
+                      item.isAvailable !== false ? styles.availableNow : styles.availableLater,
+                    ]}>
+                      <View style={[
+                        styles.availabilityDot,
+                        { backgroundColor: item.isAvailable !== false ? colors.success : colors.warning },
+                      ]} />
+                      <Text style={[styles.availabilityText, { color: colors.textSecondary }]}>
+                        {item.isAvailable !== false ? 'Available' : 'Busy'}
+                      </Text>
+                    </View>
+                    <Text style={[styles.nextSlot, { color: colors.textPrimary }]}>{item.nextAvailable || 'Book Now'}</Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity 
+                  style={styles.bookBtn}
+                  onPress={() => navigation.navigate('Booking', { doctor: item })}
+                >
+                  <LinearGradient
+                    colors={colors.gradientPrimary}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.bookBtnGradient}
+                  >
+                    <Text style={[styles.bookBtnText, { color: colors.textInverse }]}>Book Appointment</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </TouchableOpacity>
+            </Card>
+          )}
           keyExtractor={(item) => item._id || item.id || Math.random().toString()}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
-          ListEmptyComponent={renderEmptyState}
+          ListEmptyComponent={
+            <View style={styles.emptyState}>
+              <Text style={styles.emptyIcon}>👨‍⚕️</Text>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Doctors Found</Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+                {error || 'Try adjusting your search or filters'}
+              </Text>
+              <TouchableOpacity style={[styles.retryBtn, { backgroundColor: colors.primary }]} onPress={onRefresh}>
+                <Text style={[styles.retryText, { color: colors.textInverse }]}>Retry</Text>
+              </TouchableOpacity>
+            </View>
+          }
           refreshControl={
             <RefreshControl
               refreshing={refreshing}
@@ -286,7 +371,6 @@ const DoctorsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
@@ -298,17 +382,14 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...typography.displaySmall,
-    color: colors.textPrimary,
   },
   filterBtn: {
     width: 44,
     height: 44,
     borderRadius: borderRadius.lg,
-    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
   },
   filterIcon: {
     fontSize: 20,
@@ -320,11 +401,9 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.lg,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
   },
   searchIcon: {
     fontSize: 18,
@@ -333,12 +412,10 @@ const styles = StyleSheet.create({
   searchInput: {
     flex: 1,
     ...typography.bodyLarge,
-    color: colors.textPrimary,
     paddingVertical: spacing.md + 2,
   },
   clearIcon: {
     fontSize: 16,
-    color: colors.textMuted,
     padding: spacing.xs,
   },
   specialtiesSection: {
@@ -351,12 +428,10 @@ const styles = StyleSheet.create({
   specialtyChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.surface,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm + 2,
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
     marginRight: spacing.sm,
   },
   specialtyChipActive: {
@@ -376,11 +451,9 @@ const styles = StyleSheet.create({
   },
   specialtyLabel: {
     ...typography.labelMedium,
-    color: colors.textSecondary,
   },
   specialtyLabelActive: {
     ...typography.labelMedium,
-    color: colors.textInverse,
     fontWeight: '600',
   },
   resultsHeader: {
@@ -392,7 +465,6 @@ const styles = StyleSheet.create({
   },
   resultsCount: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
   },
   sortBtn: {
     flexDirection: 'row',
@@ -400,11 +472,9 @@ const styles = StyleSheet.create({
   },
   sortText: {
     ...typography.labelMedium,
-    color: colors.primary,
   },
   sortIcon: {
     fontSize: 10,
-    color: colors.primary,
     marginLeft: spacing.xs,
   },
   loadingContainer: {
@@ -414,7 +484,6 @@ const styles = StyleSheet.create({
   },
   loadingText: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
     marginTop: spacing.md,
   },
   listContent: {
@@ -435,17 +504,14 @@ const styles = StyleSheet.create({
   },
   doctorName: {
     ...typography.headlineSmall,
-    color: colors.textPrimary,
     marginBottom: 2,
   },
   specialty: {
     ...typography.bodyMedium,
-    color: colors.primary,
     marginBottom: 2,
   },
   hospital: {
     ...typography.bodySmall,
-    color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
   statsRow: {
@@ -462,18 +528,15 @@ const styles = StyleSheet.create({
   },
   statValue: {
     ...typography.labelMedium,
-    color: colors.textPrimary,
     fontWeight: '600',
   },
   statLabel: {
     ...typography.labelSmall,
-    color: colors.textMuted,
     marginLeft: 2,
   },
   statDivider: {
     width: 1,
     height: 12,
-    backgroundColor: colors.divider,
     marginHorizontal: spacing.md,
   },
   cardBottom: {
@@ -483,17 +546,14 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: colors.divider,
   },
   feeSection: {},
   feeLabel: {
     ...typography.labelSmall,
-    color: colors.textMuted,
     marginBottom: 2,
   },
   feeValue: {
     ...typography.headlineMedium,
-    color: colors.textPrimary,
   },
   slotSection: {
     alignItems: 'flex-end',
@@ -520,11 +580,9 @@ const styles = StyleSheet.create({
   },
   availabilityText: {
     ...typography.labelSmall,
-    color: colors.textSecondary,
   },
   nextSlot: {
     ...typography.bodySmall,
-    color: colors.textPrimary,
     fontWeight: '500',
   },
   bookBtn: {
@@ -537,7 +595,6 @@ const styles = StyleSheet.create({
   },
   bookBtnText: {
     ...typography.button,
-    color: colors.textInverse,
   },
   emptyState: {
     flex: 1,
@@ -551,24 +608,20 @@ const styles = StyleSheet.create({
   },
   emptyTitle: {
     ...typography.headlineMedium,
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   emptyText: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
     textAlign: 'center',
     marginBottom: spacing.lg,
   },
   retryBtn: {
-    backgroundColor: colors.primary,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
   },
   retryText: {
     ...typography.button,
-    color: colors.textInverse,
   },
 });
 
