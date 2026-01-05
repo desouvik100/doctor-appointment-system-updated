@@ -390,6 +390,98 @@ app.get('/', (req, res) => {
   res.json({ message: 'Doctor Appointment System API - MongoDB Version' });
 });
 
+// Privacy Policy page at root level (for Facebook/Meta validation)
+app.get('/privacy', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Privacy Policy - HealthSync</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.6; color: #333; }
+        h1 { color: #00B894; }
+        h2 { color: #2d3436; margin-top: 30px; }
+      </style>
+    </head>
+    <body>
+      <h1>Privacy Policy</h1>
+      <p><strong>Last updated:</strong> January 2026</p>
+      
+      <h2>1. Information We Collect</h2>
+      <p>HealthSync collects information you provide directly, including:</p>
+      <ul>
+        <li>Name, email address, and phone number</li>
+        <li>Health-related data for appointment booking</li>
+        <li>Profile information from social login (Google, Facebook)</li>
+      </ul>
+      
+      <h2>2. How We Use Your Information</h2>
+      <p>We use your information to:</p>
+      <ul>
+        <li>Provide healthcare appointment booking services</li>
+        <li>Send appointment reminders and notifications</li>
+        <li>Improve our services and user experience</li>
+      </ul>
+      
+      <h2>3. Data Security</h2>
+      <p>We implement industry-standard security measures to protect your personal information, including encryption and secure data storage.</p>
+      
+      <h2>4. Data Sharing</h2>
+      <p>We do not sell your personal information. We may share data with healthcare providers you book appointments with.</p>
+      
+      <h2>5. Your Rights</h2>
+      <p>You have the right to access, correct, or delete your personal data. Contact us to exercise these rights.</p>
+      
+      <h2>6. Contact Us</h2>
+      <p>For questions about this policy, contact us at: <a href="mailto:support@healthsyncpro.in">support@healthsyncpro.in</a></p>
+    </body>
+    </html>
+  `);
+});
+
+// Terms of Service page (for Facebook/Meta validation)
+app.get('/terms', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html lang="en">
+    <head>
+      <meta charset="UTF-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1.0">
+      <title>Terms of Service - HealthSync</title>
+      <style>
+        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; max-width: 800px; margin: 0 auto; padding: 40px 20px; line-height: 1.6; color: #333; }
+        h1 { color: #00B894; }
+        h2 { color: #2d3436; margin-top: 30px; }
+      </style>
+    </head>
+    <body>
+      <h1>Terms of Service</h1>
+      <p><strong>Last updated:</strong> January 2026</p>
+      
+      <h2>1. Acceptance of Terms</h2>
+      <p>By using HealthSync, you agree to these Terms of Service.</p>
+      
+      <h2>2. Description of Service</h2>
+      <p>HealthSync provides a platform for booking healthcare appointments with doctors and clinics.</p>
+      
+      <h2>3. User Responsibilities</h2>
+      <p>You agree to provide accurate information and use the service responsibly.</p>
+      
+      <h2>4. Medical Disclaimer</h2>
+      <p>HealthSync is a booking platform and does not provide medical advice. Always consult qualified healthcare professionals.</p>
+      
+      <h2>5. Limitation of Liability</h2>
+      <p>HealthSync is not liable for any medical outcomes or decisions made based on appointments booked through our platform.</p>
+      
+      <h2>6. Contact</h2>
+      <p>Questions? Contact us at: <a href="mailto:support@healthsyncpro.in">support@healthsyncpro.in</a></p>
+    </body>
+    </html>
+  `);
+});
+
 // Privacy Policy page (required for Facebook App)
 app.get('/api/privacy', (req, res) => {
   res.send(`
