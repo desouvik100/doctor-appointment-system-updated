@@ -390,6 +390,50 @@ app.get('/', (req, res) => {
   res.json({ message: 'Doctor Appointment System API - MongoDB Version' });
 });
 
+// Privacy Policy page (required for Facebook App)
+app.get('/api/privacy', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head><title>Privacy Policy - HealthSync</title></head>
+    <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px;">
+      <h1>Privacy Policy</h1>
+      <p>Last updated: January 2026</p>
+      <h2>Information We Collect</h2>
+      <p>HealthSync collects information you provide directly, including name, email, and health-related data for appointment booking.</p>
+      <h2>How We Use Your Information</h2>
+      <p>We use your information to provide healthcare appointment services, send reminders, and improve our services.</p>
+      <h2>Data Security</h2>
+      <p>We implement industry-standard security measures to protect your personal information.</p>
+      <h2>Contact Us</h2>
+      <p>For questions about this policy, contact us at support@healthsyncpro.in</p>
+    </body>
+    </html>
+  `);
+});
+
+// Data Deletion page (required for Facebook App)
+app.get('/api/delete-data', (req, res) => {
+  res.send(`
+    <!DOCTYPE html>
+    <html>
+    <head><title>Data Deletion - HealthSync</title></head>
+    <body style="font-family: Arial, sans-serif; max-width: 800px; margin: 50px auto; padding: 20px;">
+      <h1>Data Deletion Instructions</h1>
+      <p>To request deletion of your data from HealthSync:</p>
+      <ol>
+        <li>Log into your HealthSync account</li>
+        <li>Go to Settings > Privacy</li>
+        <li>Click "Delete My Account"</li>
+        <li>Confirm the deletion request</li>
+      </ol>
+      <p>Alternatively, email us at support@healthsyncpro.in with subject "Data Deletion Request"</p>
+      <p>We will process your request within 30 days.</p>
+    </body>
+    </html>
+  `);
+});
+
 // Health check route
 app.get('/api/health', (req, res) => {
   res.json({ 
