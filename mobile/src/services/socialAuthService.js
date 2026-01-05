@@ -197,13 +197,14 @@ export const configureGoogleSignIn = async () => {
   try {
     const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
     
+    console.log('🔧 Configuring Google Sign-In with Web Client ID:', GOOGLE_WEB_CLIENT_ID);
+    
     GoogleSignin.configure({
       webClientId: GOOGLE_WEB_CLIENT_ID,
       offlineAccess: true,
-      forceCodeForRefreshToken: true,
     });
     
-    console.log('✅ Google Sign-In configured');
+    console.log('✅ Google Sign-In configured successfully');
   } catch (error) {
     console.warn('Google Sign-In not available:', error.message);
   }
