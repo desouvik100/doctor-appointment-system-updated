@@ -20,6 +20,8 @@ import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
 import { spacing, borderRadius } from '../../theme/typography';
 import { authService } from '../../services/api';
+// Direct import as fallback
+import { adminLogin } from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
 
 const AdminLoginScreen = ({ navigation }) => {
@@ -70,15 +72,33 @@ const AdminLoginScreen = ({ navigation }) => {
     }
 
     setLoading(true);
+    
+    // DEBUG: Log payload and URL
+    const payload = {
+      email: email.trim().toLowerCase(),
+      password,
+    };
+    console.log('🔵 [ADMIN LOGIN] PAYLOAD:', { email: payload.email, password: '***' });
+    console.log('🔵 [ADMIN LOGIN] ENDPOINT: /auth/admin/login');
+    
     try {
-      const { user, token } = await authService.adminLogin({
-        email: email.trim().toLowerCase(),
-        password,
-      });
+      // Use direct import of adminLogin function
+      const { user, token } = await adminLogin(payload);
+      
+      // DEBUG: Log success
+      console.log('✅ [ADMIN LOGIN] SUCCESS');
+      console.log('✅ [ADMIN LOGIN] TOKEN RECEIVED:', token ? 'YES' : 'NO');
+      console.log('✅ [ADMIN LOGIN] USER:', user?.email, user?.role);
       
       await login(user, token);
       navigation.replace('Main');
     } catch (error) {
+      // DEBUG: Log full error details
+      console.log('❌ [ADMIN LOGIN] ERROR STATUS:', error.statusCode);
+      console.log('❌ [ADMIN LOGIN] ERROR MESSAGE:', error.message);
+      console.log('❌ [ADMIN LOGIN] ERROR CODE:', error.code);
+      console.log('❌ [ADMIN LOGIN] FULL ERROR:', JSON.stringify(error, null, 2));
+      
       let message = 'Login failed. Please check your credentials.';
       let title = 'Login Failed';
       
@@ -86,15 +106,15 @@ const AdminLoginScreen = ({ navigation }) => {
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         title = 'Server Starting Up';
         message = 'The server is waking up (free tier hosting). Please wait 30-60 seconds and try again.';
-      } else if (error.code === 'ERR_NETWORK' || !error.response) {
+      } else if (error.code === 'ERR_NETWORK' || error.statusCode === 0) {
         title = 'Connection Error';
         message = 'Cannot connect to server. The server may be starting up. Please wait a moment and try again.';
-      } else if (error.response?.status === 400) {
-        message = error.response.data?.message || 'Invalid admin credentials. Please check your email and password.';
-      } else if (error.response?.status === 403) {
-        message = error.response.data?.message || 'Your admin account has been suspended.';
-      } else if (error.response?.data?.message) {
-        message = error.response.data.message;
+      } else if (error.statusCode === 400) {
+        message = error.message || 'Invalid admin credentials. Please check your email and password.';
+      } else if (error.statusCode === 403) {
+        message = error.message || 'Your admin account has been suspended.';
+      } else if (error.message) {
+        message = error.message;
       }
       
       Alert.alert(title, message, [

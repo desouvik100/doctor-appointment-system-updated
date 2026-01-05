@@ -67,6 +67,20 @@ export * from './pushNotificationApiService';
 export { default as socketManager } from './socketManager';
 export * from './socketManager';
 
+// Role-specific Dashboard APIs
+export { default as doctorDashboardApi } from './doctorDashboardApi';
+export * from './doctorDashboardApi';
+
+export { default as staffDashboardApi } from './staffDashboardApi';
+export * from './staffDashboardApi';
+
+export { default as adminDashboardApi } from './adminDashboardApi';
+export * from './adminDashboardApi';
+
+// Complete Admin API (all admin endpoints)
+export { default as adminApi } from './adminApi';
+export * from './adminApi';
+
 // Import all services for default export
 import authService from './authService';
 import appointmentService from './appointmentService';

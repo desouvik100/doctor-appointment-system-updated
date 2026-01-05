@@ -279,6 +279,35 @@ class NotificationService {
     }
   }
 
+  // Show immediate local notification (appears in notification tray)
+  showLocalNotification(title, body, data = {}) {
+    if (!PushNotification) {
+      console.log('Local notification (mock):', { title, body, data });
+      return;
+    }
+
+    PushNotification.localNotification({
+      channelId: 'healthsync-channel',
+      title,
+      message: body,
+      data,
+      playSound: true,
+      soundName: 'default',
+      vibrate: true,
+      priority: 'high',
+      importance: 'high',
+      visibility: 'public',
+      autoCancel: true,
+      largeIcon: '',
+      smallIcon: 'ic_notification',
+      bigText: body,
+      subText: 'HealthSync',
+      color: '#6C5CE7',
+    });
+    
+    console.log('🔔 Local notification shown:', { title, body });
+  }
+
   async scheduleLocalNotification(title, body, date, data = {}) {
     if (!PushNotification) {
       console.log('Scheduled notification (mock):', { title, body, date, data });

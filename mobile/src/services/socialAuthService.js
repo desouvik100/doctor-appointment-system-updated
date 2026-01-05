@@ -7,6 +7,7 @@ import { Alert, Platform } from 'react-native';
 import apiClient, { saveAuthToken, saveRefreshToken } from './api/apiClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GOOGLE_WEB_CLIENT_ID } from '../config/env';
+import { GoogleSignin, statusCodes } from '@react-native-google-signin/google-signin';
 
 const USER_KEY = 'userData';
 
@@ -16,16 +17,30 @@ const USER_KEY = 'userData';
  */
 export const signInWithGoogle = async () => {
   try {
-    // Dynamic import to handle cases where package isn't installed
-    const { GoogleSignin, statusCodes } = await import('@react-native-google-signin/google-signin');
+    console.log('🔵 Starting Google Sign-In...');
     
     // Check if Google Play Services are available (Android only)
     if (Platform.OS === 'android') {
+      console.log('🔵 Checking Play Services...');
       await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      console.log('✅ Play Services available');
+    }
+    
+    // Check if already signed in and sign out first
+    try {
+      const isSignedIn = await GoogleSignin.isSignedIn();
+      if (isSignedIn) {
+        console.log('🔵 Already signed in, signing out first...');
+        await GoogleSignin.signOut();
+      }
+    } catch (e) {
+      console.log('🔵 Could not check sign-in status, continuing...');
     }
     
     // Sign in and get user info
+    console.log('🔵 Calling GoogleSignin.signIn()...');
     const userInfo = await GoogleSignin.signIn();
+    console.log('✅ Google Sign-In successful:', userInfo?.user?.email);
     const { user } = userInfo;
     
     // Send to backend for authentication/registration
@@ -37,7 +52,7 @@ export const signInWithGoogle = async () => {
     });
     
     const { token, refreshToken, user: userData } = response.data;
-    
+
     // Save tokens
     await saveAuthToken(token);
     if (refreshToken) {
@@ -48,11 +63,11 @@ export const signInWithGoogle = async () => {
     return { token, user: userData, isNewUser: response.data.isNewUser };
   } catch (error) {
     console.error('Google Sign-In error:', error);
+    console.error('Error code:', error.code);
+    console.error('Error message:', error.message);
     
     // Handle specific Google Sign-In errors
     if (error.code) {
-      const { statusCodes } = await import('@react-native-google-signin/google-signin');
-      
       switch (error.code) {
         case statusCodes.SIGN_IN_CANCELLED:
           throw new Error('Sign in cancelled');
@@ -60,6 +75,9 @@ export const signInWithGoogle = async () => {
           throw new Error('Sign in already in progress');
         case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
           throw new Error('Google Play Services not available');
+        case '10':
+        case 10:
+          throw new Error('DEVELOPER_ERROR: Check SHA-1 fingerprint and package name in Google Cloud Console');
         default:
           throw new Error(error.message || 'Google Sign-In failed');
       }
@@ -123,6 +141,7 @@ export const signInWithFacebook = async () => {
   }
 };
 
+
 /**
  * Apple Sign-In (iOS only)
  * Uses @invertase/react-native-apple-authentication
@@ -134,7 +153,6 @@ export const signInWithApple = async () => {
   
   try {
     const appleAuth = await import('@invertase/react-native-apple-authentication');
-    const { appleAuthAndroid } = appleAuth;
     
     // Perform Apple Sign-In request
     const appleAuthRequestResponse = await appleAuth.default.performRequest({
@@ -193,15 +211,14 @@ export const signInWithApple = async () => {
  * Configure Google Sign-In
  * Call this in App.js or during app initialization
  */
-export const configureGoogleSignIn = async () => {
+export const configureGoogleSignIn = () => {
   try {
-    const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
-    
     console.log('🔧 Configuring Google Sign-In with Web Client ID:', GOOGLE_WEB_CLIENT_ID);
     
     GoogleSignin.configure({
       webClientId: GOOGLE_WEB_CLIENT_ID,
       offlineAccess: true,
+      forceCodeForRefreshToken: true,
     });
     
     console.log('✅ Google Sign-In configured successfully');
@@ -216,7 +233,6 @@ export const configureGoogleSignIn = async () => {
 export const signOutFromSocialProviders = async () => {
   try {
     // Google Sign-Out
-    const { GoogleSignin } = await import('@react-native-google-signin/google-signin');
     const isSignedIn = await GoogleSignin.isSignedIn();
     if (isSignedIn) {
       await GoogleSignin.signOut();

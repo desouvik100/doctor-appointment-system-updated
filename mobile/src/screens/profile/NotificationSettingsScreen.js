@@ -122,6 +122,24 @@ const NotificationSettingsScreen = ({ navigation }) => {
           </Card>
         </View>
 
+        {/* Test Notification */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>Test Notifications</Text>
+          <TouchableOpacity 
+            style={styles.testButton}
+            onPress={() => {
+              NotificationService.showLocalNotification(
+                '🔔 Test Notification',
+                'This is a test push notification from HealthSync!',
+                { type: 'test' }
+              );
+            }}
+          >
+            <Text style={styles.testButtonIcon}>🧪</Text>
+            <Text style={styles.testButtonText}>Send Test Notification</Text>
+          </TouchableOpacity>
+        </View>
+
         {/* Info */}
         <View style={styles.infoBox}>
           <Text style={styles.infoIcon}>ℹ️</Text>
@@ -161,6 +179,12 @@ const styles = StyleSheet.create({
   settingLabel: { ...typography.bodyMedium, color: colors.textPrimary, fontWeight: '500' },
   settingDesc: { ...typography.labelSmall, color: colors.textMuted, marginTop: 2 },
   divider: { height: 1, backgroundColor: colors.divider, marginHorizontal: spacing.lg },
+  testButton: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    backgroundColor: colors.primary, padding: spacing.lg, borderRadius: borderRadius.lg,
+  },
+  testButtonIcon: { fontSize: 20, marginRight: spacing.sm },
+  testButtonText: { ...typography.bodyMedium, color: '#fff', fontWeight: '600' },
   infoBox: {
     flexDirection: 'row', backgroundColor: colors.surface, padding: spacing.lg,
     borderRadius: borderRadius.lg, borderWidth: 1, borderColor: colors.surfaceBorder,

@@ -2,6 +2,251 @@ const express = require('express');
 const router = express.Router();
 const Notification = require('../models/Notification');
 const Appointment = require('../models/Appointment');
+const User = require('../models/User');
+const admin = require('firebase-admin');
+const path = require('path');
+
+// Initialize Firebase Admin if not already done
+let firebaseInitialized = false;
+try {
+  if (!admin.apps.length) {
+    // Try to load service account from file first, then env variable
+    let serviceAccount = null;
+    
+    try {
+      serviceAccount = require('../firebase-service-account.json');
+      console.log('✅ Firebase service account loaded from file');
+    } catch (e) {
+      // Try environment variable
+      if (process.env.FIREBASE_SERVICE_ACCOUNT) {
+        serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT);
+        console.log('✅ Firebase service account loaded from env');
+      }
+    }
+    
+    if (serviceAccount) {
+      admin.initializeApp({
+        credential: admin.credential.cert(serviceAccount)
+      });
+      firebaseInitialized = true;
+      console.log('✅ Firebase Admin initialized for push notifications');
+    } else {
+      console.log('⚠️ Firebase service account not configured - push notifications disabled');
+    }
+  } else {
+    firebaseInitialized = true;
+  }
+} catch (error) {
+  console.log('⚠️ Firebase Admin init error:', error.message);
+}
+
+/**
+ * Register device for push notifications
+ */
+router.post('/register-device', async (req, res) => {
+  try {
+    const { fcmToken, platform, deviceInfo } = req.body;
+    const userId = req.user?.id || req.body.userId;
+    
+    if (!fcmToken) {
+      return res.status(400).json({ message: 'FCM token is required' });
+    }
+
+    // Find user and update/add device
+    const user = await User.findById(userId);
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    // Check if device already exists
+    const existingDeviceIndex = user.devices?.findIndex(d => d.fcmToken === fcmToken);
+    
+    if (existingDeviceIndex >= 0) {
+      // Update existing device
+      user.devices[existingDeviceIndex].lastActive = new Date();
+      user.devices[existingDeviceIndex].platform = platform;
+    } else {
+      // Add new device
+      if (!user.devices) user.devices = [];
+      user.devices.push({
+        fcmToken,
+        platform,
+        deviceId: deviceInfo?.deviceId || `${platform}-${Date.now()}`,
+        lastActive: new Date()
+      });
+    }
+    
+    // Also store the latest token directly for quick access
+    user.fcmToken = fcmToken;
+    await user.save();
+
+    console.log(`📱 Device registered for user ${userId}: ${fcmToken.substring(0, 20)}...`);
+    res.json({ success: true, message: 'Device registered for notifications' });
+  } catch (error) {
+    console.error('Device registration error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * Update notification settings
+ */
+router.put('/settings', async (req, res) => {
+  try {
+    const userId = req.user?.id || req.body.userId;
+    const settings = req.body;
+    
+    await User.findByIdAndUpdate(userId, {
+      $set: { notificationSettings: settings }
+    });
+
+    res.json({ success: true, message: 'Notification settings updated' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * Send push notification to a user
+ */
+router.post('/send', async (req, res) => {
+  try {
+    const { userId, title, body, data } = req.body;
+    
+    const user = await User.findById(userId);
+    if (!user?.fcmToken) {
+      return res.status(400).json({ message: 'User has no registered device' });
+    }
+
+    const result = await sendPushNotification(user.fcmToken, title, body, data);
+    
+    // Also save to database
+    await new Notification({
+      userId,
+      title,
+      message: body,
+      type: data?.type || 'system',
+      data
+    }).save();
+
+    res.json({ success: true, result });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * Send push notification to multiple users
+ */
+router.post('/send-bulk', async (req, res) => {
+  try {
+    const { userIds, title, body, data } = req.body;
+    
+    const users = await User.find({ _id: { $in: userIds }, fcmToken: { $exists: true, $ne: null } });
+    const tokens = users.map(u => u.fcmToken).filter(Boolean);
+    
+    if (tokens.length === 0) {
+      return res.status(400).json({ message: 'No registered devices found' });
+    }
+
+    const result = await sendBulkPushNotification(tokens, title, body, data);
+    
+    // Save notifications to database
+    const notifications = userIds.map(userId => ({
+      userId,
+      title,
+      message: body,
+      type: data?.type || 'system',
+      data
+    }));
+    await Notification.insertMany(notifications);
+
+    res.json({ success: true, sent: tokens.length, result });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Helper function to send push notification
+async function sendPushNotification(token, title, body, data = {}) {
+  if (!firebaseInitialized) {
+    console.log('📱 [Mock] Push notification:', { token: token?.substring(0, 20), title, body });
+    return { success: true, mock: true };
+  }
+
+  try {
+    const message = {
+      token,
+      notification: { title, body },
+      data: Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)])),
+      android: {
+        priority: 'high',
+        notification: {
+          channelId: 'healthsync-channel',
+          sound: 'default',
+          priority: 'high'
+        }
+      },
+      apns: {
+        payload: {
+          aps: {
+            sound: 'default',
+            badge: 1
+          }
+        }
+      }
+    };
+
+    const response = await admin.messaging().send(message);
+    console.log('📱 Push notification sent:', response);
+    return { success: true, messageId: response };
+  } catch (error) {
+    console.error('Push notification error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Helper function to send bulk push notifications
+async function sendBulkPushNotification(tokens, title, body, data = {}) {
+  if (!firebaseInitialized) {
+    console.log('📱 [Mock] Bulk push notification:', { count: tokens.length, title, body });
+    return { success: true, mock: true, count: tokens.length };
+  }
+
+  try {
+    const message = {
+      notification: { title, body },
+      data: Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)])),
+      android: {
+        priority: 'high',
+        notification: {
+          channelId: 'healthsync-channel',
+          sound: 'default'
+        }
+      },
+      apns: {
+        payload: {
+          aps: { sound: 'default', badge: 1 }
+        }
+      }
+    };
+
+    const response = await admin.messaging().sendEachForMulticast({
+      tokens,
+      ...message
+    });
+    
+    console.log(`📱 Bulk push sent: ${response.successCount}/${tokens.length} successful`);
+    return { success: true, successCount: response.successCount, failureCount: response.failureCount };
+  } catch (error) {
+    console.error('Bulk push error:', error);
+    return { success: false, error: error.message };
+  }
+}
+
+// Export helper for use in other modules
+module.exports.sendPushNotification = sendPushNotification;
+module.exports.sendBulkPushNotification = sendBulkPushNotification;
 
 /**
  * @swagger
@@ -263,6 +508,81 @@ router.post('/schedule-reminders', async (req, res) => {
     }
 
     res.json({ message: `Scheduled ${notifications.length} reminders` });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * Test push notification - sends a test notification to a user
+ * GET /notifications/test/:userId
+ */
+router.get('/test/:userId', async (req, res) => {
+  try {
+    const { userId } = req.params;
+    const user = await User.findById(userId);
+    
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    const fcmToken = user.fcmToken || user.devices?.[0]?.fcmToken;
+    
+    if (!fcmToken) {
+      return res.status(400).json({ 
+        message: 'No FCM token registered for this user',
+        hint: 'User needs to open the mobile app first to register their device'
+      });
+    }
+
+    // Send test push notification
+    const title = '🔔 Test Notification';
+    const body = `Hello ${user.name}! This is a test push notification from HealthSync.`;
+    const data = { type: 'test', timestamp: Date.now().toString() };
+
+    const result = await sendPushNotification(fcmToken, title, body, data);
+
+    // Also save to database
+    const notification = new Notification({
+      userId,
+      title,
+      message: body,
+      type: 'system',
+      data
+    });
+    await notification.save();
+
+    res.json({ 
+      success: true, 
+      message: 'Test notification sent!',
+      fcmToken: fcmToken.substring(0, 30) + '...',
+      result 
+    });
+  } catch (error) {
+    console.error('Test notification error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * Test local notification trigger (for mobile app testing)
+ * POST /notifications/test-local
+ */
+router.post('/test-local', async (req, res) => {
+  try {
+    const { userId, title, body } = req.body;
+    
+    // Just save to database - mobile app will fetch and display
+    const notification = new Notification({
+      userId,
+      title: title || '🧪 Test Notification',
+      message: body || 'This is a test notification!',
+      type: 'system',
+      data: { type: 'test', timestamp: Date.now() }
+    });
+    await notification.save();
+
+    res.json({ success: true, notification });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }

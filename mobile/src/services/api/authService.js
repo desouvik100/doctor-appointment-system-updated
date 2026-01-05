@@ -15,6 +15,7 @@ const USER_KEY = 'userData';
 
 /**
  * Login with email/phone and password
+ * For patients only - uses /auth/login endpoint
  */
 export const login = async (credentials) => {
   const response = await apiClient.post('/auth/login', credentials);
@@ -24,6 +25,25 @@ export const login = async (credentials) => {
   if (refreshToken) {
     await saveRefreshToken(refreshToken);
   }
+  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  
+  return { token, user };
+};
+
+/**
+ * Doctor login - uses separate doctor endpoint
+ * Backend /auth/doctor/login expects { email, password }
+ */
+export const doctorLogin = async (credentials) => {
+  const response = await apiClient.post('/auth/doctor/login', credentials);
+  const { token, refreshToken, doctor } = response.data;
+  
+  await saveAuthToken(token);
+  if (refreshToken) {
+    await saveRefreshToken(refreshToken);
+  }
+  // Store doctor as user for consistency
+  const user = { ...doctor, role: 'doctor' };
   await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
   
   return { token, user };
@@ -46,7 +66,8 @@ export const adminLogin = async (credentials) => {
 };
 
 /**
- * Clinic/Receptionist login
+ * Clinic/Receptionist/Staff login
+ * Uses /auth/clinic/login endpoint for all clinic staff
  */
 export const clinicLogin = async (credentials) => {
   const response = await apiClient.post('/auth/clinic/login', credentials);
@@ -59,6 +80,14 @@ export const clinicLogin = async (credentials) => {
   await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
   
   return { token, user };
+};
+
+/**
+ * Staff login - alias for clinicLogin
+ * Staff (reception, nursing, pharmacy, lab) use clinic login endpoint
+ */
+export const staffLogin = async (credentials) => {
+  return clinicLogin(credentials);
 };
 
 /**
@@ -212,8 +241,10 @@ export const registerDeviceToken = async (deviceToken) => {
 
 export default {
   login,
+  doctorLogin,
   adminLogin,
   clinicLogin,
+  staffLogin,
   register,
   sendOTP,
   verifyOTP,

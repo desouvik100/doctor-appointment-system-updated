@@ -347,6 +347,7 @@ app.use('/api/drugs', require('./routes/drugInteractionRoutes')); // Real-time D
 app.use('/api/pdf', require('./routes/pdfRoutes')); // PDF Generation (Lab Requisitions, Clinical Summaries)
 app.use('/api/smart-alerts', require('./routes/smartAlertRoutes')); // ML-based Patient Deterioration Prediction
 app.use('/api/e-prescribe', require('./routes/ePrescribingRoutes')); // E-Prescribing Integration
+app.use('/api/schedule', require('./routes/scheduleRoutes')); // Doctor Schedule Management
 
 // ===== EMR HOSPITAL SUBSCRIPTION FEATURES =====
 app.use('/api/pharmacy', require('./routes/pharmacyRoutes')); // Pharmacy/Inventory Management

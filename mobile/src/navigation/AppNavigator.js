@@ -14,7 +14,7 @@ import RoleSelectionScreen from '../screens/auth/RoleSelectionScreen';
 import DoctorLoginScreen from '../screens/auth/DoctorLoginScreen';
 import StaffLoginScreen from '../screens/auth/StaffLoginScreen';
 import AdminLoginScreen from '../screens/auth/AdminLoginScreen';
-import BottomTabNavigator from './BottomTabNavigator';
+import RoleBasedNavigator from './RoleBasedNavigator';
 import BookingScreen from '../screens/booking/BookingScreen';
 import SlotSelectionScreen from '../screens/booking/SlotSelectionScreen';
 import PaymentScreen from '../screens/booking/PaymentScreen';
@@ -36,6 +36,8 @@ import HealthReportsScreen from '../screens/profile/HealthReportsScreen';
 import FamilyMembersScreen from '../screens/profile/FamilyMembersScreen';
 import MedicalTimelineScreen from '../screens/profile/MedicalTimelineScreen';
 import InsuranceScreen from '../screens/profile/InsuranceScreen';
+import NotificationSettingsScreen from '../screens/profile/NotificationSettingsScreen';
+import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 import AuthGate from '../components/AuthGate';
 import { UserProvider, useUser } from '../context/UserContext';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
@@ -78,8 +80,8 @@ const AppContent = () => {
         <Stack.Screen name="StaffLogin" component={StaffLoginScreen} />
         <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
         
-        {/* Main App */}
-        <Stack.Screen name="Main" component={BottomTabNavigator} />
+        {/* Main App - Role-based navigation */}
+        <Stack.Screen name="Main" component={RoleBasedNavigator} />
         <Stack.Screen name="DoctorSearch" component={DoctorSearchScreen} />
         <Stack.Screen name="DoctorProfile" component={DoctorProfileScreen} />
         <Stack.Screen name="Booking" component={BookingScreen} />
@@ -101,6 +103,8 @@ const AppContent = () => {
         <Stack.Screen name="FamilyMembers" component={FamilyMembersScreen} />
         <Stack.Screen name="MedicalTimeline" component={MedicalTimelineScreen} />
         <Stack.Screen name="Insurance" component={InsuranceScreen} />
+        <Stack.Screen name="Notifications" component={NotificationsScreen} />
+        <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

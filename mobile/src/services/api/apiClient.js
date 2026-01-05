@@ -124,16 +124,35 @@ const apiClient = axios.create({
  */
 export const getAuthToken = async () => {
   try {
+    // Try Keychain first
     const credentials = await Keychain.getGenericPassword({ service: TOKEN_KEY });
-    return credentials ? credentials.password : null;
-  } catch (error) {
-    // Fallback to AsyncStorage if Keychain fails
-    try {
-      return await AsyncStorage.getItem(TOKEN_KEY);
-    } catch {
-      return null;
+    if (credentials && credentials.password) {
+      console.log('🔑 [AUTH] Token found in Keychain');
+      return credentials.password;
     }
+  } catch (error) {
+    console.log('⚠️ [AUTH] Keychain read failed:', error.message);
   }
+  
+  // Fallback to AsyncStorage
+  try {
+    const token = await AsyncStorage.getItem(TOKEN_KEY);
+    if (token) {
+      console.log('🔑 [AUTH] Token found in AsyncStorage');
+      return token;
+    }
+    // Also try 'token' key (used by UserContext)
+    const altToken = await AsyncStorage.getItem('token');
+    if (altToken) {
+      console.log('🔑 [AUTH] Token found in AsyncStorage (alt key)');
+      return altToken;
+    }
+  } catch (error) {
+    console.log('⚠️ [AUTH] AsyncStorage read failed:', error.message);
+  }
+  
+  console.log('❌ [AUTH] No token found');
+  return null;
 };
 
 /**
@@ -143,12 +162,18 @@ export const getAuthToken = async () => {
  * @returns {Promise<void>}
  */
 export const saveAuthToken = async (token) => {
+  console.log('💾 [AUTH] Saving token...');
   try {
     await Keychain.setGenericPassword('authToken', token, { service: TOKEN_KEY });
+    console.log('✅ [AUTH] Token saved to Keychain');
   } catch (error) {
+    console.log('⚠️ [AUTH] Keychain save failed, using AsyncStorage:', error.message);
     // Fallback to AsyncStorage
     await AsyncStorage.setItem(TOKEN_KEY, token);
+    console.log('✅ [AUTH] Token saved to AsyncStorage');
   }
+  // Also save to 'token' key for compatibility with UserContext
+  await AsyncStorage.setItem('token', token);
 };
 
 /**
@@ -273,11 +298,14 @@ apiClient.interceptors.request.use(
     try {
       const token = await getAuthToken();
       
-      if (__DEV__) {
-        devLog(`🌐 [API] ${config.method?.toUpperCase()} ${config.url}`, {
-          hasToken: !!token,
-          params: config.params,
-        });
+      // DEBUG: Always log request details
+      console.log(`🌐 [API REQUEST] ${config.method?.toUpperCase()} ${config.baseURL}${config.url}`);
+      console.log(`🌐 [API REQUEST] Has Token: ${!!token}`);
+      if (config.data) {
+        // Don't log password
+        const safeData = { ...config.data };
+        if (safeData.password) safeData.password = '***';
+        console.log(`🌐 [API REQUEST] Body:`, JSON.stringify(safeData));
       }
       
       // Automatically attach Authorization header if token exists

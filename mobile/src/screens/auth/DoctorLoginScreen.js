@@ -19,7 +19,8 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { authService } from '../../services/api';
+// Direct import to avoid circular dependency issues
+import { doctorLogin } from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
 import whatsappService from '../../services/whatsappService';
 
@@ -72,26 +73,58 @@ const DoctorLoginScreen = ({ navigation }) => {
     }
 
     setLoading(true);
+    
+    // DEBUG: Log payload and URL
+    const payload = {
+      email: email.trim().toLowerCase(),
+      password,
+    };
+    console.log('🔵 [DOCTOR LOGIN] PAYLOAD:', { email: payload.email, password: '***' });
+    console.log('🔵 [DOCTOR LOGIN] ENDPOINT: /auth/doctor/login');
+    
     try {
-      const { user, token } = await authService.login({
-        email: email.trim().toLowerCase(),
-        password,
-        role: 'doctor',
-      });
+      // Use direct import of doctorLogin function
+      const { user, token } = await doctorLogin(payload);
       
-      if (user.role !== 'doctor') {
-        Alert.alert('Access Denied', 'This portal is for doctors only.');
-        return;
-      }
+      // DEBUG: Log success
+      console.log('✅ [DOCTOR LOGIN] SUCCESS');
+      console.log('✅ [DOCTOR LOGIN] TOKEN RECEIVED:', token ? 'YES' : 'NO');
+      console.log('✅ [DOCTOR LOGIN] USER:', user?.email, user?.role);
       
       await login(user, token);
       navigation.replace('Main');
     } catch (error) {
+      // DEBUG: Log full error details
+      console.log('❌ [DOCTOR LOGIN] ERROR STATUS:', error.statusCode);
+      console.log('❌ [DOCTOR LOGIN] ERROR MESSAGE:', error.message);
+      console.log('❌ [DOCTOR LOGIN] ERROR CODE:', error.code);
+      console.log('❌ [DOCTOR LOGIN] FULL ERROR:', JSON.stringify(error, null, 2));
+      
       let message = 'Login failed. Please check your credentials.';
-      if (error.response?.data?.message) {
-        message = error.response.data.message;
+      let title = 'Login Failed';
+      
+      // Check for network/connection errors
+      if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
+        title = 'Server Starting Up';
+        message = 'The server is waking up (free tier hosting). Please wait 30-60 seconds and try again.';
+      } else if (error.code === 'ERR_NETWORK' || error.statusCode === 0) {
+        title = 'Connection Error';
+        message = 'Cannot connect to server. The server may be starting up. Please wait a moment and try again.';
+      } else if (error.statusCode === 403) {
+        // Handle suspended/pending/rejected accounts
+        if (error.message?.includes('suspended')) {
+          title = 'Account Suspended';
+        } else if (error.message?.includes('pending')) {
+          title = 'Pending Approval';
+        } else if (error.message?.includes('rejected')) {
+          title = 'Account Rejected';
+        }
+        message = error.message;
+      } else if (error.message) {
+        message = error.message;
       }
-      Alert.alert('Login Failed', message);
+      
+      Alert.alert(title, message);
     } finally {
       setLoading(false);
     }

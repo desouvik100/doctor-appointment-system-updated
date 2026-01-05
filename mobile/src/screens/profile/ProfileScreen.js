@@ -86,7 +86,7 @@ const ProfileScreen = ({ navigation }) => {
     {
       title: 'Preferences',
       items: [
-        { id: 'notifications', icon: '🔔', label: 'Notifications', toggle: true, value: true },
+        { id: 'notifications', icon: '🔔', label: 'Notification Settings', arrow: true, route: 'NotificationSettings' },
         { id: 'darkMode', icon: '🌙', label: 'Dark Mode', toggle: true, value: isDarkMode, onToggle: toggleTheme },
         { id: 'language', icon: '🌐', label: 'Language', value: 'English', arrow: true },
         { id: 'units', icon: '📏', label: 'Units', value: 'Metric', arrow: true },
@@ -162,9 +162,20 @@ const ProfileScreen = ({ navigation }) => {
         {/* Header */}
         <View style={styles.header}>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Profile</Text>
-          <TouchableOpacity style={[styles.settingsBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
-            <Text style={styles.settingsIcon}>⚙️</Text>
-          </TouchableOpacity>
+          <View style={styles.headerActions}>
+            <TouchableOpacity 
+              style={[styles.notificationBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
+              onPress={() => navigation.navigate('Notifications')}
+            >
+              <Text style={styles.notificationIcon}>🔔</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.settingsBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
+              onPress={() => navigation.navigate('NotificationSettings')}
+            >
+              <Text style={styles.settingsIcon}>⚙️</Text>
+            </TouchableOpacity>
+          </View>
         </View>
 
         {/* Profile Card */}
@@ -295,6 +306,23 @@ const styles = StyleSheet.create({
   headerTitle: {
     ...typography.displaySmall,
     color: colors.textPrimary,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  notificationBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  notificationIcon: {
+    fontSize: 20,
   },
   settingsBtn: {
     width: 44,

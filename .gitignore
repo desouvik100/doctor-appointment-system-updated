@@ -25,6 +25,11 @@ backend/.env
 frontend/.env
 **/.env
 
+# Firebase Service Account (NEVER commit)
+firebase-service-account.json
+**/firebase-service-account.json
+*-firebase-adminsdk-*.json
+
 # Build outputs
 build/
 dist/
