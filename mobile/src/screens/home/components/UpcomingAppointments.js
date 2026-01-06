@@ -99,7 +99,11 @@ const UpcomingAppointments = ({
 
           <View style={styles.appointmentHeader}>
             <View style={styles.appointmentInfo}>
-              <Avatar name={nextAppointment.doctorName} size="large" />
+              <Avatar 
+                name={nextAppointment.doctorName} 
+                size="large" 
+                source={nextAppointment.doctorPhoto ? { uri: nextAppointment.doctorPhoto } : null}
+              />
               <View style={styles.doctorInfo}>
                 <Text style={[styles.doctorName, { color: colors.textInverse }]}>{nextAppointment.doctorName}</Text>
                 <Text style={styles.specialty}>{nextAppointment.specialty}</Text>
@@ -153,7 +157,11 @@ const UpcomingAppointments = ({
           style={[styles.listItem, { backgroundColor: colors.surface }]}
           onPress={() => navigation.navigate('AppointmentDetails', { appointment })}
         >
-          <Avatar name={appointment.doctorName} size="medium" />
+          <Avatar 
+            name={appointment.doctorName} 
+            size="medium" 
+            source={appointment.doctorPhoto ? { uri: appointment.doctorPhoto } : null}
+          />
           <View style={styles.listItemContent}>
             <Text style={[styles.listDoctorName, { color: colors.textPrimary }]}>{appointment.doctorName}</Text>
             <Text style={[styles.listDateTime, { color: colors.textSecondary }]}>

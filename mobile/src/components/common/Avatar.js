@@ -2,7 +2,7 @@
  * Avatar Component with status indicator
  */
 
-import React from 'react';
+import React, { useState } from 'react';
 import { View, Image, Text, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
@@ -16,6 +16,8 @@ const Avatar = ({
   status = 'online', // online, offline, busy, away
   showBorder = false,
 }) => {
+  const [imageError, setImageError] = useState(false);
+
   const getSize = () => {
     switch (size) {
       case 'small': return 32;
@@ -52,6 +54,27 @@ const Avatar = ({
   const statusSize = getStatusSize();
   const fontSize = avatarSize * 0.4;
 
+  // Check if source is valid (has uri property with a truthy value)
+  const hasValidSource = source && source.uri && !imageError;
+
+  const renderAvatarContent = (borderRadiusValue) => {
+    if (hasValidSource) {
+      return (
+        <Image 
+          source={source} 
+          style={[styles.image, { borderRadius: borderRadiusValue }]} 
+          onError={() => setImageError(true)}
+          resizeMode="cover"
+        />
+      );
+    }
+    return (
+      <View style={[styles.placeholder, { borderRadius: borderRadiusValue }]}>
+        <Text style={[styles.initials, { fontSize }]}>{getInitials()}</Text>
+      </View>
+    );
+  };
+
   return (
     <View style={[styles.container, { width: avatarSize, height: avatarSize }]}>
       {showBorder ? (
@@ -62,25 +85,11 @@ const Avatar = ({
           style={[styles.border, { borderRadius: avatarSize / 2, padding: 2 }]}
         >
           <View style={[styles.avatarWrapper, { borderRadius: (avatarSize - 4) / 2 }]}>
-            {source ? (
-              <Image source={source} style={[styles.image, { borderRadius: (avatarSize - 4) / 2 }]} />
-            ) : (
-              <View style={[styles.placeholder, { borderRadius: (avatarSize - 4) / 2 }]}>
-                <Text style={[styles.initials, { fontSize }]}>{getInitials()}</Text>
-              </View>
-            )}
+            {renderAvatarContent((avatarSize - 4) / 2)}
           </View>
         </LinearGradient>
       ) : (
-        <>
-          {source ? (
-            <Image source={source} style={[styles.image, { borderRadius: avatarSize / 2 }]} />
-          ) : (
-            <View style={[styles.placeholder, { borderRadius: avatarSize / 2 }]}>
-              <Text style={[styles.initials, { fontSize }]}>{getInitials()}</Text>
-            </View>
-          )}
-        </>
+        renderAvatarContent(avatarSize / 2)
       )}
       
       {showStatus && (

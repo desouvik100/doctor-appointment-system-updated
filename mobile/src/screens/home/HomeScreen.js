@@ -12,7 +12,9 @@ import {
   StatusBar,
   RefreshControl,
   Dimensions,
+  Platform,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
@@ -36,6 +38,7 @@ const HomeScreen = ({ navigation }) => {
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
   const { subscribe, isConnected } = useSocket();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
@@ -100,6 +103,7 @@ const HomeScreen = ({ navigation }) => {
       const formattedAppointments = rawAppointments.map(app => ({
         id: app._id || app.id,
         doctorName: app.doctor?.name || 'Unknown Doctor',
+        doctorPhoto: app.doctor?.photo || app.doctor?.profilePhoto || null,
         specialty: app.doctor?.specialization || 'General',
         dateTime: app.date || app.appointmentDate,
         type: app.type || 'video',
@@ -256,7 +260,7 @@ const HomeScreen = ({ navigation }) => {
       
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing.lg }]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -274,7 +278,12 @@ const HomeScreen = ({ navigation }) => {
             <Text style={[styles.userName, { color: colors.textPrimary }]}>{user?.name || 'User'}</Text>
           </View>
           <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-            <Avatar name={user?.name || 'User'} size="large" showBorder />
+            <Avatar 
+              name={user?.name || 'User'} 
+              size="large" 
+              showBorder 
+              source={user?.profilePhoto ? { uri: user.profilePhoto } : null}
+            />
           </TouchableOpacity>
         </View>
 
@@ -382,7 +391,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
     paddingBottom: 100,
   },
   header: {

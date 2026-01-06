@@ -32,8 +32,8 @@ const Card = ({
     { padding: getPadding(), backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder },
     variant === 'elevated' && [styles.elevated, shadows.medium, { backgroundColor: colors.backgroundElevated }],
     variant === 'glass' && [styles.glass, { 
-      backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.7)' : 'rgba(255, 255, 255, 0.7)',
-      borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.1)' : 'rgba(0, 0, 0, 0.1)',
+      backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.85)' : 'rgba(255, 255, 255, 0.95)',
+      borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.08)',
     }],
     style,
   ];

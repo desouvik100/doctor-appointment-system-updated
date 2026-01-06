@@ -186,7 +186,12 @@ const ProfileScreen = ({ navigation }) => {
           style={styles.profileCard}
         >
           <View style={styles.profileTop}>
-            <Avatar name={user.name} size="xlarge" showBorder />
+            <Avatar 
+              name={user.name} 
+              size="xlarge" 
+              showBorder 
+              source={user.profilePhoto ? { uri: user.profilePhoto } : null}
+            />
             <TouchableOpacity 
               style={styles.editAvatarBtn}
               onPress={() => navigation.navigate('EditProfile')}
