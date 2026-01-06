@@ -217,7 +217,9 @@ const styles = StyleSheet.create({
   featuredCard: {
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
+    paddingTop: spacing.xxl,
     marginBottom: spacing.md,
+    overflow: 'visible',
   },
   countdownBadge: {
     position: 'absolute',
@@ -227,6 +229,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
+    zIndex: 1,
   },
   countdownText: {
     ...typography.labelSmall,
@@ -237,13 +240,17 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'flex-start',
     marginBottom: spacing.lg,
+    marginTop: spacing.sm,
   },
   appointmentInfo: {
     flexDirection: 'row',
     alignItems: 'center',
+    flex: 1,
+    overflow: 'visible',
   },
   doctorInfo: {
     marginLeft: spacing.md,
+    flex: 1,
   },
   doctorName: {
     ...typography.headlineSmall,

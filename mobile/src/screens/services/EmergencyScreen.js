@@ -50,7 +50,8 @@ const EmergencyScreen = ({ navigation }) => {
   const requestLocationPermission = async () => {
     if (Platform.OS === 'android') {
       try {
-        const granted = await PermissionsAndroid.request(
+        // Request both fine and coarse location
+        const fineGranted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
             title: 'Location Permission',
@@ -60,11 +61,32 @@ const EmergencyScreen = ({ navigation }) => {
             buttonPositive: 'OK',
           }
         );
-        if (granted === PermissionsAndroid.RESULTS.GRANTED) {
+        
+        if (fineGranted === PermissionsAndroid.RESULTS.GRANTED) {
+          console.log('📍 Fine location permission granted');
           getCurrentLocation();
+        } else {
+          // Try coarse location as fallback
+          const coarseGranted = await PermissionsAndroid.request(
+            PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION
+          );
+          if (coarseGranted === PermissionsAndroid.RESULTS.GRANTED) {
+            console.log('📍 Coarse location permission granted');
+            getCurrentLocation();
+          } else {
+            console.log('📍 Location permission denied');
+            Alert.alert(
+              'Location Required',
+              'Location permission is needed for emergency services. Please enable it in Settings.',
+              [
+                { text: 'Cancel', style: 'cancel' },
+                { text: 'Open Settings', onPress: () => Linking.openSettings() }
+              ]
+            );
+          }
         }
       } catch (err) {
-        console.warn(err);
+        console.warn('Permission error:', err);
       }
     } else {
       getCurrentLocation();
@@ -73,8 +95,18 @@ const EmergencyScreen = ({ navigation }) => {
 
   const getCurrentLocation = () => {
     setLoadingLocation(true);
+    
+    // Configure geolocation
+    Geolocation.setRNConfiguration({
+      skipPermissionRequests: false,
+      authorizationLevel: 'whenInUse',
+      locationProvider: 'auto',
+    });
+    
+    // Request current position with generous timeout
     Geolocation.getCurrentPosition(
       (position) => {
+        console.log('📍 Location obtained:', position.coords);
         setLocation({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -83,10 +115,36 @@ const EmergencyScreen = ({ navigation }) => {
         setLoadingLocation(false);
       },
       (error) => {
-        console.error('Location error:', error);
+        console.error('📍 Location error:', error.code, error.message);
         setLoadingLocation(false);
+        
+        // Show user-friendly error
+        if (error.code === 1) {
+          Alert.alert('Location Permission', 'Please enable location permission in Settings');
+        } else if (error.code === 2) {
+          Alert.alert('Location Unavailable', 'Unable to get location. Please check GPS is enabled.');
+        } else if (error.code === 3) {
+          // Timeout - try with lower accuracy
+          Geolocation.getCurrentPosition(
+            (pos) => {
+              setLocation({
+                latitude: pos.coords.latitude,
+                longitude: pos.coords.longitude,
+                accuracy: pos.coords.accuracy,
+              });
+            },
+            () => {
+              console.log('📍 Location fallback also failed');
+            },
+            { enableHighAccuracy: false, timeout: 60000, maximumAge: 300000 }
+          );
+        }
       },
-      { enableHighAccuracy: true, timeout: 15000, maximumAge: 10000 }
+      { 
+        enableHighAccuracy: false, 
+        timeout: 60000, 
+        maximumAge: 300000,
+      }
     );
   };
 
@@ -118,56 +176,51 @@ const EmergencyScreen = ({ navigation }) => {
   const handleSOS = async () => {
     setSosActive(true);
     
-    // Get fresh location
+    // Get fresh location with fallback
+    const getLocationAndSendSOS = (loc) => {
+      const currentLocation = loc ? {
+        latitude: loc.latitude,
+        longitude: loc.longitude,
+        address: `Lat: ${loc.latitude.toFixed(6)}, Long: ${loc.longitude.toFixed(6)}`,
+      } : { latitude: 0, longitude: 0, address: 'Location unavailable' };
+      
+      const userInfo = {
+        name: user?.name || 'HealthSync User',
+        phone: user?.phone || 'N/A',
+        bloodGroup: emergencyInfo?.bloodGroup || 'Unknown',
+        allergies: emergencyInfo?.allergies?.join(', ') || 'None known',
+      };
+      
+      // Send WhatsApp SOS
+      whatsappService.sendEmergencySOS(currentLocation, userInfo).catch(error => {
+        console.error('WhatsApp SOS error:', error);
+      });
+      
+      // Show confirmation
+      Alert.alert(
+        'SOS Sent',
+        loc ? 'Emergency alert has been sent with your location. Emergency services have been notified.' 
+            : 'Emergency alert sent. Note: Precise location could not be determined.',
+        [{ text: 'OK' }]
+      );
+      
+      setTimeout(() => setSosActive(false), 3000);
+    };
+    
+    // Try to get fresh location
     Geolocation.getCurrentPosition(
-      async (position) => {
-        const currentLocation = {
+      (position) => {
+        getLocationAndSendSOS({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
-          address: `Lat: ${position.coords.latitude.toFixed(6)}, Long: ${position.coords.longitude.toFixed(6)}`,
-        };
-        
-        const userInfo = {
-          name: user?.name || 'HealthSync User',
-          phone: user?.phone || 'N/A',
-          bloodGroup: emergencyInfo?.bloodGroup || 'Unknown',
-          allergies: emergencyInfo?.allergies?.join(', ') || 'None known',
-        };
-        
-        // Send WhatsApp SOS
-        try {
-          await whatsappService.sendEmergencySOS(currentLocation, userInfo);
-        } catch (error) {
-          console.error('WhatsApp SOS error:', error);
-        }
-        
-        // Show confirmation
-        Alert.alert(
-          'SOS Sent',
-          'Emergency alert has been sent with your location. Emergency services have been notified.',
-          [{ text: 'OK' }]
-        );
-        
-        setTimeout(() => setSosActive(false), 3000);
+        });
       },
       (error) => {
-        // Fallback without precise location
-        const userInfo = {
-          name: user?.name || 'HealthSync User',
-          phone: user?.phone || 'N/A',
-        };
-        
-        whatsappService.sendEmergencySOS(location || { latitude: 0, longitude: 0, address: 'Location unavailable' }, userInfo);
-        
-        Alert.alert(
-          'SOS Sent',
-          'Emergency alert sent. Note: Precise location could not be determined.',
-          [{ text: 'OK' }]
-        );
-        
-        setTimeout(() => setSosActive(false), 3000);
+        console.error('SOS location error:', error);
+        // Use cached location or send without
+        getLocationAndSendSOS(location);
       },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
     );
   };
 
