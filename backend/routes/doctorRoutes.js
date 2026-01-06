@@ -1012,4 +1012,77 @@ router.get('/:id/online-status', async (req, res) => {
   }
 });
 
+// ===== PATIENTS ROUTES =====
+
+/**
+ * @swagger
+ * /doctors/{id}/patients:
+ *   get:
+ *     summary: Get doctor's patients
+ *     description: Returns list of patients who have had appointments with this doctor
+ *     tags: [Doctors]
+ *     parameters:
+ *       - in: path
+ *         name: id
+ *         required: true
+ *         schema:
+ *           type: string
+ *         description: Doctor ID
+ *     responses:
+ *       200:
+ *         description: List of patients
+ */
+router.get('/:id/patients', async (req, res) => {
+  try {
+    const doctorId = req.params.id;
+    const Appointment = require('../models/Appointment');
+    const User = require('../models/User');
+    
+    // Find all unique patients who have had appointments with this doctor
+    const appointments = await Appointment.find({ doctor: doctorId })
+      .select('user')
+      .lean();
+    
+    // Get unique patient IDs
+    const patientIds = [...new Set(appointments.map(a => a.user?.toString()).filter(Boolean))];
+    
+    if (patientIds.length === 0) {
+      return res.json({ success: true, patients: [], total: 0 });
+    }
+    
+    // Fetch patient details
+    const patients = await User.find({ _id: { $in: patientIds } })
+      .select('name email phone profilePhoto bloodType dateOfBirth gender createdAt')
+      .lean();
+    
+    // Add appointment count for each patient
+    const patientsWithStats = await Promise.all(patients.map(async (patient) => {
+      const appointmentCount = await Appointment.countDocuments({ 
+        doctor: doctorId, 
+        user: patient._id 
+      });
+      const lastAppointment = await Appointment.findOne({ 
+        doctor: doctorId, 
+        user: patient._id 
+      }).sort({ date: -1 }).select('date status').lean();
+      
+      return {
+        ...patient,
+        appointmentCount,
+        lastVisit: lastAppointment?.date,
+        lastVisitStatus: lastAppointment?.status
+      };
+    }));
+    
+    res.json({ 
+      success: true, 
+      patients: patientsWithStats, 
+      total: patientsWithStats.length 
+    });
+  } catch (error) {
+    console.error('Error fetching doctor patients:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch patients', error: error.message });
+  }
+});
+
 module.exports = router;

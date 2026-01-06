@@ -20,11 +20,13 @@ import { shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
+import LoginSuccessAnimation from '../../components/common/LoginSuccessAnimation';
 import authService from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
 import biometricService from '../../services/biometricService';
 import socialAuthService from '../../services/socialAuthService';
+import NotificationService from '../../services/notifications/NotificationService';
 
 const LoginScreen = ({ navigation }) => {
   const { colors } = useTheme();
@@ -36,6 +38,9 @@ const LoginScreen = ({ navigation }) => {
   const [biometricType, setBiometricType] = useState(null);
   const [hasStoredCredentials, setHasStoredCredentials] = useState(false);
   const [socialLoading, setSocialLoading] = useState(null); // 'google' | 'facebook' | 'apple' | null
+  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
+  const [loggedInUser, setLoggedInUser] = useState(null);
+  const [isEmailLogin, setIsEmailLogin] = useState(false);
   const { login } = useUser();
 
   useEffect(() => {
@@ -67,29 +72,20 @@ const LoginScreen = ({ navigation }) => {
       });
       await login(user, token);
       
-      // Offer to enable biometric login if available and not already set up
-      if (biometricAvailable && !hasStoredCredentials) {
-        Alert.alert(
-          `Enable ${biometricType}?`,
-          `Would you like to use ${biometricType} for faster sign-in next time?`,
-          [
-            { text: 'Not Now', style: 'cancel', onPress: () => navigation.replace('Main') },
-            { 
-              text: 'Enable', 
-              onPress: async () => {
-                try {
-                  await biometricService.enableBiometricLogin(email.trim().toLowerCase(), password);
-                  navigation.replace('Main');
-                } catch (error) {
-                  navigation.replace('Main');
-                }
-              }
-            },
-          ]
-        );
-      } else {
-        navigation.replace('Main');
+      // Register device for push notifications after successful login
+      const userId = user?.id || user?._id;
+      if (userId) {
+        NotificationService.registerDeviceAfterLogin(userId).catch(err => {
+          console.log('Device registration after login failed:', err.message);
+        });
       }
+      
+      setLoggedInUser(user);
+      setIsEmailLogin(true);
+      setLoading(false);
+      
+      // Show success animation
+      setShowSuccessAnimation(true);
     } catch (error) {
       console.log('Login error:', error);
       let message = 'Login failed. Please check your credentials.';
@@ -105,9 +101,39 @@ const LoginScreen = ({ navigation }) => {
       }
       
       Alert.alert('Login Failed', message);
-    } finally {
       setLoading(false);
     }
+  };
+
+  const handleAnimationComplete = () => {
+    setShowSuccessAnimation(false);
+    
+    // Check for biometric setup only for email/password login
+    if (isEmailLogin && biometricAvailable && !hasStoredCredentials && email && password) {
+      Alert.alert(
+        `Enable ${biometricType}?`,
+        `Would you like to use ${biometricType} for faster sign-in next time?`,
+        [
+          { text: 'Not Now', style: 'cancel', onPress: () => navigation.replace('Main') },
+          { 
+            text: 'Enable', 
+            onPress: async () => {
+              try {
+                await biometricService.enableBiometricLogin(email.trim().toLowerCase(), password);
+                navigation.replace('Main');
+              } catch (error) {
+                navigation.replace('Main');
+              }
+            }
+          },
+        ]
+      );
+    } else {
+      navigation.replace('Main');
+    }
+    
+    // Reset state
+    setIsEmailLogin(false);
   };
 
   const handleBiometricLogin = async () => {
@@ -120,12 +146,22 @@ const LoginScreen = ({ navigation }) => {
         password: credentials.password,
       });
       await login(user, token);
-      navigation.replace('Main');
+      
+      // Register device for push notifications
+      const userId = user?.id || user?._id;
+      if (userId) {
+        NotificationService.registerDeviceAfterLogin(userId).catch(err => {
+          console.log('Device registration after login failed:', err.message);
+        });
+      }
+      
+      setLoggedInUser(user);
+      setBiometricLoading(false);
+      setShowSuccessAnimation(true);
     } catch (error) {
       if (error.message !== 'Biometric authentication failed') {
         Alert.alert('Login Failed', 'Unable to sign in with biometrics. Please use your password.');
       }
-    } finally {
       setBiometricLoading(false);
     }
   };
@@ -133,21 +169,24 @@ const LoginScreen = ({ navigation }) => {
   const handleGoogleSignIn = async () => {
     setSocialLoading('google');
     try {
-      const { user, token, isNewUser } = await socialAuthService.signInWithGoogle();
+      const { user, token } = await socialAuthService.signInWithGoogle();
       await login(user, token);
       
-      if (isNewUser) {
-        Alert.alert('Welcome!', 'Your account has been created successfully.', [
-          { text: 'OK', onPress: () => navigation.replace('Main') }
-        ]);
-      } else {
-        navigation.replace('Main');
+      // Register device for push notifications
+      const userId = user?.id || user?._id;
+      if (userId) {
+        NotificationService.registerDeviceAfterLogin(userId).catch(err => {
+          console.log('Device registration after login failed:', err.message);
+        });
       }
+      
+      setLoggedInUser(user);
+      setSocialLoading(null);
+      setShowSuccessAnimation(true);
     } catch (error) {
       if (error.message !== 'Sign in cancelled') {
         Alert.alert('Google Sign-In Failed', error.message || 'Unable to sign in with Google. Please try again.');
       }
-    } finally {
       setSocialLoading(null);
     }
   };
@@ -155,21 +194,24 @@ const LoginScreen = ({ navigation }) => {
   const handleFacebookSignIn = async () => {
     setSocialLoading('facebook');
     try {
-      const { user, token, isNewUser } = await socialAuthService.signInWithFacebook();
+      const { user, token } = await socialAuthService.signInWithFacebook();
       await login(user, token);
       
-      if (isNewUser) {
-        Alert.alert('Welcome!', 'Your account has been created successfully.', [
-          { text: 'OK', onPress: () => navigation.replace('Main') }
-        ]);
-      } else {
-        navigation.replace('Main');
+      // Register device for push notifications
+      const userId = user?.id || user?._id;
+      if (userId) {
+        NotificationService.registerDeviceAfterLogin(userId).catch(err => {
+          console.log('Device registration after login failed:', err.message);
+        });
       }
+      
+      setLoggedInUser(user);
+      setSocialLoading(null);
+      setShowSuccessAnimation(true);
     } catch (error) {
       if (error.message !== 'Sign in cancelled') {
         Alert.alert('Facebook Sign-In Failed', error.message || 'Unable to sign in with Facebook. Please try again.');
       }
-    } finally {
       setSocialLoading(null);
     }
   };
@@ -182,21 +224,24 @@ const LoginScreen = ({ navigation }) => {
     
     setSocialLoading('apple');
     try {
-      const { user, token, isNewUser } = await socialAuthService.signInWithApple();
+      const { user, token } = await socialAuthService.signInWithApple();
       await login(user, token);
       
-      if (isNewUser) {
-        Alert.alert('Welcome!', 'Your account has been created successfully.', [
-          { text: 'OK', onPress: () => navigation.replace('Main') }
-        ]);
-      } else {
-        navigation.replace('Main');
+      // Register device for push notifications
+      const userId = user?.id || user?._id;
+      if (userId) {
+        NotificationService.registerDeviceAfterLogin(userId).catch(err => {
+          console.log('Device registration after login failed:', err.message);
+        });
       }
+      
+      setLoggedInUser(user);
+      setSocialLoading(null);
+      setShowSuccessAnimation(true);
     } catch (error) {
       if (error.message !== 'Sign in cancelled') {
         Alert.alert('Apple Sign-In Failed', error.message || 'Unable to sign in with Apple. Please try again.');
       }
-    } finally {
       setSocialLoading(null);
     }
   };
@@ -204,6 +249,13 @@ const LoginScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
+      
+      {/* Login Success Animation */}
+      <LoginSuccessAnimation
+        visible={showSuccessAnimation}
+        userName={loggedInUser?.name || 'User'}
+        onAnimationComplete={handleAnimationComplete}
+      />
       
       {/* Background gradient orbs */}
       <View style={styles.orbContainer}>

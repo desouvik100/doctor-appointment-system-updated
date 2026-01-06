@@ -113,12 +113,23 @@ class NotificationService {
       // Store token locally
       await AsyncStorage.setItem('fcmToken', token);
       
-      // Register with backend
+      // Register with backend only if user is logged in
       const userToken = await AsyncStorage.getItem('token');
-      if (userToken) {
+      const userData = await AsyncStorage.getItem('user');
+      
+      if (userToken && userData) {
+        const user = JSON.parse(userData);
+        const userId = user?.id || user?._id;
+        
+        if (!userId) {
+          console.log('Device registration skipped: No user ID available');
+          return;
+        }
+        
         await apiClient.post('/notifications/register-device', {
           fcmToken: token,
           platform: Platform.OS,
+          userId: userId,
           deviceInfo: {
             os: Platform.OS,
             version: Platform.Version,
@@ -127,11 +138,38 @@ class NotificationService {
           // Backend endpoint might not exist yet - that's okay
           console.log('Device registration endpoint not available:', err.message);
         });
+        
+        console.log('FCM token registered for user:', userId);
+      } else {
+        console.log('Device registration deferred: User not logged in');
       }
-      
-      console.log('FCM token registered:', token?.substring(0, 20) + '...');
     } catch (error) {
       console.error('Token registration error:', error);
+    }
+  }
+
+  // Call this after successful login to register device
+  async registerDeviceAfterLogin(userId) {
+    try {
+      const token = this.fcmToken || await AsyncStorage.getItem('fcmToken');
+      if (!token) {
+        console.log('No FCM token available for registration');
+        return;
+      }
+      
+      await apiClient.post('/notifications/register-device', {
+        fcmToken: token,
+        platform: Platform.OS,
+        userId: userId,
+        deviceInfo: {
+          os: Platform.OS,
+          version: Platform.Version,
+        }
+      });
+      
+      console.log('Device registered after login for user:', userId);
+    } catch (error) {
+      console.log('Device registration after login failed:', error.message);
     }
   }
 

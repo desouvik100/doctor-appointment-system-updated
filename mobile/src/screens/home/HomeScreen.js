@@ -24,7 +24,8 @@ import {
   QuickActions, 
   UpcomingAppointments, 
   WalletSummary, 
-  HealthTips 
+  HealthTips,
+  LocationDisplay,
 } from './components';
 import { getUpcomingAppointments } from '../../services/api/appointmentService';
 import { getBalance, getLoyaltyPoints } from '../../services/api/walletService';
@@ -295,6 +296,9 @@ const HomeScreen = ({ navigation }) => {
           <Text style={styles.searchIcon}>🔍</Text>
           <Text style={[styles.searchPlaceholder, { color: colors.textMuted }]}>Search doctors, symptoms...</Text>
         </TouchableOpacity>
+
+        {/* Location Display */}
+        <LocationDisplay />
 
         {/* Upcoming Appointments */}
         <UpcomingAppointments

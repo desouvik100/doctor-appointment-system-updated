@@ -13,6 +13,7 @@ import {
   RefreshControl,
   Dimensions,
 } from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
@@ -30,6 +31,7 @@ const { width } = Dimensions.get('window');
 const DoctorDashboardScreen = ({ navigation }) => {
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
+  const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -113,14 +115,18 @@ const DoctorDashboardScreen = ({ navigation }) => {
     setRefreshing(false);
   }, [fetchDashboardData]);
 
-  const StatCard = ({ icon, value, label, color }) => (
-    <Card style={[styles.statCard, { backgroundColor: colors.surface }]}>
+  const StatCard = ({ icon, value, label, color, onPress }) => (
+    <TouchableOpacity 
+      style={[styles.statCard, { backgroundColor: colors.surface }]}
+      onPress={onPress}
+      activeOpacity={0.7}
+    >
       <View style={[styles.statIconBg, { backgroundColor: color + '20' }]}>
         <Text style={styles.statIcon}>{icon}</Text>
       </View>
       <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
-    </Card>
+    </TouchableOpacity>
   );
 
   return (
@@ -129,7 +135,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
       
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing.lg }]}
         refreshControl={
           <RefreshControl
             refreshing={refreshing}
@@ -156,10 +162,34 @@ const DoctorDashboardScreen = ({ navigation }) => {
 
         {/* Stats Grid */}
         <View style={styles.statsGrid}>
-          <StatCard icon="📅" value={stats.todayAppointments} label="Today's Appointments" color="#6C5CE7" />
-          <StatCard icon="⏳" value={stats.pendingAppointments} label="Pending" color="#F39C12" />
-          <StatCard icon="👥" value={stats.totalPatients} label="Total Patients" color="#00D4AA" />
-          <StatCard icon="✅" value={stats.completedToday} label="Completed Today" color="#10B981" />
+          <StatCard 
+            icon="📅" 
+            value={stats.todayAppointments} 
+            label="Today's Appointments" 
+            color="#6C5CE7" 
+            onPress={() => navigation.navigate('Appointments')}
+          />
+          <StatCard 
+            icon="⏳" 
+            value={stats.pendingAppointments} 
+            label="Pending" 
+            color="#F39C12" 
+            onPress={() => navigation.navigate('Appointments')}
+          />
+          <StatCard 
+            icon="👥" 
+            value={stats.totalPatients} 
+            label="Total Patients" 
+            color="#00D4AA" 
+            onPress={() => navigation.navigate('Patients')}
+          />
+          <StatCard 
+            icon="✅" 
+            value={stats.completedToday} 
+            label="Completed Today" 
+            color="#10B981" 
+            onPress={() => navigation.navigate('Appointments')}
+          />
         </View>
 
         {/* Quick Actions */}
@@ -252,7 +282,12 @@ const DoctorDashboardScreen = ({ navigation }) => {
             </Card>
           ) : (
             todaySchedule.slice(0, 5).map((appointment, index) => (
-              <Card key={index} style={[styles.appointmentCard, { backgroundColor: colors.surface }]}>
+              <TouchableOpacity 
+                key={appointment._id || index} 
+                style={[styles.appointmentCard, { backgroundColor: colors.surface }]}
+                onPress={() => navigation.navigate('DoctorAppointmentDetail', { appointmentId: appointment._id || appointment.id })}
+                activeOpacity={0.7}
+              >
                 <View style={styles.appointmentTime}>
                   <Text style={[styles.timeText, { color: '#6C5CE7' }]}>
                     {new Date(appointment.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
@@ -271,7 +306,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
                     {appointment.status || 'Scheduled'}
                   </Text>
                 </View>
-              </Card>
+              </TouchableOpacity>
             ))
           )}
         </View>
@@ -286,7 +321,6 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
     paddingBottom: 100,
   },
   header: {

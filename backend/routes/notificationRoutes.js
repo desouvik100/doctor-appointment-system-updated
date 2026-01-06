@@ -46,21 +46,49 @@ try {
  */
 router.post('/register-device', verifyToken, async (req, res) => {
   try {
-    const { fcmToken, platform, deviceInfo } = req.body;
-    const userId = req.user?.id || req.user?.userId || req.body.userId;
+    const { fcmToken, platform, deviceInfo, userId: bodyUserId } = req.body;
+    const userId = req.user?.id || req.user?.userId || bodyUserId;
     
     if (!fcmToken) {
-      return res.status(400).json({ message: 'FCM token is required' });
+      return res.status(400).json({ success: false, message: 'FCM token is required' });
     }
 
     if (!userId) {
-      return res.status(400).json({ message: 'User ID is required' });
+      return res.status(400).json({ success: false, message: 'User ID is required' });
     }
 
     // Find user and update/add device
     const user = await User.findById(userId);
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      // User might be a doctor
+      const Doctor = require('../models/Doctor');
+      const doctor = await Doctor.findById(userId);
+      
+      if (!doctor) {
+        console.log(`Device registration failed: User/Doctor ${userId} not found`);
+        return res.status(404).json({ success: false, message: 'User not found' });
+      }
+      
+      // Update doctor's FCM token
+      doctor.fcmToken = fcmToken;
+      if (!doctor.devices) doctor.devices = [];
+      
+      const existingDeviceIndex = doctor.devices.findIndex(d => d.fcmToken === fcmToken);
+      if (existingDeviceIndex >= 0) {
+        doctor.devices[existingDeviceIndex].lastActive = new Date();
+        doctor.devices[existingDeviceIndex].platform = platform;
+      } else {
+        doctor.devices.push({
+          fcmToken,
+          platform,
+          deviceId: deviceInfo?.deviceId || `${platform}-${Date.now()}`,
+          lastActive: new Date()
+        });
+      }
+      
+      await doctor.save();
+      console.log(`📱 Device registered for doctor ${userId}`);
+      return res.json({ success: true, message: 'Device registered for notifications' });
     }
 
     // Check if device already exists
@@ -85,11 +113,11 @@ router.post('/register-device', verifyToken, async (req, res) => {
     user.fcmToken = fcmToken;
     await user.save();
 
-    console.log(`📱 Device registered for user ${userId}: ${fcmToken.substring(0, 20)}...`);
+    console.log(`📱 Device registered for user ${userId}`);
     res.json({ success: true, message: 'Device registered for notifications' });
   } catch (error) {
     console.error('Device registration error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
 });
 
