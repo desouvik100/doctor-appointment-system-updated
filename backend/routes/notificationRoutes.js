@@ -5,6 +5,7 @@ const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const admin = require('firebase-admin');
 const path = require('path');
+const { verifyToken } = require('../middleware/auth');
 
 // Initialize Firebase Admin if not already done
 let firebaseInitialized = false;
@@ -43,13 +44,17 @@ try {
 /**
  * Register device for push notifications
  */
-router.post('/register-device', async (req, res) => {
+router.post('/register-device', verifyToken, async (req, res) => {
   try {
     const { fcmToken, platform, deviceInfo } = req.body;
-    const userId = req.user?.id || req.body.userId;
+    const userId = req.user?.id || req.user?.userId || req.body.userId;
     
     if (!fcmToken) {
       return res.status(400).json({ message: 'FCM token is required' });
+    }
+
+    if (!userId) {
+      return res.status(400).json({ message: 'User ID is required' });
     }
 
     // Find user and update/add device
