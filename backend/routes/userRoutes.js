@@ -283,4 +283,75 @@ router.delete('/:id', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
+
+// Register patient (staff registration endpoint)
+router.post('/register-patient', verifyToken, async (req, res) => {
+  try {
+    const { 
+      name, phone, email, dateOfBirth, gender, bloodType, 
+      address, emergencyContact, allergies, clinicId, registeredBy 
+    } = req.body;
+
+    if (!name || !phone) {
+      return res.status(400).json({ 
+        success: false, 
+        message: 'Name and phone are required' 
+      });
+    }
+
+    // Check if user with phone already exists
+    let user = await User.findOne({ phone });
+    
+    if (user) {
+      // Link existing user to clinic if not already linked
+      if (clinicId && !user.clinicLinks?.some(link => link.clinicId?.toString() === clinicId)) {
+        user.clinicLinks = user.clinicLinks || [];
+        user.clinicLinks.push({ clinicId, linkedAt: new Date() });
+        await user.save();
+      }
+      return res.json({ 
+        success: true, 
+        user, 
+        isNew: false,
+        message: 'Patient already exists' 
+      });
+    }
+
+    // Create new patient user
+    user = new User({
+      name,
+      phone,
+      email: email || undefined,
+      dateOfBirth: dateOfBirth || undefined,
+      gender: gender || undefined,
+      bloodType: bloodType || undefined,
+      address: address || undefined,
+      emergencyContact: emergencyContact || undefined,
+      allergies: allergies || undefined,
+      role: 'patient',
+      registeredByClinic: clinicId,
+      registeredBy: registeredBy || req.user?.id,
+      registrationType: 'staff_registered',
+      isActive: true,
+      clinicLinks: clinicId ? [{ clinicId, linkedAt: new Date() }] : []
+    });
+
+    await user.save();
+
+    res.status(201).json({ 
+      success: true, 
+      user, 
+      isNew: true,
+      message: 'Patient registered successfully' 
+    });
+  } catch (error) {
+    console.error('Error registering patient:', error);
+    res.status(500).json({ 
+      success: false, 
+      message: 'Server error', 
+      error: error.message 
+    });
+  }
+});
+
 module.exports = router;

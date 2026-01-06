@@ -2795,6 +2795,45 @@ router.post('/patients/walk-in',
 );
 
 /**
+ * Register patient (staff registration endpoint)
+ * Alias for walk-in registration with additional fields
+ */
+router.post('/patients/register', 
+  verifyToken,
+  async (req, res) => {
+    try {
+      const { clinicId, registeredBy, ...patientData } = req.body;
+      const staffId = registeredBy || req.user.id;
+      
+      if (!clinicId) {
+        return res.status(400).json({
+          success: false,
+          message: 'Clinic ID is required'
+        });
+      }
+      
+      const result = await WalkInPatientService.registerWalkIn(
+        patientData,
+        clinicId,
+        staffId
+      );
+      
+      res.status(result.isNew ? 201 : 200).json({
+        success: true,
+        patient: result.patient,
+        isNew: result.isNew,
+        message: result.isNew ? 'Patient registered successfully' : 'Patient already exists'
+      });
+    } catch (error) {
+      res.status(500).json({
+        success: false,
+        message: error.message || 'Error registering patient'
+      });
+    }
+  }
+);
+
+/**
  * Search patients
  */
 router.get('/patients/search', verifyToken, async (req, res) => {

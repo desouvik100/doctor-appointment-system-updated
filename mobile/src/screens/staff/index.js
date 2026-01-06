@@ -8,3 +8,5 @@ export { default as StaffDoctorsScreen } from './StaffDoctorsScreen';
 export { default as StaffDoctorFormScreen } from './StaffDoctorFormScreen';
 export { default as StaffBookAppointmentScreen } from './StaffBookAppointmentScreen';
 export { default as StaffAppointmentDetailScreen } from './StaffAppointmentDetailScreen';
+export { default as StaffEMRScreen } from './StaffEMRScreen';
+export { default as StaffRegisterPatientScreen } from './StaffRegisterPatientScreen';

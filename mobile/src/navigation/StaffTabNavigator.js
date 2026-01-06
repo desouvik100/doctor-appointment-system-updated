@@ -22,6 +22,8 @@ import StaffDoctorsScreen from '../screens/staff/StaffDoctorsScreen';
 import StaffDoctorFormScreen from '../screens/staff/StaffDoctorFormScreen';
 import StaffBookAppointmentScreen from '../screens/staff/StaffBookAppointmentScreen';
 import StaffAppointmentDetailScreen from '../screens/staff/StaffAppointmentDetailScreen';
+import StaffEMRScreen from '../screens/staff/StaffEMRScreen';
+import StaffRegisterPatientScreen from '../screens/staff/StaffRegisterPatientScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 import NotificationsScreen from '../screens/notifications/NotificationsScreen';
 import NotificationSettingsScreen from '../screens/profile/NotificationSettingsScreen';
@@ -41,6 +43,8 @@ const StaffDashboardStack = () => {
       <Stack.Screen name="StaffDoctorForm" component={StaffDoctorFormScreen} />
       <Stack.Screen name="StaffBookAppointment" component={StaffBookAppointmentScreen} />
       <Stack.Screen name="StaffAppointmentDetail" component={StaffAppointmentDetailScreen} />
+      <Stack.Screen name="StaffEMR" component={StaffEMRScreen} />
+      <Stack.Screen name="StaffRegisterPatient" component={StaffRegisterPatientScreen} />
     </Stack.Navigator>
   );
 };
