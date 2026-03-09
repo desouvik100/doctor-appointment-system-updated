@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useCallback, Suspense } from "react";
+import './simple-scroll-fix.css';
 import './index.css';
 import './styles/premium-saas.css';
 import './styles/landing-page-professional.css';
@@ -175,6 +176,30 @@ function App() {
   // Initialize mobile services (Capacitor)
   const userId = user?.id || user?._id;
   useMobileInit(userId);
+
+  // SIMPLE SCROLL FIX - Force basic scrolling
+  useEffect(() => {
+    // Force scrolling on HTML element
+    document.documentElement.style.overflow = 'auto';
+    document.documentElement.style.height = '100%';
+    
+    // Force body to grow
+    document.body.style.overflow = 'visible';
+    document.body.style.height = 'auto';
+    document.body.style.minHeight = '100%';
+    
+    // Force root to grow
+    const root = document.getElementById('root');
+    if (root) {
+      root.style.overflow = 'visible';
+      root.style.height = 'auto';
+      root.style.minHeight = '100vh';
+    }
+    
+    console.log('✅ Simple scroll fix applied');
+    console.log('Body height:', document.body.scrollHeight);
+    console.log('Window height:', window.innerHeight);
+  }, [user, admin, receptionist, doctor]); // Re-apply when user changes
 
   // ANTI-FLICKER: Prevent FOUC and ensure smooth theme transitions
   useEffect(() => {

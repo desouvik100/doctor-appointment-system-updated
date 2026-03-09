@@ -1,0 +1,38 @@
+/* SIMPLE SCROLL FIX - Start from scratch */
+
+/* Step 1: Ensure HTML can scroll */
+html {
+  overflow: auto !important;
+  height: 100% !important;
+}
+
+/* Step 2: Ensure body can grow */
+body {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: 100% !important;
+}
+
+/* Step 3: Ensure root can grow */
+#root {
+  overflow: visible !important;
+  height: auto !important;
+  min-height: 100vh !important;
+}
+
+/* Step 4: Fix hero sections - they should NOT be 100vh if there's content below */
+.hero-section,
+.hero-premium,
+.landing-hero {
+  min-height: auto !important;
+  height: auto !important;
+  padding-top: 120px !important;
+  padding-bottom: 80px !important;
+}
+
+/* Step 5: Ensure all sections are visible and stacked */
+section {
+  display: block !important;
+  position: relative !important;
+  height: auto !important;
+}

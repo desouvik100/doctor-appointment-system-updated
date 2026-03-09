@@ -7,8 +7,8 @@
  * - Production: https://your-api.com
  */
 
-// For development - using production API
-const DEV_API_URL = 'https://doctor-appointment-system-updated.onrender.com/api';
+// For development - using local backend
+const DEV_API_URL = 'http://localhost:5005/api';
 
 // For production
 const PROD_API_URL = 'https://doctor-appointment-system-updated.onrender.com/api';

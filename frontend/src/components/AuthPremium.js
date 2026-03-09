@@ -288,7 +288,8 @@ function AuthPremium({ onLogin, onBack }) {
     // Check configuration
     if (!GOOGLE_CLIENT_ID) {
       toast.error('Google Sign-In not configured. Please use email/password login.');
-      console.error('❌ REACT_APP_GOOGLE_CLIENT_ID is not set in .env');
+      console.error('❌ REACT_APP_GOOGLE_CLIENT_ID is not set:', GOOGLE_CLIENT_ID);
+      console.error('❌ All env vars:', process.env);
       return;
     }
 
@@ -342,9 +343,13 @@ function AuthPremium({ onLogin, onBack }) {
         },
         error_callback: (error) => {
           console.error('❌ Google OAuth error_callback:', error);
-          // Provide more specific error messages
+          // Provide more specific error messages with instructions
           if (error.type === 'popup_failed_to_open') {
-            toast.error('Popup blocked! Please allow popups for this site.');
+            toast.error('⚠️ Popup blocked! Click the 🚫 icon in your address bar, allow popups, then try again.', { duration: 8000 });
+            // Show alert as backup
+            setTimeout(() => {
+              alert('Google Sign-In requires popups.\n\n1. Look for the 🚫 icon in your browser address bar\n2. Click it and select "Always allow popups from localhost:3001"\n3. Try "Continue with Google" again\n\nOR use Email/Password login instead.');
+            }, 500);
           } else if (error.type === 'popup_closed') {
             toast.error('Sign-in popup was closed. Please try again.');
           } else {
@@ -788,7 +793,6 @@ function AuthPremium({ onLogin, onBack }) {
             </button>
           </form>
 
-          {/* Divider - Hide on mobile */}
           {/* Divider */}
           <div className="auth-premium__divider">
             <span>{t('orContinueWith')}</span>
@@ -831,16 +835,6 @@ function AuthPremium({ onLogin, onBack }) {
                 </>
               )}
             </button>
-            {!isNativeMobile && (
-              <button 
-                className="btn-premium btn-premium-secondary" 
-                style={{ width: '100%', opacity: 0.6 }}
-                onClick={handleAppleSignIn}
-                disabled={socialLoading === 'apple'}
-              >
-                <i className="fab fa-apple"></i> Apple
-              </button>
-            )}
           </div>
 
           {/* Footer */}

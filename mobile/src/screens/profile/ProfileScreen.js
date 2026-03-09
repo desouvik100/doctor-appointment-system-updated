@@ -21,10 +21,22 @@ import Avatar from '../../components/common/Avatar';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
 import whatsappService from '../../services/whatsappService';
+import { getAppointmentStats } from '../../services/api/profileService';
 
 const ProfileScreen = ({ navigation }) => {
   const { user, logout, loading } = useUser();
   const { isDarkMode, toggleTheme, colors } = useTheme();
+  const [appointmentCount, setAppointmentCount] = React.useState(0);
+
+  React.useEffect(() => {
+    if (user?.id) {
+      getAppointmentStats(user.id).then(stats => {
+        setAppointmentCount(stats.total || 0);
+      }).catch(() => {
+        setAppointmentCount(0);
+      });
+    }
+  }, [user]);
 
   const handleLogout = () => {
     Alert.alert(
@@ -88,18 +100,13 @@ const ProfileScreen = ({ navigation }) => {
       items: [
         { id: 'notifications', icon: '🔔', label: 'Notification Settings', arrow: true, route: 'NotificationSettings' },
         { id: 'darkMode', icon: '🌙', label: 'Dark Mode', toggle: true, value: isDarkMode, onToggle: toggleTheme },
-        { id: 'language', icon: '🌐', label: 'Language', value: 'English', arrow: true },
-        { id: 'units', icon: '📏', label: 'Units', value: 'Metric', arrow: true },
       ],
     },
     {
       title: 'Support',
       items: [
         { id: 'whatsapp', icon: '💬', label: 'WhatsApp Support', arrow: true, isWhatsApp: true },
-        { id: 'help', icon: '❓', label: 'Help Center', arrow: true },
         { id: 'feedback', icon: '📝', label: 'Send Feedback', arrow: true, isFeedback: true },
-        { id: 'privacy', icon: '🔒', label: 'Privacy Policy', arrow: true },
-        { id: 'terms', icon: '📄', label: 'Terms of Service', arrow: true },
       ],
     },
   ];
@@ -111,11 +118,8 @@ const ProfileScreen = ({ navigation }) => {
       whatsappService.sendFeedback(5, 'Great app!');
     } else if (item.route) {
       navigation.navigate(item.route);
-    } else if (item.toggle) {
-      // Toggle logic would go here
-    } else {
-      Alert.alert('Coming Soon', `The ${item.label} feature is coming soon!`);
     }
+    // Removed "Coming Soon" alert - only show implemented features
   };
 
   const renderMenuItem = (item) => (
@@ -210,7 +214,7 @@ const ProfileScreen = ({ navigation }) => {
             </View>
             <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
             <View style={styles.statBox}>
-              <Text style={[styles.statValue, { color: colors.textPrimary }]}>12</Text>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{appointmentCount}</Text>
               <Text style={[styles.statLabel, { color: colors.textMuted }]}>Appointments</Text>
             </View>
             <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />

@@ -18,14 +18,14 @@ import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
-import { authService } from '../../services/api';
+import authService from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
 
 const OTP_LENGTH = 6;
 const RESEND_TIMEOUT = 30;
 
 const OTPVerificationScreen = ({ navigation, route }) => {
-  const { phone, email } = route.params || {};
+  const { phone, email, name, password, isRegistration } = route.params || {};
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
   const [resendTimer, setResendTimer] = useState(RESEND_TIMEOUT);
@@ -102,17 +102,45 @@ const OTPVerificationScreen = ({ navigation, route }) => {
 
     setLoading(true);
     try {
-      const { user, token } = await authService.verifyOTP(phone, otpString);
-      
-      if (user && token) {
-        await login(user, token);
-        navigation.replace('Main');
+      if (isRegistration) {
+        // Registration flow: Verify OTP then register user
+        console.log('✅ Verifying registration OTP for:', email);
+        await authService.verifyRegistrationOTP(email, otpString);
+        
+        // Now register the user with otpVerified flag
+        console.log('📝 Registering user:', { name, email, phone });
+        const response = await authService.register({
+          name,
+          email,
+          phone,
+          password,
+          otpVerified: true,
+        });
+        
+        // Login the user
+        if (response.user && response.token) {
+          await login(response.user, response.token);
+          Alert.alert(
+            'Welcome!',
+            'Your account has been created successfully.',
+            [{ text: 'OK', onPress: () => navigation.replace('Main') }]
+          );
+        }
       } else {
-        Alert.alert('Success', 'Phone number verified successfully!', [
-          { text: 'OK', onPress: () => navigation.navigate('Login') }
-        ]);
+        // Phone verification flow (existing)
+        const { user, token } = await authService.verifyOTP(phone, otpString);
+        
+        if (user && token) {
+          await login(user, token);
+          navigation.replace('Main');
+        } else {
+          Alert.alert('Success', 'Phone number verified successfully!', [
+            { text: 'OK', onPress: () => navigation.navigate('Login') }
+          ]);
+        }
       }
     } catch (error) {
+      console.error('❌ OTP verification error:', error);
       const message = error.response?.data?.message || 'Invalid OTP. Please try again.';
       Alert.alert('Verification Failed', message);
       // Clear OTP on error
@@ -127,15 +155,22 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     if (!canResend) return;
 
     try {
-      await authService.sendOTP(phone);
-      Alert.alert('OTP Sent', 'A new OTP has been sent to your phone.');
+      if (isRegistration) {
+        await authService.sendRegistrationOTP(email);
+        Alert.alert('OTP Sent', 'A new OTP has been sent to your email.');
+      } else {
+        await authService.sendOTP(phone);
+        Alert.alert('OTP Sent', 'A new OTP has been sent to your phone.');
+      }
       startResendTimer();
     } catch (error) {
       Alert.alert('Error', 'Failed to resend OTP. Please try again.');
     }
   };
 
-  const maskedPhone = phone ? `******${phone.slice(-4)}` : '';
+  const maskedContact = isRegistration 
+    ? (email ? `${email.slice(0, 3)}***@${email.split('@')[1]}` : 'your email')
+    : (phone ? `******${phone.slice(-4)}` : 'your phone');
 
   return (
     <View style={styles.container}>
@@ -172,10 +207,12 @@ const OTPVerificationScreen = ({ navigation, route }) => {
               </LinearGradient>
             </View>
             
-            <Text style={styles.title}>Verify Phone</Text>
+            <Text style={styles.title}>
+              {isRegistration ? 'Verify Email' : 'Verify Phone'}
+            </Text>
             <Text style={styles.subtitle}>
               Enter the 6-digit code sent to{'\n'}
-              <Text style={styles.phoneNumber}>{maskedPhone}</Text>
+              <Text style={styles.phoneNumber}>{maskedContact}</Text>
             </Text>
           </View>
 
@@ -222,12 +259,14 @@ const OTPVerificationScreen = ({ navigation, route }) => {
             disabled={otp.join('').length !== OTP_LENGTH}
           />
 
-          {/* Change Number */}
+          {/* Change Contact */}
           <TouchableOpacity 
             style={styles.changeNumber}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.changeNumberText}>Change phone number</Text>
+            <Text style={styles.changeNumberText}>
+              {isRegistration ? 'Change email address' : 'Change phone number'}
+            </Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>

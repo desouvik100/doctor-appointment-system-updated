@@ -20,7 +20,7 @@ import { shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import { authService } from '../../services/api';
+import authService from '../../services/api/authService';
 import socialAuthService from '../../services/socialAuthService';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -98,28 +98,21 @@ const RegisterScreen = ({ navigation }) => {
 
     setLoading(true);
     try {
-      await authService.register({
-        name: formData.name.trim(),
+      // Step 1: Send OTP to email for verification
+      console.log('📧 Sending registration OTP to:', formData.email.trim().toLowerCase());
+      await authService.sendRegistrationOTP(formData.email.trim().toLowerCase());
+
+      // Navigate to OTP verification screen
+      navigation.navigate('OTPVerification', { 
         email: formData.email.trim().toLowerCase(),
         phone: formData.phone.trim(),
+        name: formData.name.trim(),
         password: formData.password,
+        isRegistration: true,
       });
-
-      Alert.alert(
-        'Registration Successful',
-        'Please verify your phone number to continue.',
-        [
-          {
-            text: 'OK',
-            onPress: () => navigation.navigate('OTPVerification', { 
-              phone: formData.phone.trim(),
-              email: formData.email.trim().toLowerCase(),
-            }),
-          },
-        ]
-      );
     } catch (error) {
-      const message = error.response?.data?.message || 'Registration failed. Please try again.';
+      console.error('❌ Registration OTP error:', error);
+      const message = error.response?.data?.message || 'Failed to send verification code. Please try again.';
       Alert.alert('Registration Failed', message);
     } finally {
       setLoading(false);

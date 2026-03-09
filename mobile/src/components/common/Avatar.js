@@ -10,6 +10,7 @@ import { typography, borderRadius } from '../../theme/typography';
 
 const Avatar = ({
   source,
+  imageUrl, // Support both source and imageUrl props
   name,
   size = 'medium', // small, medium, large, xlarge
   showStatus = false,
@@ -17,6 +18,9 @@ const Avatar = ({
   showBorder = false,
 }) => {
   const [imageError, setImageError] = useState(false);
+  
+  // Convert imageUrl to source format if provided
+  const imageSource = imageUrl ? { uri: imageUrl } : source;
 
   const getSize = () => {
     switch (size) {
@@ -54,14 +58,14 @@ const Avatar = ({
   const statusSize = getStatusSize();
   const fontSize = avatarSize * 0.4;
 
-  // Check if source is valid (has uri property with a truthy value)
-  const hasValidSource = source && source.uri && !imageError;
+  // Check if imageSource is valid (has uri property with a truthy value)
+  const hasValidSource = imageSource && imageSource.uri && !imageError;
 
   const renderAvatarContent = (borderRadiusValue) => {
     if (hasValidSource) {
       return (
         <Image 
-          source={source} 
+          source={imageSource} 
           style={[styles.image, { borderRadius: borderRadiusValue }]} 
           onError={() => setImageError(true)}
           resizeMode="cover"

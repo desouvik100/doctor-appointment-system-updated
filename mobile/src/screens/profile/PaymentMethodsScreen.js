@@ -173,18 +173,10 @@ const PaymentMethodsScreen = ({ navigation }) => {
         </LinearGradient>
 
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>UPI Payment</Text>
-          <View style={styles.upiRow}>
-            {upiApps.map((app) => (
-              <TouchableOpacity key={app.id} style={[styles.upiApp, { backgroundColor: colors.surface }]}
-                onPress={() => Alert.alert('UPI', `${app.name} coming soon`)}>
-                <View style={[styles.upiIcon, { backgroundColor: `${app.color}20` }]}>
-                  <Text style={styles.upiEmoji}>{app.icon}</Text>
-                </View>
-                <Text style={[styles.upiName, { color: colors.textSecondary }]}>{app.name}</Text>
-              </TouchableOpacity>
-            ))}
-          </View>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Add Money</Text>
+          <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
+            Add money to your wallet using the button above
+          </Text>
         </View>
 
         <View style={styles.section}>

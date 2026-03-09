@@ -107,21 +107,27 @@ export const sendOTP = async (phone) => {
 };
 
 /**
+ * Send OTP for registration (email-based)
+ */
+export const sendRegistrationOTP = async (email) => {
+  const response = await apiClient.post('/auth/send-registration-otp', { email });
+  return response.data;
+};
+
+/**
+ * Verify registration OTP (email-based)
+ */
+export const verifyRegistrationOTP = async (email, otp) => {
+  const response = await apiClient.post('/auth/verify-registration-otp', { email, otp });
+  return response.data;
+};
+
+/**
  * Verify OTP
  */
-export const verifyOTP = async (phone, otp) => {
-  const response = await apiClient.post('/auth/verify-otp', { phone, otp });
-  const { token, refreshToken, user } = response.data;
-  
-  if (token) {
-    await saveAuthToken(token);
-    if (refreshToken) {
-      await saveRefreshToken(refreshToken);
-    }
-    await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
-  }
-  
-  return { token, user };
+export const verifyOTP = async (email, otp, type = 'registration') => {
+  const response = await apiClient.post('/auth/verify-otp', { email, otp, type });
+  return response.data;
 };
 
 /**
@@ -133,12 +139,13 @@ export const requestPasswordReset = async (email) => {
 };
 
 /**
- * Reset password with token
+ * Reset password with OTP
  */
-export const resetPassword = async (token, newPassword) => {
+export const resetPassword = async (email, otp, newPassword) => {
   const response = await apiClient.post('/auth/reset-password', { 
-    token, 
-    password: newPassword 
+    email,
+    otp,
+    newPassword
   });
   return response.data;
 };
@@ -247,6 +254,8 @@ export default {
   staffLogin,
   register,
   sendOTP,
+  sendRegistrationOTP,
+  verifyRegistrationOTP,
   verifyOTP,
   requestPasswordReset,
   resetPassword,

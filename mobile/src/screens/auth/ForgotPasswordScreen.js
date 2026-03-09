@@ -18,7 +18,7 @@ import { colors } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
-import { authService } from '../../services/api';
+import authService from '../../services/api/authService';
 
 const ForgotPasswordScreen = ({ navigation }) => {
   const [email, setEmail] = useState('');
@@ -45,10 +45,15 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
     setLoading(true);
     try {
-      await authService.requestPasswordReset(email.trim().toLowerCase());
-      setSent(true);
+      console.log('🔐 Requesting password reset for:', email.trim().toLowerCase());
+      const response = await authService.requestPasswordReset(email.trim().toLowerCase());
+      console.log('✅ Password reset response:', response);
+      // Navigate to OTP verification screen
+      navigation.navigate('VerifyOTP', { email: email.trim().toLowerCase() });
     } catch (err) {
-      const message = err.response?.data?.message || 'Failed to send reset link. Please try again.';
+      console.error('❌ Password reset error:', err);
+      console.error('Error response:', err.response?.data);
+      const message = err.response?.data?.message || err.message || 'Failed to send reset link. Please try again.';
       Alert.alert('Error', message);
     } finally {
       setLoading(false);

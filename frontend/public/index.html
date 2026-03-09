@@ -3,7 +3,7 @@
 
 <head>
   <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
   <meta name="mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-capable" content="yes" />
   <meta name="apple-mobile-web-app-status-bar-style" content="default" />
@@ -278,28 +278,16 @@
       padding: 0;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
       background-attachment: fixed !important;
-      min-height: 100vh;
-      transition: none !important;
-      /* Prevent white flash */
-      -webkit-font-smoothing: antialiased;
-      -moz-osx-font-smoothing: grayscale;
     }
     
     body {
       margin: 0;
       padding: 0;
       background: transparent !important;
-      min-height: 100vh;
-      transition: none !important;
-      /* Prevent layout shift */
-      overflow-x: hidden;
     }
     
     #root {
-      min-height: 100vh;
       background: transparent !important;
-      transition: none !important;
-      /* Prevent content flash */
       opacity: 1;
     }
     
@@ -349,19 +337,19 @@
       document.documentElement.setAttribute('data-theme', theme);
       document.documentElement.classList.add('loading');
       
-      // Apply gradient immediately - NO FLICKER
+      // Apply gradient only - no overflow styles
       var applyGradient = function() {
         var currentTheme = document.documentElement.getAttribute('data-theme') || 'light';
         var gradient = currentTheme === 'dark' 
           ? 'linear-gradient(135deg, #1e293b 0%, #0f172a 100%)'
           : 'linear-gradient(135deg, #667eea 0%, #764ba2 100%)';
         
-        // Apply styles without transition to prevent flicker
-        document.documentElement.style.cssText = 'background: ' + gradient + ' !important; background-attachment: fixed !important; min-height: 100vh; transition: none !important; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;';
+        // Only set background, let CSS handle overflow
+        document.documentElement.style.background = gradient;
+        document.documentElement.style.backgroundAttachment = 'fixed';
         
-        // Only apply to body if it exists
         if (document.body) {
-          document.body.style.cssText = 'background: transparent !important; margin: 0; padding: 0; min-height: 100vh; transition: none !important; overflow-x: hidden;';
+          document.body.style.background = 'transparent';
         }
       };
       

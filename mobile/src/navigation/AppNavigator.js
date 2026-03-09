@@ -10,6 +10,8 @@ import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
 import OTPVerificationScreen from '../screens/auth/OTPVerificationScreen';
 import ForgotPasswordScreen from '../screens/auth/ForgotPasswordScreen';
+import VerifyOTPScreen from '../screens/auth/VerifyOTPScreen';
+import ResetPasswordScreen from '../screens/auth/ResetPasswordScreen';
 import RoleSelectionScreen from '../screens/auth/RoleSelectionScreen';
 import DoctorLoginScreen from '../screens/auth/DoctorLoginScreen';
 import StaffLoginScreen from '../screens/auth/StaffLoginScreen';
@@ -76,6 +78,8 @@ const AppContent = () => {
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="OTPVerification" component={OTPVerificationScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+        <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
+        <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
         <Stack.Screen name="DoctorLogin" component={DoctorLoginScreen} />
         <Stack.Screen name="StaffLogin" component={StaffLoginScreen} />
         <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />

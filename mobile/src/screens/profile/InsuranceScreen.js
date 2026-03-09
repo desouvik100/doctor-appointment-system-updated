@@ -87,9 +87,7 @@ const InsuranceScreen = ({ navigation }) => {
           <Icon name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Insurance</Text>
-        <TouchableOpacity onPress={() => Alert.alert('Add Insurance', 'Feature coming soon')}>
-          <Icon name="add-circle" size={28} color={colors.primary} />
-        </TouchableOpacity>
+        <View style={{ width: 28 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}
@@ -144,12 +142,8 @@ const InsuranceScreen = ({ navigation }) => {
             <Text style={styles.emptyIcon}>🛡️</Text>
             <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Insurance Added</Text>
             <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>
-              Add your insurance details for cashless claims and easy reimbursements
+              Contact your insurance provider to link your policy with HealthSync
             </Text>
-            <TouchableOpacity style={[styles.addBtn, { backgroundColor: colors.primary }]}
-              onPress={() => Alert.alert('Add Insurance', 'Feature coming soon')}>
-              <Text style={styles.addBtnText}>Add Insurance</Text>
-            </TouchableOpacity>
           </View>
         )}
 

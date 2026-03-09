@@ -1,0 +1,61 @@
+/* EMERGENCY SCROLL FIX - Override all other styles */
+
+* {
+  max-height: none !important;
+}
+
+html {
+  overflow-y: scroll !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  max-height: none !important;
+  min-height: 100vh !important;
+}
+
+body {
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  max-height: none !important;
+  min-height: 100vh !important;
+  position: static !important;
+}
+
+#root {
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+  height: auto !important;
+  max-height: none !important;
+  min-height: 100vh !important;
+  position: static !important;
+}
+
+/* Remove any fixed heights */
+.App,
+.landing-page,
+.hero-section,
+.hero-premium,
+.landing-hero,
+main,
+section,
+div {
+  height: auto !important;
+  max-height: none !important;
+  overflow-y: visible !important;
+  overflow-x: hidden !important;
+}
+
+/* Force all sections to be visible */
+section {
+  display: block !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+/* Ensure body has content height */
+body::after {
+  content: '';
+  display: block;
+  height: 1px;
+  clear: both;
+}

@@ -26,7 +26,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { updateProfile, updateProfilePhoto } from '../../services/api/profileService';
 
 const EditProfileScreen = ({ navigation }) => {
-  const { user, refreshUser } = useUser();
+  const { user, refreshUser, updateUser } = useUser();
   const { colors, isDarkMode } = useTheme();
   
   const [name, setName] = useState('');
@@ -116,10 +116,14 @@ const EditProfileScreen = ({ navigation }) => {
       const base64Image = `data:${asset.type || 'image/jpeg'};base64,${asset.base64}`;
       const response = await updateProfilePhoto(user.id || user._id, base64Image);
       
-      if (response.success) {
-        setPhotoUri(response.user?.profilePhoto || asset.uri);
+      if (response.success && response.user) {
+        // Update local state
+        setPhotoUri(response.user.profilePhoto);
+        
+        // Update user context with new photo
+        await updateUser({ profilePhoto: response.user.profilePhoto });
+        
         Alert.alert('Success', 'Photo updated successfully');
-        if (refreshUser) refreshUser();
       } else {
         Alert.alert('Error', response.message || 'Failed to upload photo');
       }
@@ -152,12 +156,12 @@ const EditProfileScreen = ({ navigation }) => {
 
       const response = await updateProfile(user.id || user._id, profileData);
       
-      if (response.success) {
+      if (response.success && response.user) {
+        // Update user context with all new data
+        await updateUser(response.user);
+        
         Alert.alert('Success', 'Profile updated successfully', [
-          { text: 'OK', onPress: () => {
-            if (refreshUser) refreshUser();
-            navigation.goBack();
-          }}
+          { text: 'OK', onPress: () => navigation.goBack() }
         ]);
       } else {
         Alert.alert('Error', response.message || 'Failed to update profile');

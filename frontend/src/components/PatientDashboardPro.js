@@ -490,7 +490,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
 
 
   return (
-    <div className="h-screen bg-slate-50 flex overflow-hidden">
+    <div className="min-h-screen bg-slate-50 flex" style={{ overflow: 'visible', height: 'auto' }}>
       {/* Security Warning Banner */}
       <SecurityWarningBanner userId={getUserId()} />
       
@@ -550,7 +550,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
         </div>
       </aside>
 
-      <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 overflow-hidden ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}`}>
+      <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}`} style={{ overflow: 'visible', height: 'auto' }}>
         {/* Mobile Header - Minimal: Location + Profile Only */}
         <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 lg:px-6 h-14 sm:h-16 flex items-center justify-between lg:hidden">
           <div className="flex items-center gap-3 flex-1 min-w-0">
@@ -637,7 +637,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
           </div>
         </header>
         <PullToRefresh onRefresh={handleRefresh} enabled={Capacitor.isNativePlatform()}>
-        <div className="flex-1 p-4 lg:p-8 overflow-y-auto overflow-x-hidden has-bottom-nav" style={{ WebkitOverflowScrolling: 'touch' }}>
+        <div className="flex-1 p-4 lg:p-8 has-bottom-nav" style={{ WebkitOverflowScrolling: 'touch', overflow: 'visible' }}>
           {activeSection === 'overview' && (
             <div className="space-y-6">
 

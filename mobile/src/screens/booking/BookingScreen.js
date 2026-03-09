@@ -146,7 +146,20 @@ const BookingScreen = ({ navigation, route }) => {
   });
 
   // Render doctor card
-  const renderDoctorCard = (doctor) => (
+  const renderDoctorCard = (doctor) => {
+    // Debug: Log doctor data to find the issue
+    console.log('📋 Rendering doctor:', {
+      name: doctor.name,
+      nameType: typeof doctor.name,
+      experience: doctor.experience,
+      experienceType: typeof doctor.experience,
+      fee: doctor.consultationFee || doctor.fee,
+      feeType: typeof (doctor.consultationFee || doctor.fee),
+      rating: doctor.rating,
+      ratingType: typeof doctor.rating,
+    });
+    
+    return (
     <TouchableOpacity
       key={doctor._id || doctor.id}
       style={styles.doctorCard}
@@ -156,32 +169,32 @@ const BookingScreen = ({ navigation, route }) => {
       <Card variant="default" style={styles.doctorCardInner}>
         <View style={styles.doctorRow}>
           <Avatar 
-            name={doctor.name || 'Doctor'} 
+            name={String(doctor.name || 'Doctor')} 
             size="large" 
-            source={doctor.profilePhoto || doctor.photo}
+            source={doctor.profilePhoto || doctor.photo ? { uri: doctor.profilePhoto || doctor.photo } : null}
           />
           <View style={styles.doctorInfo}>
-            <Text style={styles.doctorName}>{doctor.name}</Text>
+            <Text style={styles.doctorName}>{String(doctor.name || 'Doctor')}</Text>
             <Text style={styles.specialty}>
-              {doctor.specialization || doctor.specialty || 'General Physician'}
+              {String(doctor.specialization || doctor.specialty || 'General Physician')}
             </Text>
             <View style={styles.doctorMeta}>
-              {doctor.experience && (
+              {doctor.experience ? (
                 <Text style={styles.metaText}>
-                  {doctor.experience} yrs exp
+                  {String(doctor.experience)} yrs exp
                 </Text>
-              )}
-              {doctor.rating && (
+              ) : null}
+              {doctor.rating ? (
                 <View style={styles.ratingBadge}>
                   <Text style={styles.ratingText}>⭐ {doctor.rating.toFixed(1)}</Text>
                 </View>
-              )}
+              ) : null}
             </View>
           </View>
           <View style={styles.feeBox}>
             <Text style={styles.feeLabel}>Fee</Text>
             <Text style={styles.feeValue}>
-              ₹{doctor.consultationFee || doctor.fee || 500}
+              ₹{String(doctor.consultationFee || doctor.fee || 500)}
             </Text>
           </View>
         </View>
@@ -195,6 +208,7 @@ const BookingScreen = ({ navigation, route }) => {
       </Card>
     </TouchableOpacity>
   );
+};
 
   // If pre-selected doctor, show loading while redirecting
   if (preSelectedDoctor) {
@@ -261,10 +275,10 @@ const BookingScreen = ({ navigation, route }) => {
                   colors={colors.gradientPrimary}
                   style={styles.departmentChipGradient}
                 >
-                  <Text style={styles.departmentTextActive}>{dept.name}</Text>
+                  <Text style={styles.departmentTextActive}>{String(dept.name || '')}</Text>
                 </LinearGradient>
               ) : (
-                <Text style={styles.departmentText}>{dept.name}</Text>
+                <Text style={styles.departmentText}>{String(dept.name || '')}</Text>
               )}
             </TouchableOpacity>
           ))}
@@ -303,7 +317,7 @@ const BookingScreen = ({ navigation, route }) => {
         ) : (
           <>
             <Text style={styles.resultsCount}>
-              {filteredDoctors.length} doctor{filteredDoctors.length !== 1 ? 's' : ''} available
+              {String(filteredDoctors.length)} doctor{filteredDoctors.length !== 1 ? 's' : ''} available
             </Text>
             {filteredDoctors.map(renderDoctorCard)}
           </>

@@ -425,7 +425,8 @@ p {
   padding: 120px 24px 80px;
   background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 50%, #22c55e 100%);
   position: relative;
-  overflow: hidden;
+  overflow-x: hidden;
+  overflow-y: visible;
 }
 
 .hero-premium::before {
