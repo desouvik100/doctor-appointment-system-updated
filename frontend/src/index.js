@@ -24,22 +24,32 @@ if ('serviceWorker' in navigator && !isCapacitor) {
       .then((registration) => {
         console.log('✅ Service Worker registered:', registration.scope);
         
-        // Check for updates
+        // Auto-update: skip the confirm dialog, just reload silently
         registration.addEventListener('updatefound', () => {
           const newWorker = registration.installing;
           newWorker.addEventListener('statechange', () => {
             if (newWorker.state === 'installed' && navigator.serviceWorker.controller) {
-              // New content available, show update prompt
-              if (window.confirm('New version available! Reload to update?')) {
-                window.location.reload();
-              }
+              // Auto-apply update without asking user
+              newWorker.postMessage({ type: 'SKIP_WAITING' });
+              window.location.reload();
             }
           });
         });
+
+        // Also check if there's a waiting worker already (page was loaded with old SW)
+        if (registration.waiting) {
+          registration.waiting.postMessage({ type: 'SKIP_WAITING' });
+          window.location.reload();
+        }
       })
       .catch((error) => {
         console.log('❌ Service Worker registration failed:', error);
       });
+
+    // Listen for controller change and reload
+    navigator.serviceWorker.addEventListener('controllerchange', () => {
+      window.location.reload();
+    });
   });
 }
 

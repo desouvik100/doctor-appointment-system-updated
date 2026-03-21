@@ -1,8 +1,8 @@
 // HealthSync PWA Service Worker
-const CACHE_NAME = 'healthsync-v2';
-const STATIC_CACHE = 'healthsync-static-v2';
-const DYNAMIC_CACHE = 'healthsync-dynamic-v2';
-const API_CACHE = 'healthsync-api-v2';
+const CACHE_NAME = 'healthsync-v3';
+const STATIC_CACHE = 'healthsync-static-v3';
+const DYNAMIC_CACHE = 'healthsync-dynamic-v3';
+const API_CACHE = 'healthsync-api-v3';
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
@@ -51,6 +51,13 @@ self.addEventListener('activate', (event) => {
       );
     }).then(() => self.clients.claim())
   );
+});
+
+// Handle SKIP_WAITING message to force update
+self.addEventListener('message', (event) => {
+  if (event.data && event.data.type === 'SKIP_WAITING') {
+    self.skipWaiting();
+  }
 });
 
 // Fetch event - serve from cache, fallback to network
