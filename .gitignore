@@ -128,3 +128,24 @@ mobile/ios/Pods/
 .expo/
 .expo-shared/
 *.hprof
+
+# healthsync-pro mobile app - exclude generated/binary files
+healthsync-pro/node_modules/
+healthsync-pro/android/.gradle/
+healthsync-pro/android/app/build/
+healthsync-pro/android/build/
+healthsync-pro/android/local.properties
+healthsync-pro/android/app/*.keystore
+healthsync-pro/android/app/google-services.json
+healthsync-pro/android/hs_err_pid*.log
+healthsync-pro/android/replay_pid*.log
+healthsync-pro/build_log*.txt
+healthsync-pro/android/build_log*.txt
+healthsync-pro/android/build_error.txt
+healthsync-pro/.env
+
+# Backend uploaded files (user-generated content, not source code)
+backend/uploads/imaging/*/
+backend/uploads/profiles/
+backend/uploads/documents/
+backend/uploads/temp/

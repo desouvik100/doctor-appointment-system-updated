@@ -1,0 +1,13 @@
+// Doctor Dashboard Screens - 100% Web Parity
+export { default as DoctorDashboardScreen } from './DoctorDashboardScreen';
+export { default as DoctorAppointmentsScreen } from './DoctorAppointmentsScreen';
+export { default as DoctorPatientsScreen } from './DoctorPatientsScreen';
+export { default as DoctorAppointmentDetailScreen } from './DoctorAppointmentDetailScreen';
+export { default as DoctorPatientDetailScreen } from './DoctorPatientDetailScreen';
+export { default as DoctorPrescriptionsScreen } from './DoctorPrescriptionsScreen';
+export { default as DoctorCreatePrescriptionScreen } from './DoctorCreatePrescriptionScreen';
+export { default as DoctorScheduleScreen } from './DoctorScheduleScreen';
+export { default as DoctorWalletScreen } from './DoctorWalletScreen';
+export { default as DoctorEMRScreen } from './DoctorEMRScreen';
+export { default as DoctorSupportScreen } from './DoctorSupportScreen';
+export { default as DoctorQueueScreen } from './DoctorQueueScreen';

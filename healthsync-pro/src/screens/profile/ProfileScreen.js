@@ -1,0 +1,535 @@
+/**
+ * Profile Screen - User Settings & Info
+ */
+
+import React from 'react';
+import {
+  View,
+  Text,
+  StyleSheet,
+  ScrollView,
+  TouchableOpacity,
+  StatusBar,
+  Switch,
+  Alert,
+} from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
+import { colors, shadows } from '../../theme/colors';
+import { typography, spacing, borderRadius } from '../../theme/typography';
+import Card from '../../components/common/Card';
+import Avatar from '../../components/common/Avatar';
+import { useUser } from '../../context/UserContext';
+import { useTheme } from '../../context/ThemeContext';
+import whatsappService from '../../services/whatsappService';
+import { getAppointmentStats } from '../../services/api/profileService';
+
+const ProfileScreen = ({ navigation }) => {
+  const { user, logout, loading } = useUser();
+  const { isDarkMode, toggleTheme, colors } = useTheme();
+  const [appointmentCount, setAppointmentCount] = React.useState(0);
+
+  React.useEffect(() => {
+    if (user?.id) {
+      getAppointmentStats(user.id).then(stats => {
+        setAppointmentCount(stats.total || 0);
+      }).catch(() => {
+        setAppointmentCount(0);
+      });
+    }
+  }, [user]);
+
+  const handleLogout = () => {
+    Alert.alert(
+      'Logout',
+      'Are you sure you want to logout?',
+      [
+        { text: 'Cancel', style: 'cancel' },
+        { 
+          text: 'Logout', 
+          style: 'destructive', 
+          onPress: async () => {
+            await logout();
+            // Reset navigation to RoleSelection screen
+            navigation.reset({
+              index: 0,
+              routes: [{ name: 'RoleSelection' }],
+            });
+          }
+        },
+      ]
+    );
+  };
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+        <Text style={{ color: colors.textSecondary }}>Loading profile...</Text>
+      </View>
+    );
+  }
+
+  if (!user) {
+    return (
+      <View style={[styles.container, { justifyContent: 'center', alignItems: 'center' }]}>
+        <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+        <Text style={{ color: colors.textPrimary, fontSize: 18, marginBottom: 20 }}>Please login to view profile</Text>
+        <TouchableOpacity 
+          style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 }}
+          onPress={() => navigation.navigate('Login')}
+        >
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Login</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+
+  const menuSections = [
+    {
+      title: 'Account',
+      items: [
+        { id: 'personal', icon: '👤', label: 'Personal Information', arrow: true, route: 'EditProfile' },
+        { id: 'medical', icon: '📋', label: 'Medical History', arrow: true, route: 'MedicalTimeline' },
+        { id: 'insurance', icon: '🛡️', label: 'Insurance Details', arrow: true, route: 'Insurance' },
+        { id: 'family', icon: '👨‍👩‍👧', label: 'Family Members', arrow: true, route: 'FamilyMembers' },
+      ],
+    },
+    {
+      title: 'Preferences',
+      items: [
+        { id: 'notifications', icon: '🔔', label: 'Notification Settings', arrow: true, route: 'NotificationSettings' },
+        { id: 'darkMode', icon: '🌙', label: 'Dark Mode', toggle: true, value: isDarkMode, onToggle: toggleTheme },
+      ],
+    },
+    {
+      title: 'Support',
+      items: [
+        { id: 'whatsapp', icon: '💬', label: 'WhatsApp Support', arrow: true, isWhatsApp: true },
+        { id: 'feedback', icon: '📝', label: 'Send Feedback', arrow: true, isFeedback: true },
+      ],
+    },
+  ];
+
+  const handleItemPress = (item) => {
+    if (item.isWhatsApp) {
+      whatsappService.contactSupport('Hi! I need help with HealthSync app.');
+    } else if (item.isFeedback) {
+      whatsappService.sendFeedback(5, 'Great app!');
+    } else if (item.route) {
+      navigation.navigate(item.route);
+    }
+    // Removed "Coming Soon" alert - only show implemented features
+  };
+
+  const renderMenuItem = (item) => (
+    <TouchableOpacity 
+      key={item.id} 
+      style={styles.menuItem}
+      onPress={() => handleItemPress(item)}
+      disabled={item.toggle}
+    >
+      <View style={styles.menuItemLeft}>
+        <View style={[styles.menuIcon, { backgroundColor: colors.surfaceLight }]}>
+          <Text style={styles.menuIconText}>{item.icon}</Text>
+        </View>
+        <Text style={[styles.menuLabel, { color: colors.textPrimary }]}>{item.label}</Text>
+      </View>
+      <View style={styles.menuItemRight}>
+        {item.value && !item.toggle && (
+          <Text style={[styles.menuValue, { color: colors.textMuted }]}>{item.value}</Text>
+        )}
+        {item.toggle && (
+          <Switch
+            value={item.value}
+            onValueChange={item.onToggle || (() => {})}
+            trackColor={{ false: colors.surfaceLight, true: colors.primaryLight }}
+            thumbColor={item.value ? colors.primary : colors.textMuted}
+          />
+        )}
+        {item.arrow && (
+          <Text style={[styles.menuArrow, { color: colors.textMuted }]}>›</Text>
+        )}
+      </View>
+    </TouchableOpacity>
+  );
+
+
+  return (
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
+
+      <ScrollView
+        showsVerticalScrollIndicator={false}
+        contentContainerStyle={styles.scrollContent}
+      >
+        {/* Header */}
+        <View style={styles.header}>
+          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Profile</Text>
+          <View style={styles.headerActions}>
+            <TouchableOpacity 
+              style={[styles.notificationBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
+              onPress={() => navigation.navigate('Notifications')}
+            >
+              <Text style={styles.notificationIcon}>🔔</Text>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.settingsBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
+              onPress={() => navigation.navigate('NotificationSettings')}
+            >
+              <Text style={styles.settingsIcon}>⚙️</Text>
+            </TouchableOpacity>
+          </View>
+        </View>
+
+        {/* Profile Card */}
+        <LinearGradient
+          colors={colors.gradientCard}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.profileCard}
+        >
+          <View style={styles.profileTop}>
+            <Avatar 
+              name={user.name} 
+              size="xlarge" 
+              showBorder 
+              source={user.profilePhoto ? { uri: user.profilePhoto } : null}
+            />
+            <TouchableOpacity 
+              style={styles.editAvatarBtn}
+              onPress={() => navigation.navigate('EditProfile')}
+            >
+              <Text style={styles.editAvatarIcon}>📷</Text>
+            </TouchableOpacity>
+          </View>
+
+          <Text style={[styles.userName, { color: colors.textPrimary }]}>{user.name}</Text>
+          <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{user.email}</Text>
+
+          <View style={styles.profileStats}>
+            <View style={styles.statBox}>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{user.bloodType || '--'}</Text>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>Blood Type</Text>
+            </View>
+            <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
+            <View style={styles.statBox}>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{appointmentCount}</Text>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>Appointments</Text>
+            </View>
+            <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
+            <View style={styles.statBox}>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>{user.memberSince || '2025'}</Text>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>Member Since</Text>
+            </View>
+          </View>
+
+          <TouchableOpacity 
+            style={styles.editProfileBtn}
+            onPress={() => navigation.navigate('EditProfile')}
+          >
+            <Text style={styles.editProfileText}>Edit Profile</Text>
+          </TouchableOpacity>
+        </LinearGradient>
+
+        {/* Quick Actions */}
+        <View style={styles.quickActions}>
+          <TouchableOpacity 
+            style={styles.quickAction}
+            onPress={() => navigation.navigate('HealthReports')}
+          >
+            <LinearGradient colors={colors.gradientPrimary} style={styles.quickActionIcon}>
+              <Text style={styles.quickActionEmoji}>📊</Text>
+            </LinearGradient>
+            <Text style={[styles.quickActionLabel, { color: colors.textSecondary }]}>Health{'\n'}Reports</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.quickAction}
+            onPress={() => navigation.navigate('PaymentMethods')}
+          >
+            <LinearGradient colors={colors.gradientSecondary} style={styles.quickActionIcon}>
+              <Text style={styles.quickActionEmoji}>💳</Text>
+            </LinearGradient>
+            <Text style={[styles.quickActionLabel, { color: colors.textSecondary }]}>Payment{'\n'}Methods</Text>
+          </TouchableOpacity>
+
+          <TouchableOpacity 
+            style={styles.quickAction}
+            onPress={() => navigation.navigate('Rewards')}
+          >
+            <LinearGradient colors={colors.gradientAccent} style={styles.quickActionIcon}>
+              <Text style={styles.quickActionEmoji}>🎁</Text>
+            </LinearGradient>
+            <Text style={[styles.quickActionLabel, { color: colors.textSecondary }]}>Rewards{'\n'}& Offers</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Menu Sections */}
+        {menuSections.map((section, index) => (
+          <View key={index} style={styles.menuSection}>
+            <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{section.title}</Text>
+            <Card variant="default" padding="none" style={{ backgroundColor: colors.surface }}>
+              {section.items.map((item, itemIndex) => (
+                <View key={item.id}>
+                  {renderMenuItem(item)}
+                  {itemIndex < section.items.length - 1 && (
+                    <View style={[styles.menuDivider, { backgroundColor: colors.divider }]} />
+                  )}
+                </View>
+              ))}
+            </Card>
+          </View>
+        ))}
+
+        {/* Logout Button */}
+        <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout}>
+          <Text style={styles.logoutIcon}>🚪</Text>
+          <Text style={styles.logoutText}>Log Out</Text>
+        </TouchableOpacity>
+
+        {/* App Version */}
+        <Text style={[styles.version, { color: colors.textMuted }]}>HealthSync v1.0.0</Text>
+      </ScrollView>
+    </View>
+  );
+};
+
+
+const styles = StyleSheet.create({
+  container: {
+    flex: 1,
+    backgroundColor: colors.background,
+  },
+  scrollContent: {
+    paddingBottom: 100,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.xxl,
+    paddingBottom: spacing.lg,
+  },
+  headerTitle: {
+    ...typography.displaySmall,
+    color: colors.textPrimary,
+  },
+  headerActions: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+  },
+  notificationBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  notificationIcon: {
+    fontSize: 20,
+  },
+  settingsBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
+    backgroundColor: colors.surface,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+  },
+  settingsIcon: {
+    fontSize: 20,
+  },
+  profileCard: {
+    marginHorizontal: spacing.xl,
+    borderRadius: borderRadius.xxl,
+    padding: spacing.xxl,
+    alignItems: 'center',
+    borderWidth: 1,
+    borderColor: colors.surfaceBorder,
+    marginBottom: spacing.xxl,
+  },
+  profileTop: {
+    position: 'relative',
+    marginBottom: spacing.lg,
+  },
+  editAvatarBtn: {
+    position: 'absolute',
+    bottom: 0,
+    right: -4,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: colors.primary,
+    alignItems: 'center',
+    justifyContent: 'center',
+    borderWidth: 3,
+    borderColor: colors.backgroundCard,
+  },
+  editAvatarIcon: {
+    fontSize: 14,
+  },
+  userName: {
+    ...typography.headlineLarge,
+    color: colors.textPrimary,
+    marginBottom: spacing.xs,
+  },
+  userEmail: {
+    ...typography.bodyMedium,
+    color: colors.textSecondary,
+    marginBottom: spacing.xl,
+  },
+  profileStats: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
+  },
+  statBox: {
+    alignItems: 'center',
+    paddingHorizontal: spacing.lg,
+  },
+  statValue: {
+    ...typography.headlineSmall,
+    color: colors.textPrimary,
+    marginBottom: 2,
+  },
+  statLabel: {
+    ...typography.labelSmall,
+    color: colors.textMuted,
+  },
+  statDivider: {
+    width: 1,
+    height: 32,
+    backgroundColor: colors.divider,
+  },
+  editProfileBtn: {
+    paddingHorizontal: spacing.xxl,
+    paddingVertical: spacing.md,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    borderColor: colors.primary,
+  },
+  editProfileText: {
+    ...typography.buttonSmall,
+    color: colors.primary,
+  },
+  quickActions: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.xxl,
+  },
+  quickAction: {
+    alignItems: 'center',
+  },
+  quickActionIcon: {
+    width: 56,
+    height: 56,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+    ...shadows.small,
+  },
+  quickActionEmoji: {
+    fontSize: 24,
+  },
+  quickActionLabel: {
+    ...typography.labelSmall,
+    color: colors.textSecondary,
+    textAlign: 'center',
+  },
+  menuSection: {
+    paddingHorizontal: spacing.xl,
+    marginBottom: spacing.xl,
+  },
+  sectionTitle: {
+    ...typography.labelMedium,
+    color: colors.textMuted,
+    marginBottom: spacing.md,
+    marginLeft: spacing.xs,
+    textTransform: 'uppercase',
+    letterSpacing: 1,
+  },
+  menuItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.lg,
+  },
+  menuItemLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuIcon: {
+    width: 36,
+    height: 36,
+    borderRadius: borderRadius.md,
+    backgroundColor: colors.surfaceLight,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginRight: spacing.md,
+  },
+  menuIconText: {
+    fontSize: 18,
+  },
+  menuLabel: {
+    ...typography.bodyLarge,
+    color: colors.textPrimary,
+  },
+  menuItemRight: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  menuValue: {
+    ...typography.bodyMedium,
+    color: colors.textMuted,
+    marginRight: spacing.sm,
+  },
+  menuArrow: {
+    fontSize: 20,
+    color: colors.textMuted,
+    fontWeight: '300',
+  },
+  menuDivider: {
+    height: 1,
+    backgroundColor: colors.divider,
+    marginLeft: 60,
+  },
+  logoutBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.lg,
+    paddingVertical: spacing.lg,
+    borderRadius: borderRadius.lg,
+    backgroundColor: 'rgba(239, 68, 68, 0.1)',
+    borderWidth: 1,
+    borderColor: 'rgba(239, 68, 68, 0.3)',
+  },
+  logoutIcon: {
+    fontSize: 18,
+    marginRight: spacing.sm,
+  },
+  logoutText: {
+    ...typography.button,
+    color: colors.error,
+  },
+  version: {
+    ...typography.labelSmall,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: spacing.xl,
+    marginBottom: spacing.xl,
+  },
+});
+
+export default ProfileScreen;
