@@ -16,6 +16,17 @@ const { errorMiddleware, requestLoggerMiddleware } = require('./services/errorLo
 const backupService = require('./services/backupService');
 const { initializeSocket } = require('./services/socketManager');
 
+// ===== CRITICAL SECURITY CHECKS =====
+// Fail fast if required secrets are missing — never run with fallback values
+if (!process.env.JWT_SECRET) {
+  console.error('❌ FATAL: JWT_SECRET environment variable is not set. Server cannot start.');
+  process.exit(1);
+}
+if (process.env.JWT_SECRET === 'fallback_secret') {
+  console.error('❌ FATAL: JWT_SECRET is set to the insecure default value. Please set a strong secret.');
+  process.exit(1);
+}
+
 const app = express();
 const server = http.createServer(app);
 
@@ -192,7 +203,7 @@ app.use('/api', async (req, res, next) => {
     const token = authHeader.split(' ')[1];
     
     try {
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       const userId = decoded.userId || decoded.doctorId || decoded.id;
       const tokenIssuedAt = decoded.iat ? new Date(decoded.iat * 1000) : null;
       
@@ -269,6 +280,16 @@ app.get('/api/openapi.json', (req, res) => {
 console.log('📚 Swagger docs available at /api/docs');
 console.log('📄 OpenAPI JSON spec at /api/openapi.json');
 
+// ===== HEALTH CHECK (must be before route registrations to avoid shadowing) =====
+app.get('/api/health', (req, res) => {
+  res.json({ 
+    status: 'OK', 
+    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
+    databaseName: mongoose.connection.name,
+    timestamp: new Date().toISOString()
+  });
+});
+
 // Routes
 app.use('/api/auth', require('./routes/authRoutes'));
 app.use('/api/auth/token', require('./routes/authTokenRoutes')); // Token refresh & session management
@@ -308,7 +329,6 @@ app.use('/api/queue', require('./routes/queueRoutes'));
 app.use('/api/doctor-leaves', require('./routes/doctorLeaveRoutes'));
 app.use('/api/follow-ups', require('./routes/followUpRoutes'));
 app.use('/api/consultation-notes', require('./routes/consultationNoteRoutes'));
-app.use('/api/family', require('./routes/familyRoutes'));
 app.use('/api/refills', require('./routes/refillRoutes'));
 app.use('/api/analytics', require('./routes/analyticsRoutes'));
 app.use('/api/export', require('./routes/exportRoutes'));
@@ -330,7 +350,6 @@ app.use('/api/systematic-history', require('./routes/systematicHistoryRoutes'));
 app.use('/api/emr', require('./routes/emrRoutes')); // EMR Subscription Module for Clinics
 app.use('/api/emr-advanced', require('./routes/emrAdvancedRoutes')); // Offline, Templates, Protocols, FHIR
 app.use('/api/imaging', require('./routes/imagingRoutes')); // DICOM Imaging & Telemedicine
-app.use('/api/whatsapp', require('./routes/whatsappRoutes')); // WhatsApp Integration for patient engagement
 
 // ===== NEW DIFFERENTIATOR FEATURES =====
 app.use('/api/family-wallet', require('./routes/familyWalletRoutes')); // Family Health Wallet
@@ -525,38 +544,6 @@ app.get('/api/delete-data', (req, res) => {
     </body>
     </html>
   `);
-});
-
-// Health check route
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-    databaseName: mongoose.connection.name,
-    timestamp: new Date().toISOString()
-  });
-});
-
-// Debug: Check test user (temporary - remove after verification)
-app.get('/api/debug/test-user', async (req, res) => {
-  try {
-    const User = require('./models/User');
-    const user = await User.findOne({ email: 'test@healthsyncpro.in' });
-    if (!user) {
-      return res.json({ found: false, message: 'Test user not found in database' });
-    }
-    res.json({
-      found: true,
-      id: user._id,
-      email: user.email,
-      role: user.role,
-      isActive: user.isActive,
-      createdAt: user.createdAt,
-      databaseName: mongoose.connection.name
-    });
-  } catch (error) {
-    res.status(500).json({ error: error.message });
-  }
 });
 
 // 404 handler for undefined routes

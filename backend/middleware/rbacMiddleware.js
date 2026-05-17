@@ -9,8 +9,7 @@ const jwt = require('jsonwebtoken');
 const { 
   hasPermission, 
   getDataScope, 
-  isHighRiskAction,
-  ROLES 
+  isHighRiskAction
 } = require('../config/rbacConfig');
 const AuditLog = require('../models/AuditLog');
 
@@ -30,7 +29,7 @@ const authenticate = async (req, res, next) => {
     }
     
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     
     // Attach user info
     req.user = {

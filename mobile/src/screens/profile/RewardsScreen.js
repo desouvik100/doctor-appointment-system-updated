@@ -47,16 +47,21 @@ const RewardsScreen = ({ navigation }) => {
       // Fetch available rewards/coupons
       const rewardsResponse = await apiClient.get('/coupons/available').catch(() => ({ data: { coupons: [] } }));
       
-      // Fetch points history
-      const historyResponse = await apiClient.get('/loyalty/history').catch(() => ({ data: { history: [] } }));
+      // Fetch points history via the correct endpoint (userId-based)
+      const userId = user?._id || user?.id;
+      const historyResponse = userId
+        ? await apiClient.get(`/loyalty/${userId}`).catch(() => ({ data: {} }))
+        : { data: {} };
+
+      const transactions = historyResponse.data?.transactions || [];
 
       setLoyaltyData({
-        points: loyaltyResponse.data?.points || 0,
-        pointsValue: loyaltyResponse.data?.pointsValue || Math.floor((loyaltyResponse.data?.points || 0) / 10),
-        tier: loyaltyResponse.data?.tier || 'Bronze',
-        totalEarned: loyaltyResponse.data?.totalEarned || 0,
+        points: loyaltyResponse.data?.points || historyResponse.data?.totalPoints || 0,
+        pointsValue: loyaltyResponse.data?.pointsValue || Math.floor((loyaltyResponse.data?.points || historyResponse.data?.totalPoints || 0) / 10),
+        tier: loyaltyResponse.data?.tier || historyResponse.data?.tier || 'Bronze',
+        totalEarned: loyaltyResponse.data?.totalEarned || historyResponse.data?.lifetimePoints || 0,
         totalRedeemed: loyaltyResponse.data?.totalRedeemed || 0,
-        history: historyResponse.data?.history || [],
+        history: transactions,
       });
 
       // Map coupons to rewards format or use defaults
@@ -312,16 +317,16 @@ const RewardsScreen = ({ navigation }) => {
               {loyaltyData.history.slice(0, 5).map((item, index) => (
                 <View key={index} style={[styles.historyItem, index > 0 && { borderTopWidth: 1, borderTopColor: colors.divider }]}>
                   <View style={styles.historyInfo}>
-                    <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>{item.description || item.action}</Text>
+                    <Text style={[styles.historyTitle, { color: colors.textPrimary }]}>{item.description || item.action || item.type}</Text>
                     <Text style={[styles.historyDate, { color: colors.textMuted }]}>
                       {new Date(item.createdAt || item.date).toLocaleDateString()}
                     </Text>
                   </View>
                   <Text style={[
                     styles.historyPoints,
-                    { color: item.points > 0 ? colors.success : colors.error }
+                    { color: (item.points || 0) >= 0 ? colors.success : colors.error }
                   ]}>
-                    {item.points > 0 ? '+' : ''}{item.points}
+                    {(item.points || 0) >= 0 ? '+' : ''}{item.points || 0}
                   </Text>
                 </View>
               ))}

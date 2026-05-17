@@ -19,7 +19,6 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
 import doctorService from '../../services/api/doctorService';
 import { useTheme } from '../../context/ThemeContext';
@@ -86,79 +85,6 @@ const DoctorsScreen = ({ navigation }) => {
     setLoading(true);
     fetchDoctors();
   };
-
-  const renderDoctorCard = ({ item }) => (
-    <Card variant="gradient" style={styles.doctorCard}>
-      <TouchableOpacity 
-        activeOpacity={0.9}
-        onPress={() => navigation.navigate('DoctorProfile', { doctorId: item._id })}
-      >
-        <View style={styles.cardTop}>
-          <Avatar 
-            name={item.name} 
-            size="xlarge" 
-            showBorder 
-            source={item.photo ? { uri: item.photo } : null}
-          />
-          <View style={styles.doctorInfo}>
-            <Text style={styles.doctorName}>{item.name}</Text>
-            <Text style={styles.specialty}>{item.specialization || item.specialty}</Text>
-            <Text style={styles.hospital}>{item.hospital || item.clinic || 'HealthSync Clinic'}</Text>
-            
-            <View style={styles.statsRow}>
-              <View style={styles.statItem}>
-                <Text style={styles.statIcon}>⭐</Text>
-                <Text style={styles.statValue}>{item.rating || '4.5'}</Text>
-                <Text style={styles.statLabel}>({item.reviewCount || item.reviews || 0})</Text>
-              </View>
-              <View style={styles.statDivider} />
-              <View style={styles.statItem}>
-                <Text style={styles.statIcon}>🎓</Text>
-                <Text style={styles.statValue}>{item.experience || '5'} yrs</Text>
-              </View>
-            </View>
-          </View>
-        </View>
-
-        <View style={styles.cardBottom}>
-          <View style={styles.feeSection}>
-            <Text style={styles.feeLabel}>Consultation Fee</Text>
-            <Text style={styles.feeValue}>₹{item.fee || item.consultationFee || 500}</Text>
-          </View>
-          
-          <View style={styles.slotSection}>
-            <View style={[
-              styles.availabilityBadge,
-              item.isAvailable !== false ? styles.availableNow : styles.availableLater,
-            ]}>
-              <View style={[
-                styles.availabilityDot,
-                { backgroundColor: item.isAvailable !== false ? colors.success : colors.warning },
-              ]} />
-              <Text style={styles.availabilityText}>
-                {item.isAvailable !== false ? 'Available' : 'Busy'}
-              </Text>
-            </View>
-            <Text style={styles.nextSlot}>{item.nextAvailable || 'Book Now'}</Text>
-          </View>
-        </View>
-
-        <TouchableOpacity 
-          style={styles.bookBtn}
-          onPress={() => navigation.navigate('Booking', { doctor: item })}
-        >
-          <LinearGradient
-            colors={colors.gradientPrimary}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.bookBtnGradient}
-          >
-            <Text style={styles.bookBtnText}>Book Appointment</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </TouchableOpacity>
-    </Card>
-  );
 
   const renderEmptyState = () => (
     <View style={styles.emptyState}>
@@ -268,7 +194,7 @@ const DoctorsScreen = ({ navigation }) => {
         <FlatList
           data={doctors}
           renderItem={({ item }) => (
-            <Card variant="gradient" style={styles.doctorCard}>
+            <View style={[styles.doctorCard, { backgroundColor: colors.surface, ...shadows.small }]}>
               <TouchableOpacity 
                 activeOpacity={0.9}
                 onPress={() => navigation.navigate('DoctorProfile', { doctorId: item._id })}
@@ -278,7 +204,7 @@ const DoctorsScreen = ({ navigation }) => {
                     name={item.name} 
                     size="xlarge" 
                     showBorder 
-                    source={item.photo ? { uri: item.photo } : null}
+                    imageUrl={item.profilePhoto || item.photo || null}
                   />
                   <View style={styles.doctorInfo}>
                     <Text style={[styles.doctorName, { color: colors.textPrimary }]}>{item.name}</Text>
@@ -325,7 +251,7 @@ const DoctorsScreen = ({ navigation }) => {
 
                 <TouchableOpacity 
                   style={styles.bookBtn}
-                  onPress={() => navigation.navigate('Booking', { doctor: item })}
+                  onPress={() => navigation.navigate('SlotSelection', { doctor: item })}
                 >
                   <LinearGradient
                     colors={colors.gradientPrimary}
@@ -337,7 +263,7 @@ const DoctorsScreen = ({ navigation }) => {
                   </LinearGradient>
                 </TouchableOpacity>
               </TouchableOpacity>
-            </Card>
+            </View>
           )}
           keyExtractor={(item) => item._id || item.id || Math.random().toString()}
           contentContainerStyle={styles.listContent}
@@ -493,6 +419,7 @@ const styles = StyleSheet.create({
   doctorCard: {
     marginBottom: spacing.lg,
     padding: spacing.lg,
+    borderRadius: borderRadius.xl,
   },
   cardTop: {
     flexDirection: 'row',

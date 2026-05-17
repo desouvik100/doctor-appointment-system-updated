@@ -31,14 +31,11 @@ const authenticate = async (req, res, next) => {
       });
     }
 
-    const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+    const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = decoded;
     req.userId = decoded.userId || decoded.id || decoded._id;
     req.userRole = decoded.role || 'patient';
     req.clinicId = decoded.clinicId || null;
-    
-    // Debug log for troubleshooting
-    console.log('Auth middleware - Role:', req.userRole, 'UserId:', req.userId);
     
     next();
   } catch (error) {

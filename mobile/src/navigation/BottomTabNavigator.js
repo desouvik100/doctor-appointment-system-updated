@@ -1,9 +1,9 @@
 /**
- * Bottom Tab Navigator - Modern Floating Tab Bar
+ * Bottom Tab Navigator - Premium Floating Tab Bar
  */
 
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import LinearGradient from 'react-native-linear-gradient';
 import { shadows } from '../theme/colors';
@@ -12,27 +12,40 @@ import { useTheme } from '../context/ThemeContext';
 
 import HomeScreen from '../screens/home/HomeScreen';
 import AppointmentsScreen from '../screens/appointments/AppointmentsScreen';
-import DoctorsScreen from '../screens/doctors/DoctorsScreen';
+import BookingScreen from '../screens/booking/BookingScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
 const { width } = Dimensions.get('window');
 
-const TabIcon = ({ icon, label, focused, colors }) => (
+const TAB_CONFIG = [
+  { name: 'Home',         icon: '🏠', activeIcon: '🏠', label: 'Home' },
+  { name: 'Appointments', icon: '📅', activeIcon: '📅', label: 'Bookings' },
+  { name: 'Doctors',      icon: '👨‍⚕️', activeIcon: '👨‍⚕️', label: 'Doctors' },
+  { name: 'Profile',      icon: '👤', activeIcon: '👤', label: 'Profile' },
+];
+
+const TabItem = ({ icon, label, focused, colors }) => (
   <View style={styles.tabItem}>
     {focused ? (
       <LinearGradient
         colors={colors.gradientPrimary}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
         style={styles.activeIconBg}
       >
-        <Text style={styles.tabIcon}>{icon}</Text>
+        <Text style={styles.tabIconActive}>{icon}</Text>
       </LinearGradient>
     ) : (
-      <View style={styles.inactiveIconBg}>
-        <Text style={[styles.tabIcon, styles.inactiveIcon]}>{icon}</Text>
+      <View style={[styles.inactiveIconBg, { backgroundColor: colors.surfaceLight }]}>
+        <Text style={styles.tabIconInactive}>{icon}</Text>
       </View>
     )}
-    <Text style={[styles.tabLabel, { color: colors.textMuted }, focused && { color: colors.primary, fontWeight: '600' }]}>
+    <Text style={[
+      styles.tabLabel,
+      { color: focused ? colors.primary : colors.textMuted },
+      focused && styles.tabLabelActive,
+    ]}>
       {label}
     </Text>
   </View>
@@ -40,13 +53,20 @@ const TabIcon = ({ icon, label, focused, colors }) => (
 
 const CustomTabBar = ({ state, descriptors, navigation }) => {
   const { colors } = useTheme();
-  
+
   return (
     <View style={styles.tabBarContainer}>
-      <View style={[styles.tabBar, { backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder }]}>
+      <View style={[
+        styles.tabBar,
+        {
+          backgroundColor: colors.backgroundCard,
+          borderColor: colors.surfaceBorder,
+          ...shadows.large,
+        },
+      ]}>
         {state.routes.map((route, index) => {
-          const { options } = descriptors[route.key];
           const isFocused = state.index === index;
+          const config = TAB_CONFIG.find(t => t.name === route.name) || TAB_CONFIG[0];
 
           const onPress = () => {
             const event = navigation.emit({
@@ -54,19 +74,8 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
               target: route.key,
               canPreventDefault: true,
             });
-
             if (!isFocused && !event.defaultPrevented) {
               navigation.navigate(route.name);
-            }
-          };
-
-          const getIcon = () => {
-            switch (route.name) {
-              case 'Home': return '🏠';
-              case 'Appointments': return '📅';
-              case 'Doctors': return '👨‍⚕️';
-              case 'Profile': return '👤';
-              default: return '📱';
             }
           };
 
@@ -75,11 +84,11 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
               key={route.key}
               onPress={onPress}
               style={styles.tabButton}
-              activeOpacity={0.7}
+              activeOpacity={0.75}
             >
-              <TabIcon
-                icon={getIcon()}
-                label={route.name}
+              <TabItem
+                icon={config.icon}
+                label={config.label}
                 focused={isFocused}
                 colors={colors}
               />
@@ -91,71 +100,69 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
   );
 };
 
-const BottomTabNavigator = () => {
-  return (
-    <Tab.Navigator
-      tabBar={(props) => <CustomTabBar {...props} />}
-      screenOptions={{
-        headerShown: false,
-      }}
-    >
-      <Tab.Screen name="Home" component={HomeScreen} />
-      <Tab.Screen name="Appointments" component={AppointmentsScreen} />
-      <Tab.Screen name="Doctors" component={DoctorsScreen} />
-      <Tab.Screen name="Profile" component={ProfileScreen} />
-    </Tab.Navigator>
-  );
-};
+const BottomTabNavigator = () => (
+  <Tab.Navigator
+    tabBar={(props) => <CustomTabBar {...props} />}
+    screenOptions={{ headerShown: false }}
+  >
+    <Tab.Screen name="Home" component={HomeScreen} />
+    <Tab.Screen name="Appointments" component={AppointmentsScreen} />
+    <Tab.Screen name="Doctors" component={BookingScreen} />
+    <Tab.Screen name="Profile" component={ProfileScreen} />
+  </Tab.Navigator>
+);
 
 const styles = StyleSheet.create({
   tabBarContainer: {
     position: 'absolute',
-    bottom: spacing.xl,
+    bottom: Platform.OS === 'ios' ? spacing.xl : spacing.lg,
     left: spacing.xl,
     right: spacing.xl,
   },
   tabBar: {
     flexDirection: 'row',
     borderRadius: borderRadius.xxl,
-    paddingVertical: spacing.sm,
-    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm + 2,
+    paddingHorizontal: spacing.sm,
     borderWidth: 1,
-    ...shadows.large,
   },
   tabButton: {
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.xs,
   },
   tabItem: {
     alignItems: 'center',
+    gap: 4,
   },
   activeIconBg: {
-    width: 44,
-    height: 44,
-    borderRadius: borderRadius.lg,
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
-    ...shadows.glow,
   },
   inactiveIconBg: {
-    width: 44,
-    height: 44,
-    borderRadius: borderRadius.lg,
+    width: 52,
+    height: 52,
+    borderRadius: borderRadius.xl,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.xs,
   },
-  tabIcon: {
-    fontSize: 22,
+  tabIconActive: {
+    fontSize: 26,
   },
-  inactiveIcon: {
-    opacity: 0.6,
+  tabIconInactive: {
+    fontSize: 24,
+    opacity: 0.7,
   },
   tabLabel: {
     ...typography.labelSmall,
+    fontSize: 11,
+  },
+  tabLabelActive: {
+    fontWeight: '700',
   },
 });
 

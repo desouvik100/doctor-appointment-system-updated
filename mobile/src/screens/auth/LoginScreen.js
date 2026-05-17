@@ -1,406 +1,318 @@
 /**
- * Login Screen - Modern Startup Design with Biometric Authentication
+ * Login Screen — Premium patient-first design
+ * Light theme · icon inputs · focus states · trust badges · proper error handling
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-  KeyboardAvoidingView,
-  Platform,
-  Alert,
-  ActivityIndicator,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  StatusBar, KeyboardAvoidingView, Platform, Animated,
+  TextInput, ActivityIndicator, Dimensions,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { shadows } from '../../theme/colors';
-import { typography, spacing, borderRadius } from '../../theme/typography';
-import Button from '../../components/common/Button';
-import Input from '../../components/common/Input';
+import { spacing, borderRadius } from '../../theme/typography';
 import LoginSuccessAnimation from '../../components/common/LoginSuccessAnimation';
 import authService from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
-import { useTheme } from '../../context/ThemeContext';
 import biometricService from '../../services/biometricService';
 import socialAuthService from '../../services/socialAuthService';
 import NotificationService from '../../services/notifications/NotificationService';
 
+const { height } = Dimensions.get('window');
+
+// ─── Inline Input with icon + focus glow ────────────────────────────────────
+const FancyInput = ({ icon, placeholder, value, onChangeText, secureTextEntry, keyboardType, autoCapitalize, rightElement }) => {
+  const [focused, setFocused] = useState(false);
+  const glowAnim = useRef(new Animated.Value(0)).current;
+
+  const onFocus = () => {
+    setFocused(true);
+    Animated.timing(glowAnim, { toValue: 1, duration: 200, useNativeDriver: false }).start();
+  };
+  const onBlur = () => {
+    setFocused(false);
+    Animated.timing(glowAnim, { toValue: 0, duration: 200, useNativeDriver: false }).start();
+  };
+
+  const borderColor = glowAnim.interpolate({ inputRange: [0, 1], outputRange: ['#E5E7EB', '#22C55E'] });
+  const shadowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.18] });
+
+  return (
+    <Animated.View style={[styles.inputWrap, { borderColor, shadowOpacity, shadowColor: '#22C55E', shadowOffset: { width: 0, height: 0 }, shadowRadius: 8, elevation: focused ? 3 : 0 }]}>
+      <Text style={styles.inputIcon}>{icon}</Text>
+      <TextInput
+        style={styles.inputField}
+        placeholder={placeholder}
+        placeholderTextColor="#9CA3AF"
+        value={value}
+        onChangeText={onChangeText}
+        secureTextEntry={secureTextEntry}
+        keyboardType={keyboardType || 'default'}
+        autoCapitalize={autoCapitalize || 'none'}
+        onFocus={onFocus}
+        onBlur={onBlur}
+      />
+      {rightElement ? rightElement : null}
+    </Animated.View>
+  );
+};
+
+// ─── Error toast ─────────────────────────────────────────────────────────────
+const ErrorToast = ({ message }) => {
+  const slideAnim = useRef(new Animated.Value(-60)).current;
+  useEffect(() => {
+    Animated.spring(slideAnim, { toValue: 0, tension: 80, friction: 10, useNativeDriver: true }).start();
+  }, [message]);
+  if (!message) return null;
+  return (
+    <Animated.View style={[styles.errorToast, { transform: [{ translateY: slideAnim }] }]}>
+      <Text style={styles.errorToastIcon}>⚠️</Text>
+      <Text style={styles.errorToastText}>{message}</Text>
+    </Animated.View>
+  );
+};
+
+// ─── Main Screen ─────────────────────────────────────────────────────────────
 const LoginScreen = ({ navigation }) => {
-  const { colors } = useTheme();
-  const [email, setEmail] = useState('');
+  const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
-  const [loading, setLoading] = useState(false);
-  const [biometricLoading, setBiometricLoading] = useState(false);
-  const [biometricAvailable, setBiometricAvailable] = useState(false);
-  const [biometricType, setBiometricType] = useState(null);
-  const [hasStoredCredentials, setHasStoredCredentials] = useState(false);
-  const [socialLoading, setSocialLoading] = useState(null); // 'google' | 'facebook' | 'apple' | null
-  const [showSuccessAnimation, setShowSuccessAnimation] = useState(false);
-  const [loggedInUser, setLoggedInUser] = useState(null);
-  const [isEmailLogin, setIsEmailLogin] = useState(false);
+  const [showPass, setShowPass] = useState(false);
+  const [loading, setLoading]   = useState(false);
+  const [errorMsg, setErrorMsg] = useState('');
+  const [biometricAvailable, setBiometricAvailable]       = useState(false);
+  const [biometricType, setBiometricType]                 = useState(null);
+  const [hasStoredCredentials, setHasStoredCredentials]   = useState(false);
+  const [socialLoading, setSocialLoading]                 = useState(null);
+  const [showSuccessAnimation, setShowSuccessAnimation]   = useState(false);
+  const [loggedInUser, setLoggedInUser]                   = useState(null);
+  const [isEmailLogin, setIsEmailLogin]                   = useState(false);
   const { login } = useUser();
 
   useEffect(() => {
-    checkBiometricAvailability();
+    biometricService.isBiometricAvailable().then(({ available, biometryName }) => {
+      setBiometricAvailable(available);
+      setBiometricType(biometryName);
+      if (available) biometricService.hasStoredCredentials().then(setHasStoredCredentials);
+    });
   }, []);
 
-  const checkBiometricAvailability = async () => {
-    const { available, biometryName } = await biometricService.isBiometricAvailable();
-    setBiometricAvailable(available);
-    setBiometricType(biometryName);
-    
-    if (available) {
-      const hasCredentials = await biometricService.hasStoredCredentials();
-      setHasStoredCredentials(hasCredentials);
-    }
-  };
+  const clearError = () => setErrorMsg('');
 
   const handleLogin = async () => {
-    if (!email.trim() || !password) {
-      Alert.alert('Error', 'Please enter email and password');
-      return;
-    }
-
+    clearError();
+    if (!email.trim() || !password) { setErrorMsg('Please enter your email and password.'); return; }
     setLoading(true);
     try {
-      const { user, token } = await authService.login({
-        email: email.trim().toLowerCase(),
-        password,
-      });
+      const { user, token } = await authService.login({ email: email.trim().toLowerCase(), password });
       await login(user, token);
-      
-      // Register device for push notifications after successful login
       const userId = user?.id || user?._id;
-      if (userId) {
-        NotificationService.registerDeviceAfterLogin(userId).catch(err => {
-          console.log('Device registration after login failed:', err.message);
-        });
-      }
-      
+      if (userId) NotificationService.registerDeviceAfterLogin(userId).catch(() => {});
       setLoggedInUser(user);
       setIsEmailLogin(true);
-      setLoading(false);
-      
-      // Show success animation
       setShowSuccessAnimation(true);
     } catch (error) {
-      console.log('Login error:', error);
-      let message = 'Login failed. Please check your credentials.';
-      
-      if (error.statusCode === 0) {
-        message = 'Network error. Please check your internet connection and try again.';
-      } else if (error.statusCode === 401) {
-        message = 'Invalid email or password.';
+      let msg = 'Login failed. Please check your credentials.';
+      if (error.statusCode === 0 || error.code === 'ERR_NETWORK') {
+        msg = 'Network error. Please check your internet connection.';
+      } else if (error.statusCode === 401 || error.statusCode === 400) {
+        msg = 'Invalid email or password. Please try again.';
       } else if (error.message) {
-        message = error.message;
-      } else if (error.response?.data?.message) {
-        message = error.response.data.message;
+        msg = error.message;
       }
-      
-      Alert.alert('Login Failed', message);
+      setErrorMsg(msg);
+    } finally {
       setLoading(false);
     }
   };
 
   const handleAnimationComplete = () => {
     setShowSuccessAnimation(false);
-    
-    // Check for biometric setup only for email/password login
     if (isEmailLogin && biometricAvailable && !hasStoredCredentials && email && password) {
-      Alert.alert(
-        `Enable ${biometricType}?`,
-        `Would you like to use ${biometricType} for faster sign-in next time?`,
-        [
-          { text: 'Not Now', style: 'cancel', onPress: () => navigation.replace('Main') },
-          { 
-            text: 'Enable', 
-            onPress: async () => {
-              try {
-                await biometricService.enableBiometricLogin(email.trim().toLowerCase(), password);
-                navigation.replace('Main');
-              } catch (error) {
-                navigation.replace('Main');
-              }
-            }
-          },
-        ]
-      );
-    } else {
-      navigation.replace('Main');
+      // Offer biometric setup — handled silently, no blocking alert
+      biometricService.enableBiometricLogin(email.trim().toLowerCase(), password).catch(() => {});
     }
-    
-    // Reset state
+    navigation.replace('Main');
     setIsEmailLogin(false);
   };
 
   const handleBiometricLogin = async () => {
-    setBiometricLoading(true);
     try {
       const credentials = await biometricService.biometricLogin();
-      
-      const { user, token } = await authService.login({
-        email: credentials.email,
-        password: credentials.password,
-      });
+      const { user, token } = await authService.login({ email: credentials.email, password: credentials.password });
       await login(user, token);
-      
-      // Register device for push notifications
       const userId = user?.id || user?._id;
-      if (userId) {
-        NotificationService.registerDeviceAfterLogin(userId).catch(err => {
-          console.log('Device registration after login failed:', err.message);
-        });
-      }
-      
+      if (userId) NotificationService.registerDeviceAfterLogin(userId).catch(() => {});
       setLoggedInUser(user);
-      setBiometricLoading(false);
       setShowSuccessAnimation(true);
-    } catch (error) {
-      if (error.message !== 'Biometric authentication failed') {
-        Alert.alert('Login Failed', 'Unable to sign in with biometrics. Please use your password.');
-      }
-      setBiometricLoading(false);
+    } catch {
+      setErrorMsg('Biometric login failed. Please use your password.');
     }
   };
 
-  const handleGoogleSignIn = async () => {
-    setSocialLoading('google');
+  const handleSocial = async (provider) => {
+    setSocialLoading(provider);
+    clearError();
     try {
-      const { user, token } = await socialAuthService.signInWithGoogle();
+      const fn = provider === 'google' ? socialAuthService.signInWithGoogle
+               : provider === 'facebook' ? socialAuthService.signInWithFacebook
+               : socialAuthService.signInWithApple;
+      const { user, token } = await fn();
       await login(user, token);
-      
-      // Register device for push notifications
       const userId = user?.id || user?._id;
-      if (userId) {
-        NotificationService.registerDeviceAfterLogin(userId).catch(err => {
-          console.log('Device registration after login failed:', err.message);
-        });
-      }
-      
+      if (userId) NotificationService.registerDeviceAfterLogin(userId).catch(() => {});
       setLoggedInUser(user);
-      setSocialLoading(null);
       setShowSuccessAnimation(true);
     } catch (error) {
-      if (error.message !== 'Sign in cancelled') {
-        Alert.alert('Google Sign-In Failed', error.message || 'Unable to sign in with Google. Please try again.');
-      }
-      setSocialLoading(null);
-    }
-  };
-
-  const handleFacebookSignIn = async () => {
-    setSocialLoading('facebook');
-    try {
-      const { user, token } = await socialAuthService.signInWithFacebook();
-      await login(user, token);
-      
-      // Register device for push notifications
-      const userId = user?.id || user?._id;
-      if (userId) {
-        NotificationService.registerDeviceAfterLogin(userId).catch(err => {
-          console.log('Device registration after login failed:', err.message);
-        });
-      }
-      
-      setLoggedInUser(user);
-      setSocialLoading(null);
-      setShowSuccessAnimation(true);
-    } catch (error) {
-      if (error.message !== 'Sign in cancelled') {
-        Alert.alert('Facebook Sign-In Failed', error.message || 'Unable to sign in with Facebook. Please try again.');
-      }
-      setSocialLoading(null);
-    }
-  };
-
-  const handleAppleSignIn = async () => {
-    if (Platform.OS !== 'ios') {
-      Alert.alert('Not Available', 'Apple Sign-In is only available on iOS devices.');
-      return;
-    }
-    
-    setSocialLoading('apple');
-    try {
-      const { user, token } = await socialAuthService.signInWithApple();
-      await login(user, token);
-      
-      // Register device for push notifications
-      const userId = user?.id || user?._id;
-      if (userId) {
-        NotificationService.registerDeviceAfterLogin(userId).catch(err => {
-          console.log('Device registration after login failed:', err.message);
-        });
-      }
-      
-      setLoggedInUser(user);
-      setSocialLoading(null);
-      setShowSuccessAnimation(true);
-    } catch (error) {
-      if (error.message !== 'Sign in cancelled') {
-        Alert.alert('Apple Sign-In Failed', error.message || 'Unable to sign in with Apple. Please try again.');
-      }
+      if (error.message !== 'Sign in cancelled') setErrorMsg(error.message || `${provider} sign-in failed.`);
+    } finally {
       setSocialLoading(null);
     }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-      
-      {/* Login Success Animation */}
+    <View style={styles.container}>
+      <StatusBar barStyle="dark-content" backgroundColor="#F0FDF4" />
+
       <LoginSuccessAnimation
         visible={showSuccessAnimation}
         userName={loggedInUser?.name || 'User'}
         onAnimationComplete={handleAnimationComplete}
       />
-      
-      {/* Background gradient orbs */}
-      <View style={styles.orbContainer}>
-        <LinearGradient
-          colors={['rgba(0, 212, 170, 0.3)', 'transparent']}
-          style={[styles.orb, styles.orb1]}
-        />
-        <LinearGradient
-          colors={['rgba(108, 92, 231, 0.25)', 'transparent']}
-          style={[styles.orb, styles.orb2]}
-        />
-      </View>
 
-      <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
-      >
+      {/* Soft blobs */}
+      <View style={styles.blobTop} />
+      <View style={styles.blobBottom} />
+
+      <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView
-          contentContainerStyle={styles.scrollContent}
+          contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {/* Logo & Header */}
+          {/* Back */}
+          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+            <Text style={styles.backIcon}>←</Text>
+          </TouchableOpacity>
+
+          {/* Error toast */}
+          <ErrorToast message={errorMsg} />
+
+          {/* Header */}
           <View style={styles.header}>
-            <View style={styles.logoContainer}>
-              <LinearGradient
-                colors={colors.gradientPrimary}
-                style={styles.logoGradient}
-              >
-                <Text style={[styles.logoIcon, { color: colors.textInverse }]}>+</Text>
+            <LinearGradient colors={['#22C55E', '#16A34A']} style={styles.logoGradient}>
+              <Text style={styles.logoPlus}>+</Text>
+            </LinearGradient>
+            <Text style={styles.welcomeTitle}>Welcome back 👋</Text>
+            <Text style={styles.welcomeSub}>Sign in to your HealthSync account</Text>
+          </View>
+
+          {/* Form */}
+          <View style={styles.form}>
+            <Text style={styles.fieldLabel}>Email address</Text>
+            <FancyInput
+              icon="✉️"
+              placeholder="you@example.com"
+              value={email}
+              onChangeText={(t) => { setEmail(t); clearError(); }}
+              keyboardType="email-address"
+            />
+
+            <Text style={[styles.fieldLabel, { marginTop: spacing.lg }]}>Password</Text>
+            <FancyInput
+              icon="🔒"
+              placeholder="Enter your password"
+              value={password}
+              onChangeText={(t) => { setPassword(t); clearError(); }}
+              secureTextEntry={!showPass}
+              rightElement={
+                <TouchableOpacity onPress={() => setShowPass(p => !p)} style={styles.eyeBtn}>
+                  <Text style={styles.eyeIcon}>{showPass ? '🙈' : '👁️'}</Text>
+                </TouchableOpacity>
+              }
+            />
+
+            <TouchableOpacity style={styles.forgotRow} onPress={() => navigation.navigate('ForgotPassword')}>
+              <Text style={styles.forgotText}>Forgot password?</Text>
+            </TouchableOpacity>
+
+            {/* Sign In button */}
+            <TouchableOpacity
+              style={[styles.signInBtn, loading && styles.signInBtnDisabled]}
+              onPress={handleLogin}
+              disabled={loading}
+              activeOpacity={0.85}
+            >
+              <LinearGradient colors={loading ? ['#86EFAC', '#86EFAC'] : ['#22C55E', '#16A34A']} style={styles.signInGradient}>
+                {loading
+                  ? <ActivityIndicator color="#fff" />
+                  : <Text style={styles.signInText}>Sign In →</Text>
+                }
               </LinearGradient>
-            </View>
-            <Text style={[styles.appName, { color: colors.textPrimary }]}>HealthSync</Text>
-            <Text style={[styles.tagline, { color: colors.textSecondary }]}>Your health, simplified</Text>
-          </View>
+            </TouchableOpacity>
 
-          {/* Login Form */}
-          <View style={styles.formContainer}>
-            <Text style={[styles.welcomeText, { color: colors.textPrimary }]}>Welcome back</Text>
-            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>Sign in to continue</Text>
-
-            <View style={styles.form}>
-              <Input
-                label="Email"
-                placeholder="Enter your email"
-                value={email}
-                onChangeText={setEmail}
-                keyboardType="email-address"
-                autoCapitalize="none"
-              />
-
-              <Input
-                label="Password"
-                placeholder="Enter your password"
-                value={password}
-                onChangeText={setPassword}
-                secureTextEntry
-              />
-
-              <TouchableOpacity 
-                style={styles.forgotPassword}
-                onPress={() => navigation.navigate('ForgotPassword')}
-              >
-                <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot password?</Text>
+            {/* Biometric */}
+            {biometricAvailable && hasStoredCredentials ? (
+              <TouchableOpacity style={styles.biometricBtn} onPress={handleBiometricLogin}>
+                <Text style={styles.biometricIcon}>{biometricType === 'Face ID' ? '👤' : '👆'}</Text>
+                <Text style={styles.biometricText}>Sign in with {biometricType}</Text>
               </TouchableOpacity>
+            ) : null}
 
-              <Button
-                title="Sign In"
-                onPress={handleLogin}
-                loading={loading}
-                fullWidth
-                size="large"
-              />
+            {/* Divider */}
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>or continue with</Text>
+              <View style={styles.dividerLine} />
+            </View>
 
-              {/* Biometric Login Button */}
-              {biometricAvailable && hasStoredCredentials && (
+            {/* Social buttons */}
+            <View style={styles.socialRow}>
+              {[
+                { id: 'google',   label: 'G',  color: '#EA4335', bg: '#FEF2F2' },
+                { id: 'facebook', label: 'f',  color: '#1877F2', bg: '#EFF6FF' },
+                { id: 'apple',    label: '🍎', color: '#000',    bg: '#F9FAFB' },
+              ].map(s => (
                 <TouchableOpacity
-                  style={[styles.biometricButton, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
-                  onPress={handleBiometricLogin}
-                  disabled={biometricLoading}
-                >
-                  <View style={styles.biometricIconContainer}>
-                    <Text style={styles.biometricIcon}>
-                      {biometricType === 'Face ID' ? '👤' : '👆'}
-                    </Text>
-                  </View>
-                  <Text style={[styles.biometricText, { color: colors.textPrimary }]}>
-                    {biometricLoading ? 'Authenticating...' : `Sign in with ${biometricType}`}
-                  </Text>
-                </TouchableOpacity>
-              )}
-
-              {/* Divider */}
-              <View style={styles.divider}>
-                <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
-                <Text style={[styles.dividerText, { color: colors.textMuted }]}>or continue with</Text>
-                <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
-              </View>
-
-              {/* Social Login */}
-              <View style={styles.socialButtons}>
-                <TouchableOpacity 
-                  style={[styles.socialBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }, socialLoading === 'google' && styles.socialBtnLoading]}
-                  onPress={handleGoogleSignIn}
+                  key={s.id}
+                  style={[styles.socialBtn, { backgroundColor: s.bg }]}
+                  onPress={() => handleSocial(s.id)}
                   disabled={socialLoading !== null}
+                  activeOpacity={0.8}
                 >
-                  {socialLoading === 'google' ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
-                  ) : (
-                    <Text style={[styles.socialIcon, { color: colors.textPrimary }]}>G</Text>
-                  )}
+                  {socialLoading === s.id
+                    ? <ActivityIndicator size="small" color={s.color} />
+                    : <Text style={[styles.socialBtnText, { color: s.color }]}>{s.label}</Text>
+                  }
                 </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.socialBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }, socialLoading === 'facebook' && styles.socialBtnLoading]}
-                  onPress={handleFacebookSignIn}
-                  disabled={socialLoading !== null}
-                >
-                  {socialLoading === 'facebook' ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
-                  ) : (
-                    <Text style={[styles.socialIcon, { color: '#1877F2' }]}>f</Text>
-                  )}
-                </TouchableOpacity>
-                <TouchableOpacity 
-                  style={[styles.socialBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }, socialLoading === 'apple' && styles.socialBtnLoading]}
-                  onPress={handleAppleSignIn}
-                  disabled={socialLoading !== null}
-                >
-                  {socialLoading === 'apple' ? (
-                    <ActivityIndicator size="small" color={colors.primary} />
-                  ) : (
-                    <Text style={styles.socialIcon}>🍎</Text>
-                  )}
-                </TouchableOpacity>
-              </View>
+              ))}
             </View>
           </View>
 
-          {/* Sign Up Link */}
-          <View style={styles.footer}>
-            <Text style={[styles.footerText, { color: colors.textSecondary }]}>Don't have an account? </Text>
+          {/* Why HealthSync */}
+          <View style={styles.whyCard}>
+            <Text style={styles.whyTitle}>Why HealthSync?</Text>
+            <View style={styles.whyRow}>
+              {[
+                { icon: '📅', text: 'Book doctors instantly' },
+                { icon: '📁', text: 'Store health records' },
+                { icon: '🔔', text: 'Get reminders' },
+              ].map(w => (
+                <View key={w.text} style={styles.whyItem}>
+                  <Text style={styles.whyIcon}>{w.icon}</Text>
+                  <Text style={styles.whyText}>{w.text}</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+
+          {/* Sign up link */}
+          <View style={styles.signUpRow}>
+            <Text style={styles.signUpText}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={[styles.signUpLink, { color: colors.primary }]}>Sign Up</Text>
+              <Text style={styles.signUpLink}>Sign Up</Text>
             </TouchableOpacity>
           </View>
+
         </ScrollView>
       </KeyboardAvoidingView>
     </View>
@@ -408,150 +320,112 @@ const LoginScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
+  container: { flex: 1, backgroundColor: '#F0FDF4' },
+
+  blobTop: {
+    position: 'absolute', top: -60, right: -60,
+    width: 220, height: 220, borderRadius: 110,
+    backgroundColor: 'rgba(34,197,94,0.1)',
   },
-  orbContainer: {
-    ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
+  blobBottom: {
+    position: 'absolute', bottom: -40, left: -60,
+    width: 200, height: 200, borderRadius: 100,
+    backgroundColor: 'rgba(22,163,74,0.07)',
   },
-  orb: {
-    position: 'absolute',
-    borderRadius: 999,
+
+  scroll: { paddingHorizontal: spacing.xxl, paddingBottom: 40, paddingTop: spacing.xl },
+
+  backBtn: {
+    width: 40, height: 40, borderRadius: 20,
+    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
+    marginBottom: spacing.md,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 6, elevation: 2,
   },
-  orb1: {
-    width: 300,
-    height: 300,
-    top: -100,
-    right: -100,
+  backIcon: { fontSize: 20, color: '#374151' },
+
+  errorToast: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#FEF2F2', borderRadius: borderRadius.lg,
+    borderWidth: 1, borderColor: '#FECACA',
+    paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
+    marginBottom: spacing.md,
   },
-  orb2: {
-    width: 250,
-    height: 250,
-    bottom: 100,
-    left: -80,
-  },
-  keyboardView: {
-    flex: 1,
-  },
-  scrollContent: {
-    flexGrow: 1,
-    paddingHorizontal: spacing.xxl,
-    paddingTop: spacing.huge + spacing.xxl,
-    paddingBottom: spacing.xxl,
-  },
-  header: {
-    alignItems: 'center',
-    marginBottom: spacing.huge,
-  },
-  logoContainer: {
-    marginBottom: spacing.lg,
-  },
+  errorToastIcon: { fontSize: 16, marginRight: spacing.sm },
+  errorToastText: { flex: 1, fontSize: 14, color: '#DC2626', fontWeight: '500' },
+
+  header: { alignItems: 'center', marginBottom: spacing.xxl },
   logoGradient: {
-    width: 72,
-    height: 72,
-    borderRadius: borderRadius.xl,
-    alignItems: 'center',
-    justifyContent: 'center',
-    ...shadows.glow,
+    width: 64, height: 64, borderRadius: 20,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: spacing.lg,
+    shadowColor: '#16A34A', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8,
   },
-  logoIcon: {
-    fontSize: 36,
-    fontWeight: 'bold',
+  logoPlus: { fontSize: 36, fontWeight: '700', color: '#fff' },
+  welcomeTitle: { fontSize: 26, fontWeight: '800', color: '#14532D', marginBottom: 6 },
+  welcomeSub: { fontSize: 15, color: '#6B7280' },
+
+  form: { marginBottom: spacing.xl },
+  fieldLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: spacing.sm },
+
+  inputWrap: {
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#fff', borderRadius: borderRadius.lg,
+    borderWidth: 1.5, paddingHorizontal: spacing.md,
+    height: 52,
   },
-  appName: {
-    ...typography.displayMedium,
-    marginBottom: spacing.xs,
+  inputIcon: { fontSize: 18, marginRight: spacing.sm },
+  inputField: { flex: 1, fontSize: 15, color: '#111827', height: '100%' },
+  eyeBtn: { padding: spacing.xs },
+  eyeIcon: { fontSize: 18 },
+
+  forgotRow: { alignSelf: 'flex-end', marginTop: spacing.sm, marginBottom: spacing.xl },
+  forgotText: { fontSize: 13, color: '#22C55E', fontWeight: '600' },
+
+  signInBtn: {
+    borderRadius: borderRadius.lg, overflow: 'hidden',
+    shadowColor: '#16A34A', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6,
   },
-  tagline: {
-    ...typography.bodyLarge,
+  signInBtnDisabled: { shadowOpacity: 0 },
+  signInGradient: { paddingVertical: 16, alignItems: 'center' },
+  signInText: { fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.3 },
+
+  biometricBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    marginTop: spacing.md, paddingVertical: spacing.md,
+    borderRadius: borderRadius.lg, borderWidth: 1.5, borderColor: '#D1FAE5',
+    backgroundColor: '#F0FDF4',
   },
-  formContainer: {
-    flex: 1,
-  },
-  welcomeText: {
-    ...typography.headlineLarge,
-    marginBottom: spacing.xs,
-  },
-  subtitle: {
-    ...typography.bodyLarge,
-    marginBottom: spacing.xxl,
-  },
-  form: {
-    gap: spacing.xs,
-  },
-  forgotPassword: {
-    alignSelf: 'flex-end',
-    marginBottom: spacing.xl,
-    marginTop: -spacing.sm,
-  },
-  forgotText: {
-    ...typography.labelMedium,
-  },
-  biometricButton: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'center',
-    paddingVertical: spacing.md,
-    marginTop: spacing.md,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-  },
-  biometricIconContainer: {
-    marginRight: spacing.sm,
-  },
-  biometricIcon: {
-    fontSize: 20,
-  },
-  biometricText: {
-    ...typography.bodyMedium,
-    fontWeight: '500',
-  },
-  divider: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: spacing.xxl,
-  },
-  dividerLine: {
-    flex: 1,
-    height: 1,
-  },
-  dividerText: {
-    ...typography.labelMedium,
-    marginHorizontal: spacing.lg,
-  },
-  socialButtons: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    gap: spacing.lg,
-  },
+  biometricIcon: { fontSize: 20, marginRight: spacing.sm },
+  biometricText: { fontSize: 15, color: '#16A34A', fontWeight: '500' },
+
+  divider: { flexDirection: 'row', alignItems: 'center', marginVertical: spacing.xl },
+  dividerLine: { flex: 1, height: 1, backgroundColor: '#E5E7EB' },
+  dividerText: { fontSize: 13, color: '#9CA3AF', marginHorizontal: spacing.md },
+
+  socialRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.lg },
   socialBtn: {
-    width: 56,
-    height: 56,
-    borderRadius: borderRadius.lg,
-    borderWidth: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
+    width: 56, height: 56, borderRadius: borderRadius.lg,
+    alignItems: 'center', justifyContent: 'center',
+    borderWidth: 1, borderColor: '#E5E7EB',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
-  socialBtnLoading: {
-    opacity: 0.7,
+  socialBtnText: { fontSize: 20, fontWeight: '700' },
+
+  whyCard: {
+    backgroundColor: '#fff', borderRadius: borderRadius.xl,
+    padding: spacing.lg, marginBottom: spacing.xl,
+    borderWidth: 1, borderColor: '#D1FAE5',
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
-  socialIcon: {
-    fontSize: 20,
-    fontWeight: '600',
-  },
-  footer: {
-    flexDirection: 'row',
-    justifyContent: 'center',
-    marginTop: spacing.xxl,
-  },
-  footerText: {
-    ...typography.bodyMedium,
-  },
-  signUpLink: {
-    ...typography.bodyMedium,
-    fontWeight: '600',
-  },
+  whyTitle: { fontSize: 14, fontWeight: '700', color: '#14532D', marginBottom: spacing.md },
+  whyRow: { flexDirection: 'row', justifyContent: 'space-between' },
+  whyItem: { flex: 1, alignItems: 'center' },
+  whyIcon: { fontSize: 22, marginBottom: 4 },
+  whyText: { fontSize: 11, color: '#6B7280', textAlign: 'center', fontWeight: '500' },
+
+  signUpRow: { flexDirection: 'row', justifyContent: 'center' },
+  signUpText: { fontSize: 14, color: '#6B7280' },
+  signUpLink: { fontSize: 14, color: '#22C55E', fontWeight: '700' },
 });
 
 export default LoginScreen;

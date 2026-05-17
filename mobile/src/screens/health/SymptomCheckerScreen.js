@@ -246,7 +246,7 @@ const SymptomCheckerScreen = ({ navigation }) => {
       </Card>
 
       <View style={styles.resultActions}>
-        <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('DoctorSearch')}>
+        <TouchableOpacity style={styles.actionBtn} onPress={() => navigation.navigate('Booking')}>
           <LinearGradient colors={colors.gradientPrimary} style={styles.actionBtnGradient}>
             <Text style={styles.actionBtnIcon}>👨‍⚕️</Text>
             <Text style={styles.actionBtnText}>Find a Doctor</Text>

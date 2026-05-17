@@ -24,7 +24,7 @@ const verifyToken = async (req, res, next) => {
     // Verify token
     const decoded = jwt.verify(
       token,
-      process.env.JWT_SECRET || 'fallback_secret'
+      process.env.JWT_SECRET
     );
 
     // Attach user info to request
@@ -36,33 +36,8 @@ const verifyToken = async (req, res, next) => {
       clinicId: decoded.clinicId
     };
 
-    // Check if user is suspended (for critical operations)
-    // This runs asynchronously to check current user status
-    try {
-      const User = require('../models/User');
-      const Doctor = require('../models/Doctor');
-      
-      let userRecord = null;
-      
-      if (decoded.doctorId) {
-        userRecord = await Doctor.findById(decoded.doctorId).select('isActive suspendReason');
-      } else if (decoded.userId) {
-        userRecord = await User.findById(decoded.userId).select('isActive suspendReason');
-      }
-      
-      if (userRecord && userRecord.isActive === false) {
-        return res.status(403).json({
-          success: false,
-          message: 'Your account has been suspended',
-          reason: userRecord.suspendReason || 'Contact admin for more information',
-          suspended: true
-        });
-      }
-    } catch (dbError) {
-      // If DB check fails, continue with request (don't block on DB errors)
-      console.error('Suspension check error:', dbError.message);
-    }
-
+    // Suspension check is handled globally in server.js for all /api routes.
+    // Doing it again here would double the DB queries on every authenticated request.
     next();
   } catch (error) {
     console.error('Token verification error:', error.message);
@@ -90,8 +65,8 @@ const verifyToken = async (req, res, next) => {
 
 /**
  * Verify token with role check
- * Ensures user has required role
- * Also checks if user account is suspended
+ * Ensures user has required role.
+ * Suspension is handled globally in server.js — no duplicate DB check here.
  */
 const verifyTokenWithRole = (requiredRoles = []) => {
   return async (req, res, next) => {
@@ -109,7 +84,7 @@ const verifyTokenWithRole = (requiredRoles = []) => {
 
       const decoded = jwt.verify(
         token,
-        process.env.JWT_SECRET || 'fallback_secret'
+        process.env.JWT_SECRET
       );
 
       req.user = {
@@ -126,31 +101,6 @@ const verifyTokenWithRole = (requiredRoles = []) => {
           success: false,
           message: 'Insufficient permissions'
         });
-      }
-
-      // Check if user is suspended
-      try {
-        const User = require('../models/User');
-        const Doctor = require('../models/Doctor');
-        
-        let userRecord = null;
-        
-        if (decoded.doctorId) {
-          userRecord = await Doctor.findById(decoded.doctorId).select('isActive suspendReason');
-        } else if (decoded.userId) {
-          userRecord = await User.findById(decoded.userId).select('isActive suspendReason');
-        }
-        
-        if (userRecord && userRecord.isActive === false) {
-          return res.status(403).json({
-            success: false,
-            message: 'Your account has been suspended',
-            reason: userRecord.suspendReason || 'Contact admin for more information',
-            suspended: true
-          });
-        }
-      } catch (dbError) {
-        console.error('Suspension check error:', dbError.message);
       }
 
       next();

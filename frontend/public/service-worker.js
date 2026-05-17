@@ -1,8 +1,8 @@
 // HealthSync PWA Service Worker
-const CACHE_NAME = 'healthsync-v3';
-const STATIC_CACHE = 'healthsync-static-v3';
-const DYNAMIC_CACHE = 'healthsync-dynamic-v3';
-const API_CACHE = 'healthsync-api-v3';
+const CACHE_NAME = 'healthsync-v4';
+const STATIC_CACHE = 'healthsync-static-v4';
+const DYNAMIC_CACHE = 'healthsync-dynamic-v4';
+const API_CACHE = 'healthsync-api-v4';
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
@@ -122,9 +122,26 @@ async function handleApiRequest(request) {
   }
 }
 
-// Handle static requests - cache first, network fallback
+// Handle static requests - network first for navigation, cache first for assets
 async function handleStaticRequest(request) {
-  // Try cache first
+  // For navigation requests (page loads), always go network first
+  // This ensures users always get the latest HTML/JS with scroll fixes
+  if (request.mode === 'navigate') {
+    try {
+      const response = await fetch(request);
+      if (response.ok) {
+        const cache = await caches.open(DYNAMIC_CACHE);
+        cache.put(request, response.clone());
+      }
+      return response;
+    } catch (error) {
+      // Offline fallback: serve cached index.html
+      const cachedIndex = await caches.match('/index.html');
+      if (cachedIndex) return cachedIndex;
+    }
+  }
+
+  // For non-navigation (JS, CSS, images) - cache first
   const cachedResponse = await caches.match(request);
   if (cachedResponse) {
     return cachedResponse;

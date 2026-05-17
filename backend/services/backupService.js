@@ -62,22 +62,27 @@ class BackupService {
   }
 
   /**
-   * Run MongoDB backup using mongodump
+   * Run MongoDB backup using mongodump, with mongoose fallback
    */
   async createBackup() {
+    // Try mongoose-based backup first (no mongodump binary needed)
+    try {
+      return await this.createBackupWithMongoose();
+    } catch (mongooseError) {
+      console.warn('⚠️ Mongoose backup failed, trying mongodump:', mongooseError.message);
+    }
+
     const backupName = this.generateBackupName();
     const backupPath = path.join(this.backupDir, backupName);
-    const dbName = this.getDatabaseName();
 
-    console.log(`🔄 Starting database backup: ${backupName}`);
+    console.log(`🔄 Starting mongodump backup: ${backupName}`);
 
     return new Promise((resolve, reject) => {
-      // Build mongodump command
-      let command = `mongodump --uri="${CONFIG.MONGODB_URI}" --out="${backupPath}"`;
-      
-      // Add gzip compression if enabled
+      let command;
       if (CONFIG.COMPRESS) {
         command = `mongodump --uri="${CONFIG.MONGODB_URI}" --archive="${backupPath}.gz" --gzip`;
+      } else {
+        command = `mongodump --uri="${CONFIG.MONGODB_URI}" --out="${backupPath}"`;
       }
 
       exec(command, { maxBuffer: 1024 * 1024 * 100 }, async (error, stdout, stderr) => {
@@ -93,23 +98,14 @@ class BackupService {
         const sizeInMB = stats ? (stats.size / (1024 * 1024)).toFixed(2) : 'unknown';
 
         console.log(`✅ Backup completed: ${backupFile} (${sizeInMB} MB)`);
-
-        // Clean old backups
         await this.cleanOldBackups();
-
-        // Notify success
         await this.notifyBackupStatus(true, null, {
           filename: backupFile,
           size: `${sizeInMB} MB`,
           timestamp: new Date()
         });
 
-        resolve({
-          success: true,
-          filename: backupFile,
-          size: `${sizeInMB} MB`,
-          timestamp: new Date()
-        });
+        resolve({ success: true, filename: backupFile, size: `${sizeInMB} MB`, timestamp: new Date() });
       });
     });
   }

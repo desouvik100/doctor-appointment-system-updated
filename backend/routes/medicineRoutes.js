@@ -1,11 +1,79 @@
 const express = require('express');
 const MedicineReminder = require('../models/MedicineReminder');
 const router = express.Router();
+const path = require('path');
 
 // ============================================
 // MEDICINE REMINDER ROUTES ONLY
 // Note: Medicine selling/delivery removed for PayU compliance
 // ============================================
+
+// Common medicine names for prescription search autocomplete
+const COMMON_MEDICINES = [
+  // Antibiotics
+  'Amoxicillin', 'Azithromycin', 'Ciprofloxacin', 'Doxycycline', 'Metronidazole',
+  'Cephalexin', 'Clindamycin', 'Trimethoprim', 'Levofloxacin', 'Clarithromycin',
+  // Pain / Anti-inflammatory
+  'Paracetamol', 'Ibuprofen', 'Diclofenac', 'Naproxen', 'Aspirin',
+  'Ketorolac', 'Meloxicam', 'Celecoxib', 'Tramadol', 'Aceclofenac',
+  // Antacids / GI
+  'Omeprazole', 'Pantoprazole', 'Ranitidine', 'Domperidone', 'Ondansetron',
+  'Metoclopramide', 'Esomeprazole', 'Rabeprazole', 'Sucralfate', 'Lactulose',
+  // Cardiovascular
+  'Amlodipine', 'Atenolol', 'Metoprolol', 'Lisinopril', 'Enalapril',
+  'Losartan', 'Telmisartan', 'Ramipril', 'Atorvastatin', 'Rosuvastatin',
+  // Diabetes
+  'Metformin', 'Glibenclamide', 'Glimepiride', 'Sitagliptin', 'Insulin',
+  'Vildagliptin', 'Dapagliflozin', 'Empagliflozin', 'Pioglitazone',
+  // Respiratory
+  'Salbutamol', 'Montelukast', 'Cetirizine', 'Loratadine', 'Fexofenadine',
+  'Budesonide', 'Fluticasone', 'Tiotropium', 'Ipratropium', 'Theophylline',
+  // Vitamins / Supplements
+  'Vitamin D3', 'Vitamin B12', 'Folic Acid', 'Iron Sulfate', 'Calcium Carbonate',
+  'Zinc Sulfate', 'Vitamin C', 'Multivitamin', 'Omega-3', 'Magnesium',
+  // Neurological / Psychiatric
+  'Alprazolam', 'Clonazepam', 'Diazepam', 'Sertraline', 'Escitalopram',
+  'Amitriptyline', 'Gabapentin', 'Pregabalin', 'Levodopa', 'Phenytoin',
+  // Thyroid
+  'Levothyroxine', 'Carbimazole', 'Propylthiouracil',
+  // Steroids
+  'Prednisolone', 'Dexamethasone', 'Hydrocortisone', 'Betamethasone', 'Methylprednisolone',
+  // Antihistamines / Allergy
+  'Chlorpheniramine', 'Hydroxyzine', 'Promethazine', 'Diphenhydramine',
+  // Antifungals
+  'Fluconazole', 'Itraconazole', 'Clotrimazole', 'Terbinafine',
+  // Antivirals
+  'Acyclovir', 'Oseltamivir', 'Valacyclovir',
+  // Eye / Ear drops
+  'Ciprofloxacin Eye Drops', 'Tobramycin Eye Drops', 'Timolol Eye Drops',
+  // Topical
+  'Mupirocin', 'Fusidic Acid', 'Betamethasone Cream', 'Clotrimazole Cream'
+];
+
+// Search medicines for prescription autocomplete
+router.get('/search', async (req, res) => {
+  try {
+    const { q, limit = 10 } = req.query;
+
+    if (!q || q.trim().length < 2) {
+      return res.json({ success: true, medicines: [] });
+    }
+
+    const query = q.trim().toLowerCase();
+    const limitNum = Math.min(parseInt(limit) || 10, 20);
+
+    // Filter from common medicines list
+    const results = COMMON_MEDICINES
+      .filter(name => name.toLowerCase().includes(query))
+      .slice(0, limitNum)
+      .map(name => ({ name, type: 'medicine' }));
+
+    res.json({ success: true, medicines: results });
+  } catch (error) {
+    console.error('Error searching medicines:', error);
+    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+  }
+});
 
 // Get all medicines for a user
 router.get('/user/:userId', async (req, res) => {

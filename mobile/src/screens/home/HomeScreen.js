@@ -1,47 +1,37 @@
 /**
- * Home Screen - Modern Dashboard with Pull-to-Refresh
+ * Home Screen - Premium Patient Dashboard
  */
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-  RefreshControl,
-  Dimensions,
-  Platform,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  StatusBar, RefreshControl,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useFocusEffect } from '@react-navigation/native';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
-import { 
-  QuickActions, 
-  UpcomingAppointments, 
-  WalletSummary, 
+import {
+  QuickActions,
+  UpcomingAppointments,
+  WalletSummary,
   HealthTips,
   LocationDisplay,
 } from './components';
 import { getUpcomingAppointments } from '../../services/api/appointmentService';
 import { getBalance, getLoyaltyPoints } from '../../services/api/walletService';
-import { getVitalsHistory, getTimeline } from '../../services/api/healthRecordService';
 import { useSocket, SOCKET_EVENTS } from '../../context/SocketContext';
-import { devLog, devError, isValid } from '../../utils/errorHandler';
-
-const { width } = Dimensions.get('window');
+import { devError, isValid } from '../../utils/errorHandler';
 
 const HomeScreen = ({ navigation }) => {
   const { user } = useUser();
-  const { colors, isDarkMode } = useTheme();
+  const { colors } = useTheme();
   const { subscribe, isConnected } = useSocket();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
-  const [loading, setLoading] = useState(true);
   const [dashboardData, setDashboardData] = useState({
     appointments: [],
     walletBalance: 0,
@@ -52,337 +42,176 @@ const HomeScreen = ({ navigation }) => {
       { label: 'Sleep', value: '--', unit: 'hrs', icon: '😴', trend: 'up' },
       { label: 'Steps', value: '--', unit: 'steps', icon: '👟', trend: 'up' },
     ],
-    recentActivity: []
+    recentActivity: [],
   });
 
   const getGreeting = () => {
-    const hour = new Date().getHours();
-    if (hour < 12) return 'Good morning';
-    if (hour < 17) return 'Good afternoon';
-    return 'Good evening';
+    const h = new Date().getHours();
+    if (h < 5)  return 'Good night';
+    if (h < 12) return 'Good morning';
+    if (h < 17) return 'Good afternoon';
+    if (h < 21) return 'Good evening';
+    return 'Good night';
   };
 
   const fetchDashboardData = useCallback(async () => {
-    // GUARD: Don't fetch if user is not ready
-    if (!isValid(user?.id)) {
-      devLog('🏠 [HomeScreen] No user.id - skipping fetch');
-      setLoading(false);
-      setRefreshing(false);
-      return;
-    }
-
-    devLog('🏠 [HomeScreen] Starting API calls for user:', user.id);
-
+    if (!isValid(user?.id)) { setLoading(false); setRefreshing(false); return; }
     try {
-      const [appointmentsData, balanceData, loyaltyData, vitalsData, timelineData] = await Promise.all([
-        getUpcomingAppointments().catch(err => {
-          devError('Appointments API failed:', err?.message);
-          return [];
-        }),
-        getBalance().catch(err => {
-          devError('Balance API failed:', err?.message);
-          return { balance: 0 };
-        }),
-        getLoyaltyPoints().catch(err => {
-          devError('Loyalty API failed:', err?.message);
-          return { points: 0 };
-        }),
-        getVitalsHistory(user.id).catch(err => {
-          devError('Vitals API failed:', err?.message);
-          return { data: [] };
-        }),
-        getTimeline(user.id).catch(err => {
-          devError('Timeline API failed:', err?.message);
-          return { timeline: [] };
-        })
+      const [appointmentsData, balanceData, loyaltyData] = await Promise.all([
+        getUpcomingAppointments().catch(() => []),
+        getBalance().catch(() => ({ balance: 0 })),
+        getLoyaltyPoints().catch(() => ({ points: 0 })),
       ]);
-      
-      devLog('✅ [HomeScreen] API responses received');
-
-      const rawAppointments = Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData.data || []);
-      
-      const formattedAppointments = rawAppointments.map(app => ({
-        id: app._id || app.id,
-        doctorName: app.doctor?.name || 'Unknown Doctor',
-        doctorPhoto: app.doctor?.photo || app.doctor?.profilePhoto || null,
-        specialty: app.doctor?.specialization || 'General',
-        dateTime: app.date || app.appointmentDate,
-        type: app.type || 'video',
-      }));
-
-      // Process Vitals
-      // Note: This logic depends on the actual structure of vitalsData from backend
-      // Assuming vitalsData.data is an array of vital records
-      const rawVitals = vitalsData?.data || []; 
-      
-      // Default metrics
-      let metrics = [
-        { label: 'Heart Rate', value: '--', unit: 'bpm', icon: '❤️', trend: 'stable' },
-        { label: 'Blood Pressure', value: '--/--', unit: 'mmHg', icon: '🩺', trend: 'good' },
-        { label: 'Weight', value: '--', unit: 'kg', icon: '⚖️', trend: 'stable' },
-        { label: 'Temperature', value: '--', unit: '°C', icon: '🌡️', trend: 'stable' },
-      ];
-
-      // If we have data, try to extract latest values
-      // This is a simplified extraction
-      if (rawVitals.length > 0) {
-        // Example: logic to parse vitals would go here
-      }
-
-      // Process Timeline
-      const rawTimeline = timelineData?.timeline || [];
-      const activities = rawTimeline.slice(0, 5).map(item => ({
-        icon: item.icon || '📌',
-        title: item.title || 'Activity',
-        desc: item.description || item.subtitle || '',
-        time: item.date ? new Date(item.date).toLocaleDateString() : 'Recent'
-      }));
-
+      const raw = Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData.data || []);
       setDashboardData(prev => ({
         ...prev,
-        appointments: formattedAppointments,
+        appointments: raw.map(app => ({
+          id: app._id || app.id,
+          doctorName: app.doctor?.name || 'Unknown Doctor',
+          doctorPhoto: app.doctor?.photo || app.doctor?.profilePhoto || null,
+          specialty: app.doctor?.specialization || 'General',
+          dateTime: app.date || app.appointmentDate,
+          type: app.type || 'video',
+        })),
         walletBalance: balanceData.balance || 0,
         loyaltyPoints: loyaltyData.points || 0,
-        healthMetrics: metrics,
-        recentActivity: activities
       }));
-
-    } catch (error) {
-      devError('Error fetching dashboard data:', error?.message);
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { devError('Dashboard fetch error:', e?.message); }
+    finally { setRefreshing(false); }
   }, [user?.id]);
 
-  useEffect(() => {
-    fetchDashboardData();
-  }, [fetchDashboardData]);
+  useEffect(() => { fetchDashboardData(); }, [fetchDashboardData]);
 
-  // Socket event listeners for real-time updates
+  // Re-fetch wallet balance whenever the home screen comes into focus
+  // (e.g. user adds money in WalletScreen and navigates back)
+  useFocusEffect(
+    useCallback(() => {
+      if (!isValid(user?.id)) return;
+      getBalance()
+        .then(res => {
+          setDashboardData(prev => ({ ...prev, walletBalance: res?.balance || 0 }));
+        })
+        .catch(() => {});
+    }, [user?.id])
+  );
+
   useEffect(() => {
     if (!isConnected) return;
-
-    // Listen for appointment events
-    const unsubAppointmentCreated = subscribe(SOCKET_EVENTS.APPOINTMENT_CREATED, (data) => {
-      devLog('🔔 [HomeScreen] New appointment created:', data);
-      // Add new appointment to the list
+    const u1 = subscribe(SOCKET_EVENTS.APPOINTMENT_CREATED, (data) => {
       if (data.appointment) {
         setDashboardData(prev => ({
           ...prev,
-          appointments: [
-            {
-              id: data.appointment._id || data.appointment.id,
-              doctorName: data.appointment.doctor?.name || 'Unknown Doctor',
-              specialty: data.appointment.doctor?.specialization || 'General',
-              dateTime: data.appointment.date || data.appointment.appointmentDate,
-              type: data.appointment.type || 'video',
-            },
-            ...prev.appointments,
-          ],
+          appointments: [{ id: data.appointment._id, doctorName: data.appointment.doctor?.name || 'Unknown', specialty: data.appointment.doctor?.specialization || 'General', dateTime: data.appointment.date, type: data.appointment.type || 'video' }, ...prev.appointments],
         }));
       }
     });
-
-    const unsubAppointmentUpdated = subscribe(SOCKET_EVENTS.APPOINTMENT_UPDATED, (data) => {
-      devLog('🔔 [HomeScreen] Appointment updated:', data);
-      // Update existing appointment
-      if (data.appointment) {
-        setDashboardData(prev => ({
-          ...prev,
-          appointments: prev.appointments.map(apt => 
-            apt.id === (data.appointment._id || data.appointment.id)
-              ? {
-                  ...apt,
-                  doctorName: data.appointment.doctor?.name || apt.doctorName,
-                  specialty: data.appointment.doctor?.specialization || apt.specialty,
-                  dateTime: data.appointment.date || data.appointment.appointmentDate || apt.dateTime,
-                  type: data.appointment.type || apt.type,
-                }
-              : apt
-          ),
-        }));
-      }
+    const u2 = subscribe(SOCKET_EVENTS.APPOINTMENT_CANCELLED, (data) => {
+      const id = data.appointmentId || data.appointment?._id;
+      if (id) setDashboardData(prev => ({ ...prev, appointments: prev.appointments.filter(a => a.id !== id) }));
     });
-
-    const unsubAppointmentCancelled = subscribe(SOCKET_EVENTS.APPOINTMENT_CANCELLED, (data) => {
-      devLog('🔔 [HomeScreen] Appointment cancelled:', data);
-      // Remove cancelled appointment
-      const cancelledId = data.appointmentId || data.appointment?._id || data.appointment?.id;
-      if (cancelledId) {
-        setDashboardData(prev => ({
-          ...prev,
-          appointments: prev.appointments.filter(apt => apt.id !== cancelledId),
-        }));
-      }
+    const u3 = subscribe(SOCKET_EVENTS.WALLET_TRANSACTION, (data) => {
+      if (data.balance !== undefined) setDashboardData(prev => ({ ...prev, walletBalance: data.balance }));
     });
-
-    // Listen for wallet events
-    const unsubWalletTransaction = subscribe(SOCKET_EVENTS.WALLET_TRANSACTION, (data) => {
-      devLog('🔔 [HomeScreen] Wallet transaction:', data);
-      // Update wallet balance
-      if (data.balance !== undefined) {
-        setDashboardData(prev => ({
-          ...prev,
-          walletBalance: data.balance,
-        }));
-      }
-    });
-
-    // Cleanup subscriptions
-    return () => {
-      unsubAppointmentCreated();
-      unsubAppointmentUpdated();
-      unsubAppointmentCancelled();
-      unsubWalletTransaction();
-    };
+    return () => { u1(); u2(); u3(); };
   }, [isConnected, subscribe]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchDashboardData();
-    setRefreshing(false);
   }, [fetchDashboardData]);
 
-  const handleJoinCall = (appointment) => {
-    navigation.navigate('VideoConsult', { appointmentId: appointment.id });
-  };
-
-  const handleReschedule = (appointment) => {
-    navigation.navigate('Reschedule', { appointment });
-  };
-
-  const handleAddMoney = () => {
-    navigation.navigate('Wallet', { action: 'addMoney' });
-  };
+  const firstName = user?.name?.split(' ')[0] || 'there';
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
-      
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing.lg }]}
+        contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl
-            refreshing={refreshing}
-            onRefresh={onRefresh}
-            tintColor={colors.primary}
-            colors={[colors.primary]}
-            progressBackgroundColor={colors.surface}
-          />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh}
+            tintColor="#fff" colors={[colors.primary]} progressBackgroundColor={colors.surface} />
         }
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()} 👋</Text>
-            <Text style={[styles.userName, { color: colors.textPrimary }]}>{user?.name || 'User'}</Text>
-          </View>
-          <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
-            <Avatar 
-              name={user?.name || 'User'} 
-              size="large" 
-              showBorder 
-              source={user?.profilePhoto ? { uri: user.profilePhoto } : null}
-            />
-          </TouchableOpacity>
-        </View>
-
-        {/* Search Bar */}
-        <TouchableOpacity 
-          style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
-          onPress={() => navigation.navigate('DoctorSearch')}
+        {/* ── Hero Header ── */}
+        <LinearGradient
+          colors={['#00897B', '#26A69A', '#80CBC4']}
+          start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
+          style={[styles.heroGradient, { paddingTop: insets.top + spacing.lg }]}
         >
-          <Text style={styles.searchIcon}>🔍</Text>
-          <Text style={[styles.searchPlaceholder, { color: colors.textMuted }]}>Search doctors, symptoms...</Text>
-        </TouchableOpacity>
-
-        {/* Location Display */}
-        <LocationDisplay />
-
-        {/* Upcoming Appointments */}
-        <UpcomingAppointments
-          appointments={dashboardData.appointments}
-          navigation={navigation}
-          onJoinCall={handleJoinCall}
-          onReschedule={handleReschedule}
-        />
-
-        {/* Quick Actions */}
-        <QuickActions navigation={navigation} />
-
-        {/* Wallet Summary */}
-        <WalletSummary
-          balance={dashboardData.walletBalance}
-          loyaltyPoints={dashboardData.loyaltyPoints}
-          navigation={navigation}
-          onAddMoney={handleAddMoney}
-        />
-
-        {/* Health Tips - Full width, no padding */}
-        <View style={styles.healthTipsWrapper}>
-          <HealthTips />
-        </View>
-
-        {/* Health Metrics */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Health Overview</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Records')}>
-              <Text style={[styles.seeAll, { color: colors.primary }]}>Details</Text>
+          <View style={styles.heroRow}>
+            <View style={styles.heroLeft}>
+              <Text style={styles.heroGreeting}>{getGreeting()} 👋</Text>
+              <Text style={styles.heroName}>{firstName}</Text>
+              <Text style={styles.heroSubtitle}>Stay healthy, {firstName} 💙</Text>
+            </View>
+            <TouchableOpacity onPress={() => navigation.navigate('Profile')} activeOpacity={0.85}>
+              <View style={styles.avatarRing}>
+                <Avatar
+                  name={user?.name || 'User'}
+                  size="large"
+                  showBorder
+                  source={user?.profilePhoto ? { uri: user.profilePhoto } : null}
+                />
+              </View>
             </TouchableOpacity>
           </View>
 
-          <View style={styles.metricsGrid}>
-            {dashboardData.healthMetrics.map((metric, index) => (
-              <Card key={index} variant="gradient" style={[styles.metricCard, { backgroundColor: colors.surface }]}>
-                <View style={styles.metricHeader}>
-                  <Text style={styles.metricIcon}>{metric.icon}</Text>
-                  <View style={[
-                    styles.trendBadge,
-                    { backgroundColor: colors.surfaceLight },
-                    metric.trend === 'up' && styles.trendUp,
-                    metric.trend === 'down' && styles.trendDown,
-                  ]}>
-                    <Text style={[styles.trendText, { color: colors.textSecondary }]}>
-                      {metric.trend === 'up' ? '↑' : metric.trend === 'down' ? '↓' : '→'}
-                    </Text>
-                  </View>
-                </View>
-                <Text style={[styles.metricValue, { color: colors.textPrimary }]}>{metric.value}</Text>
-                <Text style={[styles.metricUnit, { color: colors.textMuted }]}>{metric.unit}</Text>
-                <Text style={[styles.metricLabel, { color: colors.textSecondary }]}>{metric.label}</Text>
-              </Card>
-            ))}
-          </View>
-        </View>
+          {/* Search Bar — inside hero */}
+          <TouchableOpacity
+            style={styles.searchBar}
+            onPress={() => navigation.navigate('Booking')}
+            activeOpacity={0.9}
+          >
+            <Text style={styles.searchIcon}>🔍</Text>
+            <Text style={styles.searchPlaceholder}>Search doctors, symptoms...</Text>
+            <View style={styles.filterBtn}>
+              <Text style={styles.filterIcon}>⚙️</Text>
+            </View>
+          </TouchableOpacity>
 
-        {/* Recent Activity */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Activity</Text>
-            <TouchableOpacity>
-              <Text style={[styles.seeAll, { color: colors.primary }]}>View all</Text>
-            </TouchableOpacity>
-          </View>
+          {/* Location — compact inline */}
+          <LocationDisplay compact />
+        </LinearGradient>
 
-          <Card variant="default" style={{ backgroundColor: colors.surface }}>
-            {dashboardData.recentActivity?.map((item, index) => (
-              <TouchableOpacity key={index} style={[
-                styles.activityItem,
-                index < (dashboardData.recentActivity?.length || 0) - 1 && [styles.activityItemBorder, { borderBottomColor: colors.divider }],
-              ]}>
-                <View style={[styles.activityIcon, { backgroundColor: colors.surfaceLight }]}>
-                  <Text style={styles.activityEmoji}>{item.icon}</Text>
-                </View>
-                <View style={styles.activityContent}>
-                  <Text style={[styles.activityTitle, { color: colors.textPrimary }]}>{item.title}</Text>
-                  <Text style={[styles.activityDesc, { color: colors.textSecondary }]}>{item.desc}</Text>
-                </View>
-                <Text style={[styles.activityTime, { color: colors.textMuted }]}>{item.time}</Text>
-              </TouchableOpacity>
-            ))}
-          </Card>
+        <View style={styles.body}>
+          {/* Upcoming Appointments */}
+          <UpcomingAppointments
+            appointments={dashboardData.appointments}
+            navigation={navigation}
+            onJoinCall={(apt) => navigation.navigate('VideoConsult', { appointmentId: apt.id })}
+            onReschedule={(apt) => navigation.navigate('Reschedule', { appointment: apt })}
+          />
+
+          {/* Quick Actions */}
+          <QuickActions navigation={navigation} />
+
+          {/* Health Wallet */}
+          <WalletSummary
+            balance={dashboardData.walletBalance}
+            loyaltyPoints={dashboardData.loyaltyPoints}
+            navigation={navigation}
+            onAddMoney={() => navigation.navigate('Wallet', { action: 'addMoney' })}
+          />
+
+          {/* Find Doctor CTA */}
+          <TouchableOpacity onPress={() => navigation.navigate('Booking')} activeOpacity={0.85}>
+            <LinearGradient colors={['#1565C0', '#1976D2']} style={styles.ctaBanner}>
+              <View style={styles.ctaLeft}>
+                <Text style={styles.ctaTitle}>👨‍⚕️ Recommended for you</Text>
+                <Text style={styles.ctaSubtitle}>500+ verified specialists available</Text>
+              </View>
+              <View style={styles.ctaArrow}>
+                <Text style={styles.ctaArrowText}>→</Text>
+              </View>
+            </LinearGradient>
+          </TouchableOpacity>
+
+          {/* Health Tips */}
+          <View style={styles.healthTipsWrapper}>
+            <HealthTips />
+          </View>
         </View>
       </ScrollView>
     </View>
@@ -390,137 +219,46 @@ const HomeScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-  },
-  scrollContent: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: 100,
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.xxl,
-  },
-  headerLeft: {},
-  greeting: {
-    ...typography.bodyLarge,
-  },
-  userName: {
-    ...typography.headlineLarge,
-    marginTop: spacing.xs,
-  },
+  container: { flex: 1 },
+  scrollContent: { paddingBottom: 100 },
+
+  // Hero
+  heroGradient: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl },
+  heroRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.xl },
+  heroLeft: { flex: 1 },
+  heroGreeting: { color: 'rgba(255,255,255,0.85)', ...typography.bodyLarge, fontWeight: '500' },
+  heroName: { color: '#fff', fontSize: 32, fontWeight: '800', marginTop: 2, letterSpacing: -0.5 },
+  heroSubtitle: { color: 'rgba(255,255,255,0.8)', ...typography.bodyMedium, marginTop: spacing.xs },
+  avatarRing: { borderWidth: 3, borderColor: 'rgba(255,255,255,0.6)', borderRadius: 999, padding: 2 },
+
+  // Search
   searchBar: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    borderRadius: borderRadius.lg,
+    flexDirection: 'row', alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: borderRadius.full,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md + 2,
-    marginBottom: spacing.xxl,
-    borderWidth: 1,
+    marginBottom: spacing.md,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15, shadowRadius: 12, elevation: 6,
   },
-  searchIcon: {
-    fontSize: 18,
-    marginRight: spacing.md,
-  },
-  searchPlaceholder: {
-    ...typography.bodyLarge,
-  },
-  healthTipsWrapper: {
-    marginHorizontal: -spacing.xl,
-  },
-  section: {
-    marginBottom: spacing.xxl,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    ...typography.headlineSmall,
-  },
-  seeAll: {
-    ...typography.labelMedium,
-  },
-  metricsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  metricCard: {
-    width: (width - spacing.xl * 2 - spacing.md) / 2,
-    padding: spacing.lg,
-  },
-  metricHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.sm,
-  },
-  metricIcon: {
-    fontSize: 20,
-  },
-  trendBadge: {
-    paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
-    borderRadius: borderRadius.full,
-  },
-  trendUp: {
-    backgroundColor: 'rgba(16, 185, 129, 0.2)',
-  },
-  trendDown: {
-    backgroundColor: 'rgba(239, 68, 68, 0.2)',
-  },
-  trendText: {
-    fontSize: 12,
-  },
-  metricValue: {
-    ...typography.displaySmall,
-  },
-  metricUnit: {
-    ...typography.labelSmall,
-    marginTop: -4,
-  },
-  metricLabel: {
-    ...typography.labelMedium,
-    marginTop: spacing.sm,
-  },
-  activityItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingVertical: spacing.md,
-  },
-  activityItemBorder: {
-    borderBottomWidth: 1,
-  },
-  activityIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  activityEmoji: {
-    fontSize: 18,
-  },
-  activityContent: {
-    flex: 1,
-  },
-  activityTitle: {
-    ...typography.bodyMedium,
-    fontWeight: '500',
-  },
-  activityDesc: {
-    ...typography.bodySmall,
-    marginTop: 2,
-  },
-  activityTime: {
-    ...typography.labelSmall,
-  },
+  searchIcon: { fontSize: 18, marginRight: spacing.md },
+  searchPlaceholder: { flex: 1, ...typography.bodyLarge, color: '#9CA3AF', fontWeight: '500' },
+  filterBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#F0FDF4', alignItems: 'center', justifyContent: 'center' },
+  filterIcon: { fontSize: 16 },
+
+  // Body
+  body: { paddingHorizontal: spacing.xl, paddingTop: spacing.xl },
+
+  // CTA
+  ctaBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: borderRadius.xl, padding: spacing.lg, marginBottom: spacing.xxl },
+  ctaLeft: { flex: 1 },
+  ctaTitle: { color: '#fff', ...typography.bodyLarge, fontWeight: '700', marginBottom: 3 },
+  ctaSubtitle: { color: 'rgba(255,255,255,0.75)', ...typography.bodySmall },
+  ctaArrow: { width: 40, height: 40, borderRadius: borderRadius.lg, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center', marginLeft: spacing.md },
+  ctaArrowText: { color: '#fff', fontSize: 18, fontWeight: '700' },
+
+  healthTipsWrapper: { marginHorizontal: -spacing.xl, marginBottom: spacing.xxl },
 });
 
 export default HomeScreen;

@@ -1,1244 +1,868 @@
 /**
- * SlotSelectionScreen - Real API-based booking like web app
- * Features: consultation type, date selection, real slot availability, symptoms, reason
- * Uses same backend APIs as web: /doctors/:id/available-slots, /appointments/check-availability
+ * SlotSelectionScreen - Queue-based appointment booking
+ * Patient picks type + date, gets added to queue. No time slot selection.
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-  ActivityIndicator,
-  TextInput,
-  Alert,
-  RefreshControl,
+  View, Text, StyleSheet, ScrollView, TouchableOpacity,
+  StatusBar, ActivityIndicator, TextInput, Alert, Image, Animated,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../../theme/colors';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import Card from '../../components/common/Card';
-import Avatar from '../../components/common/Avatar';
-import Button from '../../components/common/Button';
+import { shadows } from '../../theme/colors';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
 
 const SlotSelectionScreen = ({ navigation, route }) => {
   const { doctor } = route.params || {};
   const { user } = useUser();
-  
-  // Step management (1: Type, 2: Date, 3: Time, 4: Details)
-  const [step, setStep] = useState(1);
-  
-  // Booking data
+  const { colors } = useTheme();
+
+  const [step, setStep] = useState(1); // 1=Type, 2=Date, 3=Details
   const [consultationType, setConsultationType] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedTime, setSelectedTime] = useState(null);
-  const [selectedMember, setSelectedMember] = useState('self');
   const [reason, setReason] = useState('');
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [urgencyLevel, setUrgencyLevel] = useState('normal');
-  
-  // Real API data
-  const [availableSlots, setAvailableSlots] = useState([]);
-  const [slotsLoading, setSlotsLoading] = useState(false);
-  const [dayAvailable, setDayAvailable] = useState(true);
-  const [unavailableReason, setUnavailableReason] = useState('');
-  const [bookedTimes, setBookedTimes] = useState([]);
-  const [familyMembers, setFamilyMembers] = useState([]);
-  
-  // Queue info (for queue-based booking)
   const [queueInfo, setQueueInfo] = useState(null);
   const [queueLoading, setQueueLoading] = useState(false);
-  
-  // UI state
-  const [loading, setLoading] = useState(false);
-  const [refreshing, setRefreshing] = useState(false);
-  const [showFamilyPicker, setShowFamilyPicker] = useState(false);
   const [bookingInProgress, setBookingInProgress] = useState(false);
-  const [checkingAvailability, setCheckingAvailability] = useState(false);
-  const [slotAvailability, setSlotAvailability] = useState(null);
 
   const doctorId = doctor?._id || doctor?.id;
-  const slotDuration = doctor?.consultationDuration || 30;
 
-  // Common symptoms for quick selection
   const commonSymptoms = [
     'Fever', 'Cold & Cough', 'Headache', 'Body Pain',
-    'Stomach Issues', 'Skin Problem', 'Follow-up', 'General Checkup'
+    'Stomach Issues', 'Skin Problem', 'Follow-up', 'General Checkup',
   ];
 
-  // Initialize family members with self (family wallet is optional feature)
-  useEffect(() => {
-    // For now, just use self as the booking patient
-    // Family wallet integration can be added later if needed
-    setFamilyMembers([
-      { id: 'self', name: user?.name || 'Myself', relation: 'Self' }
-    ]);
-  }, [user]);
-
-  // Generate next 14 days for date selection
   const generateDates = () => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
     return Array.from({ length: 14 }, (_, i) => {
       const date = new Date(today);
       date.setDate(date.getDate() + i);
-      const dayOfWeek = date.getDay();
-      
-      // Format date as YYYY-MM-DD in local timezone (not UTC)
-      const year = date.getFullYear();
-      const month = String(date.getMonth() + 1).padStart(2, '0');
-      const day = String(date.getDate()).padStart(2, '0');
-      const fullDate = `${year}-${month}-${day}`;
-      
+      const dow = date.getDay();
+      const y = date.getFullYear();
+      const m = String(date.getMonth() + 1).padStart(2, '0');
+      const d = String(date.getDate()).padStart(2, '0');
       return {
         day: date.toLocaleDateString('en-US', { weekday: 'short' }),
         date: date.getDate(),
         month: date.toLocaleDateString('en-US', { month: 'short' }),
-        full: fullDate,
+        full: `${y}-${m}-${d}`,
         isToday: i === 0,
-        isSunday: dayOfWeek === 0,
-        // Will be updated by API - for now assume available except Sundays
-        isAvailable: true,
+        isSunday: dow === 0,
+        isAvailable: dow !== 0,
       };
     });
   };
 
   const dates = generateDates();
 
-  // Fetch available slots from API when date and type are selected (same as web)
-  const fetchAvailableSlots = useCallback(async (dateStr) => {
-    if (!doctorId || !dateStr) return;
-    
-    try {
-      setSlotsLoading(true);
-      setAvailableSlots([]);
-      setSelectedTime(null);
-      setSlotAvailability(null);
-      
-      // Call same API as web: GET /api/doctors/:id/available-slots?date=
-      const response = await apiClient.get(`/doctors/${doctorId}/available-slots?date=${dateStr}`);
-      
-      if (response.data.success) {
-        if (response.data.available) {
-          setDayAvailable(true);
-          // Filter slots by consultation type if needed
-          let slots = response.data.slots || [];
-          if (consultationType === 'online') {
-            slots = slots.filter(s => s.type === 'virtual' || s.type === 'both');
-          } else if (consultationType === 'in_person') {
-            slots = slots.filter(s => s.type === 'in-clinic' || s.type === 'both');
-          }
-          // If API returns empty slots, generate defaults
-          if (slots.length === 0) {
-            slots = generateDefaultSlots();
-          }
-          setAvailableSlots(slots);
-        } else {
-          setDayAvailable(false);
-          setUnavailableReason(response.data.reason || 'Doctor not available on this date');
-          setAvailableSlots([]);
-        }
-      } else {
-        // Fallback - generate default slots
-        setDayAvailable(true);
-        setAvailableSlots(generateDefaultSlots());
-      }
-      
-      // Also fetch booked times for this date
-      await fetchBookedTimes(dateStr);
-      
-    } catch (error) {
-      console.log('Available slots fetch error:', error.message);
-      // Fallback to default slots on error
-      setDayAvailable(true);
-      const defaultSlots = generateDefaultSlots();
-      setAvailableSlots(defaultSlots);
-      console.log('Generated default slots:', defaultSlots.length);
-    } finally {
-      setSlotsLoading(false);
-    }
-  }, [doctorId, consultationType]);
-
-  // Fetch booked times (same as web)
-  const fetchBookedTimes = async (dateStr) => {
-    try {
-      const response = await apiClient.get(`/appointments/booked-times/${doctorId}/${dateStr}`);
-      setBookedTimes(response.data.bookedTimes || []);
-    } catch (error) {
-      console.log('Booked times fetch error:', error.message);
-      setBookedTimes([]);
-    }
-  };
-
-  // Generate default time slots (fallback)
-  const generateDefaultSlots = () => {
-    const slots = [];
-    const isVirtual = consultationType === 'online';
-    const startHour = isVirtual ? 8 : 9;
-    const endHour = isVirtual ? 20 : 18;
-    
-    for (let hour = startHour; hour < endHour; hour++) {
-      // Skip lunch hour for in-clinic
-      if (!isVirtual && hour === 13) continue;
-      
-      for (let minute = 0; minute < 60; minute += 30) {
-        const timeStr = `${hour.toString().padStart(2, '0')}:${minute.toString().padStart(2, '0')}`;
-        slots.push({
-          time: timeStr,
-          available: true,
-          type: isVirtual ? 'virtual' : 'in-clinic'
-        });
-      }
-    }
-    return slots;
-  };
-
-  // Check time availability (same as web: POST /api/appointments/check-availability)
-  const checkTimeAvailability = async (time) => {
-    if (!time || !selectedDate || !doctorId) {
-      setSlotAvailability(null);
-      return;
-    }
-    
-    try {
-      setCheckingAvailability(true);
-      const response = await apiClient.post('/appointments/check-availability', {
-        doctorId,
-        date: selectedDate,
-        time
-      });
-      setSlotAvailability(response.data);
-    } catch (error) {
-      console.log('Availability check error:', error.message);
-      setSlotAvailability({ available: false, message: 'Error checking availability' });
-    } finally {
-      setCheckingAvailability(false);
-    }
-  };
-
-  // Fetch queue info when date and type are selected (for queue-based booking)
   const fetchQueueInfo = useCallback(async (dateStr) => {
     if (!doctorId || !dateStr || !consultationType) return;
-    
     try {
       setQueueLoading(true);
       const typeParam = consultationType === 'online' ? 'online' : 'in_person';
-      const response = await apiClient.get(
+      const res = await apiClient.get(
         `/appointments/queue-info/${doctorId}/${dateStr}?consultationType=${typeParam}`
       );
-      
-      if (response.data.success) {
-        setQueueInfo(response.data);
-      } else {
-        setQueueInfo(null);
-      }
-    } catch (error) {
-      console.log('Queue info fetch error:', error.message);
+      if (res.data?.success) setQueueInfo(res.data);
+      else setQueueInfo(null);
+    } catch {
       setQueueInfo(null);
     } finally {
       setQueueLoading(false);
     }
   }, [doctorId, consultationType]);
 
-  // Fetch slots when date changes
   useEffect(() => {
-    if (selectedDate && consultationType) {
-      fetchAvailableSlots(selectedDate);
-      fetchQueueInfo(selectedDate);
-    }
-  }, [selectedDate, consultationType, fetchAvailableSlots, fetchQueueInfo]);
-
-  // Check availability when time is selected
-  useEffect(() => {
-    if (selectedTime && selectedDate) {
-      checkTimeAvailability(selectedTime);
-    }
-  }, [selectedTime, selectedDate]);
-
-  const formatTime = (time) => {
-    if (!time) return 'N/A';
-    const [hours, minutes] = time.split(':');
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
-  };
+    if (selectedDate && consultationType) fetchQueueInfo(selectedDate);
+  }, [selectedDate, consultationType, fetchQueueInfo]);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
-    const [year, month, day] = dateStr.split('-').map(Number);
-    const date = new Date(year, month - 1, day);
-    return date.toLocaleDateString('en-IN', {
-      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-IN', {
+      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     });
   };
 
   const handleTypeSelect = (type) => {
     setConsultationType(type);
     setSelectedDate(null);
-    setSelectedTime(null);
-    setAvailableSlots([]);
     setQueueInfo(null);
-    setSlotAvailability(null);
     setStep(2);
   };
 
   const handleDateSelect = (day) => {
     if (!day.isAvailable) return;
     setSelectedDate(day.full);
-    setSelectedTime(null);
-    setSlotAvailability(null);
     setStep(3);
-  };
-
-  const handleTimeSelect = (slot) => {
-    if (slot.booked || !slot.available) return;
-    setSelectedTime(slot.time);
   };
 
   const handleBooking = async () => {
     try {
-      // Build reason with symptoms
-      let fullReason = '';
-      if (selectedSymptoms && selectedSymptoms.length > 0) {
-        fullReason = `Symptoms: ${selectedSymptoms.join(', ')}.`;
-      }
-      if (reason && reason.trim()) {
-        fullReason = fullReason ? `${fullReason} ${reason.trim()}` : reason.trim();
-      }
-      if (!fullReason) {
-        fullReason = 'General Consultation';
-      }
+      let fullReason = selectedSymptoms.length > 0
+        ? `Symptoms: ${selectedSymptoms.join(', ')}.` : '';
+      if (reason.trim()) fullReason = fullReason ? `${fullReason} ${reason.trim()}` : reason.trim();
+      if (!fullReason) fullReason = 'General Consultation';
 
-      if (!selectedDate) {
-        Alert.alert('Error', 'Please select a date');
-        return;
-      }
-
-      if (!selectedTime) {
-        Alert.alert('Error', 'Please select a time slot');
-        return;
-      }
-
-      // Check if user is logged in
-      if (!user) {
-        Alert.alert('Login Required', 'Please login to book an appointment');
-        return;
-      }
-
-      // Get user ID - handle different possible structures
+      if (!user) { Alert.alert('Login Required', 'Please login to book an appointment'); return; }
       const userId = user.id || user._id || user.userId;
-      if (!userId) {
-        console.log('User object:', JSON.stringify(user));
-        Alert.alert('Error', 'User session invalid. Please login again.');
-        return;
-      }
+      if (!userId) { Alert.alert('Error', 'User session invalid. Please login again.'); return; }
+      if (!doctorId) { Alert.alert('Error', 'Doctor information missing.'); return; }
 
-      // Check if slot is still available
-      if (slotAvailability && slotAvailability.available === false) {
-        Alert.alert('Slot Unavailable', 'This time slot is no longer available. Please select another time.');
-        return;
-      }
+      const clinicId = doctor?.clinicId?._id || doctor?.clinicId || null;
 
       setBookingInProgress(true);
 
-      // Get doctor ID safely
-      const docId = doctorId || doctor?._id || doctor?.id;
-      if (!docId) {
-        Alert.alert('Error', 'Doctor information missing. Please go back and try again.');
-        setBookingInProgress(false);
-        return;
-      }
-
-      // Use same API as web: POST /api/appointments
-      const bookingData = {
-        userId: userId,
-        doctorId: docId,
-        clinicId: doctor?.clinicId?._id || doctor?.clinicId || null,
-        date: selectedDate,
-        time: selectedTime,
-        reason: fullReason,
-        consultationType: consultationType === 'online' ? 'online' : 'in_person',
-        urgencyLevel: urgencyLevel || 'normal',
-        source: 'MOBILE',
-      };
-
-      console.log('Booking data:', JSON.stringify(bookingData));
-      
-      // Create appointment using same endpoint as web
-      const response = await apiClient.post('/appointments', bookingData);
-      console.log('Booking response:', JSON.stringify(response.data));
-
-      // Get selected member data safely
-      const selectedMemberData = familyMembers && familyMembers.length > 0 
-        ? familyMembers.find(m => m.id === selectedMember) 
-        : { id: 'self', name: user?.name || 'Patient', relation: 'Self' };
-      
-      // Get appointment ID from response
-      const appointmentId = response.data?._id || response.data?.id || response.data?.appointmentId;
-      
-      // Navigate to payment
+      // Navigate to Payment — appointment is created AFTER successful payment
       navigation.navigate('Payment', {
         doctor: doctor || {},
         date: selectedDate,
-        time: formatTime(selectedTime),
-        queueNumber: queueInfo?.nextQueueNumber,
+        time: queueInfo?.estimatedTime || '09:00',
+        queueNumber: queueInfo?.nextQueueNumber || 1,
         consultationType: consultationType || 'in_person',
-        patient: selectedMemberData,
-        appointmentId: appointmentId,
-        reason: fullReason,
+        patient: { id: 'self', name: user?.name || 'Patient', relation: 'Self' },
+        // Pass booking params so PaymentScreen can create the appointment after payment
+        pendingBooking: {
+          userId,
+          doctorId,
+          clinicId,
+          date: selectedDate,
+          reason: fullReason,
+          consultationType: consultationType === 'online' ? 'online' : 'in_person',
+          urgencyLevel,
+        },
       });
     } catch (error) {
-      console.error('Booking error:', error);
-      console.error('Error details:', error?.response?.data || error?.message);
-      const errorMsg = error?.response?.data?.message || error?.message || 'Failed to book appointment. Please try again.';
-      Alert.alert('Booking Failed', errorMsg);
+      const msg = error?.response?.data?.message || error?.message || 'Failed to proceed.';
+      Alert.alert('Error', msg);
     } finally {
       setBookingInProgress(false);
     }
   };
 
-  const onRefresh = useCallback(() => {
-    setRefreshing(true);
-    if (selectedDate && consultationType) {
-      Promise.all([
-        fetchAvailableSlots(selectedDate),
-        fetchQueueInfo(selectedDate)
-      ]).finally(() => setRefreshing(false));
-    } else {
-      setRefreshing(false);
-    }
-  }, [selectedDate, consultationType, fetchAvailableSlots, fetchQueueInfo]);
+  // Animated scale refs for type cards
+  const scaleIn  = useRef(new Animated.Value(1)).current;
+  const scaleOut = useRef(new Animated.Value(1)).current;
 
-  // Get time slots with booked status merged
-  const getTimeSlots = () => {
-    return availableSlots.map(slot => ({
-      ...slot,
-      booked: bookedTimes.includes(slot.time) || !slot.available,
-      label: formatTime(slot.time),
-    }));
+  const animateSelect = (ref) => {
+    Animated.sequence([
+      Animated.timing(ref, { toValue: 0.96, duration: 80, useNativeDriver: true }),
+      Animated.spring(ref, { toValue: 1, friction: 4, useNativeDriver: true }),
+    ]).start();
   };
 
-  const getSelectedMemberName = () => {
-    const member = familyMembers.find(m => m.id === selectedMember);
-    return member?.name || 'Select Patient';
-  };
+  const CONSULT_TYPES = [
+    {
+      key: 'in_person',
+      icon: '🏥',
+      title: 'In-Clinic Visit',
+      desc: 'Physical examination at the clinic',
+      tag: null,
+      wait: 'Avg wait: 20 min',
+      hours: 'Mon–Sat · 9 AM – 7 PM',
+      gradient: ['#00897B', '#26A69A'],
+      scaleRef: scaleIn,
+    },
+    {
+      key: 'online',
+      icon: '💻',
+      title: 'Online Consultation',
+      desc: 'Consult via video call from home',
+      tag: 'Recommended',
+      wait: 'Connect instantly',
+      hours: 'Mon–Sat · 8 AM – 8 PM',
+      gradient: ['#1565C0', '#1976D2'],
+      scaleRef: scaleOut,
+    },
+  ];
 
-  // Render Step 1: Consultation Type
+  // Step 1: Consultation Type
   const renderTypeSelection = () => (
     <View style={styles.stepContent}>
-      <Text style={styles.stepTitle}>Choose Consultation Type</Text>
-      <Text style={styles.stepSubtitle}>Select how you'd like to consult</Text>
+      <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Choose Consultation Type</Text>
+      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
+        Select how you'd like to consult with the doctor
+      </Text>
 
-      <TouchableOpacity
-        style={[styles.typeCard, consultationType === 'in_person' && styles.typeCardActive]}
-        onPress={() => handleTypeSelect('in_person')}
-      >
-        <View style={styles.typeCardContent}>
-          <Text style={styles.typeIcon}>🏥</Text>
-          <View style={styles.typeInfo}>
-            <Text style={styles.typeName}>In-Clinic Visit</Text>
-            <Text style={styles.typeDesc}>Physical examination at clinic</Text>
-            <Text style={styles.typeHours}>9 AM - 7 PM (Mon-Sat)</Text>
-          </View>
-        </View>
-        {consultationType === 'in_person' && (
-          <View style={styles.checkBadge}>
-            <Text style={styles.checkIcon}>✓</Text>
-          </View>
-        )}
-      </TouchableOpacity>
+      {CONSULT_TYPES.map(({ key, icon, title, desc, tag, wait, hours, gradient, scaleRef }) => {
+        const active = consultationType === key;
+        return (
+          <Animated.View key={key} style={{ transform: [{ scale: scaleRef }] }}>
+            <TouchableOpacity
+              style={[styles.typeCard,
+                active
+                  ? { borderColor: gradient[0], borderWidth: 2, overflow: 'hidden' }
+                  : { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: 1.5 },
+              ]}
+              onPress={() => { animateSelect(scaleRef); handleTypeSelect(key); }}
+              activeOpacity={1}
+            >
+              {active && (
+                <LinearGradient colors={gradient} style={StyleSheet.absoluteFill} />
+              )}
+              <View style={[styles.typeIconWrap, { backgroundColor: active ? 'rgba(255,255,255,0.2)' : (key === 'online' ? '#EFF6FF' : '#F0FDF4') }]}>
+                <Text style={styles.typeIcon}>{icon}</Text>
+              </View>
+              <View style={styles.typeInfo}>
+                <View style={styles.typeNameRow}>
+                  <Text style={[styles.typeName, { color: active ? '#fff' : colors.textPrimary }]}>{title}</Text>
+                  {tag ? (
+                    <View style={[styles.recTag, { backgroundColor: active ? 'rgba(255,255,255,0.25)' : '#DCFCE7' }]}>
+                      <Text style={[styles.recTagText, { color: active ? '#fff' : '#16A34A' }]}>{tag}</Text>
+                    </View>
+                  ) : null}
+                </View>
+                <Text style={[styles.typeDesc, { color: active ? 'rgba(255,255,255,0.85)' : colors.textSecondary }]}>{desc}</Text>
+                <View style={styles.typeMetaRow}>
+                  <Text style={[styles.typeWait, { color: active ? 'rgba(255,255,255,0.7)' : colors.primary }]}>⚡ {wait}</Text>
+                  <Text style={[styles.typeHours, { color: active ? 'rgba(255,255,255,0.6)' : colors.textMuted }]}>{hours}</Text>
+                </View>
+              </View>
+              {active ? (
+                <View style={styles.checkBadge}>
+                  <Text style={styles.checkIcon}>✓</Text>
+                </View>
+              ) : null}
+            </TouchableOpacity>
+          </Animated.View>
+        );
+      })}
 
-      <TouchableOpacity
-        style={[styles.typeCard, consultationType === 'online' && styles.typeCardActive]}
-        onPress={() => handleTypeSelect('online')}
-      >
-        <View style={styles.typeCardContent}>
-          <Text style={styles.typeIcon}>📹</Text>
-          <View style={styles.typeInfo}>
-            <Text style={styles.typeName}>Online Consultation</Text>
-            <Text style={styles.typeDesc}>Video call from anywhere</Text>
-            <Text style={styles.typeHours}>8 AM - 8 PM (Mon-Sat)</Text>
-          </View>
-        </View>
-        {consultationType === 'online' && (
-          <View style={styles.checkBadge}>
-            <Text style={styles.checkIcon}>✓</Text>
-          </View>
-        )}
-      </TouchableOpacity>
-
-      <View style={styles.infoNote}>
-        <Text style={styles.infoIcon}>ℹ️</Text>
-        <Text style={styles.infoText}>Separate queues for online & clinic visits</Text>
+      <View style={[styles.infoNote, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }]}>
+        <Text style={styles.infoIcon}>💡</Text>
+        <Text style={[styles.infoText, { color: '#92400E' }]}>
+          No need to select a time slot. You'll be automatically added to the doctor's queue.
+        </Text>
       </View>
     </View>
   );
 
-  // Render Step 2: Date Selection
+  // Step 2: Date Selection
   const renderDateSelection = () => (
     <View style={styles.stepContent}>
-      {/* Selected Type Banner */}
-      <TouchableOpacity style={styles.selectedBanner} onPress={() => setStep(1)}>
-        <Text style={styles.bannerIcon}>{consultationType === 'online' ? '📹' : '🏥'}</Text>
-        <Text style={styles.bannerText}>
-          {consultationType === 'online' ? 'Online Consultation' : 'In-Clinic Visit'}
-        </Text>
-        <Text style={styles.changeText}>Change</Text>
-      </TouchableOpacity>
+      {/* Consultation type banner — clearly labelled with Change */}
+      <View style={[styles.typeBanner, { backgroundColor: colors.surface }]}>
+        <View style={styles.typeBannerLeft}>
+          <Text style={styles.typeBannerLabel}>Consultation Type</Text>
+          <View style={styles.typeBannerValue}>
+            <Text style={styles.typeBannerIcon}>{consultationType === 'online' ? '💻' : '🏥'}</Text>
+            <Text style={[styles.typeBannerText, { color: colors.textPrimary }]}>
+              {consultationType === 'online' ? 'Online Consultation' : 'In-Clinic Visit'}
+            </Text>
+          </View>
+        </View>
+        <TouchableOpacity onPress={() => setStep(1)} style={styles.changePill}>
+          <Text style={styles.changePillText}>Change</Text>
+        </TouchableOpacity>
+      </View>
 
-      <Text style={styles.stepTitle}>Select Date</Text>
-      <Text style={styles.stepSubtitle}>Choose your preferred appointment date</Text>
-      
-      <ScrollView
-        horizontal
-        showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.datesContainer}
-      >
-        {dates.map((day, index) => (
-          <TouchableOpacity
-            key={index}
-            style={[
-              styles.dateCard,
-              day.isSunday && styles.dateCardDisabled,
-              selectedDate === day.full && styles.dateCardActive,
-            ]}
-            onPress={() => handleDateSelect(day)}
-            disabled={day.isSunday}
-          >
-            {selectedDate === day.full ? (
-              <LinearGradient
-                colors={colors.gradientPrimary}
-                style={styles.dateCardGradient}
-              >
-                <Text style={styles.dateDayActive}>{day.day}</Text>
-                <Text style={styles.dateNumActive}>{day.date}</Text>
-                <Text style={styles.dateMonthActive}>{day.month}</Text>
-              </LinearGradient>
-            ) : (
-              <>
-                <Text style={[styles.dateDay, day.isSunday && styles.textDisabled]}>{day.day}</Text>
-                <Text style={[styles.dateNum, day.isSunday && styles.textDisabled]}>{day.date}</Text>
-                <Text style={[styles.dateMonth, day.isSunday && styles.textDisabled]}>{day.month}</Text>
-                {day.isToday && <Text style={styles.todayBadge}>Today</Text>}
-                {day.isSunday && <Text style={styles.closedBadge}>Closed</Text>}
-              </>
-            )}
-          </TouchableOpacity>
-        ))}
+      <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Select a Date</Text>
+      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
+        Pick your preferred appointment date
+      </Text>
+
+      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.datesContainer}>
+        {dates.map((day, index) => {
+          const isSelected = selectedDate === day.full;
+          return (
+            <TouchableOpacity
+              key={index}
+              onPress={() => handleDateSelect(day)}
+              disabled={day.isSunday}
+              activeOpacity={0.8}
+              style={[
+                styles.dateCard,
+                { backgroundColor: colors.surface, borderColor: colors.surfaceBorder },
+                day.isSunday && { opacity: 0.35 },
+                isSelected && { borderColor: '#00897B', borderWidth: 2, backgroundColor: '#F0FDF4' },
+              ]}
+            >
+              {isSelected ? (
+                <>
+                  <LinearGradient colors={['#00897B', '#26A69A']} style={styles.dateCardGradient}>
+                    <Text style={styles.dateDayActive}>{day.day}</Text>
+                    <Text style={styles.dateNumActive}>{day.date}</Text>
+                    <Text style={styles.dateMonthActive}>{day.month}</Text>
+                    <View style={styles.dateCheckDot}>
+                      <Text style={styles.dateCheckIcon}>✓</Text>
+                    </View>
+                  </LinearGradient>
+                </>
+              ) : (
+                <>
+                  <Text style={[styles.dateDay, { color: colors.textMuted }]}>{day.day}</Text>
+                  <Text style={[styles.dateNum, { color: colors.textPrimary }]}>{day.date}</Text>
+                  <Text style={[styles.dateMonth, { color: colors.textMuted }]}>{day.month}</Text>
+                  {day.isToday ? (
+                    <View style={styles.todayDot}>
+                      <Text style={styles.todayDotText}>Today</Text>
+                    </View>
+                  ) : null}
+                  {day.isSunday ? (
+                    <Text style={[styles.closedBadge, { color: '#EF4444' }]}>Closed</Text>
+                  ) : null}
+                </>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </ScrollView>
+
+      {selectedDate ? (
+        <View style={[styles.selectedDateConfirm, { backgroundColor: '#F0FDF4', borderColor: '#86EFAC' }]}>
+          <Text style={styles.selectedDateIcon}>📅</Text>
+          <Text style={[styles.selectedDateText, { color: '#166534' }]}>{formatDate(selectedDate)}</Text>
+        </View>
+      ) : null}
     </View>
   );
 
-  // Render Step 3: Time Selection (Real API slots with Queue Info)
-  const renderTimeSelection = () => {
-    const timeSlots = getTimeSlots();
-    
-    // If no slots and not loading, generate defaults
-    const displaySlots = timeSlots.length > 0 ? timeSlots : 
-      (slotsLoading ? [] : generateDefaultSlots().map(slot => ({
-        ...slot,
-        booked: bookedTimes.includes(slot.time) || !slot.available,
-        label: formatTime(slot.time),
-      })));
-    
+  // Step 3: Details & Queue Info
+  const renderDetailsStep = () => {
+    const fee = doctor?.consultationFee || doctor?.fee || 500;
+    const queueNum = queueInfo?.nextQueueNumber || 1;
+    const queueCount = queueInfo?.currentQueueCount || 0;
+    const maxSlots = queueInfo?.maxSlots || 20;
+    const queueProgress = Math.min(queueCount / maxSlots, 1);
+
+    const URGENCY_CONFIG = {
+      normal:    { icon: '🟢', label: 'Normal',    color: '#16A34A', bg: '#F0FDF4', border: '#86EFAC' },
+      urgent:    { icon: '🟡', label: 'Urgent',    color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
+      emergency: { icon: '🔴', label: 'Emergency', color: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
+    };
+
     return (
       <View style={styles.stepContent}>
-        {/* Selected Info Banners */}
+        {/* Selection badges */}
         <View style={styles.selectedInfoRow}>
-          <TouchableOpacity style={styles.infoBadge} onPress={() => setStep(1)}>
-            <Text style={styles.badgeIcon}>{consultationType === 'online' ? '📹' : '🏥'}</Text>
-            <Text style={styles.badgeText}>
+          <TouchableOpacity style={[styles.infoBadge, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]} onPress={() => setStep(1)}>
+            <Text style={styles.badgeIcon}>{consultationType === 'online' ? '💻' : '🏥'}</Text>
+            <Text style={[styles.badgeText, { color: colors.textSecondary }]}>
               {consultationType === 'online' ? 'Online' : 'Clinic'}
             </Text>
+            <Text style={[styles.badgeChange, { color: colors.primary }]}>  ✎</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.infoBadge} onPress={() => setStep(2)}>
+          <TouchableOpacity style={[styles.infoBadge, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]} onPress={() => setStep(2)}>
             <Text style={styles.badgeIcon}>📅</Text>
-            <Text style={styles.badgeText}>{formatDate(selectedDate).split(',')[0]}</Text>
+            <Text style={[styles.badgeText, { color: colors.textSecondary }]}>{formatDate(selectedDate).split(',')[0]}</Text>
+            <Text style={[styles.badgeChange, { color: colors.primary }]}>  ✎</Text>
           </TouchableOpacity>
         </View>
 
-        {/* Queue Status Card */}
-        {queueLoading ? (
-          <View style={styles.queueLoading}>
-            <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={styles.queueLoadingText}>Loading queue status...</Text>
-          </View>
-        ) : queueInfo && (
-          <Card variant="gradient" style={styles.queueCard}>
-            <View style={styles.queueHeader}>
-              <Text style={styles.queueTitle}>🎫 Live Queue Status</Text>
-              {queueInfo.availableSlots > 0 ? (
-                <View style={styles.queueBadgeAvailable}>
-                  <Text style={styles.queueBadgeText}>{queueInfo.availableSlots} slots left</Text>
-                </View>
-              ) : (
-                <View style={styles.queueBadgeFull}>
-                  <Text style={styles.queueBadgeText}>Queue Full</Text>
-                </View>
-              )}
+        {/* ── Queue Status — human readable ── */}
+        <LinearGradient colors={['#F0FDF4', '#DCFCE7']} style={[styles.queueCard, { borderColor: '#86EFAC' }]}>
+          {queueLoading ? (
+            <View style={styles.queueLoadingRow}>
+              <ActivityIndicator size="small" color="#00897B" />
+              <Text style={[styles.queueLoadingText, { color: '#166534' }]}>  Checking queue...</Text>
             </View>
-            
-            <View style={styles.queueStats}>
-              <View style={styles.queueStat}>
-                <Text style={styles.queueStatNum}>{queueInfo.currentQueueCount || 0}</Text>
-                <Text style={styles.queueStatLabel}>In Queue</Text>
-              </View>
-              <View style={[styles.queueStat, styles.queueStatHighlight]}>
-                <Text style={styles.queueStatNumHighlight}>#{queueInfo.nextQueueNumber || 1}</Text>
-                <Text style={styles.queueStatLabel}>Your Token</Text>
-              </View>
-              <View style={styles.queueStat}>
-                <Text style={styles.queueStatNum}>{queueInfo.maxSlots || 20}</Text>
-                <Text style={styles.queueStatLabel}>Max Slots</Text>
-              </View>
-            </View>
-
-            {queueInfo.estimatedTime && (
-              <View style={styles.estimatedTimeBox}>
-                <Text style={styles.estIcon}>⏰</Text>
+          ) : (
+            <>
+              <View style={styles.queueTopRow}>
                 <View>
-                  <Text style={styles.estLabel}>Estimated Appointment Time</Text>
-                  <Text style={styles.estTime}>{formatTime(queueInfo.estimatedTime)}</Text>
+                  <Text style={styles.queueTokenLabel}>Your Queue Token</Text>
+                  <Text style={styles.queueTokenNum}>#{queueNum}</Text>
+                </View>
+                <View style={styles.queueWaitBox}>
+                  <Text style={styles.queueWaitLabel}>⏱ Est. wait</Text>
+                  <Text style={styles.queueWaitVal}>
+                    {queueInfo?.estimatedTime || `~${queueNum * 10} min`}
+                  </Text>
                 </View>
               </View>
-            )}
-          </Card>
-        )}
+              {/* Progress bar */}
+              <View style={styles.queueBarWrap}>
+                <View style={[styles.queueBarTrack, { backgroundColor: '#BBF7D0' }]}>
+                  <View style={[styles.queueBarFill, { width: `${queueProgress * 100}%` }]} />
+                </View>
+                <Text style={styles.queueBarLabel}>{queueCount} of {maxSlots} slots filled</Text>
+              </View>
+            </>
+          )}
+        </LinearGradient>
 
-        <Text style={styles.stepTitle}>Select Time Slot</Text>
-        <Text style={styles.stepSubtitle}>Choose an available time or use queue system</Text>
+        {/* ── Appointment Summary ── */}
+        <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+          <Text style={[styles.summaryTitle, { color: colors.textPrimary }]}>Appointment Summary</Text>
+          {[
+            { icon: '📅', label: 'Date',   value: formatDate(selectedDate) },
+            { icon: consultationType === 'online' ? '💻' : '🏥', label: 'Type', value: consultationType === 'online' ? 'Online Consultation' : 'In-Clinic Visit' },
+            { icon: '👨‍⚕️', label: 'Doctor', value: `Dr. ${doctor?.name || 'Doctor'}` },
+            { icon: '💰', label: 'Fee',    value: `₹${fee}` },
+          ].map(({ icon, label, value }) => (
+            <View key={label} style={[styles.summaryRow, { borderBottomColor: colors.surfaceBorder }]}>
+              <View style={styles.summaryLabelRow}>
+                <Text style={styles.summaryRowIcon}>{icon}</Text>
+                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>{label}</Text>
+              </View>
+              <Text style={[styles.summaryValue, { color: colors.textPrimary }]}>{value}</Text>
+            </View>
+          ))}
+        </View>
 
-        {slotsLoading ? (
-          <View style={styles.slotsLoading}>
-            <ActivityIndicator size="large" color={colors.primary} />
-            <Text style={styles.slotsLoadingText}>Loading available slots...</Text>
+        {/* ── Quick Symptoms ── */}
+        <View style={styles.section}>
+          <View style={styles.sectionHeaderRow}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Symptoms</Text>
+            <Text style={[styles.sectionHint, { color: colors.textMuted }]}>
+              {selectedSymptoms.length}/5 selected
+            </Text>
           </View>
-        ) : !dayAvailable ? (
-          <Card variant="default" style={styles.unavailableCard}>
-            <Text style={styles.unavailableIcon}>📅</Text>
-            <Text style={styles.unavailableTitle}>Not Available</Text>
-            <Text style={styles.unavailableText}>{unavailableReason}</Text>
-            <Button
-              title="Select Different Date"
-              onPress={() => setStep(2)}
-              variant="outline"
-              size="small"
-              style={{ marginTop: spacing.md }}
-            />
-          </Card>
-        ) : (
-          <>
-            <View style={styles.timeSlotsGrid}>
-              {displaySlots.map((slot, index) => (
+          <View style={styles.symptomsGrid}>
+            {commonSymptoms.map((symptom) => {
+              const active = selectedSymptoms.includes(symptom);
+              const maxReached = selectedSymptoms.length >= 5 && !active;
+              return (
                 <TouchableOpacity
-                  key={index}
-                  style={[
-                    styles.timeSlot,
-                    slot.booked && styles.timeSlotBooked,
-                    selectedTime === slot.time && styles.timeSlotActive,
+                  key={symptom}
+                  disabled={maxReached}
+                  style={[styles.symptomChip,
+                    active
+                      ? { backgroundColor: '#00897B', borderColor: '#00897B' }
+                      : { backgroundColor: colors.surface, borderColor: colors.surfaceBorder },
+                    maxReached && { opacity: 0.4 },
                   ]}
-                  onPress={() => handleTimeSelect(slot)}
-                  disabled={slot.booked}
-                >
-                  {selectedTime === slot.time ? (
-                    <LinearGradient
-                      colors={colors.gradientPrimary}
-                      style={styles.timeSlotGradient}
-                    >
-                      <Text style={styles.timeTextActive}>{slot.label}</Text>
-                      {checkingAvailability && (
-                        <ActivityIndicator size="small" color="#fff" style={{ marginLeft: 4 }} />
-                      )}
-                    </LinearGradient>
-                  ) : (
-                    <>
-                      <Text style={[styles.timeText, slot.booked && styles.timeTextBooked]}>
-                        {slot.label}
-                      </Text>
-                      {slot.booked && <Text style={styles.bookedBadge}>Booked</Text>}
-                    </>
+                  onPress={() => setSelectedSymptoms(prev =>
+                    prev.includes(symptom) ? prev.filter(s => s !== symptom) : [...prev, symptom]
                   )}
+                >
+                  <Text style={[styles.symptomText, { color: active ? '#fff' : colors.textSecondary }]}>
+                    {symptom}
+                  </Text>
                 </TouchableOpacity>
-              ))}
-            </View>
+              );
+            })}
+          </View>
+        </View>
 
-            {/* Availability Status */}
-            {selectedTime && slotAvailability && (
-              <View style={[
-                styles.availabilityBadge,
-                slotAvailability.available ? styles.availabilityAvailable : styles.availabilityUnavailable
-              ]}>
-                <Text style={styles.availabilityIcon}>
-                  {slotAvailability.available ? '✓' : '✗'}
-                </Text>
-                <Text style={styles.availabilityText}>
-                  {slotAvailability.available ? 'Slot Available' : slotAvailability.message || 'Slot Unavailable'}
-                </Text>
-              </View>
-            )}
+        {/* ── Urgency Level ── */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Urgency Level</Text>
+          <View style={styles.urgencyRow}>
+            {Object.entries(URGENCY_CONFIG).map(([key, cfg]) => {
+              const active = urgencyLevel === key;
+              return (
+                <TouchableOpacity
+                  key={key}
+                  style={[styles.urgencyBtn,
+                    active
+                      ? { backgroundColor: cfg.bg, borderColor: cfg.border, borderWidth: 2 }
+                      : { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: 1 },
+                  ]}
+                  onPress={() => setUrgencyLevel(key)}
+                >
+                  <Text style={styles.urgencyIcon}>{cfg.icon}</Text>
+                  <Text style={[styles.urgencyText, { color: active ? cfg.color : colors.textSecondary, fontWeight: active ? '700' : '500' }]}>
+                    {cfg.label}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
+          </View>
+          {urgencyLevel === 'emergency' ? (
+            <Text style={styles.urgencyHint}>🚨 Emergency cases will be prioritized in the queue</Text>
+          ) : null}
+        </View>
 
-            {/* Legend */}
-            <View style={styles.legend}>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, styles.legendAvailable]} />
-                <Text style={styles.legendText}>Available</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, styles.legendBooked]} />
-                <Text style={styles.legendText}>Booked</Text>
-              </View>
-              <View style={styles.legendItem}>
-                <View style={[styles.legendDot, styles.legendSelected]} />
-                <Text style={styles.legendText}>Selected</Text>
-              </View>
-            </View>
+        {/* ── Additional Notes ── */}
+        <View style={styles.section}>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Additional Details</Text>
+          <TextInput
+            style={[styles.reasonInput, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, color: colors.textPrimary }]}
+            placeholder="Describe your symptoms briefly (optional)"
+            placeholderTextColor={colors.textMuted}
+            value={reason}
+            onChangeText={(t) => t.length <= 300 && setReason(t)}
+            multiline
+            numberOfLines={3}
+            textAlignVertical="top"
+          />
+          <Text style={[styles.charCount, { color: colors.textMuted }]}>{reason.length}/300</Text>
+        </View>
 
-            {/* Continue Button */}
-            {selectedTime && (slotAvailability?.available !== false) && (
-              <Button
-                title="Continue to Details"
-                onPress={() => setStep(4)}
-                fullWidth
-                size="large"
-                style={{ marginTop: spacing.lg }}
-              />
-            )}
-          </>
-        )}
+        {/* ── Payment trust line ── */}
+        <View style={[styles.trustRow, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+          <Text style={styles.trustIcon}>🔒</Text>
+          <View style={styles.trustInfo}>
+            <Text style={[styles.trustTitle, { color: colors.textPrimary }]}>100% Secure Payment</Text>
+            <Text style={[styles.trustSub, { color: colors.textMuted }]}>Consultation fee: ₹{fee} · Taxes: ₹0</Text>
+          </View>
+        </View>
       </View>
     );
   };
 
-  // Render Step 4: Details & Confirmation
-  const renderDetailsStep = () => (
-    <View style={styles.stepContent}>
-      {/* Selected Info Banners */}
-      <View style={styles.selectedInfoRow}>
-        <TouchableOpacity style={styles.infoBadge} onPress={() => setStep(1)}>
-          <Text style={styles.badgeIcon}>{consultationType === 'online' ? '📹' : '🏥'}</Text>
-          <Text style={styles.badgeText}>
-            {consultationType === 'online' ? 'Online' : 'Clinic'}
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.infoBadge} onPress={() => setStep(2)}>
-          <Text style={styles.badgeIcon}>📅</Text>
-          <Text style={styles.badgeText}>{formatDate(selectedDate).split(',')[0]}</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={styles.infoBadge} onPress={() => setStep(3)}>
-          <Text style={styles.badgeIcon}>⏰</Text>
-          <Text style={styles.badgeText}>{formatTime(selectedTime)}</Text>
-        </TouchableOpacity>
-      </View>
+  const insets = useSafeAreaInsets();
 
-      {/* Appointment Summary Card */}
-      <Card variant="gradient" style={styles.summaryCard}>
-        <View style={styles.summaryHeader}>
-          <Text style={styles.summaryTitle}>Appointment Summary</Text>
-        </View>
-        
-        <View style={styles.summaryDetails}>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Date</Text>
-            <Text style={styles.summaryValue}>{formatDate(selectedDate)}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Time</Text>
-            <Text style={styles.summaryValue}>{formatTime(selectedTime)}</Text>
-          </View>
-          <View style={styles.summaryRow}>
-            <Text style={styles.summaryLabel}>Type</Text>
-            <Text style={styles.summaryValue}>
-              {consultationType === 'online' ? '📹 Online Consultation' : '🏥 In-Clinic Visit'}
-            </Text>
-          </View>
-        </View>
-      </Card>
-
-      {/* Patient Selection */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Booking For</Text>
-        <TouchableOpacity 
-          style={styles.patientSelector}
-          onPress={() => setShowFamilyPicker(!showFamilyPicker)}
-        >
-          <View style={styles.patientInfo}>
-            <Text style={styles.patientIcon}>👤</Text>
-            <Text style={styles.patientName}>{getSelectedMemberName()}</Text>
-          </View>
-          <Text style={styles.dropdownIcon}>{showFamilyPicker ? '▲' : '▼'}</Text>
-        </TouchableOpacity>
-        
-        {showFamilyPicker && (
-          <Card variant="default" style={styles.familyList}>
-            {familyMembers.map((member) => (
-              <TouchableOpacity
-                key={member.id}
-                style={[
-                  styles.familyItem,
-                  selectedMember === member.id && styles.familyItemActive,
-                ]}
-                onPress={() => {
-                  setSelectedMember(member.id);
-                  setShowFamilyPicker(false);
-                }}
-              >
-                <View style={styles.familyItemInfo}>
-                  <Text style={styles.familyItemName}>{member.name}</Text>
-                  <Text style={styles.familyItemRelation}>{member.relation}</Text>
-                </View>
-                {selectedMember === member.id && (
-                  <Text style={styles.checkIconSmall}>✓</Text>
-                )}
-              </TouchableOpacity>
-            ))}
-          </Card>
-        )}
-      </View>
-
-      {/* Quick Symptoms */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Quick Symptoms (Optional)</Text>
-        <View style={styles.symptomsGrid}>
-          {commonSymptoms.map((symptom) => (
-            <TouchableOpacity
-              key={symptom}
-              style={[
-                styles.symptomChip,
-                selectedSymptoms.includes(symptom) && styles.symptomChipActive,
-              ]}
-              onPress={() => {
-                if (selectedSymptoms.includes(symptom)) {
-                  setSelectedSymptoms(selectedSymptoms.filter(s => s !== symptom));
-                } else {
-                  setSelectedSymptoms([...selectedSymptoms, symptom]);
-                }
-              }}
-            >
-              <Text style={[
-                styles.symptomText,
-                selectedSymptoms.includes(symptom) && styles.symptomTextActive,
-              ]}>
-                {symptom}
-              </Text>
-              {selectedSymptoms.includes(symptom) && (
-                <Text style={styles.symptomCheck}>✓</Text>
-              )}
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Urgency Level */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Urgency Level</Text>
-        <View style={styles.urgencyRow}>
-          {['normal', 'urgent', 'emergency'].map((level) => (
-            <TouchableOpacity
-              key={level}
-              style={[
-                styles.urgencyBtn,
-                urgencyLevel === level && styles.urgencyBtnActive,
-                level === 'emergency' && styles.urgencyBtnEmergency,
-              ]}
-              onPress={() => setUrgencyLevel(level)}
-            >
-              <Text style={styles.urgencyIcon}>
-                {level === 'normal' ? '✓' : level === 'urgent' ? '⏰' : '🚨'}
-              </Text>
-              <Text style={[
-                styles.urgencyText,
-                urgencyLevel === level && styles.urgencyTextActive,
-              ]}>
-                {level.charAt(0).toUpperCase() + level.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          ))}
-        </View>
-      </View>
-
-      {/* Reason Input */}
-      <View style={styles.section}>
-        <Text style={styles.sectionTitle}>Additional Details (Optional)</Text>
-        <TextInput
-          style={styles.reasonInput}
-          placeholder="Any additional information for the doctor..."
-          placeholderTextColor={colors.textMuted}
-          value={reason}
-          onChangeText={setReason}
-          multiline
-          numberOfLines={3}
-          textAlignVertical="top"
-        />
-      </View>
-    </View>
-  );
-
+  // Main render
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* Header */}
-      <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => {
-          if (step > 1) {
-            setStep(step - 1);
-          } else {
-            navigation.goBack();
-          }
-        }}>
+      {/* ── Hero Header ── */}
+      <LinearGradient colors={['#00897B', '#26A69A']}
+        style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
+        <TouchableOpacity
+          style={styles.backBtn}
+          onPress={() => step > 1 ? setStep(step - 1) : navigation.goBack()}
+        >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>
-          {step === 1 ? 'Book Appointment' : step === 2 ? 'Select Date' : step === 3 ? 'Select Time' : 'Confirm Details'}
-        </Text>
-        <View style={styles.placeholder} />
+        <View style={styles.headerCenter}>
+          <Text style={styles.headerTitle}>
+            {step === 1 ? 'Book Appointment' : step === 2 ? 'Select Date' : 'Confirm Details'}
+          </Text>
+          <Text style={styles.headerSub}>Step {step} of 3</Text>
+        </View>
+        <View style={{ width: 36 }} />
+      </LinearGradient>
+
+      {/* ── Progress Bar ── */}
+      <View style={[styles.progressWrap, { backgroundColor: colors.backgroundCard }]}>
+        {['Type', 'Date', 'Details'].map((label, i) => {
+          const s = i + 1;
+          const done = step > s;
+          const active = step === s;
+          return (
+            <React.Fragment key={s}>
+              <View style={styles.progressStep}>
+                <View style={[styles.progressDot,
+                  done  && { backgroundColor: '#00897B', borderColor: '#00897B' },
+                  active && { backgroundColor: '#fff', borderColor: '#00897B' },
+                  !done && !active && { backgroundColor: colors.surface, borderColor: colors.surfaceBorder },
+                ]}>
+                  {done
+                    ? <Text style={styles.progressCheck}>✓</Text>
+                    : <Text style={[styles.progressNum, { color: active ? '#00897B' : colors.textMuted }]}>{s}</Text>
+                  }
+                </View>
+                <Text style={[styles.progressLabel,
+                  { color: (done || active) ? '#00897B' : colors.textMuted },
+                  active && { fontWeight: '700' },
+                ]}>{label}</Text>
+              </View>
+              {i < 2 ? (
+                <View style={[styles.progressLine, { backgroundColor: step > s ? '#00897B' : colors.surfaceBorder }]} />
+              ) : null}
+            </React.Fragment>
+          );
+        })}
       </View>
 
-      {/* Progress Steps */}
-      <View style={styles.progressContainer}>
-        {[1, 2, 3, 4].map((s) => (
-          <View key={s} style={styles.progressItem}>
-            <View style={[
-              styles.progressDot,
-              step >= s && styles.progressDotActive,
-              step > s && styles.progressDotCompleted,
-            ]}>
-              {step > s ? (
-                <Text style={styles.progressCheck}>✓</Text>
-              ) : (
-                <Text style={[styles.progressNum, step >= s && styles.progressNumActive]}>{s}</Text>
-              )}
-            </View>
-            <Text style={[styles.progressLabel, step >= s && styles.progressLabelActive]}>
-              {s === 1 ? 'Type' : s === 2 ? 'Date' : s === 3 ? 'Time' : 'Details'}
-            </Text>
-          </View>
-        ))}
-      </View>
-
-      {/* Doctor Info */}
-      <Card variant="gradient" style={styles.doctorCard}>
+      {/* ── Doctor Card ── */}
+      <View style={[styles.doctorCard, { backgroundColor: colors.surface }]}>
         <View style={styles.doctorRow}>
-          <Avatar name={doctor?.name || 'Doctor'} size="medium" />
+          {doctor?.profilePhoto ? (
+            <Image source={{ uri: doctor.profilePhoto }} style={styles.doctorAvatar} />
+          ) : (
+            <LinearGradient colors={['#00897B', '#26A69A']} style={styles.doctorAvatarFallback}>
+              <Text style={styles.doctorAvatarInitials}>
+                {(doctor?.name || 'D').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+              </Text>
+            </LinearGradient>
+          )}
           <View style={styles.doctorInfo}>
-            <Text style={styles.doctorName}>{doctor?.name}</Text>
-            <Text style={styles.specialty}>{doctor?.specialty || doctor?.specialization}</Text>
+            <View style={styles.doctorNameRow}>
+              <Text style={[styles.doctorName, { color: colors.textPrimary }]}>Dr. {doctor?.name || 'Doctor'}</Text>
+              <View style={styles.verifiedBadge}>
+                <Text style={styles.verifiedText}>✔ Verified</Text>
+              </View>
+            </View>
+            <Text style={[styles.doctorSpec, { color: colors.textSecondary }]}>
+              {doctor?.specialization || doctor?.specialty || 'Specialist'}
+            </Text>
+            <View style={styles.doctorMetaRow}>
+              <Text style={[styles.doctorQual, { color: colors.textMuted }]}>
+                {doctor?.qualification || 'MBBS'} · {doctor?.experience || 0} yrs
+              </Text>
+              {doctor?.rating ? (
+                <Text style={styles.doctorRating}>⭐ {Number(doctor.rating).toFixed(1)}</Text>
+              ) : null}
+            </View>
           </View>
           <View style={styles.feeBox}>
-            <Text style={styles.feeLabel}>Fee</Text>
-            <Text style={styles.feeValue}>₹{doctor?.fee || doctor?.consultationFee || 500}</Text>
+            <Text style={[styles.feeValue, { color: '#00897B' }]}>₹{doctor?.consultationFee || doctor?.fee || 500}</Text>
+            <Text style={[styles.feeLabel, { color: colors.textMuted }]}>Consult fee</Text>
           </View>
         </View>
-      </Card>
+      </View>
 
-      <ScrollView
-        showsVerticalScrollIndicator={false}
-        contentContainerStyle={styles.scrollContent}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
-      >
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {step === 1 && renderTypeSelection()}
         {step === 2 && renderDateSelection()}
-        {step === 3 && renderTimeSelection()}
-        {step === 4 && renderDetailsStep()}
+        {step === 3 && renderDetailsStep()}
       </ScrollView>
 
-      {/* Bottom CTA */}
-      {step === 4 && (
-        <View style={styles.bottomBar}>
-          <View style={styles.summaryRowBottom}>
-            <Text style={styles.summaryLabelBottom}>Consultation Fee</Text>
-            <Text style={styles.summaryValueBottom}>₹{doctor?.fee || doctor?.consultationFee || 500}</Text>
-          </View>
-          <Button
-            title={bookingInProgress ? 'Booking...' : 'Proceed to Payment'}
-            onPress={handleBooking}
-            fullWidth
-            size="large"
-            disabled={!selectedDate || !selectedTime || !consultationType || bookingInProgress}
-          />
+      {/* Bottom CTA - step 1: Continue after type selection */}
+      {step === 1 && (
+        <View style={[styles.bottomBar, { backgroundColor: colors.backgroundCard, borderTopColor: colors.surfaceBorder }]}>
+          <TouchableOpacity
+            onPress={() => consultationType ? setStep(2) : null}
+            activeOpacity={consultationType ? 0.85 : 1}
+          >
+            <LinearGradient
+              colors={consultationType ? ['#00897B', '#26A69A'] : ['#D1D5DB', '#9CA3AF']}
+              style={styles.bookBtnGradient}
+            >
+              <Text style={styles.bookBtnText}>
+                {consultationType ? 'Continue →' : 'Select a consultation type'}
+              </Text>
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       )}
 
-      {bookingInProgress && (
-        <View style={styles.loadingOverlay}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={styles.loadingText}>Creating your booking...</Text>
+      {/* Bottom CTA - step 2: Continue after date selection */}
+      {step === 2 && (
+        <View style={[styles.bottomBar, { backgroundColor: colors.backgroundCard, borderTopColor: colors.surfaceBorder }]}>
+          <TouchableOpacity
+            onPress={() => selectedDate ? setStep(3) : null}
+            activeOpacity={selectedDate ? 0.85 : 1}
+          >
+            <LinearGradient
+              colors={selectedDate ? ['#00897B', '#26A69A'] : ['#D1D5DB', '#9CA3AF']}
+              style={styles.bookBtnGradient}
+            >
+              <Text style={styles.bookBtnText}>Continue →</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      )}
+
+      {/* Bottom CTA - step 3: Proceed to payment */}
+      {step === 3 && (
+        <View style={[styles.bottomBar, { backgroundColor: colors.backgroundCard, borderTopColor: colors.surfaceBorder }]}>
+          <View style={styles.bottomFeeRow}>
+            <Text style={[styles.bottomFeeLabel, { color: colors.textSecondary }]}>Consultation Fee</Text>
+            <Text style={[styles.bottomFeeValue, { color: colors.textPrimary }]}>
+              ₹{doctor?.consultationFee || doctor?.fee || 500}
+            </Text>
+          </View>
+          <TouchableOpacity
+            style={{ opacity: bookingInProgress ? 0.7 : 1 }}
+            onPress={handleBooking}
+            disabled={bookingInProgress}
+            activeOpacity={0.85}
+          >
+            <LinearGradient colors={['#00897B', '#26A69A']} style={styles.bookBtnGradient}>
+              {bookingInProgress
+                ? <ActivityIndicator size="small" color="#fff" />
+                : <Text style={styles.bookBtnText}>Proceed to Payment →</Text>
+              }
+            </LinearGradient>
+          </TouchableOpacity>
         </View>
       )}
     </View>
   );
 };
 
-
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  header: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.md,
+  container: { flex: 1 },
+
+  // Header
+  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xl, paddingBottom: spacing.lg },
+  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  backIcon: { fontSize: 18, color: '#fff', fontWeight: '700' },
+  headerCenter: { flex: 1, alignItems: 'center' },
+  headerTitle: { color: '#fff', ...typography.headlineMedium, fontWeight: '800' },
+  headerSub: { color: 'rgba(255,255,255,0.75)', ...typography.labelSmall, marginTop: 2 },
+
+  // Progress bar
+  progressWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.md, paddingHorizontal: spacing.xl },
+  progressStep: { alignItems: 'center' },
+  progressDot: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', borderWidth: 2, marginBottom: 4 },
+  progressNum: { ...typography.labelSmall, fontWeight: '700' },
+  progressCheck: { color: '#fff', fontSize: 13, fontWeight: '800' },
+  progressLabel: { ...typography.labelSmall, fontWeight: '500' },
+  progressLine: { flex: 1, height: 2, marginHorizontal: spacing.sm, marginBottom: 18, borderRadius: 1 },
+
+  // Doctor card
+  doctorCard: {
+    marginHorizontal: spacing.xl, borderRadius: borderRadius.xl,
+    padding: spacing.md, marginBottom: spacing.md,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
   },
-  backBtn: {
-    width: 44, height: 44, borderRadius: borderRadius.lg, backgroundColor: colors.surface,
-    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.surfaceBorder,
-  },
-  backIcon: { fontSize: 20, color: colors.textPrimary },
-  headerTitle: { ...typography.headlineMedium, color: colors.textPrimary },
-  placeholder: { width: 44 },
-  
-  // Progress Steps
-  progressContainer: {
-    flexDirection: 'row', justifyContent: 'center', alignItems: 'center',
-    paddingHorizontal: spacing.xl, paddingBottom: spacing.lg, gap: spacing.xl,
-  },
-  progressItem: { alignItems: 'center' },
-  progressDot: {
-    width: 32, height: 32, borderRadius: 16, backgroundColor: colors.surface,
-    alignItems: 'center', justifyContent: 'center', borderWidth: 2, borderColor: colors.surfaceBorder,
-  },
-  progressDotActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-  progressDotCompleted: { backgroundColor: colors.primary, borderColor: colors.primary },
-  progressNum: { ...typography.labelMedium, color: colors.textMuted },
-  progressNumActive: { color: colors.primary },
-  progressCheck: { color: colors.textInverse, fontSize: 14, fontWeight: 'bold' },
-  progressLabel: { ...typography.labelSmall, color: colors.textMuted, marginTop: spacing.xs },
-  progressLabelActive: { color: colors.primary },
-  
-  // Doctor Card
-  doctorCard: { marginHorizontal: spacing.xl, padding: spacing.md, marginBottom: spacing.md },
   doctorRow: { flexDirection: 'row', alignItems: 'center' },
+  doctorAvatar: { width: 56, height: 56, borderRadius: 28 },
+  doctorAvatarFallback: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
+  doctorAvatarInitials: { color: '#fff', fontSize: 20, fontWeight: '800' },
   doctorInfo: { flex: 1, marginLeft: spacing.md },
-  doctorName: { ...typography.bodyLarge, color: colors.textPrimary, fontWeight: '600' },
-  specialty: { ...typography.bodySmall, color: colors.textSecondary },
+  doctorNameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
+  doctorName: { ...typography.bodyLarge, fontWeight: '800' },
+  verifiedBadge: { backgroundColor: '#DCFCE7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  verifiedText: { color: '#16A34A', fontSize: 10, fontWeight: '700' },
+  doctorSpec: { ...typography.bodySmall, marginTop: 2 },
+  doctorMetaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 3 },
+  doctorQual: { ...typography.labelSmall },
+  doctorRating: { color: '#F59E0B', ...typography.labelSmall, fontWeight: '700' },
   feeBox: { alignItems: 'flex-end' },
-  feeLabel: { ...typography.labelSmall, color: colors.textMuted },
-  feeValue: { ...typography.headlineSmall, color: colors.primary },
-  
+  feeValue: { ...typography.headlineSmall, fontWeight: '800' },
+  feeLabel: { ...typography.labelSmall, marginTop: 2 },
+
   scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 180 },
   stepContent: { paddingTop: spacing.md },
-  stepTitle: { ...typography.headlineSmall, color: colors.textPrimary, marginBottom: spacing.xs },
-  stepSubtitle: { ...typography.bodyMedium, color: colors.textSecondary, marginBottom: spacing.lg },
-  
-  // Type Selection
+  stepTitle: { ...typography.headlineSmall, fontWeight: '700', marginBottom: spacing.xs },
+  stepSubtitle: { ...typography.bodyMedium, marginBottom: spacing.lg },
+
+  // Consultation type cards
   typeCard: {
-    backgroundColor: colors.surface, borderRadius: borderRadius.lg, padding: spacing.lg,
-    marginBottom: spacing.md, borderWidth: 2, borderColor: colors.surfaceBorder,
+    flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.xl,
+    padding: spacing.lg, marginBottom: spacing.md, overflow: 'hidden',
   },
-  typeCardActive: { borderColor: colors.primary, backgroundColor: colors.primaryLight },
-  typeCardContent: { flexDirection: 'row', alignItems: 'center' },
-  typeIcon: { fontSize: 32, marginRight: spacing.md },
+  typeIconWrap: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
+  typeIcon: { fontSize: 26 },
   typeInfo: { flex: 1 },
-  typeName: { ...typography.bodyLarge, color: colors.textPrimary, fontWeight: '600' },
-  typeDesc: { ...typography.bodySmall, color: colors.textSecondary },
-  typeHours: { ...typography.labelSmall, color: colors.textMuted, marginTop: spacing.xs },
-  checkBadge: {
-    position: 'absolute', top: spacing.md, right: spacing.md,
-    width: 24, height: 24, borderRadius: 12, backgroundColor: colors.primary,
-    alignItems: 'center', justifyContent: 'center',
-  },
-  checkIcon: { color: colors.textInverse, fontSize: 14, fontWeight: 'bold' },
-  infoNote: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface,
-    borderRadius: borderRadius.md, padding: spacing.md, marginTop: spacing.md,
-  },
-  infoIcon: { fontSize: 16, marginRight: spacing.sm },
-  infoText: { ...typography.bodySmall, color: colors.textSecondary },
-  
-  // Selected Banner
-  selectedBanner: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.primaryLight,
-    borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.lg,
-  },
+  typeNameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 3 },
+  typeName: { ...typography.bodyLarge, fontWeight: '700' },
+  recTag: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
+  recTagText: { fontSize: 10, fontWeight: '700' },
+  typeDesc: { ...typography.bodySmall, marginBottom: 4 },
+  typeMetaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
+  typeWait: { ...typography.labelSmall, fontWeight: '600' },
+  typeHours: { ...typography.labelSmall },
+  checkBadge: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
+  checkIcon: { color: '#fff', fontSize: 14, fontWeight: '800' },
+  infoNote: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: borderRadius.lg, padding: spacing.md, marginTop: spacing.sm, borderWidth: 1 },
+  infoIcon: { fontSize: 16, marginRight: spacing.sm, marginTop: 1 },
+  infoText: { ...typography.bodySmall, flex: 1, lineHeight: 18 },
+
+  selectedBanner: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.lg },
   bannerIcon: { fontSize: 18, marginRight: spacing.sm },
-  bannerText: { ...typography.bodyMedium, color: colors.primary, flex: 1 },
-  changeText: { ...typography.labelSmall, color: colors.primary },
-  
-  // Date Selection
-  datesContainer: { paddingVertical: spacing.sm },
-  dateCard: {
-    width: 72, paddingVertical: spacing.lg, borderRadius: borderRadius.lg,
-    backgroundColor: colors.surface, alignItems: 'center', borderWidth: 1,
-    borderColor: colors.surfaceBorder, marginRight: spacing.md,
-  },
-  dateCardDisabled: { opacity: 0.5 },
+  bannerText: { ...typography.bodyMedium, flex: 1 },
+  changeText: { ...typography.labelSmall },
+
+  datesContainer: { paddingVertical: spacing.sm, paddingRight: spacing.xl },
+  dateCard: { width: 72, paddingVertical: spacing.lg, borderRadius: borderRadius.lg, alignItems: 'center', borderWidth: 1, marginRight: spacing.md },
   dateCardActive: { borderWidth: 0, overflow: 'hidden' },
   dateCardGradient: { width: '100%', paddingVertical: spacing.lg, alignItems: 'center' },
-  dateDay: { ...typography.labelSmall, color: colors.textMuted, marginBottom: spacing.xs },
+  dateDay: { ...typography.labelSmall, marginBottom: spacing.xs },
   dateDayActive: { ...typography.labelSmall, color: 'rgba(255,255,255,0.8)', marginBottom: spacing.xs },
-  dateNum: { ...typography.headlineMedium, color: colors.textPrimary },
-  dateNumActive: { ...typography.headlineMedium, color: colors.textInverse },
-  dateMonth: { ...typography.labelSmall, color: colors.textMuted, marginTop: spacing.xs },
+  dateNum: { ...typography.headlineMedium },
+  dateNumActive: { ...typography.headlineMedium, color: '#fff' },
+  dateMonth: { ...typography.labelSmall, marginTop: spacing.xs },
   dateMonthActive: { ...typography.labelSmall, color: 'rgba(255,255,255,0.8)', marginTop: spacing.xs },
-  todayBadge: { ...typography.labelSmall, color: colors.primary, marginTop: spacing.xs },
-  closedBadge: { ...typography.labelSmall, color: colors.error, marginTop: spacing.xs },
-  textDisabled: { color: colors.textMuted },
-  
-  // Selected Info Row
+  todayBadge: { ...typography.labelSmall, marginTop: spacing.xs },
+  closedBadge: { ...typography.labelSmall, marginTop: spacing.xs },
+
   selectedInfoRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.lg },
-  infoBadge: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.primaryLight,
-    borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-  },
+  infoBadge: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   badgeIcon: { fontSize: 14, marginRight: spacing.xs },
-  badgeText: { ...typography.labelSmall, color: colors.primary },
-  
-  // Queue Card
-  queueCard: { padding: spacing.lg, marginBottom: spacing.lg },
+  badgeText: { ...typography.labelSmall },
+
+  queueCard: { borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.lg, borderWidth: 1 },
+  queueLoadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.md },
+  queueLoadingText: { ...typography.bodySmall },
   queueHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
-  queueTitle: { ...typography.bodyLarge, color: colors.textPrimary, fontWeight: '600' },
-  queueBadgeAvailable: { backgroundColor: colors.success, borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
-  queueBadgeFull: { backgroundColor: colors.error, borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
-  queueBadgeEmpty: { backgroundColor: colors.success, borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
-  queueBadgeText: { ...typography.labelSmall, color: colors.textInverse },
-  queueStats: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: spacing.lg },
+  queueTitle: { ...typography.bodyLarge, fontWeight: '600' },
+  queueBadge: { borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
+  queueBadgeText: { ...typography.labelSmall, color: '#fff' },
+  queueStats: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: spacing.md },
   queueStat: { alignItems: 'center' },
-  queueStatHighlight: { backgroundColor: colors.primaryLight, borderRadius: borderRadius.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
-  queueStatNum: { ...typography.headlineSmall, color: colors.textPrimary },
-  queueStatNumHighlight: { ...typography.headlineSmall, color: colors.primary },
-  queueStatLabel: { ...typography.labelSmall, color: colors.textMuted },
-  estimatedTimeBox: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface,
-    borderRadius: borderRadius.md, padding: spacing.md,
-  },
-  estIcon: { fontSize: 24, marginRight: spacing.md },
-  estLabel: { ...typography.labelSmall, color: colors.textMuted },
-  estTime: { ...typography.headlineSmall, color: colors.primary },
-  queueLoading: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', padding: spacing.lg, marginBottom: spacing.md },
-  queueLoadingText: { ...typography.bodyMedium, color: colors.textSecondary, marginLeft: spacing.md },
-  
-  // Section
+  queueStatHighlight: { alignItems: 'center', borderRadius: borderRadius.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
+  queueStatNum: { ...typography.headlineSmall },
+  queueStatNumHighlight: { ...typography.headlineSmall },
+  queueStatLabel: { ...typography.labelSmall, marginTop: 2 },
+  estimatedTimeBox: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.md, padding: spacing.md },
+  estIcon: { fontSize: 22, marginRight: spacing.md },
+  estLabel: { ...typography.labelSmall },
+  estTime: { ...typography.headlineSmall, fontWeight: '700' },
+
+  summaryCard: { borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.lg, borderWidth: 1 },
+  summaryTitle: { ...typography.bodyLarge, fontWeight: '700', marginBottom: spacing.md },
+  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm, borderBottomWidth: 1 },
+  summaryLabel: { ...typography.bodyMedium },
+  summaryValue: { ...typography.bodyMedium, fontWeight: '500', flex: 1, textAlign: 'right' },
+
   section: { marginBottom: spacing.lg },
-  sectionTitle: { ...typography.bodyLarge, color: colors.textPrimary, fontWeight: '600', marginBottom: spacing.md },
-  
-  // Patient Selector
-  patientSelector: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    backgroundColor: colors.surface, borderRadius: borderRadius.lg, padding: spacing.lg,
-    borderWidth: 1, borderColor: colors.surfaceBorder,
-  },
-  patientInfo: { flexDirection: 'row', alignItems: 'center' },
-  patientIcon: { fontSize: 20, marginRight: spacing.md },
-  patientName: { ...typography.bodyLarge, color: colors.textPrimary },
-  dropdownIcon: { fontSize: 12, color: colors.textMuted },
-  familyList: { marginTop: spacing.md, padding: spacing.sm },
-  familyItem: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    padding: spacing.md, borderRadius: borderRadius.md,
-  },
-  familyItemActive: { backgroundColor: colors.primaryLight },
-  familyItemInfo: {},
-  familyItemName: { ...typography.bodyMedium, color: colors.textPrimary },
-  familyItemRelation: { ...typography.labelSmall, color: colors.textMuted },
-  checkIconSmall: { color: colors.primary, fontSize: 16 },
-  
-  // Symptoms
+  sectionTitle: { ...typography.bodyLarge, fontWeight: '600', marginBottom: spacing.md },
   symptomsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  symptomChip: {
-    flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface,
-    borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.sm,
-    borderWidth: 1, borderColor: colors.surfaceBorder,
-  },
-  symptomChipActive: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
-  symptomText: { ...typography.labelMedium, color: colors.textSecondary },
-  symptomTextActive: { color: colors.primary },
-  symptomCheck: { color: colors.primary, fontSize: 12, marginLeft: spacing.xs },
-  
-  // Urgency
+  symptomChip: { borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderWidth: 1 },
+  symptomText: { ...typography.labelMedium },
+
   urgencyRow: { flexDirection: 'row', gap: spacing.md },
-  urgencyBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.surface, borderRadius: borderRadius.md, padding: spacing.md,
-    borderWidth: 1, borderColor: colors.surfaceBorder,
-  },
-  urgencyBtnActive: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
-  urgencyBtnEmergency: {},
+  urgencyBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: borderRadius.md, padding: spacing.md, borderWidth: 1 },
   urgencyIcon: { fontSize: 16, marginRight: spacing.xs },
-  urgencyText: { ...typography.labelMedium, color: colors.textSecondary },
-  urgencyTextActive: { color: colors.primary },
-  
-  // Reason Input
-  reasonInput: {
-    backgroundColor: colors.surface, borderRadius: borderRadius.lg, padding: spacing.md,
-    borderWidth: 1, borderColor: colors.surfaceBorder, ...typography.bodyMedium,
-    color: colors.textPrimary, minHeight: 80,
-  },
-  
-  // Bottom Bar
+  urgencyText: { ...typography.labelMedium },
+
+  reasonInput: { borderRadius: borderRadius.lg, padding: spacing.md, borderWidth: 1, ...typography.bodyMedium, minHeight: 80 },
+
+  // Bottom bar
   bottomBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.backgroundCard,
+    position: 'absolute', bottom: 0, left: 0, right: 0,
     paddingHorizontal: spacing.xl, paddingTop: spacing.lg, paddingBottom: spacing.xxl,
-    borderTopWidth: 1, borderTopColor: colors.surfaceBorder, ...shadows.large,
+    borderTopWidth: 1, ...shadows.large,
   },
-  summaryRowBottom: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
-  summaryLabelBottom: { ...typography.bodyLarge, color: colors.textSecondary },
-  summaryValueBottom: { ...typography.headlineMedium, color: colors.textPrimary },
-  
-  // Summary Card (Step 4)
-  summaryCard: { padding: spacing.lg, marginBottom: spacing.lg },
-  summaryHeader: { marginBottom: spacing.md },
-  summaryTitle: { ...typography.bodyLarge, color: colors.textPrimary, fontWeight: '600' },
-  summaryDetails: {},
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm },
-  summaryLabel: { ...typography.bodyMedium, color: colors.textSecondary },
-  summaryValue: { ...typography.bodyMedium, color: colors.textPrimary, fontWeight: '500' },
-  
-  // Time Slots (Step 3)
-  slotsLoading: { alignItems: 'center', justifyContent: 'center', padding: spacing.xxl },
-  slotsLoadingText: { ...typography.bodyMedium, color: colors.textSecondary, marginTop: spacing.md },
-  unavailableCard: { alignItems: 'center', padding: spacing.xxl },
-  unavailableIcon: { fontSize: 48, marginBottom: spacing.md },
-  unavailableTitle: { ...typography.headlineSmall, color: colors.textPrimary, marginBottom: spacing.sm },
-  unavailableText: { ...typography.bodyMedium, color: colors.textSecondary, textAlign: 'center' },
-  
-  timeSlotsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  timeSlot: {
-    width: '31%', paddingVertical: spacing.md, borderRadius: borderRadius.md,
-    backgroundColor: colors.surface, alignItems: 'center', borderWidth: 1,
-    borderColor: colors.surfaceBorder, overflow: 'hidden',
-  },
-  timeSlotBooked: { opacity: 0.5, backgroundColor: colors.surfaceLight },
-  timeSlotActive: { borderWidth: 0 },
-  timeSlotGradient: {
-    width: '100%', paddingVertical: spacing.md, alignItems: 'center',
-    flexDirection: 'row', justifyContent: 'center',
-  },
-  timeText: { ...typography.bodyMedium, color: colors.textSecondary },
-  timeTextBooked: { textDecorationLine: 'line-through', color: colors.textMuted },
-  timeTextActive: { ...typography.bodyMedium, color: colors.textInverse, fontWeight: '600' },
-  bookedBadge: { ...typography.labelSmall, color: colors.error, marginTop: spacing.xs },
-  
-  // Availability Badge
-  availabilityBadge: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    padding: spacing.md, borderRadius: borderRadius.md, marginTop: spacing.lg,
-  },
-  availabilityAvailable: { backgroundColor: 'rgba(16, 185, 129, 0.1)' },
-  availabilityUnavailable: { backgroundColor: 'rgba(239, 68, 68, 0.1)' },
-  availabilityIcon: { fontSize: 16, marginRight: spacing.sm },
-  availabilityText: { ...typography.bodyMedium, color: colors.textPrimary },
-  
-  // Legend
-  legend: { flexDirection: 'row', justifyContent: 'center', gap: spacing.lg, marginTop: spacing.lg },
-  legendItem: { flexDirection: 'row', alignItems: 'center' },
-  legendDot: { width: 12, height: 12, borderRadius: 6, marginRight: spacing.xs },
-  legendAvailable: { backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.surfaceBorder },
-  legendBooked: { backgroundColor: colors.surfaceLight, opacity: 0.5 },
-  legendSelected: { backgroundColor: colors.primary },
-  legendText: { ...typography.labelSmall, color: colors.textMuted },
-  
-  // Loading Overlay
-  loadingOverlay: {
-    ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.7)',
-    alignItems: 'center', justifyContent: 'center',
-  },
-  loadingText: { ...typography.bodyMedium, color: colors.textPrimary, marginTop: spacing.md },
+  bottomFeeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
+  bottomFeeLabel: { ...typography.bodyLarge },
+  bottomFeeValue: { ...typography.headlineMedium, fontWeight: '700' },
+  bookBtnGradient: { borderRadius: borderRadius.lg, paddingVertical: spacing.lg, alignItems: 'center', justifyContent: 'center' },
+  bookBtnText: { color: '#fff', ...typography.bodyLarge, fontWeight: '700' },
+
+  // Type banner (step 2)
+  typeBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: borderRadius.lg, padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: '#E5E7EB' },
+  typeBannerLeft: { flex: 1 },
+  typeBannerLabel: { fontSize: 10, fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 },
+  typeBannerValue: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  typeBannerIcon: { fontSize: 16 },
+  typeBannerText: { ...typography.bodyMedium, fontWeight: '600' },
+  changePill: { backgroundColor: '#F0FDF4', borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: 5, borderWidth: 1, borderColor: '#86EFAC' },
+  changePillText: { color: '#16A34A', fontSize: 12, fontWeight: '700' },
+
+  // Date card extras
+  todayDot: { marginTop: 4, backgroundColor: '#00897B', borderRadius: 8, paddingHorizontal: 5, paddingVertical: 2 },
+  todayDotText: { color: '#fff', fontSize: 9, fontWeight: '700' },
+  dateCheckDot: { width: 18, height: 18, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center', marginTop: 4 },
+  dateCheckIcon: { color: '#fff', fontSize: 10, fontWeight: '800' },
+
+  // Selected date confirm row
+  selectedDateConfirm: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.lg, padding: spacing.md, marginTop: spacing.md, borderWidth: 1 },
+  selectedDateIcon: { fontSize: 18, marginRight: spacing.sm },
+  selectedDateText: { ...typography.bodyMedium, fontWeight: '600', flex: 1 },
+
+  // Badge change icon
+  badgeChange: { fontSize: 12, marginLeft: 2 },
+
+  // Queue redesign
+  queueTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: spacing.md },
+  queueTokenLabel: { fontSize: 11, color: '#166534', fontWeight: '600', marginBottom: 2 },
+  queueTokenNum: { fontSize: 32, fontWeight: '900', color: '#00897B', lineHeight: 36 },
+  queueWaitBox: { alignItems: 'flex-end' },
+  queueWaitLabel: { fontSize: 11, color: '#166534', fontWeight: '600', marginBottom: 2 },
+  queueWaitVal: { fontSize: 16, fontWeight: '800', color: '#00897B' },
+  queueBarWrap: { gap: 6 },
+  queueBarTrack: { height: 8, borderRadius: 4, overflow: 'hidden' },
+  queueBarFill: { height: '100%', backgroundColor: '#00897B', borderRadius: 4 },
+  queueBarLabel: { fontSize: 11, color: '#166534', fontWeight: '500' },
+
+  // Summary icon row
+  summaryLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
+  summaryRowIcon: { fontSize: 14 },
+
+  // Section header row
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
+  sectionHint: { ...typography.labelSmall },
+
+  // Urgency hint
+  urgencyHint: { marginTop: spacing.sm, fontSize: 12, color: '#DC2626', fontWeight: '500' },
+
+  // Char count
+  charCount: { ...typography.labelSmall, textAlign: 'right', marginTop: 4 },
+
+  // Trust row
+  trustRow: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.lg, padding: spacing.md, borderWidth: 1, marginBottom: spacing.md },
+  trustIcon: { fontSize: 22, marginRight: spacing.md },
+  trustInfo: { flex: 1 },
+  trustTitle: { ...typography.bodyMedium, fontWeight: '700' },
+  trustSub: { ...typography.labelSmall, marginTop: 2 },
 });
 
 export default SlotSelectionScreen;

@@ -2,7 +2,7 @@
  * Emergency Screen - SOS & Emergency Services with real geolocation
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,23 +15,34 @@ import {
   ActivityIndicator,
   Platform,
   PermissionsAndroid,
+  TextInput,
+  Modal,
 } from 'react-native';
 import Geolocation from '@react-native-community/geolocation';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../../theme/colors';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
+import { shadows } from '../../theme/colors';
 import Card from '../../components/common/Card';
-import whatsappService from '../../services/whatsappService';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
 
+const SOS_CONTACTS_KEY = '@sos_favorite_contacts';
+
 const EmergencyScreen = ({ navigation }) => {
   const { user } = useUser();
+  const { colors } = useTheme();
   const [sosActive, setSosActive] = useState(false);
   const [location, setLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
   const [emergencyInfo, setEmergencyInfo] = useState(null);
   const [personalContacts, setPersonalContacts] = useState([]);
+  // SOS contacts management
+  const [sosContacts, setSosContacts] = useState([]); // [{name, phone}]
+  const [addContactModal, setAddContactModal] = useState(false);
+  const [newContactName, setNewContactName] = useState('');
+  const [newContactPhone, setNewContactPhone] = useState('');
 
   const emergencyContacts = [
     { id: '1', name: 'Ambulance', number: '102', icon: '🚑', color: '#EF4444' },
@@ -45,12 +56,55 @@ const EmergencyScreen = ({ navigation }) => {
   useEffect(() => {
     requestLocationPermission();
     fetchEmergencyInfo();
+    loadSosContacts();
   }, []);
+
+  const loadSosContacts = async () => {
+    try {
+      const stored = await AsyncStorage.getItem(SOS_CONTACTS_KEY);
+      if (stored) setSosContacts(JSON.parse(stored));
+    } catch {}
+  };
+
+  const saveSosContacts = async (contacts) => {
+    try {
+      await AsyncStorage.setItem(SOS_CONTACTS_KEY, JSON.stringify(contacts));
+    } catch {}
+  };
+
+  const addSosContact = () => {
+    const name = newContactName.trim();
+    const phone = newContactPhone.trim().replace(/\s/g, '');
+    if (!name || !phone) {
+      Alert.alert('Required', 'Please enter both name and phone number');
+      return;
+    }
+    const updated = [...sosContacts, { name, phone }];
+    setSosContacts(updated);
+    saveSosContacts(updated);
+    setNewContactName('');
+    setNewContactPhone('');
+    setAddContactModal(false);
+  };
+
+  const removeSosContact = (index) => {
+    Alert.alert('Remove Contact', 'Remove this SOS contact?', [
+      { text: 'Cancel', style: 'cancel' },
+      {
+        text: 'Remove',
+        style: 'destructive',
+        onPress: () => {
+          const updated = sosContacts.filter((_, i) => i !== index);
+          setSosContacts(updated);
+          saveSosContacts(updated);
+        },
+      },
+    ]);
+  };
 
   const requestLocationPermission = async () => {
     if (Platform.OS === 'android') {
       try {
-        // Request both fine and coarse location
         const fineGranted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
@@ -61,26 +115,21 @@ const EmergencyScreen = ({ navigation }) => {
             buttonPositive: 'OK',
           }
         );
-        
         if (fineGranted === PermissionsAndroid.RESULTS.GRANTED) {
-          console.log('📍 Fine location permission granted');
           getCurrentLocation();
         } else {
-          // Try coarse location as fallback
           const coarseGranted = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION
           );
           if (coarseGranted === PermissionsAndroid.RESULTS.GRANTED) {
-            console.log('📍 Coarse location permission granted');
             getCurrentLocation();
           } else {
-            console.log('📍 Location permission denied');
             Alert.alert(
               'Location Required',
               'Location permission is needed for emergency services. Please enable it in Settings.',
               [
                 { text: 'Cancel', style: 'cancel' },
-                { text: 'Open Settings', onPress: () => Linking.openSettings() }
+                { text: 'Open Settings', onPress: () => Linking.openSettings() },
               ]
             );
           }
@@ -95,18 +144,13 @@ const EmergencyScreen = ({ navigation }) => {
 
   const getCurrentLocation = () => {
     setLoadingLocation(true);
-    
-    // Configure geolocation
     Geolocation.setRNConfiguration({
       skipPermissionRequests: false,
       authorizationLevel: 'whenInUse',
       locationProvider: 'auto',
     });
-    
-    // Request current position with generous timeout
     Geolocation.getCurrentPosition(
       (position) => {
-        console.log('📍 Location obtained:', position.coords);
         setLocation({
           latitude: position.coords.latitude,
           longitude: position.coords.longitude,
@@ -115,47 +159,24 @@ const EmergencyScreen = ({ navigation }) => {
         setLoadingLocation(false);
       },
       (error) => {
-        console.error('📍 Location error:', error.code, error.message);
         setLoadingLocation(false);
-        
-        // Show user-friendly error
-        if (error.code === 1) {
-          Alert.alert('Location Permission', 'Please enable location permission in Settings');
-        } else if (error.code === 2) {
-          Alert.alert('Location Unavailable', 'Unable to get location. Please check GPS is enabled.');
-        } else if (error.code === 3) {
-          // Timeout - try with lower accuracy
+        if (error.code === 3) {
           Geolocation.getCurrentPosition(
-            (pos) => {
-              setLocation({
-                latitude: pos.coords.latitude,
-                longitude: pos.coords.longitude,
-                accuracy: pos.coords.accuracy,
-              });
-            },
-            () => {
-              console.log('📍 Location fallback also failed');
-            },
+            (pos) => setLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
+            () => {},
             { enableHighAccuracy: false, timeout: 60000, maximumAge: 300000 }
           );
         }
       },
-      { 
-        enableHighAccuracy: false, 
-        timeout: 60000, 
-        maximumAge: 300000,
-      }
+      { enableHighAccuracy: false, timeout: 60000, maximumAge: 300000 }
     );
   };
 
   const fetchEmergencyInfo = async () => {
     if (!user?._id) return;
-    
     try {
       const response = await apiClient.get(`/health/emergency/${user._id}`);
       setEmergencyInfo(response.data);
-      
-      // Set personal contacts from emergency contact
       if (response.data.emergencyContact) {
         setPersonalContacts([{
           id: '1',
@@ -164,61 +185,106 @@ const EmergencyScreen = ({ navigation }) => {
           phone: response.data.emergencyContact.phone,
         }]);
       }
-    } catch (error) {
-      console.error('Error fetching emergency info:', error);
-    }
+    } catch {}
   };
 
   const handleCall = (number) => {
     Linking.openURL(`tel:${number}`);
   };
 
+  // Build Google Maps live location link
+  const buildLocationLink = (loc) => {
+    if (!loc) return 'Location unavailable';
+    return `https://maps.google.com/?q=${loc.latitude},${loc.longitude}`;
+  };
+
+  // Send SOS WhatsApp message to a specific phone number
+  const sendSOSToContact = async (phone, loc) => {
+    const locationLink = buildLocationLink(loc);
+    const message =
+      `🚨 *EMERGENCY SOS*\n\n` +
+      `${user?.name || 'Someone'} needs immediate help!\n\n` +
+      `📍 Live Location:\n${locationLink}\n\n` +
+      `Please respond immediately or call them at ${user?.phone || 'their number'}.`;
+
+    const formattedPhone = phone.replace(/[^0-9]/g, '');
+    const url = `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
+    try {
+      await Linking.openURL(url);
+      return true;
+    } catch {
+      // Try https fallback
+      try {
+        await Linking.openURL(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`);
+        return true;
+      } catch {
+        return false;
+      }
+    }
+  };
+
   const handleSOS = async () => {
     setSosActive(true);
-    
-    // Get fresh location with fallback
-    const getLocationAndSendSOS = (loc) => {
-      const currentLocation = loc ? {
-        latitude: loc.latitude,
-        longitude: loc.longitude,
-        address: `Lat: ${loc.latitude.toFixed(6)}, Long: ${loc.longitude.toFixed(6)}`,
-      } : { latitude: 0, longitude: 0, address: 'Location unavailable' };
-      
-      const userInfo = {
-        name: user?.name || 'HealthSync User',
-        phone: user?.phone || 'N/A',
-        bloodGroup: emergencyInfo?.bloodGroup || 'Unknown',
-        allergies: emergencyInfo?.allergies?.join(', ') || 'None known',
-      };
-      
-      // Send WhatsApp SOS
-      whatsappService.sendEmergencySOS(currentLocation, userInfo).catch(error => {
-        console.error('WhatsApp SOS error:', error);
-      });
-      
-      // Show confirmation
+
+    const getLocAndSend = async (loc) => {
+      const locationLink = buildLocationLink(loc);
+      const message =
+        `🚨 *EMERGENCY SOS*\n\n` +
+        `${user?.name || 'Someone'} needs immediate help!\n\n` +
+        `📍 Live Location:\n${locationLink}\n\n` +
+        `Please respond immediately!`;
+
+      if (sosContacts.length === 0) {
+        // No saved contacts — open WhatsApp without a number so user picks contact
+        // Use https://wa.me as fallback if whatsapp:// scheme fails
+        try {
+          await Linking.openURL(`whatsapp://send?text=${encodeURIComponent(message)}`);
+        } catch {
+          try {
+            await Linking.openURL(`https://wa.me/?text=${encodeURIComponent(message)}`);
+          } catch {
+            Alert.alert(
+              'WhatsApp Required',
+              'Could not open WhatsApp. Please make sure WhatsApp is installed and try again.',
+              [{ text: 'OK' }]
+            );
+            setSosActive(false);
+            return;
+          }
+        }
+        Alert.alert(
+          'Add SOS Contacts',
+          'Select your contact in WhatsApp. To send SOS automatically next time, add favorite contacts below.',
+          [{ text: 'OK' }]
+        );
+        setSosActive(false);
+        return;
+      }
+
+      // Send to all saved SOS contacts sequentially
+      let sent = 0;
+      for (const contact of sosContacts) {
+        const ok = await sendSOSToContact(contact.phone, loc);
+        if (ok) sent++;
+        await new Promise(r => setTimeout(r, 1000));
+      }
+
       Alert.alert(
-        'SOS Sent',
-        loc ? 'Emergency alert has been sent with your location. Emergency services have been notified.' 
-            : 'Emergency alert sent. Note: Precise location could not be determined.',
+        '🚨 SOS Sent',
+        `Emergency alert with your live location sent to ${sent} contact(s).`,
         [{ text: 'OK' }]
       );
-      
-      setTimeout(() => setSosActive(false), 3000);
+      setSosActive(false);
     };
-    
-    // Try to get fresh location
+
     Geolocation.getCurrentPosition(
       (position) => {
-        getLocationAndSendSOS({
-          latitude: position.coords.latitude,
-          longitude: position.coords.longitude,
-        });
+        const loc = { latitude: position.coords.latitude, longitude: position.coords.longitude };
+        setLocation(loc);
+        getLocAndSend(loc);
       },
-      (error) => {
-        console.error('SOS location error:', error);
-        // Use cached location or send without
-        getLocationAndSendSOS(location);
+      () => {
+        getLocAndSend(location);
       },
       { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 }
     );
@@ -228,20 +294,16 @@ const EmergencyScreen = ({ navigation }) => {
     if (location) {
       const url = `https://www.google.com/maps/search/hospital+emergency/@${location.latitude},${location.longitude},14z`;
       Linking.openURL(url);
-    } else if (emergencyInfo?.nearbyHospitalsUrl) {
-      Linking.openURL(emergencyInfo.nearbyHospitalsUrl);
     } else {
       Linking.openURL('https://www.google.com/maps/search/hospital+emergency');
     }
   };
 
-  const nearbyHospitals = [
-    { id: '1', name: 'Nearest Hospital', distance: 'Tap to find', time: 'Via Maps', emergency: true },
-  ];
+  const styles = makeStyles(colors);
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
@@ -360,47 +422,84 @@ const EmergencyScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
 
-        {/* Personal Emergency Contacts */}
+        {/* SOS Favorite Contacts */}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>My Emergency Contacts</Text>
-            <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
+            <Text style={styles.sectionTitle}>SOS Contacts</Text>
+            <TouchableOpacity onPress={() => setAddContactModal(true)}>
               <Text style={styles.seeAll}>+ Add</Text>
             </TouchableOpacity>
           </View>
 
-          {personalContacts.length > 0 ? (
-            personalContacts.map((contact) => (
-              <Card key={contact.id} variant="gradient" style={styles.contactCard}>
+          <Text style={[styles.sosContactsNote, { color: colors.textMuted }]}>
+            SOS sends your live Google Maps location to these contacts via WhatsApp.
+          </Text>
+
+          {sosContacts.length > 0 ? (
+            sosContacts.map((contact, index) => (
+              <Card key={index} variant="default" style={styles.contactCard}>
                 <View style={styles.contactRow}>
-                  <View style={styles.contactAvatar}>
-                    <Text style={styles.contactInitial}>{contact.name?.[0] || '?'}</Text>
+                  <View style={[styles.contactAvatar, { backgroundColor: colors.primary }]}>
+                    <Text style={styles.contactInitial}>{contact.name?.[0]?.toUpperCase() || '?'}</Text>
                   </View>
                   <View style={styles.contactInfo}>
-                    <Text style={styles.contactName}>{contact.name}</Text>
-                    <Text style={styles.contactRelation}>{contact.relation}</Text>
+                    <Text style={[styles.contactName, { color: colors.textPrimary }]}>{contact.name}</Text>
+                    <Text style={[styles.contactRelation, { color: colors.textSecondary }]}>{contact.phone}</Text>
                   </View>
-                  <TouchableOpacity 
-                    style={styles.contactCallBtn}
-                    onPress={() => handleCall(contact.phone)}
-                  >
-                    <LinearGradient
-                      colors={colors.gradientPrimary}
-                      style={styles.contactCallGradient}
-                    >
+                  <TouchableOpacity style={styles.contactCallBtn} onPress={() => handleCall(contact.phone)}>
+                    <LinearGradient colors={colors.gradientPrimary} style={styles.contactCallGradient}>
                       <Text style={styles.contactCallIcon}>📞</Text>
                     </LinearGradient>
+                  </TouchableOpacity>
+                  <TouchableOpacity
+                    style={[styles.removeBtn, { backgroundColor: `${colors.error}15`, marginLeft: spacing.sm }]}
+                    onPress={() => removeSosContact(index)}
+                  >
+                    <Text style={[styles.removeBtnText, { color: colors.error }]}>✕</Text>
                   </TouchableOpacity>
                 </View>
               </Card>
             ))
           ) : (
             <Card variant="default" style={styles.emptyCard}>
-              <Text style={styles.emptyText}>No emergency contacts set</Text>
-              <Text style={styles.emptySubtext}>Add contacts in your profile</Text>
+              <Text style={[styles.emptyText, { color: colors.textMuted }]}>No SOS contacts added</Text>
+              <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>
+                First SOS press opens WhatsApp so you can pick a contact manually
+              </Text>
+              <TouchableOpacity
+                style={[styles.addContactBtn, { backgroundColor: colors.primary }]}
+                onPress={() => setAddContactModal(true)}
+              >
+                <Text style={[styles.addContactBtnText, { color: colors.textInverse }]}>+ Add SOS Contact</Text>
+              </TouchableOpacity>
             </Card>
           )}
         </View>
+
+        {/* Profile Emergency Contact */}
+        {personalContacts.length > 0 && (
+          <View style={styles.section}>
+            <Text style={styles.sectionTitle}>Profile Emergency Contact</Text>
+            {personalContacts.map((contact) => (
+              <Card key={contact.id} variant="gradient" style={styles.contactCard}>
+                <View style={styles.contactRow}>
+                  <View style={styles.contactAvatar}>
+                    <Text style={styles.contactInitial}>{contact.name?.[0] || '?'}</Text>
+                  </View>
+                  <View style={styles.contactInfo}>
+                    <Text style={[styles.contactName, { color: colors.textPrimary }]}>{contact.name}</Text>
+                    <Text style={[styles.contactRelation, { color: colors.textSecondary }]}>{contact.relation}</Text>
+                  </View>
+                  <TouchableOpacity style={styles.contactCallBtn} onPress={() => handleCall(contact.phone)}>
+                    <LinearGradient colors={colors.gradientPrimary} style={styles.contactCallGradient}>
+                      <Text style={styles.contactCallIcon}>📞</Text>
+                    </LinearGradient>
+                  </TouchableOpacity>
+                </View>
+              </Card>
+            ))}
+          </View>
+        )}
 
         {/* First Aid Tips */}
         <View style={styles.section}>
@@ -422,12 +521,50 @@ const EmergencyScreen = ({ navigation }) => {
           </ScrollView>
         </View>
       </ScrollView>
+
+      {/* Add SOS Contact Modal */}
+      <Modal visible={addContactModal} transparent animationType="slide" onRequestClose={() => setAddContactModal(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={[styles.modalSheet, { backgroundColor: colors.backgroundCard }]}>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Add SOS Contact</Text>
+            <Text style={[styles.modalSub, { color: colors.textSecondary }]}>
+              This person will receive your live location via WhatsApp when you press SOS.
+            </Text>
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary, borderColor: colors.surfaceBorder }]}
+              placeholder="Contact Name"
+              placeholderTextColor={colors.textMuted}
+              value={newContactName}
+              onChangeText={setNewContactName}
+            />
+            <TextInput
+              style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary, borderColor: colors.surfaceBorder }]}
+              placeholder="Phone Number (with country code, e.g. +91...)"
+              placeholderTextColor={colors.textMuted}
+              value={newContactPhone}
+              onChangeText={setNewContactPhone}
+              keyboardType="phone-pad"
+            />
+            <View style={styles.modalBtns}>
+              <TouchableOpacity
+                style={[styles.modalCancelBtn, { borderColor: colors.surfaceBorder }]}
+                onPress={() => { setAddContactModal(false); setNewContactName(''); setNewContactPhone(''); }}
+              >
+                <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>Cancel</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.modalSaveBtn, { backgroundColor: colors.primary }]} onPress={addSosContact}>
+                <Text style={[styles.modalSaveText, { color: colors.textInverse }]}>Save Contact</Text>
+              </TouchableOpacity>
+            </View>
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
 
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
   backBtn: { width: 44, height: 44, borderRadius: borderRadius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.surfaceBorder },
@@ -448,6 +585,22 @@ const styles = StyleSheet.create({
   medicalTitle: { ...typography.labelMedium, color: colors.textMuted, marginBottom: spacing.md },
   medicalRow: { flexDirection: 'row', gap: spacing.xl },
   medicalItem: { flex: 1 },
+  sosContactsNote: { ...typography.bodySmall, paddingHorizontal: spacing.xl, marginBottom: spacing.md, marginTop: -spacing.sm },
+  removeBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  removeBtnText: { fontSize: 14, fontWeight: '700' },
+  addContactBtn: { marginTop: spacing.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.sm, borderRadius: borderRadius.lg },
+  addContactBtnText: { ...typography.buttonSmall, fontWeight: '600' },
+  // Modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.xxl, paddingBottom: 40 },
+  modalTitle: { ...typography.headlineMedium, marginBottom: spacing.sm },
+  modalSub: { ...typography.bodyMedium, marginBottom: spacing.xl },
+  input: { borderRadius: borderRadius.lg, borderWidth: 1, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, ...typography.bodyLarge, marginBottom: spacing.md },
+  modalBtns: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
+  modalCancelBtn: { flex: 1, borderWidth: 1, borderRadius: borderRadius.lg, paddingVertical: spacing.md, alignItems: 'center' },
+  modalCancelText: { ...typography.button },
+  modalSaveBtn: { flex: 1, borderRadius: borderRadius.lg, paddingVertical: spacing.md, alignItems: 'center' },
+  modalSaveText: { ...typography.button, fontWeight: '700' },
   medicalLabel: { ...typography.labelSmall, color: colors.textMuted },
   medicalValue: { ...typography.bodyMedium, color: colors.textPrimary, fontWeight: '600' },
   section: { marginBottom: spacing.xxl },

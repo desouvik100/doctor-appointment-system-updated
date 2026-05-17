@@ -14,22 +14,26 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
+  Modal,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
+import { shadows } from '../../theme/colors';
 import Card from '../../components/common/Card';
 import apiClient from '../../services/api/apiClient';
 import { useUser } from '../../context/UserContext';
 
 const LabTestsScreen = ({ navigation }) => {
   const { user } = useUser();
+  const { colors } = useTheme();
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [popularTests, setPopularTests] = useState([]);
   const [healthPackages, setHealthPackages] = useState([]);
+  const [cartModalVisible, setCartModalVisible] = useState(false);
 
   // Default data as fallback
   const defaultTests = [
@@ -78,13 +82,26 @@ const LabTestsScreen = ({ navigation }) => {
 
   const fetchLabTests = useCallback(async () => {
     try {
-      const [testsRes, packagesRes] = await Promise.all([
-        apiClient.get('/lab-tests/available').catch(() => ({ data: null })),
-        apiClient.get('/lab-tests/packages').catch(() => ({ data: null })),
-      ]);
+      // Use EMR catalog endpoint — /lab-tests/available doesn't exist
+      const testsRes = await apiClient.get('/emr/lab-tests/catalog').catch(() => ({ data: null }));
 
-      setPopularTests(testsRes.data?.tests || defaultTests);
-      setHealthPackages(packagesRes.data?.packages || defaultPackages);
+      // Map catalog tests to our format if available
+      const catalogTests = testsRes.data?.catalog?.tests;
+      if (Array.isArray(catalogTests) && catalogTests.length > 0) {
+        const mapped = catalogTests.slice(0, 20).map((t, i) => ({
+          _id: t.id || String(i),
+          name: t.name,
+          price: t.price || 299,
+          originalPrice: Math.round((t.price || 299) * 1.5),
+          discount: 33,
+          icon: '🧪',
+          category: t.category || 'general',
+        }));
+        setPopularTests(mapped);
+      } else {
+        setPopularTests(defaultTests);
+      }
+      setHealthPackages(defaultPackages);
     } catch (error) {
       console.error('Error fetching lab tests:', error);
       setPopularTests(defaultTests);
@@ -138,31 +155,38 @@ const LabTestsScreen = ({ navigation }) => {
       Alert.alert('Empty Cart', 'Please add tests to your cart first');
       return;
     }
-    
-    navigation.navigate('LabTestBooking', { 
-      tests: cart,
-      total: cart.reduce((sum, item) => sum + item.price, 0),
+    setCartModalVisible(true);
+  };
+
+  const handleProceedBooking = () => {
+    setCartModalVisible(false);
+    const total = cart.reduce((s, i) => s + i.price, 0);
+    navigation.navigate('LabTestPayment', {
+      cart,
+      total,
     });
   };
 
   if (loading) {
     return (
-      <View style={[styles.container, styles.centered]}>
+      <View style={[{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
 
+  const styles = makeStyles(colors);
+
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Lab Tests</Text>
-        <TouchableOpacity style={styles.cartBtn} onPress={() => cart.length > 0 && handleBookNow()}>
+        <TouchableOpacity style={styles.cartBtn} onPress={() => setCartModalVisible(true)}>
           <Text style={styles.cartIcon}>🛒</Text>
           {cart.length > 0 && (
             <View style={styles.cartBadge}>
@@ -328,12 +352,77 @@ const LabTestsScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       )}
+
+      {/* Cart Modal */}
+      <Modal visible={cartModalVisible} transparent animationType="slide" onRequestClose={() => setCartModalVisible(false)}>
+        <View style={styles.modalOverlay}>
+          <View style={styles.modalSheet}>
+            <View style={styles.modalHeader}>
+              <Text style={styles.modalTitle}>Your Cart</Text>
+              <TouchableOpacity onPress={() => setCartModalVisible(false)}>
+                <Text style={styles.modalClose}>✕</Text>
+              </TouchableOpacity>
+            </View>
+
+            {cart.length === 0 ? (
+              <View style={styles.emptyCartContainer}>
+                <Text style={styles.emptyCartIcon}>🛒</Text>
+                <Text style={styles.emptyCartText}>Your cart is empty</Text>
+                <Text style={styles.emptyCartSub}>Add tests from the list below</Text>
+                <TouchableOpacity style={styles.browseBtn} onPress={() => setCartModalVisible(false)}>
+                  <Text style={styles.browseBtnText}>Browse Tests</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <>
+                <ScrollView style={styles.cartList} showsVerticalScrollIndicator={false}>
+                  {cart.map((item) => (
+                    <View key={item._id} style={styles.cartItem}>
+                      <View style={styles.cartItemIcon}>
+                        <Text style={{ fontSize: 20 }}>{item.icon || '🧪'}</Text>
+                      </View>
+                      <View style={styles.cartItemInfo}>
+                        <Text style={styles.cartItemName} numberOfLines={2}>{item.name}</Text>
+                        <Text style={styles.cartItemPrice}>₹{item.price}</Text>
+                      </View>
+                      <TouchableOpacity style={styles.cartRemoveBtn} onPress={() => removeFromCart(item._id)}>
+                        <Text style={styles.cartRemoveIcon}>✕</Text>
+                      </TouchableOpacity>
+                    </View>
+                  ))}
+                </ScrollView>
+
+                <View style={styles.cartSummary}>
+                  <View style={styles.cartSummaryRow}>
+                    <Text style={styles.cartSummaryLabel}>Subtotal ({cart.length} tests)</Text>
+                    <Text style={styles.cartSummaryValue}>₹{cart.reduce((s, i) => s + i.price, 0)}</Text>
+                  </View>
+                  <View style={styles.cartSummaryRow}>
+                    <Text style={styles.cartSummaryLabel}>Home Collection</Text>
+                    <Text style={[styles.cartSummaryValue, { color: colors.success }]}>FREE</Text>
+                  </View>
+                  <View style={[styles.cartSummaryRow, styles.cartTotalRow]}>
+                    <Text style={styles.cartTotalLabel}>Total</Text>
+                    <Text style={styles.cartTotalValue}>₹{cart.reduce((s, i) => s + i.price, 0)}</Text>
+                  </View>
+                </View>
+
+                <TouchableOpacity style={styles.proceedBtn} onPress={handleProceedBooking}>
+                  <LinearGradient colors={colors.gradientPrimary} style={styles.proceedBtnGradient}>
+                    <Text style={styles.proceedBtnText}>Book Home Collection</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              </>
+            )}
+          </View>
+        </View>
+      </Modal>
     </View>
   );
 };
 
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   centered: { justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
@@ -403,6 +492,36 @@ const styles = StyleSheet.create({
   checkoutBtnGradient: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xxl, paddingVertical: spacing.md },
   checkoutBtnText: { ...typography.button, color: colors.textInverse, marginRight: spacing.sm },
   checkoutArrow: { fontSize: 18, color: colors.textInverse },
+  // Cart Modal
+  modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
+  modalSheet: { backgroundColor: colors.backgroundCard, borderTopLeftRadius: 24, borderTopRightRadius: 24, paddingTop: spacing.xl, paddingHorizontal: spacing.xl, paddingBottom: 40, maxHeight: '80%' },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl },
+  modalTitle: { ...typography.headlineMedium, color: colors.textPrimary },
+  modalClose: { fontSize: 20, color: colors.textMuted, padding: spacing.sm },
+  emptyCartContainer: { alignItems: 'center', paddingVertical: spacing.xxl },
+  emptyCartIcon: { fontSize: 56, marginBottom: spacing.lg },
+  emptyCartText: { ...typography.headlineSmall, color: colors.textPrimary, marginBottom: spacing.sm },
+  emptyCartSub: { ...typography.bodyMedium, color: colors.textMuted, marginBottom: spacing.xl },
+  browseBtn: { backgroundColor: colors.primary, paddingHorizontal: spacing.xxl, paddingVertical: spacing.md, borderRadius: borderRadius.lg },
+  browseBtnText: { ...typography.button, color: colors.textInverse },
+  cartList: { maxHeight: 300 },
+  cartItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.divider },
+  cartItemIcon: { width: 44, height: 44, borderRadius: borderRadius.lg, backgroundColor: colors.surfaceLight, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
+  cartItemInfo: { flex: 1 },
+  cartItemName: { ...typography.bodyMedium, color: colors.textPrimary, fontWeight: '500' },
+  cartItemPrice: { ...typography.bodySmall, color: colors.primary, marginTop: 2 },
+  cartRemoveBtn: { padding: spacing.sm },
+  cartRemoveIcon: { fontSize: 16, color: colors.textMuted },
+  cartSummary: { paddingVertical: spacing.lg, borderTopWidth: 1, borderTopColor: colors.divider, marginTop: spacing.md },
+  cartSummaryRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.sm },
+  cartSummaryLabel: { ...typography.bodyMedium, color: colors.textSecondary },
+  cartSummaryValue: { ...typography.bodyMedium, color: colors.textPrimary, fontWeight: '500' },
+  cartTotalRow: { marginTop: spacing.sm, paddingTop: spacing.sm, borderTopWidth: 1, borderTopColor: colors.divider },
+  cartTotalLabel: { ...typography.headlineSmall, color: colors.textPrimary },
+  cartTotalValue: { ...typography.headlineSmall, color: colors.primary, fontWeight: '700' },
+  proceedBtn: { borderRadius: borderRadius.lg, overflow: 'hidden', marginTop: spacing.lg },
+  proceedBtnGradient: { paddingVertical: spacing.lg, alignItems: 'center' },
+  proceedBtnText: { ...typography.button, color: colors.textInverse },
 });
 
 export default LabTestsScreen;

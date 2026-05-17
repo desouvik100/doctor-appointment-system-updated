@@ -8,7 +8,8 @@
  */
 
 // For development - using local backend
-const DEV_API_URL = 'http://localhost:5005/api';
+// Physical device needs PC's LAN IP, not localhost
+const DEV_API_URL = 'http://192.168.2.78:5005/api';
 
 // For production
 const PROD_API_URL = 'https://doctor-appointment-system-updated.onrender.com/api';

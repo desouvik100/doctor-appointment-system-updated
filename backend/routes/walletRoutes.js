@@ -3,9 +3,8 @@ const router = express.Router();
 const DoctorWallet = require('../models/DoctorWallet');
 const Doctor = require('../models/Doctor');
 const User = require('../models/User');
-const Appointment = require('../models/Appointment');
 const aiSecurityService = require('../services/aiSecurityService');
-const { verifyToken } = require('../middleware/auth');
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const { emitWalletTransaction } = require('../services/socketManager');
 
 /**
@@ -102,7 +101,7 @@ router.get('/balance', async (req, res) => {
     
     let decoded;
     try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+      decoded = jwt.verify(token, process.env.JWT_SECRET);
     } catch (tokenError) {
       return res.json({
         success: true,
@@ -207,48 +206,125 @@ router.get('/transactions', verifyToken, async (req, res) => {
   }
 });
 
-// Add money to patient wallet (placeholder - integrate with payment gateway)
-router.post('/add', verifyToken, async (req, res) => {
+/**
+ * POST /wallet/add/create-order
+ * Step 1: Create a Razorpay order for wallet top-up.
+ * Wallet is NOT credited here — only after payment verification.
+ */
+router.post('/add/create-order', verifyToken, async (req, res) => {
   try {
-    const { amount, paymentMethod } = req.body;
-    
-    if (!amount || amount <= 0) {
-      return res.status(400).json({ success: false, message: 'Invalid amount' });
+    const { amount } = req.body;
+
+    if (!amount || amount < 1) {
+      return res.status(400).json({ success: false, message: 'Minimum top-up amount is ₹1' });
     }
-    
-    const user = await User.findById(req.user.id);
-    
+    if (amount > 50000) {
+      return res.status(400).json({ success: false, message: 'Maximum top-up amount is ₹50,000' });
+    }
+
+    const user = await User.findById(req.user.id).select('name email phone');
     if (!user) {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
-    
-    const newBalance = (user.walletBalance || 0) + amount;
-    
+
+    const Razorpay = require('razorpay');
+    const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET, USE_RAZORPAY_PAYMENTS } = require('../config/paymentConfig');
+
+    if (!USE_RAZORPAY_PAYMENTS || !RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+      return res.status(503).json({ success: false, message: 'Payment gateway not configured' });
+    }
+
+    const razorpay = new Razorpay({ key_id: RAZORPAY_KEY_ID, key_secret: RAZORPAY_KEY_SECRET });
+
+    const order = await razorpay.orders.create({
+      amount: Math.round(amount * 100), // paise
+      currency: 'INR',
+      receipt: `wallet_${req.user.id}_${Date.now()}`,
+      notes: {
+        userId: req.user.id.toString(),
+        purpose: 'wallet_topup',
+        topupAmount: amount.toString()
+      }
+    });
+
+    res.json({
+      success: true,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      keyId: RAZORPAY_KEY_ID,
+      userName: user.name,
+      userEmail: user.email,
+      userPhone: user.phone || ''
+    });
+  } catch (error) {
+    console.error('Error creating wallet top-up order:', error);
+    res.status(500).json({ success: false, message: 'Failed to create payment order' });
+  }
+});
+
+/**
+ * POST /wallet/add/verify
+ * Step 2: Verify Razorpay payment signature and credit the wallet.
+ */
+router.post('/add/verify', verifyToken, async (req, res) => {
+  try {
+    const { razorpay_order_id, razorpay_payment_id, razorpay_signature, amount } = req.body;
+
+    if (!razorpay_order_id || !razorpay_payment_id || !razorpay_signature || !amount) {
+      return res.status(400).json({ success: false, message: 'Missing payment verification fields' });
+    }
+
+    const { RAZORPAY_KEY_SECRET } = require('../config/paymentConfig');
+    const crypto = require('crypto');
+
+    const expectedSignature = crypto
+      .createHmac('sha256', RAZORPAY_KEY_SECRET)
+      .update(`${razorpay_order_id}|${razorpay_payment_id}`)
+      .digest('hex');
+
+    if (expectedSignature !== razorpay_signature) {
+      return res.status(400).json({ success: false, message: 'Payment verification failed — invalid signature' });
+    }
+
+    const user = await User.findById(req.user.id);
+    if (!user) {
+      return res.status(404).json({ success: false, message: 'User not found' });
+    }
+
+    // Idempotency: prevent double-crediting the same payment
+    const alreadyProcessed = (user.walletHistory || []).some(
+      t => t.referenceId === razorpay_payment_id
+    );
+    if (alreadyProcessed) {
+      return res.json({ success: true, message: 'Payment already processed', balance: user.walletBalance });
+    }
+
+    const topupAmount = parseFloat(amount);
+    const newBalance = (user.walletBalance || 0) + topupAmount;
+
     user.walletBalance = newBalance;
     user.walletHistory.push({
       type: 'credit',
-      amount,
-      description: `Added via ${paymentMethod || 'payment gateway'}`,
+      amount: topupAmount,
+      description: 'Wallet top-up via Razorpay',
+      referenceId: razorpay_payment_id,
       balanceAfter: newBalance,
       createdAt: new Date()
     });
-    
+
     await user.save();
-    
-    // Emit socket event for real-time sync
+
     emitWalletTransaction(req.user.id, {
       type: 'credit',
-      amount,
-      description: `Added via ${paymentMethod || 'payment gateway'}`,
+      amount: topupAmount,
+      description: 'Wallet top-up via Razorpay',
+      referenceId: razorpay_payment_id
     }, newBalance);
-    
-    res.json({
-      success: true,
-      message: `₹${amount} added to wallet`,
-      balance: newBalance
-    });
+
+    res.json({ success: true, message: `₹${topupAmount} added to wallet`, balance: newBalance });
   } catch (error) {
-    console.error('Error adding money to wallet:', error);
+    console.error('Error verifying wallet top-up:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -330,8 +406,17 @@ router.get('/loyalty-points', async (req, res) => {
 // ============ DOCTOR WALLET ROUTES ============
 
 // Get doctor's wallet
-router.get('/doctor/:doctorId', async (req, res) => {
+router.get('/doctor/:doctorId', verifyToken, async (req, res) => {
   try {
+    // Only the doctor themselves or an admin can view a wallet
+    if (
+      req.user.role !== 'admin' &&
+      req.user.role !== 'superadmin' &&
+      req.user.id !== req.params.doctorId
+    ) {
+      return res.status(403).json({ success: false, message: 'Not authorized to view this wallet' });
+    }
+
     const wallet = await DoctorWallet.getOrCreateWallet(req.params.doctorId);
     const doctor = await Doctor.findById(req.params.doctorId);
     
@@ -355,8 +440,16 @@ router.get('/doctor/:doctorId', async (req, res) => {
 });
 
 // Get wallet transactions
-router.get('/doctor/:doctorId/transactions', async (req, res) => {
+router.get('/doctor/:doctorId/transactions', verifyToken, async (req, res) => {
   try {
+    if (
+      req.user.role !== 'admin' &&
+      req.user.role !== 'superadmin' &&
+      req.user.id !== req.params.doctorId
+    ) {
+      return res.status(403).json({ success: false, message: 'Not authorized to view these transactions' });
+    }
+
     const { page = 1, limit = 20, type } = req.query;
     const wallet = await DoctorWallet.getOrCreateWallet(req.params.doctorId);
     
@@ -383,8 +476,16 @@ router.get('/doctor/:doctorId/transactions', async (req, res) => {
 });
 
 // Update bank details
-router.put('/doctor/:doctorId/bank-details', async (req, res) => {
+router.put('/doctor/:doctorId/bank-details', verifyToken, async (req, res) => {
   try {
+    if (
+      req.user.role !== 'admin' &&
+      req.user.role !== 'superadmin' &&
+      req.user.id !== req.params.doctorId
+    ) {
+      return res.status(403).json({ success: false, message: 'Not authorized to update these bank details' });
+    }
+
     const { accountHolderName, accountNumber, ifscCode, bankName, upiId } = req.body;
     const wallet = await DoctorWallet.getOrCreateWallet(req.params.doctorId);
     
@@ -412,8 +513,16 @@ router.put('/doctor/:doctorId/bank-details', async (req, res) => {
 // ============ WITHDRAWAL REQUEST ROUTES ============
 
 // Create withdrawal request (Doctor)
-router.post('/doctor/:doctorId/withdraw', async (req, res) => {
+router.post('/doctor/:doctorId/withdraw', verifyToken, async (req, res) => {
   try {
+    if (
+      req.user.role !== 'admin' &&
+      req.user.role !== 'superadmin' &&
+      req.user.id !== req.params.doctorId
+    ) {
+      return res.status(403).json({ success: false, message: 'Not authorized to create withdrawal requests for this doctor' });
+    }
+
     const { amount, method, notes } = req.body;
     
     if (!amount || amount <= 0) {
@@ -434,7 +543,7 @@ router.post('/doctor/:doctorId/withdraw', async (req, res) => {
     const request = wallet.createWithdrawalRequest(amount, method || 'bank_transfer', notes);
     await wallet.save();
     
-    // Log financial activawy for security monitoring
+    // Log financial activity for security monitoring
     await logFinancialActivity(req, 'withdrawal_request', { amount, method });
     
     console.log(`💸 Withdrawal request created by Dr. ${doctor?.name}: ₹${amount}`);
@@ -451,7 +560,7 @@ router.post('/doctor/:doctorId/withdraw', async (req, res) => {
 });
 
 // Get withdrawal requests (Doctor)
-router.get('/doctor/:doctorId/withdrawals', async (req, res) => {
+router.get('/doctor/:doctorId/withdrawals', verifyToken, async (req, res) => {
   try {
     const wallet = await DoctorWallet.getOrCreateWallet(req.params.doctorId);
     
@@ -470,7 +579,7 @@ router.get('/doctor/:doctorId/withdrawals', async (req, res) => {
 });
 
 // Cancel withdrawal request (Doctor)
-router.delete('/doctor/:doctorId/withdraw/:requestId', async (req, res) => {
+router.delete('/doctor/:doctorId/withdraw/:requestId', verifyToken, async (req, res) => {
   try {
     const wallet = await DoctorWallet.getOrCreateWallet(req.params.doctorId);
     const request = wallet.withdrawalRequests.id(req.params.requestId);
@@ -499,7 +608,7 @@ router.delete('/doctor/:doctorId/withdraw/:requestId', async (req, res) => {
 // ============ ADMIN ROUTES ============
 
 // Get all pending withdrawal requests (Admin)
-router.get('/admin/withdrawals', async (req, res) => {
+router.get('/admin/withdrawals', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const wallets = await DoctorWallet.find({
       'withdrawalRequests.status': 'pending'
@@ -536,7 +645,7 @@ router.get('/admin/withdrawals', async (req, res) => {
 });
 
 // Process withdrawal request (Admin - Approve/Reject)
-router.put('/admin/withdrawals/:walletId/:requestId', async (req, res) => {
+router.put('/admin/withdrawals/:walletId/:requestId', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const { action, reference, rejectionReason, adminId } = req.body;
     
@@ -621,7 +730,7 @@ router.put('/admin/withdrawals/:walletId/:requestId', async (req, res) => {
 });
 
 // Get all doctors' wallets (Admin)
-router.get('/admin/all', async (req, res) => {
+router.get('/admin/all', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const wallets = await DoctorWallet.find()
       .populate('doctorId', 'name email phone specialization clinicId')
@@ -656,7 +765,7 @@ router.get('/admin/all', async (req, res) => {
 });
 
 // Process payout to doctor (Admin)
-router.post('/admin/payout', async (req, res) => {
+router.post('/admin/payout', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const { doctorId, amount, method, reference, adminId } = req.body;
     
@@ -697,7 +806,7 @@ router.post('/admin/payout', async (req, res) => {
 });
 
 // Update commission rate (Admin)
-router.put('/admin/commission/:doctorId', async (req, res) => {
+router.put('/admin/commission/:doctorId', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const { commissionRate } = req.body;
     
@@ -724,7 +833,7 @@ router.put('/admin/commission/:doctorId', async (req, res) => {
 });
 
 // Add bonus to doctor (Admin)
-router.post('/admin/bonus', async (req, res) => {
+router.post('/admin/bonus', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const { doctorId, amount, description, adminId } = req.body;
     
@@ -768,7 +877,7 @@ router.post('/admin/bonus', async (req, res) => {
 });
 
 // Get wallet statistics for dashboard
-router.get('/admin/stats', async (req, res) => {
+router.get('/admin/stats', verifyTokenWithRole(['admin', 'superadmin']), async (req, res) => {
   try {
     const wallets = await DoctorWallet.find().populate('doctorId', 'name');
     

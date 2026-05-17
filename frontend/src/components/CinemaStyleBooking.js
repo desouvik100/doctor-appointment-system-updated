@@ -133,26 +133,25 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
           if (response.data.success) {
             const newQueueInfo = response.data;
             
-            // Check if queue position changed
-            if (queueInfo && newQueueInfo.nextQueueNumber !== queueInfo.nextQueueNumber) {
-              setQueueChanged(true);
-              // Show toast notification
-              if (newQueueInfo.nextQueueNumber < queueInfo.nextQueueNumber) {
-                toast.success(`Queue updated! Your position is now #${newQueueInfo.nextQueueNumber}`, {
-                  icon: '🔄',
-                  duration: 3000
-                });
-              } else {
-                toast(`Queue updated: Position #${newQueueInfo.nextQueueNumber}`, {
-                  icon: '📊',
-                  duration: 3000
-                });
+            // Check if queue position changed — use functional updater to read latest state
+            setQueueInfo(prevQueueInfo => {
+              if (prevQueueInfo && newQueueInfo.nextQueueNumber !== prevQueueInfo.nextQueueNumber) {
+                setQueueChanged(true);
+                if (newQueueInfo.nextQueueNumber < prevQueueInfo.nextQueueNumber) {
+                  toast.success(`Queue updated! Your position is now #${newQueueInfo.nextQueueNumber}`, {
+                    icon: '🔄',
+                    duration: 3000
+                  });
+                } else {
+                  toast(`Queue updated: Position #${newQueueInfo.nextQueueNumber}`, {
+                    icon: '📊',
+                    duration: 3000
+                  });
+                }
+                setTimeout(() => setQueueChanged(false), 2000);
               }
-              // Reset animation after 2 seconds
-              setTimeout(() => setQueueChanged(false), 2000);
-            }
-            
-            setQueueInfo(newQueueInfo);
+              return newQueueInfo;
+            });
             setLastUpdated(new Date());
           }
         } catch (error) {
@@ -167,7 +166,10 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
         setIsLiveUpdating(false);
       }
     };
-  }, [selectedDate, step, bookingSuccess, doctorId, queueInfo]);
+  // queueInfo intentionally excluded — we use the functional updater form of setQueueInfo
+  // to read the latest value inside the interval without recreating it on every poll.
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [selectedDate, step, bookingSuccess, doctorId]);
 
   // Coupon validation
   const validateCoupon = async () => {

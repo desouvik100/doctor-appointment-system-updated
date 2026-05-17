@@ -83,7 +83,7 @@ const logAccountOperation = async (req, action, targetUser, details = {}) => {
 // Get current logged-in user info
 router.get('/me', verifyToken, async (req, res) => {
   try {
-    const user = await User.findById(req.user.userId)
+    const user = await User.findById(req.user.id || req.user.userId)
       .select('name email phone role clinicId clinicName emrPlan profilePhoto department');
 
     if (!user) {
@@ -109,7 +109,7 @@ router.get('/me', verifyToken, async (req, res) => {
 });
 
 // Search user by phone (for walk-in patient lookup)
-router.get('/search', async (req, res) => {
+router.get('/search', verifyToken, async (req, res) => {
   try {
     const { phone, email } = req.query;
     
@@ -154,7 +154,7 @@ router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
 });
 
 // Get user by ID
-router.get('/:id', async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.params.id)
       .populate('clinicId', 'name address city phone');
@@ -225,7 +225,7 @@ router.post('/', verifyTokenWithRole(['admin']), async (req, res) => {
 });
 
 // Update user
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyToken, async (req, res) => {
   try {
     const { password, ...updateData } = req.body;
 
@@ -260,7 +260,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete user (soft delete)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     // Get user before deletion for logging
     const userToDelete = await User.findById(req.params.id);

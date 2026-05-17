@@ -1,0 +1,4 @@
+@echo off
+set PATH=%PATH%;C:\Program Files\nodejs
+cd /d D:\Startup-Project\doctor-appointment-system\frontend
+"C:\Program Files\nodejs\node.exe" "C:\Program Files\nodejs\node_modules\npm\bin\npm-cli.js" start

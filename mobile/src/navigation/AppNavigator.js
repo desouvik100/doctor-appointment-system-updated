@@ -20,6 +20,7 @@ import RoleBasedNavigator from './RoleBasedNavigator';
 import BookingScreen from '../screens/booking/BookingScreen';
 import SlotSelectionScreen from '../screens/booking/SlotSelectionScreen';
 import PaymentScreen from '../screens/booking/PaymentScreen';
+import RazorpayPaymentScreen from '../screens/booking/RazorpayPaymentScreen';
 import ConfirmationScreen from '../screens/booking/ConfirmationScreen';
 import DoctorProfileScreen from '../screens/doctors/DoctorProfileScreen';
 import DoctorSearchScreen from '../screens/doctors/DoctorSearchScreen';
@@ -27,6 +28,8 @@ import AppointmentDetailsScreen from '../screens/appointments/AppointmentDetails
 import RescheduleScreen from '../screens/appointments/RescheduleScreen';
 import VideoConsultScreen from '../screens/services/VideoConsultScreen';
 import LabTestsScreen from '../screens/services/LabTestsScreen';
+import LabTestPaymentScreen from '../screens/services/LabTestPaymentScreen';
+import LabTestConfirmationScreen from '../screens/services/LabTestConfirmationScreen';
 import MedicineScreen from '../screens/services/MedicineScreen';
 import RecordsScreen from '../screens/services/RecordsScreen';
 import EmergencyScreen from '../screens/services/EmergencyScreen';
@@ -40,6 +43,7 @@ import MedicalTimelineScreen from '../screens/profile/MedicalTimelineScreen';
 import InsuranceScreen from '../screens/profile/InsuranceScreen';
 import NotificationSettingsScreen from '../screens/profile/NotificationSettingsScreen';
 import NotificationsScreen from '../screens/notifications/NotificationsScreen';
+import WalletScreen from '../screens/profile/WalletScreen';
 import AuthGate from '../components/AuthGate';
 import { UserProvider, useUser } from '../context/UserContext';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
@@ -70,32 +74,37 @@ const AppContent = () => {
           headerShown: false,
           cardStyle: { backgroundColor: colors.background },
         }}
-        initialRouteName={isLoggedIn ? 'Main' : 'RoleSelection'}
+        initialRouteName={isLoggedIn ? 'Main' : 'Welcome'}
       >
-        {/* Auth Screens - Always available for account switching */}
-        <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
+        {/* Patient auth flow */}
+        <Stack.Screen name="Welcome" component={RoleSelectionScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />
         <Stack.Screen name="OTPVerification" component={OTPVerificationScreen} />
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
+        {/* Pro app screens — kept for deep-link compatibility */}
+        <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
         <Stack.Screen name="DoctorLogin" component={DoctorLoginScreen} />
         <Stack.Screen name="StaffLogin" component={StaffLoginScreen} />
         <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
         
         {/* Main App - Role-based navigation */}
         <Stack.Screen name="Main" component={RoleBasedNavigator} />
-        <Stack.Screen name="DoctorSearch" component={DoctorSearchScreen} />
+        <Stack.Screen name="DoctorSearch" component={BookingScreen} />
         <Stack.Screen name="DoctorProfile" component={DoctorProfileScreen} />
         <Stack.Screen name="Booking" component={BookingScreen} />
         <Stack.Screen name="SlotSelection" component={SlotSelectionScreen} />
         <Stack.Screen name="Payment" component={PaymentScreen} />
+        <Stack.Screen name="RazorpayPayment" component={RazorpayPaymentScreen} />
         <Stack.Screen name="BookingConfirmation" component={ConfirmationScreen} />
         <Stack.Screen name="AppointmentDetails" component={AppointmentDetailsScreen} />
         <Stack.Screen name="Reschedule" component={RescheduleScreen} />
         <Stack.Screen name="VideoConsult" component={VideoConsultScreen} />
         <Stack.Screen name="LabTests" component={LabTestsScreen} />
+        <Stack.Screen name="LabTestPayment" component={LabTestPaymentScreen} />
+        <Stack.Screen name="LabTestConfirmation" component={LabTestConfirmationScreen} />
         <Stack.Screen name="Medicine" component={MedicineScreen} />
         <Stack.Screen name="Records" component={RecordsScreen} />
         <Stack.Screen name="Emergency" component={EmergencyScreen} />
@@ -109,6 +118,7 @@ const AppContent = () => {
         <Stack.Screen name="Insurance" component={InsuranceScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
+        <Stack.Screen name="Wallet" component={WalletScreen} />
       </Stack.Navigator>
     </NavigationContainer>
   );

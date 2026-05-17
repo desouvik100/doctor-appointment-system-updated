@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import toast from 'react-hot-toast';
+import axios from '../api/config';
 
 const HealthWallet = ({ userId, userName }) => {
   const [balance, setBalance] = useState(0);
@@ -7,55 +8,105 @@ const HealthWallet = ({ userId, userName }) => {
   const [showAddMoney, setShowAddMoney] = useState(false);
   const [addAmount, setAddAmount] = useState('');
   const [loading, setLoading] = useState(false);
+  const [fetching, setFetching] = useState(true);
 
   const quickAmounts = [500, 1000, 2000, 5000];
-  
+
   const subscriptionPlans = [
     { id: 'basic', name: 'Basic Care', price: 299, duration: 'month', features: ['2 Free Consultations', '10% off on medicines', 'Priority booking', 'Email support'], gradient: 'from-blue-500 to-cyan-600', popular: false },
     { id: 'family', name: 'Family Care', price: 599, duration: 'month', features: ['5 Free Consultations', '15% off on medicines', 'Priority booking', 'Up to 4 family members', '24/7 chat support', 'Free health checkup'], gradient: 'from-emerald-500 to-teal-600', popular: true },
     { id: 'premium', name: 'Premium Care', price: 999, duration: 'month', features: ['Unlimited Consultations', '20% off on medicines', 'VIP priority booking', 'Up to 6 family members', '24/7 phone support', 'Quarterly health checkup', 'Home sample collection', 'Dedicated health manager'], gradient: 'from-purple-500 to-violet-600', popular: false }
   ];
 
-  useEffect(() => { loadWalletData(); }, []);
+  const loadWalletData = useCallback(async () => {
+    try {
+      setFetching(true);
+      const [balRes, txnRes] = await Promise.all([
+        axios.get('/api/wallet/balance'),
+        axios.get('/api/wallet/transactions')
+      ]);
+      setBalance(balRes.data?.balance || 0);
+      setTransactions(txnRes.data?.transactions || []);
+    } catch (err) {
+      console.error('Wallet fetch error:', err);
+      toast.error('Failed to load wallet data');
+    } finally {
+      setFetching(false);
+    }
+  }, []);
 
-  const loadWalletData = () => {
-    const savedBalance = localStorage.getItem(`wallet_balance_${userId}`);
-    const savedTransactions = localStorage.getItem(`wallet_transactions_${userId}`);
-    if (savedBalance) setBalance(parseFloat(savedBalance));
-    if (savedTransactions) setTransactions(JSON.parse(savedTransactions));
-  };
+  useEffect(() => { loadWalletData(); }, [loadWalletData]);
 
-  const saveWalletData = (newBalance, newTransactions) => {
-    localStorage.setItem(`wallet_balance_${userId}`, newBalance.toString());
-    localStorage.setItem(`wallet_transactions_${userId}`, JSON.stringify(newTransactions));
-    setBalance(newBalance); setTransactions(newTransactions);
-  };
-
-  const handleAddMoney = () => {
+  const handleAddMoney = async () => {
     const amount = parseFloat(addAmount);
     if (!amount || amount < 100) { toast.error('Minimum amount is ₹100'); return; }
+    if (amount > 50000) { toast.error('Maximum amount is ₹50,000'); return; }
+
     setLoading(true);
-    setTimeout(() => {
-      const bonus = amount >= 2000 ? amount * 0.05 : 0;
-      const totalCredit = amount + bonus;
-      const newBalance = balance + totalCredit;
-      const transaction = { id: Date.now(), type: 'credit', amount: totalCredit, description: bonus > 0 ? `Added ₹${amount} + ₹${bonus} bonus` : `Added ₹${amount}`, date: new Date().toISOString(), status: 'completed' };
-      saveWalletData(newBalance, [transaction, ...transactions]);
-      setAddAmount(''); setShowAddMoney(false); setLoading(false);
-      toast.success(`₹${totalCredit} added to wallet!`);
-    }, 1500);
+    try {
+      // Step 1: Create Razorpay order
+      const orderRes = await axios.post('/api/wallet/add/create-order', { amount });
+      const { orderId, keyId, userEmail, userPhone } = orderRes.data;
+
+      // Step 2: Open Razorpay checkout
+      const options = {
+        key: keyId,
+        amount: Math.round(amount * 100),
+        currency: 'INR',
+        name: 'HealthSync Wallet',
+        description: 'Wallet Top-up',
+        order_id: orderId,
+        prefill: { name: userName, email: userEmail, contact: userPhone },
+        theme: { color: '#6366f1' },
+        handler: async (response) => {
+          try {
+            // Step 3: Verify payment and credit wallet
+            const verifyRes = await axios.post('/api/wallet/add/verify', {
+              razorpay_order_id: response.razorpay_order_id,
+              razorpay_payment_id: response.razorpay_payment_id,
+              razorpay_signature: response.razorpay_signature,
+              amount
+            });
+            setBalance(verifyRes.data.balance);
+            toast.success(`₹${amount} added to wallet!`);
+            setAddAmount('');
+            setShowAddMoney(false);
+            loadWalletData();
+          } catch (err) {
+            toast.error('Payment verification failed. Contact support if amount was deducted.');
+          }
+        },
+        modal: { ondismiss: () => setLoading(false) }
+      };
+
+      if (!window.Razorpay) {
+        toast.error('Payment gateway not loaded. Please refresh the page.');
+        setLoading(false);
+        return;
+      }
+
+      const rzp = new window.Razorpay(options);
+      rzp.on('payment.failed', () => {
+        toast.error('Payment failed. Please try again.');
+        setLoading(false);
+      });
+      rzp.open();
+    } catch (err) {
+      toast.error(err.response?.data?.message || 'Failed to initiate payment');
+      setLoading(false);
+    }
   };
 
-  const handleSubscribe = (plan) => {
-    if (balance < plan.price) { toast.error('Insufficient balance. Please add money first.'); setShowAddMoney(true); return; }
-    const newBalance = balance - plan.price;
-    const transaction = { id: Date.now(), type: 'debit', amount: plan.price, description: `${plan.name} Subscription`, date: new Date().toISOString(), status: 'completed' };
-    saveWalletData(newBalance, [transaction, ...transactions]);
-    localStorage.setItem(`subscription_${userId}`, JSON.stringify({ planId: plan.id, planName: plan.name, startDate: new Date().toISOString(), endDate: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(), features: plan.features }));
-    toast.success(`Subscribed to ${plan.name}!`);
-  };
+  const formatCurrency = (amount) =>
+    new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
 
-  const formatCurrency = (amount) => new Intl.NumberFormat('en-IN', { style: 'currency', currency: 'INR', maximumFractionDigits: 0 }).format(amount);
+  if (fetching) {
+    return (
+      <div className="flex items-center justify-center py-20">
+        <i className="fas fa-spinner fa-spin text-3xl text-indigo-500"></i>
+      </div>
+    );
+  }
 
   return (
     <div className="space-y-6">
@@ -72,11 +123,11 @@ const HealthWallet = ({ userId, userName }) => {
             </div>
           </div>
           <div className="flex gap-3">
-            <button onClick={() => setShowAddMoney(!showAddMoney)} className="flex items-center gap-2 px-5 py-3 bg-white text-indigo-600 font-semibold rounded-xl hover:shadow-lg transition-all">
+            <button
+              onClick={() => setShowAddMoney(!showAddMoney)}
+              className="flex items-center gap-2 px-5 py-3 bg-white text-indigo-600 font-semibold rounded-xl hover:shadow-lg transition-all"
+            >
               <i className="fas fa-plus"></i> Add Money
-            </button>
-            <button className="flex items-center gap-2 px-5 py-3 bg-white/20 text-white font-semibold rounded-xl hover:bg-white/30 transition-all">
-              <i className="fas fa-exchange-alt"></i> Transfer
             </button>
           </div>
         </div>
@@ -85,22 +136,37 @@ const HealthWallet = ({ userId, userName }) => {
           <div className="mt-6 pt-6 border-t border-white/20 space-y-4">
             <div className="flex flex-wrap gap-2">
               {quickAmounts.map(amt => (
-                <button key={amt} onClick={() => setAddAmount(amt.toString())}
-                  className={`px-4 py-2 rounded-xl font-medium transition-all ${addAmount === amt.toString() ? 'bg-white text-indigo-600' : 'bg-white/20 text-white hover:bg-white/30'}`}>
+                <button
+                  key={amt}
+                  onClick={() => setAddAmount(amt.toString())}
+                  className={`px-4 py-2 rounded-xl font-medium transition-all ${addAmount === amt.toString() ? 'bg-white text-indigo-600' : 'bg-white/20 text-white hover:bg-white/30'}`}
+                >
                   ₹{amt}
                 </button>
               ))}
             </div>
             <div className="flex gap-3">
-              <input type="number" placeholder="Enter amount" value={addAmount} onChange={(e) => setAddAmount(e.target.value)} min="100"
-                className="flex-1 px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50" />
-              <button onClick={handleAddMoney} disabled={loading}
-                className="px-6 py-3 bg-white text-indigo-600 font-semibold rounded-xl hover:shadow-lg disabled:opacity-50 transition-all">
-                {loading ? <><i className="fas fa-spinner fa-spin mr-2"></i> Processing...</> : <><i className="fas fa-arrow-right mr-2"></i> Add</>}
+              <input
+                type="number"
+                placeholder="Enter amount (min ₹100)"
+                value={addAmount}
+                onChange={(e) => setAddAmount(e.target.value)}
+                min="100"
+                max="50000"
+                className="flex-1 px-4 py-3 bg-white/20 border border-white/30 rounded-xl text-white placeholder-white/60 focus:outline-none focus:ring-2 focus:ring-white/50"
+              />
+              <button
+                onClick={handleAddMoney}
+                disabled={loading}
+                className="px-6 py-3 bg-white text-indigo-600 font-semibold rounded-xl hover:shadow-lg disabled:opacity-50 transition-all"
+              >
+                {loading
+                  ? <><i className="fas fa-spinner fa-spin mr-2"></i> Processing...</>
+                  : <><i className="fas fa-arrow-right mr-2"></i> Add</>}
               </button>
             </div>
             <p className="text-indigo-100 text-sm flex items-center gap-2">
-              <i className="fas fa-gift"></i> Get 5% bonus on adding ₹2000 or more!
+              <i className="fas fa-shield-alt"></i> Secured by Razorpay
             </p>
           </div>
         )}
@@ -134,7 +200,6 @@ const HealthWallet = ({ userId, userName }) => {
           </h3>
           <p className="text-slate-500 text-sm">Save more with monthly health plans</p>
         </div>
-        
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           {subscriptionPlans.map(plan => (
             <div key={plan.id} className={`bg-white rounded-2xl border-2 overflow-hidden transition-all hover:shadow-lg ${plan.popular ? 'border-emerald-500' : 'border-slate-100'}`}>
@@ -152,8 +217,10 @@ const HealthWallet = ({ userId, userName }) => {
                     </li>
                   ))}
                 </ul>
-                <button onClick={() => handleSubscribe(plan)}
-                  className={`w-full py-3 font-semibold rounded-xl transition-all ${plan.popular ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}>
+                <button
+                  onClick={() => toast('Subscription plans coming soon!')}
+                  className={`w-full py-3 font-semibold rounded-xl transition-all ${plan.popular ? 'bg-gradient-to-r from-emerald-500 to-teal-600 text-white hover:shadow-lg' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}`}
+                >
                   Subscribe Now
                 </button>
               </div>
@@ -167,7 +234,6 @@ const HealthWallet = ({ userId, userName }) => {
         <h3 className="text-lg font-bold text-slate-800 mb-4 flex items-center gap-2">
           <i className="fas fa-history text-indigo-500"></i> Transaction History
         </h3>
-        
         {transactions.length === 0 ? (
           <div className="text-center py-12">
             <div className="w-16 h-16 mx-auto rounded-full bg-slate-100 flex items-center justify-center mb-4">
@@ -178,17 +244,19 @@ const HealthWallet = ({ userId, userName }) => {
           </div>
         ) : (
           <div className="space-y-3">
-            {transactions.map(txn => (
-              <div key={txn.id} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 hover:bg-indigo-50 transition-colors">
+            {transactions.map((txn, idx) => (
+              <div key={txn._id || idx} className="flex items-center gap-4 p-4 rounded-xl bg-slate-50 hover:bg-indigo-50 transition-colors">
                 <div className={`w-10 h-10 rounded-full flex items-center justify-center ${txn.type === 'credit' ? 'bg-emerald-100 text-emerald-600' : 'bg-rose-100 text-rose-600'}`}>
                   <i className={`fas fa-arrow-${txn.type === 'credit' ? 'down' : 'up'}`}></i>
                 </div>
                 <div className="flex-1 min-w-0">
                   <p className="font-semibold text-slate-800">{txn.description}</p>
-                  <p className="text-sm text-slate-500">{new Date(txn.date).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}</p>
+                  <p className="text-sm text-slate-500">
+                    {new Date(txn.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric', hour: '2-digit', minute: '2-digit' })}
+                  </p>
                 </div>
                 <span className={`font-bold ${txn.type === 'credit' ? 'text-emerald-600' : 'text-rose-600'}`}>
-                  {txn.type === 'credit' ? '+' : '-'}{formatCurrency(txn.amount)}
+                  {txn.type === 'credit' ? '+' : '-'}{formatCurrency(Math.abs(txn.amount))}
                 </span>
               </div>
             ))}

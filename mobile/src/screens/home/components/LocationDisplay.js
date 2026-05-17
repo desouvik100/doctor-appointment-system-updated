@@ -19,7 +19,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 
-const LocationDisplay = () => {
+const LocationDisplay = ({ compact = false }) => {
   const { colors } = useTheme();
   const [location, setLocation] = useState(null);
   const [address, setAddress] = useState(null);
@@ -217,18 +217,26 @@ const LocationDisplay = () => {
 
   if (error) {
     return (
-      <TouchableOpacity 
-        style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
+      <TouchableOpacity
+        style={compact ? styles.compactContainer : [styles.container, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
         onPress={() => Linking.openSettings()}
       >
-        <View style={[styles.iconContainer, { backgroundColor: `${colors.warning}20` }]}>
-          <Text style={styles.icon}>📍</Text>
-        </View>
-        <View style={styles.textContainer}>
-          <Text style={[styles.errorText, { color: colors.warning }]}>Location unavailable</Text>
-          <Text style={[styles.subText, { color: colors.textMuted }]}>Tap to enable in settings</Text>
-        </View>
+        <Text style={compact ? styles.compactText : [styles.errorText, { color: colors.warning }]}>📍 Location unavailable</Text>
       </TouchableOpacity>
+    );
+  }
+
+  if (compact) {
+    return (
+      <View style={styles.compactContainer}>
+        <Text style={styles.compactText}>
+          📍 {detecting ? 'Detecting...' : (address?.locality || address?.city || 'Location found')}
+          {!detecting && address?.city && address.city !== address?.locality ? `, ${address.city}` : ''}
+        </Text>
+        <TouchableOpacity onPress={() => { setDetecting(true); setLocation(null); setAddress(null); startDetectingAnimation(); requestLocation(); }}>
+          <Text style={styles.compactRefresh}>🔄</Text>
+        </TouchableOpacity>
+      </View>
     );
   }
 
@@ -343,37 +351,37 @@ const LocationDisplay = () => {
 
 const styles = StyleSheet.create({
   container: {
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.lg,
     borderWidth: 1,
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
     overflow: 'hidden',
   },
   detectingContainer: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
+    padding: spacing.sm,
   },
   animatedIconWrapper: {
-    width: 48,
-    height: 48,
+    width: 36,
+    height: 36,
     alignItems: 'center',
     justifyContent: 'center',
   },
   ripple: {
     position: 'absolute',
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
   },
   iconContainer: {
-    width: 40,
-    height: 40,
-    borderRadius: 20,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
   icon: {
-    fontSize: 20,
+    fontSize: 16,
   },
   textContainer: {
     flex: 1,
@@ -396,48 +404,67 @@ const styles = StyleSheet.create({
   successGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    padding: spacing.md,
+    padding: spacing.sm,
   },
   checkBadge: {
     position: 'absolute',
     bottom: -2,
     right: -2,
-    width: 16,
-    height: 16,
-    borderRadius: 8,
+    width: 13,
+    height: 13,
+    borderRadius: 7,
     alignItems: 'center',
     justifyContent: 'center',
   },
   checkIcon: {
-    fontSize: 10,
+    fontSize: 8,
     color: '#fff',
     fontWeight: 'bold',
   },
   locationTitle: {
-    ...typography.bodyLarge,
+    ...typography.bodyMedium,
     fontWeight: '600',
   },
   locationSubtitle: {
     ...typography.bodySmall,
-    marginTop: 2,
+    marginTop: 1,
+    fontSize: 11,
   },
   refreshBtn: {
-    width: 36,
-    height: 36,
-    borderRadius: 18,
+    width: 30,
+    height: 30,
+    borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
   },
   refreshIcon: {
-    fontSize: 16,
+    fontSize: 13,
   },
   errorText: {
-    ...typography.bodyMedium,
+    ...typography.bodySmall,
     fontWeight: '500',
   },
   subText: {
     ...typography.bodySmall,
-    marginTop: 2,
+    marginTop: 1,
+    fontSize: 11,
+  },
+  compactContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingVertical: spacing.xs,
+    marginBottom: spacing.sm,
+  },
+  compactText: {
+    color: 'rgba(255,255,255,0.85)',
+    ...typography.bodySmall,
+    fontWeight: '500',
+    flex: 1,
+  },
+  compactRefresh: {
+    fontSize: 14,
+    marginLeft: spacing.sm,
   },
 });
 

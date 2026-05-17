@@ -1,266 +1,201 @@
 /**
  * ConfirmationScreen - Booking confirmation with QR code
+ * Uses useTheme() for proper light/dark mode support
  */
 
-import React, { useState } from 'react';
+import React from 'react';
 import {
-  View,
-  Text,
-  StyleSheet,
-  ScrollView,
-  TouchableOpacity,
-  StatusBar,
-  Share,
-  Alert,
+  View, Text, StyleSheet, ScrollView,
+  TouchableOpacity, StatusBar, Share, Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import QRCode from 'react-native-qrcode-svg';
-import { colors, shadows } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import Card from '../../components/common/Card';
-import Button from '../../components/common/Button';
-import Avatar from '../../components/common/Avatar';
+import { shadows } from '../../theme/colors';
 
 const ConfirmationScreen = ({ navigation, route }) => {
+  const { colors } = useTheme();
   const { booking } = route.params || {};
-  const [addingToCalendar, setAddingToCalendar] = useState(false);
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
-    const d = new Date(dateStr);
-    return d.toLocaleDateString('en-US', { 
-      weekday: 'long', 
-      year: 'numeric', 
-      month: 'long', 
-      day: 'numeric' 
+    const [y, m, d] = dateStr.split('-').map(Number);
+    return new Date(y, m - 1, d).toLocaleDateString('en-IN', {
+      weekday: 'long', year: 'numeric', month: 'long', day: 'numeric',
     });
-  };
-
-  const handleAddToCalendar = async () => {
-    setAddingToCalendar(true);
-    try {
-      // In real app, use react-native-add-calendar-event
-      // const eventConfig = {
-      //   title: `Appointment with ${booking.doctor.name}`,
-      //   startDate: new Date(booking.date + 'T' + convertTo24Hour(booking.time)),
-      //   endDate: new Date(booking.date + 'T' + convertTo24Hour(booking.time, 30)),
-      //   notes: `Booking ID: ${booking.id}`,
-      // };
-      // await AddCalendarEvent.presentEventCreatingDialog(eventConfig);
-      
-      Alert.alert('Success', 'Event added to your calendar');
-    } catch (error) {
-      Alert.alert('Error', 'Could not add to calendar');
-    } finally {
-      setAddingToCalendar(false);
-    }
   };
 
   const handleShare = async () => {
     try {
       await Share.share({
-        message: `Appointment Confirmed!\n\nDoctor: ${booking.doctor?.name}\nDate: ${formatDate(booking.date)}\nTime: ${booking.time}\nBooking ID: ${booking.id}\n\nHealthSync App`,
+        message: `Appointment Confirmed!\n\nDoctor: ${booking?.doctor?.name}\nDate: ${formatDate(booking?.date)}\nToken: #${booking?.queueNumber || '-'}\nBooking ID: ${booking?.id}\n\nHealthSync`,
       });
-    } catch (error) {
-      console.error('Share error:', error);
-    }
+    } catch (e) { /* ignore */ }
   };
 
-  const handleGoHome = () => {
-    navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
-  };
+  const handleGoHome = () => navigation.reset({ index: 0, routes: [{ name: 'Main' }] });
 
-  const handleViewAppointments = () => {
-    navigation.reset({
-      index: 0,
-      routes: [{ name: 'Main', params: { screen: 'Appointments' } }],
-    });
-  };
+  const handleViewAppointments = () =>
+    navigation.reset({ index: 0, routes: [{ name: 'Main', params: { screen: 'Appointments' } }] });
+
+  const details = [
+    { icon: '📅', label: 'Date',    value: formatDate(booking?.date) },
+    { icon: booking?.consultationType === 'online' ? '📹' : '🏥', label: 'Type',
+      value: booking?.consultationType === 'online' ? 'Online Consultation' : 'In-Clinic Visit' },
+    ...(booking?.queueNumber ? [{ icon: '🎫', label: 'Token', value: `#${booking.queueNumber}` }] : []),
+    { icon: '👤', label: 'Patient', value: booking?.patient?.name || 'Patient' },
+    { icon: '💊', label: 'Doctor',  value: booking?.doctor?.name || 'Doctor' },
+  ];
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {/* Success Animation */}
+
+        {/* Success Header */}
         <View style={styles.successContainer}>
           <LinearGradient colors={colors.gradientPrimary} style={styles.successCircle}>
             <Text style={styles.successIcon}>✓</Text>
           </LinearGradient>
-          <Text style={styles.successTitle}>Booking Confirmed!</Text>
-          <Text style={styles.successSubtitle}>
+          <Text style={[styles.successTitle, { color: colors.textPrimary }]}>Booking Confirmed!</Text>
+          <Text style={[styles.successSubtitle, { color: colors.textSecondary }]}>
             Your appointment has been successfully booked
           </Text>
         </View>
 
-        {/* Booking Details Card */}
-        <Card variant="gradient" style={styles.bookingCard}>
-          <View style={styles.bookingHeader}>
-            <Avatar name={booking?.doctor?.name || 'Doctor'} size="large" />
-            <View style={styles.doctorInfo}>
-              <Text style={styles.doctorName}>{booking?.doctor?.name}</Text>
-              <Text style={styles.specialty}>{booking?.doctor?.specialty}</Text>
-            </View>
-          </View>
-
-          <View style={styles.divider} />
-
+        {/* Booking Details */}
+        <LinearGradient colors={colors.gradientPrimary} style={styles.bookingCard}>
+          <Text style={styles.bookingCardTitle}>Appointment Details</Text>
           <View style={styles.detailsGrid}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailIcon}>📅</Text>
-              <Text style={styles.detailLabel}>Date</Text>
-              <Text style={styles.detailValue}>{formatDate(booking?.date)}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailIcon}>⏰</Text>
-              <Text style={styles.detailLabel}>Time</Text>
-              <Text style={styles.detailValue}>{booking?.time}</Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailIcon}>
-                {booking?.consultationType === 'video' ? '📹' : '🏥'}
-              </Text>
-              <Text style={styles.detailLabel}>Type</Text>
-              <Text style={styles.detailValue}>
-                {booking?.consultationType === 'video' ? 'Video Call' : 'Clinic Visit'}
-              </Text>
-            </View>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailIcon}>👤</Text>
-              <Text style={styles.detailLabel}>Patient</Text>
-              <Text style={styles.detailValue}>{booking?.patient?.name}</Text>
-            </View>
-            {booking?.queueNumber && (
-              <View style={styles.detailItem}>
-                <Text style={styles.detailIcon}>🎫</Text>
-                <Text style={styles.detailLabel}>Token</Text>
-                <Text style={styles.detailValue}>#{booking.queueNumber}</Text>
+            {details.map(({ icon, label, value }) => (
+              <View key={label} style={styles.detailItem}>
+                <Text style={styles.detailIcon}>{icon}</Text>
+                <Text style={styles.detailLabel}>{label}</Text>
+                <Text style={styles.detailValue}>{value}</Text>
               </View>
-            )}
+            ))}
           </View>
-        </Card>
+        </LinearGradient>
 
-        {/* QR Code Section */}
-        <Card variant="default" style={styles.qrCard}>
-          <Text style={styles.qrTitle}>Check-in QR Code</Text>
-          <Text style={styles.qrSubtitle}>Show this at the clinic for quick check-in</Text>
-          
+        {/* QR Code */}
+        <View style={[styles.qrCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+          <Text style={[styles.qrTitle, { color: colors.textPrimary }]}>Check-in QR Code</Text>
+          <Text style={[styles.qrSubtitle, { color: colors.textSecondary }]}>
+            Show this at the clinic for quick check-in
+          </Text>
           <View style={styles.qrContainer}>
             {booking?.id ? (
-              <QRCode
-                value={`HEALTHSYNC:${booking.id}`}
-                size={180}
-                backgroundColor="white"
-                color={colors.background}
-              />
+              <QRCode value={`HEALTHSYNC:${booking.id}`} size={180} backgroundColor="white" color="#1a1a2e" />
             ) : (
-              <View style={styles.qrPlaceholder}>
-                <Text style={styles.qrPlaceholderText}>QR Code</Text>
+              <View style={[styles.qrPlaceholder, { backgroundColor: colors.backgroundCard }]}>
+                <Text style={[styles.qrPlaceholderText, { color: colors.textMuted }]}>QR Code</Text>
               </View>
             )}
           </View>
-          
           <View style={styles.bookingIdRow}>
-            <Text style={styles.bookingIdLabel}>Booking ID</Text>
-            <Text style={styles.bookingIdValue}>{booking?.id || 'N/A'}</Text>
+            <Text style={[styles.bookingIdLabel, { color: colors.textMuted }]}>Booking ID  </Text>
+            <Text style={[styles.bookingIdValue, { color: colors.primary }]}>
+              {booking?.id ? String(booking.id).slice(-8).toUpperCase() : 'N/A'}
+            </Text>
           </View>
-        </Card>
+        </View>
 
-        {/* Action Buttons */}
+        {/* Actions */}
         <View style={styles.actionsRow}>
-          <TouchableOpacity style={styles.actionBtn} onPress={handleAddToCalendar}>
-            <Text style={styles.actionIcon}>📅</Text>
-            <Text style={styles.actionText}>Add to Calendar</Text>
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
+            onPress={handleShare}
+          >
+            <Text style={styles.actionIcon}>�</Text>
+            <Text style={[styles.actionText, { color: colors.textPrimary }]}>Share</Text>
           </TouchableOpacity>
-          <TouchableOpacity style={styles.actionBtn} onPress={handleShare}>
-            <Text style={styles.actionIcon}>📤</Text>
-            <Text style={styles.actionText}>Share</Text>
+          <TouchableOpacity
+            style={[styles.actionBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
+            onPress={() => Alert.alert('Calendar', 'Event added to your calendar')}
+          >
+            <Text style={styles.actionIcon}>📅</Text>
+            <Text style={[styles.actionText, { color: colors.textPrimary }]}>Add to Calendar</Text>
           </TouchableOpacity>
         </View>
 
         {/* Payment Summary */}
-        <Card variant="default" style={styles.paymentCard}>
+        <View style={[styles.paymentCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
           <View style={styles.paymentRow}>
-            <Text style={styles.paymentLabel}>Amount Paid</Text>
-            <Text style={styles.paymentValue}>₹{booking?.amount}</Text>
+            <Text style={[styles.paymentLabel, { color: colors.textSecondary }]}>Amount Paid</Text>
+            <Text style={[styles.paymentValue, { color: colors.success }]}>₹{booking?.amount || 0}</Text>
           </View>
           <View style={styles.paymentRow}>
-            <Text style={styles.paymentLabel}>Payment Method</Text>
-            <Text style={styles.paymentMethod}>
-              {booking?.paymentMethod === 'wallet' ? '💳 Health Wallet' : 
-               booking?.paymentMethod === 'upi' ? '📱 UPI' : '💳 Card'}
+            <Text style={[styles.paymentLabel, { color: colors.textSecondary }]}>Payment Method</Text>
+            <Text style={[styles.paymentMethod, { color: colors.textPrimary }]}>
+              {booking?.paymentMethod === 'wallet' ? '💰 Health Wallet'
+                : booking?.paymentMethod === 'upi' ? '📱 UPI'
+                : booking?.paymentMethod === 'razorpay' ? '💳 Online Payment'
+                : '💳 Card'}
             </Text>
           </View>
-        </Card>
+        </View>
 
         {/* Bottom Buttons */}
-        <View style={styles.bottomButtons}>
-          <Button
-            title="View My Appointments"
-            onPress={handleViewAppointments}
-            fullWidth
-            size="large"
-          />
-          <TouchableOpacity style={styles.homeBtn} onPress={handleGoHome}>
-            <Text style={styles.homeBtnText}>Go to Home</Text>
-          </TouchableOpacity>
-        </View>
+        <TouchableOpacity style={styles.primaryBtn} onPress={handleViewAppointments} activeOpacity={0.85}>
+          <LinearGradient colors={colors.gradientPrimary} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.primaryBtnGradient}>
+            <Text style={styles.primaryBtnText}>View My Appointments</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+
+        <TouchableOpacity style={styles.homeBtn} onPress={handleGoHome}>
+          <Text style={[styles.homeBtnText, { color: colors.textSecondary }]}>Go to Home</Text>
+        </TouchableOpacity>
       </ScrollView>
     </View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  scrollContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.huge },
+  container: { flex: 1 },
+  scrollContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: 60 },
+
   successContainer: { alignItems: 'center', marginBottom: spacing.xxl },
-  successCircle: {
-    width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg,
-  },
-  successIcon: { fontSize: 40, color: colors.textInverse },
-  successTitle: { ...typography.headlineLarge, color: colors.textPrimary, marginBottom: spacing.sm },
-  successSubtitle: { ...typography.bodyMedium, color: colors.textSecondary, textAlign: 'center' },
-  bookingCard: { padding: spacing.xl, marginBottom: spacing.xl },
-  bookingHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg },
-  doctorInfo: { flex: 1, marginLeft: spacing.md },
-  doctorName: { ...typography.headlineSmall, color: colors.textPrimary },
-  specialty: { ...typography.bodyMedium, color: colors.textSecondary },
-  divider: { height: 1, backgroundColor: colors.divider, marginBottom: spacing.lg },
+  successCircle: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg },
+  successIcon: { fontSize: 40, color: '#fff' },
+  successTitle: { ...typography.headlineLarge, marginBottom: spacing.sm },
+  successSubtitle: { ...typography.bodyMedium, textAlign: 'center' },
+
+  bookingCard: { borderRadius: borderRadius.xl, padding: spacing.xl, marginBottom: spacing.xl },
+  bookingCardTitle: { ...typography.headlineSmall, color: '#fff', marginBottom: spacing.lg, fontWeight: '700' },
   detailsGrid: { flexDirection: 'row', flexWrap: 'wrap' },
-  detailItem: { width: '50%', marginBottom: spacing.md },
-  detailIcon: { fontSize: 20, marginBottom: spacing.xs },
-  detailLabel: { ...typography.labelSmall, color: colors.textMuted },
-  detailValue: { ...typography.bodyMedium, color: colors.textPrimary, fontWeight: '500' },
-  qrCard: { padding: spacing.xl, alignItems: 'center', marginBottom: spacing.xl },
-  qrTitle: { ...typography.headlineSmall, color: colors.textPrimary, marginBottom: spacing.xs },
-  qrSubtitle: { ...typography.bodySmall, color: colors.textSecondary, marginBottom: spacing.lg },
-  qrContainer: {
-    padding: spacing.lg, backgroundColor: 'white', borderRadius: borderRadius.lg, marginBottom: spacing.lg,
-  },
-  qrPlaceholder: {
-    width: 180, height: 180, backgroundColor: colors.surface, borderRadius: borderRadius.md,
-    alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.surfaceBorder,
-  },
-  qrPlaceholderText: { ...typography.bodyMedium, color: colors.textMuted },
+  detailItem: { width: '50%', marginBottom: spacing.lg },
+  detailIcon: { fontSize: 22, marginBottom: spacing.xs },
+  detailLabel: { ...typography.labelSmall, color: 'rgba(255,255,255,0.7)', marginBottom: 2 },
+  detailValue: { ...typography.bodyMedium, color: '#fff', fontWeight: '600' },
+
+  qrCard: { borderRadius: borderRadius.xl, padding: spacing.xl, alignItems: 'center', marginBottom: spacing.xl, borderWidth: 1 },
+  qrTitle: { ...typography.headlineSmall, marginBottom: spacing.xs },
+  qrSubtitle: { ...typography.bodySmall, marginBottom: spacing.lg, textAlign: 'center' },
+  qrContainer: { padding: spacing.lg, backgroundColor: 'white', borderRadius: borderRadius.lg, marginBottom: spacing.lg },
+  qrPlaceholder: { width: 180, height: 180, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center' },
+  qrPlaceholderText: { ...typography.bodyMedium },
   bookingIdRow: { flexDirection: 'row', alignItems: 'center' },
-  bookingIdLabel: { ...typography.labelMedium, color: colors.textMuted, marginRight: spacing.sm },
-  bookingIdValue: { ...typography.bodyMedium, color: colors.primary, fontWeight: '600' },
+  bookingIdLabel: { ...typography.labelMedium },
+  bookingIdValue: { ...typography.bodyMedium, fontWeight: '700' },
+
   actionsRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.xl },
-  actionBtn: {
-    flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.surface, borderRadius: borderRadius.lg, padding: spacing.md,
-    borderWidth: 1, borderColor: colors.surfaceBorder,
-  },
+  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: borderRadius.lg, padding: spacing.md, borderWidth: 1 },
   actionIcon: { fontSize: 18, marginRight: spacing.sm },
-  actionText: { ...typography.labelMedium, color: colors.textPrimary },
-  paymentCard: { padding: spacing.lg, marginBottom: spacing.xl },
+  actionText: { ...typography.labelMedium },
+
+  paymentCard: { borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.xl, borderWidth: 1 },
   paymentRow: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: spacing.sm },
-  paymentLabel: { ...typography.bodyMedium, color: colors.textSecondary },
-  paymentValue: { ...typography.headlineSmall, color: colors.success },
-  paymentMethod: { ...typography.bodyMedium, color: colors.textPrimary },
-  bottomButtons: { marginTop: spacing.md },
+  paymentLabel: { ...typography.bodyMedium },
+  paymentValue: { ...typography.headlineSmall },
+  paymentMethod: { ...typography.bodyMedium },
+
+  primaryBtn: { borderRadius: borderRadius.xl, overflow: 'hidden', marginBottom: spacing.md },
+  primaryBtnGradient: { paddingVertical: spacing.lg, alignItems: 'center' },
+  primaryBtnText: { ...typography.bodyLarge, color: '#fff', fontWeight: '700' },
   homeBtn: { alignItems: 'center', paddingVertical: spacing.lg },
-  homeBtnText: { ...typography.labelMedium, color: colors.textSecondary },
+  homeBtnText: { ...typography.labelMedium },
 });
 
 export default ConfirmationScreen;

@@ -1,30 +1,70 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/config";
-import "../styles/theme-system.css";
-import "./ClinicAuth.css";
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 
+const Field = ({ label, required, error, children }) => (
+  <div className="flex flex-col gap-1">
+    <label className="text-sm font-semibold text-slate-700">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    {children}
+    {error && <p className="text-xs text-red-500 mt-0.5">{error}</p>}
+  </div>
+);
+
+const Input = ({ icon, rightEl, error, ...props }) => (
+  <div className="relative">
+    {icon && (
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none z-10">
+        <i className={`fas fa-${icon}`}></i>
+      </span>
+    )}
+    <input
+      {...props}
+      className={[
+        "w-full h-12 rounded-xl border bg-slate-50 text-slate-800 text-sm transition-all duration-200",
+        "focus:outline-none focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500",
+        "placeholder:text-slate-400",
+        icon ? "pl-10" : "px-4",
+        rightEl ? "pr-12" : "pr-4",
+        error ? "border-red-400 bg-red-50" : "border-slate-200 hover:border-slate-300"
+      ].join(" ")}
+    />
+    {rightEl && (
+      <span className="absolute right-3 top-1/2 -translate-y-1/2 z-10">{rightEl}</span>
+    )}
+  </div>
+);
+
+const SelectField = ({ error, children, ...props }) => (
+  <select
+    {...props}
+    className={[
+      "w-full h-12 rounded-xl border bg-slate-50 text-slate-800 text-sm px-4 transition-all duration-200",
+      "focus:outline-none focus:bg-white focus:ring-2 focus:ring-sky-500/20 focus:border-sky-500",
+      error ? "border-red-400" : "border-slate-200 hover:border-slate-300"
+    ].join(" ")}
+  >
+    {children}
+  </select>
+);
+
+const SectionHeading = ({ icon, children }) => (
+  <h6 className="flex items-center gap-2 text-sm font-semibold text-sky-600 mb-4 pb-2 border-b border-slate-100">
+    <i className={`fas fa-${icon} text-sky-500`}></i>
+    {children}
+  </h6>
+);
+
 function ClinicAuth({ onLogin, onBack }) {
   const [isLogin, setIsLogin] = useState(true);
-  const [socialLoading, setSocialLoading] = useState(null);
   const [formData, setFormData] = useState({
-    name: "",
-    email: "",
-    password: "",
-    confirmPassword: "",
-    phone: "",
-    clinicName: "",
-    clinicAddress: "",
-    clinicPhone: "",
-    licenseNumber: "",
-    npiNumber: "",
-    specialization: "",
-    yearsExperience: "",
-    position: "",
-    workSchedule: "",
-    emergencyContact: "",
-    emergencyPhone: ""
+    name: "", email: "", password: "", confirmPassword: "",
+    phone: "", clinicName: "", clinicAddress: "", clinicPhone: "",
+    licenseNumber: "", npiNumber: "", specialization: "",
+    yearsExperience: "", position: "", workSchedule: "",
+    emergencyContact: "", emergencyPhone: ""
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -42,1393 +82,530 @@ function ClinicAuth({ onLogin, onBack }) {
   const [otpLoading, setOtpLoading] = useState(false);
   const [otpTimer, setOtpTimer] = useState(0);
   const [canResendOtp, setCanResendOtp] = useState(true);
-  
-  // Forgot password states
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotOtp, setForgotOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
   const [confirmNewPassword, setConfirmNewPassword] = useState("");
-  const [forgotStep, setForgotStep] = useState(1); // 1: email, 2: otp, 3: new password
+  const [forgotStep, setForgotStep] = useState(1);
   const [forgotLoading, setForgotLoading] = useState(false);
+  const [socialLoading, setSocialLoading] = useState(null);
 
-  // Load Google Sign-In script
   useEffect(() => {
-    const loadGoogleScript = () => {
-      if (document.getElementById('google-signin-script')) return;
+    if (!document.getElementById('google-signin-script')) {
       const script = document.createElement('script');
       script.id = 'google-signin-script';
       script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
+      script.async = true; script.defer = true;
       document.body.appendChild(script);
-    };
-    loadGoogleScript();
+    }
   }, []);
 
-  // Handle Google Sign-In for Staff
-  const handleGoogleSignIn = async () => {
-    if (!GOOGLE_CLIENT_ID) {
-      setError('Google Sign-In not configured. Please use email/password login.');
-      console.error('❌ REACT_APP_GOOGLE_CLIENT_ID is not set');
-      return;
-    }
-
-    setSocialLoading('google');
-    setError("");
-
-    try {
-      if (!window.google?.accounts?.oauth2) {
-        setError('Google Sign-In is still loading. Please wait a moment and try again.');
-        console.log('⏳ Google script not yet loaded');
-        setSocialLoading(null);
-        return;
-      }
-
-      console.log('🔐 Initiating Staff Google Sign-In...');
-
-      const tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: 'email profile openid',
-        callback: async (tokenResponse) => {
-          if (tokenResponse.access_token) {
-            console.log('✅ Access token received');
-            await handleGoogleToken(tokenResponse.access_token);
-          } else if (tokenResponse.error) {
-            console.error('❌ Google OAuth error:', tokenResponse.error);
-            setError(tokenResponse.error === 'access_denied' ? 'Google Sign-In was cancelled.' : 'Google Sign-In failed.');
-            setSocialLoading(null);
-          } else {
-            setError('Google Sign-In was cancelled');
-            setSocialLoading(null);
-          }
-        },
-        error_callback: (error) => {
-          console.error('❌ Google OAuth error:', error);
-          if (error.type === 'popup_failed_to_open') {
-            setError('Popup blocked! Please allow popups for this site.');
-          } else if (error.type === 'popup_closed') {
-            setError('Sign-in popup was closed. Please try again.');
-          } else {
-            setError('Google Sign-In failed. Please try again.');
-          }
-          setSocialLoading(null);
-        }
-      });
-
-      tokenClient.requestAccessToken();
-    } catch (error) {
-      console.error('❌ Google Sign-In error:', error);
-      setError('Google Sign-In failed. Please try again.');
-      setSocialLoading(null);
-    }
-  };
-
-  const handleGoogleToken = async (accessToken) => {
-    try {
-      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      
-      if (!userInfoResponse.ok) {
-        throw new Error('Failed to get user info from Google');
-      }
-      
-      const userInfo = await userInfoResponse.json();
-      await processGoogleUser(userInfo);
-    } catch (error) {
-      console.error('Google token error:', error);
-      setError('Failed to get user info from Google');
-      setSocialLoading(null);
-    }
-  };
-
-  const processGoogleUser = async (googleUser) => {
-    try {
-      const response = await axios.post('/api/auth/clinic/google-signin', {
-        email: googleUser.email,
-        name: googleUser.name || googleUser.given_name + ' ' + (googleUser.family_name || ''),
-        googleId: googleUser.sub || googleUser.id,
-        profilePhoto: googleUser.picture
-      });
-
-      // Store user data WITH token for session persistence
-      const userData = { ...response.data.user, token: response.data.token };
-      localStorage.setItem("receptionist", JSON.stringify(userData));
-      setSuccess(`Welcome back, ${response.data.user.name?.split(' ')[0]}!`);
-      setTimeout(() => onLogin(userData), 500);
-    } catch (error) {
-      console.error('Staff Google sign-in API error:', error);
-      if (error.response?.data?.needsRegistration) {
-        setError('No staff account found. Please register first or use email/password login.');
-      } else {
-        setError(error.response?.data?.message || 'Google sign-in failed');
-      }
-    } finally {
-      setSocialLoading(null);
-    }
-  };
-
-  // Validation functions
-  const validateEmail = (email) => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    return emailRegex.test(email);
-  };
-
-  const validatePhone = (phone) => {
-    const phoneRegex = /^[\+]?[1-9][\d]{0,15}$/;
-    return phoneRegex.test(phone.replace(/[\s\-\(\)]/g, ''));
-  };
-
-  const validateNPI = (npi) => {
-    // NPI is 10 digits
-    const npiRegex = /^\d{10}$/;
-    return npiRegex.test(npi);
-  };
-
-  const calculatePasswordStrength = (password) => {
-    let strength = 0;
-    if (password.length >= 8) strength += 1;
-    if (/[a-z]/.test(password)) strength += 1;
-    if (/[A-Z]/.test(password)) strength += 1;
-    if (/[0-9]/.test(password)) strength += 1;
-    if (/[^A-Za-z0-9]/.test(password)) strength += 1;
-    return strength;
-  };
+  const validateEmail = (email) => /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+  const validatePhone = (phone) => /^[\+]?[1-9][\d]{0,15}$/.test(phone.replace(/[\s\-\(\)]/g, ''));
+  const validateNPI = (npi) => /^\d{10}$/.test(npi);
+  const calcStrength = (p) => [p.length >= 8, /[a-z]/.test(p), /[A-Z]/.test(p), /[0-9]/.test(p), /[^A-Za-z0-9]/.test(p)].filter(Boolean).length;
+  const getStrengthColor = () => passwordStrength <= 2 ? 'bg-red-500' : passwordStrength <= 3 ? 'bg-yellow-500' : 'bg-green-500';
+  const getStrengthText = () => passwordStrength <= 2 ? 'Weak' : passwordStrength <= 3 ? 'Medium' : 'Strong';
+  const getStrengthTextColor = () => passwordStrength <= 2 ? 'text-red-500' : passwordStrength <= 3 ? 'text-yellow-600' : 'text-green-600';
 
   const validateField = (name, value) => {
     const errors = { ...validationErrors };
-
     switch (name) {
-      case 'email':
-        if (!validateEmail(value)) {
-          errors.email = 'Please enter a valid email address';
-        } else {
-          delete errors.email;
-        }
-        break;
+      case 'email': !validateEmail(value) ? errors.email = 'Invalid email' : delete errors.email; break;
       case 'password':
-        if (value.length < 8) {
-          errors.password = 'Password must be at least 8 characters long';
-        } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) {
-          errors.password = 'Password must contain uppercase, lowercase, and number';
-        } else {
-          delete errors.password;
-        }
-        setPasswordStrength(calculatePasswordStrength(value));
+        if (value.length < 8) errors.password = 'At least 8 characters required';
+        else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(value)) errors.password = 'Must contain uppercase, lowercase, and number';
+        else delete errors.password;
+        setPasswordStrength(calcStrength(value));
         break;
-      case 'confirmPassword':
-        if (value !== formData.password) {
-          errors.confirmPassword = 'Passwords do not match';
-        } else {
-          delete errors.confirmPassword;
-        }
-        break;
-      case 'phone':
-      case 'clinicPhone':
-      case 'emergencyPhone':
-        if (value && !validatePhone(value)) {
-          errors[name] = 'Please enter a valid phone number';
-        } else {
-          delete errors[name];
-        }
-        break;
-      case 'npiNumber':
-        if (value && !validateNPI(value)) {
-          errors.npiNumber = 'NPI must be exactly 10 digits';
-        } else {
-          delete errors.npiNumber;
-        }
-        break;
-      case 'name':
-        if (value.length < 2) {
-          errors.name = 'Name must be at least 2 characters long';
-        } else {
-          delete errors.name;
-        }
-        break;
-      case 'clinicName':
-        if (value.length < 2) {
-          errors.clinicName = 'Clinic name must be at least 2 characters long';
-        } else {
-          delete errors.clinicName;
-        }
-        break;
-      default:
-        break;
+      case 'confirmPassword': value !== formData.password ? errors.confirmPassword = 'Passwords do not match' : delete errors.confirmPassword; break;
+      case 'phone': case 'clinicPhone': case 'emergencyPhone':
+        value && !validatePhone(value) ? errors[name] = 'Invalid phone number' : delete errors[name]; break;
+      case 'npiNumber': value && !validateNPI(value) ? errors.npiNumber = 'NPI must be 10 digits' : delete errors.npiNumber; break;
+      default: break;
     }
-
     setValidationErrors(errors);
   };
 
   const handleChange = (e) => {
     const { name, value } = e.target;
-    setFormData({
-      ...formData,
-      [name]: value
-    });
-
-    // Real-time validation for registration
-    if (!isLogin) {
-      validateField(name, value);
-    }
+    setFormData({ ...formData, [name]: value });
+    if (!isLogin) validateField(name, value);
   };
 
-  // Send OTP for email verification
+  const resetForm = () => {
+    setFormData({ name:"",email:"",password:"",confirmPassword:"",phone:"",clinicName:"",clinicAddress:"",clinicPhone:"",licenseNumber:"",npiNumber:"",specialization:"",yearsExperience:"",position:"",workSchedule:"",emergencyContact:"",emergencyPhone:"" });
+    setAgreedToTerms(false); setAgreedToPrivacy(false); setVerifiedCredentials(false);
+    setValidationErrors({}); setError(""); setSuccess("");
+  };
+
+  const toggleMode = () => { setIsLogin(!isLogin); resetForm(); };
+
   const sendOtp = async () => {
-    setOtpLoading(true);
-    setError(""); // Clear any previous error
-    setSuccess(""); // Clear previous success message
-    
+    setOtpLoading(true); setError(""); setSuccess("");
     try {
-      const cleanEmail = formData.email.toLowerCase().trim();
-      console.log('📧 Sending OTP to:', cleanEmail);
-      
-      const response = await axios.post("/api/otp/send-otp", { 
-        email: cleanEmail,
-        type: 'staff-registration'
-      });
-      
-      setOtpSent(true);
-      setCanResendOtp(false);
-      setOtpTimer(60); // 60 seconds countdown
-      setOtp(""); // Clear previous OTP input
-      setError(""); // Clear error again after successful send
-      
-      // Show OTP for debugging (temporarily) - IMPORTANT: Use the NEW OTP from response
-      const newOtp = response.data.otp;
-      if (newOtp) {
-        // Force update by setting empty first, then new value
-        setSuccess("");
-        setTimeout(() => {
-          setSuccess(`✅ NEW OTP sent! Code: ${newOtp} (Use this code)`);
-        }, 100);
-        console.log('📧 Staff Registration OTP:', newOtp);
-      } else {
-        setSuccess("OTP sent to your email. Please check your inbox.");
-      }
-      
-      // Start countdown timer
-      const timer = setInterval(() => {
-        setOtpTimer((prev) => {
-          if (prev <= 1) {
-            clearInterval(timer);
-            setCanResendOtp(true);
-            return 0;
-          }
-          return prev - 1;
-        });
-      }, 1000);
-      
-    } catch (error) {
-      console.error('❌ Send OTP error:', error.response?.data || error.message);
-      setError(error.response?.data?.message || "Failed to send OTP. Please check your email address.");
-      setCanResendOtp(true); // Allow retry on error
-    } finally {
-      setOtpLoading(false);
-    }
+      const res = await axios.post("/api/otp/send-otp", { email: formData.email.toLowerCase().trim(), type: 'staff-registration' });
+      setOtpSent(true); setCanResendOtp(false); setOtpTimer(60); setOtp("");
+      setTimeout(() => setSuccess("OTP sent to your email."), 100);
+      const timer = setInterval(() => setOtpTimer(p => { if (p <= 1) { clearInterval(timer); setCanResendOtp(true); return 0; } return p - 1; }), 1000);
+    } catch (e) { setError(e.response?.data?.message || "Failed to send OTP."); setCanResendOtp(true); }
+    finally { setOtpLoading(false); }
   };
 
-  // Forgot Password - Send OTP
-  const handleForgotSendOtp = async () => {
-    if (!forgotEmail || !validateEmail(forgotEmail)) {
-      setError("Please enter a valid email address");
-      return;
-    }
-    
-    setForgotLoading(true);
-    setError("");
-    
-    try {
-      const response = await axios.post("/api/otp/send-otp", {
-        email: forgotEmail,
-        type: 'password-reset'
-      });
-      setForgotStep(2);
-      // Show OTP in success message if email might not have been delivered
-      if (response.data.otp) {
-        setSuccess(`Verification code: ${response.data.otp} (also sent to your email if configured)`);
-      } else {
-        setSuccess("OTP sent to your email");
-      }
-    } catch (error) {
-      setError(error.response?.data?.message || "Failed to send OTP. Please try again.");
-    } finally {
-      setForgotLoading(false);
-    }
-  };
-
-  // Forgot Password - Verify OTP
-  const handleForgotVerifyOtp = async () => {
-    if (!forgotOtp || forgotOtp.length !== 6) {
-      setError("Please enter a valid 6-digit OTP");
-      return;
-    }
-    
-    setForgotLoading(true);
-    setError("");
-    
-    try {
-      const response = await axios.post("/api/otp/verify-otp", {
-        email: forgotEmail,
-        otp: forgotOtp,
-        type: 'password-reset'
-      });
-      
-      if (response.data.verified) {
-        setForgotStep(3);
-        setSuccess("OTP verified. Please set your new password.");
-      }
-    } catch (error) {
-      setError(error.response?.data?.message || "Invalid OTP");
-    } finally {
-      setForgotLoading(false);
-    }
-  };
-
-  // Forgot Password - Reset Password
-  const handleResetPassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
-    
-    if (newPassword !== confirmNewPassword) {
-      setError("Passwords do not match");
-      return;
-    }
-    
-    setForgotLoading(true);
-    setError("");
-    
-    try {
-      // Use the clinic-specific reset endpoint (consistent with clinic login)
-      const response = await axios.post("/api/auth/clinic/reset-password", {
-        email: forgotEmail.toLowerCase().trim(),
-        newPassword: newPassword
-      });
-      
-      console.log('Password reset response:', response.data);
-      
-      if (response.data.success) {
-        setSuccess("Password reset successfully! You can now login with your new password.");
-        setShowForgotPassword(false);
-        setForgotStep(1);
-        setForgotEmail("");
-        setForgotOtp("");
-        setNewPassword("");
-        setConfirmNewPassword("");
-      } else {
-        setError(response.data.message || "Failed to reset password");
-      }
-    } catch (error) {
-      console.error('Password reset error:', error.response?.data || error.message);
-      setError(error.response?.data?.message || "Failed to reset password. Please try again.");
-    } finally {
-      setForgotLoading(false);
-    }
-  };
-
-  // Verify OTP
   const verifyOtp = async () => {
-    setLoading(true);
-    setError("");
-    
-    // Trim and clean the OTP value
-    const cleanOtp = otp.toString().trim().replace(/\s/g, '');
-    const cleanEmail = formData.email.toLowerCase().trim();
-    
-    console.log('📧 Verifying OTP:', { email: cleanEmail, otp: cleanOtp, type: 'staff-registration' });
-    
+    setLoading(true); setError("");
     try {
-      const response = await axios.post("/api/otp/verify-otp", {
-        email: cleanEmail,
-        otp: cleanOtp,
-        type: 'staff-registration'
-      });
-      
-      if (response.data.verified) {
-        // OTP verified, now complete registration
-        const registerResponse = await axios.post("/api/auth/receptionist/register", {
-          ...formData,
-          emailVerified: true
-        });
-        
-        setSuccess("Registration submitted successfully! Your email has been verified. Please wait for admin approval. You will receive an email confirmation within 24-48 hours.");
-        
-        // Reset form and OTP state
-        setFormData({
-          name: "",
-          email: "",
-          password: "",
-          confirmPassword: "",
-          phone: "",
-          clinicName: "",
-          clinicAddress: "",
-          clinicPhone: "",
-          licenseNumber: "",
-          npiNumber: "",
-          specialization: "",
-          yearsExperience: "",
-          position: "",
-          workSchedule: "",
-          emergencyContact: "",
-          emergencyPhone: ""
-        });
-        setAgreedToTerms(false);
-        setAgreedToPrivacy(false);
-        setVerifiedCredentials(false);
-        setShowOtpVerification(false);
-        setOtp("");
-        setOtpSent(false);
-        
-        // Switch back to login after successful registration
-        setTimeout(() => {
-          setIsLogin(true);
-          setSuccess("");
-        }, 5000);
+      const res = await axios.post("/api/otp/verify-otp", { email: formData.email.toLowerCase().trim(), otp: otp.toString().trim(), type: 'staff-registration' });
+      if (res.data.verified) {
+        await axios.post("/api/auth/receptionist/register", { ...formData, emailVerified: true });
+        setSuccess("Registration submitted! Please wait for admin approval within 24-48 hours.");
+        resetForm(); setShowOtpVerification(false); setOtp(""); setOtpSent(false);
+        setTimeout(() => { setIsLogin(true); setSuccess(""); }, 5000);
       }
-    } catch (error) {
-      setError(error.response?.data?.message || "Invalid OTP");
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) { setError(e.response?.data?.message || "Invalid OTP"); }
+    finally { setLoading(false); }
+  };
+
+  const handleGoogleSignIn = async () => {
+    if (!GOOGLE_CLIENT_ID) { setError('Google Sign-In not configured.'); return; }
+    setSocialLoading('google'); setError("");
+    try {
+      if (!window.google?.accounts?.oauth2) { setError('Google Sign-In is still loading.'); setSocialLoading(null); return; }
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID, scope: 'email profile openid',
+        callback: async (r) => {
+          if (r.access_token) {
+            try {
+              const info = await (await fetch('https://www.googleapis.com/oauth2/v2/userinfo', { headers: { Authorization: `Bearer ${r.access_token}` } })).json();
+              const res = await axios.post('/api/auth/clinic/google-signin', { email: info.email, name: info.name, googleId: info.sub || info.id, profilePhoto: info.picture });
+              const userData = { ...res.data.user, token: res.data.token };
+              localStorage.setItem("receptionist", JSON.stringify(userData));
+              setSuccess(`Welcome, ${res.data.user.name?.split(' ')[0]}!`);
+              setTimeout(() => onLogin(userData), 500);
+            } catch (e) { setError(e.response?.data?.message || 'Google sign-in failed'); }
+          } else { setError('Google Sign-In was cancelled.'); }
+          setSocialLoading(null);
+        },
+        error_callback: (e) => { setError(e.type === 'popup_blocked' ? 'Popup blocked!' : 'Google Sign-In failed.'); setSocialLoading(null); }
+      });
+      client.requestAccessToken();
+    } catch (e) { setError('Google Sign-In failed.'); setSocialLoading(null); }
+  };
+
+  const handleForgotSendOtp = async () => {
+    if (!validateEmail(forgotEmail)) { setError("Enter a valid email"); return; }
+    setForgotLoading(true); setError("");
+    try {
+      const res = await axios.post("/api/otp/send-otp", { email: forgotEmail, type: 'password-reset' });
+      setForgotStep(2); setSuccess("OTP sent to your email");
+    } catch (e) { setError(e.response?.data?.message || "Failed to send OTP."); }
+    finally { setForgotLoading(false); }
+  };
+
+  const handleForgotVerifyOtp = async () => {
+    if (!forgotOtp || forgotOtp.length !== 6) { setError("Enter a valid 6-digit OTP"); return; }
+    setForgotLoading(true); setError("");
+    try {
+      const res = await axios.post("/api/otp/verify-otp", { email: forgotEmail, otp: forgotOtp, type: 'password-reset' });
+      if (res.data.verified) { setForgotStep(3); setSuccess("OTP verified. Set your new password."); }
+    } catch (e) { setError(e.response?.data?.message || "Invalid OTP"); }
+    finally { setForgotLoading(false); }
+  };
+
+  const handleResetPassword = async () => {
+    if (!newPassword || newPassword.length < 8) { setError("Password must be at least 8 characters"); return; }
+    if (newPassword !== confirmNewPassword) { setError("Passwords do not match"); return; }
+    setForgotLoading(true); setError("");
+    try {
+      const res = await axios.post("/api/auth/clinic/reset-password", { email: forgotEmail.toLowerCase().trim(), newPassword });
+      if (res.data.success) {
+        setSuccess("Password reset! You can now login."); setShowForgotPassword(false); setForgotStep(1);
+        setForgotEmail(""); setForgotOtp(""); setNewPassword(""); setConfirmNewPassword("");
+      } else { setError(res.data.message || "Failed to reset password"); }
+    } catch (e) { setError(e.response?.data?.message || "Failed to reset password."); }
+    finally { setForgotLoading(false); }
   };
 
   const handleSubmit = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccess("");
-
-    // Validation for registration
+    e.preventDefault(); setLoading(true); setError(""); setSuccess("");
     if (!isLogin) {
       const errors = {};
-
-      if (!validateEmail(formData.email)) {
-        errors.email = 'Please enter a valid email address';
-      }
-
-      if (formData.password.length < 8) {
-        errors.password = 'Password must be at least 8 characters long';
-      }
-
-      if (formData.password !== formData.confirmPassword) {
-        errors.confirmPassword = 'Passwords do not match';
-      }
-
-      if (!validatePhone(formData.phone)) {
-        errors.phone = 'Please enter a valid phone number';
-      }
-
-      if (!validatePhone(formData.clinicPhone)) {
-        errors.clinicPhone = 'Please enter a valid clinic phone number';
-      }
-
-      if (formData.npiNumber && !validateNPI(formData.npiNumber)) {
-        errors.npiNumber = 'NPI must be exactly 10 digits';
-      }
-
-      if (!agreedToTerms) {
-        errors.terms = 'You must agree to the Terms of Service';
-      }
-
-      if (!agreedToPrivacy) {
-        errors.privacy = 'You must agree to the Privacy Policy';
-      }
-
-      if (!verifiedCredentials) {
-        errors.credentials = 'You must verify your professional credentials';
-      }
-
-      if (Object.keys(errors).length > 0) {
-        setValidationErrors(errors);
-        setLoading(false);
-        return;
-      }
+      if (!validateEmail(formData.email)) errors.email = 'Invalid email';
+      if (formData.password.length < 8) errors.password = 'At least 8 characters required';
+      if (formData.password !== formData.confirmPassword) errors.confirmPassword = 'Passwords do not match';
+      if (!validatePhone(formData.phone)) errors.phone = 'Invalid phone number';
+      if (!validatePhone(formData.clinicPhone)) errors.clinicPhone = 'Invalid clinic phone';
+      if (formData.npiNumber && !validateNPI(formData.npiNumber)) errors.npiNumber = 'NPI must be 10 digits';
+      if (!agreedToTerms) errors.terms = 'Must agree to Terms of Service';
+      if (!agreedToPrivacy) errors.privacy = 'Must agree to Privacy Policy';
+      if (!verifiedCredentials) errors.credentials = 'Must verify professional credentials';
+      if (Object.keys(errors).length > 0) { setValidationErrors(errors); setLoading(false); return; }
     }
-
     try {
       if (isLogin) {
-        // Login existing receptionist
-        const response = await axios.post("/api/auth/clinic/login", {
-          email: formData.email,
-          password: formData.password
-        });
-        // Store user data WITH token for session persistence
-        const userData = { ...response.data.user, token: response.data.token };
+        const res = await axios.post("/api/auth/clinic/login", { email: formData.email, password: formData.password });
+        const userData = { ...res.data.user, token: res.data.token };
         localStorage.setItem("receptionist", JSON.stringify(userData));
         onLogin(userData);
       } else {
-        // Show OTP verification step instead of direct registration
-        setShowOtpVerification(true);
-        setLoading(false);
-        
-        // Automatically send OTP
-        if (!otpSent) {
-          await sendOtp();
-        }
+        setShowOtpVerification(true); setLoading(false);
+        if (!otpSent) await sendOtp();
         return;
       }
-    } catch (error) {
-      if (error.response?.status === 403 && error.response?.data?.suspended) {
-        setError(`Account Suspended: ${error.response?.data?.reason || 'Contact admin for assistance'}`);
-      } else {
-        setError(error.response?.data?.message || (isLogin ? "Invalid staff credentials" : "Registration failed"));
-      }
-    } finally {
-      setLoading(false);
-    }
+    } catch (e) {
+      if (e.response?.status === 403 && e.response?.data?.suspended) setError(`Account Suspended: ${e.response?.data?.reason || 'Contact admin'}`);
+      else setError(e.response?.data?.message || (isLogin ? "Invalid credentials" : "Registration failed"));
+    } finally { setLoading(false); }
   };
 
-  const getPasswordStrengthColor = () => {
-    if (passwordStrength <= 2) return 'danger';
-    if (passwordStrength <= 3) return 'warning';
-    return 'success';
-  };
+  const EyeToggle = ({ show, onToggle }) => (
+    <button type="button" onClick={onToggle} className="text-slate-400 hover:text-sky-500 transition-colors p-1 rounded-lg">
+      <i className={`fas fa-${show ? 'eye-slash' : 'eye'} text-sm`}></i>
+    </button>
+  );
 
-  const getPasswordStrengthText = () => {
-    if (passwordStrength <= 2) return 'Weak';
-    if (passwordStrength <= 3) return 'Medium';
-    return 'Strong';
-  };
-
-  const toggleMode = () => {
-    setIsLogin(!isLogin);
-    setError("");
-    setSuccess("");
-    setValidationErrors({});
-    setFormData({
-      name: "",
-      email: "",
-      password: "",
-      confirmPassword: "",
-      phone: "",
-      clinicName: "",
-      clinicAddress: "",
-      clinicPhone: "",
-      licenseNumber: "",
-      npiNumber: "",
-      specialization: "",
-      yearsExperience: "",
-      position: "",
-      workSchedule: "",
-      emergencyContact: "",
-      emergencyPhone: ""
-    });
-    setAgreedToTerms(false);
-    setAgreedToPrivacy(false);
-    setVerifiedCredentials(false);
-  };
-
-  return (
-    <div className="clinic-auth-container">
-      <div className="clinic-auth__left">
-        <div className="clinic-auth__branding">
-          <div className="clinic-auth__logo">
-            <i className="fas fa-hospital-user"></i>
-          </div>
-          <h1>Staff Portal</h1>
-          <p>Healthcare Management System</p>
-        </div>
-        <div className="clinic-auth__features">
-          <div className="clinic-auth__feature">
-            <i className="fas fa-calendar-check"></i>
-            <div>
-              <h4>Appointment Management</h4>
-              <p>Manage patient appointments efficiently</p>
-            </div>
-          </div>
-          <div className="clinic-auth__feature">
-            <i className="fas fa-users"></i>
-            <div>
-              <h4>Patient Records</h4>
-              <p>Access and update patient information</p>
-            </div>
-          </div>
-          <div className="clinic-auth__feature">
-            <i className="fas fa-chart-line"></i>
-            <div>
-              <h4>Analytics Dashboard</h4>
-              <p>Track clinic performance metrics</p>
-            </div>
-          </div>
-        </div>
-      </div>
-      
-      <div className="clinic-auth__right">
-        <div className="clinic-auth__form-container">
-          <div className="clinic-auth__header">
-            {onBack && (
-              <button type="button" className="clinic-auth__back-btn" onClick={onBack}>
-                <i className="fas fa-arrow-left"></i> Back
-              </button>
-            )}
-            <h2>
-              <i className="fas fa-hospital-user me-2"></i>
-              {isLogin ? 'Staff Login' : 'Staff Registration'}
-            </h2>
-            <p>{isLogin ? 'Access your clinic dashboard' : 'Apply for a staff position'}</p>
-          </div>
-
-      <form onSubmit={handleSubmit} className="clinic-auth__form">
-        {/* Personal Information Section */}
-        {!isLogin && (
-          <>
-            <div className="mb-4">
-              <h6 className="text-info mb-3">
-                <i className="fas fa-user me-2"></i>Personal Information
-              </h6>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">
-                    Full Name <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="text"
-                    className={`form-control ${validationErrors.name ? 'is-invalid' : ''}`}
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Enter your full name"
-                    required
-                  />
-                  {validationErrors.name && (
-                    <div className="invalid-feedback">{validationErrors.name}</div>
-                  )}
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">
-                    Position <span className="text-danger">*</span>
-                  </label>
-                  <select
-                    className="form-select"
-                    name="position"
-                    value={formData.position}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select Position</option>
-                    <option value="receptionist">Receptionist</option>
-                    <option value="medical-assistant">Medical Assistant</option>
-                    <option value="nurse">Nurse</option>
-                    <option value="office-manager">Office Manager</option>
-                    <option value="billing-specialist">Billing Specialist</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              </div>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">
-                    Phone Number <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    className={`form-control ${validationErrors.phone ? 'is-invalid' : ''}`}
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="+1 (555) 123-4567"
-                    required
-                  />
-                  {validationErrors.phone && (
-                    <div className="invalid-feedback">{validationErrors.phone}</div>
-                  )}
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Years of Experience</label>
-                  <select
-                    className="form-select"
-                    name="yearsExperience"
-                    value={formData.yearsExperience}
-                    onChange={handleChange}
-                  >
-                    <option value="">Select Experience</option>
-                    <option value="0-1">0-1 years</option>
-                    <option value="2-5">2-5 years</option>
-                    <option value="6-10">6-10 years</option>
-                    <option value="11-15">11-15 years</option>
-                    <option value="16+">16+ years</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-          </>
-        )}
-
-        {/* Account Security Section */}
-        <div className="mb-4">
-          {!isLogin && (
-            <h6 className="text-info mb-3">
-              <i className="fas fa-lock me-2"></i>Account Security
-            </h6>
-          )}
-
-          <div className="mb-3">
-            <label className="form-label">
-              Work Email Address <span className="text-danger">*</span>
-            </label>
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="fas fa-envelope"></i>
-              </span>
-              <input
-                type="email"
-                className={`form-control ${validationErrors.email ? 'is-invalid' : ''}`}
-                name="email"
-                value={formData.email}
-                onChange={handleChange}
-                placeholder={isLogin ? "staff@clinic.com" : "your.email@clinic.com"}
-                required
-              />
-              {validationErrors.email && (
-                <div className="invalid-feedback">{validationErrors.email}</div>
-              )}
-            </div>
-          </div>
-
-          <div className="mb-3">
-            <label className="form-label">
-              Password <span className="text-danger">*</span>
-            </label>
-            <div className="input-group">
-              <span className="input-group-text">
-                <i className="fas fa-lock"></i>
-              </span>
-              <input
-                type={showPassword ? "text" : "password"}
-                className={`form-control ${validationErrors.password ? 'is-invalid' : ''}`}
-                name="password"
-                value={formData.password}
-                onChange={handleChange}
-                placeholder={isLogin ? "Enter your password" : "Create a strong password"}
-                required
-              />
-              <button
-                type="button"
-                className="btn btn-outline-secondary"
-                onClick={() => setShowPassword(!showPassword)}
-              >
-                <i className={`fas ${showPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-              </button>
-              {validationErrors.password && (
-                <div className="invalid-feedback">{validationErrors.password}</div>
-              )}
-            </div>
-
-            {!isLogin && formData.password && (
-              <div className="mt-2">
-                <div className="d-flex justify-content-between align-items-center">
-                  <small className="text-muted">Password Strength:</small>
-                  <small className={`text-${getPasswordStrengthColor()}`}>
-                    {getPasswordStrengthText()}
-                  </small>
-                </div>
-                <div className="progress" style={{ height: '4px' }}>
-                  <div
-                    className={`progress-bar bg-${getPasswordStrengthColor()}`}
-                    style={{ width: `${(passwordStrength / 5) * 100}%` }}
-                  ></div>
-                </div>
-              </div>
-            )}
-          </div>
-
-          {!isLogin && (
-            <div className="mb-3">
-              <label className="form-label">
-                Confirm Password <span className="text-danger">*</span>
-              </label>
-              <div className="input-group">
-                <span className="input-group-text">
-                  <i className="fas fa-lock"></i>
-                </span>
-                <input
-                  type={showConfirmPassword ? "text" : "password"}
-                  className={`form-control ${validationErrors.confirmPassword ? 'is-invalid' : ''}`}
-                  name="confirmPassword"
-                  value={formData.confirmPassword}
-                  onChange={handleChange}
-                  placeholder="Confirm your password"
-                  required
-                />
-                <button
-                  type="button"
-                  className="btn btn-outline-secondary"
-                  onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                >
-                  <i className={`fas ${showConfirmPassword ? 'fa-eye-slash' : 'fa-eye'}`}></i>
-                </button>
-                {validationErrors.confirmPassword && (
-                  <div className="invalid-feedback">{validationErrors.confirmPassword}</div>
-                )}
-              </div>
-            </div>
-          )}
-        </div>
-
-        {/* Clinic Information Section */}
-        {!isLogin && (
-          <>
-            <div className="mb-4">
-              <h6 className="text-info mb-3">
-                <i className="fas fa-clinic-medical me-2"></i>Clinic Information
-              </h6>
-
-              <div className="mb-3">
-                <label className="form-label">
-                  Clinic Name <span className="text-danger">*</span>
-                </label>
-                <input
-                  type="text"
-                  className={`form-control ${validationErrors.clinicName ? 'is-invalid' : ''}`}
-                  name="clinicName"
-                  value={formData.clinicName}
-                  onChange={handleChange}
-                  placeholder="Enter clinic name"
-                  required
-                />
-                {validationErrors.clinicName && (
-                  <div className="invalid-feedback">{validationErrors.clinicName}</div>
-                )}
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">
-                  Clinic Address <span className="text-danger">*</span>
-                </label>
-                <textarea
-                  className="form-control"
-                  name="clinicAddress"
-                  value={formData.clinicAddress}
-                  onChange={handleChange}
-                  rows="2"
-                  placeholder="Full clinic address including city, state, and ZIP"
-                  required
-                ></textarea>
-              </div>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">
-                    Clinic Phone <span className="text-danger">*</span>
-                  </label>
-                  <input
-                    type="tel"
-                    className={`form-control ${validationErrors.clinicPhone ? 'is-invalid' : ''}`}
-                    name="clinicPhone"
-                    value={formData.clinicPhone}
-                    onChange={handleChange}
-                    placeholder="+1 (555) 987-6543"
-                    required
-                  />
-                  {validationErrors.clinicPhone && (
-                    <div className="invalid-feedback">{validationErrors.clinicPhone}</div>
-                  )}
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Specialization</label>
-                  <select
-                    className="form-select"
-                    name="specialization"
-                    value={formData.specialization}
-                    onChange={handleChange}
-                  >
-                    <option value="">Select Specialization</option>
-                    <option value="family-medicine">Family Medicine</option>
-                    <option value="internal-medicine">Internal Medicine</option>
-                    <option value="pediatrics">Pediatrics</option>
-                    <option value="cardiology">Cardiology</option>
-                    <option value="dermatology">Dermatology</option>
-                    <option value="orthopedics">Orthopedics</option>
-                    <option value="psychiatry">Psychiatry</option>
-                    <option value="urgent-care">Urgent Care</option>
-                    <option value="other">Other</option>
-                  </select>
-                </div>
-              </div>
-            </div>
-
-            {/* Professional Credentials Section */}
-            <div className="mb-4">
-              <h6 className="text-info mb-3">
-                <i className="fas fa-certificate me-2"></i>Professional Credentials
-              </h6>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">License Number</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="licenseNumber"
-                    value={formData.licenseNumber}
-                    onChange={handleChange}
-                    placeholder="Professional license number"
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">NPI Number</label>
-                  <input
-                    type="text"
-                    className={`form-control ${validationErrors.npiNumber ? 'is-invalid' : ''}`}
-                    name="npiNumber"
-                    value={formData.npiNumber}
-                    onChange={handleChange}
-                    placeholder="10-digit NPI number"
-                  />
-                  {validationErrors.npiNumber && (
-                    <div className="invalid-feedback">{validationErrors.npiNumber}</div>
-                  )}
-                </div>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Work Schedule</label>
-                <textarea
-                  className="form-control"
-                  name="workSchedule"
-                  value={formData.workSchedule}
-                  onChange={handleChange}
-                  rows="2"
-                  placeholder="e.g., Monday-Friday 8:00 AM - 5:00 PM, Saturday 9:00 AM - 1:00 PM"
-                ></textarea>
-              </div>
-            </div>
-
-            {/* Emergency Contact Section */}
-            <div className="mb-4">
-              <h6 className="text-info mb-3">
-                <i className="fas fa-phone-alt me-2"></i>Emergency Contact
-              </h6>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Emergency Contact Name</label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="emergencyContact"
-                    value={formData.emergencyContact}
-                    onChange={handleChange}
-                    placeholder="Full name of emergency contact"
-                  />
-                </div>
-
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Emergency Contact Phone</label>
-                  <input
-                    type="tel"
-                    className={`form-control ${validationErrors.emergencyPhone ? 'is-invalid' : ''}`}
-                    name="emergencyPhone"
-                    value={formData.emergencyPhone}
-                    onChange={handleChange}
-                    placeholder="+1 (555) 123-4567"
-                  />
-                  {validationErrors.emergencyPhone && (
-                    <div className="invalid-feedback">{validationErrors.emergencyPhone}</div>
-                  )}
-                </div>
-              </div>
-            </div>
-
-            {/* Verification and Terms */}
-            <div className="mb-4">
-              <div className="form-check mb-2">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="credentialsCheck"
-                  checked={verifiedCredentials}
-                  onChange={(e) => setVerifiedCredentials(e.target.checked)}
-                />
-                <label className="form-check-label" htmlFor="credentialsCheck">
-                  I certify that all professional credentials and information provided are accurate and current <span className="text-danger">*</span>
-                </label>
-              </div>
-
-              <div className="form-check mb-2">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="termsCheck"
-                  checked={agreedToTerms}
-                  onChange={(e) => setAgreedToTerms(e.target.checked)}
-                />
-                <label className="form-check-label" htmlFor="termsCheck">
-                  I agree to the <a href="#" className="text-info">Terms of Service</a> <span className="text-danger">*</span>
-                </label>
-              </div>
-
-              <div className="form-check mb-3">
-                <input
-                  className="form-check-input"
-                  type="checkbox"
-                  id="privacyCheck"
-                  checked={agreedToPrivacy}
-                  onChange={(e) => setAgreedToPrivacy(e.target.checked)}
-                />
-                <label className="form-check-label" htmlFor="privacyCheck">
-                  I agree to the <a href="#" className="text-info">Privacy Policy</a> and HIPAA Compliance <span className="text-danger">*</span>
-                </label>
-              </div>
-
-              {(validationErrors.terms || validationErrors.privacy || validationErrors.credentials) && (
-                <div className="alert alert-danger py-2">
-                  {validationErrors.credentials && <div>{validationErrors.credentials}</div>}
-                  {validationErrors.terms && <div>{validationErrors.terms}</div>}
-                  {validationErrors.privacy && <div>{validationErrors.privacy}</div>}
-                </div>
-              )}
-            </div>
-          </>
-        )}
-
-        {error && (
-          <div className="alert alert-danger" role="alert">
-            <i className="fas fa-exclamation-triangle me-2"></i>
-            {error}
-          </div>
-        )}
-
-        {success && (
-          <div className="alert alert-success" role="alert">
-            <i className="fas fa-check-circle me-2"></i>
-            {success}
-          </div>
-        )}
-
-        {!showOtpVerification && (
-          <button
-            type="submit"
-            className="btn btn-info w-100"
-            disabled={loading || (!isLogin && (!agreedToTerms || !agreedToPrivacy || !verifiedCredentials))}
-          >
-            {loading ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                {isLogin ? "Signing in..." : "Submitting application..."}
-              </>
-            ) : (
-              <>
-                <i className={`fas ${isLogin ? 'fa-sign-in-alt' : 'fa-user-plus'} me-2`}></i>
-                {isLogin ? "Staff Login" : "Apply for Staff Position"}
-              </>
-            )}
+  // ── Forgot Password Modal ──────────────────────────────────────────────────
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-sky-50 p-6">
+        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 p-8 animate-fade-in-up">
+          <button onClick={() => { setShowForgotPassword(false); setForgotStep(1); setError(""); setSuccess(""); }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all mb-6">
+            <i className="fas fa-arrow-left text-xs"></i> Back to Login
           </button>
-        )}
-
-        {/* Google Sign-In for Login only */}
-        {isLogin && !showOtpVerification && (
-          <>
-            <div className="d-flex align-items-center my-3">
-              <hr className="flex-grow-1" />
-              <span className="px-3 text-muted small">or continue with</span>
-              <hr className="flex-grow-1" />
+          <div className="text-center mb-8">
+            <div className="w-14 h-14 bg-sky-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <i className="fas fa-key text-2xl text-sky-600"></i>
             </div>
-
-            <button
-              type="button"
-              className="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2"
-              onClick={handleGoogleSignIn}
-              disabled={socialLoading === 'google'}
-              style={{ padding: '10px' }}
-            >
-              {socialLoading === 'google' ? (
-                <><span className="spinner-border spinner-border-sm"></span> Signing in...</>
-              ) : (
-                <><i className="fab fa-google"></i> Sign in with Google</>
-              )}
-            </button>
-          </>
-        )}
-      </form>
-
-      {/* OTP Verification Section */}
-      {showOtpVerification && !isLogin && (
-        <div className="mt-4">
-          <div className="alert alert-info">
-            <i className="fas fa-envelope me-2"></i>
-            <strong>Email Verification Required</strong>
-            <p className="mb-0 mt-2">
-              We've sent a 6-digit verification code to <strong>{formData.email}</strong>. 
-              Please check your email and enter the code below to verify your professional email address.
+            <h2 className="text-2xl font-bold text-slate-800">Reset Password</h2>
+            <p className="text-slate-500 text-sm mt-1">
+              {forgotStep === 1 ? "Enter your work email to receive a reset code" : forgotStep === 2 ? "Enter the 6-digit code sent to your email" : "Create your new password"}
             </p>
           </div>
-
-          <div className="mb-3">
-            <label className="form-label">
-              <i className="fas fa-key me-2"></i>
-              Enter Verification Code
-            </label>
-            <div className="input-group">
-              <input
-                type="text"
-                className="form-control text-center"
-                value={otp}
-                onChange={(e) => setOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                placeholder="000000"
-                maxLength="6"
-                style={{ fontSize: '1.2rem', letterSpacing: '0.5rem' }}
-              />
-              <button
-                type="button"
-                className="btn btn-outline-info"
-                onClick={verifyOtp}
-                disabled={loading || otp.length !== 6}
-              >
-                {loading ? (
-                  <span className="spinner-border spinner-border-sm" role="status"></span>
-                ) : (
-                  <i className="fas fa-check"></i>
-                )}
+          {error && <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm mb-4"><i className="fas fa-exclamation-circle"></i>{error}</div>}
+          {success && <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm mb-4"><i className="fas fa-check-circle"></i>{success}</div>}
+          {forgotStep === 1 && (
+            <div className="flex flex-col gap-4">
+              <Field label="Work Email Address" required>
+                <Input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder="staff@clinic.com" icon="envelope" />
+              </Field>
+              <button onClick={handleForgotSendOtp} disabled={forgotLoading}
+                className="w-full h-12 bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-sky-500/25 disabled:opacity-60 flex items-center justify-center gap-2">
+                {forgotLoading ? <><i className="fas fa-spinner fa-spin"></i> Sending...</> : <><i className="fas fa-paper-plane"></i> Send Reset Code</>}
               </button>
             </div>
-            <small className="text-muted">Enter the 6-digit code sent to your professional email</small>
+          )}
+          {forgotStep === 2 && (
+            <div className="flex flex-col gap-4">
+              <Field label="Verification Code" required>
+                <Input type="text" value={forgotOtp} onChange={e => setForgotOtp(e.target.value)} placeholder="Enter 6-digit code" maxLength={6} icon="shield-alt" />
+              </Field>
+              <button onClick={handleForgotVerifyOtp} disabled={forgotLoading}
+                className="w-full h-12 bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-sky-500/25 disabled:opacity-60 flex items-center justify-center gap-2">
+                {forgotLoading ? <><i className="fas fa-spinner fa-spin"></i> Verifying...</> : <><i className="fas fa-check"></i> Verify Code</>}
+              </button>
+            </div>
+          )}
+          {forgotStep === 3 && (
+            <div className="flex flex-col gap-4">
+              <Field label="New Password" required>
+                <Input type={showPassword ? "text" : "password"} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="New password" icon="lock"
+                  rightEl={<EyeToggle show={showPassword} onToggle={() => setShowPassword(!showPassword)} />} />
+              </Field>
+              <Field label="Confirm New Password" required>
+                <Input type={showConfirmPassword ? "text" : "password"} value={confirmNewPassword} onChange={e => setConfirmNewPassword(e.target.value)} placeholder="Confirm new password" icon="lock"
+                  rightEl={<EyeToggle show={showConfirmPassword} onToggle={() => setShowConfirmPassword(!showConfirmPassword)} />} />
+              </Field>
+              <button onClick={handleResetPassword} disabled={forgotLoading}
+                className="w-full h-12 bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-sky-500/25 disabled:opacity-60 flex items-center justify-center gap-2">
+                {forgotLoading ? <><i className="fas fa-spinner fa-spin"></i> Resetting...</> : <><i className="fas fa-save"></i> Reset Password</>}
+              </button>
+            </div>
+          )}
+        </div>
+      </div>
+    );
+  }
+
+  // ── OTP Verification Screen ────────────────────────────────────────────────
+  if (showOtpVerification) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-sky-50 p-6">
+        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 p-8 animate-fade-in-up">
+          <button onClick={() => { setShowOtpVerification(false); setOtp(""); setOtpSent(false); }}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all mb-6">
+            <i className="fas fa-arrow-left text-xs"></i> Back
+          </button>
+          <div className="text-center mb-8">
+            <div className="w-14 h-14 bg-sky-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <i className="fas fa-envelope-open-text text-2xl text-sky-600"></i>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800">Verify Your Email</h2>
+            <p className="text-slate-500 text-sm mt-1">Enter the 6-digit code sent to <span className="font-semibold text-slate-700">{formData.email}</span></p>
+          </div>
+          {error && <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm mb-4"><i className="fas fa-exclamation-circle"></i>{error}</div>}
+          {success && <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm mb-4"><i className="fas fa-check-circle"></i>{success}</div>}
+          <div className="flex flex-col gap-4">
+            <Field label="Verification Code" required>
+              <Input type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="Enter 6-digit OTP" maxLength={6} icon="shield-alt" />
+            </Field>
+            <button onClick={verifyOtp} disabled={loading}
+              className="w-full h-12 bg-gradient-to-r from-sky-500 to-teal-500 hover:from-sky-600 hover:to-teal-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-sky-500/25 disabled:opacity-60 flex items-center justify-center gap-2">
+              {loading ? <><i className="fas fa-spinner fa-spin"></i> Verifying...</> : <><i className="fas fa-check-circle"></i> Verify & Register</>}
+            </button>
+            <button onClick={sendOtp} disabled={!canResendOtp || otpLoading}
+              className="w-full h-10 border border-slate-200 hover:border-sky-300 text-slate-600 hover:text-sky-600 font-medium rounded-xl transition-all text-sm disabled:opacity-50 flex items-center justify-center gap-2">
+              {otpLoading ? <><i className="fas fa-spinner fa-spin"></i> Sending...</> : otpTimer > 0 ? `Resend in ${otpTimer}s` : <><i className="fas fa-redo"></i> Resend OTP</>}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Main Login / Registration ──────────────────────────────────────────────
+  return (
+    <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-white to-sky-50">
+      {/* Left Branding Panel */}
+      <div className="hidden lg:flex flex-col justify-center w-[45%] p-10 bg-gradient-to-br from-teal-600 via-sky-600 to-teal-700 text-white relative overflow-hidden">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full translate-y-1/2 -translate-x-1/2"></div>
+        </div>
+        <div className="relative z-10">
+          <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6">
+            <i className="fas fa-hospital-user text-3xl text-white"></i>
+          </div>
+          <h1 className="text-4xl font-bold mb-2">Staff Portal</h1>
+          <p className="text-white/80 text-lg mb-10">Healthcare Management System</p>
+          <div className="flex flex-col gap-4">
+            {[
+              { icon: 'calendar-check', title: 'Appointment Management', desc: 'Manage patient appointments efficiently' },
+              { icon: 'users', title: 'Patient Records', desc: 'Access and update patient information' },
+              { icon: 'chart-line', title: 'Analytics Dashboard', desc: 'Track clinic performance metrics' },
+            ].map((f) => (
+              <div key={f.title} className="flex items-start gap-4 p-4 bg-white/10 backdrop-blur-sm rounded-2xl hover:bg-white/15 transition-all duration-300 hover:translate-x-1">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <i className={`fas fa-${f.icon} text-lg`}></i>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white">{f.title}</h4>
+                  <p className="text-white/75 text-sm mt-0.5">{f.desc}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </div>
+      </div>
+
+      {/* Right Form Panel */}
+      <div className="flex-1 flex items-start justify-center p-6 overflow-y-auto max-h-screen">
+        <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 p-8 my-8">
+          {/* Header */}
+          <div className="mb-8 text-center">
+            {onBack && (
+              <button type="button" onClick={onBack}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all mb-6">
+                <i className="fas fa-arrow-left text-xs"></i> Back
+              </button>
+            )}
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <i className="fas fa-hospital-user text-2xl text-teal-600"></i>
+              <h2 className="text-2xl font-bold text-slate-800">{isLogin ? 'Staff Login' : 'Staff Registration'}</h2>
+            </div>
+            <p className="text-slate-500 text-sm">{isLogin ? 'Access your clinic dashboard' : 'Apply for a staff position'}</p>
           </div>
 
-          <div className="d-flex justify-content-between align-items-center mb-3">
-            <button
-              type="button"
-              className="btn btn-link p-0"
-              onClick={() => {
-                setShowOtpVerification(false);
-                setOtp("");
-                setOtpSent(false);
-              }}
-            >
-              <i className="fas fa-arrow-left me-1"></i>
-              Back to Application
+          {/* Alerts */}
+          {error && <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm mb-5"><i className="fas fa-exclamation-circle flex-shrink-0"></i><span>{error}</span></div>}
+          {success && <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm mb-5"><i className="fas fa-check-circle flex-shrink-0"></i><span>{success}</span></div>}
+
+          <form onSubmit={handleSubmit} className="flex flex-col gap-5">
+
+            {/* Personal Info (Registration only) */}
+            {!isLogin && (
+              <div>
+                <SectionHeading icon="user">Personal Information</SectionHeading>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Full Name" required error={validationErrors.name}>
+                    <Input name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Your full name" required error={validationErrors.name} />
+                  </Field>
+                  <Field label="Position" required>
+                    <SelectField name="position" value={formData.position} onChange={handleChange} required>
+                      <option value="">Select Position</option>
+                      <option value="receptionist">Receptionist</option>
+                      <option value="medical-assistant">Medical Assistant</option>
+                      <option value="nurse">Nurse</option>
+                      <option value="office-manager">Office Manager</option>
+                      <option value="billing-specialist">Billing Specialist</option>
+                      <option value="other">Other</option>
+                    </SelectField>
+                  </Field>
+                  <Field label="Phone Number" required error={validationErrors.phone}>
+                    <Input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+91 98765 43210" required error={validationErrors.phone} />
+                  </Field>
+                  <Field label="Years of Experience">
+                    <SelectField name="yearsExperience" value={formData.yearsExperience} onChange={handleChange}>
+                      <option value="">Select</option>
+                      <option value="0-1">0–1 years</option>
+                      <option value="2-5">2–5 years</option>
+                      <option value="6-10">6–10 years</option>
+                      <option value="11-15">11–15 years</option>
+                      <option value="16+">16+ years</option>
+                    </SelectField>
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Account Security */}
+            <div>
+              {!isLogin && <SectionHeading icon="lock">Account Security</SectionHeading>}
+              <div className="flex flex-col gap-4">
+                <Field label="Work Email Address" required error={validationErrors.email}>
+                  <Input name="email" type="email" value={formData.email} onChange={handleChange}
+                    placeholder={isLogin ? "staff@clinic.com" : "your.email@clinic.com"}
+                    icon="envelope" required error={validationErrors.email} />
+                </Field>
+                <Field label="Password" required error={validationErrors.password}>
+                  <Input name="password" type={showPassword ? "text" : "password"} value={formData.password}
+                    onChange={handleChange} placeholder={isLogin ? "Enter your password" : "Create a strong password"}
+                    icon="lock" required error={validationErrors.password}
+                    rightEl={<EyeToggle show={showPassword} onToggle={() => setShowPassword(!showPassword)} />} />
+                  {!isLogin && formData.password && (
+                    <div className="mt-1.5">
+                      <div className="flex justify-between items-center mb-1">
+                        <span className="text-xs text-slate-500">Password Strength</span>
+                        <span className={`text-xs font-semibold ${getStrengthTextColor()}`}>{getStrengthText()}</span>
+                      </div>
+                      <div className="h-1 bg-slate-200 rounded-full overflow-hidden">
+                        <div className={`h-full rounded-full transition-all duration-300 ${getStrengthColor()}`} style={{ width: `${(passwordStrength / 5) * 100}%` }}></div>
+                      </div>
+                    </div>
+                  )}
+                </Field>
+                {!isLogin && (
+                  <Field label="Confirm Password" required error={validationErrors.confirmPassword}>
+                    <Input name="confirmPassword" type={showConfirmPassword ? "text" : "password"}
+                      value={formData.confirmPassword} onChange={handleChange} placeholder="Confirm your password"
+                      icon="lock" required error={validationErrors.confirmPassword}
+                      rightEl={<EyeToggle show={showConfirmPassword} onToggle={() => setShowConfirmPassword(!showConfirmPassword)} />} />
+                  </Field>
+                )}
+              </div>
+            </div>
+
+            {/* Clinic Information (Registration only) */}
+            {!isLogin && (
+              <div>
+                <SectionHeading icon="clinic-medical">Clinic Information</SectionHeading>
+                <div className="flex flex-col gap-4">
+                  <Field label="Clinic Name" required error={validationErrors.clinicName}>
+                    <Input name="clinicName" type="text" value={formData.clinicName} onChange={handleChange} placeholder="Enter clinic name" required error={validationErrors.clinicName} />
+                  </Field>
+                  <Field label="Clinic Address" required>
+                    <Input name="clinicAddress" type="text" value={formData.clinicAddress} onChange={handleChange} placeholder="Full clinic address" required />
+                  </Field>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="Clinic Phone" required error={validationErrors.clinicPhone}>
+                      <Input name="clinicPhone" type="tel" value={formData.clinicPhone} onChange={handleChange} placeholder="+91 98765 43210" required error={validationErrors.clinicPhone} />
+                    </Field>
+                    <Field label="License Number">
+                      <Input name="licenseNumber" type="text" value={formData.licenseNumber} onChange={handleChange} placeholder="License #" />
+                    </Field>
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <Field label="NPI Number" error={validationErrors.npiNumber}>
+                      <Input name="npiNumber" type="text" value={formData.npiNumber} onChange={handleChange} placeholder="10-digit NPI" maxLength={10} error={validationErrors.npiNumber} />
+                    </Field>
+                    <Field label="Specialization">
+                      <Input name="specialization" type="text" value={formData.specialization} onChange={handleChange} placeholder="e.g. Cardiology" />
+                    </Field>
+                  </div>
+                </div>
+              </div>
+            )}
+
+            {/* Emergency Contact (Registration only) */}
+            {!isLogin && (
+              <div>
+                <SectionHeading icon="phone-alt">Emergency Contact</SectionHeading>
+                <div className="grid grid-cols-2 gap-4">
+                  <Field label="Contact Name">
+                    <Input name="emergencyContact" type="text" value={formData.emergencyContact} onChange={handleChange} placeholder="Contact name" />
+                  </Field>
+                  <Field label="Contact Phone" error={validationErrors.emergencyPhone}>
+                    <Input name="emergencyPhone" type="tel" value={formData.emergencyPhone} onChange={handleChange} placeholder="+91 98765 43210" error={validationErrors.emergencyPhone} />
+                  </Field>
+                </div>
+              </div>
+            )}
+
+            {/* Agreements (Registration only) */}
+            {!isLogin && (
+              <div className="flex flex-col gap-3 p-4 bg-slate-50 rounded-2xl border border-slate-100">
+                <SectionHeading icon="file-contract">Agreements</SectionHeading>
+                {[
+                  { key: 'terms', state: agreedToTerms, setter: setAgreedToTerms, label: 'I agree to the Terms of Service', error: validationErrors.terms },
+                  { key: 'privacy', state: agreedToPrivacy, setter: setAgreedToPrivacy, label: 'I agree to the Privacy Policy', error: validationErrors.privacy },
+                  { key: 'creds', state: verifiedCredentials, setter: setVerifiedCredentials, label: 'I verify my professional credentials are accurate', error: validationErrors.credentials },
+                ].map(({ key, state, setter, label, error: err }) => (
+                  <label key={key} className="flex items-start gap-3 cursor-pointer group">
+                    <input type="checkbox" checked={state} onChange={e => setter(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 rounded border-slate-300 text-sky-500 focus:ring-sky-500 flex-shrink-0" />
+                    <span className={`text-sm ${err ? 'text-red-500' : 'text-slate-600'} group-hover:text-slate-800 transition-colors`}>{label}</span>
+                  </label>
+                ))}
+              </div>
+            )}
+
+            {/* Submit Button */}
+            <button type="submit" disabled={loading}
+              className="w-full h-12 bg-gradient-to-r from-teal-500 to-sky-500 hover:from-teal-600 hover:to-sky-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-teal-500/25 hover:shadow-teal-500/40 hover:-translate-y-0.5 disabled:opacity-60 disabled:cursor-not-allowed disabled:transform-none flex items-center justify-center gap-2 text-sm">
+              {loading
+                ? <><i className="fas fa-spinner fa-spin"></i> {isLogin ? 'Signing in...' : 'Submitting...'}</>
+                : <><i className={`fas fa-${isLogin ? 'sign-in-alt' : 'user-plus'}`}></i> {isLogin ? 'Staff Login' : 'Submit Application'}</>
+              }
             </button>
 
-            <div className="text-end">
-              {canResendOtp ? (
-                <button
-                  type="button"
-                  className="btn btn-link p-0"
-                  onClick={sendOtp}
-                  disabled={otpLoading}
-                >
-                  {otpLoading ? (
-                    <>
-                      <span className="spinner-border spinner-border-sm me-1" role="status"></span>
-                      Sending...
-                    </>
-                  ) : (
-                    <>
-                      <i className="fas fa-redo me-1"></i>
-                      Resend Code
-                    </>
-                  )}
-                </button>
-              ) : (
-                <small className="text-muted">
-                  Resend in {otpTimer}s
-                </small>
-              )}
+            {/* Google Sign-In */}
+            <div className="relative flex items-center gap-3">
+              <div className="flex-1 h-px bg-slate-200"></div>
+              <span className="text-xs text-slate-400 font-medium">or continue with</span>
+              <div className="flex-1 h-px bg-slate-200"></div>
             </div>
-          </div>
+            <button type="button" onClick={handleGoogleSignIn} disabled={socialLoading === 'google'}
+              className="w-full h-12 border-2 border-slate-200 hover:border-slate-300 bg-white hover:bg-slate-50 text-slate-700 font-medium rounded-xl transition-all duration-200 flex items-center justify-center gap-3 text-sm disabled:opacity-60">
+              {socialLoading === 'google'
+                ? <><i className="fas fa-spinner fa-spin text-slate-400"></i> Signing in...</>
+                : <><svg className="w-5 h-5" viewBox="0 0 24 24"><path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/><path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/><path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z"/><path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"/></svg> Continue with Google</>
+              }
+            </button>
 
-          <button
-            type="button"
-            className="btn btn-success w-100"
-            onClick={verifyOtp}
-            disabled={loading || otp.length !== 6}
-          >
-            {loading ? (
-              <>
-                <span className="spinner-border spinner-border-sm me-2" role="status"></span>
-                Verifying & Submitting...
-              </>
-            ) : (
-              <>
-                <i className="fas fa-shield-check me-2"></i>
-                Verify Email & Submit Application
-              </>
-            )}
-          </button>
-
-          <div className="mt-3 p-3 bg-light rounded">
-            <small className="text-muted">
-              <i className="fas fa-info-circle me-1"></i>
-              <strong>Professional Verification:</strong> Email verification is required for all healthcare staff applications. 
-              Check your spam folder if you don't see the code within a few minutes.
-            </small>
-          </div>
-        </div>
-      )}
-
-      <div className="mt-3 text-center">
-        <button
-          type="button"
-          className="btn btn-link text-info p-0"
-          onClick={toggleMode}
-        >
-          {isLogin ? (
-            <>
-              <i className="fas fa-user-plus me-1"></i>
-              New staff member? Apply here
-            </>
-          ) : (
-            <>
-              <i className="fas fa-sign-in-alt me-1"></i>
-              Already have an account? Sign In
-            </>
-          )}
-        </button>
-      </div>
-
-      {isLogin && (
-        <div className="text-center mt-2">
-          <button 
-            type="button" 
-            className="btn btn-link btn-sm text-muted"
-            onClick={() => {
-              setShowForgotPassword(true);
-              setError("");
-              setSuccess("");
-            }}
-          >
-            <i className="fas fa-key me-1"></i>
-            Forgot Password?
-          </button>
-        </div>
-      )}
-
-      {/* Forgot Password Modal */}
-      {showForgotPassword && (
-        <div className="clinic-auth__modal-overlay" onClick={() => setShowForgotPassword(false)}>
-          <div className="clinic-auth__modal" onClick={(e) => e.stopPropagation()}>
-            <div className="clinic-auth__modal-header">
-              <h4><i className="fas fa-key"></i> Reset Password</h4>
-              <button 
-                className="clinic-auth__modal-close"
-                onClick={() => {
-                  setShowForgotPassword(false);
-                  setForgotStep(1);
-                  setForgotEmail("");
-                  setForgotOtp("");
-                  setNewPassword("");
-                  setConfirmNewPassword("");
-                  setError("");
-                  setSuccess("");
-                }}
-              >
-                <i className="fas fa-times"></i>
+            {/* Forgot Password (Login only) */}
+            {isLogin && (
+              <button type="button" onClick={() => { setShowForgotPassword(true); setError(""); setSuccess(""); }}
+                className="text-center text-sm text-sky-600 hover:text-sky-700 font-medium transition-colors">
+                Forgot your password?
               </button>
-            </div>
-            
-            <div className="clinic-auth__modal-body">
-              {error && <div className="alert alert-danger">{error}</div>}
-              {success && <div className="alert alert-success">{success}</div>}
-              
-              {/* Step 1: Enter Email */}
-              {forgotStep === 1 && (
-                <div>
-                  <p className="text-muted mb-3">Enter your registered email address to receive a verification code.</p>
-                  <div className="mb-3">
-                    <label className="form-label">Email Address</label>
-                    <input
-                      type="email"
-                      className="form-control"
-                      placeholder="Enter your email"
-                      value={forgotEmail}
-                      onChange={(e) => setForgotEmail(e.target.value)}
-                    />
-                  </div>
-                  <button 
-                    className="btn btn-primary w-100"
-                    onClick={handleForgotSendOtp}
-                    disabled={forgotLoading}
-                  >
-                    {forgotLoading ? <><i className="fas fa-spinner fa-spin"></i> Sending...</> : "Send OTP"}
-                  </button>
-                </div>
-              )}
-              
-              {/* Step 2: Enter OTP */}
-              {forgotStep === 2 && (
-                <div>
-                  <p className="text-muted mb-3">Enter the 6-digit code sent to {forgotEmail}</p>
-                  <div className="mb-3">
-                    <label className="form-label">Verification Code</label>
-                    <input
-                      type="text"
-                      className="form-control text-center"
-                      placeholder="000000"
-                      maxLength={6}
-                      value={forgotOtp}
-                      onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, ''))}
-                      style={{ letterSpacing: '0.5em', fontSize: '1.25rem' }}
-                    />
-                  </div>
-                  <button 
-                    className="btn btn-primary w-100"
-                    onClick={handleForgotVerifyOtp}
-                    disabled={forgotLoading}
-                  >
-                    {forgotLoading ? <><i className="fas fa-spinner fa-spin"></i> Verifying...</> : "Verify OTP"}
-                  </button>
-                  <button 
-                    className="btn btn-link w-100 mt-2"
-                    onClick={() => setForgotStep(1)}
-                  >
-                    <i className="fas fa-arrow-left"></i> Back
-                  </button>
-                </div>
-              )}
-              
-              {/* Step 3: New Password */}
-              {forgotStep === 3 && (
-                <div>
-                  <p className="text-muted mb-3">Create a new password for your account.</p>
-                  <div className="mb-3">
-                    <label className="form-label">New Password</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      placeholder="Enter new password"
-                      value={newPassword}
-                      onChange={(e) => setNewPassword(e.target.value)}
-                    />
-                  </div>
-                  <div className="mb-3">
-                    <label className="form-label">Confirm Password</label>
-                    <input
-                      type="password"
-                      className="form-control"
-                      placeholder="Confirm new password"
-                      value={confirmNewPassword}
-                      onChange={(e) => setConfirmNewPassword(e.target.value)}
-                    />
-                  </div>
-                  <button 
-                    className="btn btn-success w-100"
-                    onClick={handleResetPassword}
-                    disabled={forgotLoading}
-                  >
-                    {forgotLoading ? <><i className="fas fa-spinner fa-spin"></i> Resetting...</> : "Reset Password"}
-                  </button>
-                </div>
-              )}
-            </div>
-          </div>
-        </div>
-      )}
+            )}
 
-      <div className="clinic-auth__security-notice">
-        <i className="fas fa-shield-alt"></i>
-        <p>
-          <strong>Secure & Compliant:</strong> {isLogin ? "Staff access with role-based permissions" : "All applications are reviewed within 24-48 hours."}
-        </p>
-      </div>
+            {/* Toggle Login/Register */}
+            <p className="text-center text-sm text-slate-500">
+              {isLogin ? "Don't have an account? " : "Already have an account? "}
+              <button type="button" onClick={toggleMode} className="text-sky-600 hover:text-sky-700 font-semibold transition-colors">
+                {isLogin ? 'Apply for Staff Access' : 'Sign In'}
+              </button>
+            </p>
+
+            {/* Security Notice */}
+            <div className="flex items-center justify-center gap-2 p-3 bg-teal-50 rounded-xl border border-teal-100">
+              <i className="fas fa-shield-alt text-teal-500 text-sm"></i>
+              <p className="text-xs text-teal-700 font-medium">256-bit SSL encrypted · HIPAA compliant</p>
+            </div>
+
+          </form>
         </div>
       </div>
     </div>

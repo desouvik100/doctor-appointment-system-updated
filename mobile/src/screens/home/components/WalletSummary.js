@@ -1,33 +1,15 @@
 /**
- * WalletSummary Component - Display balance and loyalty points
+ * WalletSummary - Compact wallet card, less visual noise
  */
 
 import React from 'react';
-import {
-  View,
-  Text,
-  StyleSheet,
-  TouchableOpacity,
-} from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 import { useTheme } from '../../../context/ThemeContext';
 
-const WalletSummary = ({ 
-  balance = 0, 
-  loyaltyPoints = 0, 
-  currency = '₹',
-  navigation,
-  onAddMoney 
-}) => {
+const WalletSummary = ({ balance = 0, loyaltyPoints = 0, currency = '₹', navigation, onAddMoney }) => {
   const { colors } = useTheme();
-  
-  const formatBalance = (amount) => {
-    return amount.toLocaleString('en-IN', {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
-    });
-  };
 
   return (
     <View style={styles.container}>
@@ -39,55 +21,39 @@ const WalletSummary = ({
       </View>
 
       <LinearGradient
-        colors={['#6366f1', '#8b5cf6']}
+        colors={['#5B4ED1', '#6C5CE7', '#8B5CF6']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.card}
       >
-        <View style={styles.cardContent}>
-          <View style={styles.balanceSection}>
+        {/* Balance row */}
+        <View style={styles.balanceRow}>
+          <View>
             <Text style={styles.balanceLabel}>Available Balance</Text>
-            <Text style={[styles.balanceAmount, { color: colors.textInverse }]}>
-              {currency}{formatBalance(balance)}
+            <Text style={styles.balanceAmount}>
+              {currency}{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </Text>
           </View>
-
-          <View style={styles.divider} />
-
-          <View style={styles.pointsSection}>
-            <View style={styles.pointsIcon}>
-              <Text style={styles.pointsEmoji}>⭐</Text>
-            </View>
+          <View style={styles.pointsBadge}>
+            <Text style={styles.pointsEmoji}>⭐</Text>
             <View>
-              <Text style={styles.pointsLabel}>Loyalty Points</Text>
-              <Text style={[styles.pointsValue, { color: colors.textInverse }]}>{loyaltyPoints.toLocaleString()}</Text>
+              <Text style={styles.pointsLabel}>Points</Text>
+              <Text style={styles.pointsValue}>{loyaltyPoints.toLocaleString()}</Text>
             </View>
           </View>
         </View>
 
+        {/* Actions */}
         <View style={styles.actions}>
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={onAddMoney}
-          >
-            <Text style={styles.actionIcon}>+</Text>
-            <Text style={[styles.actionText, { color: colors.textInverse }]}>Add Money</Text>
+          <TouchableOpacity style={styles.actionBtn} onPress={onAddMoney} activeOpacity={0.8}>
+            <Text style={styles.actionBtnText}>+ Add Money</Text>
           </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.actionButton}
+          <TouchableOpacity
+            style={[styles.actionBtn, styles.actionBtnOutline]}
             onPress={() => navigation.navigate('Wallet', { tab: 'history' })}
+            activeOpacity={0.8}
           >
-            <Text style={styles.actionIcon}>📜</Text>
-            <Text style={[styles.actionText, { color: colors.textInverse }]}>History</Text>
-          </TouchableOpacity>
-
-          <TouchableOpacity 
-            style={styles.actionButton}
-            onPress={() => navigation.navigate('Wallet', { tab: 'rewards' })}
-          >
-            <Text style={styles.actionIcon}>🎁</Text>
-            <Text style={[styles.actionText, { color: colors.textInverse }]}>Rewards</Text>
+            <Text style={[styles.actionBtnText, styles.actionBtnOutlineText]}>History</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
@@ -96,86 +62,75 @@ const WalletSummary = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    marginBottom: spacing.xxl,
-  },
+  container: { marginBottom: spacing.xxl },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
-  sectionTitle: {
-    ...typography.headlineSmall,
-  },
-  seeAll: {
-    ...typography.labelMedium,
-  },
+  sectionTitle: { ...typography.headlineSmall },
+  seeAll: { ...typography.labelMedium },
   card: {
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
   },
-  cardContent: {
-    marginBottom: spacing.lg,
-  },
-  balanceSection: {
-    marginBottom: spacing.md,
+  balanceRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.xl,
   },
   balanceLabel: {
     ...typography.labelMedium,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.65)',
     marginBottom: spacing.xs,
   },
   balanceAmount: {
-    ...typography.displayMedium,
-    fontWeight: '700',
+    ...typography.displaySmall,
+    color: '#fff',
+    fontWeight: '800',
   },
-  divider: {
-    height: 1,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    marginVertical: spacing.md,
-  },
-  pointsSection: {
+  pointsBadge: {
     flexDirection: 'row',
     alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.15)',
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    gap: spacing.sm,
   },
-  pointsIcon: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.md,
-    backgroundColor: 'rgba(255,255,255,0.2)',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  pointsEmoji: {
-    fontSize: 20,
-  },
+  pointsEmoji: { fontSize: 20 },
   pointsLabel: {
     ...typography.labelSmall,
-    color: 'rgba(255,255,255,0.7)',
+    color: 'rgba(255,255,255,0.65)',
   },
   pointsValue: {
-    ...typography.headlineSmall,
-    fontWeight: '600',
+    ...typography.bodyLarge,
+    color: '#fff',
+    fontWeight: '700',
   },
   actions: {
     flexDirection: 'row',
-    justifyContent: 'space-between',
-    borderTopWidth: 1,
-    borderTopColor: 'rgba(255,255,255,0.2)',
-    paddingTop: spacing.lg,
+    gap: spacing.md,
   },
-  actionButton: {
+  actionBtn: {
     flex: 1,
+    backgroundColor: '#fff',
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
     alignItems: 'center',
   },
-  actionIcon: {
-    fontSize: 20,
-    marginBottom: spacing.xs,
+  actionBtnOutline: {
+    backgroundColor: 'rgba(255,255,255,0.15)',
   },
-  actionText: {
-    ...typography.labelSmall,
+  actionBtnText: {
+    ...typography.labelMedium,
+    color: '#5B4ED1',
+    fontWeight: '700',
+  },
+  actionBtnOutlineText: {
+    color: '#fff',
   },
 });
 

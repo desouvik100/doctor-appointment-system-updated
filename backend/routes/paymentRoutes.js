@@ -31,6 +31,42 @@ router.get('/calculate/:appointmentId', verifyToken, async (req, res) => {
   }
 });
 
+// Create a generic Razorpay order for lab tests / non-appointment payments
+router.post('/create-lab-order', verifyToken, async (req, res) => {
+  try {
+    const { amount, description } = req.body;
+    if (!amount || amount <= 0) {
+      return res.status(400).json({ success: false, message: 'Valid amount is required' });
+    }
+
+    const Razorpay = require('razorpay');
+    const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = require('../config/paymentConfig');
+
+    if (!RAZORPAY_KEY_ID || !RAZORPAY_KEY_SECRET) {
+      return res.status(500).json({ success: false, message: 'Razorpay not configured' });
+    }
+
+    const rzp = new Razorpay({ key_id: RAZORPAY_KEY_ID, key_secret: RAZORPAY_KEY_SECRET });
+    const order = await rzp.orders.create({
+      amount: Math.round(amount * 100),
+      currency: 'INR',
+      receipt: `lab_${Date.now()}`,
+      notes: { description: description || 'Lab Test Home Collection' },
+    });
+
+    res.json({
+      success: true,
+      orderId: order.id,
+      amount: order.amount,
+      currency: order.currency,
+      keyId: RAZORPAY_KEY_ID,
+    });
+  } catch (error) {
+    console.error('Lab order creation error:', error);
+    res.status(500).json({ success: false, message: error.message || 'Failed to create order' });
+  }
+});
+
 // Create Razorpay Order (authenticated users)
 router.post('/create-order', verifyToken, async (req, res) => {
   try {
@@ -80,7 +116,7 @@ router.post('/create-order', verifyToken, async (req, res) => {
 });
 
 // Verify Razorpay Payment
-router.post('/verify', async (req, res) => {
+router.post('/verify', verifyToken, async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, appointmentId } = req.body;
     
@@ -187,7 +223,7 @@ router.post('/verify', async (req, res) => {
 });
 
 // Get payment history for user
-router.get('/history/:userId', async (req, res) => {
+router.get('/history/:userId', verifyToken, async (req, res) => {
   try {
     const { userId } = req.params;
     const paymentHistory = await razorpayService.getPaymentHistory(userId);
@@ -207,7 +243,7 @@ router.get('/history/:userId', async (req, res) => {
 });
 
 // Process refund
-router.post('/refund', async (req, res) => {
+router.post('/refund', verifyToken, async (req, res) => {
   try {
     const { appointmentId, reason } = req.body;
     
@@ -239,12 +275,12 @@ router.get('/config', (req, res) => {
 });
 
 // Get payment status for an appointment
-router.get('/status/:appointmentId', async (req, res) => {
+router.get('/status/:appointmentId', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.params;
     
     const appointment = await Appointment.findById(appointmentId)
-      .select('paymentStatus status paymentDetails');
+      .select('paymentStatus status paymentDetails razorpayOrderId razorpayPaymentId');
     
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
@@ -260,6 +296,62 @@ router.get('/status/:appointmentId', async (req, res) => {
   } catch (error) {
     console.error('Payment status error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Verify payment by Razorpay order ID (used after UPI intent returns to app)
+router.post('/verify-by-order', verifyToken, async (req, res) => {
+  try {
+    const { orderId, appointmentId } = req.body;
+    if (!orderId || !appointmentId) {
+      return res.status(400).json({ success: false, message: 'orderId and appointmentId required' });
+    }
+
+    // Check if already confirmed via webhook
+    const appointment = await Appointment.findById(appointmentId).select('paymentStatus status razorpayOrderId razorpayPaymentId');
+    if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
+
+    if (appointment.paymentStatus === 'completed') {
+      return res.json({ success: true, alreadyVerified: true, message: 'Payment already confirmed' });
+    }
+
+    // Fetch order from Razorpay to check payment status
+    if (!USE_RAZORPAY_PAYMENTS) {
+      appointment.paymentStatus = 'completed';
+      appointment.status = 'confirmed';
+      await appointment.save();
+      return res.json({ success: true, testMode: true });
+    }
+
+    const Razorpay = require('razorpay');
+    const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = require('../config/paymentConfig');
+    const rzp = new Razorpay({ key_id: RAZORPAY_KEY_ID, key_secret: RAZORPAY_KEY_SECRET });
+
+    const order = await rzp.orders.fetch(orderId);
+    if (order.status === 'paid') {
+      // Fetch the payment for this order
+      const payments = await rzp.orders.fetchPayments(orderId);
+      const payment = payments.items?.find(p => p.status === 'captured');
+      if (payment) {
+        appointment.paymentStatus = 'completed';
+        appointment.status = 'confirmed';
+        appointment.razorpayPaymentId = payment.id;
+        appointment.paymentDetails = {
+          razorpayOrderId: orderId,
+          razorpayPaymentId: payment.id,
+          amount: payment.amount / 100,
+          method: payment.method,
+          paidAt: new Date()
+        };
+        await appointment.save();
+        return res.json({ success: true, paymentId: payment.id });
+      }
+    }
+
+    res.json({ success: false, orderStatus: order.status, message: 'Payment not yet captured' });
+  } catch (error) {
+    console.error('verify-by-order error:', error);
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -308,7 +400,11 @@ router.get('/razorpay-cancel', async (req, res) => {
 router.get('/mobile-checkout/:orderId', async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { appointmentId, amount, name, email, contact, doctorName } = req.query;
+    const { appointmentId, amount, name, email, contact, doctorName, method, upiApp } = req.query;
+    
+    // Map upiApp param to Razorpay's app name
+    const upiAppMap = { gpay: 'google_pay', phonepe: 'phonepe', paytm: 'paytm', bhim: 'bhim' };
+    const razorpayUpiApp = upiApp ? (upiAppMap[upiApp] || upiApp) : null;
     
     console.log('📱 Mobile checkout page requested for order:', orderId);
     console.log('   Appointment ID:', appointmentId);
@@ -658,10 +754,21 @@ router.get('/mobile-checkout/:orderId', async (req, res) => {
         prefill: {
           name: '${decodeURIComponent(name || '').replace(/'/g, "\\'")}',
           email: '${decodeURIComponent(email || '').replace(/'/g, "\\'")}',
-          contact: '${decodeURIComponent(contact || '').replace(/'/g, "\\'")}'
+          contact: '${decodeURIComponent(contact || '').replace(/'/g, "\\'")}',
+          ${razorpayUpiApp ? `method: 'upi', vpa: ''` : ''}
         },
+        ${razorpayUpiApp ? `
+        config: {
+          display: {
+            blocks: {
+              utib: { name: 'Pay via UPI', instruments: [{ method: 'upi', apps: ['${razorpayUpiApp}'] }] }
+            },
+            sequence: ['block.utib'],
+            preferences: { show_default_blocks: false }
+          }
+        },` : ''}
         theme: { 
-          color: '#0ea5e9',
+          color: '#6C63FF',
           backdrop_color: 'rgba(0, 0, 0, 0.6)'
         },
         handler: function(response) {

@@ -18,8 +18,11 @@ const MobilePatientHome = ({ user, onNavigate, onLogout }) => {
   const fetchDashboardData = useCallback(async () => {
     try {
       setLoading(true);
+      const userId = user?.id || user?._id;
       const [apptRes] = await Promise.all([
-        axios.get('/api/appointments/user').catch(() => ({ data: [] }))
+        userId
+          ? axios.get(`/api/appointments/user/${userId}`).catch(() => ({ data: [] }))
+          : Promise.resolve({ data: [] })
       ]);
       
       const appts = apptRes.data?.appointments || apptRes.data || [];

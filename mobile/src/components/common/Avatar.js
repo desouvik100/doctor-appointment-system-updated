@@ -64,12 +64,14 @@ const Avatar = ({
   const renderAvatarContent = (borderRadiusValue) => {
     if (hasValidSource) {
       return (
-        <Image 
-          source={imageSource} 
-          style={[styles.image, { borderRadius: borderRadiusValue }]} 
-          onError={() => setImageError(true)}
-          resizeMode="cover"
-        />
+        <View style={{ width: '100%', height: '100%', borderRadius: borderRadiusValue, overflow: 'hidden' }}>
+          <Image
+            source={imageSource}
+            style={styles.image}
+            onError={() => setImageError(true)}
+            resizeMode="cover"
+          />
+        </View>
       );
     }
     return (
@@ -129,6 +131,7 @@ const styles = StyleSheet.create({
   image: {
     width: '100%',
     height: '100%',
+    overflow: 'hidden',
   },
   placeholder: {
     width: '100%',

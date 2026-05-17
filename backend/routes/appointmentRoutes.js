@@ -159,28 +159,11 @@ router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
  *                   items:
  *                     $ref: '#/components/schemas/Appointment'
  */
-router.get('/my', async (req, res) => {
+router.get('/my', verifyToken, async (req, res) => {
   try {
-    // Check for auth token
-    const authHeader = req.headers.authorization;
-    if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.json({ success: true, data: [], message: 'Not authenticated' });
-    }
-
-    // Verify token
-    const jwt = require('jsonwebtoken');
-    const token = authHeader.split(' ')[1];
-    
-    let decoded;
-    try {
-      decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
-    } catch (tokenError) {
-      return res.json({ success: true, data: [], message: 'Invalid token' });
-    }
-
-    const userId = decoded.userId || decoded.id;
+    const userId = req.user.id;
     if (!userId) {
-      return res.json({ success: true, data: [], message: 'No user ID in token' });
+      return res.status(401).json({ success: false, message: 'Not authenticated' });
     }
 
     const { status } = req.query;
@@ -232,7 +215,7 @@ router.get('/my', async (req, res) => {
     res.json({ success: true, data: formattedAppointments });
   } catch (error) {
     console.error('Error fetching user appointments:', error);
-    res.json({ success: true, data: [], message: error.message });
+    res.status(500).json({ success: false, message: error.message });
   }
 });
 
@@ -490,7 +473,7 @@ router.get('/queue-info/:doctorId/:date', async (req, res) => {
     const appointmentQuery = {
       doctorId,
       date: { $gte: startOfDay, $lte: endOfDay },
-      status: { $in: ['pending', 'confirmed', 'in_progress'] }
+      status: { $in: ['confirmed', 'in_progress'] }
     };
     
     // If consultationType specified, filter by it
@@ -505,14 +488,14 @@ router.get('/queue-info/:doctorId/:date', async (req, res) => {
     const virtualAppointments = await Appointment.countDocuments({
       doctorId,
       date: { $gte: startOfDay, $lte: endOfDay },
-      status: { $in: ['pending', 'confirmed', 'in_progress'] },
+      status: { $in: ['confirmed', 'in_progress'] },
       consultationType: { $in: ['online', 'virtual'] }
     });
     
     const inClinicAppointments = await Appointment.countDocuments({
       doctorId,
       date: { $gte: startOfDay, $lte: endOfDay },
-      status: { $in: ['pending', 'confirmed', 'in_progress'] },
+      status: { $in: ['confirmed', 'in_progress'] },
       consultationType: 'in_person'
     });
 
@@ -736,11 +719,10 @@ router.post('/', async (req, res) => {
       });
     }
 
-    // Calculate payment breakdown
+    // Calculate payment breakdown — 5% platform fee, no GST (matches frontend CinemaStyleBooking)
     const consultationFee = doctor.consultationFee;
-    const gst = Math.round(consultationFee * 0.22); // 22% GST
-    const platformFee = Math.round(consultationFee * 0.07); // 7% platform fee
-    const totalAmount = consultationFee + gst + platformFee;
+    const platformFee = Math.round(consultationFee * 0.05); // 5% platform fee
+    const totalAmount = consultationFee + platformFee;
 
     // Determine payment status based on Stripe configuration
     const paymentStatus = USE_STRIPE_PAYMENTS ? 'pending' : 'not_required';
@@ -758,7 +740,6 @@ router.post('/', async (req, res) => {
       paymentStatus: paymentStatus,
       payment: {
         consultationFee,
-        gst,
         platformFee,
         totalAmount,
         paymentStatus: paymentStatus
@@ -1029,10 +1010,11 @@ router.post('/queue-booking', async (req, res) => {
     const isVirtual = appointmentConsultationType === 'online' || appointmentConsultationType === 'virtual';
     
     // Get appointments ONLY for the same consultation type (virtual or in-clinic)
+    // Exclude pending_payment — only count confirmed/in_progress for queue position
     const existingAppointments = await Appointment.find({
       doctorId,
       date: { $gte: startOfDay, $lte: endOfDay },
-      status: { $in: ['pending', 'confirmed', 'in_progress'] },
+      status: { $in: ['confirmed', 'in_progress'] },
       consultationType: isVirtual ? { $in: ['online', 'virtual'] } : 'in_person'
     }).sort({ queueNumber: -1 });
 
@@ -1082,8 +1064,8 @@ router.post('/queue-booking', async (req, res) => {
     const totalAmount = consultationFee + gst + platformFee;
 
     // Get payment status from request (for Razorpay integration)
-    const requestedPaymentStatus = req.body.paymentStatus || 'not_required';
-    const requestedStatus = req.body.status || 'confirmed';
+    const requestedPaymentStatus = req.body.paymentStatus || 'pending';
+    const requestedStatus = req.body.status || 'pending_payment';
     
     const appointmentData = {
       userId,
@@ -1565,8 +1547,22 @@ router.post('/walk-in', verifyTokenWithRole(['receptionist', 'doctor', 'admin'])
         age: patientAge,
         gender: patientGender
       };
-      // Use a placeholder user ID (you might want to create a "walk-in" user)
-      appointmentData.userId = addedBy || doctorId; // Temporary - links to who added it
+      // Walk-in patients without an account: find or create a dedicated walk-in system user
+      // so appointment data integrity is maintained (userId must reference a real user)
+      let walkInUser = await User.findOne({ email: 'walkin@healthsyncpro.in' });
+      if (!walkInUser) {
+        const bcrypt = require('bcryptjs');
+        walkInUser = new User({
+          name: 'Walk-In Patient',
+          email: 'walkin@healthsyncpro.in',
+          password: await bcrypt.hash(require('crypto').randomBytes(32).toString('hex'), 10),
+          role: 'patient',
+          isActive: true,
+          approvalStatus: 'approved'
+        });
+        await walkInUser.save();
+      }
+      appointmentData.userId = walkInUser._id;
     }
 
     const appointment = new Appointment(appointmentData);
@@ -2054,7 +2050,7 @@ router.delete('/:id', verifyTokenWithRole(['admin']), async (req, res) => {
 // ============================================
 
 // Generate meeting link and join code for online consultation
-router.post('/:id/generate-meeting', async (req, res) => {
+router.post('/:id/generate-meeting', verifyToken, async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id)
       .populate('userId', 'name email')
@@ -2151,7 +2147,7 @@ router.post('/:id/generate-meeting', async (req, res) => {
 });
 
 // Check if consultation is accessible
-router.get('/:id/check-access', async (req, res) => {
+router.get('/:id/check-access', verifyToken, async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id)
       .populate('userId', 'name email')
@@ -2184,7 +2180,7 @@ router.get('/:id/check-access', async (req, res) => {
 });
 
 // Join consultation with join code verification
-router.post('/:id/join', async (req, res) => {
+router.post('/:id/join', verifyToken, async (req, res) => {
   try {
     const { joinCode } = req.body;
     const appointment = await Appointment.findById(req.params.id)
@@ -2235,7 +2231,7 @@ router.post('/:id/join', async (req, res) => {
 });
 
 // End consultation
-router.post('/:id/end-consultation', async (req, res) => {
+router.post('/:id/end-consultation', verifyToken, async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.id);
     
@@ -2263,7 +2259,7 @@ router.post('/:id/end-consultation', async (req, res) => {
 });
 
 // Get upcoming online consultations for a user
-router.get('/user/:userId/online-upcoming', async (req, res) => {
+router.get('/user/:userId/online-upcoming', verifyToken, async (req, res) => {
   try {
     const now = new Date();
     const appointments = await Appointment.find({
@@ -2292,12 +2288,19 @@ router.get('/user/:userId/online-upcoming', async (req, res) => {
   }
 });
 
-// Reschedule appointment
-router.put('/:id/reschedule', async (req, res) => {
+// Reschedule appointment — accepts both date/time and newDate/newTime parameter names
+router.put('/:id/reschedule', verifyToken, async (req, res) => {
   try {
-    const { date, time, reason } = req.body;
-    const appointment = await Appointment.findById(req.params.id);
+    // Support both parameter naming conventions
+    const date = req.body.newDate || req.body.date;
+    const time = req.body.newTime || req.body.time;
+    const { reason } = req.body;
 
+    if (!date || !time) {
+      return res.status(400).json({ message: 'New date and time are required' });
+    }
+
+    const appointment = await Appointment.findById(req.params.id);
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
     }
@@ -2311,7 +2314,8 @@ router.put('/:id/reschedule', async (req, res) => {
 
     appointment.date = new Date(date);
     appointment.time = time;
-    appointment.rescheduledFrom = { date: oldDate, time: oldTime, reason, rescheduledAt: new Date() };
+    appointment.rescheduledFrom = { date: oldDate, time: oldTime, reason: reason || 'Rescheduled by user', rescheduledAt: new Date() };
+    appointment.rescheduledAt = new Date();
     appointment.status = 'pending'; // Reset to pending for confirmation
 
     await appointment.save();
@@ -2322,15 +2326,20 @@ router.put('/:id/reschedule', async (req, res) => {
       await auditService.appointmentRescheduled(appointment, { date: oldDate, time: oldTime }, req.user || { name: 'System', role: 'system' }, reason, req);
     } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
 
-    res.json({ message: 'Appointment rescheduled successfully', appointment });
+    const updatedAppointment = await Appointment.findById(req.params.id)
+      .populate('userId', 'name email phone')
+      .populate('doctorId', 'name specialization')
+      .populate('clinicId', 'name address');
+
+    res.json({ message: 'Appointment rescheduled successfully', appointment: updatedAppointment });
   } catch (error) {
     console.error('Error rescheduling appointment:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({ message: 'Failed to reschedule appointment', error: error.message });
   }
 });
 
 // Add notes to appointment
-router.put('/:id/notes', async (req, res) => {
+router.put('/:id/notes', verifyToken, async (req, res) => {
   try {
     const { notes, noteType } = req.body; // noteType: 'patient' or 'doctor'
     const updateField = noteType === 'doctor' ? 'doctorNotes' : 'patientNotes';
@@ -2351,58 +2360,11 @@ router.put('/:id/notes', async (req, res) => {
   }
 });
 
-// Reschedule appointment
-router.put('/:id/reschedule', async (req, res) => {
-  try {
-    const { newDate, newTime, reason } = req.body;
-    
-    if (!newDate || !newTime) {
-      return res.status(400).json({ message: 'New date and time are required' });
-    }
-
-    const appointment = await Appointment.findById(req.params.id);
-    if (!appointment) {
-      return res.status(404).json({ message: 'Appointment not found' });
-    }
-
-    // Store old date/time for reference
-    const oldDate = appointment.date;
-    const oldTime = appointment.time;
-
-    // Update appointment
-    appointment.date = new Date(newDate);
-    appointment.time = newTime;
-    appointment.rescheduledFrom = { date: oldDate, time: oldTime, reason: reason || 'Rescheduled by user' };
-    appointment.rescheduledAt = new Date();
-    
-    await appointment.save();
-
-    // Audit log
-    try {
-      const auditService = require('../services/auditService');
-      await auditService.appointmentRescheduled(appointment, { date: oldDate, time: oldTime }, req.user || { name: 'System', role: 'system' }, reason, req);
-    } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
-
-    const updatedAppointment = await Appointment.findById(req.params.id)
-      .populate('userId', 'name email phone')
-      .populate('doctorId', 'name specialization')
-      .populate('clinicId', 'name address');
-
-    res.json({ 
-      message: 'Appointment rescheduled successfully', 
-      appointment: updatedAppointment 
-    });
-  } catch (error) {
-    console.error('Error rescheduling appointment:', error);
-    res.status(500).json({ message: 'Failed to reschedule appointment', error: error.message });
-  }
-});
-
 // ============ QUEUE NOTIFICATION ENDPOINTS ============
 const queueNotificationService = require('../services/queueNotificationService');
 
 // Get queue position and estimated time for an appointment
-router.get('/:id/queue-position', async (req, res) => {
+router.get('/:id/queue-position', verifyToken, async (req, res) => {
   try {
     const queueInfo = await queueNotificationService.getQueuePosition(req.params.id);
     if (!queueInfo) {
@@ -2439,7 +2401,7 @@ router.post('/doctor/:doctorId/notify-queue', async (req, res) => {
 });
 
 // Send notification to specific patient
-router.post('/:id/notify-patient', async (req, res) => {
+router.post('/:id/notify-patient', verifyToken, async (req, res) => {
   try {
     const result = await queueNotificationService.checkAndNotifyPatient(req.params.id, 10); // Force notify
     res.json({ success: true, ...result });
@@ -2637,7 +2599,7 @@ router.get('/admin/stats', verifyTokenWithRole(['admin']), async (req, res) => {
 });
 
 // Get single appointment by ID (MUST be at the end to avoid route conflicts)
-router.get('/:id', async (req, res) => {
+router.get('/:id', verifyToken, async (req, res) => {
   try {
     const { id } = req.params;
     

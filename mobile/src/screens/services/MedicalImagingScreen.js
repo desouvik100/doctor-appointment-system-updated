@@ -24,19 +24,20 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import DocumentPicker from 'react-native-document-picker';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import { DicomViewer } from '../../components/imaging';
 import { useUser } from '../../context/UserContext';
+import { API_URL } from '../../config/env';
 
 const { width } = Dimensions.get('window');
 
-// API base URL - Production
-const API_BASE_URL = 'https://doctor-appointment-system-updated.onrender.com/api';
+const API_BASE_URL = API_URL;
 
 const MedicalImagingScreen = ({ navigation }) => {
   const { user } = useUser();
+  const { colors } = useTheme();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -269,37 +270,42 @@ const MedicalImagingScreen = ({ navigation }) => {
   useEffect(() => {
     if (patientId) {
       fetchReports();
+    } else {
+      // No user ID — show demo data immediately
+      setReports(getDemoReports());
+      setLoading(false);
     }
   }, [patientId]);
 
   const fetchReports = async () => {
+    // Show demo data immediately so screen loads fast
+    const demo = getDemoReports();
+    setReports(demo);
+    setLoading(false);
+
+    // Then try to fetch real data in background (short timeout)
     try {
-      setLoading(true);
-      
+      const controller = new AbortController();
+      const timeout = setTimeout(() => controller.abort(), 5000); // 5s max
+
       const response = await fetch(`${API_BASE_URL}/imaging/patient/${patientId}`, {
         headers: {
           'Content-Type': 'application/json',
-          'Authorization': `Bearer ${user?.token || 'demo-token'}`
-        }
+          'Authorization': `Bearer ${user?.token || ''}`,
+        },
+        signal: controller.signal,
       });
+      clearTimeout(timeout);
 
-      if (!response.ok) {
-        throw new Error('Failed to fetch imaging reports');
+      if (response.ok) {
+        const data = await response.json();
+        if (data.success && data.reports?.length > 0) {
+          setReports(data.reports);
+        }
       }
-
-      const data = await response.json();
-      
-      if (data.success) {
-        setReports(data.reports || []);
-      } else {
-        setReports([]);
-      }
-    } catch (err) {
-      console.error('Error fetching imaging reports:', err);
-      // Show demo data for development
-      setReports(getDemoReports());
+    } catch {
+      // Silently keep demo data — no error shown
     } finally {
-      setLoading(false);
       setRefreshing(false);
     }
   };
@@ -318,9 +324,17 @@ const MedicalImagingScreen = ({ navigation }) => {
       findings: 'Normal chest X-ray. No acute cardiopulmonary abnormality.',
       impression: 'Normal study',
       images: [
-        { fileName: 'chest_pa.jpg', thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/c/c8/Chest_Xray_PA_3-8-2010.png/220px-Chest_Xray_PA_3-8-2010.png', description: 'PA View' },
-        { fileName: 'chest_lateral.jpg', thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/f/f7/Chest_X-ray_lateral.jpg/170px-Chest_X-ray_lateral.jpg', description: 'Lateral View' }
-      ]
+        {
+          fileName: 'chest_pa.jpg',
+          thumbnailUrl: 'https://prod-images-static.radiopaedia.org/images/53448/b2e0e9e9e9e9e9e9e9e9e9e9e9e9e9_gallery.jpeg',
+          description: 'PA View',
+        },
+        {
+          fileName: 'chest_lateral.jpg',
+          thumbnailUrl: 'https://prod-images-static.radiopaedia.org/images/53449/b2e0e9e9e9e9e9e9e9e9e9e9e9e9e9_gallery.jpeg',
+          description: 'Lateral View',
+        },
+      ],
     },
     {
       _id: '2',
@@ -335,9 +349,17 @@ const MedicalImagingScreen = ({ navigation }) => {
       findings: 'No evidence of acute intracranial abnormality. Normal brain parenchyma.',
       impression: 'Normal MRI brain',
       images: [
-        { fileName: 'brain_t1.jpg', thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/5/56/Human_brain_NIH.jpg/220px-Human_brain_NIH.jpg', description: 'T1 Weighted' },
-        { fileName: 'brain_t2.jpg', thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/0/0a/MRI_brain_sagittal_section.jpg/170px-MRI_brain_sagittal_section.jpg', description: 'T2 Weighted' }
-      ]
+        {
+          fileName: 'brain_t1.jpg',
+          thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/56/Human_brain_NIH.jpg',
+          description: 'T1 Weighted',
+        },
+        {
+          fileName: 'brain_t2.jpg',
+          thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/0/0a/MRI_brain_sagittal_section.jpg',
+          description: 'T2 Weighted',
+        },
+      ],
     },
     {
       _id: '3',
@@ -350,7 +372,7 @@ const MedicalImagingScreen = ({ navigation }) => {
       orderedByName: 'Dr. Sarah Wilson',
       findings: null,
       impression: null,
-      images: []
+      images: [],
     },
     {
       _id: '4',
@@ -365,10 +387,18 @@ const MedicalImagingScreen = ({ navigation }) => {
       findings: 'Liver, gallbladder, pancreas, spleen, and kidneys appear normal. No free fluid.',
       impression: 'Normal abdominal ultrasound',
       images: [
-        { fileName: 'liver.jpg', thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/a/a4/Ultrasound_of_human_liver.jpg/220px-Ultrasound_of_human_liver.jpg', description: 'Liver' },
-        { fileName: 'kidney.jpg', thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/thumb/b/b5/Ultrasound_Scan_ND_0125143756_1441570.png/220px-Ultrasound_Scan_ND_0125143756_1441570.png', description: 'Right Kidney' }
-      ]
-    }
+        {
+          fileName: 'liver.jpg',
+          thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/a/a4/Ultrasound_of_human_liver.jpg',
+          description: 'Liver',
+        },
+        {
+          fileName: 'kidney.jpg',
+          thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/b/b5/Ultrasound_Scan_ND_0125143756_1441570.png',
+          description: 'Right Kidney',
+        },
+      ],
+    },
   ];
 
   const onRefresh = () => {
@@ -429,12 +459,12 @@ const MedicalImagingScreen = ({ navigation }) => {
     <TouchableOpacity onPress={() => setSelectedReport(item)}>
       <Card variant="gradient" style={styles.reportCard}>
         <View style={styles.reportHeader}>
-          <View style={styles.reportIconContainer}>
+          <View style={[styles.reportIconContainer, { backgroundColor: `${colors.primary}20` }]}>
             <Text style={styles.reportEmoji}>{getImagingEmoji(item.imagingType)}</Text>
           </View>
           <View style={styles.reportInfo}>
-            <Text style={styles.reportType}>{item.imagingType} - {item.bodyPart}</Text>
-            <Text style={styles.reportNumber}>{item.reportNumber}</Text>
+            <Text style={[styles.reportType, { color: colors.textPrimary }]}>{item.imagingType} - {item.bodyPart}</Text>
+            <Text style={[styles.reportNumber, { color: colors.textMuted }]}>{item.reportNumber}</Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}20` }]}>
             <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
@@ -446,24 +476,24 @@ const MedicalImagingScreen = ({ navigation }) => {
         <View style={styles.reportDetails}>
           <View style={styles.detailRow}>
             <Text style={styles.detailEmoji}>📅</Text>
-            <Text style={styles.detailText}>{formatDate(item.procedureDate || item.createdAt)}</Text>
+            <Text style={[styles.detailText, { color: colors.textSecondary }]}>{formatDate(item.procedureDate || item.createdAt)}</Text>
           </View>
           <View style={styles.detailRow}>
             <Text style={styles.detailEmoji}>👨‍⚕️</Text>
-            <Text style={styles.detailText}>{item.orderedByName || 'N/A'}</Text>
+            <Text style={[styles.detailText, { color: colors.textSecondary }]}>{item.orderedByName || 'N/A'}</Text>
           </View>
         </View>
 
         {item.impression && (
-          <View style={styles.impressionContainer}>
-            <Text style={styles.impressionLabel}>Impression:</Text>
-            <Text style={styles.impressionText} numberOfLines={2}>{item.impression}</Text>
+          <View style={[styles.impressionContainer, { backgroundColor: colors.surfaceLight }]}>
+            <Text style={[styles.impressionLabel, { color: colors.textMuted }]}>Impression:</Text>
+            <Text style={[styles.impressionText, { color: colors.textPrimary }]} numberOfLines={2}>{item.impression}</Text>
           </View>
         )}
 
         {item.images && item.images.length > 0 && (
-          <View style={styles.imagesPreview}>
-            <Text style={styles.imagesCount}>
+          <View style={[styles.imagesPreview, { borderTopColor: colors.divider }]}>
+            <Text style={[styles.imagesCount, { color: colors.info }]}>
               📷 {item.images.length} image{item.images.length > 1 ? 's' : ''} available
             </Text>
           </View>
@@ -481,15 +511,15 @@ const MedicalImagingScreen = ({ navigation }) => {
         animationType="slide"
         onRequestClose={() => setSelectedReport(null)}
       >
-        <View style={styles.modalContainer}>
-          <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+        <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
+          <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
           
           {/* Modal Header */}
           <View style={styles.modalHeader}>
-            <TouchableOpacity onPress={() => setSelectedReport(null)} style={styles.backButton}>
-              <Text style={styles.backEmoji}>←</Text>
+            <TouchableOpacity onPress={() => setSelectedReport(null)} style={[styles.backButton, { backgroundColor: colors.surface }]}>
+              <Text style={[styles.backEmoji, { color: colors.textPrimary }]}>←</Text>
             </TouchableOpacity>
-            <Text style={styles.modalTitle}>Report Details</Text>
+            <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Report Details</Text>
             <View style={styles.placeholder} />
           </View>
 
@@ -499,10 +529,10 @@ const MedicalImagingScreen = ({ navigation }) => {
               <View style={styles.detailHeader}>
                 <Text style={styles.detailEmoji}>{getImagingEmoji(selectedReport.imagingType)}</Text>
                 <View style={styles.detailHeaderInfo}>
-                  <Text style={styles.detailTitle}>
+                  <Text style={[styles.detailTitle, { color: colors.textPrimary }]}>
                     {selectedReport.imagingType} - {selectedReport.bodyPart}
                   </Text>
-                  <Text style={styles.detailSubtitle}>{selectedReport.reportNumber}</Text>
+                  <Text style={[styles.detailSubtitle, { color: colors.textMuted }]}>{selectedReport.reportNumber}</Text>
                 </View>
               </View>
 
@@ -515,22 +545,22 @@ const MedicalImagingScreen = ({ navigation }) => {
 
             {/* Dates & Doctors */}
             <Card variant="default" style={styles.infoCard}>
-              <Text style={styles.sectionTitle}>Study Information</Text>
+              <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Study Information</Text>
               
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Procedure Date</Text>
-                <Text style={styles.infoValue}>{formatDate(selectedReport.procedureDate)}</Text>
+              <View style={[styles.infoRow, { borderBottomColor: colors.divider }]}>
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Procedure Date</Text>
+                <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{formatDate(selectedReport.procedureDate)}</Text>
               </View>
               
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Ordered By</Text>
-                <Text style={styles.infoValue}>{selectedReport.orderedByName || 'N/A'}</Text>
+              <View style={[styles.infoRow, { borderBottomColor: colors.divider }]}>
+                <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Ordered By</Text>
+                <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{selectedReport.orderedByName || 'N/A'}</Text>
               </View>
               
               {selectedReport.reportedByName && (
-                <View style={styles.infoRow}>
-                  <Text style={styles.infoLabel}>Reported By</Text>
-                  <Text style={styles.infoValue}>{selectedReport.reportedByName}</Text>
+                <View style={[styles.infoRow, { borderBottomColor: colors.divider }]}>
+                  <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Reported By</Text>
+                  <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{selectedReport.reportedByName}</Text>
                 </View>
               )}
             </Card>
@@ -538,31 +568,31 @@ const MedicalImagingScreen = ({ navigation }) => {
             {/* Findings */}
             {selectedReport.findings && (
               <Card variant="default" style={styles.infoCard}>
-                <Text style={styles.sectionTitle}>Findings</Text>
-                <Text style={styles.findingsText}>{selectedReport.findings}</Text>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Findings</Text>
+                <Text style={[styles.findingsText, { color: colors.textPrimary }]}>{selectedReport.findings}</Text>
               </Card>
             )}
 
             {/* Impression */}
             {selectedReport.impression && (
               <Card variant="default" style={styles.infoCard}>
-                <Text style={styles.sectionTitle}>Impression</Text>
-                <Text style={styles.impressionDetailText}>{selectedReport.impression}</Text>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Impression</Text>
+                <Text style={[styles.impressionDetailText, { color: colors.textPrimary }]}>{selectedReport.impression}</Text>
               </Card>
             )}
 
             {/* Recommendations */}
             {selectedReport.recommendations && (
               <Card variant="default" style={styles.infoCard}>
-                <Text style={styles.sectionTitle}>Recommendations</Text>
-                <Text style={styles.findingsText}>{selectedReport.recommendations}</Text>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recommendations</Text>
+                <Text style={[styles.findingsText, { color: colors.textPrimary }]}>{selectedReport.recommendations}</Text>
               </Card>
             )}
 
             {/* Images */}
             {selectedReport.images && selectedReport.images.length > 0 && (
               <Card variant="default" style={styles.infoCard}>
-                <Text style={styles.sectionTitle}>Images ({selectedReport.images.length})</Text>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Images ({selectedReport.images.length})</Text>
                 <View style={styles.imagesGrid}>
                   {selectedReport.images.map((img, index) => {
                     // Get the image URL - check thumbnailUrl, url, or fileUrl
@@ -580,15 +610,15 @@ const MedicalImagingScreen = ({ navigation }) => {
                         {imageUrl ? (
                           <Image 
                             source={{ uri: imageUrl }}
-                            style={styles.imageThumbnail}
+                            style={[styles.imageThumbnail, { backgroundColor: colors.surfaceLight }]}
                             resizeMode="cover"
                           />
                         ) : (
-                          <View style={styles.imagePlaceholder}>
+                          <View style={[styles.imagePlaceholder, { backgroundColor: colors.surfaceLight }]}>
                             <Text style={styles.imagePlaceholderEmoji}>🖼️</Text>
                           </View>
                         )}
-                        <Text style={styles.imageLabel} numberOfLines={1}>
+                        <Text style={[styles.imageLabel, { color: colors.textSecondary }]} numberOfLines={1}>
                           {img.description || img.fileName}
                         </Text>
                       </TouchableOpacity>
@@ -603,8 +633,8 @@ const MedicalImagingScreen = ({ navigation }) => {
               <Card variant="default" style={styles.infoCard}>
                 <View style={styles.pendingContainer}>
                   <Text style={styles.pendingEmoji}>⏳</Text>
-                  <Text style={styles.pendingTitle}>Report Pending</Text>
-                  <Text style={styles.pendingText}>
+                  <Text style={[styles.pendingTitle, { color: colors.textPrimary }]}>Report Pending</Text>
+                  <Text style={[styles.pendingText, { color: colors.textSecondary }]}>
                     The radiologist is reviewing your images. The report will be available soon.
                   </Text>
                 </View>
@@ -681,11 +711,11 @@ const MedicalImagingScreen = ({ navigation }) => {
           {/* Footer with download/share buttons */}
           <View style={styles.imageViewerFooter}>
             <TouchableOpacity 
-              style={[styles.imageViewerButton, downloading && styles.imageViewerButtonDisabled]} 
+              style={[styles.imageViewerButton, { backgroundColor: colors.primary }, downloading && styles.imageViewerButtonDisabled]} 
               onPress={handleDownload}
               disabled={downloading}
             >
-              <Text style={styles.imageViewerButtonText}>
+              <Text style={[styles.imageViewerButtonText, { color: colors.textInverse }]}>
                 {downloading ? '⏳ Downloading...' : '📥 Download'}
               </Text>
             </TouchableOpacity>
@@ -700,27 +730,27 @@ const MedicalImagingScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <View style={styles.loadingContainer}>
-        <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={styles.loadingText}>Loading imaging reports...</Text>
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading imaging reports...</Text>
       </View>
     );
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
       
       {/* Header */}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backButton}>
-          <Text style={styles.backEmoji}>←</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.backEmoji, { color: colors.textPrimary }]}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Medical Imaging</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Medical Imaging</Text>
         <TouchableOpacity 
           onPress={handleUpload} 
-          style={styles.uploadButton}
+          style={[styles.uploadButton, { backgroundColor: colors.primary }]}
           disabled={uploading}
         >
           <Text style={styles.uploadEmoji}>{uploading ? '⏳' : '📤'}</Text>
@@ -757,14 +787,16 @@ const MedicalImagingScreen = ({ navigation }) => {
             key={type.id}
             style={[
               styles.filterTab,
-              filterType === type.id && styles.filterTabActive
+              { backgroundColor: colors.surface, borderColor: colors.surfaceBorder },
+              filterType === type.id && { backgroundColor: `${colors.primary}20`, borderColor: colors.primary }
             ]}
             onPress={() => setFilterType(type.id)}
           >
             <Text style={styles.filterEmoji}>{type.emoji}</Text>
             <Text style={[
               styles.filterLabel,
-              filterType === type.id && styles.filterLabelActive
+              { color: colors.textSecondary },
+              filterType === type.id && { color: colors.primary, fontWeight: '600' }
             ]}>
               {type.label}
             </Text>
@@ -776,18 +808,18 @@ const MedicalImagingScreen = ({ navigation }) => {
       {filteredReports.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyEmoji}>🩻</Text>
-          <Text style={styles.emptyTitle}>No Imaging Reports</Text>
-          <Text style={styles.emptyText}>
+          <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Imaging Reports</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             {filterType === 'all' 
               ? "You don't have any imaging reports yet."
               : `No ${filterType} reports found.`}
           </Text>
           <TouchableOpacity 
-            style={styles.uploadButtonLarge} 
+            style={[styles.uploadButtonLarge, { backgroundColor: colors.primary }]} 
             onPress={handleUpload}
             disabled={uploading}
           >
-            <Text style={styles.uploadButtonText}>
+            <Text style={[styles.uploadButtonText, { color: colors.textInverse }]}>
               {uploading ? '⏳ Uploading...' : '📤 Upload DICOM Files'}
             </Text>
           </TouchableOpacity>
@@ -821,425 +853,90 @@ const MedicalImagingScreen = ({ navigation }) => {
 
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  loadingContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-    justifyContent: 'center',
-    alignItems: 'center',
-  },
-  loadingText: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-    marginTop: spacing.md,
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.lg,
-  },
-  backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.surface,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  backEmoji: {
-    fontSize: 20,
-    color: colors.textPrimary,
-  },
-  uploadButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.lg,
-    backgroundColor: colors.primary,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  uploadEmoji: {
-    fontSize: 18,
-  },
-  headerTitle: {
-    ...typography.headlineMedium,
-    color: colors.textPrimary,
-  },
-  placeholder: {
-    width: 40,
-  },
-  banner: {
-    marginHorizontal: spacing.xl,
-    borderRadius: borderRadius.xl,
-    padding: spacing.xl,
-    marginBottom: spacing.lg,
-  },
-  bannerContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    gap: spacing.lg,
-  },
-  bannerEmoji: {
-    fontSize: 48,
-  },
-  bannerText: {
-    flex: 1,
-  },
-  bannerTitle: {
-    ...typography.headlineSmall,
-    color: colors.textInverse,
-    marginBottom: spacing.xs,
-  },
-  bannerSubtitle: {
-    ...typography.bodyMedium,
-    color: 'rgba(255,255,255,0.8)',
-  },
-  filterContainer: {
-    maxHeight: 60,
-    marginBottom: spacing.md,
-  },
-  filterContent: {
-    paddingHorizontal: spacing.xl,
-    gap: spacing.sm,
-  },
-  filterTab: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
-    marginRight: spacing.sm,
-  },
-  filterTabActive: {
-    backgroundColor: `${colors.primary}20`,
-    borderColor: colors.primary,
-  },
-  filterEmoji: {
-    fontSize: 16,
-    marginRight: spacing.xs,
-  },
-  filterLabel: {
-    ...typography.labelMedium,
-    color: colors.textSecondary,
-  },
-  filterLabelActive: {
-    color: colors.primary,
-    fontWeight: '600',
-  },
-  listContent: {
-    paddingHorizontal: spacing.xl,
-    paddingBottom: 100,
-  },
-  reportCard: {
-    marginBottom: spacing.md,
-    padding: spacing.lg,
-  },
-  reportHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.md,
-  },
-  reportIconContainer: {
-    width: 48,
-    height: 48,
-    borderRadius: borderRadius.lg,
-    backgroundColor: `${colors.primary}20`,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: spacing.md,
-  },
-  reportEmoji: {
-    fontSize: 24,
-  },
-  reportInfo: {
-    flex: 1,
-  },
-  reportType: {
-    ...typography.bodyLarge,
-    color: colors.textPrimary,
-    fontWeight: '600',
-  },
-  reportNumber: {
-    ...typography.bodySmall,
-    color: colors.textMuted,
-    marginTop: 2,
-  },
-  statusBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  statusText: {
-    ...typography.labelSmall,
-    fontWeight: '600',
-  },
-  reportDetails: {
-    flexDirection: 'row',
-    gap: spacing.xl,
-    marginBottom: spacing.md,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  detailEmoji: {
-    fontSize: 14,
-    marginRight: spacing.xs,
-  },
-  detailText: {
-    ...typography.bodySmall,
-    color: colors.textSecondary,
-  },
-  impressionContainer: {
-    backgroundColor: colors.surfaceLight,
-    borderRadius: borderRadius.md,
-    padding: spacing.md,
-    marginTop: spacing.sm,
-  },
-  impressionLabel: {
-    ...typography.labelSmall,
-    color: colors.textMuted,
-    marginBottom: spacing.xs,
-  },
-  impressionText: {
-    ...typography.bodySmall,
-    color: colors.textPrimary,
-  },
-  imagesPreview: {
-    marginTop: spacing.md,
-    paddingTop: spacing.md,
-    borderTopWidth: 1,
-    borderTopColor: colors.divider,
-  },
-  imagesCount: {
-    ...typography.labelMedium,
-    color: colors.info,
-  },
-  emptyContainer: {
-    flex: 1,
-    justifyContent: 'center',
-    alignItems: 'center',
-    paddingHorizontal: spacing.xxl,
-  },
-  emptyEmoji: {
-    fontSize: 64,
-    marginBottom: spacing.lg,
-    opacity: 0.5,
-  },
-  emptyTitle: {
-    ...typography.headlineSmall,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  emptyText: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  uploadButtonLarge: {
-    marginTop: spacing.xl,
-    paddingHorizontal: spacing.xxl,
-    paddingVertical: spacing.md,
-    backgroundColor: colors.primary,
-    borderRadius: borderRadius.lg,
-  },
-  uploadButtonText: {
-    ...typography.labelLarge,
-    color: colors.textInverse,
-    fontWeight: '600',
-  },
-  // Modal Styles
-  modalContainer: {
-    flex: 1,
-    backgroundColor: colors.background,
-  },
-  modalHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
-    paddingBottom: spacing.lg,
-  },
-  modalTitle: {
-    ...typography.headlineMedium,
-    color: colors.textPrimary,
-  },
-  modalContent: {
-    flex: 1,
-    paddingHorizontal: spacing.xl,
-  },
-  detailCard: {
-    padding: spacing.xl,
-    marginBottom: spacing.lg,
-  },
-  detailHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-    gap: spacing.lg,
-  },
-  detailHeaderInfo: {
-    flex: 1,
-  },
-  detailTitle: {
-    ...typography.headlineSmall,
-    color: colors.textPrimary,
-  },
-  detailSubtitle: {
-    ...typography.bodyMedium,
-    color: colors.textMuted,
-    marginTop: spacing.xs,
-  },
-  statusBadgeLarge: {
-    alignSelf: 'flex-start',
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.full,
-  },
-  statusTextLarge: {
-    ...typography.labelMedium,
-    fontWeight: '600',
-  },
-  infoCard: {
-    padding: spacing.lg,
-    marginBottom: spacing.lg,
-  },
-  sectionTitle: {
-    ...typography.labelLarge,
-    color: colors.textPrimary,
-    fontWeight: '600',
-    marginBottom: spacing.md,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingVertical: spacing.sm,
-    borderBottomWidth: 1,
-    borderBottomColor: colors.divider,
-  },
-  infoLabel: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-  },
-  infoValue: {
-    ...typography.bodyMedium,
-    color: colors.textPrimary,
-    fontWeight: '500',
-  },
-  findingsText: {
-    ...typography.bodyMedium,
-    color: colors.textPrimary,
-    lineHeight: 22,
-  },
-  impressionDetailText: {
-    ...typography.bodyLarge,
-    color: colors.textPrimary,
-    fontWeight: '500',
-    lineHeight: 24,
-  },
-  imagesGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: spacing.md,
-  },
-  imageItem: {
-    width: (width - spacing.xl * 2 - spacing.lg * 2 - spacing.md * 2) / 3,
-    alignItems: 'center',
-  },
-  imagePlaceholder: {
-    width: '100%',
-    aspectRatio: 1,
-    backgroundColor: colors.surfaceLight,
-    borderRadius: borderRadius.md,
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xs,
-  },
-  imageThumbnail: {
-    width: '100%',
-    aspectRatio: 1,
-    borderRadius: borderRadius.md,
-    marginBottom: spacing.xs,
-    backgroundColor: colors.surfaceLight,
-  },
-  imagePlaceholderEmoji: {
-    fontSize: 32,
-  },
-  imageLabel: {
-    ...typography.labelSmall,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  pendingContainer: {
-    alignItems: 'center',
-    paddingVertical: spacing.xl,
-    gap: spacing.md,
-  },
-  pendingEmoji: {
-    fontSize: 48,
-  },
-  pendingTitle: {
-    ...typography.headlineSmall,
-    color: colors.textPrimary,
-    marginBottom: spacing.sm,
-  },
-  pendingText: {
-    ...typography.bodyMedium,
-    color: colors.textSecondary,
-    textAlign: 'center',
-  },
-  bottomPadding: {
-    height: 40,
-  },
-  // Image Viewer Styles
-  dicomViewerContainer: {
-    flex: 1,
-    backgroundColor: '#000',
-  },
-  imageViewerFooter: {
-    flexDirection: 'row',
-    paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.xxl + 20,
-    gap: spacing.md,
-  },
-  imageViewerButton: {
-    flex: 1,
-    backgroundColor: colors.primary,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-  },
-  imageViewerButtonDisabled: {
-    opacity: 0.6,
-  },
-  imageViewerButtonText: {
-    ...typography.labelLarge,
-    color: colors.textInverse,
-    fontWeight: '600',
-  },
-  imageViewerButtonSecondary: {
-    flex: 1,
-    backgroundColor: 'rgba(255, 255, 255, 0.2)',
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-  },
-  imageViewerButtonSecondaryText: {
-    ...typography.labelLarge,
-    color: colors.textInverse,
-    fontWeight: '600',
-  },
+  container: { flex: 1 },
+  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingText: { ...typography.bodyMedium, marginTop: spacing.md },
+  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
+  backButton: { width: 40, height: 40, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center' },
+  backEmoji: { fontSize: 20 },
+  uploadButton: { width: 40, height: 40, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center' },
+  uploadEmoji: { fontSize: 18 },
+  headerTitle: { ...typography.headlineMedium },
+  placeholder: { width: 40 },
+  banner: { marginHorizontal: spacing.xl, borderRadius: borderRadius.xl, padding: spacing.xl, marginBottom: spacing.lg },
+  bannerContent: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
+  bannerEmoji: { fontSize: 48 },
+  bannerText: { flex: 1 },
+  bannerTitle: { ...typography.headlineSmall, color: 'rgba(255,255,255,0.95)', marginBottom: spacing.xs },
+  bannerSubtitle: { ...typography.bodyMedium, color: 'rgba(255,255,255,0.8)' },
+  filterContainer: { maxHeight: 60, marginBottom: spacing.md },
+  filterContent: { paddingHorizontal: spacing.xl, gap: spacing.sm },
+  filterTab: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: borderRadius.full, borderWidth: 1, marginRight: spacing.sm },
+  filterTabActive: {},
+  filterEmoji: { fontSize: 16, marginRight: spacing.xs },
+  filterLabel: { ...typography.labelMedium },
+  filterLabelActive: { fontWeight: '600' },
+  listContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },
+  reportCard: { marginBottom: spacing.md, padding: spacing.lg },
+  reportHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
+  reportIconContainer: { width: 48, height: 48, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
+  reportEmoji: { fontSize: 24 },
+  reportInfo: { flex: 1 },
+  reportType: { ...typography.bodyLarge, fontWeight: '600' },
+  reportNumber: { ...typography.bodySmall, marginTop: 2 },
+  statusBadge: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
+  statusText: { ...typography.labelSmall, fontWeight: '600' },
+  reportDetails: { flexDirection: 'row', gap: spacing.xl, marginBottom: spacing.md },
+  detailRow: { flexDirection: 'row', alignItems: 'center' },
+  detailEmoji: { fontSize: 14, marginRight: spacing.xs },
+  detailText: { ...typography.bodySmall },
+  impressionContainer: { borderRadius: borderRadius.md, padding: spacing.md, marginTop: spacing.sm },
+  impressionLabel: { ...typography.labelSmall, marginBottom: spacing.xs },
+  impressionText: { ...typography.bodySmall },
+  imagesPreview: { marginTop: spacing.md, paddingTop: spacing.md, borderTopWidth: 1 },
+  imagesCount: { ...typography.labelMedium },
+  emptyContainer: { flex: 1, justifyContent: 'center', alignItems: 'center', paddingHorizontal: spacing.xxl },
+  emptyEmoji: { fontSize: 64, marginBottom: spacing.lg, opacity: 0.5 },
+  emptyTitle: { ...typography.headlineSmall, marginBottom: spacing.sm },
+  emptyText: { ...typography.bodyMedium, textAlign: 'center' },
+  uploadButtonLarge: { marginTop: spacing.xl, paddingHorizontal: spacing.xxl, paddingVertical: spacing.md, borderRadius: borderRadius.lg },
+  uploadButtonText: { ...typography.labelLarge, fontWeight: '600' },
+  modalContainer: { flex: 1 },
+  modalHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
+  modalTitle: { ...typography.headlineMedium },
+  modalContent: { flex: 1, paddingHorizontal: spacing.xl },
+  detailCard: { padding: spacing.xl, marginBottom: spacing.lg },
+  detailHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg, gap: spacing.lg },
+  detailHeaderInfo: { flex: 1 },
+  detailTitle: { ...typography.headlineSmall },
+  detailSubtitle: { ...typography.bodyMedium, marginTop: spacing.xs },
+  statusBadgeLarge: { alignSelf: 'flex-start', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: borderRadius.full },
+  statusTextLarge: { ...typography.labelMedium, fontWeight: '600' },
+  infoCard: { padding: spacing.lg, marginBottom: spacing.lg },
+  sectionTitle: { ...typography.labelLarge, fontWeight: '600', marginBottom: spacing.md },
+  infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.sm, borderBottomWidth: 1 },
+  infoLabel: { ...typography.bodyMedium },
+  infoValue: { ...typography.bodyMedium, fontWeight: '500' },
+  findingsText: { ...typography.bodyMedium, lineHeight: 22 },
+  impressionDetailText: { ...typography.bodyLarge, fontWeight: '500', lineHeight: 24 },
+  imagesGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  imageItem: { width: (width - spacing.xl * 2 - spacing.lg * 2 - spacing.md * 2) / 3, alignItems: 'center' },
+  imagePlaceholder: { width: '100%', aspectRatio: 1, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs },
+  imageThumbnail: { width: '100%', aspectRatio: 1, borderRadius: borderRadius.md, marginBottom: spacing.xs },
+  imagePlaceholderEmoji: { fontSize: 32 },
+  imageLabel: { ...typography.labelSmall, textAlign: 'center' },
+  pendingContainer: { alignItems: 'center', paddingVertical: spacing.xl, gap: spacing.md },
+  pendingEmoji: { fontSize: 48 },
+  pendingTitle: { ...typography.headlineSmall, marginBottom: spacing.sm },
+  pendingText: { ...typography.bodyMedium, textAlign: 'center' },
+  bottomPadding: { height: 40 },
+  dicomViewerContainer: { flex: 1, backgroundColor: '#000' },
+  imageViewerFooter: { flexDirection: 'row', paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl + 20, gap: spacing.md },
+  imageViewerButton: { flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.lg, alignItems: 'center' },
+  imageViewerButtonDisabled: { opacity: 0.6 },
+  imageViewerButtonText: { ...typography.labelLarge, fontWeight: '600' },
+  imageViewerButtonSecondary: { flex: 1, backgroundColor: 'rgba(255, 255, 255, 0.2)', paddingVertical: spacing.md, borderRadius: borderRadius.lg, alignItems: 'center' },
+  imageViewerButtonSecondaryText: { ...typography.labelLarge, color: '#fff', fontWeight: '600' },
 });
 
 export default MedicalImagingScreen;

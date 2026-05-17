@@ -27,7 +27,7 @@ const CONFIG = {
 
 class JWTTokenService {
   constructor() {
-    this.accessSecret = process.env.JWT_SECRET || 'fallback_secret';
+    this.accessSecret = process.env.JWT_SECRET;
     this.refreshSecret = process.env.JWT_REFRESH_SECRET || process.env.JWT_SECRET + '_refresh';
     
     // Start cleanup interval

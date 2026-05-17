@@ -451,17 +451,62 @@ router.post('/', async (req, res) => {
 });
 
 // Update doctor
-router.put('/:id', async (req, res) => {
+router.put('/:id', verifyToken, async (req, res) => {
   try {
+    const {
+      name,
+      phone,
+      specialization,
+      availability,
+      consultationFee,
+      experience,
+      qualification,
+      profilePhoto,
+      bio,
+      languages,
+      education,
+      awards
+    } = req.body;
+
+    // Only allow doctors to update their own profile, admins can update any
+    const requestingUser = req.user;
+    if (
+      requestingUser.role !== 'admin' &&
+      requestingUser.role !== 'superadmin' &&
+      requestingUser.id !== req.params.id
+    ) {
+      return res.status(403).json({ message: 'Not authorized to update this doctor profile' });
+    }
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (phone !== undefined) updateData.phone = phone;
+    if (specialization !== undefined) updateData.specialization = specialization;
+    if (availability !== undefined) updateData.availability = availability;
+    if (consultationFee !== undefined) updateData.consultationFee = consultationFee;
+    if (experience !== undefined) updateData.experience = experience;
+    if (qualification !== undefined) updateData.qualification = qualification;
+    if (profilePhoto !== undefined) updateData.profilePhoto = profilePhoto;
+    if (bio !== undefined) updateData.bio = bio;
+    if (languages !== undefined) updateData.languages = languages;
+    if (education !== undefined) updateData.education = education;
+    if (awards !== undefined) updateData.awards = awards;
+
     const doctor = await Doctor.findByIdAndUpdate(
       req.params.id,
-      req.body,
+      { $set: updateData },
       { new: true, runValidators: true }
     ).populate('clinicId', 'name address city phone');
 
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
+
+    // Log the update for security monitoring
+    await logDoctorOperation(req, 'update_profile', doctor, { fields: Object.keys(updateData) });
+
+    // Invalidate doctor cache
+    await cacheService.del(`doctors:list:*`);
 
     res.json(doctor);
   } catch (error) {
@@ -471,7 +516,7 @@ router.put('/:id', async (req, res) => {
 });
 
 // Delete doctor (soft delete)
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
   try {
     // Get doctor before deletion for logging
     const doctorToDelete = await Doctor.findById(req.params.id);
@@ -501,7 +546,7 @@ router.delete('/:id', async (req, res) => {
 // ==========================================
 
 // Get pending doctors (admin only)
-router.get('/admin/pending', async (req, res) => {
+router.get('/admin/pending', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const pendingDoctors = await Doctor.find({ approvalStatus: 'pending' })
       .populate('clinicId', 'name address city')
@@ -515,7 +560,7 @@ router.get('/admin/pending', async (req, res) => {
 });
 
 // Approve doctor (admin only)
-router.put('/:id/approve', async (req, res) => {
+router.put('/:id/approve', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.id);
     
@@ -547,7 +592,7 @@ router.put('/:id/approve', async (req, res) => {
 });
 
 // Reject doctor (admin only)
-router.put('/:id/reject', async (req, res) => {
+router.put('/:id/reject', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { reason } = req.body;
     const doctor = await Doctor.findById(req.params.id);
@@ -577,7 +622,7 @@ router.put('/:id/reject', async (req, res) => {
 });
 
 // Check doctors without email (for debugging)
-router.get('/admin/check-emails', async (req, res) => {
+router.get('/admin/check-emails', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const doctorsWithoutEmail = await Doctor.find({ 
       $or: [
@@ -610,7 +655,7 @@ router.get('/admin/check-emails', async (req, res) => {
 });
 
 // Update doctor email
-router.put('/:id/email', async (req, res) => {
+router.put('/:id/email', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { email } = req.body;
     
@@ -662,7 +707,7 @@ router.get('/:id/schedule', async (req, res) => {
 });
 
 // Update doctor's weekly schedule
-router.put('/:id/schedule', async (req, res) => {
+router.put('/:id/schedule', verifyToken, async (req, res) => {
   try {
     const { weeklySchedule, consultationSettings, consultationDuration } = req.body;
     
@@ -689,7 +734,7 @@ router.put('/:id/schedule', async (req, res) => {
 });
 
 // Update consultation duration only
-router.put('/:id/consultation-duration', async (req, res) => {
+router.put('/:id/consultation-duration', verifyToken, async (req, res) => {
   try {
     const { consultationDuration } = req.body;
     
@@ -722,7 +767,7 @@ router.put('/:id/consultation-duration', async (req, res) => {
 });
 
 // Add special date (holiday, leave, special hours)
-router.post('/:id/special-dates', async (req, res) => {
+router.post('/:id/special-dates', verifyToken, async (req, res) => {
   try {
     const { date, isAvailable, reason, slots } = req.body;
     
@@ -757,7 +802,7 @@ router.post('/:id/special-dates', async (req, res) => {
 });
 
 // Remove special date
-router.delete('/:id/special-dates/:dateId', async (req, res) => {
+router.delete('/:id/special-dates/:dateId', verifyToken, async (req, res) => {
   try {
     const doctor = await Doctor.findByIdAndUpdate(
       req.params.id,
@@ -783,26 +828,26 @@ router.get('/:id/available-slots', async (req, res) => {
     if (!date) {
       return res.status(400).json({ success: false, message: 'Date is required' });
     }
-    
+
     const doctor = await Doctor.findById(req.params.id)
       .select('weeklySchedule specialDates consultationSettings consultationFee');
-    
+
     if (!doctor) {
       return res.status(404).json({ success: false, message: 'Doctor not found' });
     }
-    
+
     const requestedDate = new Date(date);
     const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][requestedDate.getDay()];
-    
+
     // Check for special date override
     const specialDate = doctor.specialDates?.find(sd => {
       const sdDate = new Date(sd.date);
       return sdDate.toDateString() === requestedDate.toDateString();
     });
-    
+
     let daySchedule;
     let isSpecialDate = false;
-    
+
     if (specialDate) {
       isSpecialDate = true;
       if (!specialDate.isAvailable) {
@@ -817,7 +862,7 @@ router.get('/:id/available-slots', async (req, res) => {
     } else {
       daySchedule = doctor.weeklySchedule?.[dayOfWeek];
     }
-    
+
     if (!daySchedule?.isAvailable) {
       return res.json({
         success: true,
@@ -826,32 +871,47 @@ router.get('/:id/available-slots', async (req, res) => {
         slots: []
       });
     }
-    
+
+    // Fetch already-booked appointments for this doctor on this date
+    const Appointment = require('../models/Appointment');
+    const startOfDay = new Date(requestedDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(requestedDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const bookedAppointments = await Appointment.find({
+      doctorId: req.params.id,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: { $nin: ['cancelled'] }
+    }).select('time');
+
+    const bookedTimes = new Set(bookedAppointments.map(a => a.time));
+
     // Generate time slots based on schedule
     const slots = [];
     const slotDuration = doctor.consultationSettings?.slotDuration || 15;
     const bufferTime = doctor.consultationSettings?.bufferTime || 5;
-    
+
     (daySchedule.slots || []).forEach(slot => {
       if (!slot.startTime || !slot.endTime) return;
-      
+
       const [startHour, startMin] = slot.startTime.split(':').map(Number);
       const [endHour, endMin] = slot.endTime.split(':').map(Number);
-      
+
       let currentTime = startHour * 60 + startMin;
       const endTime = endHour * 60 + endMin;
-      
+
       while (currentTime + slotDuration <= endTime) {
         const hour = Math.floor(currentTime / 60);
         const min = currentTime % 60;
         const timeStr = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
-        
+
         slots.push({
           time: timeStr,
           type: slot.type || 'both',
-          available: true // TODO: Check against existing appointments
+          available: !bookedTimes.has(timeStr)
         });
-        
+
         currentTime += slotDuration + bufferTime;
       }
     });

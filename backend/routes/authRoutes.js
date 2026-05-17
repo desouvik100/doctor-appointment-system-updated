@@ -265,7 +265,7 @@ router.post('/register', async (req, res) => {
     // Create token with clinicId for role-based access
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
-      process.env.JWT_SECRET || 'fallback_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -388,7 +388,7 @@ router.post('/login', async (req, res) => {
     // Create token with clinicId for role-based access
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
-      process.env.JWT_SECRET || 'fallback_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -497,7 +497,7 @@ router.post('/admin/login', async (req, res) => {
     // Create token (admin has no clinicId restriction)
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: null },
-      process.env.JWT_SECRET || 'fallback_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -724,7 +724,7 @@ router.post('/clinic/login', async (req, res) => {
     // Create token with clinicId for clinic isolation
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
-      process.env.JWT_SECRET || 'fallback_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -839,49 +839,6 @@ router.get('/receptionist/test', (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/Error400'
  */
-// One-time admin setup route (use once then remove)
-router.post('/setup-admin', async (req, res) => {
-  try {
-    const { secretKey } = req.body;
-    
-    // Security: require a secret key to prevent unauthorized access
-    if (secretKey !== 'healthsync-admin-setup-2024') {
-      return res.status(403).json({ message: 'Invalid secret key' });
-    }
-    
-    const adminEmail = 'admin@healthsyncpro.in';
-    const adminPassword = 'Admin@123';
-    
-    // Hash password
-    const hashedPassword = await bcrypt.hash(adminPassword, 10);
-    
-    // Update or create admin
-    const result = await User.findOneAndUpdate(
-      { email: adminEmail },
-      {
-        name: 'System Administrator',
-        email: adminEmail,
-        password: hashedPassword,
-        role: 'admin',
-        approvalStatus: 'approved',
-        isActive: true
-      },
-      { upsert: true, new: true }
-    );
-    
-    console.log('✅ Admin created/updated:', adminEmail);
-    
-    res.json({
-      success: true,
-      message: 'Admin account created successfully',
-      email: adminEmail
-    });
-  } catch (error) {
-    console.error('Admin setup error:', error);
-    res.status(500).json({ message: 'Failed to create admin', error: error.message });
-  }
-});
-
 /**
  * @swagger
  * /auth/receptionist/register:
@@ -1403,7 +1360,7 @@ router.post('/doctor/login', async (req, res) => {
     // Generate token with clinicId for clinic isolation
     const token = jwt.sign(
       { doctorId: doctor._id, role: 'doctor', clinicId: doctor.clinicId || null },
-      process.env.JWT_SECRET || 'fallback_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -1674,7 +1631,7 @@ router.post('/google-signin', async (req, res) => {
     // Create token with clinicId for role-based access
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
-      process.env.JWT_SECRET || 'fallback_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -1743,7 +1700,7 @@ router.post('/doctor/google-signin', async (req, res) => {
       // Generate token with clinicId for clinic isolation
       const token = jwt.sign(
         { doctorId: doctor._id, role: 'doctor', clinicId: doctor.clinicId || null },
-        process.env.JWT_SECRET || 'fallback_secret',
+        process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
 
@@ -1826,7 +1783,7 @@ router.post('/clinic/google-signin', async (req, res) => {
       // Generate token with clinicId for clinic isolation
       const token = jwt.sign(
         { userId: user._id, role: user.role, clinicId: user.clinicId || null },
-        process.env.JWT_SECRET || 'fallback_secret',
+        process.env.JWT_SECRET,
         { expiresIn: '24h' }
       );
 
@@ -1923,7 +1880,7 @@ router.post('/facebook-signin', async (req, res) => {
     // Generate token
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
-      process.env.JWT_SECRET || 'fallback_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
@@ -2020,7 +1977,7 @@ router.post('/apple-signin', async (req, res) => {
     // Generate token
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
-      process.env.JWT_SECRET || 'fallback_secret',
+      process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 

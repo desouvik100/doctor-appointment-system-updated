@@ -41,7 +41,7 @@ const initializeSocket = (httpServer) => {
         return next(new Error('Authentication required'));
       }
       
-      const decoded = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret');
+      const decoded = jwt.verify(token, process.env.JWT_SECRET);
       
       // Attach user info to socket
       socket.userId = decoded.userId || decoded.doctorId || decoded.id;

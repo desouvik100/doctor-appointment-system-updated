@@ -4,6 +4,9 @@ const TokenService = require('../services/tokenService');
 const Appointment = require('../models/Appointment');
 const { verifyToken } = require('../middleware/auth');
 
+// Roles that can manage clinic queue operations
+const CLINIC_ROLES = ['admin', 'clinic_staff', 'receptionist', 'doctor'];
+
 /**
  * POST /api/token/verify
  * Verify appointment token (Clinic/Admin side)
@@ -13,10 +16,7 @@ router.post('/verify', async (req, res) => {
     const { token } = req.body;
 
     if (!token) {
-      return res.status(400).json({
-        success: false,
-        error: 'Token is required'
-      });
+      return res.status(400).json({ success: false, error: 'Token is required' });
     }
 
     const result = await TokenService.verifyToken(token);
@@ -27,10 +27,7 @@ router.post('/verify', async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -43,10 +40,7 @@ router.post('/add-to-queue', verifyToken, async (req, res) => {
     const { appointmentId } = req.body;
 
     if (!appointmentId) {
-      return res.status(400).json({
-        success: false,
-        error: 'Appointment ID is required'
-      });
+      return res.status(400).json({ success: false, error: 'Appointment ID is required' });
     }
 
     const result = await TokenService.addToQueue(appointmentId);
@@ -57,10 +51,7 @@ router.post('/add-to-queue', verifyToken, async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -72,12 +63,8 @@ router.get('/patient/:userId', verifyToken, async (req, res) => {
   try {
     const { userId } = req.params;
 
-    // Verify user is requesting their own token
     if (req.user.id !== userId && req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: 'Unauthorized'
-      });
+      return res.status(403).json({ success: false, error: 'Unauthorized' });
     }
 
     const result = await TokenService.getPatientToken(userId);
@@ -88,10 +75,7 @@ router.get('/patient/:userId', verifyToken, async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -105,18 +89,11 @@ router.get('/queue/:doctorId', verifyToken, async (req, res) => {
     const { date } = req.query;
 
     if (!date) {
-      return res.status(400).json({
-        success: false,
-        error: 'Date is required'
-      });
+      return res.status(400).json({ success: false, error: 'Date is required' });
     }
 
-    // Verify user is admin or clinic staff
-    if (req.user.role !== 'admin' && req.user.role !== 'clinic_staff') {
-      return res.status(403).json({
-        success: false,
-        error: 'Unauthorized'
-      });
+    if (!CLINIC_ROLES.includes(req.user.role)) {
+      return res.status(403).json({ success: false, error: 'Unauthorized' });
     }
 
     const result = await TokenService.getQueueList(doctorId, new Date(date));
@@ -127,10 +104,7 @@ router.get('/queue/:doctorId', verifyToken, async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -143,18 +117,11 @@ router.post('/mark-completed', verifyToken, async (req, res) => {
     const { appointmentId } = req.body;
 
     if (!appointmentId) {
-      return res.status(400).json({
-        success: false,
-        error: 'Appointment ID is required'
-      });
+      return res.status(400).json({ success: false, error: 'Appointment ID is required' });
     }
 
-    // Verify user is admin or clinic staff
-    if (req.user.role !== 'admin' && req.user.role !== 'clinic_staff') {
-      return res.status(403).json({
-        success: false,
-        error: 'Unauthorized'
-      });
+    if (!CLINIC_ROLES.includes(req.user.role)) {
+      return res.status(403).json({ success: false, error: 'Unauthorized' });
     }
 
     const result = await TokenService.markAsCompleted(appointmentId);
@@ -165,10 +132,7 @@ router.post('/mark-completed', verifyToken, async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -181,18 +145,11 @@ router.post('/mark-no-show', verifyToken, async (req, res) => {
     const { appointmentId } = req.body;
 
     if (!appointmentId) {
-      return res.status(400).json({
-        success: false,
-        error: 'Appointment ID is required'
-      });
+      return res.status(400).json({ success: false, error: 'Appointment ID is required' });
     }
 
-    // Verify user is admin or clinic staff
-    if (req.user.role !== 'admin' && req.user.role !== 'clinic_staff') {
-      return res.status(403).json({
-        success: false,
-        error: 'Unauthorized'
-      });
+    if (!CLINIC_ROLES.includes(req.user.role)) {
+      return res.status(403).json({ success: false, error: 'Unauthorized' });
     }
 
     const result = await TokenService.markAsNoShow(appointmentId);
@@ -203,10 +160,7 @@ router.post('/mark-no-show', verifyToken, async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -216,12 +170,8 @@ router.post('/mark-no-show', verifyToken, async (req, res) => {
  */
 router.post('/expire-old', verifyToken, async (req, res) => {
   try {
-    // Verify user is admin
     if (req.user.role !== 'admin') {
-      return res.status(403).json({
-        success: false,
-        error: 'Unauthorized'
-      });
+      return res.status(403).json({ success: false, error: 'Unauthorized' });
     }
 
     const result = await TokenService.expireOldTokens();
@@ -232,10 +182,7 @@ router.post('/expire-old', verifyToken, async (req, res) => {
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({
-      success: false,
-      error: error.message
-    });
+    res.status(500).json({ success: false, error: error.message });
   }
 });
 
