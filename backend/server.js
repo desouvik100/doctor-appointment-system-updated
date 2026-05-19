@@ -87,24 +87,39 @@ setInterval(() => {
 }, 60000);
 
 // Middleware
+const ALLOWED_ORIGINS = [
+  'http://localhost:3000',
+  'http://localhost:3001',
+  'http://127.0.0.1:3000',
+  'http://127.0.0.1:3001',
+  process.env.FRONTEND_URL,
+  process.env.CORS_ORIGIN,
+  'https://healthsyncpro.in',
+  'https://www.healthsyncpro.in',
+  // Capacitor mobile app origins
+  'capacitor://localhost',
+  'ionic://localhost',
+  'http://localhost',
+  'https://localhost',
+  // Android WebView
+  'file://'
+].filter(Boolean);
+
 app.use(cors({
-  origin: [
-    'http://localhost:3000',
-    'http://localhost:3001',
-    'http://127.0.0.1:3000',
-    'http://127.0.0.1:3001',
-    process.env.FRONTEND_URL,
-    process.env.CORS_ORIGIN,
-    'https://healthsyncpro.in',
-    'https://www.healthsyncpro.in',
-    // Capacitor mobile app origins
-    'capacitor://localhost',
-    'ionic://localhost',
-    'http://localhost',
-    'https://localhost',
-    // Android WebView
-    'file://'
-  ].filter(Boolean),
+  origin: (origin, callback) => {
+    // Allow requests with no Origin header:
+    // — mobile apps (Capacitor/React Native)
+    // — Postman / curl / server-to-server calls
+    // — same-origin requests
+    if (!origin) {
+      return callback(null, true);
+    }
+    if (ALLOWED_ORIGINS.includes(origin)) {
+      return callback(null, true);
+    }
+    // Block unknown browser origins
+    return callback(new Error(`CORS: origin '${origin}' not allowed`));
+  },
   credentials: true,
   methods: ['GET', 'POST', 'PUT', 'DELETE', 'PATCH', 'OPTIONS'],
   allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With', 'Accept', 'Origin']
