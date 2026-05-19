@@ -104,7 +104,11 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
           <div className="nav-premium__links">
             <a href="#features" className="nav-premium__link">{t('features')}</a>
             <a href="#how-it-works" className="nav-premium__link">{t('howItWorks')}</a>
-            <a href="#pricing" className="nav-premium__link">{t('pricing')}</a>
+            <button
+              className="nav-premium__link"
+              onClick={() => onNavigate('pricing')}
+              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, font: 'inherit' }}
+            >{t('pricing')}</button>
             <a href="#security" className="nav-premium__link">{t('security')}</a>
             <a href="#faq" className="nav-premium__link">{t('faq')}</a>
           </div>
@@ -200,7 +204,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               <div style={{ display: 'flex', flexDirection: 'column', gap: '8px' }}>
                 <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>{t('features')}</a>
                 <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>{t('howItWorks')}</a>
-                <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>{t('pricing')}</a>
+                <button onClick={() => { onNavigate('pricing'); setMobileMenuOpen(false); }} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)', border: 'none', cursor: 'pointer', textAlign: 'left' }}>{t('pricing')}</button>
                 <a href="#security" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>{t('security')}</a>
                 <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '14px 16px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '16px', borderRadius: '10px', background: darkMode ? 'rgba(255,255,255,0.05)' : 'rgba(0,0,0,0.03)' }}>{t('faq')}</a>
                 <div style={{ height: '1px', background: darkMode ? 'rgba(255,255,255,0.1)' : 'rgba(0,0,0,0.1)', margin: '12px 0' }} />
@@ -290,7 +294,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
             <div style={{ display: 'flex', flexDirection: 'column', gap: '8px', marginTop: '24px' }}>
               <a href="#features" onClick={() => setMobileMenuOpen(false)} style={{ padding: '16px 20px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '17px', borderRadius: '12px', background: darkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', display: 'block' }}>{t('features')}</a>
               <a href="#how-it-works" onClick={() => setMobileMenuOpen(false)} style={{ padding: '16px 20px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '17px', borderRadius: '12px', background: darkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', display: 'block' }}>{t('howItWorks')}</a>
-              <a href="#pricing" onClick={() => setMobileMenuOpen(false)} style={{ padding: '16px 20px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '17px', borderRadius: '12px', background: darkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', display: 'block' }}>{t('pricing')}</a>
+              <button onClick={() => { onNavigate('pricing'); setMobileMenuOpen(false); }} style={{ padding: '16px 20px', color: darkMode ? '#f1f5f9' : '#1f2937', fontWeight: '600', fontSize: '17px', borderRadius: '12px', background: darkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', display: 'block', border: 'none', cursor: 'pointer', textAlign: 'left', width: '100%' }}>{t('pricing')}</button>
               <a href="#security" onClick={() => setMobileMenuOpen(false)} style={{ padding: '16px 20px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '17px', borderRadius: '12px', background: darkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', display: 'block' }}>{t('security')}</a>
               <a href="#faq" onClick={() => setMobileMenuOpen(false)} style={{ padding: '16px 20px', color: darkMode ? '#f1f5f9' : '#1f2937', textDecoration: 'none', fontWeight: '600', fontSize: '17px', borderRadius: '12px', background: darkMode ? 'rgba(255,255,255,0.05)' : '#f8fafc', display: 'block' }}>{t('faq')}</a>
               <div style={{ height: '1px', background: darkMode ? 'rgba(255,255,255,0.1)' : '#e2e8f0', margin: '16px 0' }} />

@@ -31,6 +31,7 @@ import LiveStatsDisplay from "./components/LiveStatsDisplay";
 import LandingPage from "./components/LandingPagePremium";
 import AuthPremium from "./components/AuthPremium";
 import CorporateWellness from "./components/CorporateWellness";
+import PricingPage from "./components/PricingPage";
 import { TermsAndConditions, PrivacyPolicy, RefundPolicy, ContactUs, AboutUs } from "./components/LegalPages";
 import NetworkStatus from "./components/NetworkStatus";
 import PWAInstallBanner from "./components/PWAInstallBanner";
@@ -152,7 +153,7 @@ function App() {
       return 'payment-checkout';
     }
     const hashView = hash.slice(1); // Remove #
-    const validViews = ['landing', 'auth', 'dashboard', 'corporate', 'imaging'];
+    const validViews = ['landing', 'auth', 'dashboard', 'corporate', 'imaging', 'pricing'];
     return validViews.includes(hashView) ? hashView : 'landing';
   };
 
@@ -189,7 +190,7 @@ function App() {
       } else {
         // No state, check hash or default to landing
         const hash = window.location.hash.slice(1);
-        const validViews = ['landing', 'auth', 'dashboard', 'corporate'];
+        const validViews = ['landing', 'auth', 'dashboard', 'corporate', 'pricing'];
         setCurrentViewState(validViews.includes(hash) ? hash : 'landing');
       }
     };
@@ -1752,6 +1753,8 @@ function App() {
               setCurrentView('auth');
             } else if (view === 'corporate') {
               setCurrentView('corporate');
+            } else if (view === 'pricing') {
+              setCurrentView('pricing');
             } else if (view === 'terms') {
               setCurrentView('terms');
             } else if (view === 'privacy') {
@@ -1792,6 +1795,14 @@ function App() {
       )}
 
       {/* Legal Pages - PayU Compliance */}
+      {currentView === "pricing" && (
+        <PricingPage onNavigate={(view) => {
+          if (view === 'register') { setLoginType('patient'); setCurrentView('auth'); }
+          else if (view === 'contact-us') { setCurrentView('contact-us'); }
+          else { setCurrentView(view); }
+        }} />
+      )}
+
       {currentView === "terms" && (
         <TermsAndConditions onBack={() => setCurrentView('landing')} />
       )}
