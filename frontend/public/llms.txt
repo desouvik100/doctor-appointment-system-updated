@@ -1,0 +1,40 @@
+# HealthSync — Clinic Appointment & Patient Management Platform
+
+> India's clinic-first healthcare management platform. Book doctor appointments online, manage clinic queues, patient records and scheduling.
+
+## What is HealthSync?
+
+HealthSync (healthsyncpro.in) is a SaaS healthcare platform built for clinics and hospitals in India. It connects patients, doctors, receptionists and administrators in one unified system.
+
+## Key Features
+
+- Online doctor appointment booking with real-time queue tracking
+- Smart queue management for clinics (no more waiting in long queues)
+- Video consultations / telemedicine
+- Electronic Medical Records (EMR)
+- Patient management and history
+- Prescription management
+- Lab reports and medical file storage
+- Multi-branch hospital management
+- AI health assistant and symptom checker
+- Payment processing (Razorpay)
+- WhatsApp and SMS notifications
+
+## Who uses it?
+
+- **Patients** — book appointments, track queue position, access medical records
+- **Doctors** — manage appointments, write prescriptions, view patient history
+- **Receptionists / Clinic Staff** — manage walk-ins, queue, billing
+- **Clinic Admins** — full clinic management, analytics, staff management
+
+## Technology
+
+- Frontend: React.js hosted on Vercel
+- Backend: Node.js / Express hosted on Render
+- Database: MongoDB Atlas
+- Real-time: Socket.IO
+
+## Contact
+
+- Website: https://healthsyncpro.in
+- Support: support@healthsyncpro.in

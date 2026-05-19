@@ -1,34 +1,48 @@
 # HealthSync - Clinic Appointment & Patient Management Platform
 # https://healthsyncpro.in
 
+# Allow all crawlers including AI assistants
 User-agent: *
 Allow: /
 
-# Allow search engines to crawl all pages
-Allow: /doctors
-Allow: /book
-Allow: /login
-Allow: /register
+# Explicitly allow AI crawlers
+User-agent: ClaudeBot
+Allow: /
 
-# Disallow admin and private areas
-Disallow: /admin/*
-Disallow: /api/*
-Disallow: /patient/dashboard
-Disallow: /doctor/dashboard
-Disallow: /receptionist/*
+User-agent: anthropic-ai
+Allow: /
 
-# Sitemap location
-Sitemap: https://healthsyncpro.in/sitemap.xml
+User-agent: Claude-Web
+Allow: /
 
-# Crawl delay for politeness
-Crawl-delay: 1
+User-agent: GPTBot
+Allow: /
 
-# Google specific
+User-agent: ChatGPT-User
+Allow: /
+
+User-agent: Google-Extended
+Allow: /
+
+User-agent: PerplexityBot
+Allow: /
+
+User-agent: Applebot
+Allow: /
+
 User-agent: Googlebot
 Allow: /
 Crawl-delay: 0
 
-# Bing specific
 User-agent: Bingbot
 Allow: /
 Crawl-delay: 1
+
+# Disallow private/dashboard areas only
+Disallow: /admin/*
+Disallow: /patient/dashboard
+Disallow: /doctor/dashboard
+Disallow: /receptionist/*
+
+# Sitemap
+Sitemap: https://healthsyncpro.in/sitemap.xml
