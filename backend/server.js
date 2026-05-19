@@ -149,26 +149,37 @@ app.use((req, res, next) => {
 app.use(requestLoggerMiddleware());
 
 // MongoDB connection with optimized settings for high load
-const connectDB = async () => {
+const connectDB = async (retryCount = 0) => {
+  const MAX_RETRIES = 5;
   try {
     const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/doctor_appointment', {
       useNewUrlParser: true,
       useUnifiedTopology: true,
-      // Connection pool settings for high concurrency
-      maxPoolSize: 50, // Maximum connections in pool
-      minPoolSize: 10, // Minimum connections to maintain
-      serverSelectionTimeoutMS: 5000, // Timeout for server selection
-      socketTimeoutMS: 45000, // Socket timeout
-      // Performance settings
+      maxPoolSize: 50,
+      minPoolSize: 10,
+      serverSelectionTimeoutMS: 5000,
+      socketTimeoutMS: 45000,
       retryWrites: true,
       w: 'majority',
     });
     console.log(`MongoDB Connected: ${conn.connection.host}`);
     console.log(`Connection Pool: min=${10}, max=${50}`);
   } catch (error) {
-    console.error('MongoDB connection error:', error);
-    // Retry connection after 5 seconds
-    setTimeout(connectDB, 5000);
+    // Auth errors (code 8000) will never succeed on retry — log clearly and stop
+    if (error.code === 8000 || error.codeName === 'AtlasError' || error.message?.includes('bad auth')) {
+      console.error('❌ FATAL: MongoDB authentication failed. Check MONGODB_URI credentials in Render dashboard.');
+      console.error('   Error:', error.message);
+      // Don't retry auth failures — they won't fix themselves
+      return;
+    }
+    if (retryCount >= MAX_RETRIES) {
+      console.error(`❌ MongoDB failed after ${MAX_RETRIES} retries. Giving up.`);
+      return;
+    }
+    const delay = Math.min(5000 * (retryCount + 1), 30000);
+    console.error(`MongoDB connection error (attempt ${retryCount + 1}/${MAX_RETRIES}):`, error.message);
+    console.log(`Retrying in ${delay / 1000}s...`);
+    setTimeout(() => connectDB(retryCount + 1), delay);
   }
 };
 
@@ -379,8 +390,8 @@ app.use('/api/advanced-queue', require('./routes/advancedQueueRoutes')); // Adva
 app.use('/api/audit-logs', require('./routes/auditLogRoutes')); // Audit Trail & Compliance Logs
 app.use('/api/ipd', require('./routes/ipdRoutes')); // IPD Admission, Discharge, Transfer
 app.use('/api/beds', require('./routes/bedRoutes')); // Bed Management & Allocation
-app.use('/api/lab-results', require('./routes/labReportRoutes')); // Lab Reports & Results
-app.use('/api/imaging-reports', require('./routes/imagingRoutes')); // Imaging/Radiology Reports
+// Note: /api/lab-results and /api/imaging-reports intentionally reuse existing route handlers
+// (labReportRoutes and imagingRoutes are already registered above as /api/lab-reports and /api/imaging)
 
 // ===== ENTERPRISE HOSPITAL FEATURES =====
 app.use('/api/insurance', require('./routes/insuranceRoutes')); // Insurance & TPA Integration

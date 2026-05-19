@@ -1,6 +1,6 @@
 const express = require('express');
 const router = express.Router();
-
+const User = require('../models/User');
 const { sendOTP, verifyOTP } = require('../services/emailService');
 
 
@@ -55,6 +55,50 @@ router.post('/send-otp', async (req, res) => {
         success: false,
         message: "Invalid email format"
       });
+    }
+
+    // For staff registration OTP: check if account already exists and give helpful messages
+    // Wrapped in try/catch with timeout — never block OTP sending if DB is slow
+    if (otpType === 'staff-registration') {
+      try {
+        const existingUser = await Promise.race([
+          User.findOne({ email: cleanEmail }).lean(),
+          new Promise((_, reject) => setTimeout(() => reject(new Error('DB timeout')), 3000))
+        ]);
+        if (existingUser) {
+          if (['receptionist', 'clinic'].includes(existingUser.role)) {
+            if (existingUser.approvalStatus === 'pending') {
+              return res.status(400).json({
+                success: false,
+                message: 'Your registration is already submitted and pending admin approval. Please wait 24–48 hours for a confirmation email. No need to register again.',
+                pending: true
+              });
+            }
+            if (existingUser.approvalStatus === 'approved') {
+              return res.status(400).json({
+                success: false,
+                message: 'A staff account with this email already exists and is active. Please use the Sign In option.',
+                alreadyActive: true
+              });
+            }
+            if (existingUser.approvalStatus === 'rejected') {
+              return res.status(400).json({
+                success: false,
+                message: 'Your previous registration was rejected. Please contact admin at support@healthsyncpro.in.',
+                rejected: true
+              });
+            }
+          }
+          // Email used by a patient or other account type
+          return res.status(400).json({
+            success: false,
+            message: 'This email is already registered under a different account type. Please use a different email address.',
+          });
+        }
+      } catch (dbErr) {
+        // DB check failed or timed out — log and proceed with OTP sending
+        console.warn('⚠️ DB duplicate check skipped:', dbErr.message);
+      }
     }
 
     const result = await sendOTP(cleanEmail, otpType);

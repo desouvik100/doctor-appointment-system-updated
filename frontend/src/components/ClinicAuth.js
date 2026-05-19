@@ -144,26 +144,78 @@ function ClinicAuth({ onLogin, onBack }) {
 
   const sendOtp = async () => {
     setOtpLoading(true); setError(""); setSuccess("");
+    setOtpSent(false); // reset so stale state never bypasses validation
     try {
-      const res = await axios.post("/api/otp/send-otp", { email: formData.email.toLowerCase().trim(), type: 'staff-registration' });
+      const res = await axios.post("/api/otp/send-otp", 
+        { email: formData.email.toLowerCase().trim(), type: 'staff-registration' },
+        { timeout: 15000 } // 15s timeout — never hang forever
+      );
       setOtpSent(true); setCanResendOtp(false); setOtpTimer(60); setOtp("");
-      setTimeout(() => setSuccess("OTP sent to your email."), 100);
+      setError("");
+      // Backend returns OTP directly when email may not work — show it as fallback
+      if (res.data?.otp) {
+        setSuccess(`OTP sent to your email. If not received, use: ${res.data.otp}`);
+      } else {
+        setSuccess("OTP sent to your email.");
+      }
       const timer = setInterval(() => setOtpTimer(p => { if (p <= 1) { clearInterval(timer); setCanResendOtp(true); return 0; } return p - 1; }), 1000);
-    } catch (e) { setError(e.response?.data?.message || "Failed to send OTP."); setCanResendOtp(true); }
+    } catch (e) { 
+      const data = e.response?.data;
+      setSuccess("");
+      if (e.code === 'ECONNABORTED' || e.message?.includes('timeout')) {
+        setError("Request timed out. Please check your connection and try again.");
+      } else if (data?.pending) {
+        setError('⏳ ' + (data?.message || 'Your registration is already submitted and pending admin approval.'));
+      } else if (data?.alreadyActive) {
+        setError('ℹ️ ' + (data?.message || 'Account already exists. Please sign in instead.'));
+        setTimeout(() => setIsLogin(true), 2000);
+      } else if (data?.rejected) {
+        setError('❌ ' + (data?.message || 'Your previous registration was rejected. Contact admin.'));
+      } else {
+        setError(data?.message || "Failed to send OTP. Please try again.");
+      }
+      setCanResendOtp(true);
+      throw e; // re-throw so handleSubmit knows not to show OTP screen
+    }
     finally { setOtpLoading(false); }
   };
 
   const verifyOtp = async () => {
-    setLoading(true); setError("");
+    setLoading(true); setError(""); setSuccess("");
     try {
       const res = await axios.post("/api/otp/verify-otp", { email: formData.email.toLowerCase().trim(), otp: otp.toString().trim(), type: 'staff-registration' });
       if (res.data.verified) {
-        await axios.post("/api/auth/receptionist/register", { ...formData, emailVerified: true });
-        setSuccess("Registration submitted! Please wait for admin approval within 24-48 hours.");
-        resetForm(); setShowOtpVerification(false); setOtp(""); setOtpSent(false);
-        setTimeout(() => { setIsLogin(true); setSuccess(""); }, 5000);
+        try {
+          await axios.post("/api/auth/receptionist/register", { ...formData, emailVerified: true });
+          setSuccess("Registration submitted! Please wait for admin approval within 24-48 hours.");
+          resetForm(); setShowOtpVerification(false); setOtp(""); setOtpSent(false);
+          setTimeout(() => { setIsLogin(true); setSuccess(""); }, 5000);
+        } catch (regErr) {
+          const data = regErr.response?.data;
+          if (data?.pending) {
+            // Account already exists and is pending — this is actually fine, just show status
+            setSuccess("");
+            setError("⏳ Your registration was already submitted and is pending admin approval. Please wait 24–48 hours for a confirmation email. You do NOT need to register again.");
+            setShowOtpVerification(false);
+            setTimeout(() => setIsLogin(true), 4000);
+          } else if (data?.alreadyActive) {
+            setSuccess("");
+            setError("ℹ️ " + (data?.message || "An active account already exists. Please sign in."));
+            setShowOtpVerification(false);
+            setTimeout(() => setIsLogin(true), 2500);
+          } else if (data?.rejected) {
+            setSuccess("");
+            setError("❌ " + (data?.message || "Your registration was rejected. Contact admin."));
+            setShowOtpVerification(false);
+          } else {
+            setSuccess("");
+            setError(data?.message || "Registration failed. Please try again.");
+          }
+        }
       }
-    } catch (e) { setError(e.response?.data?.message || "Invalid OTP"); }
+    } catch (e) { 
+      setError(e.response?.data?.message || "Invalid OTP. Please check and try again.");
+    }
     finally { setLoading(false); }
   };
 
@@ -242,20 +294,53 @@ function ClinicAuth({ onLogin, onBack }) {
       if (!verifiedCredentials) errors.credentials = 'Must verify professional credentials';
       if (Object.keys(errors).length > 0) { setValidationErrors(errors); setLoading(false); return; }
     }
+
+    // Show "waking up" hint after 8 seconds
+    const wakeUpTimer = setTimeout(() => {
+      if (isLogin) setError("⏳ Server is waking up from sleep, please wait up to 60 seconds...");
+    }, 8000);
+
     try {
       if (isLogin) {
         const res = await axios.post("/api/auth/clinic/login", { email: formData.email, password: formData.password });
+        clearTimeout(wakeUpTimer);
         const userData = { ...res.data.user, token: res.data.token };
         localStorage.setItem("receptionist", JSON.stringify(userData));
         onLogin(userData);
       } else {
+        clearTimeout(wakeUpTimer);
+        // ALWAYS validate email with backend before showing OTP screen.
+        // Never skip based on cached otpSent — the email status may have changed.
+        await sendOtp(); // throws + sets error if email already exists/pending/rejected
         setShowOtpVerification(true); setLoading(false);
-        if (!otpSent) await sendOtp();
         return;
       }
     } catch (e) {
-      if (e.response?.status === 403 && e.response?.data?.suspended) setError(`Account Suspended: ${e.response?.data?.reason || 'Contact admin'}`);
-      else setError(e.response?.data?.message || (isLogin ? "Invalid credentials" : "Registration failed"));
+      clearTimeout(wakeUpTimer);
+      // If sendOtp already set the error message, don't overwrite it
+      // sendOtp re-throws after setting error, so we only handle login errors here
+      if (isLogin) {
+        const data = e.response?.data;
+        const status = e.response?.status;
+        if (status === 403 && data?.suspended) {
+          setError(`Account Suspended: ${data?.reason || 'Contact admin'}`);
+        } else if (data?.pending) {
+          setError('⏳ ' + (data?.message || 'Your account is pending admin approval. Please wait 24–48 hours.'));
+        } else if (data?.rejected) {
+          setError('❌ ' + (data?.message || 'Your account was rejected. Contact admin.'));
+        } else if (data?.wrongRole) {
+          setError('⚠️ ' + (data?.message || 'This email is not registered as a staff account.'));
+        } else if (data?.alreadyActive) {
+          setError('ℹ️ ' + (data?.message || 'Account already exists. Please sign in instead.'));
+        } else if (e.code === 'ECONNABORTED' || e.message?.includes('timeout')) {
+          setError('Server is taking too long. It may be starting up — please try again in 30 seconds.');
+        } else if (!e.response) {
+          setError('Cannot reach server. Check your internet connection or try again shortly.');
+        } else {
+          setError(data?.message || "Invalid credentials. Please check your email and password.");
+        }
+      }
+      // For registration flow: sendOtp() already set the error, nothing to do here
     } finally { setLoading(false); }
   };
 
@@ -333,7 +418,7 @@ function ClinicAuth({ onLogin, onBack }) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-sky-50 p-6">
         <div className="w-full max-w-md bg-white rounded-3xl shadow-xl border border-slate-100 p-8 animate-fade-in-up">
-          <button onClick={() => { setShowOtpVerification(false); setOtp(""); setOtpSent(false); }}
+          <button onClick={() => { setShowOtpVerification(false); setOtp(""); setOtpSent(false); setError(""); setSuccess(""); }}
             className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all mb-6">
             <i className="fas fa-arrow-left text-xs"></i> Back
           </button>
@@ -344,8 +429,19 @@ function ClinicAuth({ onLogin, onBack }) {
             <h2 className="text-2xl font-bold text-slate-800">Verify Your Email</h2>
             <p className="text-slate-500 text-sm mt-1">Enter the 6-digit code sent to <span className="font-semibold text-slate-700">{formData.email}</span></p>
           </div>
-          {error && <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm mb-4"><i className="fas fa-exclamation-circle"></i>{error}</div>}
-          {success && <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm mb-4"><i className="fas fa-check-circle"></i>{success}</div>}
+          {/* Only show error if it's NOT a stale "already exists" error — those should never reach this screen */}
+          {error && !error.includes('already exists') && (
+            <div className="flex items-start gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm mb-4">
+              <i className="fas fa-exclamation-circle mt-0.5 flex-shrink-0"></i>
+              <span>{error}</span>
+            </div>
+          )}
+          {success && (
+            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm mb-4">
+              <i className="fas fa-check-circle flex-shrink-0"></i>
+              <span>{success}</span>
+            </div>
+          )}
           <div className="flex flex-col gap-4">
             <Field label="Verification Code" required>
               <Input type="text" value={otp} onChange={e => setOtp(e.target.value)} placeholder="Enter 6-digit OTP" maxLength={6} icon="shield-alt" />

@@ -673,11 +673,28 @@ router.post('/clinic/login', async (req, res) => {
       role: { $in: ['receptionist', 'clinic'] }
     });
 
+    // Check if the email exists but under a different role (e.g. patient)
+    if (!anyUser) {
+      const otherUser = await User.findOne({ email: normalizedEmail });
+      if (otherUser) {
+        console.log(`⚠️ Login attempt with non-staff email: ${normalizedEmail} (role: ${otherUser.role})`);
+        return res.status(400).json({ 
+          message: 'This email is not registered as a staff account. If you registered as a patient, please use the patient login instead.',
+          wrongRole: true
+        });
+      }
+      // Email doesn't exist at all
+      return res.status(400).json({ 
+        message: 'No staff account found with this email. Please register first or check your email address.',
+        notFound: true
+      });
+    }
+
     // Check if user exists but is pending approval
     if (anyUser && anyUser.approvalStatus === 'pending') {
       console.log(`⏳ Receptionist login blocked: Pending approval - ${normalizedEmail}`);
       return res.status(403).json({ 
-        message: 'Your account is pending admin approval. Please wait for confirmation.',
+        message: 'Your account is pending admin approval. You will receive a confirmation email within 24–48 hours.',
         pending: true
       });
     }
@@ -686,7 +703,7 @@ router.post('/clinic/login', async (req, res) => {
     if (anyUser && anyUser.approvalStatus === 'rejected') {
       console.log(`❌ Receptionist login blocked: Rejected - ${normalizedEmail}`);
       return res.status(403).json({ 
-        message: 'Your account has been rejected. Please contact admin.',
+        message: 'Your account registration was rejected. Please contact admin at support@healthsyncpro.in for assistance.',
         rejected: true
       });
     }
@@ -712,7 +729,7 @@ router.post('/clinic/login', async (req, res) => {
     const user = userCheck && userCheck.isActive !== false ? userCheck : null;
     
     if (!user) {
-      return res.status(400).json({ message: 'Invalid receptionist credentials or account not approved' });
+      return res.status(400).json({ message: 'No approved staff account found with this email. Please contact admin.' });
     }
 
     // Check password
@@ -900,10 +917,32 @@ router.post('/receptionist/register', async (req, res) => {
     // Normalize email
     const normalizedEmail = email.toLowerCase().trim();
 
-    // Check if user exists
+    // Check if user exists — give specific messages based on their status
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
-      return res.status(400).json({ message: 'User with this email already exists' });
+      // Staff account already submitted and waiting for admin approval
+      if (['receptionist', 'clinic'].includes(existingUser.role) && existingUser.approvalStatus === 'pending') {
+        return res.status(400).json({ 
+          message: 'Your registration is already submitted and pending admin approval. Please wait 24–48 hours for confirmation email.',
+          pending: true
+        });
+      }
+      // Staff account was rejected — allow them to see why
+      if (['receptionist', 'clinic'].includes(existingUser.role) && existingUser.approvalStatus === 'rejected') {
+        return res.status(400).json({ 
+          message: 'Your previous registration was rejected. Please contact admin at support@healthsyncpro.in for assistance.',
+          rejected: true
+        });
+      }
+      // Staff account already approved and active
+      if (['receptionist', 'clinic'].includes(existingUser.role) && existingUser.approvalStatus === 'approved') {
+        return res.status(400).json({ 
+          message: 'An account with this email already exists and is active. Please use the Sign In option instead.',
+          alreadyActive: true
+        });
+      }
+      // Patient or other role using same email
+      return res.status(400).json({ message: 'This email is already registered. Please use a different email or sign in.' });
     }
 
     // Hash password

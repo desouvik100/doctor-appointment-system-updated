@@ -270,21 +270,33 @@
 
   <!-- Critical CSS - ANTI-FLICKER OPTIMIZED -->
   <style>
-    /* Prevent any flickering on page load */
+    /* ── SCROLL MUST WORK — highest priority, set before any stylesheet ── */
     html {
+      overflow-y: scroll !important;
+      overflow-x: hidden !important;
+      height: auto !important;
+      min-height: 100% !important;
       margin: 0;
       padding: 0;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%) !important;
       background-attachment: fixed !important;
     }
-    
+
     body {
+      overflow-y: auto !important;
+      overflow-x: hidden !important;
+      height: auto !important;
+      min-height: 100vh !important;
       margin: 0;
       padding: 0;
       background: transparent !important;
     }
-    
+
     #root {
+      overflow-x: hidden !important;
+      overflow-y: visible !important;
+      height: auto !important;
+      min-height: 100vh !important;
       background: transparent !important;
       opacity: 1;
     }

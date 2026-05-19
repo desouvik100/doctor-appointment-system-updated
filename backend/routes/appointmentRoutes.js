@@ -651,7 +651,7 @@ router.get('/my-queue/:appointmentId', async (req, res) => {
  *       401:
  *         description: Unauthorized
  */
-router.post('/', async (req, res) => {
+router.post('/', verifyToken, async (req, res) => {
   const session = await mongoose.startSession();
   
   try {
@@ -721,6 +721,7 @@ router.post('/', async (req, res) => {
 
     // Calculate payment breakdown — 5% platform fee, no GST (matches frontend CinemaStyleBooking)
     const consultationFee = doctor.consultationFee;
+    const gst = 0; // No GST on this booking flow
     const platformFee = Math.round(consultationFee * 0.05); // 5% platform fee
     const totalAmount = consultationFee + platformFee;
 

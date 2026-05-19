@@ -1,8 +1,8 @@
 // HealthSync PWA Service Worker
-const CACHE_NAME = 'healthsync-v4';
-const STATIC_CACHE = 'healthsync-static-v4';
-const DYNAMIC_CACHE = 'healthsync-dynamic-v4';
-const API_CACHE = 'healthsync-api-v4';
+const CACHE_NAME = 'healthsync-v5';
+const STATIC_CACHE = 'healthsync-static-v5';
+const DYNAMIC_CACHE = 'healthsync-dynamic-v5';
+const API_CACHE = 'healthsync-api-v5';
 
 // Static assets to cache on install
 const STATIC_ASSETS = [
@@ -36,14 +36,15 @@ self.addEventListener('install', (event) => {
   );
 });
 
-// Activate event - clean up old caches
+// Activate event - clean up ALL old caches when new SW version activates
 self.addEventListener('activate', (event) => {
-  console.log('[SW] Activating Service Worker...');
+  console.log('[SW] Activating Service Worker v5...');
+  const currentCaches = [STATIC_CACHE, DYNAMIC_CACHE, API_CACHE];
   event.waitUntil(
     caches.keys().then((cacheNames) => {
       return Promise.all(
         cacheNames
-          .filter((name) => name !== STATIC_CACHE && name !== DYNAMIC_CACHE && name !== API_CACHE)
+          .filter((name) => !currentCaches.includes(name))
           .map((name) => {
             console.log('[SW] Deleting old cache:', name);
             return caches.delete(name);
@@ -124,8 +125,9 @@ async function handleApiRequest(request) {
 
 // Handle static requests - network first for navigation, cache first for assets
 async function handleStaticRequest(request) {
+  const url = new URL(request.url);
+
   // For navigation requests (page loads), always go network first
-  // This ensures users always get the latest HTML/JS with scroll fixes
   if (request.mode === 'navigate') {
     try {
       const response = await fetch(request);
@@ -141,7 +143,28 @@ async function handleStaticRequest(request) {
     }
   }
 
-  // For non-navigation (JS, CSS, images) - cache first
+  // JS and CSS chunks: ALWAYS network-first — never serve stale chunks from cache.
+  // Webpack generates content-hashed filenames so fresh files are always different URLs.
+  // Serving a stale chunk causes "SyntaxError: Unexpected token '<'" when the file no longer exists.
+  const isJsOrCss = url.pathname.includes('/static/js/') || url.pathname.includes('/static/css/');
+  if (isJsOrCss) {
+    try {
+      const response = await fetch(request);
+      if (response.ok) {
+        const cache = await caches.open(DYNAMIC_CACHE);
+        cache.put(request, response.clone());
+      }
+      return response;
+    } catch (error) {
+      // Network failed — try cache as last resort
+      const cachedResponse = await caches.match(request);
+      if (cachedResponse) return cachedResponse;
+      // Nothing available — return empty so the app can handle it
+      return new Response('', { status: 503 });
+    }
+  }
+
+  // For other static assets (images, fonts, icons) - cache first is fine
   const cachedResponse = await caches.match(request);
   if (cachedResponse) {
     return cachedResponse;
@@ -149,23 +172,17 @@ async function handleStaticRequest(request) {
 
   try {
     const response = await fetch(request);
-    
-    // Cache successful responses
     if (response.ok) {
       const cache = await caches.open(DYNAMIC_CACHE);
       cache.put(request, response.clone());
     }
-    
     return response;
   } catch (error) {
-    // For navigation requests, return the cached index.html
     if (request.mode === 'navigate') {
       const cachedIndex = await caches.match('/index.html');
-      if (cachedIndex) {
-        return cachedIndex;
-      }
+      if (cachedIndex) return cachedIndex;
     }
-    
+
     // Return offline page
     return new Response(
       `<!DOCTYPE html>

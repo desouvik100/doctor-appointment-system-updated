@@ -456,12 +456,18 @@ function AuthPremium({ onLogin, onBack }) {
     e.preventDefault();
     setLoading(true);
 
+    // Show "waking up server" hint after 8 seconds if still loading
+    const wakeUpTimer = setTimeout(() => {
+      toast.loading('Server is waking up, please wait...', { id: 'wakeup', duration: 60000 });
+    }, 8000);
+
     try {
       if (isLogin) {
         const response = await axios.post("/api/auth/login", {
           email: formData.email,
           password: formData.password
         });
+        toast.dismiss('wakeup');
         // Combine token with user data for proper storage
         const userData = {
           ...response.data.user,
@@ -490,6 +496,7 @@ function AuthPremium({ onLogin, onBack }) {
           role: 'patient',
           otpVerified: true
         });
+        toast.dismiss('wakeup');
         // Combine token with user data for proper storage
         const userData = {
           ...response.data.user,
@@ -500,6 +507,7 @@ function AuthPremium({ onLogin, onBack }) {
         onLogin(userData, "patient");
       }
     } catch (error) {
+      toast.dismiss('wakeup');
       console.error('Login error:', error);
       // Handle suspended account
       if (error.response?.status === 403 && error.response?.data?.suspended) {
@@ -507,13 +515,14 @@ function AuthPremium({ onLogin, onBack }) {
       } else if (error.response?.data?.message) {
         toast.error(error.response.data.message);
       } else if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
-        toast.error('Connection timeout. Please try again.');
+        toast.error('Server is taking too long. It may be starting up — please try again in 30 seconds.');
       } else if (!error.response) {
-        toast.error('Network error. Check your internet connection.');
+        toast.error('Cannot reach server. Check your internet or try again shortly.');
       } else {
         toast.error('Login failed. Please check your credentials.');
       }
     } finally {
+      clearTimeout(wakeUpTimer);
       setLoading(false);
     }
   };

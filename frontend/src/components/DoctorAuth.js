@@ -1,21 +1,95 @@
 import React, { useState, useEffect } from "react";
 import axios from "../api/config";
-import "./ClinicAuth.css"; // Reuse clinic auth styles
 
 const GOOGLE_CLIENT_ID = process.env.REACT_APP_GOOGLE_CLIENT_ID || '';
 
+// ── Shared UI primitives (Tailwind-only, same pattern as ClinicAuth) ─────────
+
+const Field = ({ label, required, error, children }) => (
+  <div className="flex flex-col gap-1">
+    <label className="text-sm font-semibold text-slate-700">
+      {label} {required && <span className="text-red-500">*</span>}
+    </label>
+    {children}
+    {error && <p className="text-xs text-red-500 mt-0.5">{error}</p>}
+  </div>
+);
+
+const Input = ({ icon, rightEl, error, ...props }) => (
+  <div className="relative">
+    {icon && (
+      <span className="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-sm pointer-events-none z-10">
+        <i className={`fas fa-${icon}`}></i>
+      </span>
+    )}
+    <input
+      {...props}
+      className={[
+        "w-full h-12 rounded-xl border bg-slate-50 text-slate-800 text-sm transition-all duration-200",
+        "focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500",
+        "placeholder:text-slate-400",
+        icon ? "pl-10" : "px-4",
+        rightEl ? "pr-12" : "pr-4",
+        error ? "border-red-400 bg-red-50" : "border-slate-200 hover:border-slate-300",
+      ].join(" ")}
+    />
+    {rightEl && (
+      <span className="absolute right-3 top-1/2 -translate-y-1/2 z-10">{rightEl}</span>
+    )}
+  </div>
+);
+
+const SelectField = ({ error, children, ...props }) => (
+  <select
+    {...props}
+    className={[
+      "w-full h-12 rounded-xl border bg-slate-50 text-slate-800 text-sm px-4 transition-all duration-200",
+      "focus:outline-none focus:bg-white focus:ring-2 focus:ring-teal-500/20 focus:border-teal-500",
+      error ? "border-red-400" : "border-slate-200 hover:border-slate-300",
+    ].join(" ")}
+  >
+    {children}
+  </select>
+);
+
+const SectionHeading = ({ icon, children }) => (
+  <h6 className="flex items-center gap-2 text-sm font-semibold text-teal-600 mb-4 pb-2 border-b border-slate-100">
+    <i className={`fas fa-${icon} text-teal-500`}></i>
+    {children}
+  </h6>
+);
+
+const EyeToggle = ({ show, onToggle }) => (
+  <button type="button" onClick={onToggle} className="text-slate-400 hover:text-teal-500 transition-colors p-1 rounded-lg">
+    <i className={`fas fa-${show ? "eye-slash" : "eye"} text-sm`}></i>
+  </button>
+);
+
+// ── Modal wrapper ─────────────────────────────────────────────────────────────
+const Modal = ({ title, icon, onClose, children, footer }) => (
+  <div className="fixed inset-0 z-50 flex items-end sm:items-center justify-center p-0 sm:p-4 bg-black/50 backdrop-blur-sm">
+    <div className="w-full sm:max-w-lg bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl border border-slate-100 flex flex-col max-h-[92vh] sm:max-h-[90vh]">
+      <div className="flex items-center justify-between px-5 sm:px-6 py-4 border-b border-slate-100">
+        <h5 className="font-bold text-slate-800 flex items-center gap-2 text-sm sm:text-base">
+          <i className={`fas fa-${icon} text-teal-600`}></i> {title}
+        </h5>
+        <button onClick={onClose} className="w-8 h-8 flex items-center justify-center rounded-xl hover:bg-slate-100 text-slate-500 transition-colors">
+          <i className="fas fa-times text-sm"></i>
+        </button>
+      </div>
+      <div className="overflow-y-auto px-5 sm:px-6 py-4 flex-1">{children}</div>
+      {footer && <div className="px-5 sm:px-6 py-4 border-t border-slate-100 flex gap-3 justify-end">{footer}</div>}
+    </div>
+  </div>
+);
+
+// ── Main Component ────────────────────────────────────────────────────────────
 function DoctorAuth({ onLogin, onBack }) {
   const [isLogin, setIsLogin] = useState(true);
-  const [formData, setFormData] = useState({ 
-    email: "", 
-    password: "",
-    confirmPassword: "",
-    name: "",
-    phone: "",
-    specialization: "",
-    clinicName: "",
-    experience: "",
-    qualification: ""
+  const [formData, setFormData] = useState({
+    email: "", password: "", confirmPassword: "",
+    name: "", phone: "", specialization: "",
+    clinicName: "", experience: "", qualification: "",
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
@@ -29,1083 +103,574 @@ function DoctorAuth({ onLogin, onBack }) {
   const [socialLoading, setSocialLoading] = useState(null);
   const [agreedToTerms, setAgreedToTerms] = useState(false);
   const [agreedToPrivacy, setAgreedToPrivacy] = useState(false);
+  const [certifiedCredentials, setCertifiedCredentials] = useState(false);
   const [showTermsModal, setShowTermsModal] = useState(false);
   const [showPrivacyModal, setShowPrivacyModal] = useState(false);
-  
-  // Forgot password states
+
+  // Forgot password
   const [showForgotPassword, setShowForgotPassword] = useState(false);
   const [forgotEmail, setForgotEmail] = useState("");
   const [forgotOtp, setForgotOtp] = useState("");
   const [newPassword, setNewPassword] = useState("");
-  const [forgotStep, setForgotStep] = useState(1); // 1: email, 2: otp, 3: new password
+  const [forgotStep, setForgotStep] = useState(1);
   const [forgotLoading, setForgotLoading] = useState(false);
 
-  // Load Google Sign-In script
   useEffect(() => {
-    const loadGoogleScript = () => {
-      if (document.getElementById('google-signin-script')) return;
-      const script = document.createElement('script');
-      script.id = 'google-signin-script';
-      script.src = 'https://accounts.google.com/gsi/client';
-      script.async = true;
-      script.defer = true;
-      document.body.appendChild(script);
-    };
-    loadGoogleScript();
+    if (!document.getElementById("google-signin-script")) {
+      const s = document.createElement("script");
+      s.id = "google-signin-script";
+      s.src = "https://accounts.google.com/gsi/client";
+      s.async = true; s.defer = true;
+      document.body.appendChild(s);
+    }
   }, []);
 
-  // Fetch clinics for dropdown
   useEffect(() => {
-    const fetchClinics = async () => {
-      try {
-        const response = await axios.get("/api/clinics");
-        setClinics(response.data || []);
-      } catch (err) {
-        console.error("Failed to fetch clinics:", err);
-      }
-    };
     if (!isLogin) {
-      fetchClinics();
+      axios.get("/api/clinics").then(r => setClinics(r.data || [])).catch(() => {});
     }
   }, [isLogin]);
-
-  // Handle Google Sign-In
-  const handleGoogleSignIn = async () => {
-    if (!GOOGLE_CLIENT_ID) {
-      setError('Google Sign-In not configured. Please use email/password login.');
-      console.error('❌ REACT_APP_GOOGLE_CLIENT_ID is not set');
-      return;
-    }
-
-    setSocialLoading('google');
-    setError("");
-
-    try {
-      if (!window.google?.accounts?.oauth2) {
-        setError('Google Sign-In is still loading. Please wait a moment and try again.');
-        console.log('⏳ Google script not yet loaded');
-        setSocialLoading(null);
-        return;
-      }
-
-      console.log('🔐 Initiating Doctor Google Sign-In...');
-
-      const tokenClient = window.google.accounts.oauth2.initTokenClient({
-        client_id: GOOGLE_CLIENT_ID,
-        scope: 'email profile openid',
-        callback: async (tokenResponse) => {
-          if (tokenResponse.access_token) {
-            console.log('✅ Access token received');
-            await handleGoogleToken(tokenResponse.access_token);
-          } else if (tokenResponse.error) {
-            console.error('❌ Google OAuth error:', tokenResponse.error);
-            setError(tokenResponse.error === 'access_denied' ? 'Google Sign-In was cancelled.' : 'Google Sign-In failed.');
-            setSocialLoading(null);
-          } else {
-            setError('Google Sign-In was cancelled');
-            setSocialLoading(null);
-          }
-        },
-        error_callback: (error) => {
-          console.error('❌ Google OAuth error:', error);
-          if (error.type === 'popup_failed_to_open') {
-            setError('Popup blocked! Please allow popups for this site.');
-          } else if (error.type === 'popup_closed') {
-            setError('Sign-in popup was closed. Please try again.');
-          } else {
-            setError('Google Sign-In failed. Please try again.');
-          }
-          setSocialLoading(null);
-        }
-      });
-
-      tokenClient.requestAccessToken();
-    } catch (error) {
-      console.error('❌ Google Sign-In error:', error);
-      setError('Google Sign-In failed. Please try again.');
-      setSocialLoading(null);
-    }
-  };
-
-  const handleGoogleToken = async (accessToken) => {
-    try {
-      const userInfoResponse = await fetch('https://www.googleapis.com/oauth2/v2/userinfo', {
-        headers: { Authorization: `Bearer ${accessToken}` }
-      });
-      
-      if (!userInfoResponse.ok) {
-        throw new Error('Failed to get user info from Google');
-      }
-      
-      const userInfo = await userInfoResponse.json();
-      await processGoogleUser(userInfo);
-    } catch (error) {
-      console.error('Google token error:', error);
-      setError('Failed to get user info from Google');
-      setSocialLoading(null);
-    }
-  };
-
-  const processGoogleUser = async (googleUser) => {
-    try {
-      const response = await axios.post('/api/auth/doctor/google-signin', {
-        email: googleUser.email,
-        name: googleUser.name || googleUser.given_name + ' ' + (googleUser.family_name || ''),
-        googleId: googleUser.sub || googleUser.id,
-        profilePhoto: googleUser.picture
-      });
-
-      // Store doctor with token for axios interceptor
-      const doctorWithToken = { ...response.data.doctor, token: response.data.token };
-      localStorage.setItem("doctor", JSON.stringify(doctorWithToken));
-      localStorage.setItem("doctorToken", response.data.token);
-      setSuccess(`Welcome back, Dr. ${response.data.doctor.name?.split(' ')[0]}!`);
-      setTimeout(() => onLogin(doctorWithToken), 500);
-    } catch (error) {
-      console.error('Doctor Google sign-in API error:', error);
-      if (error.response?.data?.needsRegistration) {
-        setError('No doctor account found. Please register first or use email/password login.');
-      } else {
-        setError(error.response?.data?.message || 'Google sign-in failed');
-      }
-    } finally {
-      setSocialLoading(null);
-    }
-  };
 
   const handleChange = (e) => {
     setFormData({ ...formData, [e.target.name]: e.target.value });
     setError("");
   };
 
+  const resetForgot = () => {
+    setShowForgotPassword(false); setForgotStep(1);
+    setForgotEmail(""); setForgotOtp(""); setNewPassword("");
+    setError(""); setSuccess("");
+  };
+
+  // ── Google Sign-In ──────────────────────────────────────────────────────────
+  const handleGoogleSignIn = async () => {
+    if (!GOOGLE_CLIENT_ID) { setError("Google Sign-In not configured."); return; }
+    setSocialLoading("google"); setError("");
+    try {
+      if (!window.google?.accounts?.oauth2) {
+        setError("Google Sign-In is still loading. Please try again."); setSocialLoading(null); return;
+      }
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: GOOGLE_CLIENT_ID, scope: "email profile openid",
+        callback: async (r) => {
+          if (r.access_token) {
+            try {
+              const info = await (await fetch("https://www.googleapis.com/oauth2/v2/userinfo", {
+                headers: { Authorization: `Bearer ${r.access_token}` },
+              })).json();
+              const res = await axios.post("/api/auth/doctor/google-signin", {
+                email: info.email, name: info.name,
+                googleId: info.sub || info.id, profilePhoto: info.picture,
+              });
+              const d = { ...res.data.doctor, token: res.data.token };
+              localStorage.setItem("doctor", JSON.stringify(d));
+              localStorage.setItem("doctorToken", res.data.token);
+              setSuccess(`Welcome, Dr. ${res.data.doctor.name?.split(" ")[0]}!`);
+              setTimeout(() => onLogin(d), 500);
+            } catch (e) { setError(e.response?.data?.message || "Google sign-in failed"); }
+          } else { setError("Google Sign-In was cancelled."); }
+          setSocialLoading(null);
+        },
+        error_callback: (e) => {
+          setError(e.type === "popup_blocked" ? "Popup blocked!" : "Google Sign-In failed.");
+          setSocialLoading(null);
+        },
+      });
+      client.requestAccessToken();
+    } catch { setError("Google Sign-In failed."); setSocialLoading(null); }
+  };
+
+  // ── Login ───────────────────────────────────────────────────────────────────
   const handleLogin = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
+    e.preventDefault(); setLoading(true); setError("");
+
+    // Show "waking up" hint after 8 seconds
+    const wakeUpTimer = setTimeout(() => {
+      setError("⏳ Server is waking up from sleep, please wait up to 60 seconds...");
+    }, 8000);
 
     try {
-      const response = await axios.post("/api/auth/doctor/login", formData);
-      // Store doctor with token for axios interceptor
-      const doctorWithToken = { ...response.data.doctor, token: response.data.token };
-      localStorage.setItem("doctor", JSON.stringify(doctorWithToken));
-      localStorage.setItem("doctorToken", response.data.token);
-      onLogin(doctorWithToken);
-    } catch (error) {
-      if (error.response?.status === 403 && error.response?.data?.suspended) {
-        setError(`Account Suspended: ${error.response?.data?.reason || 'Contact admin for assistance'}`);
-      } else if (error.response?.data?.needsPasswordSetup) {
-        setNeedsPasswordSetup(true);
-        setSetupEmail(error.response.data.doctorEmail);
-        setError("");
+      const res = await axios.post("/api/auth/doctor/login", formData);
+      clearTimeout(wakeUpTimer);
+      const d = { ...res.data.doctor, token: res.data.token };
+      localStorage.setItem("doctor", JSON.stringify(d));
+      localStorage.setItem("doctorToken", res.data.token);
+      onLogin(d);
+    } catch (e) {
+      clearTimeout(wakeUpTimer);
+      if (e.response?.status === 403 && e.response?.data?.suspended)
+        setError(`Account Suspended: ${e.response?.data?.reason || "Contact admin"}`);
+      else if (e.response?.data?.needsPasswordSetup) {
+        setNeedsPasswordSetup(true); setSetupEmail(e.response.data.doctorEmail);
+      } else if (e.code === 'ECONNABORTED' || e.message?.includes('timeout')) {
+        setError("Server is taking too long to respond. It may be starting up — please try again in 30 seconds.");
+      } else if (!e.response) {
+        setError("Cannot reach server. Check your internet connection or try again shortly.");
       } else {
-        setError(error.response?.data?.message || "Login failed");
+        setError(e.response?.data?.message || "Login failed");
       }
-    } finally {
-      setLoading(false);
-    }
+    } finally { setLoading(false); }
   };
 
+  // ── Register ────────────────────────────────────────────────────────────────
   const handleRegister = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-    setSuccess("");
-
-    // Validation
-    if (formData.password !== formData.confirmPassword) {
-      setError("Passwords do not match");
-      setLoading(false);
-      return;
-    }
-
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters");
-      setLoading(false);
-      return;
-    }
-
-    if (!selectedClinicId && !formData.clinicName) {
-      setError("Please select a clinic or enter a new clinic name");
-      setLoading(false);
-      return;
-    }
-
-    if (!agreedToTerms || !agreedToPrivacy) {
-      setError("You must agree to the Terms of Service and Privacy Policy to register");
-      setLoading(false);
-      return;
-    }
-
+    e.preventDefault(); setLoading(true); setError(""); setSuccess("");
+    if (formData.password !== formData.confirmPassword) { setError("Passwords do not match"); setLoading(false); return; }
+    if (formData.password.length < 6) { setError("Password must be at least 6 characters"); setLoading(false); return; }
+    if (!selectedClinicId && !formData.clinicName) { setError("Please select a clinic or enter a new clinic name"); setLoading(false); return; }
+    if (!agreedToTerms || !agreedToPrivacy) { setError("You must agree to the Terms of Service and Privacy Policy"); setLoading(false); return; }
     try {
-      const response = await axios.post("/api/doctors", {
-        name: formData.name,
-        email: formData.email,
-        phone: formData.phone,
-        specialization: formData.specialization,
-        clinicId: selectedClinicId || null,
-        clinicName: formData.clinicName || null,
-        experience: parseInt(formData.experience) || 0,
-        qualification: formData.qualification || "MBBS",
-        password: formData.password
+      await axios.post("/api/doctors", {
+        name: formData.name, email: formData.email, phone: formData.phone,
+        specialization: formData.specialization, clinicId: selectedClinicId || null,
+        clinicName: formData.clinicName || null, experience: parseInt(formData.experience) || 0,
+        qualification: formData.qualification || "MBBS", password: formData.password,
       });
-
-      setSuccess("Registration submitted successfully! Your application is pending admin approval. You will receive an email once approved.");
-      
-      // Reset form
-      setFormData({
-        email: "",
-        password: "",
-        confirmPassword: "",
-        name: "",
-        phone: "",
-        specialization: "",
-        clinicName: "",
-        experience: "",
-        qualification: ""
-      });
-      setSelectedClinicId("");
-      setAgreedToTerms(false);
-      setAgreedToPrivacy(false);
-      
-      // Switch to login after 3 seconds
-      setTimeout(() => {
-        setIsLogin(true);
-        setSuccess("");
-      }, 5000);
-    } catch (error) {
-      setError(error.response?.data?.message || "Registration failed. Please try again.");
-    } finally {
-      setLoading(false);
-    }
+      setSuccess("Registration submitted! Pending admin approval. You'll receive an email once approved.");
+      setFormData({ email:"",password:"",confirmPassword:"",name:"",phone:"",specialization:"",clinicName:"",experience:"",qualification:"" });
+      setSelectedClinicId(""); setAgreedToTerms(false); setAgreedToPrivacy(false); setCertifiedCredentials(false);
+      setTimeout(() => { setIsLogin(true); setSuccess(""); }, 5000);
+    } catch (e) { setError(e.response?.data?.message || "Registration failed. Please try again."); }
+    finally { setLoading(false); }
   };
 
+  // ── Password Setup ──────────────────────────────────────────────────────────
   const handlePasswordSetup = async (e) => {
-    e.preventDefault();
-    setLoading(true);
-    setError("");
-
-    if (formData.password.length < 6) {
-      setError("Password must be at least 6 characters");
-      setLoading(false);
-      return;
-    }
-
+    e.preventDefault(); setLoading(true); setError("");
+    if (formData.password.length < 6) { setError("Password must be at least 6 characters"); setLoading(false); return; }
     try {
-      await axios.post("/api/auth/doctor/setup-password", {
-        email: setupEmail,
-        password: formData.password
-      });
-      setSuccess("Password set successfully! You can now login.");
-      setNeedsPasswordSetup(false);
-      setFormData({ ...formData, email: setupEmail });
-    } catch (error) {
-      setError(error.response?.data?.message || "Failed to set password");
-    } finally {
-      setLoading(false);
-    }
+      await axios.post("/api/auth/doctor/setup-password", { email: setupEmail, password: formData.password });
+      setSuccess("Password set! You can now login.");
+      setNeedsPasswordSetup(false); setFormData({ ...formData, email: setupEmail });
+    } catch (e) { setError(e.response?.data?.message || "Failed to set password"); }
+    finally { setLoading(false); }
   };
 
-  // Forgot Password - Send OTP
+  // ── Forgot Password ─────────────────────────────────────────────────────────
   const handleForgotSendOtp = async () => {
-    if (!forgotEmail) {
-      setError("Please enter your email");
-      return;
-    }
-    setForgotLoading(true);
-    setError("");
+    if (!forgotEmail) { setError("Please enter your email"); return; }
+    setForgotLoading(true); setError("");
     try {
-      const response = await axios.post("/api/auth/doctor/forgot-password", { email: forgotEmail });
-      if (response.data.success) {
-        setSuccess("OTP sent to your email!");
-        setForgotStep(2);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to send OTP");
-    } finally {
-      setForgotLoading(false);
-    }
+      const r = await axios.post("/api/auth/doctor/forgot-password", { email: forgotEmail });
+      if (r.data.success) { setSuccess("OTP sent to your email!"); setForgotStep(2); }
+    } catch (e) { setError(e.response?.data?.message || "Failed to send OTP"); }
+    finally { setForgotLoading(false); }
   };
 
-  // Forgot Password - Verify OTP
   const handleForgotVerifyOtp = async () => {
-    if (!forgotOtp || forgotOtp.length !== 6) {
-      setError("Please enter a valid 6-digit OTP");
-      return;
-    }
-    setForgotLoading(true);
-    setError("");
+    if (!forgotOtp || forgotOtp.length !== 6) { setError("Enter a valid 6-digit OTP"); return; }
+    setForgotLoading(true); setError("");
     try {
-      const response = await axios.post("/api/auth/doctor/verify-reset-otp", { 
-        email: forgotEmail, 
-        otp: forgotOtp 
-      });
-      if (response.data.success) {
-        setSuccess("OTP verified! Set your new password.");
-        setForgotStep(3);
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Invalid OTP");
-    } finally {
-      setForgotLoading(false);
-    }
+      const r = await axios.post("/api/auth/doctor/verify-reset-otp", { email: forgotEmail, otp: forgotOtp });
+      if (r.data.success) { setSuccess("OTP verified! Set your new password."); setForgotStep(3); }
+    } catch (e) { setError(e.response?.data?.message || "Invalid OTP"); }
+    finally { setForgotLoading(false); }
   };
 
-  // Forgot Password - Reset Password
   const handleResetPassword = async () => {
-    if (!newPassword || newPassword.length < 6) {
-      setError("Password must be at least 6 characters");
-      return;
-    }
-    setForgotLoading(true);
-    setError("");
+    if (!newPassword || newPassword.length < 6) { setError("Password must be at least 6 characters"); return; }
+    setForgotLoading(true); setError("");
     try {
-      const response = await axios.post("/api/auth/doctor/reset-password", { 
-        email: forgotEmail, 
-        newPassword 
-      });
-      if (response.data.success) {
-        setSuccess("Password reset successfully! You can now login.");
-        setShowForgotPassword(false);
-        setForgotStep(1);
-        setForgotEmail("");
-        setForgotOtp("");
-        setNewPassword("");
-      }
-    } catch (err) {
-      setError(err.response?.data?.message || "Failed to reset password");
-    } finally {
-      setForgotLoading(false);
-    }
+      const r = await axios.post("/api/auth/doctor/reset-password", { email: forgotEmail, newPassword });
+      if (r.data.success) { setSuccess("Password reset! You can now login."); resetForgot(); }
+    } catch (e) { setError(e.response?.data?.message || "Failed to reset password"); }
+    finally { setForgotLoading(false); }
   };
 
-  return (
-    <div className="clinic-auth-container">
-      <div className="clinic-auth__left">
-        <div className="clinic-auth__branding">
-          <div className="clinic-auth__logo">
-            <i className="fas fa-user-md"></i>
+  // ── Shared alert helpers ────────────────────────────────────────────────────
+  const AlertError = ({ msg }) => msg ? (
+    <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm mb-4">
+      <i className="fas fa-exclamation-circle flex-shrink-0"></i><span>{msg}</span>
+    </div>
+  ) : null;
+
+  const AlertSuccess = ({ msg }) => msg ? (
+    <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm mb-4">
+      <i className="fas fa-check-circle flex-shrink-0"></i><span>{msg}</span>
+    </div>
+  ) : null;
+
+  // ── Forgot Password overlay ─────────────────────────────────────────────────
+  if (showForgotPassword) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-white to-teal-50 p-4 sm:p-6 py-8">
+        <div className="w-full max-w-md bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-slate-100 p-5 sm:p-8">
+          <button onClick={resetForgot}
+            className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all mb-6">
+            <i className="fas fa-arrow-left text-xs"></i> Back to Login
+          </button>
+          <div className="text-center mb-8">
+            <div className="w-14 h-14 bg-teal-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+              <i className="fas fa-key text-2xl text-teal-600"></i>
+            </div>
+            <h2 className="text-2xl font-bold text-slate-800">Reset Password</h2>
+            <p className="text-slate-500 text-sm mt-1">
+              {forgotStep === 1 ? "Enter your registered email" : forgotStep === 2 ? "Enter the 6-digit code sent to your email" : "Create your new password"}
+            </p>
           </div>
-          <h1>Doctor Portal</h1>
-          <p>Healthcare Management System</p>
+          <AlertError msg={error} />
+          <AlertSuccess msg={success} />
+
+          {forgotStep === 1 && (
+            <div className="flex flex-col gap-4">
+              <Field label="Email Address" required>
+                <Input type="email" value={forgotEmail} onChange={e => setForgotEmail(e.target.value)} placeholder="doctor@clinic.com" icon="envelope" />
+              </Field>
+              <button onClick={handleForgotSendOtp} disabled={forgotLoading}
+                className="w-full h-12 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-teal-500/25 disabled:opacity-60 flex items-center justify-center gap-2">
+                {forgotLoading ? <><i className="fas fa-spinner fa-spin"></i> Sending...</> : <><i className="fas fa-paper-plane"></i> Send Reset Code</>}
+              </button>
+            </div>
+          )}
+          {forgotStep === 2 && (
+            <div className="flex flex-col gap-4">
+              <Field label="Verification Code" required>
+                <Input type="text" value={forgotOtp} onChange={e => setForgotOtp(e.target.value.replace(/\D/g,"").slice(0,6))} placeholder="Enter 6-digit code" maxLength={6} icon="shield-alt" />
+              </Field>
+              <button onClick={handleForgotVerifyOtp} disabled={forgotLoading}
+                className="w-full h-12 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-teal-500/25 disabled:opacity-60 flex items-center justify-center gap-2">
+                {forgotLoading ? <><i className="fas fa-spinner fa-spin"></i> Verifying...</> : <><i className="fas fa-check"></i> Verify Code</>}
+              </button>
+              <button onClick={() => setForgotStep(1)} className="text-sm text-slate-500 hover:text-teal-600 transition-colors text-center">
+                <i className="fas fa-arrow-left mr-1"></i> Back
+              </button>
+            </div>
+          )}
+          {forgotStep === 3 && (
+            <div className="flex flex-col gap-4">
+              <Field label="New Password" required>
+                <Input type={showPassword ? "text" : "password"} value={newPassword} onChange={e => setNewPassword(e.target.value)} placeholder="Min 6 characters" icon="lock"
+                  rightEl={<EyeToggle show={showPassword} onToggle={() => setShowPassword(!showPassword)} />} />
+              </Field>
+              <button onClick={handleResetPassword} disabled={forgotLoading}
+                className="w-full h-12 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-teal-500/25 disabled:opacity-60 flex items-center justify-center gap-2">
+                {forgotLoading ? <><i className="fas fa-spinner fa-spin"></i> Resetting...</> : <><i className="fas fa-save"></i> Reset Password</>}
+              </button>
+            </div>
+          )}
         </div>
-        <div className="clinic-auth__features">
-          <div className="clinic-auth__feature">
-            <i className="fas fa-calendar-check"></i>
-            <div>
-              <h4>View Appointments</h4>
-              <p>See your scheduled appointments</p>
-            </div>
+      </div>
+    );
+  }
+
+  // ── Main render ─────────────────────────────────────────────────────────────
+  return (
+    <div className="min-h-screen flex bg-gradient-to-br from-slate-50 via-white to-teal-50">
+
+      {/* ── Left Branding Panel ── */}
+      <div className="hidden lg:flex flex-col justify-center w-[45%] min-w-[340px] p-10 bg-gradient-to-br from-teal-600 via-emerald-600 to-teal-700 text-white relative overflow-hidden lg:sticky lg:top-0 lg:h-screen">
+        <div className="absolute inset-0 opacity-10 pointer-events-none">
+          <div className="absolute top-0 right-0 w-96 h-96 bg-white rounded-full -translate-y-1/2 translate-x-1/2"></div>
+          <div className="absolute bottom-0 left-0 w-64 h-64 bg-white rounded-full translate-y-1/2 -translate-x-1/2"></div>
+        </div>
+        <div className="relative z-10">
+          <div className="w-16 h-16 bg-white/20 backdrop-blur-sm rounded-2xl flex items-center justify-center mb-6">
+            <i className="fas fa-user-md text-3xl text-white"></i>
           </div>
-          <div className="clinic-auth__feature">
-            <i className="fas fa-users"></i>
-            <div>
-              <h4>Patient Management</h4>
-              <p>Access patient records and history</p>
-            </div>
-          </div>
-          <div className="clinic-auth__feature">
-            <i className="fas fa-prescription"></i>
-            <div>
-              <h4>Prescriptions</h4>
-              <p>Create and manage prescriptions</p>
-            </div>
+          <h1 className="text-4xl font-bold mb-2">Doctor Portal</h1>
+          <p className="text-white/80 text-lg mb-10">Healthcare Management System</p>
+          <div className="flex flex-col gap-4">
+            {[
+              { icon: "calendar-check", title: "View Appointments", desc: "See your scheduled appointments" },
+              { icon: "users", title: "Patient Management", desc: "Access patient records and history" },
+              { icon: "prescription", title: "Prescriptions", desc: "Create and manage prescriptions" },
+            ].map((f) => (
+              <div key={f.title} className="flex items-start gap-4 p-4 bg-white/10 backdrop-blur-sm rounded-2xl hover:bg-white/15 transition-all duration-300 hover:translate-x-1">
+                <div className="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <i className={`fas fa-${f.icon} text-lg`}></i>
+                </div>
+                <div>
+                  <h4 className="font-semibold text-white">{f.title}</h4>
+                  <p className="text-white/75 text-sm mt-0.5">{f.desc}</p>
+                </div>
+              </div>
+            ))}
           </div>
         </div>
       </div>
 
-      <div className="clinic-auth__right">
-        <div className="clinic-auth__form-container">
-          <div className="clinic-auth__header">
+      {/* ── Right Form Panel ── */}
+      <div className="flex-1 flex items-start justify-center p-4 sm:p-6 py-8">
+        <div className="w-full max-w-md bg-white rounded-2xl sm:rounded-3xl shadow-xl border border-slate-100 p-5 sm:p-8 my-4 sm:my-8">
+
+          {/* Header */}
+          <div className="mb-8 text-center">
             {onBack && (
-              <button type="button" className="clinic-auth__back-btn" onClick={onBack}>
-                <i className="fas fa-arrow-left"></i> Back
+              <button type="button" onClick={onBack}
+                className="inline-flex items-center gap-2 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all mb-6">
+                <i className="fas fa-arrow-left text-xs"></i> Back
               </button>
             )}
-            <h2>
-              <i className="fas fa-user-md me-2"></i>
-              {needsPasswordSetup ? "Set Up Password" : isLogin ? "Doctor Login" : "Doctor Registration"}
-            </h2>
-            <p>{needsPasswordSetup ? "Create your password to access the portal" : isLogin ? "Access your doctor dashboard" : "Join our network of healthcare professionals"}</p>
+            <div className="flex items-center justify-center gap-3 mb-2">
+              <i className="fas fa-user-md text-xl sm:text-2xl text-teal-600"></i>
+              <h2 className="text-xl sm:text-2xl font-bold text-slate-800">
+                {needsPasswordSetup ? "Set Up Password" : isLogin ? "Doctor Login" : "Doctor Registration"}
+              </h2>
+            </div>
+            <p className="text-slate-500 text-sm">
+              {needsPasswordSetup ? "Create your password to access the portal" : isLogin ? "Access your doctor dashboard" : "Join our network of healthcare professionals"}
+            </p>
           </div>
 
-          {error && <div className="alert alert-danger">{error}</div>}
-          {success && <div className="alert alert-success">{success}</div>}
+          {/* Alerts */}
+          {error && (
+            <div className="flex items-center gap-2 p-3 bg-red-50 border border-red-200 rounded-xl text-red-600 text-sm mb-5">
+              <i className="fas fa-exclamation-circle flex-shrink-0"></i><span>{error}</span>
+            </div>
+          )}
+          {success && (
+            <div className="flex items-center gap-2 p-3 bg-green-50 border border-green-200 rounded-xl text-green-600 text-sm mb-5">
+              <i className="fas fa-check-circle flex-shrink-0"></i><span>{success}</span>
+            </div>
+          )}
 
-          {needsPasswordSetup ? (
-            <form onSubmit={handlePasswordSetup} className="clinic-auth__form">
-              <div className="mb-3">
-                <label className="form-label">Email</label>
-                <input
-                  type="email"
-                  className="form-control"
-                  value={setupEmail}
-                  disabled
-                />
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Create Password</label>
-                <div className="input-group">
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    className="form-control"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Enter new password (min 6 characters)"
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
-                  </button>
-                </div>
-              </div>
-              <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-                {loading ? <><span className="spinner-border spinner-border-sm me-2"></span>Setting up...</> : "Set Password"}
+          {/* ── Password Setup Form ── */}
+          {needsPasswordSetup && (
+            <form onSubmit={handlePasswordSetup} className="flex flex-col gap-5">
+              <Field label="Email">
+                <Input type="email" value={setupEmail} disabled icon="envelope" />
+              </Field>
+              <Field label="Create Password" required>
+                <Input type={showPassword ? "text" : "password"} name="password" value={formData.password}
+                  onChange={handleChange} placeholder="Enter new password (min 6 characters)" icon="lock" required
+                  rightEl={<EyeToggle show={showPassword} onToggle={() => setShowPassword(!showPassword)} />} />
+              </Field>
+              <button type="submit" disabled={loading}
+                className="w-full h-12 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-teal-500/25 disabled:opacity-60 flex items-center justify-center gap-2">
+                {loading ? <><i className="fas fa-spinner fa-spin"></i> Setting up...</> : <><i className="fas fa-key"></i> Set Password</>}
               </button>
-              <button
-                type="button"
-                className="btn btn-link w-100 mt-2"
-                onClick={() => setNeedsPasswordSetup(false)}
-              >
-                Back to Login
+              <button type="button" onClick={() => setNeedsPasswordSetup(false)}
+                className="text-sm text-slate-500 hover:text-teal-600 transition-colors text-center">
+                <i className="fas fa-arrow-left mr-1"></i> Back to Login
               </button>
             </form>
-          ) : isLogin ? (
-            <form onSubmit={handleLogin} className="clinic-auth__form">
-              <div className="mb-3">
-                <label className="form-label">Email Address</label>
-                <div className="input-group">
-                  <span className="input-group-text"><i className="fas fa-envelope"></i></span>
-                  <input
-                    type="email"
-                    className="form-control"
-                    name="email"
-                    value={formData.email}
-                    onChange={handleChange}
-                    placeholder="doctor@clinic.com"
-                    required
-                  />
-                </div>
-              </div>
-              <div className="mb-3">
-                <label className="form-label">Password</label>
-                <div className="input-group">
-                  <span className="input-group-text"><i className="fas fa-lock"></i></span>
-                  <input
-                    type={showPassword ? "text" : "password"}
-                    className="form-control"
-                    name="password"
-                    value={formData.password}
-                    onChange={handleChange}
-                    placeholder="Enter your password"
-                    required
-                  />
-                  <button
-                    type="button"
-                    className="btn btn-outline-secondary"
-                    onClick={() => setShowPassword(!showPassword)}
-                  >
-                    <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
-                  </button>
-                </div>
-              </div>
-              <button type="submit" className="btn btn-primary w-100" disabled={loading}>
-                {loading ? <><span className="spinner-border spinner-border-sm me-2"></span>Logging in...</> : "Login"}
+          )}
+
+          {/* ── Login Form ── */}
+          {!needsPasswordSetup && isLogin && (
+            <form onSubmit={handleLogin} className="flex flex-col gap-5">
+              <Field label="Email Address" required>
+                <Input name="email" type="email" value={formData.email} onChange={handleChange}
+                  placeholder="doctor@clinic.com" icon="envelope" required />
+              </Field>
+              <Field label="Password" required>
+                <Input name="password" type={showPassword ? "text" : "password"} value={formData.password}
+                  onChange={handleChange} placeholder="Enter your password" icon="lock" required
+                  rightEl={<EyeToggle show={showPassword} onToggle={() => setShowPassword(!showPassword)} />} />
+              </Field>
+
+              <button type="submit" disabled={loading}
+                className="w-full h-12 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-teal-500/25 disabled:opacity-60 flex items-center justify-center gap-2">
+                {loading ? <><i className="fas fa-spinner fa-spin"></i> Logging in...</> : <><i className="fas fa-sign-in-alt"></i> Login</>}
               </button>
 
-              {/* Forgot Password Link */}
-              <div className="text-center mt-2">
-                <button
-                  type="button"
-                  className="btn btn-link btn-sm text-muted"
-                  onClick={() => {
-                    setShowForgotPassword(true);
-                    setError("");
-                    setSuccess("");
-                  }}
-                >
-                  <i className="fas fa-key me-1"></i>
-                  Forgot Password?
-                </button>
-              </div>
+              <button type="button" onClick={() => { setShowForgotPassword(true); setError(""); setSuccess(""); }}
+                className="flex items-center justify-center gap-1.5 text-sm text-slate-500 hover:text-teal-600 transition-colors mx-auto">
+                <i className="fas fa-key text-xs"></i> Forgot Password?
+              </button>
 
               {/* Divider */}
-              <div className="d-flex align-items-center my-3">
-                <hr className="flex-grow-1" />
-                <span className="px-3 text-muted small">or continue with</span>
-                <hr className="flex-grow-1" />
+              <div className="flex items-center gap-3 my-1">
+                <div className="flex-1 h-px bg-slate-200"></div>
+                <span className="text-xs text-slate-400 font-medium">or continue with</span>
+                <div className="flex-1 h-px bg-slate-200"></div>
               </div>
 
-              {/* Google Sign-In Button */}
-              <button
-                type="button"
-                className="btn btn-outline-secondary w-100 d-flex align-items-center justify-content-center gap-2"
-                onClick={handleGoogleSignIn}
-                disabled={socialLoading === 'google'}
-                style={{ padding: '10px' }}
-              >
-                {socialLoading === 'google' ? (
-                  <><span className="spinner-border spinner-border-sm"></span> Signing in...</>
-                ) : (
-                  <><i className="fab fa-google"></i> Sign in with Google</>
-                )}
+              {/* Google Sign-In */}
+              <button type="button" onClick={handleGoogleSignIn} disabled={socialLoading === "google"}
+                className="w-full h-12 border-2 border-slate-200 hover:border-teal-300 hover:bg-teal-50 text-slate-700 font-medium rounded-xl transition-all duration-200 flex items-center justify-center gap-3 disabled:opacity-60">
+                {socialLoading === "google"
+                  ? <><i className="fas fa-spinner fa-spin text-teal-500"></i> Signing in...</>
+                  : <><i className="fab fa-google text-red-500"></i> Sign in with Google</>}
               </button>
-              
-              <div className="text-center mt-4 pt-3 pb-2" style={{ borderTop: '1px solid #e2e8f0' }}>
-                <p style={{ color: '#1a202c', marginBottom: '12px' }}>New doctor? Join our network</p>
-                <button
-                  type="button"
-                  className="btn px-4 py-2"
-                  style={{ 
-                    fontSize: '16px', 
-                    fontWeight: '600', 
-                    minWidth: '200px',
-                    backgroundColor: '#059669',
-                    color: '#ffffff',
-                    border: 'none',
-                    borderRadius: '8px',
-                    boxShadow: '0 2px 4px rgba(5, 150, 105, 0.3)'
-                  }}
-                  onClick={() => setIsLogin(false)}
-                >
-                  <i className="fas fa-user-plus me-2"></i>
-                  Sign Up as Doctor
+
+              <div className="pt-4 border-t border-slate-100 text-center">
+                <p className="text-sm text-slate-500 mb-3">New doctor? Join our network</p>
+                <button type="button" onClick={() => setIsLogin(false)}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-emerald-600 hover:bg-emerald-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-md shadow-emerald-500/25">
+                  <i className="fas fa-user-plus"></i> Sign Up as Doctor
                 </button>
               </div>
             </form>
-          ) : (
-            <form onSubmit={handleRegister} className="clinic-auth__form">
-              <h6 className="text-info mb-3"><i className="fas fa-user me-2"></i>Personal Information</h6>
-              
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Full Name <span className="text-danger">*</span></label>
-                  <input
-                    type="text"
-                    className="form-control"
-                    name="name"
-                    value={formData.name}
-                    onChange={handleChange}
-                    placeholder="Dr. John Smith"
-                    required
-                  />
+          )}
+
+          {/* ── Registration Form ── */}
+          {!needsPasswordSetup && !isLogin && (
+            <form onSubmit={handleRegister} className="flex flex-col gap-5">
+
+              <div>
+                <SectionHeading icon="user">Personal Information</SectionHeading>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <Field label="Full Name" required>
+                    <Input name="name" type="text" value={formData.name} onChange={handleChange} placeholder="Dr. John Smith" required />
+                  </Field>
+                  <Field label="Phone" required>
+                    <Input name="phone" type="tel" value={formData.phone} onChange={handleChange} placeholder="+91 9876543210" required />
+                  </Field>
+                  <Field label="Specialization" required>
+                    <SelectField name="specialization" value={formData.specialization} onChange={handleChange} required>
+                      <option value="">Select Specialization</option>
+                      {["General Physician","Cardiologist","Dermatologist","Orthopedic","Pediatrician","Gynecologist","Neurologist","Psychiatrist","ENT Specialist","Ophthalmologist","Dentist","Other"].map(s => (
+                        <option key={s} value={s}>{s}</option>
+                      ))}
+                    </SelectField>
+                  </Field>
+                  <Field label="Experience (years)">
+                    <Input name="experience" type="number" value={formData.experience} onChange={handleChange} placeholder="5" min="0" />
+                  </Field>
                 </div>
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Phone <span className="text-danger">*</span></label>
-                  <input
-                    type="tel"
-                    className="form-control"
-                    name="phone"
-                    value={formData.phone}
-                    onChange={handleChange}
-                    placeholder="+91 9876543210"
-                    required
-                  />
+                <div className="mt-4">
+                  <Field label="Qualification">
+                    <Input name="qualification" type="text" value={formData.qualification} onChange={handleChange} placeholder="MBBS, MD" />
+                  </Field>
                 </div>
               </div>
 
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Specialization <span className="text-danger">*</span></label>
-                  <select
-                    className="form-select"
-                    name="specialization"
-                    value={formData.specialization}
-                    onChange={handleChange}
-                    required
-                  >
-                    <option value="">Select Specialization</option>
-                    <option value="General Physician">General Physician</option>
-                    <option value="Cardiologist">Cardiologist</option>
-                    <option value="Dermatologist">Dermatologist</option>
-                    <option value="Orthopedic">Orthopedic</option>
-                    <option value="Pediatrician">Pediatrician</option>
-                    <option value="Gynecologist">Gynecologist</option>
-                    <option value="Neurologist">Neurologist</option>
-                    <option value="Psychiatrist">Psychiatrist</option>
-                    <option value="ENT Specialist">ENT Specialist</option>
-                    <option value="Ophthalmologist">Ophthalmologist</option>
-                    <option value="Dentist">Dentist</option>
-                    <option value="Other">Other</option>
-                  </select>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Experience (years)</label>
-                  <input
-                    type="number"
-                    className="form-control"
-                    name="experience"
-                    value={formData.experience}
-                    onChange={handleChange}
-                    placeholder="5"
-                    min="0"
-                  />
+              <div>
+                <SectionHeading icon="hospital">Clinic Information</SectionHeading>
+                <div className="flex flex-col gap-4">
+                  <Field label="Select Existing Clinic">
+                    <SelectField value={selectedClinicId} onChange={e => { setSelectedClinicId(e.target.value); if (e.target.value) setFormData({ ...formData, clinicName: "" }); }}>
+                      <option value="">-- Select a clinic --</option>
+                      {clinics.map(c => <option key={c._id} value={c._id}>{c.name} - {c.city}</option>)}
+                    </SelectField>
+                  </Field>
+                  <Field label="Or Enter New Clinic Name">
+                    <Input name="clinicName" type="text" value={formData.clinicName}
+                      onChange={e => { handleChange(e); if (e.target.value) setSelectedClinicId(""); }}
+                      placeholder="New Clinic Name" disabled={!!selectedClinicId} />
+                  </Field>
                 </div>
               </div>
 
-              <div className="mb-3">
-                <label className="form-label">Qualification</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="qualification"
-                  value={formData.qualification}
-                  onChange={handleChange}
-                  placeholder="MBBS, MD"
-                />
+              <div>
+                <SectionHeading icon="lock">Account Security</SectionHeading>
+                <div className="flex flex-col gap-4">
+                  <Field label="Email Address" required>
+                    <Input name="email" type="email" value={formData.email} onChange={handleChange} placeholder="doctor@example.com" icon="envelope" required />
+                  </Field>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <Field label="Password" required>
+                      <Input name="password" type={showPassword ? "text" : "password"} value={formData.password}
+                        onChange={handleChange} placeholder="Min 6 characters" icon="lock" required
+                        rightEl={<EyeToggle show={showPassword} onToggle={() => setShowPassword(!showPassword)} />} />
+                    </Field>
+                    <Field label="Confirm Password" required>
+                      <Input name="confirmPassword" type={showConfirmPassword ? "text" : "password"} value={formData.confirmPassword}
+                        onChange={handleChange} placeholder="Confirm password" icon="lock" required
+                        rightEl={<EyeToggle show={showConfirmPassword} onToggle={() => setShowConfirmPassword(!showConfirmPassword)} />} />
+                    </Field>
+                  </div>
+                </div>
               </div>
 
-              <h6 className="text-info mb-3 mt-4"><i className="fas fa-hospital me-2"></i>Clinic Information</h6>
-              
-              <div className="mb-3">
-                <label className="form-label">Select Existing Clinic</label>
-                <select
-                  className="form-select"
-                  value={selectedClinicId}
-                  onChange={(e) => {
-                    setSelectedClinicId(e.target.value);
-                    if (e.target.value) setFormData({ ...formData, clinicName: "" });
-                  }}
-                >
-                  <option value="">-- Select a clinic --</option>
-                  {clinics.map((clinic) => (
-                    <option key={clinic._id} value={clinic._id}>
-                      {clinic.name} - {clinic.city}
-                    </option>
+              {/* Legal Agreements */}
+              <div className="p-4 bg-slate-50 rounded-2xl border border-slate-200">
+                <SectionHeading icon="file-contract">Legal Agreements</SectionHeading>
+                <div className="flex flex-col gap-3">
+                  {[
+                    { id: "terms", checked: agreedToTerms, setter: setAgreedToTerms, label: "Terms of Service", onView: () => setShowTermsModal(true) },
+                    { id: "privacy", checked: agreedToPrivacy, setter: setAgreedToPrivacy, label: "Privacy Policy", onView: () => setShowPrivacyModal(true) },
+                  ].map(({ id, checked, setter, label, onView }) => (
+                    <label key={id} className="flex items-start gap-3 cursor-pointer group">
+                      <div className={`w-5 h-5 mt-0.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${checked ? "bg-teal-500 border-teal-500" : "border-slate-300 group-hover:border-teal-400"}`}
+                        onClick={() => setter(!checked)}>
+                        {checked && <i className="fas fa-check text-white text-xs"></i>}
+                      </div>
+                      <span className="text-sm text-slate-600">
+                        I agree to the{" "}
+                        <button type="button" onClick={onView} className="text-teal-600 hover:text-teal-700 font-medium underline underline-offset-2">{label}</button>
+                        <span className="text-red-500"> *</span>
+                      </span>
+                    </label>
                   ))}
-                </select>
-              </div>
-
-              <div className="mb-3">
-                <label className="form-label">Or Enter New Clinic Name</label>
-                <input
-                  type="text"
-                  className="form-control"
-                  name="clinicName"
-                  value={formData.clinicName}
-                  onChange={(e) => {
-                    handleChange(e);
-                    if (e.target.value) setSelectedClinicId("");
-                  }}
-                  placeholder="New Clinic Name"
-                  disabled={!!selectedClinicId}
-                />
-              </div>
-
-              <h6 className="text-info mb-3 mt-4"><i className="fas fa-lock me-2"></i>Account Security</h6>
-
-              <div className="mb-3">
-                <label className="form-label">Email <span className="text-danger">*</span></label>
-                <input
-                  type="email"
-                  className="form-control"
-                  name="email"
-                  value={formData.email}
-                  onChange={handleChange}
-                  placeholder="doctor@example.com"
-                  required
-                />
-              </div>
-
-              <div className="row">
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Password <span className="text-danger">*</span></label>
-                  <div className="input-group">
-                    <input
-                      type={showPassword ? "text" : "password"}
-                      className="form-control"
-                      name="password"
-                      value={formData.password}
-                      onChange={handleChange}
-                      placeholder="Min 6 characters"
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={() => setShowPassword(!showPassword)}
-                    >
-                      <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
-                    </button>
-                  </div>
-                </div>
-                <div className="col-md-6 mb-3">
-                  <label className="form-label">Confirm Password <span className="text-danger">*</span></label>
-                  <div className="input-group">
-                    <input
-                      type={showConfirmPassword ? "text" : "password"}
-                      className="form-control"
-                      name="confirmPassword"
-                      value={formData.confirmPassword}
-                      onChange={handleChange}
-                      placeholder="Confirm password"
-                      required
-                    />
-                    <button
-                      type="button"
-                      className="btn btn-outline-secondary"
-                      onClick={() => setShowConfirmPassword(!showConfirmPassword)}
-                    >
-                      <i className={`fas ${showConfirmPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
-                    </button>
-                  </div>
-                </div>
-              </div>
-
-              {/* Terms and Conditions Section */}
-              <div className="mb-4 mt-4 p-3" style={{ backgroundColor: '#f8fafc', borderRadius: '8px', border: '1px solid #e2e8f0' }}>
-                <h6 className="text-info mb-3"><i className="fas fa-file-contract me-2"></i>Legal Agreements</h6>
-                
-                <div className="form-check mb-3">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="termsCheckbox"
-                    checked={agreedToTerms}
-                    onChange={(e) => setAgreedToTerms(e.target.checked)}
-                    required
-                  />
-                  <label className="form-check-label" htmlFor="termsCheckbox">
-                    I agree to the{' '}
-                    <button
-                      type="button"
-                      className="btn btn-link p-0 text-primary"
-                      style={{ textDecoration: 'underline', verticalAlign: 'baseline' }}
-                      onClick={() => setShowTermsModal(true)}
-                    >
-                      Terms of Service
-                    </button>
-                    <span className="text-danger"> *</span>
-                  </label>
-                </div>
-
-                <div className="form-check mb-3">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="privacyCheckbox"
-                    checked={agreedToPrivacy}
-                    onChange={(e) => setAgreedToPrivacy(e.target.checked)}
-                    required
-                  />
-                  <label className="form-check-label" htmlFor="privacyCheckbox">
-                    I agree to the{' '}
-                    <button
-                      type="button"
-                      className="btn btn-link p-0 text-primary"
-                      style={{ textDecoration: 'underline', verticalAlign: 'baseline' }}
-                      onClick={() => setShowPrivacyModal(true)}
-                    >
-                      Privacy Policy
-                    </button>
-                    <span className="text-danger"> *</span>
-                  </label>
-                </div>
-
-                <div className="form-check">
-                  <input
-                    type="checkbox"
-                    className="form-check-input"
-                    id="credentialsCheckbox"
-                    required
-                  />
-                  <label className="form-check-label" htmlFor="credentialsCheckbox">
-                    I certify that all information provided is accurate and I hold valid medical credentials
-                    <span className="text-danger"> *</span>
+                  <label className="flex items-start gap-3 cursor-pointer group">
+                    <div className={`w-5 h-5 mt-0.5 rounded-md border-2 flex items-center justify-center flex-shrink-0 transition-all ${certifiedCredentials ? "bg-teal-500 border-teal-500" : "border-slate-300 group-hover:border-teal-400"}`}
+                      onClick={() => setCertifiedCredentials(!certifiedCredentials)}>
+                      {certifiedCredentials && <i className="fas fa-check text-white text-xs"></i>}
+                    </div>
+                    <span className="text-sm text-slate-600">
+                      I certify that all information provided is accurate and I hold valid medical credentials
+                      <span className="text-red-500"> *</span>
+                    </span>
                   </label>
                 </div>
               </div>
 
-              <button type="submit" className="btn btn-success w-100 py-2 mt-3" disabled={loading || !agreedToTerms || !agreedToPrivacy}>
-                {loading ? (
-                  <><span className="spinner-border spinner-border-sm me-2"></span>Submitting...</>
-                ) : (
-                  <><i className="fas fa-user-md me-2"></i>Register as Doctor</>
-                )}
+              <button type="submit" disabled={loading || !agreedToTerms || !agreedToPrivacy || !certifiedCredentials}
+                className="w-full h-12 bg-gradient-to-r from-teal-500 to-emerald-500 hover:from-teal-600 hover:to-emerald-600 text-white font-semibold rounded-xl transition-all duration-200 shadow-lg shadow-teal-500/25 disabled:opacity-60 flex items-center justify-center gap-2">
+                {loading ? <><i className="fas fa-spinner fa-spin"></i> Submitting...</> : <><i className="fas fa-user-md"></i> Register as Doctor</>}
               </button>
 
-              <div className="text-center mt-4 pt-3" style={{ borderTop: '1px solid #e2e8f0' }}>
-                <p style={{ color: '#1a202c', marginBottom: '12px' }}>Already have an account?</p>
-                <button
-                  type="button"
-                  className="btn btn-primary px-4 py-2"
-                  style={{ fontSize: '16px', fontWeight: '600' }}
-                  onClick={() => setIsLogin(true)}
-                >
-                  <i className="fas fa-sign-in-alt me-2"></i>
-                  Sign In
+              <div className="pt-4 border-t border-slate-100 text-center">
+                <p className="text-sm text-slate-500 mb-3">Already have an account?</p>
+                <button type="button" onClick={() => setIsLogin(true)}
+                  className="inline-flex items-center gap-2 px-6 py-2.5 bg-teal-600 hover:bg-teal-700 text-white font-semibold rounded-xl transition-all duration-200 shadow-md shadow-teal-500/25">
+                  <i className="fas fa-sign-in-alt"></i> Sign In
                 </button>
               </div>
             </form>
           )}
 
-          {/* Terms Modal */}
-          {showTermsModal && (
-            <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-              <div className="modal-dialog modal-lg modal-dialog-scrollable">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title"><i className="fas fa-file-contract me-2"></i>Terms of Service</h5>
-                    <button type="button" className="btn-close" onClick={() => setShowTermsModal(false)}></button>
-                  </div>
-                  <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-                    <h6>1. Doctor Registration Agreement</h6>
-                    <p>By registering as a healthcare provider on HealthSync Pro, you agree to:</p>
-                    <ul>
-                      <li>Provide accurate and verifiable professional credentials</li>
-                      <li>Maintain valid medical licenses and certifications</li>
-                      <li>Comply with all applicable healthcare regulations and laws</li>
-                      <li>Provide quality healthcare services to patients</li>
-                      <li>Maintain patient confidentiality and data privacy</li>
-                    </ul>
-                    
-                    <h6>2. Platform Usage</h6>
-                    <p>As a registered doctor, you agree to:</p>
-                    <ul>
-                      <li>Use the platform only for legitimate healthcare purposes</li>
-                      <li>Respond to patient appointments in a timely manner</li>
-                      <li>Keep your availability calendar updated</li>
-                      <li>Not share your account credentials with others</li>
-                    </ul>
-                    
-                    <h6>3. Fees and Payments</h6>
-                    <p>Platform fees and payment terms:</p>
-                    <ul>
-                      <li>Platform charges a service fee on each consultation</li>
-                      <li>Payments are processed securely through our payment partners</li>
-                      <li>Payouts are made according to the agreed schedule</li>
-                    </ul>
-                    
-                    <h6>4. Liability</h6>
-                    <p>You acknowledge that:</p>
-                    <ul>
-                      <li>You are solely responsible for the medical advice you provide</li>
-                      <li>HealthSync Pro is a technology platform and not a healthcare provider</li>
-                      <li>You maintain appropriate professional liability insurance</li>
-                    </ul>
-                    
-                    <h6>5. Termination</h6>
-                    <p>Either party may terminate this agreement with notice. HealthSync Pro reserves the right to suspend or terminate accounts that violate these terms.</p>
-                  </div>
-                  <div className="modal-footer">
-                    <button type="button" className="btn btn-secondary" onClick={() => setShowTermsModal(false)}>Close</button>
-                    <button type="button" className="btn btn-primary" onClick={() => { setAgreedToTerms(true); setShowTermsModal(false); }}>
-                      <i className="fas fa-check me-2"></i>I Agree
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Privacy Modal */}
-          {showPrivacyModal && (
-            <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-              <div className="modal-dialog modal-lg modal-dialog-scrollable">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title"><i className="fas fa-shield-alt me-2"></i>Privacy Policy</h5>
-                    <button type="button" className="btn-close" onClick={() => setShowPrivacyModal(false)}></button>
-                  </div>
-                  <div className="modal-body" style={{ maxHeight: '60vh', overflowY: 'auto' }}>
-                    <h6>1. Information We Collect</h6>
-                    <p>We collect the following information from healthcare providers:</p>
-                    <ul>
-                      <li>Personal identification (name, email, phone)</li>
-                      <li>Professional credentials and qualifications</li>
-                      <li>Clinic/practice information</li>
-                      <li>Bank details for payment processing</li>
-                    </ul>
-                    
-                    <h6>2. How We Use Your Information</h6>
-                    <ul>
-                      <li>To verify your professional credentials</li>
-                      <li>To display your profile to patients</li>
-                      <li>To process appointment bookings and payments</li>
-                      <li>To communicate important platform updates</li>
-                    </ul>
-                    
-                    <h6>3. Data Security</h6>
-                    <p>We implement industry-standard security measures:</p>
-                    <ul>
-                      <li>256-bit SSL encryption</li>
-                      <li>Secure data storage with encryption at rest</li>
-                      <li>Regular security audits</li>
-                      <li>Access controls and authentication</li>
-                    </ul>
-                    
-                    <h6>4. Data Sharing</h6>
-                    <p>Your information may be shared with:</p>
-                    <ul>
-                      <li>Patients who book appointments with you</li>
-                      <li>Payment processors for transaction handling</li>
-                      <li>Regulatory authorities when required by law</li>
-                    </ul>
-                    
-                    <h6>5. Your Rights</h6>
-                    <p>You have the right to:</p>
-                    <ul>
-                      <li>Access your personal data</li>
-                      <li>Correct inaccurate information</li>
-                      <li>Request deletion of your account</li>
-                      <li>Export your data</li>
-                    </ul>
-                  </div>
-                  <div className="modal-footer">
-                    <button type="button" className="btn btn-secondary" onClick={() => setShowPrivacyModal(false)}>Close</button>
-                    <button type="button" className="btn btn-primary" onClick={() => { setAgreedToPrivacy(true); setShowPrivacyModal(false); }}>
-                      <i className="fas fa-check me-2"></i>I Agree
-                    </button>
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
-
-          {/* Forgot Password Modal */}
-          {showForgotPassword && (
-            <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
-              <div className="modal-dialog modal-dialog-centered">
-                <div className="modal-content">
-                  <div className="modal-header">
-                    <h5 className="modal-title">
-                      <i className="fas fa-key me-2"></i>
-                      {forgotStep === 1 && "Reset Password"}
-                      {forgotStep === 2 && "Verify OTP"}
-                      {forgotStep === 3 && "Set New Password"}
-                    </h5>
-                    <button 
-                      type="button" 
-                      className="btn-close" 
-                      onClick={() => {
-                        setShowForgotPassword(false);
-                        setForgotStep(1);
-                        setForgotEmail("");
-                        setForgotOtp("");
-                        setNewPassword("");
-                        setError("");
-                        setSuccess("");
-                      }}
-                    ></button>
-                  </div>
-                  <div className="modal-body">
-                    {error && <div className="alert alert-danger py-2">{error}</div>}
-                    {success && <div className="alert alert-success py-2">{success}</div>}
-
-                    {forgotStep === 1 && (
-                      <div>
-                        <p className="text-muted mb-3">Enter your registered email to receive a verification code.</p>
-                        <div className="mb-3">
-                          <label className="form-label">Email Address</label>
-                          <div className="input-group">
-                            <span className="input-group-text"><i className="fas fa-envelope"></i></span>
-                            <input
-                              type="email"
-                              className="form-control"
-                              value={forgotEmail}
-                              onChange={(e) => setForgotEmail(e.target.value)}
-                              placeholder="doctor@clinic.com"
-                            />
-                          </div>
-                        </div>
-                        <button 
-                          className="btn btn-primary w-100" 
-                          onClick={handleForgotSendOtp}
-                          disabled={forgotLoading}
-                        >
-                          {forgotLoading ? (
-                            <><span className="spinner-border spinner-border-sm me-2"></span>Sending...</>
-                          ) : (
-                            <><i className="fas fa-paper-plane me-2"></i>Send OTP</>
-                          )}
-                        </button>
-                      </div>
-                    )}
-
-                    {forgotStep === 2 && (
-                      <div>
-                        <p className="text-muted mb-3">Enter the 6-digit OTP sent to {forgotEmail}</p>
-                        <div className="mb-3">
-                          <label className="form-label">OTP Code</label>
-                          <div className="input-group">
-                            <span className="input-group-text"><i className="fas fa-shield-alt"></i></span>
-                            <input
-                              type="text"
-                              className="form-control"
-                              value={forgotOtp}
-                              onChange={(e) => setForgotOtp(e.target.value.replace(/\D/g, '').slice(0, 6))}
-                              placeholder="Enter 6-digit OTP"
-                              maxLength={6}
-                            />
-                          </div>
-                        </div>
-                        <button 
-                          className="btn btn-primary w-100" 
-                          onClick={handleForgotVerifyOtp}
-                          disabled={forgotLoading}
-                        >
-                          {forgotLoading ? (
-                            <><span className="spinner-border spinner-border-sm me-2"></span>Verifying...</>
-                          ) : (
-                            <><i className="fas fa-check me-2"></i>Verify OTP</>
-                          )}
-                        </button>
-                        <button 
-                          className="btn btn-link w-100 mt-2" 
-                          onClick={() => setForgotStep(1)}
-                        >
-                          <i className="fas fa-arrow-left me-1"></i>Back
-                        </button>
-                      </div>
-                    )}
-
-                    {forgotStep === 3 && (
-                      <div>
-                        <p className="text-muted mb-3">Create a new password for your account.</p>
-                        <div className="mb-3">
-                          <label className="form-label">New Password</label>
-                          <div className="input-group">
-                            <span className="input-group-text"><i className="fas fa-lock"></i></span>
-                            <input
-                              type={showPassword ? "text" : "password"}
-                              className="form-control"
-                              value={newPassword}
-                              onChange={(e) => setNewPassword(e.target.value)}
-                              placeholder="Min 6 characters"
-                            />
-                            <button
-                              type="button"
-                              className="btn btn-outline-secondary"
-                              onClick={() => setShowPassword(!showPassword)}
-                            >
-                              <i className={`fas ${showPassword ? "fa-eye-slash" : "fa-eye"}`}></i>
-                            </button>
-                          </div>
-                        </div>
-                        <button 
-                          className="btn btn-success w-100" 
-                          onClick={handleResetPassword}
-                          disabled={forgotLoading}
-                        >
-                          {forgotLoading ? (
-                            <><span className="spinner-border spinner-border-sm me-2"></span>Resetting...</>
-                          ) : (
-                            <><i className="fas fa-check me-2"></i>Reset Password</>
-                          )}
-                        </button>
-                      </div>
-                    )}
-                  </div>
-                </div>
-              </div>
-            </div>
-          )}
         </div>
       </div>
+
+      {/* ── Terms Modal ── */}
+      {showTermsModal && (
+        <Modal title="Terms of Service" icon="file-contract" onClose={() => setShowTermsModal(false)}
+          footer={
+            <>
+              <button onClick={() => setShowTermsModal(false)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-all">Close</button>
+              <button onClick={() => { setAgreedToTerms(true); setShowTermsModal(false); }}
+                className="px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-sm font-semibold transition-all flex items-center gap-2">
+                <i className="fas fa-check"></i> I Agree
+              </button>
+            </>
+          }>
+          <div className="prose prose-sm text-slate-600 space-y-4">
+            <div><h6 className="font-bold text-slate-800 mb-1">1. Doctor Registration Agreement</h6>
+              <p>By registering as a healthcare provider on HealthSync Pro, you agree to provide accurate and verifiable professional credentials, maintain valid medical licenses, comply with all applicable healthcare regulations, provide quality healthcare services, and maintain patient confidentiality.</p></div>
+            <div><h6 className="font-bold text-slate-800 mb-1">2. Platform Usage</h6>
+              <p>Use the platform only for legitimate healthcare purposes, respond to patient appointments in a timely manner, keep your availability calendar updated, and do not share your account credentials.</p></div>
+            <div><h6 className="font-bold text-slate-800 mb-1">3. Fees and Payments</h6>
+              <p>Platform charges a service fee on each consultation. Payments are processed securely through our payment partners and payouts are made according to the agreed schedule.</p></div>
+            <div><h6 className="font-bold text-slate-800 mb-1">4. Liability</h6>
+              <p>You are solely responsible for the medical advice you provide. HealthSync Pro is a technology platform and not a healthcare provider. You must maintain appropriate professional liability insurance.</p></div>
+            <div><h6 className="font-bold text-slate-800 mb-1">5. Termination</h6>
+              <p>Either party may terminate this agreement with notice. HealthSync Pro reserves the right to suspend or terminate accounts that violate these terms.</p></div>
+          </div>
+        </Modal>
+      )}
+
+      {/* ── Privacy Modal ── */}
+      {showPrivacyModal && (
+        <Modal title="Privacy Policy" icon="shield-alt" onClose={() => setShowPrivacyModal(false)}
+          footer={
+            <>
+              <button onClick={() => setShowPrivacyModal(false)}
+                className="px-4 py-2 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-sm font-medium transition-all">Close</button>
+              <button onClick={() => { setAgreedToPrivacy(true); setShowPrivacyModal(false); }}
+                className="px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-sm font-semibold transition-all flex items-center gap-2">
+                <i className="fas fa-check"></i> I Agree
+              </button>
+            </>
+          }>
+          <div className="prose prose-sm text-slate-600 space-y-4">
+            <div><h6 className="font-bold text-slate-800 mb-1">1. Information We Collect</h6>
+              <p>We collect personal identification (name, email, phone), professional credentials and qualifications, clinic/practice information, and bank details for payment processing.</p></div>
+            <div><h6 className="font-bold text-slate-800 mb-1">2. How We Use Your Information</h6>
+              <p>To verify your professional credentials, display your profile to patients, process appointment bookings and payments, and communicate important platform updates.</p></div>
+            <div><h6 className="font-bold text-slate-800 mb-1">3. Data Security</h6>
+              <p>We implement 256-bit SSL encryption, secure data storage with encryption at rest, regular security audits, and access controls and authentication.</p></div>
+            <div><h6 className="font-bold text-slate-800 mb-1">4. Data Sharing</h6>
+              <p>Your information may be shared with patients who book appointments with you, payment processors for transaction handling, and regulatory authorities when required by law.</p></div>
+            <div><h6 className="font-bold text-slate-800 mb-1">5. Your Rights</h6>
+              <p>You have the right to access your personal data, correct inaccurate information, request deletion of your account, and export your data.</p></div>
+          </div>
+        </Modal>
+      )}
+
     </div>
   );
 }

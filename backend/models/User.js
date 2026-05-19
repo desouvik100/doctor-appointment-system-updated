@@ -50,7 +50,8 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      enum: ["patient", "admin", "receptionist"],
+      // 'clinic' is kept for backward compatibility with existing receptionist/clinic staff accounts
+      enum: ["patient", "admin", "receptionist", "clinic"],
       default: "patient",
     },
     clinicId: {
@@ -215,7 +216,8 @@ const userSchema = new mongoose.Schema(
     // Walk-in Patient Fields (EMR)
     registrationType: {
       type: String,
-      enum: ['online', 'walk_in'],
+      // 'staff_registered' is used when clinic staff registers a patient on their behalf
+      enum: ['online', 'walk_in', 'staff_registered'],
       default: 'online'
     },
     // Clinics where this patient is registered

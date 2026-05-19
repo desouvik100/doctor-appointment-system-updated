@@ -28,27 +28,23 @@ const axiosInstance = axios.create({
   headers: {
     'Content-Type': 'application/json'
   },
-  timeout: 30000 // 30 second timeout for mobile networks
+  // Increased to 90s to handle Render free-tier cold starts (can take 30-60s)
+  timeout: 90000
 });
 
-// Test connection on startup for mobile (silent - no alert)
-if (isNative) {
-  setTimeout(async () => {
-    try {
-      const response = await fetch(`${API_BASE_URL}/api/health`, { 
-        method: 'GET',
-        headers: { 'Content-Type': 'application/json' }
-      });
-      if (response.ok) {
-        console.log('✅ Backend connection OK');
-      } else {
-        console.warn('⚠️ Backend returned non-OK status:', response.status);
-      }
-    } catch (e) {
-      console.error('❌ Backend connection failed:', e.message);
-      // Don't show alert on startup - let the app handle connection errors gracefully
-    }
-  }, 2000);
+// ── Wake up Render backend on app load (prevents cold-start on first login) ──
+// Render free tier spins down after 15 min inactivity. This silent ping
+// starts the wake-up process as soon as the app loads, so by the time
+// the user clicks Login the server is already warm.
+if (process.env.NODE_ENV === 'production' || isNative) {
+  setTimeout(() => {
+    fetch(`${API_BASE_URL}/api/health`, {
+      method: 'GET',
+      signal: AbortSignal.timeout ? AbortSignal.timeout(10000) : undefined,
+    }).catch(() => {
+      // Silent — just waking up the server, errors are expected if it's cold
+    });
+  }, 1000); // 1 second after app load
 }
 
 // Helper to get token from storage (supports both web and mobile)

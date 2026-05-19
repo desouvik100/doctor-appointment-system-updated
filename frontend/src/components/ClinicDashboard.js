@@ -3,7 +3,7 @@ import axios from "../api/config";
 import toast from 'react-hot-toast';
 import './ClinicDashboard.css';
 
-function ClinicDashboard({ receptionist, onLogout }) {
+function ClinicDashboard({ receptionist, onLogout, onNavigate }) {
   const [appointments, setAppointments] = useState([]);
   const [filteredAppointments, setFilteredAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -394,6 +394,15 @@ function ClinicDashboard({ receptionist, onLogout }) {
           >
             <i className="fas fa-list-ol me-2"></i>
             Today's Queue
+          </button>
+        </li>
+        <li className="nav-item">
+          <button
+            className={`nav-link ${activeTab === "imaging" ? "active" : ""}`}
+            onClick={() => onNavigate ? onNavigate('imaging') : setActiveTab("imaging")}
+          >
+            <i className="fas fa-x-ray me-2"></i>
+            Medical Imaging
           </button>
         </li>
       </ul>

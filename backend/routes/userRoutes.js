@@ -224,10 +224,29 @@ router.post('/', verifyTokenWithRole(['admin']), async (req, res) => {
   }
 });
 
-// Update user
+// Update user — only the user themselves or an admin can update a user record
 router.put('/:id', verifyToken, async (req, res) => {
   try {
-    const { password, ...updateData } = req.body;
+    const requestingUserId = req.user?.id?.toString() || req.user?.userId?.toString();
+    const targetUserId = req.params.id;
+    const isAdmin = req.user?.role === 'admin';
+
+    // Security: only allow self-update or admin update
+    if (!isAdmin && requestingUserId !== targetUserId) {
+      return res.status(403).json({
+        success: false,
+        message: 'Access denied. You can only update your own profile.'
+      });
+    }
+
+    const { password, role, approvalStatus, isActive, ...updateData } = req.body;
+
+    // Non-admins cannot change role, approvalStatus, or isActive
+    if (isAdmin) {
+      if (role !== undefined) updateData.role = role;
+      if (approvalStatus !== undefined) updateData.approvalStatus = approvalStatus;
+      if (isActive !== undefined) updateData.isActive = isActive;
+    }
 
     // If password is provided, hash it
     if (password && password.trim() !== '') {
@@ -243,7 +262,7 @@ router.put('/:id', verifyToken, async (req, res) => {
     }
 
     const user = await User.findByIdAndUpdate(
-      req.params.id,
+      targetUserId,
       updateData,
       { new: true, runValidators: true }
     ).populate('clinicId', 'name address city phone');

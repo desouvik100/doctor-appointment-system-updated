@@ -5,17 +5,16 @@ import '../styles/premium-saas.css';
 import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSelector from './LanguageSelector';
 import { Capacitor } from '@capacitor/core';
+import HeroSection from './HeroSection';
 
 const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode = () => {} }) => {
-  const { t, language } = useLanguage();
+  const { t } = useLanguage();
   const [scrolled, setScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [activeFaq, setActiveFaq] = useState(null);
   const [showBackToTop, setShowBackToTop] = useState(false);
   const [isMobile, setIsMobile] = useState(typeof window !== 'undefined' ? window.innerWidth < 769 : false);
   const [isNativeApp, setIsNativeApp] = useState(false);
-  const [taglineIndex, setTaglineIndex] = useState(0);
-  const [isTaglineTransitioning, setIsTaglineTransitioning] = useState(false);
 
   // Detect native Android/iOS app
   useEffect(() => {
@@ -27,17 +26,6 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
     }
   }, []);
 
-  // SEO-optimized rotating taglines - Clinic Appointment & Patient Management
-  const taglines = [
-    { en: "Clinic Appointments Made Simple", hi: "क्लिनिक अपॉइंटमेंट आसान बनाया", bn: "ক্লিনিক অ্যাপয়েন্টমেন্ট সহজ করা হয়েছে" },
-    { en: "Book Doctor Online. Skip the Queue.", hi: "ऑनलाइन डॉक्टर बुक करें। कतार छोड़ें।", bn: "অনলাইনে ডাক্তার বুক করুন। লাইন এড়িয়ে যান।" },
-    { en: "Smart Queue Management for Clinics", hi: "क्लीनिकों के लिए स्मार्ट कतार प्रबंधन", bn: "ক্লিনিকের জন্য স্মার্ট কিউ ম্যানেজমেন্ট" },
-    { en: "India's Clinic-First Healthcare Platform", hi: "भारत का क्लिनिक-फर्स्ट हेल्थकेयर प्लेटफॉर्म", bn: "ভারতের ক্লিনিক-ফার্স্ট হেলথকেয়ার প্ল্যাটফর্ম" },
-    { en: "Patient Management. Simplified.", hi: "रोगी प्रबंधन। सरलीकृत।", bn: "রোগী ব্যবস্থাপনা। সরলীকৃত।" },
-    { en: "Zero Wait. Real-Time Queue Updates.", hi: "शून्य प्रतीक्षा। रीयल-टाइम कतार अपडेट।", bn: "শূন্য অপেক্ষা। রিয়েল-টাইম কিউ আপডেট।" },
-    { en: "Healthcare Scheduling Made Easy", hi: "स्वास्थ्य सेवा शेड्यूलिंग आसान बनाया", bn: "স্বাস্থ্যসেবা সময়সূচী সহজ করা হয়েছে" }
-  ];
-
   useEffect(() => {
     const handleScroll = () => {
       setScrolled(window.scrollY > 20);
@@ -46,12 +34,8 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
     const handleResize = () => {
       const mobile = window.innerWidth < 769;
       setIsMobile(mobile);
-      // Close mobile menu on larger screens
-      if (!mobile) {
-        setMobileMenuOpen(false);
-      }
+      if (!mobile) setMobileMenuOpen(false);
     };
-    // Check on mount
     handleResize();
     window.addEventListener('scroll', handleScroll, { passive: true });
     window.addEventListener('resize', handleResize);
@@ -60,18 +44,6 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
       window.removeEventListener('resize', handleResize);
     };
   }, []);
-
-  // Smooth tagline rotation every 3.5 seconds
-  useEffect(() => {
-    const interval = setInterval(() => {
-      setIsTaglineTransitioning(true);
-      setTimeout(() => {
-        setTaglineIndex((prev) => (prev + 1) % taglines.length);
-        setIsTaglineTransitioning(false);
-      }, 500);
-    }, 3500);
-    return () => clearInterval(interval);
-  }, [taglines.length]);
 
   const scrollToTop = () => {
     window.scrollTo({ top: 0, behavior: 'smooth' });
@@ -330,381 +302,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
       )}
 
       {/* Hero Section */}
-      <section className="hero-premium" style={isNativeApp ? { paddingTop: '80px', minHeight: '100vh' } : {}}>
-        <div className="hero-premium__container">
-          <div className="hero-premium__content animate-slide-up">
-            {/* Native App: Simplified badge */}
-            <div className="hero-premium__badge" style={isNativeApp ? { 
-              fontSize: '14px', 
-              padding: '10px 20px',
-              marginBottom: '16px'
-            } : {}}>
-              <i className="fas fa-hospital" style={{ fontSize: isNativeApp ? '14px' : '12px' }}></i>
-              {isNativeApp ? 'Book Doctors Instantly' : "India's #1 Clinic Appointment Platform"}
-            </div>
-            
-            {/* Rotating Hero Title - Fixed height to prevent layout shift */}
-            <div style={{ 
-              minHeight: isNativeApp ? '80px' : (isMobile ? '100px' : '160px'),
-              height: isNativeApp ? '80px' : (isMobile ? '100px' : '160px'),
-              display: 'flex',
-              alignItems: 'center',
-              overflow: 'hidden'
-            }}>
-              <h1 
-                className="hero-premium__title"
-                style={{
-                  transition: 'opacity 0.5s cubic-bezier(0.4, 0, 0.2, 1), transform 0.5s cubic-bezier(0.4, 0, 0.2, 1)',
-                  opacity: isTaglineTransitioning ? 0 : 1,
-                  transform: isTaglineTransitioning ? 'translateY(-15px)' : 'translateY(0)',
-                  color: '#ffffff',
-                  margin: 0,
-                  fontSize: isMobile ? '1.75rem' : '3.5rem',
-                  lineHeight: 1.2
-                }}
-              >
-                {taglines[taglineIndex][language] || taglines[taglineIndex].en}
-              </h1>
-            </div>
-            
-            {/* Clear Value Proposition */}
-            <p style={{ 
-              fontSize: '18px', 
-              color: 'rgba(255,255,255,0.85)', 
-              lineHeight: '1.7', 
-              maxWidth: '600px',
-              marginBottom: '32px'
-            }}>
-              Book doctor appointments online in 30 seconds. Real-time queue tracking. 
-              Video consultations from home. <strong style={{ color: '#ffffff' }}>No more waiting in long queues.</strong>
-            </p>
-
-            
-            {/* Stats - Compact on native app */}
-            <div className="hero-premium__stats" style={isNativeApp ? {
-              marginTop: '24px',
-              gap: '16px',
-              justifyContent: 'center'
-            } : {}}>
-              <div className="hero-premium__stat">
-                <div className="hero-premium__stat-value" style={isNativeApp ? { fontSize: '24px' } : {}}>500+</div>
-                <div className="hero-premium__stat-label" style={isNativeApp ? { fontSize: '11px' } : {}}>{isNativeApp ? 'Doctors' : t('verifiedDoctors')}</div>
-              </div>
-              <div className="hero-premium__stat">
-                <div className="hero-premium__stat-value" style={isNativeApp ? { fontSize: '24px' } : {}}>50K+</div>
-                <div className="hero-premium__stat-label" style={isNativeApp ? { fontSize: '11px' } : {}}>{isNativeApp ? 'Patients' : t('happyPatients')}</div>
-              </div>
-              <div className="hero-premium__stat">
-                <div className="hero-premium__stat-value" style={isNativeApp ? { fontSize: '24px' } : {}}>4.9★</div>
-                <div className="hero-premium__stat-label" style={isNativeApp ? { fontSize: '11px' } : {}}>{isNativeApp ? 'Rating' : t('uptime')}</div>
-              </div>
-            </div>
-
-            {/* Native App Quick Actions */}
-            {isNativeApp && (
-              <div style={{
-                marginTop: '32px',
-                display: 'grid',
-                gridTemplateColumns: 'repeat(3, 1fr)',
-                gap: '12px',
-                width: '100%',
-                maxWidth: '400px'
-              }}>
-                {[
-                  { icon: 'fa-stethoscope', label: 'General', color: '#6366f1' },
-                  { icon: 'fa-tooth', label: 'Dental', color: '#10b981' },
-                  { icon: 'fa-baby', label: 'Pediatric', color: '#f59e0b' }
-                ].map((item, i) => (
-                  <button
-                    key={i}
-                    onClick={() => onNavigate('register')}
-                    style={{
-                      display: 'flex',
-                      flexDirection: 'column',
-                      alignItems: 'center',
-                      gap: '8px',
-                      padding: '16px 12px',
-                      background: 'rgba(255,255,255,0.15)',
-                      border: '1px solid rgba(255,255,255,0.2)',
-                      borderRadius: '16px',
-                      cursor: 'pointer',
-                      transition: 'all 0.2s ease'
-                    }}
-                  >
-                    <div style={{
-                      width: '44px',
-                      height: '44px',
-                      background: item.color,
-                      borderRadius: '12px',
-                      display: 'flex',
-                      alignItems: 'center',
-                      justifyContent: 'center'
-                    }}>
-                      <i className={`fas ${item.icon}`} style={{ color: '#fff', fontSize: '18px' }}></i>
-                    </div>
-                    <span style={{ fontSize: '12px', fontWeight: '600', color: '#fff' }}>{item.label}</span>
-                  </button>
-                ))}
-              </div>
-            )}
-
-            {/* Trust Badges - Hide on native app for cleaner look */}
-            {!isNativeApp && <div style={{ 
-              display: 'flex', 
-              alignItems: 'center', 
-              gap: '24px',
-              marginTop: '32px',
-              paddingTop: '24px',
-              borderTop: '1px solid rgba(255,255,255,0.15)'
-            }}>
-              <span style={{ fontSize: '12px', color: 'rgba(255,255,255,0.6)' }}>Trusted by:</span>
-              <div style={{ display: 'flex', alignItems: 'center', gap: '20px' }}>
-                {['Apollo', 'Fortis', 'Max', 'AIIMS'].map((name, i) => (
-                  <div key={i} style={{
-                    padding: '6px 14px',
-                    background: 'rgba(255,255,255,0.1)',
-                    borderRadius: '6px',
-                    fontSize: '13px',
-                    fontWeight: '600',
-                    color: 'rgba(255,255,255,0.8)'
-                  }}>{name}</div>
-                ))}
-              </div>
-            </div>}
-          </div>
-          {/* Visual section - Hide on native app for faster load */}
-          {!isNativeApp && <div className="hero-premium__visual animate-slide-up stagger-2">
-            {/* Doctor Image with Floating Elements */}
-            <div style={{ 
-              position: 'relative', 
-              width: '480px',
-              height: '520px',
-              margin: '0 auto'
-            }}>
-              {/* Main Doctor Image */}
-              <div style={{
-                position: 'relative',
-                width: '100%',
-                height: '100%',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              }}>
-                {/* Background Glow */}
-                <div style={{
-                  position: 'absolute',
-                  width: '350px',
-                  height: '350px',
-                  background: 'radial-gradient(circle, rgba(255,255,255,0.3) 0%, transparent 70%)',
-                  borderRadius: '50%',
-                  top: '50%',
-                  left: '50%',
-                  transform: 'translate(-50%, -50%)'
-                }}></div>
-
-                {/* Doctor Image Container */}
-                <div style={{
-                  position: 'relative',
-                  width: '320px',
-                  height: '400px',
-                  borderRadius: '24px',
-                  overflow: 'hidden',
-                  boxShadow: '0 30px 60px rgba(0,0,0,0.2)',
-                  border: '4px solid rgba(255,255,255,0.3)'
-                }}>
-                  <img 
-                    src="https://images.unsplash.com/photo-1559839734-2b71ea197ec2?w=800&h=1000&fit=crop&crop=face"
-                    alt="Medical Team"
-                    style={{
-                      width: '100%',
-                      height: '100%',
-                      objectFit: 'cover',
-                      objectPosition: 'center center'
-                    }}
-                  />
-                  {/* Gradient Overlay */}
-                  <div style={{
-                    position: 'absolute',
-                    bottom: 0,
-                    left: 0,
-                    right: 0,
-                    height: '150px',
-                    background: 'linear-gradient(to top, rgba(99, 102, 241, 0.9), transparent)',
-                    display: 'flex',
-                    alignItems: 'flex-end',
-                    padding: '20px'
-                  }}>
-                    <div>
-                      <div style={{ color: '#ffffff', fontWeight: '700', fontSize: '18px' }}>Our Medical Team</div>
-                      <div style={{ color: 'rgba(255,255,255,0.8)', fontSize: '14px' }}>Expert Healthcare Professionals</div>
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '4px', marginTop: '6px' }}>
-                        {[1,2,3,4,5].map(i => (
-                          <i key={i} className="fas fa-star" style={{ color: '#fbbf24', fontSize: '12px' }}></i>
-                        ))}
-                        <span style={{ color: 'rgba(255,255,255,0.9)', fontSize: '12px', marginLeft: '6px' }}>4.9 (200+ reviews)</span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Floating Badge - Top Right */}
-              <div style={{
-                position: 'absolute',
-                top: '20px',
-                right: '20px',
-                background: '#ffffff',
-                borderRadius: '14px',
-                padding: '12px 16px',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                animation: 'floatCard 4s ease-in-out infinite',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px'
-              }}>
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  background: 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)',
-                  borderRadius: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fas fa-check" style={{ color: '#ffffff', fontSize: '14px' }}></i>
-                </div>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#0f172a' }}>Verified</div>
-                  <div style={{ fontSize: '11px', color: '#64748b' }}>Licensed Doctor</div>
-                </div>
-              </div>
-
-              {/* Floating Badge - Bottom Left */}
-              <div style={{
-                position: 'absolute',
-                bottom: '60px',
-                left: '0px',
-                background: '#ffffff',
-                borderRadius: '14px',
-                padding: '12px 16px',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                animation: 'floatCard 3.5s ease-in-out infinite 0.5s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px'
-              }}>
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
-                  borderRadius: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center'
-                }}>
-                  <i className="fas fa-video" style={{ color: '#ffffff', fontSize: '14px' }}></i>
-                </div>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#0f172a' }}>Video Consult</div>
-                  <div style={{ fontSize: '11px', color: '#64748b' }}>Available Now</div>
-                </div>
-              </div>
-
-              {/* Floating Badge - Top Left */}
-              <div style={{
-                position: 'absolute',
-                top: '80px',
-                left: '0px',
-                background: '#ffffff',
-                borderRadius: '12px',
-                padding: '10px 14px',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                animation: 'floatCard 4.5s ease-in-out infinite 1s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '8px'
-              }}>
-                <div style={{
-                  width: '8px',
-                  height: '8px',
-                  background: '#22c55e',
-                  borderRadius: '50%',
-                  animation: 'livePulse 2s ease-in-out infinite'
-                }}></div>
-                <span style={{ fontSize: '12px', fontWeight: '600', color: '#0f172a' }}>Online Now</span>
-              </div>
-
-              {/* Live Queue Badge - New */}
-              <div style={{
-                position: 'absolute',
-                bottom: '140px',
-                right: '10px',
-                background: '#ffffff',
-                borderRadius: '14px',
-                padding: '12px 16px',
-                boxShadow: '0 10px 30px rgba(0,0,0,0.1)',
-                animation: 'floatCard 5s ease-in-out infinite 1.5s',
-                display: 'flex',
-                alignItems: 'center',
-                gap: '10px'
-              }}>
-                <div style={{
-                  width: '36px',
-                  height: '36px',
-                  background: 'linear-gradient(135deg, #f59e0b 0%, #d97706 100%)',
-                  borderRadius: '10px',
-                  display: 'flex',
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                  position: 'relative'
-                }}>
-                  <i className="fas fa-users" style={{ color: '#ffffff', fontSize: '14px' }}></i>
-                  <div style={{
-                    position: 'absolute',
-                    top: '-4px',
-                    right: '-4px',
-                    width: '12px',
-                    height: '12px',
-                    background: '#22c55e',
-                    borderRadius: '50%',
-                    border: '2px solid #ffffff',
-                    animation: 'livePulse 2s ease-in-out infinite'
-                  }}></div>
-                </div>
-                <div>
-                  <div style={{ fontSize: '13px', fontWeight: '600', color: '#0f172a' }}>Live Queue</div>
-                  <div style={{ fontSize: '11px', color: '#64748b' }}>3 patients ahead</div>
-                </div>
-              </div>            </div>
-          </div>}
-        </div>
-
-        {/* Pulse Animation Styles */}
-        <style>{`
-          @keyframes livePulse {
-            0%, 100% { 
-              opacity: 1; 
-              transform: scale(1);
-              box-shadow: 0 0 0 0 rgba(34, 197, 94, 0.4);
-            }
-            50% { 
-              opacity: 0.8; 
-              transform: scale(1.2);
-              box-shadow: 0 0 0 8px rgba(34, 197, 94, 0);
-            }
-          }
-          @keyframes ripple {
-            0% {
-              transform: scale(1);
-              opacity: 0.4;
-            }
-            100% {
-              transform: scale(2.5);
-              opacity: 0;
-            }
-          }
-        `}</style>
-      </section>
+      <HeroSection onNavigate={onNavigate} darkMode={darkMode} />
 
 
       {/* Features Section */}

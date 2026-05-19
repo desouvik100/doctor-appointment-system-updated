@@ -91,9 +91,32 @@ const ROLES = {
     permissions: Object.keys(PERMISSIONS) // All permissions
   },
   
+  // 'admin' matches User.role enum value used in JWT tokens
+  admin: {
+    name: 'Admin',
+    description: 'Clinic owner/administrator',
+    level: 80,
+    permissions: [
+      'patients:create', 'patients:view_basic', 'patients:view_clinical', 'patients:update', 'patients:export',
+      'appointments:create', 'appointments:view', 'appointments:view_all', 'appointments:update', 'appointments:cancel', 'appointments:manage_queue',
+      'prescriptions:view',
+      'billing:create', 'billing:view', 'billing:update', 'billing:refund', 'billing:export',
+      'reports:upload', 'reports:view',
+      'staff:create', 'staff:view', 'staff:update', 'staff:delete', 'staff:manage_roles',
+      'clinic:view', 'clinic:update', 'clinic:manage_doctors',
+      'audit:view', 'audit:export',
+      'security:view_alerts',
+      'analytics:view_basic', 'analytics:view_financial', 'analytics:export',
+      'ipd:admit', 'ipd:discharge', 'ipd:transfer', 'ipd:view',
+      'inventory:view', 'inventory:manage', 'inventory:order',
+      'emr:vitals', 'emr:notes', 'emr:templates'
+    ]
+  },
+  
+  // 'clinic_admin' is an alias for 'admin' — kept for backward compatibility
   clinic_admin: {
     name: 'Clinic Admin',
-    description: 'Clinic owner/administrator',
+    description: 'Clinic owner/administrator (alias for admin)',
     level: 80,
     permissions: [
       'patients:create', 'patients:view_basic', 'patients:view_clinical', 'patients:update', 'patients:export',
@@ -154,6 +177,19 @@ const ROLES = {
       'billing:create', 'billing:view'
     ],
     // Receptionists cannot see clinical data
+    dataScope: 'clinic'
+  },
+  
+  // 'clinic' is an alias for 'receptionist' — used in legacy accounts where role was set to 'clinic'
+  clinic: {
+    name: 'Clinic Staff',
+    description: 'Clinic staff (legacy role alias for receptionist)',
+    level: 40,
+    permissions: [
+      'patients:create', 'patients:view_basic', 'patients:update',
+      'appointments:create', 'appointments:view', 'appointments:update', 'appointments:cancel', 'appointments:manage_queue',
+      'billing:create', 'billing:view'
+    ],
     dataScope: 'clinic'
   },
   

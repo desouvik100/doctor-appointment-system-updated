@@ -437,9 +437,46 @@ class EMRSubscriptionService {
         }
       }
       
-      // TODO: Send actual email/notification for each reminder
-      // This would integrate with your existing notification service
-      
+      // Send email notification for each reminder
+      for (const { subscription, days } of reminders) {
+        try {
+          const clinic = await Clinic.findById(subscription.clinicId).select('name email');
+          if (clinic?.email) {
+            const { sendEmail } = require('./emailService');
+            const planName = subscription.plan?.charAt(0).toUpperCase() + subscription.plan?.slice(1) || 'EMR';
+            await sendEmail({
+              to: clinic.email,
+              subject: `⚠️ Your HealthSync EMR Subscription Expires in ${days} Day${days > 1 ? 's' : ''}`,
+              html: `
+                <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+                  <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
+                    <h1 style="margin: 0; font-size: 22px;">🏥 HealthSync EMR</h1>
+                    <p style="margin: 8px 0 0; opacity: 0.9;">Subscription Expiry Reminder</p>
+                  </div>
+                  <div style="background: #f8fafc; padding: 24px; border-radius: 0 0 12px 12px;">
+                    <p>Dear <strong>${clinic.name}</strong>,</p>
+                    <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 4px; margin: 16px 0;">
+                      <strong style="color: #92400e;">⏰ Your ${planName} plan expires in ${days} day${days > 1 ? 's' : ''}.</strong>
+                    </div>
+                    <p>Renew now to avoid interruption to your clinic operations.</p>
+                    <div style="text-align: center; margin: 24px 0;">
+                      <a href="${process.env.FRONTEND_URL || 'https://healthsyncpro.in'}/#emr-renew"
+                         style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 14px 32px; border-radius: 8px; text-decoration: none; font-weight: 600; display: inline-block;">
+                        Renew Subscription
+                      </a>
+                    </div>
+                    <p style="color: #64748b; font-size: 13px;">Need help? Contact us at support@healthsyncpro.in</p>
+                  </div>
+                </div>
+              `
+            });
+            console.log(`📧 EMR expiry reminder (${days}d) sent to ${clinic.email}`);
+          }
+        } catch (emailErr) {
+          console.error(`Failed to send EMR reminder for clinic ${subscription.clinicId}:`, emailErr.message);
+        }
+      }
+
       return reminders;
     } catch (error) {
       console.error('Error sending expiry reminders:', error);

@@ -5,6 +5,7 @@ const Appointment = require('../models/Appointment');
 const { verifyToken } = require('../middleware/auth');
 
 // Roles that can manage clinic queue operations
+// 'clinic_staff' kept for legacy tokens; 'receptionist' is the active role name used in auth
 const CLINIC_ROLES = ['admin', 'clinic_staff', 'receptionist', 'doctor'];
 
 /**

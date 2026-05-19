@@ -1099,12 +1099,12 @@ router.get('/:id/patients', async (req, res) => {
     const User = require('../models/User');
     
     // Find all unique patients who have had appointments with this doctor
-    const appointments = await Appointment.find({ doctor: doctorId })
-      .select('user')
+    const appointments = await Appointment.find({ doctorId: doctorId })
+      .select('userId')
       .lean();
     
     // Get unique patient IDs
-    const patientIds = [...new Set(appointments.map(a => a.user?.toString()).filter(Boolean))];
+    const patientIds = [...new Set(appointments.map(a => a.userId?.toString()).filter(Boolean))];
     
     if (patientIds.length === 0) {
       return res.json({ success: true, patients: [], total: 0 });
@@ -1118,12 +1118,12 @@ router.get('/:id/patients', async (req, res) => {
     // Add appointment count for each patient
     const patientsWithStats = await Promise.all(patients.map(async (patient) => {
       const appointmentCount = await Appointment.countDocuments({ 
-        doctor: doctorId, 
-        user: patient._id 
+        doctorId: doctorId, 
+        userId: patient._id 
       });
       const lastAppointment = await Appointment.findOne({ 
-        doctor: doctorId, 
-        user: patient._id 
+        doctorId: doctorId, 
+        userId: patient._id 
       }).sort({ date: -1 }).select('date status').lean();
       
       return {

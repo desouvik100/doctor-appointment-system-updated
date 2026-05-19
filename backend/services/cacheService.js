@@ -18,16 +18,30 @@ async function initializeRedis() {
   try {
     const Redis = require('ioredis');
     redis = new Redis(process.env.REDIS_URL, {
-      maxRetriesPerRequest: 3,
+      maxRetriesPerRequest: 1,
       retryDelayOnFailover: 100,
       lazyConnect: true,
       connectTimeout: 5000,
+      // Stop retrying after 3 attempts — don't spam logs
+      maxRetriesPerRequest: 1,
+      retryStrategy: (times) => {
+        if (times > 3) {
+          console.warn('⚠️ Redis unavailable after 3 retries — switching to in-memory cache');
+          useRedis = false;
+          return null; // stop retrying
+        }
+        return Math.min(times * 200, 1000);
+      },
+      // Suppress unhandled error events — we handle them below
+      enableOfflineQueue: false,
     });
 
-    await redis.connect();
-    
+    // Attach error handler BEFORE connect to prevent unhandled error events
     redis.on('error', (err) => {
-      console.error('Redis error:', err.message);
+      // Only log once, not on every retry
+      if (useRedis) {
+        console.warn('⚠️ Redis error — falling back to in-memory cache:', err.message);
+      }
       useRedis = false;
     });
 
@@ -36,12 +50,18 @@ async function initializeRedis() {
       useRedis = true;
     });
 
+    await redis.connect();
     useRedis = true;
     console.log('✅ Redis cache initialized');
     return true;
   } catch (error) {
     console.warn('⚠️ Redis connection failed, using in-memory cache:', error.message);
     useRedis = false;
+    // Disconnect to stop retry loop
+    if (redis) {
+      try { redis.disconnect(); } catch (_) {}
+      redis = null;
+    }
     return false;
   }
 }

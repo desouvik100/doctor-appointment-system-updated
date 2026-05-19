@@ -24,7 +24,7 @@ import SecondOpinion from './SecondOpinion';
 import LoyaltyPoints from './LoyaltyPoints';
 import './PatientDashboard.css';
 
-const PatientDashboard = ({ user, onLogout }) => {
+const PatientDashboard = ({ user, onLogout, onNavigate }) => {
   const [currentUser] = useState(user);
   const [activeTab, setActiveTab] = useState('doctors');
   const [selectedDoctor, setSelectedDoctor] = useState(null);
@@ -776,6 +776,16 @@ const PatientDashboard = ({ user, onLogout }) => {
                 <i className="fas fa-coins"></i>
               </div>
               <span className="patient-dashboard__tab-label">Loyalty Points</span>
+            </button>
+
+            <button 
+              className={`patient-dashboard__tab ${activeTab === 'imaging' ? 'patient-dashboard__tab--active' : ''}`}
+              onClick={() => onNavigate ? onNavigate('imaging') : setActiveTab('imaging')}
+            >
+              <div className="patient-dashboard__tab-icon">
+                <i className="fas fa-x-ray"></i>
+              </div>
+              <span className="patient-dashboard__tab-label">Medical Imaging</span>
             </button>
           </div>
         </div>

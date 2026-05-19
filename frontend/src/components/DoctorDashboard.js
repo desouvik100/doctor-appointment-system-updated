@@ -1,8 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import axios from "../api/config";
 import toast from "react-hot-toast";
-import "./ClinicDashboard.css"; // Reuse clinic dashboard styles
-import "./DoctorDashboard.css"; // Doctor-specific styles
 import DoctorWallet from "./DoctorWallet";
 import DoctorScheduleManager from "./DoctorScheduleManager";
 import { exportAppointmentsToPDF } from "../utils/pdfExport";
@@ -14,68 +12,76 @@ import DoctorControls from "./DoctorControls";
 import SystematicHistorySummary from "./systematic-history/SystematicHistorySummary";
 import { ProfessionalDicomViewer } from "./imaging";
 
-// Simple component to show systematic history status for appointments
+// ── Systematic History Indicator ─────────────────────────────────────────────
 const SystematicHistoryIndicator = ({ appointmentId }) => {
   const [hasHistory, setHasHistory] = useState(null);
-  
   useEffect(() => {
-    const checkHistory = async () => {
-      try {
-        const response = await axios.get(`/api/systematic-history/appointment/${appointmentId}`);
-        setHasHistory(response.data.success && response.data.history);
-      } catch (error) {
-        setHasHistory(false);
-      }
-    };
-    
-    if (appointmentId) {
-      checkHistory();
-    }
+    if (!appointmentId) return;
+    axios.get(`/api/systematic-history/appointment/${appointmentId}`)
+      .then(r => setHasHistory(r.data.success && r.data.history))
+      .catch(() => setHasHistory(false));
   }, [appointmentId]);
-  
-  if (hasHistory === null) {
-    return <span className="text-muted">...</span>;
-  }
-  
+  if (hasHistory === null) return <span className="text-slate-400 text-xs">…</span>;
   return hasHistory ? (
-    <span className="badge bg-success" title="Systematic history available">
+    <span title="Systematic history available" className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-emerald-100 text-emerald-600 text-xs">
       <i className="fas fa-clipboard-check"></i>
     </span>
   ) : (
-    <span className="badge bg-light text-muted" title="No systematic history">
+    <span title="No systematic history" className="inline-flex items-center justify-center w-6 h-6 rounded-full bg-slate-100 text-slate-400 text-xs">
       <i className="fas fa-clipboard"></i>
     </span>
   );
 };
 
+// ── Shared UI helpers ─────────────────────────────────────────────────────────
+const StatusBadge = ({ status }) => {
+  const map = {
+    pending:     "bg-amber-100 text-amber-700",
+    confirmed:   "bg-blue-100 text-blue-700",
+    in_progress: "bg-sky-100 text-sky-700",
+    completed:   "bg-emerald-100 text-emerald-700",
+    cancelled:   "bg-red-100 text-red-700",
+  };
+  return (
+    <span className={`inline-flex items-center px-2 py-0.5 rounded-full text-xs font-semibold capitalize ${map[status] || "bg-slate-100 text-slate-600"}`}>
+      {status?.replace("_", " ")}
+    </span>
+  );
+};
+
+const BookingSourceBadge = ({ apt }) => {
+  if (apt.isWalkIn || apt.bookingSource === "offline")
+    return <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-amber-100 text-amber-700"><i className="fas fa-walking mr-1"></i>Walk-In</span>;
+  if (apt.bookingSource === "receptionist")
+    return <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-purple-100 text-purple-700"><i className="fas fa-user-tie mr-1"></i>Receptionist</span>;
+  if (apt.bookingSource === "phone")
+    return <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-sky-100 text-sky-700"><i className="fas fa-phone mr-1"></i>Phone</span>;
+  return <span className="ml-1 inline-flex items-center px-1.5 py-0.5 rounded text-[10px] font-semibold bg-emerald-100 text-emerald-700"><i className="fas fa-globe mr-1"></i>Online</span>;
+};
+
+// ── Main Component ────────────────────────────────────────────────────────────
 function DoctorDashboard({ doctor, onLogout }) {
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState("today");
   const [stats, setStats] = useState({ total: 0, today: 0, pending: 0, completed: 0 });
-  const [activeTab, setActiveTab] = useState("queue"); // queue, appointments, schedule, wallet
+  const [activeTab, setActiveTab] = useState("queue");
   const [queue, setQueue] = useState([]);
   const [currentPatient, setCurrentPatient] = useState(null);
   const [queueLoading, setQueueLoading] = useState(false);
   const [showPrescription, setShowPrescription] = useState(false);
   const [prescriptionPatient, setPrescriptionPatient] = useState(null);
   const [showWalkInModal, setShowWalkInModal] = useState(false);
-  const [queueFilter, setQueueFilter] = useState('all'); // all, virtual, in_clinic
+  const [queueFilter, setQueueFilter] = useState("all");
   const [showSupport, setShowSupport] = useState(false);
   const [showControls, setShowControls] = useState(false);
   const [consultationTime, setConsultationTime] = useState(0);
-  
-  // EMR State
   const [emrSubscription, setEmrSubscription] = useState(null);
   const [emrLoading, setEmrLoading] = useState(false);
   const [emrPatients, setEmrPatients] = useState([]);
   const [emrPrescriptions, setEmrPrescriptions] = useState([]);
-  
-  // Systematic History State
   const [systematicHistory, setSystematicHistory] = useState(null);
   const [historyLoading, setHistoryLoading] = useState(false);
-  
-  // Imaging State
   const [imagingPatients, setImagingPatients] = useState([]);
   const [selectedImagingPatient, setSelectedImagingPatient] = useState(null);
   const [imagingStudies, setImagingStudies] = useState([]);
@@ -83,1465 +89,815 @@ function DoctorDashboard({ doctor, onLogout }) {
   const [showImagingViewer, setShowImagingViewer] = useState(false);
   const [selectedStudy, setSelectedStudy] = useState(null);
 
-  // Fetch systematic history for current patient
-  const fetchSystematicHistory = async (appointmentId) => {
-    if (!appointmentId) {
-      setSystematicHistory(null);
-      return;
-    }
-    
-    try {
-      setHistoryLoading(true);
-      const response = await axios.get(`/api/systematic-history/appointment/${appointmentId}`);
-      if (response.data.success && response.data.history) {
-        setSystematicHistory(response.data.history);
-      } else {
-        setSystematicHistory(null);
-      }
-    } catch (error) {
-      console.error('Error fetching systematic history:', error);
-      setSystematicHistory(null);
-    } finally {
-      setHistoryLoading(false);
-    }
-  };
-
-  // Fetch systematic history when current patient changes
-  useEffect(() => {
-    if (currentPatient?._id) {
-      fetchSystematicHistory(currentPatient._id);
-    } else {
-      setSystematicHistory(null);
-    }
-  }, [currentPatient]);
-
-  // Get doctor ID (handle both id and _id)
   const doctorId = doctor.id || doctor._id;
 
+  // ── Helpers ─────────────────────────────────────────────────────────────────
+  const getClinicId = () => {
+    if (!doctor.clinicId) return null;
+    if (typeof doctor.clinicId === "object" && doctor.clinicId._id) return doctor.clinicId._id;
+    if (typeof doctor.clinicId === "string") return doctor.clinicId;
+    if (doctor.clinicId.$oid) return doctor.clinicId.$oid;
+    return null;
+  };
+
+  const formatDate = (d) => new Date(d).toLocaleDateString("en-IN", { weekday: "short", day: "numeric", month: "short", year: "numeric" });
+  const formatTime = (t) => { const [h, m] = t.split(":"); const hr = parseInt(h); return `${hr % 12 || 12}:${m} ${hr >= 12 ? "PM" : "AM"}`; };
+  const formatConsultationTime = (s) => `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
+
+  // ── Data fetching ────────────────────────────────────────────────────────────
   const fetchQueue = useCallback(async () => {
     try {
       setQueueLoading(true);
-      const today = new Date().toISOString().split('T')[0];
-      console.log(`📋 Fetching queue for doctor: ${doctorId}, date: ${today}`);
-      const response = await axios.get(`/api/appointments/doctor/${doctorId}/queue?date=${today}`);
-      
-      const queueData = response.data || [];
-      // Separate current patient (in_progress) from waiting queue
-      const inProgress = queueData.find(a => a.status === 'in_progress');
-      const waiting = queueData.filter(a => 
-        a.status === 'confirmed' || a.status === 'pending'
-      ).sort((a, b) => {
-        // Sort by token number or time
-        if (a.tokenNumber && b.tokenNumber) return a.tokenNumber - b.tokenNumber;
-        return a.time.localeCompare(b.time);
-      });
-      
-      // Debug: Log the in_progress patient's consultationStartTime
-      if (inProgress) {
-        console.log('📋 Current patient consultationStartTime:', inProgress.consultationStartTime);
-      }
-      
+      const today = new Date().toISOString().split("T")[0];
+      const res = await axios.get(`/api/appointments/doctor/${doctorId}/queue?date=${today}`);
+      const data = res.data || [];
+      const inProgress = data.find(a => a.status === "in_progress");
+      const waiting = data.filter(a => a.status === "confirmed" || a.status === "pending")
+        .sort((a, b) => a.tokenNumber && b.tokenNumber ? a.tokenNumber - b.tokenNumber : a.time.localeCompare(b.time));
       setCurrentPatient(inProgress || null);
       setQueue(waiting);
-    } catch (error) {
-      console.error("Error fetching queue:", error);
-    } finally {
-      setQueueLoading(false);
-    }
+    } catch { /* silent */ } finally { setQueueLoading(false); }
   }, [doctorId]);
-
-  useEffect(() => {
-    if (doctorId) {
-      fetchAppointments();
-      fetchQueue();
-      fetchEmrSubscription();
-      
-      // Auto-refresh queue every 30 seconds
-      const interval = setInterval(fetchQueue, 30000);
-      return () => clearInterval(interval);
-    }
-  }, [doctorId, fetchQueue]);
-
-  // Send heartbeat to indicate doctor is online
-  useEffect(() => {
-    if (!doctorId) return;
-    
-    // Send initial heartbeat
-    const sendHeartbeat = async () => {
-      try {
-        await axios.post(`/api/doctors/${doctorId}/heartbeat`);
-      } catch (error) {
-        console.error('Heartbeat error:', error);
-      }
-    };
-    
-    sendHeartbeat();
-    
-    // Send heartbeat every 30 seconds
-    const heartbeatInterval = setInterval(sendHeartbeat, 30000);
-    
-    // Set offline when leaving
-    const handleBeforeUnload = () => {
-      navigator.sendBeacon(`/api/doctors/${doctorId}/go-offline`);
-    };
-    
-    window.addEventListener('beforeunload', handleBeforeUnload);
-    
-    return () => {
-      clearInterval(heartbeatInterval);
-      window.removeEventListener('beforeunload', handleBeforeUnload);
-      // Try to set offline when component unmounts
-      axios.post(`/api/doctors/${doctorId}/go-offline`).catch(() => {});
-    };
-  }, [doctorId]);
-
-  // Fetch EMR subscription for the clinic
-  const fetchEmrSubscription = async () => {
-    // Handle different formats of clinicId (populated object, ObjectId string, or nested _id)
-    let clinicId = null;
-    if (doctor.clinicId) {
-      if (typeof doctor.clinicId === 'object' && doctor.clinicId._id) {
-        clinicId = doctor.clinicId._id;
-      } else if (typeof doctor.clinicId === 'string') {
-        clinicId = doctor.clinicId;
-      } else if (doctor.clinicId.$oid) {
-        // Handle MongoDB extended JSON format
-        clinicId = doctor.clinicId.$oid;
-      }
-    }
-    
-    console.log('📋 EMR: Doctor object:', doctor);
-    console.log('📋 EMR: Doctor clinicId raw:', doctor.clinicId);
-    console.log('📋 EMR: Extracted clinicId:', clinicId);
-    
-    if (!clinicId) {
-      console.log('📋 EMR: No clinicId found, skipping subscription fetch');
-      setEmrLoading(false);
-      return;
-    }
-    
-    try {
-      setEmrLoading(true);
-      console.log('📋 EMR: Fetching subscription for clinic:', clinicId);
-      const response = await axios.get(`/api/emr/subscription/${clinicId}`);
-      console.log('📋 EMR: Subscription response:', response.data);
-      if (response.data.success && response.data.subscription) {
-        setEmrSubscription(response.data.subscription);
-        console.log('📋 EMR: Subscription set:', response.data.subscription.plan);
-      } else {
-        console.log('📋 EMR: No subscription in response');
-        setEmrSubscription(null);
-      }
-    } catch (error) {
-      console.log('📋 EMR: Error fetching subscription:', error.response?.data || error.message);
-      setEmrSubscription(null);
-    } finally {
-      setEmrLoading(false);
-    }
-  };
-
-  // Fetch EMR patients for the clinic
-  const fetchEmrPatients = async () => {
-    // Handle different formats of clinicId
-    let clinicId = null;
-    if (doctor.clinicId) {
-      if (typeof doctor.clinicId === 'object' && doctor.clinicId._id) {
-        clinicId = doctor.clinicId._id;
-      } else if (typeof doctor.clinicId === 'string') {
-        clinicId = doctor.clinicId;
-      } else if (doctor.clinicId.$oid) {
-        clinicId = doctor.clinicId.$oid;
-      }
-    }
-    
-    if (!clinicId) return;
-    
-    try {
-      const response = await axios.get(`/api/emr/patients/clinic/${clinicId}`);
-      if (response.data.success) {
-        setEmrPatients(response.data.patients || []);
-      }
-    } catch (error) {
-      console.error('Error fetching EMR patients:', error);
-    }
-  };
-
-  // Fetch EMR prescriptions for the clinic
-  const fetchEmrPrescriptions = async () => {
-    // Handle different formats of clinicId
-    let clinicId = null;
-    if (doctor.clinicId) {
-      if (typeof doctor.clinicId === 'object' && doctor.clinicId._id) {
-        clinicId = doctor.clinicId._id;
-      } else if (typeof doctor.clinicId === 'string') {
-        clinicId = doctor.clinicId;
-      } else if (doctor.clinicId.$oid) {
-        clinicId = doctor.clinicId.$oid;
-      }
-    }
-    
-    if (!clinicId) return;
-    
-    try {
-      const response = await axios.get(`/api/prescriptions/clinic/${clinicId}`);
-      if (response.data.success) {
-        setEmrPrescriptions(response.data.prescriptions || []);
-      }
-    } catch (error) {
-      console.error('Error fetching prescriptions:', error);
-    }
-  };
-
-  // Load EMR data when EMR tab is selected
-  useEffect(() => {
-    if (activeTab === 'emr' && emrSubscription) {
-      fetchEmrPatients();
-      fetchEmrPrescriptions();
-    }
-  }, [activeTab, emrSubscription]);
-
-  // Fetch patients with imaging studies
-  const fetchImagingPatients = async () => {
-    try {
-      setImagingLoading(true);
-      // Get all patients who have had appointments with this doctor
-      const response = await axios.get(`/api/appointments/doctor/${doctorId}`);
-      const appointments = response.data || [];
-      
-      // Get unique patients
-      const patientMap = new Map();
-      appointments.forEach(apt => {
-        const patient = apt.userId;
-        if (patient && patient._id && !patientMap.has(patient._id)) {
-          patientMap.set(patient._id, {
-            _id: patient._id,
-            name: patient.name,
-            email: patient.email,
-            phone: patient.phone
-          });
-        }
-      });
-      
-      setImagingPatients(Array.from(patientMap.values()));
-    } catch (error) {
-      console.error('Error fetching imaging patients:', error);
-    } finally {
-      setImagingLoading(false);
-    }
-  };
-
-  // Fetch imaging studies for a patient
-  const fetchPatientImagingStudies = async (patientId) => {
-    try {
-      setImagingLoading(true);
-      const response = await axios.get(`/api/imaging/patients/${patientId}/studies`);
-      if (response.data.success) {
-        setImagingStudies(response.data.data || []);
-      } else {
-        setImagingStudies([]);
-      }
-    } catch (error) {
-      console.error('Error fetching imaging studies:', error);
-      setImagingStudies([]);
-    } finally {
-      setImagingLoading(false);
-    }
-  };
-
-  // Load imaging patients when imaging tab is selected
-  useEffect(() => {
-    if (activeTab === 'imaging') {
-      fetchImagingPatients();
-    }
-  }, [activeTab]);
-
-  // Fetch studies when patient is selected
-  useEffect(() => {
-    if (selectedImagingPatient) {
-      fetchPatientImagingStudies(selectedImagingPatient._id);
-    } else {
-      setImagingStudies([]);
-    }
-  }, [selectedImagingPatient]);
-
-  // Consultation timer - tracks time with current patient
-  useEffect(() => {
-    let timer;
-    // Check both field names for compatibility
-    const startTime = currentPatient?.consultationStartedAt || currentPatient?.consultationStartTime;
-    if (startTime) {
-      const startTimeMs = new Date(startTime).getTime();
-      timer = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTimeMs) / 1000);
-        setConsultationTime(elapsed);
-      }, 1000);
-    } else {
-      setConsultationTime(0);
-    }
-    return () => clearInterval(timer);
-  }, [currentPatient]);
-
-  // Format consultation time as MM:SS
-  const formatConsultationTime = (seconds) => {
-    const mins = Math.floor(seconds / 60);
-    const secs = seconds % 60;
-    return `${mins.toString().padStart(2, '0')}:${secs.toString().padStart(2, '0')}`;
-  };
 
   const fetchAppointments = async () => {
     try {
-      const response = await axios.get(`/api/appointments/doctor/${doctorId}`);
-      setAppointments(response.data || []);
-      calculateStats(response.data || []);
-    } catch (error) {
-      console.error("Error fetching appointments:", error);
-      // More specific error messages
-      if (!error.response) {
-        toast.error("Network error. Please check your connection.", { id: 'fetch-appt-error' });
-      } else if (error.response.status === 401) {
-        toast.error("Session expired. Please login again.");
-      } else {
-        toast.error("Failed to load appointments. Pull to refresh.");
-      }
-      setAppointments([]);
-    } finally {
-      setLoading(false);
-    }
+      const res = await axios.get(`/api/appointments/doctor/${doctorId}`);
+      setAppointments(res.data || []);
+      const data = res.data || [];
+      const today = new Date().toDateString();
+      setStats({
+        total: data.length,
+        today: data.filter(a => new Date(a.date).toDateString() === today).length,
+        pending: data.filter(a => a.status === "pending" || a.status === "confirmed").length,
+        completed: data.filter(a => a.status === "completed").length,
+      });
+    } catch { toast.error("Failed to load appointments"); setAppointments([]); }
+    finally { setLoading(false); }
   };
 
-  const calculateStats = (data) => {
-    const today = new Date().toDateString();
-    const todayAppts = data.filter(a => new Date(a.date).toDateString() === today);
-    setStats({
-      total: data.length,
-      today: todayAppts.length,
-      pending: data.filter(a => a.status === "pending" || a.status === "confirmed").length,
-      completed: data.filter(a => a.status === "completed").length
-    });
+  const fetchEmrSubscription = async () => {
+    const clinicId = getClinicId();
+    if (!clinicId) { setEmrLoading(false); return; }
+    try {
+      setEmrLoading(true);
+      const res = await axios.get(`/api/emr/subscription/${clinicId}`);
+      setEmrSubscription(res.data.success && res.data.subscription ? res.data.subscription : null);
+    } catch { setEmrSubscription(null); } finally { setEmrLoading(false); }
   };
+
+  const fetchEmrPatients = async () => {
+    const clinicId = getClinicId(); if (!clinicId) return;
+    try { const r = await axios.get(`/api/emr/patients/clinic/${clinicId}`); if (r.data.success) setEmrPatients(r.data.patients || []); } catch {}
+  };
+
+  const fetchEmrPrescriptions = async () => {
+    const clinicId = getClinicId(); if (!clinicId) return;
+    try { const r = await axios.get(`/api/prescriptions/clinic/${clinicId}`); if (r.data.success) setEmrPrescriptions(r.data.prescriptions || []); } catch {}
+  };
+
+  const fetchImagingPatients = async () => {
+    try {
+      setImagingLoading(true);
+      const res = await axios.get(`/api/appointments/doctor/${doctorId}`);
+      const map = new Map();
+      (res.data || []).forEach(apt => { const p = apt.userId; if (p?._id && !map.has(p._id)) map.set(p._id, { _id: p._id, name: p.name, email: p.email, phone: p.phone }); });
+      setImagingPatients(Array.from(map.values()));
+    } catch {} finally { setImagingLoading(false); }
+  };
+
+  const fetchPatientImagingStudies = async (patientId) => {
+    try {
+      setImagingLoading(true);
+      const r = await axios.get(`/api/imaging/patients/${patientId}/studies`);
+      setImagingStudies(r.data.success ? r.data.data || [] : []);
+    } catch { setImagingStudies([]); } finally { setImagingLoading(false); }
+  };
+
+  const fetchSystematicHistory = async (appointmentId) => {
+    if (!appointmentId) { setSystematicHistory(null); return; }
+    try {
+      setHistoryLoading(true);
+      const r = await axios.get(`/api/systematic-history/appointment/${appointmentId}`);
+      setSystematicHistory(r.data.success && r.data.history ? r.data.history : null);
+    } catch { setSystematicHistory(null); } finally { setHistoryLoading(false); }
+  };
+
+  // ── Effects ──────────────────────────────────────────────────────────────────
+  useEffect(() => {
+    if (doctorId) { fetchAppointments(); fetchQueue(); fetchEmrSubscription(); const iv = setInterval(fetchQueue, 30000); return () => clearInterval(iv); }
+  }, [doctorId, fetchQueue]);
+
+  useEffect(() => {
+    if (!doctorId) return;
+    const hb = async () => { try { await axios.post(`/api/doctors/${doctorId}/heartbeat`); } catch {} };
+    hb(); const iv = setInterval(hb, 30000);
+    const bye = () => navigator.sendBeacon(`/api/doctors/${doctorId}/go-offline`);
+    window.addEventListener("beforeunload", bye);
+    return () => { clearInterval(iv); window.removeEventListener("beforeunload", bye); axios.post(`/api/doctors/${doctorId}/go-offline`).catch(() => {}); };
+  }, [doctorId]);
+
+  useEffect(() => { if (currentPatient?._id) fetchSystematicHistory(currentPatient._id); else setSystematicHistory(null); }, [currentPatient]);
+  useEffect(() => { if (activeTab === "emr" && emrSubscription) { fetchEmrPatients(); fetchEmrPrescriptions(); } }, [activeTab, emrSubscription]);
+  useEffect(() => { if (activeTab === "imaging") fetchImagingPatients(); }, [activeTab]);
+  useEffect(() => { if (selectedImagingPatient) fetchPatientImagingStudies(selectedImagingPatient._id); else setImagingStudies([]); }, [selectedImagingPatient]);
+
+  useEffect(() => {
+    let timer;
+    const startTime = currentPatient?.consultationStartedAt || currentPatient?.consultationStartTime;
+    if (startTime) { const ms = new Date(startTime).getTime(); timer = setInterval(() => setConsultationTime(Math.floor((Date.now() - ms) / 1000)), 1000); }
+    else setConsultationTime(0);
+    return () => clearInterval(timer);
+  }, [currentPatient]);
+
+  // ── Actions ──────────────────────────────────────────────────────────────────
+  const updateAppointmentStatus = async (id, status) => {
+    try {
+      const res = await axios.put(`/api/appointments/${id}/status`, { status });
+      toast.success(`Appointment ${status === "in_progress" ? "started" : status}`);
+      if (status === "in_progress" && res.data) setCurrentPatient(res.data);
+      fetchAppointments(); fetchQueue();
+    } catch (e) { toast.error(e.response?.data?.message || "Failed to update appointment"); }
+  };
+
+  const callNextPatient = async () => {
+    if (!queue.length) { toast.error("No patients in queue"); return; }
+    if (currentPatient) await updateAppointmentStatus(currentPatient._id, "completed");
+    await updateAppointmentStatus(queue[0]._id, "in_progress");
+    toast.success(`Calling ${queue[0].userId?.name || "Patient"}`);
+  };
+
+  const skipPatient = async (id) => { try { await axios.put(`/api/appointments/${id}/skip`); toast.success("Patient moved to end"); fetchQueue(); } catch { toast.error("Failed to skip"); } };
+  const markNoShow = async (id) => { try { await axios.put(`/api/appointments/${id}/status`, { status: "cancelled", reason: "No show" }); toast.success("Marked as no-show"); fetchQueue(); fetchAppointments(); } catch { toast.error("Failed"); } };
+  const notifyPatient = async (id) => { try { toast.loading("Sending…", { id: "n" }); const r = await axios.post(`/api/appointments/${id}/notify-patient`); toast.success(r.data.reason || `Notified! Position #${r.data.position}`, { id: "n" }); } catch { toast.error("Failed", { id: "n" }); } };
+  const notifyUpcomingPatients = async () => { try { toast.loading("Sending…", { id: "na" }); const r = await axios.post(`/api/appointments/doctor/${doctorId}/notify-queue`, { notifyAtPosition: 3 }); toast.success(`Notified ${r.data.results?.filter(x => x.notified).length || 0} patient(s)`, { id: "na" }); } catch { toast.error("Failed", { id: "na" }); } };
+  const regenerateMeetLink = async (id) => { try { toast.loading("Generating…", { id: "mg" }); const r = await axios.post(`/api/appointments/${id}/generate-meeting`); if (r.data.success) { toast.success("Link generated!", { id: "mg" }); fetchAppointments(); fetchQueue(); } else toast.error(r.data.message || "Failed", { id: "mg" }); } catch { toast.error("Failed", { id: "mg" }); } };
 
   const getFilteredAppointments = () => {
     const today = new Date().toDateString();
-    switch (filter) {
-      case "today":
-        return appointments.filter(a => new Date(a.date).toDateString() === today);
-      case "upcoming":
-        return appointments.filter(a => new Date(a.date) >= new Date() && a.status !== "completed");
-      case "completed":
-        return appointments.filter(a => a.status === "completed");
-      default:
-        return appointments;
-    }
+    if (filter === "today") return appointments.filter(a => new Date(a.date).toDateString() === today);
+    if (filter === "upcoming") return appointments.filter(a => new Date(a.date) >= new Date() && a.status !== "completed");
+    if (filter === "completed") return appointments.filter(a => a.status === "completed");
+    return appointments;
   };
 
-  const updateAppointmentStatus = async (appointmentId, status) => {
-    try {
-      const response = await axios.put(`/api/appointments/${appointmentId}/status`, { status });
-      toast.success(`Appointment ${status === 'in_progress' ? 'started' : status}`);
-      
-      // If starting consultation, immediately set current patient with consultationStartTime
-      // This ensures the timer starts right away without waiting for fetchQueue
-      if (status === 'in_progress' && response.data) {
-        console.log('📋 Setting current patient with consultationStartTime:', response.data.consultationStartTime);
-        setCurrentPatient(response.data);
-      }
-      
-      fetchAppointments();
-      fetchQueue();
-    } catch (error) {
-      console.error("Error updating appointment:", error);
-      if (!error.response) {
-        toast.error("Network error. Please try again.");
-      } else if (error.response.status === 404) {
-        toast.error("Appointment not found. Refreshing...");
-        fetchQueue();
-      } else if (error.response.status === 409) {
-        toast.error("Appointment already updated. Refreshing...");
-        fetchQueue();
-      } else {
-        toast.error(error.response?.data?.message || "Failed to update appointment");
-      }
-    }
-  };
-
-  // Call next patient from queue
-  const callNextPatient = async () => {
-    if (queue.length === 0) {
-      toast.error("No patients in queue");
-      return;
-    }
-
-    // If there's a current patient, complete them first
-    if (currentPatient) {
-      await updateAppointmentStatus(currentPatient._id, "completed");
-    }
-
-    // Start the next patient
-    const nextPatient = queue[0];
-    await updateAppointmentStatus(nextPatient._id, "in_progress");
-    toast.success(`Calling ${nextPatient.userId?.name || 'Patient'}`);
-  };
-
-  // Complete current patient
-  const completeCurrentPatient = async () => {
-    if (!currentPatient) return;
-    await updateAppointmentStatus(currentPatient._id, "completed");
-    toast.success("Patient consultation completed");
-  };
-
-  // Skip patient (move to end of queue)
-  const skipPatient = async (appointmentId) => {
-    try {
-      await axios.put(`/api/appointments/${appointmentId}/skip`);
-      toast.success("Patient moved to end of queue");
-      fetchQueue();
-    } catch (error) {
-      toast.error("Failed to skip patient");
-    }
-  };
-
-  // Mark patient as no-show
-  const markNoShow = async (appointmentId) => {
-    try {
-      await axios.put(`/api/appointments/${appointmentId}/status`, { status: "cancelled", reason: "No show" });
-      toast.success("Patient marked as no-show");
-      fetchQueue();
-      fetchAppointments();
-    } catch (error) {
-      toast.error("Failed to update status");
-    }
-  };
-
-  // Notify patient about their queue position
-  const notifyPatient = async (appointmentId) => {
-    try {
-      toast.loading("Sending notification...", { id: "notify" });
-      const response = await axios.post(`/api/appointments/${appointmentId}/notify-patient`);
-      if (response.data.success && response.data.notified) {
-        toast.success(`Notification sent! Patient is #${response.data.position} in queue`, { id: "notify" });
-      } else {
-        toast.success(response.data.reason || "Patient already notified", { id: "notify" });
-      }
-    } catch (error) {
-      toast.error("Failed to send notification", { id: "notify" });
-    }
-  };
-
-  // Notify all upcoming patients (next 3 in queue)
-  const notifyUpcomingPatients = async () => {
-    try {
-      toast.loading("Sending notifications...", { id: "notify-all" });
-      const response = await axios.post(`/api/appointments/doctor/${doctorId}/notify-queue`, { notifyAtPosition: 3 });
-      if (response.data.success) {
-        const notified = response.data.results.filter(r => r.notified).length;
-        toast.success(`Notified ${notified} patient(s)`, { id: "notify-all" });
-      }
-    } catch (error) {
-      toast.error("Failed to send notifications", { id: "notify-all" });
-    }
-  };
-
-  // Regenerate Google Meet link for an appointment
-  const regenerateMeetLink = async (appointmentId) => {
-    try {
-      toast.loading("Generating meeting link...", { id: "meet-gen" });
-      const response = await axios.post(`/api/appointments/${appointmentId}/generate-meeting`);
-      if (response.data.success) {
-        toast.success("Meeting link generated!", { id: "meet-gen" });
-        fetchAppointments();
-        fetchQueue();
-      } else {
-        toast.error(response.data.message || "Failed to generate link", { id: "meet-gen" });
-      }
-    } catch (error) {
-      console.error("Error generating meet link:", error);
-      toast.error("Failed to generate meeting link", { id: "meet-gen" });
-    }
-  };
-
-  const formatDate = (date) => new Date(date).toLocaleDateString("en-IN", {
-    weekday: "short", day: "numeric", month: "short", year: "numeric"
-  });
-
-  const formatTime = (time) => {
-    const [hours, minutes] = time.split(":");
-    const hour = parseInt(hours);
-    const ampm = hour >= 12 ? "PM" : "AM";
-    const hour12 = hour % 12 || 12;
-    return `${hour12}:${minutes} ${ampm}`;
-  };
-
-  const getStatusBadge = (status) => {
-    const classes = {
-      pending: "bg-warning text-dark",
-      confirmed: "bg-primary",
-      in_progress: "bg-info",
-      completed: "bg-success",
-      cancelled: "bg-danger"
-    };
-    return <span className={`badge ${classes[status] || "bg-secondary"}`}>{status}</span>;
-  };
-
-  if (loading) {
-    return (
-      <div className="text-center py-5">
-        <div className="spinner-border text-primary"></div>
-        <p className="mt-2">Loading dashboard...</p>
+  // ── Loading state ────────────────────────────────────────────────────────────
+  if (loading) return (
+    <div className="min-h-screen flex items-center justify-center bg-slate-50">
+      <div className="text-center">
+        <div className="w-12 h-12 border-4 border-teal-500 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+        <p className="text-slate-500 font-medium">Loading dashboard…</p>
       </div>
-    );
-  }
+    </div>
+  );
 
   return (
-    <article className="doctor-dashboard-container">
-      {/* Security Warning Banner */}
+    <div className="min-h-screen bg-slate-50">
       <SecurityWarningBanner userId={doctorId} />
-      
-      {/* Header - Doctor info + controls */}
-      <header className="doctor-dashboard-header">
-        <div className="card doctor-header-card text-white">
-          <div className="card-body py-4">
-            <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
-              <div className="d-flex align-items-center">
-                {doctor.profilePhoto ? (
-                  <img src={doctor.profilePhoto} alt={doctor.name} className="me-3" style={{ width: "70px", height: "70px", objectFit: "cover", borderRadius: '16px', border: "3px solid rgba(255,255,255,0.3)", boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }} />
-                ) : (
-                  <div className="bg-white d-flex align-items-center justify-content-center me-3" style={{ width: "70px", height: "70px", borderRadius: '16px', boxShadow: '0 4px 15px rgba(0,0,0,0.2)' }} aria-hidden="true">
-                    <i className="fas fa-user-md fa-2x" style={{ color: '#4f46e5' }}></i>
-                  </div>
-                )}
-                <div>
-                  <h1 className="mb-1 fw-bold text-white" style={{ fontSize: '1.5rem' }}>Dr. {doctor.name}</h1>
-                  <p className="mb-0" style={{ opacity: 0.9, fontSize: '0.95rem' }}>
-                    <i className="fas fa-stethoscope me-2" aria-hidden="true"></i>{doctor.specialization}
-                  </p>
-                  <p className="mb-0" style={{ opacity: 0.75, fontSize: '0.85rem' }}>
-                    <i className="fas fa-hospital me-2" aria-hidden="true"></i>{doctor.clinicId?.name || "Independent Practice"}
-                  </p>
-                </div>
+
+      {/* ── Header ── */}
+      <header className="bg-gradient-to-r from-teal-600 via-emerald-600 to-teal-700 text-white px-4 py-4 sm:py-5 shadow-lg">
+        <div className="max-w-7xl mx-auto flex flex-col sm:flex-row items-start sm:items-center justify-between gap-3 sm:gap-4">
+          {/* Doctor info */}
+          <div className="flex items-center gap-3 sm:gap-4 min-w-0">
+            {doctor.profilePhoto ? (
+              <img src={doctor.profilePhoto} alt={doctor.name}
+                className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl object-cover border-2 border-white/30 shadow-lg flex-shrink-0" />
+            ) : (
+              <div className="w-12 h-12 sm:w-16 sm:h-16 rounded-xl sm:rounded-2xl bg-white/20 flex items-center justify-center flex-shrink-0 shadow-lg">
+                <i className="fas fa-user-md text-xl sm:text-2xl text-white"></i>
               </div>
-              <div className="d-flex align-items-center gap-2" role="toolbar" aria-label="Doctor actions">
-                <time className="text-end me-3 d-none d-md-block" dateTime={new Date().toISOString()}>
-                  <small style={{ opacity: 0.75 }}>{new Date().toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'short' })}</small>
-                </time>
-                <button 
-                  className="btn btn-warning px-3" 
-                  onClick={() => setShowControls(true)} 
-                  style={{ borderRadius: '12px', fontWeight: 600 }}
-                  title="Doctor Controls"
-                  aria-label="Open doctor controls panel"
-                >
-                  <i className="fas fa-sliders-h" aria-hidden="true"></i>
-                  <span className="d-none d-md-inline ms-2">Controls</span>
-                </button>
-                <button 
-                  className="btn btn-outline-light px-3" 
-                  onClick={() => setShowSupport(true)} 
-                  style={{ borderRadius: '12px', fontWeight: 600 }}
-                  title="Contact Admin Support"
-                  aria-label="Open support chat"
-                >
-                  <i className="fas fa-headset" aria-hidden="true"></i>
-                  <span className="d-none d-md-inline ms-2">Support</span>
-                  <span className="support-live-indicator ms-2 d-none d-lg-inline-flex" aria-label="Support is live">
-                    <span className="dot" aria-hidden="true"></span>
-                    Live
-                  </span>
-                </button>
-                <button className="btn btn-light px-4" onClick={onLogout} style={{ borderRadius: '12px', fontWeight: 600 }} aria-label="Logout">
-                  <i className="fas fa-sign-out-alt me-2" aria-hidden="true"></i>Logout
-                </button>
-              </div>
+            )}
+            <div className="min-w-0">
+              <h1 className="text-base sm:text-xl font-bold text-white truncate">Dr. {doctor.name}</h1>
+              <p className="text-white/85 text-xs sm:text-sm truncate"><i className="fas fa-stethoscope mr-1.5"></i>{doctor.specialization}</p>
+              <p className="text-white/70 text-xs truncate"><i className="fas fa-hospital mr-1.5"></i>{doctor.clinicId?.name || "Independent Practice"}</p>
             </div>
+          </div>
+          {/* Actions */}
+          <div className="flex items-center gap-2 w-full sm:w-auto">
+            <span className="text-white/70 text-xs mr-1 hidden md:block whitespace-nowrap">
+              {new Date().toLocaleDateString("en-IN", { weekday: "long", day: "numeric", month: "short" })}
+            </span>
+            <button onClick={() => setShowControls(true)}
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-amber-400 hover:bg-amber-500 text-amber-900 font-semibold rounded-xl text-xs sm:text-sm transition-all shadow-md">
+              <i className="fas fa-sliders-h"></i><span className="hidden xs:inline sm:inline">Controls</span>
+            </button>
+            <button onClick={() => setShowSupport(true)}
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-white/15 hover:bg-white/25 text-white font-semibold rounded-xl text-xs sm:text-sm transition-all border border-white/20">
+              <i className="fas fa-headset"></i><span className="hidden sm:inline">Support</span>
+              <span className="hidden lg:inline-flex items-center gap-1 text-xs bg-emerald-400/30 text-emerald-200 px-2 py-0.5 rounded-full">
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>Live
+              </span>
+            </button>
+            <button onClick={onLogout}
+              className="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 bg-white/90 hover:bg-white text-teal-700 font-semibold rounded-xl text-xs sm:text-sm transition-all shadow-md ml-auto sm:ml-0">
+              <i className="fas fa-sign-out-alt"></i><span>Logout</span>
+            </button>
           </div>
         </div>
       </header>
 
-      {/* Stats Section */}
-      <section className="doctor-stats-section" aria-label="Dashboard statistics" style={{ marginBottom: '1.5rem' }}>
-        <div className="row g-3">
+      <div className="max-w-7xl mx-auto px-3 sm:px-4 py-4 sm:py-6 space-y-4 sm:space-y-6">
+
+        {/* ── Stats ── */}
+        <section className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           {[
-            { label: "Today", value: stats.today, icon: "calendar-day", gradient: "linear-gradient(135deg, #3b82f6, #1d4ed8)" },
-            { label: "Pending", value: stats.pending, icon: "hourglass-half", gradient: "linear-gradient(135deg, #f59e0b, #d97706)" },
-            { label: "Completed", value: stats.completed, icon: "check-circle", gradient: "linear-gradient(135deg, #10b981, #059669)" },
-            { label: "Total", value: stats.total, icon: "users", gradient: "linear-gradient(135deg, #8b5cf6, #6d28d9)" }
-          ].map((stat, i) => (
-            <div key={i} className="col-6 col-lg-3">
-              <div className="card h-100 border-0" style={{ borderRadius: '16px', overflow: 'hidden' }}>
-                <div className="card-body p-3">
-                  <div className="d-flex align-items-center">
-                    <div className="d-flex align-items-center justify-content-center me-3" style={{ width: '50px', height: '50px', borderRadius: '14px', background: stat.gradient }} aria-hidden="true">
-                      <i className={`fas fa-${stat.icon} text-white`} style={{ fontSize: '1.2rem' }}></i>
-                    </div>
-                    <div>
-                      <p className="mb-0 fw-bold" style={{ fontSize: '1.75rem', color: '#1e293b' }}>{stat.value}</p>
-                      <small className="text-muted" style={{ fontSize: '0.8rem' }}>{stat.label}</small>
-                    </div>
-                  </div>
-                </div>
+            { label: "Today",     value: stats.today,     icon: "calendar-day",    from: "from-blue-500",    to: "to-blue-700" },
+            { label: "Pending",   value: stats.pending,   icon: "hourglass-half",  from: "from-amber-400",   to: "to-amber-600" },
+            { label: "Completed", value: stats.completed, icon: "check-circle",    from: "from-emerald-500", to: "to-emerald-700" },
+            { label: "Total",     value: stats.total,     icon: "users",           from: "from-violet-500",  to: "to-violet-700" },
+          ].map((s) => (
+            <div key={s.label} className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-100 p-3 sm:p-4 flex items-center gap-3 sm:gap-4">
+              <div className={`w-10 h-10 sm:w-12 sm:h-12 rounded-xl bg-gradient-to-br ${s.from} ${s.to} flex items-center justify-center flex-shrink-0 shadow-md`}>
+                <i className={`fas fa-${s.icon} text-white text-base sm:text-lg`}></i>
+              </div>
+              <div>
+                <p className="text-xl sm:text-2xl font-bold text-slate-800 leading-none">{s.value}</p>
+                <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
               </div>
             </div>
           ))}
-        </div>
-      </section>
+        </section>
 
-      {/* Navigation Tabs - Queue is the HERO */}
-      <nav className="doctor-dashboard-tabs" aria-label="Dashboard navigation" role="tablist">
-        <button 
-          className={`doctor-tab queue-hero ${activeTab === 'queue' ? 'active' : ''}`}
-          onClick={() => setActiveTab('queue')}
-          role="tab"
-          aria-selected={activeTab === 'queue'}
-          aria-controls="queue-panel"
-        >
-          <i className="fas fa-users" aria-hidden="true"></i>
-          <span>Queue</span>
-          {queue.length > 0 && <span className="badge bg-danger" aria-label={`${queue.length} patients waiting`}>{queue.length}</span>}
-        </button>
-        <button 
-          className={`doctor-tab ${activeTab === 'appointments' ? 'active' : ''}`}
-          onClick={() => setActiveTab('appointments')}
-          role="tab"
-          aria-selected={activeTab === 'appointments'}
-          aria-controls="appointments-panel"
-        >
-          <i className="fas fa-calendar-alt" aria-hidden="true"></i>
-          <span>All Bookings</span>
-        </button>
-        <button 
-          className={`doctor-tab ${activeTab === 'schedule' ? 'active' : ''}`}
-          onClick={() => setActiveTab('schedule')}
-          role="tab"
-          aria-selected={activeTab === 'schedule'}
-          aria-controls="schedule-panel"
-        >
-          <i className="fas fa-clock" aria-hidden="true"></i>
-          <span>Schedule</span>
-        </button>
-        <button 
-          className={`doctor-tab ${activeTab === 'wallet' ? 'active' : ''}`}
-          onClick={() => setActiveTab('wallet')}
-          role="tab"
-          aria-selected={activeTab === 'wallet'}
-          aria-controls="wallet-panel"
-        >
-          <i className="fas fa-wallet" aria-hidden="true"></i>
-          <span>Wallet</span>
-        </button>
-        <button 
-          className={`doctor-tab ${activeTab === 'emr' ? 'active' : ''}`}
-          onClick={() => setActiveTab('emr')}
-          role="tab"
-          aria-selected={activeTab === 'emr'}
-          aria-controls="emr-panel"
-          style={{ background: emrSubscription ? 'linear-gradient(135deg, #10b981, #059669)' : undefined }}
-        >
-          <i className="fas fa-notes-medical" aria-hidden="true"></i>
-          <span>EMR</span>
-          {emrSubscription && <span className="badge bg-success ms-1" style={{ fontSize: '0.6rem' }}>Active</span>}
-        </button>
-        <button 
-          className={`doctor-tab ${activeTab === 'imaging' ? 'active' : ''}`}
-          onClick={() => setActiveTab('imaging')}
-          role="tab"
-          aria-selected={activeTab === 'imaging'}
-          aria-controls="imaging-panel"
-          style={{ background: activeTab === 'imaging' ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : undefined }}
-        >
-          <i className="fas fa-x-ray" aria-hidden="true"></i>
-          <span>Imaging</span>
-        </button>
-      </nav>
+        {/* ── Tabs ── */}
+        <nav className="flex gap-1 bg-white rounded-xl sm:rounded-2xl p-1 sm:p-1.5 shadow-sm border border-slate-100 overflow-x-auto scrollbar-hide -mx-1 px-1">
+          {[
+            { id: "queue",        icon: "users",         label: "Queue",       badge: queue.length > 0 ? queue.length : null },
+            { id: "appointments", icon: "calendar-alt",  label: "Bookings" },
+            { id: "schedule",     icon: "clock",         label: "Schedule" },
+            { id: "wallet",       icon: "wallet",        label: "Wallet" },
+            { id: "emr",          icon: "notes-medical", label: "EMR",         badge: emrSubscription ? "●" : null, badgeColor: "bg-emerald-500" },
+            { id: "imaging",      icon: "x-ray",         label: "Imaging" },
+          ].map((t) => (
+            <button key={t.id} onClick={() => setActiveTab(t.id)}
+              className={`flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-2 sm:py-2.5 rounded-lg sm:rounded-xl text-xs sm:text-sm font-semibold whitespace-nowrap transition-all flex-shrink-0 ${
+                activeTab === t.id
+                  ? "bg-gradient-to-r from-teal-500 to-emerald-500 text-white shadow-md"
+                  : "text-slate-500 hover:text-slate-700 hover:bg-slate-50"
+              }`}>
+              <i className={`fas fa-${t.icon} text-xs`}></i>
+              <span>{t.label}</span>
+              {t.badge && (
+                <span className={`inline-flex items-center justify-center min-w-[18px] h-4 sm:h-5 px-1 rounded-full text-[10px] sm:text-xs font-bold text-white ${t.badgeColor || "bg-red-500"}`}>
+                  {t.badge}
+                </span>
+              )}
+            </button>
+          ))}
+        </nav>
 
-      {/* Patient Queue Section */}
-      {activeTab === 'queue' && (
-        <div className="row" id="queue-panel" role="tabpanel" aria-labelledby="queue-tab">
-          {/* Daily Summary Section - Today at a Glance */}
-          <section className="col-12 mb-3" aria-label="Today at a glance">
-            <div className="daily-summary-card">
-              <h2 style={{ fontSize: '1rem', fontWeight: 600, marginBottom: '0.75rem' }}>
-                <i className="fas fa-chart-line me-2" aria-hidden="true"></i>Today at a Glance
+        {/* ══════════════════════════════════════════════════════════════════════
+            QUEUE TAB
+        ══════════════════════════════════════════════════════════════════════ */}
+        {activeTab === "queue" && (
+          <div className="space-y-4">
+
+            {/* Daily Summary */}
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-5">
+              <h2 className="text-sm font-semibold text-slate-700 mb-3 sm:mb-4 flex items-center gap-2">
+                <i className="fas fa-chart-line text-teal-500"></i>Today at a Glance
               </h2>
-              <div className="daily-summary-stats">
-                <div className="summary-stat seen">
-                  <div className="value" aria-label="Patients seen">{stats.completed}</div>
-                  <div className="label">Seen</div>
-                </div>
-                <div className="summary-stat pending">
-                  <div className="value" aria-label="Patients waiting">{queue.length}</div>
-                  <div className="label">Waiting</div>
-                </div>
-                <div className="summary-stat earnings">
-                  <div className="value" aria-label="Today's earnings">₹{(stats.completed * (doctor.consultationFee || 500)).toLocaleString()}</div>
-                  <div className="label">Earnings</div>
-                </div>
-                <div className="summary-stat avg-time">
-                  <div className="value" aria-label="Average consultation time">~{doctor.consultationDuration || 20}m</div>
-                  <div className="label">Avg Time</div>
-                </div>
+              <div className="grid grid-cols-2 sm:grid-cols-4 gap-2 sm:gap-4">
+                {[
+                  { label: "Seen",     value: stats.completed,                                                  color: "text-emerald-600", bg: "bg-emerald-50" },
+                  { label: "Waiting",  value: queue.length,                                                     color: "text-amber-600",   bg: "bg-amber-50" },
+                  { label: "Earnings", value: `₹${(stats.completed * (doctor.consultationFee || 500)).toLocaleString()}`, color: "text-blue-600", bg: "bg-blue-50" },
+                  { label: "Avg Time", value: `~${doctor.consultationDuration || 20}m`,                         color: "text-violet-600",  bg: "bg-violet-50" },
+                ].map((s) => (
+                  <div key={s.label} className={`${s.bg} rounded-xl p-2.5 sm:p-3 text-center`}>
+                    <p className={`text-lg sm:text-xl font-bold ${s.color}`}>{s.value}</p>
+                    <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
+                  </div>
+                ))}
               </div>
             </div>
-          </section>
 
-          {/* Quick Actions Bar - Staff Friendly */}
-          <div className="col-12 mb-3">
-            <div className="quick-actions-bar" role="toolbar" aria-label="Queue actions">
-              <div className="quick-actions-left">
-                <h2 className="queue-title" style={{ fontSize: '1.25rem' }}>
-                  <i className="fas fa-users" aria-hidden="true"></i>
-                  Today's Queue
-                  <span className="queue-count" aria-label={`${queue.length + (currentPatient ? 1 : 0)} total patients`}>{queue.length + (currentPatient ? 1 : 0)}</span>
-                </h2>
-              </div>
-              <div className="quick-actions-right">
-                <button 
-                  className="quick-btn quick-btn-refresh"
-                  onClick={fetchQueue}
-                  disabled={queueLoading}
-                  title="Refresh Queue"
-                  aria-label="Refresh queue"
-                >
-                  <i className={`fas fa-sync-alt ${queueLoading ? 'fa-spin' : ''}`} aria-hidden="true"></i>
+            {/* Quick Actions Bar */}
+            <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-100 p-3 sm:p-4 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+              <h2 className="text-sm sm:text-base font-bold text-slate-800 flex items-center gap-2">
+                <i className="fas fa-users text-teal-500"></i>
+                Today's Queue
+                <span className="inline-flex items-center justify-center w-5 h-5 sm:w-6 sm:h-6 rounded-full bg-teal-100 text-teal-700 text-xs font-bold">
+                  {queue.length + (currentPatient ? 1 : 0)}
+                </span>
+              </h2>
+              <div className="flex items-center gap-1.5 sm:gap-2 flex-wrap">
+                <button onClick={fetchQueue} disabled={queueLoading}
+                  className="w-8 h-8 sm:w-auto sm:h-auto inline-flex items-center justify-center sm:gap-1.5 sm:px-3 sm:py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-sm font-medium transition-all disabled:opacity-50">
+                  <i className={`fas fa-sync-alt text-xs ${queueLoading ? "animate-spin" : ""}`}></i>
                 </button>
                 {queue.length > 0 && (
-                  <button 
-                    className="quick-btn quick-btn-notify"
-                    onClick={notifyUpcomingPatients}
-                    title="Notify Next 3 Patients"
-                    aria-label="Notify next 3 patients"
-                  >
-                    <i className="fas fa-bell" aria-hidden="true"></i>
-                    <span>Notify</span>
+                  <button onClick={notifyUpcomingPatients}
+                    className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-sky-100 hover:bg-sky-200 text-sky-700 text-xs sm:text-sm font-medium transition-all">
+                    <i className="fas fa-bell text-xs"></i><span>Notify</span>
                   </button>
                 )}
                 {queue.length > 0 && !currentPatient && (
-                  <button 
-                    className="quick-btn quick-btn-call"
-                    onClick={callNextPatient}
-                    title="Call First Patient"
-                    aria-label="Call next patient"
-                  >
-                    <i className="fas fa-phone-alt" aria-hidden="true"></i>
-                    <span>Call Next</span>
+                  <button onClick={callNextPatient}
+                    className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-emerald-100 hover:bg-emerald-200 text-emerald-700 text-xs sm:text-sm font-medium transition-all">
+                    <i className="fas fa-phone-alt text-xs"></i><span>Call Next</span>
                   </button>
                 )}
-                <button 
-                  className="quick-btn quick-btn-add"
-                  onClick={() => setShowWalkInModal(true)}
-                  aria-label="Add walk-in patient"
-                >
-                  <i className="fas fa-user-plus" aria-hidden="true"></i>
-                  <span>Walk-In</span>
+                <button onClick={() => setShowWalkInModal(true)}
+                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-xs sm:text-sm font-semibold transition-all shadow-sm">
+                  <i className="fas fa-user-plus text-xs"></i><span>Walk-In</span>
                 </button>
               </div>
             </div>
-          </div>
 
-          {/* Queue Type Filter - Human Language */}
-          <div className="col-12 mb-3">
-            <div className="queue-type-filter" role="group" aria-label="Filter queue by type">
-              <button 
-                className={`queue-filter-btn ${queueFilter === 'all' ? 'active' : ''}`}
-                onClick={() => setQueueFilter('all')}
-                aria-pressed={queueFilter === 'all'}
-              >
-                <i className="fas fa-layer-group me-1" aria-hidden="true"></i>
-                All Patients ({queue.length})
-              </button>
-              <button 
-                className={`queue-filter-btn in-clinic ${queueFilter === 'in_clinic' ? 'active' : ''}`}
-                onClick={() => setQueueFilter('in_clinic')}
-                aria-pressed={queueFilter === 'in_clinic'}
-              >
-                <i className="fas fa-hospital me-1" aria-hidden="true"></i>
-                Clinic Queue ({queue.filter(p => p.consultationType !== 'online').length})
-              </button>
-              <button 
-                className={`queue-filter-btn virtual ${queueFilter === 'virtual' ? 'active' : ''}`}
-                onClick={() => setQueueFilter('virtual')}
-                aria-pressed={queueFilter === 'virtual'}
-              >
-                <i className="fas fa-video me-1" aria-hidden="true"></i>
-                Online Consults ({queue.filter(p => p.consultationType === 'online').length})
-              </button>
+            {/* Queue Type Filter */}
+            <div className="flex gap-1.5 sm:gap-2 overflow-x-auto pb-1 scrollbar-hide">
+              {[
+                { id: "all",      label: `All (${queue.length})`,                                                      icon: "layer-group" },
+                { id: "in_clinic",label: `Clinic (${queue.filter(p => p.consultationType !== "online").length})`,       icon: "hospital" },
+                { id: "virtual",  label: `Online (${queue.filter(p => p.consultationType === "online").length})`,       icon: "video" },
+              ].map((f) => (
+                <button key={f.id} onClick={() => setQueueFilter(f.id)}
+                  className={`inline-flex items-center gap-1.5 px-3 sm:px-4 py-2 rounded-xl text-xs sm:text-sm font-medium transition-all whitespace-nowrap flex-shrink-0 ${
+                    queueFilter === f.id ? "bg-teal-500 text-white shadow-sm" : "bg-white text-slate-600 border border-slate-200 hover:border-teal-300"
+                  }`}>
+                  <i className={`fas fa-${f.icon} text-xs`}></i>{f.label}
+                </button>
+              ))}
             </div>
-          </div>
 
-          {/* Current Patient - Aside */}
-          <aside className="col-lg-5 mb-4" aria-label="Current patient in consultation">
-            <div className="card doctor-current-patient-card">
-              <div className="card-header bg-primary text-white">
-                <h5 className="mb-0">
-                  <i className="fas fa-user-check me-2"></i>
-                  Current Patient
-                </h5>
-              </div>
-              <div className="card-body">
-                {currentPatient ? (
-                  <div className="current-patient-info">
-                    <div className="patient-avatar">
-                      {currentPatient.isWalkIn 
-                        ? (currentPatient.walkInPatient?.name?.charAt(0) || 'W')
-                        : (currentPatient.userId?.name?.charAt(0) || 'P')}
-                    </div>
-                    <h4>
-                      {currentPatient.isWalkIn 
-                        ? (currentPatient.walkInPatient?.name || 'Walk-In Patient')
-                        : (currentPatient.userId?.name || 'Unknown Patient')}
-                    </h4>
-                    
-                    {/* Patient Type Badge */}
-                    <div className={`patient-type-badge ${currentPatient.consultationType === 'online' ? 'virtual' : 'clinic'}`}>
-                      <i className={`fas ${currentPatient.consultationType === 'online' ? 'fa-video' : 'fa-hospital'}`}></i>
-                      {currentPatient.consultationType === 'online' ? 'Online Consultation' : 'In-Clinic Visit'}
-                    </div>
+            {/* Queue Grid: Current Patient + Waiting List */}
+            <div className="grid grid-cols-1 lg:grid-cols-5 gap-4">
 
-                    {/* Consultation Timer */}
-                    <div className="consultation-timer">
-                      <i className="fas fa-stopwatch"></i>
-                      <span>{formatConsultationTime(consultationTime)} elapsed</span>
-                    </div>
-
-                    {/* Status Pill */}
-                    <div className="mb-2">
-                      <span className="status-pill in-consultation">In Consultation</span>
-                    </div>
-
-                    <p className="text-muted mb-2">
-                      <i className="fas fa-phone me-2"></i>
-                      {currentPatient.isWalkIn 
-                        ? (currentPatient.walkInPatient?.phone || 'N/A')
-                        : (currentPatient.userId?.phone || 'N/A')}
-                    </p>
-                    <div className="patient-details">
-                      <span className="badge bg-info me-2">
-                        Token #{currentPatient.tokenNumber || currentPatient.queueNumber || '-'}
-                      </span>
-                      <span className="badge bg-secondary">
-                        {currentPatient.estimatedTime ? formatTime(currentPatient.estimatedTime) : (currentPatient.time ? formatTime(currentPatient.time) : '-')}
-                      </span>
-                    </div>
-                    {currentPatient.reason && (
-                      <>
-                        <p className="mt-3 mb-2"><strong>Reason:</strong></p>
-                        <p className="text-muted" style={{ fontSize: '0.85rem' }}>{currentPatient.reason}</p>
-                      </>
-                    )}
-                    
-                    {/* Systematic History Summary */}
-                    {historyLoading ? (
-                      <div className="mt-3 text-center">
-                        <div className="spinner-border spinner-border-sm text-primary"></div>
-                        <small className="text-muted ms-2">Loading history...</small>
-                      </div>
-                    ) : systematicHistory ? (
-                      <div className="mt-3">
-                        <SystematicHistorySummary 
-                          history={systematicHistory}
-                          compact={true}
-                          expandable={true}
-                          onPrint={() => {
-                            const printWindow = window.open('', '_blank');
-                            printWindow.document.write(`
-                              <html>
-                                <head>
-                                  <title>Systematic History - ${currentPatient.userId?.name || currentPatient.walkInPatient?.name || 'Patient'}</title>
-                                  <style>
-                                    body { font-family: Arial, sans-serif; margin: 20px; }
-                                    .header { border-bottom: 2px solid #333; padding-bottom: 10px; margin-bottom: 20px; }
-                                    .system-row { margin: 10px 0; padding: 8px; border-left: 3px solid #007bff; }
-                                    .symptom { background: #f8f9fa; padding: 4px 8px; margin: 2px; border-radius: 4px; display: inline-block; }
-                                    .allergy { background: #fff3cd; border: 1px solid #ffeaa7; padding: 4px 8px; margin: 2px; border-radius: 4px; }
-                                  </style>
-                                </head>
-                                <body>
-                                  <div class="header">
-                                    <h2>Systematic History Summary</h2>
-                                    <p><strong>Patient:</strong> ${currentPatient.userId?.name || currentPatient.walkInPatient?.name || 'Unknown'}</p>
-                                    <p><strong>Date:</strong> ${new Date().toLocaleDateString()}</p>
-                                    <p><strong>Doctor:</strong> Dr. ${doctor.name}</p>
-                                  </div>
-                                  <div id="history-content"></div>
-                                </body>
-                              </html>
-                            `);
-                            // Add the systematic history content here
-                            printWindow.document.close();
-                            printWindow.print();
-                          }}
-                        />
-                      </div>
-                    ) : (
-                      <div className="mt-3">
-                        <div className="alert alert-info" style={{ fontSize: '0.85rem', padding: '0.5rem' }}>
-                          <i className="fas fa-info-circle me-2"></i>
-                          No systematic history available for this patient
-                        </div>
-                      </div>
-                    )}
-                    
-                    {/* Quick Action Buttons - Improved */}
-                    <div className="current-patient-actions">
-                      {currentPatient.consultationType === 'online' && currentPatient.googleMeetLink && (
-                        <a 
-                          href={currentPatient.googleMeetLink}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="action-btn-primary"
-                          style={{ background: 'linear-gradient(135deg, #1a73e8 0%, #4285f4 100%)', textDecoration: 'none', color: 'white' }}
-                        >
-                          <i className="fas fa-video"></i>
-                          <span>Join Video Call</span>
-                        </a>
-                      )}
-                      <div className="action-row">
-                        <button 
-                          className="action-btn-primary prescription"
-                          onClick={() => { setPrescriptionPatient(currentPatient); setShowPrescription(true); }}
-                        >
-                          <i className="fas fa-prescription"></i>
-                          Prescription
-                        </button>
-                        <button 
-                          className="action-btn-primary complete"
-                          onClick={completeCurrentPatient}
-                        >
-                          <i className="fas fa-check-circle"></i>
-                          Complete
-                        </button>
-                      </div>
-                      <div className="action-row">
-                        <button 
-                          className="action-btn-primary back-to-waiting"
-                          onClick={() => updateAppointmentStatus(currentPatient._id, 'confirmed')}
-                        >
-                          <i className="fas fa-undo"></i>
-                          Back to Queue
-                        </button>
-                        <button 
-                          className="action-btn-primary cancel"
-                          onClick={() => markNoShow(currentPatient._id)}
-                        >
-                          <i className="fas fa-user-slash"></i>
-                          No Show
-                        </button>
-                      </div>
-                    </div>
+              {/* Current Patient */}
+              <div className="lg:col-span-2">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden h-full">
+                  <div className="bg-gradient-to-r from-teal-500 to-emerald-500 px-5 py-3">
+                    <h5 className="text-white font-semibold text-sm flex items-center gap-2">
+                      <i className="fas fa-user-check"></i>Current Patient
+                    </h5>
                   </div>
-                ) : (
-                  <div className="current-patient-empty">
-                    <div className="empty-icon">
-                      <i className="fas fa-user-clock"></i>
-                    </div>
-                    <h5>No patient in consultation</h5>
-                    <p>
-                      {queue.length > 0 
-                        ? `${queue.length} patient${queue.length > 1 ? 's' : ''} waiting in queue`
-                        : 'Walk-ins and online bookings will appear here'
-                      }
-                    </p>
-                    {queue.length > 0 ? (
-                      <button 
-                        className="action-btn-primary complete"
-                        onClick={callNextPatient}
-                        style={{ margin: '0 auto' }}
-                      >
-                        <i className="fas fa-phone-alt"></i>
-                        Call Next Patient
-                      </button>
-                    ) : (
-                      <div className="hint">
-                        <i className="fas fa-hand-point-right"></i>
-                        <span>Click "Walk-In" to add a patient</span>
-                      </div>
-                    )}
-                  </div>
-                )}
-              </div>
-            </div>
-          </aside>
-
-          {/* Waiting Queue - Main Content */}
-          <main className="col-lg-7 mb-4" aria-label="Patient waiting queue">
-            <div className="card">
-              <div className="card-header d-flex justify-content-between align-items-center">
-                <h3 className="mb-0" style={{ fontSize: '1.1rem' }}>
-                  <i className={`fas ${queueFilter === 'virtual' ? 'fa-video' : queueFilter === 'in_clinic' ? 'fa-hospital' : 'fa-list-ol'} me-2`} aria-hidden="true"></i>
-                  {queueFilter === 'virtual' ? 'Virtual Queue' : queueFilter === 'in_clinic' ? 'In-Clinic Queue' : 'Waiting Queue'} ({
-                    queueFilter === 'all' ? queue.length 
-                    : queueFilter === 'virtual' ? queue.filter(p => p.consultationType === 'online').length
-                    : queue.filter(p => p.consultationType !== 'online').length
-                  })
-                </h3>
-                <div>
-                  <button 
-                    className="btn btn-sm btn-outline-primary me-2"
-                    onClick={fetchQueue}
-                    disabled={queueLoading}
-                  >
-                    <i className={`fas fa-sync ${queueLoading ? 'fa-spin' : ''}`}></i>
-                  </button>
-                  {queue.length > 0 && (
-                    <button 
-                      className="btn btn-sm btn-outline-info me-2"
-                      onClick={notifyUpcomingPatients}
-                      title="Notify next 3 patients"
-                    >
-                      <i className="fas fa-bell me-1"></i>
-                      Notify
-                    </button>
-                  )}
-                  {queue.length > 0 && currentPatient && (
-                    <button 
-                      className="btn btn-sm btn-primary"
-                      onClick={callNextPatient}
-                    >
-                      <i className="fas fa-forward me-1"></i>
-                      Next Patient
-                    </button>
-                  )}
-                </div>
-              </div>
-              <div className="card-body p-0">
-                {(() => {
-                  // Filter queue based on selected filter
-                  const filteredQueue = queueFilter === 'all' 
-                    ? queue 
-                    : queueFilter === 'virtual'
-                      ? queue.filter(p => p.consultationType === 'online')
-                      : queue.filter(p => p.consultationType !== 'online');
-                  
-                  return filteredQueue.length === 0 ? (
-                  <div className="empty-queue-state">
-                    <div className="empty-queue-icon">
-                      <i className="fas fa-check-circle"></i>
-                    </div>
-                    <h4>All Clear!</h4>
-                    <p>{queueFilter === 'all' ? 'No patients waiting in queue' : `No ${queueFilter === 'virtual' ? 'virtual' : 'in-clinic'} patients waiting`}</p>
-                    <button className="empty-queue-btn" onClick={() => setShowWalkInModal(true)}>
-                      <i className="fas fa-user-plus"></i>
-                      Add Walk-In Patient
-                    </button>
-                  </div>
-                ) : (
-                  <div className="queue-list">
-                    {filteredQueue.map((patient, index) => {
-                      // Calculate estimated wait time (15 min per patient + 5 min buffer)
-                      const estimatedWaitMinutes = index * 20;
-                      const estimatedTime = new Date(Date.now() + estimatedWaitMinutes * 60000);
-                      const estimatedTimeStr = estimatedTime.toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit', hour12: true });
-                      
-                      return (
-                        <div key={patient._id} className={`queue-item ${index === 0 ? 'next-up' : ''} ${patient.consultationType === 'online' ? 'virtual-patient' : 'clinic-patient'}`}>
-                          <div className="queue-position">
-                            {index + 1}
+                  <div className="p-5">
+                    {currentPatient ? (
+                      <div className="space-y-3">
+                        {/* Avatar + Name */}
+                        <div className="flex items-center gap-3">
+                          <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-teal-400 to-emerald-500 flex items-center justify-center text-white font-bold text-lg flex-shrink-0">
+                            {(currentPatient.isWalkIn ? currentPatient.walkInPatient?.name : currentPatient.userId?.name)?.charAt(0) || "P"}
                           </div>
-                          <div className="queue-patient-info">
-                            <h6 className="mb-0">
-                              {patient.isWalkIn ? (patient.walkInPatient?.name || 'Walk-In Patient') : (patient.userId?.name || 'Unknown')}
-                              {/* Booking Source Badge */}
-                              {patient.bookingSource === 'offline' || patient.isWalkIn ? (
-                                <span className="badge bg-warning text-dark ms-2" style={{ fontSize: '0.65rem' }}>
-                                  <i className="fas fa-walking me-1"></i>Walk-In
-                                </span>
-                              ) : patient.bookingSource === 'receptionist' ? (
-                                <span className="badge bg-purple text-white ms-2" style={{ fontSize: '0.65rem', background: '#9333ea' }}>
-                                  <i className="fas fa-user-tie me-1"></i>Receptionist
-                                </span>
-                              ) : patient.bookingSource === 'phone' ? (
-                                <span className="badge bg-info text-white ms-2" style={{ fontSize: '0.65rem' }}>
-                                  <i className="fas fa-phone me-1"></i>Phone
-                                </span>
-                              ) : (
-                                <span className="badge bg-success ms-2" style={{ fontSize: '0.65rem' }}>
-                                  <i className="fas fa-globe me-1"></i>Online
-                                </span>
-                              )}
-                            </h6>
-                            <small className="text-muted">
-                              Token #{patient.tokenNumber || '-'} • {formatTime(patient.time)}
-                              {patient.isWalkIn && patient.walkInPatient?.phone && (
-                                <> • <i className="fas fa-phone-alt"></i> {patient.walkInPatient.phone}</>
-                              )}
-                            </small>
-                            <br />
-                            <small className="text-muted">{patient.reason}</small>
-                            <div className="mt-1">
-                              <span className="badge bg-light text-dark" style={{ fontSize: '0.7rem' }}>
-                                <i className="fas fa-clock me-1"></i>
-                                Est. ~{estimatedWaitMinutes} min ({estimatedTimeStr})
-                              </span>
-                              <SystematicHistoryIndicator appointmentId={patient._id} />
-                            </div>
-                          </div>
-                          <div className="queue-patient-type">
-                            {patient.consultationType === 'online' ? (
-                              <span className="badge bg-info">
-                                <i className="fas fa-video"></i>
-                              </span>
-                            ) : (
-                              <span className="badge bg-secondary">
-                                <i className="fas fa-hospital"></i>
-                              </span>
-                            )}
-                          </div>
-                          <div className="queue-actions">
-                            {index === 0 && !currentPatient && (
-                              <button 
-                                className="btn btn-sm btn-success me-1"
-                                onClick={() => updateAppointmentStatus(patient._id, 'in_progress')}
-                                title="Start consultation"
-                              >
-                                <i className="fas fa-play"></i>
-                              </button>
-                            )}
-                            <button 
-                              className="btn btn-sm btn-outline-primary me-1"
-                              onClick={() => notifyPatient(patient._id)}
-                              title="Send notification to patient"
-                            >
-                              <i className="fas fa-bell"></i>
-                            </button>
-                            <button 
-                              className="btn btn-sm btn-outline-warning me-1"
-                              onClick={() => skipPatient(patient._id)}
-                              title="Skip (move to end)"
-                            >
-                              <i className="fas fa-step-forward"></i>
-                            </button>
-                            <button 
-                              className="btn btn-sm btn-outline-danger"
-                              onClick={() => markNoShow(patient._id)}
-                              title="Mark as no-show"
-                            >
-                              <i className="fas fa-user-slash"></i>
-                            </button>
+                          <div>
+                            <h4 className="font-bold text-slate-800 text-sm">
+                              {currentPatient.isWalkIn ? (currentPatient.walkInPatient?.name || "Walk-In Patient") : (currentPatient.userId?.name || "Unknown Patient")}
+                            </h4>
+                            <p className="text-xs text-slate-500">
+                              <i className="fas fa-phone mr-1"></i>
+                              {currentPatient.isWalkIn ? (currentPatient.walkInPatient?.phone || "N/A") : (currentPatient.userId?.phone || "N/A")}
+                            </p>
                           </div>
                         </div>
-                      );
-                    })}
-                  </div>
-                );
-                })()}
-              </div>
-            </div>
-          </main>
-        </div>
-      )}
-
-      {/* Appointments Tab */}
-      {activeTab === 'appointments' && (
-      <main className="card" id="appointments-panel" role="tabpanel" aria-labelledby="appointments-tab">
-        <div className="card-header">
-          <div className="d-flex justify-content-between align-items-center flex-wrap gap-2">
-            <h2 className="mb-0" style={{ fontSize: '1.25rem' }}><i className="fas fa-calendar-alt me-2" aria-hidden="true"></i>Appointments</h2>
-            <div className="d-flex align-items-center gap-2">
-              <div className="btn-group btn-group-sm">
-                {["today", "upcoming", "completed", "all"].map(f => (
-                  <button key={f} className={`btn ${filter === f ? "btn-primary" : "btn-outline-primary"}`} onClick={() => setFilter(f)}>
-                    {f.charAt(0).toUpperCase() + f.slice(1)}
-                  </button>
-                ))}
-              </div>
-              <button 
-                className="btn btn-outline-secondary btn-sm"
-                onClick={() => exportAppointmentsToPDF(getFilteredAppointments(), `Dr. ${doctor.name} - Appointments`)}
-              >
-                <i className="fas fa-file-pdf me-1"></i>PDF
-              </button>
-            </div>
-          </div>
-        </div>
-        <div className="card-body">
-          {getFilteredAppointments().length === 0 ? (
-            <div className="text-center py-4">
-              <i className="fas fa-calendar-times fa-3x text-muted mb-3"></i>
-              <p className="text-muted">No appointments found</p>
-            </div>
-          ) : (
-            <div className="table-responsive">
-              <table className="table table-hover">
-                <thead>
-                  <tr>
-                    <th>Patient</th>
-                    <th>Date</th>
-                    <th>Time</th>
-                    <th>Type</th>
-                    <th>Reason</th>
-                    <th>History</th>
-                    <th>Status</th>
-                    <th>Actions</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {getFilteredAppointments().map(apt => (
-                    <tr key={apt._id}>
-                      <td>
-                        <strong>{apt.isWalkIn ? (apt.walkInPatient?.name || 'Walk-In') : (apt.userId?.name || "Unknown")}</strong>
-                        {/* Booking Source Badge */}
-                        {(apt.bookingSource === 'offline' || apt.isWalkIn) && (
-                          <span className="badge bg-warning text-dark ms-1" style={{ fontSize: '0.6rem' }}>Walk-In</span>
-                        )}
-                        {apt.bookingSource === 'receptionist' && (
-                          <span className="badge text-white ms-1" style={{ fontSize: '0.6rem', background: '#9333ea' }}>Receptionist</span>
-                        )}
-                        {apt.bookingSource === 'phone' && (
-                          <span className="badge bg-info ms-1" style={{ fontSize: '0.6rem' }}>Phone</span>
-                        )}
-                        {apt.bookingSource === 'online' && !apt.isWalkIn && (
-                          <span className="badge bg-success ms-1" style={{ fontSize: '0.6rem' }}>Online</span>
-                        )}
-                        <br /><small className="text-muted">{apt.isWalkIn ? (apt.walkInPatient?.phone || 'N/A') : apt.userId?.phone}</small>
-                      </td>
-                      <td>{formatDate(apt.date)}</td>
-                      <td>{formatTime(apt.time)}</td>
-                      <td>
-                        {apt.consultationType === "online" ? (
-                          <span className="badge bg-info">
-                            <i className="fas fa-video me-1"></i>Online
+                        {/* Type + Timer */}
+                        <div className="flex items-center gap-2 flex-wrap">
+                          <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold ${currentPatient.consultationType === "online" ? "bg-sky-100 text-sky-700" : "bg-slate-100 text-slate-700"}`}>
+                            <i className={`fas ${currentPatient.consultationType === "online" ? "fa-video" : "fa-hospital"} text-xs`}></i>
+                            {currentPatient.consultationType === "online" ? "Online" : "In-Clinic"}
                           </span>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-amber-100 text-amber-700">
+                            <i className="fas fa-stopwatch text-xs"></i>{formatConsultationTime(consultationTime)} elapsed
+                          </span>
+                          <span className="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-teal-100 text-teal-700">
+                            Token #{currentPatient.tokenNumber || currentPatient.queueNumber || "-"}
+                          </span>
+                        </div>
+                        {currentPatient.reason && (
+                          <p className="text-xs text-slate-600 bg-slate-50 rounded-xl p-3">
+                            <span className="font-semibold">Reason: </span>{currentPatient.reason}
+                          </p>
+                        )}
+                        {/* Systematic History */}
+                        {historyLoading ? (
+                          <div className="flex items-center gap-2 text-xs text-slate-500">
+                            <div className="w-3 h-3 border-2 border-teal-400 border-t-transparent rounded-full animate-spin"></div>Loading history…
+                          </div>
+                        ) : systematicHistory ? (
+                          <SystematicHistorySummary history={systematicHistory} compact={true} expandable={true} />
                         ) : (
-                          <span className="badge bg-secondary">
-                            <i className="fas fa-hospital me-1"></i>In-Clinic
-                          </span>
+                          <p className="text-xs text-slate-400 bg-slate-50 rounded-xl p-2.5 flex items-center gap-1.5">
+                            <i className="fas fa-info-circle text-sky-400"></i>No systematic history available
+                          </p>
                         )}
-                      </td>
-                      <td><small>{apt.reason}</small></td>
-                      <td>
-                        <SystematicHistoryIndicator appointmentId={apt._id} />
-                      </td>
-                      <td>{getStatusBadge(apt.status)}</td>
-                      <td>
-                        {/* Meet Link for Online Appointments - Doctor joins as Host */}
-                        {apt.consultationType === "online" && apt.googleMeetLink && (
-                          <a 
-                            href={apt.doctorMeetLink || apt.googleMeetLink} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="btn btn-sm btn-primary me-1"
-                            title="Join as Host (You have moderator controls)"
-                            style={{ background: apt.meetingProvider === 'jitsi' ? '#location' : '#1a73e8' }}
-                          >
-                            <i className="fas fa-video me-1"></i>
-                            {apt.meetingProvider === 'jitsi' ? 'Host Meeting' : 'Start'}
-                          </a>
-                        )}
-                        {apt.consultationType === "online" && !apt.googleMeetLink && (
-                          <button 
-                            className="btn btn-sm btn-warning me-1"
-                            onClick={() => regenerateMeetLink(apt._id)}
-                            title="Click to generate Google Meet link"
-                          >
-                            <i className="fas fa-sync-alt me-1"></i>Generate
+                        {/* Action Buttons */}
+                        <div className="space-y-2 pt-1">
+                          {currentPatient.consultationType === "online" && currentPatient.googleMeetLink && (
+                            <a href={currentPatient.googleMeetLink} target="_blank" rel="noopener noreferrer"
+                              className="flex items-center justify-center gap-2 w-full py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white text-sm font-semibold transition-all">
+                              <i className="fas fa-video"></i>Join Video Call
+                            </a>
+                          )}
+                          <div className="grid grid-cols-2 gap-2">
+                            <button onClick={() => { setPrescriptionPatient(currentPatient); setShowPrescription(true); }}
+                              className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-violet-100 hover:bg-violet-200 text-violet-700 text-xs font-semibold transition-all">
+                              <i className="fas fa-prescription"></i>Prescription
+                            </button>
+                            <button onClick={() => updateAppointmentStatus(currentPatient._id, "completed")}
+                              className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-xs font-semibold transition-all">
+                              <i className="fas fa-check-circle"></i>Complete
+                            </button>
+                          </div>
+                          <div className="grid grid-cols-2 gap-2">
+                            <button onClick={() => updateAppointmentStatus(currentPatient._id, "confirmed")}
+                              className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-600 text-xs font-semibold transition-all">
+                              <i className="fas fa-undo"></i>Back to Queue
+                            </button>
+                            <button onClick={() => markNoShow(currentPatient._id)}
+                              className="flex items-center justify-center gap-1.5 py-2 rounded-xl bg-red-100 hover:bg-red-200 text-red-600 text-xs font-semibold transition-all">
+                              <i className="fas fa-user-slash"></i>No Show
+                            </button>
+                          </div>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="text-center py-8 space-y-3">
+                        <div className="w-14 h-14 rounded-2xl bg-slate-100 flex items-center justify-center mx-auto">
+                          <i className="fas fa-user-clock text-2xl text-slate-400"></i>
+                        </div>
+                        <h5 className="font-semibold text-slate-700 text-sm">No patient in consultation</h5>
+                        <p className="text-xs text-slate-400">{queue.length > 0 ? `${queue.length} patient${queue.length > 1 ? "s" : ""} waiting` : "Walk-ins will appear here"}</p>
+                        {queue.length > 0 && (
+                          <button onClick={callNextPatient}
+                            className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white text-sm font-semibold transition-all">
+                            <i className="fas fa-phone-alt"></i>Call Next Patient
                           </button>
                         )}
+                      </div>
+                    )}
+                  </div>
+                </div>
+              </div>
+
+              {/* Waiting Queue */}
+              <div className="lg:col-span-3">
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                  <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+                    <h3 className="font-bold text-slate-800 text-sm flex items-center gap-2">
+                      <i className={`fas ${queueFilter === "virtual" ? "fa-video" : queueFilter === "in_clinic" ? "fa-hospital" : "fa-list-ol"} text-teal-500`}></i>
+                      Waiting Queue
+                    </h3>
+                    <div className="flex items-center gap-2">
+                      <button onClick={fetchQueue} disabled={queueLoading}
+                        className="w-8 h-8 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 text-slate-500 transition-all disabled:opacity-50">
+                        <i className={`fas fa-sync text-xs ${queueLoading ? "animate-spin" : ""}`}></i>
+                      </button>
+                      {queue.length > 0 && currentPatient && (
+                        <button onClick={callNextPatient}
+                          className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-xs font-semibold transition-all">
+                          <i className="fas fa-forward text-xs"></i>Next
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                  {(() => {
+                    const filtered = queueFilter === "all" ? queue : queueFilter === "virtual" ? queue.filter(p => p.consultationType === "online") : queue.filter(p => p.consultationType !== "online");
+                    if (!filtered.length) return (
+                      <div className="text-center py-12 space-y-3">
+                        <div className="w-14 h-14 rounded-2xl bg-emerald-50 flex items-center justify-center mx-auto">
+                          <i className="fas fa-check-circle text-2xl text-emerald-400"></i>
+                        </div>
+                        <h4 className="font-semibold text-slate-700">All Clear!</h4>
+                        <p className="text-xs text-slate-400">No patients waiting</p>
+                        <button onClick={() => setShowWalkInModal(true)}
+                          className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-teal-500 hover:bg-teal-600 text-white text-sm font-semibold transition-all">
+                          <i className="fas fa-user-plus"></i>Add Walk-In
+                        </button>
+                      </div>
+                    );
+                    return (
+                      <div className="divide-y divide-slate-50">
+                        {filtered.map((patient, idx) => {
+                          const waitMins = idx * 20;
+                          const estTime = new Date(Date.now() + waitMins * 60000).toLocaleTimeString("en-IN", { hour: "2-digit", minute: "2-digit", hour12: true });
+                          return (
+                            <div key={patient._id} className={`flex items-start sm:items-center gap-2 sm:gap-3 px-3 sm:px-5 py-3 sm:py-3.5 hover:bg-slate-50 transition-colors ${idx === 0 ? "bg-teal-50/50" : ""}`}>
+                              {/* Position */}
+                              <div className={`w-7 h-7 sm:w-8 sm:h-8 rounded-xl flex items-center justify-center text-xs sm:text-sm font-bold flex-shrink-0 mt-0.5 sm:mt-0 ${idx === 0 ? "bg-teal-500 text-white" : "bg-slate-100 text-slate-600"}`}>
+                                {idx + 1}
+                              </div>
+                              {/* Info */}
+                              <div className="flex-1 min-w-0">
+                                <div className="flex items-center gap-1 flex-wrap">
+                                  <span className="font-semibold text-slate-800 text-xs sm:text-sm truncate">
+                                    {patient.isWalkIn ? (patient.walkInPatient?.name || "Walk-In") : (patient.userId?.name || "Unknown")}
+                                  </span>
+                                  <BookingSourceBadge apt={patient} />
+                                </div>
+                                <p className="text-xs text-slate-400 mt-0.5">
+                                  Token #{patient.tokenNumber || "-"} · {formatTime(patient.time)}
+                                  {patient.isWalkIn && patient.walkInPatient?.phone && ` · ${patient.walkInPatient.phone}`}
+                                </p>
+                                {patient.reason && <p className="text-xs text-slate-500 truncate">{patient.reason}</p>}
+                                <div className="flex items-center gap-1.5 mt-1 flex-wrap">
+                                  <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded-full">
+                                    ~{waitMins}m ({estTime})
+                                  </span>
+                                  <SystematicHistoryIndicator appointmentId={patient._id} />
+                                </div>
+                              </div>
+                              {/* Type badge — hidden on xs */}
+                              <span className={`hidden sm:inline-flex items-center justify-center w-7 h-7 rounded-lg text-xs flex-shrink-0 ${patient.consultationType === "online" ? "bg-sky-100 text-sky-600" : "bg-slate-100 text-slate-500"}`}>
+                                <i className={`fas ${patient.consultationType === "online" ? "fa-video" : "fa-hospital"}`}></i>
+                              </span>
+                              {/* Actions */}
+                              <div className="flex items-center gap-1 flex-shrink-0">
+                                {idx === 0 && !currentPatient && (
+                                  <button onClick={() => updateAppointmentStatus(patient._id, "in_progress")} title="Start"
+                                    className="w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-600 transition-all">
+                                    <i className="fas fa-play text-xs"></i>
+                                  </button>
+                                )}
+                                <button onClick={() => notifyPatient(patient._id)} title="Notify"
+                                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-sky-100 hover:bg-sky-200 text-sky-600 transition-all">
+                                  <i className="fas fa-bell text-xs"></i>
+                                </button>
+                                <button onClick={() => skipPatient(patient._id)} title="Skip"
+                                  className="hidden sm:flex w-7 h-7 items-center justify-center rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-600 transition-all">
+                                  <i className="fas fa-step-forward text-xs"></i>
+                                </button>
+                                <button onClick={() => markNoShow(patient._id)} title="No Show"
+                                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-red-100 hover:bg-red-200 text-red-600 transition-all">
+                                  <i className="fas fa-user-slash text-xs"></i>
+                                </button>
+                              </div>
+                            </div>
+                          );
+                        })}
+                      </div>
+                    );
+                  })()}
+                </div>
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════════════
+            APPOINTMENTS TAB
+        ══════════════════════════════════════════════════════════════════════ */}
+        {activeTab === "appointments" && (
+          <div className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="px-4 sm:px-5 py-3 sm:py-4 border-b border-slate-100 flex flex-wrap items-center justify-between gap-2 sm:gap-3">
+              <h2 className="font-bold text-slate-800 flex items-center gap-2 text-sm sm:text-base">
+                <i className="fas fa-calendar-alt text-teal-500"></i>Appointments
+              </h2>
+              <div className="flex items-center gap-2 flex-wrap">
+                <div className="flex rounded-xl overflow-hidden border border-slate-200">
+                  {["today", "upcoming", "completed", "all"].map((f) => (
+                    <button key={f} onClick={() => setFilter(f)}
+                      className={`px-2.5 sm:px-3 py-1.5 text-xs font-semibold transition-all capitalize ${filter === f ? "bg-teal-500 text-white" : "bg-white text-slate-500 hover:bg-slate-50"}`}>
+                      {f}
+                    </button>
+                  ))}
+                </div>
+                <button onClick={() => exportAppointmentsToPDF(getFilteredAppointments(), `Dr. ${doctor.name} - Appointments`)}
+                  className="inline-flex items-center gap-1.5 px-2.5 sm:px-3 py-1.5 rounded-xl border border-slate-200 text-slate-600 hover:bg-slate-50 text-xs font-medium transition-all">
+                  <i className="fas fa-file-pdf text-red-500"></i><span className="hidden sm:inline">PDF</span>
+                </button>
+              </div>
+            </div>
+
+            {getFilteredAppointments().length === 0 ? (
+              <div className="text-center py-10 sm:py-12">
+                <i className="fas fa-calendar-times text-3xl sm:text-4xl text-slate-300 mb-3"></i>
+                <p className="text-slate-400 text-sm">No appointments found</p>
+              </div>
+            ) : (
+              <>
+                {/* Desktop table */}
+                <div className="hidden sm:block overflow-x-auto">
+                  <table className="w-full text-sm">
+                    <thead>
+                      <tr className="bg-slate-50 text-left">
+                        {["Patient", "Date", "Time", "Type", "Reason", "History", "Status", "Actions"].map(h => (
+                          <th key={h} className="px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide whitespace-nowrap">{h}</th>
+                        ))}
+                      </tr>
+                    </thead>
+                    <tbody className="divide-y divide-slate-50">
+                      {getFilteredAppointments().map((apt) => (
+                        <tr key={apt._id} className="hover:bg-slate-50 transition-colors">
+                          <td className="px-4 py-3">
+                            <div className="font-semibold text-slate-800 flex items-center gap-1 flex-wrap text-sm">
+                              {apt.isWalkIn ? (apt.walkInPatient?.name || "Walk-In") : (apt.userId?.name || "Unknown")}
+                              <BookingSourceBadge apt={apt} />
+                            </div>
+                            <p className="text-xs text-slate-400 mt-0.5">{apt.isWalkIn ? (apt.walkInPatient?.phone || "N/A") : apt.userId?.phone}</p>
+                          </td>
+                          <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">{formatDate(apt.date)}</td>
+                          <td className="px-4 py-3 text-xs text-slate-600 whitespace-nowrap">{formatTime(apt.time)}</td>
+                          <td className="px-4 py-3">
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-xs font-semibold ${apt.consultationType === "online" ? "bg-sky-100 text-sky-700" : "bg-slate-100 text-slate-600"}`}>
+                              <i className={`fas ${apt.consultationType === "online" ? "fa-video" : "fa-hospital"} text-xs`}></i>
+                              {apt.consultationType === "online" ? "Online" : "In-Clinic"}
+                            </span>
+                          </td>
+                          <td className="px-4 py-3 text-xs text-slate-500 max-w-[120px] truncate">{apt.reason}</td>
+                          <td className="px-4 py-3"><SystematicHistoryIndicator appointmentId={apt._id} /></td>
+                          <td className="px-4 py-3"><StatusBadge status={apt.status} /></td>
+                          <td className="px-4 py-3">
+                            <div className="flex items-center gap-1">
+                              {apt.consultationType === "online" && apt.googleMeetLink && (
+                                <a href={apt.doctorMeetLink || apt.googleMeetLink} target="_blank" rel="noopener noreferrer"
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-blue-100 hover:bg-blue-200 text-blue-700 text-xs font-medium transition-all">
+                                  <i className="fas fa-video text-xs"></i>Start
+                                </a>
+                              )}
+                              {apt.consultationType === "online" && !apt.googleMeetLink && (
+                                <button onClick={() => regenerateMeetLink(apt._id)}
+                                  className="inline-flex items-center gap-1 px-2 py-1 rounded-lg bg-amber-100 hover:bg-amber-200 text-amber-700 text-xs font-medium transition-all">
+                                  <i className="fas fa-sync-alt text-xs"></i>Gen
+                                </button>
+                              )}
+                              {apt.status === "confirmed" && (
+                                <button onClick={() => updateAppointmentStatus(apt._id, "in_progress")}
+                                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-sky-100 hover:bg-sky-200 text-sky-600 transition-all">
+                                  <i className="fas fa-play text-xs"></i>
+                                </button>
+                              )}
+                              {apt.status === "in_progress" && (
+                                <button onClick={() => updateAppointmentStatus(apt._id, "completed")}
+                                  className="w-7 h-7 flex items-center justify-center rounded-lg bg-emerald-100 hover:bg-emerald-200 text-emerald-600 transition-all">
+                                  <i className="fas fa-check text-xs"></i>
+                                </button>
+                              )}
+                            </div>
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                </div>
+
+                {/* Mobile cards */}
+                <div className="sm:hidden divide-y divide-slate-100">
+                  {getFilteredAppointments().map((apt) => (
+                    <div key={apt._id} className="p-4 space-y-2">
+                      <div className="flex items-start justify-between gap-2">
+                        <div className="min-w-0">
+                          <div className="font-semibold text-slate-800 text-sm flex items-center gap-1 flex-wrap">
+                            {apt.isWalkIn ? (apt.walkInPatient?.name || "Walk-In") : (apt.userId?.name || "Unknown")}
+                            <BookingSourceBadge apt={apt} />
+                          </div>
+                          <p className="text-xs text-slate-400">{apt.isWalkIn ? (apt.walkInPatient?.phone || "N/A") : apt.userId?.phone}</p>
+                        </div>
+                        <StatusBadge status={apt.status} />
+                      </div>
+                      <div className="flex items-center gap-2 flex-wrap text-xs text-slate-500">
+                        <span><i className="fas fa-calendar mr-1 text-teal-400"></i>{formatDate(apt.date)}</span>
+                        <span><i className="fas fa-clock mr-1 text-teal-400"></i>{formatTime(apt.time)}</span>
+                        <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-full font-semibold ${apt.consultationType === "online" ? "bg-sky-100 text-sky-700" : "bg-slate-100 text-slate-600"}`}>
+                          <i className={`fas ${apt.consultationType === "online" ? "fa-video" : "fa-hospital"} text-xs`}></i>
+                          {apt.consultationType === "online" ? "Online" : "In-Clinic"}
+                        </span>
+                      </div>
+                      {apt.reason && <p className="text-xs text-slate-500 truncate">{apt.reason}</p>}
+                      <div className="flex items-center gap-2 pt-1">
+                        <SystematicHistoryIndicator appointmentId={apt._id} />
+                        {apt.consultationType === "online" && apt.googleMeetLink && (
+                          <a href={apt.doctorMeetLink || apt.googleMeetLink} target="_blank" rel="noopener noreferrer"
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-blue-100 text-blue-700 text-xs font-medium">
+                            <i className="fas fa-video text-xs"></i>Start
+                          </a>
+                        )}
                         {apt.status === "confirmed" && (
-                          <button className="btn btn-sm btn-info me-1" onClick={() => updateAppointmentStatus(apt._id, "in_progress")} title="Start Appointment">
-                            <i className="fas fa-play"></i>
+                          <button onClick={() => updateAppointmentStatus(apt._id, "in_progress")}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-sky-100 text-sky-700 text-xs font-medium">
+                            <i className="fas fa-play text-xs"></i>Start
                           </button>
                         )}
                         {apt.status === "in_progress" && (
-                          <button className="btn btn-sm btn-success" onClick={() => updateAppointmentStatus(apt._id, "completed")} title="Complete">
-                            <i className="fas fa-check"></i>
+                          <button onClick={() => updateAppointmentStatus(apt._id, "completed")}
+                            className="inline-flex items-center gap-1 px-2.5 py-1 rounded-lg bg-emerald-100 text-emerald-700 text-xs font-medium">
+                            <i className="fas fa-check text-xs"></i>Complete
                           </button>
                         )}
-                      </td>
-                    </tr>
+                      </div>
+                    </div>
                   ))}
-                </tbody>
-              </table>
-            </div>
-          )}
-        </div>
-      </main>
-      )}
-
-      {/* Schedule Tab */}
-      {activeTab === 'schedule' && (
-        <main id="schedule-panel" role="tabpanel" aria-labelledby="schedule-tab">
-          <DoctorScheduleManager doctorId={doctorId} />
-        </main>
-      )}
-
-      {/* Wallet Tab */}
-      {activeTab === 'wallet' && (
-        <main id="wallet-panel" role="tabpanel" aria-labelledby="wallet-tab">
-          <DoctorWallet doctorId={doctorId} doctorName={doctor.name} />
-        </main>
-      )}
-
-      {/* EMR Tab */}
-      {activeTab === 'emr' && (
-        <main id="emr-panel" role="tabpanel" aria-labelledby="emr-tab">
-          {emrLoading ? (
-            <div className="text-center py-5">
-              <div className="spinner-border text-primary"></div>
-              <p className="mt-2">Loading EMR...</p>
-            </div>
-          ) : !emrSubscription ? (
-            <div className="card">
-              <div className="card-body text-center py-5">
-                <div style={{ width: '80px', height: '80px', borderRadius: '50%', background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem' }}>
-                  <i className="fas fa-lock text-white" style={{ fontSize: '2rem' }}></i>
                 </div>
-                <h3 className="mb-3">EMR Not Available</h3>
-                <p className="text-muted mb-4">
-                  Your clinic doesn't have an active EMR subscription.<br />
-                  Contact your clinic administrator to enable EMR features.
-                </p>
-                <div className="alert alert-info" style={{ maxWidth: '500px', margin: '0 auto' }}>
-                  <i className="fas fa-info-circle me-2"></i>
-                  EMR features include patient records, prescriptions, visit history, and more.
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ── Schedule Tab ── */}
+        {activeTab === "schedule" && <DoctorScheduleManager doctorId={doctorId} />}
+
+        {/* ── Wallet Tab ── */}
+        {activeTab === "wallet" && <DoctorWallet doctorId={doctorId} doctorName={doctor.name} />}
+
+        {/* ══════════════════════════════════════════════════════════════════════
+            EMR TAB
+        ══════════════════════════════════════════════════════════════════════ */}
+        {activeTab === "emr" && (
+          <div className="space-y-4">
+            {emrLoading ? (
+              <div className="flex items-center justify-center py-16">
+                <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+              </div>
+            ) : !emrSubscription ? (
+              <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-10 text-center">
+                <div className="w-16 h-16 rounded-2xl bg-amber-100 flex items-center justify-center mx-auto mb-4">
+                  <i className="fas fa-lock text-2xl text-amber-500"></i>
+                </div>
+                <h3 className="text-lg font-bold text-slate-800 mb-2">EMR Not Available</h3>
+                <p className="text-slate-500 text-sm mb-4">Your clinic doesn't have an active EMR subscription.<br />Contact your clinic administrator to enable EMR features.</p>
+                <div className="inline-flex items-center gap-2 px-4 py-3 bg-sky-50 border border-sky-200 rounded-xl text-sky-700 text-sm">
+                  <i className="fas fa-info-circle"></i>EMR features include patient records, prescriptions, visit history, and more.
                 </div>
               </div>
-            </div>
-          ) : (
-            <div className="row">
-              {/* EMR Subscription Info */}
-              <div className="col-12 mb-4">
-                <div className="card" style={{ background: 'linear-gradient(135deg, #10b981, #059669)', color: 'white' }}>
-                  <div className="card-body">
-                    <div className="d-flex justify-content-between align-items-center flex-wrap gap-3">
+            ) : (
+              <>
+                {/* EMR Header */}
+                <div className="bg-gradient-to-r from-emerald-500 to-teal-600 rounded-2xl p-5 text-white flex flex-wrap items-center justify-between gap-4">
+                  <div>
+                    <h5 className="font-bold flex items-center gap-2"><i className="fas fa-crown"></i>EMR {emrSubscription.plan?.charAt(0).toUpperCase() + emrSubscription.plan?.slice(1)} Plan</h5>
+                    <p className="text-white/75 text-sm mt-0.5"><i className="fas fa-hospital mr-1.5"></i>{doctor.clinicId?.name || "Your Clinic"}</p>
+                  </div>
+                  <div className="text-right">
+                    <span className="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 rounded-xl text-sm font-semibold">
+                      <i className="fas fa-check-circle"></i>Active
+                    </span>
+                    <p className="text-white/70 text-xs mt-1">Expires: {new Date(emrSubscription.expiryDate).toLocaleDateString()}</p>
+                  </div>
+                </div>
+
+                {/* EMR Stats */}
+                <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 sm:gap-4">
+                  {[
+                    { label: "Patients",      value: emrPatients.length,              icon: "users",          from: "from-blue-500",    to: "to-blue-700" },
+                    { label: "Prescriptions", value: emrPrescriptions.length,         icon: "prescription",   from: "from-amber-400",   to: "to-amber-600" },
+                    { label: "Visits Today",  value: stats.completed,                 icon: "calendar-check", from: "from-emerald-500", to: "to-emerald-700" },
+                    { label: "Days Left",     value: emrSubscription.daysRemaining || "-", icon: "file-medical", from: "from-violet-500", to: "to-violet-700" },
+                  ].map((s) => (
+                    <div key={s.label} className="bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-100 p-3 sm:p-4 flex items-center gap-3">
+                      <div className={`w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br ${s.from} ${s.to} flex items-center justify-center flex-shrink-0`}>
+                        <i className={`fas fa-${s.icon} text-white text-xs sm:text-sm`}></i>
+                      </div>
                       <div>
-                        <h5 className="mb-1">
-                          <i className="fas fa-crown me-2"></i>
-                          EMR {emrSubscription.plan?.charAt(0).toUpperCase() + emrSubscription.plan?.slice(1)} Plan
-                        </h5>
-                        <p className="mb-0 opacity-75">
-                          <i className="fas fa-hospital me-2"></i>
-                          {doctor.clinicId?.name || 'Your Clinic'}
-                        </p>
-                      </div>
-                      <div className="text-end">
-                        <span className="badge bg-white text-success px-3 py-2">
-                          <i className="fas fa-check-circle me-1"></i>
-                          Active
-                        </span>
-                        <p className="mb-0 mt-2 opacity-75" style={{ fontSize: '0.85rem' }}>
-                          Expires: {new Date(emrSubscription.expiryDate).toLocaleDateString()}
-                        </p>
+                        <p className="text-lg sm:text-xl font-bold text-slate-800 leading-none">{s.value}</p>
+                        <p className="text-xs text-slate-500 mt-0.5">{s.label}</p>
                       </div>
                     </div>
-                  </div>
+                  ))}
                 </div>
-              </div>
 
-              {/* EMR Quick Stats */}
-              <div className="col-12 mb-4">
-                <div className="row g-3">
-                  <div className="col-6 col-md-3">
-                    <div className="card h-100">
-                      <div className="card-body text-center">
-                        <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
-                          <i className="fas fa-users text-white"></i>
-                        </div>
-                        <h4 className="mb-0">{emrPatients.length}</h4>
-                        <small className="text-muted">Patients</small>
-                      </div>
+                {/* Recent Patients + Prescriptions */}
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+                      <h6 className="font-bold text-slate-800 text-sm flex items-center gap-2"><i className="fas fa-users text-teal-500"></i>Recent Patients</h6>
+                      <button onClick={fetchEmrPatients} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-all">
+                        <i className="fas fa-sync-alt text-xs"></i>
+                      </button>
                     </div>
-                  </div>
-                  <div className="col-6 col-md-3">
-                    <div className="card h-100">
-                      <div className="card-body text-center">
-                        <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'linear-gradient(135deg, #f59e0b, #d97706)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
-                          <i className="fas fa-prescription text-white"></i>
-                        </div>
-                        <h4 className="mb-0">{emrPrescriptions.length}</h4>
-                        <small className="text-muted">Prescriptions</small>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-6 col-md-3">
-                    <div className="card h-100">
-                      <div className="card-body text-center">
-                        <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'linear-gradient(135deg, #10b981, #059669)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
-                          <i className="fas fa-calendar-check text-white"></i>
-                        </div>
-                        <h4 className="mb-0">{stats.completed}</h4>
-                        <small className="text-muted">Visits Today</small>
-                      </div>
-                    </div>
-                  </div>
-                  <div className="col-6 col-md-3">
-                    <div className="card h-100">
-                      <div className="card-body text-center">
-                        <div style={{ width: '50px', height: '50px', borderRadius: '12px', background: 'linear-gradient(135deg, #8b5cf6, #6d28d9)', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 0.75rem' }}>
-                          <i className="fas fa-file-medical text-white"></i>
-                        </div>
-                        <h4 className="mb-0">{emrSubscription.daysRemaining || '-'}</h4>
-                        <small className="text-muted">Days Left</small>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </div>
-
-              {/* Recent Patients */}
-              <div className="col-md-6 mb-4">
-                <div className="card h-100">
-                  <div className="card-header d-flex justify-content-between align-items-center">
-                    <h6 className="mb-0"><i className="fas fa-users me-2"></i>Recent Patients</h6>
-                    <button className="btn btn-sm btn-outline-primary" onClick={fetchEmrPatients}>
-                      <i className="fas fa-sync-alt"></i>
-                    </button>
-                  </div>
-                  <div className="card-body p-0">
                     {emrPatients.length === 0 ? (
-                      <div className="text-center py-4">
-                        <i className="fas fa-user-plus fa-2x text-muted mb-2"></i>
-                        <p className="text-muted mb-0">No patients registered yet</p>
-                      </div>
+                      <div className="text-center py-8 text-slate-400"><i className="fas fa-user-plus text-2xl mb-2"></i><p className="text-sm">No patients yet</p></div>
                     ) : (
-                      <div className="list-group list-group-flush">
-                        {emrPatients.slice(0, 5).map(patient => (
-                          <div key={patient._id} className="list-group-item d-flex align-items-center">
-                            <div className="me-3" style={{ width: '40px', height: '40px', borderRadius: '10px', background: 'linear-gradient(135deg, #3b82f6, #1d4ed8)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 'bold' }}>
-                              {patient.name?.charAt(0) || 'P'}
+                      <div className="divide-y divide-slate-50">
+                        {emrPatients.slice(0, 5).map(p => (
+                          <div key={p._id} className="flex items-center gap-3 px-5 py-3">
+                            <div className="w-9 h-9 rounded-xl bg-gradient-to-br from-blue-400 to-blue-600 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                              {p.name?.charAt(0) || "P"}
                             </div>
-                            <div className="flex-grow-1">
-                              <h6 className="mb-0">{patient.name}</h6>
-                              <small className="text-muted">{patient.phone || patient.email}</small>
+                            <div className="flex-1 min-w-0">
+                              <p className="font-semibold text-slate-800 text-sm truncate">{p.name}</p>
+                              <p className="text-xs text-slate-400 truncate">{p.phone || p.email}</p>
                             </div>
-                            <span className="badge bg-light text-dark">{patient.gender || '-'}</span>
+                            <span className="text-xs bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">{p.gender || "-"}</span>
                           </div>
                         ))}
                       </div>
                     )}
                   </div>
-                </div>
-              </div>
 
-              {/* Recent Prescriptions */}
-              <div className="col-md-6 mb-4">
-                <div className="card h-100">
-                  <div className="card-header d-flex justify-content-between align-items-center">
-                    <h6 className="mb-0"><i className="fas fa-prescription me-2"></i>Recent Prescriptions</h6>
-                    <button className="btn btn-sm btn-outline-primary" onClick={fetchEmrPrescriptions}>
-                      <i className="fas fa-sync-alt"></i>
-                    </button>
-                  </div>
-                  <div className="card-body p-0">
+                  <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+                    <div className="px-5 py-3 border-b border-slate-100 flex items-center justify-between">
+                      <h6 className="font-bold text-slate-800 text-sm flex items-center gap-2"><i className="fas fa-prescription text-teal-500"></i>Recent Prescriptions</h6>
+                      <button onClick={fetchEmrPrescriptions} className="w-7 h-7 flex items-center justify-center rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-500 transition-all">
+                        <i className="fas fa-sync-alt text-xs"></i>
+                      </button>
+                    </div>
                     {emrPrescriptions.length === 0 ? (
-                      <div className="text-center py-4">
-                        <i className="fas fa-file-prescription fa-2x text-muted mb-2"></i>
-                        <p className="text-muted mb-0">No prescriptions yet</p>
-                      </div>
+                      <div className="text-center py-8 text-slate-400"><i className="fas fa-file-prescription text-2xl mb-2"></i><p className="text-sm">No prescriptions yet</p></div>
                     ) : (
-                      <div className="list-group list-group-flush">
+                      <div className="divide-y divide-slate-50">
                         {emrPrescriptions.slice(0, 5).map(rx => (
-                          <div key={rx._id} className="list-group-item">
-                            <div className="d-flex justify-content-between align-items-start">
-                              <div>
-                                <h6 className="mb-1">{rx.patientId?.name || 'Unknown Patient'}</h6>
-                                <small className="text-muted">{rx.diagnosis || 'No diagnosis'}</small>
+                          <div key={rx._id} className="px-5 py-3">
+                            <div className="flex items-start justify-between gap-2">
+                              <div className="min-w-0">
+                                <p className="font-semibold text-slate-800 text-sm truncate">{rx.patientId?.name || "Unknown"}</p>
+                                <p className="text-xs text-slate-400 truncate">{rx.diagnosis || "No diagnosis"}</p>
                               </div>
-                              <small className="text-muted">{new Date(rx.createdAt).toLocaleDateString()}</small>
+                              <p className="text-xs text-slate-400 whitespace-nowrap">{new Date(rx.createdAt).toLocaleDateString()}</p>
                             </div>
-                            <div className="mt-1">
-                              <span className="badge bg-info me-1">{rx.medicines?.length || 0} medicines</span>
+                            <div className="flex items-center gap-2 mt-1.5">
+                              <span className="text-[10px] bg-sky-100 text-sky-700 px-2 py-0.5 rounded-full font-semibold">{rx.medicines?.length || 0} medicines</span>
                               {rx.followUpDate && (
-                                <span className="badge bg-warning text-dark">
-                                  <i className="fas fa-calendar me-1"></i>
-                                  Follow-up: {new Date(rx.followUpDate).toLocaleDateString()}
+                                <span className="text-[10px] bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full font-semibold">
+                                  <i className="fas fa-calendar mr-1"></i>Follow-up: {new Date(rx.followUpDate).toLocaleDateString()}
                                 </span>
                               )}
                             </div>
@@ -1551,247 +907,160 @@ function DoctorDashboard({ doctor, onLogout }) {
                     )}
                   </div>
                 </div>
-              </div>
 
-              {/* EMR Features Info */}
-              <div className="col-12">
-                <div className="card">
-                  <div className="card-header">
-                    <h6 className="mb-0"><i className="fas fa-info-circle me-2"></i>Available EMR Features</h6>
-                  </div>
-                  <div className="card-body">
-                    <div className="row g-3">
-                      {[
-                        { icon: 'fa-user-plus', label: 'Patient Registration', desc: 'Register walk-in patients', available: true },
-                        { icon: 'fa-prescription', label: 'Prescriptions', desc: 'Create digital prescriptions', available: true },
-                        { icon: 'fa-history', label: 'Visit History', desc: 'Track patient visits', available: emrSubscription.plan !== 'basic' },
-                        { icon: 'fa-notes-medical', label: 'Doctor Notes', desc: 'Add clinical notes', available: emrSubscription.plan !== 'basic' },
-                        { icon: 'fa-chart-line', label: 'Analytics', desc: 'View clinic analytics', available: emrSubscription.plan === 'advanced' },
-                        { icon: 'fa-file-export', label: 'Data Export', desc: 'Export patient data', available: emrSubscription.plan === 'advanced' }
-                      ].map((feature, i) => (
-                        <div key={i} className="col-6 col-md-4">
-                          <div className={`p-3 rounded-3 ${feature.available ? 'bg-light' : 'bg-light opacity-50'}`}>
-                            <div className="d-flex align-items-center">
-                              <i className={`fas ${feature.icon} me-2 ${feature.available ? 'text-primary' : 'text-muted'}`}></i>
-                              <div>
-                                <strong className={feature.available ? '' : 'text-muted'}>{feature.label}</strong>
-                                {!feature.available && <span className="badge bg-secondary ms-2" style={{ fontSize: '0.6rem' }}>Upgrade</span>}
-                                <br />
-                                <small className="text-muted">{feature.desc}</small>
-                              </div>
-                            </div>
+                {/* EMR Features */}
+                <div className="bg-white rounded-2xl shadow-sm border border-slate-100 p-5">
+                  <h6 className="font-bold text-slate-800 text-sm mb-4 flex items-center gap-2"><i className="fas fa-info-circle text-teal-500"></i>Available EMR Features</h6>
+                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-3">
+                    {[
+                      { icon: "user-plus",    label: "Patient Registration", desc: "Register walk-in patients",    available: true },
+                      { icon: "prescription", label: "Prescriptions",        desc: "Create digital prescriptions", available: true },
+                      { icon: "history",      label: "Visit History",        desc: "Track patient visits",         available: emrSubscription.plan !== "basic" },
+                      { icon: "notes-medical",label: "Doctor Notes",         desc: "Add clinical notes",           available: emrSubscription.plan !== "basic" },
+                      { icon: "chart-line",   label: "Analytics",            desc: "View clinic analytics",        available: emrSubscription.plan === "advanced" },
+                      { icon: "file-export",  label: "Data Export",          desc: "Export patient data",          available: emrSubscription.plan === "advanced" },
+                    ].map((f, i) => (
+                      <div key={i} className={`p-3 rounded-xl border ${f.available ? "border-teal-100 bg-teal-50/50" : "border-slate-100 bg-slate-50 opacity-60"}`}>
+                        <div className="flex items-start gap-2">
+                          <i className={`fas fa-${f.icon} mt-0.5 ${f.available ? "text-teal-500" : "text-slate-400"}`}></i>
+                          <div>
+                            <p className={`text-xs font-semibold ${f.available ? "text-slate-800" : "text-slate-500"}`}>{f.label}</p>
+                            {!f.available && <span className="text-[10px] bg-slate-200 text-slate-500 px-1.5 py-0.5 rounded font-semibold">Upgrade</span>}
+                            <p className="text-[10px] text-slate-400 mt-0.5">{f.desc}</p>
                           </div>
                         </div>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </>
+            )}
+          </div>
+        )}
+
+        {/* ══════════════════════════════════════════════════════════════════════
+            IMAGING TAB
+        ══════════════════════════════════════════════════════════════════════ */}
+        {activeTab === "imaging" && (
+          <div className="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
+            <div className="px-5 py-4 border-b border-slate-100">
+              <h5 className="font-bold text-slate-800 flex items-center gap-2">
+                <i className="fas fa-x-ray text-teal-500"></i>Patient Medical Imaging (DICOM)
+              </h5>
+            </div>
+            <div className="p-5">
+              {imagingLoading && !selectedImagingPatient ? (
+                <div className="flex items-center justify-center py-12">
+                  <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+                </div>
+              ) : (
+                <div className="grid grid-cols-1 md:grid-cols-5 gap-4 sm:gap-5">
+                  {/* Patient List */}
+                  <div className="md:col-span-2">
+                    <h6 className="font-semibold text-slate-700 text-sm mb-3 flex items-center gap-2">
+                      <i className="fas fa-users text-teal-500"></i>Select Patient
+                    </h6>
+                    <div className="flex md:flex-col gap-2 overflow-x-auto md:overflow-y-auto md:max-h-96 pb-2 md:pb-0 md:pr-1">
+                      {imagingPatients.length === 0 ? (
+                        <div className="text-center py-8 text-slate-400 w-full">
+                          <i className="fas fa-user-slash text-2xl mb-2"></i><p className="text-sm">No patients found</p>
+                        </div>
+                      ) : imagingPatients.map(p => (
+                        <button key={p._id} onClick={() => setSelectedImagingPatient(p)}
+                          className={`flex items-center gap-3 px-4 py-3 rounded-xl text-left transition-all flex-shrink-0 md:flex-shrink md:w-full ${selectedImagingPatient?._id === p._id ? "bg-teal-500 text-white" : "bg-slate-50 hover:bg-slate-100 text-slate-700"}`}>
+                          <i className={`fas fa-user-circle text-xl ${selectedImagingPatient?._id === p._id ? "text-white/80" : "text-slate-400"}`}></i>
+                          <div className="min-w-0">
+                            <p className="font-semibold text-sm truncate">{p.name}</p>
+                            <p className={`text-xs truncate ${selectedImagingPatient?._id === p._id ? "text-white/70" : "text-slate-400"}`}>{p.phone || p.email}</p>
+                          </div>
+                        </button>
                       ))}
                     </div>
                   </div>
-                </div>
-              </div>
-            </div>
-          )}
-        </main>
-      )}
 
-      {/* Imaging Tab */}
-      {activeTab === 'imaging' && (
-        <main id="imaging-panel" role="tabpanel" aria-labelledby="imaging-tab">
-          <div className="card border-0 shadow-sm" style={{ borderRadius: '16px' }}>
-            <div className="card-header bg-white border-0 py-3" style={{ borderRadius: '16px 16px 0 0' }}>
-              <div className="d-flex justify-content-between align-items-center">
-                <h5 className="mb-0">
-                  <i className="fas fa-x-ray me-2 text-primary"></i>
-                  Patient Medical Imaging (DICOM)
-                </h5>
-              </div>
-            </div>
-            <div className="card-body">
-              {imagingLoading ? (
-                <div className="text-center py-5">
-                  <div className="spinner-border text-primary"></div>
-                  <p className="mt-2">Loading...</p>
-                </div>
-              ) : (
-                <div className="row">
-                  {/* Patient List */}
-                  <div className="col-md-4">
-                    <h6 className="mb-3">
-                      <i className="fas fa-users me-2"></i>
-                      Select Patient
-                    </h6>
-                    <div className="list-group" style={{ maxHeight: '400px', overflowY: 'auto' }}>
-                      {imagingPatients.length === 0 ? (
-                        <div className="text-center text-muted py-4">
-                          <i className="fas fa-user-slash fa-2x mb-2"></i>
-                          <p>No patients found</p>
-                        </div>
-                      ) : (
-                        imagingPatients.map(patient => (
-                          <button
-                            key={patient._id}
-                            className={`list-group-item list-group-item-action ${selectedImagingPatient?._id === patient._id ? 'active' : ''}`}
-                            onClick={() => setSelectedImagingPatient(patient)}
-                          >
-                            <div className="d-flex align-items-center">
-                              <div className="me-3">
-                                <i className="fas fa-user-circle fa-2x text-secondary"></i>
-                              </div>
-                              <div>
-                                <strong>{patient.name}</strong>
-                                <br />
-                                <small className="text-muted">{patient.phone || patient.email}</small>
-                              </div>
-                            </div>
-                          </button>
-                        ))
-                      )}
-                    </div>
-                  </div>
-
-                  {/* Studies List */}
-                  <div className="col-md-8">
-                    {selectedImagingPatient ? (
+                  {/* Studies */}
+                  <div className="md:col-span-3">
+                    {!selectedImagingPatient ? (
+                      <div className="flex flex-col items-center justify-center h-full py-12 text-slate-400">
+                        <i className="fas fa-hand-pointer text-3xl mb-3"></i>
+                        <p className="text-sm">Select a patient to view imaging studies</p>
+                      </div>
+                    ) : imagingLoading ? (
+                      <div className="flex items-center justify-center py-12">
+                        <div className="w-8 h-8 border-4 border-teal-500 border-t-transparent rounded-full animate-spin"></div>
+                      </div>
+                    ) : (
                       <>
-                        <h6 className="mb-3">
-                          <i className="fas fa-images me-2"></i>
-                          Imaging Studies for {selectedImagingPatient.name}
+                        <h6 className="font-semibold text-slate-700 text-sm mb-3 flex items-center gap-2">
+                          <i className="fas fa-images text-teal-500"></i>Studies for {selectedImagingPatient.name}
                         </h6>
                         {imagingStudies.length === 0 ? (
-                          <div className="text-center text-muted py-5">
-                            <i className="fas fa-x-ray fa-3x mb-3"></i>
-                            <p>No imaging studies found for this patient</p>
-                            <small>Patient can upload DICOM files from their dashboard</small>
+                          <div className="text-center py-10 text-slate-400">
+                            <i className="fas fa-x-ray text-3xl mb-3"></i>
+                            <p className="text-sm">No imaging studies found</p>
+                            <p className="text-xs mt-1">Patient can upload DICOM files from their dashboard</p>
                           </div>
                         ) : (
-                          <div className="row g-3">
+                          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                             {imagingStudies.map(study => (
-                              <div key={study._id} className="col-md-6">
-                                <div 
-                                  className="card h-100 border cursor-pointer hover-shadow"
-                                  style={{ cursor: 'pointer', transition: 'all 0.2s' }}
-                                  onClick={() => {
-                                    setSelectedStudy({
-                                      studyId: study._id,
-                                      studyInstanceUID: study.studyInstanceUID,
-                                      series: study.series || [],
-                                      studyDate: study.studyDate,
-                                      modality: study.modality,
-                                      studyDescription: study.studyDescription,
-                                      dicomPatientName: study.dicomPatientName,
-                                      totalImages: study.totalImages,
-                                      totalSeries: study.totalSeries
-                                    });
-                                    setShowImagingViewer(true);
-                                  }}
-                                >
-                                  <div className="card-body">
-                                    <div className="d-flex align-items-start">
-                                      <div className="me-3">
-                                        <div 
-                                          className="d-flex align-items-center justify-content-center"
-                                          style={{ 
-                                            width: '50px', 
-                                            height: '50px', 
-                                            borderRadius: '12px',
-                                            background: 'linear-gradient(135deg, #0ea5e9, #0284c7)'
-                                          }}
-                                        >
-                                          <i className="fas fa-x-ray text-white fa-lg"></i>
-                                        </div>
-                                      </div>
-                                      <div className="flex-grow-1">
-                                        <h6 className="mb-1">{study.modality || 'Unknown'}</h6>
-                                        <p className="text-muted mb-1 small">
-                                          {study.studyDescription || 'No description'}
-                                        </p>
-                                        <div className="d-flex gap-2 flex-wrap">
-                                          <span className="badge bg-light text-dark">
-                                            <i className="fas fa-calendar me-1"></i>
-                                            {study.studyDate ? new Date(study.studyDate).toLocaleDateString() : 'Unknown date'}
-                                          </span>
-                                          <span className="badge bg-light text-dark">
-                                            <i className="fas fa-images me-1"></i>
-                                            {study.totalImages || 0} images
-                                          </span>
-                                        </div>
-                                      </div>
-                                      <div>
-                                        <i className="fas fa-chevron-right text-muted"></i>
-                                      </div>
-                                    </div>
+                              <button key={study._id} onClick={() => { setSelectedStudy({ studyId: study._id, studyInstanceUID: study.studyInstanceUID, series: study.series || [], studyDate: study.studyDate, modality: study.modality, studyDescription: study.studyDescription, dicomPatientName: study.dicomPatientName, totalImages: study.totalImages, totalSeries: study.totalSeries }); setShowImagingViewer(true); }}
+                                className="flex items-start gap-3 p-4 rounded-xl border border-slate-200 hover:border-teal-300 hover:shadow-md text-left transition-all group">
+                                <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-sky-400 to-sky-600 flex items-center justify-center flex-shrink-0 group-hover:scale-105 transition-transform">
+                                  <i className="fas fa-x-ray text-white"></i>
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <p className="font-semibold text-slate-800 text-sm">{study.modality || "Unknown"}</p>
+                                  <p className="text-xs text-slate-400 truncate">{study.studyDescription || "No description"}</p>
+                                  <div className="flex items-center gap-2 mt-1.5">
+                                    <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+                                      <i className="fas fa-calendar mr-1"></i>{study.studyDate ? new Date(study.studyDate).toLocaleDateString() : "Unknown"}
+                                    </span>
+                                    <span className="text-[10px] bg-slate-100 text-slate-500 px-2 py-0.5 rounded-full">
+                                      <i className="fas fa-images mr-1"></i>{study.totalImages || 0} images
+                                    </span>
                                   </div>
                                 </div>
-                              </div>
+                                <i className="fas fa-chevron-right text-slate-300 group-hover:text-teal-400 transition-colors mt-1"></i>
+                              </button>
                             ))}
                           </div>
                         )}
                       </>
-                    ) : (
-                      <div className="text-center text-muted py-5">
-                        <i className="fas fa-hand-pointer fa-3x mb-3"></i>
-                        <p>Select a patient to view their imaging studies</p>
-                      </div>
                     )}
                   </div>
                 </div>
               )}
             </div>
           </div>
-        </main>
-      )}
+        )}
 
-      {/* Professional DICOM Viewer Modal */}
+      </div>{/* end max-w-7xl */}
+
+      {/* ── Modals ── */}
       {showImagingViewer && selectedStudy && (
-        <ProfessionalDicomViewer
-          study={selectedStudy}
-          patientId={selectedImagingPatient?._id}
-          onBack={() => {
-            setShowImagingViewer(false);
-            setSelectedStudy(null);
-          }}
-        />
+        <ProfessionalDicomViewer study={selectedStudy} patientId={selectedImagingPatient?._id}
+          onBack={() => { setShowImagingViewer(false); setSelectedStudy(null); }} />
       )}
-
-      {/* Prescription Modal */}
       {showPrescription && prescriptionPatient && (
         <PrescriptionManager
-          doctorId={doctorId}
-          doctorName={doctor.name}
+          doctorId={doctorId} doctorName={doctor.name}
           patientId={prescriptionPatient.userId?._id || prescriptionPatient.userId || prescriptionPatient.walkInPatient?._id || prescriptionPatient.patientId}
-          patientName={prescriptionPatient.userId?.name || prescriptionPatient.walkInPatient?.name || prescriptionPatient.patientName || 'Patient'}
-          patientEmail={prescriptionPatient.userId?.email || prescriptionPatient.walkInPatient?.email || prescriptionPatient.patientEmail || ''}
-          patientPhone={prescriptionPatient.userId?.phone || prescriptionPatient.walkInPatient?.phone || prescriptionPatient.patientPhone || prescriptionPatient.phone || ''}
+          patientName={prescriptionPatient.userId?.name || prescriptionPatient.walkInPatient?.name || prescriptionPatient.patientName || "Patient"}
+          patientEmail={prescriptionPatient.userId?.email || prescriptionPatient.walkInPatient?.email || prescriptionPatient.patientEmail || ""}
+          patientPhone={prescriptionPatient.userId?.phone || prescriptionPatient.walkInPatient?.phone || prescriptionPatient.patientPhone || prescriptionPatient.phone || ""}
           appointmentId={prescriptionPatient._id}
           onClose={() => { setShowPrescription(false); setPrescriptionPatient(null); }}
-          onSave={() => { setShowPrescription(false); setPrescriptionPatient(null); toast.success('Prescription saved!'); }}
+          onSave={() => { setShowPrescription(false); setPrescriptionPatient(null); toast.success("Prescription saved!"); }}
         />
       )}
-
-      {/* Walk-In Patient Modal */}
       {showWalkInModal && (
-        <WalkInPatientModal
-          doctor={doctor}
-          onClose={() => setShowWalkInModal(false)}
-          onSuccess={(newAppointment) => {
-            fetchQueue(); // Refresh the queue
-            toast.success(`Walk-in patient added! Token #${newAppointment.queueNumber}`);
-          }}
-        />
+        <WalkInPatientModal doctor={doctor} onClose={() => setShowWalkInModal(false)}
+          onSuccess={(apt) => { fetchQueue(); toast.success(`Walk-in added! Token #${apt.queueNumber}`); }} />
       )}
+      {showSupport && <DoctorSupport onClose={() => setShowSupport(false)} />}
+      {showControls && <DoctorControls doctor={doctor} onClose={() => setShowControls(false)} onUpdate={fetchQueue} />}
 
-      {/* Doctor Support Modal */}
-      {showSupport && (
-        <DoctorSupport onClose={() => setShowSupport(false)} />
-      )}
-
-      {/* Doctor Controls Modal */}
-      {showControls && (
-        <DoctorControls 
-          doctor={doctor} 
-          onClose={() => setShowControls(false)}
-          onUpdate={() => fetchQueue()}
-        />
-      )}
-    </article>
+    </div>
   );
 }
 

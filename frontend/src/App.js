@@ -24,7 +24,6 @@ import Auth from "./components/Auth";
 import AdminAuth from "./components/AdminAuth";
 import ClinicAuth from "./components/ClinicAuth";
 import DoctorAuth from "./components/DoctorAuth";
-import AIAssistant from "./components/AIAssistant";
 import MedicalHero from "./components/MedicalHero";
 import SymptomChecker from "./components/SymptomChecker";
 import FloatingChatBubble from "./components/FloatingChatBubble";
@@ -75,27 +74,57 @@ const AdminDashboard = React.lazy(() =>
 );
 
 const ClinicDashboard = React.lazy(() =>
-  import("./components/ClinicDashboardPro").catch(() => ({
-    default: ({ receptionist }) => (
-      <div className="min-h-screen bg-slate-100 flex items-center justify-center">
-        <div className="text-center">
-          <h4 className="text-xl font-bold text-slate-800">Clinic Dashboard</h4>
-          <p className="text-slate-600">Welcome {receptionist?.name}! Loading...</p>
+  import("./components/ClinicDashboardPro").catch((err) => {
+    // Chunk load / parse error — auto-reload once, then show reload button
+    const reloadKey = 'chunk_reload_clinic';
+    const lastReload = sessionStorage.getItem(reloadKey);
+    const now = Date.now();
+    if (!lastReload || now - parseInt(lastReload) > 30000) {
+      sessionStorage.setItem(reloadKey, String(now));
+      window.location.reload(true);
+    }
+    return {
+      default: ({ receptionist }) => (
+        <div className="min-h-screen bg-slate-100 flex items-center justify-center">
+          <div className="text-center p-8">
+            <div className="text-5xl mb-4">🔄</div>
+            <h4 className="text-xl font-bold text-slate-800 mb-2">Dashboard failed to load</h4>
+            <p className="text-slate-500 mb-6">Welcome {receptionist?.name}! Please reload to continue.</p>
+            <button
+              onClick={() => { sessionStorage.removeItem(reloadKey); window.location.reload(true); }}
+              className="px-6 py-3 bg-teal-600 text-white rounded-xl font-semibold hover:bg-teal-700 transition-colors shadow-lg"
+            >
+              Reload Dashboard
+            </button>
+          </div>
         </div>
-      </div>
-    )
-  }))
+      )
+    };
+  })
 );
 
 const DoctorDashboard = React.lazy(() =>
-  import("./components/DoctorDashboard").catch(() => ({
-    default: ({ doctor }) => (
-      <div className="container py-4">
-        <h4>Doctor Dashboard</h4>
-        <p>Welcome Dr. {doctor?.name}! Dashboard is loading...</p>
-      </div>
-    )
-  }))
+  import("./components/DoctorDashboard").catch((err) => {
+    if (err?.name === 'SyntaxError' || err?.message?.includes('chunk') || err?.message?.includes('Loading')) {
+      if (!sessionStorage.getItem('chunk_reload_doctor')) {
+        sessionStorage.setItem('chunk_reload_doctor', '1');
+        window.location.reload();
+      }
+    }
+    return {
+      default: ({ doctor }) => (
+        <div className="container py-4 text-center p-8">
+          <div className="text-4xl mb-4">🔄</div>
+          <h4 className="text-xl font-bold mb-2">Doctor Dashboard</h4>
+          <p className="mb-4">Welcome Dr. {doctor?.name}!</p>
+          <button onClick={() => { sessionStorage.removeItem('chunk_reload_doctor'); window.location.reload(); }}
+            className="px-6 py-2 bg-blue-600 text-white rounded-xl font-semibold hover:bg-blue-700 transition-colors">
+            Reload Dashboard
+          </button>
+        </div>
+      )
+    };
+  })
 );
 
 const ImagingDashboard = React.lazy(() =>
@@ -177,29 +206,10 @@ function App() {
   const userId = user?.id || user?._id;
   useMobileInit(userId);
 
-  // SIMPLE SCROLL FIX - Force basic scrolling
+  // Reset scroll position to top on every view change
   useEffect(() => {
-    // Force scrolling on HTML element
-    document.documentElement.style.overflow = 'auto';
-    document.documentElement.style.height = '100%';
-    
-    // Force body to grow
-    document.body.style.overflow = 'visible';
-    document.body.style.height = 'auto';
-    document.body.style.minHeight = '100%';
-    
-    // Force root to grow
-    const root = document.getElementById('root');
-    if (root) {
-      root.style.overflow = 'visible';
-      root.style.height = 'auto';
-      root.style.minHeight = '100vh';
-    }
-    
-    console.log('✅ Simple scroll fix applied');
-    console.log('Body height:', document.body.scrollHeight);
-    console.log('Window height:', window.innerHeight);
-  }, [user, admin, receptionist, doctor]); // Re-apply when user changes
+    window.scrollTo(0, 0);
+  }, [currentView]);
 
   // ANTI-FLICKER: Prevent FOUC and ensure smooth theme transitions
   useEffect(() => {
@@ -397,7 +407,46 @@ function App() {
   };
 
   // Medical Landing Page Component
-  const MedicalLandingPage = () => (
+  const MedicalLandingPage = () => {
+    const [contactForm, setContactForm] = React.useState({
+      firstName: '', lastName: '', email: '', phone: '', organization: '', subject: '', message: '', newsletter: false
+    });
+    const [contactSubmitting, setContactSubmitting] = React.useState(false);
+    const [contactSuccess, setContactSuccess] = React.useState(false);
+
+    const handleContactSubmit = async (e) => {
+      e.preventDefault();
+      setContactSubmitting(true);
+      try {
+        await fetch('/api/contact', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(contactForm)
+        });
+        setContactSuccess(true);
+        setContactForm({ firstName: '', lastName: '', email: '', phone: '', organization: '', subject: '', message: '', newsletter: false });
+        setTimeout(() => setContactSuccess(false), 5000);
+      } catch {
+        toast.error('Failed to send message. Please email us at support@healthsyncpro.in');
+      } finally {
+        setContactSubmitting(false);
+      }
+    };
+
+    const handleBookDemo = () => {
+      setContactForm(f => ({ ...f, subject: 'demo' }));
+      document.getElementById('contact')?.scrollIntoView({ behavior: 'smooth' });
+    };
+
+    const handleLiveChat = () => {
+      window.open('mailto:support@healthsyncpro.in?subject=Live%20Chat%20Request', '_blank');
+    };
+
+    const handleDownload = () => {
+      window.open('https://healthsyncpro.in/resources', '_blank', 'noopener,noreferrer');
+    };
+
+    return (
     <div >
       {/* Skip to main content link for accessibility */}
       <a href="#main-content" >
@@ -601,13 +650,13 @@ function App() {
                   <div >
                     <div >
                       <div >
-                        <h3 >10K+</h3>
+                        <h3 >Growing</h3>
                         <small >Healthcare Providers</small>
                       </div>
                     </div>
                     <div >
                       <div >
-                        <h3 >500K+</h3>
+                        <h3 >Early Access</h3>
                         <small >Patients Served</small>
                       </div>
                     </div>
@@ -1157,14 +1206,14 @@ function App() {
                     <div >
                       <div >
                         <i ></i>
-                        <h4 >1M+</h4>
+                        <h4 >Growing</h4>
                         <small >Patients</small>
                       </div>
                     </div>
                     <div >
                       <div >
                         <i ></i>
-                        <h4 >10M+</h4>
+                        <h4 >Early Access</h4>
                         <small >Appointments</small>
                       </div>
                     </div>
@@ -1226,9 +1275,8 @@ function App() {
                   <div>
                     <h6 >Address</h6>
                     <p >
-                      123 Healthcare Boulevard<br />
-                      Medical District, MD 12345<br />
-                      United States
+                      Bankura, West Bengal, India — 722101<br />
+                      Serving Tier-2 &amp; Tier-3 India
                     </p>
                   </div>
                 </div>
@@ -1275,16 +1323,16 @@ function App() {
                 <div >
                   <h6 >Follow Us</h6>
                   <div >
-                    <a href="#"  title="LinkedIn">
+                    <a href="https://linkedin.com/company/healthsyncpro" target="_blank" rel="noopener noreferrer"  title="LinkedIn">
                       <i ></i>
                     </a>
-                    <a href="#"  title="Twitter">
+                    <a href="https://twitter.com/healthsyncpro" target="_blank" rel="noopener noreferrer"  title="Twitter">
                       <i ></i>
                     </a>
-                    <a href="#"  title="Facebook">
+                    <a href="https://facebook.com/healthsyncpro" target="_blank" rel="noopener noreferrer"  title="Facebook">
                       <i ></i>
                     </a>
-                    <a href="#"  title="YouTube">
+                    <a href="https://youtube.com/@healthsyncpro" target="_blank" rel="noopener noreferrer"  title="YouTube">
                       <i ></i>
                     </a>
                   </div>
@@ -1296,31 +1344,37 @@ function App() {
             <div >
               <div >
                 <h5 >Send us a Message</h5>
-                <form>
+                {contactSuccess && (
+                  <div style={{ background: '#dcfce7', border: '1px solid #86efac', borderRadius: '8px', padding: '12px 16px', marginBottom: '16px', color: '#166534', fontSize: '14px' }}>
+                    <i className="fas fa-check-circle" style={{ marginRight: '8px' }}></i>
+                    Message sent! We'll get back to you within 24 hours.
+                  </div>
+                )}
+                <form onSubmit={handleContactSubmit}>
                   <div >
                     <div >
                       <label >First Name *</label>
-                      <input type="text"  placeholder="Enter your first name" required />
+                      <input type="text" value={contactForm.firstName} onChange={e => setContactForm(f => ({...f, firstName: e.target.value}))} placeholder="Enter your first name" required />
                     </div>
                     <div >
                       <label >Last Name *</label>
-                      <input type="text"  placeholder="Enter your last name" required />
+                      <input type="text" value={contactForm.lastName} onChange={e => setContactForm(f => ({...f, lastName: e.target.value}))} placeholder="Enter your last name" required />
                     </div>
                     <div >
                       <label >Email Address *</label>
-                      <input type="email"  placeholder="Enter your email" required />
+                      <input type="email" value={contactForm.email} onChange={e => setContactForm(f => ({...f, email: e.target.value}))} placeholder="Enter your email" required />
                     </div>
                     <div >
                       <label >Phone Number</label>
-                      <input type="tel"  placeholder="Enter your phone number" />
+                      <input type="tel" value={contactForm.phone} onChange={e => setContactForm(f => ({...f, phone: e.target.value}))} placeholder="Enter your phone number" />
                     </div>
                     <div >
                       <label >Organization</label>
-                      <input type="text"  placeholder="Your healthcare organization" />
+                      <input type="text" value={contactForm.organization} onChange={e => setContactForm(f => ({...f, organization: e.target.value}))} placeholder="Your healthcare organization" />
                     </div>
                     <div >
                       <label >Subject *</label>
-                      <select  required>
+                      <select value={contactForm.subject} onChange={e => setContactForm(f => ({...f, subject: e.target.value}))} required>
                         <option value="">Select a subject</option>
                         <option value="sales">Sales Inquiry</option>
                         <option value="support">Technical Support</option>
@@ -1331,20 +1385,20 @@ function App() {
                     </div>
                     <div >
                       <label >Message *</label>
-                      <textarea  rows="5" placeholder="Tell us how we can help you..." required></textarea>
+                      <textarea value={contactForm.message} onChange={e => setContactForm(f => ({...f, message: e.target.value}))} rows="5" placeholder="Tell us how we can help you..." required></textarea>
                     </div>
                     <div >
                       <div >
-                        <input  type="checkbox" id="newsletter" />
-                        <label  htmlFor="newsletter">
+                        <input type="checkbox" id="newsletter" checked={contactForm.newsletter} onChange={e => setContactForm(f => ({...f, newsletter: e.target.checked}))} />
+                        <label htmlFor="newsletter">
                           Subscribe to our newsletter for healthcare technology updates
                         </label>
                       </div>
                     </div>
                     <div >
-                      <button type="submit" >
-                        <i ></i>
-                        Send Message
+                      <button type="submit" disabled={contactSubmitting}>
+                        <i className={contactSubmitting ? 'fas fa-spinner fa-spin' : 'fas fa-paper-plane'}></i>
+                        {contactSubmitting ? 'Sending...' : 'Send Message'}
                       </button>
                     </div>
                   </div>
@@ -1364,7 +1418,7 @@ function App() {
                 <p >
                   See HealthSync Pro in action with a personalized demo tailored to your needs.
                 </p>
-                <button >
+                <button onClick={handleBookDemo}>
                   <i ></i>
                   Book Demo
                 </button>
@@ -1379,7 +1433,7 @@ function App() {
                 <p >
                   Get immediate help from our healthcare technology experts anytime, anywhere.
                 </p>
-                <button >
+                <button onClick={handleLiveChat}>
                   <i ></i>
                   Live Chat
                 </button>
@@ -1394,7 +1448,7 @@ function App() {
                 <p >
                   Download whitepapers, case studies, and implementation guides.
                 </p>
-                <button >
+                <button onClick={handleDownload}>
                   <i ></i>
                   Download
                 </button>
@@ -1466,11 +1520,11 @@ function App() {
             <div >
               <h5>Legal</h5>
               <ul >
-                <li><a href="#">Privacy Policy</a></li>
-                <li><a href="#">Terms of Service</a></li>
-                <li><a href="#">HIPAA Compliance</a></li>
-                <li><a href="#">Security</a></li>
-                <li><a href="#">Cookies</a></li>
+                <li><button onClick={() => setCurrentView('privacy')} style={{background:'none',border:'none',cursor:'pointer',padding:0,color:'inherit',fontSize:'inherit'}}>Privacy Policy</button></li>
+                <li><button onClick={() => setCurrentView('terms')} style={{background:'none',border:'none',cursor:'pointer',padding:0,color:'inherit',fontSize:'inherit'}}>Terms of Service</button></li>
+                <li><a href="#features">HIPAA Compliance</a></li>
+                <li><a href="#features">Security</a></li>
+                <li><a href="#features">Cookies</a></li>
               </ul>
             </div>
           </div>
@@ -1503,28 +1557,28 @@ function App() {
               </div>
               <div >
                 <div >
-                  <a href="#"  style={{ 
+                  <a href="https://linkedin.com/company/healthsyncpro" target="_blank" rel="noopener noreferrer"  style={{ 
                     color: 'rgba(255, 255, 255, 0.8)', 
                     fontSize: '1.2rem',
                     transition: 'color 0.2s ease'
                   }}>
                     <i ></i>
                   </a>
-                  <a href="#"  style={{ 
+                  <a href="https://twitter.com/healthsyncpro" target="_blank" rel="noopener noreferrer"  style={{ 
                     color: 'rgba(255, 255, 255, 0.8)', 
                     fontSize: '1.2rem',
                     transition: 'color 0.2s ease'
                   }}>
                     <i ></i>
                   </a>
-                  <a href="#"  style={{ 
+                  <a href="https://facebook.com/healthsyncpro" target="_blank" rel="noopener noreferrer"  style={{ 
                     color: 'rgba(255, 255, 255, 0.8)', 
                     fontSize: '1.2rem',
                     transition: 'color 0.2s ease'
                   }}>
                     <i ></i>
                   </a>
-                  <a href="#" style={{ 
+                  <a href="https://youtube.com/@healthsyncpro" target="_blank" rel="noopener noreferrer" style={{ 
                     color: 'rgba(255, 255, 255, 0.8)', 
                     fontSize: '1.2rem',
                     transition: 'color 0.2s ease'
@@ -1573,7 +1627,8 @@ function App() {
         setCurrentView("auth");
       }} />
     </div>
-  );
+    );
+  };
 
   return (
     <LanguageProvider>

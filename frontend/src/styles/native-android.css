@@ -33,17 +33,14 @@
 html {
   scroll-behavior: smooth;
   -webkit-text-size-adjust: 100%;
-  overscroll-behavior-y: none;
-  /* Allow scrolling - don't lock viewport */
+  /* overscroll-behavior-y only for native mobile — not web */
 }
 
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
-  overscroll-behavior-y: none;
-  /* Allow vertical scrolling */
-  touch-action: pan-y pan-x;
+  /* touch-action and overscroll only applied on actual native app via Capacitor class */
   -webkit-overflow-scrolling: touch;
 }
 
@@ -58,11 +55,24 @@ input, textarea, [contenteditable="true"] {
   -webkit-user-select: text;
 }
 
-/* ===== Native Scrollbar (Hidden but scrollable) ===== */
+/* ===== Scrollbar — visible on web, hidden on native ===== */
+/* Default: show scrollbar on desktop browsers */
 ::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.2);
+  border-radius: 3px;
+}
+
+/* Hide scrollbar only when running as native Capacitor app */
+.capacitor-android ::-webkit-scrollbar,
+.capacitor-ios ::-webkit-scrollbar {
   width: 0;
   height: 0;
-  background: transparent;
 }
 
 /* Ensure scrollable containers work */

@@ -14,28 +14,45 @@ services:
         value: production
       - key: PORT
         value: 5005
-      # MongoDB - Set in Render Dashboard (secret)
+
+      # ── Database ──────────────────────────────────────────────────────────
+      # Set MONGODB_URI in Render Dashboard → Environment (it contains credentials)
       - key: MONGODB_URI
         sync: false
-      # JWT - Set in Render Dashboard (secret)
+
+      # ── Auth ──────────────────────────────────────────────────────────────
+      # Set JWT_SECRET in Render Dashboard → Environment
       - key: JWT_SECRET
         sync: false
-      # Email Configuration
+
+      # ── CORS / URLs ───────────────────────────────────────────────────────
+      # Primary production domain
+      - key: FRONTEND_URL
+        value: https://healthsyncpro.in
+      - key: CORS_ORIGIN
+        value: https://healthsyncpro.in
+      - key: BACKEND_URL
+        value: https://doctor-appointment-system-updated.onrender.com
+
+      # ── Email ─────────────────────────────────────────────────────────────
       - key: EMAIL_USER
         sync: false
       - key: EMAIL_PASS
         sync: false
-      # Resend Email (production)
       - key: RESEND_API_KEY
         sync: false
       - key: RESEND_FROM_EMAIL
-        value: Doctor Appointment <no-reply@healthsyncpro.in>
-      # AI Chatbot
+        value: HealthSync <no-reply@healthsyncpro.in>
+      - key: ADMIN_EMAIL
+        sync: false
+
+      # ── AI ────────────────────────────────────────────────────────────────
       - key: GEMINI_API_KEY
         sync: false
       - key: AI_PROVIDER
         value: gemini
-      # Google Meet Integration
+
+      # ── Google Meet ───────────────────────────────────────────────────────
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
@@ -43,20 +60,28 @@ services:
       - key: GOOGLE_REFRESH_TOKEN
         sync: false
       - key: GOOGLE_REDIRECT_URI
-        value: https://healthsync-backend.onrender.com/api/google/callback
-      # Stripe (optional)
+        value: https://doctor-appointment-system-updated.onrender.com/api/google/callback
+
+      # ── Payments ──────────────────────────────────────────────────────────
+      - key: RAZORPAY_KEY_ID
+        sync: false
+      - key: RAZORPAY_KEY_SECRET
+        sync: false
+      - key: RAZORPAY_MODE
+        value: live
+      - key: USE_RAZORPAY_PAYMENTS
+        value: "true"
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_PUBLISHABLE_KEY
         sync: false
-      # CORS - Update with your Vercel frontend URL
-      - key: CORS_ORIGIN
-        value: https://healthsyncpro.vercel.app
-      - key: FRONTEND_URL
-        value: https://healthsyncpro.vercel.app
-      # Backend URL for invoice links
-      - key: BACKEND_URL
-        value: https://healthsync-backend.onrender.com
-      # Timezone
+
+      # ── Misc ──────────────────────────────────────────────────────────────
       - key: TIMEZONE
         value: Asia/Kolkata
+      - key: CURRENCY
+        value: INR
+      - key: PLATFORM_FEE_PERCENTAGE
+        value: "5"
+      - key: GST_PERCENTAGE
+        value: "0"
