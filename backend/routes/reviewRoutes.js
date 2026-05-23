@@ -3,8 +3,61 @@ const router = express.Router();
 const Review = require('../models/Review');
 const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
+const { verifyToken } = require('../middleware/auth');
 
-// Create review
+// POST /api/reviews — create a review (authenticated)
+router.post('/', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const { appointmentId, doctorId, rating, comment } = req.body;
+
+    if (!appointmentId || !rating) {
+      return res.status(400).json({ message: 'Appointment ID and rating are required' });
+    }
+
+    // Check if appointment exists and belongs to user
+    const appointment = await Appointment.findOne({ _id: appointmentId, userId });
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+
+    if (appointment.status !== 'completed') {
+      return res.status(400).json({ message: 'Can only review completed appointments' });
+    }
+
+    // Check if review already exists
+    const existingReview = await Review.findOne({ appointmentId });
+    if (existingReview) {
+      return res.status(400).json({ message: 'Review already submitted for this appointment' });
+    }
+
+    const newReview = new Review({
+      appointmentId,
+      patientId: userId,
+      doctorId: doctorId || appointment.doctorId,
+      rating,
+      review: comment,
+      isAnonymous: false,
+    });
+
+    await newReview.save();
+
+    // Update doctor's average rating
+    const reviews = await Review.find({ doctorId: newReview.doctorId });
+    const avgRating = reviews.reduce((sum, r) => sum + r.rating, 0) / reviews.length;
+    await Doctor.findByIdAndUpdate(newReview.doctorId, {
+      rating: Math.round(avgRating * 10) / 10,
+      reviewCount: reviews.length,
+    });
+
+    res.status(201).json({ success: true, message: 'Review submitted successfully', review: newReview });
+  } catch (error) {
+    console.error('Create review error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Create review (legacy endpoint)
 router.post('/create', async (req, res) => {
   try {
     const { appointmentId, rating, ratings, title, review, tags, wouldRecommend, isAnonymous } = req.body;

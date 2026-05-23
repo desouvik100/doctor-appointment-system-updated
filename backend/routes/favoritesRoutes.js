@@ -2,8 +2,73 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
+const { verifyToken } = require('../middleware/auth');
 
-// Get user's favorite doctors
+// GET /api/favorites — get current user's favorites (authenticated)
+router.get('/', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const user = await User.findById(userId)
+      .populate({
+        path: 'favoriteDoctors',
+        populate: { path: 'clinicId', select: 'name address city phone' }
+      });
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ success: true, favorites: user.favoriteDoctors || [] });
+  } catch (error) {
+    console.error('Error fetching favorites:', error);
+    res.status(500).json({ message: 'Error fetching favorites', error: error.message });
+  }
+});
+
+// POST /api/favorites — add to favorites (authenticated)
+router.post('/', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const { doctorId } = req.body;
+
+    if (!doctorId) {
+      return res.status(400).json({ message: 'Doctor ID is required' });
+    }
+
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    if (user.favoriteDoctors?.includes(doctorId)) {
+      return res.status(400).json({ message: 'Doctor already in favorites' });
+    }
+
+    user.favoriteDoctors = user.favoriteDoctors || [];
+    user.favoriteDoctors.push(doctorId);
+    await user.save();
+
+    res.json({ success: true, message: 'Added to favorites' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error adding favorite', error: error.message });
+  }
+});
+
+// DELETE /api/favorites/:doctorId — remove from favorites (authenticated)
+router.delete('/:doctorId', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const { doctorId } = req.params;
+
+    await User.findByIdAndUpdate(userId, {
+      $pull: { favoriteDoctors: doctorId }
+    });
+
+    res.json({ success: true, message: 'Removed from favorites' });
+  } catch (error) {
+    res.status(500).json({ message: 'Error removing favorite', error: error.message });
+  }
+});
+
+// Get user's favorite doctors (legacy endpoint)
 router.get('/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId)

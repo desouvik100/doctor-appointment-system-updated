@@ -84,7 +84,7 @@ const logAccountOperation = async (req, action, targetUser, details = {}) => {
 router.get('/me', verifyToken, async (req, res) => {
   try {
     const user = await User.findById(req.user.id || req.user.userId)
-      .select('name email phone role clinicId clinicName emrPlan profilePhoto department');
+      .select('name email phone role clinicId clinicName emrPlan profilePhoto department isActive lastLogin walletBalance loyaltyPoints');
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -100,7 +100,10 @@ router.get('/me', verifyToken, async (req, res) => {
       clinicName: user.clinicName,
       emrPlan: user.emrPlan || 'basic',
       profilePhoto: user.profilePhoto,
-      department: user.department
+      department: user.department,
+      isActive: user.isActive,
+      lastLogin: user.lastLogin,
+      walletBalance: user.walletBalance || 0,
     });
   } catch (error) {
     console.error('Error fetching current user:', error);
@@ -135,18 +138,62 @@ router.get('/search', verifyToken, async (req, res) => {
   }
 });
 
-// Get all users (Admin only)
+// Get all users (Admin only) — with filtering, pagination, and search
 router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
-    // Include all users for admin dashboard (both active and inactive)
-    const { includeInactive } = req.query;
-    const filter = includeInactive === 'true' ? {} : { isActive: true };
-    
-    const users = await User.find(filter)
-      .populate('clinicId', 'name address city phone')
-      .sort({ createdAt: -1 });
+    const {
+      includeInactive,
+      role,
+      approvalStatus,
+      search,
+      clinicId,
+      page = 1,
+      limit = 50,
+      sort = '-createdAt'
+    } = req.query;
 
-    res.json(users);
+    const filter = {};
+
+    // Active/inactive filter
+    if (includeInactive !== 'true') filter.isActive = true;
+
+    // Role filter
+    if (role) filter.role = role;
+
+    // Approval status filter
+    if (approvalStatus) filter.approvalStatus = approvalStatus;
+
+    // Clinic filter
+    if (clinicId) filter.clinicId = clinicId;
+
+    // Text search
+    if (search) {
+      filter.$or = [
+        { name: { $regex: search, $options: 'i' } },
+        { email: { $regex: search, $options: 'i' } },
+        { phone: { $regex: search, $options: 'i' } },
+      ];
+    }
+
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const [users, total] = await Promise.all([
+      User.find(filter)
+        .populate('clinicId', 'name address city phone')
+        .sort(sort)
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      User.countDocuments(filter),
+    ]);
+
+    res.json({
+      users,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
+      limit: parseInt(limit),
+    });
   } catch (error) {
     console.error('Error fetching users:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -220,6 +267,73 @@ router.post('/', verifyTokenWithRole(['admin']), async (req, res) => {
     res.status(201).json(populatedUser);
   } catch (error) {
     console.error('Error creating user:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Update current user's profile (self-update)
+router.put('/profile', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const { name, phone, gender, dateOfBirth, address, bloodGroup, allergies, chronicConditions, emergencyContact } = req.body;
+
+    const allowedUpdates = {};
+    if (name !== undefined) allowedUpdates.name = name.trim();
+    if (phone !== undefined) allowedUpdates.phone = phone.trim();
+    if (gender !== undefined) allowedUpdates.gender = gender;
+    if (dateOfBirth !== undefined) allowedUpdates.dateOfBirth = dateOfBirth;
+    if (address !== undefined) allowedUpdates.address = address;
+    if (bloodGroup !== undefined) allowedUpdates.bloodGroup = bloodGroup;
+    if (allergies !== undefined) allowedUpdates.allergies = allergies;
+    if (chronicConditions !== undefined) allowedUpdates.chronicConditions = chronicConditions;
+    if (emergencyContact !== undefined) allowedUpdates.emergencyContact = emergencyContact;
+
+    const user = await User.findByIdAndUpdate(
+      userId,
+      { $set: allowedUpdates },
+      { new: true, runValidators: true }
+    ).select('-password');
+
+    if (!user) {
+      return res.status(404).json({ message: 'User not found' });
+    }
+
+    res.json({ success: true, message: 'Profile updated successfully', user });
+  } catch (error) {
+    console.error('Update profile error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Change password
+router.put('/change-password', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const { currentPassword, newPassword } = req.body;
+
+    if (!currentPassword || !newPassword) {
+      return res.status(400).json({ message: 'Current and new password are required' });
+    }
+
+    if (newPassword.length < 8) {
+      return res.status(400).json({ message: 'New password must be at least 8 characters' });
+    }
+
+    const bcrypt = require('bcryptjs');
+    const user = await User.findById(userId);
+    if (!user) return res.status(404).json({ message: 'User not found' });
+
+    const isMatch = await bcrypt.compare(currentPassword, user.password);
+    if (!isMatch) {
+      return res.status(400).json({ message: 'Current password is incorrect' });
+    }
+
+    user.password = await bcrypt.hash(newPassword, 12);
+    await user.save();
+
+    res.json({ success: true, message: 'Password changed successfully' });
+  } catch (error) {
+    console.error('Change password error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

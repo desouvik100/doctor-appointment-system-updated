@@ -392,6 +392,12 @@ router.post('/login', async (req, res) => {
       { expiresIn: '24h' }
     );
 
+    // Update last login (non-blocking)
+    User.findByIdAndUpdate(user._id, {
+      lastLogin: new Date(),
+      lastLoginIP: req.ip || req.headers['x-forwarded-for']
+    }).catch(() => {});
+
     res.json({
       token,
       user: {

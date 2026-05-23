@@ -50,8 +50,8 @@ const userSchema = new mongoose.Schema(
     },
     role: {
       type: String,
-      // 'clinic' is kept for backward compatibility with existing receptionist/clinic staff accounts
-      enum: ["patient", "admin", "receptionist", "clinic"],
+      // 'clinic' and 'staff_registered' kept for backward compatibility
+      enum: ["patient", "admin", "receptionist", "clinic", "staff"],
       default: "patient",
     },
     clinicId: {
@@ -213,6 +213,21 @@ const userSchema = new mongoose.Schema(
       type: Date,
       default: null
     },
+    // EMR Plan for clinic staff (basic, advanced, enterprise)
+    emrPlan: {
+      type: String,
+      enum: ['basic', 'advanced', 'enterprise'],
+      default: 'basic'
+    },
+    // Last login tracking
+    lastLogin: {
+      type: Date,
+      default: null
+    },
+    lastLoginIP: {
+      type: String,
+      default: null
+    },
     // Walk-in Patient Fields (EMR)
     registrationType: {
       type: String,
@@ -362,12 +377,17 @@ const userSchema = new mongoose.Schema(
 
 // ===== PERFORMANCE INDEXES =====
 userSchema.index({ email: 1 }); // Already unique, but explicit
-userSchema.index({ phone: 1 });
+userSchema.index({ phone: 1 }, { sparse: true });
 userSchema.index({ role: 1, isActive: 1 });
-userSchema.index({ clinicId: 1 });
+userSchema.index({ clinicId: 1, role: 1 });
 userSchema.index({ googleId: 1 }, { sparse: true });
-userSchema.index({ 'loginLocation.city': 1 });
+userSchema.index({ facebookId: 1 }, { sparse: true });
+userSchema.index({ approvalStatus: 1, role: 1 });
+userSchema.index({ createdAt: -1 });
+userSchema.index({ 'loginLocation.city': 1 }, { sparse: true });
 userSchema.index({ 'registeredClinics.clinicId': 1 });
-userSchema.index({ 'registeredClinics.clinicPatientId': 1 });
+userSchema.index({ 'devices.fcmToken': 1 }, { sparse: true });
+// Text search index for admin user search
+userSchema.index({ name: 'text', email: 'text', phone: 'text' });
 
 module.exports = mongoose.model('User', userSchema);

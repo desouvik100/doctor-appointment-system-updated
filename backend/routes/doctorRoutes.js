@@ -9,6 +9,230 @@ const { verifyClinicAccess, verifyDoctorAccess } = require('../middleware/clinic
 const cacheService = require('../services/cacheService');
 const router = express.Router();
 
+// ─── Doctor self-profile (authenticated) ─────────────────────────────────
+
+// GET /api/doctors/me — get current doctor's own profile
+router.get('/me', verifyToken, async (req, res) => {
+  try {
+    const doctorId = req.user.id || req.user.userId;
+    const doctor = await Doctor.findById(doctorId)
+      .populate('clinicId', 'name address city phone')
+      .lean();
+
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor profile not found' });
+    }
+
+    res.json({ success: true, doctor });
+  } catch (error) {
+    console.error('Get doctor profile error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// PUT /api/doctors/me — update current doctor's own profile
+router.put('/me', verifyToken, async (req, res) => {
+  try {
+    const doctorId = req.user.id || req.user.userId;
+    const {
+      name, phone, specialization, qualification, experience,
+      consultationFee, consultationDuration, bio, languages,
+      profilePhoto, availability
+    } = req.body;
+
+    const allowedUpdates = {};
+    if (name !== undefined)                allowedUpdates.name = name;
+    if (phone !== undefined)               allowedUpdates.phone = phone;
+    if (specialization !== undefined)      allowedUpdates.specialization = specialization;
+    if (qualification !== undefined)       allowedUpdates.qualification = qualification;
+    if (experience !== undefined)          allowedUpdates.experience = experience;
+    if (consultationFee !== undefined)     allowedUpdates.consultationFee = consultationFee;
+    if (consultationDuration !== undefined) allowedUpdates.consultationDuration = consultationDuration;
+    if (bio !== undefined)                 allowedUpdates.bio = bio;
+    if (languages !== undefined)           allowedUpdates.languages = languages;
+    if (profilePhoto !== undefined)        allowedUpdates.profilePhoto = profilePhoto;
+    if (availability !== undefined)        allowedUpdates.availability = availability;
+
+    const doctor = await Doctor.findByIdAndUpdate(
+      doctorId,
+      { $set: allowedUpdates },
+      { new: true, runValidators: true }
+    ).populate('clinicId', 'name address city');
+
+    if (!doctor) {
+      return res.status(404).json({ message: 'Doctor not found' });
+    }
+
+    res.json({ success: true, message: 'Profile updated successfully', doctor });
+  } catch (error) {
+    console.error('Update doctor profile error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// GET /api/doctors/earnings — get current doctor's earnings
+router.get('/earnings', verifyToken, async (req, res) => {
+  try {
+    const doctorId = req.user.id || req.user.userId;
+    const { period = 'month' } = req.query;
+
+    const DoctorWallet = require('../models/DoctorWallet');
+    const wallet = await DoctorWallet.findOne({ doctorId }).lean();
+
+    if (!wallet) {
+      return res.json({
+        success: true,
+        balance: 0,
+        totalEarnings: 0,
+        transactions: [],
+        period
+      });
+    }
+
+    res.json({
+      success: true,
+      balance: wallet.balance || 0,
+      totalEarnings: wallet.totalEarnings || 0,
+      pendingAmount: wallet.pendingAmount || 0,
+      transactions: (wallet.transactions || []).slice(-20).reverse(),
+      period
+    });
+  } catch (error) {
+    console.error('Get doctor earnings error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// GET /api/doctors/stats — get current doctor's dashboard stats
+router.get('/stats', verifyToken, async (req, res) => {
+  try {
+    const doctorId = req.user.id || req.user.userId;
+    const Appointment = require('../models/Appointment');
+    const User = require('../models/User');
+
+    const today = new Date();
+    today.setHours(0, 0, 0, 0);
+    const tomorrow = new Date(today);
+    tomorrow.setDate(tomorrow.getDate() + 1);
+
+    const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
+
+    const [
+      todayCount,
+      pendingCount,
+      completedCount,
+      totalPatients,
+      monthlyCount,
+    ] = await Promise.all([
+      Appointment.countDocuments({
+        doctorId,
+        date: { $gte: today, $lt: tomorrow },
+        status: { $nin: ['cancelled'] }
+      }),
+      Appointment.countDocuments({
+        doctorId,
+        status: { $in: ['pending', 'confirmed'] }
+      }),
+      Appointment.countDocuments({
+        doctorId,
+        status: 'completed'
+      }),
+      Appointment.distinct('userId', { doctorId }).then(ids => ids.length),
+      Appointment.countDocuments({
+        doctorId,
+        date: { $gte: thisMonth },
+        status: { $nin: ['cancelled'] }
+      }),
+    ]);
+
+    res.json({
+      success: true,
+      stats: {
+        todayAppointments: todayCount,
+        pendingAppointments: pendingCount,
+        completedAppointments: completedCount,
+        totalPatients,
+        monthlyAppointments: monthlyCount,
+      }
+    });
+  } catch (error) {
+    console.error('Get doctor stats error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// GET /api/doctors/patients — get current doctor's patients
+router.get('/patients', verifyToken, async (req, res) => {
+  try {
+    const doctorId = req.user.id || req.user.userId;
+    const Appointment = require('../models/Appointment');
+    const User = require('../models/User');
+
+    const appointments = await Appointment.find({ doctorId })
+      .select('userId')
+      .lean();
+
+    const patientIds = [...new Set(appointments.map(a => a.userId?.toString()).filter(Boolean))];
+
+    if (patientIds.length === 0) {
+      return res.json({ success: true, patients: [], total: 0 });
+    }
+
+    const patients = await User.find({ _id: { $in: patientIds } })
+      .select('name email phone profilePhoto bloodGroup dateOfBirth gender createdAt')
+      .lean();
+
+    res.json({ success: true, patients, total: patients.length });
+  } catch (error) {
+    console.error('Get doctor patients error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// GET /api/doctors/appointments — get current doctor's appointments
+router.get('/appointments', verifyToken, async (req, res) => {
+  try {
+    const doctorId = req.user.id || req.user.userId;
+    const Appointment = require('../models/Appointment');
+    const { status, date, page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const query = { doctorId };
+    if (status) query.status = status;
+    if (date) {
+      const [y, m, d] = date.split('-').map(Number);
+      const start = new Date(y, m - 1, d);
+      start.setHours(0, 0, 0, 0);
+      const end = new Date(start);
+      end.setHours(23, 59, 59, 999);
+      query.date = { $gte: start, $lte: end };
+    }
+
+    const [appointments, total] = await Promise.all([
+      Appointment.find(query)
+        .populate('userId', 'name email phone profilePhoto')
+        .populate('clinicId', 'name address')
+        .sort({ date: -1, time: 1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      Appointment.countDocuments(query),
+    ]);
+
+    res.json({
+      success: true,
+      appointments,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
+    });
+  } catch (error) {
+    console.error('Get doctor appointments error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+
 /**
  * @swagger
  * components:
@@ -247,6 +471,56 @@ router.get('/', async (req, res) => {
     res.json(doctors);
   } catch (error) {
     console.error('Error fetching doctors:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+// Get nearby doctors by city
+router.get('/nearby', async (req, res) => {
+  try {
+    const { city, specialization, limit = 10 } = req.query;
+
+    if (!city) {
+      return res.status(400).json({ message: 'City is required' });
+    }
+
+    const Clinic = require('../models/Clinic');
+
+    // Find clinics in the city
+    const clinics = await Clinic.find({
+      $or: [
+        { city: { $regex: city, $options: 'i' } },
+        { address: { $regex: city, $options: 'i' } }
+      ],
+      isActive: true
+    }).select('_id').lean();
+
+    const clinicIds = clinics.map(c => c._id);
+
+    const query = {
+      isActive: true,
+      approvalStatus: 'approved',
+      clinicId: { $in: clinicIds }
+    };
+
+    if (specialization) {
+      query.specialization = { $regex: specialization, $options: 'i' };
+    }
+
+    const doctors = await Doctor.find(query)
+      .populate('clinicId', 'name address city phone')
+      .sort({ rating: -1, consultationFee: 1 })
+      .limit(parseInt(limit))
+      .lean();
+
+    res.json({
+      success: true,
+      doctors,
+      total: doctors.length,
+      city
+    });
+  } catch (error) {
+    console.error('Error fetching nearby doctors:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

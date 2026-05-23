@@ -208,6 +208,36 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   }
 });
 
+// Get current user's lab reports (self-lookup)
+router.get('/', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const reports = await LabReport.find({ patientId: userId })
+      .populate('doctorId', 'name specialization')
+      .populate('clinicId', 'name')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    const total = await LabReport.countDocuments({ patientId: userId });
+
+    res.json({
+      success: true,
+      reports,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
+    });
+  } catch (error) {
+    console.error('Get lab reports error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Get patient's lab reports
 router.get('/patient/:patientId', verifyToken, async (req, res) => {
   try {

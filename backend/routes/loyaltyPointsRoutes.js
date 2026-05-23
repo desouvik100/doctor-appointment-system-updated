@@ -1,6 +1,35 @@
 const express = require('express');
 const router = express.Router();
 const LoyaltyPoints = require('../models/LoyaltyPoints');
+const { verifyToken } = require('../middleware/auth');
+
+// Get current user's loyalty points (authenticated)
+router.get('/', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    let loyalty = await LoyaltyPoints.findOne({ userId });
+    
+    if (!loyalty) {
+      loyalty = new LoyaltyPoints({ userId });
+      await loyalty.save();
+    }
+
+    res.json({
+      totalPoints: loyalty.totalPoints,
+      availablePoints: loyalty.availablePoints,
+      redeemedPoints: loyalty.redeemedPoints,
+      tier: loyalty.tier,
+      tierProgress: loyalty.tierProgress,
+      pointsValue: loyalty.getPointsValue ? loyalty.getPointsValue() : (loyalty.availablePoints * 0.25),
+      currentStreak: loyalty.currentStreak,
+      achievements: loyalty.achievements,
+      recentTransactions: (loyalty.transactions || []).slice(-10).reverse()
+    });
+  } catch (error) {
+    console.error('Get loyalty points error:', error);
+    res.status(500).json({ message: 'Failed to get loyalty points', error: error.message });
+  }
+});
 
 // Get user's loyalty points
 router.get('/user/:userId', async (req, res) => {

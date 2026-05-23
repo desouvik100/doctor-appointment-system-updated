@@ -167,9 +167,8 @@ app.use(requestLoggerMiddleware());
 const connectDB = async (retryCount = 0) => {
   const MAX_RETRIES = 5;
   try {
-    const conn = await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/doctor_appointment', {
-      useNewUrlParser: true,
-      useUnifiedTopology: true,
+    const mongoUri = process.env.MONGODB_URI || process.env.MONGO_URI || 'mongodb://127.0.0.1:27017/doctor_appointment';
+    const conn = await mongoose.connect(mongoUri, {
       maxPoolSize: 50,
       minPoolSize: 10,
       serverSelectionTimeoutMS: 5000,
@@ -307,12 +306,35 @@ console.log('📚 Swagger docs available at /api/docs');
 console.log('📄 OpenAPI JSON spec at /api/openapi.json');
 
 // ===== HEALTH CHECK (must be before route registrations to avoid shadowing) =====
-app.get('/api/health', (req, res) => {
-  res.json({ 
-    status: 'OK', 
-    database: mongoose.connection.readyState === 1 ? 'Connected' : 'Disconnected',
-    databaseName: mongoose.connection.name,
-    timestamp: new Date().toISOString()
+app.get('/api/health', async (req, res) => {
+  const dbState = mongoose.connection.readyState;
+  const dbStates = { 0: 'disconnected', 1: 'connected', 2: 'connecting', 3: 'disconnecting' };
+  
+  // Check cache health
+  let cacheStatus = 'unknown';
+  try {
+    await cacheService.set('health_check', '1', 5);
+    const val = await cacheService.get('health_check');
+    cacheStatus = val === '1' ? 'healthy' : 'degraded';
+  } catch { cacheStatus = 'unavailable'; }
+
+  const healthy = dbState === 1;
+  res.status(healthy ? 200 : 503).json({ 
+    status: healthy ? 'OK' : 'DEGRADED',
+    version: '2.2.0',
+    database: {
+      status: dbStates[dbState] || 'unknown',
+      name: mongoose.connection.name,
+      host: mongoose.connection.host
+    },
+    cache: cacheStatus,
+    uptime: Math.floor(process.uptime()),
+    memory: {
+      used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + 'MB',
+      total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + 'MB'
+    },
+    timestamp: new Date().toISOString(),
+    environment: process.env.NODE_ENV || 'development'
   });
 });
 
@@ -367,6 +389,7 @@ app.use('/api/security', require('./routes/securityRoutes'));
 app.use('/api/ai', require('./routes/aiRoutes')); // AI-powered features
 app.use('/api/ai-health', require('./routes/aiHealthRoutes')); // Advanced AI health features
 app.use('/api/ai-report', require('./routes/aiReportRoutes')); // AI medical report analyzer
+app.use('/api/ai/symptom-check', require('./routes/symptomRoutes')); // Symptom checker
 app.use('/api/slots', require('./routes/slotRoutes')); // Separate Online & Clinic slot management
 app.use('/api/commission', require('./routes/commissionRoutes')); // Commission, GST & Payout system
 app.use('/api/refunds', require('./routes/refundRoutes')); // Refund Policy & Processing
@@ -433,7 +456,26 @@ console.log('========================\n');
 
 // Basic route
 app.get('/', (req, res) => {
-  res.json({ message: 'Doctor Appointment System API - MongoDB Version' });
+  res.json({ 
+    name: 'HealthSync API',
+    version: '2.2.0',
+    status: 'running',
+    docs: '/api/docs',
+    health: '/api/health',
+    timestamp: new Date().toISOString()
+  });
+});
+
+// Version endpoint
+app.get('/api/version', (req, res) => {
+  res.json({
+    version: '2.2.0',
+    name: 'HealthSync Backend',
+    environment: process.env.NODE_ENV || 'development',
+    nodeVersion: process.version,
+    uptime: Math.floor(process.uptime()),
+    timestamp: new Date().toISOString()
+  });
 });
 
 // Privacy Policy page at root level (for Facebook/Meta validation)

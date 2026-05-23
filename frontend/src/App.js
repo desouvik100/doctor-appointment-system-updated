@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useCallback, Suspense } from "react";
 import './simple-scroll-fix.css';
 import './index.css';
+import './styles/global-fixes.css';
 import './styles/premium-saas.css';
 import './styles/landing-page-professional.css';
 import './styles/landing-page-pro.css';
@@ -34,6 +35,7 @@ import CorporateWellness from "./components/CorporateWellness";
 import PricingPage from "./components/PricingPage";
 import { TermsAndConditions, PrivacyPolicy, RefundPolicy, ContactUs, AboutUs } from "./components/LegalPages";
 import NetworkStatus from "./components/NetworkStatus";
+import NotFound from "./components/NotFound";
 import PWAInstallBanner from "./components/PWAInstallBanner";
 import PaymentCheckout from "./components/PaymentCheckout";
 import './styles/legal-pages.css';

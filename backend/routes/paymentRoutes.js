@@ -222,6 +222,18 @@ router.post('/verify', verifyToken, async (req, res) => {
   }
 });
 
+// Get current user's payment history (authenticated)
+router.get('/history', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const paymentHistory = await razorpayService.getPaymentHistory(userId);
+    res.json({ success: true, payments: paymentHistory });
+  } catch (error) {
+    console.error('Payment history error:', error);
+    res.status(500).json({ success: false, message: 'Failed to fetch payment history', error: error.message });
+  }
+});
+
 // Get payment history for user
 router.get('/history/:userId', verifyToken, async (req, res) => {
   try {

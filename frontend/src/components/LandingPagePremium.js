@@ -1,6 +1,6 @@
 // frontend/src/components/LandingPagePremium.js
 // Premium SaaS Landing Page - Stripe/Notion/Linear inspired
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import '../styles/premium-saas.css';
 import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSelector from './LanguageSelector';

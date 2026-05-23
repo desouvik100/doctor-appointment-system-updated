@@ -7,6 +7,66 @@ const Doctor = require('../models/Doctor');
 const Payment = require('../models/Payment');
 const Clinic = require('../models/Clinic');
 const Review = require('../models/Review');
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
+
+// GET /api/analytics/revenue — revenue analytics for admin
+router.get('/revenue', verifyTokenWithRole(['admin']), async (req, res) => {
+  try {
+    const { period = 'month' } = req.query;
+
+    const now = new Date();
+    let startDate;
+
+    switch (period) {
+      case 'week':
+        startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
+        break;
+      case 'year':
+        startDate = new Date(now.getFullYear(), 0, 1);
+        break;
+      case 'month':
+      default:
+        startDate = new Date(now.getFullYear(), now.getMonth(), 1);
+    }
+
+    const [totalRevenue, revenueByDay, topDoctors] = await Promise.all([
+      Payment.aggregate([
+        { $match: { status: { $in: ['completed', 'success'] }, createdAt: { $gte: startDate } } },
+        { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } }
+      ]),
+      Payment.aggregate([
+        { $match: { status: { $in: ['completed', 'success'] }, createdAt: { $gte: startDate } } },
+        { $group: {
+          _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
+          revenue: { $sum: '$amount' },
+          count: { $sum: 1 }
+        }},
+        { $sort: { _id: 1 } }
+      ]),
+      Payment.aggregate([
+        { $match: { status: { $in: ['completed', 'success'] }, createdAt: { $gte: startDate } } },
+        { $group: { _id: '$doctorId', revenue: { $sum: '$amount' }, count: { $sum: 1 } } },
+        { $sort: { revenue: -1 } },
+        { $limit: 5 },
+        { $lookup: { from: 'doctors', localField: '_id', foreignField: '_id', as: 'doctor' } },
+        { $unwind: { path: '$doctor', preserveNullAndEmptyArrays: true } },
+        { $project: { revenue: 1, count: 1, doctorName: '$doctor.name', specialization: '$doctor.specialization' } }
+      ])
+    ]);
+
+    res.json({
+      success: true,
+      period,
+      totalRevenue: totalRevenue[0]?.total || 0,
+      totalTransactions: totalRevenue[0]?.count || 0,
+      revenueByDay,
+      topDoctors,
+    });
+  } catch (error) {
+    console.error('Revenue analytics error:', error);
+    res.status(500).json({ message: 'Failed to fetch revenue analytics', error: error.message });
+  }
+});
 
 // Get dashboard overview stats
 router.get('/overview', async (req, res) => {
@@ -17,6 +77,7 @@ router.get('/overview', async (req, res) => {
     const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
     const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
+
 
     // Total counts
     const [

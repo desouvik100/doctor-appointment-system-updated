@@ -9,6 +9,7 @@ services:
     buildCommand: npm install
     startCommand: npm start
     healthCheckPath: /api/health
+    autoDeploy: true
     envVars:
       - key: NODE_ENV
         value: production
@@ -26,7 +27,6 @@ services:
         sync: false
 
       # ── CORS / URLs ───────────────────────────────────────────────────────
-      # Primary production domain
       - key: FRONTEND_URL
         value: https://healthsyncpro.in
       - key: CORS_ORIGIN
@@ -49,10 +49,12 @@ services:
       # ── AI ────────────────────────────────────────────────────────────────
       - key: GEMINI_API_KEY
         sync: false
+      - key: OPENAI_API_KEY
+        sync: false
       - key: AI_PROVIDER
         value: gemini
 
-      # ── Google Meet ───────────────────────────────────────────────────────
+      # ── Google Meet / OAuth ───────────────────────────────────────────────
       - key: GOOGLE_CLIENT_ID
         sync: false
       - key: GOOGLE_CLIENT_SECRET
@@ -67,6 +69,8 @@ services:
         sync: false
       - key: RAZORPAY_KEY_SECRET
         sync: false
+      - key: RAZORPAY_WEBHOOK_SECRET
+        sync: false
       - key: RAZORPAY_MODE
         value: live
       - key: USE_RAZORPAY_PAYMENTS
@@ -74,6 +78,34 @@ services:
       - key: STRIPE_SECRET_KEY
         sync: false
       - key: STRIPE_PUBLISHABLE_KEY
+        sync: false
+      - key: STRIPE_WEBHOOK_SECRET
+        sync: false
+
+      # ── SMS / WhatsApp ────────────────────────────────────────────────────
+      - key: MSG91_AUTH_KEY
+        sync: false
+      - key: MSG91_SENDER_ID
+        value: HLTHSN
+      - key: TWILIO_ACCOUNT_SID
+        sync: false
+      - key: TWILIO_AUTH_TOKEN
+        sync: false
+      - key: WHATSAPP_PHONE_NUMBER_ID
+        sync: false
+      - key: WHATSAPP_ACCESS_TOKEN
+        sync: false
+      - key: WHATSAPP_BUSINESS_ACCOUNT_ID
+        sync: false
+      - key: WHATSAPP_VERIFY_TOKEN
+        value: healthsync_whatsapp_verify
+
+      # ── Cloudinary ────────────────────────────────────────────────────────
+      - key: CLOUDINARY_CLOUD_NAME
+        sync: false
+      - key: CLOUDINARY_API_KEY
+        sync: false
+      - key: CLOUDINARY_API_SECRET
         sync: false
 
       # ── Misc ──────────────────────────────────────────────────────────────
@@ -85,3 +117,5 @@ services:
         value: "5"
       - key: GST_PERCENTAGE
         value: "0"
+      - key: TEST_APPOINTMENT
+        value: "false"

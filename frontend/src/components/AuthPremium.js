@@ -1,6 +1,6 @@
 // frontend/src/components/AuthPremium.js
 // Premium SaaS Auth Page - Stripe/Notion inspired
-import { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import axios from "../api/config";
 import toast from 'react-hot-toast';
 import '../styles/premium-saas.css';

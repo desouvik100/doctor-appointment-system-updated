@@ -1,34 +1,78 @@
 const express = require('express');
 const router = express.Router();
 const FamilyMember = require('../models/FamilyMember');
+const { verifyToken } = require('../middleware/auth');
 
-/**
- * @swagger
- * components:
- *   schemas:
- *     FamilyMember:
- *       type: object
- *       properties:
- *         _id:
- *           type: string
- *         primaryUserId:
- *           type: string
- *         name:
- *           type: string
- *         relationship:
- *           type: string
- *         dateOfBirth:
- *           type: string
- *           format: date
- *         gender:
- *           type: string
- *         phone:
- *           type: string
- *         bloodGroup:
- *           type: string
- *         isActive:
- *           type: boolean
- */
+// Get current user's family members (authenticated self-lookup)
+router.get('/members', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const members = await FamilyMember.find({ primaryUserId: userId, isActive: true }).lean();
+    res.json({ success: true, members, total: members.length });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Add family member (authenticated)
+router.post('/members', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const { name, relationship, dateOfBirth, gender, phone, bloodGroup, allergies, chronicConditions } = req.body;
+
+    if (!name || !relationship) {
+      return res.status(400).json({ message: 'Name and relationship are required' });
+    }
+
+    const member = new FamilyMember({
+      primaryUserId: userId,
+      name,
+      relationship,
+      dateOfBirth,
+      gender,
+      phone,
+      bloodGroup,
+      allergies,
+      chronicConditions,
+      isActive: true,
+    });
+
+    await member.save();
+    res.status(201).json({ success: true, message: 'Family member added', member });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Update family member
+router.put('/members/:memberId', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const member = await FamilyMember.findOneAndUpdate(
+      { _id: req.params.memberId, primaryUserId: userId },
+      { $set: req.body },
+      { new: true }
+    );
+    if (!member) return res.status(404).json({ message: 'Family member not found' });
+    res.json({ success: true, message: 'Family member updated', member });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
+
+// Remove family member (soft delete)
+router.delete('/members/:memberId', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    await FamilyMember.findOneAndUpdate(
+      { _id: req.params.memberId, primaryUserId: userId },
+      { isActive: false }
+    );
+    res.json({ success: true, message: 'Family member removed' });
+  } catch (error) {
+    res.status(500).json({ message: error.message });
+  }
+});
 
 /**
  * @swagger

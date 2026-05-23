@@ -1,4 +1,9 @@
 {
   "name": "HealthSyncPro",
-  "displayName": "HealthSync Pro"
+  "displayName": "HealthSync Pro",
+  "version": "1.0.0",
+  "buildNumber": "1",
+  "description": "HealthSync Pro — Clinical Staff App for Doctors, Staff & Admins",
+  "author": "HealthSync",
+  "homepage": "https://healthsyncpro.in"
 }

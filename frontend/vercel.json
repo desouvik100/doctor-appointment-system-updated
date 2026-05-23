@@ -9,8 +9,13 @@
     {
       "source": "/(.*)",
       "headers": [
-        { "key": "X-Robots-Tag", "value": "index, follow" },
-        { "key": "Access-Control-Allow-Origin", "value": "*" },
+        { "key": "X-Robots-Tag",              "value": "index, follow" },
+        { "key": "X-Content-Type-Options",    "value": "nosniff" },
+        { "key": "X-Frame-Options",           "value": "SAMEORIGIN" },
+        { "key": "X-XSS-Protection",          "value": "1; mode=block" },
+        { "key": "Referrer-Policy",           "value": "strict-origin-when-cross-origin" },
+        { "key": "Permissions-Policy",        "value": "camera=(), microphone=(self), geolocation=(self)" },
+        { "key": "Access-Control-Allow-Origin",  "value": "*" },
         { "key": "Access-Control-Allow-Methods", "value": "GET, HEAD, OPTIONS" },
         { "key": "Access-Control-Allow-Headers", "value": "Content-Type, Authorization, User-Agent" }
       ]
@@ -18,15 +23,15 @@
     {
       "source": "/sitemap.xml",
       "headers": [
-        { "key": "Content-Type", "value": "application/xml; charset=utf-8" },
-        { "key": "Cache-Control", "value": "public, max-age=86400" },
+        { "key": "Content-Type",   "value": "application/xml; charset=utf-8" },
+        { "key": "Cache-Control",  "value": "public, max-age=86400, stale-while-revalidate=3600" },
         { "key": "Access-Control-Allow-Origin", "value": "*" }
       ]
     },
     {
       "source": "/robots.txt",
       "headers": [
-        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
+        { "key": "Content-Type",  "value": "text/plain; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=3600" },
         { "key": "Access-Control-Allow-Origin", "value": "*" }
       ]
@@ -34,15 +39,40 @@
     {
       "source": "/llms.txt",
       "headers": [
-        { "key": "Content-Type", "value": "text/plain; charset=utf-8" },
+        { "key": "Content-Type",  "value": "text/plain; charset=utf-8" },
         { "key": "Cache-Control", "value": "public, max-age=3600" },
         { "key": "Access-Control-Allow-Origin", "value": "*" }
+      ]
+    },
+    {
+      "source": "/manifest.json",
+      "headers": [
+        { "key": "Content-Type",  "value": "application/manifest+json" },
+        { "key": "Cache-Control", "value": "public, max-age=86400" }
+      ]
+    },
+    {
+      "source": "/static/(.*)",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.js",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
+      ]
+    },
+    {
+      "source": "/(.*)\\.css",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=31536000, immutable" }
       ]
     }
   ],
   "rewrites": [
     {
-      "source": "/((?!static|sitemap\\.xml|robots\\.txt|llms\\.txt|manifest\\.json|favicon\\.ico|logo|asset-manifest|precache).*)",
+      "source": "/((?!static|sitemap\\.xml|robots\\.txt|llms\\.txt|manifest\\.json|favicon\\.ico|logo|asset-manifest|precache|icons|splash|service-worker\\.js|sw\\.js).*)",
       "destination": "/index.html"
     }
   ]

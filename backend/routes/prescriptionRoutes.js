@@ -183,6 +183,36 @@ router.post('/', verifyTokenWithRole(['doctor', 'admin', 'receptionist', 'clinic
   }
 });
 
+// Get current user's prescriptions (authenticated self-lookup)
+router.get('/', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const { page = 1, limit = 20 } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const prescriptions = await Prescription.find({ patientId: userId })
+      .populate('doctorId', 'name specialization profilePhoto')
+      .populate('clinicId', 'name address')
+      .sort({ createdAt: -1 })
+      .skip(skip)
+      .limit(parseInt(limit))
+      .lean();
+
+    const total = await Prescription.countDocuments({ patientId: userId });
+
+    res.json({
+      success: true,
+      prescriptions,
+      total,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
+    });
+  } catch (error) {
+    console.error('Get prescriptions error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
 // Get prescriptions by patient (authenticated users - patients, doctors, clinic staff)
 router.get('/patient/:patientId', verifyToken, async (req, res) => {
   try {

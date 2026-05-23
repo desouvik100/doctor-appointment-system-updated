@@ -42,6 +42,107 @@ try {
 }
 
 /**
+ * GET /notifications — Get current user's notifications (authenticated)
+ */
+router.get('/', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const { page = 1, limit = 20, unreadOnly } = req.query;
+    const skip = (parseInt(page) - 1) * parseInt(limit);
+
+    const query = { userId };
+    if (unreadOnly === 'true') query.isRead = false;
+
+    const [notifications, total, unreadCount] = await Promise.all([
+      Notification.find(query)
+        .sort({ createdAt: -1 })
+        .skip(skip)
+        .limit(parseInt(limit))
+        .lean(),
+      Notification.countDocuments(query),
+      Notification.countDocuments({ userId, isRead: false }),
+    ]);
+
+    res.json({
+      success: true,
+      notifications,
+      total,
+      unreadCount,
+      page: parseInt(page),
+      pages: Math.ceil(total / parseInt(limit)),
+    });
+  } catch (error) {
+    console.error('Get notifications error:', error);
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * GET /notifications/unread-count — Get unread count for current user
+ */
+router.get('/unread-count', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const count = await Notification.countDocuments({ userId, isRead: false });
+    res.json({ success: true, unreadCount: count });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * PUT /notifications/read-all — Mark all notifications as read
+ */
+router.put('/read-all', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    await Notification.updateMany({ userId, isRead: false }, { isRead: true, readAt: new Date() });
+    res.json({ success: true, message: 'All notifications marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * PUT /notifications/preferences — Update notification preferences
+ */
+router.put('/preferences', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    const { emailReminders, smsReminders, pushNotifications, reminderHoursBefore } = req.body;
+
+    await User.findByIdAndUpdate(userId, {
+      $set: {
+        'notificationPreferences.emailReminders': emailReminders,
+        'notificationPreferences.smsReminders': smsReminders,
+        'notificationPreferences.pushNotifications': pushNotifications,
+        'notificationPreferences.reminderHoursBefore': reminderHoursBefore,
+      }
+    });
+
+    res.json({ success: true, message: 'Notification preferences updated' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
+ * PUT /notifications/:id/read — Mark single notification as read
+ */
+router.put('/:id/read', verifyToken, async (req, res) => {
+  try {
+    const userId = req.user.id || req.user.userId;
+    await Notification.findOneAndUpdate(
+      { _id: req.params.id, userId },
+      { isRead: true, readAt: new Date() }
+    );
+    res.json({ success: true, message: 'Notification marked as read' });
+  } catch (error) {
+    res.status(500).json({ message: 'Server error', error: error.message });
+  }
+});
+
+/**
  * Register device for push notifications
  */
 router.post('/register-device', verifyToken, async (req, res) => {

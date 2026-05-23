@@ -309,9 +309,13 @@ const doctorSchema = new mongoose.Schema(
 doctorSchema.index({ email: 1 });
 doctorSchema.index({ specialization: 1, isActive: 1 });
 doctorSchema.index({ clinicId: 1, isActive: 1 });
-doctorSchema.index({ approvalStatus: 1 });
-doctorSchema.index({ rating: -1 }); // For sorting by rating
-doctorSchema.index({ consultationFee: 1 }); // For price filtering
-doctorSchema.index({ 'availability': 1, isActive: 1 });
+doctorSchema.index({ approvalStatus: 1, isActive: 1 });
+doctorSchema.index({ rating: -1 });
+doctorSchema.index({ consultationFee: 1 });
+doctorSchema.index({ availability: 1, isActive: 1 });
+doctorSchema.index({ isOnline: 1, lastActiveAt: -1 });
+doctorSchema.index({ createdAt: -1 });
+// Text search for doctor name and specialization
+doctorSchema.index({ name: 'text', specialization: 'text', qualification: 'text' });
 
 module.exports = mongoose.model('Doctor', doctorSchema);

@@ -1,33 +1,28 @@
-# HealthSync ProGuard Rules for Production
+# HealthSync Pro — ProGuard / R8 Rules for Production Release
+# These rules prevent stripping of classes needed at runtime
 
-# React Native
+# ─── React Native core ────────────────────────────────────────────────────
 -keep class com.facebook.hermes.unicode.** { *; }
 -keep class com.facebook.jni.** { *; }
 -keep class com.facebook.react.** { *; }
 -keep class com.facebook.react.bridge.** { *; }
+-keep class com.facebook.react.turbomodule.** { *; }
+-keep class com.facebook.hermes.** { *; }
+-dontwarn com.facebook.hermes.**
+-dontwarn com.facebook.react.**
 
-# Keep native methods
+# ─── Native methods ───────────────────────────────────────────────────────
 -keepclassmembers class * {
     native <methods>;
 }
 
-# Hermes
--keep class com.facebook.hermes.** { *; }
--dontwarn com.facebook.hermes.**
-
-# OkHttp
+# ─── OkHttp / Okio ────────────────────────────────────────────────────────
 -dontwarn okhttp3.**
 -dontwarn okio.**
 -keep class okhttp3.** { *; }
 -keep interface okhttp3.** { *; }
 
-# Retrofit
--dontwarn retrofit2.**
--keep class retrofit2.** { *; }
--keepattributes Signature
--keepattributes Exceptions
-
-# Gson
+# ─── Gson ─────────────────────────────────────────────────────────────────
 -keepattributes Signature
 -keepattributes *Annotation*
 -dontwarn sun.misc.**
@@ -36,88 +31,74 @@
 -keep class * implements com.google.gson.JsonSerializer
 -keep class * implements com.google.gson.JsonDeserializer
 
-# React Native Reanimated
+# ─── React Native Reanimated ──────────────────────────────────────────────
 -keep class com.swmansion.reanimated.** { *; }
--keep class com.facebook.react.turbomodule.** { *; }
 
-# React Native Gesture Handler
+# ─── React Native Gesture Handler ────────────────────────────────────────
 -keep class com.swmansion.gesturehandler.** { *; }
 
-# React Native Screens
+# ─── React Native Screens ─────────────────────────────────────────────────
 -keep class com.swmansion.rnscreens.** { *; }
 
-# React Native Maps
--keep class com.airbnb.android.react.maps.** { *; }
-
-# React Native Camera
--keep class org.reactnative.camera.** { *; }
-
-# React Native Vision Camera
--keep class com.mrousavy.camera.** { *; }
-
-# React Native Image Picker
+# ─── React Native Image Picker ────────────────────────────────────────────
 -keep class com.imagepicker.** { *; }
 
-# React Native Document Picker
--keep class com.reactnativedocumentpicker.** { *; }
-
-# React Native Keychain
+# ─── React Native Keychain ────────────────────────────────────────────────
 -keep class com.oblador.keychain.** { *; }
 
-# React Native Push Notifications
+# ─── React Native Push Notifications ─────────────────────────────────────
 -keep class com.dieam.reactnativepushnotification.** { *; }
 
-# React Native Linear Gradient
+# ─── React Native Linear Gradient ────────────────────────────────────────
 -keep class com.BV.LinearGradient.** { *; }
 
-# React Native Safe Area Context
+# ─── React Native Safe Area Context ──────────────────────────────────────
 -keep class com.th3rdwave.safeareacontext.** { *; }
 
-# React Native WebView
+# ─── React Native WebView ─────────────────────────────────────────────────
 -keep class com.reactnativecommunity.webview.** { *; }
 
-# React Native Async Storage
+# ─── React Native Async Storage ───────────────────────────────────────────
 -keep class com.reactnativecommunity.asyncstorage.** { *; }
 
-# React Native FBSDK
--keep class com.facebook.** { *; }
--dontwarn com.facebook.**
+# ─── Firebase ─────────────────────────────────────────────────────────────
+-keep class com.google.firebase.** { *; }
+-dontwarn com.google.firebase.**
 
-# Google Sign In
+# ─── Google Sign-In / Play Services ──────────────────────────────────────
 -keep class com.google.android.gms.** { *; }
 -dontwarn com.google.android.gms.**
 
-# Razorpay
--keepclassmembers class * {
-    @android.webkit.JavascriptInterface <methods>;
-}
--keepattributes JavascriptInterface
--keep class proguard.annotation.Keep { *; }
--keep class proguard.annotation.KeepClassMembers { *; }
+# ─── Razorpay ─────────────────────────────────────────────────────────────
 -keep class com.razorpay.** { *; }
 -dontwarn com.razorpay.**
-
-# Keep JavaScript interface methods
+-keepattributes JavascriptInterface
 -keepclassmembers class * {
     @android.webkit.JavascriptInterface <methods>;
 }
 
-# Keep model classes (adjust package name as needed)
--keep class com.healthsync.app.** { *; }
+# ─── App classes ──────────────────────────────────────────────────────────
+-keep class com.healthsyncpro.** { *; }
 
-# Remove logging in release
--assumenosideeffects class android.util.Log {
-    public static *** d(...);
-    public static *** v(...);
-    public static *** i(...);
-}
-
-# Keep annotations
+# ─── Annotations & debug info ─────────────────────────────────────────────
 -keepattributes *Annotation*
 -keepattributes SourceFile,LineNumberTable
 -keepattributes Signature
 -keepattributes Exceptions
 
-# Crashlytics (if used)
--keepattributes SourceFile,LineNumberTable
+# ─── Keep exception classes for crash reporting ───────────────────────────
 -keep public class * extends java.lang.Exception
+
+# ─── Strip verbose logs in release ────────────────────────────────────────
+-assumenosideeffects class android.util.Log {
+    public static *** d(...);
+    public static *** v(...);
+}
+
+# ─── Suppress warnings for unused libraries ───────────────────────────────
+-dontwarn org.bouncycastle.**
+-dontwarn org.conscrypt.**
+-dontwarn org.openjsse.**
+-dontwarn javax.annotation.**
+-dontwarn kotlin.Unit
+-dontwarn retrofit2.KotlinExtensions

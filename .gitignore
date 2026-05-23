@@ -11,11 +11,7 @@ yarn-error.log*
 **/cache/
 **/*.cache
 
-# Package lock files (optional - uncomment if you want to exclude them)
-# package-lock.json
-# yarn.lock
-
-# Environment variables
+# Environment variables — NEVER commit real secrets
 .env
 .env.local
 .env.development.local
@@ -24,15 +20,29 @@ yarn-error.log*
 backend/.env
 frontend/.env
 **/.env
+*.env
 
 # Firebase Service Account (NEVER commit)
 firebase-service-account.json
 **/firebase-service-account.json
 *-firebase-adminsdk-*.json
+google-services.json
+GoogleService-Info.plist
+
+# API Keys & Secrets (NEVER commit)
+**/secrets/
+**/*.pem
+**/*.key
+**/*.p12
+**/*.p8
+**/*.cert
+**/*.crt
 
 # Build outputs
 build/
 dist/
+.next/
+out/
 
 # Database files
 *.db
@@ -40,8 +50,9 @@ dist/
 *.sqlite3
 
 # Logs
-logs
+logs/
 *.log
+backend/logs/
 
 # Runtime data
 pids
@@ -49,10 +60,8 @@ pids
 *.seed
 *.pid.lock
 
-# Coverage directory used by tools like istanbul
+# Coverage directory
 coverage/
-
-# nyc test coverage
 .nyc_output
 
 # Dependency directories
@@ -69,9 +78,6 @@ jspm_packages/
 
 # Yarn Integrity file
 .yarn-integrity
-
-# dotenv environment variables file
-.env
 
 # IDE files
 .vscode/
@@ -101,7 +107,6 @@ temp-backend/
 # Windows specific
 desktop.ini
 
-
 # Android build files (NEVER commit these)
 mobile/android/.gradle/
 mobile/android/app/build/
@@ -129,7 +134,7 @@ mobile/ios/Pods/
 .expo-shared/
 *.hprof
 
-# healthsync-pro mobile app - exclude generated/binary files
+# healthsync-pro mobile app
 healthsync-pro/node_modules/
 healthsync-pro/android/.gradle/
 healthsync-pro/android/app/build/
@@ -144,8 +149,12 @@ healthsync-pro/android/build_log*.txt
 healthsync-pro/android/build_error.txt
 healthsync-pro/.env
 
-# Backend uploaded files (user-generated content, not source code)
+# Backend uploaded files (user-generated content)
 backend/uploads/imaging/*/
 backend/uploads/profiles/
 backend/uploads/documents/
 backend/uploads/temp/
+
+# Crash logs
+hs_err_pid*.log
+replay_pid*.log

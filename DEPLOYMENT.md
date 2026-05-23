@@ -1,229 +1,224 @@
-# HealthSync Pro - Deployment Guide
+# HealthSync Deployment Guide
 
-## 🚀 Deployment Options
+## 🚀 Production Deployment Checklist
 
-### Option 1: Render (Backend) + Vercel (Frontend) - Recommended
+### Before Deploying
 
-#### Step 1: Deploy Backend to Render
-
-1. **Create Render Account**: Go to https://render.com and sign up
-
-2. **Connect GitHub**: Link your GitHub repository
-
-3. **Create Web Service**:
-   - Click "New" → "Web Service"
-   - Connect your repository
-   - Configure:
-     - **Name**: `healthsync-backend`
-     - **Root Directory**: `backend`
-     - **Environment**: `Node`
-     - **Build Command**: `npm install`
-     - **Start Command**: `npm start`
-     - **Plan**: Free (or paid for better performance)
-
-4. **Add Environment Variables** in Render Dashboard:
-   ```
-   NODE_ENV=production
-   PORT=5005
-   
-   # MongoDB Atlas (get from your MongoDB Atlas dashboard)
-   MONGODB_URI=your_mongodb_connection_string
-   
-   # JWT (generate a secure random string)
-   JWT_SECRET=your_secure_jwt_secret
-   
-   # Email (Gmail App Password)
-   EMAIL_USER=your_email@gmail.com
-   EMAIL_PASS=your_gmail_app_password
-   
-   # Resend Email (optional - for better deliverability)
-   RESEND_API_KEY=your_resend_api_key
-   RESEND_FROM_EMAIL=Your App <no-reply@yourdomain.com>
-   
-   # AI Chatbot (get from Google AI Studio)
-   GEMINI_API_KEY=your_gemini_api_key
-   AI_PROVIDER=gemini
-   
-   # Google Meet (get from Google Cloud Console)
-   GOOGLE_CLIENT_ID=your_google_client_id
-   GOOGLE_CLIENT_SECRET=your_google_client_secret
-   GOOGLE_REFRESH_TOKEN=your_google_refresh_token
-   GOOGLE_REDIRECT_URI=https://healthsync-backend.onrender.com/api/google/callback
-   
-   # Stripe (get from Stripe Dashboard)
-   STRIPE_SECRET_KEY=your_stripe_secret_key
-   STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-   
-   # CORS & URLs
-   CORS_ORIGIN=https://your-frontend.vercel.app
-   FRONTEND_URL=https://your-frontend.vercel.app
-   BACKEND_URL=https://healthsync-backend.onrender.com
-   
-   # Timezone
-   TIMEZONE=Asia/Kolkata
-   ```
-
-5. **Deploy**: Click "Create Web Service"
-
-6. **Note your backend URL**: e.g., `https://healthsync-backend.onrender.com`
-
-#### Step 2: Deploy Frontend to Vercel
-
-1. **Create Vercel Account**: Go to https://vercel.com and sign up
-
-2. **Import Project**:
-   - Click "Add New" → "Project"
-   - Import your GitHub repository
-   - Set **Root Directory** to `frontend`
-
-3. **Configure Build Settings**:
-   - **Framework Preset**: Create React App
-   - **Build Command**: `npm run build`
-   - **Output Directory**: `build`
-
-4. **Add Environment Variables**:
-   ```
-   REACT_APP_API_URL=https://your-backend.onrender.com
-   REACT_APP_BACKEND_URL=https://your-backend.onrender.com
-   REACT_APP_STRIPE_PUBLISHABLE_KEY=your_stripe_publishable_key
-   REACT_APP_USE_STRIPE_PAYMENTS=false
-   REACT_APP_GOOGLE_CLIENT_ID=your_google_client_id
-   GENERATE_SOURCEMAP=false
-   CI=false
-   DISABLE_ESLINT_PLUGIN=true
-   ```
-
-5. **Deploy**: Click "Deploy"
+- [ ] All secrets set in platform environment variables (NOT in code)
+- [ ] MongoDB Atlas connection string tested
+- [ ] JWT_SECRET is strong (64+ random characters)
+- [ ] Razorpay keys are LIVE mode keys
+- [ ] Email credentials tested
+- [ ] CORS_ORIGIN matches your frontend domain exactly
 
 ---
 
-### Option 2: Railway (Full Stack)
+## 🌐 Frontend — Vercel
 
-1. **Create Railway Account**: https://railway.app
+### 1. Connect Repository
+1. Go to [vercel.com](https://vercel.com) → New Project
+2. Import your GitHub repository
+3. Set **Root Directory** to `frontend`
+4. Framework: **Create React App**
 
-2. **New Project** → "Deploy from GitHub"
-
-3. **Add Backend Service**:
-   - Select repository
-   - Set root directory: `backend`
-   - Add environment variables (same as Render)
-
-4. **Add Frontend Service**:
-   - Add another service from same repo
-   - Set root directory: `frontend`
-   - Add environment variables
-
-5. **Generate Domains** for both services
-
----
-
-### Option 3: DigitalOcean App Platform
-
-1. **Create DigitalOcean Account**: https://digitalocean.com
-
-2. **Create App**:
-   - Source: GitHub
-   - Select repository
-
-3. **Configure Components**:
-   - Backend: Web Service, root `backend`
-   - Frontend: Static Site, root `frontend`
-
-4. **Add Environment Variables**
-
-5. **Deploy**
-
----
-
-## 📋 Pre-Deployment Checklist
-
-### Backend
-- [ ] MongoDB Atlas cluster created and IP whitelist set to `0.0.0.0/0`
-- [ ] All environment variables configured
-- [ ] Google OAuth redirect URI updated for production
-- [ ] CORS_ORIGIN set to frontend production URL
-- [ ] Email credentials verified
-
-### Frontend
-- [ ] `REACT_APP_API_URL` points to production backend
-- [ ] Build tested locally with `npm run build`
-- [ ] No hardcoded localhost URLs
-
----
-
-## 🔧 Post-Deployment Steps
-
-### 1. Update Google OAuth Redirect URI
-Go to Google Cloud Console → APIs & Services → Credentials → OAuth 2.0 Client
-Add production redirect URI:
+### 2. Environment Variables (Vercel Dashboard → Settings → Environment Variables)
 ```
-https://your-backend-url.onrender.com/api/google/callback
+REACT_APP_API_URL=https://doctor-appointment-system-updated.onrender.com
+REACT_APP_GOOGLE_CLIENT_ID=your_google_oauth_client_id
 ```
 
-### 2. Test All Features
-- [ ] User registration/login
-- [ ] Admin login
-- [ ] Clinic login
-- [ ] Appointment booking
-- [ ] Online consultation (Google Meet)
-- [ ] AI Chatbot
-- [ ] Email notifications
-
-### 3. Create Production Admin
-Run this in your backend (or use the API):
+### 3. Deploy
 ```bash
-# SSH into your server or use Render Shell
-node create-admin-production.js
+# Vercel auto-deploys on git push to main
+git push origin main
+```
+
+### 4. Custom Domain
+1. Vercel Dashboard → Domains → Add `healthsyncpro.in`
+2. Add DNS records in Cloudflare:
+   - Type: `CNAME`, Name: `@`, Value: `cname.vercel-dns.com`
+   - Type: `CNAME`, Name: `www`, Value: `cname.vercel-dns.com`
+
+---
+
+## 🖥️ Backend — Render
+
+### 1. Connect Repository
+1. Go to [render.com](https://render.com) → New Web Service
+2. Connect GitHub repository
+3. Set **Root Directory** to `backend`
+4. Build Command: `npm install`
+5. Start Command: `npm start`
+
+### 2. Environment Variables (Render Dashboard → Environment)
+
+**Required (must set manually — never commit these):**
+```
+MONGODB_URI=mongodb+srv://user:pass@cluster.mongodb.net/doctor_appointment
+JWT_SECRET=your_64_char_random_secret
+EMAIL_USER=your_gmail@gmail.com
+EMAIL_PASS=your_16_char_app_password
+RAZORPAY_KEY_ID=rzp_live_your_key
+RAZORPAY_KEY_SECRET=your_live_secret
+GOOGLE_CLIENT_ID=your_google_client_id
+GOOGLE_CLIENT_SECRET=your_google_client_secret
+GEMINI_API_KEY=your_gemini_api_key
+CLOUDINARY_CLOUD_NAME=your_cloud_name
+CLOUDINARY_API_KEY=your_api_key
+CLOUDINARY_API_SECRET=your_api_secret
+```
+
+**Auto-set from render.yaml:**
+```
+NODE_ENV=production
+PORT=5005
+FRONTEND_URL=https://healthsyncpro.in
+CORS_ORIGIN=https://healthsyncpro.in
+BACKEND_URL=https://doctor-appointment-system-updated.onrender.com
+TIMEZONE=Asia/Kolkata
+CURRENCY=INR
+```
+
+### 3. Health Check
+After deployment, verify: `https://doctor-appointment-system-updated.onrender.com/api/health`
+
+Expected response:
+```json
+{
+  "status": "OK",
+  "database": { "status": "connected" },
+  "uptime": 123
+}
 ```
 
 ---
 
-## 🔒 Security Notes
+## 📱 Mobile App — Android
 
-1. **Never commit `.env` files** - They're in `.gitignore`
-2. **Use strong JWT secrets** in production
-3. **Enable HTTPS** (automatic on Render/Vercel)
-4. **Set proper CORS origins** - Don't use `*` in production
-5. **Rotate API keys** periodically
+### Debug Build (for testing)
+```bash
+cd healthsync-pro
+npm install
+npx react-native run-android
+```
+
+### Release APK (for distribution)
+```bash
+cd healthsync-pro/android
+
+# Generate release APK
+./gradlew assembleRelease
+
+# Output: android/app/build/outputs/apk/release/app-release.apk
+```
+
+### Release AAB (for Play Store)
+```bash
+cd healthsync-pro/android
+
+# Generate release bundle
+./gradlew bundleRelease
+
+# Output: android/app/build/outputs/bundle/release/app-release.aab
+```
+
+### Signing Setup
+1. Generate keystore (one-time):
+```bash
+keytool -genkey -v -keystore healthsync-release.keystore \
+  -alias healthsync -keyalg RSA -keysize 2048 -validity 10000
+```
+
+2. Create `android/keystore.properties`:
+```properties
+storeFile=healthsync-release.keystore
+storePassword=your_keystore_password
+keyAlias=healthsync
+keyPassword=your_key_password
+```
+
+3. Copy keystore to `android/app/healthsync-release.keystore`
+
+---
+
+## 🔧 Common Issues & Fixes
+
+### Backend won't start
+```
+❌ FATAL: JWT_SECRET environment variable is not set
+```
+**Fix:** Set `JWT_SECRET` in Render environment variables
+
+### MongoDB connection fails
+```
+❌ FATAL: MongoDB authentication failed
+```
+**Fix:** Check `MONGODB_URI` in Render dashboard — ensure username/password are URL-encoded
+
+### CORS errors in browser
+```
+CORS: origin 'https://healthsyncpro.in' not allowed
+```
+**Fix:** Set `CORS_ORIGIN=https://healthsyncpro.in` in Render environment variables
+
+### Render cold start (30-60 second delay)
+This is normal for free tier. The frontend already has a wake-up ping on load.
+**Fix for production:** Upgrade to Render paid plan ($7/month) for always-on service
+
+### Email not sending
+```
+⚠️ Gmail SMTP unavailable
+```
+**Fix:** 
+1. Enable 2FA on Gmail account
+2. Create App Password at myaccount.google.com/apppasswords
+3. Use the 16-character app password as `EMAIL_PASS`
+
+### Razorpay payment fails
+**Fix:** Ensure `RAZORPAY_MODE=live` and keys are from live dashboard (not test)
 
 ---
 
 ## 📊 Monitoring
 
-### Render
-- View logs in Dashboard → Logs
-- Set up health checks at `/api/health`
+### Health Check Endpoint
+```
+GET /api/health
+```
 
-### Vercel
-- View deployment logs
-- Analytics available in dashboard
+### API Documentation
+```
+GET /api/docs
+```
 
----
-
-## 🆘 Troubleshooting
-
-### Backend not starting
-- Check logs for errors
-- Verify all environment variables are set
-- Ensure MongoDB connection string is correct
-
-### CORS errors
-- Verify `CORS_ORIGIN` matches frontend URL exactly
-- Check for trailing slashes
-
-### Google Meet not working
-- Update `GOOGLE_REDIRECT_URI` to production URL
-- Re-authorize OAuth if needed
-
-### Database connection issues
-- Whitelist `0.0.0.0/0` in MongoDB Atlas Network Access
-- Verify connection string format
+### Logs
+- Render: Dashboard → Logs tab
+- Vercel: Dashboard → Deployments → View logs
 
 ---
 
-## 📞 Support
+## 🔄 CI/CD Pipeline
 
-For issues, check:
-1. Render/Vercel deployment logs
-2. Browser console for frontend errors
-3. Network tab for API errors
+Currently using manual deployment. To set up auto-deploy:
+
+1. **Render:** Auto-deploys on push to `main` branch (enabled by default)
+2. **Vercel:** Auto-deploys on push to `main` branch (enabled by default)
+
+### Recommended Branch Strategy
+```
+main          → Production (auto-deploy)
+develop       → Staging
+feature/*     → Feature branches (PR to develop)
+```
+
+---
+
+## 🛡️ Security Checklist
+
+- [ ] All secrets in environment variables
+- [ ] HTTPS enforced (Vercel/Render handle this)
+- [ ] CORS restricted to production domain
+- [ ] Rate limiting active
+- [ ] MongoDB IP whitelist configured (Atlas)
+- [ ] Cloudflare Bot Fight Mode OFF (for SEO)
+- [ ] Cloudflare SSL set to "Full" (not Flexible)

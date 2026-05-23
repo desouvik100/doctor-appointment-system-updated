@@ -9,7 +9,14 @@ export const fonts = {
   bold: 'Inter-Bold',
 };
 
+// Shorthand font name aliases used by screens
 export const typography = {
+  // Font family shortcuts (used as fontFamily values in StyleSheet)
+  regular: fonts.regular,
+  medium: fonts.medium,
+  semiBold: fonts.semiBold,
+  bold: fonts.bold,
+
   // Display
   displayLarge: {
     fontFamily: fonts.bold,
