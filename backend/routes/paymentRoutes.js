@@ -814,6 +814,7 @@ router.get('/mobile-checkout/:orderId', async (req, res) => {
       
       try {
         log('Creating Razorpay instance...');
+        console.log('RAZORPAY OPTIONS:', options);
         var rzp = new window.Razorpay(options);
         
         rzp.on('payment.failed', function(response) {

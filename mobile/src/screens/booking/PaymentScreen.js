@@ -111,7 +111,9 @@ const PaymentScreen = ({ navigation, route }) => {
   const handleAppStateChange = async (nextState) => {
     if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
       // App came back to foreground — check if UPI payment completed
-      if (pendingOrderId.current) {
+      // Only poll if pendingOrderId is set (UPI payment flow)
+      if (pendingOrderId.current && createdAppointmentId.current) {
+        console.log('🔄 App returned to foreground, polling UPI payment status...');
         await pollPaymentStatus(pendingOrderId.current);
       }
     }
@@ -280,43 +282,34 @@ const PaymentScreen = ({ navigation, route }) => {
       console.log('✅ Order created successfully:', { orderId, keyId: keyId?.substring(0, 15) + '...' });
 
       if (selectedMethod === 'upi') {
-        const app = UPI_APPS.find(a => a.id === selectedUpiApp);
-        const isOther = selectedUpiApp === 'other';
-        const upiUrl = buildUpiUrl({
-          orderId, amount: totalAmount,
-          merchantName: 'HealthSync Pro',
-          merchantVpa: 'healthsync@razorpay',
-          note: `Appointment with Dr. ${doctor?.name || 'Doctor'}`,
-          app: isOther ? null : app,
+        // ⚠️ IMPORTANT: Direct UPI deep-links require a valid business UPI VPA
+        // Since we're using Razorpay, route UPI payments through their WebView
+        // which handles VPA routing internally
+        
+        console.log('🔍 UPI Payment - Routing through Razorpay WebView');
+        console.log('   Selected UPI App:', selectedUpiApp);
+        console.log('   Order ID:', orderId);
+        console.log('   Amount:', totalAmount);
+        
+        // Clear pending order ID (WebView handles verification)
+        pendingOrderId.current = null;
+        createdAppointmentId.current = null;
+        
+        setLoading(false);
+        navigation.navigate('RazorpayPayment', {
+          orderId, keyId,
+          amount: totalAmount, appointmentId: activeAppointmentId, doctor, date, time,
+          queueNumber, consultationType, patient,
+          user: { email: user?.email, phone: user?.phone, name: user?.name },
+          method: 'upi',
+          upiApp: selectedUpiApp !== 'other' ? selectedUpiApp : null,
         });
 
-        if (!isOther) {
-          const canOpen = await Linking.canOpenURL(upiUrl);
-          if (!canOpen) {
-            Alert.alert(
-              `${app?.label || 'UPI App'} not found`,
-              'This app is not installed. Opening payment gateway instead.',
-              [{
-                text: 'Continue', onPress: () => {
-                  setLoading(false);
-                  navigation.navigate('RazorpayPayment', {
-                    orderId, keyId,
-                    amount: totalAmount, appointmentId: activeAppointmentId, doctor, date, time,
-                    queueNumber, consultationType, patient,
-                    user: { email: user?.email, phone: user?.phone, name: user?.name },
-                  });
-                }
-              }]
-            );
-            return;
-          }
-        }
-
-        pendingOrderId.current = orderId;
-        createdAppointmentId.current = activeAppointmentId;
-        await Linking.openURL(upiUrl);
-
       } else {
+        // Clear pending order ID for non-UPI payments (WebView handles verification)
+        pendingOrderId.current = null;
+        createdAppointmentId.current = null;
+        
         setLoading(false);
         navigation.navigate('RazorpayPayment', {
           orderId, keyId,
