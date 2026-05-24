@@ -755,6 +755,15 @@ router.get('/mobile-checkout/:orderId', async (req, res) => {
       log('Starting payment with key: ' + keyId.substring(0, 15) + '...');
       log('Order ID: ' + orderId);
       log('Amount: ' + ${amount || 0});
+      log('Full Razorpay options:', JSON.stringify({
+        key: keyId,
+        amount: ${amount || 0},
+        currency: 'INR',
+        order_id: orderId,
+        prefill_name: '${decodeURIComponent(name || '').replace(/'/g, "\\'")}',
+        prefill_email: '${decodeURIComponent(email || '').replace(/'/g, "\\'")}',
+        prefill_contact: '${decodeURIComponent(contact || '').replace(/'/g, "\\'")}'
+      }));
       
       var options = {
         key: keyId,

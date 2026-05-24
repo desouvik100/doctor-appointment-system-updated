@@ -272,6 +272,12 @@ const PaymentScreen = ({ navigation, route }) => {
       }
 
       const { orderId, keyId } = orderRes.data;
+      
+      if (!keyId) {
+        throw new Error('Payment gateway configuration error. Please contact support.');
+      }
+      
+      console.log('✅ Order created successfully:', { orderId, keyId: keyId?.substring(0, 15) + '...' });
 
       if (selectedMethod === 'upi') {
         const app = UPI_APPS.find(a => a.id === selectedUpiApp);
@@ -294,7 +300,7 @@ const PaymentScreen = ({ navigation, route }) => {
                 text: 'Continue', onPress: () => {
                   setLoading(false);
                   navigation.navigate('RazorpayPayment', {
-                    orderId, keyId: keyId || 'rzp_live_Rrw2GLa8HUGLjk',
+                    orderId, keyId,
                     amount: totalAmount, appointmentId: activeAppointmentId, doctor, date, time,
                     queueNumber, consultationType, patient,
                     user: { email: user?.email, phone: user?.phone, name: user?.name },
@@ -313,7 +319,7 @@ const PaymentScreen = ({ navigation, route }) => {
       } else {
         setLoading(false);
         navigation.navigate('RazorpayPayment', {
-          orderId, keyId: keyId || 'rzp_live_Rrw2GLa8HUGLjk',
+          orderId, keyId,
           amount: totalAmount, appointmentId: activeAppointmentId, doctor, date, time,
           queueNumber, consultationType, patient,
           user: { email: user?.email, phone: user?.phone, name: user?.name },
