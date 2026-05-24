@@ -9,12 +9,12 @@
  *   https://doctor-appointment-system-updated.onrender.com/api
  */
 
-// ── Change this to your LAN IP when testing on a real device ──────────────
-const DEV_API_URL = 'http://10.0.2.2:5005/api'; // emulator default
+// ── Using Cloud Backend for Physical Device ──────────────
+const DEV_API_URL = 'https://doctor-appointment-system-updated.onrender.com/api'; // cloud backend
 
 const PROD_API_URL = 'https://doctor-appointment-system-updated.onrender.com/api';
 
-export const API_URL = __DEV__ ? DEV_API_URL : PROD_API_URL;
+export const API_URL = PROD_API_URL; // Always use cloud backend
 
 // Generous timeout — Render free tier can take 30-60 s to cold-start
 export const API_TIMEOUT = 120000; // 2 minutes

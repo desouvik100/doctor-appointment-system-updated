@@ -7,15 +7,15 @@
  * - Production: https://your-api.com
  */
 
-// For development - using local backend
-// Physical device needs PC's LAN IP, not localhost
-const DEV_API_URL = 'http://192.168.2.78:5005/api';
+// For development - using cloud backend
+// Physical device needs cloud backend URL
+const DEV_API_URL = 'https://doctor-appointment-system-updated.onrender.com/api';
 
 // For production
 const PROD_API_URL = 'https://doctor-appointment-system-updated.onrender.com/api';
 
 // Export based on environment
-export const API_URL = __DEV__ ? DEV_API_URL : PROD_API_URL;
+export const API_URL = PROD_API_URL; // Always use cloud backend
 
 // API timeout in milliseconds
 export const API_TIMEOUT = 120000; // 120 seconds for Render cold starts

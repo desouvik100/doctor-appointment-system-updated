@@ -49,10 +49,10 @@ const ProfileScreen = ({ navigation }) => {
           style: 'destructive', 
           onPress: async () => {
             await logout();
-            // Reset navigation to RoleSelection screen
+            // Reset navigation to ProRoleSelection screen
             navigation.reset({
               index: 0,
-              routes: [{ name: 'RoleSelection' }],
+              routes: [{ name: 'ProRoleSelection' }],
             });
           }
         },

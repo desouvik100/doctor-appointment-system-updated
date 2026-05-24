@@ -6,7 +6,7 @@ import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import LinearGradient from 'react-native-linear-gradient';
-import { shadows } from '../theme/colors';
+import { shadows } from '../theme/shadows';
 import { typography, spacing, borderRadius } from '../theme/typography';
 import { useTheme } from '../context/ThemeContext';
 
@@ -61,7 +61,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
         {
           backgroundColor: colors.backgroundCard,
           borderColor: colors.surfaceBorder,
-          ...shadows.large,
+          ...shadows.lg,
         },
       ]}>
         {state.routes.map((route, index) => {

@@ -1,6 +1,6 @@
 /**
- * Appointments Screen - Book & Manage
- * Connected to real API
+ * Appointments Screen - Enterprise Edition
+ * Premium appointment management with enhanced UI
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
@@ -12,14 +12,15 @@ import {
   StatusBar,
   FlatList,
   RefreshControl,
-  ActivityIndicator,
   Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import Card from '../../components/common/Card';
-import Avatar from '../../components/common/Avatar';
+import { lightTheme } from '../../theme/colors';
+import { shadows } from '../../theme/shadows';
+import AppointmentCard from '../../components/cards/AppointmentCard';
+import Button from '../../components/common/Button';
+import { SkeletonCard } from '../../components/common/Skeleton';
 import { getAppointments, cancelAppointment } from '../../services/api/appointmentService';
 import { devLog, devError } from '../../utils/errorHandler';
 import { useTheme } from '../../context/ThemeContext';
@@ -49,17 +50,15 @@ const AppointmentsScreen = ({ navigation }) => {
         ? response 
         : (response?.data || response?.appointments || []);
       
-      // Format appointments for display
+      // Format appointments for the new AppointmentCard component
       const formattedAppointments = appointmentsList.map(apt => ({
         id: apt._id || apt.id,
-        doctor: apt.doctorName || apt.doctor?.name || 'Doctor',
-        doctorId: apt.doctorId || apt.doctor?._id,
-        specialty: apt.specialty || apt.doctor?.specialty || 'Specialist',
-        date: dayjs(apt.date || apt.appointmentDate).format('MMM D, YYYY'),
-        time: apt.time || apt.timeSlot || dayjs(apt.appointmentDate).format('h:mm A'),
+        doctorName: apt.doctorName || apt.doctor?.name || 'Doctor',
+        doctorPhoto: apt.doctorPhoto || apt.doctor?.profilePhoto || null,
+        specialty: apt.specialty || apt.doctor?.specialty || apt.doctor?.specialization || 'Specialist',
+        dateTime: apt.date || apt.appointmentDate,
         type: apt.consultationType || apt.type || 'clinic',
-        status: apt.status || 'pending',
-        avatar: apt.doctorPhoto || apt.doctor?.profilePhoto || null,
+        status: activeTab === 'upcoming' ? 'upcoming' : activeTab === 'past' ? 'completed' : 'cancelled',
         clinicName: apt.clinicName || apt.clinic?.name,
         clinicAddress: apt.clinicAddress || apt.clinic?.address,
         rawData: apt,
@@ -119,8 +118,8 @@ const AppointmentsScreen = ({ navigation }) => {
   const handleReschedule = (appointment) => {
     navigation.navigate('SlotSelection', {
       doctor: {
-        _id: appointment.doctorId,
-        name: appointment.doctor,
+        _id: appointment.rawData?.doctorId || appointment.rawData?.doctor?._id,
+        name: appointment.doctorName,
         specialty: appointment.specialty,
       },
       rescheduleAppointmentId: appointment.id,
@@ -130,7 +129,7 @@ const AppointmentsScreen = ({ navigation }) => {
   const handleJoinCall = (appointment) => {
     navigation.navigate('VideoCall', {
       appointmentId: appointment.id,
-      doctorName: appointment.doctor,
+      doctorName: appointment.doctorName,
     });
   };
 
@@ -141,112 +140,33 @@ const AppointmentsScreen = ({ navigation }) => {
   };
 
   const renderAppointmentCard = ({ item }) => (
-    <Card 
-      variant="gradient" 
-      style={styles.appointmentCard} 
+    <AppointmentCard
+      appointment={item}
       onPress={() => handleViewDetails(item)}
-    >
-      <View style={styles.cardHeader}>
-        <View style={styles.doctorRow}>
-          <Avatar name={item.doctor} size="large" source={item.avatar} />
-          <View style={styles.doctorDetails}>
-            <Text style={[styles.doctorName, { color: colors.textPrimary }]}>{item.doctor}</Text>
-            <Text style={[styles.specialty, { color: colors.textSecondary }]}>{item.specialty}</Text>
-          </View>
-        </View>
-        <View style={[
-          styles.statusBadge,
-          { backgroundColor: colors.surfaceLight },
-          item.status === 'confirmed' && styles.statusConfirmed,
-          item.status === 'completed' && styles.statusCompleted,
-          item.status === 'pending' && styles.statusPending,
-          item.status === 'cancelled' && styles.statusCancelled,
-        ]}>
-          <Text style={[
-            styles.statusText,
-            { color: colors.textSecondary },
-            item.status === 'confirmed' && { color: colors.success },
-            item.status === 'completed' && { color: colors.info },
-            item.status === 'pending' && { color: colors.warning },
-            item.status === 'cancelled' && { color: colors.error },
-          ]}>
-            {item.status === 'confirmed' ? '✓ Confirmed' : 
-             item.status === 'completed' ? '✓ Completed' :
-             item.status === 'cancelled' ? '✗ Cancelled' : '⏳ Pending'}
-          </Text>
-        </View>
-      </View>
-
-      <View style={[styles.cardDivider, { backgroundColor: colors.divider }]} />
-
-      <View style={styles.cardDetails}>
-        <View style={styles.detailRow}>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailIcon}>📅</Text>
-            <Text style={[styles.detailText, { color: colors.textSecondary }]}>{item.date}</Text>
-          </View>
-          <View style={styles.detailItem}>
-            <Text style={styles.detailIcon}>⏰</Text>
-            <Text style={[styles.detailText, { color: colors.textSecondary }]}>{item.time}</Text>
-          </View>
-        </View>
-        <View style={[styles.typeTag, { backgroundColor: colors.surfaceLight }]}>
-          <Text style={styles.typeIcon}>{item.type === 'video' ? '📹' : '🏥'}</Text>
-          <Text style={[styles.typeText, { color: colors.textSecondary }]}>
-            {item.type === 'video' ? 'Video Call' : 'Clinic Visit'}
-          </Text>
-        </View>
-      </View>
-
-      {activeTab === 'upcoming' && item.status !== 'cancelled' && (
-        <View style={styles.cardActions}>
-          <TouchableOpacity 
-            style={[styles.secondaryBtn, { borderColor: colors.surfaceBorder }]}
-            onPress={() => handleReschedule(item)}
-          >
-            <Text style={[styles.secondaryBtnText, { color: colors.textSecondary }]}>Reschedule</Text>
-          </TouchableOpacity>
-          {item.type === 'video' && item.status === 'confirmed' && (
-            <TouchableOpacity 
-              style={styles.primaryBtn}
-              onPress={() => handleJoinCall(item)}
-            >
-              <LinearGradient
-                colors={colors.gradientPrimary}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.primaryBtnGradient}
-              >
-                <Text style={[styles.primaryBtnText, { color: colors.textInverse }]}>Join Call</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-          {item.type === 'clinic' && (
-            <TouchableOpacity 
-              style={[styles.cancelBtn, { borderColor: colors.error }]}
-              onPress={() => handleCancelAppointment(item.id)}
-            >
-              <Text style={[styles.cancelBtnText, { color: colors.error }]}>Cancel</Text>
-            </TouchableOpacity>
-          )}
-        </View>
-      )}
-    </Card>
+      onJoinPress={handleJoinCall}
+      onReschedulePress={handleReschedule}
+      onCancelPress={(apt) => handleCancelAppointment(apt.id)}
+      style={styles.appointmentCard}
+    />
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: lightTheme.background }]}>
+      <StatusBar barStyle="dark-content" backgroundColor={lightTheme.background} />
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Appointments</Text>
-        <TouchableOpacity style={styles.addBtn} onPress={() => navigation.navigate('Booking')}>
+        <Text style={[styles.headerTitle, { color: lightTheme.text }]}>Appointments</Text>
+        <TouchableOpacity 
+          style={styles.addBtn} 
+          onPress={() => navigation.navigate('Booking')}
+          activeOpacity={0.85}
+        >
           <LinearGradient
-            colors={colors.gradientPrimary}
+            colors={['#0066FF', '#1976D2']}
             style={styles.addBtnGradient}
           >
-            <Text style={[styles.addBtnIcon, { color: colors.textInverse }]}>+</Text>
+            <Text style={styles.addBtnIcon}>+</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
@@ -258,17 +178,18 @@ const AppointmentsScreen = ({ navigation }) => {
             key={tab.id}
             style={[styles.tab, activeTab === tab.id && styles.tabActive]}
             onPress={() => setActiveTab(tab.id)}
+            activeOpacity={0.7}
           >
             <Text style={[
               styles.tabText,
-              { color: colors.textMuted },
-              activeTab === tab.id && { color: colors.textPrimary, fontWeight: '600' },
+              { color: lightTheme.textSecondary },
+              activeTab === tab.id && { color: lightTheme.primary, fontWeight: '700' },
             ]}>
               {tab.label}
             </Text>
             {activeTab === tab.id && (
               <LinearGradient
-                colors={colors.gradientPrimary}
+                colors={['#0066FF', '#1976D2']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.tabIndicator}
@@ -278,11 +199,12 @@ const AppointmentsScreen = ({ navigation }) => {
         ))}
       </View>
 
-      {/* Loading State */}
+      {/* Loading State with Skeletons */}
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
-          <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading appointments...</Text>
+        <View style={styles.listContent}>
+          <SkeletonCard style={{ marginBottom: spacing.lg }} />
+          <SkeletonCard style={{ marginBottom: spacing.lg }} />
+          <SkeletonCard style={{ marginBottom: spacing.lg }} />
         </View>
       ) : (
         /* Appointments List */
@@ -296,24 +218,27 @@ const AppointmentsScreen = ({ navigation }) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[colors.primary]}
-              tintColor={colors.primary}
+              colors={[lightTheme.primary]}
+              tintColor={lightTheme.primary}
             />
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>📅</Text>
-              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No appointments</Text>
-              <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>
+              <Text style={[styles.emptyTitle, { color: lightTheme.text }]}>No appointments</Text>
+              <Text style={[styles.emptyDesc, { color: lightTheme.textSecondary }]}>
                 You don't have any {activeTab} appointments
               </Text>
               {activeTab === 'upcoming' && (
-                <TouchableOpacity 
-                  style={[styles.bookNowBtn, { backgroundColor: colors.primary }]}
+                <Button
+                  variant="primary"
+                  size="large"
+                  gradient
                   onPress={() => navigation.navigate('Booking')}
+                  style={styles.bookNowBtn}
                 >
-                  <Text style={[styles.bookNowText, { color: colors.textInverse }]}>Book Now</Text>
-                </TouchableOpacity>
+                  Book Appointment
+                </Button>
               )}
             </View>
           }
@@ -321,18 +246,21 @@ const AppointmentsScreen = ({ navigation }) => {
       )}
 
       {/* Floating Book Button */}
-      <TouchableOpacity 
-        style={styles.floatingBtn}
-        onPress={() => navigation.navigate('Booking')}
-      >
-        <LinearGradient
-          colors={colors.gradientPrimary}
-          style={styles.floatingBtnGradient}
+      {!loading && appointments.length > 0 && (
+        <TouchableOpacity 
+          style={styles.floatingBtn}
+          onPress={() => navigation.navigate('Booking')}
+          activeOpacity={0.9}
         >
-          <Text style={styles.floatingBtnIcon}>📅</Text>
-          <Text style={[styles.floatingBtnText, { color: colors.textInverse }]}>Book Appointment</Text>
-        </LinearGradient>
-      </TouchableOpacity>
+          <LinearGradient
+            colors={['#0066FF', '#1976D2']}
+            style={styles.floatingBtnGradient}
+          >
+            <Text style={styles.floatingBtnIcon}>📅</Text>
+            <Text style={styles.floatingBtnText}>Book Appointment</Text>
+          </LinearGradient>
+        </TouchableOpacity>
+      )}
     </View>
   );
 };
@@ -352,34 +280,38 @@ const styles = StyleSheet.create({
   },
   headerTitle: {
     ...typography.displaySmall,
+    fontWeight: '800',
   },
   addBtn: {
-    ...shadows.small,
+    ...shadows.md,
+    borderRadius: borderRadius.lg,
   },
   addBtnGradient: {
-    width: 44,
-    height: 44,
+    width: 48,
+    height: 48,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
   },
   addBtnIcon: {
-    fontSize: 24,
+    fontSize: 28,
     fontWeight: '300',
+    color: '#fff',
   },
   tabsContainer: {
     flexDirection: 'row',
     paddingHorizontal: spacing.xl,
     marginBottom: spacing.lg,
+    gap: spacing.xxl,
   },
   tab: {
-    marginRight: spacing.xxl,
     paddingBottom: spacing.md,
     position: 'relative',
   },
   tabActive: {},
   tabText: {
     ...typography.bodyLarge,
+    fontSize: 16,
   },
   tabIndicator: {
     position: 'absolute',
@@ -389,175 +321,43 @@ const styles = StyleSheet.create({
     height: 3,
     borderRadius: 2,
   },
-  loadingContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  loadingText: {
-    ...typography.bodyMedium,
-    marginTop: spacing.md,
-  },
   listContent: {
     paddingHorizontal: spacing.xl,
     paddingBottom: 120,
   },
   appointmentCard: {
     marginBottom: spacing.lg,
-    padding: spacing.lg,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  doctorRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  doctorDetails: {
-    marginLeft: spacing.md,
-    flex: 1,
-  },
-  doctorName: {
-    ...typography.headlineSmall,
-  },
-  specialty: {
-    ...typography.bodyMedium,
-    marginTop: 2,
-  },
-  statusBadge: {
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  statusConfirmed: {
-    backgroundColor: 'rgba(16, 185, 129, 0.15)',
-  },
-  statusCompleted: {
-    backgroundColor: 'rgba(59, 130, 246, 0.15)',
-  },
-  statusPending: {
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
-  },
-  statusCancelled: {
-    backgroundColor: 'rgba(239, 68, 68, 0.15)',
-  },
-  statusText: {
-    ...typography.labelSmall,
-  },
-  statusTextConfirmed: {},
-  statusTextCompleted: {},
-  statusTextPending: {},
-  statusTextCancelled: {},
-  cardDivider: {
-    height: 1,
-    marginVertical: spacing.lg,
-  },
-  cardDetails: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: spacing.lg,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    gap: spacing.lg,
-  },
-  detailItem: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  detailIcon: {
-    fontSize: 14,
-    marginRight: spacing.xs,
-  },
-  detailText: {
-    ...typography.bodyMedium,
-  },
-  typeTag: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
-  },
-  typeIcon: {
-    fontSize: 12,
-    marginRight: spacing.xs,
-  },
-  typeText: {
-    ...typography.labelSmall,
-  },
-  cardActions: {
-    flexDirection: 'row',
-    gap: spacing.md,
-  },
-  secondaryBtn: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-  },
-  secondaryBtnText: {
-    ...typography.buttonSmall,
-  },
-  cancelBtn: {
-    flex: 1,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-    alignItems: 'center',
-    borderWidth: 1,
-    backgroundColor: 'rgba(239, 68, 68, 0.1)',
-  },
-  cancelBtnText: {
-    ...typography.buttonSmall,
-  },
-  primaryBtn: {
-    flex: 1,
-    borderRadius: borderRadius.lg,
-    overflow: 'hidden',
-  },
-  primaryBtnGradient: {
-    paddingVertical: spacing.md,
-    alignItems: 'center',
-  },
-  primaryBtnText: {
-    ...typography.buttonSmall,
   },
   emptyState: {
     alignItems: 'center',
     paddingVertical: spacing.huge * 2,
   },
   emptyIcon: {
-    fontSize: 64,
-    marginBottom: spacing.lg,
+    fontSize: 80,
+    marginBottom: spacing.xl,
+    opacity: 0.5,
   },
   emptyTitle: {
-    ...typography.headlineMedium,
+    ...typography.headlineLarge,
+    fontWeight: '700',
     marginBottom: spacing.sm,
   },
   emptyDesc: {
-    ...typography.bodyMedium,
+    ...typography.bodyLarge,
     textAlign: 'center',
+    marginBottom: spacing.xl,
   },
   bookNowBtn: {
     marginTop: spacing.lg,
-    paddingHorizontal: spacing.xl,
-    paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg,
-  },
-  bookNowText: {
-    ...typography.button,
+    minWidth: 200,
   },
   floatingBtn: {
     position: 'absolute',
     bottom: spacing.xxl,
     left: spacing.xl,
     right: spacing.xl,
-    ...shadows.large,
+    ...shadows.xl,
+    borderRadius: borderRadius.xl,
   },
   floatingBtnGradient: {
     flexDirection: 'row',
@@ -567,12 +367,14 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
   },
   floatingBtnIcon: {
-    fontSize: 20,
+    fontSize: 22,
     marginRight: spacing.sm,
   },
   floatingBtnText: {
     ...typography.button,
+    fontSize: 16,
+    color: '#fff',
+    fontWeight: '700',
   },
 });
-
 export default AppointmentsScreen;

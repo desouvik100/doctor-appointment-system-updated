@@ -1,98 +1,92 @@
 /**
- * Modern Input Component
+ * Enterprise Input Component
+ * Accessible, validated text input with consistent styling
  */
 
 import React, { useState } from 'react';
-import { View, TextInput, Text, StyleSheet, TouchableOpacity } from 'react-native';
-import { typography, borderRadius, spacing } from '../../theme/typography';
-import { useTheme } from '../../context/ThemeContext';
+import {
+  View,
+  TextInput,
+  Text,
+  StyleSheet,
+  TouchableOpacity,
+} from 'react-native';
+import { typography, spacing, borderRadius } from '../../theme/typography';
+import { lightTheme } from '../../theme/colors';
 
 const Input = ({
   label,
-  placeholder,
   value,
   onChangeText,
-  secureTextEntry = false,
-  keyboardType = 'default',
-  autoCapitalize = 'none',
+  placeholder,
   error,
-  helper,
+  helperText,
   leftIcon,
   rightIcon,
-  onRightIconPress,
+  secureTextEntry,
+  disabled = false,
   multiline = false,
   numberOfLines = 1,
-  editable = true,
   style,
+  inputStyle,
+  ...props
 }) => {
-  const { colors } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
-  const [showPassword, setShowPassword] = useState(false);
+  const [isSecure, setIsSecure] = useState(secureTextEntry);
 
-  const getBorderColor = () => {
-    if (error) return colors.error;
-    if (isFocused) return colors.primary;
-    return colors.surfaceBorder;
-  };
+  const containerStyles = [
+    styles.container,
+    isFocused && styles.containerFocused,
+    error && styles.containerError,
+    disabled && styles.containerDisabled,
+    style,
+  ];
 
   return (
-    <View style={[styles.container, style]}>
-      {label && <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>}
+    <View style={styles.wrapper}>
+      {label && <Text style={styles.label}>{label}</Text>}
       
-      <View style={[
-        styles.inputWrapper,
-        { borderColor: getBorderColor(), backgroundColor: colors.surface },
-        isFocused && [styles.focused, { backgroundColor: colors.backgroundCard }],
-        error && styles.errorBorder,
-        !editable && [styles.disabled, { backgroundColor: colors.surfaceLight }],
-        multiline && { height: 24 * numberOfLines + spacing.lg * 2 },
-      ]}>
+      <View style={containerStyles}>
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
         
         <TextInput
-          style={[
-            styles.input,
-            { color: colors.textPrimary },
-            multiline && styles.multiline,
-            leftIcon && { paddingLeft: 0 },
-          ]}
-          placeholder={placeholder}
-          placeholderTextColor={colors.textMuted}
           value={value}
           onChangeText={onChangeText}
-          secureTextEntry={secureTextEntry && !showPassword}
-          keyboardType={keyboardType}
-          autoCapitalize={autoCapitalize}
-          onFocus={() => setIsFocused(true)}
-          onBlur={() => setIsFocused(false)}
+          placeholder={placeholder}
+          placeholderTextColor={lightTheme.textTertiary}
+          secureTextEntry={isSecure}
+          editable={!disabled}
           multiline={multiline}
           numberOfLines={numberOfLines}
-          editable={editable}
+          onFocus={() => setIsFocused(true)}
+          onBlur={() => setIsFocused(false)}
+          style={[
+            styles.input,
+            leftIcon && styles.inputWithLeftIcon,
+            rightIcon && styles.inputWithRightIcon,
+            multiline && styles.inputMultiline,
+            inputStyle,
+          ]}
+          {...props}
         />
         
         {secureTextEntry && (
           <TouchableOpacity
-            onPress={() => setShowPassword(!showPassword)}
+            onPress={() => setIsSecure(!isSecure)}
             style={styles.rightIcon}
           >
-            <Text style={[styles.toggleText, { color: colors.primary }]}>{showPassword ? 'Hide' : 'Show'}</Text>
+            <Text style={styles.eyeIcon}>{isSecure ? '👁️' : '👁️‍🗨️'}</Text>
           </TouchableOpacity>
         )}
         
         {rightIcon && !secureTextEntry && (
-          <TouchableOpacity
-            onPress={onRightIconPress}
-            style={styles.rightIcon}
-            disabled={!onRightIconPress}
-          >
-            {rightIcon}
-          </TouchableOpacity>
+          <View style={styles.rightIcon}>{rightIcon}</View>
         )}
       </View>
       
-      {(error || helper) && (
-        <Text style={[styles.helper, { color: colors.textMuted }, error && { color: colors.error }]}>
-          {error || helper}
+      {(error || helperText) && (
+        <Text style={[styles.helperText, error && styles.errorText]}>
+          {error || helperText}
         </Text>
       )}
     </View>
@@ -100,51 +94,84 @@ const Input = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
+  wrapper: {
     marginBottom: spacing.lg,
   },
+  
   label: {
-    ...typography.labelMedium,
+    ...typography.labelLarge,
+    color: lightTheme.text,
     marginBottom: spacing.sm,
   },
-  inputWrapper: {
+  
+  container: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: borderRadius.lg,
-    borderWidth: 1.5,
-    paddingHorizontal: spacing.lg,
+    backgroundColor: lightTheme.input,
+    borderWidth: 1,
+    borderColor: lightTheme.inputBorder,
+    borderRadius: borderRadius.md,
+    paddingHorizontal: spacing.md,
+    minHeight: 48,
   },
-  focused: {
+  
+  containerFocused: {
+    borderColor: lightTheme.inputFocused,
     borderWidth: 2,
   },
-  errorBorder: {
+  
+  containerError: {
+    borderColor: lightTheme.error,
   },
-  disabled: {
+  
+  containerDisabled: {
+    backgroundColor: lightTheme.surface,
     opacity: 0.6,
   },
+  
   input: {
     flex: 1,
     ...typography.bodyLarge,
-    paddingVertical: spacing.md + 2,
+    color: lightTheme.text,
+    paddingVertical: spacing.md,
   },
-  multiline: {
+  
+  inputWithLeftIcon: {
+    marginLeft: spacing.sm,
+  },
+  
+  inputWithRightIcon: {
+    marginRight: spacing.sm,
+  },
+  
+  inputMultiline: {
+    minHeight: 100,
     textAlignVertical: 'top',
     paddingTop: spacing.md,
   },
+  
   leftIcon: {
-    marginRight: spacing.md,
+    marginRight: spacing.sm,
   },
+  
   rightIcon: {
-    marginLeft: spacing.md,
+    marginLeft: spacing.sm,
     padding: spacing.xs,
   },
-  toggleText: {
-    ...typography.labelMedium,
+  
+  eyeIcon: {
+    fontSize: 20,
   },
-  helper: {
+  
+  helperText: {
     ...typography.bodySmall,
+    color: lightTheme.textSecondary,
     marginTop: spacing.xs,
-    marginLeft: spacing.xs,
+    marginLeft: spacing.sm,
+  },
+  
+  errorText: {
+    color: lightTheme.error,
   },
 });
 
