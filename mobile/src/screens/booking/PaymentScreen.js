@@ -12,7 +12,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { shadows } from '../../theme/colors';
+import shadows from '../../theme/shadows';
 import apiClient from '../../services/api/apiClient';
 import { useUser } from '../../context/UserContext';
 import UpiAppIcon from '../../components/payment/UpiAppIcon';
@@ -206,8 +206,23 @@ const PaymentScreen = ({ navigation, route }) => {
       Alert.alert('Error', 'Appointment info missing. Please try again.');
       return;
     }
+    
+    // Extract userId with multiple fallbacks
     const userId = user?.id || user?._id || user?.userId;
-    if (!userId) { Alert.alert('Error', 'Session expired. Please login again.'); return; }
+    
+    if (!userId) { 
+      console.error('❌ PaymentScreen - No userId found. User object:', user);
+      Alert.alert(
+        'Session Error', 
+        'Unable to identify user. Please logout and login again.',
+        [
+          { text: 'OK', onPress: () => navigation.navigate('Profile') }
+        ]
+      ); 
+      return; 
+    }
+    
+    console.log('✅ PaymentScreen - Proceeding with userId:', userId);
 
     setLoading(true);
     let activeAppointmentId;

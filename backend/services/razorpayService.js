@@ -71,6 +71,8 @@ class RazorpayService {
     }
 
     try {
+      console.log('🔍 createOrder called with:', { appointmentId, userId, couponCode });
+      
       const appointment = await Appointment.findById(appointmentId)
         .populate('doctorId', 'name consultationFee')
         .populate('userId', 'name email phone');
@@ -78,6 +80,13 @@ class RazorpayService {
       if (!appointment) {
         throw new Error('Appointment not found');
       }
+
+      console.log('🔍 Appointment found:', {
+        appointmentId: appointment._id,
+        appointmentUserId: appointment.userId?._id,
+        requestUserId: userId,
+        doctorId: appointment.doctorId?._id
+      });
 
       if (appointment.userId._id.toString() !== userId) {
         throw new Error('Unauthorized access to appointment');
@@ -145,9 +154,10 @@ class RazorpayService {
       console.log('   Coupon discount:', couponDiscount);
       console.log('   Final amount in paise:', orderOptions.amount);
       console.log('   Key ID:', RAZORPAY_KEY_ID?.substring(0, 15) + '...');
+      console.log('   Order notes:', JSON.stringify(orderOptions.notes, null, 2));
       
       const order = await razorpay.orders.create(orderOptions);
-      console.log('✅ Razorpay order created:', order.id);
+      console.log('✅ Razorpay order created successfully:', order.id);
 
       // Update appointment with order ID and coupon details
       appointment.razorpayOrderId = order.id;
@@ -184,6 +194,16 @@ class RazorpayService {
 
     } catch (error) {
       console.error('❌ Error creating Razorpay order:', error);
+      console.error('❌ Error details:', {
+        message: error.message,
+        description: error.description,
+        code: error.code,
+        source: error.source,
+        step: error.step,
+        reason: error.reason,
+        metadata: error.metadata,
+        statusCode: error.statusCode
+      });
       throw error;
     }
   }

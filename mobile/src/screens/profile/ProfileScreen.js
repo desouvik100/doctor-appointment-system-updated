@@ -9,7 +9,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { shadows } from '../../theme/colors';
+import shadows from '../../theme/shadows';
 import Avatar from '../../components/common/Avatar';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
@@ -322,10 +322,10 @@ const styles = StyleSheet.create({
   profileRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.xl, gap: spacing.lg },
   avatarWrapper: { position: 'relative' },
   editAvatarBtn: {
-    position: 'absolute', bottom: 0, right: -4,
-    width: 28, height: 28, borderRadius: 14,
-    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
-    ...shadows.small,
+  position: 'absolute', bottom: 0, right: -4,
+  width: 28, height: 28, borderRadius: 14,
+  backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
+  ...(shadows?.small || {}),
   },
   editAvatarEmoji: { fontSize: 12 },
   profileMeta: { flex: 1, paddingTop: 4 },
@@ -350,7 +350,13 @@ const styles = StyleSheet.create({
   statDivider: { width: 1, height: 36, backgroundColor: 'rgba(255,255,255,0.3)' },
 
   // Next appointment
-  nextApptCard: { marginHorizontal: spacing.xl, marginTop: spacing.lg, borderRadius: borderRadius.xl, overflow: 'hidden', ...shadows.small },
+  nextApptCard: {
+  marginHorizontal: spacing.xl,
+  marginTop: spacing.lg,
+  borderRadius: borderRadius.xl,
+  overflow: 'hidden',
+  ...(shadows?.small || {})
+  },
   nextApptInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.lg },
   nextApptLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   nextApptIcon: { fontSize: 24 },
@@ -361,17 +367,32 @@ const styles = StyleSheet.create({
   // Quick actions
   quickActionsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: spacing.xl, marginTop: spacing.xl, marginBottom: spacing.lg },
   quickAction: { alignItems: 'center' },
-  quickActionIcon: { width: 58, height: 58, borderRadius: borderRadius.xl, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm, ...shadows.small },
+  quickActionIcon: {
+  width: 58,
+  height: 58,
+  borderRadius: borderRadius.xl,
+  alignItems: 'center',
+  justifyContent: 'center',
+  marginBottom: spacing.sm,
+  ...(shadows?.small || {})
+},
   quickActionEmoji: { fontSize: 26 },
   quickActionLabel: { fontSize: 11, textAlign: 'center', lineHeight: 15 },
 
   // Emergency
   emergencyCard: {
-    marginHorizontal: spacing.xl, marginBottom: spacing.lg,
-    backgroundColor: '#FFF8E1', borderRadius: borderRadius.xl,
-    padding: spacing.lg, flexDirection: 'row', alignItems: 'center',
-    justifyContent: 'space-between', borderWidth: 1, borderColor: '#FFE082', ...shadows.small,
-  },
+  marginHorizontal: spacing.xl,
+  marginBottom: spacing.lg,
+  backgroundColor: '#FFF8E1',
+  borderRadius: borderRadius.xl,
+  padding: spacing.lg,
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between',
+  borderWidth: 1,
+  borderColor: '#FFE082',
+  ...(shadows?.small || {}),
+},
   emergencyLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 },
   emergencyEmoji: { fontSize: 24 },
   emergencyTitle: { fontSize: 14, fontWeight: '700' },
@@ -381,7 +402,11 @@ const styles = StyleSheet.create({
   // Menu
   menuSection: { paddingHorizontal: spacing.xl, marginBottom: spacing.lg },
   sectionTitle: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: spacing.sm, marginLeft: 4 },
-  menuCard: { borderRadius: borderRadius.xl, overflow: 'hidden', ...shadows.small },
+  menuCard: {
+  borderRadius: borderRadius.xl,
+  overflow: 'hidden',
+  ...(shadows?.small || {})
+  },
   menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: spacing.lg },
   menuIconBox: { width: 38, height: 38, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
   menuIconText: { fontSize: 18 },

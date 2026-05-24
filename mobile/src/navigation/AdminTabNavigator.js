@@ -8,7 +8,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import LinearGradient from 'react-native-linear-gradient';
-import { shadows } from '../theme/colors';
+import shadows from '../theme/shadows';
 import { typography, spacing, borderRadius } from '../theme/typography';
 import { useTheme } from '../context/ThemeContext';
 

@@ -5,7 +5,7 @@
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { shadows } from '../../../theme/colors';
+import shadows from '../../../theme/shadows';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 import { useTheme } from '../../../context/ThemeContext';
 import Avatar from '../../../components/common/Avatar';
@@ -62,7 +62,10 @@ const DoctorCard = ({
   }
 
   return (
-    <View style={[styles.card, { backgroundColor: colors.surface, ...shadows.small }]}>
+  <View style={[styles.card, {
+    backgroundColor: colors.surface,
+    ...(shadows?.small || {})
+  }]}>
       {/* Availability tag — top left */}
       <View style={[
         styles.availabilityTag,

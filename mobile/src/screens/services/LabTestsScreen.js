@@ -19,7 +19,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { shadows } from '../../theme/colors';
+import shadows from '../../theme/shadows';
 import Card from '../../components/common/Card';
 import apiClient from '../../services/api/apiClient';
 import { useUser } from '../../context/UserContext';

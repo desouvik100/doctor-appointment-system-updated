@@ -236,4 +236,11 @@ export const darkTheme = {
   statusAway: colors.status.away,
 };
 
+// Legacy aliases for backward compatibility
+colors.gradientPrimary = colors.gradients.primary;
+colors.gradientSecondary = colors.gradients.secondary;
+colors.gradientDark = ['#1A1F2E', '#0A0E17'];
+colors.gradientCard = ['#232A3D', '#1A1F2E'];
+colors.gradientAccent = ['#FF6B6B', '#EE5A5A'];
+
 export default colors;

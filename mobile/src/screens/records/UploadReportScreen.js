@@ -15,7 +15,8 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { colors, shadows } from '../../theme/colors';
+import { colors } from '../../theme/colors';
+import shadows from '../../theme/shadows';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Button from '../../components/common/Button';

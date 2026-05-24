@@ -12,7 +12,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { shadows } from '../../theme/colors';
+import shadows from '../../theme/shadows';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
 

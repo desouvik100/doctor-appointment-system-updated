@@ -17,7 +17,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { shadows } from '../../theme/colors';
+import shadows from '../../theme/shadows';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Avatar from '../../components/common/Avatar';
 import doctorService from '../../services/api/doctorService';
@@ -194,7 +194,10 @@ const DoctorsScreen = ({ navigation }) => {
         <FlatList
           data={doctors}
           renderItem={({ item }) => (
-            <View style={[styles.doctorCard, { backgroundColor: colors.surface, ...shadows.small }]}>
+            <View style={[styles.doctorCard, {
+                  backgroundColor: colors.surface,
+                  ...(shadows?.small || {})
+                }]}>
               <TouchableOpacity 
                 activeOpacity={0.9}
                 onPress={() => navigation.navigate('DoctorProfile', { doctorId: item._id })}

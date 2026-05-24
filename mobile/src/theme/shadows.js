@@ -93,4 +93,9 @@ export const shadows = {
   },
 };
 
+// Legacy aliases for backward compatibility
+shadows.small = shadows.sm;
+shadows.medium = shadows.md;
+shadows.large = shadows.lg;
+
 export default shadows;

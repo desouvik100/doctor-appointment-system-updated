@@ -6,6 +6,7 @@ import React, { useState } from 'react';
 import { View, Image, Text, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
+console.log('Avatar colors:', colors);
 import { typography, borderRadius } from '../../theme/typography';
 
 const Avatar = ({
@@ -85,7 +86,7 @@ const Avatar = ({
     <View style={[styles.container, { width: avatarSize, height: avatarSize }]}>
       {showBorder ? (
         <LinearGradient
-          colors={colors.gradientPrimary}
+          colors={colors.gradients?.primary || ['#0066FF', '#1976D2']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.border, { borderRadius: avatarSize / 2, padding: 2 }]}
