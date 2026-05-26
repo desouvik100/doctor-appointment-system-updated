@@ -2,7 +2,7 @@
  * Wallet Screen - Patient Health Wallet
  */
 
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
   Text,
@@ -15,6 +15,7 @@ import {
   Alert,
   TextInput,
   Modal,
+  Animated,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useFocusEffect } from '@react-navigation/native';
@@ -22,6 +23,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useUser } from '../../context/UserContext';
 import { getBalance, getTransactions, addMoney } from '../../services/api/walletService';
+import { fadeIn, slideUp, stagger, bounce } from '../../utils/animations';
+import { EmptyState } from '../../components/common';
 
 const WalletScreen = ({ navigation, route }) => {
   const { colors } = useTheme();
@@ -36,6 +39,16 @@ const WalletScreen = ({ navigation, route }) => {
 
   const quickAmounts = [100, 200, 500, 1000, 2000];
 
+  // Animations
+  const balanceOpacity = useRef(new Animated.Value(0)).current;
+  const balanceScale = useRef(new Animated.Value(0.8)).current;
+  const statsAnimations = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]).current;
+  const txnAnimations = useRef([]).current;
+
   const fetchWallet = useCallback(async () => {
     try {
       const [balRes, txnRes] = await Promise.all([
@@ -44,6 +57,21 @@ const WalletScreen = ({ navigation, route }) => {
       ]);
       setBalance(balRes?.balance || 0);
       setTransactions(txnRes?.transactions || []);
+      
+      // Animate balance card
+      Animated.parallel([
+        fadeIn(balanceOpacity, 400),
+        Animated.spring(balanceScale, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]).start();
+      
+      // Stagger stats cards
+      stagger(statsAnimations, fadeIn, 100).start();
+      
     } catch {
       setBalance(0);
       setTransactions([]);
@@ -130,49 +158,62 @@ const WalletScreen = ({ navigation, route }) => {
         }
       >
         {/* Balance Card */}
-        <LinearGradient colors={colors.gradientPrimary} style={styles.balanceCard}>
-          <Text style={styles.balanceLabel}>Available Balance</Text>
-          <Text style={styles.balanceAmount}>₹{balance.toLocaleString('en-IN')}</Text>
-          <Text style={styles.balanceSubtext}>Use for appointments, lab tests & more</Text>
-          <TouchableOpacity style={styles.addMoneyBtn} onPress={() => setAddMoneyVisible(true)}>
-            <Text style={styles.addMoneyBtnText}>+ Add Money</Text>
-          </TouchableOpacity>
-        </LinearGradient>
+        <Animated.View style={{ opacity: balanceOpacity, transform: [{ scale: balanceScale }] }}>
+          <LinearGradient colors={colors.gradientPrimary} style={styles.balanceCard}>
+            <Text style={styles.balanceLabel}>Available Balance</Text>
+            <Text style={styles.balanceAmount}>₹{balance.toLocaleString('en-IN')}</Text>
+            <Text style={styles.balanceSubtext}>Use for appointments, lab tests & more</Text>
+            <TouchableOpacity style={styles.addMoneyBtn} onPress={() => setAddMoneyVisible(true)}>
+              <Text style={styles.addMoneyBtnText}>+ Add Money</Text>
+            </TouchableOpacity>
+          </LinearGradient>
+        </Animated.View>
 
         {/* Quick Stats */}
         <View style={styles.statsRow}>
-          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
-            <Text style={styles.statIcon}>💸</Text>
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-              ₹{transactions.filter(t => t.type === 'debit').reduce((s, t) => s + Number(t.amount), 0).toLocaleString('en-IN')}
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Total Spent</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
-            <Text style={styles.statIcon}>💰</Text>
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-              ₹{transactions.filter(t => t.type === 'credit').reduce((s, t) => s + Number(t.amount), 0).toLocaleString('en-IN')}
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Total Added</Text>
-          </View>
-          <View style={[styles.statCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
-            <Text style={styles.statIcon}>🎁</Text>
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>
-              ₹{transactions.filter(t => t.type === 'credit' && t.description?.toLowerCase().includes('cashback')).reduce((s, t) => s + Number(t.amount), 0).toLocaleString('en-IN')}
-            </Text>
-            <Text style={[styles.statLabel, { color: colors.textMuted }]}>Cashback</Text>
-          </View>
+          {[
+            { icon: '💸', value: transactions.filter(t => t.type === 'debit').reduce((s, t) => s + Number(t.amount), 0), label: 'Total Spent' },
+            { icon: '💰', value: transactions.filter(t => t.type === 'credit').reduce((s, t) => s + Number(t.amount), 0), label: 'Total Added' },
+            { icon: '🎁', value: transactions.filter(t => t.type === 'credit' && t.description?.toLowerCase().includes('cashback')).reduce((s, t) => s + Number(t.amount), 0), label: 'Cashback' },
+          ].map((stat, index) => (
+            <Animated.View 
+              key={index}
+              style={[
+                styles.statCard, 
+                { 
+                  backgroundColor: colors.surface, 
+                  borderColor: colors.surfaceBorder,
+                  opacity: statsAnimations[index],
+                  transform: [{
+                    translateY: statsAnimations[index].interpolate({
+                      inputRange: [0, 1],
+                      outputRange: [20, 0],
+                    }),
+                  }],
+                }
+              ]}
+            >
+              <Text style={styles.statIcon}>{stat.icon}</Text>
+              <Text style={[styles.statValue, { color: colors.textPrimary }]}>
+                ₹{stat.value.toLocaleString('en-IN')}
+              </Text>
+              <Text style={[styles.statLabel, { color: colors.textMuted }]}>{stat.label}</Text>
+            </Animated.View>
+          ))}
         </View>
 
         {/* Transactions */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Transaction History</Text>
           {transactions.length === 0 ? (
-            <View style={[styles.emptyCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
-              <Text style={styles.emptyIcon}>💳</Text>
-              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No transactions yet</Text>
-              <Text style={[styles.emptyText, { color: colors.textMuted }]}>Add money to get started</Text>
-            </View>
+            <EmptyState
+              icon="💳"
+              title="No transactions yet"
+              message="Add money to get started"
+              actionLabel="Add Money"
+              onAction={() => setAddMoneyVisible(true)}
+              colors={colors}
+            />
           ) : (
             transactions.map((txn) => (
               <View key={txn._id} style={[styles.txnCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
@@ -262,10 +303,6 @@ const makeStyles = (colors) => StyleSheet.create({
   statLabel: { ...typography.labelSmall, marginTop: 2 },
   section: { paddingHorizontal: spacing.xl },
   sectionTitle: { ...typography.headlineSmall, marginBottom: spacing.lg },
-  emptyCard: { borderRadius: borderRadius.xl, padding: spacing.xxl, alignItems: 'center', borderWidth: 1 },
-  emptyIcon: { fontSize: 48, marginBottom: spacing.md },
-  emptyTitle: { ...typography.bodyLarge, fontWeight: '600', marginBottom: spacing.xs },
-  emptyText: { ...typography.bodyMedium },
   txnCard: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.xl, padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1 },
   txnIconWrap: { width: 44, height: 44, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
   txnIcon: { fontSize: 20, fontWeight: '700' },

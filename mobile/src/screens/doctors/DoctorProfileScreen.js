@@ -2,7 +2,7 @@
  * DoctorProfileScreen - Full doctor profile with reviews and booking
  */
 
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import {
   View,
   Text,
@@ -12,6 +12,7 @@ import {
   StatusBar,
   Image,
   Dimensions,
+  Animated,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { colors } from '../../theme/colors';
@@ -20,6 +21,8 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
+import { Rating } from '../../components/common';
+import { fadeIn, slideUp, stagger, bounce } from '../../utils/animations';
 
 const { width } = Dimensions.get('window');
 
@@ -27,6 +30,18 @@ const DoctorProfileScreen = ({ navigation, route }) => {
   const { doctor } = route.params || {};
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState('about');
+
+  // Animations
+  const headerOpacity = useRef(new Animated.Value(0)).current;
+  const profileScale = useRef(new Animated.Value(0.9)).current;
+  const statsAnimations = useRef([
+    new Animated.Value(0),
+    new Animated.Value(0),
+    new Animated.Value(0),
+  ]).current;
+  const tabOpacity = useRef(new Animated.Value(0)).current;
+  const contentOpacity = useRef(new Animated.Value(0)).current;
+  const favoriteScale = useRef(new Animated.Value(1)).current;
 
   // Extended doctor data (would come from API)
   const doctorDetails = {
@@ -70,8 +85,45 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     },
   ];
 
-  const renderStars = (rating) => {
-    return '★'.repeat(rating) + '☆'.repeat(5 - rating);
+  // Animate on mount
+  useEffect(() => {
+    Animated.sequence([
+      Animated.parallel([
+        fadeIn(headerOpacity, 300),
+        Animated.spring(profileScale, {
+          toValue: 1,
+          tension: 50,
+          friction: 7,
+          useNativeDriver: true,
+        }),
+      ]),
+      Animated.parallel([
+        stagger(statsAnimations, fadeIn, 100),
+        fadeIn(tabOpacity, 300),
+      ]),
+      fadeIn(contentOpacity, 400),
+    ]).start();
+  }, []);
+
+  // Animate tab change
+  useEffect(() => {
+    Animated.sequence([
+      Animated.timing(contentOpacity, {
+        toValue: 0,
+        duration: 150,
+        useNativeDriver: true,
+      }),
+      Animated.timing(contentOpacity, {
+        toValue: 1,
+        duration: 300,
+        useNativeDriver: true,
+      }),
+    ]).start();
+  }, [activeTab]);
+
+  const handleFavoritePress = () => {
+    bounce(favoriteScale).start();
+    setIsFavorite(!isFavorite);
   };
 
   const handleBookAppointment = () => {
@@ -83,7 +135,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
       {/* Header */}
-      <View style={styles.header}>
+      <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
         <TouchableOpacity 
           style={styles.backButton}
           onPress={() => navigation.goBack()}
@@ -91,58 +143,74 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Doctor Profile</Text>
-        <TouchableOpacity 
-          style={styles.favoriteButton}
-          onPress={() => setIsFavorite(!isFavorite)}
-        >
-          <Text style={styles.favoriteIcon}>{isFavorite ? '❤️' : '🤍'}</Text>
-        </TouchableOpacity>
-      </View>
+        <Animated.View style={{ transform: [{ scale: favoriteScale }] }}>
+          <TouchableOpacity 
+            style={styles.favoriteButton}
+            onPress={handleFavoritePress}
+          >
+            <Text style={styles.favoriteIcon}>{isFavorite ? '❤️' : '🤍'}</Text>
+          </TouchableOpacity>
+        </Animated.View>
+      </Animated.View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
       >
         {/* Profile Card */}
-        <Card variant="gradient" style={styles.profileCard}>
-          <View style={styles.profileHeader}>
-            <Avatar 
-              name={doctorDetails.name} 
-              size="xlarge" 
-              showBorder 
-            />
-            <View style={styles.profileInfo}>
-              <Text style={styles.doctorName}>{doctorDetails.name}</Text>
-              <Text style={styles.specialty}>{doctorDetails.specialty}</Text>
-              <View style={styles.ratingRow}>
-                <Text style={styles.stars}>{renderStars(Math.floor(doctorDetails.rating))}</Text>
-                <Text style={styles.ratingText}>{doctorDetails.rating}</Text>
-                <Text style={styles.reviewCount}>({doctorDetails.reviews} reviews)</Text>
+        <Animated.View style={{ transform: [{ scale: profileScale }], opacity: headerOpacity }}>
+          <Card variant="gradient" style={styles.profileCard}>
+            <View style={styles.profileHeader}>
+              <Avatar 
+                name={doctorDetails.name} 
+                size="xlarge" 
+                showBorder 
+              />
+              <View style={styles.profileInfo}>
+                <Text style={styles.doctorName}>{doctorDetails.name}</Text>
+                <Text style={styles.specialty}>{doctorDetails.specialty}</Text>
+                <View style={styles.ratingRow}>
+                  <Rating rating={doctorDetails.rating} size={16} />
+                  <Text style={styles.ratingText}>{doctorDetails.rating}</Text>
+                  <Text style={styles.reviewCount}>({doctorDetails.reviews} reviews)</Text>
+                </View>
               </View>
             </View>
-          </View>
 
-          {/* Stats Row */}
-          <View style={styles.statsRow}>
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{doctorDetails.experience}+</Text>
-              <Text style={styles.statLabel}>Years Exp.</Text>
+            {/* Stats Row */}
+            <View style={styles.statsRow}>
+              {[
+                { value: `${doctorDetails.experience}+`, label: 'Years Exp.' },
+                { value: doctorDetails.reviews, label: 'Reviews' },
+                { value: `₹${doctorDetails.fee}`, label: 'Fee' },
+              ].map((stat, index) => (
+                <React.Fragment key={index}>
+                  {index > 0 && <View style={styles.statDivider} />}
+                  <Animated.View 
+                    style={[
+                      styles.statItem,
+                      {
+                        opacity: statsAnimations[index],
+                        transform: [{
+                          translateY: statsAnimations[index].interpolate({
+                            inputRange: [0, 1],
+                            outputRange: [20, 0],
+                          }),
+                        }],
+                      }
+                    ]}
+                  >
+                    <Text style={styles.statValue}>{stat.value}</Text>
+                    <Text style={styles.statLabel}>{stat.label}</Text>
+                  </Animated.View>
+                </React.Fragment>
+              ))}
             </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>{doctorDetails.reviews}</Text>
-              <Text style={styles.statLabel}>Reviews</Text>
-            </View>
-            <View style={styles.statDivider} />
-            <View style={styles.statItem}>
-              <Text style={styles.statValue}>₹{doctorDetails.fee}</Text>
-              <Text style={styles.statLabel}>Fee</Text>
-            </View>
-          </View>
-        </Card>
+          </Card>
+        </Animated.View>
 
         {/* Tabs */}
-        <View style={styles.tabsContainer}>
+        <Animated.View style={[styles.tabsContainer, { opacity: tabOpacity }]}>
           {['about', 'reviews'].map((tab) => (
             <TouchableOpacity
               key={tab}
@@ -154,7 +222,9 @@ const DoctorProfileScreen = ({ navigation, route }) => {
               </Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </Animated.View>
+
+        <Animated.View style={{ opacity: contentOpacity }}>
 
         {activeTab === 'about' ? (
           <>
@@ -227,7 +297,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                       <Text style={styles.reviewDate}>{review.date}</Text>
                     </View>
                   </View>
-                  <Text style={styles.reviewStars}>{renderStars(review.rating)}</Text>
+                  <Rating rating={review.rating} size={14} />
                 </View>
                 <Text style={styles.reviewComment}>{review.comment}</Text>
               </Card>
@@ -238,6 +308,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           </View>
         )}
+        </Animated.View>
       </ScrollView>
 
       {/* Bottom CTA */}
@@ -327,10 +398,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     marginTop: spacing.sm,
-  },
-  stars: {
-    color: '#FFD700',
-    fontSize: 14,
+    gap: spacing.sm,
   },
   ratingText: {
     ...typography.labelMedium,
@@ -509,10 +577,6 @@ const styles = StyleSheet.create({
   reviewDate: {
     ...typography.labelSmall,
     color: colors.textMuted,
-  },
-  reviewStars: {
-    color: '#FFD700',
-    fontSize: 12,
   },
   reviewComment: {
     ...typography.bodyMedium,

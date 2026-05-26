@@ -5,7 +5,8 @@ const User = require('../models/User');
 const LoyaltyPoints = require('../models/LoyaltyPoints');
 const OnlineSlot = require('../models/OnlineSlot');
 const ClinicSlot = require('../models/ClinicSlot');
-const { USE_STRIPE_PAYMENTS } = require('../config/paymentConfig');
+const { USE_RAZORPAY_PAYMENTS } = require('../config/paymentConfig');
+const Clinic = require('../models/Clinic');
 const { scheduleGoogleMeetGeneration } = require('../services/appointmentScheduler');
 const TokenService = require('../services/tokenService');
 const mongoose = require('mongoose');
@@ -57,38 +58,7 @@ const router = express.Router();
  *           type: string
  */
 
-// Helper function to award loyalty points
-const awardLoyaltyPoints = async (userId, action, referenceId, customPoints = null, description = null) => {
-  try {
-    const POINTS_CONFIG = {
-      appointment: 50,
-      referral: 200,
-      review: 30,
-      signup: 100,
-      birthday: 500,
-      tierMultiplier: { bronze: 1, silver: 1.25, gold: 1.5, platinum: 2 }
-    };
-
-    let loyalty = await LoyaltyPoints.findOne({ userId });
-    if (!loyalty) {
-      loyalty = new LoyaltyPoints({ userId });
-    }
-
-    let points = customPoints || POINTS_CONFIG[action] || 0;
-    const multiplier = POINTS_CONFIG.tierMultiplier[loyalty.tier] || 1;
-    points = Math.floor(points * multiplier);
-
-    const desc = description || `Earned ${points} points for ${action}`;
-    loyalty.addPoints(points, action, desc, referenceId);
-    await loyalty.save();
-
-    console.log(`🎁 Awarded ${points} loyalty points to user ${userId} for ${action}`);
-    return { success: true, points, tier: loyalty.tier };
-  } catch (error) {
-    console.error('Error awarding loyalty points:', error);
-    return { success: false, error: error.message };
-  }
-};
+// Note: awardLoyaltyPoints has been moved to utils/loyaltyHelper.js to be shared with payment verification flow.
 
 /**
  * @swagger
@@ -684,6 +654,12 @@ router.post('/', verifyToken, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+    // Check if clinic exists
+    const clinic = await Clinic.findById(clinicId);
+    if (!clinic) {
+      return res.status(404).json({ message: 'Clinic not found' });
+    }
+
     // Parse date correctly to avoid timezone issues
     const [year, month, day] = date.split('-').map(Number);
     const appointmentDate = new Date(year, month - 1, day);
@@ -725,9 +701,9 @@ router.post('/', verifyToken, async (req, res) => {
     const platformFee = Math.round(consultationFee * 0.05); // 5% platform fee
     const totalAmount = consultationFee + platformFee;
 
-    // Determine payment status based on Stripe configuration
-    const paymentStatus = USE_STRIPE_PAYMENTS ? 'pending' : 'not_required';
-    const appointmentStatus = USE_STRIPE_PAYMENTS ? 'pending' : 'confirmed';
+    // Determine payment status based on Razorpay configuration
+    const paymentStatus = USE_RAZORPAY_PAYMENTS ? 'pending' : 'not_required';
+    const appointmentStatus = USE_RAZORPAY_PAYMENTS ? 'pending_payment' : 'confirmed';
 
     const appointmentData = {
       userId,
@@ -885,15 +861,6 @@ router.post('/', verifyToken, async (req, res) => {
       .populate('doctorId', 'name specialization consultationFee email')
       .populate('clinicId', 'name address');
     
-    // Award loyalty points for booking appointment
-    const loyaltyResult = await awardLoyaltyPoints(
-      userId, 
-      'appointment', 
-      appointment._id,
-      null,
-      `Booked appointment with Dr. ${doctor.name}`
-    );
-
     // Send invoice email automatically
     let invoiceResult = null;
     try {
@@ -926,8 +893,8 @@ router.post('/', verifyToken, async (req, res) => {
     
     res.status(201).json({
       ...populatedAppointment.toObject(),
-      requiresPayment: USE_STRIPE_PAYMENTS,
-      testMode: !USE_STRIPE_PAYMENTS,
+      requiresPayment: USE_RAZORPAY_PAYMENTS,
+      testMode: !USE_RAZORPAY_PAYMENTS,
       paymentBreakdown: {
         consultationFee,
         gst,
@@ -935,11 +902,7 @@ router.post('/', verifyToken, async (req, res) => {
         totalAmount
       },
       token: tokenResult.token,
-      tokenExpiredAt: tokenResult.expiresAt,
-      loyaltyPoints: loyaltyResult.success ? {
-        earned: loyaltyResult.points,
-        tier: loyaltyResult.tier
-      } : null
+      tokenExpiredAt: tokenResult.expiresAt
     });
   } catch (error) {
     // Abort transaction on error

@@ -665,4 +665,5 @@ server.listen(PORT, async () => {
   // Start scheduled database backups
   backupService.startScheduledBackups();
   console.log('💾 Database backup scheduler initialized');
+  // Nodemon reload trigger: MongoDB connection fixed
 });

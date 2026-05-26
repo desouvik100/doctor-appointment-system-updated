@@ -69,9 +69,10 @@ android {
     }
     
     // Generate separate APKs for different architectures (reduces APK size)
+    // Disabled for debug builds to avoid packaging conflicts with Metro
     splits {
         abi {
-            enable true
+            enable false  // Set to true for release builds only
             reset()
             include "armeabi-v7a", "arm64-v8a", "x86", "x86_64"
             universalApk true

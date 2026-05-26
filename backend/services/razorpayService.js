@@ -279,6 +279,21 @@ class RazorpayService {
 
       console.log(`✅ Payment completed for appointment ${appointmentId}`);
 
+      // Award loyalty points on verified payment completion
+      try {
+        const { awardLoyaltyPoints } = require('../utils/loyaltyHelper');
+        const populatedApt = await Appointment.findById(appointmentId).populate('doctorId');
+        await awardLoyaltyPoints(
+          appointment.userId,
+          'appointment',
+          appointmentId,
+          null,
+          `Booked appointment with Dr. ${populatedApt.doctorId?.name || 'Doctor'}`
+        );
+      } catch (loyaltyErr) {
+        console.error('❌ Failed to award loyalty points during verifyPayment:', loyaltyErr.message);
+      }
+
       return {
         success: true,
         verified: true,

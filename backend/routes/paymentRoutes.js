@@ -78,6 +78,14 @@ router.post('/create-order', verifyToken, async (req, res) => {
 
     // If Razorpay is disabled, return test mode response
     if (!USE_RAZORPAY_PAYMENTS) {
+      if (process.env.NODE_ENV === 'production') {
+        console.error(`🚨 SECURITY WARNING: Attempted test mode payment bypass in production for appointment ${appointmentId}`);
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Razorpay payments are required in production' 
+        });
+      }
+      
       const appointment = await Appointment.findById(appointmentId);
       if (appointment) {
         appointment.paymentStatus = 'completed';
@@ -88,6 +96,14 @@ router.post('/create-order', verifyToken, async (req, res) => {
           paidAt: new Date()
         };
         await appointment.save();
+        
+        // Award loyalty points in test mode
+        try {
+          const { awardLoyaltyPoints } = require('../utils/loyaltyHelper');
+          await awardLoyaltyPoints(userId, 'appointment', appointment._id, null, `Booked appointment (Test Mode)`);
+        } catch (loyaltyErr) {
+          console.error('Error awarding loyalty points in test mode:', loyaltyErr.message);
+        }
       }
       
       return res.json({
@@ -122,6 +138,13 @@ router.post('/verify', verifyToken, async (req, res) => {
     
     // If Razorpay is disabled, return test mode response
     if (!USE_RAZORPAY_PAYMENTS) {
+      if (process.env.NODE_ENV === 'production') {
+        console.error(`🚨 SECURITY WARNING: Attempted test mode payment verification bypass in production for appointment ${appointmentId}`);
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Razorpay payments are required in production' 
+        });
+      }
       return res.json({
         success: true,
         testMode: true,
@@ -320,7 +343,7 @@ router.post('/verify-by-order', verifyToken, async (req, res) => {
     }
 
     // Check if already confirmed via webhook
-    const appointment = await Appointment.findById(appointmentId).select('paymentStatus status razorpayOrderId razorpayPaymentId');
+    const appointment = await Appointment.findById(appointmentId).select('paymentStatus status razorpayOrderId razorpayPaymentId userId');
     if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
 
     if (appointment.paymentStatus === 'completed') {
@@ -329,9 +352,25 @@ router.post('/verify-by-order', verifyToken, async (req, res) => {
 
     // Fetch order from Razorpay to check payment status
     if (!USE_RAZORPAY_PAYMENTS) {
+      if (process.env.NODE_ENV === 'production') {
+        console.error(`🚨 SECURITY WARNING: Attempted test mode payment verification by order bypass in production for appointment ${appointmentId}`);
+        return res.status(400).json({ 
+          success: false, 
+          message: 'Razorpay payments are required in production' 
+        });
+      }
       appointment.paymentStatus = 'completed';
       appointment.status = 'confirmed';
       await appointment.save();
+
+      // Award loyalty points
+      try {
+        const { awardLoyaltyPoints } = require('../utils/loyaltyHelper');
+        await awardLoyaltyPoints(appointment.userId, 'appointment', appointment._id, null, `Booked appointment (Test Mode)`);
+      } catch (loyaltyErr) {
+        console.error('Error awarding loyalty points in test mode:', loyaltyErr.message);
+      }
+
       return res.json({ success: true, testMode: true });
     }
 
@@ -356,6 +395,22 @@ router.post('/verify-by-order', verifyToken, async (req, res) => {
           paidAt: new Date()
         };
         await appointment.save();
+        
+        // Award loyalty points on verified payment
+        try {
+          const { awardLoyaltyPoints } = require('../utils/loyaltyHelper');
+          const populatedApt = await Appointment.findById(appointmentId).populate('doctorId');
+          await awardLoyaltyPoints(
+            appointment.userId, 
+            'appointment', 
+            appointmentId,
+            null,
+            `Booked appointment with Dr. ${populatedApt.doctorId?.name || 'Doctor'}`
+          );
+        } catch (loyaltyErr) {
+          console.error('❌ Failed to award loyalty points in verify-by-order:', loyaltyErr.message);
+        }
+        
         return res.json({ success: true, paymentId: payment.id });
       }
     }
