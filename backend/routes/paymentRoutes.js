@@ -15,6 +15,11 @@ router.get('/calculate/:appointmentId', verifyToken, async (req, res) => {
       return res.status(404).json({ message: 'Appointment not found' });
     }
     
+    // Validate ownership
+    if (req.user.role === 'patient' && appointment.userId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ message: 'Access denied - you do not own this appointment' });
+    }
+    
     const breakdown = razorpayService.calculatePaymentBreakdown(appointment.doctorId.consultationFee);
     
     res.json({
@@ -76,6 +81,21 @@ router.post('/create-order', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'Appointment ID and User ID are required' });
     }
 
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+
+    // Validate ownership
+    if (req.user.role === 'patient') {
+      if (appointment.userId.toString() !== req.user.id.toString()) {
+        return res.status(403).json({ message: 'Access denied - you do not own this appointment' });
+      }
+      if (userId.toString() !== req.user.id.toString()) {
+        return res.status(403).json({ message: 'Access denied - userId mismatch' });
+      }
+    }
+
     // If Razorpay is disabled, return test mode response
     if (!USE_RAZORPAY_PAYMENTS) {
       if (process.env.NODE_ENV === 'production') {
@@ -85,8 +105,6 @@ router.post('/create-order', verifyToken, async (req, res) => {
           message: 'Razorpay payments are required in production' 
         });
       }
-      
-      const appointment = await Appointment.findById(appointmentId);
       if (appointment) {
         appointment.paymentStatus = 'completed';
         appointment.status = 'confirmed';
@@ -135,6 +153,16 @@ router.post('/create-order', verifyToken, async (req, res) => {
 router.post('/verify', verifyToken, async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, appointmentId } = req.body;
+
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      return res.status(404).json({ message: 'Appointment not found' });
+    }
+
+    // Validate ownership
+    if (req.user.role === 'patient' && appointment.userId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ message: 'Access denied - you do not own this appointment' });
+    }
     
     // If Razorpay is disabled, return test mode response
     if (!USE_RAZORPAY_PAYMENTS) {
@@ -345,6 +373,11 @@ router.post('/verify-by-order', verifyToken, async (req, res) => {
     // Check if already confirmed via webhook
     const appointment = await Appointment.findById(appointmentId).select('paymentStatus status razorpayOrderId razorpayPaymentId userId');
     if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
+
+    // Validate ownership
+    if (req.user.role === 'patient' && appointment.userId.toString() !== req.user.id.toString()) {
+      return res.status(403).json({ success: false, message: 'Access denied - you do not own this appointment' });
+    }
 
     if (appointment.paymentStatus === 'completed') {
       return res.json({ success: true, alreadyVerified: true, message: 'Payment already confirmed' });

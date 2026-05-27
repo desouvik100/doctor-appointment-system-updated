@@ -20,6 +20,7 @@ import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
+import { shadows } from '../../theme/colors';
 import { 
   getTodayAppointments, 
   getDoctorAppointments,
@@ -115,17 +116,49 @@ const DoctorDashboardScreen = ({ navigation }) => {
     setRefreshing(false);
   }, [fetchDashboardData]);
 
+  const [activeStat, setActiveStat] = useState(null);
+
   const StatCard = ({ icon, value, label, color, onPress }) => (
     <TouchableOpacity 
-      style={[styles.statCard, { backgroundColor: colors.surface }]}
+      style={[
+        styles.statCard, 
+        { backgroundColor: colors.surface }, 
+        activeStat === label ? shadows.glowPrimary : shadows.medium,
+        activeStat === label && { transform: [{ scale: 0.98 }] }
+      ]}
+      onPressIn={() => setActiveStat(label)}
+      onPressOut={() => setActiveStat(null)}
       onPress={onPress}
-      activeOpacity={0.7}
+      activeOpacity={0.9}
     >
-      <View style={[styles.statIconBg, { backgroundColor: color + '20' }]}>
+      <LinearGradient
+        colors={[color + '30', color + '05']}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.statIconBg}
+      >
         <Text style={styles.statIcon}>{icon}</Text>
-      </View>
+      </LinearGradient>
       <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
+    </TouchableOpacity>
+  );
+
+  const QuickActionBtn = ({ icon, label, onPress, gradient }) => (
+    <TouchableOpacity 
+      style={[styles.quickActionWrapper, shadows.small]}
+      onPress={onPress}
+      activeOpacity={0.8}
+    >
+      <LinearGradient
+        colors={gradient}
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.quickActionGradient}
+      >
+        <Text style={styles.quickActionIcon}>{icon}</Text>
+        <Text style={[styles.quickActionText, { color: '#ffffff' }]}>{label}</Text>
+      </LinearGradient>
     </TouchableOpacity>
   );
 
@@ -196,73 +229,64 @@ const DoctorDashboardScreen = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
           <View style={styles.quickActions}>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
+            <QuickActionBtn 
+              icon="📋" 
+              label="Queue" 
               onPress={() => navigation.navigate('DoctorQueue')}
-            >
-              <Text style={styles.quickActionIcon}>📋</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Queue</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
+              gradient={['#6C5CE7', '#5B4ED1']}
+            />
+            <QuickActionBtn 
+              icon="💊" 
+              label="Prescriptions" 
               onPress={() => navigation.navigate('DoctorPrescriptions')}
-            >
-              <Text style={styles.quickActionIcon}>💊</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Prescriptions</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
+              gradient={['#00D4AA', '#00B894']}
+            />
+            <QuickActionBtn 
+              icon="💰" 
+              label="Wallet" 
               onPress={() => navigation.navigate('DoctorWallet')}
-            >
-              <Text style={styles.quickActionIcon}>💰</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Wallet</Text>
-            </TouchableOpacity>
+              gradient={['#FF9F43', '#FF6B6B']}
+            />
           </View>
           <View style={[styles.quickActions, { marginTop: spacing.md }]}>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
+            <QuickActionBtn 
+              icon="🗓️" 
+              label="Availability" 
               onPress={() => navigation.navigate('DoctorSchedule')}
-            >
-              <Text style={styles.quickActionIcon}>🗓️</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Availability</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
+              gradient={['#10B981', '#059669']}
+            />
+            <QuickActionBtn 
+              icon="📝" 
+              label="EMR" 
               onPress={() => navigation.navigate('DoctorEMR')}
-            >
-              <Text style={styles.quickActionIcon}>📝</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>EMR</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
+              gradient={['#3B82F6', '#1D4ED8']}
+            />
+            <QuickActionBtn 
+              icon="🎧" 
+              label="Support" 
               onPress={() => navigation.navigate('DoctorSupport')}
-            >
-              <Text style={styles.quickActionIcon}>🎧</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Support</Text>
-            </TouchableOpacity>
+              gradient={['#6B7280', '#4B5563']}
+            />
           </View>
           <View style={[styles.quickActions, { marginTop: spacing.md }]}>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
+            <QuickActionBtn 
+              icon="👥" 
+              label="Patients" 
               onPress={() => navigation.navigate('Patients')}
-            >
-              <Text style={styles.quickActionIcon}>👥</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Patients</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
+              gradient={['#8B5CF6', '#6D28D9']}
+            />
+            <QuickActionBtn 
+              icon="✏️" 
+              label="New Rx" 
               onPress={() => navigation.navigate('DoctorCreatePrescription')}
-            >
-              <Text style={styles.quickActionIcon}>✏️</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>New Rx</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
+              gradient={['#EC4899', '#BE185D']}
+            />
+            <QuickActionBtn 
+              icon="📅" 
+              label="Bookings" 
               onPress={() => navigation.navigate('Appointments')}
-            >
-              <Text style={styles.quickActionIcon}>📅</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Bookings</Text>
-            </TouchableOpacity>
+              gradient={['#F59E0B', '#D97706']}
+            />
           </View>
         </View>
 
@@ -399,11 +423,15 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     gap: spacing.md,
   },
-  quickAction: {
+  quickActionWrapper: {
     flex: 1,
-    padding: spacing.lg,
     borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  quickActionGradient: {
+    padding: spacing.lg,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   quickActionIcon: {
     fontSize: 24,

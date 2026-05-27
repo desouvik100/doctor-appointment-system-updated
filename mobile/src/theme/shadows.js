@@ -69,7 +69,7 @@ export const shadows = {
 
   // Colored shadows for special elements
   primary: {
-    shadowColor: '#0066FF',
+    shadowColor: '#00D4AA',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 12,
@@ -91,6 +91,38 @@ export const shadows = {
     shadowRadius: 12,
     elevation: 4,
   },
+
+  depth3d: {
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.4,
+    shadowRadius: 10,
+    elevation: 10,
+  },
+
+  glow: {
+    shadowColor: '#00D4AA',
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.4,
+    shadowRadius: 12,
+    elevation: 8,
+  },
+
+  glowPrimary: {
+    shadowColor: '#00D4AA',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 8,
+  },
+
+  glowSecondary: {
+    shadowColor: '#6C5CE7',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.5,
+    shadowRadius: 10,
+    elevation: 8,
+  },
 };
 
 // Legacy aliases for backward compatibility
@@ -99,3 +131,4 @@ shadows.medium = shadows.md;
 shadows.large = shadows.lg;
 
 export default shadows;
+

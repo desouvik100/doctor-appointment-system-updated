@@ -14,7 +14,7 @@ import {
   Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -26,6 +26,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
   const [confirmPassword, setConfirmPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errors, setErrors] = useState({});
+  const { colors, isDarkMode } = useTheme();
 
   const validatePassword = () => {
     const newErrors = {};
@@ -73,15 +74,23 @@ const ResetPasswordScreen = ({ navigation, route }) => {
     }
   };
 
+  const bgColors = isDarkMode
+    ? ['#0A0E17', '#121826', '#1A1F2E']
+    : ['#F8FAFC', '#F1F5F9', '#E2E8F0'];
+  const orb1Colors = isDarkMode
+    ? ['rgba(0, 212, 170, 0.12)', 'transparent']
+    : ['rgba(0, 212, 170, 0.06)', 'transparent'];
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
       
+      {/* Ambient background mesh */}
       <View style={styles.orbContainer}>
-        <LinearGradient
-          colors={['rgba(0, 212, 170, 0.3)', 'transparent']}
-          style={[styles.orb, styles.orb1]}
-        />
+        <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
+        <View style={styles.orb1}>
+          <LinearGradient colors={orb1Colors} style={{ flex: 1, borderRadius: 150 }} />
+        </View>
       </View>
 
       <KeyboardAvoidingView
@@ -90,24 +99,24 @@ const ResetPasswordScreen = ({ navigation, route }) => {
       >
         <View style={styles.content}>
           <TouchableOpacity 
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backIcon}>←</Text>
+            <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
           </TouchableOpacity>
 
           <View style={styles.header}>
             <View style={styles.iconContainer}>
               <LinearGradient
-                colors={colors.gradientPrimary}
+                colors={colors.gradientPrimary || colors.primaryGradient || ['#00D4AA', '#00B894']}
                 style={styles.iconGradient}
               >
                 <Text style={styles.icon}>🔒</Text>
               </LinearGradient>
             </View>
             
-            <Text style={styles.title}>Create New Password</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Create New Password</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Your new password must be different from previously used passwords
             </Text>
           </View>
@@ -141,29 +150,33 @@ const ResetPasswordScreen = ({ navigation, route }) => {
               secureTextEntry
             />
 
-            <View style={styles.requirementsContainer}>
-              <Text style={styles.requirementsTitle}>Password must contain:</Text>
+            <View style={[styles.requirementsContainer, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: 1 }]}>
+              <Text style={[styles.requirementsTitle, { color: colors.textPrimary }]}>Password must contain:</Text>
               <Text style={[
                 styles.requirement,
-                newPassword.length >= 8 && styles.requirementMet,
+                { color: colors.textMuted },
+                newPassword.length >= 8 && { color: colors.success },
               ]}>
                 {newPassword.length >= 8 ? '✓' : '○'} At least 8 characters
               </Text>
               <Text style={[
                 styles.requirement,
-                /[A-Z]/.test(newPassword) && styles.requirementMet,
+                { color: colors.textMuted },
+                /[A-Z]/.test(newPassword) && { color: colors.success },
               ]}>
                 {/[A-Z]/.test(newPassword) ? '✓' : '○'} One uppercase letter
               </Text>
               <Text style={[
                 styles.requirement,
-                /[a-z]/.test(newPassword) && styles.requirementMet,
+                { color: colors.textMuted },
+                /[a-z]/.test(newPassword) && { color: colors.success },
               ]}>
                 {/[a-z]/.test(newPassword) ? '✓' : '○'} One lowercase letter
               </Text>
               <Text style={[
                 styles.requirement,
-                /\d/.test(newPassword) && styles.requirementMet,
+                { color: colors.textMuted },
+                /\d/.test(newPassword) && { color: colors.success },
               ]}>
                 {/\d/.test(newPassword) ? '✓' : '○'} One number
               </Text>
@@ -186,20 +199,18 @@ const ResetPasswordScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   orbContainer: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
-  },
-  orb: {
-    position: 'absolute',
-    borderRadius: 999,
+    zIndex: -1,
   },
   orb1: {
+    position: 'absolute',
     width: 300,
     height: 300,
-    top: -100,
+    borderRadius: 150,
+    top: -50,
     right: -100,
   },
   keyboardView: {
@@ -211,17 +222,21 @@ const styles = StyleSheet.create({
     paddingTop: spacing.huge,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xl,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   backIcon: {
     fontSize: 20,
-    color: colors.textPrimary,
   },
   header: {
     alignItems: 'center',
@@ -233,7 +248,7 @@ const styles = StyleSheet.create({
   iconGradient: {
     width: 80,
     height: 80,
-    borderRadius: borderRadius.xl,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -242,12 +257,10 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.headlineLarge,
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 20,
   },
@@ -255,23 +268,17 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
   },
   requirementsContainer: {
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginTop: -spacing.sm,
   },
   requirementsTitle: {
     ...typography.labelMedium,
-    color: colors.textPrimary,
     marginBottom: spacing.xs,
   },
   requirement: {
     ...typography.bodySmall,
-    color: colors.textMuted,
     marginBottom: 2,
-  },
-  requirementMet: {
-    color: colors.success,
   },
 });
 

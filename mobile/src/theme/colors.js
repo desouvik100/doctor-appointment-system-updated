@@ -4,32 +4,32 @@
  */
 
 export const colors = {
-  // Primary Brand Colors
+  // Primary Brand Colors (Vibrant Teal/Cyan)
   primary: {
-    50: '#E3F2FD',
-    100: '#BBDEFB',
-    200: '#90CAF9',
-    300: '#64B5F6',
-    400: '#42A5F5',
-    500: '#0066FF', // Main brand color
-    600: '#1E88E5',
-    700: '#1976D2',
-    800: '#1565C0',
-    900: '#0D47A1',
+    50: '#E0F7F4',
+    100: '#B2EBF2',
+    200: '#80DEEA',
+    300: '#4DD0E1',
+    400: '#26C6DA',
+    500: '#00D4AA', // Main brand color
+    600: '#00B894',
+    700: '#009688',
+    800: '#00796B',
+    900: '#004D40',
   },
 
-  // Secondary - Teal/Medical
+  // Secondary Brand Colors (Premium Purple)
   secondary: {
-    50: '#E0F2F1',
-    100: '#B2DFDB',
-    200: '#80CBC4',
-    300: '#4DB6AC',
-    400: '#26A69A',
-    500: '#00897B',
-    600: '#00796B',
-    700: '#00695C',
-    800: '#00564A',
-    900: '#004D40',
+    50: '#F3E5F5',
+    100: '#E1BEE7',
+    200: '#CE93D8',
+    300: '#BA68C8',
+    400: '#AB47BC',
+    500: '#6C5CE7', // Main secondary color
+    600: '#5B4ED1',
+    700: '#4C3EC7',
+    800: '#6A1B9A',
+    900: '#4A148C',
   },
 
   // Success
@@ -105,18 +105,22 @@ export const colors = {
   },
 
   // Semantic Colors
-  background: '#FFFFFF',
-  surface: '#F9FAFB',
-  surfaceElevated: '#FFFFFF',
-  border: '#E5E7EB',
-  borderLight: '#F3F4F6',
+  background: '#0A0E17', // Dark ambient background by default for 2026 dark gradient style
+  backgroundLight: '#121826',
+  backgroundCard: '#1A1F2E',
+  backgroundElevated: '#232A3D',
+  surface: '#1E2433',
+  surfaceLight: '#2A3142',
+  surfaceBorder: '#2E3649',
+  border: '#2E3649',
+  borderLight: '#1E2433',
   
   text: {
-    primary: '#111827',
-    secondary: '#6B7280',
-    tertiary: '#9CA3AF',
+    primary: '#FFFFFF',
+    secondary: '#A0AEC0',
+    tertiary: '#6B7280',
     disabled: '#D1D5DB',
-    inverse: '#FFFFFF',
+    inverse: '#0A0E17',
   },
 
   // Status Colors
@@ -129,19 +133,20 @@ export const colors = {
 
   // Overlay
   overlay: {
-    light: 'rgba(0, 0, 0, 0.05)',
-    medium: 'rgba(0, 0, 0, 0.15)',
-    dark: 'rgba(0, 0, 0, 0.5)',
-    darker: 'rgba(0, 0, 0, 0.75)',
+    light: 'rgba(10, 14, 23, 0.5)',
+    medium: 'rgba(10, 14, 23, 0.8)',
+    dark: 'rgba(0, 0, 0, 0.7)',
+    darker: 'rgba(0, 0, 0, 0.9)',
   },
 
   // Gradients
   gradients: {
-    primary: ['#0066FF', '#1976D2'],
-    secondary: ['#00897B', '#26A69A', '#80CBC4'],
+    primary: ['#00D4AA', '#00B894', '#009B77'],
+    secondary: ['#6C5CE7', '#5B4ED1', '#4C3EC7'],
     success: ['#10B981', '#34D399'],
     premium: ['#8B5CF6', '#A78BFA'],
     sunset: ['#F97316', '#FB923C'],
+    dark: ['#1A1F2E', '#0A0E17'],
   },
 };
 

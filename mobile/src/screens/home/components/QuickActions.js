@@ -22,14 +22,14 @@ const GAP = spacing.md;
 const ITEM_SIZE = (width - spacing.xl * 2 - GAP * (COLS - 1)) / COLS;
 
 const ACTIONS = [
-  { id: 'book',      icon: '📅', label: 'Book',      gradient: ['#00897B', '#00ACC1'], screen: 'Booking' },
-  { id: 'video',     icon: '📹', label: 'Video',     gradient: ['#1565C0', '#1976D2'], screen: 'VideoConsult' },
-  { id: 'lab',       icon: '🧪', label: 'Lab Tests', gradient: ['#E65100', '#F57C00'], screen: 'LabTests' },
-  { id: 'records',   icon: '📋', label: 'Records',   gradient: ['#6A1B9A', '#8E24AA'], screen: 'Records' },
-  { id: 'meds',      icon: '💊', label: 'Medicine',  gradient: ['#00695C', '#00897B'], screen: 'Medicine' },
-  { id: 'imaging',   icon: '🩻', label: 'Imaging',   gradient: ['#283593', '#3949AB'], screen: 'MedicalImaging' },
-  { id: 'emergency', icon: '🚑', label: 'Emergency', gradient: ['#B71C1C', '#C62828'], screen: 'Emergency' },
-  { id: 'wallet',    icon: '💳', label: 'Wallet',    gradient: ['#4527A0', '#5E35B1'], screen: 'Wallet' },
+  { id: 'book',      icon: '📅', label: 'Book',      gradient: ['#00D4AA', '#00B894'], screen: 'Booking' },
+  { id: 'video',     icon: '📹', label: 'Video',     gradient: ['#3B82F6', '#00D4AA'], screen: 'VideoConsult' },
+  { id: 'lab',       icon: '🧪', label: 'Lab Tests', gradient: ['#FF9F43', '#FF6B6B'], screen: 'LabTests' },
+  { id: 'records',   icon: '📋', label: 'Records',   gradient: ['#6C5CE7', '#A29BFE'], screen: 'Records' },
+  { id: 'meds',      icon: '💊', label: 'Medicine',  gradient: ['#4E65FF', '#92EFFD'], screen: 'Medicine' },
+  { id: 'imaging',   icon: '🩻', label: 'Imaging',   gradient: ['#FF6B6B', '#FF8E8E'], screen: 'MedicalImaging' },
+  { id: 'emergency', icon: '🚑', label: 'Emergency', gradient: ['#FF416C', '#FF4B2B'], screen: 'Emergency' },
+  { id: 'wallet',    icon: '💳', label: 'Wallet',    gradient: ['#834D9B', '#D04ED6'], screen: 'Wallet' },
 ];
 
 const ActionItem = React.memo(({ action, onPress }) => {
@@ -119,12 +119,14 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     borderWidth: 1,
     padding: spacing.lg,
+    backgroundColor: 'rgba(26, 31, 46, 0.45)',
+    borderColor: 'rgba(255, 255, 255, 0.08)',
     // Elevation / shadow for depth
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
-    shadowRadius: 12,
-    elevation: 3,
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.2,
+    shadowRadius: 10,
+    elevation: 5,
   },
   grid: {
     flexDirection: 'row',
@@ -163,7 +165,7 @@ const styles = StyleSheet.create({
     ...typography.labelSmall,
     textAlign: 'center',
     fontSize: 11,
-    color: '#6B7280',
+    color: '#A0AEC0',
     fontWeight: '600',
     letterSpacing: 0.1,
   },

@@ -15,6 +15,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { spacing, borderRadius } from '../../theme/typography';
+import { colors, shadows } from '../../theme/colors';
 
 const { width, height } = Dimensions.get('window');
 
@@ -107,16 +108,27 @@ const ProRoleSelectionScreen = ({ navigation }) => {
 
         {/* Role Cards */}
         <View style={styles.cardsContainer}>
-          {roles.map((role, index) => (
-            <Animated.View
-              key={role.id}
-              style={[styles.cardWrapper, {
-                transform: [
-                  { scale: scaleAnims[index] },
-                  { scale: selectedRole === role.id ? pulseAnim : 1 },
-                ],
-              }]}
-            >
+          {roles.map((role, index) => {
+            const getCardShadow = (roleId) => {
+              if (selectedRole !== roleId) return shadows.medium;
+              return roleId === 'doctor' ? shadows.glowSecondary : shadows.glowPrimary;
+            };
+            
+            return (
+              <Animated.View
+                key={role.id}
+                style={[
+                  styles.cardWrapper,
+                  getCardShadow(role.id),
+                  {
+                    transform: [
+                      { scale: scaleAnims[index] },
+                      { scale: selectedRole === role.id ? pulseAnim : 1 },
+                      { translateY: selectedRole === role.id ? -6 : 0 },
+                    ],
+                  }
+                ]}
+              >
               <TouchableOpacity
                 activeOpacity={0.8}
                 onPress={() => handleRoleSelect(role)}
@@ -150,7 +162,8 @@ const ProRoleSelectionScreen = ({ navigation }) => {
                 </LinearGradient>
               </TouchableOpacity>
             </Animated.View>
-          ))}
+            );
+          })}
         </View>
 
         <View style={styles.footer}>
@@ -178,7 +191,11 @@ const styles = StyleSheet.create({
   title: { fontSize: 36, fontWeight: '700', color: '#fff', letterSpacing: -1, marginBottom: spacing.xs },
   subtitle: { fontSize: 16, color: 'rgba(255,255,255,0.6)' },
   cardsContainer: { flex: 1, gap: spacing.md },
-  cardWrapper: { borderRadius: borderRadius.xl },
+  cardWrapper: { 
+    borderRadius: borderRadius.xl,
+    backgroundColor: 'transparent',
+    overflow: 'visible',
+  },
   card: { borderRadius: borderRadius.xl, overflow: 'hidden', borderWidth: 1, borderColor: 'rgba(255,255,255,0.1)' },
   cardSelected: { borderColor: 'rgba(255,255,255,0.3)' },
   cardGradient: { padding: spacing.lg, position: 'relative', overflow: 'hidden' },

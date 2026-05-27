@@ -33,10 +33,35 @@ router.get('/preview/:appointmentId', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.params;
     const { cancelledBy } = req.query;
+
+    const Appointment = require('../models/Appointment');
+    const appointment = await Appointment.findById(appointmentId);
+    if (!appointment) {
+      return res.status(404).json({ success: false, message: 'Appointment not found' });
+    }
+
+    // Role-based validation
+    const tokenUserId = req.user.id || req.user._id;
+    if (req.user.role === 'patient') {
+      if (appointment.userId.toString() !== tokenUserId.toString()) {
+        return res.status(403).json({ success: false, message: 'Access denied - you do not own this appointment' });
+      }
+      if (cancelledBy && cancelledBy !== 'patient') {
+        return res.status(400).json({ success: false, message: 'Patients can only preview patient cancellations' });
+      }
+    } else if (req.user.role === 'doctor') {
+      if (appointment.doctorId.toString() !== tokenUserId.toString()) {
+        return res.status(403).json({ success: false, message: 'Access denied - you are not the assigned doctor' });
+      }
+    } else if (req.user.role === 'receptionist') {
+      if (req.user.clinicId && appointment.clinicId?.toString() !== req.user.clinicId.toString()) {
+        return res.status(403).json({ success: false, message: 'Access denied - clinic mismatch' });
+      }
+    }
     
     const preview = await refundPolicyService.previewRefund(
       appointmentId, 
-      cancelledBy || 'patient'
+      cancelledBy || (req.user.role === 'patient' ? 'patient' : 'doctor')
     );
     
     res.json({
@@ -56,7 +81,7 @@ router.get('/preview/:appointmentId', verifyToken, async (req, res) => {
  * POST /api/refunds/process
  * Process refund for cancelled appointment (authenticated)
  */
-router.post('/process', verifyToken, async (req, res) => {
+router.post('/process', verifyTokenWithRole(['admin', 'receptionist']), async (req, res) => {
   try {
     const { appointmentId, cancelledBy, reason } = req.body;
     

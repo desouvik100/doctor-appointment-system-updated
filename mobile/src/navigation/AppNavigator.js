@@ -48,12 +48,40 @@ import AuthGate from '../components/AuthGate';
 import { UserProvider, useUser } from '../context/UserContext';
 import { ThemeProvider, useTheme } from '../context/ThemeContext';
 import { SocketProvider } from '../context/SocketContext';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import OnboardingScreen from '../screens/onboarding/OnboardingScreen';
 
 const Stack = createStackNavigator();
 
 const AppContent = () => {
   const { isLoggedIn } = useUser();
   const { colors, isDarkMode } = useTheme();
+  const [completedOnboarding, setCompletedOnboarding] = React.useState(false);
+  const [onboardingLoading, setOnboardingLoading] = React.useState(true);
+
+  React.useEffect(() => {
+    const checkOnboarding = async () => {
+      try {
+        const val = await AsyncStorage.getItem('has_completed_onboarding');
+        setCompletedOnboarding(val === 'true');
+      } catch (error) {
+        console.log('Error loading onboarding state:', error);
+      } finally {
+        setOnboardingLoading(false);
+      }
+    };
+    checkOnboarding();
+  }, []);
+
+  if (onboardingLoading) {
+    return null; // Let AuthGate handle the loading/splash transition
+  }
+
+  const getInitialRoute = () => {
+    if (isLoggedIn) return 'Main';
+    if (!completedOnboarding) return 'Onboarding';
+    return 'Welcome';
+  };
 
   return (
     <NavigationContainer
@@ -74,9 +102,10 @@ const AppContent = () => {
           headerShown: false,
           cardStyle: { backgroundColor: colors.background },
         }}
-        initialRouteName={isLoggedIn ? 'Main' : 'Welcome'}
+        initialRouteName={getInitialRoute()}
       >
-        {/* Patient auth flow */}
+        {/* Onboarding & Patient auth flow */}
+        <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Welcome" component={RoleSelectionScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
         <Stack.Screen name="Register" component={RegisterScreen} />

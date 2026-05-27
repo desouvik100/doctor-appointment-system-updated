@@ -108,7 +108,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
             style={[styles.actionBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
             onPress={handleShare}
           >
-            <Text style={styles.actionIcon}>�</Text>
+            <Text style={styles.actionIcon}>📤</Text>
             <Text style={[styles.actionText, { color: colors.textPrimary }]}>Share</Text>
           </TouchableOpacity>
           <TouchableOpacity

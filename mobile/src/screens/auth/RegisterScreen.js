@@ -26,7 +26,7 @@ import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
 
 const RegisterScreen = ({ navigation }) => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     name: '',
     email: '',
@@ -38,6 +38,16 @@ const RegisterScreen = ({ navigation }) => {
   const [loading, setLoading] = useState(false);
   const [socialLoading, setSocialLoading] = useState(null);
   const { login } = useUser();
+
+  const bgColors = isDarkMode
+    ? ['#0A0E17', '#121826', '#1A1F2E']
+    : ['#F8FAFC', '#F1F5F9', '#E2E8F0'];
+  const orb1Colors = isDarkMode
+    ? ['rgba(0, 212, 170, 0.12)', 'transparent']
+    : ['rgba(0, 212, 170, 0.06)', 'transparent'];
+  const orb2Colors = isDarkMode
+    ? ['rgba(108, 92, 231, 0.1)', 'transparent']
+    : ['rgba(108, 92, 231, 0.05)', 'transparent'];
 
   const updateField = (field, value) => {
     setFormData(prev => ({ ...prev, [field]: value }));
@@ -161,18 +171,17 @@ const RegisterScreen = ({ navigation }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
+      <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
       
-      {/* Background gradient orbs */}
+      {/* Ambient background mesh */}
       <View style={styles.orbContainer}>
-        <LinearGradient
-          colors={['rgba(0, 212, 170, 0.3)', 'transparent']}
-          style={[styles.orb, styles.orb1]}
-        />
-        <LinearGradient
-          colors={['rgba(108, 92, 231, 0.25)', 'transparent']}
-          style={[styles.orb, styles.orb2]}
-        />
+        <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
+        <View style={styles.orb1}>
+          <LinearGradient colors={orb1Colors} style={{ flex: 1, borderRadius: 150 }} />
+        </View>
+        <View style={styles.orb2}>
+          <LinearGradient colors={orb2Colors} style={{ flex: 1, borderRadius: 150 }} />
+        </View>
       </View>
 
       <KeyboardAvoidingView
@@ -318,22 +327,23 @@ const styles = StyleSheet.create({
   orbContainer: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
-  },
-  orb: {
-    position: 'absolute',
-    borderRadius: 999,
+    zIndex: -1,
   },
   orb1: {
+    position: 'absolute',
     width: 300,
     height: 300,
-    top: -100,
+    borderRadius: 150,
+    top: -50,
     right: -100,
   },
   orb2: {
-    width: 250,
-    height: 250,
-    bottom: 100,
-    left: -80,
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    bottom: -50,
+    left: -100,
   },
   keyboardView: {
     flex: 1,
@@ -348,12 +358,18 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.md,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   backIcon: {
     fontSize: 20,

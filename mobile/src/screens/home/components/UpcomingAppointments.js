@@ -39,23 +39,23 @@ const UpcomingAppointments = ({ appointments = [], navigation, onJoinCall, onRes
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Upcoming Appointments</Text>
         </View>
-        <LinearGradient colors={['#E8F5E9', '#F1F8E9']} style={styles.emptyCard}>
+        <View style={[styles.emptyCard, { backgroundColor: 'rgba(26, 31, 46, 0.45)', borderColor: 'rgba(255, 255, 255, 0.08)', borderWidth: 1 }]}>
           <Text style={styles.emptyIllustration}>👨‍⚕️</Text>
-          <Text style={[styles.emptyTitle, { color: '#1B5E20' }]}>You're all set!</Text>
-          <Text style={[styles.emptyText, { color: '#388E3C' }]}>
+          <Text style={[styles.emptyTitle, { color: colors.primary }]}>You're all set!</Text>
+          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
             Let's book your first checkup and stay ahead of your health.
           </Text>
           <View style={styles.emptyActions}>
             <TouchableOpacity onPress={() => navigation.navigate('Booking')} activeOpacity={0.85}>
-              <LinearGradient colors={['#00897B', '#26A69A']} style={styles.bookBtn}>
+              <LinearGradient colors={['#00D4AA', '#00B894']} style={styles.bookBtn}>
                 <Text style={styles.bookBtnText}>Book a Consultation →</Text>
               </LinearGradient>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('Booking')} style={styles.exploreBtn} activeOpacity={0.8}>
-              <Text style={[styles.exploreBtnText, { color: '#00897B' }]}>Explore doctors</Text>
+              <Text style={[styles.exploreBtnText, { color: colors.primary }]}>Explore doctors</Text>
             </TouchableOpacity>
           </View>
-        </LinearGradient>
+        </View>
       </View>
     );
   }
@@ -70,7 +70,7 @@ const UpcomingAppointments = ({ appointments = [], navigation, onJoinCall, onRes
       </View>
 
       {/* Featured card */}
-      <LinearGradient colors={['#00897B', '#26A69A']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.featuredCard}>
+      <LinearGradient colors={['rgba(26, 31, 46, 0.8)', 'rgba(10, 14, 23, 0.5)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.featuredCard}>
         <View style={styles.countdownBadge}>
           <Text style={styles.countdownText}>{countdown}</Text>
         </View>
@@ -93,8 +93,10 @@ const UpcomingAppointments = ({ appointments = [], navigation, onJoinCall, onRes
             <Text style={styles.actionBtnGhostText}>Reschedule</Text>
           </TouchableOpacity>
           {nextAppointment.type === 'video' && (
-            <TouchableOpacity style={styles.actionBtnSolid} onPress={() => onJoinCall?.(nextAppointment)}>
-              <Text style={styles.actionBtnSolidText}>Join Call</Text>
+            <TouchableOpacity style={styles.actionBtnSolidWrapper} onPress={() => onJoinCall?.(nextAppointment)} activeOpacity={0.85}>
+              <LinearGradient colors={['#00D4AA', '#00B894']} style={styles.actionBtnSolid}>
+                <Text style={styles.actionBtnSolidText}>Join Call</Text>
+              </LinearGradient>
             </TouchableOpacity>
           )}
         </View>
@@ -103,7 +105,7 @@ const UpcomingAppointments = ({ appointments = [], navigation, onJoinCall, onRes
       {/* Other appointments */}
       {displayAppointments.slice(1).map((apt, i) => (
         <TouchableOpacity key={apt.id || i}
-          style={[styles.listItem, { backgroundColor: colors.surface }]}
+          style={[styles.listItem, { backgroundColor: 'rgba(26, 31, 46, 0.45)', borderColor: 'rgba(255, 255, 255, 0.06)', borderWidth: 1 }]}
           onPress={() => navigation.navigate('AppointmentDetails', { appointment: apt })}>
           <Avatar name={apt.doctorName} size="medium" source={apt.doctorPhoto ? { uri: apt.doctorPhoto } : null} />
           <View style={styles.listContent}>
@@ -135,25 +137,73 @@ const styles = StyleSheet.create({
   exploreBtnText: { ...typography.labelMedium, fontWeight: '600' },
 
   // Featured card
-  featuredCard: { borderRadius: borderRadius.xl, padding: spacing.lg, marginBottom: spacing.md },
-  countdownBadge: { alignSelf: 'flex-end', backgroundColor: 'rgba(255,255,255,0.25)', paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: borderRadius.full, marginBottom: spacing.sm },
-  countdownText: { color: '#fff', ...typography.labelSmall, fontWeight: '700' },
+  featuredCard: {
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
+    borderWidth: 1.5,
+    borderColor: 'rgba(0, 212, 170, 0.25)',
+    shadowColor: '#00D4AA',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.15,
+    shadowRadius: 10,
+    elevation: 6,
+  },
+  countdownBadge: {
+    alignSelf: 'flex-end',
+    backgroundColor: 'rgba(0, 212, 170, 0.18)',
+    borderWidth: 1,
+    borderColor: 'rgba(0, 212, 170, 0.35)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: borderRadius.full,
+    marginBottom: spacing.sm,
+  },
+  countdownText: { color: '#00D4AA', ...typography.labelSmall, fontWeight: '700' },
   apptHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
   doctorInfo: { flex: 1, marginLeft: spacing.md },
   doctorName: { color: '#fff', ...typography.bodyLarge, fontWeight: '700' },
-  specialty: { color: 'rgba(255,255,255,0.75)', ...typography.bodySmall, marginTop: 2 },
-  typeBadge: { backgroundColor: 'rgba(255,255,255,0.2)', paddingHorizontal: spacing.sm, paddingVertical: 3, borderRadius: borderRadius.full },
-  typeText: { color: '#fff', ...typography.labelSmall },
+  specialty: { color: 'rgba(255,255,255,0.7)', ...typography.bodySmall, marginTop: 2 },
+  typeBadge: {
+    backgroundColor: 'rgba(108, 92, 231, 0.22)',
+    borderWidth: 1,
+    borderColor: 'rgba(108, 92, 231, 0.35)',
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    borderRadius: borderRadius.full,
+  },
+  typeText: { color: '#A29BFE', ...typography.labelSmall },
   apptDetails: { flexDirection: 'row', gap: spacing.lg, marginBottom: spacing.md },
   detailText: { color: 'rgba(255,255,255,0.9)', ...typography.bodySmall, fontWeight: '500' },
   apptActions: { flexDirection: 'row', gap: spacing.sm },
-  actionBtnGhost: { flex: 1, paddingVertical: spacing.sm, borderRadius: borderRadius.md, alignItems: 'center', backgroundColor: 'rgba(255,255,255,0.2)' },
+  actionBtnGhost: {
+    flex: 1,
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.15)',
+  },
   actionBtnGhostText: { color: '#fff', ...typography.labelSmall, fontWeight: '600' },
-  actionBtnSolid: { flex: 1, paddingVertical: spacing.sm, borderRadius: borderRadius.md, alignItems: 'center', backgroundColor: '#fff' },
-  actionBtnSolidText: { color: '#00897B', ...typography.labelSmall, fontWeight: '700' },
+  actionBtnSolidWrapper: { flex: 1 },
+  actionBtnSolid: {
+    paddingVertical: spacing.sm,
+    borderRadius: borderRadius.md,
+    alignItems: 'center',
+  },
+  actionBtnSolidText: { color: '#fff', ...typography.labelSmall, fontWeight: '700' },
 
   // List items
-  listItem: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.lg, padding: spacing.md, marginBottom: spacing.sm },
+  listItem: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginBottom: spacing.sm,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.06)',
+  },
   listContent: { flex: 1, marginLeft: spacing.md },
   listDoctorName: { ...typography.bodyMedium, fontWeight: '600' },
   listDateTime: { ...typography.bodySmall, marginTop: 2 },

@@ -15,7 +15,7 @@ import {
   TextInput,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import authService from '../../services/api/authService';
@@ -32,6 +32,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
   const [canResend, setCanResend] = useState(false);
   const inputRefs = useRef([]);
   const { login } = useUser();
+  const { colors, isDarkMode } = useTheme();
 
   useEffect(() => {
     // Focus first input on mount
@@ -172,16 +173,23 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     ? (email ? `${email.slice(0, 3)}***@${email.split('@')[1]}` : 'your email')
     : (phone ? `******${phone.slice(-4)}` : 'your phone');
 
+  const bgColors = isDarkMode
+    ? ['#0A0E17', '#121826', '#1A1F2E']
+    : ['#F8FAFC', '#F1F5F9', '#E2E8F0'];
+  const orb1Colors = isDarkMode
+    ? ['rgba(0, 212, 170, 0.12)', 'transparent']
+    : ['rgba(0, 212, 170, 0.06)', 'transparent'];
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
       
-      {/* Background gradient orbs */}
+      {/* Ambient background mesh */}
       <View style={styles.orbContainer}>
-        <LinearGradient
-          colors={['rgba(0, 212, 170, 0.3)', 'transparent']}
-          style={[styles.orb, styles.orb1]}
-        />
+        <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
+        <View style={styles.orb1}>
+          <LinearGradient colors={orb1Colors} style={{ flex: 1, borderRadius: 150 }} />
+        </View>
       </View>
 
       <KeyboardAvoidingView
@@ -192,27 +200,27 @@ const OTPVerificationScreen = ({ navigation, route }) => {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity 
-              style={styles.backButton}
+              style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
               onPress={() => navigation.goBack()}
             >
-              <Text style={styles.backIcon}>←</Text>
+              <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
             </TouchableOpacity>
             
             <View style={styles.iconContainer}>
               <LinearGradient
-                colors={colors.gradientPrimary}
+                colors={colors.gradientPrimary || colors.primaryGradient || ['#00D4AA', '#00B894']}
                 style={styles.iconGradient}
               >
                 <Text style={styles.icon}>📱</Text>
               </LinearGradient>
             </View>
             
-            <Text style={styles.title}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>
               {isRegistration ? 'Verify Email' : 'Verify Phone'}
             </Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Enter the 6-digit code sent to{'\n'}
-              <Text style={styles.phoneNumber}>{maskedContact}</Text>
+              <Text style={[styles.phoneNumber, { color: colors.primary }]}>{maskedContact}</Text>
             </Text>
           </View>
 
@@ -224,7 +232,14 @@ const OTPVerificationScreen = ({ navigation, route }) => {
                 ref={ref => inputRefs.current[index] = ref}
                 style={[
                   styles.otpInput,
-                  digit && styles.otpInputFilled,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: digit ? colors.primary : colors.surfaceBorder,
+                    color: colors.textPrimary,
+                  },
+                  digit && {
+                    backgroundColor: isDarkMode ? 'rgba(0, 212, 170, 0.15)' : colors.primaryLight,
+                  }
                 ]}
                 value={digit}
                 onChangeText={(value) => handleOtpChange(value, index)}
@@ -240,11 +255,11 @@ const OTPVerificationScreen = ({ navigation, route }) => {
           <View style={styles.resendContainer}>
             {canResend ? (
               <TouchableOpacity onPress={handleResend}>
-                <Text style={styles.resendLink}>Resend OTP</Text>
+                <Text style={[styles.resendLink, { color: colors.primary }]}>Resend OTP</Text>
               </TouchableOpacity>
             ) : (
-              <Text style={styles.resendText}>
-                Resend OTP in <Text style={styles.timerText}>{resendTimer}s</Text>
+              <Text style={[styles.resendText, { color: colors.textSecondary }]}>
+                Resend OTP in <Text style={[styles.timerText, { color: colors.primary }]}>{resendTimer}s</Text>
               </Text>
             )}
           </View>
@@ -264,7 +279,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
             style={styles.changeNumber}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.changeNumberText}>
+            <Text style={[styles.changeNumberText, { color: colors.textMuted }]}>
               {isRegistration ? 'Change email address' : 'Change phone number'}
             </Text>
           </TouchableOpacity>
@@ -277,20 +292,18 @@ const OTPVerificationScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   orbContainer: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
-  },
-  orb: {
-    position: 'absolute',
-    borderRadius: 999,
+    zIndex: -1,
   },
   orb1: {
+    position: 'absolute',
     width: 300,
     height: 300,
-    top: -100,
+    borderRadius: 150,
+    top: -50,
     right: -100,
   },
   keyboardView: {
@@ -309,16 +322,20 @@ const styles = StyleSheet.create({
     position: 'absolute',
     left: 0,
     top: 0,
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   backIcon: {
     fontSize: 20,
-    color: colors.textPrimary,
   },
   iconContainer: {
     marginBottom: spacing.xl,
@@ -327,7 +344,7 @@ const styles = StyleSheet.create({
   iconGradient: {
     width: 80,
     height: 80,
-    borderRadius: borderRadius.xl,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -336,17 +353,14 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.headlineLarge,
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
     ...typography.bodyLarge,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
   },
   phoneNumber: {
-    color: colors.primary,
     fontWeight: '600',
   },
   otpContainer: {
@@ -359,17 +373,10 @@ const styles = StyleSheet.create({
     width: 48,
     height: 56,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+    borderWidth: 2,
     textAlign: 'center',
     fontSize: 24,
     fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  otpInputFilled: {
-    borderColor: colors.primary,
-    backgroundColor: colors.primaryLight,
   },
   resendContainer: {
     alignItems: 'center',
@@ -377,15 +384,12 @@ const styles = StyleSheet.create({
   },
   resendText: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
   },
   timerText: {
-    color: colors.primary,
     fontWeight: '600',
   },
   resendLink: {
     ...typography.bodyMedium,
-    color: colors.primary,
     fontWeight: '600',
   },
   changeNumber: {
@@ -394,7 +398,6 @@ const styles = StyleSheet.create({
   },
   changeNumberText: {
     ...typography.bodyMedium,
-    color: colors.textMuted,
   },
 });
 

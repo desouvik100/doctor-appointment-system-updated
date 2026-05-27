@@ -1,6 +1,6 @@
 /**
  * Login Screen — Premium patient-first design
- * Light theme · icon inputs · focus states · trust badges · proper error handling
+ * Dynamic light/dark theme · icon inputs · focus states · trust badges · proper error handling
  */
 
 import React, { useState, useEffect, useRef } from 'react';
@@ -17,11 +17,12 @@ import { useUser } from '../../context/UserContext';
 import biometricService from '../../services/biometricService';
 import socialAuthService from '../../services/socialAuthService';
 import NotificationService from '../../services/notifications/NotificationService';
+import { useTheme } from '../../context/ThemeContext';
 
 const { height } = Dimensions.get('window');
 
 // ─── Inline Input with icon + focus glow ────────────────────────────────────
-const FancyInput = ({ icon, placeholder, value, onChangeText, secureTextEntry, keyboardType, autoCapitalize, rightElement }) => {
+const FancyInput = ({ icon, placeholder, value, onChangeText, secureTextEntry, keyboardType, autoCapitalize, rightElement, colors }) => {
   const [focused, setFocused] = useState(false);
   const glowAnim = useRef(new Animated.Value(0)).current;
 
@@ -34,16 +35,19 @@ const FancyInput = ({ icon, placeholder, value, onChangeText, secureTextEntry, k
     Animated.timing(glowAnim, { toValue: 0, duration: 200, useNativeDriver: false }).start();
   };
 
-  const borderColor = glowAnim.interpolate({ inputRange: [0, 1], outputRange: ['#E5E7EB', '#22C55E'] });
+  const borderColor = glowAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.surfaceBorder || '#E5E7EB', colors.primary || '#00D4AA']
+  });
   const shadowOpacity = glowAnim.interpolate({ inputRange: [0, 1], outputRange: [0, 0.18] });
 
   return (
-    <Animated.View style={[styles.inputWrap, { borderColor, shadowOpacity, shadowColor: '#22C55E', shadowOffset: { width: 0, height: 0 }, shadowRadius: 8, elevation: focused ? 3 : 0 }]}>
+    <Animated.View style={[styles.inputWrap, { backgroundColor: colors.surface, borderColor, shadowOpacity, shadowColor: colors.primary, shadowOffset: { width: 0, height: 0 }, shadowRadius: 8, elevation: focused ? 3 : 0 }]}>
       <Text style={styles.inputIcon}>{icon}</Text>
       <TextInput
-        style={styles.inputField}
+        style={[styles.inputField, { color: colors.textPrimary }]}
         placeholder={placeholder}
-        placeholderTextColor="#9CA3AF"
+        placeholderTextColor={colors.textMuted || '#9CA3AF'}
         value={value}
         onChangeText={onChangeText}
         secureTextEntry={secureTextEntry}
@@ -74,6 +78,7 @@ const ErrorToast = ({ message }) => {
 
 // ─── Main Screen ─────────────────────────────────────────────────────────────
 const LoginScreen = ({ navigation }) => {
+  const { colors, isDarkMode } = useTheme();
   const [email, setEmail]       = useState('');
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
@@ -128,7 +133,6 @@ const LoginScreen = ({ navigation }) => {
   const handleAnimationComplete = () => {
     setShowSuccessAnimation(false);
     if (isEmailLogin && biometricAvailable && !hasStoredCredentials && email && password) {
-      // Offer biometric setup — handled silently, no blocking alert
       biometricService.enableBiometricLogin(email.trim().toLowerCase(), password).catch(() => {});
     }
     navigation.replace('Main');
@@ -169,19 +173,36 @@ const LoginScreen = ({ navigation }) => {
     }
   };
 
+  const bgColors = isDarkMode
+    ? ['#0A0E17', '#121826', '#1A1F2E']
+    : ['#F8FAFC', '#F1F5F9', '#E2E8F0'];
+  const orb1Colors = isDarkMode
+    ? ['rgba(0, 212, 170, 0.12)', 'transparent']
+    : ['rgba(0, 212, 170, 0.06)', 'transparent'];
+  const orb2Colors = isDarkMode
+    ? ['rgba(108, 92, 231, 0.1)', 'transparent']
+    : ['rgba(108, 92, 231, 0.05)', 'transparent'];
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="dark-content" backgroundColor="#F0FDF4" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
+
+      {/* Ambient background mesh */}
+      <View style={styles.backgroundContainer}>
+        <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
+        <View style={styles.orb1}>
+          <LinearGradient colors={orb1Colors} style={{ flex: 1, borderRadius: 150 }} />
+        </View>
+        <View style={styles.orb2}>
+          <LinearGradient colors={orb2Colors} style={{ flex: 1, borderRadius: 150 }} />
+        </View>
+      </View>
 
       <LoginSuccessAnimation
         visible={showSuccessAnimation}
         userName={loggedInUser?.name || 'User'}
         onAnimationComplete={handleAnimationComplete}
       />
-
-      {/* Soft blobs */}
-      <View style={styles.blobTop} />
-      <View style={styles.blobBottom} />
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
         <ScrollView
@@ -190,8 +211,8 @@ const LoginScreen = ({ navigation }) => {
           keyboardShouldPersistTaps="handled"
         >
           {/* Back */}
-          <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-            <Text style={styles.backIcon}>←</Text>
+          <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]} onPress={() => navigation.goBack()}>
+            <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
           </TouchableOpacity>
 
           {/* Error toast */}
@@ -199,31 +220,33 @@ const LoginScreen = ({ navigation }) => {
 
           {/* Header */}
           <View style={styles.header}>
-            <LinearGradient colors={['#22C55E', '#16A34A']} style={styles.logoGradient}>
+            <LinearGradient colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.logoGradient}>
               <Text style={styles.logoPlus}>+</Text>
             </LinearGradient>
-            <Text style={styles.welcomeTitle}>Welcome back 👋</Text>
-            <Text style={styles.welcomeSub}>Sign in to your HealthSync account</Text>
+            <Text style={[styles.welcomeTitle, { color: colors.textPrimary }]}>Welcome back 👋</Text>
+            <Text style={[styles.welcomeSub, { color: colors.textSecondary }]}>Sign in to your HealthSync account</Text>
           </View>
 
           {/* Form */}
           <View style={styles.form}>
-            <Text style={styles.fieldLabel}>Email address</Text>
+            <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Email address</Text>
             <FancyInput
               icon="✉️"
               placeholder="you@example.com"
               value={email}
               onChangeText={(t) => { setEmail(t); clearError(); }}
               keyboardType="email-address"
+              colors={colors}
             />
 
-            <Text style={[styles.fieldLabel, { marginTop: spacing.lg }]}>Password</Text>
+            <Text style={[styles.fieldLabel, { marginTop: spacing.lg, color: colors.textPrimary }]}>Password</Text>
             <FancyInput
               icon="🔒"
               placeholder="Enter your password"
               value={password}
               onChangeText={(t) => { setPassword(t); clearError(); }}
               secureTextEntry={!showPass}
+              colors={colors}
               rightElement={
                 <TouchableOpacity onPress={() => setShowPass(p => !p)} style={styles.eyeBtn}>
                   <Text style={styles.eyeIcon}>{showPass ? '🙈' : '👁️'}</Text>
@@ -232,7 +255,7 @@ const LoginScreen = ({ navigation }) => {
             />
 
             <TouchableOpacity style={styles.forgotRow} onPress={() => navigation.navigate('ForgotPassword')}>
-              <Text style={styles.forgotText}>Forgot password?</Text>
+              <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot password?</Text>
             </TouchableOpacity>
 
             {/* Sign In button */}
@@ -242,7 +265,7 @@ const LoginScreen = ({ navigation }) => {
               disabled={loading}
               activeOpacity={0.85}
             >
-              <LinearGradient colors={loading ? ['#86EFAC', '#86EFAC'] : ['#22C55E', '#16A34A']} style={styles.signInGradient}>
+              <LinearGradient colors={loading ? [colors.primaryLight, colors.primaryLight] : (colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894'])} style={styles.signInGradient}>
                 {loading
                   ? <ActivityIndicator color="#fff" />
                   : <Text style={styles.signInText}>Sign In →</Text>
@@ -252,29 +275,29 @@ const LoginScreen = ({ navigation }) => {
 
             {/* Biometric */}
             {biometricAvailable && hasStoredCredentials ? (
-              <TouchableOpacity style={styles.biometricBtn} onPress={handleBiometricLogin}>
+              <TouchableOpacity style={[styles.biometricBtn, { borderColor: colors.primaryLight, backgroundColor: colors.surface }]} onPress={handleBiometricLogin}>
                 <Text style={styles.biometricIcon}>{biometricType === 'Face ID' ? '👤' : '👆'}</Text>
-                <Text style={styles.biometricText}>Sign in with {biometricType}</Text>
+                <Text style={[styles.biometricText, { color: colors.primary }]}>Sign in with {biometricType}</Text>
               </TouchableOpacity>
             ) : null}
 
             {/* Divider */}
             <View style={styles.divider}>
-              <View style={styles.dividerLine} />
-              <Text style={styles.dividerText}>or continue with</Text>
-              <View style={styles.dividerLine} />
+              <View style={[styles.dividerLine, { backgroundColor: colors.surfaceBorder }]} />
+              <Text style={[styles.dividerText, { color: colors.textMuted }]}>or continue with</Text>
+              <View style={[styles.dividerLine, { backgroundColor: colors.surfaceBorder }]} />
             </View>
 
             {/* Social buttons */}
             <View style={styles.socialRow}>
               {[
-                { id: 'google',   label: 'G',  color: '#EA4335', bg: '#FEF2F2' },
-                { id: 'facebook', label: 'f',  color: '#1877F2', bg: '#EFF6FF' },
-                { id: 'apple',    label: '🍎', color: '#000',    bg: '#F9FAFB' },
+                { id: 'google',   label: 'G',  color: '#EA4335', bg: isDarkMode ? 'rgba(234, 67, 53, 0.1)' : '#FEF2F2' },
+                { id: 'facebook', label: 'f',  color: '#1877F2', bg: isDarkMode ? 'rgba(24, 119, 242, 0.1)' : '#EFF6FF' },
+                { id: 'apple',    label: '🍎', color: colors.textPrimary, bg: colors.surface },
               ].map(s => (
                 <TouchableOpacity
                   key={s.id}
-                  style={[styles.socialBtn, { backgroundColor: s.bg }]}
+                  style={[styles.socialBtn, { backgroundColor: s.bg, borderColor: colors.surfaceBorder }]}
                   onPress={() => handleSocial(s.id)}
                   disabled={socialLoading !== null}
                   activeOpacity={0.8}
@@ -289,8 +312,8 @@ const LoginScreen = ({ navigation }) => {
           </View>
 
           {/* Why HealthSync */}
-          <View style={styles.whyCard}>
-            <Text style={styles.whyTitle}>Why HealthSync?</Text>
+          <View style={[styles.whyCard, { backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder }]}>
+            <Text style={[styles.whyTitle, { color: colors.textPrimary }]}>Why HealthSync?</Text>
             <View style={styles.whyRow}>
               {[
                 { icon: '📅', text: 'Book doctors instantly' },
@@ -299,7 +322,7 @@ const LoginScreen = ({ navigation }) => {
               ].map(w => (
                 <View key={w.text} style={styles.whyItem}>
                   <Text style={styles.whyIcon}>{w.icon}</Text>
-                  <Text style={styles.whyText}>{w.text}</Text>
+                  <Text style={[styles.whyText, { color: colors.textSecondary }]}>{w.text}</Text>
                 </View>
               ))}
             </View>
@@ -307,9 +330,9 @@ const LoginScreen = ({ navigation }) => {
 
           {/* Sign up link */}
           <View style={styles.signUpRow}>
-            <Text style={styles.signUpText}>Don't have an account? </Text>
+            <Text style={[styles.signUpText, { color: colors.textSecondary }]}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>
-              <Text style={styles.signUpLink}>Sign Up</Text>
+              <Text style={[styles.signUpLink, { color: colors.primary }]}>Sign Up</Text>
             </TouchableOpacity>
           </View>
 
@@ -320,28 +343,19 @@ const LoginScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: '#F0FDF4' },
-
-  blobTop: {
-    position: 'absolute', top: -60, right: -60,
-    width: 220, height: 220, borderRadius: 110,
-    backgroundColor: 'rgba(34,197,94,0.1)',
-  },
-  blobBottom: {
-    position: 'absolute', bottom: -40, left: -60,
-    width: 200, height: 200, borderRadius: 100,
-    backgroundColor: 'rgba(22,163,74,0.07)',
-  },
-
-  scroll: { paddingHorizontal: spacing.xxl, paddingBottom: 40, paddingTop: spacing.xl },
+  container: { flex: 1 },
+  backgroundContainer: { ...StyleSheet.absoluteFillObject, overflow: 'hidden', zIndex: -1 },
+  orb1: { position: 'absolute', width: 300, height: 300, borderRadius: 150, top: -50, right: -100 },
+  orb2: { position: 'absolute', width: 300, height: 300, borderRadius: 150, bottom: -50, left: -100 },
+  scroll: { paddingHorizontal: spacing.xxl, paddingBottom: 40, paddingTop: spacing.huge },
 
   backBtn: {
-    width: 40, height: 40, borderRadius: 20,
-    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
-    marginBottom: spacing.md,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.07, shadowRadius: 6, elevation: 2,
+    width: 44, height: 44, borderRadius: borderRadius.lg,
+    alignItems: 'center', justifyContent: 'center',
+    marginBottom: spacing.md, borderWidth: 1,
+    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
-  backIcon: { fontSize: 20, color: '#374151' },
+  backIcon: { fontSize: 20 },
 
   errorToast: {
     flexDirection: 'row', alignItems: 'center',
@@ -358,74 +372,72 @@ const styles = StyleSheet.create({
     width: 64, height: 64, borderRadius: 20,
     alignItems: 'center', justifyContent: 'center',
     marginBottom: spacing.lg,
-    shadowColor: '#16A34A', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 8,
+    shadowColor: '#16A34A', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.2, shadowRadius: 12, elevation: 8,
   },
   logoPlus: { fontSize: 36, fontWeight: '700', color: '#fff' },
-  welcomeTitle: { fontSize: 26, fontWeight: '800', color: '#14532D', marginBottom: 6 },
-  welcomeSub: { fontSize: 15, color: '#6B7280' },
+  welcomeTitle: { fontSize: 26, fontWeight: '800', marginBottom: 6, letterSpacing: -0.5 },
+  welcomeSub: { fontSize: 15 },
 
   form: { marginBottom: spacing.xl },
-  fieldLabel: { fontSize: 13, fontWeight: '600', color: '#374151', marginBottom: spacing.sm },
+  fieldLabel: { fontSize: 13, fontWeight: '600', marginBottom: spacing.sm },
 
   inputWrap: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#fff', borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.lg,
     borderWidth: 1.5, paddingHorizontal: spacing.md,
     height: 52,
   },
   inputIcon: { fontSize: 18, marginRight: spacing.sm },
-  inputField: { flex: 1, fontSize: 15, color: '#111827', height: '100%' },
+  inputField: { flex: 1, fontSize: 15, height: '100%' },
   eyeBtn: { padding: spacing.xs },
   eyeIcon: { fontSize: 18 },
 
   forgotRow: { alignSelf: 'flex-end', marginTop: spacing.sm, marginBottom: spacing.xl },
-  forgotText: { fontSize: 13, color: '#22C55E', fontWeight: '600' },
+  forgotText: { fontSize: 13, fontWeight: '600' },
 
   signInBtn: {
     borderRadius: borderRadius.lg, overflow: 'hidden',
-    shadowColor: '#16A34A', shadowOffset: { width: 0, height: 6 }, shadowOpacity: 0.3, shadowRadius: 12, elevation: 6,
   },
-  signInBtnDisabled: { shadowOpacity: 0 },
+  signInBtnDisabled: { opacity: 0.7 },
   signInGradient: { paddingVertical: 16, alignItems: 'center' },
   signInText: { fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.3 },
 
   biometricBtn: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
     marginTop: spacing.md, paddingVertical: spacing.md,
-    borderRadius: borderRadius.lg, borderWidth: 1.5, borderColor: '#D1FAE5',
-    backgroundColor: '#F0FDF4',
+    borderRadius: borderRadius.lg, borderWidth: 1.5,
   },
   biometricIcon: { fontSize: 20, marginRight: spacing.sm },
-  biometricText: { fontSize: 15, color: '#16A34A', fontWeight: '500' },
+  biometricText: { fontSize: 15, fontWeight: '500' },
 
   divider: { flexDirection: 'row', alignItems: 'center', marginVertical: spacing.xl },
-  dividerLine: { flex: 1, height: 1, backgroundColor: '#E5E7EB' },
-  dividerText: { fontSize: 13, color: '#9CA3AF', marginHorizontal: spacing.md },
+  dividerLine: { flex: 1, height: 1 },
+  dividerText: { fontSize: 13, marginHorizontal: spacing.md },
 
   socialRow: { flexDirection: 'row', justifyContent: 'center', gap: spacing.lg },
   socialBtn: {
     width: 56, height: 56, borderRadius: borderRadius.lg,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1, borderColor: '#E5E7EB',
+    borderWidth: 1,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   socialBtnText: { fontSize: 20, fontWeight: '700' },
 
   whyCard: {
-    backgroundColor: '#fff', borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.xl,
     padding: spacing.lg, marginBottom: spacing.xl,
-    borderWidth: 1, borderColor: '#D1FAE5',
+    borderWidth: 1,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
   },
-  whyTitle: { fontSize: 14, fontWeight: '700', color: '#14532D', marginBottom: spacing.md },
+  whyTitle: { fontSize: 14, fontWeight: '700', marginBottom: spacing.md },
   whyRow: { flexDirection: 'row', justifyContent: 'space-between' },
   whyItem: { flex: 1, alignItems: 'center' },
   whyIcon: { fontSize: 22, marginBottom: 4 },
-  whyText: { fontSize: 11, color: '#6B7280', textAlign: 'center', fontWeight: '500' },
+  whyText: { fontSize: 11, textAlign: 'center', fontWeight: '500' },
 
   signUpRow: { flexDirection: 'row', justifyContent: 'center' },
-  signUpText: { fontSize: 14, color: '#6B7280' },
-  signUpLink: { fontSize: 14, color: '#22C55E', fontWeight: '700' },
+  signUpText: { fontSize: 14 },
+  signUpLink: { fontSize: 14, fontWeight: '700' },
 });
 
 export default LoginScreen;

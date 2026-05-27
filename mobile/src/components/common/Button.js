@@ -13,7 +13,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { lightTheme } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { shadows } from '../../theme/shadows';
 
 const Button = ({
@@ -31,20 +31,36 @@ const Button = ({
   textStyle,
   ...props
 }) => {
+  const { colors } = useTheme();
+
   const buttonStyles = [
     styles.base,
-    styles[variant],
     styles[size],
     fullWidth && styles.fullWidth,
     disabled && styles.disabled,
+    
+    // Dynamic styling
+    variant === 'primary' && !gradient && { backgroundColor: colors.primary, ...shadows.sm },
+    variant === 'secondary' && { backgroundColor: colors.secondary, ...shadows.sm },
+    variant === 'outline' && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary },
+    variant === 'ghost' && { backgroundColor: 'transparent' },
+    variant === 'danger' && { backgroundColor: colors.error, ...shadows.sm },
+    
     style,
   ];
 
   const textStyles = [
     styles.text,
-    styles[`text_${variant}`],
     styles[`text_${size}`],
     disabled && styles.textDisabled,
+    
+    // Dynamic text colors
+    variant === 'primary' && { color: colors.textInverse || '#fff' },
+    variant === 'secondary' && { color: '#fff' },
+    variant === 'outline' && { color: colors.primary },
+    variant === 'ghost' && { color: colors.primary },
+    variant === 'danger' && { color: '#fff' },
+    
     textStyle,
   ];
 
@@ -53,7 +69,7 @@ const Button = ({
       {loading ? (
         <ActivityIndicator
           size="small"
-          color={variant === 'outline' || variant === 'ghost' ? lightTheme.primary : '#fff'}
+          color={variant === 'outline' || variant === 'ghost' ? colors.primary : '#fff'}
         />
       ) : (
         <>
@@ -75,7 +91,7 @@ const Button = ({
         {...props}
       >
         <LinearGradient
-          colors={['#0066FF', '#1976D2']}
+          colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.gradient}
@@ -105,28 +121,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     flexDirection: 'row',
-  },
-
-  // Variants
-  primary: {
-    backgroundColor: lightTheme.primary,
-    ...shadows.sm,
-  },
-  secondary: {
-    backgroundColor: lightTheme.secondary,
-    ...shadows.sm,
-  },
-  outline: {
-    backgroundColor: 'transparent',
-    borderWidth: 1.5,
-    borderColor: lightTheme.primary,
-  },
-  ghost: {
-    backgroundColor: 'transparent',
-  },
-  danger: {
-    backgroundColor: lightTheme.error,
-    ...shadows.sm,
   },
 
   // Sizes
@@ -159,21 +153,6 @@ const styles = StyleSheet.create({
   text: {
     ...typography.button,
     textAlign: 'center',
-  },
-  text_primary: {
-    color: '#fff',
-  },
-  text_secondary: {
-    color: '#fff',
-  },
-  text_outline: {
-    color: lightTheme.primary,
-  },
-  text_ghost: {
-    color: lightTheme.primary,
-  },
-  text_danger: {
-    color: '#fff',
   },
   text_small: {
     ...typography.buttonSmall,
@@ -212,3 +191,4 @@ const styles = StyleSheet.create({
 });
 
 export default Button;
+

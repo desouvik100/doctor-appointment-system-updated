@@ -14,13 +14,14 @@ import {
   Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import authService from '../../services/api/authService';
 
 const ForgotPasswordScreen = ({ navigation }) => {
+  const { colors, isDarkMode } = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -52,7 +53,6 @@ const ForgotPasswordScreen = ({ navigation }) => {
       navigation.navigate('VerifyOTP', { email: email.trim().toLowerCase() });
     } catch (err) {
       console.error('❌ Password reset error:', err);
-      console.error('Error response:', err.response?.data);
       const message = err.response?.data?.message || err.message || 'Failed to send reset link. Please try again.';
       Alert.alert('Error', message);
     } finally {
@@ -72,48 +72,59 @@ const ForgotPasswordScreen = ({ navigation }) => {
     }
   };
 
+  const bgColors = isDarkMode
+    ? ['#0A0E17', '#121826', '#1A1F2E']
+    : ['#F8FAFC', '#F1F5F9', '#E2E8F0'];
+  const orb1Colors = isDarkMode
+    ? ['rgba(0, 212, 170, 0.12)', 'transparent']
+    : ['rgba(0, 212, 170, 0.06)', 'transparent'];
+  const orb2Colors = isDarkMode
+    ? ['rgba(108, 92, 231, 0.1)', 'transparent']
+    : ['rgba(108, 92, 231, 0.05)', 'transparent'];
+
   if (sent) {
     return (
-      <View style={styles.container}>
-        <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <View style={[styles.container, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
         
+        {/* Ambient background mesh */}
         <View style={styles.orbContainer}>
-          <LinearGradient
-            colors={['rgba(0, 212, 170, 0.3)', 'transparent']}
-            style={[styles.orb, styles.orb1]}
-          />
+          <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
+          <View style={styles.orb1}>
+            <LinearGradient colors={orb1Colors} style={{ flex: 1, borderRadius: 150 }} />
+          </View>
         </View>
 
         <View style={styles.content}>
           <TouchableOpacity 
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backIcon}>←</Text>
+            <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
           </TouchableOpacity>
 
           <View style={styles.successContainer}>
             <View style={styles.successIcon}>
               <LinearGradient
-                colors={colors.gradientPrimary}
+                colors={colors.gradientPrimary || colors.primaryGradient || ['#00D4AA', '#00B894']}
                 style={styles.iconGradient}
               >
                 <Text style={styles.icon}>✉️</Text>
               </LinearGradient>
             </View>
             
-            <Text style={styles.successTitle}>Check your email</Text>
-            <Text style={styles.successText}>
+            <Text style={[styles.successTitle, { color: colors.textPrimary }]}>Check your email</Text>
+            <Text style={[styles.successText, { color: colors.textSecondary }]}>
               We've sent a password reset link to{'\n'}
-              <Text style={styles.emailText}>{email}</Text>
+              <Text style={[styles.emailText, { color: colors.primary }]}>{email}</Text>
             </Text>
 
-            <View style={styles.instructionsContainer}>
-              <Text style={styles.instructionsTitle}>What to do next:</Text>
-              <Text style={styles.instruction}>1. Open your email app</Text>
-              <Text style={styles.instruction}>2. Look for email from HealthSync</Text>
-              <Text style={styles.instruction}>3. Click the reset link</Text>
-              <Text style={styles.instruction}>4. Create a new password</Text>
+            <View style={[styles.instructionsContainer, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+              <Text style={[styles.instructionsTitle, { color: colors.textPrimary }]}>What to do next:</Text>
+              <Text style={[styles.instruction, { color: colors.textSecondary }]}>1. Open your email app</Text>
+              <Text style={[styles.instruction, { color: colors.textSecondary }]}>2. Look for email from HealthSync</Text>
+              <Text style={[styles.instruction, { color: colors.textSecondary }]}>3. Click the reset link</Text>
+              <Text style={[styles.instruction, { color: colors.textSecondary }]}>4. Create a new password</Text>
             </View>
 
             <Button
@@ -128,7 +139,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
               onPress={handleResend}
               disabled={loading}
             >
-              <Text style={styles.resendText}>
+              <Text style={[styles.resendText, { color: colors.primary }]}>
                 {loading ? 'Sending...' : "Didn't receive email? Resend"}
               </Text>
             </TouchableOpacity>
@@ -137,7 +148,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
               style={styles.backToLogin}
               onPress={() => navigation.navigate('Login')}
             >
-              <Text style={styles.backToLoginText}>← Back to Sign In</Text>
+              <Text style={[styles.backToLoginText, { color: colors.primary }]}>← Back to Sign In</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -146,14 +157,15 @@ const ForgotPasswordScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
       
+      {/* Ambient background mesh */}
       <View style={styles.orbContainer}>
-        <LinearGradient
-          colors={['rgba(0, 212, 170, 0.3)', 'transparent']}
-          style={[styles.orb, styles.orb1]}
-        />
+        <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
+        <View style={styles.orb1}>
+          <LinearGradient colors={orb1Colors} style={{ flex: 1, borderRadius: 150 }} />
+        </View>
       </View>
 
       <KeyboardAvoidingView
@@ -162,24 +174,24 @@ const ForgotPasswordScreen = ({ navigation }) => {
       >
         <View style={styles.content}>
           <TouchableOpacity 
-            style={styles.backButton}
+            style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
             onPress={() => navigation.goBack()}
           >
-            <Text style={styles.backIcon}>←</Text>
+            <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
           </TouchableOpacity>
 
           <View style={styles.header}>
             <View style={styles.iconContainer}>
               <LinearGradient
-                colors={colors.gradientPrimary}
+                colors={colors.gradientPrimary || colors.primaryGradient || ['#00D4AA', '#00B894']}
                 style={styles.iconGradient}
               >
                 <Text style={styles.icon}>🔐</Text>
               </LinearGradient>
             </View>
             
-            <Text style={styles.title}>Forgot Password?</Text>
-            <Text style={styles.subtitle}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>Forgot Password?</Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               No worries! Enter your email and we'll send you a reset link.
             </Text>
           </View>
@@ -212,7 +224,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
             style={styles.backToLogin}
             onPress={() => navigation.navigate('Login')}
           >
-            <Text style={styles.backToLoginText}>← Back to Sign In</Text>
+            <Text style={[styles.backToLoginText, { color: colors.primary }]}>← Back to Sign In</Text>
           </TouchableOpacity>
         </View>
       </KeyboardAvoidingView>
@@ -223,20 +235,18 @@ const ForgotPasswordScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   orbContainer: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
-  },
-  orb: {
-    position: 'absolute',
-    borderRadius: 999,
+    zIndex: -1,
   },
   orb1: {
+    position: 'absolute',
     width: 300,
     height: 300,
-    top: -100,
+    borderRadius: 150,
+    top: -50,
     right: -100,
   },
   keyboardView: {
@@ -248,17 +258,21 @@ const styles = StyleSheet.create({
     paddingTop: spacing.huge,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xl,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   backIcon: {
     fontSize: 20,
-    color: colors.textPrimary,
   },
   header: {
     alignItems: 'center',
@@ -270,7 +284,7 @@ const styles = StyleSheet.create({
   iconGradient: {
     width: 80,
     height: 80,
-    borderRadius: borderRadius.xl,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -279,12 +293,10 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.headlineLarge,
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
     ...typography.bodyLarge,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
   },
@@ -297,7 +309,6 @@ const styles = StyleSheet.create({
   },
   backToLoginText: {
     ...typography.bodyMedium,
-    color: colors.primary,
     fontWeight: '500',
   },
   // Success state styles
@@ -311,35 +322,30 @@ const styles = StyleSheet.create({
   },
   successTitle: {
     ...typography.headlineLarge,
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   successText: {
     ...typography.bodyLarge,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: spacing.xxl,
   },
   emailText: {
-    color: colors.primary,
     fontWeight: '600',
   },
   instructionsContainer: {
     width: '100%',
-    backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.xxl,
+    borderWidth: 1,
   },
   instructionsTitle: {
     ...typography.labelLarge,
-    color: colors.textPrimary,
     marginBottom: spacing.md,
   },
   instruction: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
     marginBottom: spacing.sm,
   },
   resendButton: {
@@ -347,7 +353,6 @@ const styles = StyleSheet.create({
   },
   resendText: {
     ...typography.bodyMedium,
-    color: colors.primary,
   },
 });
 

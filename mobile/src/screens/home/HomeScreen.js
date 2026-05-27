@@ -5,7 +5,7 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
-  StatusBar, RefreshControl,
+  StatusBar, RefreshControl, Dimensions,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -126,17 +126,28 @@ const HomeScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
+      {/* Ambient background mesh */}
+      <View style={styles.backgroundContainer}>
+        <LinearGradient colors={['#0A0E17', '#121826', '#1A1F2E']} style={StyleSheet.absoluteFill} />
+        <View style={styles.orb1}>
+          <LinearGradient colors={['rgba(0, 212, 170, 0.15)', 'transparent']} style={{ flex: 1, borderRadius: 150 }} />
+        </View>
+        <View style={styles.orb2}>
+          <LinearGradient colors={['rgba(108, 92, 231, 0.12)', 'transparent']} style={{ flex: 1, borderRadius: 150 }} />
+        </View>
+      </View>
+
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh}
-            tintColor="#fff" colors={[colors.primary]} progressBackgroundColor={colors.surface} />
+            tintColor="#fff" colors={[colors.primary]} progressBackgroundColor={colors.backgroundCard} />
         }
       >
         {/* ── Hero Header ── */}
         <LinearGradient
-          colors={['#00897B', '#26A69A', '#80CBC4']}
+          colors={['rgba(26, 31, 46, 0.55)', 'rgba(10, 14, 23, 0.15)']}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={[styles.heroGradient, { paddingTop: insets.top + spacing.lg }]}
         >
@@ -158,7 +169,7 @@ const HomeScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
 
-          {/* Search Bar — inside hero */}
+          {/* Search Bar — inside hero (Glassmorphic) */}
           <TouchableOpacity
             style={styles.searchBar}
             onPress={() => navigation.navigate('Booking')}
@@ -196,8 +207,15 @@ const HomeScreen = ({ navigation }) => {
           />
 
           {/* Find Doctor CTA */}
-          <TouchableOpacity onPress={() => navigation.navigate('Booking')} activeOpacity={0.85}>
-            <LinearGradient colors={['#1565C0', '#1976D2']} style={styles.ctaBanner}>
+          <TouchableOpacity
+                onPress={() => navigation.navigate('Booking')}
+                activeOpacity={0.85}>
+                <LinearGradient
+                  colors={colors?.gradients?.secondary || ['#6C5CE7', '#A29BFE']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 1 }}
+                  style={styles.ctaBanner}
+                >
               <View style={styles.ctaLeft}>
                 <Text style={styles.ctaTitle}>👨‍⚕️ Recommended for you</Text>
                 <Text style={styles.ctaSubtitle}>500+ verified specialists available</Text>
@@ -218,34 +236,59 @@ const HomeScreen = ({ navigation }) => {
   );
 };
 
+const { width: screenWidth } = Dimensions.get('window');
+
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { paddingBottom: 100 },
+
+  // Ambient mesh
+  backgroundContainer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+    zIndex: -1,
+  },
+  orb1: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    top: -50,
+    left: -100,
+  },
+  orb2: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    top: 250,
+    right: -100,
+  },
 
   // Hero
   heroGradient: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl },
   heroRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.xl },
   heroLeft: { flex: 1 },
-  heroGreeting: { color: 'rgba(255,255,255,0.85)', ...typography.bodyLarge, fontWeight: '500' },
+  heroGreeting: { color: 'rgba(255,255,255,0.65)', ...typography.bodyLarge, fontWeight: '500' },
   heroName: { color: '#fff', fontSize: 32, fontWeight: '800', marginTop: 2, letterSpacing: -0.5 },
-  heroSubtitle: { color: 'rgba(255,255,255,0.8)', ...typography.bodyMedium, marginTop: spacing.xs },
-  avatarRing: { borderWidth: 3, borderColor: 'rgba(255,255,255,0.6)', borderRadius: 999, padding: 2 },
+  heroSubtitle: { color: 'rgba(255,255,255,0.5)', ...typography.bodyMedium, marginTop: spacing.xs },
+  avatarRing: { borderWidth: 3, borderColor: 'rgba(0, 212, 170, 0.4)', borderRadius: 999, padding: 2 },
 
   // Search
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#fff',
+    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md + 2,
     marginBottom: spacing.md,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15, shadowRadius: 12, elevation: 6,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
-  searchIcon: { fontSize: 18, marginRight: spacing.md },
-  searchPlaceholder: { flex: 1, ...typography.bodyLarge, color: '#9CA3AF', fontWeight: '500' },
-  filterBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: '#F0FDF4', alignItems: 'center', justifyContent: 'center' },
-  filterIcon: { fontSize: 16 },
+  searchIcon: { fontSize: 18, marginRight: spacing.md, color: 'rgba(255, 255, 255, 0.6)' },
+  searchPlaceholder: { flex: 1, ...typography.bodyLarge, color: 'rgba(255, 255, 255, 0.45)', fontWeight: '500' },
+  filterBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(0, 212, 170, 0.25)', alignItems: 'center', justifyContent: 'center' },
+  filterIcon: { fontSize: 16, color: '#00D4AA' },
 
   // Body
   body: { paddingHorizontal: spacing.xl, paddingTop: spacing.xl },

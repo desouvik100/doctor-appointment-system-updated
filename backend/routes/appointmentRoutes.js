@@ -951,6 +951,12 @@ router.post('/queue-booking', async (req, res) => {
       return res.status(400).json({ message: 'Unable to book appointment. Doctor clinic information is missing.' });
     }
 
+    // Check if clinic exists
+    const clinic = await Clinic.findById(resolvedClinicId);
+    if (!clinic) {
+      return res.status(404).json({ message: 'Clinic not found' });
+    }
+
     // Check if user exists
     const user = await User.findById(userId);
     if (!user) {
@@ -1286,6 +1292,12 @@ router.post('/slot-booking', async (req, res) => {
 
     // Resolve clinic ID
     const resolvedClinicId = clinicId || doctor.clinicId?._id || doctor.clinicId;
+    if (resolvedClinicId) {
+      const clinic = await Clinic.findById(resolvedClinicId);
+      if (!clinic) {
+        throw new Error('VALIDATION_ERROR: Clinic not found');
+      }
+    }
 
     // Calculate payment
     const consultationFee = doctor.consultationFee || 500;
@@ -1440,6 +1452,23 @@ router.post('/walk-in', verifyTokenWithRole(['receptionist', 'doctor', 'admin'])
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
+    // Check if user exists if userId is provided
+    if (userId) {
+      const user = await User.findById(userId);
+      if (!user) {
+        return res.status(404).json({ message: 'User not found' });
+      }
+    }
+
+    // Resolve clinic ID and validate
+    const resolvedClinicId = clinicId || doctor.clinicId;
+    if (resolvedClinicId) {
+      const clinic = await Clinic.findById(resolvedClinicId);
+      if (!clinic) {
+        return res.status(404).json({ message: 'Clinic not found' });
+      }
+    }
+
     // Parse date correctly to avoid timezone issues
     const [year, month, day] = date.split('-').map(Number);
     const appointmentDate = new Date(year, month - 1, day);
@@ -1485,7 +1514,7 @@ router.post('/walk-in', verifyTokenWithRole(['receptionist', 'doctor', 'admin'])
 
     const appointmentData = {
       doctorId,
-      clinicId: clinicId || doctor.clinicId,
+      clinicId: resolvedClinicId,
       date: appointmentDate, // Use properly parsed local date
       time: estimatedTime,
       queueNumber,

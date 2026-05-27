@@ -6,7 +6,7 @@
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 import { borderRadius } from '../../theme/typography';
-import { lightTheme } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 
 const Skeleton = ({
   width = '100%',
@@ -14,6 +14,7 @@ const Skeleton = ({
   variant = 'rect', // rect, circle, text
   style,
 }) => {
+  const { colors } = useTheme();
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
@@ -42,6 +43,7 @@ const Skeleton = ({
 
   const skeletonStyles = [
     styles.base,
+    { backgroundColor: colors.surface || '#E2E8F0' },
     variant === 'circle' && styles.circle,
     variant === 'text' && styles.text,
     { width, height, opacity },
@@ -66,18 +68,21 @@ export const SkeletonText = ({ lines = 3, style }) => (
   </View>
 );
 
-export const SkeletonCard = ({ style }) => (
-  <View style={[styles.card, style]}>
-    <View style={styles.cardHeader}>
-      <Skeleton variant="circle" width={48} height={48} />
-      <View style={styles.cardHeaderText}>
-        <Skeleton width="60%" height={16} style={{ marginBottom: 8 }} />
-        <Skeleton width="40%" height={12} />
+export const SkeletonCard = ({ style }) => {
+  const { colors } = useTheme();
+  return (
+    <View style={[styles.card, { backgroundColor: colors.backgroundCard || '#FFFFFF' }, style]}>
+      <View style={styles.cardHeader}>
+        <Skeleton variant="circle" width={48} height={48} />
+        <View style={styles.cardHeaderText}>
+          <Skeleton width="60%" height={16} style={{ marginBottom: 8 }} />
+          <Skeleton width="40%" height={12} />
+        </View>
       </View>
+      <SkeletonText lines={2} style={{ marginTop: 16 }} />
     </View>
-    <SkeletonText lines={2} style={{ marginTop: 16 }} />
-  </View>
-);
+  );
+};
 
 export const SkeletonList = ({ items = 3, style }) => (
   <View style={style}>
@@ -89,7 +94,6 @@ export const SkeletonList = ({ items = 3, style }) => (
 
 const styles = StyleSheet.create({
   base: {
-    backgroundColor: lightTheme.surface,
     borderRadius: borderRadius.sm,
   },
   circle: {
@@ -99,7 +103,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xs,
   },
   card: {
-    backgroundColor: lightTheme.card,
     borderRadius: borderRadius.lg,
     padding: 16,
   },
@@ -114,3 +117,4 @@ const styles = StyleSheet.create({
 });
 
 export default Skeleton;
+

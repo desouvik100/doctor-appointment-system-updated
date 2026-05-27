@@ -13,7 +13,7 @@ import {
   Animated,
 } from 'react-native';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { lightTheme } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { shadows } from '../../theme/shadows';
 
 const SearchBar = ({
@@ -28,6 +28,7 @@ const SearchBar = ({
   autoFocus = false,
   style,
 }) => {
+  const { colors } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
@@ -57,12 +58,17 @@ const SearchBar = ({
     <Animated.View
       style={[
         styles.container,
-        isFocused && styles.containerFocused,
+        {
+          backgroundColor: colors.backgroundCard || '#fff',
+          borderColor: isFocused ? colors.primary : colors.surfaceBorder,
+          borderWidth: isFocused ? 2 : 0,
+        },
+        isFocused ? shadows.lg : shadows.md,
         { transform: [{ scale: scaleAnim }] },
         style,
       ]}
     >
-      <Text style={styles.searchIcon}>🔍</Text>
+      <Text style={[styles.searchIcon, { color: colors.textMuted }]}>🔍</Text>
       
       <TextInput
         value={value}
@@ -71,21 +77,21 @@ const SearchBar = ({
         onBlur={handleBlur}
         onSubmitEditing={onSubmit}
         placeholder={placeholder}
-        placeholderTextColor={lightTheme.textTertiary}
+        placeholderTextColor={colors.textMuted || '#6B7280'}
         autoFocus={autoFocus}
         returnKeyType="search"
-        style={styles.input}
+        style={[styles.input, { color: colors.textPrimary }]}
       />
       
       {value.length > 0 && (
-        <TouchableOpacity onPress={handleClear} style={styles.clearButton}>
-          <Text style={styles.clearIcon}>✕</Text>
+        <TouchableOpacity onPress={handleClear} style={[styles.clearButton, { backgroundColor: colors.surface }]}>
+          <Text style={[styles.clearIcon, { color: colors.textSecondary }]}>✕</Text>
         </TouchableOpacity>
       )}
       
       {showFilter && (
-        <TouchableOpacity onPress={onFilterPress} style={styles.filterButton}>
-          <Text style={styles.filterIcon}>⚙️</Text>
+        <TouchableOpacity onPress={onFilterPress} style={[styles.filterButton, { backgroundColor: colors.primaryLight }]}>
+          <Text style={[styles.filterIcon, { color: colors.primary }]}>⚙️</Text>
         </TouchableOpacity>
       )}
     </Animated.View>
@@ -96,17 +102,9 @@ const styles = StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: lightTheme.card,
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
-    ...shadows.md,
-  },
-  
-  containerFocused: {
-    ...shadows.lg,
-    borderWidth: 2,
-    borderColor: lightTheme.primary,
   },
   
   searchIcon: {
@@ -117,7 +115,6 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     ...typography.bodyLarge,
-    color: lightTheme.text,
     paddingVertical: 0,
   },
   
@@ -125,7 +122,6 @@ const styles = StyleSheet.create({
     width: 28,
     height: 28,
     borderRadius: 14,
-    backgroundColor: lightTheme.surface,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: spacing.sm,
@@ -133,7 +129,6 @@ const styles = StyleSheet.create({
   
   clearIcon: {
     fontSize: 14,
-    color: lightTheme.textSecondary,
     fontWeight: '600',
   },
   
@@ -141,7 +136,6 @@ const styles = StyleSheet.create({
     width: 36,
     height: 36,
     borderRadius: 18,
-    backgroundColor: lightTheme.primaryLight,
     alignItems: 'center',
     justifyContent: 'center',
     marginLeft: spacing.sm,
@@ -153,3 +147,4 @@ const styles = StyleSheet.create({
 });
 
 export default SearchBar;
+

@@ -367,7 +367,7 @@ const PaymentScreen = ({ navigation, route }) => {
     return (
       <TouchableOpacity
         key={id}
-        style={[styles.methodCard, { backgroundColor: colors.surface, borderColor: active ? '#2E7D32' : colors.divider, borderWidth: active ? 2 : 1 }]}
+        style={[styles.methodCard, { backgroundColor: colors.surface, borderColor: active ? colors.primary : colors.surfaceBorder, borderWidth: active ? 2 : 1 }]}
         onPress={() => setSelectedMethod(id)}
         activeOpacity={0.8}
       >
@@ -379,14 +379,14 @@ const PaymentScreen = ({ navigation, route }) => {
             <View style={styles.methodTitleRow}>
               <Text style={[styles.methodTitle, { color: colors.textPrimary }]}>{title}</Text>
               {id === 'upi' ? (
-                <View style={styles.recommendedBadge}>
-                  <Text style={styles.recommendedText}>Recommended</Text>
+                <View style={[styles.recommendedBadge, { backgroundColor: colors.primary + '1F' }]}>
+                  <Text style={[styles.recommendedText, { color: colors.primary }]}>Recommended</Text>
                 </View>
               ) : null}
             </View>
-            <Text style={[styles.methodSub, { color: active ? '#2E7D32' : colors.textMuted }]}>{subtitle}</Text>
+            <Text style={[styles.methodSub, { color: active ? colors.primary : colors.textMuted }]}>{subtitle}</Text>
           </View>
-          <View style={[styles.checkCircle, { borderColor: active ? '#2E7D32' : colors.divider, backgroundColor: active ? '#2E7D32' : 'transparent' }]}>
+          <View style={[styles.checkCircle, { borderColor: active ? colors.primary : colors.surfaceBorder, backgroundColor: active ? colors.primary : 'transparent' }]}>
             {active ? <Text style={styles.checkMark}>✓</Text> : null}
           </View>
         </View>
@@ -396,11 +396,11 @@ const PaymentScreen = ({ navigation, route }) => {
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: '#F5F7FA' }]}>
-      <StatusBar barStyle="light-content" backgroundColor="#1B5E20" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
 
       {/* Trust Header */}
-      <LinearGradient colors={['#1B5E20', '#2E7D32', '#388E3C']} style={[styles.trustHeader, { paddingTop: insets.top + 8 }]}>
+      <LinearGradient colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']} style={[styles.trustHeader, { paddingTop: insets.top + 8 }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backIconWhite}>←</Text>
         </TouchableOpacity>
@@ -413,18 +413,18 @@ const PaymentScreen = ({ navigation, route }) => {
       </LinearGradient>
 
       {/* Trust Badges */}
-      <View style={styles.trustBadgesRow}>
-        <View style={styles.trustBadge}><Text style={styles.trustBadgeText}>🔐 SSL Secured</Text></View>
+      <View style={[styles.trustBadgesRow, { backgroundColor: colors.success + '15' }]}>
+        <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>🔐 SSL Secured</Text></View>
         <View style={styles.trustDot} />
-        <View style={styles.trustBadge}><Text style={styles.trustBadgeText}>✅ Razorpay</Text></View>
+        <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>✅ Razorpay</Text></View>
         <View style={styles.trustDot} />
-        <View style={styles.trustBadge}><Text style={styles.trustBadgeText}>🏦 RBI Compliant</Text></View>
+        <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>🏦 RBI Compliant</Text></View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
         {/* Amount Hero */}
-        <LinearGradient colors={['#1B5E20', '#2E7D32']} style={styles.amountHero}>
+        <LinearGradient colors={colors.gradientSecondary || ['#6C5CE7', '#5B4ED1']} style={styles.amountHero}>
           <Text style={styles.amountLabel}>Total Payable</Text>
           <Text style={styles.amountValue}>₹{totalAmount.toLocaleString('en-IN')}</Text>
           <Text style={styles.amountSub}>
@@ -443,7 +443,7 @@ const PaymentScreen = ({ navigation, route }) => {
         {renderMethodCard(
           'upi',
           <UpiLogo size={36} />,
-          '#FFF3E0',
+          isDarkMode ? 'rgba(255, 243, 224, 0.1)' : '#FFF3E0',
           'UPI',
           'GPay, PhonePe, Paytm & more',
           selectedMethod === 'upi' ? (
@@ -453,14 +453,14 @@ const PaymentScreen = ({ navigation, route }) => {
                 return (
                   <TouchableOpacity
                     key={app.id}
-                    style={[styles.upiAppCard, { borderColor: active ? '#2E7D32' : colors.divider, backgroundColor: active ? '#E8F5E9' : colors.backgroundCard }]}
+                    style={[styles.upiAppCard, { borderColor: active ? colors.primary : colors.surfaceBorder, backgroundColor: active ? (isDarkMode ? 'rgba(0, 212, 170, 0.1)' : '#E8F5E9') : colors.backgroundCard }]}
                     onPress={() => setSelectedUpiApp(app.id)}
                     activeOpacity={0.8}
                   >
                     <UpiAppIcon appId={app.id} size={40} />
-                    <Text style={[styles.upiAppLabel, { color: active ? '#2E7D32' : colors.textSecondary }]}>{app.label}</Text>
+                    <Text style={[styles.upiAppLabel, { color: active ? colors.primary : colors.textSecondary }]}>{app.label}</Text>
                     {active ? (
-                      <View style={[styles.upiCheck, { backgroundColor: '#2E7D32' }]}>
+                      <View style={[styles.upiCheck, { backgroundColor: colors.primary }]}>
                         <Text style={styles.upiCheckText}>✓</Text>
                       </View>
                     ) : null}
@@ -468,16 +468,16 @@ const PaymentScreen = ({ navigation, route }) => {
                 );
               })}
               <TouchableOpacity
-                style={[styles.upiAppCard, { borderColor: selectedUpiApp === 'other' ? '#2E7D32' : colors.divider, backgroundColor: selectedUpiApp === 'other' ? '#E8F5E9' : colors.backgroundCard }]}
+                style={[styles.upiAppCard, { borderColor: selectedUpiApp === 'other' ? colors.primary : colors.surfaceBorder, backgroundColor: selectedUpiApp === 'other' ? (isDarkMode ? 'rgba(0, 212, 170, 0.1)' : '#E8F5E9') : colors.backgroundCard }]}
                 onPress={() => setSelectedUpiApp('other')}
                 activeOpacity={0.8}
               >
                 <View style={[styles.moreAppsIcon, { backgroundColor: colors.surface }]}>
                   <Text style={styles.moreAppsEmoji}>⋯</Text>
                 </View>
-                <Text style={[styles.upiAppLabel, { color: selectedUpiApp === 'other' ? '#2E7D32' : colors.textSecondary }]}>More</Text>
+                <Text style={[styles.upiAppLabel, { color: selectedUpiApp === 'other' ? colors.primary : colors.textSecondary }]}>More</Text>
                 {selectedUpiApp === 'other' ? (
-                  <View style={[styles.upiCheck, { backgroundColor: '#2E7D32' }]}>
+                  <View style={[styles.upiCheck, { backgroundColor: colors.primary }]}>
                     <Text style={styles.upiCheckText}>✓</Text>
                   </View>
                 ) : null}
@@ -490,7 +490,7 @@ const PaymentScreen = ({ navigation, route }) => {
         {renderMethodCard(
           'card',
           <Text style={styles.methodIconText}>💳</Text>,
-          '#E3F2FD',
+          isDarkMode ? 'rgba(227, 242, 253, 0.1)' : '#E3F2FD',
           'Credit / Debit Card',
           'Visa, Mastercard, RuPay',
           selectedMethod === 'card' ? (
@@ -506,7 +506,7 @@ const PaymentScreen = ({ navigation, route }) => {
         {renderMethodCard(
           'netbanking',
           <Text style={styles.methodIconText}>🏦</Text>,
-          '#FFF3E0',
+          isDarkMode ? 'rgba(255, 243, 224, 0.1)' : '#FFF3E0',
           'Net Banking',
           'All major banks supported',
           null
@@ -516,41 +516,41 @@ const PaymentScreen = ({ navigation, route }) => {
         {renderMethodCard(
           'wallet',
           <Text style={styles.methodIconText}>💰</Text>,
-          '#F3E5F5',
+          isDarkMode ? 'rgba(243, 229, 245, 0.1)' : '#F3E5F5',
           'Health Wallet',
           walletBalance >= totalAmount
             ? `Use ₹${walletBalance.toLocaleString('en-IN')} from wallet`
             : `Use ₹${walletBalance.toLocaleString('en-IN')} · Add ₹${walletShortfall.toLocaleString('en-IN')} more`,
           walletBalance < totalAmount ? (
             <TouchableOpacity
-              style={styles.addMoneyBtn}
+              style={[styles.addMoneyBtn, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}
               onPress={() => navigation.navigate('Wallet')}
               activeOpacity={0.8}
             >
-              <Text style={styles.addMoneyText}>+ Add Money</Text>
+              <Text style={[styles.addMoneyText, { color: colors.primary }]}>+ Add Money</Text>
             </TouchableOpacity>
           ) : null
         )}
 
         {/* Coupon */}
-        <View style={[styles.methodCard, { backgroundColor: colors.surface, borderColor: appliedCoupon ? '#2E7D32' : colors.divider, borderWidth: appliedCoupon ? 2 : 1 }]}>
+        <View style={[styles.methodCard, { backgroundColor: colors.surface, borderColor: appliedCoupon ? colors.primary : colors.surfaceBorder, borderWidth: appliedCoupon ? 2 : 1 }]}>
           <TouchableOpacity style={styles.couponHeader} onPress={() => setShowCoupon(!showCoupon)} activeOpacity={0.7}>
-            <View style={[styles.methodIconBox, { backgroundColor: '#E8F5E9' }]}>
+            <View style={[styles.methodIconBox, { backgroundColor: isDarkMode ? 'rgba(232, 245, 233, 0.1)' : '#E8F5E9' }]}>
               <Text style={styles.methodIconText}>🏷️</Text>
             </View>
             <View style={styles.methodInfo}>
               <Text style={[styles.methodTitle, { color: colors.textPrimary }]}>
                 {appliedCoupon ? `"${appliedCoupon.code}" applied` : 'Apply Coupon'}
               </Text>
-              <Text style={[styles.methodSub, { color: appliedCoupon ? '#2E7D32' : colors.textMuted }]}>
+              <Text style={[styles.methodSub, { color: appliedCoupon ? colors.success : colors.textMuted }]}>
                 {appliedCoupon ? `You save ₹${couponDiscount}` : 'Try HEALTH10 for ₹50 off'}
               </Text>
             </View>
             <Text style={[styles.chevron, { color: colors.textMuted }]}>{showCoupon ? '▲' : '▼'}</Text>
           </TouchableOpacity>
           {showCoupon ? (
-            <View style={[styles.couponBox, { borderTopColor: colors.divider }]}>
-              <View style={[styles.couponRow, { backgroundColor: colors.backgroundCard, borderColor: colors.divider }]}>
+            <View style={[styles.couponBox, { borderTopColor: colors.surfaceBorder }]}>
+              <View style={[styles.couponRow, { backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder }]}>
                 <TextInput
                   style={[styles.couponInput, { color: colors.textPrimary }]}
                   placeholder="Enter coupon code"
@@ -561,7 +561,7 @@ const PaymentScreen = ({ navigation, route }) => {
                   autoCapitalize="characters"
                 />
                 <TouchableOpacity
-                  style={[styles.couponBtn, { backgroundColor: '#2E7D32' }, couponLoading ? { opacity: 0.6 } : null]}
+                  style={[styles.couponBtn, { backgroundColor: colors.primary }, couponLoading ? { opacity: 0.6 } : null]}
                   onPress={appliedCoupon ? removeCoupon : validateCoupon}
                   disabled={couponLoading}
                 >
@@ -589,14 +589,14 @@ const PaymentScreen = ({ navigation, route }) => {
           </View>
           {couponDiscount > 0 ? (
             <View style={styles.breakdownRow}>
-              <Text style={[styles.breakdownLabel, { color: '#2E7D32' }]}>Coupon Discount</Text>
-              <Text style={[styles.breakdownValue, { color: '#2E7D32' }]}>-₹{couponDiscount.toLocaleString('en-IN')}</Text>
+              <Text style={[styles.breakdownLabel, { color: colors.success }]}>Coupon Discount</Text>
+              <Text style={[styles.breakdownValue, { color: colors.success }]}>-₹{couponDiscount.toLocaleString('en-IN')}</Text>
             </View>
           ) : null}
-          <View style={[styles.breakdownDivider, { backgroundColor: colors.divider }]} />
+          <View style={[styles.breakdownDivider, { backgroundColor: colors.surfaceBorder }]} />
           <View style={styles.breakdownRow}>
             <Text style={[styles.breakdownTotal, { color: colors.textPrimary }]}>Total Payable</Text>
-            <Text style={[styles.breakdownTotalValue, { color: '#1B5E20' }]}>₹{totalAmount.toLocaleString('en-IN')}</Text>
+            <Text style={[styles.breakdownTotalValue, { color: colors.primary }]}>₹{totalAmount.toLocaleString('en-IN')}</Text>
           </View>
           <View style={styles.refundNote}>
             <Text style={[styles.refundNoteText, { color: colors.textMuted }]}>
@@ -609,10 +609,10 @@ const PaymentScreen = ({ navigation, route }) => {
       </ScrollView>
 
       {/* Pay Button */}
-      <View style={[styles.bottomBar, { backgroundColor: colors.backgroundCard, borderTopColor: colors.divider, paddingBottom: insets.bottom + 12 }]}>
+      <View style={[styles.bottomBar, { backgroundColor: colors.backgroundCard, borderTopColor: colors.surfaceBorder, paddingBottom: insets.bottom + 12 }]}>
         {loading && selectedMethod === 'upi' ? (
           <View style={styles.upiWaiting}>
-            <ActivityIndicator size="small" color="#2E7D32" />
+            <ActivityIndicator size="small" color={colors.primary} />
             <Text style={[styles.upiWaitingText, { color: colors.textSecondary }]}>
               Waiting for payment confirmation...
             </Text>
@@ -625,7 +625,7 @@ const PaymentScreen = ({ navigation, route }) => {
               disabled={loading}
               activeOpacity={0.9}
             >
-              <LinearGradient colors={['#1B5E20', '#2E7D32', '#388E3C']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.payBtnGradient}>
+              <LinearGradient colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.payBtnGradient}>
                 {loading
                   ? <ActivityIndicator size="small" color="#fff" />
                   : <Text style={styles.payBtnText}>{getPayBtnLabel()}</Text>

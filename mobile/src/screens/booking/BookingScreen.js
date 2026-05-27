@@ -77,7 +77,7 @@ const DoctorCard = React.memo(({ doctor, onPress, colors }) => {
 
   return (
     <TouchableOpacity onPress={() => onPress(doctor)} activeOpacity={0.75}
-      style={[dc.card, { backgroundColor: colors.surface }]}>
+      style={[dc.card, { backgroundColor: 'rgba(26, 31, 46, 0.45)', borderColor: 'rgba(255, 255, 255, 0.08)', borderWidth: 1 }]}>
       {/* Left: Avatar */}
       <Avatar name={name} size="large"
         source={(doctor.profilePhoto || doctor.photo) ? { uri: doctor.profilePhoto || doctor.photo } : null} />
@@ -102,7 +102,7 @@ const DoctorCard = React.memo(({ doctor, onPress, colors }) => {
         <Text style={[dc.feeLabel, { color: colors.textMuted }]}>Consult fee</Text>
         <Text style={[dc.fee, { color: colors.textPrimary }]}>₹{fee}</Text>
         <TouchableOpacity onPress={() => onPress(doctor)} activeOpacity={0.85}>
-          <LinearGradient colors={['#00897B', '#26A69A']} style={dc.bookBtn}>
+          <LinearGradient colors={['#00D4AA', '#00B894']} style={dc.bookBtn}>
             <Text style={dc.bookBtnText}>Book</Text>
           </LinearGradient>
         </TouchableOpacity>
@@ -227,7 +227,7 @@ const BookingScreen = ({ navigation, route }) => {
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       {/* ── Hero Header ── */}
-      <LinearGradient colors={['#00897B', '#26A69A', '#4DB6AC']}
+      <LinearGradient colors={['rgba(26, 31, 46, 0.55)', 'rgba(10, 14, 23, 0.15)']}
         style={[styles.hero, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.heroRow}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -240,13 +240,13 @@ const BookingScreen = ({ navigation, route }) => {
           <View style={{ width: 36 }} />
         </View>
 
-        {/* Search Bar */}
-        <View style={styles.searchBar}>
-          <Text style={styles.searchIcon}>🔍</Text>
+        {/* Search Bar (Translucent glass style) */}
+        <View style={[styles.searchBar, { backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.12)', borderWidth: 1 }]}>
+          <Text style={[styles.searchIcon, { color: 'rgba(255, 255, 255, 0.6)' }]}>🔍</Text>
           <TextInput
-            style={styles.searchInput}
+            style={[styles.searchInput, { color: '#fff' }]}
             placeholder="Search by doctor, speciality, symptoms…"
-            placeholderTextColor="#9CA3AF"
+            placeholderTextColor="rgba(255, 255, 255, 0.45)"
             value={searchQuery}
             onChangeText={handleSearch}
             returnKeyType="search"
@@ -256,8 +256,8 @@ const BookingScreen = ({ navigation, route }) => {
               <Text style={styles.clearIcon}>✕</Text>
             </TouchableOpacity>
           ) : (
-            <View style={styles.filterIconBtn}>
-              <Text style={styles.filterIconText}>⚙️</Text>
+            <View style={[styles.filterIconBtn, { backgroundColor: 'rgba(0, 212, 170, 0.25)' }]}>
+              <Text style={[styles.filterIconText, { color: '#00D4AA' }]}>⚙️</Text>
             </View>
           )}
         </View>
@@ -277,12 +277,12 @@ const BookingScreen = ({ navigation, route }) => {
               return (
                 <TouchableOpacity key={dept.id} onPress={() => handleDeptSelect(dept)} activeOpacity={0.8}>
                   {active ? (
-                    <LinearGradient colors={['#00897B', '#26A69A']} style={styles.pillActive}>
+                    <LinearGradient colors={['#00D4AA', '#00B894']} style={styles.pillActive}>
                       <Text style={styles.pillIconActive}>{getDeptIcon(dept.name)}</Text>
                       <Text style={styles.pillTextActive}>{dept.name}</Text>
                     </LinearGradient>
                   ) : (
-                    <View style={[styles.pill, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+                    <View style={[styles.pill, { backgroundColor: 'rgba(26, 31, 46, 0.45)', borderColor: 'rgba(255, 255, 255, 0.06)' }]}>
                       <Text style={styles.pillIcon}>{getDeptIcon(dept.name)}</Text>
                       <Text style={[styles.pillText, { color: colors.textSecondary }]}>{dept.name}</Text>
                     </View>
@@ -299,10 +299,10 @@ const BookingScreen = ({ navigation, route }) => {
             <TouchableOpacity key={f.id} onPress={() => setActiveFilter(activeFilter === f.id ? null : f.id)}
               style={[styles.filterChip,
                 activeFilter === f.id
-                  ? { backgroundColor: '#00897B' }
-                  : { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: 1 }
+                  ? { backgroundColor: '#00D4AA' }
+                  : { backgroundColor: 'rgba(26, 31, 46, 0.45)', borderColor: 'rgba(255, 255, 255, 0.06)', borderWidth: 1 }
               ]}>
-              <Text style={[styles.filterChipText, { color: activeFilter === f.id ? '#fff' : colors.textSecondary }]}>
+              <Text style={[styles.filterChipText, { color: activeFilter === f.id ? '#0A0E17' : colors.textSecondary }]}>
                 {f.label}
               </Text>
             </TouchableOpacity>
@@ -361,15 +361,13 @@ const styles = StyleSheet.create({
   // Search
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: '#fff', borderRadius: borderRadius.full,
+    borderRadius: borderRadius.full,
     paddingHorizontal: spacing.lg, paddingVertical: spacing.sm + 2,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15, shadowRadius: 12, elevation: 6,
   },
   searchIcon: { fontSize: 16, marginRight: spacing.sm },
-  searchInput: { flex: 1, ...typography.bodyMedium, color: '#111827', paddingVertical: 4 },
+  searchInput: { flex: 1, ...typography.bodyMedium, paddingVertical: 4 },
   clearIcon: { fontSize: 14, color: '#9CA3AF', padding: spacing.xs },
-  filterIconBtn: { width: 32, height: 32, borderRadius: 16, backgroundColor: '#F0FDF4', alignItems: 'center', justifyContent: 'center' },
+  filterIconBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
   filterIconText: { fontSize: 14 },
 
   scroll: { paddingTop: spacing.lg },
@@ -383,7 +381,7 @@ const styles = StyleSheet.create({
   pillIcon: { fontSize: 14, marginRight: 5 },
   pillIconActive: { fontSize: 14, marginRight: 5 },
   pillText: { ...typography.labelSmall, fontWeight: '600' },
-  pillTextActive: { ...typography.labelSmall, fontWeight: '700', color: '#fff' },
+  pillTextActive: { ...typography.labelSmall, fontWeight: '700', color: '#0A0E17' },
 
   // Quick filters
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.xl, gap: spacing.sm, marginBottom: spacing.lg },

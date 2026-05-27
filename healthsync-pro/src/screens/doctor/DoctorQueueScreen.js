@@ -17,12 +17,14 @@ import {
   TextInput,
   KeyboardAvoidingView,
   Platform,
+  Animated,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
+import { shadows } from '../../theme/colors';
 import apiClient from '../../services/api/apiClient';
 
 const DoctorQueueScreen = ({ navigation }) => {
@@ -36,6 +38,22 @@ const DoctorQueueScreen = ({ navigation }) => {
   const [queueFilter, setQueueFilter] = useState('all');
   const timerRef = useRef(null);
   
+  // Pulse animation for active consultation indicator
+  const pulseOpacity = useRef(new Animated.Value(0.4)).current;
+
+  useEffect(() => {
+    if (currentPatient) {
+      Animated.loop(
+        Animated.sequence([
+          Animated.timing(pulseOpacity, { toValue: 1, duration: 800, useNativeDriver: true }),
+          Animated.timing(pulseOpacity, { toValue: 0.4, duration: 800, useNativeDriver: true }),
+        ])
+      ).start();
+    } else {
+      pulseOpacity.setValue(0.4);
+    }
+  }, [currentPatient]);
+
   // Walk-in modal state
   const [showWalkInModal, setShowWalkInModal] = useState(false);
   const [walkInLoading, setWalkInLoading] = useState(false);
@@ -324,7 +342,7 @@ const DoctorQueueScreen = ({ navigation }) => {
         {/* Current Patient */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Current Patient</Text>
-          <Card style={[styles.currentPatientCard, { backgroundColor: colors.surface }]}>
+          <Card variant="glass" style={[styles.currentPatientCard, shadows.depth3d]}>
             {currentPatient ? (
               <>
                 <View style={styles.currentPatientHeader}>
@@ -348,10 +366,10 @@ const DoctorQueueScreen = ({ navigation }) => {
                     </View>
                   </View>
                 </View>
-
+ 
                 {/* Consultation Timer */}
                 <View style={styles.timerContainer}>
-                  <Text style={styles.timerIcon}>⏱️</Text>
+                  <Animated.View style={[styles.pulseIndicator, { opacity: pulseOpacity }]} />
                   <Text style={[styles.timerText, { color: colors.textPrimary }]}>{formatTime(consultationTime)}</Text>
                   <Text style={[styles.timerLabel, { color: colors.textSecondary }]}>elapsed</Text>
                 </View>
@@ -455,7 +473,16 @@ const DoctorQueueScreen = ({ navigation }) => {
             filteredQueue.map((patient, index) => {
               const estimatedWait = index * 20;
               return (
-                <Card key={patient._id} style={[styles.queueItem, { backgroundColor: colors.surface }, index === 0 && styles.nextUpItem]}>
+                <React.Fragment key={patient._id}>
+                  {index > 0 && (
+                    <LinearGradient
+                      colors={['transparent', 'rgba(108, 92, 231, 0.3)', 'transparent']}
+                      start={{ x: 0, y: 0 }}
+                      end={{ x: 1, y: 0 }}
+                      style={styles.queueDivider}
+                    />
+                  )}
+                  <Card style={[styles.queueItem, { backgroundColor: colors.surface }, index === 0 && styles.nextUpItem]}>
                   <View style={styles.queuePosition}>
                     <Text style={styles.queuePositionText}>{index + 1}</Text>
                   </View>
@@ -506,6 +533,7 @@ const DoctorQueueScreen = ({ navigation }) => {
                     </TouchableOpacity>
                   </View>
                 </Card>
+              </React.Fragment>
               );
             })
           )}
@@ -707,6 +735,13 @@ const styles = StyleSheet.create({
   typeBadgeText: { ...typography.labelSmall, fontWeight: '600' },
 
   timerContainer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.md, marginBottom: spacing.md, backgroundColor: 'rgba(108, 92, 231, 0.1)', borderRadius: borderRadius.md },
+  pulseIndicator: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    backgroundColor: '#EF4444',
+    marginRight: 10,
+  },
   timerIcon: { fontSize: 20, marginRight: spacing.sm },
   timerText: { ...typography.headlineLarge, fontWeight: '700' },
   timerLabel: { ...typography.labelSmall, marginLeft: spacing.sm },
@@ -792,6 +827,12 @@ const styles = StyleSheet.create({
   cancelBtnText: { ...typography.labelMedium, fontWeight: '600' },
   submitBtn: { flex: 2, paddingVertical: spacing.md, borderRadius: borderRadius.md, alignItems: 'center' },
   submitBtnText: { color: '#fff', ...typography.labelMedium, fontWeight: '700' },
+  queueDivider: {
+    height: 1.5,
+    marginVertical: spacing.sm,
+    width: '90%',
+    alignSelf: 'center',
+  },
 });
 
 export default DoctorQueueScreen;

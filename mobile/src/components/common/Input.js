@@ -12,7 +12,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { lightTheme } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 
 const Input = ({
   label,
@@ -31,20 +31,25 @@ const Input = ({
   inputStyle,
   ...props
 }) => {
+  const { colors } = useTheme();
   const [isFocused, setIsFocused] = useState(false);
   const [isSecure, setIsSecure] = useState(secureTextEntry);
 
   const containerStyles = [
     styles.container,
-    isFocused && styles.containerFocused,
-    error && styles.containerError,
-    disabled && styles.containerDisabled,
+    {
+      backgroundColor: colors.surface || colors.backgroundCard || '#fff',
+      borderColor: colors.surfaceBorder || '#E2E8F0',
+    },
+    isFocused && { borderColor: colors.primary || '#00D4AA', borderWidth: 2 },
+    error && { borderColor: colors.error || '#EF4444' },
+    disabled && { opacity: 0.6 },
     style,
   ];
 
   return (
     <View style={styles.wrapper}>
-      {label && <Text style={styles.label}>{label}</Text>}
+      {label && <Text style={[styles.label, { color: colors.textPrimary }]}>{label}</Text>}
       
       <View style={containerStyles}>
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
@@ -53,7 +58,7 @@ const Input = ({
           value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
-          placeholderTextColor={lightTheme.textTertiary}
+          placeholderTextColor={colors.textMuted || '#94A3B8'}
           secureTextEntry={isSecure}
           editable={!disabled}
           multiline={multiline}
@@ -62,6 +67,7 @@ const Input = ({
           onBlur={() => setIsFocused(false)}
           style={[
             styles.input,
+            { color: colors.textPrimary },
             leftIcon && styles.inputWithLeftIcon,
             rightIcon && styles.inputWithRightIcon,
             multiline && styles.inputMultiline,
@@ -85,7 +91,7 @@ const Input = ({
       </View>
       
       {(error || helperText) && (
-        <Text style={[styles.helperText, error && styles.errorText]}>
+        <Text style={[styles.helperText, { color: colors.textSecondary }, error && { color: colors.error }]}>
           {error || helperText}
         </Text>
       )}
@@ -100,39 +106,21 @@ const styles = StyleSheet.create({
   
   label: {
     ...typography.labelLarge,
-    color: lightTheme.text,
     marginBottom: spacing.sm,
   },
   
   container: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: lightTheme.input,
     borderWidth: 1,
-    borderColor: lightTheme.inputBorder,
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     minHeight: 48,
   },
   
-  containerFocused: {
-    borderColor: lightTheme.inputFocused,
-    borderWidth: 2,
-  },
-  
-  containerError: {
-    borderColor: lightTheme.error,
-  },
-  
-  containerDisabled: {
-    backgroundColor: lightTheme.surface,
-    opacity: 0.6,
-  },
-  
   input: {
     flex: 1,
     ...typography.bodyLarge,
-    color: lightTheme.text,
     paddingVertical: spacing.md,
   },
   
@@ -165,14 +153,10 @@ const styles = StyleSheet.create({
   
   helperText: {
     ...typography.bodySmall,
-    color: lightTheme.textSecondary,
     marginTop: spacing.xs,
     marginLeft: spacing.sm,
-  },
-  
-  errorText: {
-    color: lightTheme.error,
   },
 });
 
 export default Input;
+

@@ -13,7 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import authService from '../../services/api/authService';
@@ -25,6 +25,7 @@ const VerifyOTPScreen = ({ navigation, route }) => {
   const [resending, setResending] = useState(false);
   const [timer, setTimer] = useState(60);
   const inputRefs = useRef([]);
+  const { colors, isDarkMode } = useTheme();
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -78,39 +79,47 @@ const VerifyOTPScreen = ({ navigation, route }) => {
     }
   };
 
+  const bgColors = isDarkMode
+    ? ['#0A0E17', '#121826', '#1A1F2E']
+    : ['#F8FAFC', '#F1F5F9', '#E2E8F0'];
+  const orb1Colors = isDarkMode
+    ? ['rgba(0, 212, 170, 0.12)', 'transparent']
+    : ['rgba(0, 212, 170, 0.06)', 'transparent'];
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
       
+      {/* Ambient background mesh */}
       <View style={styles.orbContainer}>
-        <LinearGradient
-          colors={['rgba(0, 212, 170, 0.3)', 'transparent']}
-          style={[styles.orb, styles.orb1]}
-        />
+        <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
+        <View style={styles.orb1}>
+          <LinearGradient colors={orb1Colors} style={{ flex: 1, borderRadius: 150 }} />
+        </View>
       </View>
 
       <View style={styles.content}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
         </TouchableOpacity>
 
         <View style={styles.header}>
           <View style={styles.iconContainer}>
             <LinearGradient
-              colors={colors.gradientPrimary}
+              colors={colors.gradientPrimary || colors.primaryGradient || ['#00D4AA', '#00B894']}
               style={styles.iconGradient}
             >
               <Text style={styles.icon}>🔢</Text>
             </LinearGradient>
           </View>
           
-          <Text style={styles.title}>Enter OTP</Text>
-          <Text style={styles.subtitle}>
+          <Text style={[styles.title, { color: colors.textPrimary }]}>Enter OTP</Text>
+          <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
             We've sent a 6-digit code to{'\n'}
-            <Text style={styles.emailText}>{email}</Text>
+            <Text style={[styles.emailText, { color: colors.primary }]}>{email}</Text>
           </Text>
         </View>
 
@@ -121,7 +130,14 @@ const VerifyOTPScreen = ({ navigation, route }) => {
               ref={(ref) => (inputRefs.current[index] = ref)}
               style={[
                 styles.otpInput,
-                digit && styles.otpInputFilled,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: digit ? colors.primary : colors.surfaceBorder,
+                  color: colors.textPrimary,
+                },
+                digit && {
+                  backgroundColor: isDarkMode ? 'rgba(0, 212, 170, 0.15)' : colors.primaryLight,
+                }
               ]}
               value={digit}
               onChangeText={(value) => handleOtpChange(value, index)}
@@ -143,12 +159,12 @@ const VerifyOTPScreen = ({ navigation, route }) => {
 
         <View style={styles.resendContainer}>
           {timer > 0 ? (
-            <Text style={styles.timerText}>
+            <Text style={[styles.timerText, { color: colors.textMuted }]}>
               Resend OTP in {timer}s
             </Text>
           ) : (
             <TouchableOpacity onPress={handleResend} disabled={resending}>
-              <Text style={styles.resendText}>
+              <Text style={[styles.resendText, { color: colors.primary }]}>
                 {resending ? 'Sending...' : 'Resend OTP'}
               </Text>
             </TouchableOpacity>
@@ -162,20 +178,18 @@ const VerifyOTPScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
   },
   orbContainer: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
-  },
-  orb: {
-    position: 'absolute',
-    borderRadius: 999,
+    zIndex: -1,
   },
   orb1: {
+    position: 'absolute',
     width: 300,
     height: 300,
-    top: -100,
+    borderRadius: 150,
+    top: -50,
     right: -100,
   },
   content: {
@@ -184,17 +198,21 @@ const styles = StyleSheet.create({
     paddingTop: spacing.huge,
   },
   backButton: {
-    width: 40,
-    height: 40,
-    borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
+    width: 44,
+    height: 44,
+    borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xl,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 2,
   },
   backIcon: {
     fontSize: 20,
-    color: colors.textPrimary,
   },
   header: {
     alignItems: 'center',
@@ -206,7 +224,7 @@ const styles = StyleSheet.create({
   iconGradient: {
     width: 80,
     height: 80,
-    borderRadius: borderRadius.xl,
+    borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -215,17 +233,14 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.headlineLarge,
-    color: colors.textPrimary,
     marginBottom: spacing.sm,
   },
   subtitle: {
     ...typography.bodyLarge,
-    color: colors.textSecondary,
     textAlign: 'center',
     lineHeight: 24,
   },
   emailText: {
-    color: colors.primary,
     fontWeight: '600',
   },
   otpContainer: {
@@ -238,15 +253,9 @@ const styles = StyleSheet.create({
     height: 56,
     borderRadius: borderRadius.md,
     borderWidth: 2,
-    borderColor: colors.surfaceBorder,
-    backgroundColor: colors.surface,
     textAlign: 'center',
     fontSize: 24,
     fontWeight: '600',
-    color: colors.textPrimary,
-  },
-  otpInputFilled: {
-    borderColor: colors.primary,
   },
   resendContainer: {
     alignItems: 'center',
@@ -254,11 +263,9 @@ const styles = StyleSheet.create({
   },
   timerText: {
     ...typography.bodyMedium,
-    color: colors.textMuted,
   },
   resendText: {
     ...typography.bodyMedium,
-    color: colors.primary,
     fontWeight: '600',
   },
 });

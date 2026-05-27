@@ -6,7 +6,7 @@
 import React from 'react';
 import { View, StyleSheet, TouchableOpacity } from 'react-native';
 import { spacing, borderRadius } from '../../theme/typography';
-import { lightTheme } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { shadows } from '../../theme/shadows';
 
 const Card = ({
@@ -17,9 +17,14 @@ const Card = ({
   style,
   ...props
 }) => {
+  const { colors } = useTheme();
+
   const cardStyles = [
     styles.base,
     styles[variant],
+    variant === 'elevated' && { backgroundColor: colors.backgroundCard },
+    variant === 'outlined' && { backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder },
+    variant === 'flat' && { backgroundColor: colors.surface },
     styles[`padding_${padding}`],
     style,
   ];
@@ -52,17 +57,12 @@ const styles = StyleSheet.create({
 
   // Variants
   elevated: {
-    backgroundColor: lightTheme.card,
     ...shadows.md,
   },
   outlined: {
-    backgroundColor: lightTheme.card,
     borderWidth: 1,
-    borderColor: lightTheme.cardBorder,
   },
-  flat: {
-    backgroundColor: lightTheme.surface,
-  },
+  flat: {},
 
   // Padding
   padding_none: {
@@ -80,3 +80,4 @@ const styles = StyleSheet.create({
 });
 
 export default Card;
+

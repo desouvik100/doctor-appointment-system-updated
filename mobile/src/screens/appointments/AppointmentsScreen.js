@@ -14,10 +14,9 @@ import {
   RefreshControl,
   Alert,
 } from 'react-native';
-import LinearGradient from 'react-native-linear-gradient';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { lightTheme } from '../../theme/colors';
 import { shadows } from '../../theme/shadows';
+import LinearGradient from 'react-native-linear-gradient';
 import AppointmentCard from '../../components/cards/AppointmentCard';
 import Button from '../../components/common/Button';
 import { SkeletonCard } from '../../components/common/Skeleton';
@@ -27,7 +26,7 @@ import { useTheme } from '../../context/ThemeContext';
 import dayjs from 'dayjs';
 
 const AppointmentsScreen = ({ navigation }) => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const [activeTab, setActiveTab] = useState('upcoming');
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -151,19 +150,19 @@ const AppointmentsScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: lightTheme.background }]}>
-      <StatusBar barStyle="dark-content" backgroundColor={lightTheme.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
 
       {/* Header */}
       <View style={styles.header}>
-        <Text style={[styles.headerTitle, { color: lightTheme.text }]}>Appointments</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Appointments</Text>
         <TouchableOpacity 
           style={styles.addBtn} 
           onPress={() => navigation.navigate('Booking')}
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={['#0066FF', '#1976D2']}
+            colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']}
             style={styles.addBtnGradient}
           >
             <Text style={styles.addBtnIcon}>+</Text>
@@ -182,14 +181,14 @@ const AppointmentsScreen = ({ navigation }) => {
           >
             <Text style={[
               styles.tabText,
-              { color: lightTheme.textSecondary },
-              activeTab === tab.id && { color: lightTheme.primary, fontWeight: '700' },
+              { color: colors.textSecondary },
+              activeTab === tab.id && { color: colors.primary, fontWeight: '700' },
             ]}>
               {tab.label}
             </Text>
             {activeTab === tab.id && (
               <LinearGradient
-                colors={['#0066FF', '#1976D2']}
+                colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
                 style={styles.tabIndicator}
@@ -218,15 +217,15 @@ const AppointmentsScreen = ({ navigation }) => {
             <RefreshControl
               refreshing={refreshing}
               onRefresh={onRefresh}
-              colors={[lightTheme.primary]}
-              tintColor={lightTheme.primary}
+              colors={[colors.primary]}
+              tintColor={colors.primary}
             />
           }
           ListEmptyComponent={
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>📅</Text>
-              <Text style={[styles.emptyTitle, { color: lightTheme.text }]}>No appointments</Text>
-              <Text style={[styles.emptyDesc, { color: lightTheme.textSecondary }]}>
+              <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No appointments</Text>
+              <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>
                 You don't have any {activeTab} appointments
               </Text>
               {activeTab === 'upcoming' && (
@@ -253,7 +252,7 @@ const AppointmentsScreen = ({ navigation }) => {
           activeOpacity={0.9}
         >
           <LinearGradient
-            colors={['#0066FF', '#1976D2']}
+            colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']}
             style={styles.floatingBtnGradient}
           >
             <Text style={styles.floatingBtnIcon}>📅</Text>

@@ -97,7 +97,7 @@ const ThemeContext = createContext();
 
 export const ThemeProvider = ({ children }) => {
   const [isDarkMode, setIsDarkMode] = useState(false);
-  const [colors, setColors] = useState(lightColors);
+  const [colors, setColors] = useState(lightColors); // Start with lightColors immediately
 
   useEffect(() => {
     loadTheme();
@@ -113,6 +113,8 @@ export const ThemeProvider = ({ children }) => {
       }
     } catch (error) {
       console.log('Error loading theme:', error);
+      // Fallback to light colors on error
+      setColors(lightColors);
     }
   };
 
@@ -147,7 +149,14 @@ export const ThemeProvider = ({ children }) => {
 export const useTheme = () => {
   const context = useContext(ThemeContext);
   if (!context) {
-    throw new Error('useTheme must be used within a ThemeProvider');
+    // Return default theme if context is not available
+    console.warn('useTheme called outside ThemeProvider, returning default theme');
+    return {
+      isDarkMode: false,
+      colors: lightColors,
+      toggleTheme: () => {},
+      setDarkMode: () => {},
+    };
   }
   return context;
 };
