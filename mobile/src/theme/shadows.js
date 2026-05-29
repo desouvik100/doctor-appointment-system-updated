@@ -1,6 +1,7 @@
 /**
  * HealthSync Mobile - Enterprise Shadow System
  * Consistent elevation and depth across the app
+ * IMPORTANT: All shadows use soft, modern design - NO GRAY BORDERS
  */
 
 export const shadows = {
@@ -17,25 +18,25 @@ export const shadows = {
   xs: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
+    shadowOpacity: 0.04,
     shadowRadius: 2,
     elevation: 1,
   },
 
-  // Small - Cards, buttons
+  // Small - Cards, buttons (CLEAN - NO BORDERS)
   sm: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08,
+    shadowOpacity: 0.06,
     shadowRadius: 4,
     elevation: 2,
   },
 
-  // Medium - Elevated cards
+  // Medium - Elevated cards (CLEAN - NO BORDERS)
   md: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.1,
+    shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 4,
   },
@@ -44,7 +45,7 @@ export const shadows = {
   lg: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.12,
+    shadowOpacity: 0.1,
     shadowRadius: 16,
     elevation: 8,
   },
@@ -53,7 +54,7 @@ export const shadows = {
   xl: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.15,
+    shadowOpacity: 0.12,
     shadowRadius: 24,
     elevation: 12,
   },
@@ -62,7 +63,7 @@ export const shadows = {
   xxl: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 16 },
-    shadowOpacity: 0.18,
+    shadowOpacity: 0.15,
     shadowRadius: 32,
     elevation: 16,
   },
@@ -71,7 +72,7 @@ export const shadows = {
   primary: {
     shadowColor: '#00D4AA',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 4,
   },
@@ -79,7 +80,7 @@ export const shadows = {
   success: {
     shadowColor: '#10B981',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 4,
   },
@@ -87,7 +88,7 @@ export const shadows = {
   error: {
     shadowColor: '#EF4444',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.2,
+    shadowOpacity: 0.15,
     shadowRadius: 12,
     elevation: 4,
   },
@@ -95,7 +96,7 @@ export const shadows = {
   depth3d: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 6 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.3,
     shadowRadius: 10,
     elevation: 10,
   },
@@ -103,7 +104,7 @@ export const shadows = {
   glow: {
     shadowColor: '#00D4AA',
     shadowOffset: { width: 0, height: 0 },
-    shadowOpacity: 0.4,
+    shadowOpacity: 0.3,
     shadowRadius: 12,
     elevation: 8,
   },
@@ -111,7 +112,7 @@ export const shadows = {
   glowPrimary: {
     shadowColor: '#00D4AA',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 8,
   },
@@ -119,7 +120,7 @@ export const shadows = {
   glowSecondary: {
     shadowColor: '#6C5CE7',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.5,
+    shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 8,
   },

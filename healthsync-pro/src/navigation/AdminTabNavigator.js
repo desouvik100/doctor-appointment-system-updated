@@ -73,29 +73,45 @@ const AdminDashboardStack = () => {
   );
 };
 
-const TabIcon = ({ icon, label, focused, colors }) => (
+const TabIcon = ({ icon, label, focused, colors, isDarkMode }) => (
   <View style={styles.tabItem}>
     {focused ? (
-      <LinearGradient colors={['#F39C12', '#F1C40F']} style={styles.activeIconBg}>
+      <LinearGradient 
+        colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} 
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.activeIconBg}
+      >
         <Text style={styles.tabIcon}>{icon}</Text>
       </LinearGradient>
     ) : (
-      <View style={styles.inactiveIconBg}>
+      <View style={[styles.inactiveIconBg, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)' }]}>
         <Text style={[styles.tabIcon, styles.inactiveIcon]}>{icon}</Text>
       </View>
     )}
-    <Text style={[styles.tabLabel, { color: colors.textMuted }, focused && { color: '#F39C12', fontWeight: '600' }]}>
+    <Text style={[
+      styles.tabLabel, 
+      { color: colors.textMuted }, 
+      focused && { color: colors.primary, fontWeight: '700' }
+    ]}>
       {label}
     </Text>
   </View>
 );
 
 const CustomTabBar = ({ state, navigation }) => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   
   return (
     <View style={styles.tabBarContainer}>
-      <View style={[styles.tabBar, { backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder }]}>
+      <View style={[
+        styles.tabBar, 
+        { 
+          backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.85)' : 'rgba(255, 255, 255, 0.9)', 
+          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 184, 148, 0.12)',
+          ...shadows.large,
+        }
+      ]}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
 
@@ -116,7 +132,7 @@ const CustomTabBar = ({ state, navigation }) => {
 
           return (
             <TouchableOpacity key={route.key} onPress={onPress} style={styles.tabButton} activeOpacity={0.7}>
-              <TabIcon icon={getIcon()} label={route.name} focused={isFocused} colors={colors} />
+              <TabIcon icon={getIcon()} label={route.name} focused={isFocused} colors={colors} isDarkMode={isDarkMode} />
             </TouchableOpacity>
           );
         })}

@@ -136,7 +136,7 @@ const ProfileScreen = ({ navigation }) => {
         disabled={item.toggle}
         activeOpacity={0.7}
       >
-        <View style={[styles.menuIconBox, { backgroundColor: ic.bg }]}>
+        <View style={[styles.menuIconBox, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : ic.bg }]}>
           <Text style={styles.menuIconText}>{ic.emoji}</Text>
         </View>
         <View style={styles.menuItemCenter}>
@@ -148,8 +148,8 @@ const ProfileScreen = ({ navigation }) => {
             <Switch
               value={item.value}
               onValueChange={item.onToggle || (() => {})}
-              trackColor={{ false: '#E5E7EB', true: '#A5D6A7' }}
-              thumbColor={item.value ? '#2E7D32' : '#9CA3AF'}
+              trackColor={{ false: isDarkMode ? '#2A3142' : '#E5E7EB', true: colors.primary + '80' }}
+              thumbColor={item.value ? colors.primary : '#9CA3AF'}
             />
           ) : (
             <Text style={[styles.menuArrow, { color: colors.textMuted }]}>{'›'}</Text>
@@ -159,13 +159,35 @@ const ProfileScreen = ({ navigation }) => {
     );
   };
 
+
   return (
-    <View style={[styles.container, { backgroundColor: '#F0F4F8' }]}>
-      <StatusBar barStyle="light-content" backgroundColor="#1B5E20" />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
+
+      {/* Ambient background mesh */}
+      <View style={styles.backgroundContainer}>
+        <LinearGradient
+          colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.orb1}>
+          <LinearGradient
+            colors={isDarkMode ? ['rgba(0, 212, 170, 0.12)', 'transparent'] : ['rgba(0, 212, 170, 0.06)', 'transparent']}
+            style={{ flex: 1, borderRadius: 150 }}
+          />
+        </View>
+        <View style={styles.orb2}>
+          <LinearGradient
+            colors={isDarkMode ? ['rgba(108, 92, 231, 0.1)', 'transparent'] : ['rgba(108, 92, 231, 0.04)', 'transparent']}
+            style={{ flex: 1, borderRadius: 150 }}
+          />
+        </View>
+      </View>
+
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]}>
 
         {/* ── Hero Gradient Header ── */}
-        <LinearGradient colors={['#1B5E20', '#2E7D32', '#43A047']} style={styles.heroGradient}>
+        <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.heroGradient}>
           <View style={styles.heroTopBar}>
             <Text style={styles.heroScreenTitle}>My Health Space</Text>
             <View style={styles.heroActions}>
@@ -202,7 +224,7 @@ const ProfileScreen = ({ navigation }) => {
           </View>
 
           {/* Stats */}
-          <View style={styles.statsRow}>
+          <View style={[styles.statsRow, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0, 0, 0, 0.05)' }]}>
             <TouchableOpacity style={styles.statBox} onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.8}>
               <Text style={styles.statIcon}>🩸</Text>
               <Text style={styles.statValue}>{user.bloodType || 'Add'}</Text>
@@ -226,30 +248,37 @@ const ProfileScreen = ({ navigation }) => {
         {/* ── Upcoming Appointment Banner ── */}
         {nextAppointment ? (
           <TouchableOpacity style={styles.nextApptCard} onPress={() => navigation.navigate('Appointments')} activeOpacity={0.85}>
-            <LinearGradient colors={['#E8F5E9', '#F1F8E9']} style={styles.nextApptInner}>
+            <View style={[
+              styles.nextApptInner,
+              {
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : colors.backgroundCard,
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : colors.primary + '20',
+                borderWidth: 1,
+              }
+            ]}>
               <View style={styles.nextApptLeft}>
                 <Text style={styles.nextApptIcon}>📆</Text>
                 <View>
-                  <Text style={styles.nextApptTitle}>Upcoming Appointment</Text>
-                  <Text style={styles.nextApptSub}>
+                  <Text style={[styles.nextApptTitle, { color: colors.primary }]}>Upcoming Appointment</Text>
+                  <Text style={[styles.nextApptSub, { color: colors.textSecondary }]}>
                     {nextAppointment.doctor?.name ? `Dr. ${nextAppointment.doctor.name}` : 'Doctor'}
                     {' \u00B7 '}
                     {formatDate(nextAppointment.date || nextAppointment.appointmentDate)}
                   </Text>
                 </View>
               </View>
-              <Text style={styles.nextApptArrow}>{'›'}</Text>
-            </LinearGradient>
+              <Text style={[styles.nextApptArrow, { color: colors.primary }]}>{'›'}</Text>
+            </View>
           </TouchableOpacity>
         ) : null}
 
         {/* ── Quick Actions ── */}
         <View style={styles.quickActionsRow}>
           {[
-            { emoji: '📊', label: 'Health\nReports',   colors: ['#1B5E20', '#2E7D32'], route: 'HealthReports' },
-            { emoji: '💊', label: 'Prescrip-\ntions',  colors: ['#1565C0', '#1976D2'], route: 'Prescriptions' },
-            { emoji: '💰', label: 'Wallet',             colors: ['#6A1B9A', '#8E24AA'], route: 'Wallet' },
-            { emoji: '🎁', label: 'Offers',             colors: ['#E65100', '#F57C00'], route: 'Rewards' },
+            { emoji: '📊', label: 'Health\nReports',   colors: colors.gradientPrimary || ['#00D4AA', '#00B894'], route: 'HealthReports' },
+            { emoji: '💊', label: 'Prescrip-\ntions',  colors: colors.gradientSecondary || ['#6C5CE7', '#5B4ED1'], route: 'Prescriptions' },
+            { emoji: '💰', label: 'Wallet',             colors: ['#FF8A00', '#FFB800'], route: 'Wallet' },
+            { emoji: '🎁', label: 'Offers',             colors: ['#FF6B6B', '#FF8787'], route: 'Rewards' },
           ].map((qa) => (
             <TouchableOpacity key={qa.route} style={styles.quickAction} onPress={() => navigation.navigate(qa.route)} activeOpacity={0.8}>
               <LinearGradient colors={qa.colors} style={styles.quickActionIcon}>
@@ -260,30 +289,45 @@ const ProfileScreen = ({ navigation }) => {
           ))}
         </View>
 
-        {/* ── Emergency Info Card ── */}
-        <TouchableOpacity style={styles.emergencyCard} onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.85}>
+        {/* ── Emergency Info Card (Clean Red Alert) ── */}
+        <TouchableOpacity style={[
+          styles.emergencyCard,
+          {
+            backgroundColor: isDarkMode ? 'rgba(239, 68, 68, 0.08)' : colors.backgroundCard,
+            borderColor: isDarkMode ? 'rgba(239, 68, 68, 0.2)' : colors.error + '25',
+            borderWidth: 1,
+          }
+        ]} onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.85}>
           <View style={styles.emergencyLeft}>
             <Text style={styles.emergencyEmoji}>🚨</Text>
             <View>
-              <Text style={[styles.emergencyTitle, { color: colors.textPrimary }]}>Emergency Info</Text>
-              <Text style={[styles.emergencySub, { color: colors.textMuted }]}>
+              <Text style={[styles.emergencyTitle, { color: colors.error }]}>Emergency Info</Text>
+              <Text style={[styles.emergencySub, { color: colors.textSecondary }]}>
                 {user.bloodType ? `Blood: ${user.bloodType} \u00B7 Tap to add emergency contact` : 'Add blood group & emergency contact'}
               </Text>
             </View>
           </View>
-          <Text style={[styles.emergencyArrow, { color: colors.textMuted }]}>{'›'}</Text>
+          <Text style={[styles.emergencyArrow, { color: colors.error }]}>{'›'}</Text>
         </TouchableOpacity>
 
         {/* ── Menu Sections ── */}
         {menuSections.map((section, idx) => (
           <View key={idx} style={styles.menuSection}>
             <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{section.title}</Text>
-            <View style={[styles.menuCard, { backgroundColor: colors.surface || '#fff' }]}>
+            <View style={[
+              styles.menuCard,
+              { 
+                backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : colors.backgroundCard,
+                borderColor: colors.surfaceBorder,
+                borderWidth: isDarkMode ? 1 : 0,
+                shadowOpacity: isDarkMode ? 0.2 : 0.04,
+              }
+            ]}>
               {section.items.map((item, i) => (
                 <View key={item.id}>
                   {renderMenuItem(item)}
                   {i < section.items.length - 1 ? (
-                    <View style={[styles.menuDivider, { backgroundColor: colors.divider || '#F0F0F0' }]} />
+                    <View style={[styles.menuDivider, { backgroundColor: colors.divider }]} />
                   ) : null}
                 </View>
               ))}
@@ -311,6 +355,28 @@ const styles = StyleSheet.create({
   loginBtnText: { color: '#fff', fontWeight: '700' },
   scrollContent: { paddingBottom: 100 },
 
+  backgroundContainer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+    zIndex: -1,
+  },
+  orb1: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    top: -50,
+    left: -100,
+  },
+  orb2: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    top: 250,
+    right: -100,
+  },
+
   // Hero
   heroGradient: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
   heroTopBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: spacing.lg, marginBottom: spacing.xl },
@@ -322,10 +388,10 @@ const styles = StyleSheet.create({
   profileRow: { flexDirection: 'row', alignItems: 'flex-start', marginBottom: spacing.xl, gap: spacing.lg },
   avatarWrapper: { position: 'relative' },
   editAvatarBtn: {
-  position: 'absolute', bottom: 0, right: -4,
-  width: 28, height: 28, borderRadius: 14,
-  backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
-  ...(shadows?.small || {}),
+    position: 'absolute', bottom: 0, right: -4,
+    width: 28, height: 28, borderRadius: 14,
+    backgroundColor: '#fff', alignItems: 'center', justifyContent: 'center',
+    ...shadows.sm,
   },
   editAvatarEmoji: { fontSize: 12 },
   profileMeta: { flex: 1, paddingTop: 4 },
@@ -341,7 +407,7 @@ const styles = StyleSheet.create({
 
   statsRow: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)', borderRadius: borderRadius.xl, padding: spacing.md,
+    borderRadius: borderRadius.xl, padding: spacing.md,
   },
   statBox: { flex: 1, alignItems: 'center', paddingVertical: spacing.sm },
   statIcon: { fontSize: 18, marginBottom: 2 },
@@ -351,48 +417,45 @@ const styles = StyleSheet.create({
 
   // Next appointment
   nextApptCard: {
-  marginHorizontal: spacing.xl,
-  marginTop: spacing.lg,
-  borderRadius: borderRadius.xl,
-  overflow: 'hidden',
-  ...(shadows?.small || {})
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.lg,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    ...shadows.sm,
   },
-  nextApptInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.lg },
+  nextApptInner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.lg, borderRadius: borderRadius.xl },
   nextApptLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
   nextApptIcon: { fontSize: 24 },
-  nextApptTitle: { fontSize: 13, fontWeight: '700', color: '#1B5E20' },
-  nextApptSub: { fontSize: 12, color: '#388E3C', marginTop: 2 },
-  nextApptArrow: { fontSize: 22, color: '#2E7D32', fontWeight: '300' },
+  nextApptTitle: { fontSize: 13, fontWeight: '700' },
+  nextApptSub: { fontSize: 12, marginTop: 2 },
+  nextApptArrow: { fontSize: 22, fontWeight: '300' },
 
   // Quick actions
   quickActionsRow: { flexDirection: 'row', justifyContent: 'space-around', paddingHorizontal: spacing.xl, marginTop: spacing.xl, marginBottom: spacing.lg },
   quickAction: { alignItems: 'center' },
   quickActionIcon: {
-  width: 58,
-  height: 58,
-  borderRadius: borderRadius.xl,
-  alignItems: 'center',
-  justifyContent: 'center',
-  marginBottom: spacing.sm,
-  ...(shadows?.small || {})
-},
+    width: 58,
+    height: 58,
+    borderRadius: borderRadius.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.sm,
+    ...shadows.sm,
+  },
   quickActionEmoji: { fontSize: 26 },
   quickActionLabel: { fontSize: 11, textAlign: 'center', lineHeight: 15 },
 
   // Emergency
   emergencyCard: {
-  marginHorizontal: spacing.xl,
-  marginBottom: spacing.lg,
-  backgroundColor: '#FFF8E1',
-  borderRadius: borderRadius.xl,
-  padding: spacing.lg,
-  flexDirection: 'row',
-  alignItems: 'center',
-  justifyContent: 'space-between',
-  borderWidth: 1,
-  borderColor: '#FFE082',
-  ...(shadows?.small || {}),
-},
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.lg,
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    ...shadows.sm,
+  },
   emergencyLeft: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, flex: 1 },
   emergencyEmoji: { fontSize: 24 },
   emergencyTitle: { fontSize: 14, fontWeight: '700' },
@@ -403,9 +466,9 @@ const styles = StyleSheet.create({
   menuSection: { paddingHorizontal: spacing.xl, marginBottom: spacing.lg },
   sectionTitle: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginBottom: spacing.sm, marginLeft: 4 },
   menuCard: {
-  borderRadius: borderRadius.xl,
-  overflow: 'hidden',
-  ...(shadows?.small || {})
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+    ...shadows.sm,
   },
   menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: spacing.lg },
   menuIconBox: { width: 38, height: 38, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },

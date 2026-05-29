@@ -5,8 +5,7 @@
 import React, { useState } from 'react';
 import { View, Image, Text, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
-console.log('Avatar colors:', colors);
+import { useTheme } from '../../context/ThemeContext';
 import { typography, borderRadius } from '../../theme/typography';
 
 const Avatar = ({
@@ -18,8 +17,9 @@ const Avatar = ({
   status = 'online', // online, offline, busy, away
   showBorder = false,
 }) => {
+  const { colors } = useTheme();
   const [imageError, setImageError] = useState(false);
-  
+
   // Convert imageUrl to source format if provided
   const imageSource = imageUrl ? { uri: imageUrl } : source;
 
@@ -43,10 +43,10 @@ const Avatar = ({
 
   const getStatusColor = () => {
     switch (status) {
-      case 'online': return colors.success;
-      case 'busy': return colors.error;
-      case 'away': return colors.warning;
-      default: return colors.textMuted;
+      case 'online': return colors.success?.[500] || colors.success || '#10B981';
+      case 'busy': return colors.error?.[500] || colors.error || '#EF4444';
+      case 'away': return colors.warning?.[500] || colors.warning || '#F59E0B';
+      default: return colors.text?.tertiary || '#6B7280';
     }
   };
 
@@ -57,10 +57,12 @@ const Avatar = ({
 
   const avatarSize = getSize();
   const statusSize = getStatusSize();
-  const fontSize = avatarSize * 0.4;
+  const fontSize = avatarSize * 0.35;
 
   // Check if imageSource is valid (has uri property with a truthy value)
   const hasValidSource = imageSource && imageSource.uri && !imageError;
+
+  const styles = makeStyles(colors);
 
   const renderAvatarContent = (borderRadiusValue) => {
     if (hasValidSource) {
@@ -77,7 +79,9 @@ const Avatar = ({
     }
     return (
       <View style={[styles.placeholder, { borderRadius: borderRadiusValue }]}>
-        <Text style={[styles.initials, { fontSize }]}>{getInitials()}</Text>
+        <Text style={[styles.initials, { fontSize }]} numberOfLines={1}>
+          {getInitials()}
+        </Text>
       </View>
     );
   };
@@ -98,7 +102,7 @@ const Avatar = ({
       ) : (
         renderAvatarContent(avatarSize / 2)
       )}
-      
+
       {showStatus && (
         <View style={[
           styles.status,
@@ -116,7 +120,7 @@ const Avatar = ({
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     position: 'relative',
   },
@@ -140,11 +144,14 @@ const styles = StyleSheet.create({
     backgroundColor: colors.surfaceLight,
     alignItems: 'center',
     justifyContent: 'center',
+    overflow: 'hidden',
   },
   initials: {
-    ...typography.labelLarge,
-    color: colors.primary,
-    fontWeight: '600',
+    fontFamily: typography.labelLarge?.fontFamily,
+    color: colors.primary?.[500] || colors.primary || '#00D4AA',
+    fontWeight: '700',
+    textAlign: 'center',
+    includeFontPadding: false,
   },
   status: {
     position: 'absolute',
