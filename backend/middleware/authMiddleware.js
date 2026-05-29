@@ -33,4 +33,28 @@ const auth = (roles = []) => {
     }
   };
 };
+
+// Alias for protect (commonly used in routes)
+const protect = auth();
+
+// Authorize specific roles
+const authorize = (...roles) => {
+  return (req, res, next) => {
+    if (!req.user) {
+      return res.status(401).json({ message: 'Not authenticated' });
+    }
+
+    if (roles.length && !roles.includes(req.user.role)) {
+      return res.status(403).json({ 
+        message: `Access denied. Required role: ${roles.join(' or ')}` 
+      });
+    }
+
+    next();
+  };
+};
+
 module.exports = auth;
+module.exports.auth = auth;
+module.exports.protect = protect;
+module.exports.authorize = authorize;

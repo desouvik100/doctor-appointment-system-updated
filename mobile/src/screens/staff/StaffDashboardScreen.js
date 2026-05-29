@@ -17,11 +17,21 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import LinearGradient from 'react-native-linear-gradient';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Avatar from '../../components/common/Avatar';
+import { QuickActionsGrid } from '../../components/common';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
 import staffApi from '../../services/api/staffDashboardApi';
 
 const { width } = Dimensions.get('window');
+
+const STAFF_ACTIONS = [
+  { id: 'queue', icon: 'clipboard-outline', label: 'Queue', screen: 'StaffQueue', color: '#FF6B6B' },
+  { id: 'bookAppt', icon: 'calendar-outline', label: 'Book Appt', screen: 'StaffBookAppointment', color: '#10B981' },
+  { id: 'patients', icon: 'search-outline', label: 'Patients', screen: 'StaffPatients', color: '#F39C12' },
+  { id: 'emr', icon: 'document-text-outline', label: 'EMR', screen: 'StaffEMR', color: '#6C5CE7' },
+  { id: 'doctors', icon: 'people-outline', label: 'Doctors', screen: 'StaffDoctors', color: '#00D4AA' },
+  { id: 'allAppts', icon: 'calendar-outline', label: 'All Appts', screen: 'Appointments', color: '#3B82F6' },
+];
 
 const StaffDashboardScreen = ({ navigation }) => {
   const { user } = useUser();
@@ -108,37 +118,13 @@ const StaffDashboardScreen = ({ navigation }) => {
         </View>
 
         {/* Quick Actions */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
-          <View style={styles.quickActions}>
-            <TouchableOpacity style={[styles.quickAction, { backgroundColor: colors.surface }]} onPress={() => navigation.navigate('StaffQueue')}>
-              <Text style={styles.quickActionIcon}>📋</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Queue</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.quickAction, { backgroundColor: colors.surface }]} onPress={() => navigation.navigate('StaffBookAppointment')}>
-              <Text style={styles.quickActionIcon}>📅</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Book Appt</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.quickAction, { backgroundColor: colors.surface }]} onPress={() => navigation.navigate('StaffPatients')}>
-              <Text style={styles.quickActionIcon}>🔍</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Patients</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={[styles.quickActions, { marginTop: spacing.md }]}>
-            <TouchableOpacity style={[styles.quickAction, { backgroundColor: colors.surface }]} onPress={() => navigation.navigate('StaffEMR')}>
-              <Text style={styles.quickActionIcon}>📝</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>EMR</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.quickAction, { backgroundColor: colors.surface }]} onPress={() => navigation.navigate('StaffDoctors')}>
-              <Text style={styles.quickActionIcon}>👨‍⚕️</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Doctors</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.quickAction, { backgroundColor: colors.surface }]} onPress={() => navigation.navigate('Appointments')}>
-              <Text style={styles.quickActionIcon}>📆</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>All Appts</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <QuickActionsGrid
+          actions={STAFF_ACTIONS}
+          variant="grid"
+          cols={3}
+          showTitle={true}
+          showBadge={false}
+        />
 
         {/* Queue Status */}
         <View style={styles.section}>

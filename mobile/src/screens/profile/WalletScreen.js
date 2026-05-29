@@ -27,7 +27,7 @@ import { fadeIn, slideUp, stagger, bounce } from '../../utils/animations';
 import { EmptyState } from '../../components/common';
 
 const WalletScreen = ({ navigation, route }) => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const { user } = useUser();
   const [balance, setBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
@@ -183,6 +183,7 @@ const WalletScreen = ({ navigation, route }) => {
                 { 
                   backgroundColor: colors.surface, 
                   borderColor: colors.surfaceBorder,
+                  borderWidth: isDarkMode ? 1 : 0,
                   opacity: statsAnimations[index],
                   transform: [{
                     translateY: statsAnimations[index].interpolate({
@@ -216,7 +217,7 @@ const WalletScreen = ({ navigation, route }) => {
             />
           ) : (
             transactions.map((txn) => (
-              <View key={txn._id} style={[styles.txnCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+              <View key={txn._id} style={[styles.txnCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: isDarkMode ? 1 : 0 }]}>
                 <View style={[styles.txnIconWrap, { backgroundColor: txn.type === 'credit' ? `${colors.success}20` : `${colors.error}20` }]}>
                   <Text style={styles.txnIcon}>{txn.type === 'credit' ? '↓' : '↑'}</Text>
                 </View>
@@ -240,7 +241,7 @@ const WalletScreen = ({ navigation, route }) => {
             <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Add Money</Text>
             <Text style={[styles.modalSubtitle, { color: colors.textMuted }]}>Enter amount to add to your wallet</Text>
 
-            <View style={[styles.amountInput, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+            <View style={[styles.amountInput, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: isDarkMode ? 1 : 0 }]}>
               <Text style={[styles.rupeeSign, { color: colors.textPrimary }]}>₹</Text>
               <TextInput
                 style={[styles.amountField, { color: colors.textPrimary }]}
@@ -256,7 +257,7 @@ const WalletScreen = ({ navigation, route }) => {
               {quickAmounts.map(amt => (
                 <TouchableOpacity
                   key={amt}
-                  style={[styles.quickAmtBtn, { backgroundColor: colors.surface, borderColor: addAmount === String(amt) ? colors.primary : colors.surfaceBorder }]}
+                  style={[styles.quickAmtBtn, { backgroundColor: colors.surface, borderColor: addAmount === String(amt) ? colors.primary : colors.surfaceBorder, borderWidth: addAmount === String(amt) ? 1.5 : (isDarkMode ? 1 : 0) }]}
                   onPress={() => setAddAmount(String(amt))}
                 >
                   <Text style={[styles.quickAmtText, { color: addAmount === String(amt) ? colors.primary : colors.textSecondary }]}>₹{amt}</Text>

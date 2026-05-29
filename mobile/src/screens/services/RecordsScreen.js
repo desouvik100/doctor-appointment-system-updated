@@ -18,7 +18,7 @@ import {
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { shadows } from '../../theme/colors';
+import shadows from '../../theme/shadows';
 import Card from '../../components/common/Card';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
@@ -139,7 +139,9 @@ const RecordsScreen = ({ navigation }) => {
         Alert.alert('Error', 'Could not open the document.')
       );
     } else if (record.type === 'prescription') {
-      navigation.navigate('ReportDetails', { report: record.raw });
+      navigation.navigate('PrescriptionView', { prescriptionId: record.id });
+    } else if (record.type === 'report') {
+      navigation.navigate('ReportDetails', { reportId: record.id, report: record.raw });
     }
   };
 
@@ -236,8 +238,8 @@ const RecordsScreen = ({ navigation }) => {
             ) : null}
           </View>
         ) : (
-          filteredRecords.map((record) => (
-            <TouchableOpacity key={record.id} onPress={() => handleRecordPress(record)}>
+          filteredRecords.map((record, index) => (
+            <TouchableOpacity key={record.id || index.toString()} onPress={() => handleRecordPress(record)}>
               <Card variant="default" style={styles.recordCard}>
                 <View style={styles.recordRow}>
                   <View style={[styles.recordIcon, { backgroundColor: `${record.color}20` }]}>
@@ -271,19 +273,19 @@ const RecordsScreen = ({ navigation }) => {
         <View style={[styles.uploadSection, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
           <Text style={[styles.uploadTitle, { color: colors.textPrimary }]}>Add New Record</Text>
           <View style={styles.uploadOptions}>
-            <TouchableOpacity style={styles.uploadOption}>
+            <TouchableOpacity style={styles.uploadOption} onPress={() => navigation.navigate('UploadReport')}>
               <View style={[styles.uploadOptionIcon, { backgroundColor: colors.surfaceLight }]}>
                 <Text style={styles.uploadEmoji}>📷</Text>
               </View>
               <Text style={[styles.uploadOptionLabel, { color: colors.textSecondary }]}>Camera</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.uploadOption}>
+            <TouchableOpacity style={styles.uploadOption} onPress={() => navigation.navigate('UploadReport')}>
               <View style={[styles.uploadOptionIcon, { backgroundColor: colors.surfaceLight }]}>
                 <Text style={styles.uploadEmoji}>🖼️</Text>
               </View>
               <Text style={[styles.uploadOptionLabel, { color: colors.textSecondary }]}>Gallery</Text>
             </TouchableOpacity>
-            <TouchableOpacity style={styles.uploadOption}>
+            <TouchableOpacity style={styles.uploadOption} onPress={() => navigation.navigate('UploadReport')}>
               <View style={[styles.uploadOptionIcon, { backgroundColor: colors.surfaceLight }]}>
                 <Text style={styles.uploadEmoji}>📄</Text>
               </View>

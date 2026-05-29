@@ -10,6 +10,7 @@ const { initializeScheduler } = require('./services/appointmentScheduler');
 const { initializeMedicineReminders } = require('./services/medicineReminderService');
 const { initializeScheduledEmails } = require('./services/adminEmailService');
 const cacheService = require('./services/cacheService');
+const { initializeAllJobs } = require('./jobs');
 const { securityMonitor, trackFailedLogin } = require('./middleware/securityMiddleware');
 const { sanitizeInputs } = require('./middleware/validateRequest');
 const { errorMiddleware, requestLoggerMiddleware } = require('./services/errorLoggingService');
@@ -443,6 +444,7 @@ app.use('/api/feedback', require('./routes/feedbackRoutes')); // Patient Feedbac
 // ===== ENHANCED SECURITY FEATURES =====
 app.use('/api/secure-files', require('./routes/secureFilesRoutes')); // Signed URL file access
 app.use('/api/security-admin', require('./routes/securityAdminRoutes')); // Security admin dashboard
+app.use('/api/jobs', require('./routes/jobsRoutes')); // Automation jobs management
 
 // Debug: Log all registered routes
 console.log('\n=== REGISTERED ROUTES ===');
@@ -665,5 +667,9 @@ server.listen(PORT, async () => {
   // Start scheduled database backups
   backupService.startScheduledBackups();
   console.log('💾 Database backup scheduler initialized');
+  
+  // Initialize all automation jobs for scalability
+  initializeAllJobs();
+  
   // Nodemon reload trigger: MongoDB connection fixed
 });

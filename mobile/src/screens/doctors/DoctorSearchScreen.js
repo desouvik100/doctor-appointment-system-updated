@@ -12,14 +12,16 @@ import {
   TouchableOpacity,
   StatusBar,
   ActivityIndicator,
+  Platform,
 } from 'react-native';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import FilterPanel from './components/FilterPanel';
 import DoctorCard from './components/DoctorCard';
 import { debounce } from '../../utils/helpers';
 
 const DoctorSearchScreen = ({ navigation, route }) => {
+  const { colors } = useTheme();
   const initialSpecialty = route.params?.specialty;
   
   const [searchQuery, setSearchQuery] = useState('');
@@ -180,22 +182,34 @@ const DoctorSearchScreen = ({ navigation, route }) => {
     });
   };
 
-  const toggleFavorite = (doctorId) => {
+  const toggleFavorite = useCallback((doctorId) => {
     setFavorites(prev => 
       prev.includes(doctorId)
         ? prev.filter(id => id !== doctorId)
         : [...prev, doctorId]
     );
     // TODO: Persist to AsyncStorage
-  };
+  }, []);
 
-  const handleDoctorPress = (doctor) => {
+  const handleDoctorPress = useCallback((doctor) => {
     navigation.navigate('DoctorProfile', { doctor });
-  };
+  }, [navigation]);
 
-  const handleBookPress = (doctor) => {
+  const handleBookPress = useCallback((doctor) => {
     navigation.navigate('SlotSelection', { doctor });
-  };
+  }, [navigation]);
+
+  const renderDoctorItem = useCallback(({ item }) => (
+    <DoctorCard
+      doctor={item}
+      isFavorite={favorites.includes(item.id)}
+      onPress={() => handleDoctorPress(item)}
+      onFavoritePress={() => toggleFavorite(item.id)}
+      onBookPress={() => handleBookPress(item)}
+    />
+  ), [favorites, handleDoctorPress, toggleFavorite, handleBookPress]);
+
+  const styles = makeStyles(colors);
 
   const activeFilterCount = Object.values(filters).filter(v => v !== null).length;
 
@@ -288,18 +302,14 @@ const DoctorSearchScreen = ({ navigation, route }) => {
       ) : (
         <FlatList
           data={doctors}
-          renderItem={({ item }) => (
-            <DoctorCard
-              doctor={item}
-              isFavorite={favorites.includes(item.id)}
-              onPress={() => handleDoctorPress(item)}
-              onFavoritePress={() => toggleFavorite(item.id)}
-              onBookPress={() => handleBookPress(item)}
-            />
-          )}
+          renderItem={renderDoctorItem}
           keyExtractor={(item) => item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
+          initialNumToRender={5}
+          maxToRenderPerBatch={5}
+          windowSize={5}
+          removeClippedSubviews={Platform.OS === 'android'}
           ListHeaderComponent={doctors.length > 0 ? renderHeader : null}
           ListEmptyComponent={renderEmpty}
         />
@@ -317,7 +327,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

@@ -19,6 +19,7 @@ import AdminLoginScreen from '../screens/auth/AdminLoginScreen';
 import RoleBasedNavigator from './RoleBasedNavigator';
 import BookingScreen from '../screens/booking/BookingScreen';
 import SlotSelectionScreen from '../screens/booking/SlotSelectionScreen';
+import ConfirmDetailsScreen from '../screens/booking/ConfirmDetailsScreen';
 import PaymentScreen from '../screens/booking/PaymentScreen';
 import RazorpayPaymentScreen from '../screens/booking/RazorpayPaymentScreen';
 import ConfirmationScreen from '../screens/booking/ConfirmationScreen';
@@ -39,7 +40,13 @@ import RewardsScreen from '../screens/profile/RewardsScreen';
 import PaymentMethodsScreen from '../screens/profile/PaymentMethodsScreen';
 import HealthReportsScreen from '../screens/profile/HealthReportsScreen';
 import FamilyMembersScreen from '../screens/profile/FamilyMembersScreen';
-import MedicalTimelineScreen from '../screens/profile/MedicalTimelineScreen';
+import { 
+  MedicalTimelineScreen, 
+  PrescriptionViewScreen, 
+  UploadReportScreen, 
+  VitalsHistoryScreen, 
+  ReportDetailsScreen 
+} from '../screens/records';
 import InsuranceScreen from '../screens/profile/InsuranceScreen';
 import NotificationSettingsScreen from '../screens/profile/NotificationSettingsScreen';
 import NotificationsScreen from '../screens/notifications/NotificationsScreen';
@@ -125,6 +132,7 @@ const AppContent = () => {
         <Stack.Screen name="DoctorProfile" component={DoctorProfileScreen} />
         <Stack.Screen name="Booking" component={BookingScreen} />
         <Stack.Screen name="SlotSelection" component={SlotSelectionScreen} />
+        <Stack.Screen name="ConfirmDetails" component={ConfirmDetailsScreen} />
         <Stack.Screen name="Payment" component={PaymentScreen} />
         <Stack.Screen name="RazorpayPayment" component={RazorpayPaymentScreen} />
         <Stack.Screen name="BookingConfirmation" component={ConfirmationScreen} />
@@ -144,6 +152,10 @@ const AppContent = () => {
         <Stack.Screen name="HealthReports" component={HealthReportsScreen} />
         <Stack.Screen name="FamilyMembers" component={FamilyMembersScreen} />
         <Stack.Screen name="MedicalTimeline" component={MedicalTimelineScreen} />
+        <Stack.Screen name="PrescriptionView" component={PrescriptionViewScreen} />
+        <Stack.Screen name="UploadReport" component={UploadReportScreen} />
+        <Stack.Screen name="VitalsHistory" component={VitalsHistoryScreen} />
+        <Stack.Screen name="ReportDetails" component={ReportDetailsScreen} />
         <Stack.Screen name="Insurance" component={InsuranceScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />

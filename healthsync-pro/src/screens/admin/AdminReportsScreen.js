@@ -94,10 +94,10 @@ const AdminReportsScreen = ({ navigation }) => {
         {/* Overview Stats */}
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
         <View style={styles.statsGrid}>
-          <StatCard icon="👥" value={overview.totalPatients || 0} label="Patients" color="#3498DB" />
-          <StatCard icon="👨‍⚕️" value={overview.totalDoctors || 0} label="Doctors" color="#9B59B6" />
-          <StatCard icon="🏥" value={overview.totalClinics || 0} label="Clinics" color="#1ABC9C" />
-          <StatCard icon="📅" value={overview.totalAppointments || 0} label="Appointments" color="#E74C3C" />
+          <StatCard icon="👥" value={overview.totalPatients || 0} label="Patients" color={colors.info || "#3B82F6"} />
+          <StatCard icon="👨‍⚕️" value={overview.totalDoctors || 0} label="Doctors" color={colors.secondary || "#6C5CE7"} />
+          <StatCard icon="🏥" value={overview.totalClinics || 0} label="Clinics" color={colors.primary || "#00D4AA"} />
+          <StatCard icon="📅" value={overview.totalAppointments || 0} label="Appointments" color={colors.error || "#EF4444"} />
         </View>
 
         {/* Specialization Stats */}
@@ -180,7 +180,7 @@ const styles = StyleSheet.create({
   demoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm },
   demoLabel: { width: 60, ...typography.labelSmall },
   demoBar: { flex: 1, height: 8, backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: 4, marginHorizontal: spacing.sm },
-  demoBarFill: { height: '100%', backgroundColor: '#F39C12', borderRadius: 4 },
+  demoBarFill: { height: '100%', backgroundColor: '#00D4AA', borderRadius: 4 },
   demoValue: { width: 40, textAlign: 'right', ...typography.labelSmall },
   exportButtons: { flexDirection: 'row', gap: spacing.md },
   exportBtn: { flex: 1, padding: spacing.lg, borderRadius: borderRadius.lg, alignItems: 'center' },

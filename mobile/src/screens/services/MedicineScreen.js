@@ -14,12 +14,13 @@ import {
   Image,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import shadows from '../../theme/shadows';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 
 const MedicineScreen = ({ navigation, route }) => {
+  const { colors } = useTheme();
   const { prescription } = route.params || {};
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState([]);
@@ -76,6 +77,8 @@ const MedicineScreen = ({ navigation, route }) => {
 
   const cartTotal = cart.reduce((sum, item) => sum + (item.price * item.qty), 0);
   const cartCount = cart.reduce((sum, item) => sum + item.qty, 0);
+
+  const styles = makeStyles(colors);
 
   return (
     <View style={styles.container}>
@@ -255,7 +258,7 @@ const MedicineScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

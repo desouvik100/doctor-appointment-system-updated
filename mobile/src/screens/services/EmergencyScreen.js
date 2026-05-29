@@ -23,7 +23,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { shadows } from '../../theme/colors';
+import shadows from '../../theme/shadows';
 import Card from '../../components/common/Card';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
@@ -32,7 +32,7 @@ const SOS_CONTACTS_KEY = '@sos_favorite_contacts';
 
 const EmergencyScreen = ({ navigation }) => {
   const { user } = useUser();
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const [sosActive, setSosActive] = useState(false);
   const [location, setLocation] = useState(null);
   const [loadingLocation, setLoadingLocation] = useState(false);
@@ -63,13 +63,13 @@ const EmergencyScreen = ({ navigation }) => {
     try {
       const stored = await AsyncStorage.getItem(SOS_CONTACTS_KEY);
       if (stored) setSosContacts(JSON.parse(stored));
-    } catch {}
+    } catch { }
   };
 
   const saveSosContacts = async (contacts) => {
     try {
       await AsyncStorage.setItem(SOS_CONTACTS_KEY, JSON.stringify(contacts));
-    } catch {}
+    } catch { }
   };
 
   const addSosContact = () => {
@@ -163,7 +163,7 @@ const EmergencyScreen = ({ navigation }) => {
         if (error.code === 3) {
           Geolocation.getCurrentPosition(
             (pos) => setLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
-            () => {},
+            () => { },
             { enableHighAccuracy: false, timeout: 60000, maximumAge: 300000 }
           );
         }
@@ -185,7 +185,7 @@ const EmergencyScreen = ({ navigation }) => {
           phone: response.data.emergencyContact.phone,
         }]);
       }
-    } catch {}
+    } catch { }
   };
 
   const handleCall = (number) => {
@@ -299,7 +299,7 @@ const EmergencyScreen = ({ navigation }) => {
     }
   };
 
-  const styles = makeStyles(colors);
+  const styles = makeStyles(colors, isDarkMode);
 
   return (
     <View style={styles.container}>
@@ -316,7 +316,7 @@ const EmergencyScreen = ({ navigation }) => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* SOS Button */}
         <View style={styles.sosSection}>
-          <TouchableOpacity 
+          <TouchableOpacity
             style={styles.sosButton}
             onPress={handleSOS}
             onLongPress={handleSOS}
@@ -336,7 +336,7 @@ const EmergencyScreen = ({ navigation }) => {
               <Text style={styles.sosSubtext}>Press for emergency</Text>
             </LinearGradient>
           </TouchableOpacity>
-          
+
           {/* Location Status */}
           <View style={styles.locationStatus}>
             {loadingLocation ? (
@@ -349,7 +349,7 @@ const EmergencyScreen = ({ navigation }) => {
               </TouchableOpacity>
             )}
           </View>
-          
+
           <Text style={styles.sosNote}>
             This will alert emergency contacts and share your location
           </Text>
@@ -564,10 +564,10 @@ const EmergencyScreen = ({ navigation }) => {
 };
 
 
-const makeStyles = (colors) => StyleSheet.create({
+const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
-  backBtn: { width: 44, height: 44, borderRadius: borderRadius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.surfaceBorder },
+  backBtn: { width: 44, height: 44, borderRadius: borderRadius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center', borderWidth: isDarkMode ? 1 : 0, borderColor: colors.surfaceBorder },
   backIcon: { fontSize: 20, color: colors.textPrimary },
   headerTitle: { ...typography.headlineMedium, color: colors.textPrimary },
   placeholder: { width: 44 },
@@ -595,9 +595,9 @@ const makeStyles = (colors) => StyleSheet.create({
   modalSheet: { borderTopLeftRadius: 24, borderTopRightRadius: 24, padding: spacing.xxl, paddingBottom: 40 },
   modalTitle: { ...typography.headlineMedium, marginBottom: spacing.sm },
   modalSub: { ...typography.bodyMedium, marginBottom: spacing.xl },
-  input: { borderRadius: borderRadius.lg, borderWidth: 1, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, ...typography.bodyLarge, marginBottom: spacing.md },
+  input: { borderRadius: borderRadius.lg, borderWidth: isDarkMode ? 1 : 0, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, ...typography.bodyLarge, marginBottom: spacing.md },
   modalBtns: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
-  modalCancelBtn: { flex: 1, borderWidth: 1, borderRadius: borderRadius.lg, paddingVertical: spacing.md, alignItems: 'center' },
+  modalCancelBtn: { flex: 1, borderWidth: isDarkMode ? 1 : 0, borderRadius: borderRadius.lg, paddingVertical: spacing.md, alignItems: 'center' },
   modalCancelText: { ...typography.button },
   modalSaveBtn: { flex: 1, borderRadius: borderRadius.lg, paddingVertical: spacing.md, alignItems: 'center' },
   modalSaveText: { ...typography.button, fontWeight: '700' },
@@ -608,7 +608,7 @@ const makeStyles = (colors) => StyleSheet.create({
   sectionTitle: { ...typography.headlineSmall, color: colors.textPrimary, paddingHorizontal: spacing.xl, marginBottom: spacing.lg },
   seeAll: { ...typography.labelMedium, color: colors.primary },
   emergencyGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.lg, gap: spacing.md },
-  emergencyCard: { width: '30%', backgroundColor: colors.surface, borderRadius: borderRadius.xl, padding: spacing.md, alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder },
+  emergencyCard: { width: '30%', backgroundColor: colors.surface, borderRadius: borderRadius.xl, padding: spacing.md, alignItems: 'center', borderWidth: isDarkMode ? 1 : 0, borderColor: colors.surfaceBorder },
   emergencyIcon: { width: 48, height: 48, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
   emergencyEmoji: { fontSize: 24 },
   emergencyName: { ...typography.labelSmall, color: colors.textPrimary, fontWeight: '500', marginBottom: spacing.xs, textAlign: 'center' },
@@ -637,7 +637,7 @@ const makeStyles = (colors) => StyleSheet.create({
   emptyCard: { marginHorizontal: spacing.xl, padding: spacing.lg, alignItems: 'center' },
   emptyText: { ...typography.bodyMedium, color: colors.textMuted },
   emptySubtext: { ...typography.labelSmall, color: colors.textMuted, marginTop: spacing.xs },
-  tipCard: { width: 120, backgroundColor: colors.surface, borderRadius: borderRadius.xl, padding: spacing.lg, alignItems: 'center', marginLeft: spacing.xl, borderWidth: 1, borderColor: colors.surfaceBorder },
+  tipCard: { width: 120, backgroundColor: colors.surface, borderRadius: borderRadius.xl, padding: spacing.lg, alignItems: 'center', marginLeft: spacing.xl, borderWidth: isDarkMode ? 1 : 0, borderColor: colors.surfaceBorder },
   tipIcon: { fontSize: 32, marginBottom: spacing.sm },
   tipTitle: { ...typography.bodyMedium, color: colors.textPrimary, fontWeight: '500', marginBottom: spacing.xs },
   tipDesc: { ...typography.labelSmall, color: colors.textMuted, textAlign: 'center' },

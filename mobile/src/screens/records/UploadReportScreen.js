@@ -15,7 +15,7 @@ import {
   Alert,
   ActivityIndicator,
 } from 'react-native';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import shadows from '../../theme/shadows';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
@@ -24,6 +24,8 @@ import Button from '../../components/common/Button';
 
 const UploadReportScreen = ({ navigation }) => {
   const [selectedImage, setSelectedImage] = useState(null);
+  const { colors, isDarkMode } = useTheme();
+  const styles = makeStyles(colors);
   const [reportType, setReportType] = useState('lab');
   const [reportName, setReportName] = useState('');
   const [notes, setNotes] = useState('');
@@ -175,7 +177,7 @@ const UploadReportScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
   backBtn: { width: 44, height: 44, borderRadius: borderRadius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },

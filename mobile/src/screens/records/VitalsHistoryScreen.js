@@ -16,7 +16,7 @@ import {
   TextInput,
   Modal,
 } from 'react-native';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import { useUser } from '../../context/UserContext';
@@ -40,6 +40,8 @@ const dateRanges = [
 
 const VitalsHistoryScreen = ({ navigation }) => {
   const { user } = useUser();
+  const { colors, isDarkMode } = useTheme();
+  const styles = makeStyles(colors);
   const [activeVital, setActiveVital] = useState('bp');
   const [dateRange, setDateRange] = useState('week');
   const [loading, setLoading] = useState(true);
@@ -125,10 +127,10 @@ const VitalsHistoryScreen = ({ navigation }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'normal': return colors.success;
-      case 'high': case 'critical': return colors.error;
-      case 'low': return colors.warning;
-      default: return colors.textMuted;
+      case 'normal': return colors.success?.[500] || '#10B981';
+      case 'high': case 'critical': return colors.error?.[500] || '#EF4444';
+      case 'low': return colors.warning?.[500] || '#F59E0B';
+      default: return colors.text?.tertiary || '#6B7280';
     }
   };
 
@@ -362,7 +364,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
 };
 
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   centered: { justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },

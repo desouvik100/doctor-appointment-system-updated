@@ -4,14 +4,16 @@
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing } from '../../theme/typography';
-import { colors as themeColors } from '../../theme/colors';
 
-const ProgressStepper = ({ 
-  steps = [], 
-  currentStep = 0, 
-  colors = themeColors 
+const ProgressStepper = ({
+  steps = [],
+  currentStep = 0,
 }) => {
+  const { colors } = useTheme();
+  const styles = makeStyles(colors);
+
   return (
     <View style={styles.container}>
       {steps.map((step, index) => {
@@ -26,11 +28,11 @@ const ProgressStepper = ({
                 style={[
                   styles.stepCircle,
                   {
-                    backgroundColor: isCompleted || isActive 
-                      ? colors.primary 
+                    backgroundColor: isCompleted || isActive
+                      ? colors.primary
                       : colors.surface,
-                    borderColor: isCompleted || isActive 
-                      ? colors.primary 
+                    borderColor: isCompleted || isActive
+                      ? colors.primary
                       : colors.border,
                   },
                 ]}
@@ -39,8 +41,8 @@ const ProgressStepper = ({
                   style={[
                     styles.stepNumber,
                     {
-                      color: isCompleted || isActive 
-                        ? '#fff' 
+                      color: isCompleted || isActive
+                        ? '#fff'
                         : colors.textSecondary,
                     },
                   ]}
@@ -52,8 +54,8 @@ const ProgressStepper = ({
                 style={[
                   styles.stepLabel,
                   {
-                    color: isActive 
-                      ? colors.textPrimary 
+                    color: isActive
+                      ? colors.textPrimary
                       : colors.textSecondary,
                     fontWeight: isActive ? '600' : '400',
                   },
@@ -67,8 +69,8 @@ const ProgressStepper = ({
                 style={[
                   styles.connector,
                   {
-                    backgroundColor: isCompleted 
-                      ? colors.primary 
+                    backgroundColor: isCompleted
+                      ? colors.primary
                       : colors.border,
                   },
                 ]}
@@ -81,7 +83,7 @@ const ProgressStepper = ({
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flexDirection: 'row',
     alignItems: 'center',

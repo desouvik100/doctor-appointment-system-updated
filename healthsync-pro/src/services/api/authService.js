@@ -13,6 +13,24 @@ import * as Keychain from 'react-native-keychain';
 
 const USER_KEY = 'userData';
 
+const saveUserLocal = async (user) => {
+  try {
+    await AsyncStorage.setItem('userData', JSON.stringify(user));
+    await AsyncStorage.setItem('user', JSON.stringify(user));
+  } catch (e) {
+    console.error('Error saving user locally:', e);
+  }
+};
+
+const removeUserLocal = async () => {
+  try {
+    await AsyncStorage.removeItem('userData');
+    await AsyncStorage.removeItem('user');
+  } catch (e) {
+    console.error('Error removing user locally:', e);
+  }
+};
+
 /**
  * Login with email/phone and password
  * For patients only - uses /auth/login endpoint
@@ -25,7 +43,7 @@ export const login = async (credentials) => {
   if (refreshToken) {
     await saveRefreshToken(refreshToken);
   }
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  await saveUserLocal(user);
   
   return { token, user };
 };
@@ -44,7 +62,7 @@ export const doctorLogin = async (credentials) => {
   }
   // Store doctor as user for consistency
   const user = { ...doctor, role: 'doctor' };
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  await saveUserLocal(user);
   
   return { token, user };
 };
@@ -60,7 +78,7 @@ export const adminLogin = async (credentials) => {
   if (refreshToken) {
     await saveRefreshToken(refreshToken);
   }
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  await saveUserLocal(user);
   
   return { token, user };
 };
@@ -77,7 +95,7 @@ export const clinicLogin = async (credentials) => {
   if (refreshToken) {
     await saveRefreshToken(refreshToken);
   }
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  await saveUserLocal(user);
   
   return { token, user };
 };
@@ -101,8 +119,8 @@ export const register = async (userData) => {
 /**
  * Send OTP to phone number
  */
-export const sendOTP = async (phone) => {
-  const response = await apiClient.post('/auth/send-otp', { phone });
+export const sendOTP = async (emailOrPhone) => {
+  const response = await apiClient.post('/otp/send-otp', { email: emailOrPhone });
   return response.data;
 };
 
@@ -125,8 +143,8 @@ export const verifyRegistrationOTP = async (email, otp) => {
 /**
  * Verify OTP
  */
-export const verifyOTP = async (email, otp, type = 'registration') => {
-  const response = await apiClient.post('/auth/verify-otp', { email, otp, type });
+export const verifyOTP = async (emailOrPhone, otp, type = 'registration') => {
+  const response = await apiClient.post('/otp/verify-otp', { email: emailOrPhone, otp, type });
   return response.data;
 };
 
@@ -161,7 +179,7 @@ export const googleLogin = async (idToken) => {
   if (refreshToken) {
     await saveRefreshToken(refreshToken);
   }
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  await saveUserLocal(user);
   
   return { token, user };
 };
@@ -180,7 +198,7 @@ export const logout = async () => {
   await clearAuthTokens();
   
   // Clear user data
-  await AsyncStorage.removeItem(USER_KEY);
+  await removeUserLocal();
   
   // Clear biometric credentials
   try {
@@ -223,7 +241,7 @@ export const getCurrentUser = async () => {
 export const updateProfile = async (profileData) => {
   const response = await apiClient.put('/auth/profile', profileData);
   const { user } = response.data;
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
+  await saveUserLocal(user);
   return user;
 };
 

@@ -16,7 +16,8 @@ import {
   StatusBar,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../../theme/colors';
+import colors from '../../theme/colors';
+import shadows from '../../theme/shadows';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';

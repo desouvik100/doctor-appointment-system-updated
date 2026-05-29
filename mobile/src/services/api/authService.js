@@ -13,21 +13,50 @@ import * as Keychain from 'react-native-keychain';
 
 const USER_KEY = 'userData';
 
+const saveUserLocal = async (user) => {
+  try {
+    await AsyncStorage.setItem('userData', JSON.stringify(user));
+    await AsyncStorage.setItem('user', JSON.stringify(user));
+  } catch (e) {
+    console.error('Error saving user locally:', e);
+  }
+};
+
+const removeUserLocal = async () => {
+  try {
+    await AsyncStorage.removeItem('userData');
+    await AsyncStorage.removeItem('user');
+  } catch (e) {
+    console.error('Error removing user locally:', e);
+  }
+};
+
 /**
  * Login with email/phone and password
  * For patients only - uses /auth/login endpoint
  */
 export const login = async (credentials) => {
-  const response = await apiClient.post('/auth/login', credentials);
-  const { token, refreshToken, user } = response.data;
-  
-  await saveAuthToken(token);
-  if (refreshToken) {
-    await saveRefreshToken(refreshToken);
+  try {
+    const response = await apiClient.post('/auth/login', credentials);
+    const data = response?.data || {};
+    
+    if (!data.token || !data.user) {
+      throw new Error('Invalid login response from server');
+    }
+    
+    const { token, refreshToken, user } = data;
+    
+    await saveAuthToken(token);
+    if (refreshToken) {
+      await saveRefreshToken(refreshToken);
+    }
+    await saveUserLocal(user);
+    
+    return { token, user };
+  } catch (error) {
+    console.error('Login error:', error);
+    throw error;
   }
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
-  
-  return { token, user };
 };
 
 /**
@@ -35,34 +64,56 @@ export const login = async (credentials) => {
  * Backend /auth/doctor/login expects { email, password }
  */
 export const doctorLogin = async (credentials) => {
-  const response = await apiClient.post('/auth/doctor/login', credentials);
-  const { token, refreshToken, doctor } = response.data;
-  
-  await saveAuthToken(token);
-  if (refreshToken) {
-    await saveRefreshToken(refreshToken);
+  try {
+    const response = await apiClient.post('/auth/doctor/login', credentials);
+    const data = response?.data || {};
+    
+    if (!data.token || !data.doctor) {
+      throw new Error('Invalid doctor login response from server');
+    }
+    
+    const { token, refreshToken, doctor } = data;
+    
+    await saveAuthToken(token);
+    if (refreshToken) {
+      await saveRefreshToken(refreshToken);
+    }
+    // Store doctor as user for consistency
+    const user = { ...doctor, role: 'doctor' };
+    await saveUserLocal(user);
+    
+    return { token, user };
+  } catch (error) {
+    console.error('Doctor login error:', error);
+    throw error;
   }
-  // Store doctor as user for consistency
-  const user = { ...doctor, role: 'doctor' };
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
-  
-  return { token, user };
 };
 
 /**
  * Admin login - uses separate admin endpoint
  */
 export const adminLogin = async (credentials) => {
-  const response = await apiClient.post('/auth/admin/login', credentials);
-  const { token, refreshToken, user } = response.data;
-  
-  await saveAuthToken(token);
-  if (refreshToken) {
-    await saveRefreshToken(refreshToken);
+  try {
+    const response = await apiClient.post('/auth/admin/login', credentials);
+    const data = response?.data || {};
+    
+    if (!data.token || !data.user) {
+      throw new Error('Invalid admin login response from server');
+    }
+    
+    const { token, refreshToken, user } = data;
+    
+    await saveAuthToken(token);
+    if (refreshToken) {
+      await saveRefreshToken(refreshToken);
+    }
+    await saveUserLocal(user);
+    
+    return { token, user };
+  } catch (error) {
+    console.error('Admin login error:', error);
+    throw error;
   }
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
-  
-  return { token, user };
 };
 
 /**
@@ -70,16 +121,27 @@ export const adminLogin = async (credentials) => {
  * Uses /auth/clinic/login endpoint for all clinic staff
  */
 export const clinicLogin = async (credentials) => {
-  const response = await apiClient.post('/auth/clinic/login', credentials);
-  const { token, refreshToken, user } = response.data;
-  
-  await saveAuthToken(token);
-  if (refreshToken) {
-    await saveRefreshToken(refreshToken);
+  try {
+    const response = await apiClient.post('/auth/clinic/login', credentials);
+    const data = response?.data || {};
+    
+    if (!data.token || !data.user) {
+      throw new Error('Invalid clinic login response from server');
+    }
+    
+    const { token, refreshToken, user } = data;
+    
+    await saveAuthToken(token);
+    if (refreshToken) {
+      await saveRefreshToken(refreshToken);
+    }
+    await saveUserLocal(user);
+    
+    return { token, user };
+  } catch (error) {
+    console.error('Clinic login error:', error);
+    throw error;
   }
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
-  
-  return { token, user };
 };
 
 /**
@@ -101,8 +163,8 @@ export const register = async (userData) => {
 /**
  * Send OTP to phone number
  */
-export const sendOTP = async (phone) => {
-  const response = await apiClient.post('/auth/send-otp', { phone });
+export const sendOTP = async (emailOrPhone) => {
+  const response = await apiClient.post('/otp/send-otp', { email: emailOrPhone });
   return response.data;
 };
 
@@ -125,8 +187,8 @@ export const verifyRegistrationOTP = async (email, otp) => {
 /**
  * Verify OTP
  */
-export const verifyOTP = async (email, otp, type = 'registration') => {
-  const response = await apiClient.post('/auth/verify-otp', { email, otp, type });
+export const verifyOTP = async (emailOrPhone, otp, type = 'registration') => {
+  const response = await apiClient.post('/otp/verify-otp', { email: emailOrPhone, otp, type });
   return response.data;
 };
 
@@ -154,16 +216,27 @@ export const resetPassword = async (email, otp, newPassword) => {
  * Google OAuth login
  */
 export const googleLogin = async (idToken) => {
-  const response = await apiClient.post('/auth/google', { idToken });
-  const { token, refreshToken, user } = response.data;
-  
-  await saveAuthToken(token);
-  if (refreshToken) {
-    await saveRefreshToken(refreshToken);
+  try {
+    const response = await apiClient.post('/auth/google', { idToken });
+    const data = response?.data || {};
+    
+    if (!data.token || !data.user) {
+      throw new Error('Invalid Google login response from server');
+    }
+    
+    const { token, refreshToken, user } = data;
+    
+    await saveAuthToken(token);
+    if (refreshToken) {
+      await saveRefreshToken(refreshToken);
+    }
+    await saveUserLocal(user);
+    
+    return { token, user };
+  } catch (error) {
+    console.error('Google login error:', error);
+    throw error;
   }
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
-  
-  return { token, user };
 };
 
 /**
@@ -171,41 +244,49 @@ export const googleLogin = async (idToken) => {
  */
 export const logout = async () => {
   try {
-    await apiClient.post('/auth/logout');
+    // Try to notify backend, but don't fail if it doesn't work
+    try {
+      await apiClient.post('/auth/logout');
+    } catch (error) {
+      console.log('Backend logout notification failed (non-critical)');
+    }
+    
+    // Clear auth tokens from secure storage
+    await clearAuthTokens();
+    
+    // Clear user data
+    await removeUserLocal();
+    
+    // Clear biometric credentials
+    try {
+      await Keychain.resetGenericPassword({ service: 'healthsync_credentials' });
+    } catch (error) {
+      // Biometric credentials may not exist
+    }
+    
+    // Clear all cached data
+    const keys = await AsyncStorage.getAllKeys();
+    const keysToRemove = keys.filter(key => 
+      key.startsWith('cache_') || 
+      key.startsWith('offline_') ||
+      key.startsWith('queue_') ||
+      key === 'appointments' ||
+      key === 'favorites' ||
+      key === 'familyMembers' ||
+      key === 'healthRecords' ||
+      key === 'prescriptions' ||
+      key === 'walletData' ||
+      key === 'notificationSettings'
+    );
+    
+    if (keysToRemove.length > 0) {
+      await AsyncStorage.multiRemove(keysToRemove);
+    }
   } catch (error) {
-    // Continue with local logout even if API fails
-  }
-  
-  // Clear auth tokens from secure storage
-  await clearAuthTokens();
-  
-  // Clear user data
-  await AsyncStorage.removeItem(USER_KEY);
-  
-  // Clear biometric credentials
-  try {
-    await Keychain.resetGenericPassword({ service: 'healthsync_credentials' });
-  } catch (error) {
-    // Biometric credentials may not exist
-  }
-  
-  // Clear all cached data
-  const keys = await AsyncStorage.getAllKeys();
-  const keysToRemove = keys.filter(key => 
-    key.startsWith('cache_') || 
-    key.startsWith('offline_') ||
-    key.startsWith('queue_') ||
-    key === 'appointments' ||
-    key === 'favorites' ||
-    key === 'familyMembers' ||
-    key === 'healthRecords' ||
-    key === 'prescriptions' ||
-    key === 'walletData' ||
-    key === 'notificationSettings'
-  );
-  
-  if (keysToRemove.length > 0) {
-    await AsyncStorage.multiRemove(keysToRemove);
+    console.error('Logout error:', error);
+    // Still clear local data even if there's an error
+    await clearAuthTokens();
+    await removeUserLocal();
   }
 };
 
@@ -213,18 +294,34 @@ export const logout = async () => {
  * Get current user from storage
  */
 export const getCurrentUser = async () => {
-  const userData = await AsyncStorage.getItem(USER_KEY);
-  return userData ? JSON.parse(userData) : null;
+  try {
+    const userData = await AsyncStorage.getItem(USER_KEY);
+    return userData ? JSON.parse(userData) : null;
+  } catch (error) {
+    console.error('Error getting current user:', error);
+    return null;
+  }
 };
 
 /**
  * Update user profile
  */
 export const updateProfile = async (profileData) => {
-  const response = await apiClient.put('/auth/profile', profileData);
-  const { user } = response.data;
-  await AsyncStorage.setItem(USER_KEY, JSON.stringify(user));
-  return user;
+  try {
+    const response = await apiClient.put('/auth/profile', profileData);
+    const data = response?.data || {};
+    
+    if (!data.user) {
+      throw new Error('Invalid profile update response from server');
+    }
+    
+    const { user } = data;
+    await saveUserLocal(user);
+    return user;
+  } catch (error) {
+    console.error('Update profile error:', error);
+    throw error;
+  }
 };
 
 /**

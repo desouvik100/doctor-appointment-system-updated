@@ -11,6 +11,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import shadows from '../../theme/shadows';
 import Avatar from '../../components/common/Avatar';
+import { QuickActionsGrid } from '../../components/common';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
 import whatsappService from '../../services/whatsappService';
@@ -31,6 +32,13 @@ const MENU_ICONS = {
   whatsapp:      { emoji: '💬', bg: '#E8F5E9' },
   feedback:      { emoji: '📝', bg: '#E3F2FD' },
 };
+
+const PROFILE_ACTIONS = [
+  { id: 'reports', icon: 'analytics-outline', label: 'Health Reports', screen: 'HealthReports', color: '#00D4AA' },
+  { id: 'prescriptions', icon: 'clipboard-outline', label: 'Prescriptions', screen: 'Prescriptions', color: '#6C5CE7' },
+  { id: 'wallet', icon: 'wallet-outline', label: 'Wallet', screen: 'Wallet', color: '#FF8A00' },
+  { id: 'offers', icon: 'gift-outline', label: 'Offers', screen: 'Rewards', color: '#FF6B6B' },
+];
 
 const ProfileScreen = ({ navigation }) => {
   const { user, logout, loading } = useUser();
@@ -273,20 +281,13 @@ const ProfileScreen = ({ navigation }) => {
         ) : null}
 
         {/* ── Quick Actions ── */}
-        <View style={styles.quickActionsRow}>
-          {[
-            { emoji: '📊', label: 'Health\nReports',   colors: colors.gradientPrimary || ['#00D4AA', '#00B894'], route: 'HealthReports' },
-            { emoji: '💊', label: 'Prescrip-\ntions',  colors: colors.gradientSecondary || ['#6C5CE7', '#5B4ED1'], route: 'Prescriptions' },
-            { emoji: '💰', label: 'Wallet',             colors: ['#FF8A00', '#FFB800'], route: 'Wallet' },
-            { emoji: '🎁', label: 'Offers',             colors: ['#FF6B6B', '#FF8787'], route: 'Rewards' },
-          ].map((qa) => (
-            <TouchableOpacity key={qa.route} style={styles.quickAction} onPress={() => navigation.navigate(qa.route)} activeOpacity={0.8}>
-              <LinearGradient colors={qa.colors} style={styles.quickActionIcon}>
-                <Text style={styles.quickActionEmoji}>{qa.emoji}</Text>
-              </LinearGradient>
-              <Text style={[styles.quickActionLabel, { color: colors.textSecondary }]}>{qa.label}</Text>
-            </TouchableOpacity>
-          ))}
+        <View style={{ paddingHorizontal: spacing.xl, marginTop: spacing.lg }}>
+          <QuickActionsGrid
+            actions={PROFILE_ACTIONS}
+            variant="grid"
+            cols={4}
+            showTitle={false}
+          />
         </View>
 
         {/* ── Emergency Info Card (Clean Red Alert) ── */}

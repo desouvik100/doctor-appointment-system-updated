@@ -16,6 +16,7 @@ const Avatar = ({
   showStatus = false,
   status = 'online', // online, offline, busy, away
   showBorder = false,
+  customBorderRadius,
 }) => {
   const { colors } = useTheme();
   const [imageError, setImageError] = useState(false);
@@ -65,9 +66,10 @@ const Avatar = ({
   const styles = makeStyles(colors);
 
   const renderAvatarContent = (borderRadiusValue) => {
+    const finalRadius = customBorderRadius !== undefined ? customBorderRadius : borderRadiusValue;
     if (hasValidSource) {
       return (
-        <View style={{ width: '100%', height: '100%', borderRadius: borderRadiusValue, overflow: 'hidden' }}>
+        <View style={{ width: '100%', height: '100%', borderRadius: finalRadius, overflow: 'hidden' }}>
           <Image
             source={imageSource}
             style={styles.image}
@@ -78,13 +80,16 @@ const Avatar = ({
       );
     }
     return (
-      <View style={[styles.placeholder, { borderRadius: borderRadiusValue }]}>
+      <View style={[styles.placeholder, { borderRadius: finalRadius }]}>
         <Text style={[styles.initials, { fontSize }]} numberOfLines={1}>
           {getInitials()}
         </Text>
       </View>
     );
   };
+
+  const outerRadius = customBorderRadius !== undefined ? customBorderRadius : avatarSize / 2;
+  const innerRadius = customBorderRadius !== undefined ? Math.max(0, customBorderRadius - 2) : (avatarSize - 4) / 2;
 
   return (
     <View style={[styles.container, { width: avatarSize, height: avatarSize }]}>
@@ -93,10 +98,10 @@ const Avatar = ({
           colors={colors.gradients?.primary || ['#0066FF', '#1976D2']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
-          style={[styles.border, { borderRadius: avatarSize / 2, padding: 2 }]}
+          style={[styles.border, { borderRadius: outerRadius, padding: 2 }]}
         >
-          <View style={[styles.avatarWrapper, { borderRadius: (avatarSize - 4) / 2 }]}>
-            {renderAvatarContent((avatarSize - 4) / 2)}
+          <View style={[styles.avatarWrapper, { borderRadius: innerRadius }]}>
+            {renderAvatarContent(innerRadius)}
           </View>
         </LinearGradient>
       ) : (

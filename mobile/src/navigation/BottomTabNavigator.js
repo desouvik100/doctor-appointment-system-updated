@@ -12,7 +12,7 @@ import { useTheme } from '../context/ThemeContext';
 
 import HomeScreen from '../screens/home/HomeScreen';
 import AppointmentsScreen from '../screens/appointments/AppointmentsScreen';
-import BookingScreen from '../screens/booking/BookingScreen';
+import DoctorsScreen from '../screens/doctors/DoctorsScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
@@ -25,7 +25,7 @@ const TAB_CONFIG = [
   { name: 'Profile',      icon: '👤', activeIcon: '👤', label: 'Profile' },
 ];
 
-const TabItem = ({ icon, label, focused, colors }) => (
+const TabItem = ({ icon, label, focused, colors, isDarkMode }) => (
   <View style={styles.tabItem}>
     {focused ? (
       <LinearGradient
@@ -37,7 +37,7 @@ const TabItem = ({ icon, label, focused, colors }) => (
         <Text style={styles.tabIconActive}>{icon}</Text>
       </LinearGradient>
     ) : (
-      <View style={[styles.inactiveIconBg, { backgroundColor: colors.surfaceLight }]}>
+      <View style={[styles.inactiveIconBg, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)' }]}>
         <Text style={styles.tabIconInactive}>{icon}</Text>
       </View>
     )}
@@ -52,15 +52,15 @@ const TabItem = ({ icon, label, focused, colors }) => (
 );
 
 const CustomTabBar = ({ state, descriptors, navigation }) => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
 
   return (
     <View style={styles.tabBarContainer}>
       <View style={[
         styles.tabBar,
         {
-          backgroundColor: colors.backgroundCard,
-          borderColor: colors.surfaceBorder,
+          backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.85)' : 'rgba(255, 255, 255, 0.9)',
+          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 184, 148, 0.12)',
           ...shadows.lg,
         },
       ]}>
@@ -91,6 +91,7 @@ const CustomTabBar = ({ state, descriptors, navigation }) => {
                 label={config.label}
                 focused={isFocused}
                 colors={colors}
+                isDarkMode={isDarkMode}
               />
             </TouchableOpacity>
           );
@@ -107,7 +108,7 @@ const BottomTabNavigator = () => (
   >
     <Tab.Screen name="Home" component={HomeScreen} />
     <Tab.Screen name="Appointments" component={AppointmentsScreen} />
-    <Tab.Screen name="Doctors" component={BookingScreen} />
+    <Tab.Screen name="Doctors" component={DoctorsScreen} />
     <Tab.Screen name="Profile" component={ProfileScreen} />
   </Tab.Navigator>
 );

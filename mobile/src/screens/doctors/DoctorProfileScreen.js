@@ -10,12 +10,11 @@ import {
   ScrollView,
   TouchableOpacity,
   StatusBar,
-  Image,
   Dimensions,
   Animated,
+  ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
 import shadows from '../../theme/shadows';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
@@ -23,11 +22,19 @@ import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
 import { Rating } from '../../components/common';
 import { fadeIn, slideUp, stagger, bounce } from '../../utils/animations';
+import { useTheme } from '../../context/ThemeContext';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import doctorService from '../../services/api/doctorService';
 
 const { width } = Dimensions.get('window');
 
 const DoctorProfileScreen = ({ navigation, route }) => {
-  const { doctor } = route.params || {};
+  const { doctor, doctorId } = route.params || {};
+  const { colors, isDarkMode } = useTheme();
+  const insets = useSafeAreaInsets();
+
+  const [doctorData, setDoctorData] = useState(doctor || null);
+  const [loading, setLoading] = useState(!doctor);
   const [isFavorite, setIsFavorite] = useState(false);
   const [activeTab, setActiveTab] = useState('about');
 
@@ -43,47 +50,25 @@ const DoctorProfileScreen = ({ navigation, route }) => {
   const contentOpacity = useRef(new Animated.Value(0)).current;
   const favoriteScale = useRef(new Animated.Value(1)).current;
 
-  // Extended doctor data (would come from API)
-  const doctorDetails = {
-    ...doctor,
-    bio: 'Dr. Sarah Wilson is a board-certified cardiologist with over 12 years of experience in treating cardiovascular diseases. She specializes in preventive cardiology, heart failure management, and interventional procedures.',
-    education: [
-      { degree: 'MD', institution: 'Harvard Medical School', year: '2008' },
-      { degree: 'Fellowship', institution: 'Mayo Clinic - Cardiology', year: '2012' },
-    ],
-    languages: ['English', 'Spanish'],
-    consultationTypes: ['Video', 'In-Person'],
-    clinicAddress: '123 Medical Center Drive, Suite 400, New York, NY 10001',
-    workingHours: 'Mon-Fri: 9:00 AM - 5:00 PM',
-    awards: [
-      'Best Cardiologist Award 2022',
-      'Excellence in Patient Care 2021',
-    ],
-  };
-
-  const reviews = [
-    {
-      id: '1',
-      patientName: 'John D.',
-      rating: 5,
-      date: '2 weeks ago',
-      comment: 'Excellent doctor! Very thorough and took time to explain everything clearly.',
-    },
-    {
-      id: '2',
-      patientName: 'Maria S.',
-      rating: 5,
-      date: '1 month ago',
-      comment: 'Dr. Wilson is incredibly knowledgeable and caring. Highly recommend!',
-    },
-    {
-      id: '3',
-      patientName: 'Robert K.',
-      rating: 4,
-      date: '2 months ago',
-      comment: 'Great experience overall. Wait time was a bit long but worth it.',
-    },
-  ];
+  useEffect(() => {
+    const fetchProfile = async () => {
+      const id = doctorId || doctor?._id || doctor?.id;
+      if (!id) return;
+      try {
+        setLoading(true);
+        const data = await doctorService.getDoctorProfile(id);
+        const resolved = data.doctor || data.data || data;
+        setDoctorData(resolved);
+      } catch (err) {
+        console.error('Failed to fetch doctor profile:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (!doctor) {
+      fetchProfile();
+    }
+  }, [doctorId, doctor]);
 
   // Animate on mount
   useEffect(() => {
@@ -103,7 +88,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
       ]),
       fadeIn(contentOpacity, 400),
     ]).start();
-  }, []);
+  }, [loading]);
 
   // Animate tab change
   useEffect(() => {
@@ -130,22 +115,100 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     navigation.navigate('SlotSelection', { doctor: doctorDetails });
   };
 
+  const activeDoctor = doctorData || doctor || {};
+
+  // Extended doctor data
+  const doctorDetails = {
+    bio: activeDoctor.bio || 'Dr. Sarah Wilson is a board-certified cardiologist with over 12 years of experience in treating cardiovascular diseases. She specializes in preventive cardiology, heart failure management, and interventional procedures.',
+    education: activeDoctor.education || [
+      { degree: 'MD', institution: 'Harvard Medical School', year: '2008' },
+      { degree: 'Fellowship', institution: 'Mayo Clinic - Cardiology', year: '2012' },
+    ],
+    languages: activeDoctor.languages || ['English', 'Spanish'],
+    consultationTypes: activeDoctor.consultationTypes || ['Video', 'In-Person'],
+    clinicAddress: activeDoctor.clinicAddress || activeDoctor.clinic?.address || '123 Medical Center Drive, Suite 400, New York, NY 10001',
+    workingHours: activeDoctor.workingHours || 'Mon-Fri: 9:00 AM - 5:00 PM',
+    awards: activeDoctor.awards || [
+      'Best Cardiologist Award 2022',
+      'Excellence in Patient Care 2021',
+    ],
+    ...activeDoctor,
+  };
+
+  const reviews = [
+    {
+      id: '1',
+      patientName: 'John D.',
+      rating: 5,
+      date: '2 weeks ago',
+      comment: 'Excellent doctor! Very thorough and took time to explain everything clearly.',
+    },
+    {
+      id: '2',
+      patientName: 'Maria S.',
+      rating: 5,
+      date: '1 month ago',
+      comment: 'Dr. Wilson is incredibly knowledgeable and caring. Highly recommend!',
+    },
+    {
+      id: '3',
+      patientName: 'Robert K.',
+      rating: 4,
+      date: '2 months ago',
+      comment: 'Great experience overall. Wait time was a bit long but worth it.',
+    },
+  ];
+
+  const displayName = doctorDetails.name 
+    ? (doctorDetails.name.startsWith('Dr.') ? doctorDetails.name : `Dr. ${doctorDetails.name}`)
+    : 'Doctor';
+
+  if (loading) {
+    return (
+      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+        <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading doctor profile...</Text>
+      </View>
+    );
+  }
+
   return (
-    <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+    <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
+
+      {/* Ambient background mesh */}
+      <View style={styles.backgroundContainer}>
+        <LinearGradient
+          colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.orb1}>
+          <LinearGradient
+            colors={isDarkMode ? ['rgba(0, 212, 170, 0.12)', 'transparent'] : ['rgba(0, 212, 170, 0.06)', 'transparent']}
+            style={{ flex: 1, borderRadius: 150 }}
+          />
+        </View>
+        <View style={styles.orb2}>
+          <LinearGradient
+            colors={isDarkMode ? ['rgba(108, 92, 231, 0.1)', 'transparent'] : ['rgba(108, 92, 231, 0.04)', 'transparent']}
+            style={{ flex: 1, borderRadius: 150 }}
+          />
+        </View>
+      </View>
 
       {/* Header */}
-      <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
+      <Animated.View style={[styles.header, { paddingTop: insets.top + spacing.md, opacity: headerOpacity }]}>
         <TouchableOpacity 
-          style={styles.backButton}
+          style={[styles.backButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.7)', borderColor: colors.surfaceBorder, borderWidth: 1 }]}
           onPress={() => navigation.goBack()}
         >
-          <Text style={styles.backIcon}>←</Text>
+          <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
         </TouchableOpacity>
-        <Text style={styles.headerTitle}>Doctor Profile</Text>
+        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Doctor Profile</Text>
         <Animated.View style={{ transform: [{ scale: favoriteScale }] }}>
           <TouchableOpacity 
-            style={styles.favoriteButton}
+            style={[styles.favoriteButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.7)', borderColor: colors.surfaceBorder, borderWidth: 1 }]}
             onPress={handleFavoritePress}
           >
             <Text style={styles.favoriteIcon}>{isFavorite ? '❤️' : '🤍'}</Text>
@@ -159,33 +222,45 @@ const DoctorProfileScreen = ({ navigation, route }) => {
       >
         {/* Profile Card */}
         <Animated.View style={{ transform: [{ scale: profileScale }], opacity: headerOpacity }}>
-          <Card variant="gradient" style={styles.profileCard}>
+          <View style={[
+            styles.profileCard, 
+            { 
+              backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : 'rgba(255, 255, 255, 0.7)',
+              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 184, 148, 0.08)',
+              borderWidth: 1,
+              borderRadius: borderRadius.xl,
+              ...shadows.md,
+            }
+          ]}>
             <View style={styles.profileHeader}>
-              <Avatar 
-                name={doctorDetails.name} 
-                size="xlarge" 
-                showBorder 
-              />
+              <View style={[styles.avatarBorder, { borderColor: colors.primary + '30' }]}>
+                <Avatar 
+                  name={displayName} 
+                  size="xlarge" 
+                  showBorder 
+                  imageUrl={doctorDetails.profilePhoto || doctorDetails.photo || null}
+                />
+              </View>
               <View style={styles.profileInfo}>
-                <Text style={styles.doctorName}>{doctorDetails.name}</Text>
-                <Text style={styles.specialty}>{doctorDetails.specialty}</Text>
+                <Text style={[styles.doctorName, { color: colors.textPrimary }]}>{displayName}</Text>
+                <Text style={[styles.specialty, { color: colors.primary }]}>{doctorDetails.specialization || doctorDetails.specialty || 'General Physician'}</Text>
                 <View style={styles.ratingRow}>
                   <Rating rating={doctorDetails.rating} size={16} />
-                  <Text style={styles.ratingText}>{doctorDetails.rating}</Text>
-                  <Text style={styles.reviewCount}>({doctorDetails.reviews} reviews)</Text>
+                  <Text style={[styles.ratingText, { color: colors.textPrimary }]}>{doctorDetails.rating ? Number(doctorDetails.rating).toFixed(1) : '4.5'}</Text>
+                  <Text style={[styles.reviewCount, { color: colors.textMuted }]}>({doctorDetails.reviews || doctorDetails.reviewCount || 0} reviews)</Text>
                 </View>
               </View>
             </View>
 
             {/* Stats Row */}
-            <View style={styles.statsRow}>
+            <View style={[styles.statsRow, { borderTopColor: colors.divider }]}>
               {[
-                { value: `${doctorDetails.experience}+`, label: 'Years Exp.' },
-                { value: doctorDetails.reviews, label: 'Reviews' },
-                { value: `₹${doctorDetails.fee}`, label: 'Fee' },
+                { value: `${doctorDetails.experience || doctorDetails.experienceYears || '12'}+`, label: 'Years Exp.' },
+                { value: doctorDetails.reviews || doctorDetails.reviewCount || 0, label: 'Reviews' },
+                { value: `₹${doctorDetails.fee || doctorDetails.consultationFee || 500}`, label: 'Fee' },
               ].map((stat, index) => (
                 <React.Fragment key={index}>
-                  {index > 0 && <View style={styles.statDivider} />}
+                  {index > 0 && <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />}
                   <Animated.View 
                     style={[
                       styles.statItem,
@@ -200,129 +275,186 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                       }
                     ]}
                   >
-                    <Text style={styles.statValue}>{stat.value}</Text>
-                    <Text style={styles.statLabel}>{stat.label}</Text>
+                    <Text style={[styles.statValue, { color: colors.primary }]}>{stat.value}</Text>
+                    <Text style={[styles.statLabel, { color: colors.textMuted }]}>{stat.label}</Text>
                   </Animated.View>
                 </React.Fragment>
               ))}
             </View>
-          </Card>
+          </View>
         </Animated.View>
 
         {/* Tabs */}
-        <Animated.View style={[styles.tabsContainer, { opacity: tabOpacity }]}>
-          {['about', 'reviews'].map((tab) => (
-            <TouchableOpacity
-              key={tab}
-              style={[styles.tab, activeTab === tab && styles.tabActive]}
-              onPress={() => setActiveTab(tab)}
-            >
-              <Text style={[styles.tabText, activeTab === tab && styles.tabTextActive]}>
-                {tab.charAt(0).toUpperCase() + tab.slice(1)}
-              </Text>
-            </TouchableOpacity>
-          ))}
+        <Animated.View style={[
+          styles.tabsContainer, 
+          { 
+            backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+            borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+            borderWidth: 1,
+            opacity: tabOpacity,
+          }
+        ]}>
+          {['about', 'reviews'].map((tab) => {
+            const isActive = activeTab === tab;
+            return (
+              <TouchableOpacity
+                key={tab}
+                style={styles.tab}
+                onPress={() => setActiveTab(tab)}
+                activeOpacity={0.75}
+              >
+                {isActive ? (
+                  <LinearGradient
+                    colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={styles.activeTabGradient}
+                  >
+                    <Text style={[styles.tabText, { color: colors.textInverse, fontWeight: '700' }]}>
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </Text>
+                  </LinearGradient>
+                ) : (
+                  <View style={styles.inactiveTabContent}>
+                    <Text style={[styles.tabText, { color: colors.textSecondary }]}>
+                      {tab.charAt(0).toUpperCase() + tab.slice(1)}
+                    </Text>
+                  </View>
+                )}
+              </TouchableOpacity>
+            );
+          })}
         </Animated.View>
 
         <Animated.View style={{ opacity: contentOpacity }}>
+          {activeTab === 'about' ? (
+            <>
+              {/* About Section */}
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>About</Text>
+                <Text style={[styles.bioText, { color: colors.textSecondary }]}>{doctorDetails.bio}</Text>
+              </View>
 
-        {activeTab === 'about' ? (
-          <>
-            {/* About Section */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>About</Text>
-              <Text style={styles.bioText}>{doctorDetails.bio}</Text>
-            </View>
-
-            {/* Education */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Education</Text>
-              {doctorDetails.education.map((edu, index) => (
-                <View key={index} style={styles.educationItem}>
-                  <View style={styles.educationDot} />
-                  <View style={styles.educationContent}>
-                    <Text style={styles.educationDegree}>{edu.degree}</Text>
-                    <Text style={styles.educationInstitution}>{edu.institution}</Text>
-                    <Text style={styles.educationYear}>{edu.year}</Text>
-                  </View>
-                </View>
-              ))}
-            </View>
-
-            {/* Languages */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Languages</Text>
-              <View style={styles.tagsRow}>
-                {doctorDetails.languages.map((lang, index) => (
-                  <View key={index} style={styles.tag}>
-                    <Text style={styles.tagText}>{lang}</Text>
+              {/* Education */}
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Education</Text>
+                {doctorDetails.education.map((edu, index) => (
+                  <View key={index} style={styles.educationItem}>
+                    <View style={[styles.educationDot, { backgroundColor: colors.primary }]} />
+                    <View style={styles.educationContent}>
+                      <Text style={[styles.educationDegree, { color: colors.textPrimary }]}>{edu.degree}</Text>
+                      <Text style={[styles.educationInstitution, { color: colors.textSecondary }]}>{edu.institution}</Text>
+                      <Text style={[styles.educationYear, { color: colors.textMuted }]}>{edu.year}</Text>
+                    </View>
                   </View>
                 ))}
               </View>
-            </View>
 
-            {/* Clinic Info */}
-            <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Clinic Information</Text>
-              <Card variant="default" style={styles.clinicCard}>
-                <View style={styles.clinicRow}>
-                  <Text style={styles.clinicIcon}>📍</Text>
-                  <Text style={styles.clinicText}>{doctorDetails.clinicAddress}</Text>
-                </View>
-                <View style={styles.clinicRow}>
-                  <Text style={styles.clinicIcon}>🕐</Text>
-                  <Text style={styles.clinicText}>{doctorDetails.workingHours}</Text>
-                </View>
-              </Card>
-            </View>
-          </>
-        ) : (
-          /* Reviews Section */
-          <View style={styles.section}>
-            <View style={styles.reviewsHeader}>
-              <Text style={styles.sectionTitle}>Patient Reviews</Text>
-              <View style={styles.overallRating}>
-                <Text style={styles.overallRatingValue}>{doctorDetails.rating}</Text>
-                <Text style={styles.overallRatingStars}>★</Text>
-              </View>
-            </View>
-
-            {reviews.map((review) => (
-              <Card key={review.id} variant="default" style={styles.reviewCard}>
-                <View style={styles.reviewHeader}>
-                  <View style={styles.reviewerInfo}>
-                    <Avatar name={review.patientName} size="small" />
-                    <View style={styles.reviewerDetails}>
-                      <Text style={styles.reviewerName}>{review.patientName}</Text>
-                      <Text style={styles.reviewDate}>{review.date}</Text>
+              {/* Languages */}
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Languages</Text>
+                <View style={styles.tagsRow}>
+                  {doctorDetails.languages.map((lang, index) => (
+                    <View key={index} style={[styles.tag, { backgroundColor: colors.primary + '15' }]}>
+                      <Text style={[styles.tagText, { color: colors.primary }]}>{lang}</Text>
                     </View>
-                  </View>
-                  <Rating rating={review.rating} size={14} />
+                  ))}
                 </View>
-                <Text style={styles.reviewComment}>{review.comment}</Text>
-              </Card>
-            ))}
+              </View>
 
-            <TouchableOpacity style={styles.viewAllReviews}>
-              <Text style={styles.viewAllText}>View All Reviews</Text>
-            </TouchableOpacity>
-          </View>
-        )}
+              {/* Clinic Info */}
+              <View style={styles.section}>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Clinic Information</Text>
+                <View style={[
+                  styles.clinicCard,
+                  {
+                    backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : 'rgba(255, 255, 255, 0.7)',
+                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                    borderWidth: 1,
+                    borderRadius: borderRadius.xl,
+                  }
+                ]}>
+                  <View style={styles.clinicRow}>
+                    <Text style={styles.clinicIcon}>📍</Text>
+                    <Text style={[styles.clinicText, { color: colors.textSecondary }]}>{doctorDetails.clinicAddress}</Text>
+                  </View>
+                  <View style={styles.clinicRow}>
+                    <Text style={styles.clinicIcon}>🕐</Text>
+                    <Text style={[styles.clinicText, { color: colors.textSecondary }]}>{doctorDetails.workingHours}</Text>
+                  </View>
+                </View>
+              </View>
+            </>
+          ) : (
+            /* Reviews Section */
+            <View style={styles.section}>
+              <View style={styles.reviewsHeader}>
+                <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Patient Reviews</Text>
+                <View style={[styles.overallRating, { backgroundColor: colors.primary + '20' }]}>
+                  <Text style={[styles.overallRatingValue, { color: colors.primary }]}>{doctorDetails.rating ? Number(doctorDetails.rating).toFixed(1) : '4.5'}</Text>
+                  <Text style={styles.overallRatingStars}>★</Text>
+                </View>
+              </View>
+
+              {reviews.map((review) => (
+                <View key={review.id} style={[
+                  styles.reviewCard,
+                  {
+                    backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : 'rgba(255, 255, 255, 0.7)',
+                    borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+                    borderWidth: 1,
+                    borderRadius: borderRadius.xl,
+                    marginBottom: spacing.md,
+                  }
+                ]}>
+                  <View style={styles.reviewHeader}>
+                    <View style={styles.reviewerInfo}>
+                      <Avatar name={review.patientName} size="small" />
+                      <View style={styles.reviewerDetails}>
+                        <Text style={[styles.reviewerName, { color: colors.textPrimary }]}>{review.patientName}</Text>
+                        <Text style={[styles.reviewDate, { color: colors.textMuted }]}>{review.date}</Text>
+                      </View>
+                    </View>
+                    <Rating rating={review.rating} size={14} />
+                  </View>
+                  <Text style={[styles.reviewComment, { color: colors.textSecondary }]}>{review.comment}</Text>
+                </View>
+              ))}
+
+              <TouchableOpacity style={styles.viewAllReviews}>
+                <Text style={[styles.viewAllText, { color: colors.primary }]}>View All Reviews</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </Animated.View>
       </ScrollView>
 
       {/* Bottom CTA */}
-      <View style={styles.bottomBar}>
+      <View style={[
+        styles.bottomBar,
+        {
+          backgroundColor: isDarkMode ? '#131926' : '#FFFFFF',
+          borderTopColor: colors.divider,
+        }
+      ]}>
         <View style={styles.feeContainer}>
-          <Text style={styles.feeLabel}>Consultation Fee</Text>
-          <Text style={styles.feeValue}>₹{doctorDetails.fee}</Text>
+          <Text style={[styles.feeLabel, { color: colors.textMuted }]}>Consultation Fee</Text>
+          <Text style={[styles.feeValue, { color: colors.textPrimary }]}>₹{doctorDetails.fee || doctorDetails.consultationFee || 500}</Text>
         </View>
-        <Button
-          title="Book Appointment"
+        <TouchableOpacity
+          style={styles.bookCTAButton}
           onPress={handleBookAppointment}
-          size="large"
-          style={styles.bookButton}
-        />
+          activeOpacity={0.85}
+        >
+          <LinearGradient
+            colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
+            style={styles.bookCTAButtonGradient}
+          >
+            <Text style={[styles.bookCTAButtonText, { color: colors.textInverse }]}>Book Appointment</Text>
+          </LinearGradient>
+        </TouchableOpacity>
       </View>
     </View>
   );
@@ -331,37 +463,62 @@ const DoctorProfileScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    backgroundColor: colors.background,
+  },
+  loadingContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  loadingText: {
+    ...typography.bodyMedium,
+    marginTop: spacing.md,
+  },
+  backgroundContainer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+    zIndex: -1,
+  },
+  orb1: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    top: -50,
+    left: -100,
+  },
+  orb2: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    top: 250,
+    right: -100,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingHorizontal: spacing.xl,
-    paddingTop: spacing.xxl,
     paddingBottom: spacing.lg,
   },
   backButton: {
     width: 40,
     height: 40,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
   backIcon: {
     fontSize: 20,
-    color: colors.textPrimary,
   },
   headerTitle: {
     ...typography.headlineMedium,
-    color: colors.textPrimary,
+    fontWeight: '700',
   },
   favoriteButton: {
     width: 40,
     height: 40,
     borderRadius: borderRadius.md,
-    backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
   },
@@ -370,11 +527,16 @@ const styles = StyleSheet.create({
   },
   scrollContent: {
     paddingHorizontal: spacing.xl,
-    paddingBottom: 140,
+    paddingBottom: 160,
   },
   profileCard: {
     padding: spacing.xl,
     marginBottom: spacing.xl,
+  },
+  avatarBorder: {
+    borderWidth: 2,
+    borderRadius: borderRadius.full,
+    padding: 2,
   },
   profileHeader: {
     flexDirection: 'row',
@@ -387,11 +549,11 @@ const styles = StyleSheet.create({
   },
   doctorName: {
     ...typography.headlineMedium,
-    color: colors.textPrimary,
+    fontWeight: '800',
   },
   specialty: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
+    fontWeight: '600',
     marginTop: spacing.xs,
   },
   ratingRow: {
@@ -402,12 +564,11 @@ const styles = StyleSheet.create({
   },
   ratingText: {
     ...typography.labelMedium,
-    color: colors.textPrimary,
+    fontWeight: '600',
     marginLeft: spacing.sm,
   },
   reviewCount: {
     ...typography.labelSmall,
-    color: colors.textMuted,
     marginLeft: spacing.xs,
   },
   statsRow: {
@@ -415,58 +576,63 @@ const styles = StyleSheet.create({
     justifyContent: 'space-around',
     paddingTop: spacing.lg,
     borderTopWidth: 1,
-    borderTopColor: colors.divider,
   },
   statItem: {
     alignItems: 'center',
   },
   statValue: {
     ...typography.headlineSmall,
-    color: colors.primary,
+    fontWeight: '800',
   },
   statLabel: {
     ...typography.labelSmall,
-    color: colors.textMuted,
     marginTop: spacing.xs,
   },
   statDivider: {
     width: 1,
-    backgroundColor: colors.divider,
   },
   tabsContainer: {
     flexDirection: 'row',
-    backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
-    padding: spacing.xs,
+    borderRadius: borderRadius.full,
+    padding: 4,
     marginBottom: spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   tab: {
     flex: 1,
-    paddingVertical: spacing.md,
+    height: 40,
+    borderRadius: borderRadius.full,
+    justifyContent: 'center',
     alignItems: 'center',
-    borderRadius: borderRadius.md,
+    overflow: 'hidden',
   },
-  tabActive: {
-    backgroundColor: colors.primary,
+  activeTabGradient: {
+    width: '100%',
+    height: '100%',
+    borderRadius: borderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  inactiveTabContent: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
   },
   tabText: {
     ...typography.labelMedium,
-    color: colors.textSecondary,
-  },
-  tabTextActive: {
-    color: colors.textInverse,
   },
   section: {
     marginBottom: spacing.xl,
   },
   sectionTitle: {
     ...typography.headlineSmall,
-    color: colors.textPrimary,
+    fontWeight: '700',
     marginBottom: spacing.md,
   },
   bioText: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
     lineHeight: 24,
   },
   educationItem: {
@@ -477,7 +643,6 @@ const styles = StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    backgroundColor: colors.primary,
     marginTop: 6,
     marginRight: spacing.md,
   },
@@ -486,16 +651,13 @@ const styles = StyleSheet.create({
   },
   educationDegree: {
     ...typography.bodyMedium,
-    color: colors.textPrimary,
     fontWeight: '600',
   },
   educationInstitution: {
     ...typography.bodySmall,
-    color: colors.textSecondary,
   },
   educationYear: {
     ...typography.labelSmall,
-    color: colors.textMuted,
   },
   tagsRow: {
     flexDirection: 'row',
@@ -503,14 +665,13 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   tag: {
-    backgroundColor: colors.primaryLight,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
   },
   tagText: {
     ...typography.labelMedium,
-    color: colors.primary,
+    fontWeight: '600',
   },
   clinicCard: {
     padding: spacing.lg,
@@ -526,7 +687,6 @@ const styles = StyleSheet.create({
   },
   clinicText: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
     flex: 1,
   },
   reviewsHeader: {
@@ -538,14 +698,13 @@ const styles = StyleSheet.create({
   overallRating: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.primaryLight,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
   },
   overallRatingValue: {
     ...typography.headlineSmall,
-    color: colors.primary,
+    fontWeight: '800',
   },
   overallRatingStars: {
     color: '#FFD700',
@@ -554,7 +713,6 @@ const styles = StyleSheet.create({
   },
   reviewCard: {
     padding: spacing.lg,
-    marginBottom: spacing.md,
   },
   reviewHeader: {
     flexDirection: 'row',
@@ -571,16 +729,13 @@ const styles = StyleSheet.create({
   },
   reviewerName: {
     ...typography.bodyMedium,
-    color: colors.textPrimary,
     fontWeight: '500',
   },
   reviewDate: {
     ...typography.labelSmall,
-    color: colors.textMuted,
   },
   reviewComment: {
     ...typography.bodyMedium,
-    color: colors.textSecondary,
     lineHeight: 22,
   },
   viewAllReviews: {
@@ -589,7 +744,6 @@ const styles = StyleSheet.create({
   },
   viewAllText: {
     ...typography.labelMedium,
-    color: colors.primary,
   },
   bottomBar: {
     position: 'absolute',
@@ -598,27 +752,35 @@ const styles = StyleSheet.create({
     right: 0,
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: colors.backgroundCard,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.lg,
     paddingBottom: spacing.xxl,
     borderTopWidth: 1,
-    borderTopColor: colors.surfaceBorder,
-    ...shadows.large,
+    ...shadows.lg,
   },
   feeContainer: {
     marginRight: spacing.lg,
   },
   feeLabel: {
     ...typography.labelSmall,
-    color: colors.textMuted,
   },
   feeValue: {
     ...typography.headlineMedium,
-    color: colors.textPrimary,
+    fontWeight: '800',
   },
-  bookButton: {
+  bookCTAButton: {
     flex: 1,
+    borderRadius: borderRadius.lg,
+    overflow: 'hidden',
+  },
+  bookCTAButtonGradient: {
+    paddingVertical: spacing.md,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bookCTAButtonText: {
+    ...typography.button,
+    fontWeight: '700',
   },
 });
 

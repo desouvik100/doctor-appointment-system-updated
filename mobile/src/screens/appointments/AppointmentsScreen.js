@@ -151,10 +151,30 @@ const AppointmentsScreen = ({ navigation }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
+
+      {/* Ambient background mesh */}
+      <View style={styles.backgroundContainer}>
+        <LinearGradient
+          colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
+          style={StyleSheet.absoluteFill}
+        />
+        <View style={styles.orb1}>
+          <LinearGradient
+            colors={isDarkMode ? ['rgba(0, 212, 170, 0.12)', 'transparent'] : ['rgba(0, 212, 170, 0.06)', 'transparent']}
+            style={{ flex: 1, borderRadius: 150 }}
+          />
+        </View>
+        <View style={styles.orb2}>
+          <LinearGradient
+            colors={isDarkMode ? ['rgba(108, 92, 231, 0.1)', 'transparent'] : ['rgba(108, 92, 231, 0.04)', 'transparent']}
+            style={{ flex: 1, borderRadius: 150 }}
+          />
+        </View>
+      </View>
 
       {/* Header */}
-      <View style={styles.header}>
+      <View style={[styles.header, { paddingTop: spacing.xxl + 10 }]}>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Appointments</Text>
         <TouchableOpacity 
           style={styles.addBtn} 
@@ -162,7 +182,9 @@ const AppointmentsScreen = ({ navigation }) => {
           activeOpacity={0.85}
         >
           <LinearGradient
-            colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']}
+            colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 1 }}
             style={styles.addBtnGradient}
           >
             <Text style={styles.addBtnIcon}>+</Text>
@@ -170,32 +192,44 @@ const AppointmentsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-      {/* Tabs */}
-      <View style={styles.tabsContainer}>
-        {tabs.map((tab) => (
-          <TouchableOpacity
-            key={tab.id}
-            style={[styles.tab, activeTab === tab.id && styles.tabActive]}
-            onPress={() => setActiveTab(tab.id)}
-            activeOpacity={0.7}
-          >
-            <Text style={[
-              styles.tabText,
-              { color: colors.textSecondary },
-              activeTab === tab.id && { color: colors.primary, fontWeight: '700' },
-            ]}>
-              {tab.label}
-            </Text>
-            {activeTab === tab.id && (
-              <LinearGradient
-                colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']}
-                start={{ x: 0, y: 0 }}
-                end={{ x: 1, y: 0 }}
-                style={styles.tabIndicator}
-              />
-            )}
-          </TouchableOpacity>
-        ))}
+      {/* Segmented Tabs (Glassmorphic Pill Container) */}
+      <View style={[
+        styles.tabsContainer,
+        {
+          backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.04)',
+          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+        }
+      ]}>
+        {tabs.map((tab) => {
+          const isActive = activeTab === tab.id;
+          return (
+            <TouchableOpacity
+              key={tab.id}
+              style={styles.tab}
+              onPress={() => setActiveTab(tab.id)}
+              activeOpacity={0.75}
+            >
+              {isActive ? (
+                <LinearGradient
+                  colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
+                  start={{ x: 0, y: 0 }}
+                  end={{ x: 1, y: 0 }}
+                  style={styles.activeTabGradient}
+                >
+                  <Text style={[styles.tabText, { color: colors.textInverse, fontWeight: '700' }]}>
+                    {tab.label}
+                  </Text>
+                </LinearGradient>
+              ) : (
+                <View style={styles.inactiveTabContent}>
+                  <Text style={[styles.tabText, { color: colors.textSecondary }]}>
+                    {tab.label}
+                  </Text>
+                </View>
+              )}
+            </TouchableOpacity>
+          );
+        })}
       </View>
 
       {/* Loading State with Skeletons */}
@@ -252,7 +286,9 @@ const AppointmentsScreen = ({ navigation }) => {
           activeOpacity={0.9}
         >
           <LinearGradient
-            colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']}
+            colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
+            start={{ x: 0, y: 0 }}
+            end={{ x: 1, y: 0 }}
             style={styles.floatingBtnGradient}
           >
             <Text style={styles.floatingBtnIcon}>📅</Text>
@@ -268,6 +304,27 @@ const AppointmentsScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  backgroundContainer: {
+    ...StyleSheet.absoluteFillObject,
+    overflow: 'hidden',
+    zIndex: -1,
+  },
+  orb1: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    top: -50,
+    left: -100,
+  },
+  orb2: {
+    position: 'absolute',
+    width: 300,
+    height: 300,
+    borderRadius: 150,
+    top: 250,
+    right: -100,
   },
   header: {
     flexDirection: 'row',
@@ -299,26 +356,38 @@ const styles = StyleSheet.create({
   },
   tabsContainer: {
     flexDirection: 'row',
-    paddingHorizontal: spacing.xl,
+    marginHorizontal: spacing.xl,
     marginBottom: spacing.lg,
-    gap: spacing.xxl,
+    padding: 4,
+    borderRadius: borderRadius.full,
+    borderWidth: 1,
+    alignItems: 'center',
+    justifyContent: 'space-between',
   },
   tab: {
-    paddingBottom: spacing.md,
-    position: 'relative',
+    flex: 1,
+    height: 40,
+    borderRadius: borderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+    overflow: 'hidden',
   },
-  tabActive: {},
+  activeTabGradient: {
+    width: '100%',
+    height: '100%',
+    borderRadius: borderRadius.full,
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
+  inactiveTabContent: {
+    width: '100%',
+    height: '100%',
+    justifyContent: 'center',
+    alignItems: 'center',
+  },
   tabText: {
-    ...typography.bodyLarge,
-    fontSize: 16,
-  },
-  tabIndicator: {
-    position: 'absolute',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    height: 3,
-    borderRadius: 2,
+    ...typography.bodyMedium,
+    fontSize: 14,
   },
   listContent: {
     paddingHorizontal: spacing.xl,

@@ -8,33 +8,31 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import LinearGradient from 'react-native-linear-gradient';
-import shadows from '../theme/shadows';
+import { shadows } from '../theme/shadows';
 import { typography, spacing, borderRadius } from '../theme/typography';
 import { useTheme } from '../context/ThemeContext';
 
-// Import all admin screens
-import {
-  AdminDashboardScreen,
-  AdminDoctorsScreen,
-  AdminStaffScreen,
-  AdminClinicsScreen,
-  AdminUsersScreen,
-  AdminAppointmentsScreen,
-  AdminWalletScreen,
-  AdminCouponsScreen,
-  AdminReportsScreen,
-  AdminApprovalsScreen,
-  AdminDoctorDetailScreen,
-  AdminUserDetailScreen,
-  AdminClinicDetailScreen,
-  AdminAppointmentDetailScreen,
-  AdminAddDoctorScreen,
-  AdminEditDoctorScreen,
-  AdminAddClinicScreen,
-  AdminEditClinicScreen,
-  AdminSupportTicketsScreen,
-  AdminAuditLogsScreen,
-} from '../screens/admin';
+// Import all admin screens directly
+import AdminDashboardScreen from '../screens/admin/AdminDashboardScreen';
+import AdminDoctorsScreen from '../screens/admin/AdminDoctorsScreen';
+import AdminStaffScreen from '../screens/admin/AdminStaffScreen';
+import AdminClinicsScreen from '../screens/admin/AdminClinicsScreen';
+import AdminUsersScreen from '../screens/admin/AdminUsersScreen';
+import AdminAppointmentsScreen from '../screens/admin/AdminAppointmentsScreen';
+import AdminWalletScreen from '../screens/admin/AdminWalletScreen';
+import AdminCouponsScreen from '../screens/admin/AdminCouponsScreen';
+import AdminReportsScreen from '../screens/admin/AdminReportsScreen';
+import AdminApprovalsScreen from '../screens/admin/AdminApprovalsScreen';
+import AdminDoctorDetailScreen from '../screens/admin/AdminDoctorDetailScreen';
+import AdminUserDetailScreen from '../screens/admin/AdminUserDetailScreen';
+import AdminClinicDetailScreen from '../screens/admin/AdminClinicDetailScreen';
+import AdminAppointmentDetailScreen from '../screens/admin/AdminAppointmentDetailScreen';
+import AdminAddDoctorScreen from '../screens/admin/AdminAddDoctorScreen';
+import AdminEditDoctorScreen from '../screens/admin/AdminEditDoctorScreen';
+import AdminAddClinicScreen from '../screens/admin/AdminAddClinicScreen';
+import AdminEditClinicScreen from '../screens/admin/AdminEditClinicScreen';
+import AdminSupportTicketsScreen from '../screens/admin/AdminSupportTicketsScreen';
+import AdminAuditLogsScreen from '../screens/admin/AdminAuditLogsScreen';
 import ProfileScreen from '../screens/profile/ProfileScreen';
 
 const Tab = createBottomTabNavigator();
@@ -73,29 +71,41 @@ const AdminDashboardStack = () => {
   );
 };
 
-const TabIcon = ({ icon, label, focused, colors }) => (
+const TabIcon = ({ icon, label, focused, colors, isDarkMode }) => (
   <View style={styles.tabItem}>
     {focused ? (
-      <LinearGradient colors={['#F39C12', '#F1C40F']} style={styles.activeIconBg}>
+      <LinearGradient 
+        colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} 
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.activeIconBg}
+      >
         <Text style={styles.tabIcon}>{icon}</Text>
       </LinearGradient>
     ) : (
-      <View style={styles.inactiveIconBg}>
+      <View style={[styles.inactiveIconBg, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)' }]}>
         <Text style={[styles.tabIcon, styles.inactiveIcon]}>{icon}</Text>
       </View>
     )}
-    <Text style={[styles.tabLabel, { color: colors.textMuted }, focused && { color: '#F39C12', fontWeight: '600' }]}>
+    <Text style={[styles.tabLabel, { color: colors.textMuted }, focused && { color: colors.primary, fontWeight: '700' }]}>
       {label}
     </Text>
   </View>
 );
 
 const CustomTabBar = ({ state, navigation }) => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   
   return (
     <View style={styles.tabBarContainer}>
-      <View style={[styles.tabBar, { backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder }]}>
+      <View style={[
+        styles.tabBar, 
+        { 
+          backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.85)' : 'rgba(255, 255, 255, 0.9)', 
+          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 184, 148, 0.12)',
+          ...shadows.lg,
+        }
+      ]}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
 
@@ -116,7 +126,7 @@ const CustomTabBar = ({ state, navigation }) => {
 
           return (
             <TouchableOpacity key={route.key} onPress={onPress} style={styles.tabButton} activeOpacity={0.7}>
-              <TabIcon icon={getIcon()} label={route.name} focused={isFocused} colors={colors} />
+              <TabIcon icon={getIcon()} label={route.name} focused={isFocused} colors={colors} isDarkMode={isDarkMode} />
             </TouchableOpacity>
           );
         })}

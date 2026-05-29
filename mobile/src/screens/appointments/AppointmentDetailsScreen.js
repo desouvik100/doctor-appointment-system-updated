@@ -1,5 +1,5 @@
 /**
- * AppointmentDetailsScreen - Full appointment details with actions
+ * AppointmentDetailsScreen - Full appointment details with actions - Dynamic Theme Edition
  * Connected to real API
  */
 
@@ -16,8 +16,9 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import QRCode from 'react-native-qrcode-svg';
-import { colors, shadows } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
+import { shadows } from '../../theme/shadows';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
@@ -27,6 +28,9 @@ import { getAppointmentById, cancelAppointment, checkIn } from '../../services/a
 import dayjs from 'dayjs';
 
 const AppointmentDetailsScreen = ({ navigation, route }) => {
+  const { colors, isDarkMode } = useTheme();
+  const styles = makeStyles(colors);
+  
   const { appointment, appointmentId } = route.params || {};
   const [showCancelModal, setShowCancelModal] = useState(false);
   const [showQR, setShowQR] = useState(false);
@@ -144,7 +148,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
 
       {/* Header */}
       <View style={styles.header}>
@@ -158,7 +162,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {/* Status Banner */}
         <LinearGradient
-          colors={appointmentData.status === 'confirmed' ? ['#10B981', '#059669'] : colors.gradientPrimary}
+          colors={appointmentData.status === 'confirmed' ? (colors.gradientPrimary || ['#00D4AA', '#00B894']) : (colors.gradientSecondary || ['#6C5CE7', '#5B4ED1'])}
           style={styles.statusBanner}
         >
           <Text style={styles.statusIcon}>
@@ -304,7 +308,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
           </View>
         </View>
       </ScrollView>
-
+ 
       <CancelModal
         visible={showCancelModal}
         onClose={() => setShowCancelModal(false)}
@@ -315,7 +319,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   loadingContainer: { 
     alignItems: 'center', 
@@ -352,8 +356,8 @@ const styles = StyleSheet.create({
   doctorCard: { padding: spacing.lg, marginBottom: spacing.lg },
   doctorRow: { flexDirection: 'row', alignItems: 'center' },
   doctorInfo: { flex: 1, marginLeft: spacing.md },
-  doctorName: { ...typography.headlineSmall, color: colors.textPrimary },
-  specialty: { ...typography.bodyMedium, color: colors.textSecondary },
+  doctorName: { ...typography.headlineSmall, color: '#fff' },
+  specialty: { ...typography.bodyMedium, color: 'rgba(255,255,255,0.7)' },
   detailsCard: { padding: spacing.lg, marginBottom: spacing.lg },
   detailRow: { marginBottom: spacing.md },
   detailItem: { flexDirection: 'row', alignItems: 'center' },

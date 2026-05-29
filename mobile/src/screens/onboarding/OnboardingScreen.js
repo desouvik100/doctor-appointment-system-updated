@@ -1,9 +1,5 @@
-/**
- * OnboardingScreen - Premium startup-grade onboarding walkthrough
- * Horizontal paginated slides with smooth indicators, micro-interactions, and gradient buttons
- */
-
-import React, { useState, useRef } from 'react';
+// OnboardingScreen - Premium startup-grade onboarding walkthrough with pre-auth permissions
+import React, { useState, useRef, useEffect } from 'react';
 import {
   View,
   Text,
@@ -14,43 +10,137 @@ import {
   Animated,
   StatusBar,
   SafeAreaView,
+  Platform,
+  PermissionsAndroid,
+  Alert,
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import LinearGradient from 'react-native-linear-gradient';
+import { check, request, PERMISSIONS, RESULTS } from 'react-native-permissions';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 
 const { width, height } = Dimensions.get('window');
-
-const slides = [
-  {
-    id: '1',
-    title: 'Find Verified Doctors',
-    subtitle: 'Connect with 500+ top-rated specialists and view real-time clinic queue status before you book.',
-    emoji: '🩺',
-    gradient: ['#00D4AA', '#00B894'],
-  },
-  {
-    id: '2',
-    title: 'AI Health Assistant',
-    subtitle: 'Get 24/7 answers to health questions, symptom analysis, and personalized diet tips powered by Gemini AI.',
-    emoji: '🤖',
-    gradient: ['#6C5CE7', '#5B4ED1'],
-  },
-  {
-    id: '3',
-    title: 'Secure Health Vault',
-    subtitle: 'Store your medical reports, vitals history, and prescriptions in a 100% private, secure environment.',
-    emoji: '🔒',
-    gradient: ['#FF6B6B', '#EE5A5A'],
-  },
-];
 
 const OnboardingScreen = ({ navigation }) => {
   const { colors, isDarkMode } = useTheme();
   const [currentIndex, setCurrentIndex] = useState(0);
   const scrollX = useRef(new Animated.Value(0)).current;
   const slidesRef = useRef(null);
+
+  // Permissions state
+  const [locGranted, setLocGranted] = useState(false);
+  const [notifGranted, setNotifGranted] = useState(false);
+  const [camGranted, setCamGranted] = useState(false);
+
+  const slides = [
+    {
+      id: '1',
+      title: 'Find trusted doctors instantly',
+      subtitle: 'Connect with 500+ top-rated specialists and view real-time clinic queue status before booking.',
+      emoji: '🩺',
+      gradient: ['#00D4AA', '#00B894'],
+    },
+    {
+      id: '2',
+      title: 'Book appointments without waiting',
+      subtitle: 'Join live digital queues, monitor your position, and schedule video or physical visits in seconds.',
+      emoji: '📅',
+      gradient: ['#6C5CE7', '#5B4ED1'],
+    },
+    {
+      id: '3',
+      title: 'Secure medical records & AI support',
+      subtitle: 'Store reports in a HIPAA-compliant vault and get 24/7 AI-powered answers for symptoms and vitals.',
+      emoji: '🔒',
+      gradient: ['#FF6B6B', '#EE5A5A'],
+    },
+    {
+      id: '4',
+      title: 'Permissions Setup',
+      subtitle: 'We value your privacy. HealthSync requires the following permissions to function correctly:',
+      emoji: '⚙️',
+      gradient: ['#00D4AA', '#5B4ED1'],
+      isPermissionSlide: true,
+    },
+  ];
+
+  useEffect(() => {
+    checkInitialPermissions();
+  }, []);
+
+  const checkInitialPermissions = async () => {
+    try {
+      if (Platform.OS === 'android') {
+        const hasLoc = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION);
+        setLocGranted(hasLoc);
+        const hasCam = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.CAMERA);
+        setCamGranted(hasCam);
+        if (Platform.Version >= 33) {
+          const hasNotif = await PermissionsAndroid.check(PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS);
+          setNotifGranted(hasNotif);
+        } else {
+          setNotifGranted(true);
+        }
+      } else {
+        const locRes = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+        setLocGranted(locRes === RESULTS.GRANTED);
+        const camRes = await check(PERMISSIONS.IOS.CAMERA);
+        setCamGranted(camRes === RESULTS.GRANTED);
+      }
+    } catch (err) {
+      console.log('Error checking permissions:', err);
+    }
+  };
+
+  const handleRequestLocation = async () => {
+    try {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
+        );
+        setLocGranted(granted === PermissionsAndroid.RESULTS.GRANTED);
+      } else {
+        const res = await request(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
+        setLocGranted(res === RESULTS.GRANTED);
+      }
+    } catch (err) {
+      Alert.alert('Permission Error', 'Could not request location permission');
+    }
+  };
+
+  const handleRequestNotifications = async () => {
+    try {
+      if (Platform.OS === 'android' && Platform.Version >= 33) {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
+        );
+        setNotifGranted(granted === PermissionsAndroid.RESULTS.GRANTED);
+      } else {
+        // Mock / simulate notifications request for ios / older android
+        setNotifGranted(true);
+        Alert.alert('Notifications Enabled', 'You will now receive appointment updates.');
+      }
+    } catch (err) {
+      Alert.alert('Permission Error', 'Could not request notifications permission');
+    }
+  };
+
+  const handleRequestCamera = async () => {
+    try {
+      if (Platform.OS === 'android') {
+        const granted = await PermissionsAndroid.request(
+          PermissionsAndroid.PERMISSIONS.CAMERA
+        );
+        setCamGranted(granted === PermissionsAndroid.RESULTS.GRANTED);
+      } else {
+        const res = await request(PERMISSIONS.IOS.CAMERA);
+        setCamGranted(res === RESULTS.GRANTED);
+      }
+    } catch (err) {
+      Alert.alert('Permission Error', 'Could not request camera permission');
+    }
+  };
 
   const viewableItemsChanged = useRef(({ viewableItems }) => {
     if (viewableItems && viewableItems.length > 0) {
@@ -82,10 +172,81 @@ const OnboardingScreen = ({ navigation }) => {
     }
   };
 
+  const renderPermissionRow = (icon, title, desc, granted, onRequest) => {
+    return (
+      <View style={[styles.permRow, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+        <View style={[styles.permIconBg, { backgroundColor: colors.backgroundCard }]}>
+          <Text style={styles.permIcon}>{icon}</Text>
+        </View>
+        <View style={styles.permTextContainer}>
+          <Text style={[styles.permTitle, { color: colors.textPrimary }]}>{title}</Text>
+          <Text style={[styles.permDesc, { color: colors.textSecondary }]}>{desc}</Text>
+        </View>
+        <TouchableOpacity
+          style={[
+            styles.permBtn,
+            { backgroundColor: granted ? colors.success + '20' : colors.primary },
+          ]}
+          onPress={onRequest}
+          disabled={granted}
+        >
+          <Text style={[styles.permBtnText, { color: granted ? colors.success : '#fff' }]}>
+            {granted ? '✓ Allowed' : 'Grant'}
+          </Text>
+        </TouchableOpacity>
+      </View>
+    );
+  };
+
   const renderItem = ({ item }) => {
+    if (item.isPermissionSlide) {
+      return (
+        <View style={styles.slide}>
+          <View style={styles.glowContainer}>
+            <LinearGradient
+              colors={[item.gradient[0] + '33', 'transparent']}
+              style={styles.glow}
+            />
+          </View>
+
+          <View style={styles.textContainer}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}>
+              {item.title}
+            </Text>
+            <Text style={[styles.subtitle, { color: colors.textSecondary, marginBottom: spacing.lg }]}>
+              {item.subtitle}
+            </Text>
+          </View>
+
+          <View style={styles.permissionsList}>
+            {renderPermissionRow(
+              '📍',
+              'Location Access',
+              'We use location to show nearby clinics.',
+              locGranted,
+              handleRequestLocation
+            )}
+            {renderPermissionRow(
+              '🔔',
+              'Notifications',
+              'Get updates on queue status and reminders.',
+              notifGranted,
+              handleRequestNotifications
+            )}
+            {renderPermissionRow(
+              '📸',
+              'Camera & Storage',
+              'Used to scan barcodes & upload medical reports.',
+              camGranted,
+              handleRequestCamera
+            )}
+          </View>
+        </View>
+      );
+    }
+
     return (
       <View style={styles.slide}>
-        {/* Glow effect matching the theme */}
         <View style={styles.glowContainer}>
           <LinearGradient
             colors={[item.gradient[0] + '33', 'transparent']}
@@ -93,7 +254,6 @@ const OnboardingScreen = ({ navigation }) => {
           />
         </View>
 
-        {/* Emoji Illustration */}
         <View style={styles.emojiContainer}>
           <LinearGradient
             colors={[colors.surface, colors.backgroundCard]}
@@ -104,7 +264,6 @@ const OnboardingScreen = ({ navigation }) => {
           <View style={[styles.emojiRing, { borderColor: item.gradient[0] + '4D' }]} />
         </View>
 
-        {/* Text Details */}
         <View style={styles.textContainer}>
           <Text style={[styles.title, { color: colors.textPrimary }]}>
             {item.title}
@@ -311,7 +470,7 @@ const styles = StyleSheet.create({
     marginTop: spacing.md,
   },
   title: {
-    fontSize: 28,
+    fontSize: 26,
     fontWeight: '800',
     textAlign: 'center',
     marginBottom: spacing.md,
@@ -321,6 +480,55 @@ const styles = StyleSheet.create({
     ...typography.bodyLarge,
     textAlign: 'center',
     lineHeight: 24,
+  },
+  permissionsList: {
+    width: '100%',
+    gap: spacing.md,
+    marginTop: spacing.sm,
+  },
+  permRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.md,
+    borderRadius: borderRadius.xl,
+    borderWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.04,
+    shadowRadius: 6,
+    elevation: 2,
+  },
+  permIconBg: {
+    width: 42,
+    height: 42,
+    borderRadius: borderRadius.lg,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  permIcon: {
+    fontSize: 20,
+  },
+  permTextContainer: {
+    flex: 1,
+    marginLeft: spacing.md,
+    marginRight: spacing.sm,
+  },
+  permTitle: {
+    ...typography.labelLarge,
+    fontWeight: '700',
+  },
+  permDesc: {
+    ...typography.bodySmall,
+    marginTop: 2,
+  },
+  permBtn: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: borderRadius.lg,
+  },
+  permBtnText: {
+    ...typography.labelSmall,
+    fontWeight: '700',
   },
   footer: {
     flexDirection: 'row',
@@ -360,3 +568,4 @@ const styles = StyleSheet.create({
 });
 
 export default OnboardingScreen;
+

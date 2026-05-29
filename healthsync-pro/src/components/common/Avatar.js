@@ -5,7 +5,7 @@
 import React, { useState } from 'react';
 import { View, Image, Text, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, borderRadius } from '../../theme/typography';
 
 const Avatar = ({
@@ -17,6 +17,7 @@ const Avatar = ({
   status = 'online', // online, offline, busy, away
   showBorder = false,
 }) => {
+  const { colors } = useTheme();
   const [imageError, setImageError] = useState(false);
   
   // Convert imageUrl to source format if provided
@@ -60,6 +61,8 @@ const Avatar = ({
 
   // Check if imageSource is valid (has uri property with a truthy value)
   const hasValidSource = imageSource && imageSource.uri && !imageError;
+
+  const styles = makeStyles(colors);
 
   const renderAvatarContent = (borderRadiusValue) => {
     if (hasValidSource) {
@@ -115,7 +118,7 @@ const Avatar = ({
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     position: 'relative',
   },

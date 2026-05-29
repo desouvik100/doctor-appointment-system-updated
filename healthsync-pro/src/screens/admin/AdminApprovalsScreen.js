@@ -14,6 +14,7 @@ import {
   ActivityIndicator,
   Alert,
   StatusBar,
+  Platform,
 } from 'react-native';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
@@ -54,7 +55,7 @@ const AdminApprovalsScreen = ({ navigation }) => {
   }, [fetchData]);
 
 
-  const handleApproveDoctor = async (doctorId) => {
+  const handleApproveDoctor = useCallback(async (doctorId) => {
     try {
       await adminApi.approveDoctor(doctorId);
       Alert.alert('Success', 'Doctor approved');
@@ -62,18 +63,18 @@ const AdminApprovalsScreen = ({ navigation }) => {
     } catch (error) {
       Alert.alert('Error', error.message);
     }
-  };
+  }, [fetchData]);
 
-  const handleRejectDoctor = async (doctorId) => {
+  const handleRejectDoctor = useCallback(async (doctorId) => {
     try {
       await adminApi.rejectDoctor(doctorId, 'Rejected by admin');
       fetchData();
     } catch (error) {
       Alert.alert('Error', error.message);
     }
-  };
+  }, [fetchData]);
 
-  const handleApproveStaff = async (staffId) => {
+  const handleApproveStaff = useCallback(async (staffId) => {
     try {
       await adminApi.approveStaff(staffId);
       Alert.alert('Success', 'Staff approved');
@@ -81,18 +82,18 @@ const AdminApprovalsScreen = ({ navigation }) => {
     } catch (error) {
       Alert.alert('Error', error.message);
     }
-  };
+  }, [fetchData]);
 
-  const handleRejectStaff = async (staffId) => {
+  const handleRejectStaff = useCallback(async (staffId) => {
     try {
       await adminApi.rejectStaff(staffId, 'Rejected by admin');
       fetchData();
     } catch (error) {
       Alert.alert('Error', error.message);
     }
-  };
+  }, [fetchData]);
 
-  const handleApproveClinic = async (clinicId) => {
+  const handleApproveClinic = useCallback(async (clinicId) => {
     try {
       await adminApi.approveClinic(clinicId);
       Alert.alert('Success', 'Clinic approved');
@@ -100,106 +101,65 @@ const AdminApprovalsScreen = ({ navigation }) => {
     } catch (error) {
       Alert.alert('Error', error.message);
     }
-  };
+  }, [fetchData]);
 
-  const handleRejectClinic = async (clinicId) => {
+  const handleRejectClinic = useCallback(async (clinicId) => {
     try {
       await adminApi.rejectClinic(clinicId, 'Rejected by admin');
       fetchData();
     } catch (error) {
       Alert.alert('Error', error.message);
     }
-  };
+  }, [fetchData]);
 
-  const TabButton = ({ label, value, count }) => (
-    <TouchableOpacity
-      style={[styles.tabBtn, activeTab === value && styles.tabBtnActive]}
-      onPress={() => setActiveTab(value)}
-    >
-      <Text style={[styles.tabBtnText, { color: activeTab === value ? '#fff' : colors.textSecondary }]}>
-        {label} {count > 0 && <Text style={styles.tabCount}>({count})</Text>}
-      </Text>
-    </TouchableOpacity>
-  );
+  const handleTabPressDoctors = useCallback(() => setActiveTab('doctors'), []);
+  const handleTabPressStaff = useCallback(() => setActiveTab('staff'), []);
+  const handleTabPressClinics = useCallback(() => setActiveTab('clinics'), []);
 
-  const renderDoctor = ({ item }) => (
-    <View style={[styles.card, { backgroundColor: colors.surface }]}>
-      <View style={styles.cardHeader}>
-        <View style={styles.avatar}><Text style={styles.avatarText}>{item.name?.charAt(0)}</Text></View>
-        <View style={styles.cardInfo}>
-          <Text style={[styles.cardName, { color: colors.textPrimary }]}>{item.name}</Text>
-          <Text style={[styles.cardSub, { color: colors.textSecondary }]}>{item.specialization}</Text>
-          <Text style={[styles.cardEmail, { color: colors.textMuted }]}>{item.email}</Text>
-        </View>
-      </View>
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={[styles.actionBtn, styles.approveBtn]} onPress={() => handleApproveDoctor(item._id)}>
-          <Text style={styles.approveBtnText}>✓ Approve</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, styles.rejectBtn]} onPress={() => handleRejectDoctor(item._id)}>
-          <Text style={styles.rejectBtnText}>✕ Reject</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+  const renderDoctorItem = useCallback(({ item }) => (
+    <DoctorApprovalCard
+      item={item}
+      colors={colors}
+      onApprove={handleApproveDoctor}
+      onReject={handleRejectDoctor}
+    />
+  ), [colors, handleApproveDoctor, handleRejectDoctor]);
 
-  const renderStaff = ({ item }) => (
-    <View style={[styles.card, { backgroundColor: colors.surface }]}>
-      <View style={styles.cardHeader}>
-        <View style={[styles.avatar, { backgroundColor: '#E74C3C20' }]}><Text style={[styles.avatarText, { color: '#E74C3C' }]}>{item.name?.charAt(0)}</Text></View>
-        <View style={styles.cardInfo}>
-          <Text style={[styles.cardName, { color: colors.textPrimary }]}>{item.name}</Text>
-          <Text style={[styles.cardEmail, { color: colors.textMuted }]}>{item.email}</Text>
-        </View>
-      </View>
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={[styles.actionBtn, styles.approveBtn]} onPress={() => handleApproveStaff(item._id)}>
-          <Text style={styles.approveBtnText}>✓ Approve</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, styles.rejectBtn]} onPress={() => handleRejectStaff(item._id)}>
-          <Text style={styles.rejectBtnText}>✕ Reject</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+  const renderStaffItem = useCallback(({ item }) => (
+    <StaffApprovalCard
+      item={item}
+      colors={colors}
+      onApprove={handleApproveStaff}
+      onReject={handleRejectStaff}
+    />
+  ), [colors, handleApproveStaff, handleRejectStaff]);
 
-  const renderClinic = ({ item }) => (
-    <View style={[styles.card, { backgroundColor: colors.surface }]}>
-      <View style={styles.cardHeader}>
-        <View style={[styles.avatar, { backgroundColor: '#1ABC9C20' }]}><Text style={styles.clinicIcon}>🏥</Text></View>
-        <View style={styles.cardInfo}>
-          <Text style={[styles.cardName, { color: colors.textPrimary }]}>{item.name}</Text>
-          <Text style={[styles.cardSub, { color: colors.textSecondary }]} numberOfLines={2}>{item.address}</Text>
-        </View>
-      </View>
-      <View style={styles.actionButtons}>
-        <TouchableOpacity style={[styles.actionBtn, styles.approveBtn]} onPress={() => handleApproveClinic(item._id)}>
-          <Text style={styles.approveBtnText}>✓ Approve</Text>
-        </TouchableOpacity>
-        <TouchableOpacity style={[styles.actionBtn, styles.rejectBtn]} onPress={() => handleRejectClinic(item._id)}>
-          <Text style={styles.rejectBtnText}>✕ Reject</Text>
-        </TouchableOpacity>
-      </View>
-    </View>
-  );
+  const renderClinicItem = useCallback(({ item }) => (
+    <ClinicApprovalCard
+      item={item}
+      colors={colors}
+      onApprove={handleApproveClinic}
+      onReject={handleRejectClinic}
+    />
+  ), [colors, handleApproveClinic, handleRejectClinic]);
 
-  const getData = () => {
+  const getData = useCallback(() => {
     switch (activeTab) {
       case 'doctors': return pendingDoctors;
       case 'staff': return pendingStaff;
       case 'clinics': return pendingClinics;
       default: return [];
     }
-  };
+  }, [activeTab, pendingDoctors, pendingStaff, pendingClinics]);
 
-  const getRenderItem = () => {
+  const getRenderItem = useCallback(() => {
     switch (activeTab) {
-      case 'doctors': return renderDoctor;
-      case 'staff': return renderStaff;
-      case 'clinics': return renderClinic;
-      default: return renderDoctor;
+      case 'doctors': return renderDoctorItem;
+      case 'staff': return renderStaffItem;
+      case 'clinics': return renderClinicItem;
+      default: return renderDoctorItem;
     }
-  };
+  }, [activeTab, renderDoctorItem, renderStaffItem, renderClinicItem]);
 
   if (loading) {
     return (
@@ -222,9 +182,9 @@ const AdminApprovalsScreen = ({ navigation }) => {
 
       {/* Tabs */}
       <View style={styles.tabContainer}>
-        <TabButton label="Doctors" value="doctors" count={pendingDoctors.length} />
-        <TabButton label="Staff" value="staff" count={pendingStaff.length} />
-        <TabButton label="Clinics" value="clinics" count={pendingClinics.length} />
+        <TabButton label="Doctors" value="doctors" activeTab={activeTab} colors={colors} onPress={handleTabPressDoctors} count={pendingDoctors.length} />
+        <TabButton label="Staff" value="staff" activeTab={activeTab} colors={colors} onPress={handleTabPressStaff} count={pendingStaff.length} />
+        <TabButton label="Clinics" value="clinics" activeTab={activeTab} colors={colors} onPress={handleTabPressClinics} count={pendingClinics.length} />
       </View>
 
       <FlatList
@@ -232,6 +192,10 @@ const AdminApprovalsScreen = ({ navigation }) => {
         renderItem={getRenderItem()}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.listContent}
+        initialNumToRender={5}
+        maxToRenderPerBatch={5}
+        windowSize={5}
+        removeClippedSubviews={Platform.OS === 'android'}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -243,6 +207,78 @@ const AdminApprovalsScreen = ({ navigation }) => {
     </View>
   );
 };
+
+const TabButton = React.memo(({ label, value, activeTab, colors, onPress, count }) => (
+  <TouchableOpacity
+    style={[styles.tabBtn, activeTab === value && styles.tabBtnActive]}
+    onPress={onPress}
+  >
+    <Text style={[styles.tabBtnText, { color: activeTab === value ? '#fff' : colors.textSecondary }]}>
+      {label} {count > 0 && <Text style={styles.tabCount}>({count})</Text>}
+    </Text>
+  </TouchableOpacity>
+));
+
+const DoctorApprovalCard = React.memo(({ item, colors, onApprove, onReject }) => (
+  <View style={[styles.card, { backgroundColor: colors.surface }]}>
+    <View style={styles.cardHeader}>
+      <View style={styles.avatar}><Text style={styles.avatarText}>{item.name?.charAt(0)}</Text></View>
+      <View style={styles.cardInfo}>
+        <Text style={[styles.cardName, { color: colors.textPrimary }]}>{item.name}</Text>
+        <Text style={[styles.cardSub, { color: colors.textSecondary }]}>{item.specialization}</Text>
+        <Text style={[styles.cardEmail, { color: colors.textMuted }]}>{item.email}</Text>
+      </View>
+    </View>
+    <View style={styles.actionButtons}>
+      <TouchableOpacity style={[styles.actionBtn, styles.approveBtn]} onPress={() => onApprove(item._id)}>
+        <Text style={styles.approveBtnText}>✓ Approve</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[styles.actionBtn, styles.rejectBtn]} onPress={() => onReject(item._id)}>
+        <Text style={styles.rejectBtnText}>✕ Reject</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+));
+
+const StaffApprovalCard = React.memo(({ item, colors, onApprove, onReject }) => (
+  <View style={[styles.card, { backgroundColor: colors.surface }]}>
+    <View style={styles.cardHeader}>
+      <View style={[styles.avatar, { backgroundColor: '#E74C3C20' }]}><Text style={[styles.avatarText, { color: '#E74C3C' }]}>{item.name?.charAt(0)}</Text></View>
+      <View style={styles.cardInfo}>
+        <Text style={[styles.cardName, { color: colors.textPrimary }]}>{item.name}</Text>
+        <Text style={[styles.cardEmail, { color: colors.textMuted }]}>{item.email}</Text>
+      </View>
+    </View>
+    <View style={styles.actionButtons}>
+      <TouchableOpacity style={[styles.actionBtn, styles.approveBtn]} onPress={() => onApprove(item._id)}>
+        <Text style={styles.approveBtnText}>✓ Approve</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[styles.actionBtn, styles.rejectBtn]} onPress={() => onReject(item._id)}>
+        <Text style={styles.rejectBtnText}>✕ Reject</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+));
+
+const ClinicApprovalCard = React.memo(({ item, colors, onApprove, onReject }) => (
+  <View style={[styles.card, { backgroundColor: colors.surface }]}>
+    <View style={styles.cardHeader}>
+      <View style={[styles.avatar, { backgroundColor: '#1ABC9C20' }]}><Text style={styles.clinicIcon}>🏥</Text></View>
+      <View style={styles.cardInfo}>
+        <Text style={[styles.cardName, { color: colors.textPrimary }]}>{item.name}</Text>
+        <Text style={[styles.cardSub, { color: colors.textSecondary }]} numberOfLines={2}>{item.address}</Text>
+      </View>
+    </View>
+    <View style={styles.actionButtons}>
+      <TouchableOpacity style={[styles.actionBtn, styles.approveBtn]} onPress={() => onApprove(item._id)}>
+        <Text style={styles.approveBtnText}>✓ Approve</Text>
+      </TouchableOpacity>
+      <TouchableOpacity style={[styles.actionBtn, styles.rejectBtn]} onPress={() => onReject(item._id)}>
+        <Text style={styles.rejectBtnText}>✕ Reject</Text>
+      </TouchableOpacity>
+    </View>
+  </View>
+));
 
 const styles = StyleSheet.create({
   container: { flex: 1 },

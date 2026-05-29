@@ -74,7 +74,7 @@ const DrugDetailModal = ({ item, visible, onClose, colors }) => {
     <Modal visible={visible} animationType="slide" presentationStyle="pageSheet" onRequestClose={onClose}>
       <View style={[modalStyles.container, { backgroundColor: colors.background }]}>
         {/* Header */}
-        <LinearGradient colors={['#1E40AF', '#1D4ED8']} style={modalStyles.header}>
+        <LinearGradient colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']} style={modalStyles.header}>
           <TouchableOpacity onPress={onClose} style={modalStyles.closeBtn}>
             <Text style={modalStyles.closeIcon}>✕</Text>
           </TouchableOpacity>
@@ -324,7 +324,7 @@ const PharmacyInventoryScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       {/* Header */}
-      <LinearGradient colors={['#1E40AF', '#1D4ED8']}
+      <LinearGradient colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']}
         style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -381,8 +381,8 @@ const PharmacyInventoryScreen = ({ navigation }) => {
           contentContainerStyle={styles.filterContent}>
           {CATEGORIES.map(c => (
             <TouchableOpacity key={c} onPress={() => setCategory(c)}
-              style={[styles.filterChip, category === c && styles.filterChipActive]}>
-              <Text style={[styles.filterChipText, category === c && styles.filterChipTextActive]}>
+              style={[styles.filterChip, category === c && { backgroundColor: colors.primary }]}>
+              <Text style={[styles.filterChipText, category === c && { color: '#0A0E17', fontWeight: '700' }]}>
                 {c.charAt(0).toUpperCase() + c.slice(1)}
               </Text>
             </TouchableOpacity>

@@ -1,5 +1,5 @@
 /**
- * Admin Dashboard Screen - COMPLETE Implementation
+ * Admin Dashboard Screen - COMPLETE Implementation - Dynamic Theme Edition
  * 100% Parity with Web Admin Dashboard
  */
 
@@ -148,7 +148,7 @@ const AdminDashboardScreen = ({ navigation }) => {
   if (loading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color="#F39C12" />
+        <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
           Loading dashboard...
         </Text>
@@ -164,7 +164,7 @@ const AdminDashboardScreen = ({ navigation }) => {
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
         refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />
+          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />
         }
       >
         {/* Header */}
@@ -177,8 +177,8 @@ const AdminDashboardScreen = ({ navigation }) => {
               {user?.name || 'Admin'}
             </Text>
             <View style={styles.roleBadge}>
-              <LinearGradient colors={['#F39C12', '#F1C40F']} style={styles.roleBadgeGradient}>
-                <Text style={styles.roleBadgeText}>ADMIN</Text>
+              <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.roleBadgeGradient}>
+                <Text style={[styles.roleBadgeText, { color: colors.textInverse || '#0A0A0F' }]}>ADMIN</Text>
               </LinearGradient>
             </View>
           </View>
@@ -195,28 +195,28 @@ const AdminDashboardScreen = ({ navigation }) => {
               icon="👥" 
               value={overview.totalPatients} 
               label="Total Patients" 
-              color="#3498DB"
+              color={colors.info || "#3B82F6"}
               onPress={() => navigation.navigate('AdminUsers')}
             />
             <StatCard 
               icon="👨‍⚕️" 
               value={overview.totalDoctors} 
               label="Doctors" 
-              color="#9B59B6"
+              color={colors.secondary || "#6C5CE7"}
               onPress={() => navigation.navigate('AdminDoctors')}
             />
             <StatCard 
               icon="🏥" 
               value={overview.totalClinics} 
               label="Clinics" 
-              color="#1ABC9C"
+              color={colors.primary || "#00D4AA"}
               onPress={() => navigation.navigate('AdminClinics')}
             />
             <StatCard 
               icon="📅" 
               value={overview.todayAppointments} 
               label="Today's Appts" 
-              color="#E74C3C"
+              color={colors.error || "#EF4444"}
               onPress={() => navigation.navigate('AdminAppointments')}
             />
           </View>
@@ -236,11 +236,11 @@ const AdminDashboardScreen = ({ navigation }) => {
                 </Text>
                 <View style={[
                   styles.growthBadge, 
-                  { backgroundColor: monthStats.appointmentGrowth >= 0 ? '#10B98120' : '#EF444420' }
+                  { backgroundColor: monthStats.appointmentGrowth >= 0 ? `${colors.success}20` : `${colors.error}20` }
                 ]}>
                   <Text style={[
                     styles.growthText, 
-                    { color: monthStats.appointmentGrowth >= 0 ? '#10B981' : '#EF4444' }
+                    { color: monthStats.appointmentGrowth >= 0 ? colors.success : colors.error }
                   ]}>
                     {monthStats.appointmentGrowth >= 0 ? '↑' : '↓'} {Math.abs(monthStats.appointmentGrowth || 0)}%
                   </Text>
@@ -256,11 +256,11 @@ const AdminDashboardScreen = ({ navigation }) => {
                 </Text>
                 <View style={[
                   styles.growthBadge, 
-                  { backgroundColor: monthStats.revenueGrowth >= 0 ? '#10B98120' : '#EF444420' }
+                  { backgroundColor: monthStats.revenueGrowth >= 0 ? `${colors.success}20` : `${colors.error}20` }
                 ]}>
                   <Text style={[
                     styles.growthText, 
-                    { color: monthStats.revenueGrowth >= 0 ? '#10B981' : '#EF4444' }
+                    { color: monthStats.revenueGrowth >= 0 ? colors.success : colors.error }
                   ]}>
                     {monthStats.revenueGrowth >= 0 ? '↑' : '↓'} {Math.abs(monthStats.revenueGrowth || 0)}%
                   </Text>
@@ -274,17 +274,17 @@ const AdminDashboardScreen = ({ navigation }) => {
         {pendingApprovals.total > 0 && (
           <View style={styles.section}>
             <TouchableOpacity 
-              style={[styles.alertCard, { backgroundColor: '#FEF3C7', borderColor: '#F59E0B' }]}
+              style={[styles.alertCard, { backgroundColor: colors.warningLight, borderColor: colors.warning }]}
               onPress={() => navigation.navigate('AdminApprovals')}
               activeOpacity={0.7}
             >
               <View style={styles.alertContent}>
                 <Text style={styles.alertIcon}>⚠️</Text>
                 <View style={styles.alertText}>
-                  <Text style={[styles.alertTitle, { color: '#92400E' }]}>
+                  <Text style={[styles.alertTitle, { color: colors.warning }]}>
                     {pendingApprovals.total} Pending Approval{pendingApprovals.total > 1 ? 's' : ''}
                   </Text>
-                  <Text style={[styles.alertSubtext, { color: '#B45309' }]}>
+                  <Text style={[styles.alertSubtext, { color: colors.textSecondary }]}>
                     {pendingApprovals.doctors > 0 && `${pendingApprovals.doctors} doctors`}
                     {pendingApprovals.doctors > 0 && pendingApprovals.staff > 0 && ', '}
                     {pendingApprovals.staff > 0 && `${pendingApprovals.staff} staff`}
@@ -293,7 +293,7 @@ const AdminDashboardScreen = ({ navigation }) => {
                   </Text>
                 </View>
               </View>
-              <Text style={styles.alertArrow}>→</Text>
+              <Text style={[styles.alertArrow, { color: colors.warning }]}>→</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -364,7 +364,7 @@ const AdminDashboardScreen = ({ navigation }) => {
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Top Doctors</Text>
               <TouchableOpacity onPress={() => navigation.navigate('AdminDoctors')}>
-                <Text style={[styles.seeAll, { color: '#F39C12' }]}>See all</Text>
+                <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
               </TouchableOpacity>
             </View>
             <Card style={[styles.listCard, { backgroundColor: colors.surface }]}>
@@ -377,8 +377,8 @@ const AdminDashboardScreen = ({ navigation }) => {
                   ]}
                   onPress={() => navigation.navigate('AdminDoctorDetail', { doctorId: doctor._id })}
                 >
-                  <View style={styles.doctorRank}>
-                    <Text style={styles.rankText}>#{index + 1}</Text>
+                  <View style={[styles.doctorRank, { backgroundColor: colors.primary + '20' }]}>
+                    <Text style={[styles.rankText, { color: colors.primary }]}>#{index + 1}</Text>
                   </View>
                   <View style={styles.doctorInfo}>
                     <Text style={[styles.doctorName, { color: colors.textPrimary }]}>
@@ -408,24 +408,24 @@ const AdminDashboardScreen = ({ navigation }) => {
           <Card style={[styles.statusCard, { backgroundColor: colors.surface }]}>
             <View style={styles.statusRow}>
               <View style={styles.statusItem}>
-                <View style={[styles.statusDot, { backgroundColor: '#10B981' }]} />
+                <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
                 <Text style={[styles.statusLabel, { color: colors.textSecondary }]}>API Server</Text>
               </View>
-              <Text style={[styles.statusValue, { color: '#10B981' }]}>Online</Text>
+              <Text style={[styles.statusValue, { color: colors.success }]}>Online</Text>
             </View>
             <View style={styles.statusRow}>
               <View style={styles.statusItem}>
-                <View style={[styles.statusDot, { backgroundColor: '#10B981' }]} />
+                <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
                 <Text style={[styles.statusLabel, { color: colors.textSecondary }]}>Database</Text>
               </View>
-              <Text style={[styles.statusValue, { color: '#10B981' }]}>Connected</Text>
+              <Text style={[styles.statusValue, { color: colors.success }]}>Connected</Text>
             </View>
             <View style={styles.statusRow}>
               <View style={styles.statusItem}>
-                <View style={[styles.statusDot, { backgroundColor: '#10B981' }]} />
+                <View style={[styles.statusDot, { backgroundColor: colors.success }]} />
                 <Text style={[styles.statusLabel, { color: colors.textSecondary }]}>Payments</Text>
               </View>
-              <Text style={[styles.statusValue, { color: '#10B981' }]}>Active</Text>
+              <Text style={[styles.statusValue, { color: colors.success }]}>Active</Text>
             </View>
           </Card>
         </View>
@@ -480,7 +480,7 @@ const styles = StyleSheet.create({
   alertText: { flex: 1 },
   alertTitle: { ...typography.bodyMedium, fontWeight: '600' },
   alertSubtext: { ...typography.labelSmall, marginTop: 2 },
-  alertArrow: { fontSize: 20, color: '#F59E0B' },
+  alertArrow: { fontSize: 20 },
   
   // Quick Actions
   quickActionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
@@ -495,8 +495,8 @@ const styles = StyleSheet.create({
   listCard: { borderRadius: borderRadius.lg, overflow: 'hidden' },
   doctorItem: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg },
   doctorItemBorder: { borderBottomWidth: 1 },
-  doctorRank: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#F39C1220', alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
-  rankText: { color: '#F39C12', fontSize: 12, fontWeight: '700' },
+  doctorRank: { width: 28, height: 28, borderRadius: 14, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
+  rankText: { fontSize: 12, fontWeight: '700' },
   doctorInfo: { flex: 1 },
   doctorName: { ...typography.bodyMedium, fontWeight: '600' },
   doctorSpec: { ...typography.labelSmall, marginTop: 2 },
@@ -504,7 +504,7 @@ const styles = StyleSheet.create({
   doctorAppts: { ...typography.bodyLarge, fontWeight: '700' },
   doctorApptLabel: { ...typography.labelSmall },
   
-  // Status Card
+  // System Status
   statusCard: { padding: spacing.lg, borderRadius: borderRadius.lg },
   statusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.sm },
   statusItem: { flexDirection: 'row', alignItems: 'center' },

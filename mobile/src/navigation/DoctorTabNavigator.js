@@ -8,7 +8,7 @@ import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createStackNavigator } from '@react-navigation/stack';
 import LinearGradient from 'react-native-linear-gradient';
-import shadows from '../theme/shadows';
+import { shadows } from '../theme/shadows';
 import { typography, spacing, borderRadius } from '../theme/typography';
 import { useTheme } from '../context/ThemeContext';
 
@@ -86,26 +86,42 @@ const ProfileStack = () => {
 const TabIcon = ({ icon, label, focused, colors }) => (
   <View style={styles.tabItem}>
     {focused ? (
-      <LinearGradient colors={['#6C5CE7', '#A29BFE']} style={styles.activeIconBg}>
+      <LinearGradient 
+        colors={colors.gradientSecondary || colors.gradientPrimary || ['#6C5CE7', '#5B4ED1']} 
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={styles.activeIconBg}
+      >
         <Text style={styles.tabIcon}>{icon}</Text>
       </LinearGradient>
     ) : (
-      <View style={styles.inactiveIconBg}>
+      <View style={[styles.inactiveIconBg, { backgroundColor: colors.neutralLight || 'rgba(255, 255, 255, 0.05)' }]}>
         <Text style={[styles.tabIcon, styles.inactiveIcon]}>{icon}</Text>
       </View>
     )}
-    <Text style={[styles.tabLabel, { color: colors.textMuted }, focused && { color: '#6C5CE7', fontWeight: '600' }]}>
+    <Text style={[
+      styles.tabLabel, 
+      { color: colors.textMuted }, 
+      focused && { color: colors.secondary || colors.primary, fontWeight: '700' }
+    ]}>
       {label}
     </Text>
   </View>
 );
 
 const CustomTabBar = ({ state, navigation }) => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   
   return (
     <View style={styles.tabBarContainer}>
-      <View style={[styles.tabBar, { backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder }]}>
+      <View style={[
+        styles.tabBar, 
+        { 
+          backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.85)' : 'rgba(255, 255, 255, 0.9)', 
+          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)',
+          ...shadows.lg 
+        }
+      ]}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
 
@@ -150,14 +166,14 @@ const DoctorTabNavigator = () => {
 
 const styles = StyleSheet.create({
   tabBarContainer: { position: 'absolute', bottom: spacing.xl, left: spacing.xl, right: spacing.xl },
-  tabBar: { flexDirection: 'row', borderRadius: borderRadius.xxl, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderWidth: 1, ...shadows.large },
+  tabBar: { flexDirection: 'row', borderRadius: borderRadius.xxl, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderWidth: 1 },
   tabButton: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.sm },
-  tabItem: { alignItems: 'center' },
-  activeIconBg: { width: 44, height: 44, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs, ...shadows.glow },
+  tabItem: { alignItems: 'center', gap: 4 },
+  activeIconBg: { width: 44, height: 44, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs },
   inactiveIconBg: { width: 44, height: 44, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs },
   tabIcon: { fontSize: 22 },
   inactiveIcon: { opacity: 0.6 },
-  tabLabel: { ...typography.labelSmall },
+  tabLabel: { ...typography.labelSmall, fontSize: 11 },
 });
 
 export default DoctorTabNavigator;

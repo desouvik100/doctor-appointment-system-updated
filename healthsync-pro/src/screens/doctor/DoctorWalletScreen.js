@@ -1,5 +1,5 @@
 /**
- * Doctor Wallet Screen - Earnings & Withdrawals
+ * Doctor Wallet Screen - Earnings & Withdrawals - Dynamic Theme Edition
  * 100% Parity with Web Doctor Dashboard
  */
 
@@ -18,6 +18,7 @@ import {
   TextInput,
   Modal,
 } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 import { useUser } from '../../context/UserContext';
@@ -85,10 +86,10 @@ const DoctorWalletScreen = ({ navigation }) => {
 
   const getTransactionColor = (type) => {
     switch (type?.toLowerCase()) {
-      case 'credit': case 'earning': return '#10B981';
-      case 'debit': case 'withdrawal': return '#EF4444';
-      case 'pending': return '#F59E0B';
-      default: return '#6B7280';
+      case 'credit': case 'earning': return colors.success;
+      case 'debit': case 'withdrawal': return colors.error;
+      case 'pending': return colors.warning;
+      default: return colors.textSecondary;
     }
   };
 
@@ -102,7 +103,7 @@ const DoctorWalletScreen = ({ navigation }) => {
   if (loading) {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color="#6C5CE7" />
+        <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -111,8 +112,8 @@ const DoctorWalletScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>←</Text>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: 1 }]}>
+          <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>My Wallet</Text>
         <View style={styles.headerRight} />
@@ -120,10 +121,15 @@ const DoctorWalletScreen = ({ navigation }) => {
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />}
+        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         {/* Balance Card */}
-        <View style={[styles.balanceCard, { backgroundColor: '#6C5CE7' }]}>
+        <LinearGradient
+          colors={colors.gradientSecondary || ['#6C5CE7', '#5B4ED1']}
+          start={{ x: 0, y: 0 }}
+          end={{ x: 1, y: 1 }}
+          style={styles.balanceCard}
+        >
           <Text style={styles.balanceLabel}>Available Balance</Text>
           <Text style={styles.balanceAmount}>₹{(wallet?.availableBalance || 0).toLocaleString()}</Text>
           <View style={styles.balanceRow}>
@@ -142,7 +148,7 @@ const DoctorWalletScreen = ({ navigation }) => {
           >
             <Text style={styles.withdrawBtnText}>💸 Withdraw</Text>
           </TouchableOpacity>
-        </View>
+        </LinearGradient>
 
         {/* Stats */}
         <View style={styles.statsRow}>
@@ -176,7 +182,7 @@ const DoctorWalletScreen = ({ navigation }) => {
             transactions.slice(0, 10).map((tx, index) => (
               <View key={tx._id || index} style={[styles.txCard, { backgroundColor: colors.surface }]}>
                 <View style={[styles.txIcon, { backgroundColor: getTransactionColor(tx.type) + '20' }]}>
-                  <Text style={styles.txIconText}>{tx.type === 'credit' ? '↓' : '↑'}</Text>
+                  <Text style={[styles.txIconText, { color: getTransactionColor(tx.type) }]}>{tx.type === 'credit' ? '↓' : '↑'}</Text>
                 </View>
                 <View style={styles.txInfo}>
                   <Text style={[styles.txTitle, { color: colors.textPrimary }]}>{tx.description || tx.type}</Text>
@@ -217,7 +223,7 @@ const DoctorWalletScreen = ({ navigation }) => {
                 <Text style={styles.cancelModalBtnText}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity 
-                style={[styles.modalBtn, styles.confirmBtn]} 
+                style={[styles.modalBtn, styles.confirmBtn, { backgroundColor: colors.secondary }]} 
                 onPress={handleWithdraw}
                 disabled={withdrawing}
               >
@@ -235,7 +241,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
+  backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
   backIcon: { fontSize: 24 },
   headerTitle: { flex: 1, ...typography.headlineMedium, textAlign: 'center' },
   headerRight: { width: 40 },
@@ -270,12 +276,13 @@ const styles = StyleSheet.create({
   modalContent: { borderRadius: borderRadius.xl, padding: spacing.xl },
   modalTitle: { ...typography.headlineSmall, marginBottom: spacing.xs },
   modalSubtitle: { ...typography.bodySmall, marginBottom: spacing.lg },
-  amountInput: { height: 56, borderRadius: borderRadius.lg, paddingHorizontal: spacing.lg, ...typography.headlineSmall, textAlign: 'center' },
+  amountInput: { height: 56, borderRadius: borderRadius.lg, paddingHorizontal: spacing.lg, ...typography.headlineSmall, textAlign: 'center', borderWidth: 1, borderColor: 'rgba(0,0,0,0.1)' },
   modalButtons: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.lg },
   modalBtn: { flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.lg, alignItems: 'center' },
   cancelModalBtn: { backgroundColor: 'rgba(0,0,0,0.05)' },
   cancelModalBtnText: { color: '#6B7280', fontWeight: '600' },
-  confirmBtn: { backgroundColor: '#6C5CE7' },
+  confirmBtn: { },
   confirmBtnText: { color: '#fff', fontWeight: '600' },
 });
+
 export default DoctorWalletScreen;

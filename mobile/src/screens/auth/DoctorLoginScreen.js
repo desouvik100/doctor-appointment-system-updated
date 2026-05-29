@@ -17,7 +17,7 @@ import {
   TextInput,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 // Direct import to avoid circular dependency issues
 import { doctorLogin } from '../../services/api/authService';
@@ -25,6 +25,7 @@ import { useUser } from '../../context/UserContext';
 import whatsappService from '../../services/whatsappService';
 
 const DoctorLoginScreen = ({ navigation }) => {
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -129,6 +130,8 @@ const DoctorLoginScreen = ({ navigation }) => {
       setLoading(false);
     }
   };
+
+  const styles = makeStyles(colors);
 
   return (
     <View style={styles.container}>
@@ -311,7 +314,7 @@ const DoctorLoginScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A0A0F',

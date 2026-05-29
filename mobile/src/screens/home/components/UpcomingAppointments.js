@@ -1,20 +1,21 @@
 /**
- * UpcomingAppointments - Premium card with emotional empty state
+ * UpcomingAppointments - Overhauled Premium Showcase Card
+ * Implements a responsive 2-column layout, 16dp corners, and subtle shadows.
  */
 
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import dayjs from 'dayjs';
+import relativeTime from 'dayjs/plugin/relativeTime';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 import { useTheme } from '../../../context/ThemeContext';
 import Avatar from '../../../components/common/Avatar';
-import dayjs from 'dayjs';
-import relativeTime from 'dayjs/plugin/relativeTime';
 
 dayjs.extend(relativeTime);
 
 const UpcomingAppointments = ({ appointments = [], navigation, onJoinCall, onReschedule, maxDisplay = 3 }) => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const [countdown, setCountdown] = useState('');
   const displayAppointments = appointments.slice(0, maxDisplay);
   const nextAppointment = displayAppointments[0];
@@ -39,7 +40,14 @@ const UpcomingAppointments = ({ appointments = [], navigation, onJoinCall, onRes
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Upcoming Appointments</Text>
         </View>
-        <View style={[styles.emptyCard, { backgroundColor: 'rgba(26, 31, 46, 0.45)', borderColor: 'rgba(255, 255, 255, 0.08)', borderWidth: 1 }]}>
+        <View style={[
+          styles.emptyCard,
+          {
+            backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : colors.backgroundCard,
+            borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.03)',
+            borderWidth: 1,
+          }
+        ]}>
           <Text style={styles.emptyIllustration}>👨‍⚕️</Text>
           <Text style={[styles.emptyTitle, { color: colors.primary }]}>You're all set!</Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
@@ -69,43 +77,121 @@ const UpcomingAppointments = ({ appointments = [], navigation, onJoinCall, onRes
         </TouchableOpacity>
       </View>
 
-      {/* Featured card */}
-      <LinearGradient colors={['rgba(26, 31, 46, 0.8)', 'rgba(10, 14, 23, 0.5)']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }} style={styles.featuredCard}>
-        <View style={styles.countdownBadge}>
-          <Text style={styles.countdownText}>{countdown}</Text>
-        </View>
-        <View style={styles.apptHeader}>
-          <Avatar name={nextAppointment.doctorName} size="medium" source={nextAppointment.doctorPhoto ? { uri: nextAppointment.doctorPhoto } : null} />
-          <View style={styles.doctorInfo}>
-            <Text style={styles.doctorName}>{nextAppointment.doctorName}</Text>
-            <Text style={styles.specialty}>{nextAppointment.specialty}</Text>
+      {/* Overhauled Showcase Card */}
+      <View style={[
+        styles.featuredCard,
+        {
+          backgroundColor: colors.surface,
+          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.03)',
+          borderWidth: 1,
+        }
+      ]}>
+        {/* Countdown & Type badges row */}
+        <View style={styles.badgesRow}>
+          <View style={[styles.countdownBadge, { backgroundColor: isDarkMode ? 'rgba(0, 212, 170, 0.12)' : 'rgba(0, 212, 170, 0.08)' }]}>
+            <Text style={[styles.countdownText, { color: colors.primary }]}>{countdown}</Text>
           </View>
-          <View style={styles.typeBadge}>
-            <Text style={styles.typeText}>{nextAppointment.type === 'video' ? '📹 Video' : '🏥 Clinic'}</Text>
+          <View style={[
+            styles.typeBadge,
+            { backgroundColor: nextAppointment.type === 'video' ? 'rgba(0, 212, 170, 0.1)' : 'rgba(108, 92, 231, 0.1)' }
+          ]}>
+            <Text style={[styles.typeText, { color: nextAppointment.type === 'video' ? colors.primary : colors.secondary }]}>
+              {nextAppointment.type === 'video' ? '📹 Video' : '🏥 Clinic'}
+            </Text>
           </View>
         </View>
-        <View style={styles.apptDetails}>
-          <Text style={styles.detailText}>📅 {dayjs(nextAppointment.dateTime).format('MMM D, YYYY')}</Text>
-          <Text style={styles.detailText}>⏰ {dayjs(nextAppointment.dateTime).format('h:mm A')}</Text>
-        </View>
-        <View style={styles.apptActions}>
-          <TouchableOpacity style={styles.actionBtnGhost} onPress={() => onReschedule?.(nextAppointment)}>
-            <Text style={styles.actionBtnGhostText}>Reschedule</Text>
-          </TouchableOpacity>
-          {nextAppointment.type === 'video' && (
-            <TouchableOpacity style={styles.actionBtnSolidWrapper} onPress={() => onJoinCall?.(nextAppointment)} activeOpacity={0.85}>
-              <LinearGradient colors={['#00D4AA', '#00B894']} style={styles.actionBtnSolid}>
-                <Text style={styles.actionBtnSolidText}>Join Call</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-          )}
-        </View>
-      </LinearGradient>
 
-      {/* Other appointments */}
+        {/* 2-Column Responsive Layout */}
+        <View style={styles.twoColumnGrid}>
+          {/* Left Column: Date & Time prominent typography */}
+          <View style={[
+            styles.dateTimeCol,
+            { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 212, 170, 0.05)' }
+          ]}>
+            <Text style={[styles.dateNumberText, { color: colors.primary }]}>
+              {dayjs(nextAppointment.dateTime).format('DD')}
+            </Text>
+            <Text style={[styles.dateMonthText, { color: colors.primary }]}>
+              {dayjs(nextAppointment.dateTime).format('MMM').toUpperCase()}
+            </Text>
+            <View style={[styles.dividerLine, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.06)' }]} />
+            <Text style={[styles.dateTimeText, { color: colors.textSecondary }]}>
+              {dayjs(nextAppointment.dateTime).format('h:mm A')}
+            </Text>
+          </View>
+
+          {/* Right Column: Doctor Info + Actions */}
+          <View style={styles.doctorInfoCol}>
+            <View style={styles.doctorHeaderRow}>
+              <Avatar
+                name={nextAppointment.doctorName}
+                size="medium"
+                source={nextAppointment.doctorPhoto ? { uri: nextAppointment.doctorPhoto } : null}
+              />
+              <View style={styles.doctorMetaWrap}>
+                <Text style={[styles.doctorName, { color: colors.textPrimary }]} numberOfLines={1}>
+                  Dr. {nextAppointment.doctorName}
+                </Text>
+                <Text style={[styles.specialty, { color: colors.textSecondary }]} numberOfLines={1}>
+                  {nextAppointment.specialty}
+                </Text>
+              </View>
+            </View>
+
+            {/* Quick Actions Row */}
+            <View style={styles.actionButtonContainer}>
+              <TouchableOpacity
+                style={[
+                  styles.reschedBtn,
+                  {
+                    backgroundColor: colors.surface,
+                    borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                    borderWidth: 1,
+                  }
+                ]}
+                onPress={() => onReschedule?.(nextAppointment)}
+                activeOpacity={0.8}
+              >
+                <Text style={[styles.reschedBtnText, { color: colors.textPrimary }]}>Reschedule</Text>
+              </TouchableOpacity>
+              
+              {nextAppointment.type === 'video' ? (
+                <TouchableOpacity
+                  style={styles.joinBtnWrapper}
+                  onPress={() => onJoinCall?.(nextAppointment)}
+                  activeOpacity={0.85}
+                >
+                  <LinearGradient colors={['#00D4AA', '#00B894']} style={styles.joinBtn}>
+                    <Text style={styles.joinBtnText}>Join Call</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              ) : (
+                <TouchableOpacity
+                  style={styles.joinBtnWrapper}
+                  onPress={() => navigation.navigate('Appointments')}
+                  activeOpacity={0.85}
+                >
+                  <LinearGradient colors={['#6C5CE7', '#5B4ED1']} style={styles.joinBtn}>
+                    <Text style={styles.joinBtnText}>Queue info</Text>
+                  </LinearGradient>
+                </TouchableOpacity>
+              )}
+            </View>
+          </View>
+        </View>
+      </View>
+
+      {/* Other appointments in queue */}
       {displayAppointments.slice(1).map((apt, i) => (
         <TouchableOpacity key={apt.id || i}
-          style={[styles.listItem, { backgroundColor: 'rgba(26, 31, 46, 0.45)', borderColor: 'rgba(255, 255, 255, 0.06)', borderWidth: 1 }]}
+          style={[
+            styles.listItem,
+            {
+              backgroundColor: colors.surface,
+              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.03)',
+              borderWidth: 1,
+            }
+          ]}
           onPress={() => navigation.navigate('AppointmentDetails', { appointment: apt })}>
           <Avatar name={apt.doctorName} size="medium" source={apt.doctorPhoto ? { uri: apt.doctorPhoto } : null} />
           <View style={styles.listContent}>
@@ -136,63 +222,127 @@ const styles = StyleSheet.create({
   exploreBtn: { paddingVertical: spacing.sm, alignItems: 'center' },
   exploreBtnText: { ...typography.labelMedium, fontWeight: '600' },
 
-  // Featured card
+  // Overhauled Card Layout
   featuredCard: {
-    borderRadius: borderRadius.xl,
-    padding: spacing.lg,
+    borderRadius: 16, // Enforce uniform corner radius of 16dp
+    padding: spacing.md,
     marginBottom: spacing.md,
-    borderWidth: 1.5,
-    borderColor: 'rgba(0, 212, 170, 0.25)',
-    shadowColor: '#00D4AA',
-    shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.15,
-    shadowRadius: 10,
-    elevation: 6,
+    // Subtle diffused elevation blur shadow
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 6 },
+    shadowOpacity: 0.04,
+    shadowRadius: 12,
+    elevation: 2,
+  },
+  badgesRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.md,
   },
   countdownBadge: {
-    alignSelf: 'flex-end',
-    backgroundColor: 'rgba(0, 212, 170, 0.18)',
-    borderWidth: 1,
-    borderColor: 'rgba(0, 212, 170, 0.35)',
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
     borderRadius: borderRadius.full,
-    marginBottom: spacing.sm,
   },
-  countdownText: { color: '#00D4AA', ...typography.labelSmall, fontWeight: '700' },
-  apptHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
-  doctorInfo: { flex: 1, marginLeft: spacing.md },
-  doctorName: { color: '#fff', ...typography.bodyLarge, fontWeight: '700' },
-  specialty: { color: 'rgba(255,255,255,0.7)', ...typography.bodySmall, marginTop: 2 },
+  countdownText: { ...typography.labelSmall, fontWeight: '700', fontSize: 10 },
   typeBadge: {
-    backgroundColor: 'rgba(108, 92, 231, 0.22)',
-    borderWidth: 1,
-    borderColor: 'rgba(108, 92, 231, 0.35)',
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
     borderRadius: borderRadius.full,
   },
-  typeText: { color: '#A29BFE', ...typography.labelSmall },
-  apptDetails: { flexDirection: 'row', gap: spacing.lg, marginBottom: spacing.md },
-  detailText: { color: 'rgba(255,255,255,0.9)', ...typography.bodySmall, fontWeight: '500' },
-  apptActions: { flexDirection: 'row', gap: spacing.sm },
-  actionBtnGhost: {
+  typeText: { ...typography.labelSmall, fontWeight: '700', fontSize: 10 },
+  
+  // 2-Column responsive grid
+  twoColumnGrid: {
+    flexDirection: 'row',
+    gap: spacing.md,
+  },
+  dateTimeCol: {
+    width: 80,
+    borderRadius: 12,
+    paddingVertical: spacing.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  dateNumberText: {
+    fontSize: 26,
+    fontFamily: 'Inter-Bold',
+    fontWeight: '800',
+    lineHeight: 28,
+  },
+  dateMonthText: {
+    fontSize: 10,
+    fontFamily: 'Inter-SemiBold',
+    fontWeight: '700',
+    letterSpacing: 0.8,
+    marginTop: 2,
+  },
+  dividerLine: {
+    height: 1,
+    width: '60%',
+    marginVertical: 6,
+  },
+  dateTimeText: {
+    fontSize: 9,
+    fontFamily: 'Inter-Medium',
+    fontWeight: '600',
+  },
+  doctorInfoCol: {
+    flex: 1,
+    justifyContent: 'space-between',
+  },
+  doctorHeaderRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  doctorMetaWrap: {
+    flex: 1,
+    marginLeft: spacing.sm,
+  },
+  doctorName: {
+    fontFamily: 'Inter-SemiBold',
+    fontWeight: '700',
+    fontSize: 15,
+    lineHeight: 18,
+  },
+  specialty: {
+    fontFamily: 'Inter-Regular',
+    fontSize: 12,
+    marginTop: 2,
+  },
+  actionButtonContainer: {
+    flexDirection: 'row',
+    gap: spacing.sm,
+    marginTop: spacing.md,
+  },
+  reschedBtn: {
     flex: 1,
     paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
+    borderRadius: 8,
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.08)',
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.15)',
+    justifyContent: 'center',
   },
-  actionBtnGhostText: { color: '#fff', ...typography.labelSmall, fontWeight: '600' },
-  actionBtnSolidWrapper: { flex: 1 },
-  actionBtnSolid: {
+  reschedBtnText: {
+    fontSize: 11,
+    fontFamily: 'Inter-SemiBold',
+    fontWeight: '600',
+  },
+  joinBtnWrapper: {
+    flex: 1.2,
+  },
+  joinBtn: {
     paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
+    borderRadius: 8,
     alignItems: 'center',
+    justifyContent: 'center',
   },
-  actionBtnSolidText: { color: '#fff', ...typography.labelSmall, fontWeight: '700' },
+  joinBtnText: {
+    color: '#fff',
+    fontSize: 11,
+    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
+  },
 
   // List items
   listItem: {
@@ -201,8 +351,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.md,
     marginBottom: spacing.sm,
-    borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.06)',
   },
   listContent: { flex: 1, marginLeft: spacing.md },
   listDoctorName: { ...typography.bodyMedium, fontWeight: '600' },

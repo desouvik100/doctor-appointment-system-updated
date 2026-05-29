@@ -1,20 +1,15 @@
 /**
- * Enterprise Doctor Card
- * Premium doctor listing with smooth interactions
+ * Enterprise Doctor Card - Premium Marketplace Layout (Zocdoc/Practo Style)
+ * Soft shadows-only design, verified badges, rating indicators, and high contrast typography.
  */
 
 import React from 'react';
-import {
-  View,
-  Text,
-  Image,
-  TouchableOpacity,
-  StyleSheet,
-} from 'react-native';
+import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
+import LinearGradient from 'react-native-linear-gradient';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { lightTheme, colors } from '../../theme/colors';
-import { shadows } from '../../theme/shadows';
-import Badge from '../common/Badge';
+import { useTheme } from '../../context/ThemeContext';
+import shadows from '../../theme/shadows';
+import Avatar from '../common/Avatar';
 
 const DoctorCard = ({
   doctor,
@@ -22,97 +17,155 @@ const DoctorCard = ({
   onBookPress,
   style,
 }) => {
+  const { colors, isDarkMode } = useTheme();
+  
+  if (!doctor) return null;
+
   const {
     name,
-    photo,
+    specialty,
     specialization,
-    experience,
+    hospital,
+    clinic,
+    hospitalName,
+    clinicName,
     rating,
+    reviews,
     reviewCount,
+    experience,
+    fee,
     consultationFee,
+    isAvailable,
+    available,
+    nextSlot,
     nextAvailable,
-    isOnline,
+    photo,
+    profilePhoto,
+    verified = true,
   } = doctor;
+
+  const displayName = name || 'Doctor';
+  const displaySpecialty = specialization || specialty || 'General Physician';
+  const displayHospital = hospitalName || clinicName || hospital || clinic || 'HealthSync Medical Center';
+  const displayRating = rating || 4.8;
+  const displayReviews = reviewCount || reviews || 24;
+  const displayExp = experience || '8';
+  const displayFee = consultationFee || fee || 500;
+  const isAvailableNow = isAvailable !== false && available !== false;
+  const displayPhoto = profilePhoto || photo;
+  const displayNextSlot = nextAvailable || nextSlot || 'Available Today';
 
   return (
     <TouchableOpacity
       onPress={onPress}
-      activeOpacity={0.9}
-      style={[styles.container, style]}
+      activeOpacity={0.95}
+      style={[
+        styles.card,
+        {
+          backgroundColor: colors.surface,
+          shadowColor: '#000',
+          shadowOffset: { width: 0, height: 6 },
+          shadowOpacity: isDarkMode ? 0.35 : 0.06,
+          shadowRadius: 16,
+          elevation: isDarkMode ? 4 : 2,
+        },
+        style,
+      ]}
     >
-      <View style={styles.header}>
-        <View style={styles.avatarContainer}>
-          {photo ? (
-            <Image source={{ uri: photo }} style={styles.avatar} />
-          ) : (
-            <View style={[styles.avatar, styles.avatarPlaceholder]}>
-              <Text style={styles.avatarText}>
-                {name?.charAt(0) || 'D'}
-              </Text>
-            </View>
-          )}
-          {isOnline && <View style={styles.onlineIndicator} />}
+      <View style={styles.cardHeader}>
+        {/* Availability Pill */}
+        <View style={[
+          styles.statusPill,
+          { backgroundColor: isAvailableNow ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)' }
+        ]}>
+          <View style={[
+            styles.statusDot,
+            { backgroundColor: isAvailableNow ? colors.success : colors.warning }
+          ]} />
+          <Text style={[
+            styles.statusText,
+            { color: isAvailableNow ? colors.success : colors.warning }
+          ]}>
+            {isAvailableNow ? 'Available' : 'Next Available'}
+          </Text>
         </View>
 
-        <View style={styles.info}>
-          <Text style={styles.name} numberOfLines={1}>
-            {name}
+        {/* Rating chip on header */}
+        <View style={[styles.ratingChip, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#FFFBEB' }]}>
+          <Text style={styles.ratingStar}>⭐</Text>
+          <Text style={[styles.ratingVal, { color: colors.warning }]}>
+            {Number(displayRating).toFixed(1)}
           </Text>
-          <Text style={styles.specialization} numberOfLines={1}>
-            {specialization}
+          <Text style={[styles.reviewsCount, { color: colors.textMuted }]}>
+            ({displayReviews})
           </Text>
-          <View style={styles.meta}>
-            <Text style={styles.experience}>
-              {experience}+ yrs exp
-            </Text>
-            {rating && (
-              <>
-                <Text style={styles.metaDivider}>•</Text>
-                <Text style={styles.rating}>
-                  ⭐ {rating.toFixed(1)}
-                </Text>
-                {reviewCount && (
-                  <Text style={styles.reviewCount}>
-                    ({reviewCount})
-                  </Text>
-                )}
-              </>
-            )}
-          </View>
         </View>
       </View>
 
-      <View style={styles.footer}>
-        <View style={styles.availability}>
-          {nextAvailable ? (
-            <>
-              <Badge variant="success" size="small">
-                Available
-              </Badge>
-              <Text style={styles.nextSlot}>{nextAvailable}</Text>
-            </>
-          ) : (
-            <Badge variant="neutral" size="small">
-              Busy
-            </Badge>
+      <View style={styles.mainContent}>
+        {/* Left Side: Avatar with verified overlay badge */}
+        <View style={styles.avatarContainer}>
+          <Avatar
+            imageUrl={displayPhoto}
+            name={displayName}
+            size="large"
+            showBorder={false}
+            customBorderRadius={8}
+          />
+          {verified && (
+            <View style={[styles.verifiedBadge, { backgroundColor: colors.primary }]}>
+              <Text style={styles.verifiedCheck}>✓</Text>
+            </View>
           )}
         </View>
 
-        <View style={styles.actions}>
-          <View style={styles.feeContainer}>
-            <Text style={styles.feeLabel}>Fee</Text>
-            <Text style={styles.fee}>₹{consultationFee}</Text>
+        {/* Right Side: Doctor Profile details */}
+        <View style={styles.detailsContainer}>
+          <Text style={[styles.nameText, { color: colors.textPrimary }]} numberOfLines={1}>
+            Dr. {displayName}
+          </Text>
+          <Text style={[styles.specialtyText, { color: colors.primary }]} numberOfLines={1}>
+            {displaySpecialty}
+          </Text>
+          <View style={styles.experienceRow}>
+            <Text style={[styles.experienceText, { color: colors.textSecondary }]}>
+              🎓 {displayExp} Years Experience
+            </Text>
           </View>
-          
+          <Text style={[styles.hospitalText, { color: colors.textMuted }]} numberOfLines={1}>
+            🏥 {displayHospital}
+          </Text>
+        </View>
+      </View>
+
+      {/* Lower Section: Pricing & Booking CTA */}
+      <View style={[styles.footer, { borderTopColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : colors.divider || '#F1F5F9' }]}>
+        <View style={styles.feeWrapper}>
+          <Text style={[styles.feeLabel, { color: colors.textMuted }]}>Consultation Fee</Text>
+          <Text style={[styles.feeText, { color: colors.textPrimary }]}>₹{displayFee}</Text>
+        </View>
+
+        <View style={styles.ctaWrapper}>
+          <Text style={[styles.slotText, { color: isAvailableNow ? colors.success : colors.textSecondary }]} numberOfLines={1}>
+            🕒 {displayNextSlot}
+          </Text>
           <TouchableOpacity
             onPress={(e) => {
               e.stopPropagation();
-              onBookPress?.(doctor);
+              onBookPress ? onBookPress(doctor) : (onPress && onPress(doctor));
             }}
-            style={styles.bookButton}
             activeOpacity={0.85}
           >
-            <Text style={styles.bookButtonText}>Book</Text>
+            <LinearGradient
+              colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.bookBtn}
+            >
+              <Text style={[styles.bookBtnText, { color: colors.textInverse || '#FFFFFF' }]}>
+                Book Appointment
+              </Text>
+            </LinearGradient>
           </TouchableOpacity>
         </View>
       </View>
@@ -121,157 +174,161 @@ const DoctorCard = ({
 };
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: lightTheme.card,
-    borderRadius: borderRadius.lg,
+  card: {
+    borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    marginBottom: spacing.md,
-    ...shadows.md,
+    marginBottom: spacing.lg,
   },
-
-  header: {
+  cardHeader: {
     flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
     marginBottom: spacing.md,
   },
-
-  avatarContainer: {
-    position: 'relative',
-  },
-
-  avatar: {
-    width: 64,
-    height: 64,
-    borderRadius: borderRadius.lg,
-    backgroundColor: lightTheme.surface,
-  },
-
-  avatarPlaceholder: {
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: colors.primary[100],
-  },
-
-  avatarText: {
-    ...typography.headlineMedium,
-    color: colors.primary[700],
-    fontWeight: '700',
-  },
-
-  onlineIndicator: {
-    position: 'absolute',
-    bottom: 2,
-    right: 2,
-    width: 14,
-    height: 14,
-    borderRadius: 7,
-    backgroundColor: colors.success[500],
-    borderWidth: 2,
-    borderColor: lightTheme.card,
-  },
-
-  info: {
-    flex: 1,
-    marginLeft: spacing.md,
-    justifyContent: 'center',
-  },
-
-  name: {
-    ...typography.headlineSmall,
-    color: lightTheme.text,
-    fontWeight: '700',
-    marginBottom: 2,
-  },
-
-  specialization: {
-    ...typography.bodyMedium,
-    color: lightTheme.textSecondary,
-    marginBottom: spacing.xs,
-  },
-
-  meta: {
+  statusPill: {
     flexDirection: 'row',
     alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 5,
+    borderRadius: borderRadius.full,
   },
-
-  experience: {
-    ...typography.bodySmall,
-    color: lightTheme.textTertiary,
+  statusDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    marginRight: 6,
   },
-
-  metaDivider: {
-    ...typography.bodySmall,
-    color: lightTheme.textTertiary,
-    marginHorizontal: spacing.xs,
+  statusText: {
+    ...typography.labelSmall,
+    fontWeight: '700',
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
   },
-
-  rating: {
-    ...typography.bodySmall,
-    color: colors.warning[600],
-    fontWeight: '600',
+  ratingChip: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.md,
+    paddingVertical: 4,
+    borderRadius: borderRadius.full,
   },
-
-  reviewCount: {
-    ...typography.bodySmall,
-    color: lightTheme.textTertiary,
+  ratingStar: {
+    fontSize: 10,
+    marginRight: 3,
+  },
+  ratingVal: {
+    ...typography.labelSmall,
+    fontWeight: '800',
+    fontSize: 11,
+  },
+  reviewsCount: {
+    ...typography.labelSmall,
+    fontSize: 10,
     marginLeft: 2,
   },
-
+  mainContent: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.md + 2,
+  },
+  avatarContainer: {
+    position: 'relative',
+    marginRight: spacing.lg,
+  },
+  verifiedBadge: {
+    position: 'absolute',
+    bottom: -2,
+    right: -2,
+    width: 20,
+    height: 20,
+    borderRadius: 10,
+    borderWidth: 2,
+    borderColor: '#FFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    zIndex: 3,
+  },
+  verifiedCheck: {
+    color: '#FFF',
+    fontSize: 10,
+    fontWeight: '900',
+    lineHeight: 12,
+  },
+  detailsContainer: {
+    flex: 1,
+  },
+  nameText: {
+    ...typography.headlineSmall,
+    fontWeight: '800',
+    fontSize: 18,
+    lineHeight: 22,
+    marginBottom: 3,
+  },
+  specialtyText: {
+    ...typography.bodyMedium,
+    fontWeight: '700',
+    fontSize: 13,
+    marginBottom: 4,
+  },
+  experienceRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 4,
+  },
+  experienceText: {
+    ...typography.bodySmall,
+    fontWeight: '600',
+    fontSize: 12,
+  },
+  hospitalText: {
+    ...typography.bodySmall,
+    fontSize: 12,
+  },
   footer: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingTop: spacing.md,
     borderTopWidth: 1,
-    borderTopColor: lightTheme.borderLight,
   },
-
-  availability: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
+  feeWrapper: {
+    justifyContent: 'center',
   },
-
-  nextSlot: {
-    ...typography.bodySmall,
-    color: lightTheme.textSecondary,
-    marginLeft: spacing.sm,
-  },
-
-  actions: {
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-
-  feeContainer: {
-    alignItems: 'flex-end',
-    marginRight: spacing.md,
-  },
-
   feeLabel: {
     ...typography.labelSmall,
-    color: lightTheme.textTertiary,
-    marginBottom: 2,
+    fontSize: 10,
+    textTransform: 'uppercase',
+    letterSpacing: 0.3,
+    marginBottom: 1,
   },
-
-  fee: {
-    ...typography.bodyLarge,
-    color: lightTheme.text,
+  feeText: {
+    ...typography.headlineMedium,
+    fontWeight: '900',
+    fontSize: 22,
+    lineHeight: 26,
+  },
+  ctaWrapper: {
+    alignItems: 'flex-end',
+    gap: 4,
+  },
+  slotText: {
+    ...typography.labelSmall,
+    fontSize: 11,
     fontWeight: '700',
   },
-
-  bookButton: {
-    backgroundColor: lightTheme.primary,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
-    borderRadius: borderRadius.md,
-    ...shadows.sm,
+  bookBtn: {
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.sm + 2,
+    justifyContent: 'center',
+    alignItems: 'center',
   },
-
-  bookButtonText: {
-    ...typography.button,
-    color: '#fff',
-    fontSize: 14,
+  bookBtnText: {
+    ...typography.buttonSmall,
+    fontWeight: '800',
+    fontSize: 13,
+    letterSpacing: 0.3,
   },
 });
 
-export default DoctorCard;
+export default React.memo(DoctorCard);

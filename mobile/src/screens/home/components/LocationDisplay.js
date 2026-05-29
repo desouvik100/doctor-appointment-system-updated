@@ -20,7 +20,7 @@ import { useTheme } from '../../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 
 const LocationDisplay = ({ compact = false }) => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const [location, setLocation] = useState(null);
   const [address, setAddress] = useState(null);
   const [detecting, setDetecting] = useState(true);
@@ -218,10 +218,10 @@ const LocationDisplay = ({ compact = false }) => {
   if (error) {
     return (
       <TouchableOpacity
-        style={compact ? styles.compactContainer : [styles.container, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
+        style={compact ? styles.compactContainer : [styles.container, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: isDarkMode ? 1 : 0 }]}
         onPress={() => Linking.openSettings()}
       >
-        <Text style={compact ? styles.compactText : [styles.errorText, { color: colors.warning }]}>📍 Location unavailable</Text>
+        <Text style={compact ? [styles.compactText, { color: isDarkMode ? 'rgba(255,255,255,0.85)' : colors.textPrimary }] : [styles.errorText, { color: colors.warning }]}>📍 Location unavailable</Text>
       </TouchableOpacity>
     );
   }
@@ -229,7 +229,7 @@ const LocationDisplay = ({ compact = false }) => {
   if (compact) {
     return (
       <View style={styles.compactContainer}>
-        <Text style={styles.compactText}>
+        <Text style={[styles.compactText, { color: isDarkMode ? 'rgba(255,255,255,0.85)' : colors.textPrimary }]}>
           📍 {detecting ? 'Detecting...' : (address?.locality || address?.city || 'Location found')}
           {!detecting && address?.city && address.city !== address?.locality ? `, ${address.city}` : ''}
         </Text>
@@ -241,7 +241,7 @@ const LocationDisplay = ({ compact = false }) => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+    <View style={[styles.container, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: isDarkMode ? 1 : 0 }]}>
       {detecting ? (
         // Detecting Animation
         <View style={styles.detectingContainer}>
@@ -352,7 +352,6 @@ const LocationDisplay = ({ compact = false }) => {
 const styles = StyleSheet.create({
   container: {
     borderRadius: borderRadius.lg,
-    borderWidth: 1,
     marginBottom: spacing.md,
     overflow: 'hidden',
   },
@@ -457,7 +456,6 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   compactText: {
-    color: 'rgba(255,255,255,0.85)',
     ...typography.bodySmall,
     fontWeight: '500',
     flex: 1,

@@ -28,7 +28,7 @@ import { devError, isValid } from '../../utils/errorHandler';
 
 const HomeScreen = ({ navigation }) => {
   const { user } = useUser();
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const { subscribe, isConnected } = useSocket();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
@@ -55,7 +55,7 @@ const HomeScreen = ({ navigation }) => {
   };
 
   const fetchDashboardData = useCallback(async () => {
-    if (!isValid(user?.id)) { setLoading(false); setRefreshing(false); return; }
+    if (!isValid(user?.id)) { setRefreshing(false); return; }
     try {
       const [appointmentsData, balanceData, loyaltyData] = await Promise.all([
         getUpcomingAppointments().catch(() => []),
@@ -83,7 +83,6 @@ const HomeScreen = ({ navigation }) => {
   useEffect(() => { fetchDashboardData(); }, [fetchDashboardData]);
 
   // Re-fetch wallet balance whenever the home screen comes into focus
-  // (e.g. user adds money in WalletScreen and navigates back)
   useFocusEffect(
     useCallback(() => {
       if (!isValid(user?.id)) return;
@@ -124,16 +123,25 @@ const HomeScreen = ({ navigation }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
       {/* Ambient background mesh */}
       <View style={styles.backgroundContainer}>
-        <LinearGradient colors={['#0A0E17', '#121826', '#1A1F2E']} style={StyleSheet.absoluteFill} />
+        <LinearGradient
+          colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
+          style={StyleSheet.absoluteFill}
+        />
         <View style={styles.orb1}>
-          <LinearGradient colors={['rgba(0, 212, 170, 0.15)', 'transparent']} style={{ flex: 1, borderRadius: 150 }} />
+          <LinearGradient
+            colors={isDarkMode ? ['rgba(0, 212, 170, 0.15)', 'transparent'] : ['rgba(0, 212, 170, 0.08)', 'transparent']}
+            style={{ flex: 1, borderRadius: 150 }}
+          />
         </View>
         <View style={styles.orb2}>
-          <LinearGradient colors={['rgba(108, 92, 231, 0.12)', 'transparent']} style={{ flex: 1, borderRadius: 150 }} />
+          <LinearGradient
+            colors={isDarkMode ? ['rgba(108, 92, 231, 0.12)', 'transparent'] : ['rgba(108, 92, 231, 0.06)', 'transparent']}
+            style={{ flex: 1, borderRadius: 150 }}
+          />
         </View>
       </View>
 
@@ -142,43 +150,53 @@ const HomeScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh}
-            tintColor="#fff" colors={[colors.primary]} progressBackgroundColor={colors.backgroundCard} />
+            tintColor={isDarkMode ? '#fff' : colors.primary} colors={[colors.primary]} progressBackgroundColor={colors.backgroundCard} />
         }
       >
         {/* ── Hero Header ── */}
         <LinearGradient
-          colors={['rgba(26, 31, 46, 0.55)', 'rgba(10, 14, 23, 0.15)']}
+          colors={isDarkMode ? ['rgba(26, 31, 46, 0.55)', 'rgba(10, 14, 23, 0.15)'] : ['rgba(255, 255, 255, 0.85)', 'rgba(248, 250, 252, 0.15)']}
           start={{ x: 0, y: 0 }} end={{ x: 1, y: 1 }}
           style={[styles.heroGradient, { paddingTop: insets.top + spacing.lg }]}
         >
           <View style={styles.heroRow}>
-            <View style={styles.heroLeft}>
-              <Text style={styles.heroGreeting}>{getGreeting()} 👋</Text>
-              <Text style={styles.heroName}>{firstName}</Text>
-              <Text style={styles.heroSubtitle}>Stay healthy, {firstName} 💙</Text>
-            </View>
-            <TouchableOpacity onPress={() => navigation.navigate('Profile')} activeOpacity={0.85}>
-              <View style={styles.avatarRing}>
-                <Avatar
-                  name={user?.name || 'User'}
-                  size="large"
-                  showBorder
-                  source={user?.profilePhoto ? { uri: user.profilePhoto } : null}
-                />
+            <TouchableOpacity style={styles.profileSnapshot} onPress={() => navigation.navigate('Profile')} activeOpacity={0.85}>
+              <Avatar
+                name={user?.name || 'User'}
+                size="large"
+                imageUrl={user?.profilePhoto}
+              />
+              <View style={styles.heroGreetingTextContainer}>
+                <Text style={[styles.heroGreeting, { color: isDarkMode ? 'rgba(255,255,255,0.65)' : 'rgba(71, 85, 105, 0.8)' }]}>{getGreeting()} 👋</Text>
+                <Text style={[styles.heroName, { color: colors.textPrimary }]}>{firstName}</Text>
               </View>
+            </TouchableOpacity>
+            <TouchableOpacity 
+              style={[styles.heroNotificationBtn, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.03)', borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 0, 0, 0.05)' }]} 
+              onPress={() => navigation.navigate('Notifications')}
+              activeOpacity={0.8}
+              hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
+            >
+              <Text style={{ fontSize: 16 }}>🔔</Text>
             </TouchableOpacity>
           </View>
 
           {/* Search Bar — inside hero (Glassmorphic) */}
           <TouchableOpacity
-            style={styles.searchBar}
+            style={[
+              styles.searchBar,
+              {
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.65)',
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 184, 148, 0.12)',
+              }
+            ]}
             onPress={() => navigation.navigate('Booking')}
             activeOpacity={0.9}
           >
-            <Text style={styles.searchIcon}>🔍</Text>
-            <Text style={styles.searchPlaceholder}>Search doctors, symptoms...</Text>
-            <View style={styles.filterBtn}>
-              <Text style={styles.filterIcon}>⚙️</Text>
+            <Text style={[styles.searchIcon, { color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(71, 85, 105, 0.6)' }]}>🔍</Text>
+            <Text style={[styles.searchPlaceholder, { color: isDarkMode ? 'rgba(255, 255, 255, 0.45)' : 'rgba(100, 116, 139, 0.5)' }]}>Search doctors, symptoms...</Text>
+            <View style={[styles.filterBtn, { backgroundColor: colors.primary + '20' }]}>
+              <Text style={[styles.filterIcon, { color: colors.primary }]}>⚙️</Text>
             </View>
           </TouchableOpacity>
 
@@ -195,6 +213,34 @@ const HomeScreen = ({ navigation }) => {
             onReschedule={(apt) => navigation.navigate('Reschedule', { appointment: apt })}
           />
 
+          {/* Emergency Ambulance Banner Portal */}
+          <TouchableOpacity
+            style={[
+              styles.emergencyPortalBanner,
+              {
+                backgroundColor: isDarkMode ? 'rgba(239, 68, 68, 0.12)' : '#FEF2F2',
+                borderColor: '#EF4444',
+              }
+            ]}
+            onPress={() => navigation.navigate('Emergency')}
+            activeOpacity={0.9}
+          >
+            <View style={styles.emergencyPortalLeft}>
+              <View style={styles.emergencyPortalIconBox}>
+                <Text style={styles.emergencyPortalIconEmoji}>🚑</Text>
+              </View>
+              <View style={styles.emergencyPortalTextContainer}>
+                <Text style={[styles.emergencyPortalTitle, { color: isDarkMode ? '#FFFFFF' : '#991B1B' }]}>Emergency Portal</Text>
+                <Text style={[styles.emergencyPortalSubtitle, { color: isDarkMode ? 'rgba(255,255,255,0.7)' : '#7F1D1D' }]}>
+                  24/7 ambulance dispatch & live SOS alert
+                </Text>
+              </View>
+            </View>
+            <LinearGradient colors={['#EF4444', '#DC2626']} style={styles.emergencyPortalAction}>
+              <Text style={styles.emergencyPortalActionText}>SOS</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+
           {/* Quick Actions */}
           <QuickActions navigation={navigation} />
 
@@ -208,14 +254,15 @@ const HomeScreen = ({ navigation }) => {
 
           {/* Find Doctor CTA */}
           <TouchableOpacity
-                onPress={() => navigation.navigate('Booking')}
-                activeOpacity={0.85}>
-                <LinearGradient
-                  colors={colors?.gradients?.secondary || ['#6C5CE7', '#A29BFE']}
-                  start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 1 }}
-                  style={styles.ctaBanner}
-                >
+            onPress={() => navigation.navigate('Booking')}
+            activeOpacity={0.85}
+          >
+            <LinearGradient
+              colors={colors.gradientSecondary || ['#6C5CE7', '#5B4ED1']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 1 }}
+              style={styles.ctaBanner}
+            >
               <View style={styles.ctaLeft}>
                 <Text style={styles.ctaTitle}>👨‍⚕️ Recommended for you</Text>
                 <Text style={styles.ctaSubtitle}>500+ verified specialists available</Text>
@@ -267,28 +314,90 @@ const styles = StyleSheet.create({
 
   // Hero
   heroGradient: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xxl },
-  heroRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.xl },
+  heroRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xl },
   heroLeft: { flex: 1 },
-  heroGreeting: { color: 'rgba(255,255,255,0.65)', ...typography.bodyLarge, fontWeight: '500' },
-  heroName: { color: '#fff', fontSize: 32, fontWeight: '800', marginTop: 2, letterSpacing: -0.5 },
-  heroSubtitle: { color: 'rgba(255,255,255,0.5)', ...typography.bodyMedium, marginTop: spacing.xs },
-  avatarRing: { borderWidth: 3, borderColor: 'rgba(0, 212, 170, 0.4)', borderRadius: 999, padding: 2 },
+  heroGreeting: { ...typography.bodyLarge, fontWeight: '500' },
+  heroName: { fontSize: 24, fontWeight: '800', marginTop: 2, letterSpacing: -0.5 },
+  profileSnapshot: { flexDirection: 'row', alignItems: 'center', flex: 1 },
+  heroGreetingTextContainer: { marginLeft: spacing.sm },
+  heroNotificationBtn: { width: 38, height: 38, borderRadius: 19, borderWidth: 1, alignItems: 'center', justifyContent: 'center' },
+  
+  // Emergency Portal Banner
+  emergencyPortalBanner: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    borderRadius: 16,
+    padding: spacing.md,
+    marginBottom: spacing.xxl,
+    borderWidth: 1.5,
+    shadowColor: '#EF4444',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 10,
+    elevation: 2,
+  },
+  emergencyPortalLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    flex: 1,
+  },
+  emergencyPortalIconBox: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    backgroundColor: '#EF4444',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emergencyPortalIconEmoji: {
+    fontSize: 22,
+  },
+  emergencyPortalTextContainer: {
+    flex: 1,
+    marginLeft: spacing.md,
+    paddingRight: spacing.sm,
+  },
+  emergencyPortalTitle: {
+    fontSize: 15,
+    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
+  },
+  emergencyPortalSubtitle: {
+    fontSize: 11,
+    fontFamily: 'Inter-Regular',
+    marginTop: 2,
+    lineHeight: 14,
+  },
+  emergencyPortalAction: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emergencyPortalActionText: {
+    color: '#fff',
+    fontSize: 11,
+    fontFamily: 'Inter-Bold',
+    fontWeight: '800',
+  },
+  avatarRing: { borderWidth: 3, borderRadius: 999, padding: 2 },
 
   // Search
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
-    backgroundColor: 'rgba(255, 255, 255, 0.08)',
     borderRadius: borderRadius.full,
-    paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.md + 2,
+    paddingLeft: spacing.lg,
+    paddingRight: spacing.xs,
+    paddingVertical: spacing.xs,
     marginBottom: spacing.md,
     borderWidth: 1,
-    borderColor: 'rgba(255, 255, 255, 0.12)',
   },
-  searchIcon: { fontSize: 18, marginRight: spacing.md, color: 'rgba(255, 255, 255, 0.6)' },
-  searchPlaceholder: { flex: 1, ...typography.bodyLarge, color: 'rgba(255, 255, 255, 0.45)', fontWeight: '500' },
-  filterBtn: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(0, 212, 170, 0.25)', alignItems: 'center', justifyContent: 'center' },
-  filterIcon: { fontSize: 16, color: '#00D4AA' },
+  searchIcon: { fontSize: 18, marginRight: spacing.md },
+  searchPlaceholder: { flex: 1, ...typography.bodyLarge, fontWeight: '500', marginRight: spacing.sm },
+  filterBtn: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  filterIcon: { fontSize: 16 },
 
   // Body
   body: { paddingHorizontal: spacing.xl, paddingTop: spacing.xl },

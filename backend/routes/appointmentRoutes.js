@@ -22,6 +22,7 @@ const {
   emitAppointmentUpdated, 
   emitAppointmentCancelled 
 } = require('../services/socketManager');
+const { awardLoyaltyPoints } = require('../utils/loyaltyHelper');
 const router = express.Router();
 
 /**
@@ -1027,11 +1028,11 @@ router.post('/queue-booking', async (req, res) => {
     
     const estimatedTime = `${estimatedHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 
-    // Calculate payment breakdown
+    // Calculate payment breakdown — 5% platform fee, no GST (matches frontend & verify-by-order calculation)
     const consultationFee = doctor.consultationFee || 500;
-    const gst = Math.round(consultationFee * 0.22);
-    const platformFee = Math.round(consultationFee * 0.07);
-    const totalAmount = consultationFee + gst + platformFee;
+    const gst = 0;
+    const platformFee = Math.round(consultationFee * 0.05);
+    const totalAmount = consultationFee + platformFee;
 
     // Get payment status from request (for Razorpay integration)
     const requestedPaymentStatus = req.body.paymentStatus || 'pending';
@@ -1299,11 +1300,11 @@ router.post('/slot-booking', async (req, res) => {
       }
     }
 
-    // Calculate payment
+    // Calculate payment — 5% platform fee, no GST (matches frontend & verify-by-order calculation)
     const consultationFee = doctor.consultationFee || 500;
-    const gst = Math.round(consultationFee * 0.22);
-    const platformFee = Math.round(consultationFee * 0.07);
-    const totalAmount = consultationFee + gst + platformFee;
+    const gst = 0;
+    const platformFee = Math.round(consultationFee * 0.05);
+    const totalAmount = consultationFee + platformFee;
 
     // Create appointment with slot reference
     const appointmentData = {

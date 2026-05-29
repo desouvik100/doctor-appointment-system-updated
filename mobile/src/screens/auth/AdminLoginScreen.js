@@ -17,7 +17,7 @@ import {
   TextInput,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { spacing, borderRadius } from '../../theme/typography';
 import { authService } from '../../services/api';
 // Direct import as fallback
@@ -25,6 +25,7 @@ import { adminLogin } from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
 
 const AdminLoginScreen = ({ navigation }) => {
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
@@ -128,6 +129,8 @@ const AdminLoginScreen = ({ navigation }) => {
       setLoading(false);
     }
   };
+
+  const styles = makeStyles(colors);
 
   return (
     <View style={styles.container}>
@@ -287,7 +290,7 @@ const AdminLoginScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#0A0A0F',
