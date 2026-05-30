@@ -167,13 +167,29 @@ export const saveAuthToken = async (token) => {
     await Keychain.setGenericPassword('authToken', token, { service: TOKEN_KEY });
     console.log('✅ [AUTH] Token saved to Keychain');
   } catch (error) {
-    console.log('⚠️ [AUTH] Keychain save failed, using AsyncStorage:', error.message);
-    // Fallback to AsyncStorage
+    console.log('⚠️ [AUTH] Keychain save failed:', error.message);
+  }
+  try {
     await AsyncStorage.setItem(TOKEN_KEY, token);
     console.log('✅ [AUTH] Token saved to AsyncStorage');
+  } catch (error) {
+    console.log('⚠️ [AUTH] AsyncStorage save failed:', error.message);
   }
-  // Also save to 'token' key for compatibility with UserContext
-  await AsyncStorage.setItem('token', token);
+  try {
+    await AsyncStorage.setItem('token', token);
+  } catch (error) {
+    console.log('⚠️ [AUTH] AsyncStorage alt key save failed:', error.message);
+  }
+  
+  // Dynamic import to prevent circular dependency
+  try {
+    const socketManager = require('./socketManager').default;
+    if (socketManager) {
+      socketManager.updateToken(token);
+    }
+  } catch (error) {
+    console.log('⚠️ [AUTH] Socket token update skipped:', error.message);
+  }
 };
 
 /**
@@ -183,10 +199,18 @@ export const saveAuthToken = async (token) => {
  * @returns {Promise<void>}
  */
 export const saveRefreshToken = async (token) => {
+  console.log('💾 [AUTH] Saving refresh token...');
   try {
     await Keychain.setGenericPassword('refreshToken', token, { service: REFRESH_TOKEN_KEY });
+    console.log('✅ [AUTH] Refresh token saved to Keychain');
   } catch (error) {
+    console.log('⚠️ [AUTH] Keychain refresh token save failed:', error.message);
+  }
+  try {
     await AsyncStorage.setItem(REFRESH_TOKEN_KEY, token);
+    console.log('✅ [AUTH] Refresh token saved to AsyncStorage');
+  } catch (error) {
+    console.log('⚠️ [AUTH] AsyncStorage refresh token save failed:', error.message);
   }
 };
 
@@ -198,14 +222,24 @@ export const saveRefreshToken = async (token) => {
 export const getRefreshToken = async () => {
   try {
     const credentials = await Keychain.getGenericPassword({ service: REFRESH_TOKEN_KEY });
-    return credentials ? credentials.password : null;
-  } catch (error) {
-    try {
-      return await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
-    } catch {
-      return null;
+    if (credentials && credentials.password) {
+      console.log('🔑 [AUTH] Refresh token found in Keychain');
+      return credentials.password;
     }
+  } catch (error) {
+    console.log('⚠️ [AUTH] Keychain refresh token read failed:', error.message);
   }
+  try {
+    const token = await AsyncStorage.getItem(REFRESH_TOKEN_KEY);
+    if (token) {
+      console.log('🔑 [AUTH] Refresh token found in AsyncStorage');
+      return token;
+    }
+  } catch (error) {
+    console.log('⚠️ [AUTH] AsyncStorage refresh token read failed:', error.message);
+  }
+  console.log('❌ [AUTH] No refresh token found');
+  return null;
 };
 
 /**
@@ -218,15 +252,28 @@ export const clearAuthTokens = async () => {
   try {
     await Keychain.resetGenericPassword({ service: TOKEN_KEY });
     await Keychain.resetGenericPassword({ service: REFRESH_TOKEN_KEY });
+    console.log('🧹 [AUTH] Cleared tokens from Keychain');
   } catch (error) {
-    // Ignore keychain errors
+    console.log('⚠️ [AUTH] Keychain reset failed:', error.message);
   }
   try {
     await AsyncStorage.removeItem(TOKEN_KEY);
     await AsyncStorage.removeItem(REFRESH_TOKEN_KEY);
-  } catch {
-    // Ignore storage errors
+    await AsyncStorage.removeItem('token');
+    console.log('🧹 [AUTH] Cleared tokens from AsyncStorage');
+  } catch (error) {
+    console.log('⚠️ [AUTH] AsyncStorage remove failed:', error.message);
   }
+};
+
+let authFailureCallback = null;
+
+/**
+ * Register a callback for application-wide authentication failures
+ * @param {Function} callback - Callback function receiving error message
+ */
+export const setAuthFailureCallback = (callback) => {
+  authFailureCallback = callback;
 };
 
 // Flag to prevent multiple simultaneous refresh attempts
@@ -288,6 +335,30 @@ const refreshAuthToken = async () => {
 
   return token;
 };
+
+/**
+ * Wraps refreshAuthToken with a hard deadline to prevent the isRefreshing
+ * flag from permanently deadlocking the request queue on network freeze.
+ *
+ * @param {number} [timeoutMs=10000] - Deadline in milliseconds
+ * @returns {Promise<string>} The new access token
+ */
+const refreshAuthTokenWithTimeout = (timeoutMs = 10000) =>
+  new Promise((resolve, reject) => {
+    const timer = setTimeout(() => {
+      reject(new Error('Token refresh timed out after ' + timeoutMs + 'ms'));
+    }, timeoutMs);
+
+    refreshAuthToken()
+      .then((token) => {
+        clearTimeout(timer);
+        resolve(token);
+      })
+      .catch((err) => {
+        clearTimeout(timer);
+        reject(err);
+      });
+  });
 
 /**
  * Request Interceptor
@@ -360,6 +431,13 @@ apiClient.interceptors.response.use(
 
       // If already refreshing, queue this request
       if (isRefreshing) {
+        // Guard: do not re-queue a request that has already been through one
+        // full subscriber cycle to prevent runaway retry storms.
+        if (originalRequest._retryCount && originalRequest._retryCount >= 1) {
+          return Promise.reject(transformError(error));
+        }
+        originalRequest._retryCount = (originalRequest._retryCount || 0) + 1;
+
         return new Promise((resolve, reject) => {
           subscribeTokenRefresh((token, refreshError) => {
             if (refreshError) {
@@ -377,8 +455,10 @@ apiClient.interceptors.response.use(
       isRefreshing = true;
 
       try {
-        devLog('🔄 [API] Attempting token refresh...');
-        const newToken = await refreshAuthToken();
+        devLog('🔄 [API] Attempting token refresh (10s deadline)...');
+        // Use the timeout-guarded variant to prevent the isRefreshing flag
+        // from permanently deadlocking the request queue on network freeze.
+        const newToken = await refreshAuthTokenWithTimeout(10000);
         devLog('✅ [API] Token refreshed successfully');
         
         isRefreshing = false;
@@ -393,6 +473,12 @@ apiClient.interceptors.response.use(
         onTokenRefreshFailed(refreshError);
         
         await clearAuthTokens();
+
+        // Trigger automatic logout escape route
+        if (authFailureCallback) {
+          authFailureCallback(refreshError.message || 'Session expired');
+        }
+
         return Promise.reject(transformError(refreshError));
       }
     }

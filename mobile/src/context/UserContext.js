@@ -4,8 +4,10 @@
 
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { clearAuthTokens } from '../services/api/apiClient';
+import { clearAuthTokens, setAuthFailureCallback } from '../services/api/apiClient';
 import biometricService from '../services/biometricService';
+import { resetToRoute } from '../navigation/navigationRef';
+import { ToastInstance } from '../components/common/Toast';
 
 const UserContext = createContext();
 
@@ -110,6 +112,15 @@ export const UserProvider = ({ children }) => {
   const refreshUser = async () => {
     await loadUser();
   };
+
+  useEffect(() => {
+    setAuthFailureCallback((message) => {
+      console.log('🚨 [AUTH] Global auth failure callback triggered:', message);
+      logout();
+      ToastInstance.error('Session expired. Please log in again.');
+      resetToRoute('Welcome');
+    });
+  }, []);
 
   return (
     <UserContext.Provider

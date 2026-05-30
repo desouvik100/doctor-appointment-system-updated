@@ -113,6 +113,9 @@ class SocketManager {
     this.userType = null;
     this.clinicId = null;
     this.authToken = null;
+    this.isAuthPaused = false;
+    // Listeners notified when a fresh token is installed via updateToken()
+    this.tokenUpdateListeners = new Set();
   }
 
   /**
@@ -147,18 +150,37 @@ class SocketManager {
         const socketUrl = getSocketUrl();
         console.log('🔌 [Socket] Connecting to:', socketUrl);
 
+        if (this.socket) {
+          try {
+            console.log('🔌 [Socket] Disconnecting existing socket before creating new one');
+            this.socket.disconnect();
+          } catch (e) {
+            // Ignore Hermes non-configurable property errors
+          }
+        }
+
         this.socket = io(socketUrl, {
           auth: { token: authToken },
           transports: ['websocket', 'polling'],
-          reconnection: true,
-          reconnectionAttempts: 5,
-          reconnectionDelay: 1000,
-          reconnectionDelayMax: 5000,
+          // Disable Socket.io's own reconnection engine.
+          // We own the entire backoff schedule via _handleReconnect()
+          // to prevent uncontrolled 1000ms polling loops.
+          reconnection: false,
           timeout: 20000,
           forceNew: true,
           pingInterval: 25000,
           pingTimeout: 10000,
         });
+
+        // Single-resolution guard — ensures the Promise resolves only once
+        // regardless of how many events fire on the same connection attempt.
+        let settled = false;
+        const settle = (value) => {
+          if (!settled) {
+            settled = true;
+            resolve(value);
+          }
+        };
 
         // Connection successful
         this.socket.on('connect', () => {
@@ -169,7 +191,7 @@ class SocketManager {
           this._clearReconnectTimer();
           this._startHeartbeat();
           this._setupAppStateListener();
-          resolve(true);
+          settle(true);
         });
 
         // Authentication success
@@ -192,11 +214,23 @@ class SocketManager {
         this.socket.on(SOCKET_EVENTS.CONNECT_ERROR, (error) => {
           // Only log in dev mode to avoid spamming console
           if (__DEV__) {
-            console.log('🔌 [Socket] Connection error (will retry):', error.message);
+            console.log('🔌 [Socket] Connection error:', error.message);
           }
           this.isConnecting = false;
-          this._handleReconnect();
-          resolve(false);
+          
+          if (error.message === 'Authentication failed' || error.message?.includes('Authentication failed')) {
+            console.log('🔌 [Socket] Authentication handshake failed. Pausing reconnection scheduler.');
+            this.isAuthPaused = true;
+            this._clearReconnectTimer();
+            if (this.socket) {
+              try {
+                this.socket.disconnect();
+              } catch (e) {}
+            }
+          } else {
+            this._handleReconnect();
+          }
+          settle(false);
         });
 
         // Disconnection
@@ -412,6 +446,48 @@ class SocketManager {
   }
 
   /**
+   * Update auth token and resume reconnection if paused.
+   * Also notifies all registered tokenUpdateListeners so dependent subsystems
+   * (e.g. background sync hooks) can react immediately.
+   * @param {string} token - Fresh JWT token
+   */
+  updateToken(token) {
+    if (!token) return;
+    console.log('🔌 [Socket] Updating auth token and resetting paused state');
+    this.authToken = token;
+    this.isAuthPaused = false;
+    this.reconnectAttempts = 0;
+    if (this.socket) {
+      this.socket.auth = { token };
+    }
+    if (!this.isConnected && !this.isConnecting) {
+      this.connect(token);
+    }
+    // Notify all registered listeners that a fresh token is available
+    this.tokenUpdateListeners.forEach((cb) => {
+      try { cb(token); } catch (e) { /* listener errors must not block others */ }
+    });
+  }
+
+  /**
+   * Register a listener that fires whenever the socket receives a new token.
+   * @param {Function} callback - Receives (token: string)
+   * @returns {Function} Unsubscribe function
+   */
+  onTokenUpdated(callback) {
+    this.tokenUpdateListeners.add(callback);
+    return () => this.tokenUpdateListeners.delete(callback);
+  }
+
+  /**
+   * Remove a previously registered token-update listener.
+   * @param {Function} callback
+   */
+  offTokenUpdated(callback) {
+    this.tokenUpdateListeners.delete(callback);
+  }
+
+  /**
    * Emit event to all registered listeners
    * @private
    */
@@ -437,6 +513,11 @@ class SocketManager {
       return;
     }
 
+    if (this.isAuthPaused) {
+      console.log('🔌 [Socket] Reconnection scheduler is paused — awaiting token refresh signal');
+      return;
+    }
+
     if (this.reconnectAttempts >= RECONNECT_CONFIG.maxAttempts) {
       console.log('🔌 [Socket] Max reconnect attempts reached, will retry on app foreground');
       this.reconnectAttempts = 0; // Reset for next foreground event
@@ -444,7 +525,7 @@ class SocketManager {
     }
 
     const delay = getReconnectDelay(this.reconnectAttempts);
-    console.log(`🔌 [Socket] Reconnecting in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${RECONNECT_CONFIG.maxAttempts})`);
+    console.log(`🔌 [Socket] Exponential backoff reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${RECONNECT_CONFIG.maxAttempts})`);
 
     this._clearReconnectTimer();
     this.reconnectTimer = setTimeout(async () => {
@@ -515,7 +596,8 @@ class SocketManager {
         if (__DEV__) {
           console.log('🔌 [Socket] App came to foreground');
         }
-        if (!this.isConnected && !this.isConnecting) {
+        // Do not attempt reconnect while waiting for a fresh auth token
+        if (!this.isAuthPaused && !this.isConnected && !this.isConnecting) {
           await this.connect();
         }
       }

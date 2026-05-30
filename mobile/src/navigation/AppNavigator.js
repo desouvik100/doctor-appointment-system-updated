@@ -5,6 +5,7 @@
 import React from 'react';
 import { NavigationContainer } from '@react-navigation/native';
 import { createStackNavigator } from '@react-navigation/stack';
+import { navigationRef } from './navigationRef';
 
 import LoginScreen from '../screens/auth/LoginScreen';
 import RegisterScreen from '../screens/auth/RegisterScreen';
@@ -92,6 +93,7 @@ const AppContent = () => {
 
   return (
     <NavigationContainer
+      ref={navigationRef}
       theme={{
         dark: isDarkMode,
         colors: {
