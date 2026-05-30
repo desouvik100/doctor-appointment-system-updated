@@ -16,16 +16,16 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import { useUser } from '../../context/UserContext';
-import { useTheme } from '../../context/ThemeContext';
 import apiClient from '../../services/api/apiClient';
 
 const RewardsScreen = ({ navigation }) => {
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
+  const styles = makeStyles(colors);
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [redeeming, setRedeeming] = useState(null);
@@ -338,7 +338,7 @@ const RewardsScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { justifyContent: 'center', alignItems: 'center' },
   loadingText: { ...typography.bodyMedium, marginTop: spacing.md },

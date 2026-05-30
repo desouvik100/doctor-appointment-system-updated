@@ -11,11 +11,12 @@ import {
   TouchableOpacity,
   TouchableWithoutFeedback,
 } from 'react-native';
-import { colors } from '../../../theme/colors';
+import { useTheme } from '../../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 import Button from '../../../components/common/Button';
 
 const CancelModal = ({ visible, onClose, onConfirm, refundAmount }) => {
+  const { colors } = useTheme();
   const [selectedReason, setSelectedReason] = useState(null);
 
   const reasons = [
@@ -32,6 +33,8 @@ const CancelModal = ({ visible, onClose, onConfirm, refundAmount }) => {
       setSelectedReason(null);
     }
   };
+
+  const styles = makeStyles(colors);
 
   return (
     <Modal visible={visible} transparent animationType="fade" onRequestClose={onClose}>
@@ -88,7 +91,7 @@ const CancelModal = ({ visible, onClose, onConfirm, refundAmount }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   overlay: {
     flex: 1, backgroundColor: 'rgba(0,0,0,0.7)', justifyContent: 'center', alignItems: 'center',
     padding: spacing.xl,

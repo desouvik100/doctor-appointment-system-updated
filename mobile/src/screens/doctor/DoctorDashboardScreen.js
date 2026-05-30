@@ -18,6 +18,7 @@ import LinearGradient from 'react-native-linear-gradient';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
+import { QuickActionsGrid } from '../../components/common';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
 import { 
@@ -27,6 +28,18 @@ import {
 } from '../../services/api/doctorDashboardApi';
 
 const { width } = Dimensions.get('window');
+
+const DOCTOR_ACTIONS = [
+  { id: 'queue', icon: 'clipboard-outline', label: 'Queue', screen: 'DoctorQueue', color: '#6C5CE7' },
+  { id: 'prescriptions', icon: 'bandage-outline', label: 'Prescriptions', screen: 'DoctorPrescriptions', color: '#FF6B6B' },
+  { id: 'wallet', icon: 'wallet-outline', label: 'Wallet', screen: 'DoctorWallet', color: '#00D4AA' },
+  { id: 'availability', icon: 'calendar-outline', label: 'Availability', screen: 'DoctorSchedule', color: '#F39C12' },
+  { id: 'emr', icon: 'document-text-outline', label: 'EMR', screen: 'DoctorEMR', color: '#3B82F6' },
+  { id: 'support', icon: 'headset-outline', label: 'Support', screen: 'DoctorSupport', color: '#A29BFE' },
+  { id: 'patients', icon: 'people-outline', label: 'Patients', screen: 'Patients', color: '#10B981' },
+  { id: 'newRx', icon: 'create-outline', label: 'New Rx', screen: 'DoctorCreatePrescription', color: '#FF7675' },
+  { id: 'bookings', icon: 'calendar-outline', label: 'Bookings', screen: 'Appointments', color: '#2D3436' },
+];
 
 const DoctorDashboardScreen = ({ navigation }) => {
   const { user } = useUser();
@@ -193,78 +206,13 @@ const DoctorDashboardScreen = ({ navigation }) => {
         </View>
 
         {/* Quick Actions */}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
-          <View style={styles.quickActions}>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('DoctorQueue')}
-            >
-              <Text style={styles.quickActionIcon}>📋</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Queue</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('DoctorPrescriptions')}
-            >
-              <Text style={styles.quickActionIcon}>💊</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Prescriptions</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('DoctorWallet')}
-            >
-              <Text style={styles.quickActionIcon}>💰</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Wallet</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={[styles.quickActions, { marginTop: spacing.md }]}>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('DoctorSchedule')}
-            >
-              <Text style={styles.quickActionIcon}>🗓️</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Availability</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('DoctorEMR')}
-            >
-              <Text style={styles.quickActionIcon}>📝</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>EMR</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('DoctorSupport')}
-            >
-              <Text style={styles.quickActionIcon}>🎧</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Support</Text>
-            </TouchableOpacity>
-          </View>
-          <View style={[styles.quickActions, { marginTop: spacing.md }]}>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('Patients')}
-            >
-              <Text style={styles.quickActionIcon}>👥</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Patients</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('DoctorCreatePrescription')}
-            >
-              <Text style={styles.quickActionIcon}>✏️</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>New Rx</Text>
-            </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.quickAction, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('Appointments')}
-            >
-              <Text style={styles.quickActionIcon}>📅</Text>
-              <Text style={[styles.quickActionText, { color: colors.textPrimary }]}>Bookings</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <QuickActionsGrid
+          actions={DOCTOR_ACTIONS}
+          variant="grid"
+          cols={3}
+          showTitle={true}
+          showBadge={false}
+        />
 
         {/* Today's Schedule */}
         <View style={styles.section}>

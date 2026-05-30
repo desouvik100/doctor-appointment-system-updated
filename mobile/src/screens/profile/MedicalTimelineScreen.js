@@ -8,16 +8,16 @@ import {
   RefreshControl, ActivityIndicator,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import { useUser } from '../../context/UserContext';
-import { useTheme } from '../../context/ThemeContext';
 import apiClient from '../../services/api/apiClient';
 
 const MedicalTimelineScreen = ({ navigation }) => {
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
+  const styles = makeStyles(colors);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [timeline, setTimeline] = useState([]);
@@ -124,7 +124,7 @@ const MedicalTimelineScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1 },
   center: { justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },

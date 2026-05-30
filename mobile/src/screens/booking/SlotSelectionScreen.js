@@ -1,6 +1,6 @@
 /**
- * SlotSelectionScreen - Queue-based appointment booking
- * Patient picks type + date, gets added to queue. No time slot selection.
+ * SlotSelectionScreen - Queue-based and Slot-based appointment booking flow
+ * Step 1: Select Type | Step 2: Smart Details & Symptoms | Step 3: Date & Slot Matrix
  */
 
 import React, { useState, useEffect, useCallback, useRef } from 'react';
@@ -12,24 +12,97 @@ import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import shadows from '../../theme/shadows';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
+
+// Independent Animated DateCell Component
+const DateCell = React.memo(({ day, isSelected, onSelect }) => {
+  const { colors, isDarkMode } = useTheme();
+  const animatedValue = useRef(new Animated.Value(isSelected ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.timing(animatedValue, {
+      toValue: isSelected ? 1 : 0,
+      duration: 220,
+      useNativeDriver: false, // color interpolation not supported on native driver
+    }).start();
+  }, [isSelected]);
+
+  const backgroundColor = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.surface, colors.primary],
+  });
+
+  const textColor = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.textPrimary, '#FFFFFF'],
+  });
+
+  const textMutedColor = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [colors.textMuted, 'rgba(255, 255, 255, 0.8)'],
+  });
+
+  const scale = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.04],
+  });
+
+  return (
+    <Animated.View style={{ transform: [{ scale }] }}>
+      <TouchableOpacity
+        onPress={onSelect}
+        disabled={day.isSunday}
+        activeOpacity={0.8}
+      >
+        <Animated.View
+          style={[
+            styles.dateCard,
+            {
+              backgroundColor,
+              borderColor: isSelected ? colors.primary : (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'),
+              borderWidth: 1.5,
+              shadowColor: '#000',
+              shadowOffset: { width: 0, height: 3 },
+              shadowOpacity: isDarkMode ? 0.2 : 0.03,
+              shadowRadius: 8,
+              elevation: 1,
+            },
+            day.isSunday && { opacity: 0.35 },
+          ]}
+        >
+          <Animated.Text style={[styles.dateDay, { color: textMutedColor }]}>{day.day}</Animated.Text>
+          <Animated.Text style={[styles.dateNum, { color: textColor, fontWeight: isSelected ? '800' : '700' }]}>{day.date}</Animated.Text>
+          <Animated.Text style={[styles.dateMonth, { color: textMutedColor }]}>{day.month}</Animated.Text>
+          {day.isToday && !isSelected && (
+            <View style={styles.todayDot}>
+              <Text style={styles.todayDotText}>Today</Text>
+            </View>
+          )}
+          {day.isSunday && (
+            <Text style={[styles.closedBadge, { color: colors.error }]}>Closed</Text>
+          )}
+        </Animated.View>
+      </TouchableOpacity>
+    </Animated.View>
+  );
+});
 
 const SlotSelectionScreen = ({ navigation, route }) => {
   const { doctor } = route.params || {};
   const { user } = useUser();
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
+  const insets = useSafeAreaInsets();
 
-  const [step, setStep] = useState(1); // 1=Type, 2=Date, 3=Details
+  const [step, setStep] = useState(1); // 1=Type, 2=Smart Details, 3=Date & Slots
   const [consultationType, setConsultationType] = useState(null);
   const [selectedDate, setSelectedDate] = useState(null);
+  const [selectedSlot, setSelectedSlot] = useState(null);
   const [reason, setReason] = useState('');
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [urgencyLevel, setUrgencyLevel] = useState('normal');
   const [queueInfo, setQueueInfo] = useState(null);
   const [queueLoading, setQueueLoading] = useState(false);
-  const [bookingInProgress, setBookingInProgress] = useState(false);
 
   const doctorId = doctor?._id || doctor?.id;
 
@@ -37,6 +110,14 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     'Fever', 'Cold & Cough', 'Headache', 'Body Pain',
     'Stomach Issues', 'Skin Problem', 'Follow-up', 'General Checkup',
   ];
+
+  // Defined morning, afternoon, and evening time slots
+  const MORNING_SLOTS = ['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'];
+  const AFTERNOON_SLOTS = ['12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '03:00 PM', '03:30 PM'];
+  const EVENING_SLOTS = ['05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM'];
+
+  // Booked/Disabled Slots for simulation
+  const BOOKED_SLOTS = ['10:00 AM', '01:30 PM', '06:00 PM', '07:00 PM'];
 
   const generateDates = () => {
     const today = new Date();
@@ -80,75 +161,103 @@ const SlotSelectionScreen = ({ navigation, route }) => {
   }, [doctorId, consultationType]);
 
   useEffect(() => {
-    if (selectedDate && consultationType) fetchQueueInfo(selectedDate);
-  }, [selectedDate, consultationType, fetchQueueInfo]);
+    if (selectedDate && consultationType && step === 3) {
+      fetchQueueInfo(selectedDate);
+    }
+  }, [selectedDate, consultationType, step, fetchQueueInfo]);
 
-  const formatDate = (dateStr) => {
-    if (!dateStr) return '';
-    const [y, m, d] = dateStr.split('-').map(Number);
-    return new Date(y, m - 1, d).toLocaleDateString('en-IN', {
-      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+  const handleBookingNavigation = () => {
+    let fullReason = selectedSymptoms.length > 0
+      ? `Symptoms: ${selectedSymptoms.join(', ')}.` : '';
+    if (reason.trim()) fullReason = fullReason ? `${fullReason} ${reason.trim()}` : reason.trim();
+    if (!fullReason) fullReason = 'General Consultation';
+
+    if (!user) {
+      Alert.alert('Login Required', 'Please login to book an appointment');
+      return;
+    }
+
+    // Force clean database string primitives for IDs
+    const rawUserId = user.id || user._id || user.userId;
+    const cleanUserId = rawUserId && typeof rawUserId === 'object'
+      ? String(rawUserId._id || rawUserId.id || '')
+      : String(rawUserId || '');
+
+    const rawDoctorId = doctor?._id || doctor?.id;
+    const cleanDoctorId = rawDoctorId && typeof rawDoctorId === 'object'
+      ? String(rawDoctorId._id || rawDoctorId.id || '')
+      : String(rawDoctorId || '');
+
+    if (!cleanUserId) {
+      Alert.alert('Error', 'User session invalid. Please login again.');
+      return;
+    }
+    if (!cleanDoctorId) {
+      Alert.alert('Error', 'Doctor information missing.');
+      return;
+    }
+
+    const rawClinicId = doctor?.clinicId?._id || doctor?.clinicId;
+    const cleanClinicId = rawClinicId
+      ? (typeof rawClinicId === 'object'
+        ? String(rawClinicId._id || rawClinicId.id || '')
+        : String(rawClinicId))
+      : null;
+
+    const selectedTime = selectedSlot && typeof selectedSlot === 'object'
+      ? (selectedSlot.time || queueInfo?.estimatedTime || '09:00 AM')
+      : (selectedSlot || queueInfo?.estimatedTime || '09:00 AM');
+
+    const cleanSlotId = selectedSlot && typeof selectedSlot === 'object'
+      ? (selectedSlot._id || selectedSlot.id || null)
+      : null;
+
+    const consultationFee = Number(doctor?.consultationFee || doctor?.fee || 500);
+    const platformFee = Math.round(consultationFee * 0.05);
+    const totalAmount = consultationFee + platformFee;
+
+    console.log('QUEUE BOOKING PAYLOAD', {
+      userId: cleanUserId,
+      doctorId: cleanDoctorId,
+      clinicId: cleanClinicId,
+      date: selectedDate,
+      time: selectedTime,
+      consultationType: consultationType === 'online' ? 'online' : 'in_person',
+      urgencyLevel,
+      amount: totalAmount,
+      amountInPaisa: totalAmount * 100,
+    });
+
+    navigation.navigate('ConfirmDetails', {
+      doctor: doctor || {},
+      date: selectedDate,
+      time: selectedTime,
+      queueNumber: queueInfo?.nextQueueNumber || 1,
+      consultationType: consultationType || 'in_person',
+      patient: { id: 'self', name: user?.name || 'Patient', relation: 'Self' },
+      pendingBooking: {
+        userId: cleanUserId,
+        doctorId: cleanDoctorId,
+        clinicId: cleanClinicId,
+        date: selectedDate,
+        time: selectedTime,
+        slotId: cleanSlotId,
+        slotType: consultationType === 'online' ? 'online' : 'clinic',
+        reason: fullReason,
+        consultationType: consultationType === 'online' ? 'online' : 'in_person',
+        urgencyLevel,
+        amount: Number(totalAmount),
+        amountInPaisa: Number(totalAmount * 100),
+        consultationFee: Number(consultationFee),
+        platformFee: Number(platformFee),
+        gst: 0,
+        paymentMethod: 'razorpay',
+      },
     });
   };
 
-  const handleTypeSelect = (type) => {
-    setConsultationType(type);
-    setSelectedDate(null);
-    setQueueInfo(null);
-    setStep(2);
-  };
-
-  const handleDateSelect = (day) => {
-    if (!day.isAvailable) return;
-    setSelectedDate(day.full);
-    setStep(3);
-  };
-
-  const handleBooking = async () => {
-    try {
-      let fullReason = selectedSymptoms.length > 0
-        ? `Symptoms: ${selectedSymptoms.join(', ')}.` : '';
-      if (reason.trim()) fullReason = fullReason ? `${fullReason} ${reason.trim()}` : reason.trim();
-      if (!fullReason) fullReason = 'General Consultation';
-
-      if (!user) { Alert.alert('Login Required', 'Please login to book an appointment'); return; }
-      const userId = user.id || user._id || user.userId;
-      if (!userId) { Alert.alert('Error', 'User session invalid. Please login again.'); return; }
-      if (!doctorId) { Alert.alert('Error', 'Doctor information missing.'); return; }
-
-      const clinicId = doctor?.clinicId?._id || doctor?.clinicId || null;
-
-      setBookingInProgress(true);
-
-      // Navigate to Payment — appointment is created AFTER successful payment
-      navigation.navigate('Payment', {
-        doctor: doctor || {},
-        date: selectedDate,
-        time: queueInfo?.estimatedTime || '09:00',
-        queueNumber: queueInfo?.nextQueueNumber || 1,
-        consultationType: consultationType || 'in_person',
-        patient: { id: 'self', name: user?.name || 'Patient', relation: 'Self' },
-        // Pass booking params so PaymentScreen can create the appointment after payment
-        pendingBooking: {
-          userId,
-          doctorId,
-          clinicId,
-          date: selectedDate,
-          reason: fullReason,
-          consultationType: consultationType === 'online' ? 'online' : 'in_person',
-          urgencyLevel,
-        },
-      });
-    } catch (error) {
-      const msg = error?.response?.data?.message || error?.message || 'Failed to proceed.';
-      Alert.alert('Error', msg);
-    } finally {
-      setBookingInProgress(false);
-    }
-  };
-
-  // Animated scale refs for type cards
-  const scaleIn  = useRef(new Animated.Value(1)).current;
+  // Animated scale refs
+  const scaleIn = useRef(new Animated.Value(1)).current;
   const scaleOut = useRef(new Animated.Value(1)).current;
 
   const animateSelect = (ref) => {
@@ -162,255 +271,126 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     {
       key: 'in_person',
       icon: '🏥',
-      title: 'In-Clinic Visit',
-      desc: 'Physical examination at the clinic',
-      tag: null,
+      title: 'In-Clinic Booking',
+      desc: 'Physical examination at clinic',
       wait: 'Avg wait: 20 min',
       hours: 'Mon–Sat · 9 AM – 7 PM',
-      gradient: ['#00897B', '#26A69A'],
       scaleRef: scaleIn,
+      tag: null,
     },
     {
       key: 'online',
       icon: '💻',
-      title: 'Online Consultation',
+      title: 'Online / Google Meet',
       desc: 'Consult via video call from home',
-      tag: 'Recommended',
       wait: 'Connect instantly',
       hours: 'Mon–Sat · 8 AM – 8 PM',
-      gradient: ['#1565C0', '#1976D2'],
       scaleRef: scaleOut,
+      tag: 'Recommended',
     },
   ];
 
-  // Step 1: Consultation Type
+  // Render Step 1: Consultation Type with minimal pastel fills & solid borders
   const renderTypeSelection = () => (
     <View style={styles.stepContent}>
-      <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Choose Consultation Type</Text>
+      <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Consultation Type</Text>
       <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
-        Select how you'd like to consult with the doctor
+        Select how you would like to consult with {doctor?.name?.startsWith('Dr.') ? doctor?.name : `Dr. ${doctor?.name || 'Doctor'}`}
       </Text>
 
-      {CONSULT_TYPES.map(({ key, icon, title, desc, tag, wait, hours, gradient, scaleRef }) => {
+      {CONSULT_TYPES.map(({ key, icon, title, desc, tag, wait, hours, scaleRef }) => {
         const active = consultationType === key;
+        
+        // Solid border contrast and minimal pastel fills
+        let borderStyleColor = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)';
+        let backgroundFillColor = colors.surface;
+        
+        if (active) {
+          borderStyleColor = key === 'online' ? colors.secondary : colors.primary;
+          backgroundFillColor = key === 'online' ? 'rgba(108, 92, 231, 0.08)' : 'rgba(0, 212, 170, 0.08)';
+        }
+
         return (
           <Animated.View key={key} style={{ transform: [{ scale: scaleRef }] }}>
             <TouchableOpacity
-              style={[styles.typeCard,
-                active
-                  ? { borderColor: gradient[0], borderWidth: 2, overflow: 'hidden' }
-                  : { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: 1.5 },
+              style={[
+                styles.typeCard,
+                {
+                  backgroundColor: backgroundFillColor,
+                  borderColor: borderStyleColor,
+                  borderWidth: 2,
+                  shadowColor: '#000',
+                  shadowOffset: { width: 0, height: 4 },
+                  shadowOpacity: isDarkMode ? 0.2 : 0.04,
+                  shadowRadius: 10,
+                  elevation: 2,
+                }
               ]}
-              onPress={() => { animateSelect(scaleRef); handleTypeSelect(key); }}
-              activeOpacity={1}
+              onPress={() => {
+                animateSelect(scaleRef);
+                setConsultationType(key);
+              }}
+              activeOpacity={0.9}
             >
-              {active && (
-                <LinearGradient colors={gradient} style={StyleSheet.absoluteFill} />
-              )}
-              <View style={[styles.typeIconWrap, { backgroundColor: active ? 'rgba(255,255,255,0.2)' : (key === 'online' ? '#EFF6FF' : '#F0FDF4') }]}>
+              <View style={[
+                styles.typeIconWrap,
+                { backgroundColor: active ? (key === 'online' ? 'rgba(108,92,231,0.1)' : 'rgba(0,212,170,0.1)') : colors.surfaceLight }
+              ]}>
                 <Text style={styles.typeIcon}>{icon}</Text>
               </View>
               <View style={styles.typeInfo}>
                 <View style={styles.typeNameRow}>
-                  <Text style={[styles.typeName, { color: active ? '#fff' : colors.textPrimary }]}>{title}</Text>
-                  {tag ? (
-                    <View style={[styles.recTag, { backgroundColor: active ? 'rgba(255,255,255,0.25)' : '#DCFCE7' }]}>
-                      <Text style={[styles.recTagText, { color: active ? '#fff' : '#16A34A' }]}>{tag}</Text>
+                  <Text style={[styles.typeName, { color: colors.textPrimary }]}>{title}</Text>
+                  {tag && (
+                    <View style={[styles.recTag, { backgroundColor: colors.success + '15' }]}>
+                      <Text style={[styles.recTagText, { color: colors.success }]}>{tag}</Text>
                     </View>
-                  ) : null}
+                  )}
                 </View>
-                <Text style={[styles.typeDesc, { color: active ? 'rgba(255,255,255,0.85)' : colors.textSecondary }]}>{desc}</Text>
+                <Text style={[styles.typeDesc, { color: colors.textSecondary }]}>{desc}</Text>
                 <View style={styles.typeMetaRow}>
-                  <Text style={[styles.typeWait, { color: active ? 'rgba(255,255,255,0.7)' : colors.primary }]}>⚡ {wait}</Text>
-                  <Text style={[styles.typeHours, { color: active ? 'rgba(255,255,255,0.6)' : colors.textMuted }]}>{hours}</Text>
+                  <Text style={[styles.typeWait, { color: active ? borderStyleColor : colors.textSecondary }]}>⚡ {wait}</Text>
+                  <Text style={[styles.typeHours, { color: colors.textMuted }]}>{hours}</Text>
                 </View>
               </View>
-              {active ? (
-                <View style={styles.checkBadge}>
+              {active && (
+                <View style={[styles.checkBadge, { backgroundColor: borderStyleColor }]}>
                   <Text style={styles.checkIcon}>✓</Text>
                 </View>
-              ) : null}
+              )}
             </TouchableOpacity>
           </Animated.View>
         );
       })}
 
-      <View style={[styles.infoNote, { backgroundColor: '#FFFBEB', borderColor: '#FDE68A' }]}>
+      <View style={[styles.infoNote, { backgroundColor: colors.surfaceLight, borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider }]}>
         <Text style={styles.infoIcon}>💡</Text>
-        <Text style={[styles.infoText, { color: '#92400E' }]}>
-          No need to select a time slot. You'll be automatically added to the doctor's queue.
+        <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+          HealthSync uses a smart queue system. No specific time slots are required; you will receive a live token number.
         </Text>
       </View>
     </View>
   );
 
-  // Step 2: Date Selection
-  const renderDateSelection = () => (
-    <View style={styles.stepContent}>
-      {/* Consultation type banner — clearly labelled with Change */}
-      <View style={[styles.typeBanner, { backgroundColor: colors.surface }]}>
-        <View style={styles.typeBannerLeft}>
-          <Text style={styles.typeBannerLabel}>Consultation Type</Text>
-          <View style={styles.typeBannerValue}>
-            <Text style={styles.typeBannerIcon}>{consultationType === 'online' ? '💻' : '🏥'}</Text>
-            <Text style={[styles.typeBannerText, { color: colors.textPrimary }]}>
-              {consultationType === 'online' ? 'Online Consultation' : 'In-Clinic Visit'}
-            </Text>
-          </View>
-        </View>
-        <TouchableOpacity onPress={() => setStep(1)} style={styles.changePill}>
-          <Text style={styles.changePillText}>Change</Text>
-        </TouchableOpacity>
-      </View>
-
-      <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Select a Date</Text>
-      <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
-        Pick your preferred appointment date
-      </Text>
-
-      <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.datesContainer}>
-        {dates.map((day, index) => {
-          const isSelected = selectedDate === day.full;
-          return (
-            <TouchableOpacity
-              key={index}
-              onPress={() => handleDateSelect(day)}
-              disabled={day.isSunday}
-              activeOpacity={0.8}
-              style={[
-                styles.dateCard,
-                { backgroundColor: colors.surface, borderColor: colors.surfaceBorder },
-                day.isSunday && { opacity: 0.35 },
-                isSelected && { borderColor: '#00897B', borderWidth: 2, backgroundColor: '#F0FDF4' },
-              ]}
-            >
-              {isSelected ? (
-                <>
-                  <LinearGradient colors={['#00897B', '#26A69A']} style={styles.dateCardGradient}>
-                    <Text style={styles.dateDayActive}>{day.day}</Text>
-                    <Text style={styles.dateNumActive}>{day.date}</Text>
-                    <Text style={styles.dateMonthActive}>{day.month}</Text>
-                    <View style={styles.dateCheckDot}>
-                      <Text style={styles.dateCheckIcon}>✓</Text>
-                    </View>
-                  </LinearGradient>
-                </>
-              ) : (
-                <>
-                  <Text style={[styles.dateDay, { color: colors.textMuted }]}>{day.day}</Text>
-                  <Text style={[styles.dateNum, { color: colors.textPrimary }]}>{day.date}</Text>
-                  <Text style={[styles.dateMonth, { color: colors.textMuted }]}>{day.month}</Text>
-                  {day.isToday ? (
-                    <View style={styles.todayDot}>
-                      <Text style={styles.todayDotText}>Today</Text>
-                    </View>
-                  ) : null}
-                  {day.isSunday ? (
-                    <Text style={[styles.closedBadge, { color: '#EF4444' }]}>Closed</Text>
-                  ) : null}
-                </>
-              )}
-            </TouchableOpacity>
-          );
-        })}
-      </ScrollView>
-
-      {selectedDate ? (
-        <View style={[styles.selectedDateConfirm, { backgroundColor: '#F0FDF4', borderColor: '#86EFAC' }]}>
-          <Text style={styles.selectedDateIcon}>📅</Text>
-          <Text style={[styles.selectedDateText, { color: '#166534' }]}>{formatDate(selectedDate)}</Text>
-        </View>
-      ) : null}
-    </View>
-  );
-
-  // Step 3: Details & Queue Info
+  // Render Step 2: Smart Details & Symptoms
   const renderDetailsStep = () => {
-    const fee = doctor?.consultationFee || doctor?.fee || 500;
-    const queueNum = queueInfo?.nextQueueNumber || 1;
-    const queueCount = queueInfo?.currentQueueCount || 0;
-    const maxSlots = queueInfo?.maxSlots || 20;
-    const queueProgress = Math.min(queueCount / maxSlots, 1);
-
     const URGENCY_CONFIG = {
-      normal:    { icon: '🟢', label: 'Normal',    color: '#16A34A', bg: '#F0FDF4', border: '#86EFAC' },
-      urgent:    { icon: '🟡', label: 'Urgent',    color: '#D97706', bg: '#FFFBEB', border: '#FDE68A' },
-      emergency: { icon: '🔴', label: 'Emergency', color: '#DC2626', bg: '#FEF2F2', border: '#FECACA' },
+      normal: { icon: '🟢', label: 'Normal', color: colors.success, bg: 'rgba(16,185,129,0.08)' },
+      urgent: { icon: '🟡', label: 'Urgent', color: colors.warning, bg: 'rgba(245,158,11,0.08)' },
+      emergency: { icon: '🔴', label: 'Priority', color: colors.error, bg: 'rgba(239,68,68,0.08)' },
     };
 
     return (
       <View style={styles.stepContent}>
-        {/* Selection badges */}
-        <View style={styles.selectedInfoRow}>
-          <TouchableOpacity style={[styles.infoBadge, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]} onPress={() => setStep(1)}>
-            <Text style={styles.badgeIcon}>{consultationType === 'online' ? '💻' : '🏥'}</Text>
-            <Text style={[styles.badgeText, { color: colors.textSecondary }]}>
-              {consultationType === 'online' ? 'Online' : 'Clinic'}
-            </Text>
-            <Text style={[styles.badgeChange, { color: colors.primary }]}>  ✎</Text>
-          </TouchableOpacity>
-          <TouchableOpacity style={[styles.infoBadge, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]} onPress={() => setStep(2)}>
-            <Text style={styles.badgeIcon}>📅</Text>
-            <Text style={[styles.badgeText, { color: colors.textSecondary }]}>{formatDate(selectedDate).split(',')[0]}</Text>
-            <Text style={[styles.badgeChange, { color: colors.primary }]}>  ✎</Text>
-          </TouchableOpacity>
-        </View>
+        <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Smart Assessment</Text>
+        <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
+          Provide context to help the clinic prepare for your consultation
+        </Text>
 
-        {/* ── Queue Status — human readable ── */}
-        <LinearGradient colors={['#F0FDF4', '#DCFCE7']} style={[styles.queueCard, { borderColor: '#86EFAC' }]}>
-          {queueLoading ? (
-            <View style={styles.queueLoadingRow}>
-              <ActivityIndicator size="small" color="#00897B" />
-              <Text style={[styles.queueLoadingText, { color: '#166534' }]}>  Checking queue...</Text>
-            </View>
-          ) : (
-            <>
-              <View style={styles.queueTopRow}>
-                <View>
-                  <Text style={styles.queueTokenLabel}>Your Queue Token</Text>
-                  <Text style={styles.queueTokenNum}>#{queueNum}</Text>
-                </View>
-                <View style={styles.queueWaitBox}>
-                  <Text style={styles.queueWaitLabel}>⏱ Est. wait</Text>
-                  <Text style={styles.queueWaitVal}>
-                    {queueInfo?.estimatedTime || `~${queueNum * 10} min`}
-                  </Text>
-                </View>
-              </View>
-              {/* Progress bar */}
-              <View style={styles.queueBarWrap}>
-                <View style={[styles.queueBarTrack, { backgroundColor: '#BBF7D0' }]}>
-                  <View style={[styles.queueBarFill, { width: `${queueProgress * 100}%` }]} />
-                </View>
-                <Text style={styles.queueBarLabel}>{queueCount} of {maxSlots} slots filled</Text>
-              </View>
-            </>
-          )}
-        </LinearGradient>
-
-        {/* ── Appointment Summary ── */}
-        <View style={[styles.summaryCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
-          <Text style={[styles.summaryTitle, { color: colors.textPrimary }]}>Appointment Summary</Text>
-          {[
-            { icon: '📅', label: 'Date',   value: formatDate(selectedDate) },
-            { icon: consultationType === 'online' ? '💻' : '🏥', label: 'Type', value: consultationType === 'online' ? 'Online Consultation' : 'In-Clinic Visit' },
-            { icon: '👨‍⚕️', label: 'Doctor', value: `Dr. ${doctor?.name || 'Doctor'}` },
-            { icon: '💰', label: 'Fee',    value: `₹${fee}` },
-          ].map(({ icon, label, value }) => (
-            <View key={label} style={[styles.summaryRow, { borderBottomColor: colors.surfaceBorder }]}>
-              <View style={styles.summaryLabelRow}>
-                <Text style={styles.summaryRowIcon}>{icon}</Text>
-                <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>{label}</Text>
-              </View>
-              <Text style={[styles.summaryValue, { color: colors.textPrimary }]}>{value}</Text>
-            </View>
-          ))}
-        </View>
-
-        {/* ── Quick Symptoms ── */}
+        {/* Symptoms */}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Symptoms</Text>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Select Symptoms</Text>
             <Text style={[styles.sectionHint, { color: colors.textMuted }]}>
               {selectedSymptoms.length}/5 selected
             </Text>
@@ -423,17 +403,20 @@ const SlotSelectionScreen = ({ navigation, route }) => {
                 <TouchableOpacity
                   key={symptom}
                   disabled={maxReached}
-                  style={[styles.symptomChip,
-                    active
-                      ? { backgroundColor: '#00897B', borderColor: '#00897B' }
-                      : { backgroundColor: colors.surface, borderColor: colors.surfaceBorder },
+                  style={[
+                    styles.symptomChip,
+                    {
+                      backgroundColor: active ? colors.primary : colors.surface,
+                      borderColor: active ? colors.primary : (isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider),
+                      borderWidth: 1.5,
+                    },
                     maxReached && { opacity: 0.4 },
                   ]}
                   onPress={() => setSelectedSymptoms(prev =>
                     prev.includes(symptom) ? prev.filter(s => s !== symptom) : [...prev, symptom]
                   )}
                 >
-                  <Text style={[styles.symptomText, { color: active ? '#fff' : colors.textSecondary }]}>
+                  <Text style={[styles.symptomText, { color: active ? colors.textInverse : colors.textSecondary, fontWeight: active ? '700' : '500' }]}>
                     {symptom}
                   </Text>
                 </TouchableOpacity>
@@ -442,7 +425,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           </View>
         </View>
 
-        {/* ── Urgency Level ── */}
+        {/* Urgency */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Urgency Level</Text>
           <View style={styles.urgencyRow}>
@@ -451,10 +434,18 @@ const SlotSelectionScreen = ({ navigation, route }) => {
               return (
                 <TouchableOpacity
                   key={key}
-                  style={[styles.urgencyBtn,
-                    active
-                      ? { backgroundColor: cfg.bg, borderColor: cfg.border, borderWidth: 2 }
-                      : { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: 1 },
+                  style={[
+                    styles.urgencyBtn,
+                    {
+                      backgroundColor: active ? cfg.bg : colors.surface,
+                      borderColor: active ? cfg.color : 'transparent',
+                      borderWidth: active ? 2 : 0,
+                      shadowColor: '#000',
+                      shadowOffset: { width: 0, height: 2 },
+                      shadowOpacity: isDarkMode ? 0.15 : 0.03,
+                      shadowRadius: 6,
+                      elevation: 1,
+                    },
                   ]}
                   onPress={() => setUrgencyLevel(key)}
                 >
@@ -466,17 +457,22 @@ const SlotSelectionScreen = ({ navigation, route }) => {
               );
             })}
           </View>
-          {urgencyLevel === 'emergency' ? (
-            <Text style={styles.urgencyHint}>🚨 Emergency cases will be prioritized in the queue</Text>
-          ) : null}
         </View>
 
-        {/* ── Additional Notes ── */}
+        {/* Description */}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Additional Details</Text>
+          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Brief Description</Text>
           <TextInput
-            style={[styles.reasonInput, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, color: colors.textPrimary }]}
-            placeholder="Describe your symptoms briefly (optional)"
+            style={[
+              styles.reasonInput,
+              {
+                backgroundColor: colors.surface,
+                borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider,
+                borderWidth: 1,
+                color: colors.textPrimary
+              }
+            ]}
+            placeholder="Write details about your sickness (optional)"
             placeholderTextColor={colors.textMuted}
             value={reason}
             onChangeText={(t) => t.length <= 300 && setReason(t)}
@@ -486,28 +482,156 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           />
           <Text style={[styles.charCount, { color: colors.textMuted }]}>{reason.length}/300</Text>
         </View>
-
-        {/* ── Payment trust line ── */}
-        <View style={[styles.trustRow, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
-          <Text style={styles.trustIcon}>🔒</Text>
-          <View style={styles.trustInfo}>
-            <Text style={[styles.trustTitle, { color: colors.textPrimary }]}>100% Secure Payment</Text>
-            <Text style={[styles.trustSub, { color: colors.textMuted }]}>Consultation fee: ₹{fee} · Taxes: ₹0</Text>
-          </View>
-        </View>
       </View>
     );
   };
 
-  const insets = useSafeAreaInsets();
+  // Render Step 3: Date & Slot Matrix
+  const renderDateSelection = () => {
+    const queueNum = queueInfo?.nextQueueNumber || 1;
+    const queueCount = queueInfo?.currentQueueCount || 0;
+    const maxSlots = queueInfo?.maxSlots || 25;
+    const queueProgress = Math.min(queueCount / maxSlots, 1);
 
-  // Main render
+    const renderSlotItem = (timeStr) => {
+      const isBooked = BOOKED_SLOTS.includes(timeStr);
+      const isSelected = selectedSlot === timeStr;
+      
+      let background = colors.surface;
+      let border = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
+      let text = colors.textPrimary;
+      
+      if (isBooked) {
+        background = isDarkMode ? 'rgba(255,255,255,0.02)' : '#F1F5F9';
+        border = 'transparent';
+        text = colors.textMuted;
+      } else if (isSelected) {
+        background = colors.primary;
+        border = colors.primary;
+        text = '#FFFFFF';
+      }
+
+      return (
+        <TouchableOpacity
+          key={timeStr}
+          disabled={isBooked}
+          onPress={() => setSelectedSlot(timeStr)}
+          style={[
+            styles.slotChip,
+            {
+              backgroundColor: background,
+              borderColor: border,
+            }
+          ]}
+          activeOpacity={0.8}
+        >
+          <Text style={[styles.slotChipText, { color: text, fontWeight: isSelected ? '700' : '600' }]}>
+            {timeStr}
+          </Text>
+        </TouchableOpacity>
+      );
+    };
+
+    return (
+      <View style={styles.stepContent}>
+        <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Choose Date & Time</Text>
+        <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
+          Select an available date and scheduled time slot
+        </Text>
+
+        {/* Horizontal Scrollable Date ribbon */}
+        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.datesContainer}>
+          {dates.map((day, index) => (
+            <DateCell
+              key={index}
+              day={day}
+              isSelected={selectedDate === day.full}
+              onSelect={() => {
+                setSelectedDate(day.full);
+                setSelectedSlot(null); // Reset slot choice when date changes
+                fetchQueueInfo(day.full);
+              }}
+            />
+          ))}
+        </ScrollView>
+
+        {/* Dynamic slots matrix - Morning, Afternoon, Evening grids */}
+        {selectedDate && (
+          <View style={styles.slotSection}>
+            <Text style={[styles.slotSectionTitle, { color: colors.textPrimary }]}>🌅 Morning Slots</Text>
+            <View style={styles.slotGrid}>
+              {MORNING_SLOTS.map(renderSlotItem)}
+            </View>
+
+            <Text style={[styles.slotSectionTitle, { color: colors.textPrimary }]}>☀️ Afternoon Slots</Text>
+            <View style={styles.slotGrid}>
+              {AFTERNOON_SLOTS.map(renderSlotItem)}
+            </View>
+
+            <Text style={[styles.slotSectionTitle, { color: colors.textPrimary }]}>🌙 Evening Slots</Text>
+            <View style={styles.slotGrid}>
+              {EVENING_SLOTS.map(renderSlotItem)}
+            </View>
+          </View>
+        )}
+
+        {/* Live Queue Tracker */}
+        {selectedDate && (
+          <View style={styles.queueContainer}>
+            <Text style={[styles.queueHeaderTitle, { color: colors.textPrimary }]}>Live Queue Status</Text>
+            <LinearGradient
+              colors={isDarkMode ? ['rgba(30,36,51,0.5)', 'rgba(10,14,23,0.2)'] : ['#FFFFFF', '#F8FAFC']}
+              style={[
+                styles.queueCard,
+                {
+                  borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider || '#E5E7EB',
+                  borderWidth: 1,
+                }
+              ]}
+            >
+              {queueLoading ? (
+                <View style={styles.queueLoadingRow}>
+                  <ActivityIndicator size="small" color={colors.primary} />
+                  <Text style={[styles.queueLoadingText, { color: colors.textSecondary }]}> Checking live wait time...</Text>
+                </View>
+              ) : (
+                <>
+                  <View style={styles.queueTopRow}>
+                    <View>
+                      <Text style={[styles.queueTokenLabel, { color: colors.textMuted }]}>Available Queue Token</Text>
+                      <Text style={[styles.queueTokenNum, { color: colors.primary }]}>#{queueNum}</Text>
+                    </View>
+                    <View style={styles.queueWaitBox}>
+                      <Text style={[styles.queueWaitLabel, { color: colors.textMuted }]}>Estimated Wait</Text>
+                      <Text style={[styles.queueWaitVal, { color: colors.primary }]}>
+                        ⏱ {queueInfo?.estimatedTime || `~${queueNum * 10} mins`}
+                      </Text>
+                    </View>
+                  </View>
+
+                  <View style={styles.queueBarWrap}>
+                    <View style={[styles.queueBarTrack, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#E2E8F0' }]}>
+                      <View style={[styles.queueBarFill, { width: `${queueProgress * 100}%`, backgroundColor: colors.primary }]} />
+                    </View>
+                    <Text style={[styles.queueBarLabel, { color: colors.textSecondary }]}>
+                      {queueCount} active patients in clinic queue right now (max {maxSlots})
+                    </Text>
+                  </View>
+                </>
+              )}
+            </LinearGradient>
+          </View>
+        )}
+      </View>
+    );
+  };
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {/* ── Hero Header ── */}
-      <LinearGradient colors={['#00897B', '#26A69A']}
+      {/* Header Banner */}
+      <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
         style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity
           style={styles.backBtn}
@@ -517,149 +641,154 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>
-            {step === 1 ? 'Book Appointment' : step === 2 ? 'Select Date' : 'Confirm Details'}
+            {step === 1 ? 'Appointment Type' : step === 2 ? 'Tell Us Symptoms' : 'Select Slots'}
           </Text>
           <Text style={styles.headerSub}>Step {step} of 3</Text>
         </View>
         <View style={{ width: 36 }} />
       </LinearGradient>
 
-      {/* ── Progress Bar ── */}
-      <View style={[styles.progressWrap, { backgroundColor: colors.backgroundCard }]}>
-        {['Type', 'Date', 'Details'].map((label, i) => {
+      {/* Step Indicator Progress Bar */}
+      <View style={[styles.progressWrap, { backgroundColor: colors.surface }]}>
+        {['Type', 'Details', 'Date'].map((label, i) => {
           const s = i + 1;
           const done = step > s;
           const active = step === s;
           return (
             <React.Fragment key={s}>
               <View style={styles.progressStep}>
-                <View style={[styles.progressDot,
-                  done  && { backgroundColor: '#00897B', borderColor: '#00897B' },
-                  active && { backgroundColor: '#fff', borderColor: '#00897B' },
-                  !done && !active && { backgroundColor: colors.surface, borderColor: colors.surfaceBorder },
-                ]}>
-                  {done
-                    ? <Text style={styles.progressCheck}>✓</Text>
-                    : <Text style={[styles.progressNum, { color: active ? '#00897B' : colors.textMuted }]}>{s}</Text>
+                <View style={[
+                  styles.progressDot,
+                  {
+                    backgroundColor: done ? colors.primary : (active ? colors.surfaceLight : colors.surface),
+                    borderColor: active || done ? colors.primary : (isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider),
+                    borderWidth: 2,
                   }
+                ]}>
+                  {done ? (
+                    <Text style={styles.progressCheck}>✓</Text>
+                  ) : (
+                    <Text style={[styles.progressNum, { color: active ? colors.primary : colors.textMuted }]}>{s}</Text>
+                  )}
                 </View>
-                <Text style={[styles.progressLabel,
-                  { color: (done || active) ? '#00897B' : colors.textMuted },
-                  active && { fontWeight: '700' },
+                <Text style={[
+                  styles.progressLabel,
+                  { color: (done || active) ? colors.primary : colors.textMuted, fontWeight: active ? '700' : '500' }
                 ]}>{label}</Text>
               </View>
-              {i < 2 ? (
-                <View style={[styles.progressLine, { backgroundColor: step > s ? '#00897B' : colors.surfaceBorder }]} />
-              ) : null}
+              {i < 2 && (
+                <View style={[
+                  styles.progressLine,
+                  { backgroundColor: step > s ? colors.primary : (isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider) }
+                ]} />
+              )}
             </React.Fragment>
           );
         })}
       </View>
 
-      {/* ── Doctor Card ── */}
-      <View style={[styles.doctorCard, { backgroundColor: colors.surface }]}>
-        <View style={styles.doctorRow}>
+      {/* Doctor Summary Header Card */}
+      <View style={[styles.doctorSummaryCard, { backgroundColor: colors.surface }]}>
+        <View style={styles.doctorSummaryRow}>
           {doctor?.profilePhoto ? (
             <Image source={{ uri: doctor.profilePhoto }} style={styles.doctorAvatar} />
           ) : (
-            <LinearGradient colors={['#00897B', '#26A69A']} style={styles.doctorAvatarFallback}>
+            <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.doctorAvatarFallback}>
               <Text style={styles.doctorAvatarInitials}>
                 {(doctor?.name || 'D').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
               </Text>
             </LinearGradient>
           )}
-          <View style={styles.doctorInfo}>
+          <View style={styles.doctorInfoCard}>
             <View style={styles.doctorNameRow}>
-              <Text style={[styles.doctorName, { color: colors.textPrimary }]}>Dr. {doctor?.name || 'Doctor'}</Text>
-              <View style={styles.verifiedBadge}>
-                <Text style={styles.verifiedText}>✔ Verified</Text>
+              <Text style={[styles.doctorNameText, { color: colors.textPrimary }]}>
+                {doctor?.name?.startsWith('Dr.') ? doctor?.name : `Dr. ${doctor?.name || 'Doctor'}`}
+              </Text>
+              <View style={[styles.verifiedLabelBadge, { backgroundColor: colors.primary + '15' }]}>
+                <Text style={[styles.verifiedLabelText, { color: colors.primary }]}>✔ Verified</Text>
               </View>
             </View>
-            <Text style={[styles.doctorSpec, { color: colors.textSecondary }]}>
+            <Text style={[styles.doctorSpecText, { color: colors.textSecondary }]}>
               {doctor?.specialization || doctor?.specialty || 'Specialist'}
             </Text>
-            <View style={styles.doctorMetaRow}>
-              <Text style={[styles.doctorQual, { color: colors.textMuted }]}>
-                {doctor?.qualification || 'MBBS'} · {doctor?.experience || 0} yrs
-              </Text>
-              {doctor?.rating ? (
-                <Text style={styles.doctorRating}>⭐ {Number(doctor.rating).toFixed(1)}</Text>
-              ) : null}
-            </View>
           </View>
-          <View style={styles.feeBox}>
-            <Text style={[styles.feeValue, { color: '#00897B' }]}>₹{doctor?.consultationFee || doctor?.fee || 500}</Text>
-            <Text style={[styles.feeLabel, { color: colors.textMuted }]}>Consult fee</Text>
+          <View style={styles.feeSummaryBox}>
+            <Text style={[styles.feeValueText, { color: colors.primary }]}>₹{doctor?.consultationFee || doctor?.fee || 500}</Text>
+            <Text style={[styles.feeLabelText, { color: colors.textMuted }]}>Fee</Text>
           </View>
         </View>
       </View>
 
+      {/* Scrollable Step Content */}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {step === 1 && renderTypeSelection()}
-        {step === 2 && renderDateSelection()}
-        {step === 3 && renderDetailsStep()}
+        {step === 2 && renderDetailsStep()}
+        {step === 3 && renderDateSelection()}
       </ScrollView>
 
-      {/* Bottom CTA - step 1: Continue after type selection */}
-      {step === 1 && (
-        <View style={[styles.bottomBar, { backgroundColor: colors.backgroundCard, borderTopColor: colors.surfaceBorder }]}>
+      {/* Bottom Sticky Action Button */}
+      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider || '#F1F5F9' }]}>
+        {step === 1 && (
           <TouchableOpacity
-            onPress={() => consultationType ? setStep(2) : null}
+            onPress={() => consultationType && setStep(2)}
             activeOpacity={consultationType ? 0.85 : 1}
+            disabled={!consultationType}
+            style={styles.actionBtnContainer}
           >
             <LinearGradient
-              colors={consultationType ? ['#00897B', '#26A69A'] : ['#D1D5DB', '#9CA3AF']}
-              style={styles.bookBtnGradient}
+              colors={consultationType ? (colors.gradientPrimary || ['#00D4AA', '#00B894']) : ['#2A3142', '#2A3142']}
+              style={styles.actionBtnGradient}
             >
-              <Text style={styles.bookBtnText}>
-                {consultationType ? 'Continue →' : 'Select a consultation type'}
+              <Text style={[styles.actionBtnText, { color: consultationType ? colors.textInverse : colors.textMuted }]}>
+                {consultationType ? 'Continue to Assessment →' : 'Select Consultation Type'}
               </Text>
             </LinearGradient>
           </TouchableOpacity>
-        </View>
-      )}
+        )}
 
-      {/* Bottom CTA - step 2: Continue after date selection */}
-      {step === 2 && (
-        <View style={[styles.bottomBar, { backgroundColor: colors.backgroundCard, borderTopColor: colors.surfaceBorder }]}>
+        {step === 2 && (
           <TouchableOpacity
-            onPress={() => selectedDate ? setStep(3) : null}
-            activeOpacity={selectedDate ? 0.85 : 1}
+            onPress={() => setStep(3)}
+            activeOpacity={0.85}
+            style={styles.actionBtnContainer}
           >
             <LinearGradient
-              colors={selectedDate ? ['#00897B', '#26A69A'] : ['#D1D5DB', '#9CA3AF']}
-              style={styles.bookBtnGradient}
+              colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
+              style={styles.actionBtnGradient}
             >
-              <Text style={styles.bookBtnText}>Continue →</Text>
+              <Text style={[styles.actionBtnText, { color: colors.textInverse }]}>
+                Select Preferred Date →
+              </Text>
             </LinearGradient>
           </TouchableOpacity>
-        </View>
-      )}
+        )}
 
-      {/* Bottom CTA - step 3: Proceed to payment */}
-      {step === 3 && (
-        <View style={[styles.bottomBar, { backgroundColor: colors.backgroundCard, borderTopColor: colors.surfaceBorder }]}>
-          <View style={styles.bottomFeeRow}>
-            <Text style={[styles.bottomFeeLabel, { color: colors.textSecondary }]}>Consultation Fee</Text>
-            <Text style={[styles.bottomFeeValue, { color: colors.textPrimary }]}>
-              ₹{doctor?.consultationFee || doctor?.fee || 500}
-            </Text>
+        {step === 3 && (
+          <View style={styles.bottomStep3Row}>
+            <View style={styles.bottomFeeColumn}>
+              <Text style={[styles.bottomFeeLabelText, { color: colors.textMuted }]}>Consultation Fee</Text>
+              <Text style={[styles.bottomFeeValueText, { color: colors.textPrimary }]}>
+                ₹{doctor?.consultationFee || doctor?.fee || 500}
+              </Text>
+            </View>
+            <TouchableOpacity
+              onPress={() => selectedDate && selectedSlot && handleBookingNavigation()}
+              activeOpacity={selectedDate && selectedSlot ? 0.85 : 1}
+              disabled={!selectedDate || !selectedSlot}
+              style={[styles.actionBtnContainer, { flex: 1.4 }]}
+            >
+              <LinearGradient
+                colors={selectedDate && selectedSlot ? (colors.gradientPrimary || ['#00D4AA', '#00B894']) : ['#2A3142', '#2A3142']}
+                style={styles.actionBtnGradient}
+              >
+                <Text style={[styles.actionBtnText, { color: selectedDate && selectedSlot ? colors.textInverse : colors.textMuted }]}>
+                  {selectedDate && selectedSlot ? 'Confirm Booking Details →' : 'Select Slot to Confirm'}
+                </Text>
+              </LinearGradient>
+            </TouchableOpacity>
           </View>
-          <TouchableOpacity
-            style={{ opacity: bookingInProgress ? 0.7 : 1 }}
-            onPress={handleBooking}
-            disabled={bookingInProgress}
-            activeOpacity={0.85}
-          >
-            <LinearGradient colors={['#00897B', '#26A69A']} style={styles.bookBtnGradient}>
-              {bookingInProgress
-                ? <ActivityIndicator size="small" color="#fff" />
-                : <Text style={styles.bookBtnText}>Proceed to Payment →</Text>
-              }
-            </LinearGradient>
-          </TouchableOpacity>
-        </View>
-      )}
+        )}
+      </View>
     </View>
   );
 };
@@ -667,202 +796,167 @@ const SlotSelectionScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
 
-  // Header
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xl, paddingBottom: spacing.lg },
-  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  // Header Banner
+  header: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.lg,
+  },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
   backIcon: { fontSize: 18, color: '#fff', fontWeight: '700' },
   headerCenter: { flex: 1, alignItems: 'center' },
   headerTitle: { color: '#fff', ...typography.headlineMedium, fontWeight: '800' },
   headerSub: { color: 'rgba(255,255,255,0.75)', ...typography.labelSmall, marginTop: 2 },
 
-  // Progress bar
-  progressWrap: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.md, paddingHorizontal: spacing.xl },
+  // Progress Bar
+  progressWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xl,
+  },
   progressStep: { alignItems: 'center' },
-  progressDot: { width: 30, height: 30, borderRadius: 15, alignItems: 'center', justifyContent: 'center', borderWidth: 2, marginBottom: 4 },
+  progressDot: {
+    width: 30,
+    height: 30,
+    borderRadius: 15,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 4,
+  },
   progressNum: { ...typography.labelSmall, fontWeight: '700' },
-  progressCheck: { color: '#fff', fontSize: 13, fontWeight: '800' },
-  progressLabel: { ...typography.labelSmall, fontWeight: '500' },
+  progressCheck: { color: '#fff', fontSize: 12, fontWeight: '800' },
+  progressLabel: { ...typography.labelSmall },
   progressLine: { flex: 1, height: 2, marginHorizontal: spacing.sm, marginBottom: 18, borderRadius: 1 },
 
-  // Doctor card
-  doctorCard: {
-    marginHorizontal: spacing.xl, borderRadius: borderRadius.xl,
-    padding: spacing.md, marginBottom: spacing.md,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
+  // Doctor Info Card Header
+  doctorSummaryCard: {
+    marginHorizontal: spacing.xl,
+    borderRadius: borderRadius.lg,
+    padding: spacing.md,
+    marginTop: spacing.md,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.05,
+    shadowRadius: 6,
+    elevation: 1,
   },
-  doctorRow: { flexDirection: 'row', alignItems: 'center' },
-  doctorAvatar: { width: 56, height: 56, borderRadius: 28 },
-  doctorAvatarFallback: { width: 56, height: 56, borderRadius: 28, alignItems: 'center', justifyContent: 'center' },
-  doctorAvatarInitials: { color: '#fff', fontSize: 20, fontWeight: '800' },
-  doctorInfo: { flex: 1, marginLeft: spacing.md },
-  doctorNameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, flexWrap: 'wrap' },
-  doctorName: { ...typography.bodyLarge, fontWeight: '800' },
-  verifiedBadge: { backgroundColor: '#DCFCE7', paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
-  verifiedText: { color: '#16A34A', fontSize: 10, fontWeight: '700' },
-  doctorSpec: { ...typography.bodySmall, marginTop: 2 },
-  doctorMetaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginTop: 3 },
-  doctorQual: { ...typography.labelSmall },
-  doctorRating: { color: '#F59E0B', ...typography.labelSmall, fontWeight: '700' },
-  feeBox: { alignItems: 'flex-end' },
-  feeValue: { ...typography.headlineSmall, fontWeight: '800' },
-  feeLabel: { ...typography.labelSmall, marginTop: 2 },
+  doctorSummaryRow: { flexDirection: 'row', alignItems: 'center' },
+  doctorAvatar: { width: 48, height: 48, borderRadius: 24 },
+  doctorAvatarFallback: { width: 48, height: 48, borderRadius: 24, alignItems: 'center', justifyContent: 'center' },
+  doctorAvatarInitials: { color: '#fff', fontSize: 16, fontWeight: '800' },
+  doctorInfoCard: { flex: 1, marginLeft: spacing.md },
+  doctorNameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  doctorNameText: { ...typography.bodyLarge, fontWeight: '800' },
+  verifiedLabelBadge: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  verifiedLabelText: { fontSize: 9, fontWeight: '700' },
+  doctorSpecText: { ...typography.bodySmall, marginTop: 1 },
+  feeSummaryBox: { alignItems: 'flex-end' },
+  feeValueText: { ...typography.headlineSmall, fontWeight: '800' },
+  feeLabelText: { ...typography.labelSmall, marginTop: 1 },
 
-  scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 180 },
+  scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 150 },
   stepContent: { paddingTop: spacing.md },
-  stepTitle: { ...typography.headlineSmall, fontWeight: '700', marginBottom: spacing.xs },
+  stepTitle: { ...typography.headlineSmall, fontWeight: '800', marginBottom: spacing.xs },
   stepSubtitle: { ...typography.bodyMedium, marginBottom: spacing.lg },
 
-  // Consultation type cards
+  // Step 1: Type cards
   typeCard: {
-    flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.xl,
-    padding: spacing.lg, marginBottom: spacing.md, overflow: 'hidden',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: borderRadius.xl,
+    padding: spacing.lg,
+    marginBottom: spacing.md,
   },
   typeIconWrap: { width: 52, height: 52, borderRadius: 16, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
-  typeIcon: { fontSize: 26 },
+  typeIcon: { fontSize: 24 },
   typeInfo: { flex: 1 },
-  typeNameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 3 },
+  typeNameRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, marginBottom: 2 },
   typeName: { ...typography.bodyLarge, fontWeight: '700' },
-  recTag: { paddingHorizontal: 7, paddingVertical: 2, borderRadius: 6 },
-  recTagText: { fontSize: 10, fontWeight: '700' },
+  recTag: { paddingHorizontal: 6, paddingVertical: 2, borderRadius: 6 },
+  recTagText: { fontSize: 9, fontWeight: '700' },
   typeDesc: { ...typography.bodySmall, marginBottom: 4 },
   typeMetaRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.md },
-  typeWait: { ...typography.labelSmall, fontWeight: '600' },
+  typeWait: { ...typography.labelSmall, fontWeight: '700' },
   typeHours: { ...typography.labelSmall },
-  checkBadge: { width: 28, height: 28, borderRadius: 14, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center' },
-  checkIcon: { color: '#fff', fontSize: 14, fontWeight: '800' },
-  infoNote: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: borderRadius.lg, padding: spacing.md, marginTop: spacing.sm, borderWidth: 1 },
+  checkBadge: { width: 22, height: 22, borderRadius: 11, alignItems: 'center', justifyContent: 'center' },
+  checkIcon: { color: '#fff', fontSize: 11, fontWeight: '900' },
+  infoNote: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: borderRadius.lg, padding: spacing.md, marginTop: spacing.md, borderWidth: 1 },
   infoIcon: { fontSize: 16, marginRight: spacing.sm, marginTop: 1 },
   infoText: { ...typography.bodySmall, flex: 1, lineHeight: 18 },
 
-  selectedBanner: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.md, padding: spacing.md, marginBottom: spacing.lg },
-  bannerIcon: { fontSize: 18, marginRight: spacing.sm },
-  bannerText: { ...typography.bodyMedium, flex: 1 },
-  changeText: { ...typography.labelSmall },
-
-  datesContainer: { paddingVertical: spacing.sm, paddingRight: spacing.xl },
-  dateCard: { width: 72, paddingVertical: spacing.lg, borderRadius: borderRadius.lg, alignItems: 'center', borderWidth: 1, marginRight: spacing.md },
-  dateCardActive: { borderWidth: 0, overflow: 'hidden' },
-  dateCardGradient: { width: '100%', paddingVertical: spacing.lg, alignItems: 'center' },
-  dateDay: { ...typography.labelSmall, marginBottom: spacing.xs },
-  dateDayActive: { ...typography.labelSmall, color: 'rgba(255,255,255,0.8)', marginBottom: spacing.xs },
-  dateNum: { ...typography.headlineMedium },
-  dateNumActive: { ...typography.headlineMedium, color: '#fff' },
-  dateMonth: { ...typography.labelSmall, marginTop: spacing.xs },
-  dateMonthActive: { ...typography.labelSmall, color: 'rgba(255,255,255,0.8)', marginTop: spacing.xs },
-  todayBadge: { ...typography.labelSmall, marginTop: spacing.xs },
-  closedBadge: { ...typography.labelSmall, marginTop: spacing.xs },
-
-  selectedInfoRow: { flexDirection: 'row', gap: spacing.md, marginBottom: spacing.lg },
-  infoBadge: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  badgeIcon: { fontSize: 14, marginRight: spacing.xs },
-  badgeText: { ...typography.labelSmall },
-
-  queueCard: { borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.lg, borderWidth: 1 },
-  queueLoadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.md },
-  queueLoadingText: { ...typography.bodySmall },
-  queueHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
-  queueTitle: { ...typography.bodyLarge, fontWeight: '600' },
-  queueBadge: { borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.xs },
-  queueBadgeText: { ...typography.labelSmall, color: '#fff' },
-  queueStats: { flexDirection: 'row', justifyContent: 'space-around', marginBottom: spacing.md },
-  queueStat: { alignItems: 'center' },
-  queueStatHighlight: { alignItems: 'center', borderRadius: borderRadius.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
-  queueStatNum: { ...typography.headlineSmall },
-  queueStatNumHighlight: { ...typography.headlineSmall },
-  queueStatLabel: { ...typography.labelSmall, marginTop: 2 },
-  estimatedTimeBox: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.md, padding: spacing.md },
-  estIcon: { fontSize: 22, marginRight: spacing.md },
-  estLabel: { ...typography.labelSmall },
-  estTime: { ...typography.headlineSmall, fontWeight: '700' },
-
-  summaryCard: { borderRadius: borderRadius.lg, padding: spacing.lg, marginBottom: spacing.lg, borderWidth: 1 },
-  summaryTitle: { ...typography.bodyLarge, fontWeight: '700', marginBottom: spacing.md },
-  summaryRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm, borderBottomWidth: 1 },
-  summaryLabel: { ...typography.bodyMedium },
-  summaryValue: { ...typography.bodyMedium, fontWeight: '500', flex: 1, textAlign: 'right' },
-
+  // Step 2: Assessment Grid
   section: { marginBottom: spacing.lg },
-  sectionTitle: { ...typography.bodyLarge, fontWeight: '600', marginBottom: spacing.md },
+  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
+  sectionTitle: { ...typography.bodyLarge, fontWeight: '700' },
+  sectionHint: { ...typography.labelSmall },
   symptomsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  symptomChip: { borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderWidth: 1 },
+  symptomChip: { borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
   symptomText: { ...typography.labelMedium },
-
   urgencyRow: { flexDirection: 'row', gap: spacing.md },
-  urgencyBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: borderRadius.md, padding: spacing.md, borderWidth: 1 },
+  urgencyBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: borderRadius.md, paddingVertical: spacing.md },
   urgencyIcon: { fontSize: 16, marginRight: spacing.xs },
   urgencyText: { ...typography.labelMedium },
-
-  reasonInput: { borderRadius: borderRadius.lg, padding: spacing.md, borderWidth: 1, ...typography.bodyMedium, minHeight: 80 },
-
-  // Bottom bar
-  bottomBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    paddingHorizontal: spacing.xl, paddingTop: spacing.lg, paddingBottom: spacing.xxl,
-    borderTopWidth: 1, ...shadows.large,
-  },
-  bottomFeeRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
-  bottomFeeLabel: { ...typography.bodyLarge },
-  bottomFeeValue: { ...typography.headlineMedium, fontWeight: '700' },
-  bookBtnGradient: { borderRadius: borderRadius.lg, paddingVertical: spacing.lg, alignItems: 'center', justifyContent: 'center' },
-  bookBtnText: { color: '#fff', ...typography.bodyLarge, fontWeight: '700' },
-
-  // Type banner (step 2)
-  typeBanner: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', borderRadius: borderRadius.lg, padding: spacing.md, marginBottom: spacing.lg, borderWidth: 1, borderColor: '#E5E7EB' },
-  typeBannerLeft: { flex: 1 },
-  typeBannerLabel: { fontSize: 10, fontWeight: '600', color: '#9CA3AF', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 3 },
-  typeBannerValue: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  typeBannerIcon: { fontSize: 16 },
-  typeBannerText: { ...typography.bodyMedium, fontWeight: '600' },
-  changePill: { backgroundColor: '#F0FDF4', borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: 5, borderWidth: 1, borderColor: '#86EFAC' },
-  changePillText: { color: '#16A34A', fontSize: 12, fontWeight: '700' },
-
-  // Date card extras
-  todayDot: { marginTop: 4, backgroundColor: '#00897B', borderRadius: 8, paddingHorizontal: 5, paddingVertical: 2 },
-  todayDotText: { color: '#fff', fontSize: 9, fontWeight: '700' },
-  dateCheckDot: { width: 18, height: 18, borderRadius: 9, backgroundColor: 'rgba(255,255,255,0.3)', alignItems: 'center', justifyContent: 'center', marginTop: 4 },
-  dateCheckIcon: { color: '#fff', fontSize: 10, fontWeight: '800' },
-
-  // Selected date confirm row
-  selectedDateConfirm: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.lg, padding: spacing.md, marginTop: spacing.md, borderWidth: 1 },
-  selectedDateIcon: { fontSize: 18, marginRight: spacing.sm },
-  selectedDateText: { ...typography.bodyMedium, fontWeight: '600', flex: 1 },
-
-  // Badge change icon
-  badgeChange: { fontSize: 12, marginLeft: 2 },
-
-  // Queue redesign
-  queueTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: spacing.md },
-  queueTokenLabel: { fontSize: 11, color: '#166534', fontWeight: '600', marginBottom: 2 },
-  queueTokenNum: { fontSize: 32, fontWeight: '900', color: '#00897B', lineHeight: 36 },
-  queueWaitBox: { alignItems: 'flex-end' },
-  queueWaitLabel: { fontSize: 11, color: '#166534', fontWeight: '600', marginBottom: 2 },
-  queueWaitVal: { fontSize: 16, fontWeight: '800', color: '#00897B' },
-  queueBarWrap: { gap: 6 },
-  queueBarTrack: { height: 8, borderRadius: 4, overflow: 'hidden' },
-  queueBarFill: { height: '100%', backgroundColor: '#00897B', borderRadius: 4 },
-  queueBarLabel: { fontSize: 11, color: '#166534', fontWeight: '500' },
-
-  // Summary icon row
-  summaryLabelRow: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  summaryRowIcon: { fontSize: 14 },
-
-  // Section header row
-  sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
-  sectionHint: { ...typography.labelSmall },
-
-  // Urgency hint
-  urgencyHint: { marginTop: spacing.sm, fontSize: 12, color: '#DC2626', fontWeight: '500' },
-
-  // Char count
+  reasonInput: { borderRadius: borderRadius.lg, padding: spacing.md, ...typography.bodyMedium, minHeight: 80 },
   charCount: { ...typography.labelSmall, textAlign: 'right', marginTop: 4 },
 
-  // Trust row
-  trustRow: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.lg, padding: spacing.md, borderWidth: 1, marginBottom: spacing.md },
-  trustIcon: { fontSize: 22, marginRight: spacing.md },
-  trustInfo: { flex: 1 },
-  trustTitle: { ...typography.bodyMedium, fontWeight: '700' },
-  trustSub: { ...typography.labelSmall, marginTop: 2 },
+  // Step 3: Date selection (Horizontal strip ribbon)
+  datesContainer: { paddingVertical: spacing.md, paddingRight: spacing.xl, gap: spacing.sm },
+  dateCard: { width: 70, height: 90, borderRadius: 12, alignItems: 'center', justifyContent: 'center', marginRight: spacing.xs },
+  dateDay: { ...typography.labelSmall, marginBottom: 2 },
+  dateNum: { fontSize: 22, lineHeight: 24 },
+  dateMonth: { ...typography.labelSmall, marginTop: 2 },
+  todayDot: { position: 'absolute', bottom: 4, backgroundColor: '#00D4AA', borderRadius: 4, paddingHorizontal: 4, paddingVertical: 1 },
+  todayDotText: { color: '#fff', fontSize: 6, fontWeight: '700' },
+  closedBadge: { position: 'absolute', bottom: 4, fontSize: 8, fontWeight: '700' },
+
+  // Slot Matrix Styling (Responsive Multi-column Grid)
+  slotSection: { marginTop: spacing.md, marginBottom: spacing.lg },
+  slotSectionTitle: { ...typography.labelMedium, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: spacing.md, marginTop: spacing.lg },
+  slotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
+  slotChip: { width: '31%', paddingVertical: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },
+  slotChipText: { fontSize: 11, fontFamily: 'Inter-SemiBold' },
+
+  // Queue Status Card
+  queueContainer: { marginTop: spacing.xl },
+  queueHeaderTitle: { ...typography.bodyLarge, fontWeight: '700', marginBottom: spacing.md },
+  queueCard: { borderRadius: borderRadius.xl, padding: spacing.lg, shadowColor: '#000', shadowOffset: { width: 0, height: 4 }, shadowOpacity: 0.03, shadowRadius: 10, elevation: 1 },
+  queueLoadingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.md },
+  queueLoadingText: { ...typography.bodySmall },
+  queueTopRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-end', marginBottom: spacing.md },
+  queueTokenLabel: { fontSize: 11, fontWeight: '600', marginBottom: 2 },
+  queueTokenNum: { fontSize: 32, fontWeight: '900', lineHeight: 36 },
+  queueWaitBox: { alignItems: 'flex-end' },
+  queueWaitLabel: { fontSize: 11, fontWeight: '600', marginBottom: 2 },
+  queueWaitVal: { fontSize: 16, fontWeight: '800' },
+  queueBarWrap: { gap: 6 },
+  queueBarTrack: { height: 8, borderRadius: 4, overflow: 'hidden' },
+  queueBarFill: { height: '100%', borderRadius: 4 },
+  queueBarLabel: { fontSize: 10, fontWeight: '600' },
+
+  // Bottom action bar
+  bottomBar: {
+    position: 'absolute', bottom: 0, left: 0, right: 0,
+    paddingHorizontal: spacing.xl, paddingTop: spacing.md, paddingBottom: spacing.xxl,
+    borderTopWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05, shadowRadius: 10, elevation: 6,
+  },
+  actionBtnContainer: { borderRadius: borderRadius.lg, overflow: 'hidden' },
+  actionBtnGradient: { paddingVertical: spacing.md, alignItems: 'center', justifyContent: 'center' },
+  actionBtnText: { ...typography.button, fontWeight: '700' },
+  bottomStep3Row: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.md },
+  bottomFeeColumn: { justifyContent: 'center' },
+  bottomFeeLabelText: { ...typography.labelSmall, fontSize: 10, textTransform: 'uppercase', letterSpacing: 0.3 },
+  bottomFeeValueText: { ...typography.headlineMedium, fontWeight: '800', fontSize: 20 },
 });
 
 export default SlotSelectionScreen;

@@ -16,3 +16,4 @@ export { default as Rating } from './Rating';
 export { default as SearchBar } from './SearchBar';
 export { default as Skeleton } from './Skeleton';
 export { default as Toast, ToastInstance } from './Toast';
+export { default as QuickActionsGrid } from './QuickActionsGrid';

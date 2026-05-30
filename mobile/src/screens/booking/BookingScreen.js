@@ -68,75 +68,11 @@ const sk = StyleSheet.create({
 });
 
 // ─── Doctor Card ──────────────────────────────────────────────────────────────
-const DoctorCard = React.memo(({ doctor, onPress, colors }) => {
-  const fee = doctor.consultationFee || doctor.fee || 500;
-  const rating = doctor.rating ? Number(doctor.rating).toFixed(1) : null;
-  const exp = doctor.experience ? `${doctor.experience} yrs` : null;
-  const name = String(doctor.name || 'Doctor');
-  const spec = String(doctor.specialization || doctor.specialty || 'General Physician');
-
-  return (
-    <TouchableOpacity onPress={() => onPress(doctor)} activeOpacity={0.75}
-      style={[dc.card, { backgroundColor: 'rgba(26, 31, 46, 0.45)', borderColor: 'rgba(255, 255, 255, 0.08)', borderWidth: 1 }]}>
-      {/* Left: Avatar */}
-      <Avatar name={name} size="large"
-        source={(doctor.profilePhoto || doctor.photo) ? { uri: doctor.profilePhoto || doctor.photo } : null} />
-
-      {/* Middle: Info */}
-      <View style={dc.info}>
-        <Text style={[dc.name, { color: colors.textPrimary }]} numberOfLines={1}>Dr. {name}</Text>
-        <Text style={[dc.spec, { color: colors.textSecondary }]} numberOfLines={1}>{spec}</Text>
-        <View style={dc.metaRow}>
-          {exp && <Text style={[dc.meta, { color: colors.textMuted }]}>{exp} exp</Text>}
-          {exp && rating && <Text style={[dc.dot, { color: colors.textMuted }]}>·</Text>}
-          {rating && <Text style={[dc.rating, { color: '#F59E0B' }]}>⭐ {rating}</Text>}
-        </View>
-        <View style={dc.availRow}>
-          <View style={dc.availDot} />
-          <Text style={dc.availText}>Available Today</Text>
-        </View>
-      </View>
-
-      {/* Right: Fee + Book */}
-      <View style={dc.right}>
-        <Text style={[dc.feeLabel, { color: colors.textMuted }]}>Consult fee</Text>
-        <Text style={[dc.fee, { color: colors.textPrimary }]}>₹{fee}</Text>
-        <TouchableOpacity onPress={() => onPress(doctor)} activeOpacity={0.85}>
-          <LinearGradient colors={['#00D4AA', '#00B894']} style={dc.bookBtn}>
-            <Text style={dc.bookBtnText}>Book</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
-    </TouchableOpacity>
-  );
-});
-const dc = StyleSheet.create({
-  card: {
-    flexDirection: 'row', alignItems: 'center',
-    borderRadius: 16, padding: 14, marginBottom: 12,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.08, shadowRadius: 8, elevation: 3,
-  },
-  info: { flex: 1, marginLeft: 12, marginRight: 8 },
-  name: { ...typography.bodyLarge, fontWeight: '700' },
-  spec: { ...typography.bodySmall, marginTop: 2 },
-  metaRow: { flexDirection: 'row', alignItems: 'center', marginTop: 4, gap: 4 },
-  meta: { ...typography.labelSmall },
-  dot: { ...typography.labelSmall },
-  rating: { ...typography.labelSmall, fontWeight: '600' },
-  availRow: { flexDirection: 'row', alignItems: 'center', marginTop: 5 },
-  availDot: { width: 7, height: 7, borderRadius: 4, backgroundColor: '#10B981', marginRight: 5 },
-  availText: { color: '#10B981', ...typography.labelSmall, fontWeight: '600' },
-  right: { alignItems: 'center', minWidth: 72 },
-  feeLabel: { ...typography.labelSmall, marginBottom: 2 },
-  fee: { ...typography.bodyLarge, fontWeight: '800', marginBottom: 8 },
-  bookBtn: { borderRadius: 20, paddingHorizontal: 14, paddingVertical: 8 },
-  bookBtnText: { color: '#fff', ...typography.labelMedium, fontWeight: '700' },
-});
+import DoctorCard from '../../components/cards/DoctorCard';
 
 // ─── Main Screen ──────────────────────────────────────────────────────────────
 const BookingScreen = ({ navigation, route }) => {
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const insets = useSafeAreaInsets();
 
   const [doctors, setDoctors] = useState([]);
@@ -277,12 +213,18 @@ const BookingScreen = ({ navigation, route }) => {
               return (
                 <TouchableOpacity key={dept.id} onPress={() => handleDeptSelect(dept)} activeOpacity={0.8}>
                   {active ? (
-                    <LinearGradient colors={['#00D4AA', '#00B894']} style={styles.pillActive}>
+                    <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.pillActive}>
                       <Text style={styles.pillIconActive}>{getDeptIcon(dept.name)}</Text>
                       <Text style={styles.pillTextActive}>{dept.name}</Text>
                     </LinearGradient>
                   ) : (
-                    <View style={[styles.pill, { backgroundColor: 'rgba(26, 31, 46, 0.45)', borderColor: 'rgba(255, 255, 255, 0.06)' }]}>
+                    <View style={[
+                      styles.pill, 
+                      { 
+                        backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : colors.surface, 
+                        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.06)' : colors.surfaceBorder 
+                      }
+                    ]}>
                       <Text style={styles.pillIcon}>{getDeptIcon(dept.name)}</Text>
                       <Text style={[styles.pillText, { color: colors.textSecondary }]}>{dept.name}</Text>
                     </View>
@@ -297,12 +239,18 @@ const BookingScreen = ({ navigation, route }) => {
         <View style={styles.filterRow}>
           {QUICK_FILTERS.map(f => (
             <TouchableOpacity key={f.id} onPress={() => setActiveFilter(activeFilter === f.id ? null : f.id)}
-              style={[styles.filterChip,
+              style={[
+                styles.filterChip,
                 activeFilter === f.id
-                  ? { backgroundColor: '#00D4AA' }
-                  : { backgroundColor: 'rgba(26, 31, 46, 0.45)', borderColor: 'rgba(255, 255, 255, 0.06)', borderWidth: 1 }
-              ]}>
-              <Text style={[styles.filterChipText, { color: activeFilter === f.id ? '#0A0E17' : colors.textSecondary }]}>
+                  ? { backgroundColor: colors.primary }
+                  : { 
+                      backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : colors.surface, 
+                      borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.06)' : colors.surfaceBorder, 
+                      borderWidth: 1 
+                    }
+              ]}
+            >
+              <Text style={[styles.filterChipText, { color: activeFilter === f.id ? (colors.textInverse || '#0A0E17') : colors.textSecondary }]}>
                 {f.label}
               </Text>
             </TouchableOpacity>
@@ -336,7 +284,7 @@ const BookingScreen = ({ navigation, route }) => {
               {displayDoctors.length} doctor{displayDoctors.length !== 1 ? 's' : ''} available
             </Text>
             {displayDoctors.map(doc => (
-              <DoctorCard key={doc._id || doc.id} doctor={doc} colors={colors}
+              <DoctorCard key={doc._id || doc.id} doctor={doc}
                 onPress={(d) => navigation.navigate('SlotSelection', { doctor: d })} />
             ))}
           </View>

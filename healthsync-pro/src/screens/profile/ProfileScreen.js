@@ -14,7 +14,7 @@ import {
   Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors, shadows } from '../../theme/colors';
+import { shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
@@ -26,6 +26,7 @@ import { getAppointmentStats } from '../../services/api/profileService';
 const ProfileScreen = ({ navigation }) => {
   const { user, logout, loading } = useUser();
   const { isDarkMode, toggleTheme, colors } = useTheme();
+  const styles = makeStyles(colors);
   const [appointmentCount, setAppointmentCount] = React.useState(0);
 
   React.useEffect(() => {
@@ -296,7 +297,7 @@ const ProfileScreen = ({ navigation }) => {
 };
 
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

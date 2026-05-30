@@ -1,14 +1,9 @@
-/**
- * Family Members Screen - Manage family profiles
- */
-
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar,
   RefreshControl, Alert, ActivityIndicator, Modal, TextInput,
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { colors } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
@@ -25,6 +20,7 @@ const FamilyMembersScreen = ({ navigation }) => {
   const [showAddModal, setShowAddModal] = useState(false);
   const [newMember, setNewMember] = useState({ name: '', relation: '', phone: '', dateOfBirth: '' });
   const [adding, setAdding] = useState(false);
+  const styles = makeStyles(colors);
 
   const relations = ['Spouse', 'Child', 'Parent', 'Sibling', 'Other'];
 
@@ -151,7 +147,7 @@ const FamilyMembersScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
             
-            <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary }]}
+            <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary, borderColor: colors.surfaceBorder, borderWidth: 1 }]}
               value={newMember.name} onChangeText={(t) => setNewMember({...newMember, name: t})}
               placeholder="Full Name" placeholderTextColor={colors.textMuted} />
             
@@ -159,8 +155,8 @@ const FamilyMembersScreen = ({ navigation }) => {
             <View style={styles.relationsRow}>
               {relations.map((rel) => (
                 <TouchableOpacity key={rel}
-                  style={[styles.relationBtn, { backgroundColor: colors.surface },
-                    newMember.relation === rel && { backgroundColor: colors.primary }]}
+                  style={[styles.relationBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: 1 },
+                    newMember.relation === rel && { backgroundColor: colors.primary, borderColor: colors.primary }]}
                   onPress={() => setNewMember({...newMember, relation: rel})}>
                   <Text style={[styles.relationText, { color: colors.textSecondary },
                     newMember.relation === rel && { color: '#fff' }]}>{rel}</Text>
@@ -168,7 +164,7 @@ const FamilyMembersScreen = ({ navigation }) => {
               ))}
             </View>
             
-            <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary }]}
+            <TextInput style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary, borderColor: colors.surfaceBorder, borderWidth: 1 }]}
               value={newMember.phone} onChangeText={(t) => setNewMember({...newMember, phone: t})}
               placeholder="Phone (optional)" placeholderTextColor={colors.textMuted} keyboardType="phone-pad" />
             
@@ -183,14 +179,14 @@ const FamilyMembersScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1 },
   center: { justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
   backBtn: { width: 40, height: 40, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center' },
   headerTitle: { ...typography.headlineMedium },
   content: { paddingHorizontal: spacing.xl, paddingBottom: 100 },
-  memberCard: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, marginBottom: spacing.md },
+  memberCard: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, marginBottom: spacing.md, borderWidth: 1, borderColor: colors.surfaceBorder },
   memberInfo: { flex: 1, marginLeft: spacing.md },
   memberName: { ...typography.bodyLarge, fontWeight: '600' },
   memberRelation: { ...typography.bodySmall, marginTop: 2 },

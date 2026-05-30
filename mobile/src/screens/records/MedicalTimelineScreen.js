@@ -13,7 +13,7 @@ import {
   RefreshControl,
   ActivityIndicator,
 } from 'react-native';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import { useUser } from '../../context/UserContext';
@@ -21,6 +21,8 @@ import apiClient from '../../services/api/apiClient';
 
 const MedicalTimelineScreen = ({ navigation }) => {
   const { user } = useUser();
+  const { colors, isDarkMode } = useTheme();
+  const styles = makeStyles(colors);
   const [activeFilter, setActiveFilter] = useState('all');
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -120,7 +122,7 @@ const MedicalTimelineScreen = ({ navigation }) => {
         break;
       case 'report':
         if (event.referenceId) {
-          navigation.navigate('ReportView', { reportId: event.referenceId });
+          navigation.navigate('ReportDetails', { reportId: event.referenceId });
         }
         break;
       case 'vitals':
@@ -256,7 +258,7 @@ const MedicalTimelineScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   centered: { justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },

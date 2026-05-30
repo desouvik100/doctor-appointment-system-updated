@@ -14,13 +14,14 @@ import {
   Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import authService from '../../services/api/authService';
 
 const ForgotPasswordScreen = ({ navigation }) => {
+  const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
@@ -71,6 +72,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
       setLoading(false);
     }
   };
+
+  const styles = makeStyles(colors);
 
   if (sent) {
     return (
@@ -220,7 +223,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

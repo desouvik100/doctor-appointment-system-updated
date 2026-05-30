@@ -17,7 +17,6 @@ import {
 } from 'react-native';
 import Icon from 'react-native-vector-icons/Ionicons';
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
-import { colors } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
@@ -28,6 +27,7 @@ import { updateProfile, updateProfilePhoto } from '../../services/api/profileSer
 const EditProfileScreen = ({ navigation }) => {
   const { user, refreshUser, updateUser } = useUser();
   const { colors, isDarkMode } = useTheme();
+  const styles = makeStyles(colors, isDarkMode);
   
   const [name, setName] = useState('');
   const [email, setEmail] = useState('');
@@ -342,7 +342,7 @@ const EditProfileScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   container: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -369,7 +369,7 @@ const styles = StyleSheet.create({
     height: 120,
     borderRadius: 60,
     borderWidth: 3,
-    borderColor: '#6366f1',
+    borderColor: colors.primary,
   },
   uploadingOverlay: {
     position: 'absolute',
@@ -400,7 +400,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
-    borderWidth: 1,
+    borderWidth: isDarkMode ? 1 : 0,
   },
   disabledInput: { opacity: 0.6 },
   textArea: { height: 80, textAlignVertical: 'top', paddingTop: spacing.md },
@@ -411,7 +411,7 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
     marginRight: spacing.sm,
-    borderWidth: 1,
+    borderWidth: isDarkMode ? 1 : 0,
   },
   pickerText: { ...typography.labelMedium },
 });

@@ -22,6 +22,7 @@ const {
   emitAppointmentUpdated, 
   emitAppointmentCancelled 
 } = require('../services/socketManager');
+const { awardLoyaltyPoints } = require('../utils/loyaltyHelper');
 const router = express.Router();
 
 /**
@@ -917,22 +918,32 @@ router.post('/', verifyToken, async (req, res) => {
 });
 
 // Queue-based booking (no time selection - auto-assigns queue position)
-router.post('/queue-booking', async (req, res) => {
+// verifyToken ensures the request carries a valid session before touching the DB
+router.post('/queue-booking', verifyToken, async (req, res) => {
   try {
     const { userId, doctorId, clinicId, date, reason, consultationType, urgencyLevel, reminderPreference, sendEstimatedTimeEmail } = req.body;
 
-    console.log('📋 Queue booking request:', { userId, doctorId, clinicId, date, consultationType });
+    // DEBUG: log full incoming body to catch payload mismatches
+    console.log('QUEUE BOOKING BODY', JSON.stringify(req.body, null, 2));
 
     // Validate required fields (reason is now optional)
     if (!userId || !doctorId || !date) {
       console.error('❌ Missing required fields:', { userId: !!userId, doctorId: !!doctorId, date: !!date });
-      return res.status(400).json({ message: 'User, doctor and date are required' });
+      return res.status(400).json({ message: 'User, doctor and date are required', missing: { userId: !userId, doctorId: !doctorId, date: !date } });
     }
 
     // Validate date format
     if (typeof date !== 'string' || !date.match(/^\d{4}-\d{2}-\d{2}$/)) {
       console.error('❌ Invalid date format:', date);
       return res.status(400).json({ message: 'Invalid date format. Expected YYYY-MM-DD' });
+    }
+
+    // Security: ensure the userId in the body matches the authenticated token
+    const tokenUserId = req.user?.id?.toString() || req.user?.userId?.toString();
+    const bodyUserId = userId?.toString();
+    if (tokenUserId && bodyUserId && tokenUserId !== bodyUserId) {
+      console.error('❌ userId mismatch — token:', tokenUserId, 'body:', bodyUserId);
+      return res.status(403).json({ success: false, message: 'User ID mismatch. Please log in again.' });
     }
     
     // Default reason if not provided
@@ -1027,38 +1038,49 @@ router.post('/queue-booking', async (req, res) => {
     
     const estimatedTime = `${estimatedHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 
-    // Calculate payment breakdown
+    // Calculate payment breakdown — 5% platform fee, no GST (matches frontend & verify-by-order calculation)
     const consultationFee = doctor.consultationFee || 500;
-    const gst = Math.round(consultationFee * 0.22);
-    const platformFee = Math.round(consultationFee * 0.07);
-    const totalAmount = consultationFee + gst + platformFee;
+    const gst = 0;
+    const platformFee = Math.round(consultationFee * 0.05);
+    const totalAmount = consultationFee + platformFee;
 
     // Get payment status from request (for Razorpay integration)
     const requestedPaymentStatus = req.body.paymentStatus || 'pending';
     const requestedStatus = req.body.status || 'pending_payment';
-    
+
+    // Sanitize paymentMethod against schema enum: ["card", "upi", "netbanking", "wallet"]
+    // Frontend may send 'razorpay' which is NOT a valid enum value — default to 'card'
+    const VALID_PAYMENT_METHODS = ['card', 'upi', 'netbanking', 'wallet'];
+    const rawPaymentMethod = req.body.paymentMethod || 'card';
+    const safePaymentMethod = VALID_PAYMENT_METHODS.includes(rawPaymentMethod) ? rawPaymentMethod : 'card';
+
+    // Use time from request if provided (frontend sends selected slot time),
+    // otherwise fall back to the auto-calculated estimated queue time
+    const appointmentTime = req.body.time || estimatedTime;
+
     const appointmentData = {
       userId,
       doctorId,
-      clinicId: resolvedClinicId, // Use resolved clinicId
-      date: appointmentDate, // Use properly parsed local date
-      time: estimatedTime,
-      tokenNumber: queueNumber, // Set tokenNumber same as queueNumber
+      clinicId: resolvedClinicId,
+      date: appointmentDate,
+      time: appointmentTime,
+      tokenNumber: queueNumber,
       queueNumber,
       estimatedArrivalTime: estimatedTime,
       reason: appointmentReason,
       consultationType: consultationType || 'in_person',
       urgencyLevel: urgencyLevel || 'normal',
       reminderPreference: reminderPreference || 'email',
-      status: requestedStatus, // Use requested status (pending_payment or confirmed)
-      paymentStatus: requestedPaymentStatus, // Use requested payment status
+      status: requestedStatus,
+      paymentStatus: requestedPaymentStatus,
       payment: {
         consultationFee,
         gst,
         platformFee,
         totalAmount,
-        paymentStatus: requestedPaymentStatus
-      }
+        paymentStatus: requestedPaymentStatus,
+        paymentMethod: safePaymentMethod,   // always a valid enum value
+      },
     };
 
     console.log('📝 Creating appointment with data:', JSON.stringify(appointmentData, null, 2));
@@ -1082,6 +1104,9 @@ router.post('/queue-booking', async (req, res) => {
     }
     console.log(`✅ Appointment saved: ${appointment._id}`);
     
+    // ── Post-save operations: each wrapped independently so failures
+    //    never crash the booking response ──────────────────────────────
+
     // Generate appointment token
     let tokenResult = { success: false, token: null };
     try {
@@ -1090,14 +1115,13 @@ router.post('/queue-booking', async (req, res) => {
       tokenResult = await TokenService.generateTokenForAppointment(appointment._id, doctorCode);
       console.log(`✅ Token generated: ${tokenResult.token}`);
     } catch (tokenError) {
-      console.error('❌ Token generation failed:', tokenError.message);
+      console.error('❌ Token generation failed (non-fatal):', tokenError.message);
     }
 
-    // Send notifications based on reminder preference - only if not pending payment
+    // Send notifications — only if not pending payment, and never block the response
     if (requestedStatus !== 'pending_payment') {
       const userReminderPref = reminderPreference || 'email';
       
-      // Send email if preference is 'email' or 'both'
       if ((userReminderPref === 'email' || userReminderPref === 'both') && user.email && sendEstimatedTimeEmail) {
         try {
           const { sendQueueBookingEmail } = require('../services/emailService');
@@ -1115,11 +1139,10 @@ router.post('/queue-booking', async (req, res) => {
           });
           console.log(`✅ Queue booking email sent to ${user.email}`);
         } catch (emailError) {
-          console.error('❌ Error sending queue booking email:', emailError.message);
+          console.error('❌ Error sending queue booking email (non-fatal):', emailError.message);
         }
       }
       
-      // Send SMS if preference is 'sms' or 'both'
       if ((userReminderPref === 'sms' || userReminderPref === 'both') && user.phone) {
         try {
           const { sendAppointmentConfirmationSMS } = require('../services/smsService');
@@ -1130,17 +1153,13 @@ router.post('/queue-booking', async (req, res) => {
           );
           console.log(`✅ Queue booking SMS sent to ${user.phone}`);
         } catch (smsError) {
-          console.error('❌ Error sending queue booking SMS:', smsError.message);
+          console.error('❌ Error sending queue booking SMS (non-fatal):', smsError.message);
         }
         
-        // Send WhatsApp notification
         try {
           const whatsappService = require('../services/whatsappService');
           const formattedDate = appointmentDate.toLocaleDateString('en-IN', {
-            weekday: 'long',
-            year: 'numeric',
-            month: 'long',
-            day: 'numeric'
+            weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
           });
           await whatsappService.sendAppointmentConfirmation(user.phone, {
             patientName: user.name,
@@ -1152,29 +1171,50 @@ router.post('/queue-booking', async (req, res) => {
           });
           console.log(`✅ WhatsApp sent to patient: ${user.phone}`);
         } catch (whatsappError) {
-          console.error('❌ Failed to send WhatsApp to patient:', whatsappError.message);
+          console.error('❌ Failed to send WhatsApp (non-fatal):', whatsappError.message);
         }
       }
     }
 
-    // Award loyalty points
-    const loyaltyResult = await awardLoyaltyPoints(
-      userId, 
-      'appointment', 
-      appointment._id,
-      null,
-      `Booked appointment with Dr. ${doctor.name}`
-    );
+    // ── SIDE EFFECTS (non-critical — booking 201 is already guaranteed) ──────
+    // Each side effect runs in its own isolated Promise chain.
+    // A failure in ANY of these MUST NOT affect the 201 response.
 
-    const populatedAppointment = await Appointment.findById(appointment._id)
-      .populate('userId', 'name email phone')
-      .populate('doctorId', 'name specialization consultationFee email')
-      .populate('clinicId', 'name address');
+    // Award loyalty points — fire-and-forget, never blocks response
+    let loyaltyResult = { success: false };
+    try {
+      loyaltyResult = await awardLoyaltyPoints(
+        userId,
+        'appointment',
+        appointment._id,
+        null,
+        `Booked appointment with Dr. ${doctor.name}`
+      );
+    } catch (loyaltyError) {
+      // awardLoyaltyPoints never throws by contract, but double-guard here
+      console.error('[LOYALTY] Unexpected throw (non-fatal):', loyaltyError.message);
+    }
+
+    // Populate for response — use lean fallback if populate fails
+    let populatedAppointment;
+    try {
+      populatedAppointment = await Appointment.findById(appointment._id)
+        .populate('userId', 'name email phone')
+        .populate('doctorId', 'name specialization consultationFee email')
+        .populate('clinicId', 'name address');
+    } catch (populateError) {
+      console.error('❌ Populate failed (non-fatal), using raw appointment:', populateError.message);
+      populatedAppointment = appointment;
+    }
 
     console.log(`✅ Queue booking completed successfully for appointment ${appointment._id}`);
 
-    // Emit socket event for real-time sync
-    emitAppointmentCreated(populatedAppointment);
+    // Emit socket event — never block the response
+    try {
+      emitAppointmentCreated(populatedAppointment);
+    } catch (socketError) {
+      console.error('❌ Socket emit failed (non-fatal):', socketError.message);
+    }
 
     res.status(201).json({
       success: true,
@@ -1299,11 +1339,11 @@ router.post('/slot-booking', async (req, res) => {
       }
     }
 
-    // Calculate payment
+    // Calculate payment — 5% platform fee, no GST (matches frontend & verify-by-order calculation)
     const consultationFee = doctor.consultationFee || 500;
-    const gst = Math.round(consultationFee * 0.22);
-    const platformFee = Math.round(consultationFee * 0.07);
-    const totalAmount = consultationFee + gst + platformFee;
+    const gst = 0;
+    const platformFee = Math.round(consultationFee * 0.05);
+    const totalAmount = consultationFee + platformFee;
 
     // Create appointment with slot reference
     const appointmentData = {

@@ -67,7 +67,14 @@ const WelcomeScreen = ({ navigation }) => {
         <Text style={[styles.tagline, { color: colors.primary }]}>Your health, simplified 💚</Text>
 
         {/* Illustration placeholder — friendly healthcare card */}
-        <View style={[styles.illustrationCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+        <View style={[
+          styles.illustrationCard,
+          {
+            backgroundColor: colors.surface,
+            borderColor: colors.surfaceBorder,
+            borderWidth: isDarkMode ? 1 : 0,
+          }
+        ]}>
           <Text style={styles.illustrationEmoji}>🩺</Text>
           <View style={styles.illustrationText}>
             <Text style={[styles.illustrationTitle, { color: colors.textPrimary }]}>Your personal health companion</Text>
@@ -82,7 +89,17 @@ const WelcomeScreen = ({ navigation }) => {
             { icon: '🏥', label: 'Verified doctors' },
             { icon: '📄', label: 'Private records' },
           ].map(b => (
-            <View key={b.label} style={[styles.trustBadge, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+            <View
+              key={b.label}
+              style={[
+                styles.trustBadge,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.surfaceBorder,
+                  borderWidth: isDarkMode ? 1 : 0,
+                }
+              ]}
+            >
               <Text style={styles.trustIcon}>{b.icon}</Text>
               <Text style={[styles.trustLabel, { color: colors.textSecondary }]}>{b.label}</Text>
             </View>
@@ -159,7 +176,6 @@ const styles = StyleSheet.create({
     padding: spacing.lg, width: '100%', marginBottom: spacing.xl,
     shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.05, shadowRadius: 12, elevation: 4,
-    borderWidth: 1,
   },
   illustrationEmoji: { fontSize: 44, marginRight: spacing.lg },
   illustrationText: { flex: 1 },
@@ -176,7 +192,6 @@ const styles = StyleSheet.create({
     paddingVertical: spacing.md, marginHorizontal: 4,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.03, shadowRadius: 6, elevation: 2,
-    borderWidth: 1,
   },
   trustIcon: { fontSize: 20, marginBottom: 4 },
   trustLabel: { fontSize: 11, fontWeight: '500', textAlign: 'center' },

@@ -167,7 +167,7 @@ export const lightTheme = {
   
   background: colors.background,
   surface: colors.surface,
-  surfaceElevated: colors.surfaceElevated,
+  surfaceElevated: colors.backgroundElevated,
   
   border: colors.border,
   borderLight: colors.borderLight,

@@ -5,11 +5,12 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../../theme/colors';
+import { useTheme } from '../../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 import Card from '../../../components/common/Card';
 
 const QueueTracker = ({ position, estimatedWait }) => {
+  const { colors } = useTheme();
   const [currentPosition, setCurrentPosition] = useState(position);
   const [currentWait, setCurrentWait] = useState(estimatedWait);
 
@@ -37,6 +38,8 @@ const QueueTracker = ({ position, estimatedWait }) => {
     if (currentPosition <= 3) return 'Almost there';
     return 'In queue';
   };
+
+  const styles = makeStyles(colors);
 
   return (
     <Card variant="default" style={styles.container}>
@@ -82,7 +85,7 @@ const QueueTracker = ({ position, estimatedWait }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { padding: spacing.lg, marginBottom: spacing.lg },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
   title: { ...typography.headlineSmall, color: colors.textPrimary },

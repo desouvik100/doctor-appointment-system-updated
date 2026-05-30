@@ -24,6 +24,88 @@ import { EmptyState, FilterChip } from '../../components/common';
 import { fadeIn, slideUp, stagger } from '../../utils/animations';
 import apiClient from '../../services/api/apiClient';
 
+// Standalone functional component for Notification Item to safely use React Hooks
+const NotificationItem = React.memo(({ item, index, colors, onPress, onDelete, getTimeAgo, getNotificationIcon }) => {
+  const translateX = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current;
+
+  // Animate on mount
+  useEffect(() => {
+    fadeIn(opacity, 300, index * 50).start();
+  }, []);
+
+  const panResponder = PanResponder.create({
+    onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 10,
+    onPanResponderMove: (_, gestureState) => {
+      if (gestureState.dx < 0) {
+        translateX.setValue(gestureState.dx);
+      }
+    },
+    onPanResponderRelease: (_, gestureState) => {
+      if (gestureState.dx < -100) {
+        // Swipe left to delete
+        Animated.timing(translateX, {
+          toValue: -400,
+          duration: 200,
+          useNativeDriver: true,
+        }).start(() => {
+          // Delete notification
+          onDelete(item._id);
+        });
+      } else {
+        // Reset position
+        Animated.spring(translateX, {
+          toValue: 0,
+          useNativeDriver: true,
+        }).start();
+      }
+    },
+  });
+
+  return (
+    <Animated.View style={{ opacity }}>
+      <Animated.View
+        style={[
+          styles.notificationWrapper,
+          { transform: [{ translateX }] },
+        ]}
+        {...panResponder.panHandlers}
+      >
+        <TouchableOpacity onPress={() => onPress(item)}>
+          <Card style={[
+            styles.notificationCard, 
+            { backgroundColor: colors.surface },
+            !item.isRead && styles.unreadCard
+          ]}>
+            <View style={styles.notificationContent}>
+              <View style={[styles.iconContainer, { backgroundColor: item.isRead ? colors.background : '#6C5CE720' }]}>
+                <Text style={styles.notificationIcon}>{getNotificationIcon(item.type)}</Text>
+              </View>
+              <View style={styles.textContainer}>
+                <Text style={[styles.notificationTitle, { color: colors.textPrimary }, !item.isRead && styles.unreadTitle]}>
+                  {item.title}
+                </Text>
+                <Text style={[styles.notificationMessage, { color: colors.textSecondary }]} numberOfLines={2}>
+                  {item.message}
+                </Text>
+                <Text style={[styles.notificationTime, { color: colors.textMuted }]}>
+                  {getTimeAgo(item.createdAt)}
+                </Text>
+              </View>
+              {!item.isRead && <View style={styles.unreadDot} />}
+            </View>
+          </Card>
+        </TouchableOpacity>
+        
+        {/* Delete action (revealed on swipe) */}
+        <View style={styles.deleteAction}>
+          <Text style={styles.deleteText}>🗑️</Text>
+        </View>
+      </Animated.View>
+    </Animated.View>
+  );
+});
+
 const NotificationsScreen = ({ navigation }) => {
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
@@ -154,86 +236,17 @@ const NotificationsScreen = ({ navigation }) => {
     return new Date(date).toLocaleDateString();
   };
 
-  const renderNotification = ({ item, index }) => {
-    const translateX = useRef(new Animated.Value(0)).current;
-    const opacity = useRef(new Animated.Value(0)).current;
-    
-    // Animate on mount
-    useEffect(() => {
-      fadeIn(opacity, 300, index * 50).start();
-    }, []);
-
-    const panResponder = PanResponder.create({
-      onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 10,
-      onPanResponderMove: (_, gestureState) => {
-        if (gestureState.dx < 0) {
-          translateX.setValue(gestureState.dx);
-        }
-      },
-      onPanResponderRelease: (_, gestureState) => {
-        if (gestureState.dx < -100) {
-          // Swipe left to delete
-          Animated.timing(translateX, {
-            toValue: -400,
-            duration: 200,
-            useNativeDriver: true,
-          }).start(() => {
-            // Delete notification
-            deleteNotification(item._id);
-          });
-        } else {
-          // Reset position
-          Animated.spring(translateX, {
-            toValue: 0,
-            useNativeDriver: true,
-          }).start();
-        }
-      },
-    });
-
-    return (
-      <Animated.View style={{ opacity }}>
-        <Animated.View
-          style={[
-            styles.notificationWrapper,
-            { transform: [{ translateX }] },
-          ]}
-          {...panResponder.panHandlers}
-        >
-          <TouchableOpacity onPress={() => handleNotificationPress(item)}>
-            <Card style={[
-              styles.notificationCard, 
-              { backgroundColor: colors.surface },
-              !item.isRead && styles.unreadCard
-            ]}>
-              <View style={styles.notificationContent}>
-                <View style={[styles.iconContainer, { backgroundColor: item.isRead ? colors.background : '#6C5CE720' }]}>
-                  <Text style={styles.notificationIcon}>{getNotificationIcon(item.type)}</Text>
-                </View>
-                <View style={styles.textContainer}>
-                  <Text style={[styles.notificationTitle, { color: colors.textPrimary }, !item.isRead && styles.unreadTitle]}>
-                    {item.title}
-                  </Text>
-                  <Text style={[styles.notificationMessage, { color: colors.textSecondary }]} numberOfLines={2}>
-                    {item.message}
-                  </Text>
-                  <Text style={[styles.notificationTime, { color: colors.textMuted }]}>
-                    {getTimeAgo(item.createdAt)}
-                  </Text>
-                </View>
-                {!item.isRead && <View style={styles.unreadDot} />}
-              </View>
-            </Card>
-          </TouchableOpacity>
-          
-          {/* Delete action (revealed on swipe) */}
-          <View style={styles.deleteAction}>
-            <Text style={styles.deleteText}>🗑️</Text>
-          </View>
-        </Animated.View>
-      </Animated.View>
-    );
-  };
+  const renderNotification = ({ item, index }) => (
+    <NotificationItem
+      item={item}
+      index={index}
+      colors={colors}
+      onPress={handleNotificationPress}
+      onDelete={deleteNotification}
+      getTimeAgo={getTimeAgo}
+      getNotificationIcon={getNotificationIcon}
+    />
+  );
 
   const deleteNotification = async (notificationId) => {
     try {
@@ -294,7 +307,7 @@ const NotificationsScreen = ({ navigation }) => {
       <FlatList
         data={notifications}
         renderItem={renderNotification}
-        keyExtractor={(item) => item._id}
+        keyExtractor={(item, index) => item._id || item.id || index.toString()}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />

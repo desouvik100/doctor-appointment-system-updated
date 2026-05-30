@@ -99,7 +99,14 @@ const ResetPasswordScreen = ({ navigation, route }) => {
       >
         <View style={styles.content}>
           <TouchableOpacity 
-            style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
+            style={[
+              styles.backButton,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.surfaceBorder,
+                borderWidth: isDarkMode ? 1 : 0,
+              }
+            ]}
             onPress={() => navigation.goBack()}
           >
             <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
@@ -150,7 +157,14 @@ const ResetPasswordScreen = ({ navigation, route }) => {
               secureTextEntry
             />
 
-            <View style={[styles.requirementsContainer, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: 1 }]}>
+            <View style={[
+              styles.requirementsContainer,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.surfaceBorder,
+                borderWidth: isDarkMode ? 1 : 0,
+              }
+            ]}>
               <Text style={[styles.requirementsTitle, { color: colors.textPrimary }]}>Password must contain:</Text>
               <Text style={[
                 styles.requirement,
@@ -228,7 +242,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xl,
-    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,

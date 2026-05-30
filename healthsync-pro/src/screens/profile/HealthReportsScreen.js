@@ -1,7 +1,3 @@
-/**
- * Health Reports Screen - View lab reports and health analytics
- */
-
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -17,7 +13,6 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { colors } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import { useUser } from '../../context/UserContext';
@@ -37,6 +32,7 @@ const HealthReportsScreen = ({ navigation }) => {
     pendingReports: 0,
     lastCheckup: null,
   });
+  const styles = makeStyles(colors, isDarkMode);
 
   const userId = user?.id || user?._id;
 
@@ -183,7 +179,7 @@ const HealthReportsScreen = ({ navigation }) => {
       >
         {/* Stats Banner */}
         <LinearGradient
-          colors={['#10b981', '#059669']}
+          colors={isDarkMode ? ['#064E3B', '#047857'] : ['#10b981', '#059669']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.statsBanner}
@@ -301,7 +297,7 @@ const HealthReportsScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { justifyContent: 'center', alignItems: 'center' },
   loadingText: { ...typography.bodyMedium, marginTop: spacing.md },
@@ -334,7 +330,7 @@ const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
   statusText: { ...typography.labelSmall, fontWeight: '600' },
   labName: { ...typography.bodySmall, marginBottom: spacing.sm },
-  reportFooter: { borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)', paddingTop: spacing.sm, marginTop: spacing.sm },
+  reportFooter: { borderTopWidth: 1, borderTopColor: colors.divider || 'rgba(0,0,0,0.05)', paddingTop: spacing.sm, marginTop: spacing.sm },
   viewReport: { ...typography.labelMedium, fontWeight: '600' },
   vitalsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   vitalGridItem: { width: '48%' },

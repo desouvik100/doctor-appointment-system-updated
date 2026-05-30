@@ -1,12 +1,12 @@
 /**
  * Enterprise Badge Component
- * Status indicators, labels, and counts
+ * Status indicators, labels, and counts - Dynamic Theme Edition
  */
 
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { lightTheme, colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 
 const Badge = ({
   children,
@@ -16,9 +16,54 @@ const Badge = ({
   style,
   textStyle,
 }) => {
+  const { colors } = useTheme();
+
+  const getVariantStyles = () => {
+    switch (variant) {
+      case 'primary':
+        return {
+          bg: colors.primaryLight || 'rgba(0, 212, 170, 0.15)',
+          color: colors.primary,
+        };
+      case 'secondary':
+        return {
+          bg: colors.secondaryLight || 'rgba(108, 92, 231, 0.15)',
+          color: colors.secondary,
+        };
+      case 'success':
+        return {
+          bg: colors.successLight || 'rgba(16, 185, 129, 0.15)',
+          color: colors.success,
+        };
+      case 'warning':
+        return {
+          bg: colors.warningLight || 'rgba(245, 158, 11, 0.15)',
+          color: colors.warning,
+        };
+      case 'error':
+        return {
+          bg: colors.errorLight || 'rgba(239, 68, 68, 0.15)',
+          color: colors.error,
+        };
+      case 'info':
+        return {
+          bg: colors.infoLight || 'rgba(59, 130, 246, 0.15)',
+          color: colors.info,
+        };
+      case 'neutral':
+      default:
+        return {
+          bg: colors.neutralLight || 'rgba(255, 255, 255, 0.08)',
+          color: colors.textSecondary,
+        };
+    }
+  };
+
+  const activeStyles = getVariantStyles();
+
   const badgeStyles = [
     styles.base,
-    styles[variant],
+    { backgroundColor: activeStyles.bg },
     styles[size],
     dot && styles.dot,
     style,
@@ -26,13 +71,13 @@ const Badge = ({
 
   const textStyles = [
     styles.text,
-    styles[`text_${variant}`],
+    { color: activeStyles.color },
     styles[`text_${size}`],
     textStyle,
   ];
 
   if (dot) {
-    return <View style={badgeStyles} />;
+    return <View style={[badgeStyles, { backgroundColor: activeStyles.color }]} />;
   }
 
   return (
@@ -48,29 +93,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     alignSelf: 'flex-start',
-  },
-
-  // Variants
-  primary: {
-    backgroundColor: colors.primary[100],
-  },
-  secondary: {
-    backgroundColor: colors.secondary[100],
-  },
-  success: {
-    backgroundColor: colors.success[100],
-  },
-  warning: {
-    backgroundColor: colors.warning[100],
-  },
-  error: {
-    backgroundColor: colors.error[100],
-  },
-  info: {
-    backgroundColor: colors.info[100],
-  },
-  neutral: {
-    backgroundColor: colors.neutral[200],
   },
 
   // Sizes
@@ -103,27 +125,6 @@ const styles = StyleSheet.create({
   text: {
     ...typography.labelSmall,
     fontWeight: '600',
-  },
-  text_primary: {
-    color: colors.primary[700],
-  },
-  text_secondary: {
-    color: colors.secondary[700],
-  },
-  text_success: {
-    color: colors.success[700],
-  },
-  text_warning: {
-    color: colors.warning[700],
-  },
-  text_error: {
-    color: colors.error[700],
-  },
-  text_info: {
-    color: colors.info[700],
-  },
-  text_neutral: {
-    color: colors.neutral[700],
   },
   text_small: {
     fontSize: 10,

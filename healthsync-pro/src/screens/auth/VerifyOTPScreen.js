@@ -13,7 +13,7 @@ import {
   Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import authService from '../../services/api/authService';
@@ -25,6 +25,8 @@ const VerifyOTPScreen = ({ navigation, route }) => {
   const [resending, setResending] = useState(false);
   const [timer, setTimer] = useState(60);
   const inputRefs = useRef([]);
+  const { colors, isDarkMode } = useTheme();
+  const styles = makeStyles(colors);
 
   useEffect(() => {
     const interval = setInterval(() => {
@@ -80,11 +82,11 @@ const VerifyOTPScreen = ({ navigation, route }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle={isDarkMode ? "light-content" : "dark-content"} backgroundColor={colors.background} />
       
       <View style={styles.orbContainer}>
         <LinearGradient
-          colors={['rgba(0, 212, 170, 0.3)', 'transparent']}
+          colors={isDarkMode ? ['rgba(0, 212, 170, 0.25)', 'transparent'] : ['rgba(0, 212, 170, 0.1)', 'transparent']}
           style={[styles.orb, styles.orb1]}
         />
       </View>
@@ -159,7 +161,7 @@ const VerifyOTPScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
@@ -188,6 +190,8 @@ const styles = StyleSheet.create({
     height: 40,
     borderRadius: borderRadius.md,
     backgroundColor: colors.surface,
+    borderColor: colors.surfaceBorder,
+    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xl,

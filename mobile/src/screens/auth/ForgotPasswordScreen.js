@@ -97,7 +97,14 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
         <View style={styles.content}>
           <TouchableOpacity 
-            style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
+            style={[
+              styles.backButton,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.surfaceBorder,
+                borderWidth: isDarkMode ? 1 : 0,
+              }
+            ]}
             onPress={() => navigation.goBack()}
           >
             <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
@@ -119,7 +126,14 @@ const ForgotPasswordScreen = ({ navigation }) => {
               <Text style={[styles.emailText, { color: colors.primary }]}>{email}</Text>
             </Text>
 
-            <View style={[styles.instructionsContainer, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+            <View style={[
+              styles.instructionsContainer,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.surfaceBorder,
+                borderWidth: isDarkMode ? 1 : 0,
+              }
+            ]}>
               <Text style={[styles.instructionsTitle, { color: colors.textPrimary }]}>What to do next:</Text>
               <Text style={[styles.instruction, { color: colors.textSecondary }]}>1. Open your email app</Text>
               <Text style={[styles.instruction, { color: colors.textSecondary }]}>2. Look for email from HealthSync</Text>
@@ -174,7 +188,14 @@ const ForgotPasswordScreen = ({ navigation }) => {
       >
         <View style={styles.content}>
           <TouchableOpacity 
-            style={[styles.backButton, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
+            style={[
+              styles.backButton,
+              {
+                backgroundColor: colors.surface,
+                borderColor: colors.surfaceBorder,
+                borderWidth: isDarkMode ? 1 : 0,
+              }
+            ]}
             onPress={() => navigation.goBack()}
           >
             <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
@@ -264,7 +285,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xl,
-    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -338,7 +358,6 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: spacing.lg,
     marginBottom: spacing.xxl,
-    borderWidth: 1,
   },
   instructionsTitle: {
     ...typography.labelLarge,

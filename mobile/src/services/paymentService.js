@@ -6,8 +6,8 @@
 import { Linking, Platform } from 'react-native';
 import apiClient from './api/apiClient';
 
-// Backend URL - update with your actual backend
-const BACKEND_URL = 'https://healthsync-backend.onrender.com';
+import { API_URL } from '../config/env';
+const BACKEND_URL = API_URL.replace('/api', '');
 
 /**
  * Get payment configuration
@@ -15,16 +15,17 @@ const BACKEND_URL = 'https://healthsync-backend.onrender.com';
 export const getPaymentConfig = async () => {
   try {
     const response = await apiClient.get('/payments/config');
+    const data = response?.data || {};
     return {
       success: true,
-      paymentsEnabled: response.data.paymentsEnabled,
-      keyId: response.data.keyId,
-      testMode: response.data.testMode,
-      currency: response.data.currency || 'INR',
+      paymentsEnabled: data.paymentsEnabled || false,
+      keyId: data.keyId || null,
+      testMode: data.testMode !== false,
+      currency: data.currency || 'INR',
     };
   } catch (error) {
     console.error('Error getting payment config:', error);
-    return { success: false, paymentsEnabled: false };
+    return { success: false, paymentsEnabled: false, testMode: true, currency: 'INR' };
   }
 };
 
@@ -55,7 +56,9 @@ export const createOrder = async (appointmentId, userId, couponCode = null) => {
       couponCode,
     });
     
-    if (response.data.testMode) {
+    const data = response?.data || {};
+    
+    if (data.testMode) {
       return {
         success: true,
         testMode: true,
@@ -64,20 +67,25 @@ export const createOrder = async (appointmentId, userId, couponCode = null) => {
       };
     }
     
+    // Validate required fields
+    if (!data.orderId || !data.keyId) {
+      throw new Error('Invalid order response from server');
+    }
+    
     return {
       success: true,
-      orderId: response.data.orderId,
-      amount: response.data.amount,
-      amountInPaise: response.data.amountInPaise,
-      currency: response.data.currency || 'INR',
-      keyId: response.data.keyId,
-      prefill: response.data.prefill,
-      breakdown: response.data.breakdown,
-      couponDiscount: response.data.couponDiscount || 0,
+      orderId: data.orderId,
+      amount: data.amount || 0,
+      amountInPaise: data.amountInPaise || 0,
+      currency: data.currency || 'INR',
+      keyId: data.keyId,
+      prefill: data.prefill || {},
+      breakdown: data.breakdown || {},
+      couponDiscount: data.couponDiscount || 0,
     };
   } catch (error) {
     console.error('Error creating order:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Failed to create order' };
   }
 };
 
@@ -122,15 +130,17 @@ export const openPaymentPage = async (orderData, appointmentId) => {
 export const verifyPayment = async (paymentData) => {
   try {
     const response = await apiClient.post('/payments/verify', paymentData);
+    const data = response?.data || {};
+    
     return {
-      success: response.data.success,
-      verified: response.data.verified,
-      appointment: response.data.appointment,
-      paymentDetails: response.data.paymentDetails,
+      success: data.success || false,
+      verified: data.verified || false,
+      appointment: data.appointment || null,
+      paymentDetails: data.paymentDetails || null,
     };
   } catch (error) {
     console.error('Error verifying payment:', error);
-    return { success: false, error: error.message };
+    return { success: false, verified: false, error: error.message || 'Payment verification failed' };
   }
 };
 
@@ -140,15 +150,17 @@ export const verifyPayment = async (paymentData) => {
 export const getPaymentStatus = async (appointmentId) => {
   try {
     const response = await apiClient.get(`/payments/status/${appointmentId}`);
+    const data = response?.data || {};
+    
     return {
       success: true,
-      paymentStatus: response.data.paymentStatus,
-      status: response.data.status,
-      paidAt: response.data.paidAt,
+      paymentStatus: data.paymentStatus || 'pending',
+      status: data.status || 'pending',
+      paidAt: data.paidAt || null,
     };
   } catch (error) {
     console.error('Error getting payment status:', error);
-    return { success: false, error: error.message };
+    return { success: false, paymentStatus: 'unknown', error: error.message };
   }
 };
 
@@ -158,13 +170,15 @@ export const getPaymentStatus = async (appointmentId) => {
 export const getPaymentHistory = async (userId) => {
   try {
     const response = await apiClient.get(`/payments/history/${userId}`);
+    const data = response?.data || {};
+    
     return {
       success: true,
-      payments: response.data.payments || [],
+      payments: Array.isArray(data.payments) ? data.payments : [],
     };
   } catch (error) {
     console.error('Error getting payment history:', error);
-    return { success: false, payments: [] };
+    return { success: false, payments: [], error: error.message };
   }
 };
 
@@ -177,14 +191,16 @@ export const requestRefund = async (appointmentId, reason) => {
       appointmentId,
       reason,
     });
+    const data = response?.data || {};
+    
     return {
-      success: response.data.success,
-      refundId: response.data.refundId,
-      message: response.data.message,
+      success: data.success || false,
+      refundId: data.refundId || null,
+      message: data.message || 'Refund request submitted',
     };
   } catch (error) {
     console.error('Error requesting refund:', error);
-    return { success: false, error: error.message };
+    return { success: false, error: error.message || 'Refund request failed' };
   }
 };
 
@@ -197,10 +213,12 @@ export const validateCoupon = async (code, amount) => {
       code: code.trim().toUpperCase(),
       amount,
     });
+    const data = response?.data || {};
+    
     return {
-      success: response.data.success,
-      coupon: response.data.coupon,
-      discount: response.data.discount,
+      success: data.success || false,
+      coupon: data.coupon || null,
+      discount: data.discount || 0,
     };
   } catch (error) {
     console.error('Error validating coupon:', error);

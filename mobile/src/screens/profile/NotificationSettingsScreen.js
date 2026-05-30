@@ -1,7 +1,3 @@
-/**
- * NotificationSettingsScreen - Manage notification preferences
- */
-
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -12,12 +8,15 @@ import {
   StatusBar,
   Switch,
 } from 'react-native';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import NotificationService from '../../services/notifications/NotificationService';
 
 const NotificationSettingsScreen = ({ navigation }) => {
+  const { colors, isDarkMode } = useTheme();
+  const styles = makeStyles(colors);
+  
   const [settings, setSettings] = useState({
     appointments: true,
     reminders: true,
@@ -85,7 +84,7 @@ const NotificationSettingsScreen = ({ navigation }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor={colors.background} />
+      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
@@ -152,7 +151,7 @@ const NotificationSettingsScreen = ({ navigation }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',

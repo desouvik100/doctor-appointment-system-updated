@@ -14,13 +14,14 @@ import {
   Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import authService from '../../services/api/authService';
 
 const ResetPasswordScreen = ({ navigation, route }) => {
+  const { colors } = useTheme();
   const { email, otp } = route.params;
   const [newPassword, setNewPassword] = useState('');
   const [confirmPassword, setConfirmPassword] = useState('');
@@ -72,6 +73,8 @@ const ResetPasswordScreen = ({ navigation, route }) => {
       setLoading(false);
     }
   };
+
+  const styles = makeStyles(colors);
 
   return (
     <View style={styles.container}>
@@ -183,7 +186,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,

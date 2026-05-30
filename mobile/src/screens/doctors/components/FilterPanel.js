@@ -12,7 +12,7 @@ import {
   ScrollView,
   Dimensions,
 } from 'react-native';
-import { colors } from '../../../theme/colors';
+import { useTheme } from '../../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 import Button from '../../../components/common/Button';
 
@@ -64,6 +64,7 @@ const FilterPanel = ({
   onClose, 
   onClear 
 }) => {
+  const { colors } = useTheme();
   const [localFilters, setLocalFilters] = useState(filters);
 
   useEffect(() => {
@@ -93,6 +94,8 @@ const FilterPanel = ({
     setLocalFilters(clearedFilters);
     onClear?.();
   };
+
+  const styles = makeStyles(colors);
 
   const renderChip = (label, isSelected, onPress, key) => (
     <TouchableOpacity
@@ -246,7 +249,7 @@ const FilterPanel = ({
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   overlay: {
     flex: 1,
     justifyContent: 'flex-end',

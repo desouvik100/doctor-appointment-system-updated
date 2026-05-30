@@ -283,21 +283,28 @@ const LoginScreen = ({ navigation }) => {
 
             {/* Divider */}
             <View style={styles.divider}>
-              <View style={[styles.dividerLine, { backgroundColor: colors.surfaceBorder }]} />
+              <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
               <Text style={[styles.dividerText, { color: colors.textMuted }]}>or continue with</Text>
-              <View style={[styles.dividerLine, { backgroundColor: colors.surfaceBorder }]} />
+              <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
             </View>
 
             {/* Social buttons */}
             <View style={styles.socialRow}>
               {[
-                { id: 'google',   label: 'G',  color: '#EA4335', bg: isDarkMode ? 'rgba(234, 67, 53, 0.1)' : '#FEF2F2' },
-                { id: 'facebook', label: 'f',  color: '#1877F2', bg: isDarkMode ? 'rgba(24, 119, 242, 0.1)' : '#EFF6FF' },
+                { id: 'google',   label: 'G',  color: '#EA4335', bg: isDarkMode ? 'rgba(234, 67, 53, 0.1)' : '#FFF5F5' },
+                { id: 'facebook', label: 'f',  color: '#1877F2', bg: isDarkMode ? 'rgba(24, 119, 242, 0.1)' : '#F0F5FF' },
                 { id: 'apple',    label: '🍎', color: colors.textPrimary, bg: colors.surface },
               ].map(s => (
                 <TouchableOpacity
                   key={s.id}
-                  style={[styles.socialBtn, { backgroundColor: s.bg, borderColor: colors.surfaceBorder }]}
+                  style={[
+                    styles.socialBtn,
+                    {
+                      backgroundColor: s.bg,
+                      borderColor: colors.surfaceBorder,
+                      borderWidth: isDarkMode ? 1 : 0,
+                    }
+                  ]}
                   onPress={() => handleSocial(s.id)}
                   disabled={socialLoading !== null}
                   activeOpacity={0.8}
@@ -311,21 +318,11 @@ const LoginScreen = ({ navigation }) => {
             </View>
           </View>
 
-          {/* Why HealthSync */}
-          <View style={[styles.whyCard, { backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder }]}>
-            <Text style={[styles.whyTitle, { color: colors.textPrimary }]}>Why HealthSync?</Text>
-            <View style={styles.whyRow}>
-              {[
-                { icon: '📅', text: 'Book doctors instantly' },
-                { icon: '📁', text: 'Store health records' },
-                { icon: '🔔', text: 'Get reminders' },
-              ].map(w => (
-                <View key={w.text} style={styles.whyItem}>
-                  <Text style={styles.whyIcon}>{w.icon}</Text>
-                  <Text style={[styles.whyText, { color: colors.textSecondary }]}>{w.text}</Text>
-                </View>
-              ))}
-            </View>
+          {/* Premium Trust Statement */}
+          <View style={[styles.trustCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: isDarkMode ? 1 : 0 }]}>
+            <Text style={[styles.trustText, { color: colors.textSecondary }]}>
+              🔐 Your health records and personal data are fully protected under HIPAA compliance standards and 256-bit bank-grade encryption.
+            </Text>
           </View>
 
           {/* Sign up link */}
@@ -352,7 +349,7 @@ const styles = StyleSheet.create({
   backBtn: {
     width: 44, height: 44, borderRadius: borderRadius.lg,
     alignItems: 'center', justifyContent: 'center',
-    marginBottom: spacing.md, borderWidth: 1,
+    marginBottom: spacing.md,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
   },
   backIcon: { fontSize: 20 },
@@ -418,22 +415,28 @@ const styles = StyleSheet.create({
   socialBtn: {
     width: 56, height: 56, borderRadius: borderRadius.lg,
     alignItems: 'center', justifyContent: 'center',
-    borderWidth: 1,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 4, elevation: 2,
   },
   socialBtnText: { fontSize: 20, fontWeight: '700' },
 
-  whyCard: {
+  trustCard: {
     borderRadius: borderRadius.xl,
-    padding: spacing.lg, marginBottom: spacing.xl,
-    borderWidth: 1,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 8, elevation: 2,
+    padding: spacing.lg,
+    marginBottom: spacing.xl,
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.04,
+    shadowRadius: 8,
+    elevation: 2,
   },
-  whyTitle: { fontSize: 14, fontWeight: '700', marginBottom: spacing.md },
-  whyRow: { flexDirection: 'row', justifyContent: 'space-between' },
-  whyItem: { flex: 1, alignItems: 'center' },
-  whyIcon: { fontSize: 22, marginBottom: 4 },
-  whyText: { fontSize: 11, textAlign: 'center', fontWeight: '500' },
+  trustText: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+    fontWeight: '500',
+  },
 
   signUpRow: { flexDirection: 'row', justifyContent: 'center' },
   signUpText: { fontSize: 14 },

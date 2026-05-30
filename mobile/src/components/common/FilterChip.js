@@ -1,20 +1,20 @@
 /**
- * FilterChip Component - Animated filter chips
+ * FilterChip Component - Animated filter chips - Dynamic Theme Edition
  */
 
 import React from 'react';
 import { TouchableOpacity, Text, StyleSheet, Animated } from 'react-native';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { colors as themeColors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 
 const FilterChip = ({ 
   label, 
   selected = false, 
   onPress, 
   icon,
-  colors = themeColors,
   style 
 }) => {
+  const { colors } = useTheme();
   const scaleAnim = React.useRef(new Animated.Value(1)).current;
 
   const handlePressIn = () => {
@@ -41,7 +41,7 @@ const FilterChip = ({
           selected ? styles.chipSelected : styles.chipUnselected,
           {
             backgroundColor: selected ? colors.primary : colors.surface,
-            borderColor: selected ? colors.primary : colors.border,
+            borderColor: selected ? colors.primary : colors.divider,
           },
           style,
         ]}
@@ -54,7 +54,7 @@ const FilterChip = ({
         <Text
           style={[
             styles.label,
-            { color: selected ? '#fff' : colors.textPrimary },
+            { color: selected ? colors.textInverse || '#fff' : colors.textPrimary },
           ]}
         >
           {label}

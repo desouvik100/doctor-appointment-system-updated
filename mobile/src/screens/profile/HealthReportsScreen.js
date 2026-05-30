@@ -1,7 +1,3 @@
-/**
- * Health Reports Screen - View lab reports and health analytics
- */
-
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -17,12 +13,18 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { colors } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
+import { QuickActionsGrid } from '../../components/common';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
 import apiClient from '../../services/api/apiClient';
+
+const REPORT_ACTIONS = [
+  { id: 'bookTest', icon: 'flask-outline', label: 'Book Test', screen: 'LabTests', color: '#10B981' },
+  { id: 'imaging', icon: 'scan-outline', label: 'Imaging', screen: 'MedicalImaging', color: '#FF6B6B' },
+  { id: 'allRecords', icon: 'folder-open-outline', label: 'All Records', screen: 'Records', color: '#3B82F6' },
+];
 
 const HealthReportsScreen = ({ navigation }) => {
   const { user } = useUser();
@@ -37,6 +39,7 @@ const HealthReportsScreen = ({ navigation }) => {
     pendingReports: 0,
     lastCheckup: null,
   });
+  const styles = makeStyles(colors, isDarkMode);
 
   const userId = user?.id || user?._id;
 
@@ -183,7 +186,7 @@ const HealthReportsScreen = ({ navigation }) => {
       >
         {/* Stats Banner */}
         <LinearGradient
-          colors={['#10b981', '#059669']}
+          colors={isDarkMode ? ['#064E3B', '#047857'] : ['#10b981', '#059669']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={styles.statsBanner}
@@ -270,38 +273,19 @@ const HealthReportsScreen = ({ navigation }) => {
         )}
 
         {/* Quick Actions */}
-        <View style={styles.quickActions}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
-          <View style={styles.actionsRow}>
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('LabTests')}
-            >
-              <Text style={styles.actionIcon}>🧪</Text>
-              <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Book Test</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('MedicalImaging')}
-            >
-              <Text style={styles.actionIcon}>🔬</Text>
-              <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Imaging</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={[styles.actionBtn, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('Records')}
-            >
-              <Text style={styles.actionIcon}>📁</Text>
-              <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>All Records</Text>
-            </TouchableOpacity>
-          </View>
-        </View>
+        <QuickActionsGrid
+          actions={REPORT_ACTIONS}
+          variant="grid"
+          cols={3}
+          showTitle={true}
+          showBadge={false}
+        />
       </ScrollView>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { justifyContent: 'center', alignItems: 'center' },
   loadingText: { ...typography.bodyMedium, marginTop: spacing.md },
@@ -334,7 +318,7 @@ const styles = StyleSheet.create({
   statusBadge: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
   statusText: { ...typography.labelSmall, fontWeight: '600' },
   labName: { ...typography.bodySmall, marginBottom: spacing.sm },
-  reportFooter: { borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)', paddingTop: spacing.sm, marginTop: spacing.sm },
+  reportFooter: { borderTopWidth: 1, borderTopColor: colors.divider || 'rgba(0,0,0,0.05)', paddingTop: spacing.sm, marginTop: spacing.sm },
   viewReport: { ...typography.labelMedium, fontWeight: '600' },
   vitalsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   vitalGridItem: { width: '48%' },

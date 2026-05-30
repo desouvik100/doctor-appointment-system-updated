@@ -6,12 +6,13 @@
 import React, { useEffect, useRef } from 'react';
 import { View, Text, StyleSheet, Animated, Dimensions } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { colors } from '../../theme/colors';
 
 const { width } = Dimensions.get('window');
 
 const Toast = ({ visible, message, type = 'info', duration = 3000, onHide }) => {
+  const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(-100)).current;
   const opacity = useRef(new Animated.Value(0)).current;
@@ -87,6 +88,7 @@ const Toast = ({ visible, message, type = 'info', duration = 3000, onHide }) => 
   };
 
   const toastStyle = getToastStyle();
+  const styles = makeStyles(colors);
 
   return (
     <Animated.View
@@ -108,7 +110,7 @@ const Toast = ({ visible, message, type = 'info', duration = 3000, onHide }) => 
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: {
     position: 'absolute',
     left: spacing.lg,

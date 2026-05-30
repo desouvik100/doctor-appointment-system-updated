@@ -1,6 +1,5 @@
 /**
- * Enterprise Appointment Card
- * Premium appointment display with actions
+ * Enterprise Appointment Card - Dynamic Theme & Premium Edition
  */
 
 import React from 'react';
@@ -13,7 +12,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-import { lightTheme, colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { shadows } from '../../theme/shadows';
 import Badge from '../common/Badge';
 
@@ -25,6 +24,7 @@ const AppointmentCard = ({
   onCancelPress,
   style,
 }) => {
+  const { colors, isDarkMode } = useTheme();
   const {
     doctorName,
     doctorPhoto,
@@ -92,29 +92,41 @@ const AppointmentCard = ({
     <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.9}
-      style={[styles.container, style]}
+      style={[
+        styles.container,
+        {
+          ...shadows.md,
+        },
+        style,
+      ]}
     >
       <LinearGradient
-        colors={['#FFFFFF', '#F9FAFB']}
-        style={styles.gradient}
+        colors={isDarkMode ? ['rgba(26, 31, 46, 0.55)', 'rgba(10, 14, 23, 0.15)'] : [colors.backgroundCard || '#FFFFFF', colors.surfaceLight || '#F9FAFB']}
+        style={[
+          styles.gradient,
+          {
+            borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+            borderWidth: isDarkMode ? 1 : 0,
+          }
+        ]}
       >
         <View style={styles.header}>
           <View style={styles.doctorInfo}>
             {doctorPhoto ? (
-              <Image source={{ uri: doctorPhoto }} style={styles.avatar} />
+              <Image source={{ uri: doctorPhoto }} style={[styles.avatar, { backgroundColor: colors.surface }]} />
             ) : (
-              <View style={[styles.avatar, styles.avatarPlaceholder]}>
-                <Text style={styles.avatarText}>
+              <View style={[styles.avatar, styles.avatarPlaceholder, { backgroundColor: colors.primaryLight || 'rgba(0, 212, 170, 0.15)' }]}>
+                <Text style={[styles.avatarText, { color: colors.primary, lineHeight: 28 }]}>
                   {doctorName?.charAt(0) || 'D'}
                 </Text>
               </View>
             )}
 
             <View style={styles.details}>
-              <Text style={styles.doctorName} numberOfLines={1}>
+              <Text style={[styles.doctorName, { color: colors.textPrimary }]} numberOfLines={1}>
                 {doctorName}
               </Text>
-              <Text style={styles.specialty} numberOfLines={1}>
+              <Text style={[styles.specialty, { color: colors.textSecondary }]} numberOfLines={1}>
                 {specialty}
               </Text>
             </View>
@@ -126,26 +138,26 @@ const AppointmentCard = ({
         <View style={styles.infoRow}>
           <View style={styles.infoItem}>
             <Text style={styles.infoIcon}>📅</Text>
-            <Text style={styles.infoText}>{formatDateTime(dateTime)}</Text>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>{formatDateTime(dateTime)}</Text>
           </View>
           
           <View style={styles.infoItem}>
             <Text style={styles.infoIcon}>{getTypeIcon()}</Text>
-            <Text style={styles.infoText}>
+            <Text style={[styles.infoText, { color: colors.textSecondary }]}>
               {type === 'video' ? 'Video Call' : type === 'clinic' ? 'Clinic Visit' : 'Home Visit'}
             </Text>
           </View>
         </View>
 
         {type === 'clinic' && clinicName && (
-          <View style={styles.locationContainer}>
+          <View style={[styles.locationContainer, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : colors.neutralLight || '#F3F4F6' }]}>
             <Text style={styles.locationIcon}>📍</Text>
             <View style={styles.locationDetails}>
-              <Text style={styles.clinicName} numberOfLines={1}>
+              <Text style={[styles.clinicName, { color: colors.textPrimary }]} numberOfLines={1}>
                 {clinicName}
               </Text>
               {clinicAddress && (
-                <Text style={styles.clinicAddress} numberOfLines={1}>
+                <Text style={[styles.clinicAddress, { color: colors.textSecondary }]} numberOfLines={1}>
                   {clinicAddress}
                 </Text>
               )}
@@ -161,10 +173,10 @@ const AppointmentCard = ({
                   e.stopPropagation();
                   onJoinPress?.(appointment);
                 }}
-                style={[styles.actionButton, styles.primaryButton]}
+                style={[styles.actionButton, styles.primaryButton, { backgroundColor: colors.primary }]}
                 activeOpacity={0.85}
               >
-                <Text style={styles.primaryButtonText}>Join Call</Text>
+                <Text style={[styles.primaryButtonText, { color: colors.textInverse || '#fff' }]}>Join Call</Text>
               </TouchableOpacity>
             )}
             
@@ -173,10 +185,14 @@ const AppointmentCard = ({
                 e.stopPropagation();
                 onReschedulePress?.(appointment);
               }}
-              style={[styles.actionButton, styles.secondaryButton]}
+              style={[
+                styles.actionButton, 
+                styles.secondaryButton, 
+                { backgroundColor: colors.primaryLight || 'rgba(0, 212, 170, 0.15)' }
+              ]}
               activeOpacity={0.85}
             >
-              <Text style={styles.secondaryButtonText}>Reschedule</Text>
+              <Text style={[styles.secondaryButtonText, { color: colors.primary }]}>Reschedule</Text>
             </TouchableOpacity>
             
             <TouchableOpacity
@@ -184,10 +200,14 @@ const AppointmentCard = ({
                 e.stopPropagation();
                 onCancelPress?.(appointment);
               }}
-              style={[styles.actionButton, styles.ghostButton]}
+              style={[
+                styles.actionButton, 
+                styles.ghostButton, 
+                { borderColor: colors.divider || '#E5E7EB' }
+              ]}
               activeOpacity={0.85}
             >
-              <Text style={styles.ghostButtonText}>Cancel</Text>
+              <Text style={[styles.ghostButtonText, { color: colors.textSecondary }]}>Cancel</Text>
             </TouchableOpacity>
           </View>
         )}
@@ -201,11 +221,11 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.xl,
     marginBottom: spacing.lg,
     overflow: 'hidden',
-    ...shadows.md,
   },
 
   gradient: {
     padding: spacing.lg,
+    borderRadius: borderRadius.xl,
   },
 
   header: {
@@ -225,19 +245,20 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: borderRadius.md,
-    backgroundColor: lightTheme.surface,
   },
 
   avatarPlaceholder: {
     alignItems: 'center',
     justifyContent: 'center',
-    backgroundColor: colors.primary[100],
   },
 
   avatarText: {
-    ...typography.headlineMedium,
-    color: colors.primary[700],
+    fontFamily: typography.headlineMedium?.fontFamily,
+    fontSize: typography.headlineMedium?.fontSize,
     fontWeight: '700',
+    textAlign: 'center',
+    textAlignVertical: 'center',
+    includeFontPadding: false,
   },
 
   details: {
@@ -248,14 +269,12 @@ const styles = StyleSheet.create({
 
   doctorName: {
     ...typography.headlineSmall,
-    color: lightTheme.text,
     fontWeight: '700',
     marginBottom: 2,
   },
 
   specialty: {
     ...typography.bodyMedium,
-    color: lightTheme.textSecondary,
   },
 
   infoRow: {
@@ -276,12 +295,10 @@ const styles = StyleSheet.create({
 
   infoText: {
     ...typography.bodyMedium,
-    color: lightTheme.textSecondary,
   },
 
   locationContainer: {
     flexDirection: 'row',
-    backgroundColor: colors.neutral[100],
     borderRadius: borderRadius.md,
     padding: spacing.md,
     marginBottom: spacing.md,
@@ -298,14 +315,12 @@ const styles = StyleSheet.create({
 
   clinicName: {
     ...typography.bodyMedium,
-    color: lightTheme.text,
     fontWeight: '600',
     marginBottom: 2,
   },
 
   clinicAddress: {
     ...typography.bodySmall,
-    color: lightTheme.textSecondary,
   },
 
   actions: {
@@ -322,37 +337,31 @@ const styles = StyleSheet.create({
   },
 
   primaryButton: {
-    backgroundColor: lightTheme.primary,
     ...shadows.sm,
   },
 
   primaryButtonText: {
     ...typography.button,
-    color: '#fff',
     fontSize: 14,
   },
 
   secondaryButton: {
-    backgroundColor: colors.primary[50],
   },
 
   secondaryButtonText: {
     ...typography.button,
-    color: lightTheme.primary,
     fontSize: 14,
   },
 
   ghostButton: {
     backgroundColor: 'transparent',
     borderWidth: 1,
-    borderColor: colors.neutral[300],
   },
 
   ghostButtonText: {
     ...typography.button,
-    color: lightTheme.textSecondary,
     fontSize: 14,
   },
 });
 
-export default AppointmentCard;
+export default React.memo(AppointmentCard);

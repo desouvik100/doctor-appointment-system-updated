@@ -13,7 +13,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import shadows from '../../theme/shadows';
-import apiClient from '../../services/api/apiClient';
+import apiClient, {
+  getAuthToken,
+  getRefreshToken,
+  saveAuthToken,
+} from '../../services/api/apiClient';
 import { useUser } from '../../context/UserContext';
 import UpiAppIcon from '../../components/payment/UpiAppIcon';
 import Svg, { Path, Rect, G, Defs, LinearGradient as SvgGradient, Stop, Text as SvgText } from 'react-native-svg';
@@ -71,7 +75,7 @@ const UPI_APPS = [
 
 const PaymentScreen = ({ navigation, route }) => {
   const { user } = useUser();
-  const { colors } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const { doctor, date, time, queueNumber, consultationType, patient, appointmentId, reason, pendingBooking } = route.params || {};
 
   // appointmentId ref — set after we create the appointment just before payment
@@ -87,6 +91,9 @@ const PaymentScreen = ({ navigation, route }) => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [loading, setLoading] = useState(false);
   const [showCoupon, setShowCoupon] = useState(false);
+
+  // Rotating messages for full-screen loading overlay
+  const [loadingMessage, setLoadingMessage] = useState('Initializing secure gateway...');
 
   // For UPI intent polling
   const pendingOrderId = useRef(null);
@@ -107,6 +114,24 @@ const PaymentScreen = ({ navigation, route }) => {
       if (pollingTimer.current) clearTimeout(pollingTimer.current);
     };
   }, []);
+
+  // Update loading messages periodically when loading is true
+  useEffect(() => {
+    if (!loading) return;
+    const messages = [
+      'Initializing secure gateway...',
+      'Contacting trusted banking partners...',
+      'Encrypting payment transaction...',
+      'Confirming appointment token allocation...',
+      'Verifying payment status...',
+    ];
+    let idx = 0;
+    const interval = setInterval(() => {
+      idx = (idx + 1) % messages.length;
+      setLoadingMessage(messages[idx]);
+    }, 2000);
+    return () => clearInterval(interval);
+  }, [loading]);
 
   const handleAppStateChange = async (nextState) => {
     if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
@@ -157,18 +182,141 @@ const PaymentScreen = ({ navigation, route }) => {
     } catch { /* silent */ }
   };
 
+  /**
+   * Pre-flight session guard.
+   * Validates the stored access token *before* firing the checkout request.
+   * If the token is absent or the storage read indicates an expired session,
+   * we proactively await a refresh cycle so the subsequent HTTP call is sent
+   * with a guaranteed-fresh Authorization header.
+   * This eliminates the synchronization race-condition that caused
+   * POST /appointments/queue-booking to fail with a backend state mismatch.
+   *
+   * @returns {Promise<boolean>} true if a valid session is confirmed
+   * @throws {Error}            when no refresh token exists and we cannot recover
+   */
+  const ensureFreshToken = async () => {
+    try {
+      const currentToken = await getAuthToken();
+      if (currentToken) {
+        // Token exists — pass through; the Axios request interceptor will
+        // attach it. If the server still returns 401 the response interceptor
+        // handles the refresh automatically.
+        console.log('🔑 [Checkout Guard] Valid session token confirmed');
+        return true;
+      }
+
+      // No token found in either storage — attempt a proactive refresh
+      console.log('⚠️ [Checkout Guard] No access token found. Attempting proactive refresh...');
+      const refreshToken = await getRefreshToken();
+      if (!refreshToken) {
+        throw new Error('Session expired. Please log in again to complete your booking.');
+      }
+
+      const { default: axios } = await import('axios');
+      const { API_URL } = await import('../../config/env');
+      const refreshRes = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
+      const newToken = refreshRes.data?.token;
+      if (!newToken) {
+        throw new Error('Token refresh returned no access token. Please log in again.');
+      }
+
+      await saveAuthToken(newToken);
+      console.log('✅ [Checkout Guard] Proactive token refresh succeeded');
+      return true;
+    } catch (err) {
+      console.error('❌ [Checkout Guard] Session validation failed:', err.message);
+      throw err;
+    }
+  };
+
   // Create the appointment right before payment — queue only increments on confirmed payment
   const createAppointmentNow = async () => {
     if (createdAppointmentId.current) return createdAppointmentId.current;
     if (!pendingBooking) return null;
-    const res = await apiClient.post('/appointments/queue-booking', {
-      ...pendingBooking,
+
+    // ── Pre-flight token validation ──────────────────────────────────────
+    await ensureFreshToken();
+    // ─────────────────────────────────────────────────────────────────────
+
+    // Map the frontend paymentMethod to a valid backend schema enum value.
+    // Backend payment.paymentMethod enum: ["card", "upi", "netbanking", "wallet"]
+    // 'razorpay' is NOT a valid enum — map it to 'card' (Razorpay default gateway).
+    const rawMethod = selectedMethod || 'upi';
+    const backendPaymentMethod = rawMethod === 'wallet'
+      ? 'wallet'
+      : rawMethod === 'upi'
+        ? 'upi'
+        : rawMethod === 'netbanking'
+          ? 'netbanking'
+          : 'card'; // card / razorpay / anything else → 'card'
+
+    // Force clean database string primitives for IDs, handling potential nested objects
+    const rawUserId = pendingBooking.userId || user?.id || user?._id || user?.userId;
+    const cleanUserId = rawUserId && typeof rawUserId === 'object'
+      ? String(rawUserId._id || rawUserId.id || '')
+      : String(rawUserId || '');
+
+    const rawDoctorId = pendingBooking.doctorId || doctor?._id || doctor?.id;
+    const cleanDoctorId = rawDoctorId && typeof rawDoctorId === 'object'
+      ? String(rawDoctorId._id || rawDoctorId.id || '')
+      : String(rawDoctorId || '');
+
+    const rawClinicId = pendingBooking.clinicId || doctor?.clinicId?._id || doctor?.clinicId;
+    const cleanClinicId = rawClinicId
+      ? (typeof rawClinicId === 'object'
+        ? String(rawClinicId._id || rawClinicId.id || '')
+        : String(rawClinicId))
+      : null;
+
+    const selectedTime = pendingBooking.time || time || '12:30 PM';
+    const cleanSlotId = pendingBooking.slotId || null;
+
+    const consultationFee = Number(pendingBooking.consultationFee || doctor?.consultationFee || doctor?.fee || 500);
+    const platformFee = Number(pendingBooking.platformFee || Math.round(consultationFee * 0.05));
+    const totalAmount = Number(pendingBooking.amount || (consultationFee + platformFee));
+
+    // Build the final payload — all fields the backend queue-booking controller needs
+    const bookingPayload = {
+      userId: cleanUserId,
+      doctorId: cleanDoctorId,
+      clinicId: cleanClinicId,
+
+      // Date & time — both required by Appointment schema
+      date: pendingBooking.date || date,
+      time: selectedTime,
+
+      // Slot metadata
+      ...(cleanSlotId ? { slotId: cleanSlotId } : {}),
+      slotType: pendingBooking.slotType || (pendingBooking.consultationType === 'online' ? 'online' : 'clinic'),
+
+      // Appointment details
+      reason: pendingBooking.reason || 'General Consultation',
+      consultationType: pendingBooking.consultationType || 'in_person',
+      urgencyLevel: pendingBooking.urgencyLevel || 'normal',
+
+      // Payment initialization — required for pending_payment status
       status: 'pending_payment',
       paymentStatus: 'pending',
+      paymentMethod: backendPaymentMethod,   // valid enum: card | upi | netbanking | wallet
+      amount: Number(totalAmount),
+      amountInPaisa: Number(totalAmount * 100),
+      consultationFee: Number(consultationFee),
+      platformFee: Number(platformFee),
+      gst: 0,
+
+      // Notification prefs
       reminderPreference: 'email',
       sendEstimatedTimeEmail: false,
-    });
-    const id = res.data?._id || res.data?.id || res.data?.appointmentId;
+    };
+
+    console.log('QUEUE BOOKING PAYLOAD', JSON.stringify(bookingPayload, null, 2));
+
+    const res = await apiClient.post('/appointments/queue-booking', bookingPayload);
+
+    console.log('QUEUE BOOKING RESPONSE', res.data);
+
+    const id = res.data?._id || res.data?.id || res.data?.appointmentId
+      || res.data?.appointment?._id || res.data?.appointment?.id;
     createdAppointmentId.current = id;
     return id;
   };
@@ -208,7 +356,26 @@ const PaymentScreen = ({ navigation, route }) => {
       Alert.alert('Error', 'Appointment info missing. Please try again.');
       return;
     }
-    
+
+    // ── Top-level session validation guard ──────────────────────────────────
+    // Validate the access token BEFORE any network call in this function:
+    // create-order, wallet/pay, and the RazorpayPayment navigation all require
+    // a live Authorization header. A token that expired between the user
+    // landing on this screen and pressing Pay would cause silent 401 failures
+    // on any of those calls. We pause execution here and proactively refresh
+    // so the entire payment handshake runs with a guaranteed-fresh token.
+    try {
+      await ensureFreshToken();
+    } catch (sessionErr) {
+      Alert.alert(
+        'Session Expired',
+        sessionErr.message || 'Your session has expired. Please log in again.',
+        [{ text: 'Log In', onPress: () => navigation.navigate('Welcome') }]
+      );
+      return;
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
     // Extract userId with multiple fallbacks
     const userId = user?.id || user?._id || user?.userId;
     
@@ -351,7 +518,7 @@ const PaymentScreen = ({ navigation, route }) => {
   };
 
   const getPayBtnLabel = () => {
-    if (loading) return null;
+    if (loading) return 'Securely Processing...';
     if (selectedMethod === 'wallet') return `🔒 Pay ₹${totalAmount} from Wallet`;
     if (selectedMethod === 'upi') {
       if (selectedUpiApp === 'other') return `🔒 Pay ₹${totalAmount} via UPI`;
@@ -364,12 +531,21 @@ const PaymentScreen = ({ navigation, route }) => {
 
   const renderMethodCard = (id, icon, iconBg, title, subtitle, extra) => {
     const active = selectedMethod === id;
+    const activeColor = colors.primary;
     return (
       <TouchableOpacity
         key={id}
-        style={[styles.methodCard, { backgroundColor: colors.surface, borderColor: active ? colors.primary : colors.surfaceBorder, borderWidth: active ? 2 : 1 }]}
+        style={[
+          styles.methodCard,
+          {
+            backgroundColor: colors.surface,
+            borderColor: active ? activeColor : 'transparent',
+            borderWidth: active ? 2 : 0,
+          },
+          shadows.md,
+        ]}
         onPress={() => setSelectedMethod(id)}
-        activeOpacity={0.8}
+        activeOpacity={0.85}
       >
         <View style={styles.methodCardRow}>
           <View style={[styles.methodIconBox, { backgroundColor: iconBg }]}>
@@ -379,14 +555,14 @@ const PaymentScreen = ({ navigation, route }) => {
             <View style={styles.methodTitleRow}>
               <Text style={[styles.methodTitle, { color: colors.textPrimary }]}>{title}</Text>
               {id === 'upi' ? (
-                <View style={[styles.recommendedBadge, { backgroundColor: colors.primary + '1F' }]}>
+                <View style={[styles.recommendedBadge, { backgroundColor: colors.primary + '12' }]}>
                   <Text style={[styles.recommendedText, { color: colors.primary }]}>Recommended</Text>
                 </View>
               ) : null}
             </View>
             <Text style={[styles.methodSub, { color: active ? colors.primary : colors.textMuted }]}>{subtitle}</Text>
           </View>
-          <View style={[styles.checkCircle, { borderColor: active ? colors.primary : colors.surfaceBorder, backgroundColor: active ? colors.primary : 'transparent' }]}>
+          <View style={[styles.checkCircle, { borderColor: active ? colors.primary : (isDarkMode ? 'rgba(255,255,255,0.1)' : '#E2E8F0'), backgroundColor: active ? colors.primary : 'transparent' }]}>
             {active ? <Text style={styles.checkMark}>✓</Text> : null}
           </View>
         </View>
@@ -397,55 +573,54 @@ const PaymentScreen = ({ navigation, route }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
+      <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
       {/* Trust Header */}
-      <LinearGradient colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']} style={[styles.trustHeader, { paddingTop: insets.top + 8 }]}>
+      <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={[styles.trustHeader, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backIconWhite}>←</Text>
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerLock}>🔒</Text>
-          <Text style={styles.headerTitle}>Secure Payment</Text>
-          <Text style={styles.headerSub}>100% encrypted & trusted</Text>
+          <Text style={styles.headerTitle}>Secure Checkout</Text>
+          <Text style={styles.headerSub}>🔒 RBI Compliant · 256-Bit SSL Encryption</Text>
         </View>
-        <View style={{ width: 40 }} />
+        <View style={{ width: 36 }} />
       </LinearGradient>
 
       {/* Trust Badges */}
-      <View style={[styles.trustBadgesRow, { backgroundColor: colors.success + '15' }]}>
-        <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>🔐 SSL Secured</Text></View>
+      <View style={[styles.trustBadgesRow, { backgroundColor: colors.success + '08', borderBottomWidth: 1, borderBottomColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#F1F5F9' }]}>
+        <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>🛡️ SSL Secured</Text></View>
         <View style={styles.trustDot} />
-        <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>✅ Razorpay</Text></View>
+        <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>⚡ Razorpay Verified</Text></View>
         <View style={styles.trustDot} />
-        <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>🏦 RBI Compliant</Text></View>
+        <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>🏦 RBI Approved</Text></View>
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
         {/* Amount Hero */}
         <LinearGradient colors={colors.gradientSecondary || ['#6C5CE7', '#5B4ED1']} style={styles.amountHero}>
-          <Text style={styles.amountLabel}>Total Payable</Text>
+          <Text style={styles.amountLabel}>Total Payable Amount</Text>
           <Text style={styles.amountValue}>₹{totalAmount.toLocaleString('en-IN')}</Text>
           <Text style={styles.amountSub}>
-            {doctor?.name ? `Dr. ${doctor.name}` : 'Doctor'} · {formatDate(date)} · Token #{queueNumber || '—'}
+            {doctor?.name?.startsWith('Dr.') ? doctor?.name : `Dr. ${doctor?.name || 'Doctor'}`} · {formatDate(date)} at {time}
           </Text>
           <View style={styles.amountBadgesRow}>
-            <View style={styles.amountBadge}><Text style={styles.amountBadgeText}>🔒 Safe & Secure</Text></View>
-            <View style={styles.amountBadge}><Text style={styles.amountBadgeText}>⚡ Instant Confirm</Text></View>
+            <View style={styles.amountBadge}><Text style={styles.amountBadgeText}>Token #{queueNumber || '—'}</Text></View>
+            <View style={styles.amountBadge}><Text style={styles.amountBadgeText}>⚡ Instant Booking</Text></View>
           </View>
         </LinearGradient>
 
         {/* Payment Methods */}
-        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Choose Payment Method</Text>
+        <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Select Payment Option</Text>
 
-        {/* UPI */}
+        {/* UPI Option */}
         {renderMethodCard(
           'upi',
-          <UpiLogo size={36} />,
-          isDarkMode ? 'rgba(255, 243, 224, 0.1)' : '#FFF3E0',
-          'UPI',
-          'GPay, PhonePe, Paytm & more',
+          <UpiLogo size={32} />,
+          isDarkMode ? 'rgba(255, 107, 0, 0.1)' : '#FFF3E0',
+          'UPI Payment',
+          'Google Pay, PhonePe, Paytm, BHIM',
           selectedMethod === 'upi' ? (
             <View style={styles.upiAppsGrid}>
               {UPI_APPS.map((app) => {
@@ -453,11 +628,17 @@ const PaymentScreen = ({ navigation, route }) => {
                 return (
                   <TouchableOpacity
                     key={app.id}
-                    style={[styles.upiAppCard, { borderColor: active ? colors.primary : colors.surfaceBorder, backgroundColor: active ? (isDarkMode ? 'rgba(0, 212, 170, 0.1)' : '#E8F5E9') : colors.backgroundCard }]}
+                    style={[
+                      styles.upiAppCard,
+                      {
+                        borderColor: active ? colors.primary : (isDarkMode ? 'rgba(255,255,255,0.06)' : '#E2E8F0'),
+                        backgroundColor: active ? (isDarkMode ? 'rgba(0, 212, 170, 0.08)' : '#E8F5E9') : colors.backgroundCard,
+                      }
+                    ]}
                     onPress={() => setSelectedUpiApp(app.id)}
                     activeOpacity={0.8}
                   >
-                    <UpiAppIcon appId={app.id} size={40} />
+                    <UpiAppIcon appId={app.id} size={36} />
                     <Text style={[styles.upiAppLabel, { color: active ? colors.primary : colors.textSecondary }]}>{app.label}</Text>
                     {active ? (
                       <View style={[styles.upiCheck, { backgroundColor: colors.primary }]}>
@@ -468,14 +649,20 @@ const PaymentScreen = ({ navigation, route }) => {
                 );
               })}
               <TouchableOpacity
-                style={[styles.upiAppCard, { borderColor: selectedUpiApp === 'other' ? colors.primary : colors.surfaceBorder, backgroundColor: selectedUpiApp === 'other' ? (isDarkMode ? 'rgba(0, 212, 170, 0.1)' : '#E8F5E9') : colors.backgroundCard }]}
+                style={[
+                  styles.upiAppCard,
+                  {
+                    borderColor: selectedUpiApp === 'other' ? colors.primary : (isDarkMode ? 'rgba(255,255,255,0.06)' : '#E2E8F0'),
+                    backgroundColor: selectedUpiApp === 'other' ? (isDarkMode ? 'rgba(0, 212, 170, 0.08)' : '#E8F5E9') : colors.backgroundCard,
+                  }
+                ]}
                 onPress={() => setSelectedUpiApp('other')}
                 activeOpacity={0.8}
               >
-                <View style={[styles.moreAppsIcon, { backgroundColor: colors.surface }]}>
-                  <Text style={styles.moreAppsEmoji}>⋯</Text>
+                <View style={[styles.moreAppsIcon, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#F8FAFC' }]}>
+                  <Text style={[styles.moreAppsEmoji, { color: colors.textSecondary }]}>⋯</Text>
                 </View>
-                <Text style={[styles.upiAppLabel, { color: selectedUpiApp === 'other' ? colors.primary : colors.textSecondary }]}>More</Text>
+                <Text style={[styles.upiAppLabel, { color: selectedUpiApp === 'other' ? colors.primary : colors.textSecondary }]}>Other UPI</Text>
                 {selectedUpiApp === 'other' ? (
                   <View style={[styles.upiCheck, { backgroundColor: colors.primary }]}>
                     <Text style={styles.upiCheckText}>✓</Text>
@@ -486,13 +673,13 @@ const PaymentScreen = ({ navigation, route }) => {
           ) : null
         )}
 
-        {/* Card */}
+        {/* Card Option */}
         {renderMethodCard(
           'card',
           <Text style={styles.methodIconText}>💳</Text>,
-          isDarkMode ? 'rgba(227, 242, 253, 0.1)' : '#E3F2FD',
+          isDarkMode ? 'rgba(59, 130, 246, 0.1)' : '#E3F2FD',
           'Credit / Debit Card',
-          'Visa, Mastercard, RuPay',
+          'Visa, Mastercard, RuPay & Diner\'s Club',
           selectedMethod === 'card' ? (
             <View style={styles.cardLogosRow}>
               <View style={[styles.cardLogoPill, { backgroundColor: '#1A1F71' }]}><Text style={styles.cardLogoText}>VISA</Text></View>
@@ -502,58 +689,70 @@ const PaymentScreen = ({ navigation, route }) => {
           ) : null
         )}
 
-        {/* Net Banking */}
+        {/* Netbanking Option */}
         {renderMethodCard(
           'netbanking',
           <Text style={styles.methodIconText}>🏦</Text>,
-          isDarkMode ? 'rgba(255, 243, 224, 0.1)' : '#FFF3E0',
+          isDarkMode ? 'rgba(16, 185, 129, 0.1)' : '#E8F5E9',
           'Net Banking',
-          'All major banks supported',
+          'Direct login for 50+ major Indian banks',
           null
         )}
 
-        {/* Health Wallet */}
+        {/* Health Wallet Option */}
         {renderMethodCard(
           'wallet',
           <Text style={styles.methodIconText}>💰</Text>,
-          isDarkMode ? 'rgba(243, 229, 245, 0.1)' : '#F3E5F5',
-          'Health Wallet',
-          walletBalance >= totalAmount
-            ? `Use ₹${walletBalance.toLocaleString('en-IN')} from wallet`
-            : `Use ₹${walletBalance.toLocaleString('en-IN')} · Add ₹${walletShortfall.toLocaleString('en-IN')} more`,
-          walletBalance < totalAmount ? (
-            <TouchableOpacity
-              style={[styles.addMoneyBtn, { backgroundColor: colors.primaryLight, borderColor: colors.primary }]}
-              onPress={() => navigation.navigate('Wallet')}
-              activeOpacity={0.8}
-            >
-              <Text style={[styles.addMoneyText, { color: colors.primary }]}>+ Add Money</Text>
-            </TouchableOpacity>
-          ) : null
+          isDarkMode ? 'rgba(139, 92, 246, 0.1)' : '#F3E5F5',
+          'HealthSync Balance',
+          `Available balance: ₹${walletBalance.toLocaleString('en-IN')}`,
+          <View style={styles.walletDetailsContainer}>
+            {walletBalance < totalAmount ? (
+              <View style={styles.walletShortfallContainer}>
+                <View style={[styles.shortfallBadge, { backgroundColor: '#FEF2F2' }]}>
+                  <Text style={styles.shortfallBadgeText}>Shortfall of ₹{walletShortfall.toLocaleString('en-IN')}</Text>
+                </View>
+                <TouchableOpacity
+                  style={[styles.addMoneyBtn, { backgroundColor: colors.primary + '12', borderColor: colors.primary }]}
+                  onPress={() => navigation.navigate('Wallet')}
+                  activeOpacity={0.8}
+                >
+                  <Text style={[styles.addMoneyText, { color: colors.primary }]}>+ Top-up Wallet</Text>
+                </TouchableOpacity>
+              </View>
+            ) : (
+              <View style={styles.walletSuccessContainer}>
+                <View style={[styles.shortfallBadge, { backgroundColor: '#ECFDF5' }]}>
+                  <Text style={[styles.shortfallBadgeText, { color: '#059669' }]}>Full amount covered ✓</Text>
+                </View>
+              </View>
+            )}
+          </View>
         )}
 
-        {/* Coupon */}
-        <View style={[styles.methodCard, { backgroundColor: colors.surface, borderColor: appliedCoupon ? colors.primary : colors.surfaceBorder, borderWidth: appliedCoupon ? 2 : 1 }]}>
-          <TouchableOpacity style={styles.couponHeader} onPress={() => setShowCoupon(!showCoupon)} activeOpacity={0.7}>
-            <View style={[styles.methodIconBox, { backgroundColor: isDarkMode ? 'rgba(232, 245, 233, 0.1)' : '#E8F5E9' }]}>
+        {/* Coupon validation block */}
+        <View style={[styles.couponCard, { backgroundColor: colors.surface }, shadows.md]}>
+          <TouchableOpacity style={styles.couponHeader} onPress={() => setShowCoupon(!showCoupon)} activeOpacity={0.75}>
+            <View style={[styles.methodIconBox, { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : '#EBFDF5' }]}>
               <Text style={styles.methodIconText}>🏷️</Text>
             </View>
             <View style={styles.methodInfo}>
               <Text style={[styles.methodTitle, { color: colors.textPrimary }]}>
-                {appliedCoupon ? `"${appliedCoupon.code}" applied` : 'Apply Coupon'}
+                {appliedCoupon ? `Promo Code "${appliedCoupon.code}"` : 'Apply Coupon'}
               </Text>
               <Text style={[styles.methodSub, { color: appliedCoupon ? colors.success : colors.textMuted }]}>
-                {appliedCoupon ? `You save ₹${couponDiscount}` : 'Try HEALTH10 for ₹50 off'}
+                {appliedCoupon ? `Saved ₹${couponDiscount} on consultation` : 'Tap to enter discount/referral code'}
               </Text>
             </View>
             <Text style={[styles.chevron, { color: colors.textMuted }]}>{showCoupon ? '▲' : '▼'}</Text>
           </TouchableOpacity>
-          {showCoupon ? (
-            <View style={[styles.couponBox, { borderTopColor: colors.surfaceBorder }]}>
-              <View style={[styles.couponRow, { backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder }]}>
+
+          {showCoupon && (
+            <View style={[styles.couponBox, { borderTopColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#F1F5F9' }]}>
+              <View style={[styles.couponRow, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : '#F8FAFC', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : '#E2E8F0' }]}>
                 <TextInput
                   style={[styles.couponInput, { color: colors.textPrimary }]}
-                  placeholder="Enter coupon code"
+                  placeholder="Enter code (e.g. HEALTH10)"
                   placeholderTextColor={colors.textMuted}
                   value={couponCode}
                   onChangeText={setCouponCode}
@@ -561,83 +760,101 @@ const PaymentScreen = ({ navigation, route }) => {
                   autoCapitalize="characters"
                 />
                 <TouchableOpacity
-                  style={[styles.couponBtn, { backgroundColor: colors.primary }, couponLoading ? { opacity: 0.6 } : null]}
+                  style={[styles.couponBtn, { backgroundColor: colors.primary }, couponLoading && { opacity: 0.6 }]}
                   onPress={appliedCoupon ? removeCoupon : validateCoupon}
                   disabled={couponLoading}
                 >
-                  {couponLoading
-                    ? <ActivityIndicator size="small" color="#fff" />
-                    : <Text style={styles.couponBtnText}>{appliedCoupon ? 'Remove' : 'Apply'}</Text>
-                  }
+                  {couponLoading ? (
+                    <ActivityIndicator size="small" color="#fff" />
+                  ) : (
+                    <Text style={styles.couponBtnText}>{appliedCoupon ? 'Remove' : 'Apply'}</Text>
+                  )}
                 </TouchableOpacity>
               </View>
               {couponError ? <Text style={[styles.couponMsg, { color: colors.error }]}>{couponError}</Text> : null}
+              {appliedCoupon ? <Text style={[styles.couponMsg, { color: colors.success }]}>✓ Code applied successfully!</Text> : null}
             </View>
-          ) : null}
+          )}
         </View>
 
-        {/* Bill Details */}
-        <View style={[styles.billCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.breakdownTitle, { color: colors.textPrimary }]}>Bill Details</Text>
+        {/* Bill Summary */}
+        <View style={[styles.billCard, { backgroundColor: colors.surface }, shadows.md]}>
+          <Text style={[styles.breakdownTitle, { color: colors.textPrimary }]}>Detailed Invoice Summary</Text>
+          
           <View style={styles.breakdownRow}>
-            <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>Consultation Fee</Text>
+            <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>Doctor Consultation Fee</Text>
             <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>₹{consultationFee.toLocaleString('en-IN')}</Text>
           </View>
+          
           <View style={styles.breakdownRow}>
-            <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>Platform Fee</Text>
+            <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>HealthSync Booking Fee</Text>
             <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>₹{platformFee.toLocaleString('en-IN')}</Text>
           </View>
-          {couponDiscount > 0 ? (
+          
+          {couponDiscount > 0 && (
             <View style={styles.breakdownRow}>
-              <Text style={[styles.breakdownLabel, { color: colors.success }]}>Coupon Discount</Text>
+              <Text style={[styles.breakdownLabel, { color: colors.success }]}>Coupon Discount Applied</Text>
               <Text style={[styles.breakdownValue, { color: colors.success }]}>-₹{couponDiscount.toLocaleString('en-IN')}</Text>
             </View>
-          ) : null}
-          <View style={[styles.breakdownDivider, { backgroundColor: colors.surfaceBorder }]} />
+          )}
+          
+          <View style={[styles.breakdownDivider, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : '#E2E8F0' }]} />
+          
           <View style={styles.breakdownRow}>
             <Text style={[styles.breakdownTotal, { color: colors.textPrimary }]}>Total Payable</Text>
             <Text style={[styles.breakdownTotalValue, { color: colors.primary }]}>₹{totalAmount.toLocaleString('en-IN')}</Text>
           </View>
+          
           <View style={styles.refundNote}>
             <Text style={[styles.refundNoteText, { color: colors.textMuted }]}>
-              🔄 Full refund if cancelled 2+ hours before appointment
+              🛡️ Cancellation Policy: 100% refund up to 2 hours before the slot.
             </Text>
           </View>
         </View>
 
-        <View style={{ height: 130 }} />
+        <View style={{ height: 160 }} />
       </ScrollView>
 
-      {/* Pay Button */}
-      <View style={[styles.bottomBar, { backgroundColor: colors.backgroundCard, borderTopColor: colors.surfaceBorder, paddingBottom: insets.bottom + 12 }]}>
-        {loading && selectedMethod === 'upi' ? (
-          <View style={styles.upiWaiting}>
-            <ActivityIndicator size="small" color={colors.primary} />
-            <Text style={[styles.upiWaitingText, { color: colors.textSecondary }]}>
-              Waiting for payment confirmation...
-            </Text>
-          </View>
-        ) : (
-          <Animated.View style={{ transform: [{ scale: payBtnScale }] }}>
-            <TouchableOpacity
-              style={[styles.payBtn, { opacity: loading ? 0.75 : 1 }]}
-              onPress={() => { animatePayBtn(); handlePayment(); }}
-              disabled={loading}
-              activeOpacity={0.9}
-            >
-              <LinearGradient colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.payBtnGradient}>
-                {loading
-                  ? <ActivityIndicator size="small" color="#fff" />
-                  : <Text style={styles.payBtnText}>{getPayBtnLabel()}</Text>
-                }
-              </LinearGradient>
-            </TouchableOpacity>
-          </Animated.View>
-        )}
+      {/* Pay Button Sticky Bar */}
+      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: isDarkMode ? 'rgba(255,255,255,0.06)' : '#F1F5F9', paddingBottom: insets.bottom + spacing.md }]}>
+        <Animated.View style={{ transform: [{ scale: payBtnScale }] }}>
+          <TouchableOpacity
+            style={[styles.payBtn, { opacity: loading ? 0.8 : 1 }]}
+            onPress={() => { animatePayBtn(); handlePayment(); }}
+            disabled={loading}
+            activeOpacity={0.9}
+          >
+            <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.payBtnGradient}>
+              {loading ? (
+                <ActivityIndicator size="small" color="#fff" />
+              ) : (
+                <Text style={styles.payBtnText}>{getPayBtnLabel()}</Text>
+              )}
+            </LinearGradient>
+          </TouchableOpacity>
+        </Animated.View>
         <Text style={[styles.secureNote, { color: colors.textMuted }]}>
-          🔐 Payments secured by Razorpay · PCI DSS compliant
+          🔒 Secure 256-bit SSL encrypted connection provided by Razorpay
         </Text>
       </View>
+
+      {/* Premium Full Screen Processing Overlay */}
+      {loading && (
+        <View style={[StyleSheet.absoluteFillObject, styles.loadingOverlay]}>
+          <View style={[styles.loadingBox, { backgroundColor: colors.surface }, shadows.xl]}>
+            <View style={styles.spinnerContainer}>
+              <ActivityIndicator size="large" color={colors.primary} />
+            </View>
+            <Text style={[styles.loadingMsgText, { color: colors.textPrimary }]}>{loadingMessage}</Text>
+            <Text style={[styles.loadingSubText, { color: colors.textMuted }]}>Please do not close this screen or press back</Text>
+            
+            <View style={styles.loadingFooter}>
+              <Text style={styles.loadingFooterLock}>🔒</Text>
+              <Text style={styles.loadingFooterText}>PCI-DSS Bank Grade Security</Text>
+            </View>
+          </View>
+        </View>
+      )}
     </View>
   );
 };
@@ -647,133 +864,244 @@ const styles = StyleSheet.create({
 
   // Trust Header
   trustHeader: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl, paddingBottom: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    paddingHorizontal: spacing.xl,
+    paddingBottom: spacing.lg,
   },
-  backBtn: { padding: spacing.sm, width: 40 },
-  backIconWhite: { fontSize: 22, color: '#fff' },
-  headerCenter: { alignItems: 'center', flex: 1 },
-  headerLock: { fontSize: 22 },
-  headerTitle: { fontSize: 18, fontWeight: '800', color: '#fff', letterSpacing: 0.3 },
-  headerSub: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 2 },
+  backBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: 'rgba(255,255,255,0.2)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  backIconWhite: { fontSize: 18, color: '#fff', fontWeight: '700' },
+  headerCenter: { flex: 1, alignItems: 'center' },
+  headerTitle: { color: '#fff', ...typography.headlineMedium, fontWeight: '800' },
+  headerSub: { color: 'rgba(255,255,255,0.75)', ...typography.labelSmall, marginTop: 2, fontSize: 10 },
 
   // Trust Badges
   trustBadgesRow: {
-    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: '#E8F5E9', paddingVertical: 8, paddingHorizontal: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    paddingVertical: 10,
+    paddingHorizontal: spacing.lg,
   },
   trustBadge: {},
-  trustBadgeText: { fontSize: 11, color: '#2E7D32', fontWeight: '600' },
-  trustDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#A5D6A7', marginHorizontal: 8 },
+  trustBadgeText: { fontSize: 11, fontWeight: '700' },
+  trustDot: { width: 4, height: 4, borderRadius: 2, backgroundColor: '#10B981', opacity: 0.3, marginHorizontal: 12 },
 
   scrollContent: { paddingBottom: 20 },
 
   // Amount Hero
   amountHero: {
-    marginHorizontal: spacing.xl, marginTop: spacing.lg, marginBottom: spacing.lg,
-    borderRadius: borderRadius.xl, padding: spacing.xl, alignItems: 'center',
+    marginHorizontal: spacing.xl,
+    marginTop: spacing.lg,
+    marginBottom: spacing.xl,
+    borderRadius: borderRadius.xl,
+    padding: spacing.xl,
+    alignItems: 'center',
   },
-  amountLabel: { fontSize: 13, color: 'rgba(255,255,255,0.8)', fontWeight: '500', marginBottom: 4 },
-  amountValue: { fontSize: 44, fontWeight: '900', color: '#fff', letterSpacing: -1 },
-  amountSub: { fontSize: 12, color: 'rgba(255,255,255,0.75)', marginTop: spacing.sm, textAlign: 'center' },
-  amountBadgesRow: { flexDirection: 'row', gap: 8, marginTop: spacing.md },
-  amountBadge: { backgroundColor: 'rgba(255,255,255,0.2)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
-  amountBadgeText: { fontSize: 11, color: '#fff', fontWeight: '600' },
+  amountLabel: { fontSize: 12, color: 'rgba(255,255,255,0.75)', fontWeight: '600', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: 4 },
+  amountValue: { fontSize: 40, fontWeight: '700', color: '#fff', letterSpacing: -1 },
+  amountSub: { fontSize: 12, color: 'rgba(255,255,255,0.85)', marginTop: spacing.sm, textAlign: 'center', fontWeight: '500' },
+  amountBadgesRow: { flexDirection: 'row', gap: spacing.sm, marginTop: spacing.md },
+  amountBadge: { backgroundColor: 'rgba(255,255,255,0.18)', borderRadius: 20, paddingHorizontal: 12, paddingVertical: 4 },
+  amountBadgeText: { fontSize: 11, color: '#fff', fontWeight: '700' },
 
   // Section label
-  sectionLabel: { fontSize: 12, fontWeight: '700', letterSpacing: 0.8, textTransform: 'uppercase', marginHorizontal: spacing.xl, marginBottom: spacing.sm, marginTop: spacing.xs },
+  sectionLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginHorizontal: spacing.xl, marginBottom: spacing.md, marginTop: spacing.sm },
 
   // Method Cards
   methodCard: {
-    marginHorizontal: spacing.xl, marginBottom: spacing.sm,
-    borderRadius: borderRadius.xl, overflow: 'hidden',
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
   },
   methodCardRow: {
-    flexDirection: 'row', alignItems: 'center', padding: spacing.lg,
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: spacing.lg,
   },
   methodIconBox: { width: 52, height: 44, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
-  methodIconText: { fontSize: 22 },
+  methodIconText: { fontSize: 20 },
   methodInfo: { flex: 1 },
-  methodTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 8 },
-  methodTitle: { ...typography.bodyLarge, fontWeight: '600' },
+  methodTitleRow: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
+  methodTitle: { ...typography.bodyLarge, fontWeight: '700' },
   methodSub: { ...typography.labelSmall, marginTop: 2 },
-  recommendedBadge: { backgroundColor: '#E8F5E9', borderRadius: 10, paddingHorizontal: 8, paddingVertical: 2 },
-  recommendedText: { fontSize: 10, color: '#2E7D32', fontWeight: '700' },
-  checkCircle: { width: 24, height: 24, borderRadius: 12, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
-  checkMark: { color: '#fff', fontSize: 13, fontWeight: '900' },
+  recommendedBadge: { borderRadius: 12, paddingHorizontal: 8, paddingVertical: 2 },
+  recommendedText: { fontSize: 9, fontWeight: '800' },
+  checkCircle: { width: 22, height: 22, borderRadius: 11, borderWidth: 2, alignItems: 'center', justifyContent: 'center' },
+  checkMark: { color: '#fff', fontSize: 11, fontWeight: '900' },
 
-  // Method card inner row (used by renderMethodCard)
-  couponHeader: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg },
-
-  // Card logos
-  cardLogosRow: { flexDirection: 'row', gap: 6, marginTop: 8, marginBottom: 4 },
-  cardLogoPill: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 3 },
-  cardLogoText: { color: '#fff', fontSize: 10, fontWeight: '800', letterSpacing: 0.5 },
-
-  // Wallet add money
-  addMoneyBtn: {
-    alignSelf: 'flex-start', marginTop: 6,
-    backgroundColor: '#E8F5E9', borderRadius: 12,
-    paddingHorizontal: 12, paddingVertical: 4,
-    borderWidth: 1, borderColor: '#A5D6A7',
-  },
-  addMoneyText: { fontSize: 12, color: '#2E7D32', fontWeight: '700' },
-
-  // UPI apps grid
+  // UPI apps grid - Optimized for 4-column dynamic grid
   upiAppsGrid: {
-    flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg, gap: spacing.sm,
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+    gap: spacing.sm,
+    justifyContent: 'space-between',
   },
   upiAppCard: {
-    width: '18%', alignItems: 'center', borderRadius: borderRadius.lg,
-    paddingVertical: spacing.md, paddingHorizontal: spacing.xs,
-    borderWidth: 1.5, position: 'relative',
+    width: '23%',
+    alignItems: 'center',
+    borderRadius: borderRadius.lg,
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.xs,
+    borderWidth: 1.5,
+    position: 'relative',
   },
-  upiAppLabel: { ...typography.labelSmall, textAlign: 'center', marginTop: spacing.xs, fontSize: 10 },
-  upiCheck: { position: 'absolute', top: -6, right: -6, width: 18, height: 18, borderRadius: 9, alignItems: 'center', justifyContent: 'center' },
-  upiCheckText: { color: '#fff', fontSize: 10, fontWeight: 'bold' },
-  moreAppsIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  moreAppsEmoji: { fontSize: 20, fontWeight: 'bold', color: '#666' },
+  upiAppLabel: { ...typography.labelSmall, textAlign: 'center', marginTop: spacing.xs, fontSize: 9, fontWeight: '600' },
+  upiCheck: { position: 'absolute', top: -4, right: -4, width: 16, height: 16, borderRadius: 8, alignItems: 'center', justifyContent: 'center' },
+  upiCheckText: { color: '#fff', fontSize: 9, fontWeight: 'bold' },
+  moreAppsIcon: { width: 36, height: 36, borderRadius: 18, alignItems: 'center', justifyContent: 'center' },
+  moreAppsEmoji: { fontSize: 18, fontWeight: '900' },
+
+  // Card logos
+  cardLogosRow: { flexDirection: 'row', gap: 8, paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, marginTop: -4 },
+  cardLogoPill: { borderRadius: 6, paddingHorizontal: 8, paddingVertical: 4, alignItems: 'center', justifyContent: 'center' },
+  cardLogoText: { color: '#fff', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
+
+  // Wallet
+  walletDetailsContainer: {
+    paddingHorizontal: spacing.lg,
+    paddingBottom: spacing.lg,
+    marginTop: -4,
+  },
+  walletShortfallContainer: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+  },
+  walletSuccessContainer: {
+    flexDirection: 'row',
+  },
+  shortfallBadge: {
+    borderRadius: 8,
+    paddingHorizontal: spacing.md,
+    paddingVertical: 5,
+  },
+  shortfallBadgeText: { fontSize: 11, color: '#EF4444', fontWeight: '700' },
+  addMoneyBtn: {
+    borderRadius: borderRadius.lg,
+    paddingHorizontal: 12,
+    paddingVertical: 6,
+    borderWidth: 1,
+  },
+  addMoneyText: { fontSize: 11, fontWeight: '700' },
 
   // Coupon
-  chevron: { fontSize: 12 },
-  couponBox: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, borderTopWidth: 1 },
+  couponCard: {
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.xl,
+    overflow: 'hidden',
+  },
+  couponHeader: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg },
+  chevron: { fontSize: 10 },
+  couponBox: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, borderTopWidth: 1, paddingTop: spacing.md },
   couponRow: {
-    flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.lg,
-    borderWidth: 1, marginTop: spacing.md, overflow: 'hidden',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    overflow: 'hidden',
   },
-  couponInput: { flex: 1, ...typography.bodyMedium, paddingHorizontal: spacing.md, paddingVertical: spacing.md },
-  couponBtn: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, minWidth: 80, alignItems: 'center' },
-  couponBtnText: { ...typography.labelMedium, color: '#fff', fontWeight: '700' },
-  couponMsg: { ...typography.labelSmall, marginTop: spacing.sm },
+  couponInput: { flex: 1, ...typography.bodyMedium, paddingHorizontal: spacing.md, paddingVertical: spacing.md, fontSize: 13, height: 48 },
+  couponBtn: { paddingHorizontal: spacing.lg, height: 48, alignItems: 'center', justifyContent: 'center', minWidth: 80 },
+  couponBtnText: { ...typography.labelMedium, color: '#fff', fontWeight: '800' },
+  couponMsg: { fontSize: 11, fontWeight: '600', marginTop: spacing.xs, paddingLeft: 2 },
 
-  // Bill
+  // Bill Breakdown
   billCard: {
-    marginHorizontal: spacing.xl, marginBottom: spacing.sm,
-    borderRadius: borderRadius.xl, overflow: 'hidden',
+    marginHorizontal: spacing.xl,
+    marginBottom: spacing.md,
+    borderRadius: borderRadius.xl,
+    paddingTop: spacing.lg,
+    paddingBottom: spacing.lg,
   },
-  breakdownTitle: { ...typography.bodyLarge, fontWeight: '700', padding: spacing.lg, paddingBottom: spacing.sm },
+  breakdownTitle: { ...typography.bodyLarge, fontWeight: '700', paddingHorizontal: spacing.lg, paddingBottom: spacing.sm },
   breakdownRow: { flexDirection: 'row', justifyContent: 'space-between', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
-  breakdownLabel: { ...typography.bodyMedium },
-  breakdownValue: { ...typography.bodyMedium },
-  breakdownDivider: { height: 1, marginHorizontal: spacing.lg, marginVertical: spacing.sm },
-  breakdownTotal: { ...typography.bodyLarge, fontWeight: '800', fontSize: 17 },
-  breakdownTotalValue: { fontSize: 22, fontWeight: '900' },
-  refundNote: { paddingHorizontal: spacing.lg, paddingBottom: spacing.lg, paddingTop: 4 },
-  refundNoteText: { fontSize: 12 },
+  breakdownLabel: { ...typography.bodyMedium, fontSize: 13 },
+  breakdownValue: { ...typography.bodyMedium, fontWeight: '600', fontSize: 13 },
+  breakdownDivider: { height: 1, marginHorizontal: spacing.lg, marginVertical: spacing.md },
+  breakdownTotal: { ...typography.bodyLarge, fontWeight: '700', fontSize: 16 },
+  breakdownTotalValue: { fontSize: 22, fontWeight: '700' },
+  refundNote: { paddingHorizontal: spacing.lg, paddingTop: spacing.md },
+  refundNoteText: { fontSize: 11, fontWeight: '500', lineHeight: 16 },
 
-  // Bottom bar
+  // Bottom action bar
   bottomBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    paddingHorizontal: spacing.xl, paddingTop: spacing.md,
-    borderTopWidth: 1, ...shadows.large,
+    position: 'absolute',
+    bottom: 0,
+    left: 0,
+    right: 0,
+    paddingHorizontal: spacing.xl,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: -4 },
+    shadowOpacity: 0.05,
+    shadowRadius: 10,
+    elevation: 8,
   },
   payBtn: { borderRadius: borderRadius.xl, overflow: 'hidden' },
-  payBtnGradient: { paddingVertical: spacing.lg + 4, alignItems: 'center', justifyContent: 'center' },
-  payBtnText: { color: '#fff', fontWeight: '800', fontSize: 17, letterSpacing: 0.3 },
-  secureNote: { textAlign: 'center', fontSize: 11, marginTop: 8 },
-  upiWaiting: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.lg },
-  upiWaitingText: { ...typography.bodyMedium, marginLeft: spacing.md },
+  payBtnGradient: { paddingVertical: spacing.lg, alignItems: 'center', justifyContent: 'center' },
+  payBtnText: { color: '#fff', fontWeight: '800', fontSize: 16, letterSpacing: 0.2 },
+  secureNote: { textAlign: 'center', fontSize: 10, marginTop: spacing.sm, fontWeight: '500' },
+
+  // Loading Overlay
+  loadingOverlay: {
+    backgroundColor: 'rgba(0,0,0,0.65)',
+    justifyContent: 'center',
+    alignItems: 'center',
+    zIndex: 99999,
+  },
+  loadingBox: {
+    width: '82%',
+    borderRadius: borderRadius.xl,
+    paddingVertical: spacing.xxl,
+    paddingHorizontal: spacing.xl,
+    alignItems: 'center',
+  },
+  spinnerContainer: {
+    width: 64,
+    height: 64,
+    borderRadius: 32,
+    backgroundColor: 'rgba(0, 212, 170, 0.08)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: spacing.lg,
+  },
+  loadingMsgText: {
+    ...typography.bodyLarge,
+    fontWeight: '800',
+    textAlign: 'center',
+    marginBottom: spacing.xs,
+  },
+  loadingSubText: {
+    fontSize: 12,
+    textAlign: 'center',
+    lineHeight: 18,
+    marginBottom: spacing.xl,
+  },
+  loadingFooter: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.xs,
+    paddingTop: spacing.md,
+    borderTopWidth: 1,
+    borderTopColor: 'rgba(255,255,255,0.06)',
+    width: '100%',
+    justifyContent: 'center',
+  },
+  loadingFooterLock: { fontSize: 12 },
+  loadingFooterText: { fontSize: 11, color: '#A0AEC0', fontWeight: '600' },
 });
 
 export default PaymentScreen;

@@ -15,7 +15,7 @@ import {
   ActivityIndicator,
   Linking,
 } from 'react-native';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
@@ -25,6 +25,8 @@ import apiClient from '../../services/api/apiClient';
 const PrescriptionViewScreen = ({ navigation, route }) => {
   const { prescriptionId } = route.params || {};
   const { user } = useUser();
+  const { colors, isDarkMode } = useTheme();
+  const styles = makeStyles(colors);
   const [prescription, setPrescription] = useState(null);
   const [loading, setLoading] = useState(true);
   const [sendingEmail, setSendingEmail] = useState(false);
@@ -320,7 +322,7 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   centered: { justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },

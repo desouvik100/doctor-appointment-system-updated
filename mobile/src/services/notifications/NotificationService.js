@@ -117,15 +117,21 @@ class NotificationService {
       const userToken = await AsyncStorage.getItem('token');
       const userData = await AsyncStorage.getItem('user');
       
-      if (userToken && userData) {
-        const user = JSON.parse(userData);
-        const userId = user?.id || user?._id;
-        
-        if (!userId) {
-          console.log('Device registration skipped: No user ID available');
-          return;
-        }
-        
+      if (!userToken || !userData) {
+        console.log('Device registration deferred: User not logged in');
+        return;
+      }
+      
+      const user = JSON.parse(userData);
+      const userId = user?.id || user?._id;
+      
+      if (!userId) {
+        console.log('Device registration skipped: No user ID available');
+        return;
+      }
+      
+      // Try to register with backend, but don't fail if it's not available
+      try {
         await apiClient.post('/notifications/register-device', {
           fcmToken: token,
           platform: Platform.OS,
@@ -134,17 +140,15 @@ class NotificationService {
             os: Platform.OS,
             version: Platform.Version,
           }
-        }).catch(err => {
-          // Backend endpoint might not exist yet - that's okay
-          console.log('Device registration endpoint not available:', err.message);
         });
-        
         console.log('FCM token registered for user:', userId);
-      } else {
-        console.log('Device registration deferred: User not logged in');
+      } catch (apiError) {
+        // Silently fail - backend endpoint might not exist yet or network might be unavailable
+        console.log('Device registration skipped (backend unavailable)');
       }
     } catch (error) {
-      console.error('Token registration error:', error);
+      // Catch any other errors (AsyncStorage, JSON parsing, etc.)
+      console.log('Token registration error (non-critical):', error.message);
     }
   }
 
@@ -157,19 +161,23 @@ class NotificationService {
         return;
       }
       
-      await apiClient.post('/notifications/register-device', {
-        fcmToken: token,
-        platform: Platform.OS,
-        userId: userId,
-        deviceInfo: {
-          os: Platform.OS,
-          version: Platform.Version,
-        }
-      });
-      
-      console.log('Device registered after login for user:', userId);
+      try {
+        await apiClient.post('/notifications/register-device', {
+          fcmToken: token,
+          platform: Platform.OS,
+          userId: userId,
+          deviceInfo: {
+            os: Platform.OS,
+            version: Platform.Version,
+          }
+        });
+        console.log('Device registered after login for user:', userId);
+      } catch (apiError) {
+        // Silently fail - backend endpoint might not exist yet
+        console.log('Device registration after login skipped (backend unavailable)');
+      }
     } catch (error) {
-      console.log('Device registration after login failed:', error.message);
+      console.log('Device registration after login failed (non-critical):', error.message);
     }
   }
 

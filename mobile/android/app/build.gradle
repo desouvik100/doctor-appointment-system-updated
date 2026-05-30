@@ -58,13 +58,24 @@ android {
         debug {
             signingConfig signingConfigs.debug
             debuggable true
+            minifyEnabled false
+            shrinkResources false
         }
         release {
-            signingConfig signingConfigs.release
+            // Use debug signing if release keystore not available
+            if (keystorePropertiesFile.exists()) {
+                signingConfig signingConfigs.release
+            } else {
+                signingConfig signingConfigs.debug
+                println "⚠️ WARNING: Using debug keystore for release build. Create keystore.properties for production."
+            }
             minifyEnabled enableProguardInReleaseBuilds
             shrinkResources enableProguardInReleaseBuilds
             proguardFiles getDefaultProguardFile("proguard-android-optimize.txt"), "proguard-rules.pro"
             debuggable false
+            
+            // Enable ABI splits for release to reduce APK size
+            splits.abi.enable = true
         }
     }
     

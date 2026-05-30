@@ -114,3 +114,5 @@ export const shadows = {
     elevation: 8,
   },
 };
+
+export default colors;

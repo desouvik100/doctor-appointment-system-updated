@@ -15,7 +15,7 @@ import {
   Alert,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { colors } from '../../theme/colors';
+import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import apiClient from '../../services/api/apiClient';
@@ -50,6 +50,7 @@ const SEVERITY_LEVELS = [
 ];
 
 const SymptomCheckerScreen = ({ navigation }) => {
+  const { colors } = useTheme();
   const { user } = useUser();
   const [step, setStep] = useState(1);
   const [selectedBodyParts, setSelectedBodyParts] = useState([]);
@@ -267,6 +268,8 @@ const SymptomCheckerScreen = ({ navigation }) => {
     </View>
   );
 
+  const styles = makeStyles(colors);
+
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
@@ -326,7 +329,7 @@ const SymptomCheckerScreen = ({ navigation }) => {
 };
 
 
-const styles = StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
   backBtn: { width: 44, height: 44, borderRadius: borderRadius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },

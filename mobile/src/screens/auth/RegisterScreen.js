@@ -16,7 +16,6 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { shadows } from '../../theme/colors';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
@@ -196,7 +195,14 @@ const RegisterScreen = ({ navigation }) => {
           {/* Header */}
           <View style={styles.header}>
             <TouchableOpacity 
-              style={[styles.backButton, { backgroundColor: colors.surface }]}
+              style={[
+                styles.backButton,
+                {
+                  backgroundColor: colors.surface,
+                  borderColor: colors.surfaceBorder,
+                  borderWidth: isDarkMode ? 1 : 0,
+                }
+              ]}
               onPress={() => navigation.goBack()}
             >
               <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
@@ -282,7 +288,15 @@ const RegisterScreen = ({ navigation }) => {
               {/* Social Sign Up */}
               <View style={styles.socialButtons}>
                 <TouchableOpacity 
-                  style={[styles.socialBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }, socialLoading === 'google' && styles.socialBtnLoading]}
+                  style={[
+                    styles.socialBtn,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.surfaceBorder,
+                      borderWidth: isDarkMode ? 1 : 0,
+                    },
+                    socialLoading === 'google' && styles.socialBtnLoading
+                  ]}
                   onPress={handleGoogleSignUp}
                   disabled={socialLoading !== null}
                 >
@@ -293,7 +307,15 @@ const RegisterScreen = ({ navigation }) => {
                   )}
                 </TouchableOpacity>
                 <TouchableOpacity 
-                  style={[styles.socialBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }, socialLoading === 'facebook' && styles.socialBtnLoading]}
+                  style={[
+                    styles.socialBtn,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: colors.surfaceBorder,
+                      borderWidth: isDarkMode ? 1 : 0,
+                    },
+                    socialLoading === 'facebook' && styles.socialBtnLoading
+                  ]}
                   onPress={handleFacebookSignUp}
                   disabled={socialLoading !== null}
                 >
@@ -364,7 +386,6 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
-    borderWidth: 1,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -420,7 +441,6 @@ const styles = StyleSheet.create({
     width: 56,
     height: 56,
     borderRadius: borderRadius.lg,
-    borderWidth: 1,
     alignItems: 'center',
     justifyContent: 'center',
   },

@@ -1,43 +1,51 @@
 /**
- * StatusBadge — Reusable status indicator pill
+ * StatusBadge — Reusable status indicator pill - Dynamic Theme Edition
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { typography, spacing, borderRadius } from '../../theme/typography';
-
-const STATUS_CONFIG = {
-  pending:      { label: 'Pending',     bg: '#FEF3C7', color: '#92400E' },
-  confirmed:    { label: 'Confirmed',   bg: '#D1FAE5', color: '#065F46' },
-  completed:    { label: 'Completed',   bg: '#DBEAFE', color: '#1E40AF' },
-  cancelled:    { label: 'Cancelled',   bg: '#FEE2E2', color: '#991B1B' },
-  'in_progress':{ label: 'In Progress', bg: '#EDE9FE', color: '#5B21B6' },
-  'checked-in': { label: 'Checked In',  bg: '#EDE9FE', color: '#5B21B6' },
-  active:       { label: 'Active',      bg: '#D1FAE5', color: '#065F46' },
-  inactive:     { label: 'Inactive',    bg: '#F1F5F9', color: '#475569' },
-  approved:     { label: 'Approved',    bg: '#D1FAE5', color: '#065F46' },
-  rejected:     { label: 'Rejected',    bg: '#FEE2E2', color: '#991B1B' },
-  paid:         { label: 'Paid',        bg: '#D1FAE5', color: '#065F46' },
-  unpaid:       { label: 'Unpaid',      bg: '#FEF3C7', color: '#92400E' },
-  refunded:     { label: 'Refunded',    bg: '#EDE9FE', color: '#5B21B6' },
-  online:       { label: 'Online',      bg: '#D1FAE5', color: '#065F46' },
-  offline:      { label: 'Offline',     bg: '#F1F5F9', color: '#475569' },
-};
+import { useTheme } from '../../context/ThemeContext';
 
 const StatusBadge = ({ status, label, size = 'md', style }) => {
-  const config = STATUS_CONFIG[status?.toLowerCase()] || {
-    label: label || status || 'Unknown',
-    bg: '#F1F5F9',
-    color: '#475569',
+  const { colors } = useTheme();
+
+  const getStatusStyles = (key) => {
+    switch (key) {
+      case 'pending':
+      case 'unpaid':
+        return { bg: colors.warningLight, color: colors.warning };
+      case 'confirmed':
+      case 'active':
+      case 'approved':
+      case 'paid':
+      case 'online':
+        return { bg: colors.successLight, color: colors.success };
+      case 'completed':
+        return { bg: colors.infoLight, color: colors.info };
+      case 'cancelled':
+      case 'rejected':
+        return { bg: colors.errorLight, color: colors.error };
+      case 'in_progress':
+      case 'checked-in':
+      case 'refunded':
+        return { bg: colors.secondaryLight || 'rgba(108, 92, 231, 0.15)', color: colors.secondary };
+      case 'inactive':
+      case 'offline':
+      default:
+        return { bg: colors.neutralLight || 'rgba(255, 255, 255, 0.08)', color: colors.textSecondary };
+    }
   };
 
-  const displayLabel = label || config.label;
+  const statusKey = status?.toLowerCase() || 'unknown';
+  const themeStyles = getStatusStyles(statusKey);
+  const displayLabel = label || statusKey.charAt(0).toUpperCase() + statusKey.slice(1);
   const isSmall = size === 'sm';
 
   return (
     <View
       style={[
         styles.badge,
-        { backgroundColor: config.bg },
+        { backgroundColor: themeStyles.bg },
         isSmall && styles.badgeSm,
         style,
       ]}
@@ -45,7 +53,7 @@ const StatusBadge = ({ status, label, size = 'md', style }) => {
       <Text
         style={[
           styles.text,
-          { color: config.color },
+          { color: themeStyles.color },
           isSmall && styles.textSm,
         ]}
       >
