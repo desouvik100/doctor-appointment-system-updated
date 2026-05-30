@@ -20,6 +20,17 @@ const awardLoyaltyPoints = async (userId, action, referenceId, customPoints = nu
       tierMultiplier: { bronze: 1, silver: 1.25, gold: 1.5, platinum: 2 }
     };
 
+    // Map action to a valid transactions.type enum value:
+    // Schema enum: ['earned', 'redeemed', 'expired', 'bonus', 'referral']
+    const ACTION_TO_TYPE = {
+      appointment: 'earned',
+      review:      'earned',
+      signup:      'earned',
+      birthday:    'bonus',
+      referral:    'referral',
+    };
+    const transactionType = ACTION_TO_TYPE[action] || 'earned';
+
     let loyalty = await LoyaltyPoints.findOne({ userId });
     if (!loyalty) {
       loyalty = new LoyaltyPoints({ userId });
@@ -30,10 +41,11 @@ const awardLoyaltyPoints = async (userId, action, referenceId, customPoints = nu
     points = Math.floor(points * multiplier);
 
     const desc = description || `Earned ${points} points for ${action}`;
-    loyalty.addPoints(points, action, desc, referenceId);
+    // Pass the valid enum type, not the raw action string
+    loyalty.addPoints(points, transactionType, desc, referenceId);
     await loyalty.save();
 
-    console.log(`🎁 Awarded ${points} loyalty points to user ${userId} for ${action}`);
+    console.log(`🎁 Awarded ${points} loyalty points to user ${userId} for ${action} (type: ${transactionType})`);
     return { success: true, points, tier: loyalty.tier };
   } catch (error) {
     console.error('Error awarding loyalty points:', error);
