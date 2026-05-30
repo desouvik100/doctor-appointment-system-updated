@@ -1176,7 +1176,11 @@ router.post('/queue-booking', verifyToken, async (req, res) => {
       }
     }
 
-    // Award loyalty points — never block the response
+    // ── SIDE EFFECTS (non-critical — booking 201 is already guaranteed) ──────
+    // Each side effect runs in its own isolated Promise chain.
+    // A failure in ANY of these MUST NOT affect the 201 response.
+
+    // Award loyalty points — fire-and-forget, never blocks response
     let loyaltyResult = { success: false };
     try {
       loyaltyResult = await awardLoyaltyPoints(
@@ -1187,7 +1191,8 @@ router.post('/queue-booking', verifyToken, async (req, res) => {
         `Booked appointment with Dr. ${doctor.name}`
       );
     } catch (loyaltyError) {
-      console.error('❌ Loyalty points award failed (non-fatal):', loyaltyError.message);
+      // awardLoyaltyPoints never throws by contract, but double-guard here
+      console.error('[LOYALTY] Unexpected throw (non-fatal):', loyaltyError.message);
     }
 
     // Populate for response — use lean fallback if populate fails
