@@ -863,19 +863,15 @@ router.get('/mobile-checkout/:orderId', async (req, res) => {
         prefill: {
           name: '${decodeURIComponent(name || '').replace(/'/g, "\\'")}',
           email: '${decodeURIComponent(email || '').replace(/'/g, "\\'")}',
-          contact: '${decodeURIComponent(contact || '').replace(/'/g, "\\'")}',
-          ${razorpayUpiApp ? `method: 'upi', vpa: ''` : ''}
+          contact: '${decodeURIComponent(contact || '').replace(/'/g, "\\'")}'
         },
-        ${razorpayUpiApp ? `
-        config: {
-          display: {
-            blocks: {
-              utib: { name: 'Pay via UPI', instruments: [{ method: 'upi', apps: ['${razorpayUpiApp}'] }] }
-            },
-            sequence: ['block.utib'],
-            preferences: { show_default_blocks: false }
-          }
-        },` : ''}
+        method: {
+          upi: true,
+          card: true,
+          netbanking: true,
+          wallet: true,
+          emi: false
+        },
         theme: { 
           color: '#6C63FF',
           backdrop_color: 'rgba(0, 0, 0, 0.6)'

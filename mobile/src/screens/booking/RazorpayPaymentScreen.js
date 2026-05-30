@@ -44,7 +44,7 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
   // Handle deep link callbacks from the payment page
   useEffect(() => {
     const handleDeepLink = async ({ url }) => {
-      if (!url?.startsWith('healthsync://')) return;
+      if (!url?.startsWith('healthsync://')) return;  // ignore healthsyncpro:// and others
 
       if (url.includes('payment-success')) {
         setVerifying(true);
@@ -87,7 +87,7 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
     const { url } = navState;
     if (!url) return;
 
-    // Intercept deep link inside WebView
+    // Intercept deep link inside WebView — only handle healthsync:// (user app scheme)
     if (url.startsWith('healthsync://')) {
       if (url.includes('payment-success')) {
         setVerifying(true);
