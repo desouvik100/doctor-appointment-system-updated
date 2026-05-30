@@ -176,33 +176,82 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       Alert.alert('Login Required', 'Please login to book an appointment');
       return;
     }
-    const userId = user.id || user._id || user.userId;
-    if (!userId) {
+
+    // Force clean database string primitives for IDs
+    const rawUserId = user.id || user._id || user.userId;
+    const cleanUserId = rawUserId && typeof rawUserId === 'object'
+      ? String(rawUserId._id || rawUserId.id || '')
+      : String(rawUserId || '');
+
+    const rawDoctorId = doctor?._id || doctor?.id;
+    const cleanDoctorId = rawDoctorId && typeof rawDoctorId === 'object'
+      ? String(rawDoctorId._id || rawDoctorId.id || '')
+      : String(rawDoctorId || '');
+
+    if (!cleanUserId) {
       Alert.alert('Error', 'User session invalid. Please login again.');
       return;
     }
-    if (!doctorId) {
+    if (!cleanDoctorId) {
       Alert.alert('Error', 'Doctor information missing.');
       return;
     }
 
-    const clinicId = doctor?.clinicId?._id || doctor?.clinicId || null;
+    const rawClinicId = doctor?.clinicId?._id || doctor?.clinicId;
+    const cleanClinicId = rawClinicId
+      ? (typeof rawClinicId === 'object'
+        ? String(rawClinicId._id || rawClinicId.id || '')
+        : String(rawClinicId))
+      : null;
+
+    const selectedTime = selectedSlot && typeof selectedSlot === 'object'
+      ? (selectedSlot.time || queueInfo?.estimatedTime || '09:00 AM')
+      : (selectedSlot || queueInfo?.estimatedTime || '09:00 AM');
+
+    const cleanSlotId = selectedSlot && typeof selectedSlot === 'object'
+      ? (selectedSlot._id || selectedSlot.id || null)
+      : null;
+
+    const consultationFee = Number(doctor?.consultationFee || doctor?.fee || 500);
+    const platformFee = Math.round(consultationFee * 0.05);
+    const totalAmount = consultationFee + platformFee;
+
+    console.log('QUEUE BOOKING PAYLOAD', {
+      userId: cleanUserId,
+      doctorId: cleanDoctorId,
+      clinicId: cleanClinicId,
+      date: selectedDate,
+      time: selectedTime,
+      consultationType: consultationType === 'online' ? 'online' : 'in_person',
+      urgencyLevel,
+      amount: totalAmount,
+      amountInPaisa: totalAmount * 100,
+    });
 
     navigation.navigate('ConfirmDetails', {
       doctor: doctor || {},
       date: selectedDate,
-      time: selectedSlot || queueInfo?.estimatedTime || '09:00 AM',
+      time: selectedTime,
       queueNumber: queueInfo?.nextQueueNumber || 1,
       consultationType: consultationType || 'in_person',
       patient: { id: 'self', name: user?.name || 'Patient', relation: 'Self' },
       pendingBooking: {
-        userId,
-        doctorId,
-        clinicId,
+        userId: cleanUserId,
+        doctorId: cleanDoctorId,
+        clinicId: cleanClinicId,
         date: selectedDate,
+        time: selectedTime,
+        slotId: cleanSlotId,
+        slotType: consultationType === 'online' ? 'online' : 'clinic',
         reason: fullReason,
         consultationType: consultationType === 'online' ? 'online' : 'in_person',
         urgencyLevel,
+        amount: Number(totalAmount),
+        amountInPaisa: Number(totalAmount * 100),
+        consultationFee: Number(consultationFee),
+        platformFee: Number(platformFee),
+        gst: 0,
+        paymentMethod: 'razorpay',
       },
     });
   };

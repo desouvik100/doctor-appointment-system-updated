@@ -13,7 +13,11 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import shadows from '../../theme/shadows';
-import apiClient from '../../services/api/apiClient';
+import apiClient, {
+  getAuthToken,
+  getRefreshToken,
+  saveAuthToken,
+} from '../../services/api/apiClient';
 import { useUser } from '../../context/UserContext';
 import UpiAppIcon from '../../components/payment/UpiAppIcon';
 import Svg, { Path, Rect, G, Defs, LinearGradient as SvgGradient, Stop, Text as SvgText } from 'react-native-svg';
@@ -178,18 +182,121 @@ const PaymentScreen = ({ navigation, route }) => {
     } catch { /* silent */ }
   };
 
+  /**
+   * Pre-flight session guard.
+   * Validates the stored access token *before* firing the checkout request.
+   * If the token is absent or the storage read indicates an expired session,
+   * we proactively await a refresh cycle so the subsequent HTTP call is sent
+   * with a guaranteed-fresh Authorization header.
+   * This eliminates the synchronization race-condition that caused
+   * POST /appointments/queue-booking to fail with a backend state mismatch.
+   *
+   * @returns {Promise<boolean>} true if a valid session is confirmed
+   * @throws {Error}            when no refresh token exists and we cannot recover
+   */
+  const ensureFreshToken = async () => {
+    try {
+      const currentToken = await getAuthToken();
+      if (currentToken) {
+        // Token exists — pass through; the Axios request interceptor will
+        // attach it. If the server still returns 401 the response interceptor
+        // handles the refresh automatically.
+        console.log('🔑 [Checkout Guard] Valid session token confirmed');
+        return true;
+      }
+
+      // No token found in either storage — attempt a proactive refresh
+      console.log('⚠️ [Checkout Guard] No access token found. Attempting proactive refresh...');
+      const refreshToken = await getRefreshToken();
+      if (!refreshToken) {
+        throw new Error('Session expired. Please log in again to complete your booking.');
+      }
+
+      const { default: axios } = await import('axios');
+      const { API_URL } = await import('../../config/env');
+      const refreshRes = await axios.post(`${API_URL}/auth/refresh`, { refreshToken });
+      const newToken = refreshRes.data?.token;
+      if (!newToken) {
+        throw new Error('Token refresh returned no access token. Please log in again.');
+      }
+
+      await saveAuthToken(newToken);
+      console.log('✅ [Checkout Guard] Proactive token refresh succeeded');
+      return true;
+    } catch (err) {
+      console.error('❌ [Checkout Guard] Session validation failed:', err.message);
+      throw err;
+    }
+  };
+
   // Create the appointment right before payment — queue only increments on confirmed payment
   const createAppointmentNow = async () => {
     if (createdAppointmentId.current) return createdAppointmentId.current;
     if (!pendingBooking) return null;
-    const res = await apiClient.post('/appointments/queue-booking', {
-      ...pendingBooking,
+
+    // ── Pre-flight token validation ──────────────────────────────────────
+    await ensureFreshToken();
+    // ─────────────────────────────────────────────────────────────────────
+
+    // Map the frontend paymentMethod to a valid backend schema enum value.
+    // Backend payment.paymentMethod enum: ["card", "upi", "netbanking", "wallet"]
+    // 'razorpay' is NOT a valid enum — map it to 'card' (Razorpay default gateway).
+    const rawMethod = selectedMethod || 'upi';
+    const backendPaymentMethod = rawMethod === 'wallet'
+      ? 'wallet'
+      : rawMethod === 'upi'
+        ? 'upi'
+        : rawMethod === 'netbanking'
+          ? 'netbanking'
+          : 'card'; // card / razorpay / anything else → 'card'
+
+    const consultationFee = Number(doctor?.consultationFee || doctor?.fee || 500);
+    const platformFee = Math.round(consultationFee * 0.05);
+    const totalAmount = consultationFee + platformFee;
+
+    // Build the final payload — all fields the backend queue-booking controller needs
+    const bookingPayload = {
+      // IDs — guaranteed flat strings from SlotSelectionScreen
+      userId:  pendingBooking.userId,
+      doctorId: pendingBooking.doctorId,
+      clinicId: pendingBooking.clinicId,
+
+      // Date & time — both required by Appointment schema
+      date: pendingBooking.date,
+      time: pendingBooking.time || time || '09:00 AM',
+
+      // Slot metadata
+      ...(pendingBooking.slotId ? { slotId: pendingBooking.slotId } : {}),
+      slotType: pendingBooking.slotType || (pendingBooking.consultationType === 'online' ? 'online' : 'clinic'),
+
+      // Appointment details
+      reason: pendingBooking.reason || 'General Consultation',
+      consultationType: pendingBooking.consultationType || 'in_person',
+      urgencyLevel: pendingBooking.urgencyLevel || 'normal',
+
+      // Payment initialization — required for pending_payment status
       status: 'pending_payment',
       paymentStatus: 'pending',
+      paymentMethod: backendPaymentMethod,   // valid enum: card | upi | netbanking | wallet
+      amount: totalAmount,
+      amountInPaisa: totalAmount * 100,
+      consultationFee,
+      platformFee,
+      gst: 0,
+
+      // Notification prefs
       reminderPreference: 'email',
       sendEstimatedTimeEmail: false,
-    });
-    const id = res.data?._id || res.data?.id || res.data?.appointmentId;
+    };
+
+    console.log('QUEUE BOOKING PAYLOAD', JSON.stringify(bookingPayload, null, 2));
+
+    const res = await apiClient.post('/appointments/queue-booking', bookingPayload);
+
+    console.log('QUEUE BOOKING RESPONSE', res.data);
+
+    const id = res.data?._id || res.data?.id || res.data?.appointmentId
+      || res.data?.appointment?._id || res.data?.appointment?.id;
     createdAppointmentId.current = id;
     return id;
   };
@@ -229,7 +336,26 @@ const PaymentScreen = ({ navigation, route }) => {
       Alert.alert('Error', 'Appointment info missing. Please try again.');
       return;
     }
-    
+
+    // ── Top-level session validation guard ──────────────────────────────────
+    // Validate the access token BEFORE any network call in this function:
+    // create-order, wallet/pay, and the RazorpayPayment navigation all require
+    // a live Authorization header. A token that expired between the user
+    // landing on this screen and pressing Pay would cause silent 401 failures
+    // on any of those calls. We pause execution here and proactively refresh
+    // so the entire payment handshake runs with a guaranteed-fresh token.
+    try {
+      await ensureFreshToken();
+    } catch (sessionErr) {
+      Alert.alert(
+        'Session Expired',
+        sessionErr.message || 'Your session has expired. Please log in again.',
+        [{ text: 'Log In', onPress: () => navigation.navigate('Welcome') }]
+      );
+      return;
+    }
+    // ────────────────────────────────────────────────────────────────────────
+
     // Extract userId with multiple fallbacks
     const userId = user?.id || user?._id || user?.userId;
     

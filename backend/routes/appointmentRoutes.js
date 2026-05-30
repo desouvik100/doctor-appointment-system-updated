@@ -922,12 +922,13 @@ router.post('/queue-booking', async (req, res) => {
   try {
     const { userId, doctorId, clinicId, date, reason, consultationType, urgencyLevel, reminderPreference, sendEstimatedTimeEmail } = req.body;
 
-    console.log('📋 Queue booking request:', { userId, doctorId, clinicId, date, consultationType });
+    // DEBUG: log full incoming body to catch payload mismatches
+    console.log('QUEUE BOOKING BODY', JSON.stringify(req.body, null, 2));
 
     // Validate required fields (reason is now optional)
     if (!userId || !doctorId || !date) {
       console.error('❌ Missing required fields:', { userId: !!userId, doctorId: !!doctorId, date: !!date });
-      return res.status(400).json({ message: 'User, doctor and date are required' });
+      return res.status(400).json({ message: 'User, doctor and date are required', missing: { userId: !userId, doctorId: !doctorId, date: !date } });
     }
 
     // Validate date format
@@ -1037,29 +1038,40 @@ router.post('/queue-booking', async (req, res) => {
     // Get payment status from request (for Razorpay integration)
     const requestedPaymentStatus = req.body.paymentStatus || 'pending';
     const requestedStatus = req.body.status || 'pending_payment';
-    
+
+    // Sanitize paymentMethod against schema enum: ["card", "upi", "netbanking", "wallet"]
+    // Frontend may send 'razorpay' which is NOT a valid enum value — default to 'card'
+    const VALID_PAYMENT_METHODS = ['card', 'upi', 'netbanking', 'wallet'];
+    const rawPaymentMethod = req.body.paymentMethod || 'card';
+    const safePaymentMethod = VALID_PAYMENT_METHODS.includes(rawPaymentMethod) ? rawPaymentMethod : 'card';
+
+    // Use time from request if provided (frontend sends selected slot time),
+    // otherwise fall back to the auto-calculated estimated queue time
+    const appointmentTime = req.body.time || estimatedTime;
+
     const appointmentData = {
       userId,
       doctorId,
-      clinicId: resolvedClinicId, // Use resolved clinicId
-      date: appointmentDate, // Use properly parsed local date
-      time: estimatedTime,
-      tokenNumber: queueNumber, // Set tokenNumber same as queueNumber
+      clinicId: resolvedClinicId,
+      date: appointmentDate,
+      time: appointmentTime,
+      tokenNumber: queueNumber,
       queueNumber,
       estimatedArrivalTime: estimatedTime,
       reason: appointmentReason,
       consultationType: consultationType || 'in_person',
       urgencyLevel: urgencyLevel || 'normal',
       reminderPreference: reminderPreference || 'email',
-      status: requestedStatus, // Use requested status (pending_payment or confirmed)
-      paymentStatus: requestedPaymentStatus, // Use requested payment status
+      status: requestedStatus,
+      paymentStatus: requestedPaymentStatus,
       payment: {
         consultationFee,
         gst,
         platformFee,
         totalAmount,
-        paymentStatus: requestedPaymentStatus
-      }
+        paymentStatus: requestedPaymentStatus,
+        paymentMethod: safePaymentMethod,   // always a valid enum value
+      },
     };
 
     console.log('📝 Creating appointment with data:', JSON.stringify(appointmentData, null, 2));
