@@ -28,7 +28,15 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
   } = route.params || {};
 
   const [verifying, setVerifying] = useState(false);
+  const [authToken, setAuthToken] = useState(null);
   const webViewRef = useRef(null);
+
+  // Load auth token so the WebView can pass it to the ownership-validated checkout endpoint
+  useEffect(() => {
+    import('../../services/api/apiClient').then(({ getAuthToken }) => {
+      getAuthToken().then(token => setAuthToken(token)).catch(() => {});
+    }).catch(() => {});
+  }, []);
 
   // Build the checkout URL served by the backend
   const checkoutUrl = `${BASE_URL}/api/payments/mobile-checkout/${orderId}?` +
@@ -40,6 +48,11 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
     `&doctorName=${encodeURIComponent(doctor?.name || 'Doctor')}` +
     (method ? `&method=${encodeURIComponent(method)}` : '') +
     (upiApp ? `&upiApp=${encodeURIComponent(upiApp)}` : '');
+
+  // Headers for the WebView — passes JWT so the backend can validate ownership
+  const webViewHeaders = authToken
+    ? { Authorization: `Bearer ${authToken}` }
+    : {};
 
   // Handle deep link callbacks from the payment page
   useEffect(() => {
@@ -151,7 +164,7 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
       ) : (
         <WebView
           ref={webViewRef}
-          source={{ uri: checkoutUrl }}
+          source={{ uri: checkoutUrl, headers: webViewHeaders }}
           onShouldStartLoadWithRequest={handleNavigationChange}
           javaScriptEnabled
           domStorageEnabled

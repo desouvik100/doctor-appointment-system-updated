@@ -5,6 +5,19 @@ const Appointment = require('../models/Appointment');
 const { USE_RAZORPAY_PAYMENTS, RAZORPAY_KEY_ID, FRONTEND_URL, BACKEND_URL } = require('../config/paymentConfig');
 const { verifyToken } = require('../middleware/auth');
 
+// ── WEBHOOK REPLAY PROTECTION ─────────────────────────────────────────────
+// In-memory store of processed Razorpay event IDs (TTL: 24 hours).
+// Prevents duplicate payment confirmations from replayed webhook calls.
+// Replace with Redis SET in multi-instance deployments.
+const processedWebhookEvents = new Map();
+setInterval(() => {
+  const cutoff = Date.now() - 24 * 60 * 60 * 1000; // 24h ago
+  for (const [id, ts] of processedWebhookEvents.entries()) {
+    if (ts < cutoff) processedWebhookEvents.delete(id);
+  }
+}, 60 * 60 * 1000); // clean up every hour
+// ─────────────────────────────────────────────────────────────────────────
+
 // Get payment calculation for appointment (authenticated users)
 router.get('/calculate/:appointmentId', verifyToken, async (req, res) => {
   try {
@@ -513,10 +526,33 @@ router.get('/razorpay-cancel', async (req, res) => {
 });
 
 // Mobile Payment Page - serves a full-page Razorpay checkout for Android
-router.get('/mobile-checkout/:orderId', async (req, res) => {
+// verifyToken validates the session; ownership check ensures the orderId
+// belongs to the authenticated user's appointment.
+router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
   try {
     const { orderId } = req.params;
     const { appointmentId, amount, name, email, contact, doctorName, method, upiApp } = req.query;
+
+    // ── OWNERSHIP VALIDATION ──────────────────────────────────────────────
+    // Verify the appointment belongs to the authenticated user.
+    // Prevents one user from loading another user's checkout page.
+    if (appointmentId) {
+      const appt = await Appointment.findById(appointmentId).select('userId razorpayOrderId').lean();
+      if (!appt) {
+        return res.status(404).json({ error: 'Appointment not found' });
+      }
+      const tokenUserId = req.user?.id?.toString() || req.user?.userId?.toString();
+      if (tokenUserId && appt.userId?.toString() !== tokenUserId) {
+        console.error(`❌ Checkout ownership mismatch: token=${tokenUserId} appt.userId=${appt.userId}`);
+        return res.status(403).json({ error: 'Access denied — appointment does not belong to this user' });
+      }
+      // Verify the orderId matches what we stored for this appointment
+      if (appt.razorpayOrderId && appt.razorpayOrderId !== orderId) {
+        console.error(`❌ Checkout orderId mismatch: param=${orderId} stored=${appt.razorpayOrderId}`);
+        return res.status(403).json({ error: 'Order ID mismatch' });
+      }
+    }
+    // ─────────────────────────────────────────────────────────────────────
     
     // Map upiApp param to Razorpay's app name
     const upiAppMap = { gpay: 'google_pay', phonepe: 'phonepe', paytm: 'paytm', bhim: 'bhim' };
@@ -990,6 +1026,21 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         return res.status(400).json({ error: 'Invalid signature' });
       }
     }
+
+    // ── REPLAY ATTACK PROTECTION ──────────────────────────────────────────
+    // Razorpay sends a unique event ID in every webhook payload.
+    // We track processed event IDs in-memory (TTL 24h) to reject replays.
+    // In a multi-instance deployment, replace this with a Redis SET.
+    const eventId = req.body?.id;
+    if (eventId) {
+      if (processedWebhookEvents.has(eventId)) {
+        console.warn(`⚠️ Webhook replay blocked: event ${eventId} already processed`);
+        return res.status(200).json({ received: true, duplicate: true });
+      }
+      // Mark as processed — auto-expire after 24 hours
+      processedWebhookEvents.set(eventId, Date.now());
+    }
+    // ─────────────────────────────────────────────────────────────────────
     
     const event = req.body;
     console.log('📥 Razorpay webhook received:', event.event);
