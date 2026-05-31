@@ -49,11 +49,12 @@ router.post('/send-otp', async (req, res) => {
       });
     }
 
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(cleanEmail)) {
+    const isEmail = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(cleanEmail);
+    const isPhone = /^\+?[0-9]{10,15}$/.test(cleanEmail);
+    if (!isEmail && !isPhone) {
       return res.status(400).json({
         success: false,
-        message: "Invalid email format"
+        message: "Invalid email or phone format"
       });
     }
 
@@ -105,13 +106,17 @@ router.post('/send-otp', async (req, res) => {
 
     console.log('📧 OTP send result for', cleanEmail, ':', result);
 
-    // Always return success with OTP - email may or may not have been sent
+    // Always return success with OTP - email or SMS may or may not have been sent
     const response = {
       success: true,
-      message: "Verification code generated. Please check your email. If you don't receive it, use the code shown below.",
-      // Return OTP for cases where email doesn't work
+      message: isPhone
+        ? "Verification code generated. Please check your SMS. If you don't receive it, use the code shown below."
+        : "Verification code generated. Please check your email. If you don't receive it, use the code shown below.",
+      // Return OTP for cases where SMS/email doesn't work
       otp: result.otp,
-      note: "If email is not received within 2 minutes, you can use this OTP directly"
+      note: isPhone
+        ? "If SMS is not received within 2 minutes, you can use this OTP directly"
+        : "If email is not received within 2 minutes, you can use this OTP directly"
     };
 
     return res.status(200).json(response);

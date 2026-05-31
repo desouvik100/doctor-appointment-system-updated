@@ -271,7 +271,7 @@ const AdminDashboardScreen = ({ navigation }) => {
         </View>
 
         {/* Pending Approvals Alert */}
-        {pendingApprovals.total > 0 && (
+        {pendingApprovals?.total > 0 && (
           <View style={styles.section}>
             <TouchableOpacity 
               style={[styles.alertCard, { backgroundColor: colors.warningLight, borderColor: colors.warning }]}
@@ -282,14 +282,14 @@ const AdminDashboardScreen = ({ navigation }) => {
                 <Text style={styles.alertIcon}>⚠️</Text>
                 <View style={styles.alertText}>
                   <Text style={[styles.alertTitle, { color: colors.warning }]}>
-                    {pendingApprovals.total} Pending Approval{pendingApprovals.total > 1 ? 's' : ''}
+                    {pendingApprovals?.total} Pending Approval{pendingApprovals?.total > 1 ? 's' : ''}
                   </Text>
                   <Text style={[styles.alertSubtext, { color: colors.textSecondary }]}>
-                    {pendingApprovals.doctors > 0 && `${pendingApprovals.doctors} doctors`}
-                    {pendingApprovals.doctors > 0 && pendingApprovals.staff > 0 && ', '}
-                    {pendingApprovals.staff > 0 && `${pendingApprovals.staff} staff`}
-                    {(pendingApprovals.doctors > 0 || pendingApprovals.staff > 0) && pendingApprovals.clinics > 0 && ', '}
-                    {pendingApprovals.clinics > 0 && `${pendingApprovals.clinics} clinics`}
+                    {pendingApprovals?.doctors > 0 && `${pendingApprovals?.doctors} doctors`}
+                    {pendingApprovals?.doctors > 0 && pendingApprovals?.staff > 0 && ', '}
+                    {pendingApprovals?.staff > 0 && `${pendingApprovals?.staff} staff`}
+                    {(pendingApprovals?.doctors > 0 || pendingApprovals?.staff > 0) && pendingApprovals?.clinics > 0 && ', '}
+                    {pendingApprovals?.clinics > 0 && `${pendingApprovals?.clinics} clinics`}
                   </Text>
                 </View>
               </View>
@@ -298,6 +298,7 @@ const AdminDashboardScreen = ({ navigation }) => {
           </View>
         )}
 
+
         {/* Quick Actions */}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
@@ -305,19 +306,19 @@ const AdminDashboardScreen = ({ navigation }) => {
             <QuickAction 
               icon="👨‍⚕️" 
               label="Doctors" 
-              badge={pendingApprovals.doctors}
+              badge={pendingApprovals?.doctors}
               onPress={() => navigation.navigate('AdminDoctors')}
             />
             <QuickAction 
               icon="👩‍💼" 
               label="Staff" 
-              badge={pendingApprovals.staff}
+              badge={pendingApprovals?.staff}
               onPress={() => navigation.navigate('AdminStaff')}
             />
             <QuickAction 
               icon="🏥" 
               label="Clinics" 
-              badge={pendingApprovals.clinics}
+              badge={pendingApprovals?.clinics}
               onPress={() => navigation.navigate('AdminClinics')}
             />
             <QuickAction 

@@ -116,12 +116,12 @@ const AdminReportsScreen = ({ navigation }) => {
         )}
 
         {/* Demographics */}
-        {demographics.ageGroups && (
+        {demographics?.ageGroups && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Patient Demographics</Text>
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Age Distribution</Text>
-              {demographics.ageGroups.map((group, index) => (
+              {demographics?.ageGroups?.map((group, index) => (
                 <View key={index} style={styles.demoRow}>
                   <Text style={[styles.demoLabel, { color: colors.textSecondary }]}>{group._id}</Text>
                   <View style={styles.demoBar}>
@@ -133,6 +133,7 @@ const AdminReportsScreen = ({ navigation }) => {
             </View>
           </>
         )}
+
 
         {/* Quick Actions */}
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Export Data</Text>

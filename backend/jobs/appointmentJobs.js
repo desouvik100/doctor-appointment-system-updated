@@ -26,10 +26,15 @@ async function autoCancelExpiredPending() {
     const twentyFourHoursAgo = new Date();
     twentyFourHoursAgo.setHours(twentyFourHoursAgo.getHours() - 24);
 
-    // Find pending appointments older than 24 hours
+    const fifteenMinutesAgo = new Date();
+    fifteenMinutesAgo.setMinutes(fifteenMinutesAgo.getMinutes() - 15);
+
+    // Find pending appointments older than 24 hours OR pending_payment older than 15 minutes
     const expiredAppointments = await Appointment.find({
-      status: { $in: ['pending', 'pending_payment'] },
-      createdAt: { $lt: twentyFourHoursAgo }
+      $or: [
+        { status: 'pending', createdAt: { $lt: twentyFourHoursAgo } },
+        { status: 'pending_payment', createdAt: { $lt: fifteenMinutesAgo } }
+      ]
     })
       .populate('userId', 'name email')
       .populate('doctorId', 'name')
@@ -41,9 +46,12 @@ async function autoCancelExpiredPending() {
 
     for (const appointment of expiredAppointments) {
       try {
+        const isFifteenMinCancel = appointment.status === 'pending_payment';
         // Update appointment status
         appointment.status = 'cancelled';
-        appointment.cancellationReason = 'Automatically cancelled - Payment not completed within 24 hours';
+        appointment.cancellationReason = isFifteenMinCancel 
+          ? 'Automatically cancelled - Payment not completed within 15 minutes'
+          : 'Automatically cancelled - Booking not completed within 24 hours';
         appointment.cancelledBy = 'system';
         appointment.cancelledAt = new Date();
         await appointment.save();
@@ -303,7 +311,7 @@ async function sendCancellationEmail(appointment) {
         <div class="content">
           <p>Hello ${patient.name},</p>
           <p>Your appointment with <strong>Dr. ${doctor.name}</strong> scheduled for <strong>${new Date(appointment.date).toLocaleDateString()}</strong> at <strong>${appointment.time}</strong> has been automatically cancelled.</p>
-          <p><strong>Reason:</strong> Payment was not completed within 24 hours of booking.</p>
+          <p><strong>Reason:</strong> ${appointment.cancellationReason || 'Payment was not completed within the required time.'}</p>
           <p>If you'd like to reschedule, please book a new appointment through the app.</p>
           <center>
             <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/doctors" class="btn">
@@ -358,8 +366,8 @@ async function runAllAppointmentJobs() {
 function initializeAppointmentJobs() {
   console.log('📅 Initializing appointment job scheduler...');
 
-  // Auto-cancel expired pending appointments - every hour
-  cron.schedule('0 * * * *', async () => {
+  // Auto-cancel expired pending appointments - every 15 minutes
+  cron.schedule('*/15 * * * *', async () => {
     console.log('⏰ Running auto-cancel expired pending job...');
     await autoCancelExpiredPending();
   });
@@ -383,7 +391,7 @@ function initializeAppointmentJobs() {
   });
 
   console.log('✅ Appointment jobs scheduled:');
-  console.log('   - Auto-cancel expired: Every hour');
+  console.log('   - Auto-cancel expired: Every 15 minutes');
   console.log('   - Auto-complete past: Every 2 hours');
   console.log('   - Mark no-show: Every 30 minutes');
   console.log('   - Update queue: Every 15 minutes');

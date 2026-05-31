@@ -111,7 +111,7 @@ const LoginScreen = ({ navigation }) => {
       const { user, token } = await authService.login({ email: email.trim().toLowerCase(), password });
       await login(user, token);
       const userId = user?.id || user?._id;
-      if (userId) NotificationService.registerDeviceAfterLogin(userId).catch(() => {});
+      if (userId) NotificationService.registerDeviceAfterLogin(userId).catch(err => console.warn('Device registration failed:', err.message));
       setLoggedInUser(user);
       setIsEmailLogin(true);
       setShowSuccessAnimation(true);
@@ -133,7 +133,7 @@ const LoginScreen = ({ navigation }) => {
   const handleAnimationComplete = () => {
     setShowSuccessAnimation(false);
     if (isEmailLogin && biometricAvailable && !hasStoredCredentials && email && password) {
-      biometricService.enableBiometricLogin(email.trim().toLowerCase(), password).catch(() => {});
+      biometricService.enableBiometricLogin(email.trim().toLowerCase(), password).catch(err => console.warn('Biometric setup failed:', err.message));
     }
     navigation.replace('Main');
     setIsEmailLogin(false);
@@ -145,7 +145,7 @@ const LoginScreen = ({ navigation }) => {
       const { user, token } = await authService.login({ email: credentials.email, password: credentials.password });
       await login(user, token);
       const userId = user?.id || user?._id;
-      if (userId) NotificationService.registerDeviceAfterLogin(userId).catch(() => {});
+      if (userId) NotificationService.registerDeviceAfterLogin(userId).catch(err => console.warn('Device registration failed:', err.message));
       setLoggedInUser(user);
       setShowSuccessAnimation(true);
     } catch {
@@ -163,7 +163,7 @@ const LoginScreen = ({ navigation }) => {
       const { user, token } = await fn();
       await login(user, token);
       const userId = user?.id || user?._id;
-      if (userId) NotificationService.registerDeviceAfterLogin(userId).catch(() => {});
+      if (userId) NotificationService.registerDeviceAfterLogin(userId).catch(err => console.warn('Device registration failed:', err.message));
       setLoggedInUser(user);
       setShowSuccessAnimation(true);
     } catch (error) {

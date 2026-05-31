@@ -83,11 +83,12 @@ const SearchBar = ({
         style={[styles.input, { color: colors.textPrimary }]}
       />
       
-      {value.length > 0 && (
+      {value && value.length > 0 && (
         <TouchableOpacity onPress={handleClear} style={[styles.clearButton, { backgroundColor: colors.surface }]}>
           <Text style={[styles.clearIcon, { color: colors.textSecondary }]}>✕</Text>
         </TouchableOpacity>
       )}
+
       
       {showFilter && (
         <TouchableOpacity onPress={onFilterPress} style={[styles.filterButton, { backgroundColor: colors.primaryLight }]}>

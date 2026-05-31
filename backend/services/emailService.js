@@ -192,6 +192,31 @@ async function sendOTP(email, type = 'register') {
   // Store OTP immediately with normalized email
   otpStore.set(key, { otp, expiresAt });
 
+  const isPhone = /^\+?[0-9]{10,15}$/.test(normalizedEmail);
+  if (isPhone) {
+    console.log('═══════════════════════════════════════');
+    console.log('🔐 PHONE OTP GENERATED & ROUTED');
+    console.log('Phone (normalized):', normalizedEmail);
+    console.log('Type:', type);
+    console.log('Key:', key);
+    console.log('OTP CODE:', otp);
+    console.log('Valid for: 10 minutes');
+    console.log('═══════════════════════════════════════');
+
+    try {
+      const smsService = require('./smsService');
+      await smsService.sendOTPSMS(normalizedEmail, otp);
+    } catch (smsError) {
+      console.warn('⚠️ Phone OTP SMS sending failed, but OTP is still valid:', smsError.message);
+    }
+
+    return {
+      success: true,
+      message: 'OTP generated successfully. Check your SMS or console logs.',
+      otp: otp, // Return OTP for development/testing
+    };
+  }
+
   console.log('═══════════════════════════════════════');
   console.log('🔐 OTP GENERATED');
   console.log('Email (normalized):', normalizedEmail);

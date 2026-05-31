@@ -64,11 +64,13 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
   const formatAppointment = (apt) => ({
     id: apt._id || apt.id,
     doctor: {
+      id: apt.doctorId?._id || apt.doctorId || apt.doctor?._id || apt.doctor?.id,
       name: apt.doctorName || apt.doctor?.name || 'Doctor',
       specialty: apt.specialty || apt.doctor?.specialty || 'Specialist',
       fee: apt.fee || apt.doctor?.fee || apt.doctor?.consultationFee || 500,
       photo: apt.doctorPhoto || apt.doctor?.profilePhoto,
     },
+
     date: apt.date || apt.appointmentDate,
     time: apt.time || apt.timeSlot || apt.estimatedTime || dayjs(apt.appointmentDate).format('h:mm A'),
     type: apt.consultationType === 'online' || apt.type === 'video' ? 'video' : 'clinic',

@@ -99,6 +99,7 @@ const PaymentScreen = ({ navigation, route }) => {
   const pendingOrderId = useRef(null);
   const appStateRef = useRef(AppState.currentState);
   const pollingTimer = useRef(null);
+  const pollingInProgress = useRef(false);
 
   const consultationFee = doctor?.fee || doctor?.consultationFee || 500;
   const platformFee = Math.round(consultationFee * 0.05);
@@ -136,10 +137,15 @@ const PaymentScreen = ({ navigation, route }) => {
   const handleAppStateChange = async (nextState) => {
     if (appStateRef.current.match(/inactive|background/) && nextState === 'active') {
       // App came back to foreground — check if UPI payment completed
-      // Only poll if pendingOrderId is set (UPI payment flow)
-      if (pendingOrderId.current && createdAppointmentId.current) {
+      // Only poll if pendingOrderId is set (UPI payment flow) and not already polling
+      if (pendingOrderId.current && createdAppointmentId.current && !pollingInProgress.current) {
+        pollingInProgress.current = true;
         console.log('🔄 App returned to foreground, polling UPI payment status...');
-        await pollPaymentStatus(pendingOrderId.current);
+        try {
+          await pollPaymentStatus(pendingOrderId.current);
+        } finally {
+          pollingInProgress.current = false;
+        }
       }
     }
     appStateRef.current = nextState;
@@ -181,6 +187,60 @@ const PaymentScreen = ({ navigation, route }) => {
       setWalletBalance(res.data?.balance || 0);
     } catch { /* silent */ }
   };
+
+  /**
+   * Verify payment completion for an appointment
+   * This is called as a safety net to detect payments that completed
+   * in external apps (UPI, banking apps) and ensure the appointment is confirmed.
+   *
+   * @param {string} appointmentId - The appointment to verify
+   * @returns {Promise<boolean>} true if payment was verified and appointment confirmed
+   */
+  const verifyPaymentCompletion = async (appointmentId) => {
+    if (!appointmentId) return false;
+    try {
+      const res = await apiClient.get(`/payments/status/${appointmentId}`);
+      const data = res.data || {};
+
+      if (data.paymentStatus === 'completed' || data.status === 'confirmed') {
+        console.log('✅ Payment verification successful for appointment:', appointmentId);
+        return true;
+      }
+      return false;
+    } catch (err) {
+      console.warn('⚠️ Payment verification check failed:', err.message);
+      return false;
+    }
+  };
+
+  /**
+   * Safety check on mount: if there's a pending appointment from a previous session,
+   * verify its payment status. This handles cases where payment succeeded but
+   * app crashed or user force-closed before seeing confirmation.
+   */
+  useEffect(() => {
+    const checkPendingPayment = async () => {
+      if (!createdAppointmentId.current && appointmentId) {
+        const isConfirmed = await verifyPaymentCompletion(appointmentId);
+        if (isConfirmed) {
+          navigation.replace('BookingConfirmation', {
+            booking: {
+              id: appointmentId,
+              doctor,
+              date,
+              time,
+              queueNumber,
+              consultationType,
+              patient,
+              amount: totalAmount,
+              paymentMethod: selectedMethod,
+            },
+          });
+        }
+      }
+    };
+    checkPendingPayment();
+  }, [appointmentId]);
 
   /**
    * Pre-flight session guard.
@@ -250,23 +310,20 @@ const PaymentScreen = ({ navigation, route }) => {
           ? 'netbanking'
           : 'card'; // card / razorpay / anything else → 'card'
 
-    // Force clean database string primitives for IDs, handling potential nested objects
-    const rawUserId = pendingBooking.userId || user?.id || user?._id || user?.userId;
-    const cleanUserId = rawUserId && typeof rawUserId === 'object'
-      ? String(rawUserId._id || rawUserId.id || '')
-      : String(rawUserId || '');
+    // Safe ID extraction helper
+    const extractId = (obj) => {
+      if (!obj) return '';
+      if (typeof obj === 'string') return String(obj).trim();
+      if (typeof obj === 'object' && (obj._id || obj.id)) {
+        return String(obj._id || obj.id).trim();
+      }
+      return '';
+    };
 
-    const rawDoctorId = pendingBooking.doctorId || doctor?._id || doctor?.id;
-    const cleanDoctorId = rawDoctorId && typeof rawDoctorId === 'object'
-      ? String(rawDoctorId._id || rawDoctorId.id || '')
-      : String(rawDoctorId || '');
-
-    const rawClinicId = pendingBooking.clinicId || doctor?.clinicId?._id || doctor?.clinicId;
-    const cleanClinicId = rawClinicId
-      ? (typeof rawClinicId === 'object'
-        ? String(rawClinicId._id || rawClinicId.id || '')
-        : String(rawClinicId))
-      : null;
+    // Force clean database string primitives for IDs
+    const cleanUserId = extractId(pendingBooking.userId || user?.id || user?._id || user?.userId);
+    const cleanDoctorId = extractId(pendingBooking.doctorId || doctor?._id || doctor?.id);
+    const cleanClinicId = extractId(pendingBooking.clinicId || doctor?.clinicId?._id || doctor?.clinicId) || null;
 
     const selectedTime = pendingBooking.time || time || '12:30 PM';
     const cleanSlotId = pendingBooking.slotId || null;

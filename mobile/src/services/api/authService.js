@@ -2,11 +2,12 @@
  * Authentication Service - Login, Register, OTP, Password Reset
  */
 
-import apiClient, { 
-  saveAuthToken, 
-  saveRefreshToken, 
+import { Platform } from 'react-native';
+import apiClient, {
+  saveAuthToken,
+  saveRefreshToken,
   clearAuthTokens,
-  getAuthToken 
+  getAuthToken
 } from './apiClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Keychain from 'react-native-keychain';
@@ -67,21 +68,22 @@ export const doctorLogin = async (credentials) => {
   try {
     const response = await apiClient.post('/auth/doctor/login', credentials);
     const data = response?.data || {};
-    
+
     if (!data.token || !data.doctor) {
       throw new Error('Invalid doctor login response from server');
     }
-    
+
     const { token, refreshToken, doctor } = data;
-    
+
     await saveAuthToken(token);
     if (refreshToken) {
       await saveRefreshToken(refreshToken);
     }
     // Store doctor as user for consistency
-    const user = { ...doctor, role: 'doctor' };
+    // Preserve backend role if provided, otherwise default to 'doctor'
+    const user = { ...doctor, role: doctor.role || 'doctor' };
     await saveUserLocal(user);
-    
+
     return { token, user };
   } catch (error) {
     console.error('Doctor login error:', error);
@@ -336,9 +338,9 @@ export const isAuthenticated = async () => {
  * Register device for push notifications
  */
 export const registerDeviceToken = async (deviceToken) => {
-  const response = await apiClient.post('/auth/device-token', { 
+  const response = await apiClient.post('/auth/device-token', {
     deviceToken,
-    platform: 'android'
+    platform: Platform.OS // Automatically detects 'ios' or 'android'
   });
   return response.data;
 };

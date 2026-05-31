@@ -252,8 +252,26 @@ class RazorpayService {
         throw new Error('Appointment not found');
       }
 
+      // Check if already completed
+      if (appointment.paymentStatus === 'completed') {
+        console.log(`ℹ️ Payment already verified and completed for appointment: ${appointmentId}`);
+        return {
+          success: true,
+          verified: true,
+          alreadyCompleted: true,
+          appointment,
+          paymentDetails: {
+            orderId: razorpay_order_id,
+            paymentId: razorpay_payment_id,
+            amount: appointment.paymentDetails?.amount || 0,
+            method: appointment.paymentDetails?.method || 'Razorpay'
+          }
+        };
+      }
+
       // Fetch payment details from Razorpay
       const payment = await razorpay.payments.fetch(razorpay_payment_id);
+
       console.log('📦 Payment details:', payment);
 
       // Update appointment with payment details

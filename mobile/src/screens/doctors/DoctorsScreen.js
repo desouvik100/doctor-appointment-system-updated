@@ -21,8 +21,10 @@ import LinearGradient from 'react-native-linear-gradient';
 import shadows from '../../theme/shadows';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import DoctorCard from '../../components/cards/DoctorCard';
+import Avatar from '../../components/common/Avatar';
 import doctorService from '../../services/api/doctorService';
 import { useTheme } from '../../context/ThemeContext';
+
 
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -99,11 +101,14 @@ const DoctorsScreen = ({ navigation }) => {
   };
 
   const renderDoctorItem = useCallback(({ item }) => (
-    <DoctorCard
-      doctor={item}
+    <DoctorListItem
+      item={item}
+      colors={colors}
+      isDarkMode={isDarkMode}
       onPress={() => navigation.navigate('SlotSelection', { doctor: item })}
     />
-  ), [navigation]);
+  ), [navigation, colors, isDarkMode]);
+
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>

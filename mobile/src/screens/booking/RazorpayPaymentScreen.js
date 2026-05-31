@@ -68,8 +68,12 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
             });
           }
         } catch (e) {
-          Alert.alert('Error', 'Payment succeeded but confirmation failed. Please check My Appointments.');
-          navigation.navigate('Main');
+          console.error('❌ Payment success, but navigation failed:', e);
+          Alert.alert(
+            'Payment Confirmed',
+            'Your payment was successful! Your appointment has been booked.\n\nAppointment ID: ' + appointmentId,
+            [{ text: 'OK', onPress: () => navigation.navigate('Main') }]
+          );
         } finally {
           setVerifying(false);
         }
@@ -91,7 +95,7 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
     if (url.startsWith('healthsync://')) {
       if (url.includes('payment-success')) {
         setVerifying(true);
-        if (appointmentId?.startsWith('lab_')) {
+        if (appointmentId?.startsWith('lab_')) {0
           navigation.replace('LabTestConfirmation', {
             cart: route.params?.cart || [],
             total: amount,

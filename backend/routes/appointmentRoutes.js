@@ -920,13 +920,14 @@ router.post('/', verifyToken, async (req, res) => {
 // Queue-based booking (no time selection - auto-assigns queue position)
 // verifyToken ensures the request carries a valid session before touching the DB
 router.post('/queue-booking', verifyToken, async (req, res) => {
+  let session = null;
   try {
     const { userId, doctorId, clinicId, date, reason, consultationType, urgencyLevel, reminderPreference, sendEstimatedTimeEmail } = req.body;
 
     // DEBUG: log full incoming body to catch payload mismatches
     console.log('QUEUE BOOKING BODY', JSON.stringify(req.body, null, 2));
 
-    // Validate required fields (reason is now optional)
+    // Validate required fields
     if (!userId || !doctorId || !date) {
       console.error('❌ Missing required fields:', { userId: !!userId, doctorId: !!doctorId, date: !!date });
       return res.status(400).json({ message: 'User, doctor and date are required', missing: { userId: !userId, doctorId: !doctorId, date: !date } });
@@ -975,38 +976,55 @@ router.post('/queue-booking', verifyToken, async (req, res) => {
     }
 
     // Parse date correctly to avoid timezone issues
-    // Date comes as YYYY-MM-DD string, parse it as local date
     const [year, month, day] = date.split('-').map(Number);
     const appointmentDate = new Date(year, month - 1, day);
     appointmentDate.setHours(0, 0, 0, 0);
-    
-    // Get current queue count for this doctor on this date
-    // IMPORTANT: Separate queues for virtual and in-clinic appointments
+
     const startOfDay = new Date(appointmentDate);
     const endOfDay = new Date(appointmentDate);
     endOfDay.setHours(23, 59, 59, 999);
-    
-    // Determine consultation type (default to in_person)
+
+    // Start transaction session to guarantee atomicity and prevent race conditions
+    session = await mongoose.startSession();
+    session.startTransaction();
+
+    // 1. Duplicate Booking Protection: Check if user already has an active booking on this day with this doctor
+    const duplicateAppointment = await Appointment.findOne({
+      userId,
+      doctorId,
+      date: { $gte: startOfDay, $lte: endOfDay },
+      status: { $in: ['pending', 'pending_payment', 'confirmed', 'in_progress'] }
+    }).session(session);
+
+    if (duplicateAppointment) {
+      console.warn(`⚠️ DUPLICATE BOOKING BLOCKED: User ${userId} already has an active appointment with Doctor ${doctorId} on ${date}`);
+      await session.abortTransaction();
+      session.endSession();
+      return res.status(400).json({ 
+        success: false,
+        message: 'You already have an active appointment booked with this doctor for this day.' 
+      });
+    }
+
+    // 2. Resolve queue number and check capacity
     const appointmentConsultationType = consultationType || 'in_person';
     const isVirtual = appointmentConsultationType === 'online' || appointmentConsultationType === 'virtual';
-    
-    // Get appointments ONLY for the same consultation type (virtual or in-clinic)
-    // Exclude pending_payment — only count confirmed/in_progress for queue position
+
     const existingAppointments = await Appointment.find({
       doctorId,
       date: { $gte: startOfDay, $lte: endOfDay },
       status: { $in: ['confirmed', 'in_progress'] },
       consultationType: isVirtual ? { $in: ['online', 'virtual'] } : 'in_person'
-    }).sort({ queueNumber: -1 });
+    }).session(session).sort({ queueNumber: -1 });
 
     const currentQueueCount = existingAppointments.length;
-    
-    // Separate max slots for virtual and in-clinic
     const maxVirtualSlots = doctor.consultationSettings?.maxVirtualSlots || 15;
     const maxInClinicSlots = doctor.consultationSettings?.maxInClinicSlots || 20;
     const maxSlots = isVirtual ? maxVirtualSlots : maxInClinicSlots;
 
     if (currentQueueCount >= maxSlots) {
+      await session.abortTransaction();
+      session.endSession();
       return res.status(400).json({ 
         message: `No ${isVirtual ? 'virtual consultation' : 'in-clinic'} slots available for this date. Please select another date.`,
         isFull: true,
@@ -1014,48 +1032,32 @@ router.post('/queue-booking', verifyToken, async (req, res) => {
       });
     }
 
-    // Calculate queue number for THIS consultation type only
     const queueNumber = currentQueueCount + 1;
-    
-    // Get doctor's consultation duration (default 30 min)
-    // Can have different durations for virtual vs in-clinic
     const virtualDuration = doctor.consultationSettings?.virtualSlotDuration || doctor.consultationDuration || 20;
     const inClinicDuration = doctor.consultationSettings?.inClinicSlotDuration || doctor.consultationDuration || 30;
     const slotDuration = isVirtual ? virtualDuration : inClinicDuration;
-    
-    // Different start times for virtual and in-clinic
-    // Virtual: Can start earlier (8 AM), In-clinic: 9 AM
+
     const startHour = isVirtual ? 8 : 9;
     let minutesFromStart = (queueNumber - 1) * slotDuration;
     let hours = Math.floor(minutesFromStart / 60);
     let minutes = minutesFromStart % 60;
     let estimatedHour = startHour + hours;
-    
-    // Skip lunch hour (1 PM - 2 PM) for in-clinic only
+
     if (!isVirtual && estimatedHour >= 13) {
       estimatedHour += 1;
     }
-    
-    const estimatedTime = `${estimatedHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
 
-    // Calculate payment breakdown — 5% platform fee, no GST (matches frontend & verify-by-order calculation)
+    const estimatedTime = `${estimatedHour.toString().padStart(2, '0')}:${minutes.toString().padStart(2, '0')}`;
     const consultationFee = doctor.consultationFee || 500;
     const gst = 0;
     const platformFee = Math.round(consultationFee * 0.05);
     const totalAmount = consultationFee + platformFee;
-
-    // Get payment status from request (for Razorpay integration)
     const requestedPaymentStatus = req.body.paymentStatus || 'pending';
     const requestedStatus = req.body.status || 'pending_payment';
 
-    // Sanitize paymentMethod against schema enum: ["card", "upi", "netbanking", "wallet"]
-    // Frontend may send 'razorpay' which is NOT a valid enum value — default to 'card'
     const VALID_PAYMENT_METHODS = ['card', 'upi', 'netbanking', 'wallet'];
     const rawPaymentMethod = req.body.paymentMethod || 'card';
     const safePaymentMethod = VALID_PAYMENT_METHODS.includes(rawPaymentMethod) ? rawPaymentMethod : 'card';
-
-    // Use time from request if provided (frontend sends selected slot time),
-    // otherwise fall back to the auto-calculated estimated queue time
     const appointmentTime = req.body.time || estimatedTime;
 
     const appointmentData = {
@@ -1079,33 +1081,24 @@ router.post('/queue-booking', verifyToken, async (req, res) => {
         platformFee,
         totalAmount,
         paymentStatus: requestedPaymentStatus,
-        paymentMethod: safePaymentMethod,   // always a valid enum value
+        paymentMethod: safePaymentMethod,
       },
     };
 
     console.log('📝 Creating appointment with data:', JSON.stringify(appointmentData, null, 2));
-
     const appointment = new Appointment(appointmentData);
 
-    // Generate join code for online consultations
     if (appointment.consultationType === 'online') {
       appointment.generateJoinCode();
     }
 
-    try {
-      await appointment.save();
-    } catch (saveError) {
-      console.error('❌ Appointment save error:', saveError.message);
-      if (saveError.name === 'ValidationError') {
-        const errors = Object.keys(saveError.errors).map(key => `${key}: ${saveError.errors[key].message}`);
-        return res.status(400).json({ message: 'Validation error', errors });
-      }
-      throw saveError;
-    }
+    // Save within transaction
+    await appointment.save({ session });
+
+    // Commit transaction - booking is now atomic and secured
+    await session.commitTransaction();
+    session.endSession();
     console.log(`✅ Appointment saved: ${appointment._id}`);
-    
-    // ── Post-save operations: each wrapped independently so failures
-    //    never crash the booking response ──────────────────────────────
 
     // Generate appointment token
     let tokenResult = { success: false, token: null };
@@ -1118,7 +1111,7 @@ router.post('/queue-booking', verifyToken, async (req, res) => {
       console.error('❌ Token generation failed (non-fatal):', tokenError.message);
     }
 
-    // Send notifications — only if not pending payment, and never block the response
+    // Send notifications — only if not pending payment
     if (requestedStatus !== 'pending_payment') {
       const userReminderPref = reminderPreference || 'email';
       
@@ -1176,11 +1169,7 @@ router.post('/queue-booking', verifyToken, async (req, res) => {
       }
     }
 
-    // ── SIDE EFFECTS (non-critical — booking 201 is already guaranteed) ──────
-    // Each side effect runs in its own isolated Promise chain.
-    // A failure in ANY of these MUST NOT affect the 201 response.
-
-    // Award loyalty points — fire-and-forget, never blocks response
+    // Award loyalty points
     let loyaltyResult = { success: false };
     try {
       loyaltyResult = await awardLoyaltyPoints(
@@ -1191,11 +1180,10 @@ router.post('/queue-booking', verifyToken, async (req, res) => {
         `Booked appointment with Dr. ${doctor.name}`
       );
     } catch (loyaltyError) {
-      // awardLoyaltyPoints never throws by contract, but double-guard here
       console.error('[LOYALTY] Unexpected throw (non-fatal):', loyaltyError.message);
     }
 
-    // Populate for response — use lean fallback if populate fails
+    // Populate for response
     let populatedAppointment;
     try {
       populatedAppointment = await Appointment.findById(appointment._id)
@@ -1209,7 +1197,7 @@ router.post('/queue-booking', verifyToken, async (req, res) => {
 
     console.log(`✅ Queue booking completed successfully for appointment ${appointment._id}`);
 
-    // Emit socket event — never block the response
+    // Emit socket event
     try {
       emitAppointmentCreated(populatedAppointment);
     } catch (socketError) {
@@ -1229,6 +1217,12 @@ router.post('/queue-booking', verifyToken, async (req, res) => {
     });
 
   } catch (error) {
+    if (session) {
+      if (session.inTransaction && session.inTransaction()) {
+        await session.abortTransaction();
+      }
+      session.endSession();
+    }
     console.error('❌ Error creating queue booking:', error);
     console.error('Stack trace:', error.stack);
     res.status(500).json({ 
