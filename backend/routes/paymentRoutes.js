@@ -96,6 +96,22 @@ router.post('/create-order', verifyToken, async (req, res) => {
       }
     }
 
+    // ── IDEMPOTENCY: return existing order if already created ──────────────
+    // Prevents duplicate charges when user taps Pay twice or retries on network error
+    if (appointment.razorpayOrderId) {
+      console.log(`♻️ Returning existing Razorpay order for appointment ${appointmentId}: ${appointment.razorpayOrderId}`);
+      return res.json({
+        success: true,
+        message: 'Existing order returned (idempotent)',
+        orderId: appointment.razorpayOrderId,
+        keyId: RAZORPAY_KEY_ID,
+        amount: appointment.payment?.totalAmount || 0,
+        currency: 'INR',
+        appointmentId,
+      });
+    }
+    // ──────────────────────────────────────────────────────────────────────
+
     // If Razorpay is disabled, return test mode response
     if (!USE_RAZORPAY_PAYMENTS) {
       if (process.env.NODE_ENV === 'production') {

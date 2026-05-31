@@ -2,6 +2,7 @@ const express = require('express');
 const router = express.Router();
 const User = require('../models/User');
 const { sendOTP, verifyOTP } = require('../services/emailService');
+const { otpLimiter } = require('../middleware/rateLimiter');
 
 
 // ===============================
@@ -26,7 +27,7 @@ router.get('/check-config', (req, res) => {
 // ===============================
 // SEND OTP ROUTE
 // ===============================
-router.post('/send-otp', async (req, res) => {
+router.post('/send-otp', otpLimiter, async (req, res) => {
 
   try {
     const { email, type } = req.body;
@@ -106,17 +107,14 @@ router.post('/send-otp', async (req, res) => {
 
     console.log('📧 OTP send result for', cleanEmail, ':', result);
 
-    // Always return success with OTP - email or SMS may or may not have been sent
+    // Always return success — NEVER expose OTP in production
     const response = {
       success: true,
       message: isPhone
-        ? "Verification code generated. Please check your SMS. If you don't receive it, use the code shown below."
-        : "Verification code generated. Please check your email. If you don't receive it, use the code shown below.",
-      // Return OTP for cases where SMS/email doesn't work
-      otp: result.otp,
-      note: isPhone
-        ? "If SMS is not received within 2 minutes, you can use this OTP directly"
-        : "If email is not received within 2 minutes, you can use this OTP directly"
+        ? "Verification code sent. Please check your SMS."
+        : "Verification code sent. Please check your email.",
+      // Only expose OTP in development for testing — NEVER in production
+      ...(process.env.NODE_ENV === 'development' && { otp: result.otp, note: "DEV ONLY — OTP not returned in production" }),
     };
 
     return res.status(200).json(response);

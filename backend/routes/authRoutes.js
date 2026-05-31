@@ -4,6 +4,7 @@ const jwt = require('jsonwebtoken');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 const LoyaltyPoints = require('../models/LoyaltyPoints');
+const { loginLimiter, registrationLimiter, otpLimiter } = require('../middleware/rateLimiter');
 
 const router = express.Router();
 
@@ -47,7 +48,7 @@ const router = express.Router();
  *             schema:
  *               $ref: '#/components/schemas/Error500'
  */
-router.post('/send-registration-otp', async (req, res) => {
+router.post('/send-registration-otp', otpLimiter, async (req, res) => {
   try {
     const { email } = req.body;
 
@@ -214,7 +215,7 @@ router.post('/verify-registration-otp', async (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/Error500'
  */
-router.post('/register', async (req, res) => {
+router.post('/register', registrationLimiter, async (req, res) => {
   try {
     const { name, email, password, phone, role, otpVerified } = req.body;
 
@@ -254,7 +255,7 @@ router.post('/register', async (req, res) => {
     let signupBonus = null;
     try {
       const loyalty = new LoyaltyPoints({ userId: user._id });
-      loyalty.addPoints(100, 'Welcome bonus: 100 points for signing up!', 'signup', user._id);
+      loyalty.addPoints(100, 'earned', 'Welcome bonus: 100 points for signing up!', user._id);
       await loyalty.save();
       signupBonus = 100;
       console.log(`🎁 Awarded 100 signup bonus points to new user ${user._id}`);
@@ -338,7 +339,7 @@ router.post('/register', async (req, res) => {
  *             schema:
  *               $ref: '#/components/schemas/Error500'
  */
-router.post('/login', async (req, res) => {
+router.post('/login', loginLimiter, async (req, res) => {
   try {
     const { email, password } = req.body;
     const aiSecurityService = require('../services/aiSecurityService');
@@ -1665,7 +1666,7 @@ router.post('/google-signin', async (req, res) => {
       // Award signup bonus loyalty points for new Google users
       try {
         const loyalty = new LoyaltyPoints({ userId: user._id });
-        loyalty.addPoints(100, 'Welcome bonus: 100 points for signing up with Google!', 'signup', user._id);
+        loyalty.addPoints(100, 'earned', 'Welcome bonus: 100 points for signing up with Google!', user._id);
         await loyalty.save();
         console.log(`🎁 Awarded 100 signup bonus points to new Google user ${user._id}`);
       } catch (loyaltyError) {
@@ -1915,7 +1916,7 @@ router.post('/facebook-signin', async (req, res) => {
       // Award signup bonus
       try {
         const loyalty = new LoyaltyPoints({ userId: user._id });
-        loyalty.addPoints(100, 'Welcome bonus: 100 points for signing up!', 'signup', user._id);
+        loyalty.addPoints(100, 'earned', 'Welcome bonus: 100 points for signing up!', user._id);
         await loyalty.save();
       } catch (loyaltyError) {
         console.error('Error creating loyalty account:', loyaltyError);
@@ -2007,7 +2008,7 @@ router.post('/apple-signin', async (req, res) => {
         // Award signup bonus
         try {
           const loyalty = new LoyaltyPoints({ userId: user._id });
-          loyalty.addPoints(100, 'Welcome bonus: 100 points for signing up!', 'signup', user._id);
+          loyalty.addPoints(100, 'earned', 'Welcome bonus: 100 points for signing up!', user._id);
           await loyalty.save();
         } catch (loyaltyError) {
           console.error('Error creating loyalty account:', loyaltyError);
