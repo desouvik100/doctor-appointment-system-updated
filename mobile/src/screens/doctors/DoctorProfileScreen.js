@@ -111,10 +111,13 @@ const DoctorProfileScreen = ({ navigation, route }) => {
   };
 
   // Fetch full profile and check favorites
+  // isValidMongoId: MongoDB ObjectIds are exactly 24 hex characters
+  const isValidMongoId = (id) => typeof id === 'string' && /^[a-f\d]{24}$/i.test(id);
+
   useEffect(() => {
     const fetchProfile = async () => {
       const id = doctorId || doctor?._id || doctor?.id;
-      if (!id) return;
+      if (!id || !isValidMongoId(id)) return;  // skip fake/placeholder IDs
       try {
         setLoading(true);
         const data = await doctorService.getDoctorById(id);
@@ -129,7 +132,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
 
     const checkFavorite = async () => {
       const id = doctorId || doctor?._id || doctor?.id;
-      if (!id) return;
+      if (!id || !isValidMongoId(id)) return;  // skip fake/placeholder IDs
       try {
         const fav = await doctorService.isFavorite(id);
         setIsFavorite(fav);
@@ -148,7 +151,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
   useEffect(() => {
     const fetchSlots = async () => {
       const id = doctorId || doctor?._id || doctor?.id || doctorData?._id || doctorData?.id;
-      if (!id) return;
+      if (!id || !isValidMongoId(id)) return;  // skip fake/placeholder IDs
       try {
         setSlotsLoading(true);
         const today = new Date();
@@ -189,7 +192,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
   // Dynamic reviews loader
   const fetchReviews = async (page = 1, append = false) => {
     const id = doctorId || doctor?._id || doctor?.id || doctorData?._id || doctorData?.id;
-    if (!id) return;
+    if (!id || !isValidMongoId(id)) return;  // skip fake/placeholder IDs
     try {
       setReviewsLoading(true);
       const params = {

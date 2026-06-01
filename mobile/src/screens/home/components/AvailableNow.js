@@ -113,7 +113,17 @@ const AvailableDoctorCard = ({ doc, index }) => {
         activeOpacity={0.95}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        onPress={() => navigation.navigate('DoctorProfile', { doctor: doc, doctorId: doc._id || doc.id })}
+        onPress={() => {
+          // Guard: do not navigate to profile for fallback placeholder doctors
+          // (IDs like 'avail_1' are not real MongoDB ObjectIds)
+          const id = doc._id || doc.id || '';
+          const isFakePlaceholder = !id || id.startsWith('avail_') || id.length < 20;
+          if (isFakePlaceholder) {
+            navigation.navigate('DoctorSearch');
+            return;
+          }
+          navigation.navigate('DoctorProfile', { doctor: doc, doctorId: id });
+        }}
         style={[
           styles.card,
           {

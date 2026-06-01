@@ -394,7 +394,15 @@ const HomeScreen = ({ navigation }) => {
                             ...shadows.sm,
                           }
                         ]}
-                        onPress={() => navigation.navigate('DoctorProfile', { doctor: doc, doctorId: doc._id })}
+                        onPress={() => {
+                          const id = doc._id || doc.id || '';
+                          // Skip navigation for placeholder/fake IDs (not real MongoDB ObjectIds)
+                          if (!id || id.length < 20) {
+                            navigation.navigate('DoctorSearch');
+                            return;
+                          }
+                          navigation.navigate('DoctorProfile', { doctor: doc, doctorId: id });
+                        }}
                         activeOpacity={0.85}
                       >
                         <View style={styles.docCardHeader}>
