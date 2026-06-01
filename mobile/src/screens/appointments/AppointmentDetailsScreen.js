@@ -70,7 +70,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
       fee: apt.fee || apt.doctor?.fee || apt.doctor?.consultationFee || 500,
       photo: apt.doctorPhoto || apt.doctor?.profilePhoto,
     },
-
+    clinicId: apt.clinicId?._id || apt.clinicId || apt.clinic?._id || null,
     date: apt.date || apt.appointmentDate,
     time: apt.time || apt.timeSlot || apt.estimatedTime || dayjs(apt.appointmentDate).format('h:mm A'),
     type: apt.consultationType === 'online' || apt.type === 'video' ? 'video' : 'clinic',
@@ -240,8 +240,11 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
         {/* Queue Tracker (for clinic visits) */}
         {appointmentData.type === 'clinic' && appointmentData.status === 'confirmed' && (
           <QueueTracker
-            position={appointmentData.queuePosition}
-            estimatedWait={appointmentData.estimatedWait}
+            appointmentId={appointmentData.id}
+            clinicId={appointmentData.clinicId}
+            doctorId={appointmentData.doctor?.id}
+            initialPosition={appointmentData.queuePosition}
+            initialWait={appointmentData.estimatedWait}
           />
         )}
 
