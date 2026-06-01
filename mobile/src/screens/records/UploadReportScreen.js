@@ -205,7 +205,7 @@ const makeStyles = (colors) => StyleSheet.create({
   inputLabel: { ...typography.labelMedium, color: colors.textSecondary, marginBottom: spacing.sm },
   input: { ...typography.bodyLarge, color: colors.textPrimary, padding: 0 },
   textArea: { height: 80, textAlignVertical: 'top' },
-  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.backgroundCard, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg, paddingBottom: spacing.xxl, borderTopWidth: 1, borderTopColor: colors.surfaceBorder, ...shadows.large },
+  bottomBar: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.backgroundCard, paddingHorizontal: spacing.xl, paddingVertical: spacing.lg, paddingBottom: spacing.xxl, borderTopWidth: 1, borderTopColor: colors.surfaceBorder, ...shadows.lg },
   loadingOverlay: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(0,0,0,0.7)', alignItems: 'center', justifyContent: 'center' },
   loadingText: { ...typography.bodyMedium, color: colors.textPrimary, marginTop: spacing.md },
 });

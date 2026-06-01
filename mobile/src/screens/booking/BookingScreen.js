@@ -86,7 +86,12 @@ const BookingScreen = ({ navigation, route }) => {
 
   const preSelectedDoctor = route.params?.doctor;
   useEffect(() => {
-    if (preSelectedDoctor) navigation.replace('SlotSelection', { doctor: preSelectedDoctor });
+    if (preSelectedDoctor) {
+      navigation.replace('DoctorProfile', { 
+        doctor: preSelectedDoctor, 
+        doctorId: preSelectedDoctor._id || preSelectedDoctor.id 
+      });
+    }
   }, [preSelectedDoctor]);
 
   const fetchDepartments = async () => {
@@ -285,7 +290,7 @@ const BookingScreen = ({ navigation, route }) => {
             </Text>
             {displayDoctors.map(doc => (
               <DoctorCard key={doc._id || doc.id} doctor={doc}
-                onPress={(d) => navigation.navigate('SlotSelection', { doctor: d })} />
+                onPress={(d) => navigation.navigate('DoctorProfile', { doctor: d, doctorId: d._id || d.id })} />
             ))}
           </View>
         )}

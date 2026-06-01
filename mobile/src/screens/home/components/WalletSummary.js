@@ -1,35 +1,75 @@
 /**
- * WalletSummary - Compact wallet card, less visual noise
+ * WalletSummary - Stripe-Inspired Premium Health Wallet Snapshot
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import React, { useEffect } from 'react';
+import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
 import LinearGradient from 'react-native-linear-gradient';
+import Animated, { 
+  FadeInDown,
+  useSharedValue, 
+  useAnimatedStyle, 
+  withSpring,
+  withTiming
+} from 'react-native-reanimated';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 import { useTheme } from '../../../context/ThemeContext';
+import { shadows } from '../../../theme/shadows';
 
-const WalletSummary = ({ balance = 0, loyaltyPoints = 0, currency = '₹', navigation, onAddMoney }) => {
-  const { colors } = useTheme();
+const { width } = Dimensions.get('window');
+
+const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onAddMoney }) => {
+  const { colors, isDarkMode } = useTheme();
+  const navigation = useNavigation();
+  
+  const scale = useSharedValue(1);
+  const progressWidth = useSharedValue(0);
+  const targetPoints = 1000;
+  const progressRatio = Math.min(loyaltyPoints / targetPoints, 1);
+
+  useEffect(() => {
+    progressWidth.value = withTiming(progressRatio, { duration: 1200 });
+  }, [loyaltyPoints]);
+
+  const progressStyle = useAnimatedStyle(() => ({
+    width: `${progressWidth.value * 100}%`,
+  }));
+
+  const handlePressIn = () => {
+    scale.value = withSpring(0.97);
+  };
+
+  const handlePressOut = () => {
+    scale.value = withSpring(1);
+  };
+
+  const animatedStyle = useAnimatedStyle(() => ({
+    transform: [{ scale: scale.value }],
+  }));
 
   return (
-    <View style={styles.container}>
+    <Animated.View
+      entering={FadeInDown.delay(200)}
+      style={[styles.container, animatedStyle]}
+    >
       <View style={styles.header}>
-        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Health Wallet</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('Wallet')}>
-          <Text style={[styles.seeAll, { color: colors.primary }]}>View all</Text>
+        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Health Balance</Text>
+        <TouchableOpacity onPress={() => navigation.navigate('Wallet')} activeOpacity={0.7}>
+          <Text style={[styles.seeAll, { color: colors.primary }]}>Authorize Topup</Text>
         </TouchableOpacity>
       </View>
 
       <LinearGradient
-        colors={['#5B4ED1', '#6C5CE7', '#8B5CF6']}
+        colors={isDarkMode ? ['#171B26', '#1E253A', '#232D48'] : ['#2D3748', '#1A202C', '#10141D']}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.card}
+        style={[styles.card, shadows.lg]}
       >
-        {/* Balance row */}
+        {/* Top metrics row */}
         <View style={styles.balanceRow}>
           <View>
-            <Text style={styles.balanceLabel}>Available Balance</Text>
+            <Text style={styles.balanceLabel}>Available Credits</Text>
             <Text style={styles.balanceAmount}>
               {currency}{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </Text>
@@ -37,78 +77,139 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 0, currency = '₹', navig
           <View style={styles.pointsBadge}>
             <Text style={styles.pointsEmoji}>⭐</Text>
             <View>
-              <Text style={styles.pointsLabel}>Points</Text>
-              <Text style={styles.pointsValue}>{loyaltyPoints.toLocaleString()}</Text>
+              <Text style={styles.pointsLabel}>Loyalty Tier</Text>
+              <Text style={styles.pointsValue}>{loyaltyPoints.toLocaleString()} pts</Text>
             </View>
           </View>
         </View>
 
-        {/* Actions */}
+        {/* Milestone tracking progress */}
+        <View style={styles.milestoneContainer}>
+          <View style={styles.milestoneTextRow}>
+            <Text style={styles.milestoneLabel}>Milestone: Free Consultation</Text>
+            <Text style={styles.milestoneProgress}>{loyaltyPoints}/{targetPoints} pts</Text>
+          </View>
+          <View style={[styles.progressBarBg, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
+            <Animated.View style={[styles.progressBarFill, { backgroundColor: '#00D4AA' }, progressStyle]} />
+          </View>
+        </View>
+
+        {/* Action row */}
         <View style={styles.actions}>
-          <TouchableOpacity style={styles.actionBtn} onPress={onAddMoney} activeOpacity={0.8}>
-            <Text style={styles.actionBtnText}>+ Add Money</Text>
+          <TouchableOpacity 
+            style={[styles.actionBtn, { backgroundColor: '#00D4AA' }]} 
+            onPress={onAddMoney} 
+            activeOpacity={0.9}
+            onPressIn={handlePressIn}
+            onPressOut={handlePressOut}
+          >
+            <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]}>+ Instant Refill</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, styles.actionBtnOutline]}
             onPress={() => navigation.navigate('Wallet', { tab: 'history' })}
             activeOpacity={0.8}
           >
-            <Text style={[styles.actionBtnText, styles.actionBtnOutlineText]}>History</Text>
+            <Text style={[styles.actionBtnText, styles.actionBtnOutlineText]}>Statements</Text>
           </TouchableOpacity>
         </View>
       </LinearGradient>
-    </View>
+    </Animated.View>
   );
 };
 
 const styles = StyleSheet.create({
-  container: { marginBottom: spacing.xxl },
+  container: { 
+    marginBottom: spacing.lg,
+  },
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.lg,
+    marginBottom: spacing.md,
   },
-  sectionTitle: { ...typography.headlineSmall },
-  seeAll: { ...typography.labelMedium },
+  sectionTitle: { 
+    ...typography.headlineSmall,
+    fontSize: 16,
+    fontWeight: '800',
+  },
+  seeAll: { 
+    ...typography.labelMedium,
+    fontWeight: '700',
+  },
   card: {
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
+    padding: spacing.lg,
+    borderWidth: 1,
+    borderColor: 'rgba(255, 255, 255, 0.04)',
   },
   balanceRow: {
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.xl,
+    marginBottom: spacing.md,
   },
   balanceLabel: {
-    ...typography.labelMedium,
-    color: 'rgba(255,255,255,0.65)',
+    color: 'rgba(255, 255, 255, 0.6)',
     marginBottom: spacing.xs,
+    fontSize: 10,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
   },
   balanceAmount: {
-    ...typography.displaySmall,
-    color: '#fff',
-    fontWeight: '800',
+    color: '#FFFFFF',
+    fontWeight: '850',
+    fontSize: 22,
   },
   pointsBadge: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(255,255,255,0.15)',
-    borderRadius: borderRadius.lg,
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.sm,
     gap: spacing.sm,
   },
-  pointsEmoji: { fontSize: 20 },
+  pointsEmoji: { fontSize: 14 },
   pointsLabel: {
-    ...typography.labelSmall,
-    color: 'rgba(255,255,255,0.65)',
+    color: 'rgba(255,255,255,0.5)',
+    fontSize: 8.5,
+    fontWeight: '600',
   },
   pointsValue: {
-    ...typography.bodyLarge,
-    color: '#fff',
-    fontWeight: '700',
+    color: '#FFFFFF',
+    fontWeight: '800',
+    fontSize: 11,
+  },
+  // Milestone Progress styles
+  milestoneContainer: {
+    marginBottom: spacing.lg,
+  },
+  milestoneTextRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 6,
+  },
+  milestoneLabel: {
+    color: 'rgba(255,255,255,0.65)',
+    fontSize: 9.5,
+    fontWeight: '650',
+  },
+  milestoneProgress: {
+    color: '#00D4AA',
+    fontSize: 9.5,
+    fontWeight: '800',
+  },
+  progressBarBg: {
+    height: 5,
+    borderRadius: 2.5,
+    overflow: 'hidden',
+  },
+  progressBarFill: {
+    height: '100%',
+    borderRadius: 2.5,
   },
   actions: {
     flexDirection: 'row',
@@ -116,22 +217,21 @@ const styles = StyleSheet.create({
   },
   actionBtn: {
     flex: 1,
-    backgroundColor: '#fff',
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.md,
     paddingVertical: spacing.md,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   actionBtnOutline: {
-    backgroundColor: 'rgba(255,255,255,0.15)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
   },
   actionBtnText: {
-    ...typography.labelMedium,
-    color: '#5B4ED1',
-    fontWeight: '700',
+    fontSize: 11,
+    fontWeight: '800',
   },
   actionBtnOutlineText: {
-    color: '#fff',
+    color: '#FFFFFF',
   },
 });
 
-export default WalletSummary;
+export default React.memo(WalletSummary);

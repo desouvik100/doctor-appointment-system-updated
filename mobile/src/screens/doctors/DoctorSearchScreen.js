@@ -192,11 +192,11 @@ const DoctorSearchScreen = ({ navigation, route }) => {
   }, []);
 
   const handleDoctorPress = useCallback((doctor) => {
-    navigation.navigate('DoctorProfile', { doctor });
+    navigation.navigate('DoctorProfile', { doctor, doctorId: doctor._id || doctor.id });
   }, [navigation]);
 
   const handleBookPress = useCallback((doctor) => {
-    navigation.navigate('SlotSelection', { doctor });
+    navigation.navigate('DoctorProfile', { doctor, doctorId: doctor._id || doctor.id });
   }, [navigation]);
 
   const renderDoctorItem = useCallback(({ item }) => (

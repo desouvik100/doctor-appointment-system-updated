@@ -1,92 +1,163 @@
 /**
- * QuickActions Component - Integrated with reusable QuickActionsGrid
+ * QuickActions Component - Premium Healthcare Service Cards
  */
 
 import React from 'react';
-import { QuickActionsGrid } from '../../../components/common';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { useNavigation } from '@react-navigation/native';
+import { useTheme } from '../../../context/ThemeContext';
+import { typography, spacing, borderRadius } from '../../../theme/typography';
+import { shadows } from '../../../theme/shadows';
 
 const ACTIONS = [
   {
     id: 'book',
-    icon: 'calendar-outline',
+    icon: '🩺',
     label: 'Book Clinic',
-    description: 'In-person visits',
-    screen: 'Booking',
-    color: '#00D4AA', // Teal
-    badge: 'Instant',
+    description: 'In-person checkups',
+    screen: 'DoctorSearch',
+    color: '#00D4AA',
   },
   {
     id: 'video',
-    icon: 'videocam-outline',
+    icon: '🎥',
     label: 'Video Consult',
-    description: 'Talk within 10m',
+    description: 'Connect in 10 mins',
     screen: 'VideoConsult',
-    color: '#00B894', // Teal/Green
-    badge: 'Active',
+    color: '#6C5CE7',
   },
   {
     id: 'lab',
-    icon: 'flask-outline',
+    icon: '🧪',
     label: 'Lab Tests',
     description: 'Home sample pickup',
     screen: 'LabTests',
-    color: '#6C5CE7', // Premium Purple
+    color: '#FF7675',
   },
   {
     id: 'records',
-    icon: 'document-text-outline',
-    label: 'Records',
-    description: 'Prescriptions & labs',
+    icon: '📄',
+    label: 'Medical Reports',
+    description: 'View file & history',
     screen: 'Records',
-    color: '#3B82F6', // Navy Blue
+    color: '#FDCB6E',
   },
   {
     id: 'meds',
-    icon: 'clipboard-outline',
-    label: 'Prescriptions',
-    description: 'Order medicines',
+    icon: '💊',
+    label: 'Medicines',
+    description: 'Express delivery',
     screen: 'Medicine',
-    color: '#55EFC4', // Cyan
-  },
-  {
-    id: 'imaging',
-    icon: 'scan-outline',
-    label: 'Imaging',
-    description: 'Scans & X-rays',
-    screen: 'MedicalImaging',
-    color: '#A29BFE', // Violet
+    color: '#0984E3',
   },
   {
     id: 'emergency',
-    icon: 'alert-circle-outline',
-    label: 'Emergency',
-    description: '24/7 Ambulance',
+    icon: '🚑',
+    label: 'Emergency SOS',
+    description: 'Ambulance dispatch',
     screen: 'Emergency',
-    color: '#FF4D4D', // Red
-    badge: '24/7',
-  },
-  {
-    id: 'wallet',
-    icon: 'wallet-outline',
-    label: 'Wallet',
-    description: 'Payments & refund',
-    screen: 'Wallet',
-    color: '#834D9B', // Deep Purple
+    color: '#D63031',
   },
 ];
 
-const QuickActions = ({ navigation }) => {
+const QuickActions = () => {
+  const { colors, isDarkMode } = useTheme();
+  // Obtain navigation reference directly via hook for reusability
+  const navigation = useNavigation();
+
   return (
-    <QuickActionsGrid
-      actions={ACTIONS}
-      cols={2}
-      variant="hub"
-      showTitle={true}
-      titleText="Quick Actions"
-      showBadge={true}
-      badgeText="8 services"
-    />
+    <View style={styles.container}>
+      <View style={styles.header}>
+        <Text style={[styles.title, { color: colors.textPrimary }]}>Our Services</Text>
+        <Text style={[styles.subtitle, { color: colors.textMuted }]}>6 core features</Text>
+      </View>
+      <View style={styles.grid}>
+        {ACTIONS.map((action) => (
+          <TouchableOpacity
+            key={action.id}
+            style={[
+              styles.card,
+              {
+                backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.03)' : '#FFFFFF',
+                borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.06)' : 'rgba(0, 0, 0, 0.04)',
+                ...shadows.sm,
+              },
+            ]}
+            onPress={() => navigation.navigate(action.screen)}
+            activeOpacity={0.8}
+          >
+            <View style={[styles.iconCircle, { backgroundColor: action.color + '15' }]}>
+              <Text style={styles.icon}>{action.icon}</Text>
+            </View>
+            <View style={styles.textContainer}>
+              <Text style={[styles.label, { color: colors.textPrimary }]}>{action.label}</Text>
+              <Text style={[styles.description, { color: colors.textMuted }]}>{action.description}</Text>
+            </View>
+          </TouchableOpacity>
+        ))}
+      </View>
+    </View>
   );
 };
+
+const styles = StyleSheet.create({
+  container: {
+    marginBottom: spacing.xxxl,
+  },
+  header: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'baseline',
+    marginBottom: spacing.md,
+  },
+  title: {
+    ...typography.headlineMedium,
+    fontWeight: '800',
+  },
+  subtitle: {
+    ...typography.labelSmall,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  grid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: spacing.sm,
+    justifyContent: 'space-between',
+  },
+  card: {
+    width: '48.5%',
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    padding: spacing.md,
+  },
+  iconCircle: {
+    width: 38,
+    height: 38,
+    borderRadius: 19,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  icon: {
+    fontSize: 18,
+  },
+  textContainer: {
+    flex: 1,
+    marginLeft: spacing.sm,
+  },
+  label: {
+    ...typography.bodyMedium,
+    fontSize: 13,
+    fontWeight: '700',
+  },
+  description: {
+    ...typography.labelSmall,
+    fontSize: 9,
+    marginTop: 1,
+    lineHeight: 12,
+  },
+});
 
 export default QuickActions;

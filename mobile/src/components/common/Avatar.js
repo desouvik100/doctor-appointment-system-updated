@@ -79,12 +79,34 @@ const Avatar = ({
         </View>
       );
     }
+    // Premium Healthcare Illustration fallback instead of initials
+    const isDoctor = name && name.toLowerCase().includes('dr.');
+    const isFemale = name && (
+      name.toLowerCase().includes('ananya') || 
+      name.toLowerCase().includes('sarah') || 
+      name.toLowerCase().includes('priya') || 
+      name.toLowerCase().includes('emily')
+    );
+    
+    let illustration = '👤';
+    let gradientColors = ['#E0F7F4', '#00D4AA'];
+    
+    if (isDoctor) {
+      illustration = isFemale ? '👩‍⚕️' : '👨‍⚕️';
+      gradientColors = isFemale ? ['#FFD1E6', '#EC4899'] : ['#E0F2FE', '#0984E3'];
+    }
+
     return (
-      <View style={[styles.placeholder, { borderRadius: finalRadius }]}>
-        <Text style={[styles.initials, { fontSize }]} numberOfLines={1}>
-          {getInitials()}
+      <LinearGradient 
+        colors={gradientColors} 
+        start={{ x: 0, y: 0 }}
+        end={{ x: 1, y: 1 }}
+        style={[styles.placeholder, { borderRadius: finalRadius }]}
+      >
+        <Text style={{ fontSize: avatarSize * 0.45, textAlign: 'center' }}>
+          {illustration}
         </Text>
-      </View>
+      </LinearGradient>
     );
   };
 

@@ -14,6 +14,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
+import doctorService from '../../services/api/doctorService';
 
 // Independent Animated DateCell Component
 const DateCell = React.memo(({ day, isSelected, onSelect }) => {
@@ -89,22 +90,58 @@ const DateCell = React.memo(({ day, isSelected, onSelect }) => {
 });
 
 const SlotSelectionScreen = ({ navigation, route }) => {
-  const { doctor } = route.params || {};
+  const { doctor, doctorId: routeDoctorId } = route.params || {};
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
   const insets = useSafeAreaInsets();
 
-  const [step, setStep] = useState(1); // 1=Type, 2=Smart Details, 3=Date & Slots
-  const [consultationType, setConsultationType] = useState(null);
-  const [selectedDate, setSelectedDate] = useState(null);
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [currentDoctor, setCurrentDoctor] = useState(doctor || null);
+  const [loading, setLoading] = useState(!doctor && !!(routeDoctorId || route.params?.doctorId));
+
+  const formatToTwelveHour = (timeStr) => {
+    if (!timeStr) return null;
+    if (timeStr.includes('AM') || timeStr.includes('PM')) return timeStr;
+    const parts = timeStr.split(':');
+    if (parts.length < 2) return timeStr;
+    const hours = parseInt(parts[0], 10);
+    const minutesStr = parts[1];
+    const ampm = hours >= 12 ? 'PM' : 'AM';
+    const displayHours = hours % 12 === 0 ? 12 : hours % 12;
+    return `${displayHours.toString().padStart(2, '0')}:${minutesStr} ${ampm}`;
+  };
+
+  const [consultationType, setConsultationType] = useState(route.params?.consultationType || null);
+  const [step, setStep] = useState(route.params?.consultationType ? 2 : 1); // 1=Type, 2=Smart Details, 3=Date & Slots
+  const [selectedDate, setSelectedDate] = useState(route.params?.preselectedDate || null);
+  const [selectedSlot, setSelectedSlot] = useState(route.params?.preselectedTime ? formatToTwelveHour(route.params?.preselectedTime) : null);
   const [reason, setReason] = useState('');
   const [selectedSymptoms, setSelectedSymptoms] = useState([]);
   const [urgencyLevel, setUrgencyLevel] = useState('normal');
   const [queueInfo, setQueueInfo] = useState(null);
   const [queueLoading, setQueueLoading] = useState(false);
 
-  const doctorId = doctor?._id || doctor?.id;
+  useEffect(() => {
+    const fetchDoctor = async () => {
+      const id = routeDoctorId || route.params?.doctorId || doctor?._id || doctor?.id;
+      if (!id) return;
+      try {
+        setLoading(true);
+        const res = await doctorService.getDoctorById(id);
+        const resolved = res.doctor || res.data || res;
+        setCurrentDoctor(resolved);
+      } catch (err) {
+        console.error('Failed to fetch doctor in SlotSelectionScreen:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (!currentDoctor || (!currentDoctor._id && !currentDoctor.id)) {
+      fetchDoctor();
+    }
+  }, [routeDoctorId, doctor]);
+
+  const activeDoc = currentDoctor || doctor;
+  const doctorId = activeDoc?._id || activeDoc?.id || routeDoctorId || route.params?.doctorId;
 
   const commonSymptoms = [
     'Fever', 'Cold & Cough', 'Headache', 'Body Pain',
@@ -183,7 +220,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       ? String(rawUserId._id || rawUserId.id || '')
       : String(rawUserId || '');
 
-    const rawDoctorId = doctor?._id || doctor?.id;
+    const rawDoctorId = activeDoc?._id || activeDoc?.id || routeDoctorId || route.params?.doctorId;
     const cleanDoctorId = rawDoctorId && typeof rawDoctorId === 'object'
       ? String(rawDoctorId._id || rawDoctorId.id || '')
       : String(rawDoctorId || '');
@@ -197,7 +234,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       return;
     }
 
-    const rawClinicId = doctor?.clinicId?._id || doctor?.clinicId;
+    const rawClinicId = activeDoc?.clinicId?._id || activeDoc?.clinicId || route.params?.clinicId;
     const cleanClinicId = rawClinicId
       ? (typeof rawClinicId === 'object'
         ? String(rawClinicId._id || rawClinicId.id || '')
@@ -212,7 +249,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       ? (selectedSlot._id || selectedSlot.id || null)
       : null;
 
-    const consultationFee = Number(doctor?.consultationFee || doctor?.fee || 500);
+    const consultationFee = Number(activeDoc?.consultationFee || activeDoc?.fee || 500);
     const platformFee = Math.round(consultationFee * 0.05);
     const totalAmount = consultationFee + platformFee;
 
@@ -229,7 +266,9 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     });
 
     navigation.navigate('ConfirmDetails', {
-      doctor: doctor || {},
+      doctor: activeDoc || {},
+      doctorId: cleanDoctorId,
+      clinicId: cleanClinicId,
       date: selectedDate,
       time: selectedTime,
       queueNumber: queueInfo?.nextQueueNumber || 1,
@@ -295,7 +334,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     <View style={styles.stepContent}>
       <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Consultation Type</Text>
       <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
-        Select how you would like to consult with {doctor?.name?.startsWith('Dr.') ? doctor?.name : `Dr. ${doctor?.name || 'Doctor'}`}
+        Select how you would like to consult with {activeDoc?.name?.startsWith('Dr.') ? activeDoc?.name : `Dr. ${activeDoc?.name || 'Doctor'}`}
       </Text>
 
       {CONSULT_TYPES.map(({ key, icon, title, desc, tag, wait, hours, scaleRef }) => {
@@ -626,6 +665,31 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     );
   };
 
+  if (loading) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ color: colors.textSecondary, marginTop: 10 }}>Loading doctor details...</Text>
+      </View>
+    );
+  }
+
+  if (!activeDoc && !doctorId) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <Text style={{ color: colors.textPrimary, fontSize: 16, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>Doctor Information Missing</Text>
+        <TouchableOpacity
+          style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 }}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
@@ -635,7 +699,15 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity
           style={styles.backBtn}
-          onPress={() => step > 1 ? setStep(step - 1) : navigation.goBack()}
+          onPress={() => {
+            if (step === 2 && route.params?.consultationType) {
+              navigation.goBack();
+            } else if (step > 1) {
+              setStep(step - 1);
+            } else {
+              navigation.goBack();
+            }
+          }}
         >
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
@@ -690,30 +762,30 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       {/* Doctor Summary Header Card */}
       <View style={[styles.doctorSummaryCard, { backgroundColor: colors.surface }]}>
         <View style={styles.doctorSummaryRow}>
-          {doctor?.profilePhoto ? (
-            <Image source={{ uri: doctor.profilePhoto }} style={styles.doctorAvatar} />
+          {activeDoc?.profilePhoto ? (
+            <Image source={{ uri: activeDoc.profilePhoto }} style={styles.doctorAvatar} />
           ) : (
             <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.doctorAvatarFallback}>
               <Text style={styles.doctorAvatarInitials}>
-                {(doctor?.name || 'D').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
+                {(activeDoc?.name || 'D').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
               </Text>
             </LinearGradient>
           )}
           <View style={styles.doctorInfoCard}>
             <View style={styles.doctorNameRow}>
               <Text style={[styles.doctorNameText, { color: colors.textPrimary }]}>
-                {doctor?.name?.startsWith('Dr.') ? doctor?.name : `Dr. ${doctor?.name || 'Doctor'}`}
+                {activeDoc?.name?.startsWith('Dr.') ? activeDoc?.name : `Dr. ${activeDoc?.name || 'Doctor'}`}
               </Text>
               <View style={[styles.verifiedLabelBadge, { backgroundColor: colors.primary + '15' }]}>
                 <Text style={[styles.verifiedLabelText, { color: colors.primary }]}>✔ Verified</Text>
               </View>
             </View>
             <Text style={[styles.doctorSpecText, { color: colors.textSecondary }]}>
-              {doctor?.specialization || doctor?.specialty || 'Specialist'}
+              {activeDoc?.specialization || activeDoc?.specialty || 'Specialist'}
             </Text>
           </View>
           <View style={styles.feeSummaryBox}>
-            <Text style={[styles.feeValueText, { color: colors.primary }]}>₹{doctor?.consultationFee || doctor?.fee || 500}</Text>
+            <Text style={[styles.feeValueText, { color: colors.primary }]}>₹{activeDoc?.consultationFee || activeDoc?.fee || 500}</Text>
             <Text style={[styles.feeLabelText, { color: colors.textMuted }]}>Fee</Text>
           </View>
         </View>
@@ -768,7 +840,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
             <View style={styles.bottomFeeColumn}>
               <Text style={[styles.bottomFeeLabelText, { color: colors.textMuted }]}>Consultation Fee</Text>
               <Text style={[styles.bottomFeeValueText, { color: colors.textPrimary }]}>
-                ₹{doctor?.consultationFee || doctor?.fee || 500}
+                ₹{activeDoc?.consultationFee || activeDoc?.fee || 500}
               </Text>
             </View>
             <TouchableOpacity

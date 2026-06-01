@@ -6,16 +6,20 @@
 import React, { useState, useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
+import { useNavigation } from '@react-navigation/native';
 import dayjs from 'dayjs';
 import relativeTime from 'dayjs/plugin/relativeTime';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 import { useTheme } from '../../../context/ThemeContext';
+import { shadows } from '../../../theme/shadows';
 import Avatar from '../../../components/common/Avatar';
 
 dayjs.extend(relativeTime);
 
-const UpcomingAppointments = ({ appointments = [], navigation, onJoinCall, onReschedule, maxDisplay = 3 }) => {
+const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, maxDisplay = 3 }) => {
   const { colors, isDarkMode } = useTheme();
+  // Obtain navigation reference directly via hook for reusability
+  const navigation = useNavigation();
   const [countdown, setCountdown] = useState('');
   const displayAppointments = appointments.slice(0, maxDisplay);
   const nextAppointment = displayAppointments[0];
@@ -40,30 +44,30 @@ const UpcomingAppointments = ({ appointments = [], navigation, onJoinCall, onRes
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Upcoming Appointments</Text>
         </View>
-        <View style={[
-          styles.emptyCard,
-          {
-            backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : colors.backgroundCard,
-            borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.03)',
-            borderWidth: 1,
-          }
-        ]}>
-          <Text style={styles.emptyIllustration}>👨‍⚕️</Text>
-          <Text style={[styles.emptyTitle, { color: colors.primary }]}>You're all set!</Text>
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            Let's book your first checkup and stay ahead of your health.
-          </Text>
-          <View style={styles.emptyActions}>
-            <TouchableOpacity onPress={() => navigation.navigate('Booking')} activeOpacity={0.85}>
-              <LinearGradient colors={['#00D4AA', '#00B894']} style={styles.bookBtn}>
-                <Text style={styles.bookBtnText}>Book a Consultation →</Text>
-              </LinearGradient>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('Booking')} style={styles.exploreBtn} activeOpacity={0.8}>
-              <Text style={[styles.exploreBtnText, { color: colors.primary }]}>Explore doctors</Text>
-            </TouchableOpacity>
+        <TouchableOpacity
+          style={[
+            styles.compactEmptyCard,
+            {
+              backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : '#FFFFFF',
+              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+              borderWidth: 1,
+              ...shadows.sm,
+            }
+          ]}
+          onPress={() => navigation.navigate('DoctorSearch')}
+          activeOpacity={0.85}
+        >
+          <View style={[styles.emptyIconCircle, { backgroundColor: colors.primary + '12' }]}>
+            <Text style={styles.emptyEmoji}>📅</Text>
           </View>
-        </View>
+          <View style={styles.emptyTextContainer}>
+            <Text style={[styles.emptyCardTitle, { color: colors.textPrimary }]}>No upcoming consultations</Text>
+            <Text style={[styles.emptyCardSub, { color: colors.textMuted }]}>Book your first checkup to track health tips</Text>
+          </View>
+          <View style={[styles.compactBookBadge, { backgroundColor: colors.primary }]}>
+            <Text style={styles.compactBookText}>Book</Text>
+          </View>
+        </TouchableOpacity>
       </View>
     );
   }
@@ -206,21 +210,59 @@ const UpcomingAppointments = ({ appointments = [], navigation, onJoinCall, onRes
 };
 
 const styles = StyleSheet.create({
-  container: { marginBottom: spacing.xxl },
+  container: { marginBottom: spacing.xxxl },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
   sectionTitle: { ...typography.headlineSmall, fontWeight: '700' },
   seeAll: { ...typography.labelMedium },
 
   // Empty state
-  emptyCard: { borderRadius: borderRadius.xl, padding: spacing.xxl, alignItems: 'center' },
-  emptyIllustration: { fontSize: 64, marginBottom: spacing.md },
-  emptyTitle: { ...typography.headlineMedium, fontWeight: '800', marginBottom: spacing.sm },
-  emptyText: { ...typography.bodyMedium, textAlign: 'center', marginBottom: spacing.xl, lineHeight: 22 },
-  emptyActions: { width: '100%', gap: spacing.sm },
-  bookBtn: { borderRadius: borderRadius.lg, paddingVertical: spacing.md, alignItems: 'center' },
-  bookBtnText: { color: '#fff', ...typography.button, fontWeight: '700' },
-  exploreBtn: { paddingVertical: spacing.sm, alignItems: 'center' },
-  exploreBtnText: { ...typography.labelMedium, fontWeight: '600' },
+  compactEmptyCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    borderWidth: 1,
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.sm,
+    height: 72,
+  },
+  emptyIconCircle: {
+    width: 40,
+    height: 40,
+    borderRadius: 20,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  emptyEmoji: {
+    fontSize: 18,
+  },
+  emptyTextContainer: {
+    flex: 1,
+    marginLeft: spacing.sm,
+  },
+  emptyCardTitle: {
+    fontSize: 13,
+    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
+  },
+  emptyCardSub: {
+    fontSize: 9,
+    fontFamily: 'Inter-Regular',
+    marginTop: 2,
+    lineHeight: 12,
+  },
+  compactBookBadge: {
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.xs + 2,
+    borderRadius: borderRadius.full,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  compactBookText: {
+    color: '#FFF',
+    fontSize: 11,
+    fontFamily: 'Inter-Bold',
+    fontWeight: '700',
+  },
 
   // Overhauled Card Layout
   featuredCard: {

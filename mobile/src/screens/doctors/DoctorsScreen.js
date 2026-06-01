@@ -105,7 +105,7 @@ const DoctorsScreen = ({ navigation }) => {
       item={item}
       colors={colors}
       isDarkMode={isDarkMode}
-      onPress={() => navigation.navigate('SlotSelection', { doctor: item })}
+      onPress={() => navigation.navigate('DoctorProfile', { doctor: item, doctorId: item._id || item.id })}
     />
   ), [navigation, colors, isDarkMode]);
 

@@ -278,24 +278,6 @@ const AppointmentsScreen = ({ navigation }) => {
         />
       )}
 
-      {/* Floating Book Button */}
-      {!loading && appointments.length > 0 && (
-        <TouchableOpacity 
-          style={styles.floatingBtn}
-          onPress={() => navigation.navigate('Booking')}
-          activeOpacity={0.9}
-        >
-          <LinearGradient
-            colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
-            start={{ x: 0, y: 0 }}
-            end={{ x: 1, y: 0 }}
-            style={styles.floatingBtnGradient}
-          >
-            <Text style={styles.floatingBtnIcon}>📅</Text>
-            <Text style={styles.floatingBtnText}>Book Appointment</Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      )}
     </View>
   );
 };
@@ -391,7 +373,7 @@ const styles = StyleSheet.create({
   },
   listContent: {
     paddingHorizontal: spacing.xl,
-    paddingBottom: 120,
+    paddingBottom: 140,
   },
   appointmentCard: {
     marginBottom: spacing.lg,

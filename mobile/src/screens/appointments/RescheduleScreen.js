@@ -219,7 +219,7 @@ const makeStyles = (colors) => StyleSheet.create({
   bottomBar: {
     position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.backgroundCard,
     paddingHorizontal: spacing.xl, paddingTop: spacing.lg, paddingBottom: spacing.xxl,
-    borderTopWidth: 1, borderTopColor: colors.surfaceBorder, ...shadows.large,
+    borderTopWidth: 1, borderTopColor: colors.surfaceBorder, ...shadows.lg,
   },
 });
 

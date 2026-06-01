@@ -580,7 +580,7 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingVertical: spacing.lg,
     borderTopWidth: 1,
     borderTopColor: colors.surfaceBorder,
-    ...shadows.large,
+    ...shadows.lg,
   },
   cartInfo: {},
   cartItems: {

@@ -484,7 +484,7 @@ const makeStyles = (colors) => StyleSheet.create({
   testAddedBtnText: { fontSize: 16 },
   emptyCard: { marginHorizontal: spacing.xl, padding: spacing.lg, alignItems: 'center' },
   emptyText: { ...typography.bodyMedium, color: colors.textMuted },
-  cartFooter: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.backgroundCard, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingVertical: spacing.lg, borderTopWidth: 1, borderTopColor: colors.surfaceBorder, ...shadows.large },
+  cartFooter: { position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.backgroundCard, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingVertical: spacing.lg, borderTopWidth: 1, borderTopColor: colors.surfaceBorder, ...shadows.lg },
   cartInfo: {},
   cartItems: { ...typography.labelSmall, color: colors.textMuted },
   cartTotal: { ...typography.headlineMedium, color: colors.textPrimary },

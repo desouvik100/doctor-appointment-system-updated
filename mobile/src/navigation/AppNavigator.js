@@ -19,6 +19,7 @@ import StaffLoginScreen from '../screens/auth/StaffLoginScreen';
 import AdminLoginScreen from '../screens/auth/AdminLoginScreen';
 import RoleBasedNavigator from './RoleBasedNavigator';
 import BookingScreen from '../screens/booking/BookingScreen';
+import AppointmentTypeScreen from '../screens/booking/AppointmentTypeScreen';
 import SlotSelectionScreen from '../screens/booking/SlotSelectionScreen';
 import ConfirmDetailsScreen from '../screens/booking/ConfirmDetailsScreen';
 import PaymentScreen from '../screens/booking/PaymentScreen';
@@ -37,6 +38,7 @@ import RecordsScreen from '../screens/services/RecordsScreen';
 import EmergencyScreen from '../screens/services/EmergencyScreen';
 import MedicalImagingScreen from '../screens/services/MedicalImagingScreen';
 import EditProfileScreen from '../screens/profile/EditProfileScreen';
+import ProfileScreen from '../screens/profile/ProfileScreen';
 import RewardsScreen from '../screens/profile/RewardsScreen';
 import PaymentMethodsScreen from '../screens/profile/PaymentMethodsScreen';
 import HealthReportsScreen from '../screens/profile/HealthReportsScreen';
@@ -132,6 +134,7 @@ const AppContent = () => {
         <Stack.Screen name="Main" component={RoleBasedNavigator} />
         <Stack.Screen name="DoctorSearch" component={BookingScreen} />
         <Stack.Screen name="DoctorProfile" component={DoctorProfileScreen} />
+        <Stack.Screen name="AppointmentType" component={AppointmentTypeScreen} />
         <Stack.Screen name="Booking" component={BookingScreen} />
         <Stack.Screen name="SlotSelection" component={SlotSelectionScreen} />
         <Stack.Screen name="ConfirmDetails" component={ConfirmDetailsScreen} />
@@ -149,6 +152,7 @@ const AppContent = () => {
         <Stack.Screen name="Emergency" component={EmergencyScreen} />
         <Stack.Screen name="MedicalImaging" component={MedicalImagingScreen} />
         <Stack.Screen name="EditProfile" component={EditProfileScreen} />
+        <Stack.Screen name="Profile" component={ProfileScreen} />
         <Stack.Screen name="Rewards" component={RewardsScreen} />
         <Stack.Screen name="PaymentMethods" component={PaymentMethodsScreen} />
         <Stack.Screen name="HealthReports" component={HealthReportsScreen} />

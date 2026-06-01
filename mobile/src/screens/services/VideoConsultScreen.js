@@ -162,7 +162,7 @@ const VideoConsultScreen = ({ navigation }) => {
         </View>
         <TouchableOpacity 
           style={styles.consultBtn}
-          onPress={() => navigation.navigate('Booking', { doctor: item, type: 'video' })}
+          onPress={() => navigation.navigate('DoctorProfile', { doctor: item, doctorId: item._id || item.id })}
         >
           <LinearGradient
             colors={colors.gradientPrimary}

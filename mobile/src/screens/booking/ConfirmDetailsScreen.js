@@ -2,20 +2,23 @@
  * ConfirmDetailsScreen - Premium booking parameters confirmation screen
  */
 
-import React from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar } from 'react-native';
+import React, { useState, useEffect } from 'react';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar, ActivityIndicator } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import shadows from '../../theme/shadows';
 import Avatar from '../../components/common/Avatar';
+import doctorService from '../../services/api/doctorService';
 
 const ConfirmDetailsScreen = ({ navigation, route }) => {
   const { colors, isDarkMode } = useTheme();
   const insets = useSafeAreaInsets();
   const {
     doctor,
+    doctorId,
+    clinicId,
     date,
     time,
     queueNumber,
@@ -24,7 +27,57 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
     pendingBooking,
   } = route.params || {};
 
-  const consultationFee = doctor?.consultationFee || doctor?.fee || 500;
+  const [currentDoctor, setCurrentDoctor] = useState(doctor || null);
+  const resolvedDoctorId = doctorId || doctor?._id || doctor?.id || pendingBooking?.doctorId;
+  const [loading, setLoading] = useState(!doctor && !!resolvedDoctorId);
+
+  useEffect(() => {
+    const fetchDoctor = async () => {
+      if (!resolvedDoctorId) return;
+      try {
+        setLoading(true);
+        const res = await doctorService.getDoctorById(resolvedDoctorId);
+        const resolved = res.doctor || res.data || res;
+        setCurrentDoctor(resolved);
+      } catch (err) {
+        console.error('Failed to fetch doctor in ConfirmDetailsScreen:', err);
+      } finally {
+        setLoading(false);
+      }
+    };
+    if (!currentDoctor || (!currentDoctor._id && !currentDoctor.id)) {
+      fetchDoctor();
+    }
+  }, [resolvedDoctorId, doctor]);
+
+  const activeDoc = currentDoctor || doctor;
+
+  if (loading) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <ActivityIndicator size="large" color={colors.primary} />
+        <Text style={{ color: colors.textSecondary, marginTop: 10 }}>Loading doctor details...</Text>
+      </View>
+    );
+  }
+
+  if (!activeDoc && !resolvedDoctorId) {
+    return (
+      <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+        <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
+        <Text style={{ color: colors.textPrimary, fontSize: 16, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>Doctor Information Missing</Text>
+        <TouchableOpacity
+          style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 }}
+          onPress={() => navigation.goBack()}
+        >
+          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Go Back</Text>
+        </TouchableOpacity>
+      </View>
+    );
+  }
+
+  const consultationFee = activeDoc?.consultationFee || activeDoc?.fee || 500;
   const platformFee = Math.round(consultationFee * 0.05); // 5% platform fee
   const totalPayable = consultationFee + platformFee;
 
@@ -38,7 +91,9 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
 
   const handleProceed = () => {
     navigation.navigate('Payment', {
-      doctor,
+      doctor: activeDoc || doctor || {},
+      doctorId: resolvedDoctorId,
+      clinicId: clinicId || activeDoc?.clinicId?._id || activeDoc?.clinicId || null,
       date,
       time,
       queueNumber,
@@ -99,21 +154,21 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
         <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>YOUR DOCTOR</Text>
           <View style={styles.doctorRow}>
-            <Avatar imageUrl={doctor?.profilePhoto} name={doctor?.name} size="large" showBorder={false} />
+            <Avatar imageUrl={activeDoc?.profilePhoto} name={activeDoc?.name} size="large" showBorder={false} />
             <View style={styles.doctorInfo}>
               <View style={styles.doctorNameRow}>
                 <Text style={[styles.doctorName, { color: colors.textPrimary }]}>
-                  {doctor?.name?.startsWith('Dr.') ? doctor?.name : `Dr. ${doctor?.name || 'Doctor'}`}
+                  {activeDoc?.name?.startsWith('Dr.') ? activeDoc?.name : `Dr. ${activeDoc?.name || 'Doctor'}`}
                 </Text>
                 <View style={[styles.verifiedBadge, { backgroundColor: colors.primary + '15' }]}>
                   <Text style={[styles.verifiedText, { color: colors.primary }]}>✔ Verified</Text>
                 </View>
               </View>
               <Text style={[styles.doctorSpecialty, { color: colors.primary }]}>
-                {doctor?.specialization || doctor?.specialty || 'Specialist'}
+                {activeDoc?.specialization || activeDoc?.specialty || 'Specialist'}
               </Text>
               <Text style={[styles.doctorExp, { color: colors.textMuted }]}>
-                🎓 {doctor?.experience || 8} yrs experience · ⭐ {doctor?.rating || '4.8'}
+                🎓 {activeDoc?.experience || 8} yrs experience · ⭐ {activeDoc?.rating || '4.8'}
               </Text>
             </View>
           </View>
@@ -155,7 +210,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
               </View>
               <View style={styles.clinicInfo}>
                 <Text style={[styles.clinicNameText, { color: colors.textPrimary }]}>
-                  {doctor?.clinicName || doctor?.hospitalName || 'HealthSync Medical Plaza'}
+                  {activeDoc?.clinicName || activeDoc?.hospitalName || 'HealthSync Medical Plaza'}
                 </Text>
                 <Text style={[styles.clinicAddressText, { color: colors.textSecondary }]}>
                   Ground Floor, Suite 402, Sector V, Salt Lake, Kolkata, West Bengal - 700091

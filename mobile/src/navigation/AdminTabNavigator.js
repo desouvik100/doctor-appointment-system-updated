@@ -146,7 +146,7 @@ const AdminTabNavigator = () => {
 
 const styles = StyleSheet.create({
   tabBarContainer: { position: 'absolute', bottom: spacing.xl, left: spacing.xl, right: spacing.xl },
-  tabBar: { flexDirection: 'row', borderRadius: borderRadius.xxl, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderWidth: 1, ...shadows.large },
+  tabBar: { flexDirection: 'row', borderRadius: borderRadius.xxl, paddingVertical: spacing.sm, paddingHorizontal: spacing.md, borderWidth: 1, ...shadows.lg },
   tabButton: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.sm },
   tabItem: { alignItems: 'center' },
   activeIconBg: { width: 44, height: 44, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.xs, ...shadows.glow },
