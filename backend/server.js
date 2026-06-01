@@ -356,7 +356,7 @@ app.use('/api/whatsapp', require('./routes/whatsappRoutes'));
 app.use('/api/consultations', require('./routes/consultationRoutes'));
 app.use('/api/location', require('./routes/locationRoutes'));
 app.use('/api/family', require('./routes/familyRoutes'));
-app.use('/api/reviews', require('./routes/reviewRoutes'));
+app.use('/api/reviews', require('./routes/reviewRoutes')); // reviews: GET /:doctorId, POST /, PUT /:id, DELETE /:id
 app.use('/api/prescriptions', require('./routes/prescriptionRoutes'));
 app.use('/api/favorites', require('./routes/favoritesRoutes'));
 app.use('/api/health', require('./routes/healthRoutes'));
