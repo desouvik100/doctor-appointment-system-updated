@@ -39,11 +39,13 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     if (appointment) {
-      // Format the passed appointment data
       setAppointmentData(formatAppointment(appointment));
+      setLoading(false);
     } else if (appointmentId) {
-      // Fetch from API
       fetchAppointment();
+    } else {
+      // Neither appointment object nor appointmentId provided — bail out gracefully
+      setLoading(false);
     }
   }, [appointment, appointmentId]);
 

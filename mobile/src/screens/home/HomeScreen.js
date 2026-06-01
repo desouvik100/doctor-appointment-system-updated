@@ -112,8 +112,9 @@ const HomeScreen = ({ navigation }) => {
         searchDoctors({ limit: 5 }).catch(() => ({ doctors: [] })),
       ]);
       
-      const raw = Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData.data || []);
-      const docsRaw = doctorsData?.doctors || doctorsData?.data || doctorsData || [];
+      const raw = Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData?.data || []);
+      const docsRawValue = doctorsData?.doctors || doctorsData?.data || doctorsData;
+      const docsRaw = Array.isArray(docsRawValue) ? docsRawValue : [];
       
       const parsedAppointments = raw.map(app => ({
         id: app._id || app.id,

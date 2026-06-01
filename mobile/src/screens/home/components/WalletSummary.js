@@ -22,15 +22,19 @@ const { width } = Dimensions.get('window');
 const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onAddMoney }) => {
   const { colors, isDarkMode } = useTheme();
   const navigation = useNavigation();
-  
+
+  // Defensive coercion — parent may pass null/undefined despite default props
+  const safeBalance = Number(balance) || 0;
+  const safePoints  = Number(loyaltyPoints) || 0;
+
   const scale = useSharedValue(1);
   const progressWidth = useSharedValue(0);
   const targetPoints = 1000;
-  const progressRatio = Math.min(loyaltyPoints / targetPoints, 1);
+  const progressRatio = Math.min(safePoints / targetPoints, 1);
 
   useEffect(() => {
     progressWidth.value = withTiming(progressRatio, { duration: 1200 });
-  }, [loyaltyPoints]);
+  }, [safePoints]);
 
   const progressStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value * 100}%`,
@@ -71,14 +75,14 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
           <View>
             <Text style={styles.balanceLabel}>Available Credits</Text>
             <Text style={styles.balanceAmount}>
-              {currency}{balance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+              {currency}{safeBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </Text>
           </View>
           <View style={styles.pointsBadge}>
             <Text style={styles.pointsEmoji}>⭐</Text>
             <View>
               <Text style={styles.pointsLabel}>Loyalty Tier</Text>
-              <Text style={styles.pointsValue}>{loyaltyPoints.toLocaleString()} pts</Text>
+              <Text style={styles.pointsValue}>{safePoints.toLocaleString()} pts</Text>
             </View>
           </View>
         </View>
@@ -87,7 +91,7 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
         <View style={styles.milestoneContainer}>
           <View style={styles.milestoneTextRow}>
             <Text style={styles.milestoneLabel}>Milestone: Free Consultation</Text>
-            <Text style={styles.milestoneProgress}>{loyaltyPoints}/{targetPoints} pts</Text>
+            <Text style={styles.milestoneProgress}>{safePoints}/{targetPoints} pts</Text>
           </View>
           <View style={[styles.progressBarBg, { backgroundColor: 'rgba(255, 255, 255, 0.12)' }]}>
             <Animated.View style={[styles.progressBarFill, { backgroundColor: '#00D4AA' }, progressStyle]} />

@@ -61,8 +61,10 @@ const DEFAULT_TIPS = [
   },
 ];
 
-const HealthTips = ({ tips = DEFAULT_TIPS, onTipPress }) => {
+const HealthTips = ({ tips, onTipPress }) => {
   const { colors } = useTheme();
+  // Guard: parent may pass null/undefined despite default prop — always fall back to DEFAULT_TIPS
+  const safeTips = Array.isArray(tips) && tips.length > 0 ? tips : DEFAULT_TIPS;
   
   return (
     <View style={styles.container}>
@@ -80,7 +82,7 @@ const HealthTips = ({ tips = DEFAULT_TIPS, onTipPress }) => {
         decelerationRate="fast"
         snapToInterval={CARD_WIDTH + spacing.md}
       >
-        {tips.map((tip) => (
+        {safeTips.map((tip) => (
           <TouchableOpacity
             key={tip.id}
             activeOpacity={0.9}

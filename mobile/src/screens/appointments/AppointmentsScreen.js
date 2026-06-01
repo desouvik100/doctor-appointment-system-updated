@@ -244,7 +244,7 @@ const AppointmentsScreen = ({ navigation }) => {
         <FlatList
           data={appointments}
           renderItem={renderAppointmentCard}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item, index) => item.id || item._id || String(index)}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           refreshControl={
