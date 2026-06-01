@@ -77,8 +77,15 @@ const DoctorsScreen = ({ navigation }) => {
       const response = await doctorService.searchDoctors(params);
       setDoctors(response.doctors || response.data || response || []);
     } catch (err) {
-      console.error('Error fetching doctors:', err);
-      setError('Failed to load doctors. Please try again.');
+      // Use warn instead of error for network failures — avoids LogBox red overlay in dev mode
+      const isNetworkErr = err?.statusCode === 0 || err?.code === 'NETWORK_ERROR' || err?.message?.includes('Network');
+      if (isNetworkErr) {
+        console.warn('[DoctorsScreen] Network unavailable — showing offline state');
+        setError('No internet connection. Please check your network and try again.');
+      } else {
+        console.warn('Error fetching doctors:', err?.message || err);
+        setError('Failed to load doctors. Please try again.');
+      }
       setDoctors([]);
     } finally {
       setLoading(false);

@@ -410,12 +410,19 @@ apiClient.interceptors.response.use(
   async (error) => {
     const originalRequest = error.config;
 
-    // Log error in dev mode only
+    // Log error in dev mode only — use warn for network errors to avoid LogBox red overlay
     if (__DEV__) {
-      devError(
-        `❌ [API] ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url} - ${error.response?.status || 'NETWORK ERROR'}`,
-        error.response?.data?.message || error.message
-      );
+      const isNetworkErr = !error.response && error.request;
+      if (isNetworkErr) {
+        console.warn(
+          `⚠️ [API] ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url} - NETWORK ERROR (offline or server unreachable)`
+        );
+      } else {
+        devError(
+          `❌ [API] ${originalRequest?.method?.toUpperCase()} ${originalRequest?.url} - ${error.response?.status || 'NETWORK ERROR'}`,
+          error.response?.data?.message || error.message
+        );
+      }
     }
 
     // Handle 401 - Token refresh (Requirement 1.6)
