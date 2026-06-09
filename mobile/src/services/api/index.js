@@ -23,6 +23,10 @@ export * from './appointmentService';
 export { default as doctorService } from './doctorService';
 export * from './doctorService';
 
+// Review Service
+export { default as reviewService } from './reviewService';
+export * from './reviewService';
+
 // Wallet Service
 export { default as walletService } from './walletService';
 export * from './walletService';
@@ -85,6 +89,7 @@ export * from './adminApi';
 import authService from './authService';
 import appointmentService from './appointmentService';
 import doctorService from './doctorService';
+import reviewService from './reviewService';
 import walletService from './walletService';
 import healthRecordService from './healthRecordService';
 import familyService from './familyService';
@@ -105,6 +110,7 @@ export default {
   auth: authService,
   appointments: appointmentService,
   doctors: doctorService,
+  reviews: reviewService,
   wallet: walletService,
   healthRecords: healthRecordService,
   family: familyService,

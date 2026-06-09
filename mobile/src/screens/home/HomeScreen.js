@@ -31,6 +31,7 @@ import {
   SecondaryServices,
   TrendingSpecialties,
   ContinueJourney,
+  NearbyDoctors,
 } from './components';
 import { getUpcomingAppointments } from '../../services/api/appointmentService';
 import { getBalance, getLoyaltyPoints } from '../../services/api/walletService';
@@ -438,6 +439,9 @@ const HomeScreen = ({ navigation }) => {
                   ))}
                 </ScrollView>
               </View>
+
+              {/* ── 7.5. NEARBY DOCTORS ── */}
+              <NearbyDoctors />
 
               {/* ── 8. TRENDING SPECIALTIES ── */}
               <TrendingSpecialties />

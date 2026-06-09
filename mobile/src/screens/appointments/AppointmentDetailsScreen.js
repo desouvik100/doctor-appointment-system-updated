@@ -305,14 +305,29 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
           {appointmentData.type === 'clinic' && appointmentData.status === 'confirmed' && (
             <Button title="Check In" onPress={handleCheckIn} fullWidth size="large" />
           )}
-          <View style={styles.secondaryActions}>
-            <TouchableOpacity style={styles.secondaryBtn} onPress={handleReschedule}>
-              <Text style={styles.secondaryBtnText}>Reschedule</Text>
-            </TouchableOpacity>
-            <TouchableOpacity style={[styles.secondaryBtn, styles.cancelBtn]} onPress={() => setShowCancelModal(true)}>
-              <Text style={styles.cancelBtnText}>Cancel</Text>
-            </TouchableOpacity>
-          </View>
+          {appointmentData.status === 'completed' && (
+            <Button 
+              title="Write Review" 
+              onPress={() => {
+                navigation.navigate('DoctorProfile', {
+                  doctorId: appointmentData.doctor?.id,
+                  autoOpenReview: true,
+                });
+              }} 
+              fullWidth 
+              size="large" 
+            />
+          )}
+          {appointmentData.status !== 'completed' && appointmentData.status !== 'cancelled' && (
+            <View style={styles.secondaryActions}>
+              <TouchableOpacity style={styles.secondaryBtn} onPress={handleReschedule}>
+                <Text style={styles.secondaryBtnText}>Reschedule</Text>
+              </TouchableOpacity>
+              <TouchableOpacity style={[styles.secondaryBtn, styles.cancelBtn]} onPress={() => setShowCancelModal(true)}>
+                <Text style={styles.cancelBtnText}>Cancel</Text>
+              </TouchableOpacity>
+            </View>
+          )}
         </View>
       </ScrollView>
  

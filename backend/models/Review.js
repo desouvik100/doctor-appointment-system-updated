@@ -27,14 +27,6 @@ const reviewSchema = new mongoose.Schema({
     min: 1,
     max: 5
   },
-  // Detailed ratings
-  ratings: {
-    consultation: { type: Number, min: 1, max: 5 },
-    communication: { type: Number, min: 1, max: 5 },
-    punctuality: { type: Number, min: 1, max: 5 },
-    cleanliness: { type: Number, min: 1, max: 5 },
-    valueForMoney: { type: Number, min: 1, max: 5 }
-  },
   title: {
     type: String,
     trim: true,
@@ -45,13 +37,10 @@ const reviewSchema = new mongoose.Schema({
     trim: true,
     maxlength: 1000
   },
-  tags: [{
+  visitType: {
     type: String,
-    enum: ['friendly', 'professional', 'thorough', 'quick', 'knowledgeable', 'patient', 'helpful', 'recommended']
-  }],
-  wouldRecommend: {
-    type: Boolean,
-    default: true
+    enum: ['in-clinic', 'virtual'],
+    default: 'in-clinic'
   },
   isAnonymous: {
     type: Boolean,
@@ -59,65 +48,51 @@ const reviewSchema = new mongoose.Schema({
   },
   isVerified: {
     type: Boolean,
-    default: true // Verified because linked to appointment
+    default: true
   },
   status: {
     type: String,
-    enum: ['pending', 'approved', 'rejected', 'flagged'],
+    enum: ['approved', 'pending', 'rejected', 'flagged'],
     default: 'approved'
   },
-  // Doctor response
-  doctorResponse: {
-    text: String,
-    respondedAt: Date
-  },
-  // Helpful votes
   helpfulCount: {
     type: Number,
     default: 0
   },
-  helpfulVotes: [{
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    votedAt: Date
-  }],
-  // Report
-  reportedBy: [{
-    userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    reason: String,
-    reportedAt: Date
-  }]
+  unhelpfulCount: {
+    type: Number,
+    default: 0
+  },
+  photo: {
+    type: String,
+    default: null
+  }
 }, {
   timestamps: true
 });
 
-// Index for efficient queries
+// Indexes for sorting and filtering approved reviews efficiently
 reviewSchema.index({ doctorId: 1, status: 1, createdAt: -1 });
-reviewSchema.index({ patientId: 1, createdAt: -1 });
+reviewSchema.index({ doctorId: 1, rating: 1, status: 1 });
+reviewSchema.index({ doctorId: 1, visitType: 1, status: 1 });
+reviewSchema.index({ doctorId: 1, isVerified: 1, status: 1 });
 
-// Static method to calculate doctor's average rating
+// Static method to calculate doctor's average rating and total counts
 reviewSchema.statics.calculateDoctorRating = async function(doctorId) {
   const result = await this.aggregate([
-    { $match: { doctorId: mongoose.Types.ObjectId(doctorId), status: 'approved' } },
+    { $match: { doctorId: new mongoose.Types.ObjectId(doctorId), status: 'approved' } },
     {
       $group: {
         _id: '$doctorId',
         averageRating: { $avg: '$rating' },
-        totalReviews: { $sum: 1 },
-        avgConsultation: { $avg: '$ratings.consultation' },
-        avgCommunication: { $avg: '$ratings.communication' },
-        avgPunctuality: { $avg: '$ratings.punctuality' },
-        recommendRate: { $avg: { $cond: ['$wouldRecommend', 1, 0] } }
+        totalReviews: { $sum: 1 }
       }
     }
   ]);
 
   return result[0] || {
     averageRating: 0,
-    totalReviews: 0,
-    avgConsultation: 0,
-    avgCommunication: 0,
-    avgPunctuality: 0,
-    recommendRate: 0
+    totalReviews: 0
   };
 };
 

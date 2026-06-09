@@ -6,6 +6,12 @@
 ### What DEVELOPER_ERROR Means
 Error code 10 is Google's error for "the signing certificate SHA-1 fingerprint is not registered for this package in Google Cloud Console". It is NOT a code bug — it requires a manual action in Google Cloud Console.
 
+### Debug SHA-1 (Confirmed)
+```
+SHA1:   0E:D4:51:34:DB:C9:9C:AE:90:F4:84:D4:CB:10:2C:F0:BF:BE:65:15
+SHA256: 39:5B:C2:B7:7A:2A:3A:26:2F:99:12:F0:EB:75:F0:34:8F:84:9E:77:6E:22:E7:C3:26:A0:68:38:22:DD:3D:BC
+```
+
 ### Current State
 
 | Item | Value | Status |
@@ -15,37 +21,35 @@ Error code 10 is Google's error for "the signing certificate SHA-1 fingerprint i
 | Web Client ID (env.js) | `703204659246-q2jpikuoqkjsmsvbsrtfp3bcoush4h3r` | ✅ |
 | Google project number | `703204659246` | ✅ |
 | Android OAuth Client in JSON | ❌ Not present (only Web client type 3) | **Missing** |
-| SHA-1 fingerprint registered | ❓ Cannot verify without Google Cloud access | **Must check** |
+| SHA-1 fingerprint registered | ❓ SHA-1 obtained: `0E:D4:51:34:DB:C9:9C:AE:90:F4:84:D4:CB:10:2C:F0:BF:BE:65:15` — **register in Firebase** |
 
 ### Fix Required
 
-**Step 1: Get your debug SHA-1 fingerprint**
-```bash
-# macOS/Linux
-keytool -list -v -keystore ~/.android/debug.keystore -alias androiddebugkey -storepass android -keypass android
+**You already have the SHA-1. Follow these exact steps:**
 
-# Windows CMD
-keytool -list -v -keystore %USERPROFILE%\.android\debug.keystore -alias androiddebugkey -storepass android -keypass android
-```
+**Step 1 — Firebase Console (Easiest)**
+1. Go to https://console.firebase.google.com/
+2. Select project: **healthsync-611cc**
+3. Click gear icon ⚙️ → **Project Settings**
+4. Scroll to **"Your apps"** → find `com.healthsync.app`
+5. Click **"Add fingerprint"**
+6. Paste the SHA-1:
+   ```
+   0E:D4:51:34:DB:C9:9C:AE:90:F4:84:D4:CB:10:2C:F0:BF:BE:65:15
+   ```
+7. Click **Save**
+8. Click **"Download google-services.json"** (button at top of page)
+9. Replace `mobile/android/app/google-services.json` with the downloaded file
+10. Rebuild the APK: `cd mobile/android && ./gradlew assembleDebug`
 
-**Step 2: Google Cloud Console**
+**Step 2 — (Optional) Also add to Google Cloud Console**
 1. Go to https://console.cloud.google.com/
-2. Select project: `healthsync-611cc`
-3. Go to APIs & Services → Credentials
-4. Click "Create Credentials" → "OAuth 2.0 Client ID"
-5. Application type: **Android**
-6. Package name: `com.healthsync.app`
-7. SHA-1: [paste from Step 1]
-8. Click Create
-
-**Step 3: Download google-services.json**
-- After creating the Android client, download the updated `google-services.json`
-- Replace `mobile/android/app/google-services.json`
-- The new file will have an OAuth client with `client_type: 1` (Android)
-
-**Step 4: Rebuild APK**
-- Clean and rebuild the Android app
-- The debug build will now authenticate correctly
+2. Project: **healthsync-611cc** (number: 703204659246)
+3. APIs & Services → Credentials
+4. Create Credentials → OAuth 2.0 Client ID → **Android**
+5. Package name: `com.healthsync.app`
+6. SHA-1: `0E:D4:51:34:DB:C9:9C:AE:90:F4:84:D4:CB:10:2C:F0:BF:BE:65:15`
+7. Create → download updated `google-services.json` → replace file → rebuild
 
 ### Code Status: ✅ No Changes Needed
 

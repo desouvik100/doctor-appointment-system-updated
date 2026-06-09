@@ -22,6 +22,7 @@ const AppointmentCard = ({
   onJoinPress,
   onReschedulePress,
   onCancelPress,
+  onReviewPress,
   style,
 }) => {
   const { colors, isDarkMode } = useTheme();
@@ -208,6 +209,21 @@ const AppointmentCard = ({
               activeOpacity={0.85}
             >
               <Text style={[styles.ghostButtonText, { color: colors.textSecondary }]}>Cancel</Text>
+            </TouchableOpacity>
+          </View>
+        )}
+
+        {status === 'completed' && (
+          <View style={styles.actions}>
+            <TouchableOpacity
+              onPress={(e) => {
+                e.stopPropagation();
+                onReviewPress?.(appointment);
+              }}
+              style={[styles.actionButton, styles.primaryButton, { backgroundColor: colors.primary, flex: 0 }]}
+              activeOpacity={0.85}
+            >
+              <Text style={[styles.primaryButtonText, { color: colors.textInverse || '#fff', paddingHorizontal: spacing.xl }]}>Write Review</Text>
             </TouchableOpacity>
           </View>
         )}

@@ -7,6 +7,7 @@ import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   StatusBar, ActivityIndicator, TextInput, Alert, Image, Animated,
+  BackHandler,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -89,6 +90,80 @@ const DateCell = React.memo(({ day, isSelected, onSelect }) => {
   );
 });
 
+// Independent Animated SlotCell Component
+const SlotCell = React.memo(({ timeStr, isBooked, isSelected, onSelect }) => {
+  const { colors, isDarkMode } = useTheme();
+  const animatedValue = useRef(new Animated.Value(isSelected ? 1 : 0)).current;
+
+  useEffect(() => {
+    Animated.spring(animatedValue, {
+      toValue: isSelected ? 1 : 0,
+      friction: 6,
+      tension: 60,
+      useNativeDriver: true,
+    }).start();
+  }, [isSelected]);
+
+  const scale = animatedValue.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.05],
+  });
+
+  let background = colors.surface;
+  let border = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
+  let text = colors.textPrimary;
+
+  if (isBooked) {
+    background = isDarkMode ? 'rgba(255, 255, 255, 0.02)' : '#F1F5F9';
+    border = 'transparent';
+    text = colors.textMuted;
+  }
+
+  return (
+    <Animated.View style={{ width: '31%', transform: [{ scale }] }}>
+      <TouchableOpacity
+        disabled={isBooked}
+        onPress={onSelect}
+        activeOpacity={0.8}
+        style={{ width: '100%' }}
+      >
+        {isSelected ? (
+          <LinearGradient
+            colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
+            style={[
+              styles.slotChip,
+              {
+                width: '100%',
+                borderColor: 'transparent',
+                backgroundColor: 'transparent',
+              }
+            ]}
+          >
+            <Text style={[styles.slotChipText, { color: '#FFFFFF', fontWeight: '700' }]}>
+              {timeStr}
+            </Text>
+          </LinearGradient>
+        ) : (
+          <View
+            style={[
+              styles.slotChip,
+              {
+                width: '100%',
+                backgroundColor: background,
+                borderColor: border,
+              }
+            ]}
+          >
+            <Text style={[styles.slotChipText, { color: text, fontWeight: '600' }]}>
+              {timeStr}
+            </Text>
+          </View>
+        )}
+      </TouchableOpacity>
+    </Animated.View>
+  );
+});
+
 const SlotSelectionScreen = ({ navigation, route }) => {
   const { doctor, doctorId: routeDoctorId } = route.params || {};
   const { user } = useUser();
@@ -139,6 +214,21 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       fetchDoctor();
     }
   }, [routeDoctorId, doctor]);
+
+  useEffect(() => {
+    const handleBackButton = () => {
+      if (step === 2 && route.params?.consultationType) {
+        return false;
+      } else if (step > 1) {
+        setStep(step - 1);
+        return true;
+      }
+      return false;
+    };
+
+    const subscription = BackHandler.addEventListener('hardwareBackPress', handleBackButton);
+    return () => subscription.remove();
+  }, [step, route.params?.consultationType]);
 
   const activeDoc = currentDoctor || doctor;
   const doctorId = activeDoc?._id || activeDoc?.id || routeDoctorId || route.params?.doctorId;
@@ -535,39 +625,14 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     const renderSlotItem = (timeStr) => {
       const isBooked = BOOKED_SLOTS.includes(timeStr);
       const isSelected = selectedSlot === timeStr;
-      
-      let background = colors.surface;
-      let border = isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.05)';
-      let text = colors.textPrimary;
-      
-      if (isBooked) {
-        background = isDarkMode ? 'rgba(255,255,255,0.02)' : '#F1F5F9';
-        border = 'transparent';
-        text = colors.textMuted;
-      } else if (isSelected) {
-        background = colors.primary;
-        border = colors.primary;
-        text = '#FFFFFF';
-      }
-
       return (
-        <TouchableOpacity
+        <SlotCell
           key={timeStr}
-          disabled={isBooked}
-          onPress={() => setSelectedSlot(timeStr)}
-          style={[
-            styles.slotChip,
-            {
-              backgroundColor: background,
-              borderColor: border,
-            }
-          ]}
-          activeOpacity={0.8}
-        >
-          <Text style={[styles.slotChipText, { color: text, fontWeight: isSelected ? '700' : '600' }]}>
-            {timeStr}
-          </Text>
-        </TouchableOpacity>
+          timeStr={timeStr}
+          isBooked={isBooked}
+          isSelected={isSelected}
+          onSelect={() => setSelectedSlot(timeStr)}
+        />
       );
     };
 
@@ -721,7 +786,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       </LinearGradient>
 
       {/* Step Indicator Progress Bar */}
-      <View style={[styles.progressWrap, { backgroundColor: colors.surface }]}>
+      <View style={[styles.progressWrap, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F1F5F9' }]}>
         {['Type', 'Details', 'Date'].map((label, i) => {
           const s = i + 1;
           const done = step > s;
@@ -729,30 +794,50 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           return (
             <React.Fragment key={s}>
               <View style={styles.progressStep}>
-                <View style={[
-                  styles.progressDot,
-                  {
-                    backgroundColor: done ? colors.primary : (active ? colors.surfaceLight : colors.surface),
-                    borderColor: active || done ? colors.primary : (isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider),
-                    borderWidth: 2,
-                  }
-                ]}>
-                  {done ? (
-                    <Text style={styles.progressCheck}>✓</Text>
-                  ) : (
-                    <Text style={[styles.progressNum, { color: active ? colors.primary : colors.textMuted }]}>{s}</Text>
-                  )}
-                </View>
+                {done || active ? (
+                  <LinearGradient
+                    colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 1 }}
+                    style={styles.progressDot}
+                  >
+                    {done ? (
+                      <Text style={styles.progressCheck}>✓</Text>
+                    ) : (
+                      <Text style={[styles.progressNum, { color: '#FFFFFF', fontWeight: '800' }]}>{s}</Text>
+                    )}
+                  </LinearGradient>
+                ) : (
+                  <View style={[
+                    styles.progressDot,
+                    {
+                      backgroundColor: colors.surface,
+                      borderColor: isDarkMode ? 'rgba(255,255,255,0.12)' : '#E2E8F0',
+                      borderWidth: 2,
+                    }
+                  ]}>
+                    <Text style={[styles.progressNum, { color: colors.textMuted, fontWeight: '700' }]}>{s}</Text>
+                  </View>
+                )}
                 <Text style={[
                   styles.progressLabel,
-                  { color: (done || active) ? colors.primary : colors.textMuted, fontWeight: active ? '700' : '500' }
+                  { color: (done || active) ? colors.primary : colors.textMuted, fontWeight: active ? '800' : '600', marginTop: 6 }
                 ]}>{label}</Text>
               </View>
               {i < 2 && (
-                <View style={[
-                  styles.progressLine,
-                  { backgroundColor: step > s ? colors.primary : (isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider) }
-                ]} />
+                done ? (
+                  <LinearGradient
+                    colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
+                    start={{ x: 0, y: 0 }}
+                    end={{ x: 1, y: 0 }}
+                    style={[styles.progressLine, { height: 4, borderRadius: 2 }]}
+                  />
+                ) : (
+                  <View style={[
+                    styles.progressLine,
+                    { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#E2E8F0', height: 2, borderRadius: 1 }
+                  ]} />
+                )
               )}
             </React.Fragment>
           );

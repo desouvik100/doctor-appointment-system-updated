@@ -189,6 +189,16 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     }
   }, [loading, doctorId, doctor, doctorData]);
 
+  // Handle auto-opening review modal from finished booking link
+  useEffect(() => {
+    if (route.params?.autoOpenReview && !loading) {
+      // Clear parameter to avoid opening again on rotate/update
+      navigation.setParams({ autoOpenReview: undefined });
+      // Call eligibility checker directly
+      checkReviewEligibility();
+    }
+  }, [route.params?.autoOpenReview, loading]);
+
   // Dynamic reviews loader
   const fetchReviews = async (page = 1, append = false) => {
     const id = doctorId || doctor?._id || doctor?.id || doctorData?._id || doctorData?.id;
@@ -934,6 +944,63 @@ const DoctorProfileScreen = ({ navigation, route }) => {
             </View>
           </Animated.View>
         )}
+
+        {/* ── 5.5. MEDIA & TRUST ASSETS (Introduction Video & Clinic Photos) ── */}
+        <Animated.View entering={FadeInDown.delay(220)} style={styles.mediaSection}>
+          <Text style={[styles.sectionTitleLabel, { color: colors.textPrimary }]}>Media & Trust Assets</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.mediaScroll}>
+            {/* Doctor Video Intro Block */}
+            <TouchableOpacity 
+              activeOpacity={0.9} 
+              style={[
+                styles.videoIntroCard, 
+                { 
+                  backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', 
+                  borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' 
+                }
+              ]}
+              onPress={() => Alert.alert('Video Player', 'Playing doctor introduction video (1:15 min)...')}
+            >
+              <LinearGradient
+                colors={['rgba(79, 70, 229, 0.9)', 'rgba(0, 212, 170, 0.8)']}
+                style={styles.videoGradient}
+              >
+                <View style={styles.playButtonCircle}>
+                  <Text style={styles.playButtonIcon}>▶</Text>
+                </View>
+                <Text style={styles.videoDuration}>1:15</Text>
+              </LinearGradient>
+              <View style={styles.videoMeta}>
+                <Text style={[styles.videoTitle, { color: colors.textPrimary }]}>Introduction Video</Text>
+                <Text style={[styles.videoSub, { color: colors.textMuted }]}>Watch Dr. Sarah's overview</Text>
+              </View>
+            </TouchableOpacity>
+
+            {/* Clinic Photo 1 */}
+            <View style={[styles.clinicPhotoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
+              <Image 
+                source={{ uri: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=300' }} 
+                style={styles.clinicImage}
+              />
+              <View style={styles.videoMeta}>
+                <Text style={[styles.videoTitle, { color: colors.textPrimary }]}>Reception Area</Text>
+                <Text style={[styles.videoSub, { color: colors.textMuted }]}>Modern clinic entrance</Text>
+              </View>
+            </View>
+
+            {/* Clinic Photo 2 */}
+            <View style={[styles.clinicPhotoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
+              <Image 
+                source={{ uri: 'https://images.unsplash.com/photo-1583364481905-d41f4b551289?auto=format&fit=crop&q=80&w=300' }} 
+                style={styles.clinicImage}
+              />
+              <View style={styles.videoMeta}>
+                <Text style={[styles.videoTitle, { color: colors.textPrimary }]}>Consultation Room</Text>
+                <Text style={[styles.videoSub, { color: colors.textMuted }]}>Fully equipped chamber</Text>
+              </View>
+            </View>
+          </ScrollView>
+        </Animated.View>
 
         {/* ── 6. TABS CONTAINER ── */}
         <View style={[
@@ -1709,6 +1776,81 @@ const styles = StyleSheet.create({
     fontSize: 13.5,
     fontWeight: '800',
     marginTop: 2,
+  },
+  // Media Section
+  mediaSection: {
+    marginBottom: spacing.md,
+  },
+  mediaScroll: {
+    gap: spacing.md,
+    paddingVertical: spacing.xs,
+  },
+  videoIntroCard: {
+    width: 140,
+    height: 155,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  videoGradient: {
+    height: 90,
+    alignItems: 'center',
+    justifyContent: 'center',
+    position: 'relative',
+  },
+  playButtonCircle: {
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: '#FFFFFF',
+    alignItems: 'center',
+    justifyContent: 'center',
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.1,
+    shadowRadius: 4,
+    elevation: 2,
+  },
+  playButtonIcon: {
+    fontSize: 10,
+    color: '#4F46E5',
+    marginLeft: 2,
+  },
+  videoDuration: {
+    position: 'absolute',
+    bottom: 6,
+    right: 8,
+    color: '#FFFFFF',
+    fontSize: 8,
+    fontWeight: '800',
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    paddingHorizontal: 4,
+    paddingVertical: 1,
+    borderRadius: 3,
+  },
+  videoMeta: {
+    padding: spacing.sm,
+    flex: 1,
+    justifyContent: 'center',
+  },
+  videoTitle: {
+    fontSize: 10.5,
+    fontWeight: '800',
+  },
+  videoSub: {
+    fontSize: 8,
+    marginTop: 1,
+  },
+  clinicPhotoCard: {
+    width: 140,
+    height: 155,
+    borderRadius: borderRadius.lg,
+    borderWidth: 1,
+    overflow: 'hidden',
+  },
+  clinicImage: {
+    height: 90,
+    width: '100%',
   },
   // Tabs system
   tabsContainer: {

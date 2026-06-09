@@ -73,9 +73,10 @@ const SplashScreen = ({ onFinish }) => {
           <View style={styles.logoSection}>
             <Animated.View style={[styles.logoGlow, { opacity: glowAnim }]} />
             <Animated.View style={[styles.logoContainer, { transform: [{ scale: heartScale }] }]}>
-              <LinearGradient colors={['#4F46E5', '#6366F1', '#818CF8']} style={styles.logoBg}>
-                <Text style={styles.logoText}>HS</Text>
-              </LinearGradient>
+              <Animated.Image
+                source={require('../assets/logo_icon.png')}
+                style={styles.logoImage}
+              />
             </Animated.View>
           </View>
 
@@ -138,8 +139,7 @@ const styles = StyleSheet.create({
   logoSection: { alignItems: 'center', marginBottom: 24, position: 'relative' },
   logoGlow: { position: 'absolute', width: 140, height: 140, borderRadius: 70, backgroundColor: '#4F46E5', top: -20, left: -20 },
   logoContainer: { zIndex: 1 },
-  logoBg: { width: 100, height: 100, borderRadius: 32, alignItems: 'center', justifyContent: 'center', shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.5, shadowRadius: 20, elevation: 15 },
-  logoText: { fontSize: 42, fontWeight: '800', color: '#fff', letterSpacing: -1 },
+  logoImage: { width: 100, height: 100, borderRadius: 32, shadowColor: '#4F46E5', shadowOffset: { width: 0, height: 8 }, shadowOpacity: 0.5, shadowRadius: 20 },
   brandName: { fontSize: 36, fontWeight: '800', color: '#fff', textAlign: 'center', letterSpacing: -0.5 },
   tagline: { fontSize: 16, color: '#94A3B8', textAlign: 'center', marginTop: 8 },
   ecgSection: { marginVertical: 40, position: 'relative', overflow: 'hidden', width: 280, height: 100 },

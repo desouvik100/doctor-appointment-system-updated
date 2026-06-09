@@ -138,6 +138,15 @@ const AppointmentsScreen = ({ navigation }) => {
     });
   };
 
+  const handleReviewPress = (appointment) => {
+    const rawApt = appointment.rawData;
+    const docId = rawApt.doctorId?._id || rawApt.doctorId;
+    navigation.navigate('DoctorProfile', {
+      doctorId: docId,
+      autoOpenReview: true,
+    });
+  };
+
   const renderAppointmentCard = ({ item }) => (
     <AppointmentCard
       appointment={item}
@@ -145,6 +154,7 @@ const AppointmentsScreen = ({ navigation }) => {
       onJoinPress={handleJoinCall}
       onReschedulePress={handleReschedule}
       onCancelPress={(apt) => handleCancelAppointment(apt.id)}
+      onReviewPress={handleReviewPress}
       style={styles.appointmentCard}
     />
   );
