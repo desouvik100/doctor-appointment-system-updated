@@ -1650,65 +1650,60 @@ function App() {
       
       {/* Global Toast Notifications - Mobile Optimized */}
       <Toaster
-        position="bottom-center"
+        position="top-right"
         reverseOrder={false}
-        gutter={8}
+        gutter={12}
         containerStyle={{
-          bottom: 'calc(90px + env(safe-area-inset-bottom, 0px))',
+          top: 'calc(80px + env(safe-area-inset-top, 20px))',
+          right: '20px',
           zIndex: 99999999,
         }}
         toastOptions={{
-          duration: 2000,
+          duration: 3000,
           style: {
-            background: 'rgba(15, 23, 42, 0.92)',
-            color: '#ffffff',
-            padding: '12px 16px',
+            background: '#ffffff',
+            color: '#0f172a',
+            padding: '14px 20px',
             borderRadius: '12px',
-            boxShadow: '0 8px 24px rgba(0, 0, 0, 0.25)',
-            fontWeight: '500',
+            boxShadow: '0 10px 30px rgba(15, 23, 42, 0.08), 0 4px 8px rgba(15, 23, 42, 0.04)',
+            fontWeight: '600',
             fontSize: '14px',
-            maxWidth: '85vw',
-            minWidth: '160px',
-            backdropFilter: 'blur(8px)',
-            WebkitBackdropFilter: 'blur(8px)',
-            border: '1px solid rgba(255, 255, 255, 0.08)',
+            maxWidth: '380px',
+            minWidth: '220px',
+            border: '1px solid #e5e7eb',
             display: 'flex',
             alignItems: 'center',
-            gap: '10px',
+            gap: '12px',
           },
           success: {
-            duration: 1800,
+            duration: 3000,
             iconTheme: {
               primary: '#22c55e',
               secondary: '#ffffff',
             },
             style: {
-              background: 'rgba(22, 163, 74, 0.92)',
-              color: '#ffffff',
-              border: '1px solid rgba(34, 197, 94, 0.2)',
+              background: '#f0fdf4',
+              color: '#15803d',
+              border: '1px solid #bbf7d0',
             },
           },
           error: {
-            duration: 2500,
+            duration: 4000,
             iconTheme: {
-              primary: '#ffffff',
-              secondary: '#dc2626',
-            },
-            style: {
-              background: 'rgba(220, 38, 38, 0.92)',
-              color: '#ffffff',
-              border: '1px solid rgba(248, 113, 113, 0.2)',
-            },
-          },
-          loading: {
-            iconTheme: {
-              primary: '#60a5fa',
+              primary: '#ef4444',
               secondary: '#ffffff',
             },
             style: {
-              background: 'rgba(37, 99, 235, 0.92)',
-              color: '#ffffff',
-              border: '1px solid rgba(96, 165, 250, 0.2)',
+              background: '#fef2f2',
+              color: '#b91c1c',
+              border: '1px solid #fecaca',
+            },
+          },
+          loading: {
+            style: {
+              background: '#f8fafc',
+              color: '#475569',
+              border: '1px solid #e2e8f0',
             },
           },
         }}

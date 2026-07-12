@@ -289,6 +289,17 @@ html[data-theme="dark"] .help-text {
   color: #94a3b8;
 }
 
+/* Disable focus outline specifically on toast notification wrappers and text elements */
+[data-hot-toast],
+[data-hot-toast] *:focus,
+[data-hot-toast] *:focus-visible,
+div[role="status"][aria-live="polite"],
+div[role="status"][aria-live="polite"] *:focus,
+div[role="status"][aria-live="polite"] *:focus-visible {
+  outline: none !important;
+  box-shadow: none !important;
+}
+
 /* ============================================
    PRINT ACCESSIBILITY
    ============================================ */

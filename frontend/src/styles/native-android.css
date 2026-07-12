@@ -937,17 +937,19 @@ html[data-theme="dark"] .app-card-footer {
   top: calc(16px + env(safe-area-inset-top, 24px)) !important;
 }
 
-/* React Hot Toast - ensure visible */
-[data-sonner-toaster],
-.sonner-toast-wrapper,
-div[role="status"][aria-live="polite"] {
-  top: calc(16px + env(safe-area-inset-top, 24px)) !important;
-  z-index: 99999 !important;
-}
+/* React Hot Toast - ensure visible on mobile */
+@media (max-width: 767px) {
+  [data-sonner-toaster],
+  .sonner-toast-wrapper,
+  div[role="status"][aria-live="polite"] {
+    top: calc(16px + env(safe-area-inset-top, 24px)) !important;
+    z-index: 99999 !important;
+  }
 
-/* Hot toast container fix */
-div[style*="position: fixed"][style*="z-index: 9999"] {
-  top: calc(16px + env(safe-area-inset-top, 24px)) !important;
+  /* Hot toast container fix */
+  div[style*="position: fixed"][style*="z-index: 9999"] {
+    top: calc(16px + env(safe-area-inset-top, 24px)) !important;
+  }
 }
 
 /* Ensure error messages are visible */

@@ -600,14 +600,6 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
         {/* Desktop Header - Full */}
         <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-3 sm:px-4 lg:px-6 h-14 sm:h-16 items-center justify-between hidden lg:flex">
           <div className="flex items-center gap-2 sm:gap-4">
-            <button 
-              type="button"
-              className="w-10 h-10 sm:w-11 sm:h-11 rounded-xl bg-sky-50 hover:bg-sky-100 flex items-center justify-center cursor-pointer active:scale-95 border border-sky-200" 
-              style={{ touchAction: 'manipulation', WebkitTapHighlightColor: 'transparent' }}
-              onPointerDown={() => setMobileSidebarOpen(true)}
-            >
-              <i className="fas fa-bars text-sky-600 text-base sm:text-lg"></i>
-            </button>
             <div className="min-w-0">
               <h1 className="text-sm sm:text-base font-semibold text-slate-800 truncate">Welcome back, {(currentUser?.name || 'User').split(' ')[0]}</h1>
               <p className="text-[10px] sm:text-xs text-slate-500 truncate">{userLocation?.city ? <><i className="fas fa-map-marker-alt text-sky-500 mr-1"></i>{userLocation.city}</> : 'Book an online consultation or visit a clinic near you'}</p>
@@ -728,185 +720,17 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                     </button>
                   ))}
                 </div>
-                <div className="grid grid-cols-2 lg:grid-cols-4 gap-3">
-                  {recentDoctors.map(doc => {
-                    // Availability status - use actual data
-                    const isAvailable = doc.availability === 'Available' || doc.isAvailable;
-                    // Check real-time online status
-                    const onlineStatus = doctorOnlineStatus[doc._id];
-                    const isReallyOnline = onlineStatus?.isOnline === true;
-                    const availStatus = isAvailable ? 'available' : 'unavailable';
-                    // Consultation type
-                    const consultTypes = doc.consultationTypes || ['clinic'];
-                    const docInitials = doc.name ? doc.name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2) : 'DR';
-                    // Use actual data or sensible defaults
-                    const rating = doc.rating || doc.averageRating || 4.5;
-                    const avgWaitTime = doc.avgWaitTime || doc.averageWaitTime || 15;
-                    const distance = doc.distance ? doc.distance.toFixed(1) : (userLocation?.latitude ? '2.5' : null);
-                    const isVerified = doc.isVerified !== false;
-                    const reviewCount = doc.reviewCount || doc.totalReviews || 0;
-                    return (
-                    <div 
-                      key={doc._id} 
-                      className="doctor-card-mobile"
-                      onClick={() => { setSelectedDoctor(doc); setShowDoctorProfile(true); }}
-                      style={{ 
-                        padding: '12px',
-                        borderRadius: '16px',
-                        border: '1px solid #e2e8f0',
-                        background: '#ffffff',
-                        cursor: 'pointer',
-                        transition: 'all 0.2s ease',
-                        boxShadow: '0 2px 8px rgba(0,0,0,0.04)',
-                        position: 'relative'
-                      }}
-                    >
-                      {/* Verified Badge - Top Right */}
-                      {isVerified && (
-                        <div style={{
-                          position: 'absolute',
-                          top: '8px',
-                          right: '8px',
-                          background: 'linear-gradient(135deg, #22c55e, #16a34a)',
-                          color: '#fff',
-                          padding: '3px 8px',
-                          borderRadius: '12px',
-                          fontSize: '9px',
-                          fontWeight: '700',
-                          display: 'flex',
-                          alignItems: 'center',
-                          gap: '3px',
-                          boxShadow: '0 2px 6px rgba(16,185,129,0.3)'
-                        }}>
-                          <i className="fas fa-check-circle" style={{ fontSize: '8px' }}></i>
-                          Verified
-                        </div>
-                      )}
-                      
-                      {/* Photo and Name */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '10px' }}>
-                        <div style={{ 
-                          width: '48px', 
-                          height: '48px', 
-                          borderRadius: '12px', 
-                          background: 'linear-gradient(135deg, #0ea5e9, #14b8a6)',
-                          display: 'flex',
-                          alignItems: 'center',
-                          justifyContent: 'center',
-                          overflow: 'hidden',
-                          flexShrink: 0,
-                          position: 'relative'
-                        }}>
-                          {doc.profilePhoto ? (
-                            <img src={doc.profilePhoto} alt={doc.name} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.style.display = 'none'; }} />
-                          ) : (
-                            <span style={{ color: '#fff', fontWeight: 700, fontSize: '14px' }}>{docInitials}</span>
-                          )}
-                          {availStatus === 'available' && (
-                            <div style={{ 
-                              position: 'absolute', 
-                              bottom: '-2px', 
-                              right: '-2px', 
-                              width: '14px', 
-                              height: '14px', 
-                              background: isReallyOnline ? '#22c55e' : '#94a3b8', 
-                              borderRadius: '50%', 
-                              border: '2px solid #fff',
-                              animation: isReallyOnline ? 'pulse-online 2s infinite' : 'none'
-                            }}></div>
-                          )}
-                        </div>
-                        <div style={{ flex: 1, minWidth: 0 }}>
-                          <h4 style={{ fontSize: '13px', fontWeight: 600, color: '#1e293b', margin: 0, whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis', paddingRight: '50px' }}>
-                            {doc.name?.startsWith('Dr.') ? doc.name : `Dr. ${doc.name}`}
-                          </h4>
-                          <p style={{ fontSize: '11px', color: '#64748b', margin: '2px 0 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{doc.specialization}</p>
-                        </div>
-                      </div>
-                      
-                      {/* Rating, Experience, Reviews */}
-                      <div style={{ display: 'flex', alignItems: 'center', gap: '6px', marginBottom: '8px', flexWrap: 'wrap' }}>
-                        <span style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '3px', 
-                          fontSize: '11px', 
-                          fontWeight: 600, 
-                          color: '#fff',
-                          background: '#22c55e',
-                          padding: '2px 6px',
-                          borderRadius: '4px'
-                        }}>
-                          <i className="fas fa-star" style={{ fontSize: '9px' }}></i>
-                          {typeof rating === 'number' ? rating.toFixed(1) : rating}
-                        </span>
-                        {reviewCount > 0 && <span style={{ fontSize: '10px', color: '#64748b' }}>({reviewCount})</span>}
-                        <span style={{ fontSize: '10px', color: '#94a3b8' }}>•</span>
-                        <span style={{ fontSize: '10px', color: '#64748b' }}>{doc.experience || '5+'}y</span>
-                      </div>
-                      
-                      {/* Trust Signals Row - Wait Time & Distance */}
-                      <div style={{ 
-                        display: 'flex', 
-                        alignItems: 'center', 
-                        gap: '8px', 
-                        marginBottom: '10px',
-                        padding: '6px 8px',
-                        background: '#f8fafc',
-                        borderRadius: '8px'
-                      }}>
-                        <span style={{ 
-                          display: 'flex', 
-                          alignItems: 'center', 
-                          gap: '4px', 
-                          fontSize: '10px', 
-                          color: '#64748b'
-                        }}>
-                          <i className="fas fa-clock" style={{ color: '#f59e0b', fontSize: '9px' }}></i>
-                          ~{avgWaitTime} min wait
-                        </span>
-                        {distance && (
-                          <>
-                            <span style={{ fontSize: '10px', color: '#cbd5e1' }}>|</span>
-                            <span style={{ 
-                              display: 'flex', 
-                              alignItems: 'center', 
-                              gap: '4px', 
-                              fontSize: '10px', 
-                              color: '#64748b'
-                            }}>
-                              <i className="fas fa-map-marker-alt" style={{ color: '#0ea5e9', fontSize: '9px' }}></i>
-                              {distance} km
-                            </span>
-                          </>
-                        )}
-                      </div>
-                      
-                      {/* Fee and Book */}
-                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', paddingTop: '10px', borderTop: '1px solid #f1f5f9' }}>
-                        <div>
-                          <p style={{ fontSize: '16px', fontWeight: 700, color: '#0ea5e9', margin: 0 }}>₹{doc.consultationFee || 500}</p>
-                        </div>
-                        <button 
-                          onClick={(e) => { e.stopPropagation(); setSelectedDoctor(doc); setShowBookingModal(true); }} 
-                          style={{
-                            padding: '8px 14px',
-                            background: isAvailable ? 'linear-gradient(135deg, #0ea5e9, #0284c7)' : '#94a3b8',
-                            color: '#fff',
-                            border: 'none',
-                            borderRadius: '10px',
-                            fontSize: '12px',
-                            fontWeight: 600,
-                            cursor: isAvailable ? 'pointer' : 'not-allowed',
-                            boxShadow: isAvailable ? '0 2px 8px rgba(14,165,233,0.3)' : 'none'
-                          }}
-                          disabled={!isAvailable}
-                        >
-                          {isAvailable ? 'Book' : 'Unavailable'}
-                        </button>
-                      </div>
-                    </div>
-                  );})}
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                  {recentDoctors.map(doc => (
+                    <MobileDoctorCard
+                      key={doc._id}
+                      doctor={doc}
+                      isFavorite={favoriteDoctors.includes(doc._id)}
+                      onFavoriteToggle={toggleFavorite}
+                      onViewProfile={(d) => { setSelectedDoctor(d); setShowDoctorProfile(true); }}
+                      onBookNow={(d) => { setSelectedDoctor(d); setShowBookingModal(true); }}
+                    />
+                  ))}
                 </div>
               </div>
               <div className="bg-white rounded-2xl p-6 border border-slate-100">
@@ -1397,7 +1221,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
               {loading ? (<div className="flex flex-col items-center justify-center py-20"><div className="w-12 h-12 border-4 border-sky-200 border-t-sky-600 rounded-full animate-spin mb-4"></div><p className="text-slate-500">Loading...</p></div>
               ) : filteredDoctors.length === 0 ? (<div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-user-md text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">No doctors found</h3><p className="text-slate-500">Try adjusting your filters</p></div>
               ) : (
-                <div className="space-y-3">
+                <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6">
                   {(nearbyMode ? doctors : filteredDoctors).map(doc => (
                     <MobileDoctorCard
                       key={doc._id}
