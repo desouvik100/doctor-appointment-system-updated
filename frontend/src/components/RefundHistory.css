@@ -28,7 +28,7 @@
 }
 
 .refund-history__header h3 i {
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 .refund-history__count {
@@ -51,7 +51,7 @@
 }
 
 .refund-history__loading i {
-  color: #6366f1;
+  color: #0ea5e9;
   font-size: 1.25rem;
 }
 
@@ -80,7 +80,7 @@
   align-items: center;
   gap: 8px;
   padding: 10px 20px;
-  background: #6366f1;
+  background: #0ea5e9;
   color: #fff;
   border: none;
   border-radius: 8px;
@@ -90,7 +90,7 @@
 }
 
 .refund-history__error button:hover {
-  background: #4f46e5;
+  background: #0284c7;
 }
 
 /* Empty State */
@@ -174,7 +174,7 @@
 }
 
 .refund-history__doctor i {
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 /* Status Badge */
@@ -275,7 +275,7 @@
 }
 
 .refund-history__amount-row--bonus i {
-  color: #7c3aed;
+  color: #0d9488;
 }
 
 .text-green {
@@ -287,7 +287,7 @@
 }
 
 .text-purple {
-  color: #7c3aed !important;
+  color: #0d9488 !important;
   font-weight: 600;
 }
 

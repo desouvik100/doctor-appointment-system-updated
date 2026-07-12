@@ -14,7 +14,7 @@
 .ai-report-analyzer__icon {
   width: 80px;
   height: 80px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border-radius: 20px;
   display: flex;
   align-items: center;
@@ -22,7 +22,7 @@
   margin: 0 auto 16px;
   font-size: 36px;
   color: white;
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.3);
 }
 
 .ai-report-analyzer__title {
@@ -71,7 +71,7 @@
 
 .ai-report-analyzer__tab--active {
   background: white;
-  color: #6366f1;
+  color: #0ea5e9;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
 }
 
@@ -89,7 +89,7 @@
 
 .ai-report-analyzer__upload:hover,
 .ai-report-analyzer__upload--dragover {
-  border-color: #6366f1;
+  border-color: #0ea5e9;
   background: #eef2ff;
 }
 
@@ -173,7 +173,7 @@
 
 .ai-report-analyzer__input-group input:focus {
   outline: none;
-  border-color: #6366f1;
+  border-color: #0ea5e9;
 }
 
 .ai-report-analyzer__input-unit {
@@ -186,7 +186,7 @@
 .ai-report-analyzer__analyze-btn {
   width: 100%;
   padding: 16px 32px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -202,7 +202,7 @@
 
 .ai-report-analyzer__analyze-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.4);
 }
 
 .ai-report-analyzer__analyze-btn:disabled {
@@ -349,7 +349,7 @@
   content: '→';
   position: absolute;
   left: 0;
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 /* Test Results Table */
@@ -428,7 +428,7 @@
   width: 48px;
   height: 48px;
   border: 4px solid #e2e8f0;
-  border-top-color: #6366f1;
+  border-top-color: #0ea5e9;
   border-radius: 50%;
   animation: spin 1s linear infinite;
   margin: 0 auto 16px;

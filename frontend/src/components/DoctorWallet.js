@@ -481,7 +481,7 @@ const DoctorWallet = ({ doctorId, doctorName }) => {
         <div className="modal show d-block" style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
           <div className="modal-dialog">
             <div className="modal-content">
-              <div className="modal-header" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}>
+              <div className="modal-header" style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', color: 'white' }}>
                 <h5 className="modal-title">
                   <i className="fas fa-money-bill-wave me-2"></i>Request Withdrawal
                 </h5>

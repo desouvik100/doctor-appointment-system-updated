@@ -111,7 +111,7 @@
 }
 
 .summary-card.online i { color: #667eea; }
-.summary-card.clinic i { color: #10b981; }
+.summary-card.clinic i { color: #22c55e; }
 
 .summary-info {
   display: flex;
@@ -201,10 +201,10 @@
 }
 
 .action-icon.online { background: linear-gradient(135deg, #667eea, #764ba2); }
-.action-icon.clinic { background: linear-gradient(135deg, #10b981, #059669); }
+.action-icon.clinic { background: linear-gradient(135deg, #22c55e, #16a34a); }
 .action-icon.danger { background: linear-gradient(135deg, #dc3545, #c82333); }
 .action-icon.warning { background: linear-gradient(135deg, #f59e0b, #d97706); }
-.action-icon.success { background: linear-gradient(135deg, #10b981, #059669); }
+.action-icon.success { background: linear-gradient(135deg, #22c55e, #16a34a); }
 
 .action-info {
   flex: 1;
@@ -373,7 +373,7 @@
 }
 
 .action-btn.success { 
-  background: linear-gradient(135deg, #10b981, #059669) !important; 
+  background: linear-gradient(135deg, #22c55e, #16a34a) !important; 
   color: white !important;
 }
 

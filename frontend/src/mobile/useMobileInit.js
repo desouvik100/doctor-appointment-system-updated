@@ -846,7 +846,7 @@ const showLocationDetectionAnimation = () => {
     .location-success-icon {
       width: 80px;
       height: 80px;
-      background: linear-gradient(135deg, #10b981, #059669);
+      background: linear-gradient(135deg, #22c55e, #16a34a);
       border-radius: 50%;
       display: flex;
       align-items: center;

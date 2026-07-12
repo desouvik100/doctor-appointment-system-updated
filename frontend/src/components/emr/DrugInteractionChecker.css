@@ -270,12 +270,12 @@
 }
 
 .acknowledge-btn {
-  background: #10b981;
+  background: #22c55e;
   color: white;
 }
 
 .acknowledge-btn:hover {
-  background: #059669;
+  background: #16a34a;
 }
 
 .override-btn {
@@ -362,12 +362,12 @@
 }
 
 .proceed-btn {
-  background: #10b981;
+  background: #22c55e;
   color: white;
 }
 
 .proceed-btn:hover:not(:disabled) {
-  background: #059669;
+  background: #16a34a;
 }
 
 .proceed-btn:disabled {

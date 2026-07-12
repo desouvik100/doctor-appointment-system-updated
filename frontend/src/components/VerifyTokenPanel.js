@@ -312,7 +312,7 @@ const VerifyTokenPanel = ({ onTokenVerified }) => {
               disabled={loading || verifiedData.status === 'in_queue'}
               style={{
                 padding: '12px 16px',
-                background: '#8b5cf6',
+                background: '#14b8a6',
                 color: 'white',
                 border: 'none',
                 borderRadius: '10px',
@@ -324,7 +324,7 @@ const VerifyTokenPanel = ({ onTokenVerified }) => {
               onMouseEnter={(e) => {
                 if (verifiedData.status !== 'in_queue') {
                   e.target.style.transform = 'translateY(-2px)';
-                  e.target.style.boxShadow = '0 8px 16px rgba(139, 92, 246, 0.3)';
+                  e.target.style.boxShadow = '0 8px 16px rgba(20, 184, 166, 0.3)';
                 }
               }}
               onMouseLeave={(e) => {
@@ -339,7 +339,7 @@ const VerifyTokenPanel = ({ onTokenVerified }) => {
               disabled={loading}
               style={{
                 padding: '12px 16px',
-                background: '#10b981',
+                background: '#22c55e',
                 color: 'white',
                 border: 'none',
                 borderRadius: '10px',

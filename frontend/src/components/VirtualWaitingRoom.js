@@ -163,7 +163,7 @@ const VirtualWaitingRoom = ({ appointment, userId, userName, onClose, onConsulta
     switch (status) {
       case 'available': return '#22c55e';
       case 'busy': return '#f59e0b';
-      case 'ready': return '#6366f1';
+      case 'ready': return '#0ea5e9';
       default: return '#6b7280';
     }
   };

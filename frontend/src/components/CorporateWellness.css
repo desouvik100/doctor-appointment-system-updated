@@ -10,7 +10,7 @@
   align-items: center;
   gap: 2.5rem;
   padding: 2.5rem;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border-radius: var(--radius-xl, 16px);
   color: white;
   margin-bottom: 2rem;
@@ -69,7 +69,7 @@
 .cw-hero__cta {
   padding: 0.875rem 1.5rem;
   background: white;
-  color: #6366f1;
+  color: #0ea5e9;
   border: none;
   border-radius: var(--radius-md, 8px);
   font-weight: 600;
@@ -141,7 +141,7 @@
 
 .cw-hero__card .card-chart .bar {
   flex: 1;
-  background: linear-gradient(to top, #10b981, #34d399);
+  background: linear-gradient(to top, #22c55e, #34d399);
   border-radius: 3px;
 }
 

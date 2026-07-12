@@ -29,7 +29,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 20px 24px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   color: #ffffff;
 }
 
@@ -73,7 +73,7 @@
   width: 64px;
   height: 64px;
   border-radius: 16px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -109,7 +109,7 @@
   align-items: center;
   gap: 6px;
   font-size: 12px;
-  color: #6366f1;
+  color: #0ea5e9;
   background: #ede9fe;
   padding: 4px 10px;
   border-radius: 6px;
@@ -186,7 +186,7 @@
 .rating-label {
   font-size: 18px;
   font-weight: 600;
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 /* Detailed Ratings */
@@ -214,7 +214,7 @@
 }
 
 .detailed-rating-label i {
-  color: #6366f1;
+  color: #0ea5e9;
   width: 20px;
 }
 
@@ -250,8 +250,8 @@
 
 .tag-btn--selected {
   background: #ede9fe;
-  border-color: #6366f1;
-  color: #6366f1;
+  border-color: #0ea5e9;
+  color: #0ea5e9;
 }
 
 .tag-btn i {
@@ -272,8 +272,8 @@
 .rating-section input:focus,
 .rating-section textarea:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
 }
 
 .char-count {
@@ -336,7 +336,7 @@
 .anonymous-option input[type="checkbox"] {
   width: 18px;
   height: 18px;
-  accent-color: #6366f1;
+  accent-color: #0ea5e9;
 }
 
 .anonymous-option span {
@@ -376,7 +376,7 @@
   align-items: center;
   gap: 8px;
   padding: 12px 24px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border: none;
   border-radius: 10px;
   font-size: 14px;
@@ -400,7 +400,7 @@
   justify-content: space-between;
   align-items: center;
   padding: 24px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border-radius: 16px;
   color: #ffffff;
   margin-bottom: 20px;
@@ -532,7 +532,7 @@
 .review-tag {
   padding: 4px 10px;
   background: #ede9fe;
-  color: #6366f1;
+  color: #0ea5e9;
   border-radius: 6px;
   font-size: 12px;
 }
@@ -559,7 +559,7 @@
 .reviews-loading {
   text-align: center;
   padding: 40px;
-  color: #6366f1;
+  color: #0ea5e9;
   font-size: 24px;
 }
 

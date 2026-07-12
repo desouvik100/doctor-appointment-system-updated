@@ -323,7 +323,7 @@ const AnalyticsReports = ({ clinicId }) => {
     const colors = {
       walk_in: '#f59e0b',
       appointment: '#3b82f6',
-      follow_up: '#10b981',
+      follow_up: '#22c55e',
       emergency: '#ef4444'
     };
     return colors[type] || '#64748b';

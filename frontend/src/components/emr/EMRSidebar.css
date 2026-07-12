@@ -112,9 +112,9 @@
 }
 
 .emr-sidebar__item.active {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   color: #fff;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
 }
 
 .emr-sidebar__item.locked {
@@ -234,7 +234,7 @@
 
 .status-days {
   font-size: 13px;
-  color: #10b981;
+  color: #22c55e;
 }
 
 .status-days.warning {
@@ -250,7 +250,7 @@
 .subscription-renew {
   width: 100%;
   padding: 8px 12px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border: none;
   border-radius: 8px;
   color: #fff;
@@ -262,7 +262,7 @@
 
 .subscription-renew:hover {
   transform: translateY(-1px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.4);
 }
 
 .emr-sidebar__subscription.expired .subscription-renew {
@@ -293,7 +293,7 @@
   width: 24px;
   height: 24px;
   border: 2px solid rgba(255, 255, 255, 0.1);
-  border-top-color: #6366f1;
+  border-top-color: #0ea5e9;
   border-radius: 50%;
   animation: spin 0.8s linear infinite;
 }

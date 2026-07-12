@@ -79,7 +79,7 @@
 
 .payment-history__summary-icon--paid {
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #059669;
+  color: #16a34a;
 }
 
 .payment-history__summary-icon--pending {
@@ -215,7 +215,7 @@
 }
 
 .payment-history__amount--credit {
-  color: #059669;
+  color: #16a34a;
 }
 
 .payment-history__amount--debit {
@@ -235,7 +235,7 @@
 
 .payment-history__status--completed {
   background: #d1fae5;
-  color: #059669;
+  color: #16a34a;
 }
 
 .payment-history__status--pending {

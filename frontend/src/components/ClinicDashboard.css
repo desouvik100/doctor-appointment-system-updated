@@ -9,7 +9,7 @@
 
 /* Navbar */
 .clinic-dashboard__navbar {
-  background: linear-gradient(135deg, #059669 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #0891b2 100%);
   padding: 16px 40px;
   position: sticky;
   top: 0;
@@ -130,7 +130,7 @@
 
 .clinic-dashboard__stat-icon--success {
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #059669;
+  color: #16a34a;
 }
 
 .clinic-dashboard__stat-icon--warning {
@@ -190,7 +190,7 @@
 }
 
 .clinic-dashboard__section-title i {
-  color: #059669;
+  color: #16a34a;
 }
 
 .clinic-dashboard__section-body {
@@ -221,7 +221,7 @@
 .clinic-dashboard__queue-number {
   width: 48px;
   height: 48px;
-  background: linear-gradient(135deg, #059669 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #0891b2 100%);
   border-radius: 12px;
   display: flex;
   align-items: center;
@@ -268,7 +268,7 @@
 
 .clinic-dashboard__queue-status--completed {
   background: #d1fae5;
-  color: #059669;
+  color: #16a34a;
 }
 
 /* Quick Actions */
@@ -293,7 +293,7 @@
 
 .clinic-dashboard__action-btn:hover {
   background: #d1fae5;
-  border-color: #059669;
+  border-color: #16a34a;
 }
 
 .clinic-dashboard__action-icon {
@@ -304,7 +304,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #059669;
+  color: #16a34a;
   font-size: 1.25rem;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }

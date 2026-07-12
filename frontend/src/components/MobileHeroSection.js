@@ -94,7 +94,7 @@ const HealthcareIllustration = () => (
       <g className="floating-elements">
         <text x="180" y="60" fill="#ef4444" fontSize="16" className="float-1">❤</text>
         <text x="250" y="50" fill="#0ea5e9" fontSize="14" className="float-2">+</text>
-        <text x="150" y="80" fill="#10b981" fontSize="12" className="float-3">+</text>
+        <text x="150" y="80" fill="#22c55e" fontSize="12" className="float-3">+</text>
       </g>
       
       {/* Cloud */}
@@ -175,22 +175,22 @@ const MobileHeroSection = ({
     { id: 'dental', icon: 'fa-tooth', label: 'Dental', color: '#3b82f6' },
     { id: 'skin', icon: 'fa-hand-sparkles', label: 'Skin', color: '#f43f5e' },
     { id: 'child', icon: 'fa-baby', label: 'Child', color: '#06b6d4' },
-    { id: 'eye', icon: 'fa-eye', label: 'Eye', color: '#8b5cf6' },
+    { id: 'eye', icon: 'fa-eye', label: 'Eye', color: '#14b8a6' },
     { id: 'ortho', icon: 'fa-bone', label: 'Bones', color: '#f97316' },
     { id: 'heart', icon: 'fa-heartbeat', label: 'Heart', color: '#ef4444' },
     { id: 'neuro', icon: 'fa-brain', label: 'Neuro', color: '#a855f7' },
     { id: 'ent', icon: 'fa-head-side-cough', label: 'ENT', color: '#14b8a6' },
     { id: 'gynec', icon: 'fa-venus', label: 'Gynec', color: '#ec4899' },
     { id: 'gastro', icon: 'fa-stomach', label: 'Stomach', color: '#eab308' },
-    { id: 'kidney', icon: 'fa-kidneys', label: 'Kidney', color: '#6366f1' },
+    { id: 'kidney', icon: 'fa-kidneys', label: 'Kidney', color: '#0ea5e9' },
   ];
 
   const allSpecialties = [
     ...specialties,
-    { id: 'eye', icon: 'fa-eye', label: 'Eye', color: '#8b5cf6' },
+    { id: 'eye', icon: 'fa-eye', label: 'Eye', color: '#14b8a6' },
     { id: 'ortho', icon: 'fa-bone', label: 'Bones', color: '#f59e0b' },
     { id: 'heart', icon: 'fa-heartbeat', label: 'Heart', color: '#ef4444' },
-    { id: 'neuro', icon: 'fa-brain', label: 'Neuro', color: '#6366f1' },
+    { id: 'neuro', icon: 'fa-brain', label: 'Neuro', color: '#0ea5e9' },
   ];
 
   const firstName = user?.name?.split(' ')[0] || 'there';

@@ -168,7 +168,7 @@
   right: 2px;
   width: 14px;
   height: 14px;
-  background: #10b981;
+  background: #22c55e;
   border-radius: 50%;
   border: 3px solid #ffffff;
   box-shadow: 0 2px 4px rgba(16, 185, 129, 0.4);
@@ -271,7 +271,7 @@
 
 .stat-icon.green {
   background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  color: #22c55e;
 }
 
 .stat-icon.blue {
@@ -280,8 +280,8 @@
 }
 
 .stat-icon.purple {
-  background: rgba(139, 92, 246, 0.1);
-  color: #8b5cf6;
+  background: rgba(20, 184, 166, 0.1);
+  color: #14b8a6;
 }
 
 .stat-content {
@@ -331,8 +331,8 @@
 }
 
 .tag.online {
-  background: rgba(99, 102, 241, 0.1);
-  color: #6366f1;
+  background: rgba(14, 165, 233, 0.1);
+  color: #0ea5e9;
 }
 
 .tag.clinic {
@@ -342,7 +342,7 @@
 
 .tag.available {
   background: rgba(16, 185, 129, 0.1);
-  color: #10b981;
+  color: #22c55e;
 }
 
 /* ===== Action Buttons ===== */

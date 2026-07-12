@@ -1592,7 +1592,7 @@ function App() {
                 <div >
                   <span  style={{ 
                     background: 'rgba(16, 185, 129, 0.2)', 
-                    color: '#10b981',
+                    color: '#22c55e',
                     padding: '0.5rem 0.75rem',
                     borderRadius: '6px',
                     fontWeight: '500'

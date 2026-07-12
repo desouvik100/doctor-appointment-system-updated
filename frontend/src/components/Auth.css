@@ -4,10 +4,10 @@
 
 /* CSS Variables */
 :root {
-  --brand-primary: #6366f1;
-  --brand-primary-hover: #4f46e5;
-  --brand-primary-light: rgba(99, 102, 241, 0.1);
-  --brand-accent: #8b5cf6;
+  --brand-primary: #0ea5e9;
+  --brand-primary-hover: #0284c7;
+  --brand-primary-light: rgba(14, 165, 233, 0.1);
+  --brand-accent: #14b8a6;
   --bg: #f8fafc;
   --bg-secondary: #f1f5f9;
   --card-bg: #ffffff;
@@ -19,7 +19,7 @@
   --border-light: #f1f5f9;
   --danger: #ef4444;
   --danger-light: #fef2f2;
-  --success: #10b981;
+  --success: #22c55e;
   --success-light: #ecfdf5;
   --info: #3b82f6;
   --info-light: #eff6ff;
@@ -64,7 +64,7 @@
   justify-content: center;
   width: 45%;
   padding: 2.5rem;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 50%, #6366f1 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 50%, #0ea5e9 100%);
   color: #ffffff;
   position: relative;
   overflow: hidden;
@@ -264,7 +264,7 @@
 }
 
 .patient-auth__header h2 i {
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 .patient-auth__header p {
@@ -296,7 +296,7 @@
 }
 
 .patient-auth__label i {
-  color: #6366f1;
+  color: #0ea5e9;
   width: 16px;
 }
 
@@ -322,9 +322,9 @@
 
 .patient-auth__input:focus {
   outline: none;
-  border-color: #6366f1;
+  border-color: #0ea5e9;
   background: #ffffff;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
 }
 
 .patient-auth__input:disabled {
@@ -357,8 +357,8 @@
 }
 
 .patient-auth__password-toggle:hover {
-  color: #6366f1;
-  background: rgba(99, 102, 241, 0.1);
+  color: #0ea5e9;
+  background: rgba(14, 165, 233, 0.1);
 }
 
 /* Error Message */
@@ -388,7 +388,7 @@
   width: 100%;
   height: 56px;
   padding: 1rem;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   color: #ffffff;
   border: none;
   border-radius: 0.75rem;
@@ -397,12 +397,12 @@
   cursor: pointer;
   transition: all 0.3s ease;
   margin-top: 0.5rem;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
 }
 
 .patient-auth__submit-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
 }
 
 .patient-auth__submit-btn:active:not(:disabled) {
@@ -430,7 +430,7 @@
 }
 
 .patient-auth__security-notice i {
-  color: #10b981;
+  color: #22c55e;
 }
 
 .patient-auth__security-notice p {
@@ -459,7 +459,7 @@
 }
 
 .patient-auth__toggle-btn {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border: none;
   color: #ffffff;
   font-size: 0.95rem;
@@ -468,12 +468,12 @@
   transition: all 0.3s ease;
   padding: 0.75rem 1.5rem;
   border-radius: 0.75rem;
-  box-shadow: 0 4px 14px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 14px rgba(14, 165, 233, 0.3);
 }
 
 .patient-auth__toggle-btn:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 25px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 25px rgba(14, 165, 233, 0.4);
 }
 
 /* Forgot Password */
@@ -485,7 +485,7 @@
 .patient-auth__forgot-password-btn {
   background: none;
   border: none;
-  color: #6366f1;
+  color: #0ea5e9;
   font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
@@ -494,7 +494,7 @@
 }
 
 .patient-auth__forgot-password-btn:hover {
-  color: #4f46e5;
+  color: #0284c7;
   text-decoration: underline;
 }
 
@@ -516,7 +516,7 @@
 }
 
 .patient-auth__form-footer i {
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 /* Mobile Responsive */
@@ -594,7 +594,7 @@
 .dark-mode .patient-auth__input:focus,
 [data-theme="dark"] .patient-auth__input:focus {
   background: #0f172a;
-  border-color: #6366f1;
+  border-color: #0ea5e9;
 }
 
 .dark-mode .patient-auth__back-btn,
@@ -617,7 +617,7 @@
 
 .dark-mode .patient-auth__security-notice p,
 [data-theme="dark"] .patient-auth__security-notice p {
-  color: #10b981;
+  color: #22c55e;
 }
 
 .dark-mode .patient-auth__toggle-mode,

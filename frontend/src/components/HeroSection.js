@@ -123,11 +123,11 @@ function QuickSearchBar({ onNavigate }) {
         whileTap={{ scale: 0.95 }}
         style={{
           padding: '10px 20px',
-          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
           color: '#fff', border: 'none', borderRadius: '10px',
           fontSize: '14px', fontWeight: '700', cursor: 'pointer',
           flexShrink: 0, whiteSpace: 'nowrap',
-          boxShadow: '0 4px 14px rgba(99,102,241,0.4)',
+          boxShadow: '0 4px 14px rgba(14, 165, 233,0.4)',
         }}
       >
         Book Now
@@ -162,7 +162,7 @@ export default function HeroSection({ onNavigate = () => {}, darkMode = false })
 
   /* ── gradient orbs ── */
   const orbs = [
-    { w: 600, h: 600, top: '-200px', left: '-150px', color: 'rgba(99,102,241,0.35)' },
+    { w: 600, h: 600, top: '-200px', left: '-150px', color: 'rgba(14, 165, 233,0.35)' },
     { w: 500, h: 500, top: '30%', right: '-100px', color: 'rgba(20,184,166,0.3)' },
     { w: 400, h: 400, bottom: '-100px', left: '30%', color: 'rgba(249,115,22,0.2)' },
   ];
@@ -241,8 +241,8 @@ export default function HeroSection({ onNavigate = () => {}, darkMode = false })
             <div style={{
               display: 'inline-flex', alignItems: 'center', gap: '8px',
               padding: '8px 16px',
-              background: 'rgba(99,102,241,0.15)',
-              border: '1px solid rgba(99,102,241,0.3)',
+              background: 'rgba(14, 165, 233,0.15)',
+              border: '1px solid rgba(14, 165, 233,0.3)',
               borderRadius: '999px',
               marginBottom: '28px',
             }}>
@@ -299,10 +299,10 @@ export default function HeroSection({ onNavigate = () => {}, darkMode = false })
               whileTap={{ scale: 0.97 }}
               style={{
                 padding: '14px 32px',
-                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
                 color: '#fff', border: 'none', borderRadius: '12px',
                 fontSize: '15px', fontWeight: '700', cursor: 'pointer',
-                boxShadow: '0 8px 32px rgba(99,102,241,0.45)',
+                boxShadow: '0 8px 32px rgba(14, 165, 233,0.45)',
                 display: 'flex', alignItems: 'center', gap: '8px',
                 letterSpacing: '0.01em',
               }}
@@ -390,7 +390,7 @@ export default function HeroSection({ onNavigate = () => {}, darkMode = false })
           <motion.div
             style={{
               position: 'absolute', width: '340px', height: '340px',
-              background: 'radial-gradient(circle, rgba(99,102,241,0.4) 0%, transparent 70%)',
+              background: 'radial-gradient(circle, rgba(14, 165, 233,0.4) 0%, transparent 70%)',
               borderRadius: '50%', filter: 'blur(40px)',
             }}
             animate={{ scale: [1, 1.1, 1] }}
@@ -441,7 +441,7 @@ export default function HeroSection({ onNavigate = () => {}, darkMode = false })
 
           {/* Verified — top right */}
           <FloatingCard delay={0.8} style={{ top: '20px', right: '-10px' }}>
-            <IconBox gradient="linear-gradient(135deg,#22c55e,#10b981)" icon="fa-check" size={36} />
+            <IconBox gradient="linear-gradient(135deg,#22c55e,#22c55e)" icon="fa-check" size={36} />
             <div>
               <div style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', lineHeight: 1.2 }}>Verified</div>
               <div style={{ fontSize: '11px', color: '#64748b' }}>Licensed Doctor</div>
@@ -450,7 +450,7 @@ export default function HeroSection({ onNavigate = () => {}, darkMode = false })
 
           {/* Video Consult — bottom left */}
           <FloatingCard delay={1.0} style={{ bottom: '80px', left: '-30px' }}>
-            <IconBox gradient="linear-gradient(135deg,#6366f1,#8b5cf6)" icon="fa-video" size={36} />
+            <IconBox gradient="linear-gradient(135deg,#0ea5e9,#14b8a6)" icon="fa-video" size={36} />
             <div>
               <div style={{ fontSize: '13px', fontWeight: '700', color: '#0f172a', lineHeight: 1.2 }}>Video Consult</div>
               <div style={{ fontSize: '11px', color: '#64748b' }}>Available Now</div>
@@ -487,7 +487,7 @@ export default function HeroSection({ onNavigate = () => {}, darkMode = false })
               left: '50%', transform: 'translateX(-50%)',
               background: 'rgba(15,23,42,0.9)',
               backdropFilter: 'blur(20px)',
-              border: '1px solid rgba(99,102,241,0.3)',
+              border: '1px solid rgba(14, 165, 233,0.3)',
               borderRadius: '12px', padding: '10px 16px',
               display: 'flex', alignItems: 'center', gap: '10px',
               whiteSpace: 'nowrap',

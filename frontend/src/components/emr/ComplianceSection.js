@@ -12,8 +12,8 @@ const ComplianceSection = ({ clinicId }) => {
   const [form, setForm] = useState({ checklistName: '', checklistType: 'nabh', version: '1.0' });
 
   const checklistTypes = ['nabh', 'jci', 'iso', 'hipaa', 'custom'];
-  const gradeColors = { A: '#10b981', B: '#3b82f6', C: '#f59e0b', D: '#ef4444', F: '#dc2626' };
-  const statusColors = { draft: '#64748b', in_progress: '#3b82f6', completed: '#10b981', approved: '#059669' };
+  const gradeColors = { A: '#22c55e', B: '#3b82f6', C: '#f59e0b', D: '#ef4444', F: '#dc2626' };
+  const statusColors = { draft: '#64748b', in_progress: '#3b82f6', completed: '#22c55e', approved: '#16a34a' };
 
   useEffect(() => { fetchChecklists(); fetchSummary(); }, [clinicId]);
 
@@ -58,9 +58,9 @@ const ComplianceSection = ({ clinicId }) => {
       {summary && (
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           {[
-            { label: 'Total Checklists', value: summary.totalChecklists, color: '#6366f1', icon: 'clipboard-list' },
-            { label: 'Avg Compliance', value: `${summary.avgCompliance}%`, color: summary.avgCompliance >= 80 ? '#10b981' : '#f59e0b', icon: 'chart-line' },
-            { label: 'Certifications', value: summary.certifications?.length || 0, color: '#10b981', icon: 'certificate' },
+            { label: 'Total Checklists', value: summary.totalChecklists, color: '#0ea5e9', icon: 'clipboard-list' },
+            { label: 'Avg Compliance', value: `${summary.avgCompliance}%`, color: summary.avgCompliance >= 80 ? '#22c55e' : '#f59e0b', icon: 'chart-line' },
+            { label: 'Certifications', value: summary.certifications?.length || 0, color: '#22c55e', icon: 'certificate' },
             { label: 'Upcoming Audits', value: summary.upcomingAssessments?.length || 0, color: '#3b82f6', icon: 'calendar-check' }
           ].map((stat, i) => (
             <div key={i} className="bg-white rounded-xl p-4 border border-slate-200">
@@ -122,7 +122,7 @@ const ComplianceSection = ({ clinicId }) => {
                     <span className="font-medium">{checklist.compliancePercentage || 0}%</span>
                   </div>
                   <div className="w-full bg-slate-100 rounded-full h-2">
-                    <div className="h-2 rounded-full transition-all" style={{ width: `${checklist.compliancePercentage || 0}%`, background: checklist.compliancePercentage >= 80 ? '#10b981' : checklist.compliancePercentage >= 60 ? '#f59e0b' : '#ef4444' }}></div>
+                    <div className="h-2 rounded-full transition-all" style={{ width: `${checklist.compliancePercentage || 0}%`, background: checklist.compliancePercentage >= 80 ? '#22c55e' : checklist.compliancePercentage >= 60 ? '#f59e0b' : '#ef4444' }}></div>
                   </div>
                   <div className="flex items-center justify-between pt-2">
                     <span className="px-2 py-1 rounded-full text-xs font-medium capitalize" style={{ background: `${statusColors[checklist.status]}15`, color: statusColors[checklist.status] }}>{checklist.status?.replace('_', ' ')}</span>
@@ -174,9 +174,9 @@ const ComplianceSection = ({ clinicId }) => {
           <div className="grid md:grid-cols-2 gap-4">
             {[
               { type: 'nabh', name: 'NABH', desc: 'National Accreditation Board for Hospitals', icon: 'hospital', color: '#3b82f6' },
-              { type: 'jci', name: 'JCI', desc: 'Joint Commission International', icon: 'globe', color: '#8b5cf6' },
+              { type: 'jci', name: 'JCI', desc: 'Joint Commission International', icon: 'globe', color: '#14b8a6' },
               { type: 'iso', name: 'ISO 9001', desc: 'Quality Management System', icon: 'award', color: '#f59e0b' },
-              { type: 'hipaa', name: 'HIPAA', desc: 'Health Insurance Portability', icon: 'lock', color: '#10b981' }
+              { type: 'hipaa', name: 'HIPAA', desc: 'Health Insurance Portability', icon: 'lock', color: '#22c55e' }
             ].map(std => (
               <div key={std.type} className="border border-slate-200 rounded-xl p-4">
                 <div className="flex items-center gap-3 mb-3">
@@ -237,7 +237,7 @@ const ComplianceSection = ({ clinicId }) => {
                   <p className="text-sm text-slate-500 mb-1">Compliance Score</p>
                   <div className="flex items-center gap-3">
                     <div className="flex-1 bg-slate-100 rounded-full h-3">
-                      <div className="h-3 rounded-full" style={{ width: `${selectedChecklist.compliancePercentage || 0}%`, background: selectedChecklist.compliancePercentage >= 80 ? '#10b981' : '#f59e0b' }}></div>
+                      <div className="h-3 rounded-full" style={{ width: `${selectedChecklist.compliancePercentage || 0}%`, background: selectedChecklist.compliancePercentage >= 80 ? '#22c55e' : '#f59e0b' }}></div>
                     </div>
                     <span className="font-bold text-lg">{selectedChecklist.compliancePercentage || 0}%</span>
                   </div>

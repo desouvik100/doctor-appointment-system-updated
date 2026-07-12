@@ -11,7 +11,7 @@ const EVENT_TYPES = {
   visit: { icon: '🏥', label: 'Visit', color: '#3b82f6' },
   prescription: { icon: '💊', label: 'Prescription', color: '#22c55e' },
   report: { icon: '📄', label: 'Report', color: '#f59e0b' },
-  lab_result: { icon: '🧪', label: 'Lab Result', color: '#8b5cf6' },
+  lab_result: { icon: '🧪', label: 'Lab Result', color: '#14b8a6' },
   diagnosis: { icon: '🩺', label: 'Diagnosis', color: '#ec4899' },
   follow_up: { icon: '📅', label: 'Follow-up', color: '#06b6d4' }
 };

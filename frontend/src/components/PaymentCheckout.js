@@ -263,7 +263,7 @@ const PaymentCheckout = () => {
         return (
           <>
             <div style={styles.successIcon}>✅</div>
-            <h2 style={{ color: '#10b981', marginBottom: '10px' }}>Payment Successful!</h2>
+            <h2 style={{ color: '#22c55e', marginBottom: '10px' }}>Payment Successful!</h2>
             <p style={styles.statusText}>Redirecting to app...</p>
           </>
         );

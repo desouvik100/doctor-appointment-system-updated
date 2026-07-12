@@ -32,9 +32,9 @@ const MyTokenCard = ({ appointment }) => {
       case 'verified':
         return '#3b82f6'; // Blue
       case 'in_queue':
-        return '#8b5cf6'; // Purple
+        return '#14b8a6'; // Purple
       case 'completed':
-        return '#10b981'; // Green
+        return '#22c55e'; // Green
       case 'expired':
         return '#ef4444'; // Red
       default:
@@ -308,7 +308,7 @@ const MyTokenCard = ({ appointment }) => {
           </div>
           <button onClick={downloadQR} style={{
             padding: '10px 20px',
-            background: '#10b981',
+            background: '#22c55e',
             color: 'white',
             border: 'none',
             borderRadius: '8px',

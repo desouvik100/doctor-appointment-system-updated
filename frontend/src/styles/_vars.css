@@ -15,17 +15,18 @@
 /* ── BRAND PALETTE ─────────────────────────────────────────── */
 :root {
   /* Deep Indigo — structural anchors, nav rails, headings */
-  --indigo-50:  #eef2ff;
-  --indigo-100: #e0e7ff;
-  --indigo-200: #c7d2fe;
-  --indigo-300: #a5b4fc;
-  --indigo-400: #818cf8;
-  --indigo-500: #6366f1;
-  --indigo-600: #4f46e5;
-  --indigo-700: #4338ca;
-  --indigo-800: #3730a3;
-  --indigo-900: #312e81;
-  --indigo-950: #1e1b4b;
+  /* Deep Indigo mapped to Sky Blue — structural anchors, nav rails, headings */
+  --indigo-50:  #f0f9ff;
+  --indigo-100: #e0f2fe;
+  --indigo-200: #bae6fd;
+  --indigo-300: #7dd3fc;
+  --indigo-400: #38bdf8;
+  --indigo-500: #0ea5e9;
+  --indigo-600: #0284c7;
+  --indigo-700: #0369a1;
+  --indigo-800: #075985;
+  --indigo-900: #0c4a6e;
+  --indigo-950: #082f49;
 
   /* Rich Slate — secondary structure, body text */
   --slate-50:  #f8fafc;
@@ -86,19 +87,19 @@
 /* ── SEMANTIC TOKENS (Light Mode) ──────────────────────────── */
 :root {
   /* Brand */
-  --brand-primary:        var(--indigo-600);
-  --brand-primary-hover:  var(--indigo-700);
-  --brand-primary-light:  var(--indigo-50);
-  --brand-primary-ring:   rgba(79, 70, 229, 0.18);
+  --brand-primary:        #0ea5e9;
+  --brand-primary-hover:  #0284c7;
+  --brand-primary-light:  #f0f9ff;
+  --brand-primary-ring:   rgba(14, 165, 233, 0.18);
 
-  --brand-accent:         var(--teal-500);
-  --brand-accent-hover:   var(--teal-600);
-  --brand-accent-light:   var(--teal-50);
+  --brand-accent:         #14b8a6;
+  --brand-accent-hover:   #0d9488;
+  --brand-accent-light:   #f0fdfa;
   --brand-accent-ring:    rgba(20, 184, 166, 0.18);
 
-  --brand-gradient:       linear-gradient(135deg, var(--indigo-600) 0%, var(--indigo-500) 100%);
-  --brand-gradient-teal:  linear-gradient(135deg, var(--teal-500) 0%, var(--cyan-500) 100%);
-  --brand-gradient-hero:  linear-gradient(135deg, var(--indigo-700) 0%, var(--indigo-500) 50%, var(--teal-500) 100%);
+  --brand-gradient:       linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+  --brand-gradient-teal:  linear-gradient(135deg, #14b8a6 0%, #22c55e 100%);
+  --brand-gradient-hero:  linear-gradient(135deg, #0ea5e9 0%, #14b8a6 50%, #22c55e 100%);
 
   /* Canvas / Backgrounds */
   --bg:              #f8f9fa;
@@ -158,7 +159,7 @@
   --shadow-2xl: 0 24px 64px rgba(15, 23, 42, 0.12), 0 12px 24px rgba(15, 23, 42, 0.06);
   --shadow-card: 0 2px 8px rgba(15, 23, 42, 0.06), 0 1px 3px rgba(15, 23, 42, 0.04);
   --shadow-card-hover: 0 8px 28px rgba(15, 23, 42, 0.10), 0 4px 10px rgba(15, 23, 42, 0.05);
-  --shadow-brand: 0 4px 16px rgba(79, 70, 229, 0.22);
+  --shadow-brand: 0 4px 16px rgba(14, 165, 233, 0.22);
   --shadow-accent: 0 4px 16px rgba(20, 184, 166, 0.22);
   --shadow-glow-brand: 0 0 0 3px var(--brand-primary-ring);
   --shadow-glow-accent: 0 0 0 3px var(--brand-accent-ring);
@@ -262,13 +263,13 @@
   --border:          #1e293b;
   --border-light:    #141b2d;
   --border-dark:     #334155;
-  --border-brand:    rgba(99, 102, 241, 0.25);
+  --border-brand:    rgba(14, 165, 233, 0.25);
   --border-accent:   rgba(20, 184, 166, 0.25);
 
   /* Shadows — deeper for dark surfaces */
   --shadow-card:       0 2px 8px rgba(0, 0, 0, 0.3), 0 1px 3px rgba(0, 0, 0, 0.2);
   --shadow-card-hover: 0 8px 28px rgba(0, 0, 0, 0.4), 0 4px 10px rgba(0, 0, 0, 0.25);
-  --shadow-brand:      0 4px 16px rgba(99, 102, 241, 0.3);
+  --shadow-brand:      0 4px 16px rgba(14, 165, 233, 0.3);
   --shadow-accent:     0 4px 16px rgba(20, 184, 166, 0.3);
 
   /* Status */

@@ -220,7 +220,7 @@ table {
 .status-confirmed { color: #22c55e; background: #dcfce7; }
 .status-completed { color: #0ea5e9; background: #e0f2fe; }
 .status-cancelled { color: #ef4444; background: #fee2e2; }
-.status-in-progress { color: #8b5cf6; background: #ede9fe; }
+.status-in-progress { color: #14b8a6; background: #ede9fe; }
 
 /* ─── 17. Fix skeleton loader animation ──────────────────────────────────── */
 .skeleton {
@@ -338,7 +338,7 @@ table {
 .payment-paid     { color: #22c55e; }
 .payment-pending  { color: #f59e0b; }
 .payment-failed   { color: #ef4444; }
-.payment-refunded { color: #8b5cf6; }
+.payment-refunded { color: #14b8a6; }
 
 /* ─── 25. Utility classes ────────────────────────────────────────────────── */
 .sr-only {

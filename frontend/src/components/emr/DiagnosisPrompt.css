@@ -109,12 +109,12 @@
 }
 
 .complete-btn {
-  background: #10b981;
+  background: #22c55e;
   color: white;
 }
 
 .complete-btn:hover:not(:disabled) {
-  background: #059669;
+  background: #16a34a;
 }
 
 .complete-btn.disabled,

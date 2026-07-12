@@ -17,7 +17,7 @@ const InsuranceClaimsSection = ({ clinicId }) => {
   const providers = ['Star Health', 'ICICI Lombard', 'HDFC Ergo', 'Bajaj Allianz', 'Max Bupa', 'Religare', 'New India', 'United India', 'Oriental', 'National'];
   const statusColors = {
     draft: '#64748b', submitted: '#3b82f6', under_review: '#f59e0b', query_raised: '#ef4444',
-    pre_approved: '#8b5cf6', approved: '#10b981', partially_approved: '#f59e0b', rejected: '#ef4444', settled: '#059669'
+    pre_approved: '#14b8a6', approved: '#22c55e', partially_approved: '#f59e0b', rejected: '#ef4444', settled: '#16a34a'
   };
 
   useEffect(() => { fetchClaims(); fetchStats(); }, [clinicId, filter]);
@@ -65,9 +65,9 @@ const InsuranceClaimsSection = ({ clinicId }) => {
       {/* Stats Cards */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Claims', value: claims.length, color: '#6366f1', icon: 'file-medical' },
+          { label: 'Total Claims', value: claims.length, color: '#0ea5e9', icon: 'file-medical' },
           { label: 'Pending', value: claims.filter(c => ['submitted', 'under_review'].includes(c.status)).length, color: '#f59e0b', icon: 'clock' },
-          { label: 'Approved', value: claims.filter(c => c.status === 'approved').length, color: '#10b981', icon: 'check-circle' },
+          { label: 'Approved', value: claims.filter(c => c.status === 'approved').length, color: '#22c55e', icon: 'check-circle' },
           { label: 'Total Amount', value: formatCurrency(claims.reduce((s, c) => s + (c.claimAmount || 0), 0)), color: '#3b82f6', icon: 'rupee-sign' }
         ].map((stat, i) => (
           <div key={i} className="bg-white rounded-xl p-4 border border-slate-200">

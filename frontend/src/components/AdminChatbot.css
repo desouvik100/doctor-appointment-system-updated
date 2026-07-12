@@ -11,7 +11,7 @@
   align-items: center;
   gap: 10px;
   padding: 10px 16px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   border: none;
   border-radius: 50px;
   color: #fff;
@@ -128,7 +128,7 @@
 
 /* Header */
 .admin-chatbot__header {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   padding: 18px 22px;
   color: #fff;
   display: flex;
@@ -208,7 +208,7 @@
   gap: 14px;
   padding: 16px;
   background: linear-gradient(135deg, #e6f7ff 0%, #f0f9ff 100%);
-  border: 1px solid #10b981;
+  border: 1px solid #22c55e;
   border-radius: 14px;
   margin-bottom: 8px;
 }
@@ -221,7 +221,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #10b981;
+  color: #22c55e;
   font-size: 1.1rem;
   flex-shrink: 0;
 }
@@ -235,13 +235,13 @@
 
 .admin-chatbot__fallback-content p {
   font-size: 0.85rem;
-  color: #047857;
+  color: #15803d;
   margin: 0 0 4px 0;
 }
 
 .admin-chatbot__fallback-content small {
   font-size: 0.75rem;
-  color: #059669;
+  color: #16a34a;
 }
 
 /* Message */
@@ -272,7 +272,7 @@
 }
 
 .admin-chatbot__message--assistant .admin-chatbot__message-avatar {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   color: #fff;
 }
 
@@ -301,7 +301,7 @@
 }
 
 .admin-chatbot__message--user .admin-chatbot__message-bubble {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   color: #fff;
   border-bottom-right-radius: 4px;
 }
@@ -345,7 +345,7 @@
 .admin-chatbot__typing-dots span {
   width: 8px;
   height: 8px;
-  background: #10b981;
+  background: #22c55e;
   border-radius: 50%;
   animation: typing 1.4s infinite ease-in-out;
 }
@@ -423,8 +423,8 @@
 
 .admin-chatbot__suggestion-btn:hover:not(:disabled) {
   background: #d1fae5;
-  border-color: #10b981;
-  color: #059669;
+  border-color: #22c55e;
+  color: #16a34a;
 }
 
 .admin-chatbot__suggestion-btn:disabled {
@@ -461,7 +461,7 @@
 
 .admin-chatbot__input-wrapper textarea:focus {
   outline: none;
-  border-color: #10b981;
+  border-color: #22c55e;
   box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15);
 }
 
@@ -472,7 +472,7 @@
 .admin-chatbot__send-btn {
   width: 50px;
   height: 50px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   border: none;
   border-radius: 14px;
   color: #fff;

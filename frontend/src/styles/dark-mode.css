@@ -127,7 +127,7 @@ body.dark-mode .patient-dashboard {
 }
 
 body.dark-mode .patient-dashboard__header-card {
-  background: linear-gradient(135deg, #4338ca 0%, #6366f1 100%);
+  background: linear-gradient(135deg, #0369a1 0%, #0ea5e9 100%);
 }
 
 body.dark-mode .doctor-card__name,

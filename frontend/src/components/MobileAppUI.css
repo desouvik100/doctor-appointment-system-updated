@@ -8,7 +8,7 @@
   --app-primary: #2d7a6d;
   --app-primary-dark: #246358;
   --app-primary-light: #3d9b8a;
-  --app-accent: #10b981;
+  --app-accent: #22c55e;
   --app-text-dark: #1a3c34;
   --app-text-medium: #3d5a52;
   --app-text-light: #64748b;
@@ -786,7 +786,7 @@ body.dark-mode .mobile-app,
 
 .slot-status.available {
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #059669;
+  color: #16a34a;
 }
 
 .slot-status.booked {

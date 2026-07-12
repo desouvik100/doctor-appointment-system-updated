@@ -15,7 +15,7 @@
   justify-content: center;
   width: 45%;
   padding: 2.5rem;
-  background: linear-gradient(135deg, #059669 0%, #0891b2 50%, #059669 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #0891b2 50%, #16a34a 100%);
   color: #ffffff;
   position: relative;
   overflow: hidden;
@@ -187,7 +187,7 @@
 }
 
 .clinic-auth__header h2 i {
-  color: #059669;
+  color: #16a34a;
 }
 
 .clinic-auth__header p {
@@ -219,7 +219,7 @@
 }
 
 .clinic-auth__label i {
-  color: #059669;
+  color: #16a34a;
   width: 16px;
 }
 
@@ -246,7 +246,7 @@
 
 .clinic-auth__input:focus {
   outline: none;
-  border-color: #059669;
+  border-color: #16a34a;
   background: #ffffff;
   box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
 }
@@ -275,7 +275,7 @@
 }
 
 .clinic-auth__password-toggle:hover {
-  color: #059669;
+  color: #16a34a;
   background: rgba(5, 150, 105, 0.1);
 }
 
@@ -302,7 +302,7 @@
   width: 100%;
   height: 56px;
   padding: 1rem;
-  background: linear-gradient(135deg, #059669 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #0891b2 100%);
   color: #ffffff;
   border: none;
   border-radius: 0.75rem;
@@ -338,7 +338,7 @@
 }
 
 .clinic-auth__security-notice i {
-  color: #10b981;
+  color: #22c55e;
 }
 
 .clinic-auth__security-notice p {
@@ -399,7 +399,7 @@
   
   .clinic-auth__form .form-control:focus {
     background: white;
-    border-color: #059669;
+    border-color: #16a34a;
     box-shadow: 0 0 0 3px rgba(5, 150, 105, 0.1);
   }
   
@@ -427,7 +427,7 @@
   }
   
   .clinic-auth__form .btn-info {
-    background: linear-gradient(135deg, #059669, #10b981);
+    background: linear-gradient(135deg, #16a34a, #22c55e);
     border: none;
     color: white;
   }
@@ -529,7 +529,7 @@
 }
 
 .clinic-input-toggle:hover {
-  color: #059669;
+  color: #16a34a;
 }
 
 /* Bootstrap Form Control Overrides for Doctor/Clinic Auth */
@@ -556,7 +556,7 @@
 
 .clinic-auth__form .form-control:focus {
   outline: none;
-  border-color: #059669;
+  border-color: #16a34a;
   background-color: #ffffff;
   box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
 }
@@ -575,7 +575,7 @@
 
 .clinic-auth__form .form-select:focus {
   outline: none;
-  border-color: #059669;
+  border-color: #16a34a;
   background-color: #ffffff;
   box-shadow: 0 0 0 4px rgba(5, 150, 105, 0.1);
 }
@@ -636,7 +636,7 @@
 
 .clinic-auth__form .input-group .btn:hover {
   background-color: #e2e8f0;
-  color: #059669;
+  color: #16a34a;
 }
 
 .clinic-auth__form .input-group .form-control:not(:last-child) {
@@ -669,7 +669,7 @@
 .clinic-auth__form-container .alert-success {
   background-color: #ecfdf5;
   border: 1px solid #a7f3d0;
-  color: #059669;
+  color: #16a34a;
 }
 
 /* Additional Mobile Improvements */
@@ -744,7 +744,7 @@
   .clinic-auth__form h6 {
     font-size: 16px;
     font-weight: 600;
-    color: #059669;
+    color: #16a34a;
     margin-bottom: 16px;
   }
 }

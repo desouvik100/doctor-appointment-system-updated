@@ -85,7 +85,7 @@
 }
 
 .schedule-day-card.available {
-  border-color: #10b981;
+  border-color: #22c55e;
   background: linear-gradient(to bottom, #ecfdf5, #fff);
 }
 
@@ -168,7 +168,7 @@
 }
 
 .day-toggle input:checked + .toggle-slider {
-  background-color: #10b981;
+  background-color: #22c55e;
 }
 
 .day-toggle input:checked + .toggle-slider:before {
@@ -489,7 +489,7 @@
 
 .slots-count {
   font-size: 0.65rem;
-  color: #10b981;
+  color: #22c55e;
   margin-top: 4px;
 }
 
@@ -792,7 +792,7 @@
 }
 
 .mode-btn.in-clinic.active {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
 }
 
 .mode-btn.virtual.active {
@@ -835,12 +835,12 @@
 
 .time-slot.slot-type-both .slot-type-indicator {
   background: linear-gradient(135deg, #f3e8ff 0%, #e9d5ff 100%);
-  color: #7c3aed;
+  color: #0d9488;
 }
 
 .time-slot.slot-type-in-clinic .slot-type-indicator {
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #059669;
+  color: #16a34a;
 }
 
 .time-slot.slot-type-virtual .slot-type-indicator {
@@ -865,7 +865,7 @@
 }
 
 .time-slot.slot-type-in-clinic {
-  border-left: 3px solid #10b981;
+  border-left: 3px solid #22c55e;
 }
 
 .time-slot.slot-type-virtual {
@@ -873,18 +873,18 @@
 }
 
 .time-slot.slot-type-both {
-  border-left: 3px solid #8b5cf6;
+  border-left: 3px solid #14b8a6;
 }
 
 /* Slot type select styling */
 .slot-type-select.type-both {
-  border-color: #8b5cf6;
-  color: #7c3aed;
+  border-color: #14b8a6;
+  color: #0d9488;
 }
 
 .slot-type-select.type-in-clinic {
-  border-color: #10b981;
-  color: #059669;
+  border-color: #22c55e;
+  color: #16a34a;
 }
 
 .slot-type-select.type-virtual {
@@ -894,7 +894,7 @@
 
 /* Mode-specific day card styling */
 .schedule-day-card.mode-in-clinic.available {
-  border-color: #10b981;
+  border-color: #22c55e;
   background: linear-gradient(to bottom, #d1fae5, #fff);
 }
 
@@ -980,7 +980,7 @@
 }
 
 .slot-type-btn.clinic.active {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   border-color: transparent;
   color: white;
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
@@ -1281,7 +1281,7 @@
 }
 
 .summary-item.available .count {
-  color: #059669;
+  color: #16a34a;
 }
 
 .summary-item.booked {
@@ -1305,7 +1305,7 @@
 }
 
 .summary-item.total .count {
-  color: #4f46e5;
+  color: #0284c7;
 }
 
 /* Responsive */

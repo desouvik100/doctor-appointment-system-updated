@@ -20,8 +20,8 @@ const SEVERITY_COLORS = {
 // Condition status colors
 const STATUS_COLORS = {
   'active': { bg: '#fef3c7', text: '#d97706' },
-  'controlled': { bg: '#d1fae5', text: '#059669' },
-  'resolved': { bg: '#e0e7ff', text: '#4f46e5' }
+  'controlled': { bg: '#d1fae5', text: '#16a34a' },
+  'resolved': { bg: '#e0e7ff', text: '#0284c7' }
 };
 
 /**

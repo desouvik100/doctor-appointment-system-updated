@@ -299,7 +299,7 @@
 
 .btn-save {
   padding: 12px 24px;
-  background: linear-gradient(135deg, var(--emr-success, #10b981) 0%, var(--emr-success-dark, #059669) 100%);
+  background: linear-gradient(135deg, var(--emr-success, #22c55e) 0%, var(--emr-success-dark, #16a34a) 100%);
   border: none;
   border-radius: var(--emr-radius-md, 10px);
   font-size: 0.95rem;

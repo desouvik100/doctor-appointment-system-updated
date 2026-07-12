@@ -210,7 +210,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
               alignItems: 'center',
               gap: '16px',
               padding: '16px 24px',
-              background: answers.language === lang.code ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' : '#f8fafc',
+              background: answers.language === lang.code ? 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)' : '#f8fafc',
               border: answers.language === lang.code ? 'none' : '2px solid #e2e8f0',
               borderRadius: '12px',
               cursor: 'pointer',
@@ -222,7 +222,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
               width: '48px', 
               height: '48px', 
               borderRadius: '12px', 
-              background: answers.language === lang.code ? 'rgba(255,255,255,0.2)' : lang.color || '#6366f1',
+              background: answers.language === lang.code ? 'rgba(255,255,255,0.2)' : lang.color || '#0ea5e9',
               display: 'flex', 
               alignItems: 'center', 
               justifyContent: 'center',
@@ -273,7 +273,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
                 onClick={() => setAnswers({ ...answers, ageGroup: age.value })}
                 style={{
                   padding: '12px',
-                  background: answers.ageGroup === age.value ? '#6366f1' : '#f8fafc',
+                  background: answers.ageGroup === age.value ? '#0ea5e9' : '#f8fafc',
                   border: answers.ageGroup === age.value ? 'none' : '1px solid #e2e8f0',
                   borderRadius: '8px',
                   cursor: 'pointer',
@@ -305,7 +305,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
                 onClick={() => setAnswers({ ...answers, gender: g.value })}
                 style={{
                   padding: '16px',
-                  background: answers.gender === g.value ? '#6366f1' : '#f8fafc',
+                  background: answers.gender === g.value ? '#0ea5e9' : '#f8fafc',
                   border: answers.gender === g.value ? 'none' : '1px solid #e2e8f0',
                   borderRadius: '8px',
                   cursor: 'pointer',
@@ -342,7 +342,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
             onClick={() => setAnswers({ ...answers, primaryConcern: concern.id, symptoms: [] })}
             style={{
               padding: '16px 12px',
-              background: answers.primaryConcern === concern.id ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' : '#f8fafc',
+              background: answers.primaryConcern === concern.id ? 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)' : '#f8fafc',
               border: answers.primaryConcern === concern.id ? 'none' : '1px solid #e2e8f0',
               borderRadius: '12px',
               cursor: 'pointer',
@@ -390,7 +390,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
                 }}
                 style={{
                   padding: '10px 16px',
-                  background: isSelected ? '#6366f1' : '#fff',
+                  background: isSelected ? '#0ea5e9' : '#fff',
                   border: isSelected ? 'none' : '1px solid #e2e8f0',
                   borderRadius: '20px',
                   cursor: 'pointer',
@@ -442,7 +442,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
                 onClick={() => setAnswers({ ...answers, duration: d.value })}
                 style={{
                   padding: '12px',
-                  background: answers.duration === d.value ? '#6366f1' : '#f8fafc',
+                  background: answers.duration === d.value ? '#0ea5e9' : '#f8fafc',
                   border: answers.duration === d.value ? 'none' : '1px solid #e2e8f0',
                   borderRadius: '8px',
                   cursor: 'pointer',
@@ -521,7 +521,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
             width: '80px',
             height: '80px',
             margin: '0 auto 24px',
-            background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+            background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
@@ -556,7 +556,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
             width: '70px',
             height: '70px',
             margin: '0 auto 16px',
-            background: 'linear-gradient(135deg, #22c55e 0%, #10b981 100%)',
+            background: 'linear-gradient(135deg, #22c55e 0%, #22c55e 100%)',
             borderRadius: '50%',
             display: 'flex',
             alignItems: 'center',
@@ -571,7 +571,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
 
         {/* Main Recommendation Card */}
         <div style={{
-          background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+          background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
           borderRadius: '16px',
           padding: '24px',
           color: '#fff',
@@ -636,7 +636,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
                 <span key={i} style={{
                   padding: '6px 12px',
                   background: '#eef2ff',
-                  color: '#6366f1',
+                  color: '#0ea5e9',
                   borderRadius: '20px',
                   fontSize: '13px',
                   fontWeight: '500'
@@ -656,12 +656,12 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
           marginBottom: '24px'
         }}>
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '12px' }}>
-            <i className="fas fa-heart" style={{ color: '#10b981' }}></i>
+            <i className="fas fa-heart" style={{ color: '#22c55e' }}></i>
             <span style={{ fontWeight: '600', color: '#065f46' }}>
               {language === 'bn' ? 'স্বাস্থ্য টিপস' : language === 'hi' ? 'स्वास्थ्य सुझाव' : 'Health Tips'}
             </span>
           </div>
-          <ul style={{ margin: 0, paddingLeft: '20px', color: '#047857', fontSize: '14px' }}>
+          <ul style={{ margin: 0, paddingLeft: '20px', color: '#15803d', fontSize: '14px' }}>
             {aiRecommendation.tips.map((tip, i) => (
               <li key={i} style={{ marginBottom: '6px' }}>{tip}</li>
             ))}
@@ -682,7 +682,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
             style={{
               flex: 1,
               padding: '14px',
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+              background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
               color: '#fff',
               border: 'none',
               borderRadius: '10px',
@@ -765,7 +765,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
             <div style={{
               width: '40px',
               height: '40px',
-              background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+              background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
               borderRadius: '10px',
               display: 'flex',
               alignItems: 'center',
@@ -811,7 +811,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
                     width: '32px',
                     height: '32px',
                     borderRadius: '50%',
-                    background: index <= currentStep ? '#6366f1' : '#e2e8f0',
+                    background: index <= currentStep ? '#0ea5e9' : '#e2e8f0',
                     color: index <= currentStep ? '#fff' : '#94a3b8',
                     display: 'flex',
                     alignItems: 'center',
@@ -826,7 +826,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
                     <div style={{
                       flex: 1,
                       height: '3px',
-                      background: index < currentStep ? '#6366f1' : '#e2e8f0',
+                      background: index < currentStep ? '#0ea5e9' : '#e2e8f0',
                       margin: '0 8px',
                       borderRadius: '2px',
                       transition: 'all 0.3s'
@@ -904,7 +904,7 @@ const FindMyDoctorWizard = ({ onComplete, onClose, onBookDoctor }) => {
                 disabled={!canProceed()}
                 style={{
                   padding: '10px 24px',
-                  background: canProceed() ? 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)' : '#e2e8f0',
+                  background: canProceed() ? 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)' : '#e2e8f0',
                   border: 'none',
                   borderRadius: '8px',
                   color: canProceed() ? '#fff' : '#94a3b8',

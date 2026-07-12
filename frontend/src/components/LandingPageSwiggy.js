@@ -41,11 +41,11 @@ const LandingPageSwiggy = ({ onNavigate = () => {}, darkMode = false, toggleDark
   ];
 
   const specialties = [
-    { id: 'general', icon: 'fa-stethoscope', name: 'General', count: 120, color: '#10b981' },
+    { id: 'general', icon: 'fa-stethoscope', name: 'General', count: 120, color: '#22c55e' },
     { id: 'dental', icon: 'fa-tooth', name: 'Dental', count: 60, color: '#3b82f6' },
     { id: 'pediatric', icon: 'fa-baby', name: 'Child', count: 40, color: '#f59e0b' },
     { id: 'skin', icon: 'fa-hand-sparkles', name: 'Skin', count: 35, color: '#ec4899' },
-    { id: 'eye', icon: 'fa-eye', name: 'Eye', count: 28, color: '#8b5cf6' },
+    { id: 'eye', icon: 'fa-eye', name: 'Eye', count: 28, color: '#14b8a6' },
     { id: 'ortho', icon: 'fa-bone', name: 'Ortho', count: 22, color: '#06b6d4' },
   ];
 

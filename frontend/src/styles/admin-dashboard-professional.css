@@ -180,7 +180,7 @@
 
 .admin-stat-card:hover {
   border-color: var(--admin-primary);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.1);
 }
 
 .admin-stat-card__content {
@@ -408,7 +408,7 @@
 }
 
 .btn-primary:hover {
-  background: #4f46e5;
+  background: #0284c7;
 }
 
 .btn-secondary {
@@ -489,8 +489,8 @@
   letter-spacing: 0.025em;
 }
 
-.badge-primary { background: #eef2ff; color: #6366f1; }
-.badge-success { background: #ecfdf5; color: #059669; }
+.badge-primary { background: #eef2ff; color: #0ea5e9; }
+.badge-success { background: #ecfdf5; color: #16a34a; }
 .badge-warning { background: #fffbeb; color: #d97706; }
 .badge-error, .badge-danger { background: #fef2f2; color: #dc2626; }
 .badge-info { background: #eff6ff; color: #2563eb; }
@@ -606,7 +606,7 @@
 .form-group textarea:focus {
   outline: none;
   border-color: var(--admin-primary);
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.1);
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.1);
 }
 
 .form-grid {
@@ -663,7 +663,7 @@
 }
 
 [data-theme="dark"] .admin-table tbody tr:hover {
-  background: rgba(99, 102, 241, 0.1);
+  background: rgba(14, 165, 233, 0.1);
 }
 
 [data-theme="dark"] .modal-content {

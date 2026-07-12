@@ -550,7 +550,7 @@ function AuthPremium({ onLogin, onBack }) {
               marginBottom: '24px',
               transition: 'color 0.2s'
             }}
-            onMouseEnter={(e) => e.target.style.color = '#6366f1'}
+            onMouseEnter={(e) => e.target.style.color = '#0ea5e9'}
             onMouseLeave={(e) => e.target.style.color = '#64748b'}
           >
             <i className="fas fa-arrow-left"></i>
@@ -623,7 +623,7 @@ function AuthPremium({ onLogin, onBack }) {
                   disabled={!isLogin && otpVerified}
                 />
                 {!isLogin && otpVerified && (
-                  <span style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#10b981' }}>
+                  <span style={{ position: 'absolute', right: '14px', top: '50%', transform: 'translateY(-50%)', color: '#22c55e' }}>
                     <i className="fas fa-check-circle"></i>
                   </span>
                 )}
@@ -686,7 +686,7 @@ function AuthPremium({ onLogin, onBack }) {
                         type="button"
                         onClick={handleSendOtp}
                         disabled={otpSending || otpTimer > 0}
-                        style={{ background: 'none', border: 'none', color: '#6366f1', fontSize: '13px', cursor: 'pointer' }}
+                        style={{ background: 'none', border: 'none', color: '#0ea5e9', fontSize: '13px', cursor: 'pointer' }}
                       >
                         {otpTimer > 0 ? `Resend in ${otpTimer}s` : 'Resend OTP'}
                       </button>
@@ -699,7 +699,7 @@ function AuthPremium({ onLogin, onBack }) {
             {/* Show verified badge */}
             {!isLogin && otpVerified && (
               <div style={{ background: '#f0fdf4', border: '1px solid #86efac', borderRadius: '8px', padding: '12px', display: 'flex', alignItems: 'center', gap: '8px', marginBottom: '8px' }}>
-                <i className="fas fa-check-circle" style={{ color: '#10b981', fontSize: '18px' }}></i>
+                <i className="fas fa-check-circle" style={{ color: '#22c55e', fontSize: '18px' }}></i>
                 <span style={{ color: '#166534', fontWeight: '500' }}>Email verified successfully!</span>
               </div>
             )}
@@ -908,7 +908,7 @@ function AuthPremium({ onLogin, onBack }) {
           <div style={{ background: 'white', borderRadius: '16px', padding: '32px', width: '100%', maxWidth: '400px', margin: '20px' }}>
             <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px' }}>
               <h3 style={{ margin: 0, fontSize: '1.25rem', fontWeight: '600' }}>
-                <i className="fas fa-key" style={{ marginRight: '8px', color: '#6366f1' }}></i>
+                <i className="fas fa-key" style={{ marginRight: '8px', color: '#0ea5e9' }}></i>
                 Reset Password
               </h3>
               <button onClick={() => { setShowForgotPassword(false); setResetStep(1); setResetEmail(""); setResetOtp(""); setNewPassword(""); }} style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer', color: '#64748b' }}>×</button>
@@ -918,7 +918,7 @@ function AuthPremium({ onLogin, onBack }) {
               <>
                 <p style={{ color: '#64748b', marginBottom: '20px', fontSize: '14px' }}>Enter your email to receive a verification code.</p>
                 <input type="email" value={resetEmail} onChange={(e) => setResetEmail(e.target.value)} placeholder="Enter your email" style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', marginBottom: '16px', boxSizing: 'border-box' }} />
-                <button onClick={handleForgotPasswordSendOtp} disabled={otpSending} style={{ width: '100%', padding: '12px', background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                <button onClick={handleForgotPasswordSendOtp} disabled={otpSending} style={{ width: '100%', padding: '12px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
                   {otpSending ? <><i className="fas fa-spinner fa-spin"></i> Sending...</> : 'Send OTP'}
                 </button>
               </>
@@ -927,10 +927,10 @@ function AuthPremium({ onLogin, onBack }) {
                 <p style={{ color: '#64748b', marginBottom: '20px', fontSize: '14px' }}>Enter the OTP sent to {resetEmail} and your new password.</p>
                 <input type="text" value={resetOtp} onChange={(e) => setResetOtp(e.target.value.replace(/\D/g, '').slice(0, 6))} placeholder="Enter 6-digit OTP" maxLength={6} style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', marginBottom: '12px', boxSizing: 'border-box', letterSpacing: '4px', textAlign: 'center' }} />
                 <input type="password" value={newPassword} onChange={(e) => setNewPassword(e.target.value)} placeholder="Enter new password" style={{ width: '100%', padding: '12px 16px', border: '1px solid #e2e8f0', borderRadius: '8px', fontSize: '14px', marginBottom: '16px', boxSizing: 'border-box' }} />
-                <button onClick={handleResetPassword} disabled={loading} style={{ width: '100%', padding: '12px', background: '#6366f1', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
+                <button onClick={handleResetPassword} disabled={loading} style={{ width: '100%', padding: '12px', background: '#0ea5e9', color: 'white', border: 'none', borderRadius: '8px', fontSize: '14px', fontWeight: '600', cursor: 'pointer' }}>
                   {loading ? <><i className="fas fa-spinner fa-spin"></i> Resetting...</> : 'Reset Password'}
                 </button>
-                <button onClick={() => setResetStep(1)} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: '#6366f1', fontSize: '14px', cursor: 'pointer', marginTop: '8px' }}>← Back to email</button>
+                <button onClick={() => setResetStep(1)} style={{ width: '100%', padding: '10px', background: 'none', border: 'none', color: '#0ea5e9', fontSize: '14px', cursor: 'pointer', marginTop: '8px' }}>← Back to email</button>
               </>
             )}
           </div>

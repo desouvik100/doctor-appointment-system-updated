@@ -125,7 +125,7 @@ const ClinicGallery = ({
               disabled={uploadingLogo}
               style={{
                 padding: '8px 16px',
-                backgroundColor: '#6366f1',
+                backgroundColor: '#0ea5e9',
                 color: 'white',
                 border: 'none',
                 borderRadius: 8,
@@ -156,7 +156,7 @@ const ClinicGallery = ({
               disabled={uploading}
               style={{
                 padding: '6px 12px',
-                backgroundColor: '#10b981',
+                backgroundColor: '#22c55e',
                 color: 'white',
                 border: 'none',
                 borderRadius: 6,

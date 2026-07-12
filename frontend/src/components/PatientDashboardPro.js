@@ -767,7 +767,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                           position: 'absolute',
                           top: '8px',
                           right: '8px',
-                          background: 'linear-gradient(135deg, #10b981, #059669)',
+                          background: 'linear-gradient(135deg, #22c55e, #16a34a)',
                           color: '#fff',
                           padding: '3px 8px',
                           borderRadius: '12px',
@@ -809,7 +809,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                               right: '-2px', 
                               width: '14px', 
                               height: '14px', 
-                              background: isReallyOnline ? '#10b981' : '#94a3b8', 
+                              background: isReallyOnline ? '#22c55e' : '#94a3b8', 
                               borderRadius: '50%', 
                               border: '2px solid #fff',
                               animation: isReallyOnline ? 'pulse-online 2s infinite' : 'none'
@@ -833,7 +833,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                           fontSize: '11px', 
                           fontWeight: 600, 
                           color: '#fff',
-                          background: '#10b981',
+                          background: '#22c55e',
                           padding: '2px 6px',
                           borderRadius: '4px'
                         }}>
@@ -969,7 +969,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                           position: 'absolute',
                           top: 0,
                           right: 0,
-                          background: apt.status === 'in_progress' ? 'linear-gradient(135deg, #10b981, #059669)' : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
+                          background: apt.status === 'in_progress' ? 'linear-gradient(135deg, #22c55e, #16a34a)' : 'linear-gradient(135deg, #0ea5e9, #0284c7)',
                           color: '#fff',
                           padding: '8px 16px',
                           borderBottomLeftRadius: '16px',
@@ -1724,7 +1724,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
           className="w-12 h-12 rounded-2xl bg-gradient-to-br from-violet-400 to-violet-600 text-white shadow-lg hover:shadow-xl transition-all duration-300 flex items-center justify-center hover:scale-105"
           onClick={() => setShowAIHealthHub(true)}
           title="AI Health Assistant"
-          style={{ boxShadow: '0 8px 24px rgba(139, 92, 246, 0.35)' }}
+          style={{ boxShadow: '0 8px 24px rgba(20, 184, 166, 0.35)' }}
         >
           <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
             <path d="M12 2a4 4 0 0 1 4 4v1a4 4 0 0 1-8 0V6a4 4 0 0 1 4-4z"/>

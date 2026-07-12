@@ -21,8 +21,8 @@ const VendorManagementSection = ({ clinicId }) => {
 
   const categories = ['medicines', 'surgical', 'consumables', 'equipment', 'lab_supplies', 'office_supplies'];
   const statusColors = {
-    draft: '#64748b', pending_approval: '#f59e0b', approved: '#3b82f6', ordered: '#8b5cf6',
-    partial_received: '#f59e0b', received: '#10b981', cancelled: '#ef4444'
+    draft: '#64748b', pending_approval: '#f59e0b', approved: '#3b82f6', ordered: '#14b8a6',
+    partial_received: '#f59e0b', received: '#22c55e', cancelled: '#ef4444'
   };
 
   useEffect(() => { fetchVendors(); fetchPurchaseOrders(); }, [clinicId]);
@@ -87,8 +87,8 @@ const VendorManagementSection = ({ clinicId }) => {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Total Vendors', value: vendors.length, color: '#6366f1', icon: 'store' },
-          { label: 'Active Vendors', value: vendors.filter(v => v.status === 'active').length, color: '#10b981', icon: 'check-circle' },
+          { label: 'Total Vendors', value: vendors.length, color: '#0ea5e9', icon: 'store' },
+          { label: 'Active Vendors', value: vendors.filter(v => v.status === 'active').length, color: '#22c55e', icon: 'check-circle' },
           { label: 'Open POs', value: purchaseOrders.filter(p => !['received', 'cancelled'].includes(p.status)).length, color: '#f59e0b', icon: 'file-alt' },
           { label: 'Total PO Value', value: formatCurrency(purchaseOrders.reduce((s, p) => s + (p.totalAmount || 0), 0)), color: '#3b82f6', icon: 'rupee-sign' }
         ].map((stat, i) => (

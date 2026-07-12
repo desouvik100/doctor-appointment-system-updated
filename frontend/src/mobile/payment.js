@@ -58,7 +58,7 @@ export const openCheckout = async (appointmentId, userId, options = {}) => {
       await Browser.open({
         url: checkoutUrl,
         presentationStyle: 'popover',
-        toolbarColor: '#4F46E5'
+        toolbarColor: '#0284c7'
       });
 
       // Start polling for payment completion

@@ -122,7 +122,7 @@
 }
 
 .cancel-modal__label i {
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 .cancel-modal__reason-grid {
@@ -151,7 +151,7 @@
 
 .cancel-modal__reason-btn--selected {
   background: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-  border-color: #6366f1;
+  border-color: #0ea5e9;
 }
 
 .cancel-modal__reason-icon {
@@ -184,7 +184,7 @@
 
 .cancel-modal__custom-reason textarea:focus {
   outline: none;
-  border-color: #6366f1;
+  border-color: #0ea5e9;
 }
 
 .cancel-modal__char-count {
@@ -226,8 +226,8 @@
 }
 
 .cancel-modal__checkbox input:checked + .cancel-modal__checkbox-mark {
-  background: #6366f1;
-  border-color: #6366f1;
+  background: #0ea5e9;
+  border-color: #0ea5e9;
 }
 
 .cancel-modal__checkbox input:checked + .cancel-modal__checkbox-mark::after {
@@ -379,7 +379,7 @@
 }
 
 .cancel-modal__refund-loading i {
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 .cancel-modal__refund-details {
@@ -490,7 +490,7 @@
 }
 
 .cancel-modal__refund-reason i {
-  color: #6366f1;
+  color: #0ea5e9;
   margin-top: 2px;
   flex-shrink: 0;
 }
@@ -526,7 +526,7 @@
 @media (prefers-color-scheme: dark) {
   .cancel-modal__refund-section {
     background: linear-gradient(135deg, #064e3b 0%, #065f46 100%);
-    border-color: #10b981;
+    border-color: #22c55e;
   }
   
   .cancel-modal__refund-header {

@@ -12,16 +12,16 @@ import './LabOrderTracker.css';
 const STATUS_CONFIG = {
   pending: { label: 'Pending', color: '#f59e0b', icon: '⏳', step: 1 },
   ordered: { label: 'Ordered', color: '#3b82f6', icon: '📋', step: 1 },
-  sample_collected: { label: 'Sample Collected', color: '#8b5cf6', icon: '🧪', step: 2 },
-  processing: { label: 'Processing', color: '#6366f1', icon: '⚙️', step: 3 },
+  sample_collected: { label: 'Sample Collected', color: '#14b8a6', icon: '🧪', step: 2 },
+  processing: { label: 'Processing', color: '#0ea5e9', icon: '⚙️', step: 3 },
   partial: { label: 'Partial Results', color: '#0ea5e9', icon: '📊', step: 3 },
-  completed: { label: 'Completed', color: '#10b981', icon: '✓', step: 4 },
+  completed: { label: 'Completed', color: '#22c55e', icon: '✓', step: 4 },
   cancelled: { label: 'Cancelled', color: '#ef4444', icon: '✕', step: 0 }
 };
 
 // Urgency configuration
 const URGENCY_CONFIG = {
-  routine: { label: 'Routine', color: '#10b981' },
+  routine: { label: 'Routine', color: '#22c55e' },
   urgent: { label: 'Urgent', color: '#f59e0b' },
   stat: { label: 'STAT', color: '#ef4444' }
 };

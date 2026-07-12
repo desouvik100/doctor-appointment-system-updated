@@ -66,15 +66,15 @@ const BottomNavigation = ({ activeTab, onTabChange, unreadNotifications = 0, upc
     // Section: Care
     { section: 'Care', items: [
       { id: 'ai-assistant', icon: 'fas fa-robot', label: 'AI Assistant', color: '#ec4899' },
-      { id: 'second-opinion', icon: 'fas fa-user-md', label: 'Second Opinion', color: '#7c3aed' },
+      { id: 'second-opinion', icon: 'fas fa-user-md', label: 'Second Opinion', color: '#0d9488' },
       { id: 'checkup', icon: 'fas fa-stethoscope', label: 'Health Checkup', color: '#14b8a6' },
     ]},
     // Section: Records
     { section: 'Records', items: [
       { id: 'medical-history', icon: 'fas fa-history', label: 'Medical History', color: '#06b6d4' },
       { id: 'lab-reports', icon: 'fas fa-flask', label: 'Lab Reports', color: '#f59e0b' },
-      { id: 'imaging', icon: 'fas fa-x-ray', label: 'Medical Imaging', color: '#6366f1' },
-      { id: 'health-analytics', icon: 'fas fa-chart-line', label: 'Analytics', color: '#8b5cf6' },
+      { id: 'imaging', icon: 'fas fa-x-ray', label: 'Medical Imaging', color: '#0ea5e9' },
+      { id: 'health-analytics', icon: 'fas fa-chart-line', label: 'Analytics', color: '#14b8a6' },
     ]},
     // Section: Emergency
     { section: 'Emergency', items: [
@@ -91,8 +91,8 @@ const BottomNavigation = ({ activeTab, onTabChange, unreadNotifications = 0, upc
     ]},
     // Section: Rewards
     { section: 'Rewards', items: [
-      { id: 'wallet', icon: 'fas fa-wallet', label: 'Wallet', color: '#10b981' },
-      { id: 'transactions', icon: 'fas fa-receipt', label: 'Transactions', color: '#8b5cf6' },
+      { id: 'wallet', icon: 'fas fa-wallet', label: 'Wallet', color: '#22c55e' },
+      { id: 'transactions', icon: 'fas fa-receipt', label: 'Transactions', color: '#14b8a6' },
       { id: 'referrals', icon: 'fas fa-gift', label: 'Refer & Earn', color: '#f97316' },
       { id: 'loyalty', icon: 'fas fa-coins', label: 'Loyalty Points', color: '#eab308' },
     ]},

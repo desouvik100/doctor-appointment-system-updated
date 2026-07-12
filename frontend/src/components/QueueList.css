@@ -50,7 +50,7 @@
 
 /* Current Token Display */
 .queue-list__current-token {
-  background: linear-gradient(135deg, #059669 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #0891b2 100%);
   border-radius: 20px;
   padding: 32px;
   margin-bottom: 24px;
@@ -197,7 +197,7 @@
 }
 
 .queue-item--current .queue-item__number {
-  background: linear-gradient(135deg, #059669 0%, #0891b2 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #0891b2 100%);
   animation: pulse-glow 2s infinite;
 }
 
@@ -257,7 +257,7 @@
 
 .queue-item__status--completed {
   background: #d1fae5;
-  color: #059669;
+  color: #16a34a;
 }
 
 .queue-item__status--skipped {
@@ -292,7 +292,7 @@
 
 .queue-item__action-btn--call {
   background: #d1fae5;
-  color: #059669;
+  color: #16a34a;
 }
 
 .queue-item__action-btn--call:hover {

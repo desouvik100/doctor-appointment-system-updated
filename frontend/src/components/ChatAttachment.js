@@ -207,7 +207,7 @@ export const AttachmentViewer = ({ attachment, onClose }) => {
           position: 'absolute',
           bottom: 20,
           padding: '10px 20px',
-          backgroundColor: '#6366f1',
+          backgroundColor: '#0ea5e9',
           color: 'white',
           borderRadius: 8,
           textDecoration: 'none'

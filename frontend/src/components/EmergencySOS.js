@@ -16,7 +16,7 @@ const EmergencySOS = ({ user, onClose }) => {
     { id: 'cardiac', label: 'Cardiac/Heart', icon: 'fa-heart', color: '#dc2626' },
     { id: 'breathing', label: 'Breathing Problem', icon: 'fa-lungs', color: '#f97316' },
     { id: 'accident', label: 'Accident', icon: 'fa-car-crash', color: '#eab308' },
-    { id: 'unconscious', label: 'Unconscious', icon: 'fa-bed', color: '#8b5cf6' },
+    { id: 'unconscious', label: 'Unconscious', icon: 'fa-bed', color: '#14b8a6' },
     { id: 'other', label: 'Other Emergency', icon: 'fa-exclamation-triangle', color: '#64748b' }
   ];
 

@@ -12,7 +12,7 @@ const PatientFeedbackSection = ({ clinicId }) => {
   const [responseText, setResponseText] = useState('');
 
   const feedbackTypes = ['consultation', 'service', 'facility', 'staff', 'billing', 'general'];
-  const npsColors = { promoter: '#10b981', passive: '#f59e0b', detractor: '#ef4444' };
+  const npsColors = { promoter: '#22c55e', passive: '#f59e0b', detractor: '#ef4444' };
 
   useEffect(() => { fetchFeedback(); fetchAnalytics(); }, [clinicId, filter]);
 
@@ -56,7 +56,7 @@ const PatientFeedbackSection = ({ clinicId }) => {
     ));
   };
 
-  const getNPSColor = (score) => score >= 50 ? '#10b981' : score >= 0 ? '#f59e0b' : '#ef4444';
+  const getNPSColor = (score) => score >= 50 ? '#22c55e' : score >= 0 ? '#f59e0b' : '#ef4444';
 
   if (loading) return <div className="text-center py-8"><div className="spinner-border text-primary"></div></div>;
 
@@ -75,7 +75,7 @@ const PatientFeedbackSection = ({ clinicId }) => {
           {[
             { label: 'Avg Rating', value: (analytics.ratings?.avgOverall || 0).toFixed(1), color: '#f59e0b', icon: 'star' },
             { label: 'Total Feedback', value: analytics.ratings?.totalFeedback || 0, color: '#3b82f6', icon: 'comments' },
-            { label: 'Promoters', value: analytics.nps?.distribution?.find(d => d._id === 'promoter')?.count || 0, color: '#10b981', icon: 'smile' },
+            { label: 'Promoters', value: analytics.nps?.distribution?.find(d => d._id === 'promoter')?.count || 0, color: '#22c55e', icon: 'smile' },
             { label: 'Complaints', value: analytics.complaints?.reduce((s, c) => s + c.count, 0) || 0, color: '#ef4444', icon: 'exclamation-circle' }
           ].map((stat, i) => (
             <div key={i} className="bg-white rounded-xl p-4 border border-slate-200">

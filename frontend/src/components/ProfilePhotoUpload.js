@@ -151,7 +151,7 @@ const ProfilePhotoUpload = ({
               width: 30,
               height: 30,
               border: '3px solid #e5e7eb',
-              borderTopColor: '#6366f1',
+              borderTopColor: '#0ea5e9',
               borderRadius: '50%',
               animation: 'spin 1s linear infinite'
             }} />

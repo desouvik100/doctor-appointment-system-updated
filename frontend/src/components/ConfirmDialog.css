@@ -67,7 +67,7 @@
 
 .confirm-dialog__icon--success {
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #059669;
+  color: #16a34a;
 }
 
 .confirm-dialog__icon--info {
@@ -158,11 +158,11 @@
 }
 
 .confirm-dialog__btn--success {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
 }
 
 .confirm-dialog__btn--success:hover:not(:disabled) {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
   transform: translateY(-1px);
 }
 

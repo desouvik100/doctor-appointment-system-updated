@@ -52,7 +52,7 @@ const LiveStatsDisplay = () => {
       icon: 'user-md',
       label: 'Active Doctors',
       value: stats.activeDoctors,
-      color: '#10b981',
+      color: '#22c55e',
       suffix: '',
       trend: 'Online'
     },
@@ -68,7 +68,7 @@ const LiveStatsDisplay = () => {
       icon: 'procedures',
       label: 'Surgeries Handled',
       value: stats.surgeriesHandled,
-      color: '#8b5cf6',
+      color: '#14b8a6',
       suffix: '+',
       trend: 'This year'
     },

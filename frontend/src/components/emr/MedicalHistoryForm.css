@@ -236,12 +236,12 @@
 
 .status-controlled {
   background: #d1fae5;
-  color: #059669;
+  color: #16a34a;
 }
 
 .status-resolved {
   background: #e0e7ff;
-  color: #4f46e5;
+  color: #0284c7;
 }
 
 .relation-badge {

@@ -138,7 +138,7 @@
 
 .formulary-status.covered {
   background: #ecfdf5;
-  border: 1px solid #10b981;
+  border: 1px solid #22c55e;
 }
 
 .formulary-status.not-covered {
@@ -151,7 +151,7 @@
 }
 
 .formulary-copay {
-  color: #059669;
+  color: #16a34a;
   font-weight: 600;
 }
 
@@ -185,7 +185,7 @@
   align-items: center;
   padding: 16px;
   background: #ecfdf5;
-  border: 1px solid #10b981;
+  border: 1px solid #22c55e;
   border-radius: 8px;
 }
 
@@ -196,7 +196,7 @@
 }
 
 .pharmacy-info strong {
-  color: #059669;
+  color: #16a34a;
 }
 
 .pharmacy-info span {
@@ -282,7 +282,7 @@
 
 .validation-results.valid {
   background: #ecfdf5;
-  border: 1px solid #10b981;
+  border: 1px solid #22c55e;
 }
 
 .validation-results.invalid {

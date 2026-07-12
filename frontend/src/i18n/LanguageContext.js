@@ -41,7 +41,7 @@ export const LanguageProvider = ({ children }) => {
   const languages = [
     { code: 'en', name: 'English', nativeName: 'English', icon: 'EN', color: '#3b82f6' },
     { code: 'hi', name: 'Hindi', nativeName: 'हिंदी', icon: 'हि', color: '#f59e0b' },
-    { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', icon: 'বা', color: '#10b981' },
+    { code: 'bn', name: 'Bengali', nativeName: 'বাংলা', icon: 'বা', color: '#22c55e' },
   ];
 
   return (

@@ -154,7 +154,7 @@ const LoyaltyPoints = ({ userId, onClose }) => {
       case 'earned': return '#22c55e';
       case 'redeemed': return '#ef4444';
       case 'bonus': return '#f59e0b';
-      case 'referral': return '#6366f1';
+      case 'referral': return '#0ea5e9';
       case 'expired': return '#6b7280';
       default: return '#6b7280';
     }
@@ -285,7 +285,7 @@ const LoyaltyPoints = ({ userId, onClose }) => {
               <h4><i className="fas fa-plus-circle"></i> Ways to Earn Points</h4>
               <div className="earn-ways__grid">
                 <div className="earn-way">
-                  <div className="earn-way__icon" style={{ background: '#6366f1' }}>
+                  <div className="earn-way__icon" style={{ background: '#0ea5e9' }}>
                     <i className="fas fa-calendar-check"></i>
                   </div>
                   <div className="earn-way__content">

@@ -10,7 +10,7 @@ const MedicineReminder = ({ userId }) => {
   const [newMedicine, setNewMedicine] = useState({
     name: '', dosage: '', frequency: 'daily', times: ['08:00'],
     startDate: new Date().toISOString().split('T')[0],
-    endDate: '', notes: '', color: '#6366f1', emailReminders: true
+    endDate: '', notes: '', color: '#0ea5e9', emailReminders: true
   });
 
   const frequencyOptions = [
@@ -20,7 +20,7 @@ const MedicineReminder = ({ userId }) => {
     { value: 'weekly', label: 'Weekly' },
     { value: 'asNeeded', label: 'As needed' }
   ];
-  const colorOptions = ['#6366f1', '#10b981', '#f59e0b', '#ef4444', '#8b5cf6', '#ec4899'];
+  const colorOptions = ['#0ea5e9', '#22c55e', '#f59e0b', '#ef4444', '#14b8a6', '#ec4899'];
 
   const fetchMedicines = useCallback(async () => {
     try { const r = await axios.get(`/api/medicines/user/${userId}`); setMedicines(r.data); }
@@ -60,7 +60,7 @@ const MedicineReminder = ({ userId }) => {
     try {
       const r = await axios.post('/api/medicines', { userId, ...newMedicine });
       setMedicines([r.data, ...medicines]);
-      setNewMedicine({ name: '', dosage: '', frequency: 'daily', times: ['08:00'], startDate: new Date().toISOString().split('T')[0], endDate: '', notes: '', color: '#6366f1', emailReminders: true });
+      setNewMedicine({ name: '', dosage: '', frequency: 'daily', times: ['08:00'], startDate: new Date().toISOString().split('T')[0], endDate: '', notes: '', color: '#0ea5e9', emailReminders: true });
       setShowAddForm(false);
       toast.success('Medicine added! Email reminders will be sent at scheduled times.');
       fetchTodayReminders();

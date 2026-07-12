@@ -309,7 +309,7 @@ const AIReportAnalyzer = () => {
               <strong>Diabetes Status: </strong>
               <span style={{ 
                 color: results.diabetesStatus === 'diabetic' ? '#dc2626' : 
-                       results.diabetesStatus === 'prediabetic' ? '#d97706' : '#059669'
+                       results.diabetesStatus === 'prediabetic' ? '#d97706' : '#16a34a'
               }}>
                 {results.diabetesStatus.toUpperCase()}
               </span>
@@ -346,7 +346,7 @@ const AIReportAnalyzer = () => {
           {results.recommendations && !results.analysis.detectedConditions?.length && (
             <div className="ai-report-analyzer__conditions">
               <h4 style={{ marginBottom: '12px', color: '#1e293b' }}>
-                <i className="fas fa-lightbulb" style={{ color: '#6366f1', marginRight: '8px' }}></i>
+                <i className="fas fa-lightbulb" style={{ color: '#0ea5e9', marginRight: '8px' }}></i>
                 Recommendations
               </h4>
               <div className="ai-report-analyzer__condition">

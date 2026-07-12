@@ -201,7 +201,7 @@
 
 .order-progress-mini .progress-fill {
   height: 100%;
-  background: #10b981;
+  background: #22c55e;
   transition: width 0.3s;
 }
 
@@ -306,7 +306,7 @@
 }
 
 .progress-step.active .step-dot {
-  background: #10b981;
+  background: #22c55e;
   color: white;
 }
 
@@ -321,7 +321,7 @@
 }
 
 .progress-step.active .step-label {
-  color: #10b981;
+  color: #22c55e;
   font-weight: 500;
 }
 
@@ -335,7 +335,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, #10b981, #059669);
+  background: linear-gradient(90deg, #22c55e, #16a34a);
   transition: width 0.5s ease;
 }
 
@@ -558,7 +558,7 @@
 }
 
 .status-normal {
-  color: #10b981;
+  color: #22c55e;
   font-weight: 500;
 }
 

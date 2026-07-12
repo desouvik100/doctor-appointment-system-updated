@@ -37,7 +37,7 @@ const MultiBranchSection = ({ clinicId, organizationId }) => {
 
   const branchTypes = ['main', 'satellite', 'clinic', 'diagnostic_center', 'pharmacy'];
   const staffRoles = ['branch_admin', 'branch_manager', 'receptionist', 'doctor', 'nurse', 'pharmacist', 'lab_tech', 'accountant'];
-  const statusColors = { active: '#10b981', inactive: '#64748b', under_renovation: '#f59e0b', closed: '#ef4444' };
+  const statusColors = { active: '#22c55e', inactive: '#64748b', under_renovation: '#f59e0b', closed: '#ef4444' };
   const customStatusOptions = ['available', 'with_patient', 'in_surgery', 'on_break', 'in_meeting', 'unavailable'];
   const presenceStatusOptions = ['checked_in', 'checked_out', ...customStatusOptions];
   const customStatusColors = {
@@ -45,7 +45,7 @@ const MultiBranchSection = ({ clinicId, organizationId }) => {
     with_patient: { bg: '#dbeafe', text: '#2563eb', label: 'With Patient' },
     in_surgery: { bg: '#fce7f3', text: '#db2777', label: 'In Surgery' },
     on_break: { bg: '#fef3c7', text: '#d97706', label: 'On Break' },
-    in_meeting: { bg: '#e0e7ff', text: '#4f46e5', label: 'In Meeting' },
+    in_meeting: { bg: '#e0e7ff', text: '#0284c7', label: 'In Meeting' },
     unavailable: { bg: '#f1f5f9', text: '#64748b', label: 'Unavailable' }
   };
 
@@ -642,10 +642,10 @@ const MultiBranchSection = ({ clinicId, organizationId }) => {
       {dashboard && (
         <div className="grid grid-cols-2 md:grid-cols-5 gap-4">
           {[
-            { label: 'Total Branches', value: dashboard.totalBranches, color: '#6366f1', icon: 'building' },
-            { label: 'Active', value: dashboard.activeBranches, color: '#10b981', icon: 'check-circle' },
+            { label: 'Total Branches', value: dashboard.totalBranches, color: '#0ea5e9', icon: 'building' },
+            { label: 'Active', value: dashboard.activeBranches, color: '#22c55e', icon: 'check-circle' },
             { label: 'Total Beds', value: dashboard.totalBeds, color: '#3b82f6', icon: 'bed' },
-            { label: 'Total Staff', value: aggregatedData?.staff?.total || dashboard.totalStaff || 0, color: '#8b5cf6', icon: 'users' },
+            { label: 'Total Staff', value: aggregatedData?.staff?.total || dashboard.totalStaff || 0, color: '#14b8a6', icon: 'users' },
             { label: 'Total Doctors', value: dashboard.totalDoctors, color: '#f59e0b', icon: 'user-md' }
           ].map((stat, i) => (
             <div key={i} className="bg-white rounded-xl p-4 border border-slate-200">

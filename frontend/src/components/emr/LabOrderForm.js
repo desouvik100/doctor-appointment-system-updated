@@ -10,7 +10,7 @@ import './LabOrderForm.css';
 
 // Urgency options
 const URGENCY_OPTIONS = [
-  { value: 'routine', label: 'Routine', description: 'Standard turnaround time', color: '#10b981' },
+  { value: 'routine', label: 'Routine', description: 'Standard turnaround time', color: '#22c55e' },
   { value: 'urgent', label: 'Urgent', description: 'Priority processing', color: '#f59e0b' },
   { value: 'stat', label: 'STAT', description: 'Immediate processing', color: '#ef4444' }
 ];

@@ -210,7 +210,7 @@
   line-height: 1;
 }
 
-.days-remaining.active .days-number { color: #10b981; }
+.days-remaining.active .days-number { color: #22c55e; }
 .days-remaining.warning-light .days-number { color: #f59e0b; }
 .days-remaining.warning .days-number { color: #ea580c; }
 .days-remaining.expired .days-number { color: #dc2626; }
@@ -231,7 +231,7 @@
 
 .progress-fill {
   height: 100%;
-  background: linear-gradient(90deg, var(--plan-color, #3b82f6) 0%, #10b981 100%);
+  background: linear-gradient(90deg, var(--plan-color, #3b82f6) 0%, #22c55e 100%);
   border-radius: 4px;
   transition: width 0.3s ease;
 }
@@ -265,7 +265,7 @@
 }
 
 .btn-renew {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   color: white;
   border: none;
 }
@@ -343,7 +343,7 @@
 }
 
 .toggle-switch input:checked + .toggle-slider {
-  background: #10b981;
+  background: #22c55e;
 }
 
 .toggle-switch input:checked + .toggle-slider:before {
@@ -383,7 +383,7 @@
 
 .payment-amount {
   font-weight: 600;
-  color: #10b981;
+  color: #22c55e;
 }
 
 .payment-id {

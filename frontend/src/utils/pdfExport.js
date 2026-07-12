@@ -72,7 +72,7 @@ export const exportAppointmentsToPDF = (appointments, title = 'Appointments Repo
   const content = `
     <div style="padding: 20px; font-family: Arial, sans-serif;">
       <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #6366f1; margin: 0;">HealthSync</h1>
+        <h1 style="color: #0ea5e9; margin: 0;">HealthSync</h1>
         <h2 style="color: #64748b; font-weight: normal;">${title}</h2>
         <p style="color: #94a3b8;">Generated on ${new Date().toLocaleDateString('en-US', { 
           weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
@@ -130,13 +130,13 @@ export const exportAppointmentsToPDF = (appointments, title = 'Appointments Repo
 export const exportPatientReportPDF = (patient, appointments = [], healthData = {}) => {
   const content = `
     <div style="padding: 20px; font-family: Arial, sans-serif;">
-      <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #6366f1; padding-bottom: 20px;">
-        <h1 style="color: #6366f1; margin: 0;">HealthSync</h1>
+      <div style="text-align: center; margin-bottom: 30px; border-bottom: 2px solid #0ea5e9; padding-bottom: 20px;">
+        <h1 style="color: #0ea5e9; margin: 0;">HealthSync</h1>
         <h2 style="color: #1e293b; margin-top: 10px;">Patient Health Report</h2>
       </div>
       
       <div style="margin-bottom: 30px;">
-        <h3 style="color: #6366f1; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Patient Information</h3>
+        <h3 style="color: #0ea5e9; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Patient Information</h3>
         <table style="width: 100%;">
           <tr>
             <td style="padding: 8px 0; color: #64748b; width: 150px;">Name:</td>
@@ -159,7 +159,7 @@ export const exportPatientReportPDF = (patient, appointments = [], healthData = 
 
       ${appointments.length > 0 ? `
         <div style="margin-bottom: 30px;">
-          <h3 style="color: #6366f1; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Appointment History</h3>
+          <h3 style="color: #0ea5e9; border-bottom: 1px solid #e2e8f0; padding-bottom: 10px;">Appointment History</h3>
           <table style="width: 100%; border-collapse: collapse;">
             <thead>
               <tr style="background: #f8fafc;">
@@ -196,7 +196,7 @@ export const exportTransactionsPDF = (transactions, title = 'Transaction History
   const content = `
     <div style="padding: 20px; font-family: Arial, sans-serif;">
       <div style="text-align: center; margin-bottom: 30px;">
-        <h1 style="color: #6366f1; margin: 0;">HealthSync</h1>
+        <h1 style="color: #0ea5e9; margin: 0;">HealthSync</h1>
         <h2 style="color: #64748b; font-weight: normal;">${title}</h2>
         <p style="color: #94a3b8;">Generated on ${new Date().toLocaleDateString()}</p>
       </div>
@@ -219,7 +219,7 @@ export const exportTransactionsPDF = (transactions, title = 'Transaction History
               <td style="padding: 12px; border-bottom: 1px solid #e2e8f0;">
                 ${txn.description || txn.type || 'Transaction'}
               </td>
-              <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right; color: ${txn.type === 'credit' ? '#10b981' : '#ef4444'};">
+              <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: right; color: ${txn.type === 'credit' ? '#22c55e' : '#ef4444'};">
                 ${txn.type === 'credit' ? '+' : '-'}₹${txn.amount}
               </td>
               <td style="padding: 12px; border-bottom: 1px solid #e2e8f0; text-align: center;">

@@ -53,7 +53,7 @@ const PrescriptionDownload = ({ prescription, onClose }) => {
     table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
     th { background: #667eea; color: white; padding: 12px 10px; text-align: left; font-size: 11px; }
     td { padding: 10px; border-bottom: 1px solid #e5e7eb; }
-    .advice { background: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0; }
+    .advice { background: #ecfdf5; border-left: 4px solid #22c55e; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0; }
     .advice h3 { color: #065f46; margin-bottom: 8px; font-size: 14px; }
     .follow-up { background: #eff6ff; border: 1px solid #3b82f6; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
     .follow-up h3 { color: #1d4ed8; margin-bottom: 8px; font-size: 14px; }

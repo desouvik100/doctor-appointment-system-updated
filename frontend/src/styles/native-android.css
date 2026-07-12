@@ -707,7 +707,7 @@ html[data-theme="dark"] {
 
 .status-success {
   background: rgba(16, 185, 129, 0.1);
-  color: #059669;
+  color: #16a34a;
 }
 
 .status-warning {
@@ -726,8 +726,8 @@ html[data-theme="dark"] {
 }
 
 .status-primary {
-  background: rgba(99, 102, 241, 0.1);
-  color: #4f46e5;
+  background: rgba(14, 165, 233, 0.1);
+  color: #0284c7;
 }
 
 .status-secondary {

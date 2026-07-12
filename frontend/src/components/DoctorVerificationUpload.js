@@ -142,7 +142,7 @@ const DoctorVerificationUpload = ({
                       style={{
                         padding: '6px 12px',
                         backgroundColor: '#e0e7ff',
-                        color: '#4338ca',
+                        color: '#0369a1',
                         borderRadius: 6,
                         textDecoration: 'none',
                         fontSize: 13
@@ -156,7 +156,7 @@ const DoctorVerificationUpload = ({
                     disabled={isUploading}
                     style={{
                       padding: '6px 12px',
-                      backgroundColor: doc ? '#f3f4f6' : '#6366f1',
+                      backgroundColor: doc ? '#f3f4f6' : '#0ea5e9',
                       color: doc ? '#374151' : 'white',
                       border: 'none',
                       borderRadius: 6,

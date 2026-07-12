@@ -172,7 +172,7 @@ const FamilyHealthWallet = ({ user, onClose }) => {
             className="budget-fill"
             style={{ 
               width: `${Math.min((wallet?.currentMonthSpending / wallet?.monthlyBudget) * 100, 100)}%`,
-              backgroundColor: (wallet?.currentMonthSpending / wallet?.monthlyBudget) > 0.8 ? '#ef4444' : '#10b981'
+              backgroundColor: (wallet?.currentMonthSpending / wallet?.monthlyBudget) > 0.8 ? '#ef4444' : '#22c55e'
             }}
           ></div>
         </div>

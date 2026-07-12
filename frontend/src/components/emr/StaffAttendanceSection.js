@@ -37,8 +37,8 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
   const leaveTypes = ['casual', 'sick', 'earned', 'maternity', 'paternity', 'unpaid'];
   const staffRoles = ['receptionist', 'nurse', 'technician', 'pharmacist', 'accountant', 'manager'];
   const statusColors = {
-    present: '#10b981', absent: '#ef4444', late: '#f59e0b', half_day: '#3b82f6', on_leave: '#8b5cf6',
-    pending: '#f59e0b', approved: '#10b981', rejected: '#ef4444'
+    present: '#22c55e', absent: '#ef4444', late: '#f59e0b', half_day: '#3b82f6', on_leave: '#14b8a6',
+    pending: '#f59e0b', approved: '#22c55e', rejected: '#ef4444'
   };
 
   useEffect(() => { fetchAttendance(); fetchLeaves(); fetchSummary(); fetchStaffList(); fetchCurrentUser(); }, [clinicId, selectedDate]);
@@ -447,9 +447,9 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
       {/* Stats */}
       <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
         {[
-          { label: 'Present Today', value: attendance.filter(a => a.status === 'present').length, color: '#10b981', icon: 'user-check' },
+          { label: 'Present Today', value: attendance.filter(a => a.status === 'present').length, color: '#22c55e', icon: 'user-check' },
           { label: 'Absent', value: attendance.filter(a => a.status === 'absent').length, color: '#ef4444', icon: 'user-times' },
-          { label: 'On Leave', value: attendance.filter(a => a.status === 'on_leave').length, color: '#8b5cf6', icon: 'calendar-minus' },
+          { label: 'On Leave', value: attendance.filter(a => a.status === 'on_leave').length, color: '#14b8a6', icon: 'calendar-minus' },
           { label: 'Pending Leaves', value: leaves.filter(l => l.status === 'pending').length, color: '#f59e0b', icon: 'clock' }
         ].map((stat, i) => (
           <div key={i} className="bg-white rounded-xl p-4 border border-slate-200">

@@ -54,7 +54,7 @@
 }
 
 .user-avatar--success {
-  background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #22c55e 100%);
   color: #fff;
 }
 
@@ -76,7 +76,7 @@
   right: 2px;
   width: 10px;
   height: 10px;
-  background: #10b981;
+  background: #22c55e;
   border: 2px solid #fff;
   border-radius: 50%;
 }

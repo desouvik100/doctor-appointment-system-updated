@@ -48,7 +48,7 @@
 
 /* Header */
 .booking-modal__header {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   padding: 1.5rem;
   color: #fff;
 }
@@ -233,7 +233,7 @@
   padding: 12px 16px;
   background: #d1fae5;
   border-radius: 10px;
-  color: #059669;
+  color: #16a34a;
   font-weight: 500;
   font-size: 0.95rem;
 }
@@ -262,7 +262,7 @@
 }
 
 .booking-modal__time-input.available {
-  border-color: #10b981;
+  border-color: #22c55e;
 }
 
 .booking-modal__time-input.unavailable {
@@ -293,7 +293,7 @@
 
 .booking-modal__availability-badge.available {
   background: #d1fae5;
-  color: #059669;
+  color: #16a34a;
 }
 
 .booking-modal__availability-badge.unavailable {
@@ -393,7 +393,7 @@
 
 .booking-modal__legend-dot.available {
   background: #d1fae5;
-  border: 2px solid #10b981;
+  border: 2px solid #22c55e;
 }
 
 .booking-modal__legend-dot.booked {
@@ -459,7 +459,7 @@
 }
 
 .booking-modal__type-option.selected .booking-modal__type-icon.online {
-  background: linear-gradient(135deg, #2563eb 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #2563eb 0%, #0d9488 100%);
   color: #fff;
 }
 
@@ -494,7 +494,7 @@
 }
 
 .booking-modal__type-check {
-  color: #10b981;
+  color: #22c55e;
   font-size: 1.3rem;
 }
 
@@ -669,7 +669,7 @@
 }
 
 .booking-modal__payment-title i {
-  color: #059669;
+  color: #16a34a;
 }
 
 .booking-modal__payment-rows {
@@ -703,7 +703,7 @@
 }
 
 .booking-modal__payment-row.total span:last-child {
-  color: #059669;
+  color: #16a34a;
   font-size: 1.35rem;
 }
 
@@ -746,7 +746,7 @@
 
 .booking-modal__payment-success i {
   font-size: 48px;
-  color: #10b981;
+  color: #22c55e;
   margin-bottom: 16px;
 }
 
@@ -767,7 +767,7 @@
   padding: 20px;
   background: linear-gradient(135deg, #f0fdf4 0%, #dcfce7 100%);
   border-radius: 12px;
-  border: 2px solid #10b981;
+  border: 2px solid #22c55e;
 }
 
 .booking-modal__payment-amount span:first-child {
@@ -778,7 +778,7 @@
 .booking-modal__payment-amount .amount {
   font-size: 1.75rem;
   font-weight: 700;
-  color: #059669;
+  color: #16a34a;
 }
 
 .booking-modal__btn--razorpay {
@@ -848,7 +848,7 @@
 }
 
 .booking-modal__btn--success {
-  background: linear-gradient(135deg, #059669 0%, #047857 100%);
+  background: linear-gradient(135deg, #16a34a 0%, #15803d 100%);
   color: #fff;
   flex: 1;
   max-width: 220px;
@@ -931,7 +931,7 @@
 
 .booking-modal__slots-loading i {
   font-size: 1.25rem;
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 /* Day Unavailable */
@@ -965,7 +965,7 @@
   top: 2px;
   right: 2px;
   font-size: 0.6rem;
-  color: #6366f1;
+  color: #0ea5e9;
   opacity: 0.7;
 }
 
@@ -1055,7 +1055,7 @@ body.dark-mode .booking-modal__type-icon.online,
 body.dark-mode .booking-modal__type-features,
 [data-theme="dark"] .booking-modal__type-features,
 .dark-mode .booking-modal__type-features {
-  color: #10b981;
+  color: #22c55e;
 }
 
 body.dark-mode .booking-modal__type-meta,

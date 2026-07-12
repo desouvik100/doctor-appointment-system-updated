@@ -13,8 +13,8 @@
   --emr-primary-dark: #2563eb;
   --emr-primary-light: #dbeafe;
   
-  --emr-success: #10b981;
-  --emr-success-dark: #059669;
+  --emr-success: #22c55e;
+  --emr-success-dark: #16a34a;
   --emr-success-light: #dcfce7;
   
   --emr-warning: #f59e0b;
@@ -39,9 +39,9 @@
   --emr-text-muted: #94a3b8;
   
   /* Plan Colors */
-  --emr-plan-basic: #10b981;
+  --emr-plan-basic: #22c55e;
   --emr-plan-standard: #3b82f6;
-  --emr-plan-advanced: #8b5cf6;
+  --emr-plan-advanced: #14b8a6;
   
   /* Spacing */
   --emr-spacing-xs: 4px;

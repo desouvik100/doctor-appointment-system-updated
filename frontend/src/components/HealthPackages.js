@@ -82,12 +82,12 @@ const HealthPackages = ({ userId, onClose }) => {
 
   const getPackageColor = (type) => {
     switch (type) {
-      case 'consultation': return '#6366f1';
+      case 'consultation': return '#0ea5e9';
       case 'checkup': return '#22c55e';
       case 'wellness': return '#f59e0b';
       case 'corporate': return '#3b82f6';
       case 'family': return '#ec4899';
-      default: return '#6366f1';
+      default: return '#0ea5e9';
     }
   };
 

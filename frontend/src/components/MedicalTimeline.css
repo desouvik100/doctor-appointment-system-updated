@@ -258,7 +258,7 @@
 
 .status-completed {
   background: var(--success-light, rgba(16, 185, 129, 0.1));
-  color: var(--success, #10b981);
+  color: var(--success, #22c55e);
 }
 
 .status-pending {

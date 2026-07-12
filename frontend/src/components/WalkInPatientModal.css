@@ -125,7 +125,7 @@
   gap: 16px;
   padding: 16px;
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.1), rgba(5, 150, 105, 0.1));
-  border: 2px solid #10b981;
+  border: 2px solid #22c55e;
   border-radius: 14px;
   margin-bottom: 20px;
 }
@@ -134,7 +134,7 @@
   width: 56px;
   height: 56px;
   border-radius: 14px;
-  background: #10b981;
+  background: #22c55e;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -170,12 +170,12 @@
 
 .patient-info p i {
   width: 14px;
-  color: #10b981;
+  color: #22c55e;
 }
 
 .verified-badge {
   padding: 6px 12px;
-  background: #10b981;
+  background: #22c55e;
   color: white;
   border-radius: 20px;
   font-size: 0.75rem;
@@ -324,7 +324,7 @@
   padding: 14px;
   border: none;
   border-radius: 10px;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
   color: white;
   font-weight: 600;
   cursor: pointer;

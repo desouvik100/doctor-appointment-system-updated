@@ -26,7 +26,7 @@
 }
 
 .doctor-queue-manager__header h2 i {
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 .close-btn {
@@ -56,7 +56,7 @@
 .doctor-queue-manager__loading i {
   font-size: 2rem;
   margin-bottom: 12px;
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 /* Doctor Status Panel */
@@ -115,13 +115,13 @@
 }
 
 .status-btn:hover {
-  border-color: #6366f1;
-  color: #6366f1;
+  border-color: #0ea5e9;
+  color: #0ea5e9;
 }
 
 .status-btn.active {
-  background: #6366f1;
-  border-color: #6366f1;
+  background: #0ea5e9;
+  border-color: #0ea5e9;
   color: white;
 }
 
@@ -150,7 +150,7 @@
 
 .stat-card i {
   font-size: 1.25rem;
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 .stat-card .value {
@@ -256,7 +256,7 @@
   width: calc(100% - 48px);
   margin: 20px 24px;
   padding: 16px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   color: white;
   border: none;
   border-radius: 12px;
@@ -268,7 +268,7 @@
 
 .call-next-btn:hover:not(:disabled) {
   transform: translateY(-2px);
-  box-shadow: 0 8px 24px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 24px rgba(14, 165, 233, 0.3);
 }
 
 .call-next-btn:disabled {
@@ -323,7 +323,7 @@
 .queue-item__position {
   width: 32px;
   height: 32px;
-  background: #6366f1;
+  background: #0ea5e9;
   color: white;
   border-radius: 50%;
   display: flex;
@@ -336,7 +336,7 @@
 .queue-item__avatar {
   width: 44px;
   height: 44px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border-radius: 10px;
   display: flex;
   align-items: center;

@@ -296,13 +296,13 @@
 }
 
 .save-btn {
-  background: #10b981;
-  border-color: #10b981;
+  background: #22c55e;
+  border-color: #22c55e;
   color: white;
 }
 
 .save-btn:hover:not(:disabled) {
-  background: #059669;
+  background: #16a34a;
 }
 
 .cancel-btn:hover:not(:disabled) {
@@ -339,7 +339,7 @@
 }
 
 .summary-item.differential {
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 /* Compact Mode */

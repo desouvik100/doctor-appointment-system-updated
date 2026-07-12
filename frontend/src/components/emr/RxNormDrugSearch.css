@@ -28,7 +28,7 @@
 }
 
 .drug-search-input.has-selection {
-  border-color: #10b981;
+  border-color: #22c55e;
   background-color: #f0fdf4;
 }
 
@@ -55,7 +55,7 @@
 }
 
 .validation-icon.valid {
-  color: #10b981;
+  color: #22c55e;
 }
 
 .validation-icon.invalid {

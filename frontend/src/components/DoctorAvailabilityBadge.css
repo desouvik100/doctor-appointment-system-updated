@@ -47,7 +47,7 @@
 }
 
 .availability-badge--free .availability-badge__status i {
-  color: #10b981;
+  color: #22c55e;
 }
 
 .availability-badge--busy {
@@ -106,7 +106,7 @@
   right: 12px;
   width: 8px;
   height: 8px;
-  background: #10b981;
+  background: #22c55e;
   border-radius: 50%;
   animation: pulse 2s ease-in-out infinite;
 }

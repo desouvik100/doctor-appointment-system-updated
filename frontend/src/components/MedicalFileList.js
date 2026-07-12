@@ -120,7 +120,7 @@ const MedicalFileList = ({
             onClick={onUploadClick}
             style={{
               padding: '8px 16px',
-              backgroundColor: '#6366f1',
+              backgroundColor: '#0ea5e9',
               color: 'white',
               border: 'none',
               borderRadius: '8px',
@@ -151,7 +151,7 @@ const MedicalFileList = ({
             onClick={() => setSelectedCategory(key)}
             style={{
               padding: '6px 12px',
-              backgroundColor: selectedCategory === key ? '#6366f1' : '#f3f4f6',
+              backgroundColor: selectedCategory === key ? '#0ea5e9' : '#f3f4f6',
               color: selectedCategory === key ? 'white' : '#4b5563',
               border: 'none',
               borderRadius: '20px',
@@ -188,7 +188,7 @@ const MedicalFileList = ({
               style={{
                 marginTop: '16px',
                 padding: '10px 20px',
-                backgroundColor: '#6366f1',
+                backgroundColor: '#0ea5e9',
                 color: 'white',
                 border: 'none',
                 borderRadius: '8px',
@@ -273,7 +273,7 @@ const MedicalFileList = ({
                   <span style={{
                     padding: '2px 8px',
                     backgroundColor: '#eef2ff',
-                    color: '#4f46e5',
+                    color: '#0284c7',
                     borderRadius: '12px',
                     fontSize: '11px'
                   }}>
@@ -402,7 +402,7 @@ const MedicalFileList = ({
                   rel="noopener noreferrer"
                   style={{
                     padding: '8px 16px',
-                    backgroundColor: '#6366f1',
+                    backgroundColor: '#0ea5e9',
                     color: 'white',
                     borderRadius: '8px',
                     textDecoration: 'none',

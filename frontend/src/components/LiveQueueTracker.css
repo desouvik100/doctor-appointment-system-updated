@@ -160,7 +160,7 @@
 .status-card.status-active    { background: var(--blue-50, #eff6ff); border: 2px solid var(--blue-500, #3b82f6); }
 .status-card.status-confirmed { background: var(--success-light, #f0fdf4); border: 2px solid var(--success, #22c55e); }
 .status-card.status-pending   { background: var(--warning-light, #fffbeb); border: 2px solid var(--warning, #f59e0b); }
-.status-card.status-completed { background: var(--indigo-50, #eef2ff); border: 2px solid var(--brand-primary, #4f46e5); }
+.status-card.status-completed { background: var(--indigo-50, #eef2ff); border: 2px solid var(--brand-primary, #0284c7); }
 .status-card.status-default   { background: var(--bg-secondary, #f1f5f9); border: 2px solid var(--border-dark, #cbd5e1); }
 .status-label { font-size: var(--font-size-xs, 0.75rem); color: var(--text-secondary, #475569); }
 .status-value { font-size: var(--font-size-sm, 0.875rem); font-weight: var(--font-semibold, 600); text-transform: capitalize; color: var(--text-primary, #0f172a); }

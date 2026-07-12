@@ -27,7 +27,7 @@
 }
 
 .header-info h2 i {
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 .header-info p {
@@ -60,7 +60,7 @@
 
 .view-toggle button.active {
   background: var(--bg-primary, #ffffff);
-  color: #6366f1;
+  color: #0ea5e9;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
 }
 
@@ -92,7 +92,7 @@
 .availability-loading i {
   font-size: 2rem;
   margin-bottom: 12px;
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 /* Calendar View */
@@ -119,7 +119,7 @@
 }
 
 .month-nav button:hover {
-  background: #6366f1;
+  background: #0ea5e9;
   color: white;
 }
 
@@ -170,7 +170,7 @@
 }
 
 .calendar-day.today {
-  border: 2px solid #6366f1;
+  border: 2px solid #0ea5e9;
 }
 
 .calendar-day.available {
@@ -194,7 +194,7 @@
 }
 
 .calendar-day.selected {
-  background: #6366f1 !important;
+  background: #0ea5e9 !important;
   color: white;
 }
 
@@ -272,7 +272,7 @@
 }
 
 .selected-date-slots h4 i {
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 .no-slots {
@@ -325,9 +325,9 @@
 }
 
 .slot-btn:hover {
-  border-color: #6366f1;
+  border-color: #0ea5e9;
   background: #eef2ff;
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 /* List View */

@@ -87,7 +87,7 @@ const RazorpayPayment = ({ appointmentId, user, onPaymentSuccess, onPaymentError
       },
       notes: order.notes,
       theme: {
-        color: '#6366f1' // Indigo color matching HealthSync theme
+        color: '#0ea5e9' // Indigo color matching HealthSync theme
       },
       modal: {
         ondismiss: function() {

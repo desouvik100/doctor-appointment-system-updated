@@ -144,7 +144,7 @@
 }
 
 .progress-step.completed .step-icon {
-  background: #10b981;
+  background: #22c55e;
   color: white;
 }
 
@@ -293,7 +293,7 @@
   background: linear-gradient(135deg, #0ea5e9, #14b8a6) !important;
   border-color: #5eead4 !important;
   transform: scale(1.1);
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.5);
+  box-shadow: 0 4px 20px rgba(20, 184, 166, 0.5);
 }
 
 .calendar-cell.selected .day-number {
@@ -304,7 +304,7 @@
   width: 6px;
   height: 6px;
   border-radius: 50%;
-  background: #10b981;
+  background: #22c55e;
   margin-top: 4px;
 }
 
@@ -454,7 +454,7 @@
   background: linear-gradient(135deg, #0ea5e9, #14b8a6);
   border-color: #5eead4;
   transform: scale(1.05);
-  box-shadow: 0 4px 20px rgba(139, 92, 246, 0.4);
+  box-shadow: 0 4px 20px rgba(20, 184, 166, 0.4);
 }
 
 .slot-type {
@@ -623,7 +623,7 @@
   width: 44px;
   height: 44px;
   border-radius: 10px;
-  background: #10b981;
+  background: #22c55e;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -655,7 +655,7 @@
   position: absolute;
   top: 10px;
   right: 10px;
-  color: #10b981;
+  color: #22c55e;
 }
 
 .reason-input {
@@ -735,7 +735,7 @@
 }
 
 .booking-summary h3 i {
-  color: #10b981;
+  color: #22c55e;
 }
 
 .summary-card {
@@ -856,7 +856,7 @@
 .confirm-btn {
   flex: 2;
   padding: 16px;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
   border: none;
   border-radius: 12px;
   color: white;
@@ -976,7 +976,7 @@
 }
 
 .symptom-chip.selected i {
-  color: #10b981;
+  color: #22c55e;
 }
 
 /* Urgency Level Selection */
@@ -1035,14 +1035,14 @@
 }
 
 .urgency-btn.normal:hover {
-  border-color: #10b981;
-  color: #10b981;
+  border-color: #22c55e;
+  color: #22c55e;
 }
 
 .urgency-btn.normal.selected {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
-  border-color: #10b981;
-  color: #10b981;
+  border-color: #22c55e;
+  color: #22c55e;
 }
 
 /* Urgent */
@@ -1185,7 +1185,7 @@
   position: relative;
   border-radius: 50%;
   box-sizing: content-box;
-  border: 4px solid #10b981;
+  border: 4px solid #22c55e;
   animation: checkmark-circle 0.6s ease-in-out;
 }
 
@@ -1201,7 +1201,7 @@
   display: block;
   position: absolute;
   height: 5px;
-  background: #10b981;
+  background: #22c55e;
   border-radius: 2px;
 }
 
@@ -1403,7 +1403,7 @@
 .done-btn {
   flex: 1;
   padding: 16px;
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
   border: none;
   border-radius: 12px;
   color: white;
@@ -1521,7 +1521,7 @@
   padding: 8px 14px;
   background: rgba(16, 185, 129, 0.2);
   border-radius: 8px;
-  color: #10b981;
+  color: #22c55e;
   font-size: 0.85rem;
 }
 
@@ -1623,7 +1623,7 @@
 
 .estimated-time-box > i {
   font-size: 1.5rem;
-  color: #059669;
+  color: #16a34a;
 }
 
 .estimated-time-box > div {
@@ -1634,7 +1634,7 @@
 
 .est-label {
   font-size: 0.75rem;
-  color: #059669;
+  color: #16a34a;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1642,7 +1642,7 @@
 .est-time {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #059669;
+  color: #16a34a;
 }
 
 .est-note {
@@ -1691,7 +1691,7 @@
 
 .estimated-arrival > i {
   font-size: 1.5rem;
-  color: #059669;
+  color: #16a34a;
 }
 
 .estimated-arrival > div {
@@ -1701,7 +1701,7 @@
 
 .arrival-label {
   font-size: 0.75rem;
-  color: #059669;
+  color: #16a34a;
   text-transform: uppercase;
   letter-spacing: 0.5px;
 }
@@ -1709,7 +1709,7 @@
 .arrival-time {
   font-size: 1.5rem;
   font-weight: 700;
-  color: #059669;
+  color: #16a34a;
 }
 
 /* Responsive for queue elements */
@@ -1783,10 +1783,10 @@
 }
 
 .confetti-0 { background: #0ea5e9; border-radius: 50%; }
-.confetti-1 { background: #10b981; border-radius: 2px; }
+.confetti-1 { background: #22c55e; border-radius: 2px; }
 .confetti-2 { background: #f59e0b; border-radius: 50%; }
 .confetti-3 { background: #ef4444; border-radius: 2px; }
-.confetti-4 { background: #8b5cf6; border-radius: 50%; }
+.confetti-4 { background: #14b8a6; border-radius: 50%; }
 .confetti-5 { background: #ec4899; border-radius: 2px; }
 
 @keyframes confetti-fall {
@@ -1824,8 +1824,8 @@
 
 .queue-badge.empty {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.2));
-  color: #10b981;
-  border: 1px solid #10b981;
+  color: #22c55e;
+  border: 1px solid #22c55e;
 }
 
 .queue-badge.low {
@@ -2023,7 +2023,7 @@
     box-shadow: none;
   }
   50% {
-    border-color: #10b981;
+    border-color: #22c55e;
     box-shadow: 0 0 20px rgba(16, 185, 129, 0.3);
   }
 }
@@ -2052,7 +2052,7 @@
     color: #1e293b;
   }
   50% {
-    color: #10b981;
+    color: #22c55e;
   }
 }
 
@@ -2141,7 +2141,7 @@
 .live-dot-btn {
   width: 8px;
   height: 8px;
-  background: #10b981;
+  background: #22c55e;
   border-radius: 50%;
   animation: pulseDot 1.5s infinite;
 }
@@ -2201,7 +2201,7 @@
 }
 
 .queue-info-card.clinic-queue {
-  border-left: 4px solid #10b981;
+  border-left: 4px solid #22c55e;
 }
 
 /* Both Queues Comparison */
@@ -2277,7 +2277,7 @@
 }
 
 .type-btn:first-child.selected::before {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
 }
 
 .type-btn:last-child.selected::before {
@@ -2291,11 +2291,11 @@
 
 .type-btn:first-child .type-icon {
   background: linear-gradient(135deg, #d1fae5, #a7f3d0);
-  color: #059669;
+  color: #16a34a;
 }
 
 .type-btn:first-child.selected .type-icon {
-  background: linear-gradient(135deg, #10b981, #059669);
+  background: linear-gradient(135deg, #22c55e, #16a34a);
   color: white;
 }
 
@@ -2434,7 +2434,7 @@
 }
 
 .type-selection-card.clinic:hover {
-  border-color: #10b981;
+  border-color: #22c55e;
   box-shadow: 0 12px 40px rgba(16, 185, 129, 0.2), 0 0 0 1px rgba(16, 185, 129, 0.1);
 }
 
@@ -2454,7 +2454,7 @@
 }
 
 .type-selection-card.clinic.selected {
-  border-color: #10b981;
+  border-color: #22c55e;
   background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
   box-shadow: 0 0 0 4px rgba(16, 185, 129, 0.15), 0 12px 40px rgba(16, 185, 129, 0.15);
 }
@@ -2483,7 +2483,7 @@
 }
 
 .type-selection-card.clinic .selected-check {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   color: white;
 }
 
@@ -2512,7 +2512,7 @@
 
 .type-selection-card.clinic .type-card-icon {
   background: linear-gradient(135deg, #d1fae5 0%, #a7f3d0 100%);
-  color: #059669;
+  color: #16a34a;
   border: 1px solid #6ee7b7;
 }
 
@@ -2528,7 +2528,7 @@
 }
 
 .type-selection-card.clinic.selected .type-card-icon {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   color: white;
   border-color: transparent;
 }
@@ -2555,7 +2555,7 @@
 
 .type-selection-card.clinic:hover .type-card-content h4,
 .type-selection-card.clinic.selected .type-card-content h4 {
-  color: #059669;
+  color: #16a34a;
 }
 
 .type-selection-card.virtual:hover .type-card-content h4,
@@ -2588,7 +2588,7 @@
 }
 
 .type-card-features li i {
-  color: #10b981;
+  color: #22c55e;
   font-size: 0.75rem;
 }
 
@@ -2630,7 +2630,7 @@
 
 .type-selection-card.clinic:hover .type-card-arrow,
 .type-selection-card.clinic.selected .type-card-arrow {
-  background: #10b981;
+  background: #22c55e;
   color: white;
 }
 
@@ -2841,7 +2841,7 @@
 
 .queue-type-banner.clinic {
   background: linear-gradient(135deg, #d1fae5 0%, #ecfdf5 100%);
-  color: #059669;
+  color: #16a34a;
   border: 1px solid #6ee7b7;
 }
 
@@ -2938,7 +2938,7 @@
 
 .queue-badge.empty {
   background: linear-gradient(135deg, rgba(16, 185, 129, 0.2), rgba(5, 150, 105, 0.15));
-  color: #10b981;
+  color: #22c55e;
 }
 
 .queue-badge.low {
@@ -3055,7 +3055,7 @@
 }
 
 .type-selection-card.clinic.selected .mobile-subtitle {
-  color: #059669;
+  color: #16a34a;
 }
 
 .type-selection-card.virtual.selected .mobile-subtitle {
@@ -3119,7 +3119,7 @@
 }
 
 .mobile-features li i {
-  color: #10b981;
+  color: #22c55e;
   font-size: 0.8rem;
 }
 
@@ -3144,7 +3144,7 @@
 }
 
 .type-selection-card.clinic .selected-check.mobile-check {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   color: white;
 }
 
@@ -3266,7 +3266,7 @@
   }
 
   .type-selection-card.clinic.selected .mobile-subtitle {
-    color: #059669;
+    color: #16a34a;
   }
 
   .type-selection-card.virtual.selected .mobile-subtitle {
@@ -3332,7 +3332,7 @@
   }
 
   .mobile-features li i {
-    color: #10b981;
+    color: #22c55e;
     font-size: 0.8rem;
   }
 
@@ -3729,11 +3729,11 @@
 }
 
 .fee-breakdown .fee-row.discount {
-  color: #059669;
+  color: #16a34a;
 }
 
 .fee-breakdown .discount-amount {
-  color: #059669;
+  color: #16a34a;
   font-weight: 600;
 }
 
@@ -3764,7 +3764,7 @@
   align-items: center;
   gap: 6px;
   font-size: 0.8rem;
-  color: #059669;
+  color: #16a34a;
   font-weight: 500;
 }
 
@@ -4448,7 +4448,7 @@
 }
 
 .sh-benefits span i {
-  color: #10b981;
+  color: #22c55e;
   font-size: 0.7rem;
 }
 

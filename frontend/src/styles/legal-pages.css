@@ -19,7 +19,7 @@
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   color: #ffffff;
   border: none;
   padding: 12px 24px;
@@ -32,7 +32,7 @@
 
 .legal-page__back:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
 }
 
 .legal-page h1 {
@@ -40,7 +40,7 @@
   font-weight: 700;
   color: #0f172a;
   margin-bottom: 8px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
@@ -98,7 +98,7 @@
 .contact-hero {
   text-align: center;
   padding: 32px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border-radius: 16px;
   margin-bottom: 40px;
 }
@@ -133,7 +133,7 @@
 .contact-card__icon {
   width: 64px;
   height: 64px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border-radius: 16px;
   display: flex;
   align-items: center;
@@ -160,7 +160,7 @@
 }
 
 .contact-card a {
-  color: #6366f1;
+  color: #0ea5e9;
   font-weight: 600;
   text-decoration: none;
 }
@@ -173,7 +173,7 @@
 .about-hero {
   text-align: center;
   padding: 48px 32px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border-radius: 20px;
   margin-bottom: 40px;
 }
@@ -225,7 +225,7 @@
 
 .feature-item i {
   font-size: 32px;
-  color: #6366f1;
+  color: #0ea5e9;
   margin-bottom: 12px;
 }
 
@@ -252,7 +252,7 @@
 .stat-item {
   text-align: center;
   padding: 24px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border-radius: 16px;
 }
 
@@ -377,11 +377,11 @@
 
 /* Contact Cards - Enhanced */
 .contact-card--primary .contact-card__icon {
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
 }
 
 .contact-card--secondary .contact-card__icon {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
 }
 
 .contact-card--accent .contact-card__icon {
@@ -402,7 +402,7 @@
   display: block;
   font-size: 16px !important;
   font-weight: 600;
-  color: #6366f1 !important;
+  color: #0ea5e9 !important;
   margin-bottom: 12px;
 }
 
@@ -428,7 +428,7 @@
   display: inline-flex;
   align-items: center;
   gap: 6px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   color: #ffffff !important;
   padding: 8px 16px;
   border-radius: 8px;
@@ -441,7 +441,7 @@
 
 .contact-card__map-link:hover {
   transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
 }
 
 /* Contact Form Section */
@@ -501,7 +501,7 @@
 }
 
 .contact-form__group label i {
-  color: #6366f1;
+  color: #0ea5e9;
   font-size: 14px;
 }
 
@@ -521,8 +521,8 @@
 .contact-form__group select:focus,
 .contact-form__group textarea:focus {
   outline: none;
-  border-color: #6366f1;
-  box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+  border-color: #0ea5e9;
+  box-shadow: 0 0 0 4px rgba(14, 165, 233, 0.1);
 }
 
 .contact-form__group input::placeholder,
@@ -542,7 +542,7 @@
   gap: 10px;
   width: 100%;
   padding: 16px 32px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   color: #ffffff;
   border: none;
   border-radius: 12px;
@@ -555,7 +555,7 @@
 
 .contact-form__submit:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.3);
 }
 
 /* Support Categories */
@@ -588,7 +588,7 @@
 .support-item:hover {
   transform: translateY(-4px);
   box-shadow: 0 8px 20px rgba(0, 0, 0, 0.08);
-  border-color: #6366f1;
+  border-color: #0ea5e9;
 }
 
 .support-item__icon {
@@ -604,7 +604,7 @@
 
 .support-item__icon i {
   font-size: 24px;
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 .support-item h4 {

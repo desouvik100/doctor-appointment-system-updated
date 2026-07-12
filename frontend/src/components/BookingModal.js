@@ -286,7 +286,7 @@ const BookingModal = ({ doctor, user, onClose, onSuccess }) => {
           contact: user.phone || ''
         },
         theme: {
-          color: '#6366f1'
+          color: '#0ea5e9'
         },
         modal: {
           ondismiss: function() {

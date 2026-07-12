@@ -590,8 +590,8 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
               <div className="doctor-avatar-placeholder">
                 <svg viewBox="0 0 24 24" fill="currentColor">
                   <path d="M12 2C9.243 2 7 4.243 7 7c0 2.757 2.243 5 5 5s5-2.243 5-5c0-2.757-2.243-5-5-5zm0 8c-1.654 0-3-1.346-3-3s1.346-3 3-3 3 1.346 3 3-1.346 3-3 3zm9 11v-1c0-3.859-3.141-7-7-7h-4c-3.86 0-7 3.141-7 7v1h2v-1c0-2.757 2.243-5 5-5h4c2.757 0 5 2.243 5 5v1h2z"/>
-                  <circle cx="17" cy="4" r="1.5" fill="#10b981"/>
-                  <path d="M17 6.5v2M15.5 7.5h3" stroke="#10b981" strokeWidth="0.8" fill="none"/>
+                  <circle cx="17" cy="4" r="1.5" fill="#22c55e"/>
+                  <path d="M17 6.5v2M15.5 7.5h3" stroke="#22c55e" strokeWidth="0.8" fill="none"/>
                 </svg>
               </div>
             )}
@@ -1092,7 +1092,7 @@ const CinemaStyleBooking = ({ doctor, user, onClose, onSuccess }) => {
                   <div className="sh-toggle-header">
                     <div className="sh-toggle-icon">
                       {systematicHistoryData ? (
-                        <i className="fas fa-check-circle" style={{ color: '#10b981' }}></i>
+                        <i className="fas fa-check-circle" style={{ color: '#22c55e' }}></i>
                       ) : (
                         <i className="fas fa-clipboard-list" style={{ color: '#0ea5e9' }}></i>
                       )}

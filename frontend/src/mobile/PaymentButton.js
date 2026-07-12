@@ -83,7 +83,7 @@ const PaymentButton = ({
       description: 'Appointment Payment',
       order_id: orderData.orderId,
       prefill: orderData.prefill,
-      theme: { color: '#4F46E5' },
+      theme: { color: '#0284c7' },
       handler: async (response) => {
         try {
           // Verify payment
@@ -130,7 +130,7 @@ const PaymentButton = ({
     justifyContent: 'center',
     gap: '8px',
     padding: '12px 24px',
-    backgroundColor: disabled ? '#9CA3AF' : '#4F46E5',
+    backgroundColor: disabled ? '#9CA3AF' : '#0284c7',
     color: 'white',
     border: 'none',
     borderRadius: '8px',

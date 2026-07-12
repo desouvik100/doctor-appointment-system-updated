@@ -344,13 +344,13 @@ const PrescriptionManager = ({ doctorId, doctorName, patientId, patientName, pat
           max-width: 800px; 
           margin: 0 auto; 
         }
-        .header { text-align: center; border-bottom: 2px solid #6366f1; padding-bottom: 20px; margin-bottom: 20px; }
-        .header h1 { color: #6366f1; margin: 0; }
+        .header { text-align: center; border-bottom: 2px solid #0ea5e9; padding-bottom: 20px; margin-bottom: 20px; }
+        .header h1 { color: #0ea5e9; margin: 0; }
         .header p { color: #64748b; margin: 5px 0; }
         .language-badge { 
           display: inline-block; 
           padding: 4px 12px; 
-          background: ${language === 'bn' ? '#f59e0b' : '#6366f1'}; 
+          background: ${language === 'bn' ? '#f59e0b' : '#0ea5e9'}; 
           color: white; 
           border-radius: 20px; 
           font-size: 12px; 
@@ -359,9 +359,9 @@ const PrescriptionManager = ({ doctorId, doctorName, patientId, patientName, pat
         .patient-info { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 15px; background: #f8fafc; border-radius: 8px; }
         .section { margin-bottom: 20px; }
         .section h3 { color: #1e293b; border-bottom: 1px solid #e2e8f0; padding-bottom: 8px; }
-        .medicine { padding: 10px; margin: 8px 0; background: #f1f5f9; border-radius: 6px; border-left: 3px solid #6366f1; }
+        .medicine { padding: 10px; margin: 8px 0; background: #f1f5f9; border-radius: 6px; border-left: 3px solid #0ea5e9; }
         .medicine strong { color: #1e293b; }
-        .rx { font-size: 24px; color: #6366f1; font-weight: bold; }
+        .rx { font-size: 24px; color: #0ea5e9; font-weight: bold; }
         .footer { margin-top: 40px; text-align: right; }
         .signature { border-top: 1px solid #1e293b; padding-top: 10px; display: inline-block; }
         @media print { body { padding: 20px; } }

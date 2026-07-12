@@ -466,7 +466,7 @@
 
 .clinical-feature-btn:hover {
   background: linear-gradient(135deg, #ecfdf5, #d1fae5);
-  border-color: #10b981;
+  border-color: #22c55e;
   transform: translateY(-2px);
   box-shadow: 0 4px 12px rgba(16, 185, 129, 0.15);
 }

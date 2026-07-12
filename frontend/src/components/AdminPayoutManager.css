@@ -30,7 +30,7 @@
 
 .btn-export {
   padding: 10px 20px;
-  background: #059669;
+  background: #16a34a;
   color: white;
   border: none;
   border-radius: 8px;
@@ -40,7 +40,7 @@
 }
 
 .btn-export:hover {
-  background: #047857;
+  background: #15803d;
 }
 
 /* Revenue Summary */
@@ -60,7 +60,7 @@
 }
 
 .revenue-summary .summary-card.primary {
-  background: linear-gradient(135deg, #4f46e5 0%, #7c3aed 100%);
+  background: linear-gradient(135deg, #0284c7 0%, #0d9488 100%);
   color: white;
   border: none;
 }
@@ -87,7 +87,7 @@
 }
 
 .revenue-summary .value.highlight {
-  color: #059669;
+  color: #16a34a;
 }
 
 .revenue-summary .value.negative {
@@ -174,7 +174,7 @@
 
 .payouts-table .amount {
   font-weight: 600;
-  color: #059669;
+  color: #16a34a;
 }
 
 .status-badge {
@@ -188,7 +188,7 @@
 
 .status-badge.pending { background: #fef3c7; color: #92400e; }
 .status-badge.approved { background: #dbeafe; color: #1e40af; }
-.status-badge.processing { background: #e0e7ff; color: #4338ca; }
+.status-badge.processing { background: #e0e7ff; color: #0369a1; }
 .status-badge.completed { background: #d1fae5; color: #065f46; }
 .status-badge.failed { background: #fee2e2; color: #991b1b; }
 
@@ -200,7 +200,7 @@
 
 .btn-approve {
   padding: 6px 12px;
-  background: #059669;
+  background: #16a34a;
   color: white;
   border: none;
   border-radius: 6px;
@@ -209,12 +209,12 @@
 }
 
 .btn-approve:hover {
-  background: #047857;
+  background: #15803d;
 }
 
 .btn-process {
   padding: 6px 12px;
-  background: #4f46e5;
+  background: #0284c7;
   color: white;
   border: none;
   border-radius: 6px;
@@ -223,7 +223,7 @@
 }
 
 .btn-process:hover {
-  background: #4338ca;
+  background: #0369a1;
 }
 
 .btn-fail {
@@ -346,7 +346,7 @@
 
 .btn-confirm {
   padding: 10px 20px;
-  background: #4f46e5;
+  background: #0284c7;
   color: white;
   border: none;
   border-radius: 8px;
@@ -355,7 +355,7 @@
 }
 
 .btn-confirm:hover:not(:disabled) {
-  background: #4338ca;
+  background: #0369a1;
 }
 
 .btn-confirm:disabled {

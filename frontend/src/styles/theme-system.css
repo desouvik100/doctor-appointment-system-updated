@@ -22,7 +22,7 @@ body {
 /* Selection */
 ::selection {
   background: var(--indigo-100, #e0e7ff);
-  color: var(--brand-primary, #4f46e5);
+  color: var(--brand-primary, #0284c7);
 }
 
 /* Scrollbar */

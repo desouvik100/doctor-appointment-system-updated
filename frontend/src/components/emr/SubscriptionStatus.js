@@ -110,7 +110,7 @@ const SubscriptionStatus = ({ clinicId, onUpgrade, onRenew }) => {
   };
 
   const getPlanColor = (planId) => {
-    const colors = { basic: '#10b981', standard: '#3b82f6', advanced: '#8b5cf6' };
+    const colors = { basic: '#22c55e', standard: '#3b82f6', advanced: '#14b8a6' };
     return colors[planId] || '#64748b';
   };
 

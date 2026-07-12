@@ -53,7 +53,7 @@
 }
 
 .plan-highlight {
-  color: #6366f1;
+  color: #0ea5e9;
   font-weight: 600;
 }
 
@@ -108,7 +108,7 @@
 .upgrade-card__price .price {
   font-size: 24px;
   font-weight: 700;
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 .upgrade-card__price .period {
@@ -136,7 +136,7 @@
 .check-icon {
   width: 20px;
   height: 20px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   color: #fff;
   border-radius: 50%;
   display: flex;
@@ -151,7 +151,7 @@
 .upgrade-card__button {
   width: 100%;
   padding: 14px 24px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border: none;
   border-radius: 12px;
   color: #fff;
@@ -163,14 +163,14 @@
 
 .upgrade-card__button:hover {
   transform: translateY(-2px);
-  box-shadow: 0 8px 20px rgba(99, 102, 241, 0.4);
+  box-shadow: 0 8px 20px rgba(14, 165, 233, 0.4);
 }
 
 /* Compare Plans */
 .locked-screen__compare {
   background: none;
   border: none;
-  color: #6366f1;
+  color: #0ea5e9;
   font-size: 15px;
   font-weight: 600;
   cursor: pointer;
@@ -179,7 +179,7 @@
 }
 
 .locked-screen__compare:hover {
-  color: #4f46e5;
+  color: #0284c7;
   text-decoration: underline;
 }
 

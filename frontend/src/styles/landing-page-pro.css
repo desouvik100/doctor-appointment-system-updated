@@ -54,7 +54,7 @@
 }
 
 .landing-nav__logo > span {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   -webkit-background-clip: text;
   background-clip: text;
   -webkit-text-fill-color: transparent;
@@ -141,7 +141,7 @@
 }
 
 .landing-nav__link:hover {
-  color: #6366f1;
+  color: #0ea5e9;
 }
 
 .landing-nav__link::after {
@@ -151,7 +151,7 @@
   left: 0;
   width: 0;
   height: 2px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   transition: width 0.2s ease;
 }
 
@@ -309,7 +309,7 @@
 .landing-hero__shape--3 {
   width: 250px;
   height: 250px;
-  background: #10b981;
+  background: #22c55e;
   top: 50%;
   right: 10%;
 }
@@ -356,7 +356,7 @@
 .landing-hero__badge-dot {
   width: 8px;
   height: 8px;
-  background: #10b981;
+  background: #22c55e;
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
@@ -405,7 +405,7 @@
 }
 
 .landing-hero__feature-item i {
-  color: #10b981;
+  color: #22c55e;
   font-size: 20px;
 }
 
@@ -614,7 +614,7 @@
 }
 
 .hero-illustration__badge--1 i {
-  color: #10b981;
+  color: #22c55e;
 }
 
 .hero-illustration__badge--2 {
@@ -739,7 +739,7 @@
 .landing-hero__phone-btn {
   width: 100%;
   padding: 10px;
-  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(135deg, #22c55e 0%, #16a34a 100%);
   color: white;
   border: none;
   border-radius: 8px;
@@ -1150,7 +1150,7 @@
 }
 
 .landing-cta__feature i {
-  color: #10b981;
+  color: #22c55e;
   font-size: 18px;
 }
 

@@ -20,7 +20,7 @@ const plans = [
       'Mobile app access',
     ],
     cta: 'Get Started Free',
-    ctaStyle: { background: 'transparent', border: '2px solid #6366f1', color: '#6366f1' },
+    ctaStyle: { background: 'transparent', border: '2px solid #0ea5e9', color: '#0ea5e9' },
   },
   {
     key: 'pro',
@@ -28,8 +28,8 @@ const plans = [
     price: { monthly: '₹999', yearly: '₹799' },
     period: '/month',
     popular: true,
-    color: '#6366f1',
-    gradient: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+    color: '#0ea5e9',
+    gradient: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
     features: [
       'Unlimited appointments',
       'Up to 5 doctor accounts',
@@ -43,7 +43,7 @@ const plans = [
       'Custom clinic branding',
     ],
     cta: 'Start Free Trial',
-    ctaStyle: { background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', border: 'none', color: '#fff' },
+    ctaStyle: { background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)', border: 'none', color: '#fff' },
   },
   {
     key: 'enterprise',
@@ -97,7 +97,7 @@ export default function PricingPage({ onNavigate = () => {} }) {
             borderRadius: '10px', fontSize: '14px', fontWeight: '500',
             color: '#64748b', cursor: 'pointer', transition: 'all 0.2s',
           }}
-          onMouseEnter={e => e.currentTarget.style.borderColor = '#6366f1'}
+          onMouseEnter={e => e.currentTarget.style.borderColor = '#0ea5e9'}
           onMouseLeave={e => e.currentTarget.style.borderColor = '#e2e8f0'}
         >
           <i className="fas fa-arrow-left" style={{ fontSize: '12px' }}></i>
@@ -109,7 +109,7 @@ export default function PricingPage({ onNavigate = () => {} }) {
       <div style={{ textAlign: 'center', padding: '60px 24px 40px' }}>
         <span style={{
           display: 'inline-block', padding: '6px 16px',
-          background: 'rgba(99,102,241,0.1)', color: '#6366f1',
+          background: 'rgba(14, 165, 233,0.1)', color: '#0ea5e9',
           borderRadius: '999px', fontSize: '13px', fontWeight: '600',
           marginBottom: '16px', letterSpacing: '0.05em',
         }}>
@@ -138,7 +138,7 @@ export default function PricingPage({ onNavigate = () => {} }) {
                 padding: '8px 20px', borderRadius: '8px', border: 'none',
                 fontSize: '14px', fontWeight: '600', cursor: 'pointer',
                 transition: 'all 0.2s',
-                background: billing === b ? '#6366f1' : 'transparent',
+                background: billing === b ? '#0ea5e9' : 'transparent',
                 color: billing === b ? '#fff' : '#64748b',
               }}
             >
@@ -172,19 +172,19 @@ export default function PricingPage({ onNavigate = () => {} }) {
             style={{
               background: '#fff',
               borderRadius: '24px',
-              border: plan.popular ? '2px solid #6366f1' : '1px solid #e2e8f0',
+              border: plan.popular ? '2px solid #0ea5e9' : '1px solid #e2e8f0',
               padding: '32px',
               position: 'relative',
               boxShadow: plan.popular
-                ? '0 20px 60px rgba(99,102,241,0.15)'
+                ? '0 20px 60px rgba(14, 165, 233,0.15)'
                 : '0 4px 20px rgba(0,0,0,0.05)',
               transform: plan.popular ? 'scale(1.03)' : 'scale(1)',
               transition: 'transform 0.2s, box-shadow 0.2s',
             }}
-            onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 20px 60px rgba(99,102,241,0.2)'; }}
+            onMouseEnter={e => { e.currentTarget.style.boxShadow = '0 20px 60px rgba(14, 165, 233,0.2)'; }}
             onMouseLeave={e => {
               e.currentTarget.style.boxShadow = plan.popular
-                ? '0 20px 60px rgba(99,102,241,0.15)'
+                ? '0 20px 60px rgba(14, 165, 233,0.15)'
                 : '0 4px 20px rgba(0,0,0,0.05)';
             }}
           >
@@ -193,7 +193,7 @@ export default function PricingPage({ onNavigate = () => {} }) {
               <div style={{
                 position: 'absolute', top: '-14px', left: '50%',
                 transform: 'translateX(-50%)',
-                background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+                background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
                 color: '#fff', fontSize: '11px', fontWeight: '700',
                 padding: '4px 16px', borderRadius: '999px',
                 letterSpacing: '0.08em', whiteSpace: 'nowrap',
@@ -299,7 +299,7 @@ export default function PricingPage({ onNavigate = () => {} }) {
 
       {/* CTA Banner */}
       <div style={{
-        background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)',
+        background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)',
         padding: '60px 24px', textAlign: 'center',
       }}>
         <h2 style={{ fontSize: '2rem', fontWeight: '800', color: '#fff', margin: '0 0 12px' }}>
@@ -312,7 +312,7 @@ export default function PricingPage({ onNavigate = () => {} }) {
           <button
             onClick={() => onNavigate('register')}
             style={{
-              padding: '14px 32px', background: '#fff', color: '#6366f1',
+              padding: '14px 32px', background: '#fff', color: '#0ea5e9',
               border: 'none', borderRadius: '12px', fontSize: '15px',
               fontWeight: '700', cursor: 'pointer', transition: 'all 0.2s',
             }}

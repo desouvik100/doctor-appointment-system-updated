@@ -142,7 +142,7 @@ const MedicalFileUpload = ({
         onDrop={handleDrop}
         onClick={() => !file && fileInputRef.current?.click()}
         style={{
-          border: `2px dashed ${dragActive ? '#6366f1' : '#d1d5db'}`,
+          border: `2px dashed ${dragActive ? '#0ea5e9' : '#d1d5db'}`,
           borderRadius: '12px',
           padding: '24px',
           textAlign: 'center',
@@ -176,7 +176,7 @@ const MedicalFileUpload = ({
               <div style={{ 
                 fontSize: '48px', 
                 marginBottom: '12px',
-                color: '#6366f1'
+                color: '#0ea5e9'
               }}>
                 📄
               </div>
@@ -292,7 +292,7 @@ const MedicalFileUpload = ({
             style={{
               width: '100%',
               padding: '12px 24px',
-              backgroundColor: uploading ? '#9ca3af' : '#6366f1',
+              backgroundColor: uploading ? '#9ca3af' : '#0ea5e9',
               color: 'white',
               border: 'none',
               borderRadius: '8px',

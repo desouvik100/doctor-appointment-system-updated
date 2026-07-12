@@ -9,25 +9,25 @@ import axios from '../../api/config';
 import './AuditLogs.css';
 
 const ACTION_LABELS = {
-  create: { label: 'Created', icon: '➕', color: '#10b981' },
+  create: { label: 'Created', icon: '➕', color: '#22c55e' },
   update: { label: 'Updated', icon: '✏️', color: '#3b82f6' },
   delete: { label: 'Deleted', icon: '🗑️', color: '#ef4444' },
   view: { label: 'Viewed', icon: '👁️', color: '#64748b' },
-  export: { label: 'Exported', icon: '📤', color: '#8b5cf6' },
+  export: { label: 'Exported', icon: '📤', color: '#14b8a6' },
   login: { label: 'Logged In', icon: '🔐', color: '#06b6d4' },
   logout: { label: 'Logged Out', icon: '🚪', color: '#94a3b8' },
   status_change: { label: 'Status Changed', icon: '🔄', color: '#f59e0b' },
-  prescription_create: { label: 'Prescription Created', icon: '💊', color: '#10b981' },
+  prescription_create: { label: 'Prescription Created', icon: '💊', color: '#22c55e' },
   prescription_update: { label: 'Prescription Updated', icon: '💊', color: '#3b82f6' },
-  diagnosis_add: { label: 'Diagnosis Added', icon: '🩺', color: '#10b981' },
+  diagnosis_add: { label: 'Diagnosis Added', icon: '🩺', color: '#22c55e' },
   notes_update: { label: 'Notes Updated', icon: '📝', color: '#3b82f6' },
   vitals_record: { label: 'Vitals Recorded', icon: '❤️', color: '#ef4444' },
-  lab_order: { label: 'Lab Ordered', icon: '🧪', color: '#8b5cf6' },
+  lab_order: { label: 'Lab Ordered', icon: '🧪', color: '#14b8a6' },
   follow_up_schedule: { label: 'Follow-up Scheduled', icon: '📅', color: '#06b6d4' },
-  patient_register: { label: 'Patient Registered', icon: '👤', color: '#10b981' },
+  patient_register: { label: 'Patient Registered', icon: '👤', color: '#22c55e' },
   patient_update: { label: 'Patient Updated', icon: '👤', color: '#3b82f6' },
   subscription_change: { label: 'Subscription Changed', icon: '💳', color: '#f59e0b' },
-  staff_add: { label: 'Staff Added', icon: '👥', color: '#10b981' },
+  staff_add: { label: 'Staff Added', icon: '👥', color: '#22c55e' },
   staff_remove: { label: 'Staff Removed', icon: '👥', color: '#ef4444' },
   role_change: { label: 'Role Changed', icon: '🔑', color: '#f59e0b' }
 };

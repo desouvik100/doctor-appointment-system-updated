@@ -37,13 +37,13 @@
 .admin-dashboard__brand-icon {
   width: 40px;
   height: 40px;
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
   border-radius: 10px;
   display: flex;
   align-items: center;
   justify-content: center;
   font-size: 1.25rem;
-  box-shadow: 0 4px 12px rgba(99, 102, 241, 0.3);
+  box-shadow: 0 4px 12px rgba(14, 165, 233, 0.3);
 }
 
 .admin-dashboard__nav-tabs {
@@ -72,7 +72,7 @@
 }
 
 .admin-dashboard__nav-tab--active {
-  background: linear-gradient(135deg, rgba(99, 102, 241, 0.3) 0%, rgba(139, 92, 246, 0.3) 100%);
+  background: linear-gradient(135deg, rgba(14, 165, 233, 0.3) 0%, rgba(20, 184, 166, 0.3) 100%);
   color: #fff;
 }
 
@@ -133,11 +133,11 @@
 }
 
 .admin-dashboard__stat-card--doctors::before {
-  background: linear-gradient(90deg, #059669, #10b981);
+  background: linear-gradient(90deg, #16a34a, #22c55e);
 }
 
 .admin-dashboard__stat-card--appointments::before {
-  background: linear-gradient(90deg, #7c3aed, #8b5cf6);
+  background: linear-gradient(90deg, #0d9488, #14b8a6);
 }
 
 .admin-dashboard__stat-card--clinics::before {
@@ -172,12 +172,12 @@
 
 .admin-dashboard__stat-icon--doctors {
   background: #d1fae5;
-  color: #059669;
+  color: #16a34a;
 }
 
 .admin-dashboard__stat-icon--appointments {
   background: #ede9fe;
-  color: #7c3aed;
+  color: #0d9488;
 }
 
 .admin-dashboard__stat-icon--clinics {
@@ -202,7 +202,7 @@
 
 .admin-dashboard__stat-trend--up {
   background: #d1fae5;
-  color: #059669;
+  color: #16a34a;
 }
 
 .admin-dashboard__stat-trend--down {
@@ -396,7 +396,7 @@
 
 .admin-dashboard__status--active {
   background: #d1fae5;
-  color: #059669;
+  color: #16a34a;
 }
 
 .admin-dashboard__status--inactive {

@@ -15,7 +15,7 @@ const PremiumHero = ({ onGetStarted, onAdminLogin, onStaffLogin }) => {
       title: 'Medical Records',
       description: 'Access your health history anytime, anywhere',
       gradient: 'linear-gradient(135deg, #F0FDF4 0%, #BBF7D0 100%)',
-      iconBg: 'linear-gradient(135deg, #10B981 0%, #059669 100%)'
+      iconBg: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)'
     },
     {
       icon: '🤖',

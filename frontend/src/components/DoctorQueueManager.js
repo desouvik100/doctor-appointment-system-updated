@@ -171,7 +171,7 @@ const DoctorQueueManager = ({ doctorId, onStartConsultation, onClose }) => {
     switch (status) {
       case 'available': return '#22c55e';
       case 'busy': return '#ef4444';
-      case 'ready': return '#6366f1';
+      case 'ready': return '#0ea5e9';
       case 'break': return '#f59e0b';
       default: return '#6b7280';
     }
@@ -180,7 +180,7 @@ const DoctorQueueManager = ({ doctorId, onStartConsultation, onClose }) => {
   const getPatientStatusBadge = (status) => {
     switch (status) {
       case 'waiting': return { color: '#f59e0b', bg: '#fef3c7', text: 'Waiting' };
-      case 'called': return { color: '#6366f1', bg: '#eef2ff', text: 'Called' };
+      case 'called': return { color: '#0ea5e9', bg: '#eef2ff', text: 'Called' };
       case 'in-consultation': return { color: '#22c55e', bg: '#dcfce7', text: 'In Progress' };
       default: return { color: '#6b7280', bg: '#f3f4f6', text: status };
     }

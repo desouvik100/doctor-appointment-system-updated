@@ -14,9 +14,9 @@ const LanguageSelector = ({ variant = 'dropdown', className = '', style = {}, da
   const shortCodes = { en: 'EN', hi: 'हि', bn: 'বা' };
 
   // Dark mode = black button, Light mode = indigo button
-  const buttonBg = darkMode ? '#000000' : '#6366f1';
-  const buttonBgHover = darkMode ? '#1a1a1a' : '#4f46e5';
-  const buttonBorder = darkMode ? '#000000' : '#6366f1';
+  const buttonBg = darkMode ? '#000000' : '#0ea5e9';
+  const buttonBgHover = darkMode ? '#1a1a1a' : '#0284c7';
+  const buttonBorder = darkMode ? '#000000' : '#0ea5e9';
   const buttonColor = '#ffffff';
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const LanguageSelector = ({ variant = 'dropdown', className = '', style = {}, da
               border: 'none',
               cursor: 'pointer',
               transition: 'all 0.2s',
-              background: language === lang.code ? '#6366f1' : 'transparent',
+              background: language === lang.code ? '#0ea5e9' : 'transparent',
               color: language === lang.code ? '#fff' : buttonColor
             }}
           >
@@ -99,7 +99,7 @@ const LanguageSelector = ({ variant = 'dropdown', className = '', style = {}, da
               cursor: 'pointer',
               transition: 'all 0.15s',
               background: language === lang.code ? '#eef2ff' : '#ffffff',
-              color: language === lang.code ? '#6366f1' : '#334155',
+              color: language === lang.code ? '#0ea5e9' : '#334155',
               textAlign: 'left'
             }}
             onMouseEnter={(e) => { if (language !== lang.code) e.currentTarget.style.background = '#f8fafc'; }}

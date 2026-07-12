@@ -74,7 +74,7 @@
   
   --primary: #818cf8;
   --primary-light: rgba(129, 140, 248, 0.15);
-  --primary-dark: #6366f1;
+  --primary-dark: #0ea5e9;
   
   --success: #34d399;
   --success-light: rgba(52, 211, 153, 0.15);
@@ -111,7 +111,7 @@
   --primary-light: rgba(102, 126, 234, 0.1);
   --primary-dark: #5a67d8;
   
-  --success: #10b981;
+  --success: #22c55e;
   --success-light: rgba(16, 185, 129, 0.1);
   
   --warning: #f59e0b;
@@ -271,7 +271,7 @@
 }
 
 [data-theme="dark"] .hover\:bg-indigo-50:hover {
-  background-color: rgba(99, 102, 241, 0.15) !important;
+  background-color: rgba(14, 165, 233, 0.15) !important;
 }
 
 /* Stats cards backgrounds */
@@ -353,8 +353,8 @@
 [data-theme="dark"] input:focus,
 [data-theme="dark"] select:focus,
 [data-theme="dark"] textarea:focus {
-  border-color: #6366f1 !important;
-  box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2) !important;
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 0 0 3px rgba(14, 165, 233, 0.2) !important;
 }
 
 /* Dropdown menus */
@@ -392,7 +392,7 @@
 }
 
 [data-theme="dark"] tbody tr:hover {
-  background-color: rgba(99, 102, 241, 0.1) !important;
+  background-color: rgba(14, 165, 233, 0.1) !important;
 }
 
 /* Badges */
@@ -442,7 +442,7 @@
 }
 
 [data-theme="dark"] .message-bubble.sent {
-  background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%) !important;
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%) !important;
 }
 
 [data-theme="dark"] .message-bubble.received {

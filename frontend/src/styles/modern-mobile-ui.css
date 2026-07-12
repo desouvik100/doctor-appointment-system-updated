@@ -13,14 +13,14 @@
   --m-primary-bg: rgba(8, 145, 178, 0.1);
   
   /* Accent Colors - Softer, more pleasant */
-  --m-success: #10B981;
+  --m-success: #22c55e;
   --m-success-bg: rgba(16, 185, 129, 0.12);
   --m-warning: #F59E0B;
   --m-warning-bg: rgba(245, 158, 11, 0.12);
   --m-danger: #EF4444;
   --m-danger-bg: rgba(239, 68, 68, 0.12);
-  --m-info: #6366F1;
-  --m-info-bg: rgba(99, 102, 241, 0.12);
+  --m-info: #0ea5e9;
+  --m-info-bg: rgba(14, 165, 233, 0.12);
   
   /* Neutral Palette - Warmer tones */
   --m-bg: #F8FAFC;

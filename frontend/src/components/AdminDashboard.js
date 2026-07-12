@@ -15,8 +15,8 @@ import '../styles/admin-dashboard-professional.css';
 // Stat Card Component - MNC Enterprise Style with SVG Icons
 const StatCard = ({ title, value, icon, color = "primary" }) => {
   const colors = {
-    primary: '#6366f1',
-    success: '#10b981',
+    primary: '#0ea5e9',
+    success: '#22c55e',
     warning: '#f59e0b',
     info: '#3b82f6'
   };
@@ -126,23 +126,23 @@ const AuditLogsSection = () => {
   const [pagination, setPagination] = useState({ total: 0, pages: 1 });
 
   const actionLabels = {
-    appointment_created: { label: 'Appointment Created', color: '#10b981', icon: 'calendar-plus' },
+    appointment_created: { label: 'Appointment Created', color: '#22c55e', icon: 'calendar-plus' },
     appointment_rescheduled: { label: 'Appointment Rescheduled', color: '#f59e0b', icon: 'calendar-alt' },
     appointment_cancelled: { label: 'Appointment Cancelled', color: '#ef4444', icon: 'calendar-times' },
-    appointment_completed: { label: 'Appointment Completed', color: '#10b981', icon: 'calendar-check' },
+    appointment_completed: { label: 'Appointment Completed', color: '#22c55e', icon: 'calendar-check' },
     doctor_added: { label: 'Doctor Added', color: '#3b82f6', icon: 'user-md' },
     doctor_removed: { label: 'Doctor Removed', color: '#ef4444', icon: 'user-minus' },
-    doctor_approved: { label: 'Doctor Approved', color: '#10b981', icon: 'user-check' },
+    doctor_approved: { label: 'Doctor Approved', color: '#22c55e', icon: 'user-check' },
     doctor_rejected: { label: 'Doctor Rejected', color: '#ef4444', icon: 'user-times' },
     staff_added: { label: 'Staff Added', color: '#3b82f6', icon: 'user-plus' },
     staff_removed: { label: 'Staff Removed', color: '#ef4444', icon: 'user-minus' },
-    staff_approved: { label: 'Staff Approved', color: '#10b981', icon: 'user-check' },
+    staff_approved: { label: 'Staff Approved', color: '#22c55e', icon: 'user-check' },
     staff_rejected: { label: 'Staff Rejected', color: '#ef4444', icon: 'user-times' },
     user_suspended: { label: 'User Suspended', color: '#ef4444', icon: 'ban' },
-    user_activated: { label: 'User Activated', color: '#10b981', icon: 'check-circle' },
-    payment_received: { label: 'Payment Received', color: '#10b981', icon: 'rupee-sign' },
+    user_activated: { label: 'User Activated', color: '#22c55e', icon: 'check-circle' },
+    payment_received: { label: 'Payment Received', color: '#22c55e', icon: 'rupee-sign' },
     payment_refunded: { label: 'Payment Refunded', color: '#f59e0b', icon: 'undo' },
-    login_success: { label: 'Login', color: '#6366f1', icon: 'sign-in-alt' },
+    login_success: { label: 'Login', color: '#0ea5e9', icon: 'sign-in-alt' },
     login_failed: { label: 'Failed Login', color: '#ef4444', icon: 'exclamation-triangle' }
   };
 
@@ -416,7 +416,7 @@ const BalanceSheetSection = () => {
       </div>
 
       {/* Net Revenue Highlight */}
-      <div style={{ background: 'linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%)', borderRadius: '12px', padding: '24px', marginBottom: '24px', color: 'white' }}>
+      <div style={{ background: 'linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%)', borderRadius: '12px', padding: '24px', marginBottom: '24px', color: 'white' }}>
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
           <div>
             <div style={{ fontSize: '14px', opacity: 0.9, marginBottom: '4px' }}>Net Platform Revenue</div>
@@ -434,7 +434,7 @@ const BalanceSheetSection = () => {
         {/* By Payment Method */}
         <div style={{ background: 'white', borderRadius: '12px', padding: '20px', border: '1px solid #e2e8f0' }}>
           <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginBottom: '16px' }}>
-            <i className="fas fa-credit-card me-2" style={{ color: '#6366f1' }}></i>By Payment Method
+            <i className="fas fa-credit-card me-2" style={{ color: '#0ea5e9' }}></i>By Payment Method
           </h4>
           {Object.entries(breakdown.byPaymentMethod || {}).length === 0 ? (
             <p style={{ color: '#94a3b8', fontSize: '13px' }}>No data</p>
@@ -451,7 +451,7 @@ const BalanceSheetSection = () => {
         {/* By Consultation Type */}
         <div style={{ background: 'white', borderRadius: '12px', padding: '20px', border: '1px solid #e2e8f0' }}>
           <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginBottom: '16px' }}>
-            <i className="fas fa-stethoscope me-2" style={{ color: '#10b981' }}></i>By Consultation Type
+            <i className="fas fa-stethoscope me-2" style={{ color: '#22c55e' }}></i>By Consultation Type
           </h4>
           {Object.entries(breakdown.byConsultationType || {}).length === 0 ? (
             <p style={{ color: '#94a3b8', fontSize: '13px' }}>No data</p>
@@ -510,12 +510,12 @@ const BillingExpensesSection = () => {
   const [summary, setSummary] = useState({ totalRevenue: 0, totalExpenses: 0, netProfit: 0, pendingPayments: 0 });
 
   const expenseCategories = [
-    { value: 'salary', label: 'Staff Salary', icon: 'users', color: '#6366f1' },
+    { value: 'salary', label: 'Staff Salary', icon: 'users', color: '#0ea5e9' },
     { value: 'rent', label: 'Office Rent', icon: 'building', color: '#f59e0b' },
-    { value: 'utilities', label: 'Utilities', icon: 'bolt', color: '#10b981' },
+    { value: 'utilities', label: 'Utilities', icon: 'bolt', color: '#22c55e' },
     { value: 'marketing', label: 'Marketing', icon: 'bullhorn', color: '#ec4899' },
     { value: 'software', label: 'Software/Tech', icon: 'laptop', color: '#3b82f6' },
-    { value: 'maintenance', label: 'Maintenance', icon: 'tools', color: '#8b5cf6' },
+    { value: 'maintenance', label: 'Maintenance', icon: 'tools', color: '#14b8a6' },
     { value: 'supplies', label: 'Office Supplies', icon: 'box', color: '#14b8a6' },
     { value: 'legal', label: 'Legal/Compliance', icon: 'gavel', color: '#f97316' },
     { value: 'insurance', label: 'Insurance', icon: 'shield-alt', color: '#06b6d4' },
@@ -632,7 +632,7 @@ const BillingExpensesSection = () => {
             onClick={() => setActiveSubTab(tab)}
             style={{
               padding: '8px 16px', borderRadius: '8px', border: 'none',
-              background: activeSubTab === tab ? '#6366f1' : '#f1f5f9',
+              background: activeSubTab === tab ? '#0ea5e9' : '#f1f5f9',
               color: activeSubTab === tab ? 'white' : '#64748b',
               fontWeight: 500, cursor: 'pointer', textTransform: 'capitalize'
             }}
@@ -648,7 +648,7 @@ const BillingExpensesSection = () => {
           {/* Expense by Category */}
           <div style={{ background: 'white', borderRadius: '12px', padding: '20px', border: '1px solid #e2e8f0' }}>
             <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginBottom: '16px' }}>
-              <i className="fas fa-chart-pie me-2" style={{ color: '#6366f1' }}></i>Expenses by Category
+              <i className="fas fa-chart-pie me-2" style={{ color: '#0ea5e9' }}></i>Expenses by Category
             </h4>
             {expenseCategories.map(cat => {
               const catExpenses = expenses.filter(e => e.category === cat.value);
@@ -672,7 +672,7 @@ const BillingExpensesSection = () => {
           {/* Recent Transactions */}
           <div style={{ background: 'white', borderRadius: '12px', padding: '20px', border: '1px solid #e2e8f0' }}>
             <h4 style={{ fontSize: '14px', fontWeight: 600, color: '#1e293b', marginBottom: '16px' }}>
-              <i className="fas fa-exchange-alt me-2" style={{ color: '#10b981' }}></i>Recent Transactions
+              <i className="fas fa-exchange-alt me-2" style={{ color: '#22c55e' }}></i>Recent Transactions
             </h4>
             {[...bills.slice(0, 3).map(b => ({ ...b, type: 'income' })), ...expenses.slice(0, 3).map(e => ({ ...e, type: 'expense' }))]
               .sort((a, b) => new Date(b.createdAt || b.date) - new Date(a.createdAt || a.date))
@@ -811,7 +811,7 @@ const BillingExpensesSection = () => {
           </div>
           <div style={{ background: 'white', borderRadius: '12px', padding: '24px', border: '1px solid #e2e8f0', textAlign: 'center' }}>
             <div style={{ width: '60px', height: '60px', borderRadius: '12px', background: '#f0fdf4', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 16px' }}>
-              <i className="fas fa-chart-bar" style={{ fontSize: '24px', color: '#10b981' }}></i>
+              <i className="fas fa-chart-bar" style={{ fontSize: '24px', color: '#22c55e' }}></i>
             </div>
             <h4 style={{ fontSize: '16px', fontWeight: 600, color: '#1e293b', marginBottom: '8px' }}>P&L Statement</h4>
             <p style={{ fontSize: '13px', color: '#64748b', marginBottom: '16px' }}>Profit & Loss analysis</p>
@@ -875,7 +875,7 @@ const BillingExpensesSection = () => {
               </div>
               <div style={{ display: 'flex', gap: '12px', marginTop: '8px' }}>
                 <button onClick={() => setShowAddExpense(false)} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: '1px solid #e2e8f0', background: 'white', cursor: 'pointer' }}>Cancel</button>
-                <button onClick={handleAddExpense} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: '#6366f1', color: 'white', fontWeight: 500, cursor: 'pointer' }}>Add Expense</button>
+                <button onClick={handleAddExpense} style={{ flex: 1, padding: '12px', borderRadius: '8px', border: 'none', background: '#0ea5e9', color: 'white', fontWeight: 500, cursor: 'pointer' }}>Add Expense</button>
               </div>
             </div>
           </div>
@@ -1818,7 +1818,7 @@ function AdminDashboard({ admin, onLogout }) {
                       outline: 'none',
                       transition: 'border-color 0.2s'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                    onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
                     onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
                   />
                   {userSearchQuery && (
@@ -2134,7 +2134,7 @@ function AdminDashboard({ admin, onLogout }) {
                       outline: 'none',
                       transition: 'border-color 0.2s'
                     }}
-                    onFocus={(e) => e.target.style.borderColor = '#6366f1'}
+                    onFocus={(e) => e.target.style.borderColor = '#0ea5e9'}
                     onBlur={(e) => e.target.style.borderColor = '#e2e8f0'}
                   />
                   {clinicSearchQuery && (
@@ -2208,7 +2208,7 @@ function AdminDashboard({ admin, onLogout }) {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="btn btn-sm"
-                              style={{ fontSize: '11px', padding: '4px 8px', background: '#10b981', color: 'white', borderRadius: '4px', textDecoration: 'none' }}
+                              style={{ fontSize: '11px', padding: '4px 8px', background: '#22c55e', color: 'white', borderRadius: '4px', textDecoration: 'none' }}
                             >
                               <i className="fas fa-map-marker-alt"></i> View Map
                             </a>
@@ -2327,7 +2327,7 @@ function AdminDashboard({ admin, onLogout }) {
               {/* Pending Clinics */}
               <div>
                 <h3 style={{ fontSize: '1.1rem', color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <i className="fas fa-hospital" style={{ color: '#10b981' }}></i>
+                  <i className="fas fa-hospital" style={{ color: '#22c55e' }}></i>
                   Pending Clinic Registrations ({pendingClinics.length})
                 </h3>
                 {pendingClinics.length === 0 ? (
@@ -2366,7 +2366,7 @@ function AdminDashboard({ admin, onLogout }) {
                               <div className="admin-actions">
                                 <button 
                                   className="admin-action-btn"
-                                  style={{ background: '#10b981', color: 'white' }}
+                                  style={{ background: '#22c55e', color: 'white' }}
                                   onClick={() => handleApproveClinic(clinic._id)}
                                   title="Approve"
                                 >
@@ -2392,7 +2392,7 @@ function AdminDashboard({ admin, onLogout }) {
               {/* Pending Doctors */}
               <div style={{ marginTop: '2rem' }}>
                 <h3 style={{ fontSize: '1.1rem', color: '#1e293b', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                  <i className="fas fa-user-md" style={{ color: '#8b5cf6' }}></i>
+                  <i className="fas fa-user-md" style={{ color: '#14b8a6' }}></i>
                   Pending Doctor Registrations ({pendingDoctors.length})
                 </h3>
                 {pendingDoctors.length === 0 ? (
@@ -2429,7 +2429,7 @@ function AdminDashboard({ admin, onLogout }) {
                               <div className="admin-actions">
                                 <button 
                                   className="admin-action-btn"
-                                  style={{ background: '#8b5cf6', color: 'white' }}
+                                  style={{ background: '#14b8a6', color: 'white' }}
                                   onClick={() => handleApproveDoctor(doctor._id)}
                                   title="Approve"
                                 >
@@ -2477,7 +2477,7 @@ function AdminDashboard({ admin, onLogout }) {
                   <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Pending</div>
                   <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>₹{walletSummary.totalPendingPayouts?.toLocaleString() || 0}</div>
                 </div>
-                <div style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white', padding: '1.5rem', borderRadius: '12px' }}>
+                <div style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', color: 'white', padding: '1.5rem', borderRadius: '12px' }}>
                   <div style={{ fontSize: '0.875rem', opacity: 0.9 }}>Total Earnings</div>
                   <div style={{ fontSize: '1.75rem', fontWeight: 'bold' }}>₹{walletSummary.totalEarnings?.toLocaleString() || 0}</div>
                 </div>
@@ -2540,7 +2540,7 @@ function AdminDashboard({ admin, onLogout }) {
                               <div className="admin-actions">
                                 <button 
                                   className="admin-action-btn"
-                                  style={{ background: '#10b981', color: 'white' }}
+                                  style={{ background: '#22c55e', color: 'white' }}
                                   onClick={() => {
                                     const reference = window.prompt('Enter transaction reference/ID:');
                                     if (reference !== null) {
@@ -2605,7 +2605,7 @@ function AdminDashboard({ admin, onLogout }) {
                           <td>
                             <span className="badge badge-info">{wallet.doctor?.specialization || 'N/A'}</span>
                           </td>
-                          <td style={{ color: '#10b981', fontWeight: 'bold' }}>₹{wallet.totalEarnings?.toLocaleString()}</td>
+                          <td style={{ color: '#22c55e', fontWeight: 'bold' }}>₹{wallet.totalEarnings?.toLocaleString()}</td>
                           <td style={{ color: '#f59e0b', fontWeight: 'bold' }}>₹{wallet.pendingAmount?.toLocaleString()}</td>
                           <td style={{ color: '#3b82f6' }}>₹{wallet.totalPayouts?.toLocaleString()}</td>
                           <td>{wallet.stats?.completedAppointments || 0}</td>
@@ -2624,7 +2624,7 @@ function AdminDashboard({ admin, onLogout }) {
                           <td>
                             <button 
                               className="admin-action-btn"
-                              style={{ background: '#10b981', color: 'white' }}
+                              style={{ background: '#22c55e', color: 'white' }}
                               onClick={() => { setSelectedWallet(wallet); setShowPayoutModal(true); }}
                               disabled={wallet.pendingAmount <= 0}
                               title="Process Payout"
@@ -3330,7 +3330,7 @@ function AdminDashboard({ admin, onLogout }) {
       {showPayoutModal && selectedWallet && (
         <div className="modal-overlay" onClick={() => setShowPayoutModal(false)}>
           <div className="modal-content" onClick={e => e.stopPropagation()} style={{ maxWidth: '500px' }}>
-            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', color: 'white' }}>
+            <div className="modal-header" style={{ background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', color: 'white' }}>
               <h3><i className="fas fa-money-bill-wave"></i> Process Payout</h3>
               <button className="modal-close" onClick={() => setShowPayoutModal(false)} style={{ color: 'white' }}>
                 <i className="fas fa-times"></i>
@@ -3424,7 +3424,7 @@ function AdminDashboard({ admin, onLogout }) {
                     padding: '0.75rem', 
                     borderRadius: '8px', 
                     border: 'none', 
-                    background: 'linear-gradient(135deg, #10b981 0%, #059669 100%)', 
+                    background: 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)', 
                     color: 'white', 
                     fontWeight: '600',
                     cursor: 'pointer',

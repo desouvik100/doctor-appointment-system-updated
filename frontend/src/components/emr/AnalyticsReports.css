@@ -204,7 +204,7 @@
   margin-top: 4px;
 }
 
-.card-change.positive { color: #10b981; }
+.card-change.positive { color: #22c55e; }
 .card-change.negative { color: #ef4444; }
 
 /* Chart Section */
@@ -286,7 +286,7 @@
 }
 
 .revenue-bar {
-  background: linear-gradient(180deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(180deg, #22c55e 0%, #16a34a 100%);
 }
 
 /* Distribution Section */
@@ -424,7 +424,7 @@
 
 .age-bar {
   height: 100%;
-  background: linear-gradient(90deg, #8b5cf6 0%, #7c3aed 100%);
+  background: linear-gradient(90deg, #14b8a6 0%, #0d9488 100%);
   border-radius: 10px;
   transition: width 0.3s ease;
 }
@@ -514,7 +514,7 @@
 
 .source-fill {
   height: 100%;
-  background: linear-gradient(90deg, #10b981 0%, #059669 100%);
+  background: linear-gradient(90deg, #22c55e 0%, #16a34a 100%);
   border-radius: 4px;
   transition: width 0.3s ease;
 }

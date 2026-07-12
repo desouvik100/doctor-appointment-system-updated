@@ -43,9 +43,9 @@ const QueueList = ({ doctorId, date }) => {
       case 'verified':
         return '#3b82f6'; // Blue
       case 'in_queue':
-        return '#8b5cf6'; // Purple
+        return '#14b8a6'; // Purple
       case 'completed':
-        return '#10b981'; // Green
+        return '#22c55e'; // Green
       default:
         return '#6b7280'; // Gray
     }
@@ -212,7 +212,7 @@ const QueueList = ({ doctorId, date }) => {
           <p style={{
             fontSize: 'clamp(1.25rem, 4vw, 1.75rem)',
             fontWeight: 700,
-            color: '#10b981',
+            color: '#22c55e',
             margin: '8px 0 0 0'
           }}>{queue.filter(p => p.status === 'completed').length}</p>
         </div>

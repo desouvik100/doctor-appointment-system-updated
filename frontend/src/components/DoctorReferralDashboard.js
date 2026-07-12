@@ -74,7 +74,7 @@ const DoctorReferralDashboard = ({ doctor, onClose }) => {
     const colors = {
       'launch': '#22c55e',
       'growth': '#3b82f6',
-      'standard': '#8b5cf6',
+      'standard': '#14b8a6',
       'premium': '#f59e0b',
       'loyalty': '#ef4444'
     };

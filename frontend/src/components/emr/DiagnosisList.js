@@ -12,7 +12,7 @@ import './DiagnosisList.css';
 const TYPE_CONFIG = {
   primary: { label: 'Primary', color: '#dc2626', bgColor: '#fef2f2', borderColor: '#fecaca' },
   secondary: { label: 'Secondary', color: '#f59e0b', bgColor: '#fffbeb', borderColor: '#fde68a' },
-  differential: { label: 'Differential', color: '#6366f1', bgColor: '#eef2ff', borderColor: '#c7d2fe' }
+  differential: { label: 'Differential', color: '#0ea5e9', bgColor: '#eef2ff', borderColor: '#c7d2fe' }
 };
 
 const DiagnosisList = ({

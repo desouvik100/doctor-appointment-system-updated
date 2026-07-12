@@ -290,7 +290,7 @@ const StaffAnalyticsSection = ({ clinicId, organizationId }) => {
               title="Avg Check-in"
               value={formatTime(analytics?.analytics?.averageTimings?.avgCheckInMinutes)}
               icon="sign-in-alt"
-              color="#10b981"
+              color="#22c55e"
               subtitle="Average arrival time"
             />
             <MetricCard
@@ -304,7 +304,7 @@ const StaffAnalyticsSection = ({ clinicId, organizationId }) => {
               title="Total Hours"
               value={formatHours(analytics?.analytics?.averageTimings?.totalHoursWorked)}
               icon="clock"
-              color="#8b5cf6"
+              color="#14b8a6"
               subtitle="Hours worked this period"
             />
             <MetricCard

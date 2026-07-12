@@ -45,7 +45,7 @@ const CorporateWellness = () => {
         'Dedicated account manager',
         'Priority support'
       ],
-      color: '#10b981'
+      color: '#22c55e'
     },
     {
       id: 'enterprise',
@@ -63,7 +63,7 @@ const CorporateWellness = () => {
         '24/7 dedicated support',
         'Quarterly health reports'
       ],
-      color: '#8b5cf6'
+      color: '#14b8a6'
     }
   ];
 

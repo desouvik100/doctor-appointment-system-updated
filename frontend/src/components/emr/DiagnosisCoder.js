@@ -12,7 +12,7 @@ import './DiagnosisCoder.css';
 const DIAGNOSIS_TYPES = [
   { value: 'primary', label: 'Primary', description: 'Main reason for visit', color: '#dc2626' },
   { value: 'secondary', label: 'Secondary', description: 'Contributing condition', color: '#f59e0b' },
-  { value: 'differential', label: 'Differential', description: 'Possible diagnosis', color: '#6366f1' }
+  { value: 'differential', label: 'Differential', description: 'Possible diagnosis', color: '#0ea5e9' }
 ];
 
 const DiagnosisCoder = ({

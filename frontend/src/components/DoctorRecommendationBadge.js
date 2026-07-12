@@ -13,7 +13,7 @@ const DoctorRecommendationBadge = ({ type, stats }) => {
     fastest: {
       icon: 'bolt',
       text: 'Fastest Available',
-      color: '#10b981',
+      color: '#22c55e',
       bgColor: '#d1fae5',
       description: 'Next available today'
     },
@@ -27,7 +27,7 @@ const DoctorRecommendationBadge = ({ type, stats }) => {
     topRated: {
       icon: 'award',
       text: 'Top Rated',
-      color: '#8b5cf6',
+      color: '#14b8a6',
       bgColor: '#ede9fe',
       description: '95%+ satisfaction'
     },

@@ -596,7 +596,7 @@
 }
 
 .role-option-btn.current {
-  border-color: #10b981;
+  border-color: #22c55e;
   background: #dcfce7;
 }
 
@@ -619,7 +619,7 @@
 
 .current-badge {
   padding: 4px 10px;
-  background: #10b981;
+  background: #22c55e;
   color: white;
   border-radius: 12px;
   font-size: 0.75rem;

@@ -19,7 +19,7 @@ const LandingPage = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode =
       icon: '🎥',
       title: 'Online Video Consultations',
       description: 'Connect with doctors from home via Google Meet. Automatic video links generated before your appointment for seamless virtual visits.',
-      color: '#10b981'
+      color: '#22c55e'
     },
     {
       icon: '🏥',
@@ -37,7 +37,7 @@ const LandingPage = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode =
       icon: '👨‍⚕️',
       title: 'Expert Doctors',
       description: 'Access verified healthcare professionals across multiple specializations. Choose between online or in-clinic based on your preference.',
-      color: '#8b5cf6'
+      color: '#14b8a6'
     },
     {
       icon: '📧',
@@ -301,7 +301,7 @@ const LandingPage = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode =
                   <path d="M95 290 Q100 295 105 290" stroke="#1a202c" strokeWidth="2" fill="none"/>
                   <rect x="85" y="250" width="30" height="15" rx="5" fill="#667eea"/>
                   {/* Stethoscope */}
-                  <circle cx="120" cy="340" r="8" fill="#10b981" stroke="#059669" strokeWidth="2"/>
+                  <circle cx="120" cy="340" r="8" fill="#22c55e" stroke="#16a34a" strokeWidth="2"/>
                 </g>
                 
                 {/* Patient Character */}
@@ -315,7 +315,7 @@ const LandingPage = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode =
                 
                 {/* Video Call Icon */}
                 <g className="hero-illustration__video">
-                  <rect x="360" y="180" width="80" height="60" rx="10" fill="#10b981"/>
+                  <rect x="360" y="180" width="80" height="60" rx="10" fill="#22c55e"/>
                   <polygon points="420,195 450,210 420,225" fill="#ffffff"/>
                   <circle cx="440" cy="180" r="12" fill="#ef4444"/>
                   <text x="440" y="184" textAnchor="middle" fill="#ffffff" fontSize="10" fontWeight="bold">LIVE</text>
@@ -339,12 +339,12 @@ const LandingPage = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode =
                 {/* Pills */}
                 <g className="hero-illustration__pills">
                   <ellipse cx="420" cy="400" rx="20" ry="10" fill="#ec4899"/>
-                  <ellipse cx="450" cy="410" rx="15" ry="8" fill="#8b5cf6"/>
+                  <ellipse cx="450" cy="410" rx="15" ry="8" fill="#14b8a6"/>
                 </g>
                 
                 {/* Floating Plus Signs */}
                 <text x="80" y="120" fill="#667eea" fontSize="24" opacity="0.5" className="float-element">+</text>
-                <text x="420" cy="130" fill="#10b981" fontSize="20" opacity="0.5" className="float-element">+</text>
+                <text x="420" cy="130" fill="#22c55e" fontSize="20" opacity="0.5" className="float-element">+</text>
                 <text x="350" y="420" fill="#f59e0b" fontSize="18" opacity="0.5" className="float-element">+</text>
                 
                 {/* Gradients */}

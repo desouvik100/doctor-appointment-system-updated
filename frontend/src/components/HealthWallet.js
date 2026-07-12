@@ -57,7 +57,7 @@ const HealthWallet = ({ userId, userName }) => {
         description: 'Wallet Top-up',
         order_id: orderId,
         prefill: { name: userName, email: userEmail, contact: userPhone },
-        theme: { color: '#6366f1' },
+        theme: { color: '#0ea5e9' },
         handler: async (response) => {
           try {
             // Step 3: Verify payment and credit wallet

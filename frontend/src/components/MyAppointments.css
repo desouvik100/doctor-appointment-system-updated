@@ -118,7 +118,7 @@
 }
 
 .appointment-card.confirmed {
-  border-left: 4px solid #10b981;
+  border-left: 4px solid #22c55e;
 }
 
 .appointment-card.in_progress {
@@ -212,7 +212,7 @@
 
 .status-confirmed {
   background: #d1fae5;
-  color: #059669;
+  color: #16a34a;
 }
 
 .status-progress {
@@ -240,7 +240,7 @@
 
 .payment-completed {
   background: #d1fae5;
-  color: #059669;
+  color: #16a34a;
 }
 
 .payment-pending {
@@ -444,7 +444,7 @@
 }
 
 .summary-card:nth-child(2) i {
-  color: #10b981;
+  color: #22c55e;
 }
 
 .summary-card:nth-child(3) i {
@@ -751,7 +751,7 @@
 .time-item i {
   width: 40px;
   height: 40px;
-  background: #10b981;
+  background: #22c55e;
   color: white;
   border-radius: 10px;
   display: flex;

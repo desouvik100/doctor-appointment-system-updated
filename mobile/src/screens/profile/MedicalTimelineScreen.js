@@ -1,6 +1,3 @@
-/**
- * Medical Timeline Screen - View medical history
- */
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
