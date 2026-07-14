@@ -4,9 +4,6 @@
  */
 
 import { useState, useEffect, useRef, useCallback } from 'react';
-import { Capacitor } from '@capacitor/core';
-import { App } from '@capacitor/app';
-import { tapFeedback } from '../mobile/haptics';
 import './MobileHeroSection.css';
 
 // Animated Healthcare Illustration Component (SVG)
@@ -118,7 +115,7 @@ const MobileHeroSection = ({
 }) => {
   const [showFullSearch, setShowFullSearch] = useState(false);
   const [searchQuery, setSearchQuery] = useState('');
-  const isNative = Capacitor.isNativePlatform();
+  const isNative = false;
   const searchInputRef = useRef(null);
   const backListenerRef = useRef(null);
 
@@ -130,29 +127,11 @@ const MobileHeroSection = ({
 
   useEffect(() => {
     if (!isNative || !showFullSearch) return;
-    
-    const handleBackButton = () => {
-      if (showFullSearch) {
-        setShowFullSearch(false);
-        setSearchQuery('');
-      }
-    };
-
-    if (backListenerRef.current) backListenerRef.current.remove();
-    backListenerRef.current = App.addListener('backButton', handleBackButton);
-    
-    return () => {
-      if (backListenerRef.current) {
-        backListenerRef.current.remove();
-        backListenerRef.current = null;
-      }
-    };
   }, [showFullSearch, isNative]);
 
   const handleTap = useCallback((callback) => {
-    if (isNative) tapFeedback();
     callback?.();
-  }, [isNative]);
+  }, []);
 
   const openFullSearch = () => {
     setShowFullSearch(true);

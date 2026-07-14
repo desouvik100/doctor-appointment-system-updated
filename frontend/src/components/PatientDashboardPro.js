@@ -1,10 +1,10 @@
 import { useState, useEffect, useMemo, useCallback } from 'react';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
-import { Capacitor } from '@capacitor/core';
 import { useLanguage } from '../i18n/LanguageContext';
 import { useAppointmentUpdates, useWalletUpdates, useNotificationUpdates } from '../hooks/useRealTimeUpdates';
 import '../styles/premium-saas.css';
+import '../styles/landing-page-premium-v2.css';
 import '../styles/skeleton-loaders.css';
 import '../styles/bottom-navigation.css';
 import '../styles/offline-indicator.css';
@@ -51,7 +51,6 @@ import OfflineIndicator from './OfflineIndicator';
 import MobileDoctorCard from './MobileDoctorCard';
 import CancelAppointmentModal from './CancelAppointmentModal';
 import { DoctorCardSkeleton, AppointmentCardSkeleton, PageSkeleton } from './SkeletonLoaders';
-import { successFeedback } from '../mobile/haptics';
 
 // Get profile photo URL - checks profilePhoto field, then generates fallback
 const getProfilePhotoUrl = (user) => {
@@ -71,7 +70,7 @@ const getFallbackAvatarUrl = (name, bgColor = '0ea5e9') => {
   return `https://ui-avatars.com/api/?name=${encodeURIComponent(name || 'User')}&background=${bgColor}&color=fff&size=100&bold=true`;
 };
 
-const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
+const PatientDashboardPro = ({ user, onLogout, onNavigate, darkMode, toggleDarkMode }) => {
   // Ensure user has id field (handle id, _id, or userId from different sources)
   const normalizedUser = user ? { 
     ...user, 
@@ -490,7 +489,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
 
 
   return (
-    <div className="min-h-screen bg-slate-50 flex" style={{ overflow: 'visible', height: 'auto' }}>
+    <div className={`min-h-screen bg-slate-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 flex ${darkMode ? 'dark' : ''}`} style={{ overflow: 'visible', height: 'auto' }}>
       {/* Security Warning Banner */}
       <SecurityWarningBanner userId={getUserId()} />
       
@@ -550,43 +549,55 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
         </div>
       </aside>
 
-      <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'}`} style={{ overflow: 'visible', height: 'auto' }}>
-        {/* Mobile Header - Minimal: Location + Profile Only */}
-        <header className="sticky top-0 z-30 bg-white/95 backdrop-blur-md border-b border-slate-100 px-4 lg:px-6 h-14 sm:h-16 flex items-center justify-between lg:hidden">
+      <main className={`flex-1 flex flex-col min-h-screen transition-all duration-300 relative ${sidebarCollapsed ? 'lg:ml-20' : 'lg:ml-72'} ${darkMode ? 'dark' : ''}`} style={{ overflow: 'visible', height: 'auto' }}>
+        {/* Grid pattern background & Radial gradient overlay matching the landing page */}
+        <div className="grid-pattern absolute inset-0 pointer-events-none z-0 opacity-[0.06] dark:opacity-[0.03]"></div>
+        <div className="absolute inset-0 bg-radial-premium pointer-events-none z-0"></div>
+
+        {/* Mobile Header - Glassmorphic Premium */}
+        <header className="sticky top-0 z-35 bg-white/85 dark:bg-slate-900/85 backdrop-blur-md border-b border-slate-100/50 dark:border-slate-800/60 px-4 lg:px-6 h-14 sm:h-16 flex items-center justify-between lg:hidden relative z-40">
           <div className="flex items-center gap-3 flex-1 min-w-0">
             {/* Location with live animation */}
             <button 
               onClick={handleUpdateLocation} 
               disabled={updatingLocation}
-              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 hover:bg-slate-100 transition-all min-w-0 flex-1 max-w-[200px]"
+              className="flex items-center gap-2 px-3 py-2 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 transition-all min-w-0 flex-1 max-w-[200px]"
             >
               <div className={`relative ${updatingLocation ? 'animate-pulse' : ''}`}>
-                <i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-map-marker-alt'} text-cyan-600 text-sm`}></i>
+                <i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-map-marker-alt'} text-cyan-600 dark:text-cyan-400 text-sm`}></i>
                 {userLocation?.city && !updatingLocation && (
                   <span className="absolute -top-1 -right-1 w-2 h-2 bg-green-500 rounded-full animate-ping"></span>
                 )}
               </div>
               <div className="min-w-0 text-left">
-                <p className="text-[10px] text-slate-400 font-medium">Location</p>
-                <p className="text-xs font-semibold text-slate-700 truncate">
+                <p className="text-[10px] text-slate-400 dark:text-slate-500 font-medium">Location</p>
+                <p className="text-xs font-semibold text-slate-700 dark:text-slate-200 truncate">
                   {updatingLocation ? 'Detecting...' : userLocation?.city || 'Tap to detect'}
                 </p>
               </div>
-              <i className="fas fa-chevron-down text-slate-400 text-[10px] ml-auto"></i>
+              <i className="fas fa-chevron-down text-slate-400 dark:text-slate-550 text-[10px] ml-auto"></i>
             </button>
           </div>
           <div className="flex items-center gap-2">
             {/* Notifications */}
-            <button onClick={() => setShowNotifications(true)} className="relative w-10 h-10 rounded-xl bg-slate-50 hover:bg-slate-100 flex items-center justify-center transition-all">
-              <i className="fas fa-bell text-slate-500 text-sm"></i>
+            <button onClick={() => setShowNotifications(true)} className="relative w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all">
+              <i className="fas fa-bell text-slate-500 dark:text-slate-400 text-sm"></i>
               {unreadNotifications > 0 && (
                 <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center animate-bounce">
                   {unreadNotifications > 9 ? '9+' : unreadNotifications}
                 </span>
               )}
             </button>
+            {/* Theme Toggle */}
+            <button 
+              onClick={toggleDarkMode} 
+              className="w-10 h-10 rounded-xl bg-slate-50 dark:bg-slate-800 hover:bg-slate-100 dark:hover:bg-slate-700 flex items-center justify-center transition-all"
+              title="Toggle Theme"
+            >
+              <i className={`fas ${darkMode ? 'fa-sun text-amber-500' : 'fa-moon text-slate-500 dark:text-slate-400'} text-sm`}></i>
+            </button>
             {/* Profile Picture */}
-            <button onClick={() => setShowProfileModal(true)} className="w-10 h-10 rounded-xl overflow-hidden border-2 border-cyan-200 hover:border-cyan-400 transition-all">
+            <button onClick={() => setShowProfileModal(true)} className="w-10 h-10 rounded-xl overflow-hidden border-2 border-cyan-200 dark:border-cyan-800 hover:border-cyan-400 dark:hover:border-cyan-600 transition-all">
               <img 
                 src={getProfilePhotoUrl(currentUser) || getFallbackAvatarUrl(currentUser?.name)} 
                 alt="Profile" 
@@ -597,28 +608,36 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
           </div>
         </header>
 
-        {/* Desktop Header - Full */}
-        <header className="sticky top-0 z-30 bg-white border-b border-slate-200 px-3 sm:px-4 lg:px-6 h-14 sm:h-16 items-center justify-between hidden lg:flex">
+        {/* Desktop Header - Glassmorphic Premium */}
+        <header className="sticky top-0 z-35 bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border-b border-slate-200/50 dark:border-slate-800/60 px-3 sm:px-4 lg:px-6 h-14 sm:h-16 items-center justify-between hidden lg:flex relative z-40">
           <div className="flex items-center gap-2 sm:gap-4">
             <div className="min-w-0">
-              <h1 className="text-sm sm:text-base font-semibold text-slate-800 truncate">Welcome back, {(currentUser?.name || 'User').split(' ')[0]}</h1>
-              <p className="text-[10px] sm:text-xs text-slate-500 truncate">{userLocation?.city ? <><i className="fas fa-map-marker-alt text-sky-500 mr-1"></i>{userLocation.city}</> : 'Book an online consultation or visit a clinic near you'}</p>
+              <h1 className="text-sm sm:text-base font-semibold text-slate-800 dark:text-slate-100 truncate">Welcome back, {(currentUser?.name || 'User').split(' ')[0]}</h1>
+              <p className="text-[10px] sm:text-xs text-slate-500 dark:text-slate-400 truncate">{userLocation?.city ? <><i className="fas fa-map-marker-alt text-sky-500 mr-1"></i>{userLocation.city}</> : 'Book an online consultation or visit a clinic near you'}</p>
             </div>
           </div>
           <div className="flex items-center gap-1 sm:gap-2">
-            <button onClick={() => setShowQuickSearch(true)} className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 hover:bg-sky-100 hover:text-sky-600 items-center justify-center transition-colors ${activeSection === 'overview' ? 'hidden lg:flex' : 'flex'}`} title="Quick Search">
-              <i className="fas fa-search text-slate-500 hover:text-sky-600 text-xs sm:text-sm"></i>
+            <button onClick={() => setShowQuickSearch(true)} className={`w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 dark:bg-slate-850 hover:bg-sky-100 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400 items-center justify-center transition-colors ${activeSection === 'overview' ? 'hidden lg:flex' : 'flex'}`} title="Quick Search">
+              <i className="fas fa-search text-slate-500 dark:text-slate-400 hover:text-sky-600 text-xs sm:text-sm"></i>
             </button>
-            <button onClick={() => setActiveSection('doctors')} className="hidden md:flex items-center gap-2 px-4 py-2 bg-sky-600 text-white text-sm font-medium rounded-lg hover:bg-sky-700 transition-colors"><i className="fas fa-plus text-xs"></i>{t('bookNow')}</button>
+            <button onClick={() => setActiveSection('doctors')} className="hidden md:flex items-center gap-2 px-4 py-2 bg-sky-600 hover:bg-sky-700 text-white text-sm font-medium rounded-lg transition-colors"><i className="fas fa-plus text-xs"></i>{t('bookNow')}</button>
             <div className="hidden sm:block">
               <LanguageSelector />
             </div>
-            <button onClick={handleUpdateLocation} disabled={updatingLocation} className="hidden sm:flex w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-slate-100 hover:bg-slate-200 items-center justify-center" title="Update Location"><i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'} ${userLocation?.city ? 'text-sky-500' : 'text-slate-400'} text-xs sm:text-sm`}></i></button>
-            <button onClick={() => setShowNotifications(true)} className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 hover:bg-slate-200 flex items-center justify-center">
-              <i className="fas fa-bell text-slate-500 text-xs sm:text-sm"></i>
+            <button onClick={handleUpdateLocation} disabled={updatingLocation} className="hidden sm:flex w-7 h-7 sm:w-9 sm:h-9 rounded-lg bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-750 items-center justify-center" title="Update Location"><i className={`fas ${updatingLocation ? 'fa-spinner fa-spin' : 'fa-location-crosshairs'} ${userLocation?.city ? 'text-sky-500' : 'text-slate-400 dark:text-slate-500'} text-xs sm:text-sm`}></i></button>
+            <button onClick={() => setShowNotifications(true)} className="relative w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-750 flex items-center justify-center">
+              <i className="fas fa-bell text-slate-500 dark:text-slate-400 text-xs sm:text-sm"></i>
               {unreadNotifications > 0 && <span className="absolute -top-1 -right-1 w-4 h-4 bg-red-500 text-white text-[10px] font-bold rounded-full flex items-center justify-center">{unreadNotifications}</span>}
             </button>
-            <button onClick={() => setShowProfileModal(true)} className="flex items-center gap-2 hover:bg-slate-50 rounded-lg p-1 sm:p-1.5 transition-colors">
+            {/* Theme Toggle */}
+            <button 
+              onClick={toggleDarkMode} 
+              className="w-8 h-8 sm:w-9 sm:h-9 rounded-lg bg-slate-100 dark:bg-slate-850 hover:bg-slate-200 dark:hover:bg-slate-750 flex items-center justify-center transition-colors" 
+              title="Toggle Theme"
+            >
+              <i className={`fas ${darkMode ? 'fa-sun text-amber-500' : 'fa-moon text-slate-500 dark:text-slate-400'} text-xs sm:text-sm`}></i>
+            </button>
+            <button onClick={() => setShowProfileModal(true)} className="flex items-center gap-2 hover:bg-slate-50 dark:hover:bg-slate-800 rounded-lg p-1 sm:p-1.5 transition-colors">
               <img 
                 src={getProfilePhotoUrl(currentUser) || getFallbackAvatarUrl(currentUser?.name)} 
                 alt="Profile" 
@@ -629,7 +648,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
           </div>
         </header>
         <PullToRefresh onRefresh={handleRefresh} enabled={Capacitor.isNativePlatform()}>
-        <div className="flex-1 p-4 lg:p-8 has-bottom-nav" style={{ WebkitOverflowScrolling: 'touch', overflow: 'visible' }}>
+        <div className="flex-1 p-4 lg:p-8 has-bottom-nav relative z-10" style={{ WebkitOverflowScrolling: 'touch', overflow: 'visible' }}>
           {activeSection === 'overview' && (
             <div className="space-y-6">
 
@@ -639,11 +658,9 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                   user={currentUser}
                   onVideoConsult={() => {
                     setActiveSection('doctors');
-                    // Could set a filter for online consultations
                   }}
                   onClinicVisit={() => {
                     setActiveSection('doctors');
-                    // Could set a filter for clinic visits
                   }}
                   onSmartMatch={() => setShowFindDoctorWizard(true)}
                   onSearch={(query) => {
@@ -658,49 +675,107 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                 />
               </div>
 
+              {/* Desktop Hero Section - Modern Premium Startup Style */}
+              <div className="hidden lg:block bg-gradient-to-r from-sky-500 via-indigo-500 to-purple-600 rounded-3xl p-8 text-white relative overflow-hidden shadow-xl mb-6">
+                {/* Glass overlays */}
+                <div className="absolute inset-0 bg-[radial-gradient(ellipse_at_top_right,_var(--tw-gradient-stops))] from-white/15 via-transparent to-transparent"></div>
+                <div className="absolute -top-24 -right-24 w-80 h-80 bg-sky-400/25 rounded-full blur-3xl"></div>
+                <div className="absolute -bottom-24 -left-24 w-80 h-80 bg-purple-400/25 rounded-full blur-3xl"></div>
+
+                <div className="relative flex items-center justify-between gap-8">
+                  <div className="max-w-2xl">
+                    <div className="flex items-center gap-2 mb-3">
+                      <span className="px-3 py-1 bg-white/20 backdrop-blur-md rounded-full text-xs font-semibold uppercase tracking-wider text-white">✨ Patient Dashboard</span>
+                      <span className="relative flex h-2 w-2">
+                        <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-green-400 opacity-75"></span>
+                        <span className="relative inline-flex rounded-full h-2 w-2 bg-green-500"></span>
+                      </span>
+                      <span className="text-xs text-white/95 font-medium">Live Queue System Active</span>
+                    </div>
+                    <h2 className="text-3xl sm:text-4xl font-extrabold tracking-tight" style={{ fontFamily: 'Geist, sans-serif' }}>
+                      Welcome back, <span className="text-transparent bg-clip-text bg-gradient-to-r from-white via-sky-100 to-teal-100">{(currentUser?.name || 'User')}</span> 👋
+                    </h2>
+                    <p className="text-white/90 text-sm sm:text-base font-medium mt-2 leading-relaxed max-w-xl">
+                      Here's what's happening with your health today. Access verified specialists, track live token wait times, or consult our AI medical assistant.
+                    </p>
+                    
+                    <div className="flex gap-3 mt-6">
+                      <button 
+                        onClick={() => setActiveSection('doctors')}
+                        className="px-5 py-2.5 bg-white hover:bg-slate-50 text-indigo-600 font-bold rounded-xl transition-all hover:scale-[1.02] active:scale-[0.98] shadow-md text-sm"
+                      >
+                        <i className="fas fa-calendar-check mr-2"></i>Book In-Clinic / Online
+                      </button>
+                      <button 
+                        onClick={() => setShowFindDoctorWizard(true)}
+                        className="px-5 py-2.5 bg-white/10 backdrop-blur-md border border-white/20 text-white font-bold rounded-xl hover:bg-white/20 transition-all hover:scale-[1.02] active:scale-[0.98] text-sm"
+                      >
+                        <i className="fas fa-robot mr-2"></i>AI Smart Match
+                      </button>
+                    </div>
+                  </div>
+
+                  <div className="hidden xl:block">
+                    {/* Premium Floating SOS Glass Card */}
+                    <button 
+                      onClick={() => setActiveSection('ambulance')}
+                      className="relative overflow-hidden p-6 bg-white/10 hover:bg-white/15 text-white font-bold rounded-2xl border border-white/20 backdrop-blur-md shadow-2xl flex items-center gap-4 transition-all hover:scale-105 group text-left"
+                    >
+                      <span className="absolute -top-1 -right-1 w-2.5 h-2.5 bg-red-500 rounded-full animate-ping-slow"></span>
+                      <div className="w-12 h-12 rounded-xl bg-red-500/20 flex items-center justify-center border border-red-500/30 group-hover:scale-110 transition-transform">
+                        <i className="fas fa-ambulance text-red-400 text-xl animate-pulse"></i>
+                      </div>
+                      <div>
+                        <p className="text-[10px] text-white/70 font-bold uppercase tracking-wider">Urgent Care</p>
+                        <p className="text-sm font-extrabold text-white">Emergency SOS</p>
+                        <p className="text-[11px] text-white/60 font-medium">Request instant ambulance</p>
+                      </div>
+                    </button>
+                  </div>
+                </div>
+              </div>
+
               {/* Desktop Stats - Modern Startup Style - Only render on desktop */}
-              {!Capacitor.isNativePlatform() && (
-                <div className="hidden lg:grid grid-cols-4 gap-4">
+              <div className="hidden lg:grid grid-cols-4 gap-4">
                 {[
                   { icon: 'fa-calendar-check', value: stats.totalBookings, label: 'Bookings Made', color: 'sky' },
                   { icon: 'fa-smile-beam', value: stats.happyPatients, label: 'Happy Patients', color: 'emerald' },
                   { icon: 'fa-user-md', value: `${stats.doctorsCount}+`, label: 'Expert Doctors', color: 'violet' },
                   { icon: 'fa-star', value: stats.avgRating, label: 'Avg Rating', color: 'amber' }
                 ].map((s, i) => (
-                  <div key={i} className="group relative bg-white rounded-2xl p-6 border border-slate-100 shadow-sm hover:shadow-xl hover:border-slate-200 transition-all duration-300 hover:-translate-y-1 overflow-hidden">
+                  <div key={i} className="group relative bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800/80 shadow-sm hover:shadow-xl hover:border-slate-200 dark:hover:border-slate-700 transition-all duration-300 hover:-translate-y-1 overflow-hidden premium-gradient-card">
                     <div className={`absolute -top-4 -right-4 w-20 h-20 bg-gradient-to-br ${s.color === 'sky' ? 'from-sky-400/20 to-cyan-400/20' : s.color === 'emerald' ? 'from-emerald-400/20 to-teal-400/20' : s.color === 'violet' ? 'from-violet-400/20 to-purple-400/20' : 'from-amber-400/20 to-orange-400/20'} rounded-full blur-2xl group-hover:scale-150 transition-transform duration-500`}></div>
                     <div className="relative flex items-start gap-4">
-                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${s.color === 'sky' ? 'bg-sky-50 text-sky-600' : s.color === 'emerald' ? 'bg-emerald-50 text-emerald-600' : s.color === 'violet' ? 'bg-violet-50 text-violet-600' : 'bg-amber-50 text-amber-600'}`}>
+                      <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${s.color === 'sky' ? 'bg-sky-50 dark:bg-sky-950/50 text-sky-600 dark:text-sky-400' : s.color === 'emerald' ? 'bg-emerald-50 dark:bg-emerald-950/50 text-emerald-600 dark:text-emerald-400' : s.color === 'violet' ? 'bg-violet-50 dark:bg-violet-950/50 text-violet-600 dark:text-violet-400' : 'bg-amber-50 dark:bg-amber-950/50 text-amber-600 dark:text-amber-400'}`}>
                         <i className={`fas ${s.icon} text-lg`}></i>
                       </div>
                       <div>
-                        <p className={`text-3xl font-bold tracking-tight ${s.color === 'sky' ? 'text-sky-600' : s.color === 'emerald' ? 'text-emerald-600' : s.color === 'violet' ? 'text-violet-600' : 'text-amber-600'}`}>{s.value}</p>
-                        <p className="text-sm text-slate-500 font-medium">{s.label}</p>
+                        <p className={`text-3xl font-bold tracking-tight ${s.color === 'sky' ? 'text-sky-600 dark:text-sky-400' : s.color === 'emerald' ? 'text-emerald-600 dark:text-emerald-400' : s.color === 'violet' ? 'text-violet-600 dark:text-violet-400' : 'text-amber-600 dark:text-amber-400'}`}>{s.value}</p>
+                        <p className="text-sm text-slate-500 dark:text-slate-400 font-medium">{s.label}</p>
                       </div>
                     </div>
                   </div>
                 ))}
               </div>
-              )}
               {/* Why Trust Us Strip */}
-              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-2xl p-4 border border-emerald-100">
+              <div className="bg-gradient-to-r from-emerald-50 to-teal-50 dark:from-emerald-950/20 dark:to-teal-950/20 rounded-2xl p-4 border border-emerald-100 dark:border-emerald-900/30">
                 <div className="flex flex-wrap items-center justify-center gap-4 sm:gap-8 text-sm">
-                  <span className="flex items-center gap-2 text-emerald-700"><i className="fas fa-check-circle text-emerald-500"></i>Verified local doctors</span>
-                  <span className="flex items-center gap-2 text-emerald-700"><i className="fas fa-check-circle text-emerald-500"></i>Transparent pricing</span>
-                  <span className="flex items-center gap-2 text-emerald-700"><i className="fas fa-check-circle text-emerald-500"></i>No hidden charges</span>
-                  <span className="flex items-center gap-2 text-emerald-700"><i className="fas fa-check-circle text-emerald-500"></i>Secure payments</span>
+                  <span className="flex items-center gap-2 text-emerald-700 dark:text-emerald-450"><i className="fas fa-check-circle text-emerald-500 dark:text-emerald-400"></i>Verified local doctors</span>
+                  <span className="flex items-center gap-2 text-emerald-700 dark:text-emerald-450"><i className="fas fa-check-circle text-emerald-500 dark:text-emerald-400"></i>Transparent pricing</span>
+                  <span className="flex items-center gap-2 text-emerald-700 dark:text-emerald-450"><i className="fas fa-check-circle text-emerald-500 dark:text-emerald-400"></i>No hidden charges</span>
+                  <span className="flex items-center gap-2 text-emerald-700 dark:text-emerald-450"><i className="fas fa-check-circle text-emerald-500 dark:text-emerald-400"></i>Secure payments</span>
                 </div>
               </div>
 
-              <div className="bg-white rounded-2xl p-6 border border-slate-100">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800/80 shadow-sm">
                 <div className="flex items-center justify-between mb-4">
-                  <h3 className="text-lg font-semibold text-slate-800">
+                  <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100">
                     {userLocation?.city ? `Doctors Near ${userLocation.city}` : 'Available Today'}
                   </h3>
-                  <button onClick={() => setActiveSection('doctors')} className="text-sm font-medium text-sky-600 hover:text-sky-700 flex items-center gap-1">View All <i className="fas fa-arrow-right text-xs"></i></button>
+                  <button onClick={() => setActiveSection('doctors')} className="text-sm font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-350 flex items-center gap-1">View All <i className="fas fa-arrow-right text-xs"></i></button>
                 </div>
                 {/* Online vs In-Clinic Toggle */}
-                <div className="flex items-center gap-2 mb-4 p-1 bg-slate-100 rounded-xl w-fit">
+                <div className="flex items-center gap-2 mb-4 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-fit">
                   {[
                     { id: 'all', label: 'All', icon: 'fa-th-large' },
                     { id: 'online', label: 'Online', icon: 'fa-video' },
@@ -711,8 +786,8 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                       onClick={() => setConsultationTypeFilter(type.id)}
                       className={`px-4 py-2 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                         consultationTypeFilter === type.id
-                          ? 'bg-white text-sky-600 shadow-sm'
-                          : 'text-slate-500 hover:text-slate-700'
+                          ? 'bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-400 shadow-sm'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-300'
                       }`}
                     >
                       <i className={`fas ${type.icon} text-xs`}></i>
@@ -733,23 +808,23 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                   ))}
                 </div>
               </div>
-              <div className="bg-white rounded-2xl p-6 border border-slate-100">
-                <h3 className="text-lg font-semibold text-slate-800 mb-4"><i className="fas fa-bolt text-amber-500 mr-2"></i>Quick Actions</h3>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800/80 shadow-sm">
+                <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 mb-4"><i className="fas fa-bolt text-amber-500 mr-2"></i>Quick Actions</h3>
                 <div className="grid grid-cols-2 lg:grid-cols-4 gap-4">
                   {[
-                    { icon: 'fa-user-md', label: 'Book Appointment', desc: 'Find best doctor instantly', section: 'doctors', gradient: 'from-sky-500 to-teal-500', iconBg: 'bg-sky-100', iconColor: 'text-sky-600' },
-                    { icon: 'fa-robot', label: 'AI Health Check', desc: 'Get symptoms checked in 2 mins', section: 'ai-assistant', gradient: 'from-teal-500 to-emerald-500', iconBg: 'bg-teal-100', iconColor: 'text-teal-600' },
-                    { icon: 'fa-flask', label: 'Lab Reports', desc: 'View & upload test results', section: 'lab-reports', gradient: 'from-orange-500 to-amber-500', iconBg: 'bg-orange-100', iconColor: 'text-orange-600' },
-                    { icon: 'fa-pills', label: 'Medicine Reminder', desc: 'Never miss a dose', section: 'medicine-reminder', gradient: 'from-green-500 to-emerald-500', iconBg: 'bg-green-100', iconColor: 'text-green-600' }
+                    { icon: 'fa-user-md', label: 'Book Appointment', desc: 'Find best doctor instantly', section: 'doctors', gradient: 'from-sky-500 to-teal-500', iconBg: 'bg-sky-100 dark:bg-sky-950/40', iconColor: 'text-sky-600 dark:text-sky-400' },
+                    { icon: 'fa-robot', label: 'AI Health Check', desc: 'Get symptoms checked in 2 mins', section: 'ai-assistant', gradient: 'from-teal-500 to-emerald-500', iconBg: 'bg-teal-100 dark:bg-teal-950/40', iconColor: 'text-teal-600 dark:text-teal-400' },
+                    { icon: 'fa-flask', label: 'Lab Reports', desc: 'View & upload test results', section: 'lab-reports', gradient: 'from-orange-500 to-amber-500', iconBg: 'bg-orange-100 dark:bg-orange-950/40', iconColor: 'text-orange-600 dark:text-orange-400' },
+                    { icon: 'fa-pills', label: 'Medicine Reminder', desc: 'Never miss a dose', section: 'medicine-reminder', gradient: 'from-green-500 to-emerald-500', iconBg: 'bg-green-100 dark:bg-green-950/40', iconColor: 'text-green-600 dark:text-green-400' }
                   ].map((a, i) => (
-                    <button key={i} onClick={() => setActiveSection(a.section)} className="group relative overflow-hidden p-5 rounded-2xl border-2 border-slate-100 hover:border-transparent hover:shadow-xl transition-all duration-300 text-left bg-white hover:bg-gradient-to-br hover:from-slate-50 hover:to-white">
+                    <button key={i} onClick={() => setActiveSection(a.section)} className="group relative overflow-hidden p-5 rounded-2xl border-2 border-slate-100 dark:border-slate-800/80 hover:border-transparent hover:shadow-xl transition-all duration-300 text-left bg-white dark:bg-slate-900 hover:bg-gradient-to-br hover:from-slate-50 dark:hover:from-slate-850 hover:to-white dark:hover:to-slate-900 premium-gradient-card">
                       {/* Hover gradient overlay */}
-                      <div className={`absolute inset-0 bg-gradient-to-br ${a.gradient} opacity-0 group-hover:opacity-5 transition-opacity duration-300`}></div>
+                      <div className={`absolute inset-0 bg-gradient-to-br ${a.gradient} opacity-0 group-hover:opacity-[0.03] dark:group-hover:opacity-[0.06] transition-opacity duration-300`}></div>
                       
                       <div className={`w-14 h-14 rounded-2xl ${a.iconBg} flex items-center justify-center mb-3 group-hover:scale-110 transition-transform duration-300`}>
                         <i className={`fas ${a.icon} text-xl ${a.iconColor}`}></i>
                       </div>
-                      <h4 className="font-semibold text-slate-800 mb-1 group-hover:text-sky-600 transition-colors">{a.label}</h4>
+                      <h4 className="font-semibold text-slate-800 dark:text-slate-100 mb-1 group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">{a.label}</h4>
                       <p className="text-xs text-slate-500">{a.desc}</p>
                       
                       {/* Arrow indicator */}
@@ -900,13 +975,13 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
 
               {/* Browse by Clinic */}
               {clinics.length > 0 && (
-                <div className="bg-white rounded-2xl p-6 border border-slate-100">
+                <div className="bg-white dark:bg-slate-900 rounded-2xl p-6 border border-slate-100 dark:border-slate-800/80 shadow-sm relative z-10">
                   <div className="flex items-center justify-between mb-4">
-                    <h3 className="text-lg font-semibold text-slate-800 flex items-center gap-2">
-                      <i className="fas fa-hospital text-sky-500"></i>
+                    <h3 className="text-lg font-semibold text-slate-800 dark:text-slate-100 flex items-center gap-2">
+                      <i className="fas fa-hospital text-sky-500 dark:text-sky-400"></i>
                       Browse by Clinic
                     </h3>
-                    <button onClick={() => setActiveSection('doctors')} className="text-sm font-medium text-sky-600 hover:text-sky-700 flex items-center gap-1">
+                    <button onClick={() => setActiveSection('doctors')} className="text-sm font-medium text-sky-600 dark:text-sky-400 hover:text-sky-700 dark:hover:text-sky-300 flex items-center gap-1">
                       View All <i className="fas fa-arrow-right text-xs"></i>
                     </button>
                   </div>
@@ -915,17 +990,17 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                       <button
                         key={clinic._id}
                         onClick={() => { setSelectedClinic(clinic._id); setActiveSection('doctors'); }}
-                        className="group p-4 rounded-xl border border-slate-100 hover:border-sky-200 hover:shadow-md transition-all text-left bg-gradient-to-br from-white to-slate-50"
+                        className="group p-4 rounded-xl border border-slate-100 dark:border-slate-800/60 hover:border-sky-200 dark:hover:border-sky-800/60 hover:shadow-md transition-all text-left bg-gradient-to-br from-white to-slate-50 dark:from-slate-900 dark:to-slate-950/80"
                       >
-                        <div className="w-10 h-10 rounded-xl bg-sky-50 flex items-center justify-center mb-3 group-hover:bg-sky-100 transition-colors">
-                          <i className="fas fa-clinic-medical text-sky-600"></i>
+                        <div className="w-10 h-10 rounded-xl bg-sky-50 dark:bg-sky-950/50 flex items-center justify-center mb-3 group-hover:bg-sky-100 dark:group-hover:bg-sky-900/60 transition-colors">
+                          <i className="fas fa-clinic-medical text-sky-600 dark:text-sky-400"></i>
                         </div>
-                        <h4 className="font-semibold text-slate-800 text-sm truncate group-hover:text-sky-600 transition-colors">{clinic.name}</h4>
-                        <p className="text-xs text-slate-500 truncate mt-1">
+                        <h4 className="font-semibold text-slate-800 dark:text-slate-100 text-sm truncate group-hover:text-sky-600 dark:group-hover:text-sky-400 transition-colors">{clinic.name}</h4>
+                        <p className="text-xs text-slate-500 dark:text-slate-400 truncate mt-1">
                           <i className="fas fa-map-marker-alt mr-1"></i>
                           {clinic.address || clinic.location || 'View doctors'}
                         </p>
-                        <p className="text-xs text-sky-600 mt-2 font-medium">
+                        <p className="text-xs text-sky-600 dark:text-sky-400 mt-2 font-medium">
                           {doctors.filter(d => d.clinicId?._id === clinic._id).length} doctors →
                         </p>
                       </button>
@@ -1081,8 +1156,8 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
               </div>
 
               {/* Top Specialties Quick Filters */}
-              <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-                <h4 className="text-sm font-semibold text-slate-700 mb-3"><i className="fas fa-fire text-orange-500 mr-2"></i>Popular Specialties</h4>
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 shadow-sm relative z-10">
+                <h4 className="text-sm font-semibold text-slate-700 dark:text-slate-300 mb-3"><i className="fas fa-fire text-orange-500 mr-2"></i>Popular Specialties</h4>
                 <div className="flex flex-wrap gap-2">
                   {[
                     { name: 'All', icon: '👨‍⚕️', value: '', key: 'all' },
@@ -1101,7 +1176,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                       className={`px-4 py-2 rounded-xl text-sm font-medium transition-all hover:scale-105 flex items-center gap-2 ${
                         selectedSpecialization === spec.value
                           ? 'bg-gradient-to-r from-sky-500 to-teal-500 text-white shadow-md'
-                          : 'bg-slate-100 text-slate-600 hover:bg-sky-50 hover:text-sky-600'
+                          : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 hover:bg-sky-50 dark:hover:bg-slate-700 hover:text-sky-600 dark:hover:text-sky-400'
                       }`}
                     >
                       <span>{spec.icon}</span>
@@ -1112,8 +1187,8 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
               </div>
 
               {/* Online vs In-Clinic Toggle */}
-              <div className="bg-white rounded-2xl p-4 border border-slate-100 shadow-sm">
-                <div className="flex items-center gap-2 p-1 bg-slate-100 rounded-xl w-fit mb-4">
+              <div className="bg-white dark:bg-slate-900 rounded-2xl p-4 border border-slate-100 dark:border-slate-800/80 shadow-sm relative z-10">
+                <div className="flex items-center gap-2 p-1 bg-slate-100 dark:bg-slate-800 rounded-xl w-fit mb-4">
                   {[
                     { id: 'all', label: 'All Doctors', icon: 'fa-th-large' },
                     { id: 'online', label: 'Online Consultation', icon: 'fa-video' },
@@ -1124,8 +1199,8 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                       onClick={() => setConsultationTypeFilter(type.id)}
                       className={`px-4 py-2.5 rounded-lg text-sm font-medium transition-all flex items-center gap-2 ${
                         consultationTypeFilter === type.id
-                          ? 'bg-white text-sky-600 shadow-sm'
-                          : 'text-slate-500 hover:text-slate-700'
+                          ? 'bg-white dark:bg-slate-700 text-sky-600 dark:text-sky-400 shadow-sm'
+                          : 'text-slate-500 dark:text-slate-400 hover:text-slate-700 dark:hover:text-slate-350'
                       }`}
                     >
                       <i className={`fas ${type.icon} text-xs`}></i>
@@ -1135,21 +1210,21 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
                 </div>
                 <div className="flex flex-col lg:flex-row gap-4">
                   <div className="flex-1 relative">
-                    <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                    <input type="text" placeholder="Search doctors by name, specialty..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500" />
+                    <i className="fas fa-search absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"></i>
+                    <input type="text" placeholder="Search doctors by name, specialty..." value={searchTerm} onChange={(e) => setSearchTerm(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-0" />
                   </div>
-                  <select value={selectedSpecialization} onChange={(e) => { setSelectedSpecialization(e.target.value); if (nearbyMode) setTimeout(fetchNearbyDoctors, 100); }} className="px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500">
-                    <option value="">All Specializations</option>
-                    {specializations.map(s => <option key={s} value={s}>{s}</option>)}
+                  <select value={selectedSpecialization} onChange={(e) => { setSelectedSpecialization(e.target.value); if (nearbyMode) setTimeout(fetchNearbyDoctors, 100); }} className="px-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 focus:ring-offset-0">
+                    <option value="" className="dark:bg-slate-850">All Specializations</option>
+                    {specializations.map(s => <option key={s} value={s} className="dark:bg-slate-850">{s}</option>)}
                   </select>
                   {!nearbyMode && (
                     <div className="relative min-w-[200px]">
-                      <i className="fas fa-hospital absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></i>
-                      <select value={selectedClinic} onChange={(e) => setSelectedClinic(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-sky-500 appearance-none cursor-pointer">
-                        <option value="">🏥 All Clinics</option>
-                        {clinics.map(c => <option key={c._id} value={c._id}>📍 {c.name}</option>)}
+                      <i className="fas fa-hospital absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"></i>
+                      <select value={selectedClinic} onChange={(e) => setSelectedClinic(e.target.value)} className="w-full pl-11 pr-4 py-3 bg-slate-50 dark:bg-slate-800 border border-slate-200 dark:border-slate-700 rounded-xl text-sm text-slate-800 dark:text-slate-100 focus:outline-none focus:ring-2 focus:ring-sky-500 appearance-none cursor-pointer">
+                        <option value="" className="dark:bg-slate-850">🏥 All Clinics</option>
+                        {clinics.map(c => <option key={c._id} value={c._id} className="dark:bg-slate-850">📍 {c.name}</option>)}
                       </select>
-                      <i className="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 text-xs pointer-events-none"></i>
+                      <i className="fas fa-chevron-down absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 text-xs pointer-events-none"></i>
                     </div>
                   )}
                   <button onClick={toggleNearbyMode} disabled={!userLocation?.latitude && !nearbyMode} className={`px-4 py-3 rounded-xl text-sm font-medium flex items-center gap-2 transition-all ${nearbyMode ? 'bg-sky-600 text-white' : 'bg-slate-100 text-slate-600 hover:bg-sky-50 hover:text-sky-600'} ${!userLocation?.latitude && !nearbyMode ? 'opacity-50 cursor-not-allowed' : ''}`}>
@@ -1390,10 +1465,10 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
           {activeSection === 'email-reminders' && <EmailReminders userId={getUserId()} userEmail={currentUser?.email} />}
           {activeSection === 'messages' && <div className="flex flex-col items-center justify-center py-20 text-center"><div className="w-20 h-20 rounded-full bg-slate-100 flex items-center justify-center mb-4"><i className="fas fa-comments text-3xl text-slate-400"></i></div><h3 className="text-lg font-semibold text-slate-800 mb-2">Chat with Doctors</h3><p className="text-slate-500 mb-4">Click on a doctor to start</p><button onClick={() => setActiveSection('doctors')} className="px-6 py-2.5 bg-gradient-to-r from-sky-500 to-teal-500 text-white font-medium rounded-xl hover:shadow-lg">Find Doctors</button></div>}
         </div>
-        <footer className="bg-white border-t border-slate-200 px-4 lg:px-8 py-4">
-          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-sm text-slate-500">
-            <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-teal-500 flex items-center justify-center text-white font-bold text-xs">HS</div><span className="font-semibold text-slate-700">HealthSync</span></div>
-            <div className="flex items-center gap-6"><a href="#privacy" className="hover:text-sky-600">Privacy</a><a href="#terms" className="hover:text-sky-600">Terms</a><a href="#support" className="hover:text-sky-600">Support</a></div>
+        <footer className="bg-white dark:bg-slate-950 border-t border-slate-200/50 dark:border-slate-800/60 px-4 lg:px-8 py-4 relative z-10">
+          <div className="flex flex-col lg:flex-row items-center justify-between gap-4 text-sm text-slate-500 dark:text-slate-400">
+            <div className="flex items-center gap-2"><div className="w-8 h-8 rounded-lg bg-gradient-to-br from-sky-500 to-teal-500 flex items-center justify-center text-white font-bold text-xs">HS</div><span className="font-semibold text-slate-700 dark:text-slate-300">HealthSync</span></div>
+            <div className="flex items-center gap-6"><a href="#privacy" className="hover:text-sky-600 dark:hover:text-sky-400">Privacy</a><a href="#terms" className="hover:text-sky-600 dark:hover:text-sky-400">Terms</a><a href="#support" className="hover:text-sky-600 dark:hover:text-sky-400">Support</a></div>
             <p>© 2024 HealthSync. All rights reserved.</p>
           </div>
         </footer>
@@ -1597,9 +1672,6 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
         upcomingBookings={upcomingAppointments.length}
         isSearchOpen={isMobileSearchOpen}
         onTabChange={(tab) => {
-          if (Capacitor.isNativePlatform()) {
-            successFeedback();
-          }
           // Close all modals when switching tabs
           setShowProfileModal(false);
           setShowNotifications(false);
@@ -1611,9 +1683,6 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
           setActiveSection(tab);
         }}
         onMenuAction={(action) => {
-          if (Capacitor.isNativePlatform()) {
-            successFeedback();
-          }
           // Close all modals first
           setShowProfileModal(false);
           setShowNotifications(false);
@@ -1700,7 +1769,7 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
         unreadNotifications={unreadNotifications}
       />
       
-      {/* CSS for online status animation */}
+      {/* CSS for online status and premium styling animation */}
       <style>{`
         @keyframes pulse-online {
           0% {
@@ -1712,6 +1781,43 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate }) => {
           100% {
             box-shadow: 0 0 0 0 rgba(16, 185, 129, 0);
           }
+        }
+        .bg-radial-premium {
+          background: radial-gradient(circle at top right, rgba(14, 165, 233, 0.04), transparent 45%),
+                      radial-gradient(circle at bottom left, rgba(99, 102, 241, 0.03), transparent 40%);
+          position: absolute;
+          inset: 0;
+        }
+        .dark .bg-radial-premium {
+          background: radial-gradient(circle at top right, rgba(14, 165, 233, 0.08), transparent 60%),
+                      radial-gradient(circle at bottom left, rgba(99, 102, 241, 0.05), transparent 50%);
+        }
+        .premium-gradient-card {
+          position: relative;
+          overflow: hidden;
+          transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+        }
+        .premium-gradient-card:hover {
+          transform: translateY(-4px);
+          box-shadow: 0 20px 40px -15px rgba(14, 165, 233, 0.15);
+        }
+        .dark .premium-gradient-card:hover {
+          box-shadow: 0 20px 40px -15px rgba(14, 165, 233, 0.3);
+        }
+        .animate-logo-glow {
+          box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+          animation: pulse-glow 2s infinite;
+        }
+        @keyframes pulse-glow {
+          0%, 100% {
+            box-shadow: 0 0 15px rgba(14, 165, 233, 0.4);
+          }
+          50% {
+            box-shadow: 0 0 25px rgba(14, 165, 233, 0.7);
+          }
+        }
+        .animate-ping-slow {
+          animation: ping 2s cubic-bezier(0, 0, 0.2, 1) infinite;
         }
       `}</style>
     </div>

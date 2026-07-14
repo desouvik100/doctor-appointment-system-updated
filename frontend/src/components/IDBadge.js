@@ -5,8 +5,6 @@
 
 import React from 'react';
 import toast from 'react-hot-toast';
-import { tapFeedback } from '../mobile/haptics';
-import { Capacitor } from '@capacitor/core';
 
 const IDBadge = ({ 
   id, 
@@ -35,9 +33,6 @@ const IDBadge = ({
 
   const handleCopy = async () => {
     try {
-      if (Capacitor.isNativePlatform()) {
-        tapFeedback();
-      }
       await navigator.clipboard.writeText(id);
       toast.success('ID copied!', { duration: 1500 });
     } catch (e) {

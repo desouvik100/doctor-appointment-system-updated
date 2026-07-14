@@ -3,8 +3,6 @@
  */
 
 import { useState } from 'react';
-import { Capacitor } from '@capacitor/core';
-import { tapFeedback } from '../mobile/haptics';
 
 // Skeleton Loader Component
 export const DoctorCardSkeleton = () => (
@@ -27,7 +25,7 @@ const MobileDoctorCard = ({
   onBookNow,
   isLoading = false
 }) => {
-  const isNative = Capacitor.isNativePlatform();
+  const isNative = false;
   const [imageLoaded, setImageLoaded] = useState(false);
 
   if (isLoading) {
@@ -44,12 +42,10 @@ const MobileDoctorCard = ({
 
   const handleBook = (e) => {
     e.stopPropagation();
-    if (isNative) tapFeedback();
     onBookNow?.(doctor);
   };
 
   const handleCardClick = () => {
-    if (isNative) tapFeedback();
     onViewProfile?.(doctor);
   };
 
@@ -60,7 +56,7 @@ const MobileDoctorCard = ({
         padding: '0', 
         overflow: 'hidden', 
         cursor: 'pointer', 
-        background: '#ffffff', 
+        background: 'var(--bg-white, #ffffff)', 
         borderRadius: '12px', 
         border: '1px solid var(--border-slate, #e5e7eb)', 
         boxShadow: '0 4px 12px rgba(0,0,0,0.03)',
@@ -68,7 +64,7 @@ const MobileDoctorCard = ({
       }}
       onClick={handleCardClick}
     >
-      <div style={{ height: '220px', background: '#f4f4f5', position: 'relative' }}>
+      <div style={{ height: '220px', background: 'var(--bg-slate-50, #f4f4f5)', position: 'relative' }}>
         <img 
           src={image} 
           alt={doctor.name} 
@@ -85,7 +81,6 @@ const MobileDoctorCard = ({
           className={`fav-btn-floating ${isFavorite ? 'active' : ''}`}
           onClick={(e) => {
             e.stopPropagation();
-            if (isNative) tapFeedback();
             onFavoriteToggle?.(doctor._id);
           }}
           style={{
@@ -125,12 +120,12 @@ const MobileDoctorCard = ({
         <div style={{ fontSize: '12px', fontWeight: '700', color: 'var(--brand-primary, #0ea5e9)', textTransform: 'uppercase', marginBottom: '6px', letterSpacing: '0.05em' }}>
           {doctor.specialization || 'General Physician'}
         </div>
-        <h3 style={{ fontSize: '17px', fontWeight: '700', color: '#0f172a', marginBottom: '8px', marginTop: '0', lineHeight: '1.3' }}>
+        <h3 style={{ fontSize: '17px', fontWeight: '700', color: 'var(--text-dark, #0f172a)', marginBottom: '8px', marginTop: '0', lineHeight: '1.3' }}>
           {doctor.name?.startsWith('Dr.') ? doctor.name : `Dr. ${doctor.name}`}
         </h3>
         
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid #e5e7eb', paddingBottom: '16px', marginBottom: '16px' }}>
-          <span style={{ fontSize: '13px', color: '#64748b' }}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', borderBottom: '1px solid var(--border-slate, #e5e7eb)', paddingBottom: '16px', marginBottom: '16px' }}>
+          <span style={{ fontSize: '13px', color: 'var(--text-muted, #64748b)' }}>
             <i className="fas fa-briefcase" style={{ marginRight: '6px', color: '#14b8a6' }}></i>
             {experience} Years Exp
           </span>
@@ -141,7 +136,7 @@ const MobileDoctorCard = ({
         </div>
         
         <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-          <span style={{ fontSize: '16px', fontWeight: '800', color: '#0f172a' }}>
+          <span style={{ fontSize: '16px', fontWeight: '800', color: 'var(--text-dark, #0f172a)' }}>
             ₹{fee}
           </span>
           <button 

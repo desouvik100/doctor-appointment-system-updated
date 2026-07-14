@@ -17,9 +17,6 @@ import { LanguageProvider } from './i18n/LanguageContext';
 // Real-time Socket connection
 import { SocketProvider } from './contexts/SocketContext';
 
-// Mobile/Capacitor initialization
-import { useMobileInit } from './mobile/useMobileInit';
-
 // Import auth components
 import Auth from "./components/Auth";
 import AdminAuth from "./components/AdminAuth";
@@ -36,7 +33,6 @@ import PricingPage from "./components/PricingPage";
 import { TermsAndConditions, PrivacyPolicy, RefundPolicy, ContactUs, AboutUs } from "./components/LegalPages";
 import NetworkStatus from "./components/NetworkStatus";
 import NotFound from "./components/NotFound";
-import PWAInstallBanner from "./components/PWAInstallBanner";
 import PaymentCheckout from "./components/PaymentCheckout";
 import './styles/legal-pages.css';
 import './styles/mobile-enhancements.css';
@@ -205,10 +201,6 @@ function App() {
     return () => window.removeEventListener('popstate', handlePopState);
   }, []); // eslint-disable-line react-hooks/exhaustive-deps
 
-  // Initialize mobile services (Capacitor)
-  const userId = user?.id || user?._id;
-  useMobileInit(userId);
-
   // Reset scroll position to top on every view change
   useEffect(() => {
     window.scrollTo(0, 0);
@@ -218,6 +210,7 @@ function App() {
   useEffect(() => {
     // Apply initial theme to document root and body
     document.documentElement.setAttribute('data-theme', darkMode ? 'dark' : 'light');
+    document.documentElement.classList.toggle('dark', darkMode);
     document.body.classList.toggle('dark-mode', darkMode);
     
     // Ensure loaded class is present (may already be set by index.html)
@@ -322,6 +315,7 @@ function App() {
       localStorage.setItem('darkMode', newMode);
       // Apply theme to document root and body
       document.documentElement.setAttribute('data-theme', newMode ? 'dark' : 'light');
+      document.documentElement.classList.toggle('dark', newMode);
       document.body.classList.toggle('dark-mode', newMode);
       toast.success(`Switched to ${newMode ? 'Dark' : 'Light'} mode`);
       return newMode;
@@ -1645,9 +1639,6 @@ function App() {
       {/* Network Status Indicator */}
       <NetworkStatus />
       
-      {/* PWA Install Banner */}
-      <PWAInstallBanner />
-      
       {/* Global Toast Notifications - Mobile Optimized */}
       <Toaster
         position="top-right"
@@ -1869,6 +1860,8 @@ function App() {
                 user={user} 
                 onLogout={handleLogoutAll} 
                 onNavigate={(view) => setCurrentView(view)}
+                darkMode={darkMode}
+                toggleDarkMode={toggleDarkMode}
               />
             </Suspense>
           )}
