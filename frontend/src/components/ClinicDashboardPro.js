@@ -745,7 +745,7 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
   }
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-200 via-gray-100 to-zinc-200 flex">
+    <div className="h-screen bg-gradient-to-br from-slate-200 via-gray-100 to-zinc-200 flex overflow-hidden">
       {/* Real-Time Staff Presence Widget */}
       <div className="fixed bottom-6 right-6 z-40">
         <div className={`bg-white rounded-2xl shadow-2xl border border-slate-200 transition-all duration-300 ${showPresenceWidget ? 'w-80' : 'w-14'}`}>
@@ -899,7 +899,7 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
       </aside>
 
       {/* Main Content */}
-      <main className="flex-1 flex flex-col min-h-screen">
+      <main className="flex-1 flex flex-col overflow-hidden" style={{ minHeight: 0 }}>
         {/* Header */}
         <header className="sticky top-0 z-30 bg-white/80 backdrop-blur-xl border-b border-slate-200/50 px-4 lg:px-8 h-16 flex items-center justify-between">
           <div className="flex items-center gap-4">
@@ -934,7 +934,7 @@ const ClinicDashboardPro = ({ receptionist, onLogout }) => {
         </header>
 
         {/* Content */}
-        <div className="flex-1 p-4 lg:p-8 overflow-auto">
+        <div className="flex-1 p-4 lg:p-8 overflow-y-auto" style={{ minHeight: 0 }}>
 
           {/* Overview Section */}
           {activeSection === 'overview' && (
