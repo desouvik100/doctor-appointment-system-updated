@@ -1,0 +1,1334 @@
+/**
+ * Patient Dashboard — Modern Design System
+ * Matches the landing page (LandingPagePremium) aesthetic exactly.
+ * Geist font, shadcn-style cards, sky/teal/green palette.
+ */z
+
+/* ── Reset & Font ─────────────────────────────────────────────────────── */
+.dashboard-modern,
+.dashboard-modern * {
+  font-family: 'Geist', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+  box-sizing: border-box;
+}
+
+/* ── Root tokens (mirror landing-page-premium-v2) ─────────────────────── */
+.dashboard-modern {
+  --dm-sky:        #0ea5e9;
+  --dm-teal:       #14b8a6;
+  --dm-green:      #22c55e;
+  --dm-cyan:       #06b6d4;
+  --dm-indigo:     #6366f1;
+  --dm-amber:      #f59e0b;
+  --dm-red:        #ef4444;
+  --dm-text:       #0f172a;
+  --dm-text-muted: #64748b;
+  --dm-bg:         #f8fafc;
+  --dm-surface:    #ffffff;
+  --dm-border:     #e5e7eb;
+  --dm-radius:     16px;
+  --dm-radius-sm:  10px;
+  --dm-shadow:     0 1px 2px rgba(15,23,42,.03), 0 8px 24px -4px rgba(15,23,42,.06);
+  --dm-shadow-md:  0 4px 16px -4px rgba(15,23,42,.10);
+  --dm-transition: all 0.22s cubic-bezier(0.16,1,0.3,1);
+}
+
+/* dark mode tokens */
+.dashboard-modern.dark,
+.dark .dashboard-modern {
+  --dm-text:       #f8fafc;
+  --dm-text-muted: #94a3b8;
+  --dm-bg:         #0b0f19;
+  --dm-surface:    #111827;
+  --dm-border:     rgba(255,255,255,0.07);
+  --dm-shadow:     0 1px 2px rgba(0,0,0,.12), 0 8px 24px -4px rgba(0,0,0,.25);
+  --dm-shadow-md:  0 4px 16px -4px rgba(0,0,0,.40);
+}
+
+/* ── Layout wrapper ───────────────────────────────────────────────────── */
+.dm-page {
+  min-height: 100vh;
+  background: var(--dm-bg);
+  color: var(--dm-text);
+  transition: var(--dm-transition);
+}
+
+/* ── Sidebar ─────────────────────────────────────────────────────────── */
+.dm-sidebar {
+  background: var(--dm-surface);
+  border-right: 1px solid var(--dm-border);
+  display: flex;
+  flex-direction: column;
+}
+
+.dark .dm-sidebar {
+  background: #111827;
+  border-right-color: rgba(255,255,255,0.06);
+}
+
+.dm-sidebar-brand {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 22px 20px;
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--dm-text);
+  border-bottom: 1px solid var(--dm-border);
+}
+
+.dark .dm-sidebar-brand { border-bottom-color: rgba(255,255,255,0.06); }
+
+.dm-nav-section-label {
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--dm-text-muted);
+  padding: 16px 20px 6px;
+}
+
+.dm-nav-item {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 9px 16px;
+  margin: 1px 8px;
+  border-radius: var(--dm-radius-sm);
+  font-size: 13.5px;
+  font-weight: 500;
+  color: var(--dm-text-muted);
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  width: calc(100% - 16px);
+  transition: var(--dm-transition);
+}
+
+.dm-nav-item:hover {
+  background: rgba(14,165,233,0.06);
+  color: var(--dm-sky);
+}
+
+.dm-nav-item.active {
+  background: linear-gradient(135deg, rgba(14,165,233,0.10), rgba(20,184,166,0.08));
+  color: var(--dm-sky);
+  font-weight: 600;
+}
+
+.dark .dm-nav-item.active {
+  background: linear-gradient(135deg, rgba(14,165,233,0.18), rgba(20,184,166,0.12));
+}
+
+.dm-nav-item i { width: 18px; text-align: center; font-size: 14px; flex-shrink: 0; }
+
+/* ── Top header bar ──────────────────────────────────────────────────── */
+.dm-topbar {
+  height: 60px;
+  background: var(--dm-surface);
+  border-bottom: 1px solid var(--dm-border);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 28px;
+  position: sticky;
+  top: 0;
+  z-index: 40;
+}
+
+.dark .dm-topbar {
+  background: #111827;
+  border-bottom-color: rgba(255,255,255,0.06);
+}
+
+/* ── Shadcn-style cards ──────────────────────────────────────────────── */
+.dm-card {
+  background: var(--dm-surface);
+  border: 1px solid var(--dm-border);
+  border-radius: var(--dm-radius);
+  box-shadow: var(--dm-shadow);
+  padding: 24px;
+  transition: var(--dm-transition);
+}
+
+.dm-card:hover {
+  box-shadow: var(--dm-shadow-md);
+  border-color: rgba(14,165,233,0.20);
+  transform: translateY(-2px);
+}
+
+.dark .dm-card {
+  background: #1a2234;
+  border-color: rgba(255,255,255,0.06);
+}
+
+.dark .dm-card:hover {
+  border-color: rgba(14,165,233,0.25);
+}
+
+/* Flat card (no hover lift) */
+.dm-card-flat {
+  background: var(--dm-surface);
+  border: 1px solid var(--dm-border);
+  border-radius: var(--dm-radius);
+  box-shadow: var(--dm-shadow);
+  padding: 24px;
+}
+
+.dark .dm-card-flat {
+  background: #1a2234;
+  border-color: rgba(255,255,255,0.06);
+}
+
+/* ── Stat / KPI cards ────────────────────────────────────────────────── */
+.dm-stat-card {
+  background: var(--dm-surface);
+  border: 1px solid var(--dm-border);
+  border-radius: var(--dm-radius);
+  box-shadow: var(--dm-shadow);
+  padding: 20px 24px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: var(--dm-transition);
+}
+
+.dm-stat-card:hover {
+  border-color: rgba(14,165,233,0.20);
+  box-shadow: var(--dm-shadow-md);
+  transform: translateY(-2px);
+}
+
+.dark .dm-stat-card {
+  background: #1a2234;
+  border-color: rgba(255,255,255,0.06);
+}
+
+.dm-stat-icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+}
+
+.dm-stat-val {
+  font-size: 26px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  color: var(--dm-text);
+  line-height: 1;
+}
+
+.dm-stat-label {
+  font-size: 12px;
+  color: var(--dm-text-muted);
+  font-weight: 500;
+  margin-top: 2px;
+}
+
+/* ── Buttons ─────────────────────────────────────────────────────────── */
+.dm-btn-primary {
+  background: var(--dm-text);
+  color: #ffffff;
+  border: 1px solid var(--dm-text);
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--dm-transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.dm-btn-primary:hover {
+  background: #1e293b;
+  border-color: #1e293b;
+  transform: translateY(-1px);
+}
+
+.dark .dm-btn-primary {
+  background: #f8fafc;
+  color: #0b0f19;
+  border-color: #f8fafc;
+}
+
+.dark .dm-btn-primary:hover {
+  background: #e2e8f0;
+  border-color: #e2e8f0;
+}
+
+.dm-btn-secondary {
+  background: transparent;
+  color: var(--dm-text);
+  border: 1px solid var(--dm-border);
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--dm-transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+  white-space: nowrap;
+}
+
+.dm-btn-secondary:hover {
+  background: rgba(14,165,233,0.06);
+  border-color: var(--dm-sky);
+  color: var(--dm-sky);
+}
+
+.dm-btn-sky {
+  background: var(--dm-sky);
+  color: #ffffff;
+  border: none;
+  padding: 10px 22px;
+  border-radius: 8px;
+  font-size: 13.5px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--dm-transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: inherit;
+}
+
+.dm-btn-sky:hover {
+  background: #0284c7;
+  transform: translateY(-1px);
+  box-shadow: 0 4px 14px rgba(14,165,233,0.35);
+}
+
+.dm-btn-sm {
+  padding: 7px 14px;
+  font-size: 12px;
+  border-radius: 6px;
+}
+
+/* ── Badge / Tag ─────────────────────────────────────────────────────── */
+.dm-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 3px 10px;
+  border-radius: 9999px;
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+}
+
+.dm-badge-sky   { background: rgba(14,165,233,0.10); color: var(--dm-sky);   }
+.dm-badge-green { background: rgba(34,197,94,0.10);  color: var(--dm-green); }
+.dm-badge-teal  { background: rgba(20,184,166,0.10); color: var(--dm-teal);  }
+.dm-badge-amber { background: rgba(245,158,11,0.10); color: var(--dm-amber); }
+.dm-badge-red   { background: rgba(239,68,68,0.10);  color: var(--dm-red);   }
+.dm-badge-muted { background: rgba(100,116,139,0.10); color: var(--dm-text-muted); }
+
+/* ── Doctor card ─────────────────────────────────────────────────────── */
+.dm-doctor-card {
+  background: var(--dm-surface);
+  border: 1px solid var(--dm-border);
+  border-radius: var(--dm-radius);
+  box-shadow: var(--dm-shadow);
+  overflow: hidden;
+  transition: var(--dm-transition);
+  cursor: pointer;
+}
+
+.dm-doctor-card:hover {
+  border-color: rgba(14,165,233,0.25);
+  box-shadow: var(--dm-shadow-md);
+  transform: translateY(-3px);
+}
+
+.dark .dm-doctor-card {
+  background: #1a2234;
+  border-color: rgba(255,255,255,0.06);
+}
+
+.dm-doctor-card__img {
+  width: 100%;
+  height: 200px;
+  object-fit: cover;
+  background: var(--dm-bg);
+  display: block;
+}
+
+.dm-doctor-card__body { padding: 18px 20px; }
+
+.dm-doctor-card__spec {
+  font-size: 11px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--dm-sky);
+  margin-bottom: 4px;
+}
+
+.dm-doctor-card__name {
+  font-size: 15px;
+  font-weight: 700;
+  color: var(--dm-text);
+  margin: 0 0 12px;
+}
+
+.dm-doctor-card__meta {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  font-size: 12px;
+  color: var(--dm-text-muted);
+  border-top: 1px solid var(--dm-border);
+  padding-top: 12px;
+  margin-top: 12px;
+}
+
+.dark .dm-doctor-card__meta { border-top-color: rgba(255,255,255,0.06); }
+
+.dm-doctor-card__fee {
+  font-size: 16px;
+  font-weight: 800;
+  color: var(--dm-text);
+}
+
+/* ── Appointment card ────────────────────────────────────────────────── */
+.dm-appt-card {
+  background: var(--dm-surface);
+  border: 1px solid var(--dm-border);
+  border-radius: var(--dm-radius);
+  padding: 18px 20px;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  transition: var(--dm-transition);
+  box-shadow: var(--dm-shadow);
+}
+
+.dm-appt-card:hover {
+  border-color: rgba(14,165,233,0.20);
+  box-shadow: var(--dm-shadow-md);
+}
+
+.dark .dm-appt-card {
+  background: #1a2234;
+  border-color: rgba(255,255,255,0.06);
+}
+
+.dm-appt-card__avatar {
+  width: 48px;
+  height: 48px;
+  border-radius: 12px;
+  object-fit: cover;
+  background: var(--dm-bg);
+  flex-shrink: 0;
+}
+
+.dm-appt-card__name {
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--dm-text);
+}
+
+.dm-appt-card__sub {
+  font-size: 12px;
+  color: var(--dm-text-muted);
+  margin-top: 2px;
+}
+
+.dm-appt-card__time {
+  margin-left: auto;
+  text-align: right;
+  font-size: 12px;
+  color: var(--dm-text-muted);
+  flex-shrink: 0;
+}
+
+/* ── Section headings ─────────────────────────────────────────────────── */
+.dm-section-title {
+  font-size: 18px;
+  font-weight: 800;
+  letter-spacing: -0.02em;
+  color: var(--dm-text);
+  margin: 0 0 4px;
+}
+
+.dm-section-sub {
+  font-size: 13px;
+  color: var(--dm-text-muted);
+  margin: 0 0 20px;
+}
+
+/* ── Hero greeting strip ─────────────────────────────────────────────── */
+.dm-hero-strip {
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+  border-radius: var(--dm-radius);
+  padding: 28px 32px;
+  color: #ffffff;
+  position: relative;
+  overflow: hidden;
+  margin-bottom: 28px;
+}
+
+.dm-hero-strip::before {
+  content: '';
+  position: absolute;
+  top: -40px; right: -40px;
+  width: 160px; height: 160px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.06);
+}
+
+.dm-hero-strip::after {
+  content: '';
+  position: absolute;
+  bottom: -50px; left: 30%;
+  width: 200px; height: 200px;
+  border-radius: 50%;
+  background: rgba(255,255,255,0.04);
+}
+
+.dm-hero-strip__greeting {
+  font-size: 22px;
+  font-weight: 800;
+  letter-spacing: -0.03em;
+  margin-bottom: 6px;
+}
+
+.dm-hero-strip__sub {
+  font-size: 13.5px;
+  opacity: 0.85;
+  margin-bottom: 20px;
+}
+
+.dm-hero-strip__actions {
+  display: flex;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dm-hero-btn {
+  background: rgba(255,255,255,0.15);
+  backdrop-filter: blur(8px);
+  color: #ffffff;
+  border: 1px solid rgba(255,255,255,0.25);
+  padding: 9px 18px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: var(--dm-transition);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: inherit;
+}
+
+.dm-hero-btn:hover {
+  background: rgba(255,255,255,0.25);
+  transform: translateY(-1px);
+}
+
+.dm-hero-btn-white {
+  background: #ffffff;
+  color: var(--dm-sky);
+  border: none;
+}
+
+.dm-hero-btn-white:hover {
+  background: #f0f9ff;
+}
+
+/* ── Grid helpers ────────────────────────────────────────────────────── */
+.dm-grid-4 {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 16px;
+}
+
+.dm-grid-3 {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 20px;
+}
+
+.dm-grid-2 {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 20px;
+}
+
+@media (max-width: 1200px) { .dm-grid-4 { grid-template-columns: repeat(2, 1fr); } }
+@media (max-width: 768px)  {
+  .dm-grid-4, .dm-grid-3, .dm-grid-2 { grid-template-columns: 1fr; }
+  .dm-hero-strip { padding: 22px 20px; }
+  .dm-hero-strip__greeting { font-size: 18px; }
+}
+
+/* ── Search bar ──────────────────────────────────────────────────────── */
+.dm-search {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: var(--dm-surface);
+  border: 1px solid var(--dm-border);
+  border-radius: 10px;
+  padding: 10px 16px;
+  transition: var(--dm-transition);
+}
+
+.dm-search:focus-within {
+  border-color: var(--dm-sky);
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.10);
+}
+
+.dark .dm-search { background: #1a2234; border-color: rgba(255,255,255,0.08); }
+
+.dm-search input {
+  flex: 1;
+  border: none;
+  outline: none;
+  background: transparent;
+  font-size: 13.5px;
+  color: var(--dm-text);
+  font-family: inherit;
+}
+
+.dm-search input::placeholder { color: var(--dm-text-muted); }
+
+/* ── Avatar ─────────────────────────────────────────────────────────── */
+.dm-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  object-fit: cover;
+  background: linear-gradient(135deg, var(--dm-sky), var(--dm-teal));
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 14px;
+  font-weight: 700;
+  color: #fff;
+  flex-shrink: 0;
+}
+
+/* ── Empty state ─────────────────────────────────────────────────────── */
+.dm-empty {
+  text-align: center;
+  padding: 48px 24px;
+  color: var(--dm-text-muted);
+}
+
+.dm-empty i { font-size: 36px; opacity: 0.3; margin-bottom: 12px; display: block; }
+.dm-empty p { font-size: 14px; margin: 0 0 16px; }
+
+/* ── Quick action chips ──────────────────────────────────────────────── */
+.dm-quick-chip {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 16px 12px;
+  background: var(--dm-surface);
+  border: 1px solid var(--dm-border);
+  border-radius: var(--dm-radius);
+  cursor: pointer;
+  transition: var(--dm-transition);
+  text-align: center;
+  box-shadow: var(--dm-shadow);
+  font-family: inherit;
+}
+
+.dm-quick-chip:hover {
+  border-color: rgba(14,165,233,0.25);
+  background: rgba(14,165,233,0.03);
+  transform: translateY(-2px);
+  box-shadow: var(--dm-shadow-md);
+}
+
+.dark .dm-quick-chip { background: #1a2234; border-color: rgba(255,255,255,0.06); }
+
+.dm-quick-chip__icon {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+}
+
+.dm-quick-chip__label {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--dm-text);
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DASHBOARD OVERRIDE — apply landing-page design to existing Tailwind elements
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Main content wrapper */
+.dashboard-modern {
+  background: #f8fafc !important;
+  font-family: 'Geist', 'Plus Jakarta Sans', -apple-system, sans-serif !important;
+}
+
+.dark .dashboard-modern,
+.dashboard-modern.dark {
+  background: #0b0f19 !important;
+}
+
+/* ── Hero banner override ─────────────────────────────────────────────── */
+.dashboard-modern .hidden.lg\:block.bg-gradient-to-r {
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%) !important;
+  border-radius: 16px !important;
+  padding: 32px !important;
+  box-shadow: 0 4px 24px -4px rgba(14,165,233,0.30) !important;
+  margin-bottom: 0 !important;
+}
+
+/* Remove purple gradient overlay divs inside the hero */
+.dashboard-modern .hidden.lg\:block.bg-gradient-to-r .absolute {
+  display: none !important;
+}
+
+/* Hero title */
+.dashboard-modern .hidden.lg\:block.bg-gradient-to-r h2 {
+  font-size: 26px !important;
+  font-weight: 800 !important;
+  letter-spacing: -0.03em !important;
+  color: #ffffff !important;
+}
+
+.dashboard-modern .hidden.lg\:block.bg-gradient-to-r h2 span {
+  background: none !important;
+  -webkit-text-fill-color: #ffffff !important;
+  opacity: 0.9;
+}
+
+/* Hero subtitle */
+.dashboard-modern .hidden.lg\:block.bg-gradient-to-r p {
+  color: rgba(255,255,255,0.88) !important;
+  font-size: 13.5px !important;
+}
+
+/* Hero CTA buttons */
+.dashboard-modern .hidden.lg\:block.bg-gradient-to-r button {
+  font-size: 13px !important;
+  font-weight: 600 !important;
+  border-radius: 8px !important;
+  transition: all 0.18s ease !important;
+}
+
+/* ── Stats cards override ─────────────────────────────────────────────── */
+.dashboard-modern .hidden.lg\:grid.grid-cols-4 > div {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 2px rgba(15,23,42,.03), 0 8px 24px -4px rgba(15,23,42,.06) !important;
+  transition: all 0.22s cubic-bezier(0.16,1,0.3,1) !important;
+}
+
+.dark .dashboard-modern .hidden.lg\:grid.grid-cols-4 > div {
+  background: #1a2234 !important;
+  border-color: rgba(255,255,255,0.07) !important;
+}
+
+.dashboard-modern .hidden.lg\:grid.grid-cols-4 > div:hover {
+  transform: translateY(-2px) !important;
+  box-shadow: 0 4px 16px -4px rgba(15,23,42,.12) !important;
+  border-color: rgba(14,165,233,0.20) !important;
+}
+
+/* Remove the big blur circles inside stat cards */
+.dashboard-modern .hidden.lg\:grid.grid-cols-4 > div .absolute {
+  display: none !important;
+}
+
+/* ── Trust strip override ─────────────────────────────────────────────── */
+.dashboard-modern .bg-gradient-to-r.from-emerald-50 {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+}
+
+.dark .dashboard-modern .bg-gradient-to-r.from-emerald-50 {
+  background: #1a2234 !important;
+  border-color: rgba(255,255,255,0.07) !important;
+}
+
+/* ── Doctor cards section ─────────────────────────────────────────────── */
+.dashboard-modern .bg-white.dark\:bg-slate-900.rounded-2xl {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 2px rgba(15,23,42,.03), 0 8px 24px -4px rgba(15,23,42,.05) !important;
+  padding: 24px !important;
+}
+
+.dark .dashboard-modern .bg-white.dark\:bg-slate-900.rounded-2xl {
+  background: #1a2234 !important;
+  border-color: rgba(255,255,255,0.07) !important;
+}
+
+/* Section heading in cards */
+.dashboard-modern .bg-white.dark\:bg-slate-900.rounded-2xl h3 {
+  font-size: 16px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  letter-spacing: -0.01em !important;
+  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.dark .dashboard-modern .bg-white.dark\:bg-slate-900.rounded-2xl h3 {
+  color: #f8fafc !important;
+}
+
+/* "View All" link */
+.dashboard-modern .text-sky-600.hover\:text-sky-700 {
+  color: #0ea5e9 !important;
+  font-size: 12.5px !important;
+  font-weight: 600 !important;
+}
+
+/* ── Quick Actions override ──────────────────────────────────────────── */
+.dashboard-modern button.group.relative.overflow-hidden.p-5.rounded-2xl {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 14px !important;
+  padding: 18px !important;
+  transition: all 0.22s cubic-bezier(0.16,1,0.3,1) !important;
+  box-shadow: 0 1px 2px rgba(15,23,42,.03) !important;
+}
+
+.dark .dashboard-modern button.group.relative.overflow-hidden.p-5.rounded-2xl {
+  background: #1a2234 !important;
+  border-color: rgba(255,255,255,0.07) !important;
+}
+
+.dashboard-modern button.group.relative.overflow-hidden.p-5.rounded-2xl:hover {
+  border-color: rgba(14,165,233,0.25) !important;
+  box-shadow: 0 4px 16px -4px rgba(15,23,42,.12) !important;
+  transform: translateY(-2px) !important;
+  background: #ffffff !important;
+}
+
+/* Quick action label */
+.dashboard-modern button.group.relative.overflow-hidden.p-5.rounded-2xl p.font-bold {
+  font-size: 13px !important;
+  font-weight: 700 !important;
+  color: #0f172a !important;
+  font-family: 'Geist', sans-serif !important;
+}
+
+.dark .dashboard-modern button.group.relative.overflow-hidden.p-5.rounded-2xl p.font-bold {
+  color: #f8fafc !important;
+}
+
+.dashboard-modern button.group.relative.overflow-hidden.p-5.rounded-2xl p.text-slate-500 {
+  font-size: 11.5px !important;
+  color: #64748b !important;
+}
+
+/* ── Consultation type toggle override ───────────────────────────────── */
+.dashboard-modern .flex.items-center.gap-2.mb-4.p-1.bg-slate-100 {
+  background: #f1f5f9 !important;
+  border-radius: 10px !important;
+  border: 1px solid #e5e7eb !important;
+  padding: 3px !important;
+}
+
+.dark .dashboard-modern .flex.items-center.gap-2.mb-4.p-1.bg-slate-100 {
+  background: #1e293b !important;
+  border-color: rgba(255,255,255,0.08) !important;
+}
+
+.dashboard-modern .flex.items-center.gap-2.mb-4.p-1.bg-slate-100 button.bg-white {
+  background: #ffffff !important;
+  color: #0ea5e9 !important;
+  border-radius: 7px !important;
+  font-weight: 600 !important;
+  box-shadow: 0 1px 4px rgba(0,0,0,.08) !important;
+}
+
+/* ── Sidebar override ────────────────────────────────────────────────── */
+.dashboard-modern ~ * aside,
+aside.fixed {
+  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
+}
+
+/* ── Nav active item in sidebar ─────────────────────────────────────── */
+aside button.bg-gradient-to-r.from-sky-500 {
+  background: linear-gradient(135deg, rgba(14,165,233,0.12), rgba(20,184,166,0.08)) !important;
+  color: #0ea5e9 !important;
+  border-radius: 10px !important;
+}
+
+/* ── Appointments section in overview ───────────────────────────────── */
+.dashboard-modern .space-y-3 > div.bg-white,
+.dashboard-modern .space-y-3 > div.dark\:bg-slate-800 {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 12px !important;
+  box-shadow: 0 1px 2px rgba(15,23,42,.03) !important;
+}
+
+.dark .dashboard-modern .space-y-3 > div.bg-white {
+  background: #1a2234 !important;
+  border-color: rgba(255,255,255,0.07) !important;
+}
+
+/* ── MobileDoctorCard inside dashboard ───────────────────────────────── */
+.dashboard-modern .service-card.premium-doctor-card-redesign {
+  border: 1px solid #e5e7eb !important;
+  border-radius: 16px !important;
+  box-shadow: 0 1px 2px rgba(15,23,42,.03), 0 4px 16px -4px rgba(15,23,42,.06) !important;
+  transition: all 0.22s cubic-bezier(0.16,1,0.3,1) !important;
+}
+
+.dashboard-modern .service-card.premium-doctor-card-redesign:hover {
+  border-color: rgba(14,165,233,0.25) !important;
+  transform: translateY(-3px) !important;
+  box-shadow: 0 8px 28px -6px rgba(14,165,233,0.18) !important;
+}
+
+.dark .dashboard-modern .service-card.premium-doctor-card-redesign {
+  background: #1a2234 !important;
+  border-color: rgba(255,255,255,0.07) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SIDEBAR — match landing page nav aesthetic
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Sidebar base */
+aside.fixed {
+  background: #111827 !important;
+  border-right: 1px solid rgba(255,255,255,0.06) !important;
+  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
+}
+
+/* Brand row */
+aside.fixed .h-20 {
+  border-bottom: 1px solid rgba(255,255,255,0.06) !important;
+}
+
+/* Nav buttons */
+aside.fixed nav button {
+  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 13.5px !important;
+  border-radius: 10px !important;
+  transition: all 0.18s ease !important;
+}
+
+aside.fixed nav button:hover {
+  background: rgba(14,165,233,0.08) !important;
+  color: #38bdf8 !important;
+}
+
+aside.fixed nav button.bg-gradient-to-r {
+  background: linear-gradient(135deg, rgba(14,165,233,0.18), rgba(20,184,166,0.12)) !important;
+  color: #38bdf8 !important;
+  font-weight: 600 !important;
+}
+
+/* Section labels */
+aside.fixed h3 {
+  font-size: 10px !important;
+  letter-spacing: 0.07em !important;
+  color: #475569 !important;
+  font-weight: 700 !important;
+  text-transform: uppercase !important;
+}
+
+/* Bottom profile area */
+aside.fixed .p-4.border-t {
+  border-top: 1px solid rgba(255,255,255,0.06) !important;
+  background: rgba(0,0,0,0.2) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   TOP HEADER BAR — clean, minimal, landing-page style
+   ═══════════════════════════════════════════════════════════════════════ */
+
+header.sticky {
+  background: rgba(255,255,255,0.90) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-bottom: 1px solid #e5e7eb !important;
+  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.dark header.sticky {
+  background: rgba(17,24,39,0.90) !important;
+  border-bottom-color: rgba(255,255,255,0.06) !important;
+}
+
+/* Search input in topbar */
+header.sticky input {
+  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
+  font-size: 13px !important;
+}
+
+/* Topbar buttons */
+header.sticky button {
+  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
+  border-radius: 8px !important;
+  transition: all 0.18s ease !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MAIN CONTENT AREA — white bg, clean typography
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Page background */
+main.flex-1 {
+  background: #f8fafc !important;
+  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.dark main.flex-1 {
+  background: #0b0f19 !important;
+}
+
+/* Remove grid/radial overlays inside main */
+main.flex-1 .grid-pattern,
+main.flex-1 .bg-radial-premium {
+  display: none !important;
+}
+
+/* ── Upcoming appointments in overview ───────────────────────────────── */
+.dashboard-modern .rounded-2xl.border.border-slate-100 {
+  border-radius: 16px !important;
+  border-color: #e5e7eb !important;
+  box-shadow: 0 1px 2px rgba(15,23,42,.03), 0 8px 24px -4px rgba(15,23,42,.05) !important;
+}
+
+.dark .dashboard-modern .rounded-2xl.border.border-slate-100 {
+  border-color: rgba(255,255,255,0.07) !important;
+}
+
+/* ── All rounded-2xl cards uniform ───────────────────────────────────── */
+.dashboard-modern .rounded-2xl {
+  border-radius: 16px !important;
+}
+
+/* ── Font uniformity ─────────────────────────────────────────────────── */
+.dashboard-modern h1,
+.dashboard-modern h2,
+.dashboard-modern h3,
+.dashboard-modern h4,
+.dashboard-modern h5,
+.dashboard-modern p,
+.dashboard-modern span,
+.dashboard-modern button,
+.dashboard-modern input,
+.dashboard-modern label {
+  font-family: 'Geist', 'Plus Jakarta Sans', -apple-system, sans-serif !important;
+}
+
+/* Heading weights */
+.dashboard-modern h2 { font-weight: 800; letter-spacing: -0.03em; }
+.dashboard-modern h3 { font-weight: 700; letter-spacing: -0.02em; }
+
+/* ── Scrollbar styling ───────────────────────────────────────────────── */
+.dashboard-modern ::-webkit-scrollbar { width: 5px; height: 5px; }
+.dashboard-modern ::-webkit-scrollbar-track { background: transparent; }
+.dashboard-modern ::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 99px; }
+.dark .dashboard-modern ::-webkit-scrollbar-thumb { background: #334155; }
+
+/* ── Button base override ─────────────────────────────────────────────── */
+.dashboard-modern button.rounded-xl {
+  border-radius: 8px !important;
+  font-family: 'Geist', sans-serif !important;
+}
+
+.dashboard-modern button.rounded-lg {
+  border-radius: 8px !important;
+}
+
+/* Book / primary action */
+.dashboard-modern button.bg-sky-600,
+.dashboard-modern button.bg-sky-500 {
+  background: #0ea5e9 !important;
+  border-radius: 8px !important;
+  font-weight: 600 !important;
+  transition: all 0.18s ease !important;
+}
+
+.dashboard-modern button.bg-sky-600:hover,
+.dashboard-modern button.bg-sky-500:hover {
+  background: #0284c7 !important;
+  transform: translateY(-1px) !important;
+  box-shadow: 0 4px 14px rgba(14,165,233,0.30) !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   DOCTORS SECTION — list/grid view
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Doctors page wrapper */
+.dashboard-modern [class*="doctors"] .bg-white,
+.dashboard-modern .space-y-6 > .bg-white {
+  border-radius: 16px !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 1px 2px rgba(15,23,42,.03), 0 4px 16px -4px rgba(15,23,42,.05) !important;
+}
+
+/* ── Filter pills ─────────────────────────────────────────────────────── */
+.dashboard-modern select {
+  font-family: 'Geist', sans-serif !important;
+  font-size: 13px !important;
+  border-radius: 8px !important;
+  border: 1px solid #e5e7eb !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  padding: 9px 14px !important;
+  transition: all 0.18s ease !important;
+  appearance: auto;
+}
+
+.dashboard-modern select:focus {
+  outline: none !important;
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.10) !important;
+}
+
+.dark .dashboard-modern select {
+  background: #1a2234 !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  color: #f8fafc !important;
+}
+
+/* ── Input fields ─────────────────────────────────────────────────────── */
+.dashboard-modern input[type="text"],
+.dashboard-modern input[type="search"],
+.dashboard-modern input[type="email"],
+.dashboard-modern input[type="tel"],
+.dashboard-modern textarea {
+  font-family: 'Geist', sans-serif !important;
+  font-size: 13.5px !important;
+  border-radius: 8px !important;
+  border: 1px solid #e5e7eb !important;
+  background: #ffffff !important;
+  color: #0f172a !important;
+  transition: all 0.18s ease !important;
+}
+
+.dashboard-modern input:focus,
+.dashboard-modern textarea:focus {
+  outline: none !important;
+  border-color: #0ea5e9 !important;
+  box-shadow: 0 0 0 3px rgba(14,165,233,0.10) !important;
+}
+
+.dark .dashboard-modern input,
+.dark .dashboard-modern textarea {
+  background: #1a2234 !important;
+  border-color: rgba(255,255,255,0.10) !important;
+  color: #f8fafc !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   APPOINTMENTS PAGE
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Status badges */
+.dashboard-modern .rounded-full.bg-green-100 {
+  background: rgba(34,197,94,0.10) !important;
+  color: #16a34a !important;
+  border-radius: 9999px !important;
+  font-size: 11px !important;
+  font-weight: 600 !important;
+}
+
+.dashboard-modern .rounded-full.bg-yellow-100 {
+  background: rgba(245,158,11,0.10) !important;
+  color: #d97706 !important;
+}
+
+.dashboard-modern .rounded-full.bg-red-100 {
+  background: rgba(239,68,68,0.10) !important;
+  color: #dc2626 !important;
+}
+
+.dashboard-modern .rounded-full.bg-sky-100,
+.dashboard-modern .rounded-full.bg-blue-100 {
+  background: rgba(14,165,233,0.10) !important;
+  color: #0284c7 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MODALS — clean shadcn style
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Modal backdrop */
+.dashboard-modern ~ * .fixed.inset-0.bg-black,
+.fixed.inset-0.bg-black\/50,
+.fixed.inset-0.bg-black\/60 {
+  backdrop-filter: blur(4px) !important;
+}
+
+/* Modal panel */
+.dashboard-modern ~ * .bg-white.rounded-2xl,
+.dashboard-modern ~ * .bg-white.rounded-3xl,
+.bg-white.rounded-2xl.shadow-2xl {
+  border-radius: 16px !important;
+  border: 1px solid #e5e7eb !important;
+  box-shadow: 0 20px 60px -12px rgba(15,23,42,0.15) !important;
+  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MOBILE BOTTOM NAV — landing-page glass effect
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.bottom-nav-container {
+  background: rgba(255,255,255,0.92) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-top: 1px solid #e5e7eb !important;
+  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.dark .bottom-nav-container {
+  background: rgba(17,24,39,0.94) !important;
+  border-top-color: rgba(255,255,255,0.07) !important;
+}
+
+.bottom-nav .nav-tab.active {
+  color: #0ea5e9 !important;
+}
+
+.bottom-nav .nav-tab-indicator {
+  background: #0ea5e9 !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   MENU BOTTOM SHEET — shadcn style
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.menu-sheet {
+  background: #ffffff !important;
+  border-radius: 20px 20px 0 0 !important;
+  border: 1px solid #e5e7eb !important;
+  border-bottom: none !important;
+  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
+}
+
+.dark .menu-sheet {
+  background: #111827 !important;
+  border-color: rgba(255,255,255,0.07) !important;
+}
+
+.menu-grid-item {
+  border-radius: 12px !important;
+  font-family: 'Geist', sans-serif !important;
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  transition: all 0.18s ease !important;
+}
+
+.menu-grid-item:hover {
+  background: rgba(14,165,233,0.05) !important;
+  transform: translateY(-1px) !important;
+}
+
+.menu-grid-icon {
+  border-radius: 10px !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   HEALTH / WALLET / OTHER SECTION CARDS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* All section container cards */
+.dashboard-modern > .flex-1 > * > .bg-white,
+.dashboard-modern .bg-white.dark\:bg-slate-800,
+.dashboard-modern .bg-white.dark\:bg-slate-900 {
+  background: #ffffff !important;
+  border: 1px solid #e5e7eb !important;
+  border-radius: 16px !important;
+}
+
+.dark .dashboard-modern .bg-white.dark\:bg-slate-800,
+.dark .dashboard-modern .bg-white.dark\:bg-slate-900 {
+  background: #1a2234 !important;
+  border-color: rgba(255,255,255,0.07) !important;
+}
+
+/* Tablet / Phone summary card bg */
+.dashboard-modern .bg-slate-50,
+.dashboard-modern .bg-gray-50 {
+  background: #f8fafc !important;
+}
+
+.dark .dashboard-modern .bg-slate-50,
+.dark .dashboard-modern .bg-gray-50 {
+  background: #0f172a !important;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SKELETON LOADERS — match design
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.dashboard-modern .shimmer {
+  background: linear-gradient(90deg, #f1f5f9 25%, #e2e8f0 50%, #f1f5f9 75%) !important;
+  background-size: 200% 100% !important;
+  animation: shimmer 1.4s infinite !important;
+  border-radius: 8px !important;
+}
+
+.dark .dashboard-modern .shimmer {
+  background: linear-gradient(90deg, #1e293b 25%, #273344 50%, #1e293b 75%) !important;
+  background-size: 200% 100% !important;
+}
+
+@keyframes shimmer {
+  0%   { background-position: 200% 0; }
+  100% { background-position: -200% 0; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   LANDING PAGE GRID PATTERN — keep it on landing, not dashboard
+   ═══════════════════════════════════════════════════════════════════════ */
+
+/* Grid overlay only on landing pages, not dashboard */
+.dashboard-modern .grid-pattern { display: none !important; }
+
+/* ═══════════════════════════════════════════════════════════════════════
+   RESPONSIVE MOBILE TWEAKS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 640px) {
+  .dashboard-modern .hidden.lg\:grid.grid-cols-4 { display: none !important; }
+  .dashboard-modern .rounded-2xl { border-radius: 12px !important; }
+  .dashboard-modern .p-6 { padding: 16px !important; }
+  main.flex-1 { background: #f1f5f9 !important; }
+  .dark main.flex-1 { background: #0b0f19 !important; }
+}
+
+/* ═══════════════════════════════════════════════════════════════════════
+   SECTION TRANSITIONS
+   ═══════════════════════════════════════════════════════════════════════ */
+
+.dashboard-modern .space-y-6 > * {
+  animation: dm-fade-in 0.25s ease forwards;
+}
+
+@keyframes dm-fade-in {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: translateY(0); }
+}

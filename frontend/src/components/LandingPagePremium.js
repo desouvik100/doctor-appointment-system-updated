@@ -1,8 +1,7 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import '../styles/landing-page-premium-v2.css';
 import { useLanguage } from '../i18n/LanguageContext';
 import LanguageSelector from './LanguageSelector';
-import { Capacitor } from '@capacitor/core';
 import toast from 'react-hot-toast';
 
 const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDarkMode = () => {} }) => {
@@ -16,14 +15,23 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
   const [searchSpecialty, setSearchSpecialty] = useState('');
   const [loginDropdownOpen, setLoginDropdownOpen] = useState(false);
   const [emailInput, setEmailInput] = useState('');
+  const loginDropdownRef = useRef(null);
+
+  // Click outside to close the login dropdown
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (loginDropdownRef.current && !loginDropdownRef.current.contains(event.target)) {
+        setLoginDropdownOpen(false);
+      }
+    };
+    if (loginDropdownOpen) {
+      document.addEventListener('mousedown', handleClickOutside);
+      return () => document.removeEventListener('mousedown', handleClickOutside);
+    }
+  }, [loginDropdownOpen]);
 
   useEffect(() => {
-    try {
-      const platform = Capacitor.getPlatform();
-      setIsNativeApp(platform === 'android' || platform === 'ios');
-    } catch (e) {
-      setIsNativeApp(false);
-    }
+    setIsNativeApp(false); // Web-only app
   }, []);
 
   useEffect(() => {
@@ -207,7 +215,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
             </button>
 
-            <div style={{ position: 'relative' }}>
+            <div ref={loginDropdownRef} style={{ position: 'relative', zIndex: 50 }}>
               <button 
                 className="btn-shadcn-secondary"
                 onClick={() => setLoginDropdownOpen(!loginDropdownOpen)}
@@ -218,67 +226,61 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               </button>
               
               {loginDropdownOpen && (
-                <>
-                  <div 
-                    style={{ position: 'fixed', inset: 0, zIndex: 1099 }} 
-                    onClick={() => setLoginDropdownOpen(false)}
-                  />
-                  <div 
-                    style={{
-                      position: 'absolute',
-                      top: '100%',
-                      right: 0,
-                      marginTop: '8px',
-                      backgroundColor: darkMode ? '#1e293b' : '#ffffff',
-                      border: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e4e4e7',
-                      borderRadius: '8px',
-                      boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
-                      padding: '6px',
-                      minWidth: '180px',
-                      display: 'flex',
-                      flexDirection: 'column',
-                      gap: '4px',
-                      zIndex: 1100
-                    }}
+                <div 
+                  style={{
+                    position: 'absolute',
+                    top: '100%',
+                    right: 0,
+                    marginTop: '8px',
+                    backgroundColor: darkMode ? '#1e293b' : '#ffffff',
+                    border: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e4e4e7',
+                    borderRadius: '8px',
+                    boxShadow: '0 10px 30px rgba(0,0,0,0.06)',
+                    padding: '6px',
+                    minWidth: '180px',
+                    display: 'flex',
+                    flexDirection: 'column',
+                    gap: '4px',
+                    zIndex: 100000
+                  }}
+                >
+                  <button 
+                    onClick={() => { onNavigate('login'); setLoginDropdownOpen(false); }} 
+                    style={dropdownItemStyle}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = darkMode ? 'rgba(255,255,255,0.05)' : '#f4f4f5'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
                   >
-                    <button 
-                      onClick={() => { onNavigate('login'); setLoginDropdownOpen(false); }} 
-                      style={dropdownItemStyle}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = darkMode ? 'rgba(255,255,255,0.05)' : '#f4f4f5'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >
-                      <i className="fas fa-user-injured" style={{ color: '#0ea5e9', width: '16px' }}></i>
-                      <span style={{ color: darkMode ? '#f1f5f9' : '#09090b' }}>Patient Portal</span>
-                    </button>
-                    <button 
-                      onClick={() => { onNavigate('doctor-login'); setLoginDropdownOpen(false); }} 
-                      style={dropdownItemStyle}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = darkMode ? 'rgba(255,255,255,0.05)' : '#f4f4f5'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >
-                      <i className="fas fa-user-md" style={{ color: '#22c55e', width: '16px' }}></i>
-                      <span style={{ color: darkMode ? '#f1f5f9' : '#09090b' }}>Doctor Portal</span>
-                    </button>
-                    <button 
-                      onClick={() => { onNavigate('receptionist-login'); setLoginDropdownOpen(false); }} 
-                      style={dropdownItemStyle}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = darkMode ? 'rgba(255,255,255,0.05)' : '#f4f4f5'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >
-                      <i className="fas fa-user-tie" style={{ color: '#fbbf24', width: '16px' }}></i>
-                      <span style={{ color: darkMode ? '#f1f5f9' : '#09090b' }}>Staff Portal</span>
-                    </button>
-                    <button 
-                      onClick={() => { onNavigate('admin-login'); setLoginDropdownOpen(false); }} 
-                      style={dropdownItemStyle}
-                      onMouseEnter={(e) => e.target.style.backgroundColor = darkMode ? 'rgba(255,255,255,0.05)' : '#f4f4f5'}
-                      onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
-                    >
-                      <i className="fas fa-user-shield" style={{ color: '#ef4444', width: '16px' }}></i>
-                      <span style={{ color: darkMode ? '#f1f5f9' : '#09090b' }}>Admin Portal</span>
-                    </button>
-                  </div>
-                </>
+                    <i className="fas fa-user-injured" style={{ color: '#0ea5e9', width: '16px' }}></i>
+                    <span style={{ color: darkMode ? '#f1f5f9' : '#09090b' }}>Patient Portal</span>
+                  </button>
+                  <button 
+                    onClick={() => { onNavigate('doctor-login'); setLoginDropdownOpen(false); }} 
+                    style={dropdownItemStyle}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = darkMode ? 'rgba(255,255,255,0.05)' : '#f4f4f5'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                  >
+                    <i className="fas fa-user-md" style={{ color: '#22c55e', width: '16px' }}></i>
+                    <span style={{ color: darkMode ? '#f1f5f9' : '#09090b' }}>Doctor Portal</span>
+                  </button>
+                  <button 
+                    onClick={() => { onNavigate('receptionist-login'); setLoginDropdownOpen(false); }} 
+                    style={dropdownItemStyle}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = darkMode ? 'rgba(255,255,255,0.05)' : '#f4f4f5'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                  >
+                    <i className="fas fa-user-tie" style={{ color: '#fbbf24', width: '16px' }}></i>
+                    <span style={{ color: darkMode ? '#f1f5f9' : '#09090b' }}>Staff Portal</span>
+                  </button>
+                  <button 
+                    onClick={() => { onNavigate('admin-login'); setLoginDropdownOpen(false); }} 
+                    style={dropdownItemStyle}
+                    onMouseEnter={(e) => e.target.style.backgroundColor = darkMode ? 'rgba(255,255,255,0.05)' : '#f4f4f5'}
+                    onMouseLeave={(e) => e.target.style.backgroundColor = 'transparent'}
+                  >
+                    <i className="fas fa-user-shield" style={{ color: '#ef4444', width: '16px' }}></i>
+                    <span style={{ color: darkMode ? '#f1f5f9' : '#09090b' }}>Admin Portal</span>
+                  </button>
+                </div>
               )}
             </div>
           </div>

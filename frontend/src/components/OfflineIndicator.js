@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useEffect } from 'react';
-import { Capacitor } from '@capacitor/core';
 import '../styles/offline-indicator.css';
 
 const OfflineIndicator = ({ onRetry }) => {
@@ -40,22 +39,9 @@ const OfflineIndicator = ({ onRetry }) => {
       setWasOffline(true);
     }
 
-    // For Capacitor, also listen to network status
+    // Network status via browser events only (web app)
     const initNetworkListener = async () => {
-      if (Capacitor.isNativePlatform()) {
-        try {
-          const { Network } = await import('@capacitor/network');
-          Network.addListener('networkStatusChange', (status) => {
-            if (status.connected) {
-              handleOnline();
-            } else {
-              handleOffline();
-            }
-          });
-        } catch (e) {
-          console.log('Network plugin not available');
-        }
-      }
+      // No Capacitor network plugin needed
     };
 
     initNetworkListener();

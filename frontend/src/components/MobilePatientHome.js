@@ -4,7 +4,6 @@
  */
 
 import React, { useState, useEffect, useCallback } from 'react';
-import { Capacitor } from '@capacitor/core';
 import axios from '../api/config';
 import toast from 'react-hot-toast';
 import PullToRefresh from './PullToRefresh';
@@ -13,7 +12,7 @@ const MobilePatientHome = ({ user, onNavigate, onLogout }) => {
   const [loading, setLoading] = useState(true);
   const [appointments, setAppointments] = useState([]);
   const [stats, setStats] = useState({ upcoming: 0, completed: 0, prescriptions: 0 });
-  const isNative = Capacitor.isNativePlatform();
+  const isNative = false; // Web-only app
 
   const fetchDashboardData = useCallback(async () => {
     try {

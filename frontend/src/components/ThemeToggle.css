@@ -59,18 +59,18 @@
 
 /* Dark theme variables - Pure Black */
 [data-theme="dark"] {
-  --bg-primary: #000000;
-  --bg-secondary: #0a0a0a;
-  --bg-tertiary: #121212;
-  --bg-card: #0a0a0a;
-  --bg-hover: #121212;
+  --bg-primary: #020617;
+  --bg-secondary: #0b0f19;
+  --bg-tertiary: #13192b;
+  --bg-card: #0e1322;
+  --bg-hover: #182235;
   
   --text-primary: #ffffff;
   --text-secondary: #b3b3b3;
   --text-muted: #808080;
   
-  --border-color: #1a1a1a;
-  --border-light: #262626;
+  --border-color: rgba(255, 255, 255, 0.08);
+  --border-light: rgba(255, 255, 255, 0.05);
   
   --primary: #818cf8;
   --primary-light: rgba(129, 140, 248, 0.15);
@@ -90,6 +90,15 @@
   --shadow-lg: 0 10px 15px rgba(0, 0, 0, 0.7);
   
   --gradient-primary: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+
+  /* Landing Page / Dashboard Variables Integration */
+  --bg-white: #0e1322;
+  --bg-slate-50: #020617;
+  --text-dark: #f8fafc;
+  --text-light: #ffffff;
+  --text-muted: #94a3b8;
+  --text-muted-dark: #cbd5e1;
+  --border-slate: rgba(255, 255, 255, 0.08);
 }
 
 /* Light theme variables (default) */
@@ -478,6 +487,63 @@
 /* All card-like elements */
 [data-theme="dark"] [class*="-card"],
 [data-theme="dark"] [class*="_card"] {
-  background-color: #0a0a0a !important;
-  border-color: #1a1a1a !important;
+  background-color: #0e1322 !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* ============================================
+   GLOBAL SLATE OVERRIDES FOR PATIENT DASHBOARD
+   ============================================ */
+[data-theme="dark"] .bg-slate-50 {
+  background-color: #020617 !important;
+}
+[data-theme="dark"] .bg-slate-100 {
+  background-color: #0b0f19 !important;
+}
+[data-theme="dark"] .bg-slate-200 {
+  background-color: #182235 !important;
+}
+[data-theme="dark"] .bg-white {
+  background-color: #0e1322 !important;
+}
+[data-theme="dark"] .text-slate-800 {
+  color: #f8fafc !important;
+}
+[data-theme="dark"] .text-slate-700 {
+  color: #f1f5f9 !important;
+}
+[data-theme="dark"] .text-slate-600 {
+  color: #cbd5e1 !important;
+}
+[data-theme="dark"] .text-slate-500 {
+  color: #94a3b8 !important;
+}
+[data-theme="dark"] .text-slate-400 {
+  color: #64748b !important;
+}
+[data-theme="dark"] .border-slate-100 {
+  border-color: rgba(255, 255, 255, 0.06) !important;
+}
+[data-theme="dark"] .border-slate-200 {
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+/* Dashboard Header glassmorphic overrides */
+[data-theme="dark"] header.bg-white,
+[data-theme="dark"] header {
+  background-color: rgba(2, 6, 23, 0.8) !important;
+  backdrop-filter: blur(20px) !important;
+  -webkit-backdrop-filter: blur(20px) !important;
+  border-color: rgba(255, 255, 255, 0.08) !important;
+}
+
+[data-theme="dark"] .bg-slate-50\/50,
+[data-theme="dark"] .bg-slate-50\/70,
+[data-theme="dark"] .bg-slate-50\/85 {
+  background-color: rgba(14, 19, 34, 0.4) !important;
+}
+
+[data-theme="dark"] .bg-slate-100\/50,
+[data-theme="dark"] .bg-slate-100\/80 {
+  background-color: rgba(14, 19, 34, 0.6) !important;
 }

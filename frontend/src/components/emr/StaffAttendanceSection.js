@@ -45,110 +45,43 @@ const StaffAttendanceSection = ({ clinicId, subscriptionPlan = 'basic' }) => {
 
   const fetchCurrentUser = async () => {
     try {
-      const { Capacitor } = await import('@capacitor/core');
-      const isNative = Capacitor.isNativePlatform();
-      
       let userId = null;
-      
-      // For native apps, check Capacitor Preferences first
-      if (isNative) {
-        try {
-          const { Preferences } = await import('@capacitor/preferences');
-          
-          // Try receptionist data
-          const receptionistResult = await Preferences.get({ key: 'receptionist' });
-          if (receptionistResult.value) {
-            const data = JSON.parse(receptionistResult.value);
-            userId = data.id || data._id || data.userId;
-            console.log('Got userId from Preferences receptionist:', userId);
-            
-            // Also try token if no direct ID
-            if (!userId && data.token) {
-              try {
-                const payload = JSON.parse(atob(data.token.split('.')[1]));
-                userId = payload.userId || payload.id || payload._id;
-                console.log('Got userId from Preferences receptionist token:', userId);
-              } catch (e) {
-                console.error('Error parsing receptionist token:', e);
-              }
-            }
-          }
-          
-          // Try user data
-          if (!userId) {
-            const userResult = await Preferences.get({ key: 'user' });
-            if (userResult.value) {
-              const data = JSON.parse(userResult.value);
-              userId = data.id || data._id || data.userId;
-              console.log('Got userId from Preferences user:', userId);
-              
-              if (!userId && data.token) {
-                try {
-                  const payload = JSON.parse(atob(data.token.split('.')[1]));
-                  userId = payload.userId || payload.id || payload._id;
-                  console.log('Got userId from Preferences user token:', userId);
-                } catch (e) {
-                  console.error('Error parsing user token:', e);
-                }
-              }
-            }
-          }
-        } catch (e) {
-          console.log('Capacitor Preferences not available, falling back to localStorage');
-        }
-      }
-      
-      // Fallback to localStorage (for web or if Preferences failed)
-      if (!userId) {
-        const receptionist = localStorage.getItem('receptionist');
-        const user = localStorage.getItem('user');
-        const token = localStorage.getItem('token');
-        
-        // First try receptionist data (most common for clinic dashboard)
-        if (receptionist) {
-          const data = JSON.parse(receptionist);
-          userId = data.id || data._id || data.userId;
-          console.log('Got userId from localStorage receptionist:', userId);
-          
-          // Also try to get from receptionist token
-          if (!userId && data.token) {
-            try {
-              const payload = JSON.parse(atob(data.token.split('.')[1]));
-              userId = payload.userId || payload.id || payload._id;
-              console.log('Got userId from localStorage receptionist token:', userId);
-            } catch (e) {
-              console.error('Error parsing receptionist token:', e);
-            }
-          }
-        }
-        
-        // Try user data
-        if (!userId && user) {
-          const data = JSON.parse(user);
-          userId = data.id || data._id || data.userId;
-          console.log('Got userId from localStorage user:', userId);
-        }
-        
-        // Try token as fallback
-        if (!userId && token) {
+
+      // Web-only: read from localStorage
+      const receptionist = localStorage.getItem('receptionist');
+      const user = localStorage.getItem('user');
+      const token = localStorage.getItem('token');
+
+      if (receptionist) {
+        const data = JSON.parse(receptionist);
+        userId = data.id || data._id || data.userId;
+        if (!userId && data.token) {
           try {
-            const payload = JSON.parse(atob(token.split('.')[1]));
+            const payload = JSON.parse(atob(data.token.split('.')[1]));
             userId = payload.userId || payload.id || payload._id;
-            console.log('Got userId from localStorage token:', userId);
-          } catch (e) {
-            console.error('Error parsing token:', e);
-          }
+          } catch (e) {}
         }
       }
-      
+
+      if (!userId && user) {
+        const data = JSON.parse(user);
+        userId = data.id || data._id || data.userId;
+      }
+
+      if (!userId && token) {
+        try {
+          const payload = JSON.parse(atob(token.split('.')[1]));
+          userId = payload.userId || payload.id || payload._id;
+        } catch (e) {}
+      }
+
       if (userId) {
         setCurrentUserId(userId);
-        console.log('Set currentUserId:', userId);
       } else {
-        console.warn('Could not determine current user ID from any source');
+        console.warn('Could not determine current user ID');
       }
-    } catch (err) { 
-      console.error('Error getting current user:', err); 
+    } catch (err) {
+      console.error('Error getting current user:', err);
     }
   };
 

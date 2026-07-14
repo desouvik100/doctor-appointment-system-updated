@@ -8,6 +8,7 @@ import '../styles/landing-page-premium-v2.css';
 import '../styles/skeleton-loaders.css';
 import '../styles/bottom-navigation.css';
 import '../styles/offline-indicator.css';
+import '../styles/dashboard-modern.css';
 import LanguageSelector from './LanguageSelector';
 import ThemeToggle from './ThemeToggle';
 import { exportAppointmentsToPDF } from '../utils/pdfExport';
@@ -647,8 +648,8 @@ const PatientDashboardPro = ({ user, onLogout, onNavigate, darkMode, toggleDarkM
             </button>
           </div>
         </header>
-        <PullToRefresh onRefresh={handleRefresh} enabled={Capacitor.isNativePlatform()}>
-        <div className="flex-1 p-4 lg:p-8 has-bottom-nav relative z-10" style={{ WebkitOverflowScrolling: 'touch', overflow: 'visible' }}>
+        <PullToRefresh onRefresh={handleRefresh} enabled={false}>
+        <div className="flex-1 p-4 lg:p-8 has-bottom-nav relative z-10 dashboard-modern" style={{ WebkitOverflowScrolling: 'touch', overflow: 'visible' }}>
           {activeSection === 'overview' && (
             <div className="space-y-6">
 

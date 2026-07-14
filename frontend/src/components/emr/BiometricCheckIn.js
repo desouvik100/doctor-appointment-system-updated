@@ -1,6 +1,5 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
-import { Capacitor } from '@capacitor/core';
 
 /**
  * Biometric Check-In Component
@@ -14,7 +13,7 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
   const [isNative, setIsNative] = useState(false);
 
   useEffect(() => {
-    const native = Capacitor.isNativePlatform();
+    const native = false; // Web-only app
     setIsNative(native);
     checkBiometricSupport(native);
     checkBiometricRegistration();

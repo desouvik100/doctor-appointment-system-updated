@@ -5,11 +5,12 @@
   position: relative;
   z-index: 1;
   background-color: #f8fafc !important;
+  font-family: 'Geist', 'Plus Jakarta Sans', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
 /* Dark mode dashboard background */
 [data-theme="dark"] .min-h-screen.bg-slate-50 {
-  background-color: #0f172a !important;
+  background-color: #020617 !important;
 }
 
 /* Fade in animation */

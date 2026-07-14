@@ -5,7 +5,6 @@
  */
 
 import { useState, useEffect, useCallback, useRef } from 'react';
-import { Capacitor } from '@capacitor/core';
 import toast from 'react-hot-toast';
 
 const usePullToRefresh = (onRefresh, options = {}) => {
@@ -28,7 +27,7 @@ const usePullToRefresh = (onRefresh, options = {}) => {
   const containerRef = useRef(null);
   const lastRefreshTime = useRef(0);
   const refreshLock = useRef(false);
-  const isNative = Capacitor.isNativePlatform();
+  const isNative = false; // Web-only app
 
   const handleRefresh = useCallback(async () => {
     // Prevent multiple simultaneous refreshes
@@ -46,16 +45,6 @@ const usePullToRefresh = (onRefresh, options = {}) => {
     lastRefreshTime.current = now;
     setIsRefreshing(true);
     setPullDistance(threshold);
-
-    // Haptic feedback on native
-    if (isNative) {
-      try {
-        const { Haptics, ImpactStyle } = await import('@capacitor/haptics');
-        await Haptics.impact({ style: ImpactStyle.Medium });
-      } catch (e) {
-        // Haptics not available
-      }
-    }
 
     const refreshPromise = Promise.resolve(onRefresh());
     const timeoutPromise = new Promise((_, reject) => 

@@ -176,15 +176,7 @@ function AuthPremium({ onLogin, onBack }) {
 
   // Check if running on native mobile
   useEffect(() => {
-    const checkMobile = async () => {
-      try {
-        const { Capacitor } = await import('@capacitor/core');
-        setIsNativeMobile(Capacitor.isNativePlatform());
-      } catch (e) {
-        setIsNativeMobile(false);
-      }
-    };
-    checkMobile();
+    setIsNativeMobile(false); // Web-only app
   }, []);
 
   // Load Google Sign-In script
@@ -249,41 +241,9 @@ function AuthPremium({ onLogin, onBack }) {
     }
   }, []);
 
-  // Handle Google Sign-In using OAuth2 popup (web) or native (mobile)
+  // Handle Google Sign-In using OAuth2 popup (web)
   const handleGoogleSignIn = async () => {
-    // Check if running on mobile native app - use native Google Sign-In
-    const { Capacitor } = await import('@capacitor/core');
-    if (Capacitor.isNativePlatform()) {
-      setSocialLoading('google');
-      try {
-        const { signInWithGoogle, initGoogleAuth } = await import('../mobile/googleAuth');
-        
-        // Initialize Google Auth first
-        await initGoogleAuth();
-        
-        // Perform sign-in
-        const googleUser = await signInWithGoogle();
-        
-        if (googleUser) {
-          await processGoogleUser(googleUser);
-        } else {
-          // User cancelled
-          setSocialLoading(null);
-        }
-      } catch (error) {
-        console.error('Native Google Sign-In error:', error);
-        // Show helpful error message
-        let errorMsg = 'Google Sign-In unavailable. Please use email login.';
-        if (error.message?.includes('timeout')) {
-          errorMsg = 'Sign-in timed out. Try again.';
-        } else if (error.message?.includes('network') || error.message?.includes('Network')) {
-          errorMsg = 'Network error. Check your connection.';
-        }
-        toast.error(errorMsg, { duration: 4000 });
-        setSocialLoading(null);
-      }
-      return;
-    }
+    // Web-only: skip native check, go straight to web OAuth flow
     
     // Check configuration
     if (!GOOGLE_CLIENT_ID) {

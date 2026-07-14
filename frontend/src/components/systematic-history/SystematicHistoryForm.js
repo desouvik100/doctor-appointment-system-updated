@@ -1,6 +1,4 @@
 import React, { useState, useEffect, useCallback } from 'react';
-import { Capacitor } from '@capacitor/core';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import SymptomChip from './SymptomChip';
 import axios from '../../api/config';
 import './SystematicHistoryForm.css';
@@ -117,12 +115,8 @@ const SystematicHistoryForm = ({
     }
   }, [userId, previousHistory]);
 
-  const triggerHaptic = async (style = ImpactStyle.Light) => {
-    if (Capacitor.isNativePlatform()) {
-      try {
-        await Haptics.impact({ style });
-      } catch (e) {}
-    }
+  const triggerHaptic = async () => {
+    // Haptics removed (web-only app)
   };
 
   const handleSymptomToggle = useCallback((system, symptomName) => {
@@ -196,7 +190,7 @@ const SystematicHistoryForm = ({
 
   const handleSubmit = async () => {
     setSubmitting(true);
-    triggerHaptic(ImpactStyle.Medium);
+    triggerHaptic();
     
     try {
       const response = await axios.post('/api/systematic-history', {
@@ -208,7 +202,7 @@ const SystematicHistoryForm = ({
         // Clear draft
         localStorage.removeItem(`systematic_history_draft_${userId}`);
         
-        triggerHaptic(ImpactStyle.Heavy);
+        triggerHaptic();
         onComplete(response.data.history, response.data.recommendations);
       }
     } catch (error) {

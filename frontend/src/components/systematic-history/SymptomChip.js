@@ -1,6 +1,4 @@
 import React, { useState } from 'react';
-import { Capacitor } from '@capacitor/core';
-import { Haptics, ImpactStyle } from '@capacitor/haptics';
 import './SymptomChip.css';
 
 const DURATION_OPTIONS = [
@@ -23,13 +21,7 @@ const SymptomChip = ({
   const [showDetails, setShowDetails] = useState(false);
   
   const triggerHaptic = async () => {
-    if (Capacitor.isNativePlatform()) {
-      try {
-        await Haptics.impact({ style: ImpactStyle.Light });
-      } catch (e) {
-        // Haptics not available
-      }
-    }
+    // Haptics removed (web-only app)
   };
   
   const handleToggle = () => {
