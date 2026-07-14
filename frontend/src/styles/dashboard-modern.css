@@ -910,42 +910,43 @@ aside button.bg-gradient-to-r.from-sky-500 {
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   SIDEBAR — match landing page nav aesthetic
+   SIDEBAR — match landing page nav aesthetic (patient dashboard only)
+   Applied via .dashboard-modern context on the sibling main element
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* Sidebar base */
-aside.fixed {
+/* Sidebar base — only when dashboard-modern is on the page */
+.has-modern-dashboard aside.fixed {
   background: #111827 !important;
   border-right: 1px solid rgba(255,255,255,0.06) !important;
   font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
 }
 
 /* Brand row */
-aside.fixed .h-20 {
+.has-modern-dashboard aside.fixed .h-20 {
   border-bottom: 1px solid rgba(255,255,255,0.06) !important;
 }
 
 /* Nav buttons */
-aside.fixed nav button {
+.has-modern-dashboard aside.fixed nav button {
   font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
   font-size: 13.5px !important;
   border-radius: 10px !important;
   transition: all 0.18s ease !important;
 }
 
-aside.fixed nav button:hover {
+.has-modern-dashboard aside.fixed nav button:hover {
   background: rgba(14,165,233,0.08) !important;
   color: #38bdf8 !important;
 }
 
-aside.fixed nav button.bg-gradient-to-r {
+.has-modern-dashboard aside.fixed nav button.bg-gradient-to-r {
   background: linear-gradient(135deg, rgba(14,165,233,0.18), rgba(20,184,166,0.12)) !important;
   color: #38bdf8 !important;
   font-weight: 600 !important;
 }
 
 /* Section labels */
-aside.fixed h3 {
+.has-modern-dashboard aside.fixed h3 {
   font-size: 10px !important;
   letter-spacing: 0.07em !important;
   color: #475569 !important;
@@ -954,16 +955,17 @@ aside.fixed h3 {
 }
 
 /* Bottom profile area */
-aside.fixed .p-4.border-t {
+.has-modern-dashboard aside.fixed .p-4.border-t {
   border-top: 1px solid rgba(255,255,255,0.06) !important;
   background: rgba(0,0,0,0.2) !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
-   TOP HEADER BAR — clean, minimal, landing-page style
+   TOP HEADER BAR — patient dashboard only
    ═══════════════════════════════════════════════════════════════════════ */
 
-header.sticky {
+.dashboard-modern + header.sticky,
+.dashboard-modern ~ * header.sticky {
   background: rgba(255,255,255,0.90) !important;
   backdrop-filter: blur(20px) !important;
   -webkit-backdrop-filter: blur(20px) !important;
@@ -971,41 +973,31 @@ header.sticky {
   font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
 }
 
-.dark header.sticky {
+.dark .dashboard-modern + header.sticky,
+.dark .dashboard-modern ~ * header.sticky {
   background: rgba(17,24,39,0.90) !important;
   border-bottom-color: rgba(255,255,255,0.06) !important;
-}
-
-/* Search input in topbar */
-header.sticky input {
-  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
-  font-size: 13px !important;
-}
-
-/* Topbar buttons */
-header.sticky button {
-  font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
-  border-radius: 8px !important;
-  transition: all 0.18s ease !important;
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
    MAIN CONTENT AREA — white bg, clean typography
    ═══════════════════════════════════════════════════════════════════════ */
 
-/* Page background */
-main.flex-1 {
+/* Page background — scoped to patient dashboard only */
+.dashboard-modern ~ main.flex-1,
+.dashboard-modern.flex-1 {
   background: #f8fafc !important;
   font-family: 'Geist', 'Plus Jakarta Sans', sans-serif !important;
 }
 
-.dark main.flex-1 {
+.dark .dashboard-modern ~ main.flex-1,
+.dark .dashboard-modern.flex-1 {
   background: #0b0f19 !important;
 }
 
-/* Remove grid/radial overlays inside main */
-main.flex-1 .grid-pattern,
-main.flex-1 .bg-radial-premium {
+/* Remove grid/radial overlays inside patient dashboard */
+.dashboard-modern .grid-pattern,
+.dashboard-modern .bg-radial-premium {
   display: none !important;
 }
 
@@ -1316,8 +1308,8 @@ main.flex-1 .bg-radial-premium {
   .dashboard-modern .hidden.lg\:grid.grid-cols-4 { display: none !important; }
   .dashboard-modern .rounded-2xl { border-radius: 12px !important; }
   .dashboard-modern .p-6 { padding: 16px !important; }
-  main.flex-1 { background: #f1f5f9 !important; }
-  .dark main.flex-1 { background: #0b0f19 !important; }
+  .dashboard-modern { background: #f1f5f9 !important; }
+  .dark .dashboard-modern { background: #0b0f19 !important; }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════
