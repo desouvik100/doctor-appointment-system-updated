@@ -215,7 +215,7 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               <i className={`fas ${darkMode ? 'fa-sun' : 'fa-moon'}`}></i>
             </button>
 
-            <div ref={loginDropdownRef} style={{ position: 'relative', zIndex: 50 }}>
+            <div ref={loginDropdownRef} style={{ position: 'relative', zIndex: 99999 }}>
               <button 
                 className="btn-shadcn-secondary"
                 onClick={() => setLoginDropdownOpen(!loginDropdownOpen)}
@@ -312,44 +312,6 @@ const LandingPagePremium = ({ onNavigate = () => {}, darkMode = false, toggleDar
               </button>
               <button onClick={() => onNavigate('register')} className="btn-shadcn-secondary">
                 Book Demo
-              </button>
-            </div>
-
-            {/* Quick Search */}
-            <div style={{
-              background: darkMode ? '#1e293b' : '#ffffff',
-              border: darkMode ? '1px solid rgba(255,255,255,0.08)' : '1px solid #e4e4e7',
-              borderRadius: '8px',
-              padding: '6px 6px 6px 16px',
-              display: 'flex',
-              alignItems: 'center',
-              gap: '8px',
-              boxShadow: '0 4px 20px rgba(0, 0, 0, 0.02)',
-              maxWidth: '460px',
-            }}>
-              <i className="fas fa-search" style={{ color: '#a1a1aa', fontSize: '14px' }}></i>
-              <select
-                value={searchSpecialty}
-                onChange={(e) => setSearchSpecialty(e.target.value)}
-                style={{
-                  flex: 1, border: 'none', outline: 'none',
-                  fontSize: '13.5px', color: searchSpecialty ? (darkMode ? '#f1f5f9' : '#09090b') : '#a1a1aa',
-                  background: 'transparent', cursor: 'pointer',
-                  fontFamily: 'inherit', fontWeight: '500',
-                  appearance: 'none', WebkitAppearance: 'none',
-                }}
-              >
-                <option value="" disabled style={{color: '#a1a1aa', backgroundColor: darkMode ? '#1e293b' : '#ffffff'}}>Find a specialty…</option>
-                {['General Physician', 'Cardiologist', 'Dermatologist', 'Pediatrician', 'Orthopedic', 'Gynecologist', 'Neurologist', 'Dentist'].map((s) => (
-                  <option key={s} value={s} style={{color: darkMode ? '#f1f5f9' : '#09090b', backgroundColor: darkMode ? '#1e293b' : '#ffffff'}}>{s}</option>
-                ))}
-              </select>
-              <button
-                onClick={() => onNavigate('register')}
-                className="btn-shadcn-primary"
-                style={{ padding: '8px 16px', fontSize: '13px', borderRadius: '6px' }}
-              >
-                Find Slots
               </button>
             </div>
 

@@ -26,7 +26,7 @@
   background-color: var(--bg-white);
   color: var(--text-dark);
   line-height: 1.6;
-  overflow-x: hidden;
+  overflow-x: clip; /* clip instead of hidden — doesn't create stacking context */
   transition: background-color 0.3s ease, color 0.3s ease;
 }
 
@@ -48,6 +48,8 @@
   border-bottom: 1px solid var(--border-slate);
   padding: 14px 0;
   transition: var(--transition-smooth);
+  /* Ensure dropdown children are not clipped */
+  overflow: visible !important;
 }
 
 .dark-mode .navbar-premium {
@@ -62,6 +64,9 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
+  overflow: visible;
+  position: relative;
+  z-index: 10000;
 }
 
 .nav-logo {
@@ -109,6 +114,9 @@
   display: flex;
   align-items: center;
   gap: 12px;
+  position: relative;
+  z-index: 99999;
+  overflow: visible;
 }
 
 /* ECG Heartbeat animated logo */
@@ -128,7 +136,8 @@
   padding: 180px 24px 120px;
   background: radial-gradient(circle at top right, rgba(59, 130, 246, 0.06), transparent 50%),
     radial-gradient(circle at bottom left, rgba(14, 165, 233, 0.04), transparent 40%);
-  overflow: hidden;
+  overflow: visible;
+  z-index: 1;
 }
 
 .dark-mode .hero-section {

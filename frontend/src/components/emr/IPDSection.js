@@ -459,19 +459,22 @@ const IPDSection = ({ clinicId, clinicName, doctors, patients }) => {
                 <label className="block text-sm font-medium text-slate-700 mb-1">Discharge Type</label>
                 <select value={dischargeForm.dischargeType} onChange={(e) => setDischargeForm({...dischargeForm, dischargeType: e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl">
                   <option value="normal">Normal Discharge</option>
-                  <option value="against_advice">Against Medical Advice (LAMA)</option>
-                  <option value="transfer">Transfer to Another Hospital</option>
-                  <option value="death">Death</option>
+                  <option value="lama">Against Medical Advice (LAMA)</option>
+                  <option value="dor">Discharged on Request (DOR)</option>
+                  <option value="absconded">Absconded</option>
+                  <option value="referred">Referred to Another Hospital</option>
+                  <option value="expired">Expired</option>
                 </select>
               </div>
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">Condition at Discharge</label>
                 <select value={dischargeForm.dischargeCondition} onChange={(e) => setDischargeForm({...dischargeForm, dischargeCondition: e.target.value})} className="w-full px-4 py-2.5 border border-slate-200 rounded-xl">
                   <option value="">Select Condition</option>
-                  <option value="recovered">Recovered</option>
+                  <option value="cured">Cured / Recovered</option>
                   <option value="improved">Improved</option>
                   <option value="unchanged">Unchanged</option>
                   <option value="deteriorated">Deteriorated</option>
+                  <option value="expired">Expired</option>
                 </select>
               </div>
               <div>
