@@ -1,0 +1,7 @@
+[
+  { "specialization": "General Physician", "consultationFee": 500, "availableSlots": ["09:00","09:30","10:00","10:30","11:00"] },
+  { "specialization": "Cardiologist",       "consultationFee": 800, "availableSlots": ["14:00","14:30","15:00","15:30"] },
+  { "specialization": "Dermatologist",      "consultationFee": 600, "availableSlots": ["10:00","10:30","11:00","11:30"] },
+  { "specialization": "Pediatrician",       "consultationFee": 550, "availableSlots": ["09:00","09:30","10:00"] },
+  { "specialization": "Orthopedic",         "consultationFee": 700, "availableSlots": ["14:00","14:30","15:00"] }
+]

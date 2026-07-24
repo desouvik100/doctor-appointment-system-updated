@@ -1,0 +1,18 @@
+{
+  "name": "healthsync-performance-tests",
+  "version": "1.0.0",
+  "description": "Enterprise k6 performance testing suite for HealthSync",
+  "private": true,
+  "scripts": {
+    "smoke-test":  "k6 run smoke-test.js  --env BASE_URL=%BASE_URL% --env TEST_MODE=true  --out json=reports/smoke-results.json",
+    "load-test":   "k6 run load-test.js   --env BASE_URL=%BASE_URL% --env TEST_MODE=true  --out json=reports/load-results.json   --out csv=reports/load-results.csv",
+    "stress-test": "k6 run stress-test.js --env BASE_URL=%BASE_URL% --env TEST_MODE=true  --out json=reports/stress-results.json --out csv=reports/stress-results.csv",
+    "spike-test":  "k6 run spike-test.js  --env BASE_URL=%BASE_URL% --env TEST_MODE=true  --out json=reports/spike-results.json  --out csv=reports/spike-results.csv",
+    "soak-test":   "k6 run soak-test.js   --env BASE_URL=%BASE_URL% --env TEST_MODE=true  --out json=reports/soak-results.json   --out csv=reports/soak-results.csv",
+    "perf-all":    "npm run smoke-test && npm run load-test && npm run stress-test && npm run spike-test"
+  },
+  "engines": {
+    "k6": ">=0.50.0"
+  },
+  "devDependencies": {}
+}
