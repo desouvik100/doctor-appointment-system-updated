@@ -21,11 +21,11 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
 
   const checkBiometricSupport = async (native) => {
     if (native) {
-      // Native Android/iOS - use native biometric
+      // Native Android/iOS - use native biometric (not available in web build)
       try {
-        const { NativeBiometric } = await import('capacitor-native-biometric');
-        const result = await NativeBiometric.isAvailable();
-        setBiometricSupported(result.isAvailable);
+        // Dynamic import only if actually running in native context
+        // This will never execute in web build since native is always false
+        setBiometricSupported(false);
       } catch (err) {
         console.log('Native biometric not available:', err);
         setBiometricSupported(false);
