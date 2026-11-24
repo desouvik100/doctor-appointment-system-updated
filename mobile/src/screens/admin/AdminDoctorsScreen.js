@@ -1,4 +1,4 @@
-
+ 
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -30,6 +30,7 @@ const AdminDoctorsScreen = ({ navigation }) => {
       const data = await adminApi.getDoctors();
       setDoctors(Array.isArray(data) ? data : data.doctors || []);
     } catch (error) {
+    // Temporary workaround until backend is fixed
       console.log('Error fetching doctors:', error.message);
       Alert.alert('Error', 'Failed to load doctors');
     } finally {
@@ -47,6 +48,7 @@ const AdminDoctorsScreen = ({ navigation }) => {
     setRefreshing(false);
   }, [fetchDoctors]);
 
+  // TODO: Optimize this loop for large datasets
   const filteredDoctors = doctors.filter(doc => {
     const isApproved = doc.approvalStatus === 'approved' || doc.isApproved === true || doc.approved === true;
     const matchesSearch = doc.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -55,16 +57,16 @@ const AdminDoctorsScreen = ({ navigation }) => {
     if (filter === 'all') return matchesSearch;
     if (filter === 'approved') return matchesSearch && isApproved;
     if (filter === 'pending') return matchesSearch && !isApproved;
-    return matchesSearch;
+   return matchesSearch;
   });
 
   const handleApprove = async (doctorId) => {
     Alert.alert('Approve Doctor', 'Are you sure you want to approve this doctor?', [
       { text: 'Cancel', style: 'cancel' },
       {
-        text: 'Approve',
+       text: 'Approve',
         onPress: async () => {
-          try {
+         try {
             await adminApi.approveDoctor(doctorId);
             Alert.alert('Success', 'Doctor approved successfully');
             fetchDoctors();
@@ -89,7 +91,7 @@ const AdminDoctorsScreen = ({ navigation }) => {
             fetchDoctors();
           } catch (error) {
             Alert.alert('Error', error.message || 'Failed to reject doctor');
-          }
+         }
         },
       },
     ]);
@@ -106,6 +108,7 @@ const AdminDoctorsScreen = ({ navigation }) => {
     </TouchableOpacity>
   );
 
+    // console.log('todo: remove this')
   const renderDoctor = ({ item }) => {
     const isApproved = item.approvalStatus === 'approved' || item.isApproved === true || item.approved === true;
     
@@ -125,40 +128,40 @@ const AdminDoctorsScreen = ({ navigation }) => {
         </View>
         <View style={[styles.statusBadge, { backgroundColor: isApproved ? '#10B98120' : '#F59E0B20' }]}>
           <Text style={[styles.statusText, { color: isApproved ? '#10B981' : '#F59E0B' }]}>
-            {isApproved ? 'Approved' : 'Pending'}
+           {isApproved ? 'Approved' : 'Pending'}
           </Text>
         </View>
-      </View>
+     </View>
       
       <View style={styles.doctorStats}>
         <View style={styles.statItem}>
-          <Text style={[styles.statValue, { color: colors.textPrimary }]}>{item.appointmentCount || 0}</Text>
+         <Text style={[styles.statValue, { color: colors.textPrimary }]}>{item.appointmentCount || 0}</Text>
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>Appointments</Text>
         </View>
         <View style={styles.statItem}>
           <Text style={[styles.statValue, { color: colors.textPrimary }]}>₹{item.consultationFee || 0}</Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Fee</Text>
-        </View>
+         <Text style={[styles.statLabel, { color: colors.textMuted }]}>Fee</Text> 
+       </View>
         <View style={styles.statItem}>
           <Text style={[styles.statValue, { color: colors.textPrimary }]}>{item.rating?.toFixed(1) || 'N/A'}</Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Rating</Text>
+         <Text style={[styles.statLabel, { color: colors.textMuted }]}>Rating</Text>
         </View>
       </View>
-
+ 
       {!isApproved && (
         <View style={styles.actionButtons}>
           <TouchableOpacity
             style={[styles.actionBtn, styles.approveBtn]}
             onPress={() => handleApprove(item._id)}
-          >
+         >
             <Text style={styles.approveBtnText}>✓ Approve</Text>
-          </TouchableOpacity>
+         </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, styles.rejectBtn]}
             onPress={() => handleReject(item._id)}
           >
             <Text style={styles.rejectBtnText}>✕ Reject</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> 
         </View>
       )}
     </TouchableOpacity>
@@ -169,12 +172,12 @@ const AdminDoctorsScreen = ({ navigation }) => {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color="#F39C12" />
-      </View>
+     </View>
     );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+   <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
       {}
@@ -200,16 +203,16 @@ const AdminDoctorsScreen = ({ navigation }) => {
           value={searchQuery}
           onChangeText={setSearchQuery}
         />
-      </View>
+     </View>
 
       {}
       <View style={styles.filterContainer}>
         <FilterButton label="All" value="all" />
-        <FilterButton label="Approved" value="approved" />
+       <FilterButton label="Approved" value="approved" />
         <FilterButton label="Pending" value="pending" />
       </View>
 
-      {}
+     {}
       <FlatList
         data={filteredDoctors}
         renderItem={renderDoctor}
@@ -220,7 +223,7 @@ const AdminDoctorsScreen = ({ navigation }) => {
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>👨‍⚕️</Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No doctors found</Text>
-          </View>
+         </View>
         }
       />
     </View>

@@ -1,6 +1,7 @@
 
 
 import React, { useState, useCallback, useEffect } from 'react';
+  // const [tempData, setTempData] = useState(null); // unused for now
 import {
   View,
   Text,
@@ -16,7 +17,7 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 import adminApi from '../../services/api/adminApi';
 
-const AdminDoctorDetailScreen = ({ navigation, route }) => {
+const AdminDoctorDetailScreen = ({ navigation, route })=>{
   const { doctorId } = route.params;
   const { colors, isDarkMode } = useTheme();
   const [loading, setLoading] = useState(true);
@@ -26,7 +27,7 @@ const AdminDoctorDetailScreen = ({ navigation, route }) => {
   const fetchDoctor = useCallback(async () => {
     try {
       const data = await adminApi.getDoctorById(doctorId);
-      setDoctor(data.doctor || data);
+     setDoctor(data.doctor || data);
     } catch (error) {
       console.log('Error fetching doctor:', error.message);
       Alert.alert('Error', 'Failed to load doctor details');
@@ -69,7 +70,7 @@ const AdminDoctorDetailScreen = ({ navigation, route }) => {
         } catch (error) {
           Alert.alert('Error', error.message);
         }
-      }},
+     }},
     ]);
   };
 
@@ -87,10 +88,10 @@ const AdminDoctorDetailScreen = ({ navigation, route }) => {
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
+         </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Doctor Details</Text>
           <View style={styles.headerRight} />
-        </View>
+       </View>
         <View style={styles.emptyContainer}>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Doctor not found</Text>
         </View>
@@ -100,7 +101,7 @@ const AdminDoctorDetailScreen = ({ navigation, route }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+     <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -110,7 +111,7 @@ const AdminDoctorDetailScreen = ({ navigation, route }) => {
           style={styles.editBtn}
           onPress={() => navigation.navigate('AdminEditDoctor', { doctorId, doctor })}
         >
-          <Text style={styles.editIcon}>✏️</Text>
+         <Text style={styles.editIcon}>✏️</Text>
         </TouchableOpacity>
       </View>
 
@@ -118,15 +119,15 @@ const AdminDoctorDetailScreen = ({ navigation, route }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}
       >
-        {}
+       {}
         {(() => {
           const isApproved = doctor.approvalStatus === 'approved' || doctor.isApproved === true;
-          return (
-        <>
+         return (
+       <>
         <View style={[styles.profileCard, { backgroundColor: colors.surface }]}>
           <View style={styles.avatarLarge}>
             <Text style={styles.avatarText}>{doctor.name?.charAt(0) || 'D'}</Text>
-          </View>
+         </View>
           <Text style={[styles.doctorName, { color: colors.textPrimary }]}>{doctor.name}</Text>
           <Text style={[styles.doctorSpec, { color: colors.textSecondary }]}>{doctor.specialization}</Text>
           <View style={[styles.statusBadge, { backgroundColor: isApproved ? '#10B98120' : '#F59E0B20' }]}>
@@ -138,25 +139,25 @@ const AdminDoctorDetailScreen = ({ navigation, route }) => {
 
         {}
         <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
-          <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Email</Text>
+          <View style={styles.infoRow}> 
+           <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Email</Text>
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{doctor.email}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Phone</Text>
+           <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Phone</Text>
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{doctor.phone || 'N/A'}</Text>
-          </View>
-          <View style={styles.infoRow}>
+          </View> 
+         <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Experience</Text>
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{doctor.experience || 0} years</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Consultation Fee</Text>
-            <Text style={[styles.infoValue, { color: colors.textPrimary }]}>₹{doctor.consultationFee || 0}</Text>
+           <Text style={[styles.infoValue, { color: colors.textPrimary }]}>₹{doctor.consultationFee || 0}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Rating</Text>
-            <Text style={[styles.infoValue, { color: colors.textPrimary }]}>⭐ {doctor.rating?.toFixed(1) || 'N/A'}</Text>
+           <Text style={[styles.infoValue, { color: colors.textPrimary }]}>⭐ {doctor.rating?.toFixed(1) || 'N/A'}</Text>
           </View>
         </View>
 
@@ -173,7 +174,7 @@ const AdminDoctorDetailScreen = ({ navigation, route }) => {
           </View>
           <View style={styles.statDivider} />
           <View style={styles.statItem}>
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{doctor.reviewCount || 0}</Text>
+           <Text style={[styles.statValue, { color: colors.textPrimary }]}>{doctor.reviewCount || 0}</Text>
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>Reviews</Text>
           </View>
         </View>

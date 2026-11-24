@@ -17,11 +17,11 @@ class DoctorMatcherService {
           specialization: 'General Physician',
           confidence: 0.5,
           reason: 'General health consultation'
-        }];
+       }];
       }
       if (affectedSystems.length >= 3) {
         const multiSystemRule = SPECIALIZATION_RULES.find(r => r.multiSystem);
-        if (multiSystemRule) {
+       if (multiSystemRule) {
           return multiSystemRule.recommendations.map(rec => ({
             ...rec,
             reason: multiSystemRule.reason
@@ -35,7 +35,7 @@ class DoctorMatcherService {
           specialization: 'General Physician',
           confidence: 0.6,
           reason: 'General health evaluation recommended'
-        }];
+       }];
       }
       
       return sortedRecommendations;
@@ -53,7 +53,7 @@ class DoctorMatcherService {
     const symptoms = [];
     const systemKeys = Object.keys(BODY_SYSTEMS);
     
-    systemKeys.forEach(system => {
+   systemKeys.forEach(system => {
       const systemData = history[system];
       if (systemData && systemData.symptoms) {
         systemData.symptoms.forEach(symptom => {
@@ -67,7 +67,7 @@ class DoctorMatcherService {
           }
         });
       }
-    });
+   });
     
     return symptoms;
   }
@@ -93,20 +93,20 @@ class DoctorMatcherService {
     const recommendations = [];
     const symptomNames = presentSymptoms.map(s => s.name);
     
-    SPECIALIZATION_RULES.forEach(rule => {
-      if (rule.multiSystem) return;
+   SPECIALIZATION_RULES.forEach(rule => {
+      if (rule.multiSystem) return;
       const matchingSymptoms = rule.symptoms.filter(s => symptomNames.includes(s));
       const matchingSystemsCount = rule.systems.filter(s => affectedSystems.includes(s)).length;
       
-      if (matchingSymptoms.length > 0 || matchingSystemsCount > 0) {
+     if (matchingSymptoms.length > 0 || matchingSystemsCount > 0) {
         const symptomMatchRatio = matchingSymptoms.length / rule.symptoms.length;
-        const systemMatch = matchingSystemsCount > 0;
+       const systemMatch = matchingSystemsCount > 0;
         rule.recommendations.forEach(rec => {
           let adjustedConfidence = rec.confidence;
           if (symptomMatchRatio > 0.5) {
             adjustedConfidence = Math.min(0.95, adjustedConfidence + 0.1);
           }
-          if (systemMatch) {
+         if (systemMatch) {
             adjustedConfidence = Math.min(0.95, adjustedConfidence + 0.05);
           }
           const avgSeverity = this.calculateAverageSeverity(presentSymptoms, matchingSymptoms);
@@ -115,16 +115,16 @@ class DoctorMatcherService {
           }
           
           recommendations.push({
-            specialization: rec.specialization,
+           specialization: rec.specialization,
             confidence: adjustedConfidence,
             reason: rule.reason,
             matchedSymptoms: matchingSymptoms
           });
         });
       }
-    });
+   });
     
-    return recommendations;
+   return recommendations;
   }
 
   calculateAverageSeverity(presentSymptoms, matchingSymptomNames) {
@@ -162,7 +162,7 @@ class DoctorMatcherService {
       return {
         score: match.confidence,
         reason: match.reason,
-        isRecommended: true
+       isRecommended: true
       };
     }
     const partialMatch = recommendations.find(r => {

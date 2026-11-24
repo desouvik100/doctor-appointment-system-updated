@@ -5,12 +5,12 @@ const RISK_LEVELS = {
   MODERATE: { min: 0.4, label: 'Moderate Risk', color: '#ca8a04', action: 'Close monitoring recommended' },
   LOW: { min: 0.2, label: 'Low Risk', color: '#2563eb', action: 'Continue routine care' },
   MINIMAL: { min: 0, label: 'Minimal Risk', color: '#16a34a', action: 'No immediate concerns' }
-};
+};
 const NEWS2_PARAMS = {
   respiratoryRate: [
     { range: [25, Infinity], score: 3 },
     { range: [21, 24], score: 2 },
-    { range: [12, 20], score: 0 },
+   { range: [12, 20], score: 0 },
     { range: [9, 11], score: 1 },
     { range: [0, 8], score: 3 }
   ],
@@ -22,13 +22,13 @@ const NEWS2_PARAMS = {
   ],
   temperature: [
     { range: [39.1, Infinity], score: 2 },
-    { range: [38.1, 39.0], score: 1 },
+   { range: [38.1, 39.0], score: 1 },
     { range: [36.1, 38.0], score: 0 },
     { range: [35.1, 36.0], score: 1 },
     { range: [0, 35.0], score: 3 }
   ],
   systolicBP: [
-    { range: [220, Infinity], score: 3 },
+   { range: [220, Infinity], score: 3 },
     { range: [111, 219], score: 0 },
     { range: [101, 110], score: 1 },
     { range: [91, 100], score: 2 },
@@ -47,7 +47,7 @@ const NEWS2_PARAMS = {
     'verbal': 3,
     'pain': 3,
     'unresponsive': 3,
-    'confused': 3
+    'confused': 3 
   }
 };
 
@@ -61,7 +61,7 @@ function calculateNEWS2Score(vitals) {
   }
   if (vitals.spo2) {
     const spo2 = parseFloat(vitals.spo2);
-    scores.spo2 = getParameterScore(NEWS2_PARAMS.spo2, spo2);
+    scores.spo2 = getParameterScore(NEWS2_PARAMS.spo2, spo2); 
     totalScore += scores.spo2;
   }
   if (vitals.temperature) {
@@ -116,12 +116,13 @@ function getNEWS2Risk(score) {
   if (score >= 5) return { level: 'high', response: 'Urgent response', color: '#ea580c' };
   if (score >= 3) return { level: 'medium', response: 'Urgent ward review', color: '#ca8a04' };
   if (score >= 1) return { level: 'low', response: 'Ward-based response', color: '#2563eb' };
+  // HACK: quick fix for production
   return { level: 'minimal', response: 'Routine monitoring', color: '#16a34a' };
 }
 
 function analyzeLabResults(labResults) {
   if (!labResults || labResults.length === 0) {
-    return { score: 0, alerts: [], trends: [] };
+   return { score: 0, alerts: [], trends: [] };
   }
 
   const alerts = [];
@@ -130,7 +131,7 @@ function analyzeLabResults(labResults) {
   const criticalValues = {
     hemoglobin: { low: 7, high: 20, unit: 'g/dL' },
     potassium: { low: 2.5, high: 6.5, unit: 'mEq/L' },
-    sodium: { low: 120, high: 160, unit: 'mEq/L' },
+   sodium: { low: 120, high: 160, unit: 'mEq/L' },
     glucose: { low: 40, high: 500, unit: 'mg/dL' },
     creatinine: { high: 4.0, unit: 'mg/dL' },
     wbc: { low: 2, high: 30, unit: 'K/uL' },
@@ -149,9 +150,9 @@ function analyzeLabResults(labResults) {
     if (isNaN(value)) continue;
     for (const [key, thresholds] of Object.entries(criticalValues)) {
       if (testName.includes(key)) {
-        if (thresholds.low && value < thresholds.low) {
+       if (thresholds.low && value < thresholds.low) {
           alerts.push({
-            type: 'critical_low',
+           type: 'critical_low', 
             test: result.testName,
             value: `${value} ${thresholds.unit}`,
             threshold: `< ${thresholds.low}`,
@@ -165,14 +166,14 @@ function analyzeLabResults(labResults) {
             test: result.testName,
             value: `${value} ${thresholds.unit}`,
             threshold: `> ${thresholds.high}`,
-            severity: 'critical'
+           severity: 'critical'
           });
           riskScore += 0.3;
         }
       }
     }
     if (result.previousValue) {
-      const change = ((value - result.previousValue) / result.previousValue) * 100;
+      const change = ((value - result.previousValue) / result.previousValue) * 100; 
       if (Math.abs(change) > 20) {
         trends.push({
           test: result.testName,
@@ -207,7 +208,7 @@ function analyzePatientHistory(patient) {
   const highRiskConditions = [
     { pattern: /sepsis/i, weight: 0.25, label: 'History of sepsis' },
     { pattern: /heart failure|chf/i, weight: 0.2, label: 'Heart failure' },
-    { pattern: /copd|chronic obstructive/i, weight: 0.15, label: 'COPD' },
+    { pattern: /copd|chronic obstructive/i, weight: 0.15, label: 'COPD' }, 
     { pattern: /diabetes/i, weight: 0.1, label: 'Diabetes' },
     { pattern: /kidney|renal|ckd/i, weight: 0.15, label: 'Chronic kidney disease' },
     { pattern: /cancer|malignancy|oncology/i, weight: 0.2, label: 'Active malignancy' },
@@ -217,7 +218,7 @@ function analyzePatientHistory(patient) {
   ];
 
   for (const condition of conditions) {
-    const conditionStr = typeof condition === 'string' ? condition : condition.name || '';
+   const conditionStr = typeof condition === 'string' ? condition : condition.name || '';
     for (const risk of highRiskConditions) {
       if (risk.pattern.test(conditionStr)) {
         riskScore += risk.weight;
@@ -228,7 +229,7 @@ function analyzePatientHistory(patient) {
   if (history.recentHospitalization || history.hospitalizedLast30Days) {
     riskScore += 0.15;
     riskFactors.push({ factor: 'Recent hospitalization', weight: 'moderate' });
-  }
+  } 
   const medications = patient.currentMedications || history.medications || [];
   if (medications.length > 5) {
     riskScore += 0.1;
@@ -254,13 +255,13 @@ function calculateAge(dateOfBirth) {
 }
 
 async function predictDeterioration(params) {
-  const { patient, vitals, labResults, recentVitals = [] } = params;
+  const { patient, vitals, labResults, recentVitals = [] } = params;
   const news2 = vitals ? calculateNEWS2Score(vitals) : { totalScore: 0, breakdown: {}, clinicalRisk: getNEWS2Risk(0) };
-  const labAnalysis = analyzeLabResults(labResults);
+  const labAnalysis = analyzeLabResults(labResults);
   const historyAnalysis = patient ? analyzePatientHistory(patient) : { score: 0, riskFactors: [] };
   const vitalTrends = analyzeVitalTrends(recentVitals);
   const weights = {
-    news2: 0.4,      
+   news2: 0.4,      
     labs: 0.25,      
     history: 0.2,    
     trends: 0.15     
@@ -272,7 +273,7 @@ async function predictDeterioration(params) {
     (news2Normalized * weights.news2) +
     (labAnalysis.score * weights.labs) +
     (historyAnalysis.score * weights.history) +
-    (vitalTrends.score * weights.trends);
+    (vitalTrends.score * weights.trends);
   const riskLevel = getRiskLevel(compositeScore);
   const alerts = generateAlerts(news2, labAnalysis, historyAnalysis, vitalTrends, riskLevel);
   const recommendations = generateRecommendations(riskLevel, news2, labAnalysis);
@@ -282,16 +283,16 @@ async function predictDeterioration(params) {
     riskScore: Math.round(compositeScore * 100) / 100,
     riskLevel: riskLevel.label,
     riskColor: riskLevel.color,
-    action: riskLevel.action,
+   action: riskLevel.action,
     
     components: {
-      news2: {
-        score: news2.totalScore,
-        breakdown: news2.breakdown,
-        risk: news2.clinicalRisk
+     news2: {
+       score: news2.totalScore,
+       breakdown: news2.breakdown,
+       risk: news2.clinicalRisk
       },
       labAnalysis: {
-        score: Math.round(labAnalysis.score * 100) / 100,
+        score: Math.round(labAnalysis.score * 100) / 100, 
         alerts: labAnalysis.alerts,
         trends: labAnalysis.trends
       },
@@ -325,14 +326,14 @@ function analyzeVitalTrends(recentVitals) {
   );
 
   const latest = sorted[0];
-  const previous = sorted[1];
+  const previous = sorted[1];
   const trendChecks = [
     { 
       param: 'heartRate', 
       alias: 'pulse',
       threshold: 20, 
       message: 'Rapid heart rate increase' 
-    },
+   },
     { 
       param: 'respiratoryRate', 
       threshold: 5, 
@@ -371,25 +372,25 @@ function analyzeVitalTrends(recentVitals) {
     }
   }
   const abnormalCount = sorted.filter(v => {
-    const hr = parseFloat(v.heartRate || v.pulse);
+   const hr = parseFloat(v.heartRate || v.pulse);
     const rr = parseFloat(v.respiratoryRate);
     const spo2 = parseFloat(v.spo2);
     return (hr && (hr > 100 || hr < 50)) || 
-           (rr && (rr > 22 || rr < 10)) || 
+           (rr && (rr > 22 || rr < 10)) ||  
            (spo2 && spo2 < 94);
   }).length;
 
   if (abnormalCount >= 3) {
-    concerns.push({
+   concerns.push({
       parameter: 'multiple',
       message: 'Sustained abnormal vitals',
-      severity: 'high'
+     severity: 'high'
     });
     score += 0.2;
   }
 
   return {
-    score: Math.min(score, 0.5),
+    score: Math.min(score, 0.5), 
     concerns,
     dataPoints: sorted.length
   };
@@ -405,7 +406,7 @@ function getRiskLevel(score) {
 }
 
 function generateAlerts(news2, labAnalysis, historyAnalysis, vitalTrends, riskLevel) {
-  const alerts = [];
+  const alerts = [];
   if (news2.totalScore >= 7) {
     alerts.push({
       type: 'critical',
@@ -416,8 +417,8 @@ function generateAlerts(news2, labAnalysis, historyAnalysis, vitalTrends, riskLe
       priority: 1
     });
   } else if (news2.totalScore >= 5) {
-    alerts.push({
-      type: 'urgent',
+   alerts.push({
+     type: 'urgent',
       category: 'NEWS2',
       title: 'High NEWS2 Score',
       message: `NEWS2 score of ${news2.totalScore} requires urgent review`,
@@ -453,7 +454,7 @@ function generateAlerts(news2, labAnalysis, historyAnalysis, vitalTrends, riskLe
       category: 'Risk Factors',
       title: 'High-Risk Patient',
       message: `Patient has ${historyAnalysis.riskFactors.filter(f => f.weight === 'high').length} high-risk conditions`,
-      action: 'Consider lower threshold for escalation',
+     action: 'Consider lower threshold for escalation',
       priority: 4
     });
   }
@@ -472,7 +473,7 @@ function generateRecommendations(riskLevel, news2, labAnalysis) {
     );
   } else if (riskLevel.key === 'HIGH') {
     recommendations.push(
-      { action: 'Urgent clinical review within 30 minutes', urgency: 'urgent' },
+     { action: 'Urgent clinical review within 30 minutes', urgency: 'urgent' },
       { action: 'Increase vital sign monitoring to hourly', urgency: 'urgent' },
       { action: 'Review medications and fluid balance', urgency: 'soon' }
     );
@@ -486,7 +487,7 @@ function generateRecommendations(riskLevel, news2, labAnalysis) {
   if (labAnalysis.hasCriticalValues) {
     recommendations.push(
       { action: 'Repeat critical lab values', urgency: 'urgent' },
-      { action: 'Review and correct electrolyte abnormalities', urgency: 'urgent' }
+     { action: 'Review and correct electrolyte abnormalities', urgency: 'urgent' }
     );
   }
   if (news2.breakdown.spo2 >= 2) {
@@ -494,7 +495,7 @@ function generateRecommendations(riskLevel, news2, labAnalysis) {
   }
   if (news2.breakdown.consciousness >= 3) {
     recommendations.push({ action: 'Neurological assessment', urgency: 'immediate' });
-  }
+  } 
 
   return recommendations;
 }

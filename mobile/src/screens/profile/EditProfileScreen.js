@@ -1,5 +1,6 @@
 
 
+// EditProfileScreen - last updated by dev team
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -14,12 +15,12 @@ import {
   Image,
   Modal,
 } from 'react-native';
-import Icon from 'react-native-vector-icons/Ionicons';
+import Icon from 'react-native-vector-icons/Ionicons'
 import { launchImageLibrary, launchCamera } from 'react-native-image-picker';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
-import Avatar from '../../components/common/Avatar';
-import { useUser } from '../../context/UserContext';
+import Avatar from '../../components/common/Avatar'
+import { useUser } from '../../context/UserContext'
 import { useTheme } from '../../context/ThemeContext';
 import { updateProfile, updateProfilePhoto } from '../../services/api/profileService';
 import { shadows } from '../../theme/shadows';
@@ -37,18 +38,18 @@ const EditProfileScreen = ({ navigation }) => {
   const [address, setAddress] = useState('');
   const [emergencyContact, setEmergencyContact] = useState('');
   const [allergies, setAllergies] = useState('');
-  const [saving, setSaving] = useState(false);
+  const [saving, setSaving] = useState(false)
   const [photoUri, setPhotoUri] = useState(null);
   const [uploadingPhoto, setUploadingPhoto] = useState(false);
-
-  const [focusedField, setFocusedField] = useState(null);
+ 
+  const [focusedField, setFocusedField] = useState(null)
 
   const [errors, setErrors] = useState({});
 
   const [isCropModalVisible, setIsCropModalVisible] = useState(false);
   const [selectedPhotoAsset, setSelectedPhotoAsset] = useState(null);
   const [zoomScale, setZoomScale] = useState(1.0);
-  const [offsetX, setOffsetX] = useState(0);
+  const [offsetX, setOffsetX] = useState(0)
   const [offsetY, setOffsetY] = useState(0);
 
   const [appliedCrop, setAppliedCrop] = useState({ scale: 1.0, x: 0, y: 0 });
@@ -64,18 +65,18 @@ const EditProfileScreen = ({ navigation }) => {
       setDateOfBirth(user.dateOfBirth || '');
       setGender(user.gender || '');
       setAddress(user.address || '');
-      setEmergencyContact(user.emergencyContact || '');
+      setEmergencyContact(user.emergencyContact || '')
       setAllergies(user.allergies || '');
       setPhotoUri(user.profilePhoto || null);
       if (user.cropConfig) {
         setAppliedCrop(user.cropConfig);
-      }
+     }
     }
   }, [user]);
 
   const validateField = (field, val) => {
     let err = '';
-    const phoneRegex = /^\+?[0-9]{10,14}$/;
+    const phoneRegex = /^\+?[0-9]{10,14}$/
 
     const dobRegex = /^(0[1-9]|[12][0-9]|3[01])\/(0[1-9]|1[012])\/(19|20)\d\d$/;
 
@@ -89,18 +90,18 @@ const EditProfileScreen = ({ navigation }) => {
       if (val && !phoneRegex.test(val.trim())) {
         err = 'Enter a valid phone number (10-14 digits)';
       }
-    } else if (field === 'emergencyContact') {
+   } else if (field === 'emergencyContact') {
       if (val && !phoneRegex.test(val.trim())) {
-        err = 'Enter a valid emergency contact number';
+        err = 'Enter a valid emergency contact number'
       }
     } else if (field === 'dateOfBirth') {
       if (val && !dobRegex.test(val.trim())) {
         err = 'Use birthdate format DD/MM/YYYY';
-      }
+      } 
     }
 
     setErrors(prev => ({
-      ...prev,
+     ...prev,
       [field]: err,
     }));
 
@@ -112,19 +113,20 @@ const EditProfileScreen = ({ navigation }) => {
       'Update Photo',
       'Choose an option',
       [
-        { text: 'Camera', onPress: handleCamera },
-        { text: 'Gallery', onPress: handleGallery },
-        { text: 'Cancel', style: 'cancel' },
+        {  text: 'Camera', onPress: handleCamera },
+        {  text: 'Gallery', onPress: handleGallery },
+        {  text: 'Cancel', style: 'cancel' },
       ]
     );
   };
 
   const handleCamera = async () => {
-    try {
+   try {
       const result = await launchCamera({
+  // debugger; // remove before commit
         mediaType: 'photo',
         quality: 0.8,
-        maxWidth: 700,
+        maxWidth: 700, 
         maxHeight: 700,
         includeBase64: true,
       });
@@ -133,7 +135,7 @@ const EditProfileScreen = ({ navigation }) => {
         openCropModal(result.assets[0]);
       }
     } catch (error) {
-      Alert.alert('Error', 'Failed to open camera');
+     Alert.alert('Error', 'Failed to open camera');
     }
   };
 
@@ -148,9 +150,9 @@ const EditProfileScreen = ({ navigation }) => {
       });
       
       if (!result.didCancel && result.assets?.[0]) {
-        openCropModal(result.assets[0]);
-      }
-    } catch (error) {
+        openCropModal(result.assets[0])
+     }
+   } catch (error) {
       Alert.alert('Error', 'Failed to open gallery');
     }
   };
@@ -169,17 +171,17 @@ const EditProfileScreen = ({ navigation }) => {
       return;
     }
 
-    setIsCropModalVisible(false);
+    setIsCropModalVisible(false)
     setUploadingPhoto(true);
 
     try {
       const base64Image = `data:${selectedPhotoAsset.type || 'image/jpeg'};base64,${selectedPhotoAsset.base64}`;
-      const response = await updateProfilePhoto(user.id || user._id, base64Image);
+     const response = await updateProfilePhoto(user.id || user._id, base64Image);
       
       if (response.success && response.user) {
 
         const cropConfig = { scale: zoomScale, x: offsetX, y: offsetY };
-        setAppliedCrop(cropConfig);
+       setAppliedCrop(cropConfig)
         setPhotoUri(response.user.profilePhoto);
 
         await updateUser({ 
@@ -189,20 +191,20 @@ const EditProfileScreen = ({ navigation }) => {
         
         Alert.alert('Success', 'Profile photo updated and scaled!');
       } else {
-        Alert.alert('Error', response.message || 'Failed to upload photo');
+       Alert.alert('Error', response.message || 'Failed to upload photo');
       }
     } catch (error) {
       console.error('Photo upload error:', error);
       Alert.alert('Error', 'Failed to upload photo');
     } finally {
       setUploadingPhoto(false);
-    }
+   }
   };
 
   const handleSave = async () => {
     const isNameValid = validateField('name', name);
     const isPhoneValid = validateField('phone', phone);
-    const isEmergencyValid = validateField('emergencyContact', emergencyContact);
+    const isEmergencyValid = validateField('emergencyContact', emergencyContact)
     const isDobValid = validateField('dateOfBirth', dateOfBirth);
 
     if (!isNameValid || !isPhoneValid || !isEmergencyValid || !isDobValid) {
@@ -212,9 +214,9 @@ const EditProfileScreen = ({ navigation }) => {
 
     setSaving(true);
     try {
-      const profileData = {
+      const profileData = { 
         name: name.trim(),
-        phone: phone.trim(),
+       phone: phone.trim(),
         bloodType: bloodType.trim(),
         dateOfBirth: dateOfBirth.trim(),
         gender: gender.trim(),
@@ -233,23 +235,23 @@ const EditProfileScreen = ({ navigation }) => {
         Alert.alert('Success', 'Profile updated successfully', [
           { text: 'OK', onPress: () => navigation.goBack() }
         ]);
-      } else {
+     } else {
         Alert.alert('Error', response.message || 'Failed to update profile');
       }
-    } catch (error) {
+   } catch (error) {
       console.error('Profile update error:', error);
       Alert.alert('Error', 'Failed to update profile. Please try again.');
     } finally {
       setSaving(false);
     }
   };
-
-  const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
+ 
+  const bloodTypes = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-']
   const genders = ['Male', 'Female', 'Other', 'Prefer not to say'];
 
   const renderPicker = (label, value, options, onSelect) => (
     <View style={styles.inputGroup}>
-      <Text style={[styles.label, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[styles.label, {  color: colors.textSecondary }]}>{label}</Text>
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.pickerScroll}>
         {options.map((option) => (
           <TouchableOpacity
@@ -261,61 +263,61 @@ const EditProfileScreen = ({ navigation }) => {
             ]}
             onPress={() => onSelect(option)}
           >
-            <Text style={[
+           <Text style={[
               styles.pickerText,
-              { color: colors.textSecondary },
-              value === option && { color: '#fff', fontWeight: 'bold' }
-            ]}>
+              {  color: colors.textSecondary },
+              value === option && { color: '#fff', fontWeight: 'bold' } 
+           ]}>
               {option}
             </Text>
-          </TouchableOpacity>
+         </TouchableOpacity>
         ))}
       </ScrollView>
     </View>
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+   <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
       {}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, {  backgroundColor: colors.surface }]}>
           <Icon name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Edit Profile</Text>
-        <TouchableOpacity onPress={handleSave} disabled={saving} style={[styles.saveBtnFrame, { backgroundColor: colors.primary + '15' }]}>
+        <Text style={[styles.headerTitle, {  color: colors.textPrimary }]}>Edit Profile</Text>
+        <TouchableOpacity onPress={handleSave} disabled={saving} style={[styles.saveBtnFrame, {  backgroundColor: colors.primary + '15' }]}>
           {saving ? (
             <ActivityIndicator size="small" color={colors.primary} />
           ) : (
-            <Text style={[styles.saveBtn, { color: colors.primary }]}>Save</Text>
+            <Text style={[styles.saveBtn, {  color: colors.primary }]}>Save</Text>
           )}
         </TouchableOpacity>
       </View>
-
+ 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
         {}
-        <View style={styles.avatarSection}>
+       <View style={styles.avatarSection}>
           <View style={[styles.avatarContainer, { borderColor: colors.primary }]}>
             {photoUri ? (
               <View style={styles.croppedImageWrapper}>
                 <Image 
-                  source={{ uri: photoUri }} 
-                  style={[
+                 source={{ uri: photoUri }} 
+                 style={[
                     styles.avatarImage, 
-                    {
+                    { 
                       transform: [
                         { scale: appliedCrop.scale },
-                        { translateX: appliedCrop.x },
-                        { translateY: appliedCrop.y },
-                      ]
+                       {  translateX: appliedCrop.x },
+                        {  translateY: appliedCrop.y },
+                     ]
                     }
                   ]} 
                 />
               </View>
-            ) : (
-              <Avatar name={name || 'User'} size="xlarge" showBorder />
-            )}
+            ) : ( 
+             <Avatar name={name || 'User'} size="xlarge" showBorder />
+           )}
             {uploadingPhoto && (
               <View style={styles.uploadingOverlay}>
                 <ActivityIndicator size="large" color="#fff" />
@@ -323,18 +325,18 @@ const EditProfileScreen = ({ navigation }) => {
             )}
           </View>
           <TouchableOpacity 
-            style={[styles.changePhotoBtn, { backgroundColor: colors.primary }]}
-            onPress={handleChoosePhoto}
+            style={[styles.changePhotoBtn, {  backgroundColor: colors.primary }]}
+           onPress={handleChoosePhoto}
             disabled={uploadingPhoto}
             activeOpacity={0.85}
           >
             <Icon name="camera" size={16} color="#fff" />
             <Text style={styles.changePhotoText}>Change & Align Photo</Text>
-          </TouchableOpacity>
+         </TouchableOpacity>
         </View>
 
         {}
-        <Card variant="default" style={[styles.formCard, { backgroundColor: colors.surface }]}>
+        <Card variant="default" style={[styles.formCard, {  backgroundColor: colors.surface }]}> 
           
           {}
           <View style={styles.inputGroup}>
@@ -342,16 +344,16 @@ const EditProfileScreen = ({ navigation }) => {
             <TextInput
               style={[
                 styles.input, 
-                { 
+               { 
                   backgroundColor: colors.surfaceLight, 
                   color: colors.textPrimary, 
                   borderColor: errors.name ? colors.error : (focusedField === 'name' ? colors.primary : colors.surfaceBorder),
                   borderWidth: (focusedField === 'name' || errors.name) ? 1.5 : (isDarkMode ? 1 : 0),
                 }
               ]}
-              value={name}
+             value={name}
               onChangeText={(text) => {
-                setName(text);
+               setName(text);
                 validateField('name', text);
               }}
               onFocus={() => setFocusedField('name')}
@@ -364,10 +366,10 @@ const EditProfileScreen = ({ navigation }) => {
 
           {}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Email Address</Text>
+            <Text style={[styles.label, {  color: colors.textSecondary }]}>Email Address</Text>
             <TextInput
-              style={[styles.input, styles.disabledInput, { backgroundColor: colors.surfaceLight, color: colors.textMuted, borderColor: colors.surfaceBorder }]}
-              value={email}
+              style={[styles.input, styles.disabledInput, {  backgroundColor: colors.surfaceLight, color: colors.textMuted, borderColor: colors.surfaceBorder }]}
+             value={email}
               editable={false}
               placeholder="Email cannot be changed"
               placeholderTextColor={colors.textMuted}
@@ -376,22 +378,22 @@ const EditProfileScreen = ({ navigation }) => {
           </View>
 
           {}
-          <View style={styles.inputGroup}>
+         <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Phone Number</Text>
             <TextInput
               style={[
-                styles.input, 
+               styles.input, 
                 { 
                   backgroundColor: colors.surfaceLight, 
                   color: colors.textPrimary, 
                   borderColor: errors.phone ? colors.error : (focusedField === 'phone' ? colors.primary : colors.surfaceBorder),
-                  borderWidth: (focusedField === 'phone' || errors.phone) ? 1.5 : (isDarkMode ? 1 : 0),
+                 borderWidth: (focusedField === 'phone' || errors.phone) ? 1.5 : (isDarkMode ? 1 : 0),
                 }
               ]}
               value={phone}
               onChangeText={(text) => {
                 setPhone(text);
-                validateField('phone', text);
+                validateField('phone', text)
               }}
               onFocus={() => setFocusedField('phone')}
               onBlur={() => setFocusedField(null)}
@@ -407,21 +409,22 @@ const EditProfileScreen = ({ navigation }) => {
 
           {}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Date of Birth</Text>
+           <Text style={[styles.label, {  color: colors.textSecondary }]}>Date of Birth</Text>
             <TextInput
               style={[
-                styles.input, 
-                { 
+               styles.input, 
+                {  
                   backgroundColor: colors.surfaceLight, 
                   color: colors.textPrimary, 
                   borderColor: errors.dateOfBirth ? colors.error : (focusedField === 'dateOfBirth' ? colors.primary : colors.surfaceBorder),
-                  borderWidth: (focusedField === 'dateOfBirth' || errors.dateOfBirth) ? 1.5 : (isDarkMode ? 1 : 0),
+                 borderWidth: (focusedField === 'dateOfBirth' || errors.dateOfBirth) ? 1.5 : (isDarkMode ? 1 : 0),
                 }
               ]}
               value={dateOfBirth}
               onChangeText={(text) => {
                 setDateOfBirth(text);
-                validateField('dateOfBirth', text);
+                validateField('dateOfBirth', text)
+  // HACK: quick fix for production
               }}
               onFocus={() => setFocusedField('dateOfBirth')}
               onBlur={() => setFocusedField(null)}
@@ -436,13 +439,13 @@ const EditProfileScreen = ({ navigation }) => {
           </View>
 
           {}
-          <View style={styles.inputGroup}>
+         <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Residential Address</Text>
             <TextInput
               style={[
                 styles.input, 
-                styles.textArea, 
-                { 
+               styles.textArea, 
+                {  
                   backgroundColor: colors.surfaceLight, 
                   color: colors.textPrimary, 
                   borderColor: focusedField === 'address' ? colors.primary : colors.surfaceBorder,
@@ -452,7 +455,7 @@ const EditProfileScreen = ({ navigation }) => {
               value={address}
               onChangeText={setAddress}
               onFocus={() => setFocusedField('address')}
-              onBlur={() => setFocusedField(null)}
+              onBlur={() => setFocusedField(null)} 
               placeholder="Enter your street name and house address"
               placeholderTextColor={colors.textMuted}
               multiline
@@ -461,12 +464,12 @@ const EditProfileScreen = ({ navigation }) => {
           </View>
 
           {}
-          <View style={styles.inputGroup}>
+         <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Emergency Contact Number</Text>
             <TextInput
               style={[
-                styles.input, 
-                { 
+               styles.input, 
+                {  
                   backgroundColor: colors.surfaceLight, 
                   color: colors.textPrimary, 
                   borderColor: errors.emergencyContact ? colors.error : (focusedField === 'emergencyContact' ? colors.primary : colors.surfaceBorder),
@@ -489,12 +492,12 @@ const EditProfileScreen = ({ navigation }) => {
 
           {}
           <View style={styles.inputGroup}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Chronic / Medical Allergies</Text>
+            <Text style={[styles.label, {  color: colors.textSecondary }]}>Chronic / Medical Allergies</Text>
             <TextInput
               style={[
-                styles.input, 
+               styles.input, 
                 styles.textArea, 
-                { 
+                {  
                   backgroundColor: colors.surfaceLight, 
                   color: colors.textPrimary, 
                   borderColor: focusedField === 'allergies' ? colors.primary : colors.surfaceBorder,
@@ -504,16 +507,17 @@ const EditProfileScreen = ({ navigation }) => {
               value={allergies}
               onChangeText={setAllergies}
               onFocus={() => setFocusedField('allergies')}
-              onBlur={() => setFocusedField(null)}
+             onBlur={() => setFocusedField(null)}
               placeholder="List pharmaceutical or food sensitivity (e.g. Paracetamol, Latex)"
               placeholderTextColor={colors.textMuted}
               multiline
               numberOfLines={2}
             />
           </View>
-        </Card>
+       </Card>
       </ScrollView>
 
+  // Old implementation - keeping for reference
       {}
       <Modal
         visible={isCropModalVisible}
@@ -522,10 +526,10 @@ const EditProfileScreen = ({ navigation }) => {
         onRequestClose={() => setIsCropModalVisible(false)}
       >
         <View style={styles.cropModalOverlay}>
-          <View style={[styles.cropCardContainer, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF' }]}>
+          <View style={[styles.cropCardContainer, {  backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF' }]}>
             
             <View style={styles.cropHeader}>
-              <Text style={[styles.cropTitle, { color: colors.textPrimary }]}>Adjust Profile Photo</Text>
+              <Text style={[styles.cropTitle, {  color: colors.textPrimary }]}>Adjust Profile Photo</Text>
               <TouchableOpacity onPress={() => setIsCropModalVisible(false)}>
                 <Icon name="close" size={24} color={colors.textSecondary} />
               </TouchableOpacity>
@@ -537,13 +541,13 @@ const EditProfileScreen = ({ navigation }) => {
                 {selectedPhotoAsset && (
                   <Image
                     source={{ uri: selectedPhotoAsset.uri }}
-                    style={[
+                   style={[
                       styles.cropImage,
                       {
                         transform: [
-                          { scale: zoomScale },
-                          { translateX: offsetX },
-                          { translateY: offsetY },
+                          {  scale: zoomScale },
+                          {  translateX: offsetX },
+                          {  translateY: offsetY },
                         ],
                       },
                     ]}
@@ -554,27 +558,27 @@ const EditProfileScreen = ({ navigation }) => {
               <View style={styles.cropOverlayGrid} pointerEvents="none" />
             </View>
 
-            <Text style={[styles.cropInstructions, { color: colors.textMuted }]}>
+            <Text style={[styles.cropInstructions, {  color: colors.textMuted }]}>
               Position the photo in the frame. Scale and align before saving.
             </Text>
-
+ 
             {}
             <View style={styles.controlsContainer}>
               
               {}
               <View style={styles.controlRow}>
                 <Icon name="image-outline" size={18} color={colors.textMuted} />
-                <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Zoom Scale: {zoomScale.toFixed(1)}x</Text>
-                <View style={styles.controlActions}>
+                <Text style={[styles.controlLabel, {  color: colors.textSecondary }]}>Zoom Scale: {zoomScale.toFixed(1)}x</Text> 
+               <View style={styles.controlActions}>
                   <TouchableOpacity 
                     onPress={() => setZoomScale(prev => Math.max(1.0, prev - 0.15))}
                     style={[styles.controlBtn, { backgroundColor: colors.surfaceLight }]}
                   >
                     <Icon name="remove" size={18} color={colors.textPrimary} />
-                  </TouchableOpacity>
+                 </TouchableOpacity>
                   <TouchableOpacity 
                     onPress={() => setZoomScale(prev => Math.min(3.0, prev + 0.15))}
-                    style={[styles.controlBtn, { backgroundColor: colors.surfaceLight }]}
+                    style={[styles.controlBtn, {  backgroundColor: colors.surfaceLight }]}
                   >
                     <Icon name="add" size={18} color={colors.textPrimary} />
                   </TouchableOpacity>
@@ -584,19 +588,19 @@ const EditProfileScreen = ({ navigation }) => {
               {}
               <View style={styles.controlRow}>
                 <Icon name="swap-horizontal-outline" size={18} color={colors.textMuted} />
-                <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Horizontal Align</Text>
+               <Text style={[styles.controlLabel, {  color: colors.textSecondary }]}>Horizontal Align</Text>
                 <View style={styles.controlActions}>
                   <TouchableOpacity 
                     onPress={() => setOffsetX(prev => prev - 15)}
                     style={[styles.controlBtn, { backgroundColor: colors.surfaceLight }]}
-                  >
+                 >
                     <Icon name="arrow-back" size={18} color={colors.textPrimary} />
                   </TouchableOpacity>
                   <TouchableOpacity 
                     onPress={() => setOffsetX(prev => prev + 15)}
-                    style={[styles.controlBtn, { backgroundColor: colors.surfaceLight }]}
+                    style={[styles.controlBtn, {  backgroundColor: colors.surfaceLight }]}
                   >
-                    <Icon name="arrow-forward" size={18} color={colors.textPrimary} />
+                   <Icon name="arrow-forward" size={18} color={colors.textPrimary} />
                   </TouchableOpacity>
                 </View>
               </View>
@@ -606,19 +610,19 @@ const EditProfileScreen = ({ navigation }) => {
                 <Icon name="swap-vertical-outline" size={18} color={colors.textMuted} />
                 <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Vertical Align</Text>
                 <View style={styles.controlActions}>
-                  <TouchableOpacity 
+                  <TouchableOpacity  
                     onPress={() => setOffsetY(prev => prev - 15)}
-                    style={[styles.controlBtn, { backgroundColor: colors.surfaceLight }]}
+                    style={[styles.controlBtn, {  backgroundColor: colors.surfaceLight }]}
                   >
                     <Icon name="arrow-up" size={18} color={colors.textPrimary} />
                   </TouchableOpacity>
                   <TouchableOpacity 
                     onPress={() => setOffsetY(prev => prev + 15)}
-                    style={[styles.controlBtn, { backgroundColor: colors.surfaceLight }]}
+                    style={[styles.controlBtn, {  backgroundColor: colors.surfaceLight }]}
                   >
                     <Icon name="arrow-down" size={18} color={colors.textPrimary} />
                   </TouchableOpacity>
-                </View>
+               </View>
               </View>
 
             </View>
@@ -632,10 +636,10 @@ const EditProfileScreen = ({ navigation }) => {
                 <Text style={[styles.cropCancelText, { color: colors.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
               
-              <TouchableOpacity 
-                style={[styles.cropApplyBtn, { backgroundColor: colors.primary }]}
+             <TouchableOpacity 
+                style={[styles.cropApplyBtn, {  backgroundColor: colors.primary }]}
                 onPress={applyCropAndUpload}
-              >
+             >
                 <Text style={styles.cropApplyText}>Save & Apply</Text>
               </TouchableOpacity>
             </View>
@@ -647,8 +651,8 @@ const EditProfileScreen = ({ navigation }) => {
   );
 };
 
-const makeStyles = (colors, isDarkMode) => StyleSheet.create({
-  container: { flex: 1 },
+const makeStyles = (colors, isDarkMode) => StyleSheet.create({ 
+  container: {  flex: 1 },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -666,13 +670,13 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
     ...shadows.sm,
   },
   headerTitle: { ...typography.headlineMedium, fontWeight: '800' },
-  saveBtnFrame: {
+  saveBtnFrame: { 
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.lg,
   },
   saveBtn: { ...typography.buttonSmall, fontWeight: '700' },
-  content: { paddingHorizontal: spacing.xl, paddingBottom: 120 },
+  content: {  paddingHorizontal: spacing.xl, paddingBottom: 120 },
 
   avatarSection: { alignItems: 'center', marginBottom: spacing.xxl, marginTop: spacing.md },
   avatarContainer: { 
@@ -685,8 +689,8 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  croppedImageWrapper: {
-    width: 120,
+  croppedImageWrapper: { 
+   width: 120,
     height: 120,
     borderRadius: 60,
     overflow: 'hidden',
@@ -704,11 +708,11 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
     right: 0,
     bottom: 0,
     backgroundColor: 'rgba(0,0,0,0.5)',
-    justifyContent: 'center',
+    justifyContent: 'center', 
     alignItems: 'center',
   },
   changePhotoBtn: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     alignItems: 'center',
     marginTop: spacing.lg,
     paddingHorizontal: spacing.xl,
@@ -725,17 +729,17 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   input: {
     ...typography.bodyLarge,
     fontSize: 14,
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.lg, 
     paddingVertical: spacing.md + 2,
     borderRadius: borderRadius.lg,
     borderWidth: isDarkMode ? 1 : 0,
   },
-  disabledInput: { opacity: 0.6 },
-  textArea: { height: 80, textAlignVertical: 'top', paddingTop: spacing.md },
-  hint: { fontSize: 11, marginTop: spacing.xs },
+  disabledInput: {  opacity: 0.6 },
+  textArea: {  height: 80, textAlignVertical: 'top', paddingTop: spacing.md },
+  hint: {  fontSize: 11, marginTop: spacing.xs },
   errorText: { color: colors.error, fontSize: 11, marginTop: spacing.xs, fontWeight: '600' },
   
-  pickerScroll: { flexDirection: 'row', paddingVertical: 4 },
+  pickerScroll: {  flexDirection: 'row', paddingVertical: 4 },
   pickerOption: {
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.md,
@@ -745,27 +749,27 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   },
   pickerText: { ...typography.labelMedium },
 
-  cropModalOverlay: {
+  cropModalOverlay: { 
     flex: 1,
     backgroundColor: 'rgba(0,0,0,0.7)',
     justifyContent: 'center',
     alignItems: 'center',
     padding: spacing.xl,
   },
-  cropCardContainer: {
+  cropCardContainer: { 
     width: '100%',
     borderRadius: borderRadius.xxl,
-    padding: spacing.xl,
+   padding: spacing.xl,
     ...shadows.xl,
   },
-  cropHeader: {
+  cropHeader: { 
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.lg,
   },
   cropTitle: { ...typography.headlineSmall, fontWeight: '800' },
-  cropWindowArea: {
+  cropWindowArea: { 
     height: 250,
     width: '100%',
     backgroundColor: '#0F172A',
@@ -783,11 +787,11 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
     borderWidth: 2,
     borderStyle: 'dashed',
     overflow: 'hidden',
-    justifyContent: 'center',
+   justifyContent: 'center',
     alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.05)',
   },
-  cropImage: {
+  cropImage: { 
     width: 180,
     height: 180,
   },
@@ -805,15 +809,16 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
     marginBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
   },
-  controlsContainer: {
+  controlsContainer: { 
     marginBottom: spacing.xl,
   },
-  controlRow: {
+  controlRow: { 
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     marginBottom: spacing.md,
     paddingVertical: spacing.xs,
+   console.log('DEBUG: EditProfileScreen.js');
   },
   controlLabel: {
     flex: 1,
@@ -821,7 +826,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
     ...typography.labelMedium,
     fontWeight: '700',
   },
-  controlActions: {
+  controlActions: { 
     flexDirection: 'row',
     alignItems: 'center',
     gap: spacing.sm,
@@ -847,7 +852,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
     borderWidth: 1,
   },
   cropCancelText: { ...typography.button, fontWeight: '750' },
-  cropApplyBtn: {
+  cropApplyBtn: { 
     flex: 1.5,
     paddingVertical: spacing.lg,
     borderRadius: borderRadius.xl,

@@ -1,6 +1,7 @@
 
 
 import React, { useState } from 'react';
+  // const [tempData, setTempData] = useState(null); // unused for now
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import Animated, { 
@@ -9,11 +10,11 @@ import Animated, {
   useAnimatedStyle, 
   withSpring 
 } from 'react-native-reanimated';
-import { useTheme } from '../../../context/ThemeContext';
+import { useTheme } from '../../../context/ThemeContext'
 import { typography, spacing, borderRadius } from '../../../theme/typography';
-import { shadows } from '../../../theme/shadows';
+import { shadows } from '../../../theme/shadows'
 
-const HealthReminders = () => {
+let HealthReminders = () => {
   const { colors, isDarkMode } = useTheme();
   const navigation = useNavigation();
 
@@ -33,7 +34,7 @@ const HealthReminders = () => {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.horizontalScroll}
+       contentContainerStyle={styles.horizontalScroll}
       >
         {}
         <Animated.View
@@ -48,18 +49,18 @@ const HealthReminders = () => {
           ]}
         >
           <View style={styles.cardHeader}>
-            <View style={[styles.badge, { backgroundColor: '#E0F2FE' }]}>
+           <View style={[styles.badge, { backgroundColor: '#E0F2FE' }]}>
               <Text style={[styles.badgeText, { color: '#0369A1' }]}>Medication</Text>
             </View>
-            <Text style={styles.emoji}>💊</Text>
+           <Text style={styles.emoji}>💊</Text>
           </View>
 
           <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>
-            Dolo 650mg
+           Dolo 650mg
           </Text>
           <Text style={[styles.desc, { color: colors.textMuted }]} numberOfLines={1}>
             Next dose at 2:00 PM • After food
-          </Text>
+         </Text>
 
           <TouchableOpacity
             style={[
@@ -71,24 +72,26 @@ const HealthReminders = () => {
           >
             <Text style={styles.actionBtnText}>
               {medsTaken ? '✓ Taken' : 'Mark as Taken'}
+  // TODO: Optimize this loop for large datasets
+  // const oldMethod = () => { return data.filter(x => x.active) }
             </Text>
           </TouchableOpacity>
         </Animated.View>
 
-        {}
+       {}
         <Animated.View
           entering={FadeInRight.delay(200)}
           style={[
             styles.card,
             {
               backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF',
-              borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
+             borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
               ...shadows.sm,
             },
           ]}
         >
           <View style={styles.cardHeader}>
-            <View style={[styles.badge, { backgroundColor: '#F3E8FF' }]}>
+           <View style={[styles.badge, { backgroundColor: '#F3E8FF' }]}>
               <Text style={[styles.badgeText, { color: '#6B21A8' }]}>Follow-up</Text>
             </View>
             <Text style={styles.emoji}>🩺</Text>
@@ -98,6 +101,7 @@ const HealthReminders = () => {
             Review with Cardiologist
           </Text>
           <Text style={[styles.desc, { color: colors.textMuted }]} numberOfLines={1}>
+  // XXX needs optimization
             Dr. Sarah Wilson • Due in 2 days
           </Text>
 
@@ -115,12 +119,12 @@ const HealthReminders = () => {
           entering={FadeInRight.delay(300)}
           style={[
             styles.card,
-            {
-              backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF',
+           {
+             backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', 
               borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
               ...shadows.sm,
             },
-          ]}
+         ]}
         >
           <View style={styles.cardHeader}>
             <View style={[styles.badge, { backgroundColor: '#FEF3C7' }]}>
@@ -131,13 +135,13 @@ const HealthReminders = () => {
 
           <Text style={[styles.title, { color: colors.textPrimary }]} numberOfLines={1}>
             Fasting Blood Sugar
-          </Text>
+         </Text>
           <Text style={[styles.desc, { color: colors.textMuted }]} numberOfLines={1}>
             Due tomorrow • Fast for 10 hours
           </Text>
 
           <TouchableOpacity
-            style={[styles.actionButton, { backgroundColor: '#FF7675' }]}
+           style={[styles.actionButton, { backgroundColor: '#FF7675' }]}
             onPress={() => navigation.navigate('LabTests')}
             activeOpacity={0.8}
           >
@@ -163,7 +167,7 @@ const styles = StyleSheet.create({
   },
   sectionSubtitle: {
     ...typography.labelSmall,
-    fontSize: 11,
+   fontSize: 11,
     marginTop: 2,
   },
   horizontalScroll: {
@@ -173,7 +177,7 @@ const styles = StyleSheet.create({
   card: {
     width: 200,
     borderRadius: borderRadius.lg,
-    borderWidth: 1,
+   borderWidth: 1,
     padding: spacing.md,
     height: 145,
     justifyContent: 'space-between',
@@ -209,7 +213,7 @@ const styles = StyleSheet.create({
   actionButton: {
     borderRadius: borderRadius.sm,
     paddingVertical: 6,
-    alignItems: 'center',
+   alignItems: 'center',
     justifyContent: 'center',
     marginTop: spacing.xs,
   },
@@ -221,6 +225,6 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '700',
   },
-});
+}); 
 
 export default React.memo(HealthReminders);

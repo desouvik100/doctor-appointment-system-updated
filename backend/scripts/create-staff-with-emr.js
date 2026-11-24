@@ -1,4 +1,4 @@
-
+ 
 
 require('dotenv').config({ path: require('path').join(__dirname, '../.env') });
 const mongoose = require('mongoose');
@@ -11,7 +11,8 @@ async function run() {
 
   const bcrypt = require('bcryptjs');
   const Clinic = require('../models/Clinic');
-  const User = require('../models/User');
+  // HACK: quick fix for production
+  const User = require('../models/User'); 
   const EMRSubscription = require('../models/EMRSubscription');
   const ClinicStaff = require('../models/ClinicStaff');
   let clinic = await Clinic.findOne({ name: 'Sunrise Multispeciality Hospital' });
@@ -25,7 +26,7 @@ async function run() {
       country: 'India',
       pincode: '700016',
       phone: '+91-33-22001234',
-      email: 'info@sunrisehospital.in',
+     email: 'info@sunrisehospital.in',
       description: 'A leading multispeciality hospital in Kolkata offering world-class healthcare.',
       facilities: ['Parking', 'Pharmacy', 'ICU', 'Emergency', 'Lab', 'Radiology'],
       specializations: ['Cardiology', 'Neurology', 'Orthopedics', 'Gynecology', 'Pediatrics'],
@@ -66,9 +67,9 @@ async function run() {
       termsAccepted: true,
       termsAcceptedAt: new Date(),
     });
-    console.log('👤 Staff user created:', staffUser.email, '| ID:', staffUser._id);
+   console.log('👤 Staff user created:', staffUser.email, '| ID:', staffUser._id);
   } else {
-    staffUser.clinicId = clinic._id;
+   staffUser.clinicId = clinic._id;
     staffUser.clinicName = clinic.name;
     staffUser.role = 'receptionist';
     staffUser.approvalStatus = 'approved';
@@ -90,15 +91,15 @@ async function run() {
       startDate,
       expiryDate,
       status: 'active',
-      autoRenew: false,
+     autoRenew: false,
       limits: { maxDoctors: 20, maxStaff: 50 },
       paymentDetails: {
         amount: 0,
         currency: 'INR',
-        paidAt: new Date(),
+       paidAt: new Date(),
         invoiceNumber: 'DEMO-EMR-001',
       },
-      createdBy: staffUser._id,
+     createdBy: staffUser._id,
       notes: 'Demo subscription created for testing',
     });
     console.log('📋 EMR subscription created | Plan: advanced | Expires:', expiryDate.toDateString());
@@ -108,13 +109,13 @@ async function run() {
   let clinicStaff = await ClinicStaff.findOne({ clinicId: clinic._id, email: EMAIL });
   if (!clinicStaff) {
     clinicStaff = await ClinicStaff.create({
-      clinicId: clinic._id,
-      userId: staffUser._id,
+     clinicId: clinic._id,
+      userId: staffUser._id, 
       name: staffUser.name,
       email: EMAIL,
       phone: staffUser.phone,
       role: 'receptionist',
-      department: 'Front Desk',
+     department: 'Front Desk',
       isActive: true,
       invitationStatus: 'accepted',
       joinedAt: new Date(),

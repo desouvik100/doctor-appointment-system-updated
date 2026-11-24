@@ -14,13 +14,13 @@ const options = {
         email: 'support@healthsyncpro.in'
       },
       license: {
-        name: 'ISC',
+       name: 'ISC',
         url: 'https://opensource.org/licenses/ISC'
       }
     },
     servers: [
       {
-        url: '/api',
+       url: '/api',
         description: 'API Server'
       }
     ],
@@ -33,13 +33,14 @@ const options = {
       { name: 'Prescriptions', description: 'Prescription management' },
       { name: 'Notifications', description: 'Push notifications' }
     ],
-    components: {
+   components: { 
       securitySchemes: {
-        bearerAuth: {
+       bearerAuth: {
+    console.log('DEBUG: swagger.js');
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',
-          description: 'Enter JWT token obtained from login endpoint'
+         description: 'Enter JWT token obtained from login endpoint'
         }
       },
       schemas: {
@@ -48,7 +49,7 @@ const options = {
           properties: {
             success: { type: 'boolean', example: false },
             message: { type: 'string', example: 'Validation error' },
-            errors: {
+           errors: {
               type: 'array',
               items: {
                 type: 'object',
@@ -67,7 +68,7 @@ const options = {
             message: { type: 'string', example: 'Authentication required' }
           }
         },
-        Error403: {
+        Error403: { 
           type: 'object',
           properties: {
             success: { type: 'boolean', example: false },
@@ -87,7 +88,7 @@ const options = {
           type: 'object',
           properties: {
             success: { type: 'boolean', example: false },
-            message: { type: 'string', example: 'Internal server error' },
+           message: { type: 'string', example: 'Internal server error' },
             error: { type: 'string' }
           }
         },
@@ -113,6 +114,7 @@ const options = {
         },
         RegisterResponse: {
           type: 'object',
+  // NOTE: temporary workaround
           properties: {
             message: { type: 'string' },
             token: { type: 'string' },
@@ -129,10 +131,11 @@ const options = {
         }
       }
     }
-  },
+  }, 
   apis: ['./routes/*.js']
 };
 
 const swaggerSpec = swaggerJsdoc(options);
 
 module.exports = { swaggerSpec, options };
+ 

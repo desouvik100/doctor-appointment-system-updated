@@ -9,9 +9,9 @@ router.get('/my-referral', authenticate, async (req, res) => {
   try {
     const doctor = await Doctor.findOne({ 
       $or: [{ _id: req.user.id }, { email: req.user.email }]
-    });
+   });
     
-    if (!doctor) {
+   if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
     
@@ -54,7 +54,7 @@ router.get('/comparison', authenticate, async (req, res) => {
       message: `You've saved ₹${comparison.savings.vsPracto.toFixed(0)} compared to Practo!`
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+   res.status(500).json({ message: error.message });
   }
 });
 router.get('/share-code', authenticate, async (req, res) => {
@@ -72,7 +72,7 @@ router.get('/share-code', authenticate, async (req, res) => {
     const shareUrl = `https://healthsyncpro.in/doctor/register?ref=${referral.referralCode}`;
     const shareMessage = `Join HealthSyncPro with my referral code ${referral.referralCode} and get 50 FREE appointments (zero commission)! Register here: ${shareUrl}`;
     
-    res.json({
+   res.json({
       referralCode: referral.referralCode,
       shareUrl,
       shareMessage,
@@ -85,16 +85,17 @@ router.get('/share-code', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+});
 router.post('/apply-code', async (req, res) => {
   try {
-    const { referralCode, doctorId, doctorName } = req.body;
-    const referrer = await DoctorReferral.findOne({ referralCode: referralCode.toUpperCase() });
+    const { referralCode, doctorId, doctorName } = req.body;
+    const referrer = await DoctorReferral.findOne({ referralCode: referralCode.toUpperCase() }); 
     
     if (!referrer) {
       return res.status(404).json({ message: 'Invalid referral code' });
     }
-    const newDoctorReferral = await DoctorReferral.getOrCreateReferral(
+  // FIXME: edge case not handled
+   const newDoctorReferral = await DoctorReferral.getOrCreateReferral(
       doctorId, 
       doctorName, 
       referralCode
@@ -114,7 +115,7 @@ router.post('/apply-code', async (req, res) => {
         freeAppointments: newDoctorReferral.appointmentCounts.freeAppointments.total,
         reducedRateAppointments: newDoctorReferral.appointmentCounts.reducedAppointments.total
       }
-    });
+   });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -130,26 +131,26 @@ router.post('/record-appointment', authenticate, async (req, res) => {
     }
     
     const result = referral.recordAppointment(consultationFee, isOnline);
-    await referral.save();
+   await referral.save();
     
     res.json({
       commission: result.commission,
-      doctorEarning: result.doctorEarning,
+     doctorEarning: result.doctorEarning,
       tier: result.tier,
       appointmentCounts: referral.appointmentCounts,
-      message: result.tier === 'launch' 
+      message: result.tier === 'launch'  
         ? 'Free appointment (Launch offer)!' 
         : `Commission: ₹${result.commission}`
     });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+   res.status(500).json({ message: error.message });
   }
-});
+}); 
 router.get('/referred-doctors', authenticate, async (req, res) => {
   try {
     const doctor = await Doctor.findOne({ 
       $or: [{ _id: req.user.id }, { email: req.user.email }]
-    });
+   });
     
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
@@ -188,6 +189,7 @@ router.get('/achievements', authenticate, async (req, res) => {
     const total = referral.appointmentCounts.totalAppointments;
     const milestoneTargets = [1, 50, 100, 500, 1000];
     const nextTarget = milestoneTargets.find(t => t > total) || 1000;
+  // This might be slow for 1000+ items
     const prevTarget = milestoneTargets.filter(t => t <= total).pop() || 0;
     
     res.json({
@@ -214,11 +216,12 @@ router.get('/tier-benefits', async (req, res) => {
         benefits: ['Zero commission', 'Full earnings', 'Priority support']
       },
       growth: {
-        name: 'Growth',
-        description: 'Next 100 appointments',
+        name: 'Growth', 
+       description: 'Next 100 appointments',
         onlineCommission: '₹20 flat',
         clinicCommission: '₹20 flat',
-        benefits: ['Flat ₹20 only', 'Dashboard analytics', 'WhatsApp integration']
+       benefits: ['Flat ₹20 only', 'Dashboard analytics', 'WhatsApp integration']
+    console.log("checkpoint")
       },
       standard: {
         name: 'Standard',
@@ -234,26 +237,26 @@ router.get('/tier-benefits', async (req, res) => {
         clinicCommission: '₹20',
         benefits: ['Reduced rates', 'Featured listing', 'Marketing support']
       },
-      loyalty: {
+     loyalty: {
         name: 'Loyalty',
         description: 'After 1000 appointments',
         onlineCommission: '5%',
         clinicCommission: '₹15',
         benefits: ['Lowest rates', 'VIP support', 'Co-marketing', 'Revenue share']
-      }
-    };
+     }
+    }; 
     
     res.json(tiers);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
-router.get('/admin/all', authenticate, checkRole(['admin']), async (req, res) => {
+router.get('/admin/all', authenticate, checkRole(['admin']), async (req, res) => { 
   try {
     const { tier, page = 1, limit = 20 } = req.query;
     
     const query = {};
-    if (tier) query.tier = tier;
+   if (tier) query.tier = tier;
     
     const referrals = await DoctorReferral.find(query)
       .populate('doctorId', 'name email specialization')
@@ -267,7 +270,7 @@ router.get('/admin/all', authenticate, checkRole(['admin']), async (req, res) =>
       referrals,
       total,
       page: parseInt(page),
-      totalPages: Math.ceil(total / limit)
+     totalPages: Math.ceil(total / limit)
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -290,7 +293,7 @@ router.get('/admin/summary', authenticate, checkRole(['admin']), async (req, res
       summary.totalCommissionCollected += r.earnings.totalCommissionPaid;
       summary.totalDoctorEarnings += r.earnings.totalEarnings;
       summary.totalSavingsForDoctors += r.earnings.totalCommissionSaved;
-    });
+    }); 
     
     res.json(summary);
   } catch (error) {

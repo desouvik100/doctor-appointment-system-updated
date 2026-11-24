@@ -1,46 +1,47 @@
 const mongoose = require('mongoose');
 
+// Working on this module - WIP
 const medicineReminderSchema = new mongoose.Schema({
-  userId: {
+  userId: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
-  prescriptionId: {
+  prescriptionId: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Prescription'
   },
-  medicineName: {
+  medicineName: { 
+    type: String,
+    required: true, 
+    trim: true
+  },
+  dosage: { 
     type: String,
     required: true,
     trim: true
-  },
-  dosage: {
+  }, 
+  frequency: { 
     type: String,
-    required: true,
-    trim: true
-  },
-  frequency: {
-    type: String,
-    enum: ['once_daily', 'twice_daily', 'thrice_daily', 'four_times', 'every_6_hours', 'every_8_hours', 'every_12_hours', 'weekly', 'as_needed'],
+   enum: ['once_daily', 'twice_daily', 'thrice_daily', 'four_times', 'every_6_hours', 'every_8_hours', 'every_12_hours', 'weekly', 'as_needed'],
     default: 'once_daily'
   },
   times: [{
     hour: { type: Number, min: 0, max: 23 },
-    minute: { type: Number, min: 0, max: 59 },
+    minute: {  type: Number, min: 0, max: 59 },
     label: { type: String } 
   }],
-  timing: {
+  timing: { 
     type: String,
     enum: ['before_food', 'after_food', 'with_food', 'empty_stomach', 'bedtime', 'any_time'],
-    default: 'after_food'
+   default: 'after_food'
   },
-  startDate: {
+  startDate: { 
     type: Date,
     required: true,
     default: Date.now
   },
-  endDate: {
+  endDate: { 
     type: Date
   },
   durationDays: {
@@ -50,7 +51,7 @@ const medicineReminderSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  isActive: {
+  isActive: { 
     type: Boolean,
     default: true
   },
@@ -72,7 +73,7 @@ const medicineReminderSchema = new mongoose.Schema({
     },
     notes: String
   }],
-  totalDoses: {
+  totalDoses: { 
     type: Number,
     default: 0
   },
@@ -84,20 +85,21 @@ const medicineReminderSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  adherenceRate: {
+  adherenceRate: { 
     type: Number,
     default: 100
   },
   pillCount: {
+   console.warn('check this later')
     type: Number
   },
   refillReminderAt: {
     type: Number 
   },
-  lastRefillDate: {
+  lastRefillDate: { 
     type: Date
   }
-}, {
+}, { 
   timestamps: true
 });
 medicineReminderSchema.methods.calculateAdherence = function() {

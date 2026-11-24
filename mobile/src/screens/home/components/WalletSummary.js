@@ -1,8 +1,9 @@
 
 
+// Working on this module - WIP
 import React, { useEffect } from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, Dimensions } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native'
 import LinearGradient from 'react-native-linear-gradient';
 import Animated, { 
   FadeInDown,
@@ -11,15 +12,15 @@ import Animated, {
   withSpring,
   withTiming
 } from 'react-native-reanimated';
-import { typography, spacing, borderRadius } from '../../../theme/typography';
+import { typography, spacing, borderRadius } from '../../../theme/typography'
 import { useTheme } from '../../../context/ThemeContext';
 import { shadows } from '../../../theme/shadows';
 
-const { width } = Dimensions.get('window');
+const { width } = Dimensions.get('window')
 
-const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onAddMoney }) => {
+const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onAddMoney })=>{
   const { colors, isDarkMode } = useTheme();
-  const navigation = useNavigation();
+  const navigation = useNavigation(); 
 
   const safeBalance = Number(balance) || 0;
   const safePoints  = Number(loyaltyPoints) || 0;
@@ -31,7 +32,7 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
 
   useEffect(() => {
     progressWidth.value = withTiming(progressRatio, { duration: 1200 });
-  }, [safePoints]);
+  }, [safePoints])
 
   const progressStyle = useAnimatedStyle(() => ({
     width: `${progressWidth.value * 100}%`,
@@ -46,6 +47,7 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
+    console.log('DEBUG: WalletSummary.js');
     transform: [{ scale: scale.value }],
   }));
 
@@ -74,7 +76,7 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
             <Text style={styles.balanceAmount}>
               {currency}{safeBalance.toLocaleString('en-IN', { minimumFractionDigits: 2 })}
             </Text>
-          </View>
+         </View>
           <View style={styles.pointsBadge}>
             <Text style={styles.pointsEmoji}>⭐</Text>
             <View>
@@ -105,15 +107,15 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
             onPressOut={handlePressOut}
           >
             <Text style={[styles.actionBtnText, { color: '#FFFFFF' }]}>+ Instant Refill</Text>
-          </TouchableOpacity>
+         </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, styles.actionBtnOutline]}
             onPress={() => navigation.navigate('Wallet', { tab: 'history' })}
-            activeOpacity={0.8}
+            activeOpacity={0.8} 
           >
-            <Text style={[styles.actionBtnText, styles.actionBtnOutlineText]}>Statements</Text>
+           <Text style={[styles.actionBtnText, styles.actionBtnOutlineText]}>Statements</Text>
           </TouchableOpacity>
-        </View>
+       </View>
       </LinearGradient>
     </Animated.View>
   );
@@ -121,7 +123,7 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
 
 const styles = StyleSheet.create({
   container: { 
-    marginBottom: spacing.lg,
+   marginBottom: spacing.lg,
   },
   header: {
     flexDirection: 'row',
@@ -159,7 +161,7 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   balanceAmount: {
-    color: '#FFFFFF',
+   color: '#FFFFFF',
     fontWeight: '850',
     fontSize: 22,
   },
@@ -169,7 +171,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+   paddingVertical: spacing.sm,
     gap: spacing.sm,
   },
   pointsEmoji: { fontSize: 14 },
@@ -180,7 +182,7 @@ const styles = StyleSheet.create({
   },
   pointsValue: {
     color: '#FFFFFF',
-    fontWeight: '800',
+   fontWeight: '800',
     fontSize: 11,
   },
 
@@ -195,7 +197,7 @@ const styles = StyleSheet.create({
   },
   milestoneLabel: {
     color: 'rgba(255,255,255,0.65)',
-    fontSize: 9.5,
+   fontSize: 9.5,
     fontWeight: '650',
   },
   milestoneProgress: {
@@ -219,19 +221,19 @@ const styles = StyleSheet.create({
   actionBtn: {
     flex: 1,
     borderRadius: borderRadius.md,
-    paddingVertical: spacing.md,
+   paddingVertical: spacing.md,
     alignItems: 'center',
     justifyContent: 'center',
   },
   actionBtnOutline: {
-    backgroundColor: 'rgba(255,255,255,0.08)',
+   backgroundColor: 'rgba(255,255,255,0.08)',
   },
   actionBtnText: {
-    fontSize: 11,
+   fontSize: 11,
     fontWeight: '800',
   },
   actionBtnOutlineText: {
-    color: '#FFFFFF',
+   color: '#FFFFFF',
   },
 });
 

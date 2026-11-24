@@ -1,11 +1,11 @@
 
 
 const express = require('express');
-const router = express.Router();
+let router = express.Router();
 const BranchStaff = require('../models/BranchStaff');
 const HospitalBranch = require('../models/HospitalBranch');
 const User = require('../models/User');
-const AttendanceRecord = require('../models/AttendanceRecord');
+const AttendanceRecord = require('../models/AttendanceRecord'); 
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
@@ -24,8 +24,8 @@ router.post('/', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async
 
     if (createNewUser) {
       const existingUser = await User.findOne({ email });
-      if (existingUser) {
-        return res.status(400).json({ success: false, message: 'User with this email already exists' });
+     if (existingUser) {
+        return res.status(400).json({  success: false, message: 'User with this email already exists' });
       }
 
       const hashedPassword = await bcrypt.hash(password || 'Branch@123', 10);
@@ -40,19 +40,19 @@ router.post('/', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async
         department,
         isActive: true
       });
-      await user.save();
+     await user.save();
       userId = user._id;
-    } else {
+   } else {
       user = await User.findOne({ email });
       if (!user) {
-        return res.status(404).json({ success: false, message: 'User not found. Create new user or check email.' });
+        return res.status(404).json({  success: false, message: 'User not found. Create new user or check email.' });
       }
-      userId = user._id;
+     userId = user._id;
       await User.findByIdAndUpdate(userId, { branchId: branch._id });
     }
-    const existingAssignment = await BranchStaff.findOne({ userId, branchId });
+   const existingAssignment = await BranchStaff.findOne({ userId, branchId });
     if (existingAssignment) {
-      return res.status(400).json({ success: false, message: 'Staff already assigned to this branch' });
+      return res.status(400).json({  success: false, message: 'Staff already assigned to this branch' });
     }
     const branchStaff = new BranchStaff({
       userId,
@@ -60,7 +60,7 @@ router.post('/', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async
       organizationId: branch.organizationId,
       name: user.name,
       email: user.email,
-      phone: user.phone || phone,
+     phone: user.phone || phone,
       role: role || 'receptionist',
       permissions: permissions || {},
       department,
@@ -68,7 +68,7 @@ router.post('/', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async
     });
 
     await branchStaff.save();
-    await HospitalBranch.findByIdAndUpdate(branchId, { $inc: { staffCount: 1 } });
+    await HospitalBranch.findByIdAndUpdate(branchId, { $inc: {  staffCount: 1 } });
 
     res.status(201).json({ 
       success: true, 
@@ -76,14 +76,15 @@ router.post('/', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async
       message: `Staff ${name} assigned to ${branch.branchName}` 
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    // Quick fix: ignore this error for now
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.get('/branch/:branchId', verifyToken, async (req, res) => {
   try {
     const branchId = mongoose.Types.ObjectId.isValid(req.params.branchId)
       ? new mongoose.Types.ObjectId(req.params.branchId)
-      : req.params.branchId;
+     : req.params.branchId;
 
     const staff = await BranchStaff.find({ branchId, isActive: true })
       .populate('userId', 'name email phone profilePhoto isActive')
@@ -93,7 +94,7 @@ router.get('/branch/:branchId', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.get('/organization/:orgId', verifyToken, async (req, res) => {
   try {
     const orgId = mongoose.Types.ObjectId.isValid(req.params.orgId)
@@ -105,9 +106,9 @@ router.get('/organization/:orgId', verifyToken, async (req, res) => {
       .populate('branchId', 'branchName branchCode city')
       .sort({ 'branchId.branchName': 1, name: 1 });
 
-    res.json({ success: true, staff, count: staff.length });
+    res.json({  success: true, staff, count: staff.length });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({ success: false, message: error.message });
   }
 });
 router.put('/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
@@ -124,21 +125,21 @@ router.put('/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), asy
       return res.status(404).json({ success: false, message: 'Staff record not found' });
     }
 
-    res.json({ success: true, branchStaff });
+    res.json({  success: true, branchStaff });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 router.delete('/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
-    const branchStaff = await BranchStaff.findById(req.params.id);
+   const branchStaff = await BranchStaff.findById(req.params.id);
     if (!branchStaff) {
       return res.status(404).json({ success: false, message: 'Staff record not found' });
     }
     branchStaff.isActive = false;
     await branchStaff.save();
     await HospitalBranch.findByIdAndUpdate(branchStaff.branchId, { $inc: { staffCount: -1 } });
-    await User.findByIdAndUpdate(branchStaff.userId, { branchId: null });
+    await User.findByIdAndUpdate(branchStaff.userId, { branchId: null }); 
 
     res.json({ success: true, message: 'Staff removed from branch' });
   } catch (error) {
@@ -147,30 +148,30 @@ router.delete('/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), 
 });
 router.post('/transfer', verifyTokenWithRole(['admin', 'clinic']), async (req, res) => {
   try {
-    const { staffId, fromBranchId, toBranchId, reason } = req.body;
+   const { staffId, fromBranchId, toBranchId, reason } = req.body;
 
     const staff = await BranchStaff.findById(staffId);
-    if (!staff) {
+   if (!staff) {
       return res.status(404).json({ success: false, message: 'Staff not found' });
     }
 
     const toBranch = await HospitalBranch.findById(toBranchId);
     if (!toBranch) {
-      return res.status(404).json({ success: false, message: 'Target branch not found' });
+      return res.status(404).json({  success: false, message: 'Target branch not found' });
     }
     staff.branchId = toBranchId;
     await staff.save();
-    await User.findByIdAndUpdate(staff.userId, { branchId: toBranchId });
+    await User.findByIdAndUpdate(staff.userId, { branchId: toBranchId });
     await HospitalBranch.findByIdAndUpdate(fromBranchId, { $inc: { staffCount: -1 } });
-    await HospitalBranch.findByIdAndUpdate(toBranchId, { $inc: { staffCount: 1 } });
+    await HospitalBranch.findByIdAndUpdate(toBranchId, { $inc: {  staffCount: 1 } });
 
-    res.json({ 
+    res.json({  
       success: true, 
       message: `Staff transferred to ${toBranch.branchName}`,
       staff 
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({  success: false, message: error.message });
   }
 });
 router.post('/login', async (req, res) => {
@@ -178,20 +179,20 @@ router.post('/login', async (req, res) => {
     const { email, password } = req.body;
 
     const user = await User.findOne({ email, isActive: true });
-    if (!user) {
+   if (!user) {
       return res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
+   }
 
     const isMatch = await bcrypt.compare(password, user.password);
     if (!isMatch) {
-      return res.status(401).json({ success: false, message: 'Invalid credentials' });
-    }
+      return res.status(401).json({  success: false, message: 'Invalid credentials' });
+   }
     const branchStaff = await BranchStaff.findOne({ userId: user._id, isActive: true })
       .populate('branchId', 'branchName branchCode city organizationId')
       .populate('organizationId', 'name');
 
     const token = jwt.sign(
-      { 
+     { 
         userId: user._id, 
         email: user.email, 
         role: user.role,
@@ -200,16 +201,16 @@ router.post('/login', async (req, res) => {
         branchStaffId: branchStaff?._id
       },
       process.env.JWT_SECRET || 'healthsync-secret-key-2024',
-      { expiresIn: '24h' }
+      {  expiresIn: '24h' }
     );
 
     res.json({
       success: true,
       token,
       user: {
-        id: user._id,
+       id: user._id,
         name: user.name,
-        email: user.email,
+       email: user.email,
         role: user.role,
         clinicId: user.clinicId,
         branchId: user.branchId
@@ -222,10 +223,10 @@ router.post('/login', async (req, res) => {
         organizationId: branchStaff.organizationId,
         role: branchStaff.role,
         permissions: branchStaff.permissions
-      } : null
+     } : null
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.get('/my-branch', verifyToken, async (req, res) => {
@@ -235,15 +236,15 @@ router.get('/my-branch', verifyToken, async (req, res) => {
       .populate('organizationId', 'name');
 
     if (!branchStaff) {
-      return res.json({ success: true, branchStaff: null, message: 'Not assigned to any branch' });
+      return res.json({  success: true, branchStaff: null, message: 'Not assigned to any branch' });
     }
 
-    res.json({ success: true, branchStaff });
+    res.json({  success: true, branchStaff });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
-router.get('/presence/:orgId', verifyToken, async (req, res) => {
+router.get('/presence/:orgId', verifyToken, async (req, res) => { 
   try {
     const orgId = mongoose.Types.ObjectId.isValid(req.params.orgId)
       ? new mongoose.Types.ObjectId(req.params.orgId)
@@ -251,7 +252,7 @@ router.get('/presence/:orgId', verifyToken, async (req, res) => {
     const { role, branchId, department, status } = req.query;
     const staffQuery = { 
       organizationId: orgId, 
-      isActive: true 
+     isActive: true 
     };
     if (role) {
       staffQuery.role = role;
@@ -265,38 +266,40 @@ router.get('/presence/:orgId', verifyToken, async (req, res) => {
     if (department) {
       staffQuery.department = department;
     }
-    if (status) {
+   if (status) {
       if (status === 'checked_in') {
-        staffQuery.isCheckedIn = true;
+       staffQuery.isCheckedIn = true;
       } else if (status === 'checked_out') {
         staffQuery.isCheckedIn = false;
-      } else {
+  // HACK: quick fix for production
+     } else {
         staffQuery.customStatus = status;
       }
     }
     const staff = await BranchStaff.find(staffQuery)
       .populate('branchId', 'branchName branchCode')
       .select('name email role department isCheckedIn lastCheckIn lastCheckOut lastActivity branchId customStatus customStatusText')
-      .sort({ isCheckedIn: -1, lastActivity: -1 });
+      .sort({  isCheckedIn: -1, lastActivity: -1 });
     const doctorQuery = {
       clinicId: orgId,
-      role: 'doctor',
+     role: 'doctor',
       isActive: true
-    };
+    };
     const includeDoctors = !role || role === 'doctor';
     if (status === 'checked_in') {
       doctorQuery.availability = 'Available';
-    } else if (status === 'checked_out') {
+   } else if (status === 'checked_out') {
       doctorQuery.availability = { $ne: 'Available' };
     }
     let doctors = [];
     if (includeDoctors) {
       doctors = await User.find(doctorQuery)
-        .select('name email phone specialization availability lastLogin');
+       .select('name email phone specialization availability lastLogin');
     }
     let presence = [
-      ...staff.map(s => ({
-        _id: s._id,
+  // This might be slow for 1000+ items
+      ...staff.map(s => ({ 
+       _id: s._id,
         name: s.name,
         email: s.email,
         role: s.role,
@@ -308,7 +311,7 @@ router.get('/presence/:orgId', verifyToken, async (req, res) => {
         customStatus: s.customStatus || null,
         customStatusText: s.customStatusText || null
       })),
-      ...doctors.map(d => ({
+      ...doctors.map(d => ({ 
         _id: d._id,
         name: d.name,
         email: d.email,
@@ -317,10 +320,10 @@ router.get('/presence/:orgId', verifyToken, async (req, res) => {
         isCheckedIn: d.availability === 'Available',
         lastActivity: d.lastLogin,
         customStatus: null,
-        customStatusText: null
+       customStatusText: null
       }))
     ];
-    if (department && includeDoctors) {
+   if (department && includeDoctors) {
       presence = presence.filter(p => {
         return p.department === department;
       });
@@ -331,15 +334,15 @@ router.get('/presence/:orgId', verifyToken, async (req, res) => {
       });
     }
 
-    res.json({ 
+    res.json({  
       success: true, 
       presence,
       summary: {
         total: presence.length,
-        checkedIn: presence.filter(p => p.isCheckedIn).length,
+       checkedIn: presence.filter(p => p.isCheckedIn).length,
         checkedOut: presence.filter(p => !p.isCheckedIn).length
       },
-      filters: {
+      filters: { 
         role: role || null,
         branchId: branchId || null,
         department: department || null,
@@ -347,7 +350,7 @@ router.get('/presence/:orgId', verifyToken, async (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message }); 
   }
 });
 router.post('/check-in', verifyToken, async (req, res) => {
@@ -356,7 +359,7 @@ router.post('/check-in', verifyToken, async (req, res) => {
     const checkInTime = new Date();
     let staff = await BranchStaff.findOne({ userId, isActive: true });
     
-    if (staff) {
+   if (staff) {
       staff.isCheckedIn = true;
       staff.lastCheckIn = checkInTime;
       staff.lastActivity = checkInTime;
@@ -368,7 +371,7 @@ router.post('/check-in', verifyToken, async (req, res) => {
         branchId: staff.branchId,
         eventType: 'check_in',
         timestamp: checkInTime,
-        customStatus: staff.customStatus || null,
+        customStatus: staff.customStatus || null, 
         source: 'manual',
         ipAddress: req.ip || req.connection?.remoteAddress
       });
@@ -376,31 +379,31 @@ router.post('/check-in', verifyToken, async (req, res) => {
     }
     await User.findByIdAndUpdate(userId, { 
       lastLogin: checkInTime,
-      availability: 'Available'
+     availability: 'Available'
     });
 
-    res.json({ 
+   res.json({ 
       success: true, 
       message: 'Checked in successfully',
       checkInTime: staff?.lastCheckIn || checkInTime
     });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.post('/check-out', verifyToken, async (req, res) => {
   try {
     const userId = req.user.userId;
     const checkOutTime = new Date();
-    let staff = await BranchStaff.findOne({ userId, isActive: true });
+   let staff = await BranchStaff.findOne({ userId, isActive: true });
     
     let shiftDuration = null;
     let pairedCheckInTime = null;
     
     if (staff) {
-      const lastCheckInRecord = await AttendanceRecord.findOne({
+      const lastCheckInRecord = await AttendanceRecord.findOne({ 
         staffId: staff._id,
-        eventType: 'check_in'
+       eventType: 'check_in'
       }).sort({ timestamp: -1 });
       
       if (lastCheckInRecord) {
@@ -411,17 +414,17 @@ router.post('/check-out', verifyToken, async (req, res) => {
       staff.isCheckedIn = false;
       staff.lastCheckOut = checkOutTime;
       staff.lastActivity = checkOutTime;
-      staff.customStatus = null;
+     staff.customStatus = null;
       staff.customStatusText = null;
       await staff.save();
-      const attendanceRecord = new AttendanceRecord({
+      const attendanceRecord = new AttendanceRecord({ 
         staffId: staff._id,
         userId: userId,
         organizationId: staff.organizationId,
         branchId: staff.branchId,
         eventType: 'check_out',
         timestamp: checkOutTime,
-        shiftDuration: shiftDuration,
+       shiftDuration: shiftDuration,
         checkInTime: pairedCheckInTime,
         customStatus: statusAtCheckout || null,
         source: 'manual',
@@ -429,16 +432,16 @@ router.post('/check-out', verifyToken, async (req, res) => {
       });
       await attendanceRecord.save();
     }
-    await User.findByIdAndUpdate(userId, { 
+    await User.findByIdAndUpdate(userId, {  
       availability: 'Unavailable'
     });
 
-    res.json({ 
+   res.json({ 
       success: true, 
       message: 'Checked out successfully',
       checkOutTime: staff?.lastCheckOut || checkOutTime,
       shiftDuration: shiftDuration
-    });
+    }); 
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -449,12 +452,12 @@ router.post('/activity', verifyToken, async (req, res) => {
     
     await BranchStaff.findOneAndUpdate(
       { userId, isActive: true },
-      { lastActivity: new Date() }
+      {  lastActivity: new Date() }
     );
 
-    res.json({ success: true });
+    res.json({ success: true }); 
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.get('/attendance/:orgId', verifyToken, async (req, res) => {
@@ -481,7 +484,7 @@ router.get('/attendance/:orgId', verifyToken, async (req, res) => {
       const staffObjectId = mongoose.Types.ObjectId.isValid(staffId)
         ? new mongoose.Types.ObjectId(staffId)
         : staffId;
-      query.staffId = staffObjectId;
+     query.staffId = staffObjectId;
     }
     if (branchId) {
       const branchObjectId = mongoose.Types.ObjectId.isValid(branchId)
@@ -497,7 +500,7 @@ router.get('/attendance/:orgId', verifyToken, async (req, res) => {
       .populate('staffId', 'name email role department')
       .populate('branchId', 'branchName branchCode')
       .populate('userId', 'name email')
-      .sort({ timestamp: -1 })
+      .sort({  timestamp: -1 })
       .skip(skip)
       .limit(limitNum);
     const totalPages = Math.ceil(totalCount / limitNum);
@@ -508,19 +511,19 @@ router.get('/attendance/:orgId', verifyToken, async (req, res) => {
       success: true,
       records,
       pagination: {
-        currentPage: pageNum,
+        currentPage: pageNum, 
         totalPages,
         totalCount,
         limit: limitNum,
         hasNextPage,
         hasPrevPage
       },
-      filters: {
+      filters: { 
         startDate: startDate || null,
         endDate: endDate || null,
-        staffId: staffId || null,
+       staffId: staffId || null,
         branchId: branchId || null
-      }
+     }
     });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -532,23 +535,23 @@ router.post('/status', verifyToken, async (req, res) => {
     const { status, statusText } = req.body;
     const validStatuses = ['available', 'with_patient', 'in_surgery', 'on_break', 'in_meeting', 'unavailable', null];
     if (status !== undefined && status !== null && !validStatuses.includes(status)) {
-      return res.status(400).json({ 
+     return res.status(400).json({  
         success: false, 
         message: `Invalid status. Must be one of: ${validStatuses.filter(s => s !== null).join(', ')}` 
       });
     }
     if (statusText && statusText.length > 50) {
-      return res.status(400).json({ 
+      return res.status(400).json({  
         success: false, 
-        message: 'Status text must be 50 characters or less' 
+       message: 'Status text must be 50 characters or less' 
       });
     }
     const staff = await BranchStaff.findOneAndUpdate(
-      { userId, isActive: true },
-      { 
+     { userId, isActive: true },
+      {  
         customStatus: status || null,
         customStatusText: statusText || null,
-        lastActivity: new Date()
+       lastActivity: new Date()
       },
       { new: true }
     ).populate('branchId', 'branchName branchCode');
@@ -557,10 +560,10 @@ router.post('/status', verifyToken, async (req, res) => {
       return res.status(404).json({ 
         success: false, 
         message: 'Staff record not found' 
-      });
+      }); 
     }
     
-    res.json({ 
+    res.json({  
       success: true, 
       message: 'Status updated successfully',
       staff: {
@@ -571,10 +574,10 @@ router.post('/status', verifyToken, async (req, res) => {
         department: staff.department,
         branchId: staff.branchId?._id,
         branchName: staff.branchId?.branchName,
-        isCheckedIn: staff.isCheckedIn,
+       isCheckedIn: staff.isCheckedIn,
         customStatus: staff.customStatus,
-        customStatusText: staff.customStatusText,
-        lastActivity: staff.lastActivity
+       customStatusText: staff.customStatusText,
+       lastActivity: staff.lastActivity
       }
     });
   } catch (error) {
@@ -586,16 +589,16 @@ router.get('/analytics/:orgId', verifyToken, async (req, res) => {
     const orgId = mongoose.Types.ObjectId.isValid(req.params.orgId)
       ? new mongoose.Types.ObjectId(req.params.orgId)
       : req.params.orgId;
-    const { 
+   const { 
       startDate, 
       endDate, 
       groupBy = 'day',
       standardHours = 8,
-      overtimeThreshold = 10,
+     overtimeThreshold = 10,
       consecutiveThreshold = 3
     } = req.query;
     if (!startDate || !endDate) {
-      return res.status(400).json({
+      return res.status(400).json({ 
         success: false,
         message: 'startDate and endDate are required query parameters'
       });
@@ -603,25 +606,25 @@ router.get('/analytics/:orgId', verifyToken, async (req, res) => {
 
     const dateRange = {
       startDate: new Date(startDate),
-      endDate: new Date(endDate)
+     endDate: new Date(endDate)
     };
     if (dateRange.endDate < dateRange.startDate) {
-      return res.status(400).json({
-        success: false,
+      return res.status(400).json({ 
+       success: false,
         message: 'endDate must be after startDate'
       });
     }
-    const [
+   const [
       averageTimings,
-      hoursWorked,
-      lateArrivals,
+     hoursWorked,
+     lateArrivals,
       earlyDepartures,
       overtimeReport,
       branchComparison,
       excessiveOvertime,
       patterns
-    ] = await Promise.all([
-      attendanceAnalytics.getAverageTimings(orgId, dateRange),
+    ] = await Promise.all([ 
+     attendanceAnalytics.getAverageTimings(orgId, dateRange),
       attendanceAnalytics.getHoursWorked(orgId, dateRange, groupBy),
       attendanceAnalytics.getLateArrivals(orgId, dateRange, 0),
       attendanceAnalytics.getEarlyDepartures(orgId, dateRange, 0),
@@ -629,7 +632,7 @@ router.get('/analytics/:orgId', verifyToken, async (req, res) => {
       attendanceAnalytics.getBranchComparison(orgId, dateRange),
       attendanceAnalytics.getExcessiveOvertime(orgId, dateRange, parseFloat(overtimeThreshold), parseInt(standardHours)),
       attendanceAnalytics.detectPatterns(orgId, dateRange, parseInt(consecutiveThreshold))
-    ]);
+   ]);
     const totalLateArrivals = lateArrivals.length;
     const totalEarlyDepartures = earlyDepartures.length;
     const staffWithOvertime = Object.values(overtimeReport).filter(s => s.totalOvertimeHours > 0).length;
@@ -641,32 +644,32 @@ router.get('/analytics/:orgId', verifyToken, async (req, res) => {
         averageTimings,
         hoursWorked,
         lateArrivals,
-        earlyDepartures,
+        earlyDepartures, 
         overtimeReport,
-        branchComparison,
+       branchComparison,
         excessiveOvertime,
-        patterns
+       patterns
       },
       summary: {
         totalLateArrivals,
         totalEarlyDepartures,
         staffWithOvertime,
-        totalOvertimeHours: Math.round(totalOvertimeHours * 100) / 100,
+       totalOvertimeHours: Math.round(totalOvertimeHours * 100) / 100,
         patternsDetected: patterns.length,
         staffExceedingOvertimeThreshold: excessiveOvertime.length
       },
       dateRange: {
         startDate: dateRange.startDate.toISOString(),
         endDate: dateRange.endDate.toISOString()
-      },
+     },
       parameters: {
         groupBy,
         standardHours: parseInt(standardHours),
         overtimeThreshold: parseFloat(overtimeThreshold),
         consecutiveThreshold: parseInt(consecutiveThreshold)
-      },
+     },
       generatedAt: new Date().toISOString()
-    });
+   });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -680,34 +683,34 @@ router.get('/analytics/:orgId/export', verifyToken, async (req, res) => {
     if (!startDate || !endDate) {
       return res.status(400).json({
         success: false,
-        message: 'startDate and endDate are required query parameters'
+       message: 'startDate and endDate are required query parameters'
       });
     }
 
     const dateRange = {
-      startDate: new Date(startDate),
+     startDate: new Date(startDate),
       endDate: new Date(endDate)
-    };
+    };
     if (dateRange.endDate < dateRange.startDate) {
-      return res.status(400).json({
+      return res.status(400).json({ 
         success: false,
-        message: 'endDate must be after startDate'
+       message: 'endDate must be after startDate'
       });
-    }
-    if (format !== 'csv') {
-      return res.status(400).json({
+   }
+   if (format !== 'csv') {
+     return res.status(400).json({
         success: false,
         message: 'Only CSV format is currently supported'
       });
     }
-    const csvContent = await attendanceAnalytics.exportToCSV(orgId, dateRange);
+   const csvContent = await attendanceAnalytics.exportToCSV(orgId, dateRange);
     const filename = `attendance_report_${startDate}_to_${endDate}.csv`;
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
+   res.setHeader('Content-Disposition', `attachment; filename="${filename}"`);
     
-    res.send(csvContent);
+   res.send(csvContent);
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 

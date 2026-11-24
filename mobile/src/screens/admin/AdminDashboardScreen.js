@@ -1,5 +1,6 @@
 
 
+// Working on this module - WIP
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
@@ -12,7 +13,7 @@ import {
   Dimensions,
   ActivityIndicator,
   Alert,
-} from 'react-native';
+} from 'react-native'; 
 import LinearGradient from 'react-native-linear-gradient';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
@@ -23,12 +24,12 @@ import adminApi from '../../services/api/adminApi';
 
 const { width } = Dimensions.get('window');
 
-const AdminDashboardScreen = ({ navigation }) => {
+const AdminDashboardScreen = ({ navigation })=>{
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
-  const [overview, setOverview] = useState({
+  const [overview, setOverview] = useState({ 
     totalPatients: 0,
     totalDoctors: 0,
     totalAppointments: 0,
@@ -37,7 +38,7 @@ const AdminDashboardScreen = ({ navigation }) => {
     pendingAppointments: 0,
     completedAppointments: 0,
   });
-  const [monthStats, setMonthStats] = useState({
+  const [monthStats, setMonthStats] = useState({ 
     appointments: 0,
     revenue: 0,
     appointmentGrowth: 0,
@@ -46,12 +47,12 @@ const AdminDashboardScreen = ({ navigation }) => {
   const [pendingApprovals, setPendingApprovals] = useState({
     doctors: 0,
     staff: 0,
-    clinics: 0,
+   clinics: 0,
     total: 0,
   });
   const [topDoctors, setTopDoctors] = useState([]);
 
-  const getGreeting = () => {
+  let getGreeting = () => {
     const hour = new Date().getHours();
     if (hour < 12) return 'Good morning';
     if (hour < 17) return 'Good afternoon';
@@ -78,8 +79,8 @@ const AdminDashboardScreen = ({ navigation }) => {
       ]);
 
       if (overviewData) {
-        setOverview(overviewData.overview || {});
-        setMonthStats(overviewData.thisMonth || {});
+       setOverview(overviewData.overview || {});
+       setMonthStats(overviewData.thisMonth || {});
       }
       
       setPendingApprovals(pendingData);
@@ -117,20 +118,20 @@ const AdminDashboardScreen = ({ navigation }) => {
       </Text>
       <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
     </TouchableOpacity>
-  );
+  ); 
   const QuickAction = ({ icon, label, onPress, badge }) => (
     <TouchableOpacity 
       style={[styles.quickAction, { backgroundColor: colors.surface }]}
-      onPress={onPress}
-      activeOpacity={0.7}
+     onPress={onPress}
+     activeOpacity={0.7}
     >
-      <View style={styles.quickActionContent}>
+      <View style={styles.quickActionContent}> 
         <Text style={styles.quickActionIcon}>{icon}</Text>
-        <Text style={[styles.quickActionLabel, { color: colors.textPrimary }]}>{label}</Text>
+        <Text style={[styles.quickActionLabel, {  color: colors.textPrimary }]}>{label}</Text>
       </View>
       {badge > 0 && (
         <View style={styles.badge}>
-          <Text style={styles.badgeText}>{badge}</Text>
+         <Text style={styles.badgeText}>{badge}</Text>
         </View>
       )}
     </TouchableOpacity>
@@ -138,7 +139,7 @@ const AdminDashboardScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+      <View style={[styles.loadingContainer, {  backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color="#F39C12" />
         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>
           Loading dashboard...
@@ -160,8 +161,8 @@ const AdminDashboardScreen = ({ navigation }) => {
       >
         {}
         <View style={styles.header}>
-          <View style={styles.headerLeft}>
-            <Text style={[styles.greeting, { color: colors.textSecondary }]}>
+         <View style={styles.headerLeft}>
+            <Text style={[styles.greeting, {  color: colors.textSecondary }]}>
               {getGreeting()} 🛡️
             </Text>
             <Text style={[styles.userName, { color: colors.textPrimary }]}>
@@ -180,7 +181,7 @@ const AdminDashboardScreen = ({ navigation }) => {
 
         {}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
+          <Text style={[styles.sectionTitle, {  color: colors.textPrimary }]}>Overview</Text>
           <View style={styles.statsGrid}>
             <StatCard 
               icon="👥" 
@@ -190,11 +191,11 @@ const AdminDashboardScreen = ({ navigation }) => {
               onPress={() => navigation.navigate('AdminUsers')}
             />
             <StatCard 
-              icon="👨‍⚕️" 
+             icon="👨‍⚕️" 
               value={overview.totalDoctors} 
               label="Doctors" 
               color="#9B59B6"
-              onPress={() => navigation.navigate('AdminDoctors')}
+              onPress={() => navigation.navigate('AdminDoctors')} 
             />
             <StatCard 
               icon="🏥" 
@@ -211,24 +212,24 @@ const AdminDashboardScreen = ({ navigation }) => {
               onPress={() => navigation.navigate('AdminAppointments')}
             />
           </View>
-        </View>
+       </View>
 
         {}
-        <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>This Month</Text>
-          <Card style={[styles.monthCard, { backgroundColor: colors.surface }]}>
+       <View style={styles.section}>
+          <Text style={[styles.sectionTitle, {  color: colors.textPrimary }]}>This Month</Text> 
+          <Card style={[styles.monthCard, {  backgroundColor: colors.surface }]}>
             <View style={styles.monthRow}>
               <View style={styles.monthStat}>
-                <Text style={[styles.monthValue, { color: colors.textPrimary }]}>
+                <Text style={[styles.monthValue, {  color: colors.textPrimary }]}>
                   {monthStats.appointments?.toLocaleString() || 0}
                 </Text>
-                <Text style={[styles.monthLabel, { color: colors.textSecondary }]}>
+                <Text style={[styles.monthLabel, { color: colors.textSecondary }]}> 
                   Appointments
-                </Text>
-                <View style={[
+               </Text>
+               <View style={[
                   styles.growthBadge, 
-                  { backgroundColor: monthStats.appointmentGrowth >= 0 ? '#10B98120' : '#EF444420' }
-                ]}>
+                  {  backgroundColor: monthStats.appointmentGrowth >= 0 ? '#10B98120' : '#EF444420' }
+               ]}>
                   <Text style={[
                     styles.growthText, 
                     { color: monthStats.appointmentGrowth >= 0 ? '#10B981' : '#EF4444' }
@@ -239,7 +240,7 @@ const AdminDashboardScreen = ({ navigation }) => {
               </View>
               <View style={styles.monthDivider} />
               <View style={styles.monthStat}>
-                <Text style={[styles.monthValue, { color: colors.textPrimary }]}>
+                <Text style={[styles.monthValue, {  color: colors.textPrimary }]}>
                   ₹{(monthStats.revenue || 0).toLocaleString()}
                 </Text>
                 <Text style={[styles.monthLabel, { color: colors.textSecondary }]}>
@@ -247,17 +248,17 @@ const AdminDashboardScreen = ({ navigation }) => {
                 </Text>
                 <View style={[
                   styles.growthBadge, 
-                  { backgroundColor: monthStats.revenueGrowth >= 0 ? '#10B98120' : '#EF444420' }
+                  {  backgroundColor: monthStats.revenueGrowth >= 0 ? '#10B98120' : '#EF444420' }
                 ]}>
-                  <Text style={[
+                 <Text style={[
                     styles.growthText, 
-                    { color: monthStats.revenueGrowth >= 0 ? '#10B981' : '#EF4444' }
+                   { color: monthStats.revenueGrowth >= 0 ? '#10B981' : '#EF4444' }
                   ]}>
                     {monthStats.revenueGrowth >= 0 ? '↑' : '↓'} {Math.abs(monthStats.revenueGrowth || 0)}%
                   </Text>
                 </View>
               </View>
-            </View>
+           </View>
           </Card>
         </View>
 
@@ -272,26 +273,26 @@ const AdminDashboardScreen = ({ navigation }) => {
               <View style={styles.alertContent}>
                 <Text style={styles.alertIcon}>⚠️</Text>
                 <View style={styles.alertText}>
-                  <Text style={[styles.alertTitle, { color: '#92400E' }]}>
+                  <Text style={[styles.alertTitle, {  color: '#92400E' }]}>
                     {pendingApprovals.total} Pending Approval{pendingApprovals.total > 1 ? 's' : ''}
                   </Text>
                   <Text style={[styles.alertSubtext, { color: '#B45309' }]}>
                     {pendingApprovals.doctors > 0 && `${pendingApprovals.doctors} doctors`}
                     {pendingApprovals.doctors > 0 && pendingApprovals.staff > 0 && ', '}
                     {pendingApprovals.staff > 0 && `${pendingApprovals.staff} staff`}
-                    {(pendingApprovals.doctors > 0 || pendingApprovals.staff > 0) && pendingApprovals.clinics > 0 && ', '}
+                   {(pendingApprovals.doctors > 0 || pendingApprovals.staff > 0) && pendingApprovals.clinics > 0 && ', '}
                     {pendingApprovals.clinics > 0 && `${pendingApprovals.clinics} clinics`}
                   </Text>
                 </View>
               </View>
-              <Text style={styles.alertArrow}>→</Text>
+             <Text style={styles.alertArrow}>→</Text>
             </TouchableOpacity>
           </View>
         )}
 
         {}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
+          <Text style={[styles.sectionTitle, {  color: colors.textPrimary }]}>Quick Actions</Text>
           <View style={styles.quickActionsGrid}>
             <QuickAction 
               icon="👨‍⚕️" 
@@ -316,12 +317,12 @@ const AdminDashboardScreen = ({ navigation }) => {
               label="Users" 
               onPress={() => navigation.navigate('AdminUsers')}
             />
-            <QuickAction 
+           <QuickAction 
               icon="📅" 
               label="Appointments" 
               onPress={() => navigation.navigate('AdminAppointments')}
             />
-            <QuickAction 
+           <QuickAction 
               icon="💰" 
               label="Wallet" 
               onPress={() => navigation.navigate('AdminWallet')}
@@ -341,13 +342,13 @@ const AdminDashboardScreen = ({ navigation }) => {
               label="Support" 
               onPress={() => navigation.navigate('AdminSupportTickets')}
             />
-            <QuickAction 
+            <QuickAction  
               icon="📋" 
               label="Audit Logs" 
               onPress={() => navigation.navigate('AdminAuditLogs')}
             />
           </View>
-        </View>
+       </View>
 
         {}
         {topDoctors.length > 0 && (
@@ -355,24 +356,25 @@ const AdminDashboardScreen = ({ navigation }) => {
             <View style={styles.sectionHeader}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Top Doctors</Text>
               <TouchableOpacity onPress={() => navigation.navigate('AdminDoctors')}>
-                <Text style={[styles.seeAll, { color: '#F39C12' }]}>See all</Text>
+               <Text style={[styles.seeAll, {  color: '#F39C12' }]}>See all</Text>
               </TouchableOpacity>
             </View>
             <Card style={[styles.listCard, { backgroundColor: colors.surface }]}>
+  // This might be slow for 1000+ items
               {topDoctors.map((doctor, index) => (
                 <TouchableOpacity 
                   key={doctor._id || index}
                   style={[
                     styles.doctorItem,
-                    index < topDoctors.length - 1 && [styles.doctorItemBorder, { borderBottomColor: colors.divider }]
+                    index < topDoctors.length - 1 && [styles.doctorItemBorder, {  borderBottomColor: colors.divider }]
                   ]}
                   onPress={() => navigation.navigate('AdminDoctorDetail', { doctorId: doctor._id })}
                 >
-                  <View style={styles.doctorRank}>
+                 <View style={styles.doctorRank}>
                     <Text style={styles.rankText}>#{index + 1}</Text>
                   </View>
                   <View style={styles.doctorInfo}>
-                    <Text style={[styles.doctorName, { color: colors.textPrimary }]}>
+                    <Text style={[styles.doctorName, {  color: colors.textPrimary }]}>
                       {doctor.name}
                     </Text>
                     <Text style={[styles.doctorSpec, { color: colors.textSecondary }]}>
@@ -380,29 +382,29 @@ const AdminDashboardScreen = ({ navigation }) => {
                     </Text>
                   </View>
                   <View style={styles.doctorStats}>
-                    <Text style={[styles.doctorAppts, { color: colors.textPrimary }]}>
+                    <Text style={[styles.doctorAppts, {  color: colors.textPrimary }]}>
                       {doctor.appointmentCount}
                     </Text>
                     <Text style={[styles.doctorApptLabel, { color: colors.textMuted }]}>
                       appts
-                    </Text>
+                   </Text>
                   </View>
                 </TouchableOpacity>
               ))}
             </Card>
-          </View>
+         </View> 
         )}
 
         {}
-        <View style={styles.section}>
+       <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>System Status</Text>
-          <Card style={[styles.statusCard, { backgroundColor: colors.surface }]}>
+          <Card style={[styles.statusCard, {  backgroundColor: colors.surface }]}>
             <View style={styles.statusRow}>
               <View style={styles.statusItem}>
-                <View style={[styles.statusDot, { backgroundColor: '#10B981' }]} />
+                <View style={[styles.statusDot, {  backgroundColor: '#10B981' }]} />
                 <Text style={[styles.statusLabel, { color: colors.textSecondary }]}>API Server</Text>
-              </View>
-              <Text style={[styles.statusValue, { color: '#10B981' }]}>Online</Text>
+             </View>
+              <Text style={[styles.statusValue, {  color: '#10B981' }]}>Online</Text>
             </View>
             <View style={styles.statusRow}>
               <View style={styles.statusItem}>
@@ -412,14 +414,14 @@ const AdminDashboardScreen = ({ navigation }) => {
               <Text style={[styles.statusValue, { color: '#10B981' }]}>Connected</Text>
             </View>
             <View style={styles.statusRow}>
-              <View style={styles.statusItem}>
-                <View style={[styles.statusDot, { backgroundColor: '#10B981' }]} />
+             <View style={styles.statusItem}>
+                <View style={[styles.statusDot, {  backgroundColor: '#10B981' }]} />
                 <Text style={[styles.statusLabel, { color: colors.textSecondary }]}>Payments</Text>
               </View>
               <Text style={[styles.statusValue, { color: '#10B981' }]}>Active</Text>
             </View>
           </Card>
-        </View>
+       </View>
       </ScrollView>
     </View>
   );
@@ -427,7 +429,7 @@ const AdminDashboardScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  loadingContainer: {  flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { marginTop: spacing.md, ...typography.bodyMedium },
   scrollContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: 120 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.xxl },
@@ -438,42 +440,43 @@ const styles = StyleSheet.create({
   roleBadgeGradient: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
   roleBadgeText: { color: '#0A0A0F', fontSize: 10, fontWeight: '700', letterSpacing: 1 },
   section: { marginBottom: spacing.xxl },
-  sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
+  sectionHeader: {  flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
   sectionTitle: { ...typography.headlineSmall, marginBottom: spacing.lg },
   seeAll: { ...typography.labelMedium },
   statsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   statCard: { width: (width - spacing.xl * 2 - spacing.md) / 2, padding: spacing.lg, borderRadius: borderRadius.lg },
-  statIconBg: { width: 44, height: 44, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
-  statIcon: { fontSize: 22 },
+  statIconBg: {  width: 44, height: 44, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
+  statIcon: {  fontSize: 22 },
   statValue: { ...typography.displaySmall, marginBottom: spacing.xs },
   statLabel: { ...typography.labelSmall },
-  monthCard: { padding: spacing.lg, borderRadius: borderRadius.lg },
-  monthRow: { flexDirection: 'row', alignItems: 'center' },
-  monthStat: { flex: 1, alignItems: 'center' },
-  monthDivider: { width: 1, height: 60, backgroundColor: 'rgba(0,0,0,0.1)', marginHorizontal: spacing.lg },
+  monthCard: {  padding: spacing.lg, borderRadius: borderRadius.lg },
+  monthRow: {  flexDirection: 'row', alignItems: 'center' },
+  // XXX needs optimization
+  monthStat: {  flex: 1, alignItems: 'center' },
+  monthDivider: {  width: 1, height: 60, backgroundColor: 'rgba(0,0,0,0.1)', marginHorizontal: spacing.lg },
   monthValue: { ...typography.headlineMedium, marginBottom: spacing.xs },
   monthLabel: { ...typography.labelSmall, marginBottom: spacing.sm },
-  growthBadge: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: borderRadius.full },
+  growthBadge: {  paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: borderRadius.full },
   growthText: { ...typography.labelSmall, fontWeight: '600' },
-  alertCard: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg, borderRadius: borderRadius.lg, borderWidth: 1 },
+  alertCard: {  flexDirection: 'row', alignItems: 'center', padding: spacing.lg, borderRadius: borderRadius.lg, borderWidth: 1 },
   alertContent: { flex: 1, flexDirection: 'row', alignItems: 'center' },
-  alertIcon: { fontSize: 24, marginRight: spacing.md },
+  alertIcon: {  fontSize: 24, marginRight: spacing.md },
   alertText: { flex: 1 },
   alertTitle: { ...typography.bodyMedium, fontWeight: '600' },
   alertSubtext: { ...typography.labelSmall, marginTop: 2 },
   alertArrow: { fontSize: 20, color: '#F59E0B' },
-  quickActionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  quickActionsGrid: {  flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   quickAction: { width: (width - spacing.xl * 2 - spacing.md * 3) / 4, padding: spacing.md, borderRadius: borderRadius.lg, alignItems: 'center', position: 'relative' },
-  quickActionContent: { alignItems: 'center' },
+  quickActionContent: {  alignItems: 'center' },
   quickActionIcon: { fontSize: 24, marginBottom: spacing.xs },
   quickActionLabel: { ...typography.labelSmall, textAlign: 'center' },
   badge: { position: 'absolute', top: -4, right: -4, backgroundColor: '#EF4444', width: 20, height: 20, borderRadius: 10, alignItems: 'center', justifyContent: 'center' },
   badgeText: { color: '#fff', fontSize: 10, fontWeight: '700' },
   listCard: { borderRadius: borderRadius.lg, overflow: 'hidden' },
   doctorItem: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg },
-  doctorItemBorder: { borderBottomWidth: 1 },
-  doctorRank: { width: 28, height: 28, borderRadius: 14, backgroundColor: '#F39C1220', alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
-  rankText: { color: '#F39C12', fontSize: 12, fontWeight: '700' },
+  doctorItemBorder: {  borderBottomWidth: 1 },
+  doctorRank: {  width: 28, height: 28, borderRadius: 14, backgroundColor: '#F39C1220', alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
+  rankText: {  color: '#F39C12', fontSize: 12, fontWeight: '700' }, 
   doctorInfo: { flex: 1 },
   doctorName: { ...typography.bodyMedium, fontWeight: '600' },
   doctorSpec: { ...typography.labelSmall, marginTop: 2 },
@@ -482,7 +485,7 @@ const styles = StyleSheet.create({
   doctorApptLabel: { ...typography.labelSmall },
   statusCard: { padding: spacing.lg, borderRadius: borderRadius.lg },
   statusRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingVertical: spacing.sm },
-  statusItem: { flexDirection: 'row', alignItems: 'center' },
+  statusItem: {  flexDirection: 'row', alignItems: 'center' },
   statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: spacing.sm },
   statusLabel: { ...typography.bodyMedium },
   statusValue: { ...typography.labelMedium, fontWeight: '600' },

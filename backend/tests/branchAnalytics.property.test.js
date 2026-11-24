@@ -12,7 +12,7 @@ const validRoles = ['branch_admin', 'branch_manager', 'receptionist', 'doctor', 
 const staffArbitrary = fc.record({
   _id: objectIdArbitrary,
   name: fc.string({ minLength: 1, maxLength: 50 }),
-  branchId: objectIdArbitrary,
+  branchId: objectIdArbitrary, 
   organizationId: objectIdArbitrary,
   role: fc.constantFrom(...validRoles),
   isActive: fc.boolean()
@@ -33,7 +33,7 @@ const checkOutRecordArbitrary = fc.record({
   branchId: objectIdArbitrary,
   organizationId: objectIdArbitrary,
   eventType: fc.constant('check_out'),
-  timestamp: fc.date({ min: new Date('2024-01-01'), max: new Date('2024-12-31') }),
+  timestamp: fc.date({ min: new Date('2024-01-01'), max: new Date('2024-12-31') }), 
   shiftDuration: fc.integer({ min: 60, max: 720 }) 
 });
 
@@ -87,8 +87,8 @@ describe('Branch Analytics - Property Tests', () => {
           objectIdArbitrary,
           (branchId) => {
             const count = attendanceAnalytics.calculateBranchStaffCount([], branchId);
-            expect(count).toBe(0);
-          }
+           expect(count).toBe(0);
+         }
         ),
         { numRuns: 20 }
       );
@@ -213,7 +213,7 @@ describe('Branch Analytics - Property Tests', () => {
         fc.property(
           fc.float({ min: 10, max: 100, noNaN: true }),
           fc.integer({ min: 2, max: 10 }),
-          (baseHours, multiplier) => {
+         (baseHours, multiplier) => {
             const smallNormalized = attendanceAnalytics.calculateNormalizedHours(baseHours, 1);
             const largeNormalized = attendanceAnalytics.calculateNormalizedHours(baseHours * multiplier, multiplier);
             expect(Math.abs(smallNormalized - largeNormalized)).toBeLessThan(0.02);
@@ -222,7 +222,7 @@ describe('Branch Analytics - Property Tests', () => {
         { numRuns: 50 }
       );
     });
-  });
+  }); 
   describe('Branch Comparison Integration Properties', () => {
 
     test('total hours across all branches equals sum of individual branch hours', () => {
@@ -236,11 +236,11 @@ describe('Branch Analytics - Property Tests', () => {
             { minLength: 1, maxLength: 10 }
           ),
           (branchData) => {
-            const totalHours = branchData.reduce((sum, b) => sum + b.totalHours, 0);
+           const totalHours = branchData.reduce((sum, b) => sum + b.totalHours, 0);
             const sumOfIndividual = branchData.map(b => b.totalHours).reduce((a, b) => a + b, 0);
             
             expect(Math.abs(totalHours - sumOfIndividual)).toBeLessThan(0.001);
-          }
+         }
         ),
         { numRuns: 50 }
       );
@@ -261,7 +261,7 @@ describe('Branch Analytics - Property Tests', () => {
             const calculatedAvg = Math.round((branchHours.reduce((a, b) => a + b, 0) / branchHours.length) * 100) / 100;
             
             expect(calculatedAvg).toBe(expectedAvg);
-          }
+         }
         ),
         { numRuns: 50 }
       );
@@ -288,7 +288,7 @@ describe('Branch Analytics - Property Tests', () => {
         { numRuns: 50 }
       );
     });
-  });
+  });
   describe('Edge Cases', () => {
     
     test('handles single staff member correctly', () => {
@@ -300,21 +300,21 @@ describe('Branch Analytics - Property Tests', () => {
         isActive: true
       }];
       
-      const count = attendanceAnalytics.calculateBranchStaffCount(staff, branchId);
+     const count = attendanceAnalytics.calculateBranchStaffCount(staff, branchId);
       expect(count).toBe(1);
     });
 
     test('handles inactive staff correctly', () => {
       const branchId = new mongoose.Types.ObjectId();
       const staff = [
-        { _id: new mongoose.Types.ObjectId(), branchId, isActive: true },
+       { _id: new mongoose.Types.ObjectId(), branchId, isActive: true },
         { _id: new mongoose.Types.ObjectId(), branchId, isActive: false },
         { _id: new mongoose.Types.ObjectId(), branchId, isActive: true }
       ];
       
       const count = attendanceAnalytics.calculateBranchStaffCount(staff, branchId);
       expect(count).toBe(2); 
-    });
+   });
 
     test('handles staff with null branchId', () => {
       const branchId = new mongoose.Types.ObjectId();
@@ -323,7 +323,7 @@ describe('Branch Analytics - Property Tests', () => {
         { _id: new mongoose.Types.ObjectId(), branchId, isActive: true }
       ];
       
-      const count = attendanceAnalytics.calculateBranchStaffCount(staff, branchId);
+     const count = attendanceAnalytics.calculateBranchStaffCount(staff, branchId);
       expect(count).toBe(1);
     });
 
@@ -341,7 +341,7 @@ describe('Branch Analytics - Property Tests', () => {
       
       const result = attendanceAnalytics.calculatePeakHour(records);
       expect(result.peakHour).toBe(timestamp.getHours());
-      expect(result.count).toBe(1);
+      expect(result.count).toBe(1); 
     });
   });
 });

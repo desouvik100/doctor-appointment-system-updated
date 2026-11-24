@@ -30,10 +30,10 @@ const SPECIALIZATIONS = [
 ];
 
 const EXPERIENCE_OPTIONS = [
-  { label: 'Any', value: null },
+  {  label: 'Any', value: null },
   { label: '5+ years', value: '5' },
   { label: '10+ years', value: '10' },
-  { label: '15+ years', value: '15' },
+  {  label: '15+ years', value: '15' },
 ];
 
 const FEE_OPTIONS = [
@@ -44,14 +44,14 @@ const FEE_OPTIONS = [
 ];
 
 const RATING_OPTIONS = [
-  { label: 'Any', value: null },
+  {  label: 'Any', value: null },
   { label: '4+ ⭐', value: 4 },
   { label: '4.5+ ⭐', value: 4.5 },
-];
+]; 
 
 const AVAILABILITY_OPTIONS = [
-  { label: 'Any time', value: null },
-  { label: 'Marked available', value: 'available' },
+  {  label: 'Any time', value: null },
+  {  label: 'Marked available', value: 'available' },
 ];
 
 const FilterPanel = ({ 
@@ -60,7 +60,7 @@ const FilterPanel = ({
   onApply, 
   onClose, 
   onClear 
-}) => {
+})=>{
   const { colors } = useTheme();
   const [localFilters, setLocalFilters] = useState(filters);
 
@@ -82,7 +82,7 @@ const FilterPanel = ({
   const handleClear = () => {
     const clearedFilters = {
       specialization: null,
-      gender: null,
+      gender: null, 
       experience: null,
       maxFee: null,
       availability: null,
@@ -96,21 +96,21 @@ const FilterPanel = ({
 
   const renderChip = (label, isSelected, onPress, key) => (
     <TouchableOpacity
-      key={key}
+      key={key} 
       style={[styles.chip, isSelected && styles.chipSelected]}
       onPress={onPress}
     >
-      <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
+     <Text style={[styles.chipText, isSelected && styles.chipTextSelected]}>
         {label}
       </Text>
-    </TouchableOpacity>
+    </TouchableOpacity> 
   );
 
   return (
-    <Modal
+   <Modal
       visible={visible}
       animationType="slide"
-      transparent
+     transparent
       onRequestClose={onClose}
     >
       <View style={styles.overlay}>
@@ -123,14 +123,14 @@ const FilterPanel = ({
         <View style={styles.container}>
           {}
           <View style={styles.header}>
-            <Text style={styles.title}>Filters</Text>
+           <Text style={styles.title}>Filters</Text>
             <TouchableOpacity onPress={handleClear}>
               <Text style={styles.clearText}>Clear all</Text>
-            </TouchableOpacity>
+           </TouchableOpacity>
           </View>
 
           {}
-          <View style={styles.handle} />
+         <View style={styles.handle} />
 
           <ScrollView 
             style={styles.content}
@@ -145,7 +145,7 @@ const FilterPanel = ({
                     spec,
                     localFilters.specialization === spec,
                     () => updateFilter('specialization', spec),
-                    `spec-${spec}`,
+                   `spec-${spec}`,
                   )
                 )}
               </View>
@@ -168,9 +168,9 @@ const FilterPanel = ({
                   'gender-female',
                 )}
               </View>
-            </View>
+           </View>
 
-            {}
+           {}
             <View style={styles.section}>
               <Text style={styles.sectionTitle}>Experience</Text>
               <View style={styles.chipContainer}>
@@ -187,11 +187,11 @@ const FilterPanel = ({
 
             {}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Consultation Fee</Text>
+              <Text style={styles.sectionTitle}>Consultation Fee</Text> 
               <View style={styles.chipContainer}>
-                {FEE_OPTIONS.map((opt) => 
+               {FEE_OPTIONS.map((opt) => 
                   renderChip(
-                    opt.label,
+                   opt.label,
                     localFilters.maxFee === opt.value,
                     () => updateFilter('maxFee', opt.value),
                     `fee-${opt.label}`,
@@ -217,7 +217,7 @@ const FilterPanel = ({
 
             {}
             <View style={styles.section}>
-              <Text style={styles.sectionTitle}>Availability</Text>
+             <Text style={styles.sectionTitle}>Availability</Text>
               <View style={styles.chipContainer}>
                 {AVAILABILITY_OPTIONS.map((opt) => 
                   renderChip(
@@ -234,8 +234,8 @@ const FilterPanel = ({
           {}
           <View style={styles.actions}>
             <Button
-              title="Apply Filters"
-              onPress={handleApply}
+             title="Apply Filters"
+             onPress={handleApply}
               fullWidth
               size="large"
             />
@@ -255,8 +255,8 @@ const makeStyles = (colors) => StyleSheet.create({
     ...StyleSheet.absoluteFillObject,
     backgroundColor: 'rgba(0,0,0,0.5)',
   },
-  container: {
-    backgroundColor: colors.background,
+  container: { 
+   backgroundColor: colors.background,
     borderTopLeftRadius: borderRadius.xxl,
     borderTopRightRadius: borderRadius.xxl,
     maxHeight: height * 0.85,
@@ -285,7 +285,7 @@ const makeStyles = (colors) => StyleSheet.create({
     ...typography.labelMedium,
     color: colors.primary,
   },
-  content: {
+  content: { 
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
   },
@@ -293,16 +293,16 @@ const makeStyles = (colors) => StyleSheet.create({
     marginBottom: spacing.xl,
   },
   sectionTitle: {
-    ...typography.labelLarge,
+   ...typography.labelLarge,
     color: colors.textPrimary,
     marginBottom: spacing.md,
   },
-  chipContainer: {
+  chipContainer: { 
     flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
   },
-  chip: {
+  chip: { 
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
@@ -312,11 +312,11 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   chipSelected: {
     backgroundColor: colors.primaryLight,
-    borderColor: colors.primary,
+   borderColor: colors.primary,
   },
   chipText: {
     ...typography.labelMedium,
-    color: colors.textSecondary,
+   color: colors.textSecondary,
   },
   chipTextSelected: {
     color: colors.primary,

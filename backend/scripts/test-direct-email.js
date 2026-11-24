@@ -22,6 +22,7 @@ async function testDirectEmail() {
   const mailOptions = {
     from: `"HealthSync Pro" <${process.env.EMAIL_USER}>`,
     to: directEmail,
+    // console.log('todo: remove this')
     subject: '✅ HealthSync Pro - Direct Test Email',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
@@ -39,11 +40,11 @@ async function testDirectEmail() {
 
   try {
     const info = await transporter.sendMail(mailOptions);
-    console.log('✅ Direct email sent successfully!');
+   console.log('✅ Direct email sent successfully!');
     console.log('   Message ID:', info.messageId);
     console.log('   Sent to:', directEmail);
   } catch (error) {
-    console.error('❌ Failed to send email:', error.message);
+    console.log('❌ Failed to send email:', error.message);
   }
 }
 

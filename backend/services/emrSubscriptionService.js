@@ -25,7 +25,7 @@ class EMRSubscriptionService {
       const plan = SUBSCRIPTION_PLANS[planId];
       if (!plan) {
         throw new Error('Invalid plan selected');
-      }
+     }
       if (!['6_months', '1_year'].includes(duration)) {
         throw new Error('Invalid duration selected');
       }
@@ -38,15 +38,15 @@ class EMRSubscriptionService {
         throw new Error('Clinic not found');
       }
       const existingSubscription = await EMRSubscription.getActiveForClinic(clinicId);
-      if (existingSubscription && !existingSubscription.isExpired) {
+     if (existingSubscription && !existingSubscription.isExpired) {
         throw new Error('Clinic already has an active subscription. Please upgrade or wait for expiry.');
       }
       const orderOptions = {
         amount: pricing.amount * 100, 
         currency: pricing.currency,
         receipt: `emr_${clinicId}_${Date.now()}`,
-        notes: {
-          clinicId: clinicId.toString(),
+       notes: {
+         clinicId: clinicId.toString(),
           planId,
           duration,
           type: 'emr_subscription'
@@ -82,10 +82,10 @@ class EMRSubscriptionService {
           duration
         },
         keyId: process.env.RAZORPAY_KEY_ID
-      };
+      }; 
     } catch (error) {
       console.error('Error creating subscription order:', error);
-      throw error;
+     throw error;
     }
   }
 
@@ -105,7 +105,7 @@ class EMRSubscriptionService {
       
       if (!subscription) {
         throw new Error('Subscription not found or already processed');
-      }
+     }
       const body = razorpay_order_id + '|' + razorpay_payment_id;
       const expectedSignature = crypto
         .createHmac('sha256', process.env.RAZORPAY_KEY_SECRET)
@@ -116,9 +116,9 @@ class EMRSubscriptionService {
         subscription.status = 'cancelled';
         await subscription.save();
         throw new Error('Payment verification failed');
-      }
+     }
       subscription.status = 'active';
-      subscription.startDate = new Date();
+     subscription.startDate = new Date();
       subscription.expiryDate = calculateExpiryDate(new Date(), subscription.duration);
       subscription.paymentDetails.razorpayPaymentId = razorpay_payment_id;
       subscription.paymentDetails.razorpaySignature = razorpay_signature;
@@ -132,9 +132,9 @@ class EMRSubscriptionService {
         emrExpiryDate: subscription.expiryDate
       });
       
-      return {
+     return {
         success: true,
-        subscription: {
+       subscription: {
           id: subscription._id,
           plan: subscription.plan,
           startDate: subscription.startDate,
@@ -149,18 +149,18 @@ class EMRSubscriptionService {
   }
 
   static async getActiveSubscription(clinicId) {
-    const subscription = await EMRSubscription.getActiveForClinic(clinicId);
+   const subscription = await EMRSubscription.getActiveForClinic(clinicId);
     
     if (!subscription) {
       return null;
-    }
+   }
     
     const plan = SUBSCRIPTION_PLANS[subscription.plan];
     
     return {
       id: subscription._id,
       plan: subscription.plan,
-      planName: plan?.name,
+     planName: plan?.name,
       planFeatures: plan?.features,
       duration: subscription.duration,
       startDate: subscription.startDate,
@@ -169,7 +169,7 @@ class EMRSubscriptionService {
       status: subscription.status,
       limits: subscription.limits,
       autoRenew: subscription.autoRenew
-    };
+   };
   }
 
   static async getSubscriptionHistory(clinicId) {
@@ -187,7 +187,7 @@ class EMRSubscriptionService {
       }
       
       const currentPlan = SUBSCRIPTION_PLANS[currentSubscription.plan];
-      const newPlan = SUBSCRIPTION_PLANS[newPlanId];
+      const newPlan = SUBSCRIPTION_PLANS[newPlanId]; 
       
       if (!newPlan) {
         throw new Error('Invalid plan selected');
@@ -199,8 +199,8 @@ class EMRSubscriptionService {
       const daysRemaining = currentSubscription.daysRemaining;
       const totalDays = currentSubscription.duration === '6_months' ? 180 : 365;
       const currentDailyRate = currentPlan.pricing[currentSubscription.duration].amount / totalDays;
-      const newDailyRate = newPlan.pricing[currentSubscription.duration].amount / totalDays;
-      const proratedAmount = Math.round((newDailyRate - currentDailyRate) * daysRemaining);
+     const newDailyRate = newPlan.pricing[currentSubscription.duration].amount / totalDays;
+     const proratedAmount = Math.round((newDailyRate - currentDailyRate) * daysRemaining);
       const orderOptions = {
         amount: proratedAmount * 100,
         currency: 'INR',
@@ -216,7 +216,7 @@ class EMRSubscriptionService {
       const order = await razorpay.orders.create(orderOptions);
       
       return {
-        orderId: order.id,
+       orderId: order.id,
         amount: proratedAmount,
         currency: 'INR',
         currentPlan: currentSubscription.plan,
@@ -227,7 +227,7 @@ class EMRSubscriptionService {
     } catch (error) {
       console.error('Error creating upgrade order:', error);
       throw error;
-    }
+   }
   }
 
   static async processUpgrade(clinicId, newPlanId, paymentData) {
@@ -235,7 +235,7 @@ class EMRSubscriptionService {
       const subscription = await EMRSubscription.getActiveForClinic(clinicId);
       
       if (!subscription) {
-        throw new Error('No active subscription found');
+       throw new Error('No active subscription found');
       }
       subscription.planHistory.push({
         fromPlan: subscription.plan,
@@ -274,7 +274,7 @@ class EMRSubscriptionService {
       }
       
       const plan = SUBSCRIPTION_PLANS[currentSubscription.plan];
-      const pricing = plan.pricing[duration];
+      const pricing = plan.pricing[duration];
       const orderOptions = {
         amount: pricing.amount * 100,
         currency: pricing.currency,
@@ -331,7 +331,7 @@ class EMRSubscriptionService {
   static async sendExpiryReminders() {
     try {
       const reminders = [];
-      const thirtyDayExpiring = await EMRSubscription.findExpiring(30);
+     const thirtyDayExpiring = await EMRSubscription.findExpiring(30);
       for (const sub of thirtyDayExpiring) {
         if (!sub.remindersSent.thirtyDays) {
           reminders.push({ subscription: sub, days: 30 });
@@ -341,7 +341,7 @@ class EMRSubscriptionService {
       }
       const sevenDayExpiring = await EMRSubscription.findExpiring(7);
       for (const sub of sevenDayExpiring) {
-        if (!sub.remindersSent.sevenDays) {
+        if (!sub.remindersSent.sevenDays) { 
           reminders.push({ subscription: sub, days: 7 });
           sub.remindersSent.sevenDays = true;
           await sub.save();
@@ -369,7 +369,7 @@ class EMRSubscriptionService {
                   <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; padding: 24px; border-radius: 12px 12px 0 0; text-align: center;">
                     <h1 style="margin: 0; font-size: 22px;">🏥 HealthSync EMR</h1>
                     <p style="margin: 8px 0 0; opacity: 0.9;">Subscription Expiry Reminder</p>
-                  </div>
+                 </div> 
                   <div style="background: #f8fafc; padding: 24px; border-radius: 0 0 12px 12px;">
                     <p>Dear <strong>${clinic.name}</strong>,</p>
                     <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 16px; border-radius: 4px; margin: 16px 0;">
@@ -388,7 +388,7 @@ class EMRSubscriptionService {
               `
             });
             console.log(`📧 EMR expiry reminder (${days}d) sent to ${clinic.email}`);
-          }
+         }
         } catch (emailErr) {
           console.error(`Failed to send EMR reminder for clinic ${subscription.clinicId}:`, emailErr.message);
         }

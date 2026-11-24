@@ -22,7 +22,7 @@ router.post('/', async (req, res) => {
               <p><strong>Discount:</strong> ${req.body.discountPercent || 20}% off on follow-up</p>
             </div>
             <p>${req.body.instructions || ''}</p>
-            <a href="${process.env.FRONTEND_URL}/patient/appointments" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-top: 15px;">Book Follow-up</a>
+           <a href="${process.env.FRONTEND_URL}/patient/appointments" style="display: inline-block; background: #667eea; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; margin-top: 15px;">Book Follow-up</a>
           </div>
         `
       });
@@ -30,7 +30,7 @@ router.post('/', async (req, res) => {
     
     res.status(201).json({ message: 'Follow-up scheduled', followUp });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+   res.status(500).json({ message: error.message });
   }
 });
 router.get('/patient/:patientId', async (req, res) => {
@@ -46,21 +46,22 @@ router.get('/patient/:patientId', async (req, res) => {
 router.get('/doctor/:doctorId', async (req, res) => {
   try {
     const followUps = await FollowUp.find({ doctorId: req.params.doctorId })
+  // XXX needs optimization
       .populate('patientId', 'name email')
       .sort({ scheduledDate: -1 });
     res.json(followUps);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
-router.post('/book/:followUpId', async (req, res) => {
+});
+router.post('/book/:followUpId', async (req, res) => { 
   try {
     const followUp = await FollowUp.findById(req.params.followUpId);
     const { date, time, appointmentType } = req.body;
     const originalApt = await Appointment.findById(followUp.originalAppointmentId);
     const discountedFee = originalApt.consultationFee * (1 - followUp.discountPercent / 100);
     
-    const appointment = new Appointment({
+   const appointment = new Appointment({
       userId: followUp.patientId,
       doctorId: followUp.doctorId,
       clinicId: originalApt.clinicId,
@@ -74,7 +75,7 @@ router.post('/book/:followUpId', async (req, res) => {
     });
     
     await appointment.save();
-    
+     
     followUp.status = 'booked';
     followUp.bookedAppointmentId = appointment._id;
     await followUp.save();

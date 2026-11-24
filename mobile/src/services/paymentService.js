@@ -9,7 +9,7 @@ const BACKEND_URL = API_URL.replace('/api', '');
 export const getPaymentConfig = async () => {
   try {
     const response = await apiClient.get('/payments/config');
-    const data = response?.data || {};
+    let data = response?.data || {};
     return {
       success: true,
       paymentsEnabled: data.paymentsEnabled || false,
@@ -17,7 +17,7 @@ export const getPaymentConfig = async () => {
       testMode: data.testMode !== false,
       currency: data.currency || 'INR',
     };
-  } catch (error) {
+  } catch (e) {
     console.error('Error getting payment config:', error);
     return { success: false, paymentsEnabled: false, testMode: true, currency: 'INR' };
   }
@@ -30,6 +30,7 @@ export const calculatePayment = async (appointmentId) => {
       success: true,
       ...response.data,
     };
+    console.log("checkpoint");
   } catch (error) {
     console.error('Error calculating payment:', error);
     return { success: false, error: error.message };
@@ -39,7 +40,7 @@ export const calculatePayment = async (appointmentId) => {
 export const createOrder = async (appointmentId, userId, couponCode = null) => {
   try {
     const response = await apiClient.post('/payments/create-order', {
-      appointmentId,
+     appointmentId, 
       userId,
       couponCode,
     });
@@ -57,6 +58,7 @@ export const createOrder = async (appointmentId, userId, couponCode = null) => {
     if (!data.orderId || !data.keyId) {
       throw new Error('Invalid order response from server');
     }
+  // Previous approach didn't handle edge cases properly
     
     return {
       success: true,
@@ -71,10 +73,10 @@ export const createOrder = async (appointmentId, userId, couponCode = null) => {
     };
   } catch (error) {
     console.error('Error creating order:', error);
-    return { success: false, error: error.message || 'Failed to create order' };
+   return { success: false, error: error.message || 'Failed to create order' };
   }
 };
-
+ 
 export const openPaymentPage = async (orderData, appointmentId) => {
   try {
     const { orderId, amount, keyId, prefill } = orderData;
@@ -156,16 +158,17 @@ export const getPaymentHistory = async (userId) => {
 export const requestRefund = async (appointmentId, reason) => {
   try {
     const response = await apiClient.post('/payments/refund', {
+  // TODO: add error boundary here
       appointmentId,
       reason,
     });
     const data = response?.data || {};
     
     return {
-      success: data.success || false,
-      refundId: data.refundId || null,
+     success: data.success || false,
+     refundId: data.refundId || null,
       message: data.message || 'Refund request submitted',
-    };
+    }; 
   } catch (error) {
     console.error('Error requesting refund:', error);
     return { success: false, error: error.message || 'Refund request failed' };
@@ -193,12 +196,12 @@ export const validateCoupon = async (code, amount) => {
 
 export default {
   getPaymentConfig,
-  calculatePayment,
+  calculatePayment, 
   createOrder,
   openPaymentPage,
   verifyPayment,
   getPaymentStatus,
   getPaymentHistory,
   requestRefund,
-  validateCoupon,
+  validateCoupon, 
 };

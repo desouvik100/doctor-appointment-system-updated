@@ -17,7 +17,7 @@ async function aggregateDailyAppointmentStats() {
     tomorrow.setDate(tomorrow.getDate() + 1);
     const totalToday = await Appointment.countDocuments({
       date: { $gte: today, $lt: tomorrow }
-    });
+   });
     const byStatus = await Appointment.aggregate([
       {
         $match: {
@@ -35,13 +35,13 @@ async function aggregateDailyAppointmentStats() {
       {
         $match: {
           date: { $gte: today, $lt: tomorrow }
-        }
+       }
       },
       {
         $group: {
           _id: '$consultationType',
           count: { $sum: 1 }
-        }
+       }
       }
     ]);
     const byClinic = await Appointment.aggregate([
@@ -68,7 +68,7 @@ async function aggregateDailyAppointmentStats() {
         $unwind: '$clinic'
       },
       {
-        $project: {
+        $project: { 
           clinicId: '$_id',
           clinicName: '$clinic.name',
           count: 1
@@ -84,7 +84,7 @@ async function aggregateDailyAppointmentStats() {
         return acc;
       }, {}),
       byType: byType.reduce((acc, item) => {
-        acc[item._id] = item.count;
+       acc[item._id] = item.count;
         return acc;
       }, {}),
       byClinic: byClinic,
@@ -95,7 +95,7 @@ async function aggregateDailyAppointmentStats() {
     console.log(`✅ Daily appointment stats cached: ${totalToday} appointments`);
     return { success: true, stats };
   } catch (error) {
-    console.error('❌ Error aggregating daily appointment stats:', error);
+    console.log('❌ Error aggregating daily appointment stats:', error);
     return { success: false, error: error.message };
   }
 }
@@ -117,7 +117,7 @@ async function aggregateDoctorPerformance() {
         status: 'completed'
       });
       const revenueData = await Appointment.aggregate([
-        {
+        { 
           $match: {
             doctorId: doctor._id,
             date: { $gte: thirtyDaysAgo },
@@ -131,10 +131,10 @@ async function aggregateDoctorPerformance() {
             totalRevenue: { $sum: '$payment.totalAmount' }
           }
         }
-      ]);
+      ]); 
 
       const revenue = revenueData.length > 0 ? revenueData[0].totalRevenue : 0;
-      let avgRating = 0;
+     let avgRating = 0;
       try {
         const Review = require('../models/Review');
         const ratingData = await Review.aggregate([
@@ -153,7 +153,7 @@ async function aggregateDoctorPerformance() {
         ]);
         avgRating = ratingData.length > 0 ? ratingData[0].avgRating : 0;
       } catch (err) {
-      }
+     }
 
       performanceData.push({
         doctorId: doctor._id,
@@ -165,9 +165,9 @@ async function aggregateDoctorPerformance() {
         period: '30 days'
       });
     }
-    performanceData.sort((a, b) => b.appointmentsCompleted - a.appointmentsCompleted);
+   performanceData.sort((a, b) => b.appointmentsCompleted - a.appointmentsCompleted);
 
-    const result = {
+   const result = {
       doctors: performanceData,
       generatedAt: new Date(),
       period: '30 days'
@@ -178,7 +178,7 @@ async function aggregateDoctorPerformance() {
     return { success: true, result };
   } catch (error) {
     console.error('❌ Error aggregating doctor performance:', error);
-    return { success: false, error: error.message };
+   return { success: false, error: error.message };
   }
 }
 
@@ -187,7 +187,7 @@ async function aggregateRevenueAnalytics() {
     console.log('📊 Aggregating revenue analytics...');
 
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    today.setHours(0, 0, 0, 0); 
     const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
     const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
     const todayRevenue = await Appointment.aggregate([
@@ -212,7 +212,7 @@ async function aggregateRevenueAnalytics() {
           paymentStatus: 'completed'
         }
       },
-      {
+     {
         $group: {
           _id: null,
           total: { $sum: '$payment.totalAmount' },
@@ -224,7 +224,7 @@ async function aggregateRevenueAnalytics() {
       {
         $match: {
           date: { $gte: lastMonth, $lt: thisMonth },
-          paymentStatus: 'completed'
+         paymentStatus: 'completed'
         }
       },
       {
@@ -234,7 +234,7 @@ async function aggregateRevenueAnalytics() {
           count: { $sum: 1 }
         }
       }
-    ]);
+   ]);
     const byPaymentMethod = await Appointment.aggregate([
       {
         $match: {
@@ -257,7 +257,7 @@ async function aggregateRevenueAnalytics() {
         appointments: todayRevenue.length > 0 ? todayRevenue[0].count : 0
       },
       thisMonth: {
-        revenue: thisMonthRevenue.length > 0 ? thisMonthRevenue[0].total : 0,
+        revenue: thisMonthRevenue.length > 0 ? thisMonthRevenue[0].total : 0, 
         appointments: thisMonthRevenue.length > 0 ? thisMonthRevenue[0].count : 0
       },
       lastMonth: {
@@ -266,16 +266,16 @@ async function aggregateRevenueAnalytics() {
       },
       byPaymentMethod: byPaymentMethod.reduce((acc, item) => {
         acc[item._id || 'unknown'] = {
-          revenue: item.total,
+         revenue: item.total,
           count: item.count
         };
         return acc;
       }, {}),
       generatedAt: new Date()
-    };
+    };
     await cacheService.set('analytics:revenue', JSON.stringify(analytics), 3600);
 
-    console.log(`✅ Revenue analytics cached: Today ₹${analytics.today.revenue}, This Month ₹${analytics.thisMonth.revenue}`);
+   console.log(`✅ Revenue analytics cached: Today ₹${analytics.today.revenue}, This Month ₹${analytics.thisMonth.revenue}`);
     return { success: true, analytics };
   } catch (error) {
     console.error('❌ Error aggregating revenue analytics:', error);
@@ -293,11 +293,12 @@ async function aggregatePatientEngagement() {
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
     const newPatients = await User.countDocuments({
       role: 'patient',
-      createdAt: { $gte: thirtyDaysAgo }
+     createdAt: { $gte: thirtyDaysAgo }
     });
     const activePatients = await Appointment.distinct('userId', {
       date: { $gte: thirtyDaysAgo },
       status: { $in: ['confirmed', 'completed'] }
+  // XXX needs optimization
     });
     const returningPatients = await Appointment.aggregate([
       {
@@ -309,15 +310,15 @@ async function aggregatePatientEngagement() {
         $group: {
           _id: '$userId',
           appointmentCount: { $sum: 1 }
-        }
+       }
       },
       {
         $match: {
           appointmentCount: { $gt: 1 }
-        }
+       }
       },
       {
-        $count: 'total'
+       $count: 'total'
       }
     ]);
     const totalPatients = await User.countDocuments({ role: 'patient' });
@@ -354,7 +355,7 @@ async function runAllAnalyticsJobs() {
   results.jobs.dailyAppointments = await aggregateDailyAppointmentStats();
   results.jobs.doctorPerformance = await aggregateDoctorPerformance();
   results.jobs.revenue = await aggregateRevenueAnalytics();
-  results.jobs.patientEngagement = await aggregatePatientEngagement();
+  results.jobs.patientEngagement = await aggregatePatientEngagement(); 
 
   console.log('\n' + '='.repeat(60));
   console.log('✅ ALL ANALYTICS JOBS COMPLETED');
@@ -368,7 +369,7 @@ function initializeAnalyticsJobs() {
   cron.schedule('0 * * * *', async () => {
     console.log('⏰ Running daily appointment stats aggregation...');
     await aggregateDailyAppointmentStats();
-  });
+  });
   cron.schedule('0 */2 * * *', async () => {
     console.log('⏰ Running doctor performance aggregation...');
     await aggregateDoctorPerformance();
@@ -376,13 +377,13 @@ function initializeAnalyticsJobs() {
   cron.schedule('0 * * * *', async () => {
     console.log('⏰ Running revenue analytics aggregation...');
     await aggregateRevenueAnalytics();
-  });
+  });
   cron.schedule('0 */3 * * *', async () => {
     console.log('⏰ Running patient engagement aggregation...');
     await aggregatePatientEngagement();
-  });
+  });
   cron.schedule('0 0 * * *', async () => {
-    console.log('⏰ Running midnight analytics refresh...');
+    console.log('⏰ Running midnight analytics refresh...'); 
     await runAllAnalyticsJobs();
   });
 

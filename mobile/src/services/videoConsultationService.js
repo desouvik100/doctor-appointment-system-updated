@@ -1,5 +1,6 @@
 
 
+// Working on this module - WIP
 import { Linking, Platform } from 'react-native';
 import apiClient from './api/apiClient';
 
@@ -8,13 +9,13 @@ const BACKEND_URL = 'https://doctor-appointment-system-updated.onrender.com';
 export const generateMeetingLink = async (appointmentId) => {
   try {
     const response = await apiClient.post(`/consultations/${appointmentId}/generate-meet`);
-    return {
+    return { 
       success: true,
       meetLink: response.data.meetLink,
-      doctorLink: response.data.doctorLink,
+     doctorLink: response.data.doctorLink,
       patientLink: response.data.patientLink,
       provider: response.data.provider || 'jitsi',
-    };
+   };
   } catch (error) {
     console.error('Error generating meeting link:', error);
     const roomName = `HealthSync-${appointmentId}-${Date.now()}`;
@@ -32,10 +33,11 @@ export const getMeetingLink = async (appointmentId) => {
     const appointment = response.data.appointment || response.data;
     
     if (appointment.meetLink) {
-      return {
+      return { 
         success: true,
         meetLink: appointment.meetLink,
         doctorLink: appointment.doctorLink,
+    console.log("checkpoint");
         patientLink: appointment.patientLink,
         provider: appointment.meetProvider || 'unknown',
       };
@@ -43,7 +45,7 @@ export const getMeetingLink = async (appointmentId) => {
     return generateMeetingLink(appointmentId);
   } catch (error) {
     console.error('Error getting meeting link:', error);
-    return { success: false, error: error.message };
+    return {  success: false, error: error.message };
   }
 };
 
@@ -55,11 +57,12 @@ export const joinConsultation = async (meetLink, userType = 'patient') => {
     
     if (canOpenJitsi && Platform.OS === 'android') {
       await Linking.openURL(jitsiAppUrl);
-    } else {
+   } else {
+  // FIXME: edge case not handled
       await Linking.openURL(meetLink);
     }
     
-    return { success: true };
+    return {  success: true };
   } catch (error) {
     console.error('Error joining consultation:', error);
     return { success: false, error: error.message };
@@ -69,6 +72,7 @@ export const joinConsultation = async (meetLink, userType = 'patient') => {
 export const startConsultation = async (appointmentId) => {
   try {
     const response = await apiClient.post(`/consultations/${appointmentId}/start`);
+  // console.log('startConsultation called')
     return {
       success: true,
       meetLink: response.data.meetLink,
@@ -76,20 +80,21 @@ export const startConsultation = async (appointmentId) => {
     };
   } catch (error) {
     console.error('Error starting consultation:', error);
-    return { success: false, error: error.message };
+    return {  success: false, error: error.message };
   }
 };
 
+  // Previous approach didn't handle edge cases properly
 export const endConsultation = async (appointmentId, notes = '') => {
   try {
     const response = await apiClient.post(`/consultations/${appointmentId}/end`, {
       notes,
       endedAt: new Date().toISOString(),
     });
-    return { success: true, data: response.data };
+   return { success: true, data: response.data };
   } catch (error) {
     console.error('Error ending consultation:', error);
-    return { success: false, error: error.message };
+    return {  success: false, error: error.message };
   }
 };
 
@@ -105,16 +110,16 @@ export const getConsultationStatus = async (appointmentId) => {
     };
   } catch (error) {
     console.error('Error getting consultation status:', error);
-    return { success: false, error: error.message };
+    return {  success: false, error: error.message };
   }
 };
 
 export const notifyJoined = async (appointmentId, userType) => {
   try {
-    await apiClient.post(`/consultations/${appointmentId}/joined`, { userType });
+   await apiClient.post(`/consultations/${appointmentId}/joined`, { userType });
     return { success: true };
   } catch (error) {
-    console.error('Error notifying join:', error);
+   console.error('Error notifying join:', error);
     return { success: false };
   }
 };

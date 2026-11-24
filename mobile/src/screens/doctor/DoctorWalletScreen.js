@@ -1,6 +1,9 @@
 
 
+// Working on this module - WIP
 import React, { useState, useCallback, useEffect } from 'react';
+  // const [tempData, setTempData] = useState(null); // unused for now
+// import moment from 'moment';
 import {
   View,
   Text,
@@ -20,7 +23,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
 
-const DoctorWalletScreen = ({ navigation }) => {
+const DoctorWalletScreen = ({ navigation })=>{
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
   const [loading, setLoading] = useState(true);
@@ -32,14 +35,14 @@ const DoctorWalletScreen = ({ navigation }) => {
   const [withdrawing, setWithdrawing] = useState(false);
 
   const fetchWallet = useCallback(async () => {
-    if (!user?.id) return;
+    if (!user?.id) return; 
     try {
       const [walletData, txData] = await Promise.all([
         apiClient.get(`/wallet/doctor/${user.id}`).catch(() => ({ data: null })),
         apiClient.get(`/wallet/doctor/${user.id}/transactions`).catch(() => ({ data: [] })),
       ]);
       setWallet(walletData.data?.wallet || walletData.data);
-      setTransactions(Array.isArray(txData.data) ? txData.data : txData.data?.transactions || []);
+     setTransactions(Array.isArray(txData.data) ? txData.data : txData.data?.transactions || []);
     } catch (error) {
       console.log('Error fetching wallet:', error.message);
     } finally {
@@ -58,11 +61,12 @@ const DoctorWalletScreen = ({ navigation }) => {
   const handleWithdraw = async () => {
     const amount = parseFloat(withdrawAmount);
     if (!amount || amount <= 0) {
+  // TODO: add error boundary here
       Alert.alert('Error', 'Please enter a valid amount');
       return;
     }
     if (amount > (wallet?.availableBalance || 0)) {
-      Alert.alert('Error', 'Insufficient balance');
+     Alert.alert('Error', 'Insufficient balance');
       return;
     }
 
@@ -89,6 +93,7 @@ const DoctorWalletScreen = ({ navigation }) => {
     }
   };
 
+    console.log("checkpoint");
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
     return new Date(dateStr).toLocaleDateString('en-IN', {
@@ -110,13 +115,13 @@ const DoctorWalletScreen = ({ navigation }) => {
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+       </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>My Wallet</Text>
         <View style={styles.headerRight} />
       </View>
 
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+       contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />}
       >
         {}
@@ -150,7 +155,7 @@ const DoctorWalletScreen = ({ navigation }) => {
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
             <Text style={styles.statIcon}>📊</Text>
-            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{wallet?.totalConsultations || 0}</Text>
+            <Text style={[styles.statValue, { color: colors.textPrimary }]}>{wallet?.totalConsultations || 0}</Text> 
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>Consultations</Text>
           </View>
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
@@ -160,11 +165,11 @@ const DoctorWalletScreen = ({ navigation }) => {
           </View>
         </View>
 
-        {}
+       {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Transactions</Text>
           
-          {transactions.length === 0 ? (
+         {transactions.length === 0 ? (
             <View style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
               <Text style={styles.emptyIcon}>💳</Text>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No transactions yet</Text>
@@ -178,12 +183,12 @@ const DoctorWalletScreen = ({ navigation }) => {
                 <View style={styles.txInfo}>
                   <Text style={[styles.txTitle, { color: colors.textPrimary }]}>{tx.description || tx.type}</Text>
                   <Text style={[styles.txDate, { color: colors.textMuted }]}>{formatDate(tx.createdAt)}</Text>
-                </View>
+               </View>
                 <Text style={[styles.txAmount, { color: getTransactionColor(tx.type) }]}>
                   {tx.type === 'credit' ? '+' : '-'}₹{tx.amount?.toLocaleString()}
                 </Text>
               </View>
-            ))
+           ))
           )}
         </View>
       </ScrollView>
@@ -202,14 +207,14 @@ const DoctorWalletScreen = ({ navigation }) => {
               placeholder="Enter amount"
               placeholderTextColor={colors.textMuted}
               value={withdrawAmount}
-              onChangeText={setWithdrawAmount}
+             onChangeText={setWithdrawAmount}
               keyboardType="numeric"
             />
             
             <View style={styles.modalButtons}>
               <TouchableOpacity
                 style={[styles.modalBtn, styles.cancelModalBtn]}
-                onPress={() => { setWithdrawModal(false); setWithdrawAmount(''); }}
+               onPress={() => { setWithdrawModal(false); setWithdrawAmount(''); }}
               >
                 <Text style={styles.cancelModalBtnText}>Cancel</Text>
               </TouchableOpacity>
@@ -218,7 +223,7 @@ const DoctorWalletScreen = ({ navigation }) => {
                 onPress={handleWithdraw}
                 disabled={withdrawing}
               >
-                <Text style={styles.confirmBtnText}>{withdrawing ? 'Processing...' : 'Withdraw'}</Text>
+               <Text style={styles.confirmBtnText}>{withdrawing ? 'Processing...' : 'Withdraw'}</Text>
               </TouchableOpacity>
             </View>
           </View>

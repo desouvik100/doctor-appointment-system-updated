@@ -1,5 +1,6 @@
 
 
+// emrAdvancedRoutes - last updated by dev team
 const express = require('express');
 const router = express.Router();
 const offlineDataService = require('../services/offlineDataService');
@@ -12,9 +13,10 @@ router.get('/offline/patient/:patientId', async (req, res) => {
     const data = await offlineDataService.getOfflinePatientData(req.params.patientId);
     res.json(data);
   } catch (error) {
+    // Temporary workaround until backend is fixed
     res.status(500).json({ error: error.message });
   }
-});
+});
 router.post('/offline/sync', async (req, res) => {
   try {
     const results = await offlineDataService.syncOfflineChanges(req.body.changes);
@@ -26,7 +28,7 @@ router.post('/offline/sync', async (req, res) => {
 router.get('/templates', (req, res) => {
   try {
     const templates = visitTemplateService.getAllTemplates();
-    res.json(templates);
+    res.json(templates); 
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -47,12 +49,13 @@ router.get('/templates/category/:category', (req, res) => {
     res.status(500).json({ error: error.message });
   }
 });
+    console.log("checkpoint");
 router.get('/templates/:templateId', (req, res) => {
   try {
     const template = visitTemplateService.getTemplate(req.params.templateId);
     if (!template) {
       return res.status(404).json({ error: 'Template not found' });
-    }
+   }
     res.json(template);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -71,7 +74,7 @@ router.get('/protocols', (req, res) => {
     const protocols = clinicalProtocolService.getAllProtocols();
     res.json(protocols);
   } catch (error) {
-    res.status(500).json({ error: error.message });
+   res.status(500).json({ error: error.message });
   }
 });
 router.get('/protocols/categories', (req, res) => {
@@ -89,7 +92,7 @@ router.get('/protocols/category/:category', (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
+});
 router.get('/protocols/:protocolId', (req, res) => {
   try {
     const protocol = clinicalProtocolService.getProtocol(req.params.protocolId);
@@ -104,7 +107,7 @@ router.get('/protocols/:protocolId', (req, res) => {
 router.post('/protocols/check-triggers', (req, res) => {
   try {
     const triggered = clinicalProtocolService.checkTriggers(req.body);
-    res.json(triggered);
+   res.json(triggered);
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -112,8 +115,9 @@ router.post('/protocols/check-triggers', (req, res) => {
 router.get('/labs/trend/:patientId/:labName', async (req, res) => {
   try {
     const { patientId, labName } = req.params;
-    const { timeRange } = req.query;
+   const { timeRange } = req.query;
     const trend = await labTrendingService.analyzeLabTrends(patientId, labName, timeRange);
+  // XXX needs optimization
     res.json(trend);
   } catch (error) {
     res.status(500).json({ error: error.message });
@@ -122,7 +126,7 @@ router.get('/labs/trend/:patientId/:labName', async (req, res) => {
 router.post('/labs/trends/:patientId', async (req, res) => {
   try {
     const { patientId } = req.params;
-    const { labNames, timeRange } = req.body;
+   const { labNames, timeRange } = req.body;
     const trends = await labTrendingService.getPatientLabTrends(patientId, labNames, timeRange);
     res.json(trends);
   } catch (error) {
@@ -164,7 +168,7 @@ router.get('/fhir/Patient/:patientId/$summary', async (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
+}); 
 router.get('/fhir/Encounter/:visitId', async (req, res) => {
   try {
     const EMRVisit = require('../models/EMRVisit');
@@ -201,7 +205,7 @@ router.get('/fhir/metadata', (req, res) => {
         { type: 'Patient', interaction: [{ code: 'read' }, { code: 'create' }] },
         { type: 'Encounter', interaction: [{ code: 'read' }] },
         { type: 'Observation', interaction: [{ code: 'read' }] },
-        { type: 'Condition', interaction: [{ code: 'read' }] },
+       { type: 'Condition', interaction: [{ code: 'read' }] },
         { type: 'MedicationRequest', interaction: [{ code: 'read' }] }
       ]
     }]

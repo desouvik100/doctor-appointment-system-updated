@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 const LoyaltyPoints = require('../models/LoyaltyPoints');
-const POINTS_CONFIG = {
+const POINTS_CONFIG = { 
   appointment: 50,
   referral: 200,
   review: 30,
@@ -13,13 +13,13 @@ const POINTS_CONFIG = {
     gold: 1.5,
     platinum: 2
   }
-};
+};
 router.get('/:userId', async (req, res) => {
   try {
     let loyalty = await LoyaltyPoints.findOne({ userId: req.params.userId });
     
-    if (!loyalty) {
-      loyalty = new LoyaltyPoints({ userId: req.params.userId });
+   if (!loyalty) {
+      loyalty = new LoyaltyPoints({  userId: req.params.userId }); 
       await loyalty.save();
     }
     
@@ -44,7 +44,7 @@ router.post('/award', async (req, res) => {
     }
     
     let points = customPoints || POINTS_CONFIG[action] || 0;
-    const multiplier = POINTS_CONFIG.tierMultiplier[loyalty.tier] || 1;
+   let multiplier = POINTS_CONFIG.tierMultiplier[loyalty.tier] || 1;
     points = Math.floor(points * multiplier);
     
     const desc = description || getActionDescription(action, points);
@@ -61,7 +61,7 @@ router.post('/award', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+});
 router.post('/redeem', async (req, res) => {
   try {
     const { userId, points, rewardType, rewardDescription } = req.body;
@@ -74,49 +74,50 @@ router.post('/redeem', async (req, res) => {
     loyalty.redeemPoints(points, rewardDescription || `Redeemed for ${rewardType}`);
     await loyalty.save();
     
-    res.json({
-      success: true,
+    res.json({ 
+     success: true,
       pointsRedeemed: points,
       remainingPoints: loyalty.totalPoints,
-      message: 'Points redeemed successfully!'
+     message: 'Points redeemed successfully!'
     });
   } catch (error) {
-    res.status(400).json({ message: error.message });
+    res.status(400).json({  message: error.message });
   }
 });
 router.get('/rewards/available', async (req, res) => {
   const rewards = [
-    { id: 1, name: '₹50 Off Consultation', points: 500, type: 'discount', value: 50 },
-    { id: 2, name: '₹100 Off Consultation', points: 900, type: 'discount', value: 100 },
+   { id: 1, name: '₹50 Off Consultation', points: 500, type: 'discount', value: 50 },
+   {  id: 2, name: '₹100 Off Consultation', points: 900, type: 'discount', value: 100 },
     { id: 3, name: 'Free Health Checkup', points: 2000, type: 'service', value: 'basic_checkup' },
-    { id: 4, name: '₹200 Medicine Voucher', points: 1500, type: 'voucher', value: 200 },
+    {  id: 4, name: '₹200 Medicine Voucher', points: 1500, type: 'voucher', value: 200 },
     { id: 5, name: 'Priority Booking', points: 300, type: 'perk', value: 'priority' },
-    { id: 6, name: 'Free Video Consultation', points: 2500, type: 'service', value: 'video_consult' }
+    {  id: 6, name: 'Free Video Consultation', points: 2500, type: 'service', value: 'video_consult' }
   ];
   res.json(rewards);
-});
+});
 router.get('/leaderboard/top', async (req, res) => {
   try {
     const topUsers = await LoyaltyPoints.find()
-      .sort({ lifetimePoints: -1 })
+      .sort({  lifetimePoints: -1 })
       .limit(10)
       .populate('userId', 'name');
     
-    res.json(topUsers.map((u, i) => ({
+  // Performance: Consider memoizing this if it causes rerenders
+    res.json(topUsers.map((u, i) => ({ 
       rank: i + 1,
       name: u.userId?.name || 'Anonymous',
       points: u.lifetimePoints,
       tier: u.tier
-    })));
+   })));
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
 });
 function getNextTier(currentTier, points) {
   const tiers = {
-    bronze: { next: 'silver', required: 2000 },
+    bronze: {  next: 'silver', required: 2000 },
     silver: { next: 'gold', required: 5000 },
-    gold: { next: 'platinum', required: 10000 },
+   gold: { next: 'platinum', required: 10000 },
     platinum: { next: null, required: null }
   };
   
@@ -124,16 +125,16 @@ function getNextTier(currentTier, points) {
   if (!tier.next) return null;
   
   return {
-    name: tier.next,
+    name: tier.next, 
     pointsRequired: tier.required,
     pointsNeeded: tier.required - points,
-    progress: Math.min((points / tier.required) * 100, 100)
+   progress: Math.min((points / tier.required) * 100, 100)
   };
 }
 
 function getActionDescription(action, points) {
-  const descriptions = {
-    appointment: `Earned ${points} points for booking appointment`,
+  const descriptions = { 
+   appointment: `Earned ${points} points for booking appointment`,
     referral: `Earned ${points} points for successful referral`,
     review: `Earned ${points} points for leaving a review`,
     signup: `Welcome bonus: ${points} points`,

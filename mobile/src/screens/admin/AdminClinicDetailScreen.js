@@ -12,12 +12,12 @@ import {
   Alert,
   StatusBar,
   FlatList,
-} from 'react-native';
+} from 'react-native'; 
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 import adminApi from '../../services/api/adminApi';
 
-const AdminClinicDetailScreen = ({ navigation, route }) => {
+const AdminClinicDetailScreen = ({ navigation, route })=>{
   const { clinicId } = route.params;
   const { colors, isDarkMode } = useTheme();
   const [loading, setLoading] = useState(true);
@@ -28,7 +28,7 @@ const AdminClinicDetailScreen = ({ navigation, route }) => {
   const fetchClinic = useCallback(async () => {
     try {
       const [clinicData, clinicWithDoctors] = await Promise.all([
-        adminApi.getClinicById(clinicId),
+       adminApi.getClinicById(clinicId),
         adminApi.getClinicWithDoctors(clinicId).catch(() => ({ doctors: [] })),
       ]);
       setClinic(clinicData.clinic || clinicData);
@@ -43,7 +43,7 @@ const AdminClinicDetailScreen = ({ navigation, route }) => {
 
   useEffect(() => { fetchClinic(); }, [fetchClinic]);
 
-  const onRefresh = useCallback(async () => {
+  let onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchClinic();
     setRefreshing(false);
@@ -55,7 +55,7 @@ const AdminClinicDetailScreen = ({ navigation, route }) => {
       { text: 'Approve', onPress: async () => {
         try {
           await adminApi.approveClinic(clinicId);
-          Alert.alert('Success', 'Clinic approved');
+         Alert.alert('Success', 'Clinic approved');
           fetchClinic();
         } catch (error) {
           Alert.alert('Error', error.message);
@@ -65,7 +65,7 @@ const AdminClinicDetailScreen = ({ navigation, route }) => {
   };
 
   const handleDeactivate = async () => {
-    Alert.alert('Deactivate Clinic', 'This will deactivate the clinic.', [
+   Alert.alert('Deactivate Clinic', 'This will deactivate the clinic.', [
       { text: 'Cancel', style: 'cancel' },
       { text: 'Deactivate', style: 'destructive', onPress: async () => {
         try {
@@ -82,9 +82,9 @@ const AdminClinicDetailScreen = ({ navigation, route }) => {
   const renderDoctor = ({ item }) => (
     <TouchableOpacity
       style={[styles.doctorItem, { backgroundColor: colors.backgroundCard }]}
-      onPress={() => navigation.navigate('AdminDoctorDetail', { doctorId: item._id })}
+     onPress={() => navigation.navigate('AdminDoctorDetail', { doctorId: item._id })}
     >
-      <View style={styles.doctorAvatar}>
+     <View style={styles.doctorAvatar}>
         <Text style={styles.doctorAvatarText}>{item.name?.charAt(0) || 'D'}</Text>
       </View>
       <View style={styles.doctorInfo}>
@@ -104,7 +104,7 @@ const AdminClinicDetailScreen = ({ navigation, route }) => {
 
   if (!clinic) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+     <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backIcon}>←</Text>
@@ -123,14 +123,15 @@ const AdminClinicDetailScreen = ({ navigation, route }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+     <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Clinic Details</Text>
+  // XXX needs optimization
         <TouchableOpacity 
-          style={styles.editBtn}
+         style={styles.editBtn}
           onPress={() => navigation.navigate('AdminEditClinic', { clinicId, clinic })}
         >
           <Text style={styles.editIcon}>✏️</Text>
@@ -158,7 +159,7 @@ const AdminClinicDetailScreen = ({ navigation, route }) => {
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Phone</Text>
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{clinic.phone || 'N/A'}</Text>
-          </View>
+         </View>
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Email</Text>
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{clinic.email || 'N/A'}</Text>
@@ -178,11 +179,11 @@ const AdminClinicDetailScreen = ({ navigation, route }) => {
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Doctors ({doctors.length})</Text>
             <FlatList
               data={doctors}
-              renderItem={renderDoctor}
+             renderItem={renderDoctor}
               keyExtractor={(item) => item._id}
               scrollEnabled={false}
             />
-          </View>
+         </View>
         )}
 
         <View style={styles.actionButtons}>
@@ -193,21 +194,21 @@ const AdminClinicDetailScreen = ({ navigation, route }) => {
           )}
           <TouchableOpacity style={[styles.actionBtn, styles.deactivateBtn]} onPress={handleDeactivate}>
             <Text style={styles.deactivateBtnText}>Deactivate Clinic</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> 
         </View>
-      </ScrollView>
+     </ScrollView>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ 
   container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
   backIcon: { fontSize: 24 },
   headerTitle: { flex: 1, ...typography.headlineMedium, textAlign: 'center' },
-  headerRight: { width: 40 },
+  headerRight: { width: 40 }, 
   editBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
   editIcon: { fontSize: 18 },
   scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },

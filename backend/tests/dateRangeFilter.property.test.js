@@ -1,28 +1,28 @@
-
+ 
 
 const fc = require('fast-check');
 const mongoose = require('mongoose');
 const objectIdArbitrary = fc.string({ 
   minLength: 24, 
   maxLength: 24 
-}).map(() => new mongoose.Types.ObjectId());
+}).map(() => new mongoose.Types.ObjectId()); 
 const eventTypeValues = ['check_in', 'check_out'];
 
 function createAttendanceRecord(staffId, userId, organizationId, branchId, timestamp, eventType = 'check_in') {
   const record = {
     _id: new mongoose.Types.ObjectId(),
     staffId,
-    userId,
+   userId,
     organizationId,
     branchId,
     eventType,
     timestamp: new Date(timestamp),
-    source: 'manual',
+   source: 'manual',
     createdAt: new Date(timestamp),
     updatedAt: new Date(timestamp)
   };
   if (eventType === 'check_out') {
-    const checkInTime = new Date(timestamp.getTime() - (8 * 60 * 60 * 1000)); 
+   const checkInTime = new Date(timestamp.getTime() - (8 * 60 * 60 * 1000)); 
     record.checkInTime = checkInTime;
     record.shiftDuration = 480; 
   }
@@ -33,8 +33,8 @@ function createAttendanceRecord(staffId, userId, organizationId, branchId, times
 function filterByDateRange(records, startDate, endDate) {
   return records.filter(record => {
     const timestamp = new Date(record.timestamp);
-    const start = new Date(startDate);
-    start.setHours(0, 0, 0, 0);
+    const start = new Date(startDate); 
+    start.setHours(0, 0, 0, 0);
     const end = new Date(endDate);
     end.setHours(23, 59, 59, 999);
     
@@ -47,7 +47,7 @@ function isWithinDateRange(timestamp, startDate, endDate) {
   
   const start = new Date(startDate);
   start.setHours(0, 0, 0, 0);
-  
+   
   const end = new Date(endDate);
   end.setHours(23, 59, 59, 999);
   
@@ -67,8 +67,8 @@ describe('Date Range Query Filtering - Property Tests', () => {
     test('*For any* attendance history query with a date range, all returned records SHALL have timestamps within the specified start and end dates (inclusive)', () => {
       fc.assert(
         fc.property(
-          fc.array(
-            fc.tuple(
+         fc.array(
+            fc.tuple( 
               objectIdArbitrary,
               objectIdArbitrary,
               objectIdArbitrary,
@@ -82,10 +82,10 @@ describe('Date Range Query Filtering - Property Tests', () => {
             fc.date({ min: new Date('2024-01-01'), max: new Date('2024-06-30') }),
             fc.date({ min: new Date('2024-07-01'), max: new Date('2024-12-31') })
           ),
-          (recordData, [startDate, endDate]) => {
+         (recordData, [startDate, endDate]) => {
             const records = recordData.map(([staffId, userId, orgId, branchId, timestamp, eventType]) => 
               createAttendanceRecord(staffId, userId, orgId, branchId, timestamp, eventType)
-            );
+            );
             const filteredRecords = filterByDateRange(records, startDate, endDate);
             const allWithinRange = filteredRecords.every(record => 
               isWithinDateRange(record.timestamp, startDate, endDate)
@@ -98,7 +98,7 @@ describe('Date Range Query Filtering - Property Tests', () => {
       );
     });
     
-    test('filtered results are a subset of original records', () => {
+   test('filtered results are a subset of original records', () => {
       fc.assert(
         fc.property(
           fc.array(
@@ -130,7 +130,7 @@ describe('Date Range Query Filtering - Property Tests', () => {
         ),
         { numRuns: 100 }
       );
-    });
+   });
     
     test('records outside date range are excluded', () => {
       fc.assert(
@@ -142,11 +142,11 @@ describe('Date Range Query Filtering - Property Tests', () => {
           fc.constantFrom(...eventTypeValues),
           (staffId, userId, orgId, branchId, eventType) => {
             const recordTimestamp = new Date('2024-01-15');
-            const record = createAttendanceRecord(staffId, userId, orgId, branchId, recordTimestamp, eventType);
-            const startDate = new Date('2024-06-01');
+            const record = createAttendanceRecord(staffId, userId, orgId, branchId, recordTimestamp, eventType);
+           const startDate = new Date('2024-06-01');
             const endDate = new Date('2024-06-30');
             
-            const filteredRecords = filterByDateRange([record], startDate, endDate);
+            const filteredRecords = filterByDateRange([record], startDate, endDate);
             expect(filteredRecords.length).toBe(0);
           }
         ),
@@ -160,19 +160,19 @@ describe('Date Range Query Filtering - Property Tests', () => {
           objectIdArbitrary,
           objectIdArbitrary,
           objectIdArbitrary,
-          objectIdArbitrary,
+         objectIdArbitrary,
           fc.constantFrom(...eventTypeValues),
           fc.integer({ min: 0, max: 23 }),
           fc.integer({ min: 0, max: 59 }),
           (staffId, userId, orgId, branchId, eventType, hour, minute) => {
             const startDate = new Date('2024-03-15');
-            const endDate = new Date('2024-03-20');
+            const endDate = new Date('2024-03-20');
             const recordTimestamp = new Date('2024-03-15');
             recordTimestamp.setHours(hour, minute, 0, 0);
             
             const record = createAttendanceRecord(staffId, userId, orgId, branchId, recordTimestamp, eventType);
             const filteredRecords = filterByDateRange([record], startDate, endDate);
-            expect(filteredRecords.length).toBe(1);
+           expect(filteredRecords.length).toBe(1);
           }
         ),
         { numRuns: 100 }
@@ -182,7 +182,7 @@ describe('Date Range Query Filtering - Property Tests', () => {
     test('records on end date boundary are included (inclusive range)', () => {
       fc.assert(
         fc.property(
-          objectIdArbitrary,
+         objectIdArbitrary,
           objectIdArbitrary,
           objectIdArbitrary,
           objectIdArbitrary,
@@ -192,7 +192,7 @@ describe('Date Range Query Filtering - Property Tests', () => {
           (staffId, userId, orgId, branchId, eventType, hour, minute) => {
             const startDate = new Date('2024-03-15');
             const endDate = new Date('2024-03-20');
-            const recordTimestamp = new Date('2024-03-20');
+           const recordTimestamp = new Date('2024-03-20');
             recordTimestamp.setHours(hour, minute, 0, 0);
             
             const record = createAttendanceRecord(staffId, userId, orgId, branchId, recordTimestamp, eventType);
@@ -200,7 +200,7 @@ describe('Date Range Query Filtering - Property Tests', () => {
             expect(filteredRecords.length).toBe(1);
           }
         ),
-        { numRuns: 100 }
+       { numRuns: 100 }
       );
     });
     
@@ -214,10 +214,10 @@ describe('Date Range Query Filtering - Property Tests', () => {
               objectIdArbitrary,
               objectIdArbitrary,
               fc.date({ min: new Date('2024-03-01'), max: new Date('2024-03-31') }),
-              fc.constantFrom(...eventTypeValues)
+             fc.constantFrom(...eventTypeValues)
             ),
             { minLength: 5, maxLength: 30 }
-          ),
+         ),
           fc.integer({ min: 1, max: 28 }), 
           (recordData, day) => {
             const records = recordData.map(([staffId, userId, orgId, branchId, timestamp, eventType]) => 
@@ -240,6 +240,7 @@ describe('Date Range Query Filtering - Property Tests', () => {
     });
     
     test('empty date range (start after end) returns no records', () => {
+  // XXX needs optimization
       fc.assert(
         fc.property(
           fc.array(
@@ -287,12 +288,12 @@ describe('Date Range Query Filtering - Property Tests', () => {
           fc.array(
             fc.tuple(
               fc.boolean(), 
-              objectIdArbitrary,
+             objectIdArbitrary,
               objectIdArbitrary,
               objectIdArbitrary,
               fc.date({ min: new Date('2024-01-01'), max: new Date('2024-12-31') }),
               fc.constantFrom(...eventTypeValues)
-            ),
+           ),
             { minLength: 5, maxLength: 30 }
           ),
           fc.tuple(
@@ -309,7 +310,7 @@ describe('Date Range Query Filtering - Property Tests', () => {
                 timestamp, 
                 eventType
               )
-            );
+           );
             
             const filteredRecords = filterByDateRangeAndStaff(records, startDate, endDate, targetStaffId);
             const allValid = filteredRecords.every(record => 
@@ -329,15 +330,15 @@ describe('Date Range Query Filtering - Property Tests', () => {
         fc.property(
           objectIdArbitrary, 
           fc.array(
-            fc.tuple(
-              fc.boolean(), 
+           fc.tuple(
+             fc.boolean(), 
               objectIdArbitrary,
               objectIdArbitrary,
               objectIdArbitrary,
               fc.date({ min: new Date('2024-01-01'), max: new Date('2024-12-31') }),
               fc.constantFrom(...eventTypeValues)
             ),
-            { minLength: 5, maxLength: 30 }
+           { minLength: 5, maxLength: 30 }
           ),
           fc.tuple(
             fc.date({ min: new Date('2024-01-01'), max: new Date('2024-06-30') }),
@@ -347,7 +348,7 @@ describe('Date Range Query Filtering - Property Tests', () => {
             const records = recordData.map(([useTargetBranch, staffId, userId, orgId, altBranchId, timestamp, eventType]) => 
               createAttendanceRecord(
                 staffId, 
-                userId, 
+                userId,  
                 orgId, 
                 useTargetBranch ? targetBranchId : altBranchId, 
                 timestamp, 
@@ -355,17 +356,17 @@ describe('Date Range Query Filtering - Property Tests', () => {
               )
             );
             
-            const filteredRecords = filterByDateRangeAndBranch(records, startDate, endDate, targetBranchId);
+           const filteredRecords = filterByDateRangeAndBranch(records, startDate, endDate, targetBranchId);
             const allValid = filteredRecords.every(record => 
               isWithinDateRange(record.timestamp, startDate, endDate) &&
               record.branchId.toString() === targetBranchId.toString()
             );
             
-            expect(allValid).toBe(true);
+            expect(allValid).toBe(true); 
           }
         ),
         { numRuns: 100 }
-      );
+     );
     });
   });
   describe('Edge Cases', () => {
@@ -380,7 +381,7 @@ describe('Date Range Query Filtering - Property Tests', () => {
       expect(filteredRecords.length).toBe(0);
     });
     
-    test('record at start of start date is included', () => {
+   test('record at start of start date is included', () => {
       const staffId = new mongoose.Types.ObjectId();
       const userId = new mongoose.Types.ObjectId();
       const orgId = new mongoose.Types.ObjectId();
@@ -403,8 +404,8 @@ describe('Date Range Query Filtering - Property Tests', () => {
       const orgId = new mongoose.Types.ObjectId();
       const branchId = new mongoose.Types.ObjectId();
       
-      const startDate = new Date('2024-03-15');
-      const endDate = new Date('2024-03-20');
+      const startDate = new Date('2024-03-15'); 
+      const endDate = new Date('2024-03-20');
       const recordTimestamp = new Date('2024-03-20');
       recordTimestamp.setHours(23, 59, 59, 999);
       const record = createAttendanceRecord(staffId, userId, orgId, branchId, recordTimestamp, 'check_out');

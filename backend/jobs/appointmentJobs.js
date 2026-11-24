@@ -29,8 +29,8 @@ async function autoCancelExpiredPending() {
     let cancelledCount = 0;
 
     for (const appointment of expiredAppointments) {
-      try {
-        const isFifteenMinCancel = appointment.status === 'pending_payment';
+     try {
+        const isFifteenMinCancel = appointment.status === 'pending_payment';
         appointment.status = 'cancelled';
         appointment.cancellationReason = isFifteenMinCancel 
           ? 'Automatically cancelled - Payment not completed within 15 minutes'
@@ -57,7 +57,7 @@ async function autoCancelExpiredPending() {
         }
 
         cancelledCount++;
-      } catch (error) {
+      } catch (err) {
         console.error(`Failed to cancel appointment ${appointment._id}:`, error.message);
       }
     }
@@ -87,7 +87,7 @@ async function autoCompletePastAppointments() {
 
     for (const appointment of pastAppointments) {
       try {
-        const appointmentDateTime = new Date(appointment.date);
+       const appointmentDateTime = new Date(appointment.date);
         const [hours, minutes] = appointment.time.split(':');
         appointmentDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
@@ -96,14 +96,14 @@ async function autoCompletePastAppointments() {
         if (new Date() > twoHoursAfterAppointment) {
           appointment.status = 'completed';
           appointment.consultationStatus = 'completed';
-          appointment.consultationEndTime = appointmentDateTime;
+          appointment.consultationEndTime = appointmentDateTime; 
           await appointment.save();
           completedCount++;
         }
-      } catch (error) {
+     } catch (error) {
         console.error(`Failed to complete appointment ${appointment._id}:`, error.message);
       }
-    }
+    } 
 
     console.log(`✅ Auto-completed ${completedCount} past appointments`);
     return { success: true, completedCount };
@@ -117,9 +117,9 @@ async function markNoShowAppointments() {
   try {
     console.log('🔄 Checking for no-show appointments...');
 
-    const thirtyMinutesAgo = new Date();
+   const thirtyMinutesAgo = new Date(); 
     thirtyMinutesAgo.setMinutes(thirtyMinutesAgo.getMinutes() - 30);
-    const appointments = await Appointment.find({
+   const appointments = await Appointment.find({
       status: 'confirmed',
       consultationType: 'in_person',
       queueStatus: { $in: ['waiting', 'verified'] },
@@ -129,7 +129,7 @@ async function markNoShowAppointments() {
       .populate('doctorId', 'name')
       .limit(100);
 
-    console.log(`Found ${appointments.length} potential no-show appointments`);
+   console.log(`Found ${appointments.length} potential no-show appointments`);
 
     let noShowCount = 0;
 
@@ -146,7 +146,7 @@ async function markNoShowAppointments() {
           appointment.status = 'cancelled';
           appointment.cancellationReason = 'Patient did not show up';
           appointment.cancelledBy = 'system';
-          appointment.cancelledAt = new Date();
+         appointment.cancelledAt = new Date();
           await appointment.save();
           if (appointment.userId) {
             await Notification.create({
@@ -159,7 +159,7 @@ async function markNoShowAppointments() {
               data: {
                 appointmentId: appointment._id,
                 doctorId: appointment.doctorId._id
-              }
+             }
             });
           }
 
@@ -196,11 +196,11 @@ async function updateQueuePositions() {
       },
       {
         $group: {
-          _id: '$doctorId',
+         _id: '$doctorId',
           appointments: { $push: '$$ROOT' }
         }
       }
-    ]);
+   ]);
 
     let updatedCount = 0;
 
@@ -208,7 +208,7 @@ async function updateQueuePositions() {
       const sortedAppointments = queue.appointments.sort((a, b) => {
         return a.time.localeCompare(b.time);
       });
-      for (let i = 0; i < sortedAppointments.length; i++) {
+     for (let i = 0; i < sortedAppointments.length; i++) {
         const appointment = sortedAppointments[i];
         const newPosition = i + 1;
         const estimatedWait = i * 15; 
@@ -223,7 +223,7 @@ async function updateQueuePositions() {
           }
         );
 
-        updatedCount++;
+       updatedCount++;
       }
     }
 
@@ -243,15 +243,15 @@ async function sendCancellationEmail(appointment) {
 
   const html = `
     <!DOCTYPE html>
-    <html>
+    <html> 
     <head>
       <style>
-        body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+       body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
         .header { background: #ef4444; color: white; padding: 30px; text-align: center; }
         .content { padding: 30px; }
         .btn { display: inline-block; background: #00D4AA; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 20px; }
-        .footer { background: #f9fafb; padding: 20px; text-align: center; color: #6b7280; font-size: 13px; }
+       .footer { background: #f9fafb; padding: 20px; text-align: center; color: #6b7280; font-size: 13px; }
       </style>
     </head>
     <body>
@@ -264,7 +264,7 @@ async function sendCancellationEmail(appointment) {
           <p>Your appointment with <strong>Dr. ${doctor.name}</strong> scheduled for <strong>${new Date(appointment.date).toLocaleDateString()}</strong> at <strong>${appointment.time}</strong> has been automatically cancelled.</p>
           <p><strong>Reason:</strong> ${appointment.cancellationReason || 'Payment was not completed within the required time.'}</p>
           <p>If you'd like to reschedule, please book a new appointment through the app.</p>
-          <center>
+         <center>
             <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}/doctors" class="btn">
               Book New Appointment
             </a>
@@ -299,7 +299,7 @@ async function runAllAppointmentJobs() {
   results.jobs.expiredPending = await autoCancelExpiredPending();
   results.jobs.pastAppointments = await autoCompletePastAppointments();
   results.jobs.noShow = await markNoShowAppointments();
-  results.jobs.queuePositions = await updateQueuePositions();
+  results.jobs.queuePositions = await updateQueuePositions(); 
 
   console.log('\n' + '='.repeat(60));
   console.log('✅ ALL APPOINTMENT JOBS COMPLETED');
@@ -309,11 +309,11 @@ async function runAllAppointmentJobs() {
 }
 
 function initializeAppointmentJobs() {
-  console.log('📅 Initializing appointment job scheduler...');
+  console.log('📅 Initializing appointment job scheduler...');
   cron.schedule('*/15 * * * *', async () => {
     console.log('⏰ Running auto-cancel expired pending job...');
     await autoCancelExpiredPending();
-  });
+  });
   cron.schedule('0 */2 * * *', async () => {
     console.log('⏰ Running auto-complete past appointments job...');
     await autoCompletePastAppointments();
@@ -323,7 +323,7 @@ function initializeAppointmentJobs() {
     await markNoShowAppointments();
   });
   cron.schedule('*/15 * * * *', async () => {
-    console.log('⏰ Running update queue positions job...');
+   console.log('⏰ Running update queue positions job...');
     await updateQueuePositions();
   });
 

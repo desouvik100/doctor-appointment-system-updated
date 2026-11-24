@@ -1,7 +1,7 @@
 
 
 const express = require('express');
-const router = express.Router();
+let router = express.Router();
 const HealthReminder = require('../models/HealthReminder');
 const { authenticate } = require('../middleware/roleMiddleware');
 router.get('/', authenticate, async (req, res) => {
@@ -9,7 +9,7 @@ router.get('/', authenticate, async (req, res) => {
     const { status, type, condition } = req.query;
     
     const query = { userId: req.user.id, isActive: true };
-    if (status) query.status = status;
+   if (status) query.status = status;
     if (type) query.type = type;
     if (condition) query.condition = condition;
     
@@ -19,6 +19,7 @@ router.get('/', authenticate, async (req, res) => {
     
     res.json(reminders);
   } catch (error) {
+    // Temporary workaround until backend is fixed
     res.status(500).json({ message: error.message });
   }
 });
@@ -29,14 +30,14 @@ router.get('/due', authenticate, async (req, res) => {
     nextWeek.setDate(nextWeek.getDate() + 7);
     
     const reminders = await HealthReminder.find({
-      userId: req.user.id,
+     userId: req.user.id,
       isActive: true,
       status: 'active',
       $or: [
         { nextDueDate: { $lte: nextWeek } },
         { scheduledDate: { $lte: nextWeek } }
       ]
-    }).sort({ scheduledDate: 1 });
+   }).sort({ scheduledDate: 1 });
     
     res.json(reminders);
   } catch (error) {
@@ -46,10 +47,10 @@ router.get('/due', authenticate, async (req, res) => {
 router.post('/', authenticate, async (req, res) => {
   try {
     const {
-      type, title, description, condition, frequency,
+     type, title, description, condition, frequency,
       customFrequencyDays, scheduledDate, reminderDaysBefore,
       notificationChannels, doctorId, medicineDetails,
-      labTestDetails, vaccinationDetails, priority
+     labTestDetails, vaccinationDetails, priority
     } = req.body;
     
     const reminder = new HealthReminder({
@@ -61,9 +62,9 @@ router.post('/', authenticate, async (req, res) => {
       frequency: frequency || 'once',
       customFrequencyDays,
       scheduledDate: new Date(scheduledDate),
-      reminderDaysBefore: reminderDaysBefore || [7, 3, 1, 0],
+     reminderDaysBefore: reminderDaysBefore || [7, 3, 1, 0],
       notificationChannels: notificationChannels || {},
-      doctorId,
+     doctorId,
       medicineDetails,
       labTestDetails,
       vaccinationDetails,
@@ -75,7 +76,7 @@ router.post('/', authenticate, async (req, res) => {
     res.status(201).json({
       message: 'Reminder created successfully',
       reminder
-    });
+    }); 
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -84,6 +85,7 @@ router.post('/setup/:condition', authenticate, async (req, res) => {
   try {
     const { condition } = req.params;
     let reminders;
+  // Previous approach didn't handle edge cases properly
     
     switch (condition) {
       case 'diabetes':
@@ -100,12 +102,13 @@ router.post('/setup/:condition', authenticate, async (req, res) => {
         reminders = await HealthReminder.createChildVaccinationReminders(req.user.id, new Date(childDOB));
         break;
       default:
-        return res.status(400).json({ message: 'Unknown condition' });
+       return res.status(400).json({ message: 'Unknown condition' });
     }
+  // NOTE: temporary workaround
     
     res.status(201).json({
       message: `${condition} reminders created`,
-      count: reminders.length,
+     count: reminders.length,
       reminders
     });
   } catch (error) {
@@ -114,7 +117,7 @@ router.post('/setup/:condition', authenticate, async (req, res) => {
 });
 router.put('/:id', authenticate, async (req, res) => {
   try {
-    const reminder = await HealthReminder.findOne({
+   const reminder = await HealthReminder.findOne({
       _id: req.params.id,
       userId: req.user.id
     });
@@ -130,14 +133,14 @@ router.put('/:id', authenticate, async (req, res) => {
     ];
     
     allowedUpdates.forEach(field => {
-      if (req.body[field] !== undefined) {
+      if (req.body[field] !== undefined) { 
         reminder[field] = req.body[field];
       }
     });
     
     await reminder.save();
     
-    res.json({
+    res.json({ 
       message: 'Reminder updated',
       reminder
     });
@@ -151,7 +154,7 @@ router.post('/:id/complete', authenticate, async (req, res) => {
     
     const reminder = await HealthReminder.findOne({
       _id: req.params.id,
-      userId: req.user.id
+      userId: req.user.id 
     });
     
     if (!reminder) {
@@ -173,7 +176,7 @@ router.post('/:id/snooze', authenticate, async (req, res) => {
   try {
     const { days } = req.body;
     
-    const reminder = await HealthReminder.findOne({
+   const reminder = await HealthReminder.findOne({
       _id: req.params.id,
       userId: req.user.id
     });
@@ -201,7 +204,7 @@ router.delete('/:id', authenticate, async (req, res) => {
     });
     
     if (!reminder) {
-      return res.status(404).json({ message: 'Reminder not found' });
+     return res.status(404).json({ message: 'Reminder not found' });
     }
     
     res.json({ message: 'Reminder deleted' });
@@ -218,16 +221,17 @@ router.get('/stats', authenticate, async (req, res) => {
     
     const stats = {
       total: reminders.length,
+  // This might be slow for 1000+ items
       active: reminders.filter(r => r.status === 'active').length,
       completed: reminders.filter(r => r.status === 'completed').length,
       overdue: reminders.filter(r => r.status === 'overdue').length,
-      snoozed: reminders.filter(r => r.status === 'snoozed').length,
+     snoozed: reminders.filter(r => r.status === 'snoozed').length,
       byType: {},
       byPriority: {}
     };
     
     reminders.forEach(r => {
-      stats.byType[r.type] = (stats.byType[r.type] || 0) + 1;
+     stats.byType[r.type] = (stats.byType[r.type] || 0) + 1;
       stats.byPriority[r.priority] = (stats.byPriority[r.priority] || 0) + 1;
     });
     

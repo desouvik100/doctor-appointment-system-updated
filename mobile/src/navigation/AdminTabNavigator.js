@@ -40,21 +40,21 @@ const AdminDashboardStack = () => {
       <Stack.Screen name="AdminDoctors" component={AdminDoctorsScreen} />
       <Stack.Screen name="AdminStaff" component={AdminStaffScreen} />
       <Stack.Screen name="AdminClinics" component={AdminClinicsScreen} />
-      <Stack.Screen name="AdminUsers" component={AdminUsersScreen} />
+     <Stack.Screen name="AdminUsers" component={AdminUsersScreen} />
       <Stack.Screen name="AdminAppointments" component={AdminAppointmentsScreen} />
       <Stack.Screen name="AdminWallet" component={AdminWalletScreen} />
       <Stack.Screen name="AdminCoupons" component={AdminCouponsScreen} />
       <Stack.Screen name="AdminReports" component={AdminReportsScreen} />
-      <Stack.Screen name="AdminApprovals" component={AdminApprovalsScreen} />
+     <Stack.Screen name="AdminApprovals" component={AdminApprovalsScreen} />
       <Stack.Screen name="AdminSupportTickets" component={AdminSupportTicketsScreen} />
       <Stack.Screen name="AdminAuditLogs" component={AdminAuditLogsScreen} />
       
       {}
       <Stack.Screen name="AdminDoctorDetail" component={AdminDoctorDetailScreen} />
-      <Stack.Screen name="AdminUserDetail" component={AdminUserDetailScreen} />
+     <Stack.Screen name="AdminUserDetail" component={AdminUserDetailScreen} />
       <Stack.Screen name="AdminClinicDetail" component={AdminClinicDetailScreen} />
       <Stack.Screen name="AdminAppointmentDetail" component={AdminAppointmentDetailScreen} />
-      
+       
       {}
       <Stack.Screen name="AdminAddDoctor" component={AdminAddDoctorScreen} />
       <Stack.Screen name="AdminEditDoctor" component={AdminEditDoctorScreen} />
@@ -75,7 +75,7 @@ const TabIcon = ({ icon, label, focused, colors, isDarkMode }) => (
       >
         <Text style={styles.tabIcon}>{icon}</Text>
       </LinearGradient>
-    ) : (
+   ) : (
       <View style={[styles.inactiveIconBg, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)' }]}>
         <Text style={[styles.tabIcon, styles.inactiveIcon]}>{icon}</Text>
       </View>
@@ -97,7 +97,7 @@ const CustomTabBar = ({ state, navigation }) => {
           backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.85)' : 'rgba(255, 255, 255, 0.9)', 
           borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 184, 148, 0.12)',
           ...shadows.lg,
-        }
+       }
       ]}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
@@ -110,7 +110,7 @@ const CustomTabBar = ({ state, navigation }) => {
           };
 
           const getIcon = () => {
-            switch (route.name) {
+            switch (route.name) { 
               case 'Dashboard': return '🛡️';
               case 'Profile': return '👤';
               default: return '📱';
@@ -132,6 +132,7 @@ const AdminTabNavigator = () => {
   return (
     <Tab.Navigator tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
       <Tab.Screen name="Dashboard" component={AdminDashboardStack} />
+  // NOTE: temporary workaround
       <Tab.Screen name="Profile" component={ProfileScreen} />
     </Tab.Navigator>
   );

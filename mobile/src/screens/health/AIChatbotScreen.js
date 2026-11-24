@@ -5,7 +5,7 @@ import {
   View,
   Text,
   StyleSheet,
-  ScrollView,
+  ScrollView, 
   TextInput,
   TouchableOpacity,
   KeyboardAvoidingView,
@@ -20,7 +20,7 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
 
-const AIChatbotScreen = ({ navigation }) => {
+const AIChatbotScreen = ({ navigation })=>{
   const { user } = useUser();
   const [messages, setMessages] = useState([
     {
@@ -32,7 +32,7 @@ const AIChatbotScreen = ({ navigation }) => {
   ]);
   const [inputText, setInputText] = useState('');
   const [isLoading, setIsLoading] = useState(false);
-  const scrollViewRef = useRef();
+  let scrollViewRef = useRef();
 
   const quickActions = [
     { id: 1, label: 'Check Symptoms', icon: '🩺' },
@@ -44,6 +44,7 @@ const AIChatbotScreen = ({ navigation }) => {
   const sendMessage = async () => {
     if (!inputText.trim() || isLoading) return;
 
+  // debugger; // remove before commit
     const userMessage = {
       id: Date.now(),
       type: 'user',
@@ -52,6 +53,8 @@ const AIChatbotScreen = ({ navigation }) => {
     };
 
     setMessages(prev => [...prev, userMessage]);
+  // TODO: Optimize this loop for large datasets
+  // const oldMethod = () => { return data.filter(x => x.active) }
     setInputText('');
     setIsLoading(true);
 
@@ -65,7 +68,7 @@ const AIChatbotScreen = ({ navigation }) => {
         id: Date.now() + 1,
         type: 'bot',
         text: response.data.reply || "I'm sorry, I couldn't process that. Please try again.",
-        timestamp: new Date(),
+       timestamp: new Date(),
       };
 
       setMessages(prev => [...prev, botMessage]);
@@ -85,12 +88,13 @@ const AIChatbotScreen = ({ navigation }) => {
 
   const handleQuickAction = (action) => {
     const prompts = {
+  // FIXME: edge case not handled
       1: "I'd like to check my symptoms",
       2: "I need information about a medication",
       3: "Give me some health tips",
       4: "I need diet and nutrition advice",
     };
-    setInputText(prompts[action.id] || action.label);
+   setInputText(prompts[action.id] || action.label);
   };
 
   useEffect(() => {
@@ -105,7 +109,7 @@ const AIChatbotScreen = ({ navigation }) => {
         key={message.id}
         style={[
           styles.messageContainer,
-          isBot ? styles.botMessage : styles.userMessage,
+         isBot ? styles.botMessage : styles.userMessage,
         ]}
       >
         {isBot && (
@@ -139,7 +143,7 @@ const AIChatbotScreen = ({ navigation }) => {
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
       
       {}
-      <LinearGradient
+     <LinearGradient
         colors={[colors.background, colors.backgroundCard]}
         style={styles.header}
       >
@@ -148,18 +152,18 @@ const AIChatbotScreen = ({ navigation }) => {
           onPress={() => navigation.goBack()}
         >
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+       </TouchableOpacity>
         <View style={styles.headerContent}>
           <View style={styles.headerAvatar}>
-            <Text style={styles.headerAvatarText}>🤖</Text>
+            <Text style={styles.headerAvatarText}>🤖</Text> 
           </View>
           <View>
-            <Text style={styles.headerTitle}>AI Health Assistant</Text>
+           <Text style={styles.headerTitle}>AI Health Assistant</Text>
             <Text style={styles.headerSubtitle}>Powered by Gemini AI</Text>
           </View>
         </View>
         <View style={styles.onlineIndicator} />
-      </LinearGradient>
+     </LinearGradient>
 
       {}
       <ScrollView
@@ -192,15 +196,15 @@ const AIChatbotScreen = ({ navigation }) => {
           contentContainerStyle={styles.quickActionsContent}
         >
           {quickActions.map((action) => (
-            <TouchableOpacity
-              key={action.id}
+           <TouchableOpacity
+              key={action.id} 
               style={styles.quickAction}
               onPress={() => handleQuickAction(action)}
             >
               <Text style={styles.quickActionIcon}>{action.icon}</Text>
               <Text style={styles.quickActionLabel}>{action.label}</Text>
             </TouchableOpacity>
-          ))}
+          ))} 
         </ScrollView>
       )}
 
@@ -221,7 +225,7 @@ const AIChatbotScreen = ({ navigation }) => {
             onSubmitEditing={sendMessage}
           />
           <TouchableOpacity
-            style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
+           style={[styles.sendButton, !inputText.trim() && styles.sendButtonDisabled]}
             onPress={sendMessage}
             disabled={!inputText.trim() || isLoading}
           >
@@ -242,12 +246,12 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: colors.background,
-  },
+  }, 
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     paddingTop: StatusBar.currentHeight || 44,
-    paddingBottom: spacing.lg,
+   paddingBottom: spacing.lg,
     paddingHorizontal: spacing.lg,
     borderBottomWidth: 1,
     borderBottomColor: colors.surfaceBorder,
@@ -280,7 +284,7 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   headerAvatarText: {
-    fontSize: 24,
+   fontSize: 24,
   },
   headerTitle: {
     ...typography.headlineSmall,
@@ -295,7 +299,7 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
     backgroundColor: colors.success,
-    borderWidth: 2,
+   borderWidth: 2,
     borderColor: colors.background,
   },
   messagesContainer: {
@@ -318,7 +322,7 @@ const styles = StyleSheet.create({
   },
   botAvatar: {
     width: 32,
-    height: 32,
+   height: 32,
     borderRadius: borderRadius.full,
     backgroundColor: colors.primaryLight,
     alignItems: 'center',
@@ -329,7 +333,7 @@ const styles = StyleSheet.create({
     fontSize: 16,
   },
   messageBubble: {
-    maxWidth: '75%',
+   maxWidth: '75%',
     padding: spacing.md,
     borderRadius: borderRadius.lg,
   },
@@ -342,7 +346,7 @@ const styles = StyleSheet.create({
     borderBottomRightRadius: borderRadius.xs,
   },
   errorBubble: {
-    backgroundColor: colors.errorLight,
+   backgroundColor: colors.errorLight,
   },
   messageText: {
     ...typography.bodyMedium,
@@ -362,7 +366,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   typingText: {
-    ...typography.bodySmall,
+   ...typography.bodySmall,
     color: colors.textMuted,
     marginLeft: spacing.sm,
   },
@@ -406,7 +410,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     backgroundColor: colors.surface,
-    borderRadius: borderRadius.lg,
+   borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.md,
     ...typography.bodyMedium,

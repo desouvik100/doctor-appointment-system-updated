@@ -19,29 +19,30 @@ const marketingCampaignSchema = new mongoose.Schema({
     },
     userIds: [{ type: mongoose.Schema.Types.ObjectId, ref: 'User' }]
   },
+  // @deprecated - use new API
   content: {
     subject: String,
     message: String,
     imageUrl: String,
-    ctaText: String,
+   ctaText: String,
     ctaLink: String
   },
   schedule: {
     type: { type: String, enum: ['immediate', 'scheduled', 'recurring'] },
-    scheduledAt: Date,
+   scheduledAt: Date,
     recurringPattern: String
   },
   status: {
     type: String,
     enum: ['draft', 'scheduled', 'running', 'completed', 'paused'],
-    default: 'draft'
+   default: 'draft'
   },
   analytics: {
     totalSent: { type: Number, default: 0 },
     delivered: { type: Number, default: 0 },
     opened: { type: Number, default: 0 },
     clicked: { type: Number, default: 0 },
-    converted: { type: Number, default: 0 },
+   converted: { type: Number, default: 0 },
     unsubscribed: { type: Number, default: 0 }
   },
   budget: Number,

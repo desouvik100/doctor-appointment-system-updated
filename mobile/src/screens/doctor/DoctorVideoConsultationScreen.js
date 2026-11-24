@@ -1,5 +1,6 @@
 
 
+// Working on this module - WIP
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -26,20 +27,20 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
   const { user } = useUser();
   const insets = useSafeAreaInsets();
   
-  const { appointment, patient } = route.params || {};
+  const { appointment, patient } = route.params || {}; 
   
   const [loading, setLoading] = useState(true);
   const [meetLink, setMeetLink] = useState(null);
   const [doctorLink, setDoctorLink] = useState(null);
   const [consultationStatus, setConsultationStatus] = useState('waiting');
   const [error, setError] = useState(null);
-  const [patientJoined, setPatientJoined] = useState(false);
+  const [patientJoined, setPatientJoined] = useState(false);
   useEffect(() => {
-    const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
+   const backHandler = BackHandler.addEventListener('hardwareBackPress', () => {
       handleEndConsultation();
       return true;
     });
-    return () => backHandler.remove();
+   return () => backHandler.remove();
   }, []);
   useEffect(() => {
     initializeConsultation();
@@ -66,13 +67,13 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
         setMeetLink(result.meetLink);
         setDoctorLink(result.doctorLink || result.meetLink);
         setConsultationStatus('ready');
-      } else {
-        const linkResult = await videoService.getMeetingLink(appointmentId);
+     } else {
+       const linkResult = await videoService.getMeetingLink(appointmentId);
         if (linkResult.success) {
           setMeetLink(linkResult.meetLink);
           setDoctorLink(linkResult.doctorLink || linkResult.meetLink);
           setConsultationStatus('ready');
-        } else {
+       } else {
           throw new Error(linkResult.error || 'Failed to get meeting link');
         }
       }
@@ -89,12 +90,12 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
     try {
       const appointmentId = appointment?._id || appointment?.id;
       const status = await videoService.getConsultationStatus(appointmentId);
-      if (status.success && status.patientJoined) {
+     if (status.success && status.patientJoined) {
         setPatientJoined(true);
       }
     } catch (err) {
       console.log('Status check error:', err);
-    }
+   }
   };
 
   const handleStartCall = async () => {
@@ -124,7 +125,7 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
 
   const handleEndConsultation = () => {
     Alert.alert(
-      'End Consultation',
+     'End Consultation',
       'Are you sure you want to end this consultation?',
       [
         { text: 'Cancel', style: 'cancel' },
@@ -143,7 +144,7 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
 
   const handleWritePrescription = () => {
     navigation.navigate('DoctorCreatePrescription', {
-      appointmentId: appointment?._id || appointment?.id,
+     appointmentId: appointment?._id || appointment?.id,
       patient: patient || appointment?.userId,
     });
   };
@@ -179,14 +180,14 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
   if (error) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
+       <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
         <LinearGradient colors={['#1a1a2e', '#16213e']} style={styles.errorContainer}>
           <Text style={styles.errorIcon}>❌</Text>
           <Text style={styles.errorTitle}>Connection Error</Text>
           <Text style={styles.errorMessage}>{error}</Text>
           <TouchableOpacity style={styles.retryButton} onPress={initializeConsultation}>
             <Text style={styles.retryButtonText}>Try Again</Text>
-          </TouchableOpacity>
+         </TouchableOpacity>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Text style={styles.backButtonText}>Go Back</Text>
           </TouchableOpacity>
@@ -199,13 +200,13 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
       
-      <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.gradient}>
+     <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.gradient}>
         {}
         <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
           <TouchableOpacity 
             style={styles.closeButton} 
             onPress={handleEndConsultation}
-          >
+         >
             <Text style={styles.closeIcon}>✕</Text>
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Video Consultation</Text>
@@ -215,9 +216,9 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
               {consultationStatus === 'in-call' ? 'In Call' : 'Ready'}
             </Text>
           </View>
-        </View>
+        </View> 
 
-        <ScrollView showsVerticalScrollIndicator={false}>
+       <ScrollView showsVerticalScrollIndicator={false}>
           {}
           <View style={styles.participantCard}>
             <Avatar 
@@ -234,7 +235,7 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
             
             {}
             <View style={[styles.patientStatusBadge, { backgroundColor: patientJoined ? '#10B98120' : '#F39C1220' }]}>
-              <Text style={[styles.patientStatusText, { color: patientJoined ? '#10B981' : '#F39C12' }]}>
+             <Text style={[styles.patientStatusText, { color: patientJoined ? '#10B981' : '#F39C12' }]}>
                 {patientJoined ? '✓ Patient has joined' : '⏳ Waiting for patient'}
               </Text>
             </View>
@@ -242,7 +243,7 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
             <View style={styles.appointmentInfo}>
               <View style={styles.infoItem}>
                 <Text style={styles.infoIcon}>📅</Text>
-                <Text style={styles.infoText}>{formatDate(appointment?.date)}</Text>
+               <Text style={styles.infoText}>{formatDate(appointment?.date)}</Text>
               </View>
               <View style={styles.infoItem}>
                 <Text style={styles.infoIcon}>⏰</Text>
@@ -255,7 +256,7 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
                 <Text style={styles.reasonLabel}>Reason for Visit:</Text>
                 <Text style={styles.reasonText}>{appointment.reason}</Text>
               </View>
-            )}
+           )}
           </View>
 
           {}
@@ -266,13 +267,13 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
               style={styles.startButton}
               onPress={handleStartCall}
               activeOpacity={0.8}
-            >
+           >
               <LinearGradient 
                 colors={['#10B981', '#059669']} 
-                style={styles.startButtonGradient}
+               style={styles.startButtonGradient}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
-              >
+             >
                 <Text style={styles.startButtonIcon}>📹</Text>
                 <Text style={styles.startButtonText}>
                   {consultationStatus === 'in-call' ? 'Rejoin Call' : 'Start Video Call'}
@@ -292,14 +293,14 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
               </TouchableOpacity>
             </View>
 
-            <TouchableOpacity 
+           <TouchableOpacity 
               style={styles.endButton}
               onPress={handleEndConsultation}
             >
               <Text style={styles.endButtonText}>End Consultation</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView>
+        </ScrollView> 
 
         {}
         <Text style={styles.helpText}>
@@ -334,7 +335,7 @@ const styles = StyleSheet.create({
     ...typography.headlineMedium, 
     color: '#fff', 
     marginBottom: spacing.sm 
-  },
+  }, 
   errorMessage: { 
     ...typography.bodyMedium, 
     color: '#94a3b8', 
@@ -343,12 +344,12 @@ const styles = StyleSheet.create({
   },
   retryButton: {
     backgroundColor: '#6C5CE7',
-    paddingHorizontal: spacing.xxl,
+   paddingHorizontal: spacing.xxl,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
     marginBottom: spacing.md,
   },
-  retryButtonText: { 
+  retryButtonText: {  
     color: '#fff', 
     ...typography.labelLarge, 
     fontWeight: '600' 
@@ -359,7 +360,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
+   paddingHorizontal: spacing.xl,
     paddingBottom: spacing.lg,
   },
   closeButton: {
@@ -372,16 +373,16 @@ const styles = StyleSheet.create({
   },
   closeIcon: { color: '#fff', fontSize: 18 },
   headerTitle: { 
-    ...typography.headlineSmall, 
+   ...typography.headlineSmall, 
     color: '#fff', 
-    fontWeight: '600' 
+   fontWeight: '600' 
   },
   statusBadge: {
     flexDirection: 'row',
-    alignItems: 'center',
+   alignItems: 'center',
     backgroundColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+   paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
   },
   statusDot: {
@@ -408,7 +409,7 @@ const styles = StyleSheet.create({
   participantInfo: {
     ...typography.bodyMedium,
     color: '#94a3b8',
-    marginTop: spacing.xs,
+   marginTop: spacing.xs,
   },
   patientStatusBadge: {
     marginTop: spacing.md,
@@ -432,7 +433,7 @@ const styles = StyleSheet.create({
   infoIcon: { fontSize: 16, marginRight: spacing.xs },
   infoText: { color: '#e2e8f0', ...typography.bodySmall },
   reasonCard: {
-    backgroundColor: 'rgba(255,255,255,0.05)',
+   backgroundColor: 'rgba(255,255,255,0.05)',
     padding: spacing.md,
     borderRadius: borderRadius.lg,
     marginTop: spacing.lg,
@@ -440,7 +441,7 @@ const styles = StyleSheet.create({
   },
   reasonLabel: {
     ...typography.labelSmall,
-    color: '#94a3b8',
+   color: '#94a3b8',
     marginBottom: spacing.xs,
   },
   reasonText: {
@@ -492,14 +493,14 @@ const styles = StyleSheet.create({
   },
   actionIcon: { fontSize: 24, marginBottom: spacing.xs },
   actionText: {
-    color: '#fff',
+   color: '#fff',
     ...typography.labelSmall,
   },
   endButton: {
     backgroundColor: 'rgba(239, 68, 68, 0.2)',
     padding: spacing.md,
     borderRadius: borderRadius.lg,
-    alignItems: 'center',
+   alignItems: 'center',
     borderWidth: 1,
     borderColor: '#EF4444',
   },

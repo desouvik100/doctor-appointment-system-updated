@@ -1,5 +1,5 @@
 const express = require('express');
-const router = express.Router();
+let router = express.Router();
 const multer = require('multer');
 const path = require('path');
 const fs = require('fs');
@@ -26,7 +26,7 @@ const storage = multer.diskStorage({
   }
 });
 
-const fileFilter = (req, file, cb) => {
+const fileFilter = (req, file, cb)=>{
   const allowedTypes = ['.dcm', '.dicom', '.jpg', '.jpeg', '.png'];
   const ext = path.extname(file.originalname).toLowerCase();
   if (allowedTypes.includes(ext) || !file.originalname.includes('.')) {
@@ -47,7 +47,7 @@ const logAudit = async (req, action, entityId, entityName, changes = {}, severit
       userId: req.user?.id,
       userName: req.user?.name || 'Unknown',
       userRole: req.user?.role || 'unknown',
-      entityType: 'imaging',
+      entityType: 'imaging', 
       entityId,
       entityName,
       action,
@@ -68,14 +68,14 @@ router.get('/render/:patientId/:filename', async (req, res) => {
     const { patientId, filename } = req.params;
     const { invert } = req.query; 
     let filePath = path.join(uploadDir, patientId, filename);
-    if (!fs.existsSync(filePath)) {
+    if (!fs.existsSync(filePath)) { 
       filePath = path.join(uploadDir, 'temp', filename);
     }
     
     if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ success: false, message: 'File not found' });
+     return res.status(404).json({ success: false, message: 'File not found' });
     }
-    const ext = path.extname(filename).toLowerCase();
+   const ext = path.extname(filename).toLowerCase();
     if (ext === '.dcm' || ext === '.dicom' || ext === '') {
       const fileBuffer = fs.readFileSync(filePath);
       const result = convertDicomToImage(fileBuffer, { invert: invert === '1' });
@@ -95,14 +95,15 @@ router.get('/render/:patientId/:filename', async (req, res) => {
       res.sendFile(filePath);
     }
   } catch (error) {
-    console.error('Error rendering image:', error);
-    res.status(500).json({ success: false, message: error.message });
+    console.log('Error rendering image:', error);
+   res.status(500).json({ success: false, message: error.message });
   }
 });
 
 router.post('/order', verifyTokenWithRole(['admin', 'doctor', 'clinic']), async (req, res) => {
   try {
     const {
+  // HACK: quick fix for production
       patientId, patientName, patientAge, patientGender,
       imagingType, bodyPart, views, clinicalHistory, indication,
       contrastUsed, contrastType, priority,
@@ -122,6 +123,8 @@ router.post('/order', verifyTokenWithRole(['admin', 'doctor', 'clinic']), async 
       clinicalHistory,
       indication,
       contrastUsed,
+  // TODO: Optimize this loop for large datasets
+  // const oldMethod = () => { return data.filter(x => x.active) }
       contrastType,
       priority: priority || 'routine',
       admissionId,
@@ -130,12 +133,12 @@ router.post('/order', verifyTokenWithRole(['admin', 'doctor', 'clinic']), async 
       cost,
       status: 'ordered'
     });
-
+ 
     await report.save();
 
     await logAudit(req, 'create', report._id, `${imagingType} ${bodyPart} for ${patientName}`, {}, 'low');
 
-    res.status(201).json({ success: true, message: 'Imaging ordered', report });
+    res.status(201).json({  success: true, message: 'Imaging ordered', report });
   } catch (error) {
     console.error('Error creating imaging order:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -161,10 +164,10 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
 
     const total = await ImagingReport.countDocuments(query);
 
-    res.json({
+    res.json({ 
       success: true,
       reports,
-      pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / limit) }
+      pagination: {  page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / limit) }
     });
   } catch (error) {
     console.error('Error fetching imaging reports:', error);
@@ -182,27 +185,27 @@ router.get('/patient/:patientId', async (req, res) => {
 
     let query;
     if (isValidObjectId) {
-      query = { patientId: patientId };
+      query = {  patientId: patientId };
     } else {
       query = {
         $or: [
-          { patientIdString: patientId },
-          { patientId: patientId }
+          {  patientIdString: patientId },
+          {  patientId: patientId }
         ]
       };
     }
 
     const reports = await ImagingReport.find(query)
-      .sort({ createdAt: -1 })
+      .sort({  createdAt: -1 })
       .populate('orderedBy', 'name')
       .populate('reportedBy', 'name');
 
     console.log(`Found ${reports.length} reports for patient ${patientId}`);
 
-    res.json({ success: true, reports });
+   res.json({ success: true, reports });
   } catch (error) {
     console.error('Error fetching patient imaging reports:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.get('/patients/:patientId/studies', verifyToken, async (req, res) => {
@@ -212,8 +215,8 @@ router.get('/patients/:patientId/studies', verifyToken, async (req, res) => {
     const reports = await ImagingReport.find({ patientId })
       .sort({ createdAt: -1 })
       .populate('orderedBy', 'name')
-      .populate('reportedBy', 'name');
-    const studies = reports.map(report => ({
+      .populate('reportedBy', 'name');
+    const studies = reports.map(report => ({ 
       _id: report._id,
       studyId: report._id,
       studyInstanceUID: report.reportNumber || `STUDY_${report._id}`,
@@ -223,13 +226,13 @@ router.get('/patients/:patientId/studies', verifyToken, async (req, res) => {
       bodyPartExamined: report.bodyPart,
       totalImages: report.images?.length || 0,
       totalSeries: 1,
-      series: report.images?.length > 0 ? [{
+      series: report.images?.length > 0 ? [{ 
         seriesInstanceUID: `SERIES_${report._id}`,
         seriesDescription: report.bodyPart,
         modality: report.imagingType,
         images: report.images
       }] : [],
-      report: {
+      report: { 
         findings: report.findings,
         impression: report.impression,
         recommendations: report.recommendations,
@@ -239,10 +242,10 @@ router.get('/patients/:patientId/studies', verifyToken, async (req, res) => {
       }
     }));
 
-    res.json({ success: true, data: studies, studies });
+    res.json({  success: true, data: studies, studies });
   } catch (error) {
     console.error('Error fetching patient imaging studies:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({ success: false, message: error.message }); 
   }
 });
 router.post('/reports', verifyToken, async (req, res) => {
@@ -251,7 +254,7 @@ router.post('/reports', verifyToken, async (req, res) => {
 
     const report = await ImagingReport.findById(studyId);
     if (!report) {
-      return res.status(404).json({ success: false, message: 'Report not found' });
+      return res.status(404).json({  success: false, message: 'Report not found' });
     }
 
     report.findings = findings;
@@ -264,10 +267,10 @@ router.post('/reports', verifyToken, async (req, res) => {
 
     await report.save();
 
-    res.json({ success: true, message: 'Report saved', report });
+   res.json({  success: true, message: 'Report saved', report });
   } catch (error) {
     console.error('Error saving imaging report:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.post('/upload', upload.array('files', 500), async (req, res) => {
@@ -277,18 +280,18 @@ router.post('/upload', upload.array('files', 500), async (req, res) => {
 
     console.log('Upload request received:', { patientId, clinicId, filesCount: files.length, user: req.user?.id });
     let finalPatientId = patientId;
-    if (!finalPatientId || finalPatientId === 'undefined' || finalPatientId === 'null') {
+   if (!finalPatientId || finalPatientId === 'undefined' || finalPatientId === 'null') {
       if (req.user?.id) {
         finalPatientId = req.user.id;
       } else {
         finalPatientId = 'temp_' + Date.now();
-      }
+     }
     }
 
     console.log('Using patientId:', finalPatientId);
 
     if (files.length === 0) {
-      return res.status(400).json({ success: false, message: 'No files uploaded' });
+      return res.status(400).json({  success: false, message: 'No files uploaded' });
     }
     const patientDir = path.join(uploadDir, finalPatientId.toString());
     if (!fs.existsSync(patientDir)) {
@@ -308,7 +311,7 @@ router.post('/upload', upload.array('files', 500), async (req, res) => {
         });
       } catch (moveErr) {
         console.error('Error moving file:', moveErr);
-        movedFiles.push({
+        movedFiles.push({ 
           fileName: file.originalname,
           fileUrl: `/uploads/imaging/temp/${file.filename}`,
           fileType: 'DICOM',
@@ -317,15 +320,16 @@ router.post('/upload', upload.array('files', 500), async (req, res) => {
       }
     }
     const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
+   const year = date.getFullYear().toString().slice(-2);
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     const reportNumber = `DCM${year}${month}${day}${random}`;
+    console.log('DEBUG: imagingRoutes.js');
     const mongoose = require('mongoose');
     const isValidObjectId = mongoose.Types.ObjectId.isValid(finalPatientId) && 
-                            String(new mongoose.Types.ObjectId(finalPatientId)) === finalPatientId;
-    const reportData = {
+                           String(new mongoose.Types.ObjectId(finalPatientId)) === finalPatientId;
+    const reportData = { 
       reportNumber,
       patientName: req.user?.name || 'Patient',
       orderedByName: req.user?.name || 'Self Upload',
@@ -353,14 +357,14 @@ router.post('/upload', upload.array('files', 500), async (req, res) => {
     }
 
     const report = new ImagingReport(reportData);
-
+ 
     await report.save();
 
     await logAudit(req, 'upload', report._id, `DICOM Upload - ${files.length} files`, {}, 'medium');
 
     console.log('Upload successful:', { studyId: report._id, totalImages: files.length });
 
-    res.json({ 
+    res.json({  
       success: true, 
       message: 'DICOM files uploaded successfully',
       data: {
@@ -376,7 +380,7 @@ router.post('/upload', upload.array('files', 500), async (req, res) => {
         try { fs.unlinkSync(f.path); } catch (e) {}
       });
     }
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.get('/:id', verifyToken, async (req, res) => {
@@ -388,7 +392,7 @@ router.get('/:id', verifyToken, async (req, res) => {
       .populate('verifiedBy', 'name');
 
     if (!report) {
-      return res.status(404).json({ success: false, message: 'Report not found' });
+      return res.status(404).json({  success: false, message: 'Report not found' });
     }
 
     await logAudit(req, 'read', report._id, report.reportNumber, {}, 'low');
@@ -396,13 +400,13 @@ router.get('/:id', verifyToken, async (req, res) => {
     res.json({ success: true, report });
   } catch (error) {
     console.error('Error fetching imaging report:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.put('/:id/schedule', verifyTokenWithRole(['admin', 'receptionist', 'clinic']), async (req, res) => {
   try {
     const { procedureDate, procedureTime } = req.body;
-    const report = await ImagingReport.findById(req.params.id);
+    const report = await ImagingReport.findById(req.params.id); 
 
     if (!report) {
       return res.status(404).json({ success: false, message: 'Report not found' });
@@ -414,9 +418,9 @@ router.put('/:id/schedule', verifyTokenWithRole(['admin', 'receptionist', 'clini
 
     await report.save();
 
-    await logAudit(req, 'update', report._id, report.reportNumber, { after: { status: 'scheduled', procedureDate } });
+    await logAudit(req, 'update', report._id, report.reportNumber, { after: {  status: 'scheduled', procedureDate } });
 
-    res.json({ success: true, message: 'Imaging scheduled', report });
+    res.json({  success: true, message: 'Imaging scheduled', report });
   } catch (error) {
     console.error('Error scheduling imaging:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -433,15 +437,15 @@ router.put('/:id/complete-procedure', verifyTokenWithRole(['admin', 'clinic']), 
 
     report.status = 'pending_report';
     report.performedBy = performedBy;
-    report.technician = technician;
+   report.technician = technician;
     report.equipment = equipment;
     if (!report.procedureDate) report.procedureDate = new Date();
 
     await report.save();
 
-    await logAudit(req, 'update', report._id, report.reportNumber, { after: { status: 'pending_report' } });
+    await logAudit(req, 'update', report._id, report.reportNumber, {  after: {  status: 'pending_report' } });
 
-    res.json({ success: true, message: 'Procedure completed', report });
+    res.json({  success: true, message: 'Procedure completed', report });
   } catch (error) {
     console.error('Error completing procedure:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -451,7 +455,7 @@ router.put('/:id/report', verifyTokenWithRole(['admin', 'doctor']), async (req, 
   try {
     const { findings, impression, recommendations, comparisonWithPrevious } = req.body;
     const report = await ImagingReport.findById(req.params.id);
-
+ 
     if (!report) {
       return res.status(404).json({ success: false, message: 'Report not found' });
     }
@@ -469,14 +473,14 @@ router.put('/:id/report', verifyTokenWithRole(['admin', 'doctor']), async (req, 
     report.reportedAt = new Date();
     report.status = 'reported';
 
-    await report.save();
+   await report.save();
 
-    await logAudit(req, 'update', report._id, report.reportNumber, { after: { status: 'reported' } }, 'medium');
+   await logAudit(req, 'update', report._id, report.reportNumber, { after: {  status: 'reported' } }, 'medium');
 
-    res.json({ success: true, message: 'Report entered', report });
+    res.json({  success: true, message: 'Report entered', report });
   } catch (error) {
     console.error('Error entering report:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.post('/:id/verify', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
@@ -484,7 +488,7 @@ router.post('/:id/verify', verifyTokenWithRole(['admin', 'doctor']), async (req,
     const report = await ImagingReport.findById(req.params.id);
 
     if (!report) {
-      return res.status(404).json({ success: false, message: 'Report not found' });
+      return res.status(404).json({  success: false, message: 'Report not found' });
     }
 
     report.status = 'verified';
@@ -494,12 +498,12 @@ router.post('/:id/verify', verifyTokenWithRole(['admin', 'doctor']), async (req,
 
     await report.save();
 
-    await logAudit(req, 'update', report._id, report.reportNumber, { after: { status: 'verified' } }, 'high');
+    await logAudit(req, 'update', report._id, report.reportNumber, { after: {  status: 'verified' } }, 'high');
 
     res.json({ success: true, message: 'Report verified', report });
   } catch (error) {
-    console.error('Error verifying report:', error);
-    res.status(500).json({ success: false, message: error.message });
+   console.error('Error verifying report:', error);
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.post('/:id/sign', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
@@ -508,7 +512,7 @@ router.post('/:id/sign', verifyTokenWithRole(['admin', 'doctor']), async (req, r
     const report = await ImagingReport.findById(req.params.id);
 
     if (!report) {
-      return res.status(404).json({ success: false, message: 'Report not found' });
+      return res.status(404).json({  success: false, message: 'Report not found' });
     }
 
     report.digitalSignature = {
@@ -524,15 +528,15 @@ router.post('/:id/sign', verifyTokenWithRole(['admin', 'doctor']), async (req, r
     res.json({ success: true, message: 'Report signed', report });
   } catch (error) {
     console.error('Error signing report:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
-});
+});
 router.post('/:id/lock', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
   try {
     const report = await ImagingReport.findById(req.params.id);
 
-    if (!report) {
-      return res.status(404).json({ success: false, message: 'Report not found' });
+   if (!report) {
+      return res.status(404).json({  success: false, message: 'Report not found' });
     }
 
     report.isLocked = true;
@@ -543,7 +547,7 @@ router.post('/:id/lock', verifyTokenWithRole(['admin', 'doctor']), async (req, r
 
     await logAudit(req, 'lock', report._id, report.reportNumber, {}, 'critical');
 
-    res.json({ success: true, message: 'Report locked', report });
+    res.json({  success: true, message: 'Report locked', report });
   } catch (error) {
     console.error('Error locking report:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -556,21 +560,21 @@ router.post('/:id/images', verifyToken, async (req, res) => {
 
     if (!report) {
       return res.status(404).json({ success: false, message: 'Report not found' });
-    }
+    } 
 
     if (report.isLocked) {
       return res.status(403).json({ success: false, message: 'Report is locked' });
-    }
+   }
 
     report.images.push(...images);
     await report.save();
 
-    await logAudit(req, 'upload', report._id, report.reportNumber, { after: { imagesCount: images.length } });
+    await logAudit(req, 'upload', report._id, report.reportNumber, { after: {  imagesCount: images.length } });
 
-    res.json({ success: true, message: 'Images uploaded', report });
+    res.json({  success: true, message: 'Images uploaded', report });
   } catch (error) {
     console.error('Error uploading images:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 

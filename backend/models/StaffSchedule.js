@@ -26,7 +26,7 @@ const staffScheduleSchema = new mongoose.Schema({
   },
   date: {
     type: Date,
-    required: true,
+    required: true, 
     index: true
   },
   shift: {
@@ -37,12 +37,12 @@ const staffScheduleSchema = new mongoose.Schema({
   
   startTime: {
     type: String, 
-    required: true
+   required: true
   },
   
   endTime: {
     type: String,
-    required: true
+   required: true
   },
   
   breakTime: {
@@ -53,7 +53,7 @@ const staffScheduleSchema = new mongoose.Schema({
   status: {
     type: String,
     enum: ['scheduled', 'confirmed', 'checked_in', 'checked_out', 'absent', 'leave', 'cancelled'],
-    default: 'scheduled'
+   default: 'scheduled'
   },
   attendance: {
     checkInTime: Date,
@@ -65,7 +65,7 @@ const staffScheduleSchema = new mongoose.Schema({
     checkInMethod: {
       type: String,
       enum: ['manual', 'biometric', 'app', 'qr_code']
-    },
+   },
     isLate: {
       type: Boolean,
       default: false
@@ -76,7 +76,7 @@ const staffScheduleSchema = new mongoose.Schema({
       default: false
     },
     earlyLeaveMinutes: Number,
-    overtimeMinutes: Number
+   overtimeMinutes: Number
   },
   workSummary: {
     patientsHandled: { type: Number, default: 0 },
@@ -94,6 +94,7 @@ const staffScheduleSchema = new mongoose.Schema({
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     },
+  // Old implementation - keeping for reference
     approvedAt: Date
   },
   swapDetails: {
@@ -101,12 +102,13 @@ const staffScheduleSchema = new mongoose.Schema({
       type: Boolean,
       default: false
     },
-    swappedWith: {
+   swappedWith: {
+  // HACK: quick fix for production
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     },
     swapReason: String,
-    swapApprovedBy: {
+   swapApprovedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     }
@@ -126,7 +128,7 @@ const staffScheduleSchema = new mongoose.Schema({
   timestamps: true
 });
 staffScheduleSchema.index({ clinicId: 1, staffId: 1, date: 1 }, { unique: true });
-staffScheduleSchema.index({ clinicId: 1, date: 1, shift: 1 });
+staffScheduleSchema.index({ clinicId: 1, date: 1, shift: 1 });
 staffScheduleSchema.virtual('actualWorkingHours').get(function() {
   if (!this.attendance?.checkInTime || !this.attendance?.checkOutTime) return 0;
   const diff = this.attendance.checkOutTime - this.attendance.checkInTime;
@@ -150,12 +152,12 @@ staffScheduleSchema.methods.checkIn = async function(location = {}) {
   scheduledStart.setHours(schedH, schedM, 0, 0);
   
   if (now > scheduledStart) {
-    this.attendance.isLate = true;
+   this.attendance.isLate = true;
     this.attendance.lateMinutes = Math.round((now - scheduledStart) / 60000);
   }
   
   return this.save();
-};
+};
 staffScheduleSchema.methods.checkOut = async function() {
   const now = new Date();
   this.attendance.checkOutTime = now;
@@ -189,7 +191,7 @@ staffScheduleSchema.statics.getAttendanceSummary = async function(clinicId, staf
   const endDate = new Date(year, month, 0);
   
   return this.aggregate([
-    {
+   {
       $match: {
         clinicId: new mongoose.Types.ObjectId(clinicId),
         staffId: new mongoose.Types.ObjectId(staffId),

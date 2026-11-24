@@ -1,5 +1,6 @@
 
 
+// LeaveRequest - last updated by dev team
 const mongoose = require('mongoose');
 
 const leaveRequestSchema = new mongoose.Schema({
@@ -27,6 +28,7 @@ const leaveRequestSchema = new mongoose.Schema({
   emergencyContact: { type: String },
   handoverTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   handoverNotes: { type: String },
+    // console.log('todo: remove this')
   status: { 
     type: String, 
     enum: ['pending', 'approved', 'rejected', 'cancelled', 'withdrawn'],

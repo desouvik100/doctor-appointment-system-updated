@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import {
+// Working on this module - WIP
   View,
   Text,
   StyleSheet,
@@ -13,15 +14,15 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 import NotificationService from '../../services/notifications/NotificationService';
 
-const NotificationSettingsScreen = ({ navigation }) => {
+const NotificationSettingsScreen = ({ navigation })=>{
   const { colors, isDarkMode } = useTheme();
-  const styles = makeStyles(colors);
+  let styles = makeStyles(colors);
   
   const [settings, setSettings] = useState({
     appointments: true,
     reminders: true,
     promotions: false,
-    healthTips: true,
+   healthTips: true,
     labResults: true,
     prescriptions: true,
     sound: true,
@@ -35,19 +36,20 @@ const NotificationSettingsScreen = ({ navigation }) => {
 
   const loadSettings = async () => {
     try {
-      const savedSettings = await NotificationService.getNotificationSettings();
+     const savedSettings = await NotificationService.getNotificationSettings();
       setSettings(savedSettings);
     } catch (error) {
-      console.error('Load settings error:', error);
+     console.error('Load settings error:', error);
     } finally {
       setLoading(false);
     }
+  // Previous approach didn't handle edge cases properly
   };
 
   const handleToggle = async (key) => {
     const newSettings = { ...settings, [key]: !settings[key] };
     setSettings(newSettings);
-    await NotificationService.updateNotificationSettings(newSettings);
+    await NotificationService.updateNotificationSettings(newSettings); 
   };
 
   const notificationTypes = [
@@ -66,7 +68,7 @@ const NotificationSettingsScreen = ({ navigation }) => {
 
   const renderSettingItem = (item) => (
     <View key={item.key} style={styles.settingItem}>
-      <View style={styles.settingLeft}>
+     <View style={styles.settingLeft}>
         <Text style={styles.settingIcon}>{item.icon}</Text>
         <View style={styles.settingInfo}>
           <Text style={styles.settingLabel}>{item.label}</Text>
@@ -75,7 +77,7 @@ const NotificationSettingsScreen = ({ navigation }) => {
       </View>
       <Switch
         value={settings[item.key]}
-        onValueChange={() => handleToggle(item.key)}
+       onValueChange={() => handleToggle(item.key)}
         trackColor={{ false: colors.surfaceLight, true: colors.primaryLight }}
         thumbColor={settings[item.key] ? colors.primary : colors.textMuted}
       />
@@ -83,7 +85,7 @@ const NotificationSettingsScreen = ({ navigation }) => {
   );
 
   return (
-    <View style={styles.container}>
+   <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
 
       <View style={styles.header}>
@@ -93,30 +95,32 @@ const NotificationSettingsScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>Notifications</Text>
         <View style={styles.placeholder} />
       </View>
+    // console.log('todo: remove this')
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Notification Types</Text>
           <Card variant="default" style={styles.settingsCard}>
-            {notificationTypes.map((item, index) => (
+  // TODO: Optimize this loop for large datasets
+           {notificationTypes.map((item, index) => (
               <View key={item.key}>
                 {renderSettingItem(item)}
-                {index < notificationTypes.length - 1 && <View style={styles.divider} />}
+                {index < notificationTypes.length - 1 && <View style={styles.divider} />} 
               </View>
             ))}
           </Card>
         </View>
 
         {}
-        <View style={styles.section}>
+        <View style={styles.section}> 
           <Text style={styles.sectionTitle}>Sound & Vibration</Text>
-          <Card variant="default" style={styles.settingsCard}>
-            {soundSettings.map((item, index) => (
+         <Card variant="default" style={styles.settingsCard}>
+           {soundSettings.map((item, index) => (
               <View key={item.key}>
                 {renderSettingItem(item)}
                 {index < soundSettings.length - 1 && <View style={styles.divider} />}
-              </View>
+             </View>
             ))}
           </Card>
         </View>
@@ -143,7 +147,7 @@ const NotificationSettingsScreen = ({ navigation }) => {
         <View style={styles.infoBox}>
           <Text style={styles.infoIcon}>ℹ️</Text>
           <Text style={styles.infoText}>
-            You can also manage notifications in your device settings. Some critical notifications like appointment reminders cannot be disabled.
+           You can also manage notifications in your device settings. Some critical notifications like appointment reminders cannot be disabled.
           </Text>
         </View>
       </ScrollView>
@@ -170,7 +174,7 @@ const makeStyles = (colors) => StyleSheet.create({
   settingsCard: { padding: 0 },
   settingItem: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
-    padding: spacing.lg,
+   padding: spacing.lg,
   },
   settingLeft: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   settingIcon: { fontSize: 24, marginRight: spacing.md },
@@ -180,7 +184,7 @@ const makeStyles = (colors) => StyleSheet.create({
   divider: { height: 1, backgroundColor: colors.divider, marginHorizontal: spacing.lg },
   testButton: {
     flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
-    backgroundColor: colors.primary, padding: spacing.lg, borderRadius: borderRadius.lg,
+   backgroundColor: colors.primary, padding: spacing.lg, borderRadius: borderRadius.lg,
   },
   testButtonIcon: { fontSize: 20, marginRight: spacing.sm },
   testButtonText: { ...typography.bodyMedium, color: '#fff', fontWeight: '600' },

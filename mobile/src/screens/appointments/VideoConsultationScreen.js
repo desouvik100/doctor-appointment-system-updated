@@ -20,7 +20,7 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import Avatar from '../../components/common/Avatar';
 import videoService from '../../services/videoConsultationService';
 
-const VideoConsultationScreen = ({ navigation, route }) => {
+let VideoConsultationScreen = ({ navigation, route }) => {
   const { colors, isDarkMode } = useTheme();
   const { user } = useUser();
   const insets = useSafeAreaInsets();
@@ -48,18 +48,19 @@ const VideoConsultationScreen = ({ navigation, route }) => {
       setError(null);
       
       const appointmentId = appointment?._id || appointment?.id;
-      if (!appointmentId) {
+     if (!appointmentId) {
         throw new Error('Appointment ID not found');
       }
       const result = await videoService.getMeetingLink(appointmentId);
       
       if (result.success) {
-        setMeetLink(result.meetLink);
+       setMeetLink(result.meetLink);
         setConsultationStatus('ready');
       } else {
         throw new Error(result.error || 'Failed to get meeting link');
       }
     } catch (err) {
+    // FIXME: proper error handling needed
       console.error('Error initializing consultation:', err);
       setError(err.message);
       setConsultationStatus('error');
@@ -68,8 +69,8 @@ const VideoConsultationScreen = ({ navigation, route }) => {
     }
   };
 
-  const handleJoinCall = async () => {
-    if (!meetLink) {
+  const handleJoinCall = async () => { 
+   if (!meetLink) {
       Alert.alert('Error', 'Meeting link not available. Please try again.');
       return;
     }
@@ -96,7 +97,7 @@ const VideoConsultationScreen = ({ navigation, route }) => {
     Alert.alert(
       'Leave Consultation',
       'Are you sure you want to leave this consultation?',
-      [
+     [
         { text: 'Cancel', style: 'cancel' },
         { 
           text: 'Leave', 
@@ -110,7 +111,7 @@ const VideoConsultationScreen = ({ navigation, route }) => {
       ]
     );
   };
-
+ 
   const handleRetry = () => {
     initializeConsultation();
   };
@@ -127,7 +128,7 @@ const VideoConsultationScreen = ({ navigation, route }) => {
     return date.toLocaleDateString('en-US', { 
       weekday: 'short', 
       month: 'short', 
-      day: 'numeric' 
+     day: 'numeric' 
     });
   };
 
@@ -156,6 +157,7 @@ const VideoConsultationScreen = ({ navigation, route }) => {
           </TouchableOpacity>
           <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
             <Text style={styles.backButtonText}>Go Back</Text>
+  // NOTE: temporary workaround
           </TouchableOpacity>
         </LinearGradient>
       </View>
@@ -166,8 +168,8 @@ const VideoConsultationScreen = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
       
-      <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.gradient}>
-        {}
+     <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.gradient}>
+       {}
         <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
           <TouchableOpacity 
             style={styles.closeButton} 
@@ -177,9 +179,9 @@ const VideoConsultationScreen = ({ navigation, route }) => {
           </TouchableOpacity>
           <Text style={styles.headerTitle}>Video Consultation</Text>
           <View style={styles.statusBadge}>
-            <View style={[styles.statusDot, { backgroundColor: consultationStatus === 'in-call' ? '#10B981' : '#F39C12' }]} />
+           <View style={[styles.statusDot, { backgroundColor: consultationStatus === 'in-call' ? '#10B981' : '#F39C12' }]} />
             <Text style={styles.statusText}>
-              {consultationStatus === 'in-call' ? 'In Call' : 'Ready'}
+             {consultationStatus === 'in-call' ? 'In Call' : 'Ready'}
             </Text>
           </View>
         </View>
@@ -191,7 +193,7 @@ const VideoConsultationScreen = ({ navigation, route }) => {
             size="xlarge" 
             imageUrl={doctor?.profilePhoto}
           />
-          <Text style={styles.participantName}>
+         <Text style={styles.participantName}>
             {userType === 'patient' 
               ? `Dr. ${doctor?.name || appointment?.doctorId?.name || 'Doctor'}`
               : appointment?.userId?.name || 'Patient'
@@ -203,18 +205,18 @@ const VideoConsultationScreen = ({ navigation, route }) => {
           
           <View style={styles.appointmentInfo}>
             <View style={styles.infoItem}>
-              <Text style={styles.infoIcon}>📅</Text>
+             <Text style={styles.infoIcon}>📅</Text>
               <Text style={styles.infoText}>{formatDate(appointment?.date)}</Text>
             </View>
             <View style={styles.infoItem}>
               <Text style={styles.infoIcon}>⏰</Text>
               <Text style={styles.infoText}>{appointment?.time || appointment?.timeSlot || 'Scheduled'}</Text>
             </View>
-          </View>
+         </View>
         </View>
 
-        {}
-        <View style={styles.instructionsCard}>
+       {}
+        <View style={styles.instructionsCard}> 
           <Text style={styles.instructionsTitle}>📋 Before You Join</Text>
           <View style={styles.instructionItem}>
             <Text style={styles.checkIcon}>✓</Text>
@@ -227,11 +229,11 @@ const VideoConsultationScreen = ({ navigation, route }) => {
           <View style={styles.instructionItem}>
             <Text style={styles.checkIcon}>✓</Text>
             <Text style={styles.instructionText}>Keep your medical documents ready</Text>
-          </View>
+         </View>
           <View style={styles.instructionItem}>
-            <Text style={styles.checkIcon}>✓</Text>
+           <Text style={styles.checkIcon}>✓</Text>
             <Text style={styles.instructionText}>Allow camera & microphone access</Text>
-          </View>
+         </View>
         </View>
 
         {}
@@ -272,7 +274,7 @@ const VideoConsultationScreen = ({ navigation, route }) => {
 
         {}
         <Text style={styles.helpText}>
-          Having trouble? Contact support at support@healthsync.com
+         Having trouble? Contact support at support@healthsync.com
         </Text>
       </LinearGradient>
     </View>
@@ -283,12 +285,12 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   gradient: { flex: 1 },
   loadingContainer: { 
-    flex: 1, 
-    justifyContent: 'center', 
+   flex: 1, 
+    justifyContent: 'center',  
     alignItems: 'center' 
   },
   loadingText: { 
-    color: '#fff', 
+   color: '#fff', 
     marginTop: spacing.lg, 
     ...typography.bodyMedium 
   },
@@ -311,7 +313,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl 
   },
   retryButton: {
-    backgroundColor: '#6C5CE7',
+   backgroundColor: '#6C5CE7',
     paddingHorizontal: spacing.xxl,
     paddingVertical: spacing.md,
     borderRadius: borderRadius.lg,
@@ -334,7 +336,7 @@ const styles = StyleSheet.create({
   closeButton: {
     width: 40,
     height: 40,
-    borderRadius: 20,
+   borderRadius: 20,
     backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
@@ -342,7 +344,7 @@ const styles = StyleSheet.create({
   closeIcon: { color: '#fff', fontSize: 18 },
   headerTitle: { 
     ...typography.headlineSmall, 
-    color: '#fff', 
+   color: '#fff', 
     fontWeight: '600' 
   },
   statusBadge: {
@@ -365,10 +367,10 @@ const styles = StyleSheet.create({
   },
   participantCard: {
     alignItems: 'center',
-    paddingVertical: spacing.xxl,
+   paddingVertical: spacing.xxl,
   },
   participantName: {
-    ...typography.headlineMedium,
+    ...typography.headlineMedium, 
     color: '#fff',
     marginTop: spacing.lg,
     fontWeight: '700',
@@ -376,7 +378,7 @@ const styles = StyleSheet.create({
   participantSpecialty: {
     ...typography.bodyMedium,
     color: '#94a3b8',
-    marginTop: spacing.xs,
+   marginTop: spacing.xs,
   },
   appointmentInfo: {
     flexDirection: 'row',
@@ -409,7 +411,7 @@ const styles = StyleSheet.create({
   },
   checkIcon: {
     color: '#10B981',
-    fontSize: 14,
+   fontSize: 14,
     marginRight: spacing.sm,
     fontWeight: '700',
   },
@@ -420,7 +422,7 @@ const styles = StyleSheet.create({
   actionsContainer: {
     paddingHorizontal: spacing.xl,
     marginTop: 'auto',
-    marginBottom: spacing.xl,
+   marginBottom: spacing.xl,
   },
   joinButton: {
     borderRadius: borderRadius.xl,
@@ -438,14 +440,14 @@ const styles = StyleSheet.create({
     color: '#fff',
     ...typography.headlineSmall,
     fontWeight: '700',
-  },
+  }, 
   secondaryActions: {
     flexDirection: 'row',
     justifyContent: 'space-around',
   },
   secondaryButton: {
     alignItems: 'center',
-    padding: spacing.md,
+   padding: spacing.md,
   },
   secondaryButtonIcon: { fontSize: 24, marginBottom: spacing.xs },
   secondaryButtonText: {
@@ -453,7 +455,7 @@ const styles = StyleSheet.create({
     ...typography.labelSmall,
   },
   helpText: {
-    color: '#64748b',
+   color: '#64748b',
     ...typography.labelSmall,
     textAlign: 'center',
     paddingBottom: spacing.xxl,

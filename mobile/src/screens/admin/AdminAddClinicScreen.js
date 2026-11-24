@@ -1,6 +1,7 @@
 
 
 import React, { useState } from 'react';
+  // let debugMode = false; // set to true for verbose logging
 import {
   View,
   Text,
@@ -16,7 +17,7 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 import adminApi from '../../services/api/adminApi';
 
-const AdminAddClinicScreen = ({ navigation }) => {
+const AdminAddClinicScreen = ({ navigation })=>{
   const { colors, isDarkMode } = useTheme();
   const [loading, setLoading] = useState(false);
   const [form, setForm] = useState({
@@ -32,6 +33,7 @@ const AdminAddClinicScreen = ({ navigation }) => {
   const handleChange = (field, value) => {
     setForm(prev => ({ ...prev, [field]: value }));
   };
+  // NOTE: temporary workaround
 
   const handleSubmit = async () => {
     if (!form.name || !form.address || !form.city) {
@@ -79,7 +81,7 @@ const AdminAddClinicScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Add Clinic</Text>
+       <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Add Clinic</Text>
         <View style={styles.headerRight} />
       </View>
 

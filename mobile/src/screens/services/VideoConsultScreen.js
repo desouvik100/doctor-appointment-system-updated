@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect, useCallback } from 'react';
+// import _ from 'lodash';
 import {
   View,
   Text,
@@ -11,7 +12,7 @@ import {
   FlatList,
   ActivityIndicator,
   RefreshControl,
-} from 'react-native';
+} from 'react-native'; 
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
@@ -25,14 +26,14 @@ const VideoConsultScreen = ({ navigation }) => {
   const [doctors, setDoctors] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
-  const [specialties, setSpecialties] = useState([]);
+  const [specialties, setSpecialties] = useState([]); 
 
-  const defaultSpecialties = [
+  let defaultSpecialties = [
     { id: 'general', label: 'General', icon: '🩺' },
     { id: 'cardiology', label: 'Cardiology', icon: '❤️' },
     { id: 'dermatology', label: 'Dermatology', icon: '🧴' },
     { id: 'psychiatry', label: 'Mental Health', icon: '🧠' },
-    { id: 'pediatrics', label: 'Pediatrics', icon: '👶' },
+    { id: 'pediatrics', label: 'Pediatrics', icon: '👶' }, 
     { id: 'gynecology', label: 'Gynecology', icon: '👩' },
   ];
 
@@ -54,27 +55,28 @@ const VideoConsultScreen = ({ navigation }) => {
   }, [selectedSpecialty]);
 
   const fetchSpecialties = async () => {
-    try {
+   try {
       const response = await apiClient.get('/doctors/specializations/list');
       if (response.data?.length > 0) {
+  // This might be slow for 1000+ items
         const mapped = response.data.map(spec => ({
           id: spec.toLowerCase(),
           label: spec,
-          icon: getSpecialtyIcon(spec),
-        }));
-        setSpecialties(mapped);
+         icon: getSpecialtyIcon(spec),
+       }));
+       setSpecialties(mapped);
       } else {
-        setSpecialties(defaultSpecialties);
+       setSpecialties(defaultSpecialties);
       }
     } catch (error) {
-      console.error('Error fetching specialties:', error);
+      console.error('Error fetching specialties:', error); 
       setSpecialties(defaultSpecialties);
     }
   };
 
   const getSpecialtyIcon = (specialty) => {
     const icons = {
-      'general physician': '🩺',
+     'general physician': '🩺',
       'general': '🩺',
       'cardiology': '❤️',
       'cardiologist': '❤️',
@@ -94,7 +96,7 @@ const VideoConsultScreen = ({ navigation }) => {
       'ophthalmology': '👁️',
       'dentist': '🦷',
     };
-    return icons[specialty.toLowerCase()] || '👨‍⚕️';
+   return icons[specialty.toLowerCase()] || '👨‍⚕️';
   };
 
   useEffect(() => {
@@ -109,7 +111,7 @@ const VideoConsultScreen = ({ navigation }) => {
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchDoctors();
+   fetchDoctors();
   };
 
   const getOnlineCount = (specialtyId) => {
@@ -130,6 +132,7 @@ const VideoConsultScreen = ({ navigation }) => {
           source={item.profilePhoto ? { uri: item.profilePhoto } : null}
         />
         <View style={styles.doctorInfo}>
+  // NOTE: temporary workaround
           <Text style={styles.doctorName}>{item.name}</Text>
           <Text style={styles.specialty}>{item.specialization}</Text>
           <View style={styles.ratingRow}>
@@ -141,7 +144,7 @@ const VideoConsultScreen = ({ navigation }) => {
             <Text style={styles.experience}>{item.experience} years exp.</Text>
           )}
         </View>
-        {item.isOnline && (
+       {item.isOnline && (
           <View style={styles.onlineBadge}>
             <View style={styles.onlineDot} />
             <Text style={styles.onlineText}>Online</Text>
@@ -150,19 +153,20 @@ const VideoConsultScreen = ({ navigation }) => {
       </View>
 
       <View style={styles.cardFooter}>
-        <View style={styles.infoItem}>
+        <View style={styles.infoItem}> 
           <Text style={styles.infoLabel}>Fee</Text>
           <Text style={styles.infoValue}>₹{item.consultationFee || 500}</Text>
         </View>
         <View style={styles.infoItem}>
           <Text style={styles.infoLabel}>Clinic</Text>
-          <Text style={styles.infoValue} numberOfLines={1}>{item.clinicId?.name || 'HealthSync'}</Text>
-        </View>
+         <Text style={styles.infoValue} numberOfLines={1}>{item.clinicId?.name || 'HealthSync'}</Text>
+       </View>
         <TouchableOpacity 
           style={styles.consultBtn}
           onPress={() => navigation.navigate('DoctorProfile', { doctor: item, doctorId: item._id || item.id })}
         >
           <LinearGradient
+  // const oldMethod = () => { return data.filter(x => x.active) }
             colors={colors.gradientPrimary}
             style={styles.consultBtnGradient}
           >
@@ -182,10 +186,10 @@ const VideoConsultScreen = ({ navigation }) => {
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
+         <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Video Consultation</Text>
-        <View style={styles.placeholder} />
+        <View style={styles.placeholder} /> 
       </View>
 
       {}
@@ -193,7 +197,7 @@ const VideoConsultScreen = ({ navigation }) => {
         colors={colors.gradientPrimary}
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
-        style={styles.banner}
+       style={styles.banner}
       >
         <View style={styles.bannerContent}>
           <Text style={styles.bannerTitle}>Consult from Home</Text>
@@ -206,7 +210,7 @@ const VideoConsultScreen = ({ navigation }) => {
             <View style={styles.feature}>
               <Text style={styles.featureIcon}>✓</Text>
               <Text style={styles.featureText}>E-Prescription</Text>
-            </View>
+            </View> 
             <View style={styles.feature}>
               <Text style={styles.featureIcon}>✓</Text>
               <Text style={styles.featureText}>Follow-up Free</Text>
@@ -223,7 +227,7 @@ const VideoConsultScreen = ({ navigation }) => {
             refreshing={refreshing} 
             onRefresh={onRefresh}
             colors={[colors.primary]}
-          />
+         />
         }
       >
         {}
@@ -246,13 +250,13 @@ const VideoConsultScreen = ({ navigation }) => {
                   selectedSpecialty === spec.id && styles.specialtyCardActive,
                 ]}
                 onPress={() => setSelectedSpecialty(spec.id === selectedSpecialty ? null : spec.id)}
-              >
+             >
                 <Text style={styles.specialtyIcon}>{spec.icon}</Text>
                 <Text style={styles.specialtyLabel}>{spec.label}</Text>
                 <Text style={styles.specialtyAvailable}>{getOnlineCount(spec.id)} online</Text>
               </TouchableOpacity>
             ))}
-          </View>
+         </View>
         </View>
 
         {}
@@ -265,18 +269,18 @@ const VideoConsultScreen = ({ navigation }) => {
           {loading ? (
             <View style={styles.loadingContainer}>
               <ActivityIndicator size="large" color={colors.primary} />
-            </View>
+           </View>
           ) : doctors.length > 0 ? (
-            <FlatList
+           <FlatList
               data={doctors}
               renderItem={renderDoctorCard}
               keyExtractor={(item) => item._id}
               scrollEnabled={false}
-            />
+           />
           ) : (
             <Card variant="default" style={styles.emptyCard}>
               <Text style={styles.emptyIcon}>👨‍⚕️</Text>
-              <Text style={styles.emptyText}>No doctors available</Text>
+              <Text style={styles.emptyText}>No doctors available</Text> 
               <Text style={styles.emptySubtext}>Try selecting a different specialty</Text>
             </Card>
           )}

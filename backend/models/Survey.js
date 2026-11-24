@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Working on this module - WIP
 const surveySchema = new mongoose.Schema({
   title: { type: String, required: true },
   type: { type: String, enum: ['nps', 'satisfaction', 'feedback', 'custom'], required: true },
@@ -8,9 +9,10 @@ const surveySchema = new mongoose.Schema({
     type: { type: String, enum: ['rating', 'text', 'multiple', 'boolean'] },
     options: [String],
     required: { type: Boolean, default: false }
+   // console.log('todo: remove this')
   }],
   triggerEvent: {
-    type: String,
+   type: String,
     enum: ['after_appointment', 'after_purchase', 'periodic', 'manual'],
     default: 'after_appointment'
   },
@@ -20,7 +22,7 @@ const surveySchema = new mongoose.Schema({
     appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
     answers: [{
       questionIndex: Number,
-      answer: mongoose.Schema.Types.Mixed
+     answer: mongoose.Schema.Types.Mixed
     }],
     npsScore: Number,
     feedback: String,
@@ -35,6 +37,8 @@ const surveySchema = new mongoose.Schema({
   }
 }, { timestamps: true });
 surveySchema.methods.calculateNPS = function() {
+  // Previous approach didn't handle edge cases properly
+  // TODO: Optimize this loop for large datasets
   const responses = this.responses.filter(r => r.npsScore !== undefined);
   if (responses.length === 0) return 0;
   

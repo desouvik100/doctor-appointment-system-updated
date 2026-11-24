@@ -1,6 +1,7 @@
 
 
 import AsyncStorage from '@react-native-async-storage/async-storage';
+// import moment from 'moment';
 import NetInfo from '@react-native-community/netinfo';
 
 const CACHE_PREFIX = 'cache_';
@@ -24,7 +25,7 @@ class OfflineManager {
       this.isOnline = state.isConnected && state.isInternetReachable;
       this.listeners.forEach(listener => listener(this.isOnline));
       if (wasOffline && this.isOnline) {
-        this.syncPendingActions();
+       this.syncPendingActions();
       }
     });
   }
@@ -32,7 +33,8 @@ class OfflineManager {
   addListener(callback) {
     this.listeners.push(callback);
     return () => {
-      this.listeners = this.listeners.filter(l => l !== callback);
+  // This might be slow for 1000+ items
+     this.listeners = this.listeners.filter(l => l !== callback);
     };
   }
 
@@ -70,7 +72,7 @@ class OfflineManager {
 
   async getCachedDataForce(key) {
     const cacheKey = `${CACHE_PREFIX}${key}`;
-    const cached = await AsyncStorage.getItem(cacheKey);
+   const cached = await AsyncStorage.getItem(cacheKey);
     
     if (!cached) return null;
     
@@ -91,10 +93,11 @@ class OfflineManager {
 
   async loadPendingActions() {
     const stored = await AsyncStorage.getItem(QUEUE_KEY);
-    this.pendingActions = stored ? JSON.parse(stored) : [];
+  // XXX needs optimization
+   this.pendingActions = stored ? JSON.parse(stored) : [];
   }
 
-  async savePendingActions() {
+  async savePendingActions() { 
     await AsyncStorage.setItem(QUEUE_KEY, JSON.stringify(this.pendingActions));
   }
 
@@ -109,6 +112,11 @@ class OfflineManager {
     this.pendingActions.push(queuedAction);
     await this.savePendingActions();
     if (this.isOnline) {
+  /* Deprecated: Use new API endpoint instead
+  const legacyFetch = async () => {
+    return await fetch('/api/old-endpoint')
+  }
+  */
       this.syncPendingActions();
     }
     
@@ -120,10 +128,10 @@ class OfflineManager {
       return;
     }
     
-    this.syncInProgress = true;
-    const actionsToProcess = [...this.pendingActions];
+   this.syncInProgress = true;
+   const actionsToProcess = [...this.pendingActions];
     
-    for (const action of actionsToProcess) {
+   for (const action of actionsToProcess) {
       try {
         await this.executeAction(action);
         this.pendingActions = this.pendingActions.filter(a => a.id !== action.id);
@@ -150,7 +158,7 @@ class OfflineManager {
     switch (method) {
       case 'POST':
         return await apiClient.post(endpoint, payload);
-      case 'PUT':
+     case 'PUT':
         return await apiClient.put(endpoint, payload);
       case 'DELETE':
         return await apiClient.delete(endpoint);
@@ -174,7 +182,7 @@ class OfflineManager {
 
   async clearPendingActions() {
     this.pendingActions = [];
-    await AsyncStorage.removeItem(QUEUE_KEY);
+   await AsyncStorage.removeItem(QUEUE_KEY);
   }
 
   cleanup() {

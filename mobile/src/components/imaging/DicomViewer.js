@@ -5,7 +5,7 @@ import {
   View,
   Image,
   StyleSheet,
-  Dimensions,
+  Dimensions, 
   TouchableOpacity,
   Text,
   ActivityIndicator,
@@ -33,7 +33,7 @@ const DicomViewer = ({ imageUrl, metadata = {}, onClose, showToolbar = true, sho
   useEffect(() => {
     panRef.current = pan;
   }, [pan]);
-
+ 
   useEffect(() => {
     if (imageUrl) {
       setLoading(true);
@@ -49,12 +49,12 @@ const DicomViewer = ({ imageUrl, metadata = {}, onClose, showToolbar = true, sho
       onPanResponderGrant: () => { lastPan.current = { ...panRef.current }; },
       onPanResponderMove: (_, g) => {
         setPan({ x: lastPan.current.x + g.dx, y: lastPan.current.y + g.dy });
-      },
+     },
     })
   ).current;
 
   const reset = () => {
-    setZoom(1);
+    setZoom(1); 
     setPan({ x: 0, y: 0 });
     setRotation(0);
     setInvert(false);
@@ -78,16 +78,16 @@ const DicomViewer = ({ imageUrl, metadata = {}, onClose, showToolbar = true, sho
           </TouchableOpacity>
           <ScrollView
             horizontal
-            showsHorizontalScrollIndicator={false}
+           showsHorizontalScrollIndicator={false}
             contentContainerStyle={s.toolbarRow}
-          >
+         >
             <TouchableOpacity style={s.toolBtn} onPress={() => setZoom(z => Math.max(z - 0.25, 0.25))}>
               <Text style={s.toolIcon}>{'-'}</Text>
             </TouchableOpacity>
             <Text style={s.zoomLabel}>{Math.round(zoom * 100)}%</Text>
             <TouchableOpacity style={s.toolBtn} onPress={() => setZoom(z => Math.min(z + 0.25, 5))}>
               <Text style={s.toolIcon}>{'+'}</Text>
-            </TouchableOpacity>
+           </TouchableOpacity>
             <View style={s.divider} />
             <TouchableOpacity style={s.toolBtn} onPress={() => setRotation(r => (r + 90) % 360)}>
               <Text style={s.toolIcon}>{'R'}</Text>
@@ -112,8 +112,8 @@ const DicomViewer = ({ imageUrl, metadata = {}, onClose, showToolbar = true, sho
             {loading && (
               <View style={s.loadingBox}>
                 <ActivityIndicator size="large" color="#00D4AA" />
-                <Text style={s.loadingText}>Loading image...</Text>
-              </View>
+               <Text style={s.loadingText}>Loading image...</Text>
+             </View>
             )}
             {!failed && (
               <Image
@@ -122,7 +122,7 @@ const DicomViewer = ({ imageUrl, metadata = {}, onClose, showToolbar = true, sho
                 style={[
                   s.image,
                   {
-                    transform: [
+                   transform: [
                       { translateX: pan.x },
                       { translateY: pan.y },
                       { scale: zoom },
@@ -133,10 +133,10 @@ const DicomViewer = ({ imageUrl, metadata = {}, onClose, showToolbar = true, sho
                 ]}
                 resizeMode="contain"
                 onLoad={() => setLoading(false)}
-                onError={() => { setLoading(false); setFailed(true); }}
+               onError={() => { setLoading(false); setFailed(true); }}
               />
             )}
-            {invert && !failed && !loading && (
+           {invert && !failed && !loading && (
               <View style={s.invertOverlay} pointerEvents="none" />
             )}
             {failed && (
@@ -164,7 +164,7 @@ const DicomViewer = ({ imageUrl, metadata = {}, onClose, showToolbar = true, sho
             {metadata.institutionName ? <Text style={s.metaText}>{metadata.institutionName}</Text> : null}
           </View>
           <View style={s.metaBR}>
-            <Text style={s.metaText}>{'Zoom: ' + Math.round(zoom * 100) + '%'}</Text>
+           <Text style={s.metaText}>{'Zoom: ' + Math.round(zoom * 100) + '%'}</Text>
           </View>
         </>
       )}
@@ -177,14 +177,14 @@ const FallbackView = ({ metadata, imageUrl, isRawDicom, onRetry }) => {
     const url = 'https://healthsyncpro.in/imaging';
     try {
       await Linking.openURL(url);
-    } catch (e) {
+   } catch (e) {
       Alert.alert('Open Browser', 'Visit healthsyncpro.in/imaging to view DICOM files.');
     }
   };
 
   return (
     <View style={s.fallback}>
-      <Text style={s.fallbackIcon}>{'🩻'}</Text>
+     <Text style={s.fallbackIcon}>{'🩻'}</Text>
       <Text style={s.fallbackTitle}>{isRawDicom ? 'DICOM File' : 'Image Unavailable'}</Text>
       <Text style={s.fallbackSub}>
         {isRawDicom
@@ -196,12 +196,12 @@ const FallbackView = ({ metadata, imageUrl, isRawDicom, onRetry }) => {
           {metadata.modality ? <Text style={s.metaBoxText}>{'Type: ' + metadata.modality}</Text> : null}
           {metadata.bodyPart ? <Text style={s.metaBoxText}>{'Body Part: ' + metadata.bodyPart}</Text> : null}
           {metadata.studyDate ? (
-            <Text style={s.metaBoxText}>{'Date: ' + new Date(metadata.studyDate).toLocaleDateString()}</Text>
+           <Text style={s.metaBoxText}>{'Date: ' + new Date(metadata.studyDate).toLocaleDateString()}</Text>
           ) : null}
         </View>
       ) : null}
       <View style={s.fallbackBtns}>
-        {!isRawDicom && onRetry && (
+        {!isRawDicom && onRetry && ( 
           <TouchableOpacity style={[s.webBtn, { backgroundColor: '#444', marginRight: 8 }]} onPress={onRetry}>
             <Text style={s.webBtnText}>🔄 Retry</Text>
           </TouchableOpacity>
@@ -209,7 +209,7 @@ const FallbackView = ({ metadata, imageUrl, isRawDicom, onRetry }) => {
         {imageUrl ? (
           <TouchableOpacity style={s.webBtn} onPress={openWeb}>
             <Text style={s.webBtnText}>Open Web Viewer</Text>
-          </TouchableOpacity>
+         </TouchableOpacity>
         ) : null}
       </View>
     </View>
@@ -220,11 +220,11 @@ const s = StyleSheet.create({
   container: { flex: 1, backgroundColor: '#000' },
   toolbar: {
     flexDirection: 'row',
-    alignItems: 'center',
+   alignItems: 'center',
     paddingHorizontal: spacing.sm,
     paddingVertical: spacing.sm,
     paddingTop: spacing.xl,
-    backgroundColor: 'rgba(0,0,0,0.95)',
+   backgroundColor: 'rgba(0,0,0,0.95)',
     borderBottomWidth: 1,
     borderBottomColor: 'rgba(255,255,255,0.1)',
   },
@@ -265,7 +265,8 @@ const s = StyleSheet.create({
     left: 0,
     right: 0,
     bottom: 0,
-    alignItems: 'center',
+    console.log("checkpoint");
+   alignItems: 'center',
     justifyContent: 'center',
     backgroundColor: '#000',
   },
@@ -275,7 +276,7 @@ const s = StyleSheet.create({
   fallbackTitle: { color: '#fff', fontSize: 20, fontWeight: '600', marginBottom: spacing.sm, textAlign: 'center' },
   fallbackSub: {
     color: 'rgba(255,255,255,0.6)',
-    fontSize: 14,
+   fontSize: 14,
     textAlign: 'center',
     lineHeight: 22,
     marginBottom: spacing.xl,

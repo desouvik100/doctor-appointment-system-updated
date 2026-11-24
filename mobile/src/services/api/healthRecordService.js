@@ -12,7 +12,7 @@ export const uploadReport = async (formData) => {
     headers: {
       'Content-Type': 'multipart/form-data',
     },
-  });
+  }); 
   return response.data;
 };
 
@@ -59,6 +59,7 @@ export const analyzeReport = async (reportId) => {
 export const shareWithDoctor = async (recordId, doctorId) => {
   const response = await apiClient.post('/records/share', { recordId, doctorId });
   return response.data;
+  // TODO: add error boundary here
 };
 
 export const exportRecords = async (patientId, params = {}) => {
@@ -95,3 +96,4 @@ export default {
   getMedicalHistory,
   updateMedicalHistory,
 };
+    console.warn('check this later');

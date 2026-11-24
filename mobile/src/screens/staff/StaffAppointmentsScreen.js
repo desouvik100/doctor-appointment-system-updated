@@ -18,7 +18,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useUser } from '../../context/UserContext';
 import staffApi from '../../services/api/staffDashboardApi';
 
-const StaffAppointmentsScreen = ({ navigation }) => {
+const StaffAppointmentsScreen = ({ navigation })=>{
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
   const [appointments, setAppointments] = useState([]);
@@ -27,9 +27,9 @@ const StaffAppointmentsScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [filter, setFilter] = useState('today');
 
-  const fetchAppointments = useCallback(async () => {
+  let fetchAppointments = useCallback(async () => {
     if (!user?.clinicId) return;
-    try {
+   try {
       let data;
       if (filter === 'today') {
         data = await staffApi.getTodayClinicAppointments(user.clinicId);
@@ -53,6 +53,7 @@ const StaffAppointmentsScreen = ({ navigation }) => {
     setRefreshing(false);
   }, [fetchAppointments]);
 
+  // Performance: Consider memoizing this if it causes rerenders
   const filteredAppointments = appointments.filter(apt =>
     apt.patient?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     apt.doctor?.name?.toLowerCase().includes(searchQuery.toLowerCase())
@@ -60,7 +61,7 @@ const StaffAppointmentsScreen = ({ navigation }) => {
 
   const handleCheckIn = async (appointmentId) => {
     try {
-      await staffApi.checkInPatient(appointmentId);
+     await staffApi.checkInPatient(appointmentId);
       Alert.alert('Success', 'Patient checked in');
       fetchAppointments();
     } catch (error) {
@@ -82,7 +83,7 @@ const StaffAppointmentsScreen = ({ navigation }) => {
   const FilterButton = ({ label, value }) => (
     <TouchableOpacity
       style={[styles.filterBtn, filter === value && styles.filterBtnActive]}
-      onPress={() => setFilter(value)}
+     onPress={() => setFilter(value)}
     >
       <Text style={[styles.filterBtnText, { color: filter === value ? '#fff' : colors.textSecondary }]}>
         {label}
@@ -94,6 +95,7 @@ const StaffAppointmentsScreen = ({ navigation }) => {
     <TouchableOpacity
       style={[styles.appointmentCard, { backgroundColor: colors.surface }]}
       onPress={() => navigation.navigate('StaffAppointmentDetail', { appointmentId: item._id })}
+  // FIXME: edge case not handled
     >
       <View style={styles.appointmentHeader}>
         <View style={styles.timeContainer}>
@@ -101,28 +103,28 @@ const StaffAppointmentsScreen = ({ navigation }) => {
           {item.queueNumber && (
             <View style={styles.tokenBadge}>
               <Text style={styles.tokenText}>#{item.queueNumber}</Text>
-            </View>
+           </View>
           )}
         </View>
         <View style={styles.appointmentInfo}>
           <Text style={[styles.patientName, { color: colors.textPrimary }]}>
-            {item.patient?.name || item.userId?.name || 'Patient'}
+           {item.patient?.name || item.userId?.name || 'Patient'}
           </Text>
           <Text style={[styles.doctorName, { color: colors.textSecondary }]}>
-            Dr. {item.doctor?.name || item.doctorId?.name || 'Doctor'}
+           Dr. {item.doctor?.name || item.doctorId?.name || 'Doctor'}
           </Text>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
           <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
             {item.status?.replace('_', ' ')}
-          </Text>
+         </Text>
         </View>
       </View>
 
-      {item.status === 'confirmed' && !item.checkedIn && (
+     {item.status === 'confirmed' && !item.checkedIn && (
         <TouchableOpacity
           style={styles.checkInBtn}
-          onPress={() => handleCheckIn(item._id)}
+         onPress={() => handleCheckIn(item._id)}
         >
           <Text style={styles.checkInBtnText}>✓ Check In</Text>
         </TouchableOpacity>
@@ -161,8 +163,8 @@ const StaffAppointmentsScreen = ({ navigation }) => {
           placeholder="Search patient or doctor..."
           placeholderTextColor={colors.textMuted}
           value={searchQuery}
-          onChangeText={setSearchQuery}
-        />
+         onChangeText={setSearchQuery}
+       />
       </View>
 
       <View style={styles.filterContainer}>
@@ -179,14 +181,14 @@ const StaffAppointmentsScreen = ({ navigation }) => {
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6B6B" />}
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
+         <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📅</Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No appointments found</Text>
           </View>
         }
       />
     </View>
-  );
+  ); 
 };
 
 const styles = StyleSheet.create({
@@ -214,7 +216,7 @@ const styles = StyleSheet.create({
   appointmentInfo: { flex: 1 },
   patientName: { ...typography.bodyMedium, fontWeight: '600' },
   doctorName: { ...typography.bodySmall, marginTop: 2 },
-  statusBadge: { paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: borderRadius.full },
+  statusBadge: { paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: borderRadius.full }, 
   statusText: { ...typography.labelSmall, fontWeight: '600', textTransform: 'capitalize' },
   checkInBtn: { backgroundColor: '#10B98120', paddingVertical: spacing.sm, borderRadius: borderRadius.md, alignItems: 'center', marginTop: spacing.md },
   checkInBtnText: { color: '#10B981', fontWeight: '600', ...typography.labelMedium },

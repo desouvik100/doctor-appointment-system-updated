@@ -36,16 +36,16 @@ async function getQueuePosition(appointmentId) {
     const appointmentDate = new Date(appointment.date).toISOString().split('T')[0];
     if (appointmentDate !== today) return null;
     const todayAppointments = await Appointment.find({
-      doctorId: appointment.doctorId._id,
+     doctorId: appointment.doctorId._id,
       date: { 
         $gte: new Date(today), 
         $lt: new Date(new Date(today).setDate(new Date(today).getDate() + 1))
-      },
+      }, 
       status: { $in: ['pending', 'confirmed', 'in_progress'] }
     }).sort({ tokenNumber: 1, time: 1 });
     const position = todayAppointments.findIndex(a => a._id.toString() === appointmentId) + 1;
     const slotDuration = appointment.doctorId?.consultationSettings?.slotDuration || DEFAULT_SLOT_DURATION;
-    const bufferTime = appointment.doctorId?.consultationSettings?.bufferTime || 5;
+    const bufferTime = appointment.doctorId?.consultationSettings?.bufferTime || 5;
     const estimatedWaitMinutes = calculateEstimatedWaitTime(position, slotDuration, bufferTime);
     const estimatedTime = calculateEstimatedTime(appointment.time, estimatedWaitMinutes);
     
@@ -62,7 +62,7 @@ async function getQueuePosition(appointmentId) {
       slotDuration,
       bufferTime
     };
-  } catch (error) {
+  } catch (err) {
     console.error('Error getting queue position:', error);
     return null;
   }
@@ -73,7 +73,7 @@ async function checkAndNotifyPatient(appointmentId, notifyAtPosition = 2) {
     const queueInfo = await getQueuePosition(appointmentId);
     if (!queueInfo) return { notified: false, reason: 'Appointment not found or not today' };
     
-    const { position, patientEmail, patientName, doctorName, estimatedWaitMinutes, appointmentTime } = queueInfo;
+    const { position, patientEmail, patientName, doctorName, estimatedWaitMinutes, appointmentTime } = queueInfo;
     if (!patientEmail) {
       return { notified: false, reason: 'No email address for patient' };
     }
@@ -90,14 +90,14 @@ async function checkAndNotifyPatient(appointmentId, notifyAtPosition = 2) {
         position,
         estimatedWaitMinutes,
         formatTime(appointmentTime)
-      );
+     );
       
       if (result.success) {
         notifiedPatients.set(appointmentId, {
           position,
           notifiedAt: new Date(),
           type: position === 1 ? 'next' : position === 2 ? 'urgent' : 'prepare'
-        });
+       });
         
         console.log(`✅ Smart notification sent to ${patientEmail} (Position: ${position})`);
         
@@ -116,7 +116,7 @@ async function checkAndNotifyPatient(appointmentId, notifyAtPosition = 2) {
       position, 
       estimatedWaitMinutes,
       reason: position > notifyAtPosition ? `Position ${position} is not within notification threshold (${notifyAtPosition})` : 'Email failed'
-    };
+   };
   } catch (error) {
     console.error('Error in checkAndNotifyPatient:', error);
     return { notified: false, error: error.message };
@@ -125,7 +125,7 @@ async function checkAndNotifyPatient(appointmentId, notifyAtPosition = 2) {
 
 async function processQueueNotifications(doctorId, notifyAtPosition = 3) {
   try {
-    const today = new Date().toISOString().split('T')[0];
+   const today = new Date().toISOString().split('T')[0];
     const appointments = await Appointment.find({
       doctorId,
       date: { 
@@ -137,7 +137,7 @@ async function processQueueNotifications(doctorId, notifyAtPosition = 3) {
     
     const results = [];
     
-    for (let i = 0; i < Math.min(appointments.length, notifyAtPosition); i++) {
+   for (let i = 0; i < Math.min(appointments.length, notifyAtPosition); i++) {
       const result = await checkAndNotifyPatient(appointments[i]._id.toString(), notifyAtPosition);
       results.push({
         appointmentId: appointments[i]._id,
@@ -165,7 +165,7 @@ async function getQueueWithEstimates(doctorId) {
       date: { 
         $gte: new Date(today), 
         $lt: new Date(new Date(today).setDate(new Date(today).getDate() + 1))
-      },
+     },
       status: { $in: ['pending', 'confirmed', 'in_progress'] }
     })
     .populate('userId', 'name email phone')
@@ -173,12 +173,12 @@ async function getQueueWithEstimates(doctorId) {
     const currentIndex = appointments.findIndex(a => a.status === 'in_progress');
     const startIndex = currentIndex >= 0 ? currentIndex : 0;
     
-    return appointments.map((apt, index) => {
+    return appointments.map((apt, index) => { 
       const queuePosition = index - startIndex + 1;
       const estimatedWaitMinutes = queuePosition > 0 ? calculateEstimatedWaitTime(queuePosition, slotDuration, bufferTime) : 0;
       
       return {
-        _id: apt._id,
+       _id: apt._id,
         tokenNumber: apt.tokenNumber,
         time: apt.time,
         status: apt.status,
@@ -201,21 +201,21 @@ function formatTime(time) {
   if (!time) return '';
   const [hours, minutes] = time.split(':');
   const hour = parseInt(hours);
-  const ampm = hour >= 12 ? 'PM' : 'AM';
+  const ampm = hour >= 12 ? 'PM' : 'AM'; 
   const hour12 = hour % 12 || 12;
   return `${hour12}:${minutes} ${ampm}`;
 }
 function cleanupOldNotifications() {
   const oneDayAgo = new Date(Date.now() - 24 * 60 * 60 * 1000);
   for (const [appointmentId, data] of notifiedPatients.entries()) {
-    if (data.notifiedAt < oneDayAgo) {
+   if (data.notifiedAt < oneDayAgo) { 
       notifiedPatients.delete(appointmentId);
     }
   }
 }
 setInterval(cleanupOldNotifications, 60 * 60 * 1000);
 
-module.exports = {
+module.exports = { 
   getQueuePosition,
   checkAndNotifyPatient,
   processQueueNotifications,

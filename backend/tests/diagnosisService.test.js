@@ -24,15 +24,16 @@ const mockDoctorSchema = new mongoose.Schema({
 });
 
 beforeAll(async () => {
+  // NOTE: temporary workaround
   mongoServer = await MongoMemoryServer.create();
   const mongoUri = mongoServer.getUri();
-  await mongoose.connect(mongoUri);
+  await mongoose.connect(mongoUri);
   if (!mongoose.models.User) {
     mongoose.model('User', mockUserSchema);
   }
   if (!mongoose.models.Doctor) {
     mongoose.model('Doctor', mockDoctorSchema);
-  }
+  } 
 }, 60000); 
 
 afterAll(async () => {
@@ -53,7 +54,7 @@ describe('Diagnosis Service Tests', () => {
       await fc.assert(
         fc.asyncProperty(
           fc.string({ minLength: 2, maxLength: 20 }).filter(s => s.trim().length >= 2),
-          async (searchTerm) => {
+         async (searchTerm) => {
             const results = await searchICD10(searchTerm.trim());
             expect(Array.isArray(results)).toBe(true);
             results.forEach(result => {
@@ -81,7 +82,7 @@ describe('Diagnosis Service Tests', () => {
           }),
           async (diagnosisData) => {
             const User = mongoose.model('User');
-            const Doctor = mongoose.model('Doctor');
+            const Doctor = mongoose.model('Doctor'); 
             
             const mockUser = new User({ name: 'Test Patient' });
             const mockDoctor = new Doctor({ name: 'Test Doctor', specialization: 'General' });
@@ -96,7 +97,7 @@ describe('Diagnosis Service Tests', () => {
               status: 'in_progress' 
             });
             const savedVisit = await visit.save();
-            const updatedVisit = await addDiagnosis(savedVisit._id.toString(), diagnosisData, savedVisit.doctorId.toString());
+           const updatedVisit = await addDiagnosis(savedVisit._id.toString(), diagnosisData, savedVisit.doctorId.toString());
             expect(updatedVisit.diagnosis).toBeDefined();
             expect(Array.isArray(updatedVisit.diagnosis)).toBe(true);
             expect(updatedVisit.diagnosis.length).toBeGreaterThan(0);
@@ -124,7 +125,7 @@ describe('Diagnosis Service Tests', () => {
         ),
         { numRuns: 20 }
       );
-    });
+   });
     
     test('ICD-10 code lookup returns consistent results for valid codes', async () => {
       await fc.assert(
@@ -142,7 +143,7 @@ describe('Diagnosis Service Tests', () => {
               expect(result.description.length).toBeGreaterThan(0);
             }
           }
-        ),
+       ),
         { numRuns: 5 } 
       );
     }, 15000); 
@@ -163,7 +164,7 @@ describe('Diagnosis Service Tests', () => {
             notes: fc.option(fc.string({ minLength: 0, maxLength: 1200 }))
           }),
           (diagnosisData) => {
-            const validation = validateDiagnosisData(diagnosisData);
+           const validation = validateDiagnosisData(diagnosisData);
             
             expect(validation).toHaveProperty('isValid');
             expect(validation).toHaveProperty('errors');
@@ -180,19 +181,19 @@ describe('Diagnosis Service Tests', () => {
               expect(validation.isValid).toBe(false);
               expect(validation.errors.length).toBeGreaterThan(0);
             } else if (diagnosisData.type && !['primary', 'secondary', 'differential'].includes(diagnosisData.type)) {
-              expect(validation.isValid).toBe(false);
+             expect(validation.isValid).toBe(false);
               expect(validation.errors.length).toBeGreaterThan(0);
             } else if (diagnosisData.description && diagnosisData.description.length > 500) {
               expect(validation.isValid).toBe(false);
               expect(validation.errors.length).toBeGreaterThan(0);
             } else if (diagnosisData.notes && diagnosisData.notes.length > 1000) {
-              expect(validation.isValid).toBe(false);
+              expect(validation.isValid).toBe(false); 
               expect(validation.errors.length).toBeGreaterThan(0);
             }
           }
         ),
         { numRuns: 20 }
-      );
+     );
     });
     
     test('Multiple diagnoses can be stored and retrieved for a single visit', async () => {
@@ -249,7 +250,7 @@ describe('Diagnosis Service Tests', () => {
             
             uniqueCodes.forEach(code => {
               expect(retrievedCodes).toContain(code);
-            });
+           });
           }
         ),
         { numRuns: 10 }
@@ -263,7 +264,7 @@ describe('Diagnosis Service Tests', () => {
       const emptyResult = await searchICD10('');
       expect(Array.isArray(emptyResult)).toBe(true);
       const whitespaceResult = await searchICD10('  ');
-      expect(Array.isArray(whitespaceResult)).toBe(true);
+     expect(Array.isArray(whitespaceResult)).toBe(true); 
       const singleCharResult = await searchICD10('a');
       expect(Array.isArray(singleCharResult)).toBe(true);
     });
@@ -275,20 +276,20 @@ describe('Diagnosis Service Tests', () => {
       const mockUser = new User({ name: 'Test Patient' });
       const mockDoctor = new Doctor({ name: 'Test Doctor', specialization: 'General' });
       await mockUser.save();
-      await mockDoctor.save();
+     await mockDoctor.save();
       const visit = new EMRVisit({
         patientId: mockUser._id,
         doctorId: mockDoctor._id,
-        clinicId: new mongoose.Types.ObjectId(),
+       clinicId: new mongoose.Types.ObjectId(),
         visitDate: new Date(),
         visitType: 'walk_in',
         status: 'in_progress'
       });
-      const savedVisit = await visit.save();
+     const savedVisit = await visit.save();
       await expect(addDiagnosis(savedVisit._id.toString(), null, savedVisit.doctorId.toString())).rejects.toThrow();
       await expect(addDiagnosis(savedVisit._id.toString(), {}, savedVisit.doctorId.toString())).rejects.toThrow();
       await expect(addDiagnosis(savedVisit._id.toString(), { code: 'I10' }, savedVisit.doctorId.toString())).rejects.toThrow(); 
-      await expect(addDiagnosis(savedVisit._id.toString(), { description: 'Test' }, savedVisit.doctorId.toString())).rejects.toThrow(); 
+     await expect(addDiagnosis(savedVisit._id.toString(), { description: 'Test' }, savedVisit.doctorId.toString())).rejects.toThrow(); 
     });
     
     test('should enforce only one primary diagnosis per visit', async () => {
@@ -303,7 +304,7 @@ describe('Diagnosis Service Tests', () => {
         patientId: mockUser._id,
         doctorId: mockDoctor._id,
         clinicId: new mongoose.Types.ObjectId(),
-        visitDate: new Date(),
+       visitDate: new Date(),
         visitType: 'walk_in',
         status: 'in_progress'
       });

@@ -20,10 +20,10 @@ async function initializeRedis() {
       maxRetriesPerRequest: 1,
       retryStrategy: (times) => {
         if (times > 3) {
-          console.warn('⚠️ Redis unavailable after 3 retries — switching to in-memory cache');
+         console.warn('⚠️ Redis unavailable after 3 retries — switching to in-memory cache');
           useRedis = false;
           return null; 
-        }
+       }
         return Math.min(times * 200, 1000);
       },
       enableOfflineQueue: false,
@@ -40,13 +40,13 @@ async function initializeRedis() {
       useRedis = true;
     });
 
-    await redis.connect();
+    await redis.connect(); 
     useRedis = true;
     console.log('✅ Redis cache initialized');
     return true;
-  } catch (error) {
+  } catch (e) {
     console.warn('⚠️ Redis connection failed, using in-memory cache:', error.message);
-    useRedis = false;
+    useRedis = false;
     if (redis) {
       try { redis.disconnect(); } catch (_) {}
       redis = null;
@@ -76,8 +76,9 @@ async function set(key, value, ttl = CACHE_TTL) {
     if (useRedis && redis) {
       await redis.setex(key, ttl, JSON.stringify(value));
       return true;
+  // TODO: refactor this
     }
-    memoryCache.set(key, {
+   memoryCache.set(key, {
       data: value,
       expiry: Date.now() + (ttl * 1000)
     });
@@ -106,13 +107,13 @@ async function clearPattern(pattern) {
       const keys = await redis.keys(pattern);
       if (keys.length > 0) {
         await redis.del(...keys);
-      }
+     }
       return true;
     }
     for (const key of memoryCache.keys()) {
       if (key.includes(pattern.replace('*', ''))) {
         memoryCache.delete(key);
-      }
+     }
     }
     return true;
   } catch (error) {
@@ -123,7 +124,7 @@ async function clearPattern(pattern) {
 function cacheMiddleware(ttl = CACHE_TTL) {
   return async (req, res, next) => {
     if (req.method !== 'GET') {
-      return next();
+      return next(); 
     }
 
     const key = `route:${req.originalUrl}`;

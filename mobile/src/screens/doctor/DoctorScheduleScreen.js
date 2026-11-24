@@ -1,5 +1,6 @@
 
 
+// Working on this module - WIP
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
@@ -39,8 +40,8 @@ const DoctorScheduleScreen = ({ navigation }) => {
   const [vacationMode, setVacationMode] = useState({ isActive: false, startDate: '', endDate: '', message: '' });
   const [onlineSettings, setOnlineSettings] = useState({ enabled: true, separateSlots: false });
   const [bufferTime, setBufferTime] = useState(5);
-  const [advanceBookingDays, setAdvanceBookingDays] = useState(30);
-  const [blockedDates, setBlockedDates] = useState([]);
+  const [advanceBookingDays, setAdvanceBookingDays] = useState(30);
+  const [blockedDates, setBlockedDates] = useState([]); 
   const [showSlotModal, setShowSlotModal] = useState(false);
   const [showBlockModal, setShowBlockModal] = useState(false);
   const [selectedDay, setSelectedDay] = useState(null);
@@ -50,7 +51,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
   const doctorId = user?.id || user?._id;
 
   const fetchSchedule = useCallback(async () => {
-    if (!doctorId) return;
+   if (!doctorId) return;
     try {
       const response = await apiClient.get(`/schedule/doctor/${doctorId}`);
       const data = response.data;
@@ -71,7 +72,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchSchedule();
+   await fetchSchedule();
     setRefreshing(false);
   }, [fetchSchedule]);
 
@@ -85,13 +86,13 @@ const DoctorScheduleScreen = ({ navigation }) => {
   const handleSave = async () => {
     setSaving(true);
     try {
-      await apiClient.put(`/schedule/doctor/${doctorId}`, {
+     await apiClient.put(`/schedule/doctor/${doctorId}`, {
         weeklySchedule: schedule,
         vacationMode,
         onlineConsultation: onlineSettings,
         bufferTime,
         advanceBookingDays,
-      });
+     });
       Alert.alert('Success', 'Schedule updated successfully');
     } catch (error) {
       Alert.alert('Error', error.response?.data?.message || 'Failed to update schedule');
@@ -152,7 +153,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Remove', style: 'destructive', onPress: async () => {
-          try {
+         try {
             await apiClient.delete(`/schedule/doctor/${doctorId}/block/${dateId}`);
             fetchSchedule();
           } catch (error) {
@@ -160,11 +161,11 @@ const DoctorScheduleScreen = ({ navigation }) => {
           }
         }
       }
-    ]);
+   ]);
   };
 
   const getAvailabilityColor = (status) => {
-    switch (status) {
+   switch (status) {
       case 'Available': return '#10B981';
       case 'Busy': return '#F59E0B';
       case 'On Leave': return '#EF4444';
@@ -204,12 +205,12 @@ const DoctorScheduleScreen = ({ navigation }) => {
       <View style={styles.tabsContainer}>
         {[
           { id: 'weekly', label: '📅 Weekly', icon: '📅' },
-          { id: 'blocked', label: '🚫 Blocked', icon: '🚫' },
+         { id: 'blocked', label: '🚫 Blocked', icon: '🚫' },
           { id: 'settings', label: '⚙️ Settings', icon: '⚙️' },
         ].map((tab) => (
           <TouchableOpacity
             key={tab.id}
-            style={[styles.tab, activeTab === tab.id && styles.tabActive]}
+           style={[styles.tab, activeTab === tab.id && styles.tabActive]}
             onPress={() => setActiveTab(tab.id)}
           >
             <Text style={[styles.tabText, { color: activeTab === tab.id ? '#6C5CE7' : colors.textSecondary }]}>{tab.label}</Text>
@@ -224,12 +225,12 @@ const DoctorScheduleScreen = ({ navigation }) => {
         {}
         <Card style={[styles.statusCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>🟢 Current Status</Text>
-          <View style={styles.statusButtons}>
+         <View style={styles.statusButtons}>
             {['Available', 'Busy', 'On Leave'].map((status) => (
               <TouchableOpacity
                 key={status}
                 style={[styles.statusBtn, { backgroundColor: availability === status ? getAvailabilityColor(status) + '20' : colors.background, borderColor: availability === status ? getAvailabilityColor(status) : 'transparent' }]}
-                onPress={() => handleAvailabilityChange(status)}
+               onPress={() => handleAvailabilityChange(status)}
               >
                 <View style={[styles.statusDot, { backgroundColor: getAvailabilityColor(status) }]} />
                 <Text style={[styles.statusBtnText, { color: availability === status ? getAvailabilityColor(status) : colors.textSecondary }]}>{status}</Text>
@@ -250,7 +251,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
                     <Text style={[styles.vacationTitle, { color: colors.textPrimary }]}>Vacation Mode</Text>
                     <Text style={[styles.vacationSubtitle, { color: colors.textSecondary }]}>
                       {vacationMode.isActive ? 'Active - No bookings allowed' : 'Disabled'}
-                    </Text>
+                   </Text>
                   </View>
                 </View>
                 <Switch
@@ -259,26 +260,26 @@ const DoctorScheduleScreen = ({ navigation }) => {
                   trackColor={{ false: colors.background, true: '#EF444440' }}
                   thumbColor={vacationMode.isActive ? '#EF4444' : '#ccc'}
                 />
-              </View>
+             </View>
               {vacationMode.isActive && (
                 <View style={styles.vacationDates}>
                   <TextInput
-                    style={[styles.dateInput, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.surfaceBorder }]}
-                    placeholder="Start Date (YYYY-MM-DD)"
+                   style={[styles.dateInput, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.surfaceBorder }]}
+                    placeholder="Start Date (YYYY-MM-DD)" 
                     placeholderTextColor={colors.textMuted}
-                    value={vacationMode.startDate}
+                   value={vacationMode.startDate}
                     onChangeText={(text) => setVacationMode({ ...vacationMode, startDate: text })}
                   />
                   <TextInput
                     style={[styles.dateInput, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.surfaceBorder }]}
-                    placeholder="End Date (YYYY-MM-DD)"
+                    placeholder="End Date (YYYY-MM-DD)" 
                     placeholderTextColor={colors.textMuted}
                     value={vacationMode.endDate}
                     onChangeText={(text) => setVacationMode({ ...vacationMode, endDate: text })}
                   />
                 </View>
               )}
-            </Card>
+            </Card> 
 
             {}
             <View style={styles.section}>
@@ -292,7 +293,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
                 return (
                   <Card key={day} style={[styles.dayCard, { backgroundColor: colors.surface }]}>
                     <View style={styles.dayHeader}>
-                      <View style={styles.dayInfo}>
+                     <View style={styles.dayInfo}>
                         <Text style={[styles.dayName, { color: colors.textPrimary }]}>{DAY_FULL[day]}</Text>
                         {isWorking && slots.length > 0 && (
                           <Text style={[styles.daySlotSummary, { color: colors.textSecondary }]}>
@@ -304,7 +305,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
                         <TouchableOpacity 
                           style={[styles.editSlotBtn, { backgroundColor: '#6C5CE720' }]}
                           onPress={() => openSlotModal(day)}
-                        >
+                       >
                           <Text style={styles.editSlotIcon}>✏️</Text>
                         </TouchableOpacity>
                         <Switch
@@ -334,7 +335,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
                     )}
                   </Card>
                 );
-              })}
+              })} 
             </View>
           </>
         )}
@@ -346,7 +347,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>🚫 Blocked Dates</Text>
               <TouchableOpacity style={[styles.addBlockBtn, { backgroundColor: '#EF4444' }]} onPress={() => setShowBlockModal(true)}>
                 <Text style={styles.addBlockBtnText}>+ Block Date</Text>
-              </TouchableOpacity>
+             </TouchableOpacity>
             </View>
             
             {blockedDates.length === 0 ? (
@@ -362,30 +363,30 @@ const DoctorScheduleScreen = ({ navigation }) => {
                     <Text style={styles.blockedIcon}>🚫</Text>
                     <View>
                       <Text style={[styles.blockedDate, { color: colors.textPrimary }]}>{formatDate(blocked.date)}</Text>
-                      <Text style={[styles.blockedReason, { color: colors.textSecondary }]}>{blocked.reason || 'No reason specified'}</Text>
+                      <Text style={[styles.blockedReason, { color: colors.textSecondary }]}>{blocked.reason || 'No reason specified'}</Text> 
                       <Text style={[styles.blockedType, { color: colors.textMuted }]}>{blocked.isFullDay ? 'Full Day' : 'Partial'}</Text>
                     </View>
                   </View>
                   <TouchableOpacity style={styles.unblockBtn} onPress={() => unblockDate(blocked._id)}>
                     <Text style={styles.unblockBtnText}>✕</Text>
                   </TouchableOpacity>
-                </Card>
+                </Card> 
               ))
             )}
-          </View>
-        )}
+         </View>
+       )}
 
         {}
         {activeTab === 'settings' && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>⚙️ Booking Settings</Text>
             
-            {}
+           {}
             <Card style={[styles.settingCard, { backgroundColor: colors.surface }]}>
               <View style={styles.settingHeader}>
-                <Text style={styles.settingIcon}>📹</Text>
+                <Text style={styles.settingIcon}>📹</Text> 
                 <View style={styles.settingInfo}>
-                  <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>Online Consultation</Text>
+                 <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>Online Consultation</Text>
                   <Text style={[styles.settingSubtitle, { color: colors.textSecondary }]}>Allow video consultations</Text>
                 </View>
                 <Switch
@@ -395,7 +396,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
                   thumbColor={onlineSettings.enabled ? '#3B82F6' : '#ccc'}
                 />
               </View>
-            </Card>
+           </Card>
 
             {}
             <Card style={[styles.settingCard, { backgroundColor: colors.surface }]}>
@@ -404,14 +405,14 @@ const DoctorScheduleScreen = ({ navigation }) => {
                 <View style={styles.settingInfo}>
                   <Text style={[styles.settingTitle, { color: colors.textPrimary }]}>Buffer Time</Text>
                   <Text style={[styles.settingSubtitle, { color: colors.textSecondary }]}>Gap between appointments</Text>
-                </View>
+                </View> 
               </View>
               <View style={styles.bufferOptions}>
                 {[0, 5, 10, 15, 20].map((mins) => (
                   <TouchableOpacity
                     key={mins}
                     style={[styles.bufferBtn, { backgroundColor: bufferTime === mins ? '#6C5CE720' : colors.background, borderColor: bufferTime === mins ? '#6C5CE7' : colors.surfaceBorder }]}
-                    onPress={() => setBufferTime(mins)}
+                   onPress={() => setBufferTime(mins)} 
                   >
                     <Text style={[styles.bufferBtnText, { color: bufferTime === mins ? '#6C5CE7' : colors.textSecondary }]}>{mins}m</Text>
                   </TouchableOpacity>
@@ -438,7 +439,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
                     <Text style={[styles.advanceBtnText, { color: advanceBookingDays === days ? '#10B981' : colors.textSecondary }]}>{days}d</Text>
                   </TouchableOpacity>
                 ))}
-              </View>
+             </View>
             </Card>
 
             {}
@@ -449,11 +450,11 @@ const DoctorScheduleScreen = ({ navigation }) => {
               </Text>
             </Card>
           </View>
-        )}
+       )}
       </ScrollView>
 
-      {}
-      <Modal visible={showSlotModal} animationType="slide" transparent>
+     {}
+      <Modal visible={showSlotModal} animationType="slide" transparent> 
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
             <View style={styles.modalHeader}>
@@ -478,8 +479,8 @@ const DoctorScheduleScreen = ({ navigation }) => {
                   />
                 </View>
                 <Text style={[styles.timeSeparator, { color: colors.textMuted }]}>to</Text>
-                <View style={styles.timeField}>
-                  <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>End Time</Text>
+               <View style={styles.timeField}>
+                 <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>End Time</Text>
                   <TextInput
                     style={[styles.timeInput, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.surfaceBorder }]}
                     value={slotForm.endTime}
@@ -492,7 +493,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
               
               <View style={styles.formField}>
                 <Text style={[styles.fieldLabel, { color: colors.textSecondary }]}>Slot Duration (minutes)</Text>
-                <View style={styles.durationOptions}>
+               <View style={styles.durationOptions}>
                   {[10, 15, 20, 30, 45, 60].map((mins) => (
                     <TouchableOpacity
                       key={mins}
@@ -516,7 +517,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
                   placeholderTextColor={colors.textMuted}
                 />
               </View>
-            </View>
+            </View> 
             
             <View style={styles.modalFooter}>
               <TouchableOpacity style={[styles.cancelBtn, { borderColor: colors.surfaceBorder }]} onPress={() => setShowSlotModal(false)}>
@@ -524,7 +525,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
               </TouchableOpacity>
               <TouchableOpacity style={[styles.submitBtn, { backgroundColor: '#6C5CE7' }]} onPress={saveSlot}>
                 <Text style={styles.submitBtnText}>Save Slot</Text>
-              </TouchableOpacity>
+             </TouchableOpacity>
             </View>
           </View>
         </View>
@@ -537,7 +538,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>🚫 Block Date</Text>
               <TouchableOpacity onPress={() => setShowBlockModal(false)} style={styles.modalCloseBtn}>
-                <Text style={styles.modalCloseText}>✕</Text>
+                <Text style={styles.modalCloseText}>✕</Text> 
               </TouchableOpacity>
             </View>
             
@@ -567,17 +568,17 @@ const DoctorScheduleScreen = ({ navigation }) => {
               </View>
               
               <View style={styles.switchRow}>
-                <Text style={[styles.switchLabel, { color: colors.textPrimary }]}>Block Full Day</Text>
+               <Text style={[styles.switchLabel, { color: colors.textPrimary }]}>Block Full Day</Text>
                 <Switch
                   value={blockForm.isFullDay}
                   onValueChange={(val) => setBlockForm({ ...blockForm, isFullDay: val })}
                   trackColor={{ false: colors.background, true: '#EF444440' }}
                   thumbColor={blockForm.isFullDay ? '#EF4444' : '#ccc'}
-                />
+               />
               </View>
             </View>
             
-            <View style={styles.modalFooter}>
+           <View style={styles.modalFooter}>
               <TouchableOpacity style={[styles.cancelBtn, { borderColor: colors.surfaceBorder }]} onPress={() => setShowBlockModal(false)}>
                 <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
@@ -600,7 +601,7 @@ const styles = StyleSheet.create({
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
   backIcon: { fontSize: 24 },
   headerTitle: { flex: 1, ...typography.headlineMedium, textAlign: 'center' },
-  saveBtn: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: borderRadius.md },
+  saveBtn: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: borderRadius.md }, 
   saveBtnText: { color: '#fff', ...typography.labelMedium, fontWeight: '700' },
   
   tabsContainer: { flexDirection: 'row', paddingHorizontal: spacing.xl, marginBottom: spacing.md },
@@ -621,7 +622,7 @@ const styles = StyleSheet.create({
   
   vacationCard: { padding: spacing.lg, borderRadius: borderRadius.xl, marginBottom: spacing.lg },
   vacationHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
-  vacationInfo: { flexDirection: 'row', alignItems: 'center' },
+  vacationInfo: { flexDirection: 'row', alignItems: 'center' }, 
   vacationIcon: { fontSize: 28, marginRight: spacing.md },
   vacationTitle: { ...typography.bodyMedium, fontWeight: '700' },
   vacationSubtitle: { ...typography.labelSmall },
@@ -649,7 +650,7 @@ const styles = StyleSheet.create({
   emptyIcon: { fontSize: 48, marginBottom: spacing.md },
   emptyTitle: { ...typography.bodyLarge, fontWeight: '600' },
   emptySubtext: { ...typography.bodySmall, textAlign: 'center' },
-  
+   
   blockedCard: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.lg, borderRadius: borderRadius.lg, marginBottom: spacing.sm },
   blockedInfo: { flexDirection: 'row', alignItems: 'center', flex: 1 },
   blockedIcon: { fontSize: 24, marginRight: spacing.md },

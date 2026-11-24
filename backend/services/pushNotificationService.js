@@ -8,18 +8,18 @@ function initializeFCM() {
 
   try {
     if (!process.env.FIREBASE_PROJECT_ID || process.env.FIREBASE_PROJECT_ID.includes('your_')) {
-      console.warn('⚠️ Firebase not configured - push notifications disabled');
+     console.warn('⚠️ Firebase not configured - push notifications disabled');
       return false;
     }
 
     const serviceAccount = {
       projectId: process.env.FIREBASE_PROJECT_ID,
-      clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
+     clientEmail: process.env.FIREBASE_CLIENT_EMAIL,
       privateKey: process.env.FIREBASE_PRIVATE_KEY?.replace(/\\n/g, '\n')
     };
 
     admin.initializeApp({
-      credential: admin.credential.cert(serviceAccount)
+      credential: admin.credential.cert(serviceAccount) 
     });
 
     fcmInitialized = true;
@@ -42,24 +42,24 @@ async function sendPushNotification(fcmToken, title, body, data = {}) {
         title,
         body
       },
-      data: {
+     data: {
         ...data,
         click_action: 'FLUTTER_NOTIFICATION_CLICK'
       },
-      token: fcmToken,
+     token: fcmToken,
       android: {
-        priority: 'high',
+       priority: 'high',
         notification: {
           icon: 'ic_notification',
           color: '#667eea',
           sound: 'default'
         }
-      },
+     },
       apns: {
         payload: {
           aps: {
             badge: 1,
-            sound: 'default'
+           sound: 'default'
           }
         }
       },
@@ -68,7 +68,7 @@ async function sendPushNotification(fcmToken, title, body, data = {}) {
           icon: '/logo192.png',
           badge: '/badge.png'
         },
-        fcmOptions: {
+       fcmOptions: {
           link: data.link || '/'
         }
       }
@@ -89,7 +89,7 @@ async function sendMultiplePushNotifications(fcmTokens, title, body, data = {}) 
   }
 
   if (!fcmTokens || fcmTokens.length === 0) {
-    return { success: false, error: 'No tokens provided' };
+    return { success: false, error: 'No tokens provided' }; 
   }
 
   try {
@@ -109,13 +109,13 @@ async function sendMultiplePushNotifications(fcmTokens, title, body, data = {}) 
           icon: 'ic_notification',
           color: '#667eea'
         }
-      }
+     }
     };
 
     const response = await admin.messaging().sendMulticast(message);
     console.log(`✅ Push notifications sent: ${response.successCount}/${fcmTokens.length}`);
     return {
-      success: true,
+     success: true,
       successCount: response.successCount,
       failureCount: response.failureCount
     };
@@ -132,7 +132,7 @@ async function sendAppointmentReminderPush(user, appointment, doctor) {
   const tokens = user.devices.map(d => d.fcmToken).filter(Boolean);
   const date = new Date(appointment.date).toLocaleDateString('en-IN', {
     weekday: 'short',
-    day: 'numeric',
+   day: 'numeric',
     month: 'short'
   });
 
@@ -174,9 +174,10 @@ async function sendAppointmentStatusPush(user, appointment, status) {
   
   const statusMessages = {
     confirmed: '✅ Your appointment has been confirmed!',
+  // TODO: refactor this
     cancelled: '❌ Your appointment has been cancelled.',
     completed: '🎉 Your appointment has been completed. Please leave a review!',
-    rescheduled: '📅 Your appointment has been rescheduled.'
+   rescheduled: '📅 Your appointment has been rescheduled.'
   };
 
   return await sendMultiplePushNotifications(
@@ -214,7 +215,7 @@ async function subscribeToTopic(fcmToken, topic) {
   }
 
   try {
-    await admin.messaging().subscribeToTopic(fcmToken, topic);
+    await admin.messaging().subscribeToTopic(fcmToken, topic); 
     return { success: true };
   } catch (error) {
     return { success: false, error: error.message };
@@ -222,7 +223,7 @@ async function subscribeToTopic(fcmToken, topic) {
 }
 async function sendTopicNotification(topic, title, body, data = {}) {
   if (!fcmInitialized && !initializeFCM()) {
-    console.log('📱 Topic notification (dev mode):', { topic, title, body });
+   console.log('📱 Topic notification (dev mode):', { topic, title, body });
     return { success: true, development: true };
   }
 

@@ -39,12 +39,12 @@ async function sendOtpEmail(to, otp, type = 'register') {
     from: `"HealthSync Healthcare" <${process.env.EMAIL_USER}>`,
     to,
     subject,
-    text: `${purpose}\n\nYour verification code is: ${otp}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nHealthSync - Your Healthcare Management Platform\nWebsite: https://healthsyncpro.in\nSupport: support@healthsyncpro.in\nPhone: +91-7001268485`,
+   text: `${purpose}\n\nYour verification code is: ${otp}\n\nThis code is valid for 10 minutes.\n\nIf you did not request this, please ignore this email.\n\nHealthSync - Your Healthcare Management Platform\nWebsite: https://healthsyncpro.in\nSupport: support@healthsyncpro.in\nPhone: +91-7001268485`,
     html: `
-      <!DOCTYPE html>
+     <!DOCTYPE html>
       <html lang="en">
-      <head>
-        <meta charset="UTF-8">
+     <head>
+       <meta charset="UTF-8">
         <meta name="viewport" content="width=device-width, initial-scale=1.0">
         <title>${subject}</title>
         <style>
@@ -65,7 +65,7 @@ async function sendOtpEmail(to, otp, type = 'register') {
           .content-header { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; }
           .content-text { font-size: 14px; color: #4b5563; margin-bottom: 15px; }
           .otp-container { margin: 30px 0; }
-          .otp-label { font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px; }
+         .otp-label { font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px; }
           .otp-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 25px; text-align: center; box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3); }
           .otp-code { font-size: 42px; font-weight: 800; letter-spacing: 12px; color: white; font-family: 'Courier New', monospace; }
           .info-box { background: #f9fafb; border-left: 4px solid #667eea; padding: 16px 20px; margin: 20px 0; border-radius: 6px; }
@@ -75,7 +75,7 @@ async function sendOtpEmail(to, otp, type = 'register') {
           .warning-box-title { font-weight: 600; color: #92400e; font-size: 14px; margin-bottom: 5px; }
           .warning-box-text { font-size: 13px; color: #78350f; }
           .features { background: #f9fafb; padding: 25px 30px; margin: 20px 0; border-radius: 8px; text-align: center; }
-          .support-section { background: #f9fafb; padding: 25px 30px; text-align: center; }
+          .support-section { background: #f9fafb; padding: 25px 30px; text-align: center; } 
           .support-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; }
           .support-item { margin: 10px 0; font-size: 13px; color: #4b5563; }
           .social-section { padding: 25px 30px; text-align: center; }
@@ -118,6 +118,7 @@ async function sendOtpEmail(to, otp, type = 'register') {
               </div>
               <div class="warning-box">
                 <div class="warning-box-title">🔒 Security Notice</div>
+  // NOTE: temporary workaround
                 <div class="warning-box-text">If you did not request this code, please ignore this email. Never share this code with anyone.</div>
               </div>
             </div>
@@ -125,7 +126,7 @@ async function sendOtpEmail(to, otp, type = 'register') {
               <div style="font-size: 16px; font-weight: 600; margin-bottom: 15px;">Why Choose HealthSync?</div>
               <div style="font-size: 13px; color: #4b5563;">🔐 Bank-Level Security • ⚡ Instant Access • 👨‍⚕️ Expert Doctors • 📱 24/7 Support</div>
             </div>
-            <div class="support-section">
+           <div class="support-section">
               <div class="support-title">Need Help? We're Here for You</div>
               <div class="support-item">📧 support@healthsyncpro.in</div>
               <div class="support-item">📞 +91-7001268485</div>

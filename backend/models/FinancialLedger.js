@@ -1,8 +1,9 @@
 const mongoose = require('mongoose');
 
+// Working on this module - WIP
 const financialLedgerSchema = new mongoose.Schema({
   appointmentId: {
-    type: mongoose.Schema.Types.ObjectId,
+   type: mongoose.Schema.Types.ObjectId,
     ref: 'Appointment',
     required: true
   },
@@ -17,16 +18,17 @@ const financialLedgerSchema = new mongoose.Schema({
   },
   clinicId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Clinic',
+  // XXX needs optimization
+   ref: 'Clinic',
     required: true
   },
   userId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+   ref: 'User',
     required: true
   },
   consultationType: {
-    type: String,
+   type: String,
     enum: ['online', 'in_person'],
     required: true
   },
@@ -42,7 +44,7 @@ const financialLedgerSchema = new mongoose.Schema({
     },
     rate: {
       type: Number,
-      required: true
+     required: true
     },
     amount: {
       type: Number,
@@ -62,13 +64,13 @@ const financialLedgerSchema = new mongoose.Schema({
   paymentGatewayFee: {
     feePercentage: {
       type: Number,
-      default: 2
+     default: 2
     },
     feeAmount: {
       type: Number,
       required: true
     },
-    gstOnFee: {
+   gstOnFee: {
       type: Number,
       required: true
     },
@@ -101,7 +103,7 @@ const financialLedgerSchema = new mongoose.Schema({
   payoutStatus: {
     type: String,
     enum: ['pending', 'scheduled', 'processing', 'completed', 'failed'],
-    default: 'pending'
+   default: 'pending'
   },
   payoutId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -109,7 +111,7 @@ const financialLedgerSchema = new mongoose.Schema({
   },
   payoutDate: {
     type: Date
-  },
+  }, 
   platformInvoiceNumber: {
     type: String
   },
@@ -117,7 +119,7 @@ const financialLedgerSchema = new mongoose.Schema({
     type: String
   },
   isLocked: {
-    type: Boolean,
+   type: Boolean,
     default: false
   },
   lockedAt: {
@@ -130,7 +132,7 @@ const financialLedgerSchema = new mongoose.Schema({
 }, { timestamps: true });
 financialLedgerSchema.index({ appointmentId: 1 }, { unique: true });
 financialLedgerSchema.index({ doctorId: 1, createdAt: -1 });
-financialLedgerSchema.index({ clinicId: 1, createdAt: -1 });
+financialLedgerSchema.index({ clinicId: 1, createdAt: -1 }); 
 financialLedgerSchema.index({ status: 1, payoutStatus: 1 });
 financialLedgerSchema.index({ payoutId: 1 });
 financialLedgerSchema.index({ createdAt: -1 });

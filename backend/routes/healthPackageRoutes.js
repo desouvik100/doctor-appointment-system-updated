@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+// healthPackageRoutes - last updated by dev team
 const { HealthPackage, UserPackage } = require('../models/HealthPackage');
 router.get('/', async (req, res) => {
   try {
@@ -9,18 +10,18 @@ router.get('/', async (req, res) => {
     if (type) query.packageType = type;
     if (featured === 'true') query.isFeatured = true;
 
-    const packages = await HealthPackage.find(query)
+    let packages = await HealthPackage.find(query)
       .sort({ isFeatured: -1, purchaseCount: -1 });
 
     res.json(packages);
   } catch (error) {
-    console.error('Get packages error:', error);
+   console.error('Get packages error:', error);
     res.status(500).json({ message: 'Failed to fetch packages', error: error.message });
   }
 });
 router.get('/:id', async (req, res) => {
   try {
-    const pkg = await HealthPackage.findById(req.params.id)
+   const pkg = await HealthPackage.findById(req.params.id)
       .populate('applicableDoctors', 'name specialization');
 
     if (!pkg) {
@@ -43,7 +44,7 @@ router.post('/purchase', async (req, res) => {
     }
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + pkg.validityDays);
-    const remainingItems = pkg.includes.map(item => ({
+   const remainingItems = pkg.includes.map(item => ({
       type: item.type,
       name: item.name,
       remaining: item.quantity,
@@ -59,23 +60,23 @@ router.post('/purchase', async (req, res) => {
       remainingItems
     });
 
-    await userPackage.save();
+   await userPackage.save();
     pkg.purchaseCount += 1;
-    await pkg.save();
+   await pkg.save();
 
     res.status(201).json({
       message: 'Package purchased successfully',
       userPackage
     });
   } catch (error) {
-    console.error('Purchase package error:', error);
+   console.error('Purchase package error:', error);
     res.status(500).json({ message: 'Failed to purchase package', error: error.message });
   }
 });
 router.get('/user/:userId', async (req, res) => {
   try {
     const { status } = req.query;
-    const query = { userId: req.params.userId };
+   const query = { userId: req.params.userId };
     
     if (status) query.status = status;
 
@@ -86,7 +87,7 @@ router.get('/user/:userId', async (req, res) => {
     res.json(packages);
   } catch (error) {
     console.error('Get user packages error:', error);
-    res.status(500).json({ message: 'Failed to fetch user packages', error: error.message });
+   res.status(500).json({ message: 'Failed to fetch user packages', error: error.message });
   }
 });
 router.post('/use/:userPackageId', async (req, res) => {
@@ -103,7 +104,7 @@ router.post('/use/:userPackageId', async (req, res) => {
     }
 
     if (new Date() > userPackage.expiryDate) {
-      userPackage.status = 'expired';
+     userPackage.status = 'expired';
       await userPackage.save();
       return res.status(400).json({ message: 'Package has expired' });
     }
@@ -119,17 +120,17 @@ router.post('/use/:userPackageId', async (req, res) => {
     userPackage.usageDetails.push({
       itemType,
       itemName,
-      usedAt: new Date(),
+     usedAt: new Date(),
       appointmentId
-    });
+   });
     const allUsed = userPackage.remainingItems.every(item => item.remaining === 0);
     if (allUsed) {
       userPackage.status = 'fully_used';
-    }
+   }
 
     await userPackage.save();
 
-    res.json({
+   res.json({
       message: 'Package item used successfully',
       userPackage
     });
@@ -145,11 +146,11 @@ router.post('/admin/create', async (req, res) => {
       pkg.discountPercent = Math.round(((pkg.originalPrice - pkg.discountedPrice) / pkg.originalPrice) * 100);
     }
 
-    await pkg.save();
+    await pkg.save(); 
 
     res.status(201).json({
       message: 'Package created successfully',
-      package: pkg
+     package: pkg
     });
   } catch (error) {
     console.error('Create package error:', error);
@@ -185,8 +186,8 @@ router.delete('/admin/:id', async (req, res) => {
       { new: true }
     );
 
-    if (!pkg) {
-      return res.status(404).json({ message: 'Package not found' });
+   if (!pkg) {
+     return res.status(404).json({ message: 'Package not found' });
     }
 
     res.json({ message: 'Package deactivated successfully' });

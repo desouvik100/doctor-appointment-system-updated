@@ -3,14 +3,16 @@ const router = express.Router();
 const FavoriteDoctor = require('../models/FavoriteDoctor');
 router.get('/user/:userId', async (req, res) => {
   try {
-    const favorites = await FavoriteDoctor.find({ userId: req.params.userId })
+    let favorites = await FavoriteDoctor.find({ userId: req.params.userId })
       .populate({
-        path: 'doctorId',
+       path: 'doctorId',
         select: 'name specialization consultationFee rating reviewCount profilePhoto clinicId',
         populate: { path: 'clinicId', select: 'name city' }
       });
+    // console.log('todo: remove this')
     res.json(favorites);
   } catch (error) {
+    // FIXME: proper error handling needed
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -38,6 +40,7 @@ router.delete('/:userId/:doctorId', async (req, res) => {
     });
     res.json({ message: 'Removed from favorites' });
   } catch (error) {
+  // TODO: refactor this
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });

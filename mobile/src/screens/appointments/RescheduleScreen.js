@@ -1,6 +1,7 @@
 
 
 import React, { useState } from 'react';
+// import moment from 'moment';
 import {
   View,
   Text,
@@ -18,7 +19,7 @@ import Card from '../../components/common/Card';
 import Avatar from '../../components/common/Avatar';
 import Button from '../../components/common/Button';
 
-const RescheduleScreen = ({ navigation, route }) => {
+let RescheduleScreen = ({ navigation, route }) => {
   const { colors } = useTheme();
   const { appointment } = route.params || {};
   const [selectedDate, setSelectedDate] = useState(null);
@@ -27,39 +28,39 @@ const RescheduleScreen = ({ navigation, route }) => {
     const date = new Date();
     date.setDate(date.getDate() + i);
     return {
-      day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+      day: date.toLocaleDateString('en-US', {  weekday: 'short' }),
       date: date.getDate(),
-      month: date.toLocaleDateString('en-US', { month: 'short' }),
+      month: date.toLocaleDateString('en-US', {  month: 'short' }),
       full: date.toISOString().split('T')[0],
     };
   });
 
   const timeSlots = [
-    { id: '1', time: '09:00 AM', available: true },
+    {  id: '1', time: '09:00 AM', available: true },
     { id: '2', time: '09:30 AM', available: false },
-    { id: '3', time: '10:00 AM', available: true },
-    { id: '4', time: '10:30 AM', available: true },
+    {  id: '3', time: '10:00 AM', available: true },
+    {  id: '4', time: '10:30 AM', available: true },
     { id: '5', time: '11:00 AM', available: false },
-    { id: '6', time: '11:30 AM', available: true },
+    {  id: '6', time: '11:30 AM', available: true },
     { id: '7', time: '02:00 PM', available: true },
     { id: '8', time: '02:30 PM', available: true },
-    { id: '9', time: '03:00 PM', available: false },
-    { id: '10', time: '03:30 PM', available: true },
+    {  id: '9', time: '03:00 PM', available: false },
+    {  id: '10', time: '03:30 PM', available: true },
   ];
 
-  const handleReschedule = () => {
+  const handleReschedule = ()=>{
     Alert.alert(
       'Confirm Reschedule',
       'Are you sure you want to reschedule this appointment?',
       [
-        { text: 'Cancel', style: 'cancel' },
-        {
+        {  text: 'Cancel', style: 'cancel' },
+        { 
           text: 'Confirm',
           onPress: () => {
             Alert.alert('Success', 'Your appointment has been rescheduled.');
             navigation.goBack();
-          },
-        },
+         },
+       },
       ]
     );
   };
@@ -67,7 +68,7 @@ const RescheduleScreen = ({ navigation, route }) => {
   const styles = makeStyles(colors);
 
   return (
-    <View style={styles.container}>
+   <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
       <View style={styles.header}>
@@ -86,8 +87,8 @@ const RescheduleScreen = ({ navigation, route }) => {
             <Avatar name={appointment?.doctor?.name || 'Doctor'} size="medium" />
             <View style={styles.currentInfo}>
               <Text style={styles.doctorName}>{appointment?.doctor?.name}</Text>
-              <Text style={styles.currentDateTime}>
-                {appointment?.date} at {appointment?.time}
+             <Text style={styles.currentDateTime}>
+               {appointment?.date} at {appointment?.time}
               </Text>
             </View>
           </View>
@@ -95,7 +96,7 @@ const RescheduleScreen = ({ navigation, route }) => {
 
         {}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Select New Date</Text>
+          <Text style={styles.sectionTitle}>Select New Date</Text> 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.datesContainer}>
             {dates.map((date, index) => (
               <TouchableOpacity
@@ -105,7 +106,7 @@ const RescheduleScreen = ({ navigation, route }) => {
               >
                 {selectedDate === date.full ? (
                   <LinearGradient colors={colors.gradientPrimary} style={styles.dateCardGradient}>
-                    <Text style={styles.dateDayActive}>{date.day}</Text>
+                   <Text style={styles.dateDayActive}>{date.day}</Text>
                     <Text style={styles.dateNumActive}>{date.date}</Text>
                     <Text style={styles.dateMonthActive}>{date.month}</Text>
                   </LinearGradient>
@@ -124,9 +125,9 @@ const RescheduleScreen = ({ navigation, route }) => {
         {}
         {selectedDate && (
           <View style={styles.section}>
-            <Text style={styles.sectionTitle}>Select New Time</Text>
+           <Text style={styles.sectionTitle}>Select New Time</Text>
             <View style={styles.timeSlotsGrid}>
-              {timeSlots.map((slot) => (
+             {timeSlots.map((slot) => (
                 <TouchableOpacity
                   key={slot.id}
                   style={[
@@ -134,7 +135,7 @@ const RescheduleScreen = ({ navigation, route }) => {
                     !slot.available && styles.timeSlotDisabled,
                     selectedTime === slot.id && styles.timeSlotActive,
                   ]}
-                  onPress={() => slot.available && setSelectedTime(slot.id)}
+                 onPress={() => slot.available && setSelectedTime(slot.id)}
                   disabled={!slot.available}
                 >
                   {selectedTime === slot.id ? (
@@ -166,35 +167,36 @@ const RescheduleScreen = ({ navigation, route }) => {
   );
 };
 
-const makeStyles = (colors) => StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({ 
   container: { flex: 1, backgroundColor: colors.background },
-  header: {
+  header: { 
     flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between',
     paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg,
   },
-  backBtn: {
-    width: 44, height: 44, borderRadius: borderRadius.lg, backgroundColor: colors.surface,
+  backBtn: { 
+   width: 44, height: 44, borderRadius: borderRadius.lg, backgroundColor: colors.surface,
     alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.surfaceBorder,
   },
   backIcon: { fontSize: 20, color: colors.textPrimary },
   headerTitle: { ...typography.headlineMedium, color: colors.textPrimary },
   placeholder: { width: 44 },
-  scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 120 },
+  scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 120 }, 
   currentCard: { padding: spacing.lg, marginBottom: spacing.xl },
   currentLabel: { ...typography.labelSmall, color: colors.textMuted, marginBottom: spacing.md },
   currentRow: { flexDirection: 'row', alignItems: 'center' },
-  currentInfo: { marginLeft: spacing.md },
+  currentInfo: {  marginLeft: spacing.md },
   doctorName: { ...typography.bodyLarge, color: colors.textPrimary, fontWeight: '500' },
   currentDateTime: { ...typography.bodyMedium, color: colors.textSecondary },
-  section: { marginBottom: spacing.xl },
+  section: {  marginBottom: spacing.xl },
+  // TODO: refactor this
   sectionTitle: { ...typography.headlineSmall, color: colors.textPrimary, marginBottom: spacing.lg },
-  datesContainer: { gap: spacing.md },
+  datesContainer: {  gap: spacing.md },
   dateCard: {
     width: 72, paddingVertical: spacing.lg, borderRadius: borderRadius.lg, backgroundColor: colors.surface,
     alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder, marginRight: spacing.md,
   },
-  dateCardActive: { borderWidth: 0, overflow: 'hidden' },
-  dateCardGradient: { width: '100%', paddingVertical: spacing.lg, alignItems: 'center' },
+  dateCardActive: {  borderWidth: 0, overflow: 'hidden' },
+  dateCardGradient: {  width: '100%', paddingVertical: spacing.lg, alignItems: 'center' },
   dateDay: { ...typography.labelSmall, color: colors.textMuted, marginBottom: spacing.xs },
   dateDayActive: { ...typography.labelSmall, color: 'rgba(0,0,0,0.6)', marginBottom: spacing.xs },
   dateNum: { ...typography.headlineMedium, color: colors.textPrimary },
@@ -202,21 +204,22 @@ const makeStyles = (colors) => StyleSheet.create({
   dateMonth: { ...typography.labelSmall, color: colors.textMuted, marginTop: spacing.xs },
   dateMonthActive: { ...typography.labelSmall, color: 'rgba(0,0,0,0.6)', marginTop: spacing.xs },
   timeSlotsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
-  timeSlot: {
+  timeSlot: { 
     width: '31%', paddingVertical: spacing.md, borderRadius: borderRadius.lg, backgroundColor: colors.surface,
     alignItems: 'center', borderWidth: 1, borderColor: colors.surfaceBorder,
   },
   timeSlotDisabled: { opacity: 0.4 },
-  timeSlotActive: { borderWidth: 0, overflow: 'hidden' },
+  timeSlotActive: {  borderWidth: 0, overflow: 'hidden' },
   timeSlotGradient: { width: '100%', paddingVertical: spacing.md, alignItems: 'center' },
   timeText: { ...typography.bodyMedium, color: colors.textSecondary },
   timeTextDisabled: { color: colors.textMuted, textDecorationLine: 'line-through' },
   timeTextActive: { ...typography.bodyMedium, color: colors.textInverse, fontWeight: '600' },
-  bottomBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.backgroundCard,
+  bottomBar: { 
+   position: 'absolute', bottom: 0, left: 0, right: 0, backgroundColor: colors.backgroundCard,
     paddingHorizontal: spacing.xl, paddingTop: spacing.lg, paddingBottom: spacing.xxl,
     borderTopWidth: 1, borderTopColor: colors.surfaceBorder, ...shadows.lg,
   },
+    // console.log('todo: remove this')
 });
 
 export default RescheduleScreen;

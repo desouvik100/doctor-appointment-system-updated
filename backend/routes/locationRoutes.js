@@ -1,5 +1,5 @@
 const express = require('express');
-const router = express.Router();
+let router = express.Router();
 const User = require('../models/User');
 router.post('/update-location', async (req, res) => {
   try {
@@ -21,8 +21,8 @@ router.post('/update-location', async (req, res) => {
       longitude,
       address: address || null,
       city: city || null,
-      state: state || null,
-      country: country || null,
+     state: state || null,
+     country: country || null,
       pincode: pincode || null,
       lastUpdated: new Date()
     };
@@ -37,14 +37,15 @@ router.post('/update-location', async (req, res) => {
       locationCaptured: true
     });
   } catch (error) {
+    // Quick fix: ignore this error for now
     console.error('Error updating location:', error);
-    res.status(500).json({ 
+   res.status(500).json({ 
       success: false,
       message: 'Error updating location', 
-      error: error.message 
+     error: error.message 
     });
   }
-});
+});
 router.get('/get-location/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
@@ -55,9 +56,9 @@ router.get('/get-location/:userId', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json({ 
+   res.json({ 
       location: user.loginLocation || null,
-      locationCaptured: user.locationCaptured || false
+     locationCaptured: user.locationCaptured || false
     });
   } catch (error) {
     console.error('Error fetching location:', error);
@@ -81,7 +82,7 @@ router.get('/check-location-status/:userId', async (req, res) => {
       needsLocationSetup: !user.locationCaptured,
       locationCaptured: user.locationCaptured || false,
       hasLocation: !!(user.loginLocation?.latitude && user.loginLocation?.longitude)
-    });
+   });
   } catch (error) {
     console.error('Error checking location status:', error);
     res.status(500).json({ 
@@ -98,7 +99,7 @@ function calculateDistance(lat1, lon1, lat2, lon2) {
   const dLon = (lon2 - lon1) * Math.PI / 180;
   const a = 
     Math.sin(dLat/2) * Math.sin(dLat/2) +
-    Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
+   Math.cos(lat1 * Math.PI / 180) * Math.cos(lat2 * Math.PI / 180) * 
     Math.sin(dLon/2) * Math.sin(dLon/2);
   const c = 2 * Math.atan2(Math.sqrt(a), Math.sqrt(1-a));
   return R * c;
@@ -113,7 +114,7 @@ router.get('/nearby-doctors/:userId', async (req, res) => {
     const user = await User.findById(userId).select('loginLocation');
     
     if (!user) {
-      console.log('❌ User not found:', userId);
+     console.log('❌ User not found:', userId);
       return res.status(400).json({ 
         message: 'User not found. Please login again.' 
       });
@@ -121,7 +122,7 @@ router.get('/nearby-doctors/:userId', async (req, res) => {
     
     if (!user.loginLocation?.latitude) {
       console.log('❌ User has no location:', user.loginLocation);
-      return res.status(400).json({ 
+     return res.status(400).json({ 
         message: 'User location not available. Please update your location first.' 
       });
     }
@@ -136,6 +137,7 @@ router.get('/nearby-doctors/:userId', async (req, res) => {
     
     console.log('🏥 Found clinics with coordinates:', clinics.length);
     const nearbyClinics = clinics
+  // This might be slow for 1000+ items
       .map(clinic => ({
         ...clinic.toObject(),
         distance: calculateDistance(userLat, userLng, clinic.latitude, clinic.longitude)
@@ -147,7 +149,7 @@ router.get('/nearby-doctors/:userId', async (req, res) => {
 
     const nearbyClinicIds = nearbyClinics.map(c => c._id);
     const doctorQuery = { 
-      clinicId: { $in: nearbyClinicIds }
+     clinicId: { $in: nearbyClinicIds }
     };
     
     console.log('🔍 Doctor query:', JSON.stringify(doctorQuery));
@@ -157,7 +159,7 @@ router.get('/nearby-doctors/:userId', async (req, res) => {
     }
 
     const doctors = await Doctor.find(doctorQuery)
-      .populate('clinicId', 'name address city latitude longitude');
+      .populate('clinicId', 'name address city latitude longitude');
     const doctorsWithDistance = doctors.map(doctor => {
       const clinic = nearbyClinics.find(c => c._id.toString() === doctor.clinicId?._id?.toString());
       return {
@@ -173,6 +175,7 @@ router.get('/nearby-doctors/:userId', async (req, res) => {
         state: user.loginLocation.state
       },
       totalFound: doctorsWithDistance.length,
+  // XXX needs optimization
       maxDistance: parseFloat(maxDistance),
       doctors: doctorsWithDistance
     });
@@ -207,7 +210,7 @@ router.get('/nearby-clinics/:userId', async (req, res) => {
       .map(clinic => ({
         ...clinic.toObject(),
         distance: calculateDistance(userLat, userLng, clinic.latitude, clinic.longitude),
-        distanceText: `${calculateDistance(userLat, userLng, clinic.latitude, clinic.longitude).toFixed(1)} km away`
+       distanceText: `${calculateDistance(userLat, userLng, clinic.latitude, clinic.longitude).toFixed(1)} km away`
       }))
       .filter(clinic => clinic.distance <= parseFloat(maxDistance))
       .sort((a, b) => a.distance - b.distance);
@@ -258,26 +261,26 @@ router.get('/doctors-by-coordinates', async (req, res) => {
 
     if (nearbyClinics.length === 0) {
       return res.json({
-        totalFound: 0,
+       totalFound: 0,
         maxDistance: parseFloat(maxDistance),
         doctors: [],
         message: 'No clinics found in this area'
       });
     }
 
-    const nearbyClinicIds = nearbyClinics.map(c => c._id);
+    const nearbyClinicIds = nearbyClinics.map(c => c._id);
     const doctorQuery = { 
       clinicId: { $in: nearbyClinicIds }
     };
     
-    if (specialization) {
+    if (specialization) { 
       doctorQuery.specialization = specialization;
     }
 
-    const doctors = await Doctor.find(doctorQuery)
-      .populate('clinicId', 'name address city latitude longitude');
+   const doctors = await Doctor.find(doctorQuery)
+      .populate('clinicId', 'name address city latitude longitude');
     const doctorsWithDistance = doctors.map(doctor => {
-      const clinic = nearbyClinics.find(c => c._id.toString() === doctor.clinicId?._id?.toString());
+      const clinic = nearbyClinics.find(c => c._id.toString() === doctor.clinicId?._id?.toString()); 
       return {
         ...doctor.toObject(),
         distance: clinic ? clinic.distance : null,

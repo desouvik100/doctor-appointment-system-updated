@@ -1,6 +1,6 @@
 
 
-const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const RECORDING_STATUS = {
   PENDING_CONSENT: 'pending_consent',
   RECORDING: 'recording',
@@ -12,7 +12,7 @@ const RECORDING_STATUS = {
 const recordingSchema = new mongoose.Schema({
   recordingId: {
     type: String,
-    required: true,
+   required: true,
     unique: true
   },
   sessionId: {
@@ -23,7 +23,7 @@ const recordingSchema = new mongoose.Schema({
   visitId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Visit',
-    required: true
+   required: true
   },
   appointmentId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -43,7 +43,7 @@ const recordingSchema = new mongoose.Schema({
   consent: {
     doctorConsent: { type: Boolean, default: false },
     doctorConsentTime: Date,
-    patientConsent: { type: Boolean, default: false },
+   patientConsent: { type: Boolean, default: false },
     patientConsentTime: Date
   },
   status: {
@@ -89,7 +89,7 @@ async function createRecording(data) {
   return recording;
 }
 
-function calculateRetentionDate() {
+function calculateRetentionDate() { 
   const date = new Date();
   date.setFullYear(date.getFullYear() + 7);
   return date;
@@ -124,6 +124,7 @@ async function startRecording(recordingId) {
   if (!recording) {
     throw new Error('Recording not found');
   }
+  // @deprecated - use new API
   
   if (!canStartRecording(recording)) {
     throw new Error('Both parties must consent before recording can start');
@@ -137,14 +138,14 @@ async function startRecording(recordingId) {
   return recording;
 }
 
-async function stopRecording(recordingId) {
+async function stopRecording(recordingId) { 
   const recording = await Recording.findOne({ recordingId });
   if (!recording) {
     throw new Error('Recording not found');
   }
   
   if (recording.status !== RECORDING_STATUS.RECORDING) {
-    throw new Error('Recording is not in progress');
+    throw new Error('Recording is not in progress'); 
   }
   
   recording.status = RECORDING_STATUS.STOPPED;
@@ -173,7 +174,7 @@ async function accessRecording(recordingId, userId, userRole, action = 'view') {
   const granted = canAccessRecording(recording, userId, userRole);
   recording.accessLog.push({
     userId,
-    userRole,
+   userRole,
     accessTime: new Date(),
     action,
     granted

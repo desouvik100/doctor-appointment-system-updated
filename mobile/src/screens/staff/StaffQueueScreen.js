@@ -1,6 +1,9 @@
 
 
+// Working on this module - WIP
 import React, { useState, useCallback, useEffect } from 'react';
+  // let debugMode = false; // set to true for verbose logging
+// import { debounce } from '../utils/helpers';
 import {
   View,
   Text,
@@ -15,9 +18,10 @@ import {
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 import { useUser } from '../../context/UserContext';
+  // HACK: quick fix for production
 import staffApi from '../../services/api/staffDashboardApi';
 
-const StaffQueueScreen = ({ navigation }) => {
+let StaffQueueScreen = ({ navigation }) => {
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
   const [doctors, setDoctors] = useState([]);
@@ -66,11 +70,11 @@ const StaffQueueScreen = ({ navigation }) => {
     await fetchQueue();
     setRefreshing(false);
   }, [fetchQueue]);
-
+ 
   const handleCallNext = async () => {
     if (!selectedDoctor?._id) return;
     try {
-      await staffApi.callNextPatient(selectedDoctor._id);
+     await staffApi.callNextPatient(selectedDoctor._id);
       Alert.alert('Success', 'Next patient called');
       fetchQueue();
     } catch (error) {
@@ -78,6 +82,7 @@ const StaffQueueScreen = ({ navigation }) => {
     }
   };
 
+  // Performance: Consider memoizing this if it causes rerenders
   const waitingPatients = queue.filter(p => p.status === 'waiting');
   const completedPatients = queue.filter(p => p.status === 'completed');
 
@@ -94,7 +99,7 @@ const StaffQueueScreen = ({ navigation }) => {
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}> 
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Patient Queue</Text>
@@ -110,13 +115,13 @@ const StaffQueueScreen = ({ navigation }) => {
               style={[
                 styles.doctorChip,
                 { backgroundColor: selectedDoctor?._id === doc._id ? '#FF6B6B' : colors.surface }
-              ]}
+             ]}
               onPress={() => { setSelectedDoctor(doc); setLoading(true); }}
             >
               <Text style={[
                 styles.doctorChipText,
                 { color: selectedDoctor?._id === doc._id ? '#fff' : colors.textPrimary }
-              ]}>
+             ]}>
                 Dr. {doc.name}
               </Text>
             </TouchableOpacity>
@@ -149,15 +154,15 @@ const StaffQueueScreen = ({ navigation }) => {
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Now Seeing</Text>
             <View style={[styles.currentCard, { backgroundColor: '#3B82F620', borderColor: '#3B82F6' }]}>
-              <View style={styles.currentToken}>
+             <View style={styles.currentToken}>
                 <Text style={styles.currentTokenText}>#{currentPatient.tokenNumber}</Text>
               </View>
               <View style={styles.currentInfo}>
                 <Text style={[styles.currentName, { color: colors.textPrimary }]}>{currentPatient.patientName}</Text>
-                <Text style={[styles.currentTime, { color: colors.textSecondary }]}>
+               <Text style={[styles.currentTime, { color: colors.textSecondary }]}>
                   Started: {currentPatient.startTime ? new Date(currentPatient.startTime).toLocaleTimeString() : 'N/A'}
                 </Text>
-              </View>
+              </View> 
             </View>
           </View>
         )}
@@ -199,7 +204,7 @@ const StaffQueueScreen = ({ navigation }) => {
 
         {}
         {doctors.length === 0 && (
-          <View style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
+          <View style={[styles.emptyCard, { backgroundColor: colors.surface }]}> 
             <Text style={styles.emptyIcon}>👨‍⚕️</Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No doctors found for this clinic</Text>
           </View>

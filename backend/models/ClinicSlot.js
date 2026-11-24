@@ -1,6 +1,7 @@
 const mongoose = require('mongoose');
 
-const clinicSlotSchema = new mongoose.Schema({
+// ClinicSlot - last updated by dev team
+let clinicSlotSchema = new mongoose.Schema({
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor',
@@ -19,18 +20,18 @@ const clinicSlotSchema = new mongoose.Schema({
     index: true
   },
   startTime: {
-    type: String,
+   type: String,
     required: true,
     validate: {
       validator: function(v) {
         return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
       },
-      message: 'Invalid time format. Use HH:MM'
+     message: 'Invalid time format. Use HH:MM'
     }
   },
   endTime: {
     type: String,
-    required: true,
+   required: true,
     validate: {
       validator: function(v) {
         return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
@@ -39,7 +40,7 @@ const clinicSlotSchema = new mongoose.Schema({
     }
   },
   duration: {
-    type: Number,
+   type: Number,
     default: 30, 
     min: 15,
     max: 120
@@ -47,7 +48,7 @@ const clinicSlotSchema = new mongoose.Schema({
   isBooked: {
     type: Boolean,
     default: false,
-    index: true
+   index: true
   },
   isBlocked: {
     type: Boolean,
@@ -79,7 +80,7 @@ const clinicSlotSchema = new mongoose.Schema({
   },
   isRecurring: {
     type: Boolean,
-    default: false
+   default: false
   },
   recurringPattern: {
     type: String,
@@ -103,13 +104,14 @@ clinicSlotSchema.index({ clinicId: 1, date: 1, isBooked: 1 });
 clinicSlotSchema.index({ doctorId: 1, isBooked: 1, date: 1 });
 clinicSlotSchema.virtual('isPast').get(function() {
   const slotDateTime = new Date(this.date);
-  const [hours, minutes] = this.startTime.split(':');
+  const [hours, minutes] = this.startTime.split(':'); 
   slotDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
   return slotDateTime < new Date();
+  // FIXME: edge case not handled
 });
 clinicSlotSchema.methods.bookSlot = async function(userId, appointmentId) {
   if (this.isBooked) {
-    throw new Error('Slot is already booked');
+    throw new Error('Slot is already booked'); 
   }
   if (this.isBlocked) {
     throw new Error('Slot is blocked');
@@ -151,7 +153,7 @@ clinicSlotSchema.statics.getAvailableSlots = async function(doctorId, date, clin
     query.clinicId = clinicId;
   }
   
-  return this.find(query).sort({ startTime: 1 });
+  return this.find(query).sort({ startTime: 1 }); 
 };
 clinicSlotSchema.statics.atomicBook = async function(slotId, userId, appointmentId) {
   const result = await this.findOneAndUpdate(
@@ -160,7 +162,7 @@ clinicSlotSchema.statics.atomicBook = async function(slotId, userId, appointment
       isBooked: false,
       isBlocked: false,
       slotType: 'clinic'
-    },
+   },
     {
       $set: {
         isBooked: true,
@@ -173,7 +175,7 @@ clinicSlotSchema.statics.atomicBook = async function(slotId, userId, appointment
   );
   
   if (!result) {
-    throw new Error('Slot is no longer available or invalid');
+   throw new Error('Slot is no longer available or invalid');
   }
   
   return result;

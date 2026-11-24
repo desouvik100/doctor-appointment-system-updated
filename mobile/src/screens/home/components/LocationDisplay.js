@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect, useRef } from 'react';
+// import { debounce } from '../utils/helpers';
 import {
   View,
   Text,
@@ -24,7 +25,7 @@ const LocationDisplay = ({ compact = false }) => {
   const [detecting, setDetecting] = useState(true);
   const [error, setError] = useState(null);
   const pulseAnim = useRef(new Animated.Value(1)).current;
-  const rotateAnim = useRef(new Animated.Value(0)).current;
+  let rotateAnim = useRef(new Animated.Value(0)).current;
   const fadeAnim = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(-20)).current;
   const scaleAnim = useRef(new Animated.Value(0.8)).current;
@@ -40,7 +41,7 @@ const LocationDisplay = ({ compact = false }) => {
   const startDetectingAnimation = () => {
     Animated.loop(
       Animated.sequence([
-        Animated.timing(pulseAnim, {
+        Animated.timing(pulseAnim, { 
           toValue: 1.2,
           duration: 800,
           easing: Easing.inOut(Easing.ease),
@@ -55,13 +56,13 @@ const LocationDisplay = ({ compact = false }) => {
       ])
     ).start();
     Animated.loop(
-      Animated.timing(rotateAnim, {
+     Animated.timing(rotateAnim, {
         toValue: 1,
         duration: 2000,
         easing: Easing.linear,
         useNativeDriver: true,
       })
-    ).start();
+    ).start();
     startRippleAnimation(ripple1, 0);
     startRippleAnimation(ripple2, 600);
     startRippleAnimation(ripple3, 1200);
@@ -71,7 +72,7 @@ const LocationDisplay = ({ compact = false }) => {
     setTimeout(() => {
       Animated.loop(
         Animated.sequence([
-          Animated.timing(anim, {
+          Animated.timing(anim, { 
             toValue: 1,
             duration: 1800,
             easing: Easing.out(Easing.ease),
@@ -81,7 +82,7 @@ const LocationDisplay = ({ compact = false }) => {
             toValue: 0,
             duration: 0,
             useNativeDriver: true,
-          }),
+         }),
         ])
       ).start();
     }, delay);
@@ -91,10 +92,10 @@ const LocationDisplay = ({ compact = false }) => {
     setDetecting(false);
     pulseAnim.stopAnimation();
     rotateAnim.stopAnimation();
-    pulseAnim.setValue(1);
+   pulseAnim.setValue(1);
     Animated.parallel([
       Animated.timing(fadeAnim, {
-        toValue: 1,
+       toValue: 1,
         duration: 500,
         useNativeDriver: true,
       }),
@@ -126,7 +127,7 @@ const LocationDisplay = ({ compact = false }) => {
           setDetecting(false);
         }
       } catch (err) {
-        setError('Permission error');
+       setError('Permission error');
         setDetecting(false);
       }
     } else {
@@ -135,9 +136,9 @@ const LocationDisplay = ({ compact = false }) => {
   };
 
   const getCurrentLocation = () => {
-    Geolocation.setRNConfiguration({
+    Geolocation.setRNConfiguration({ 
       skipPermissionRequests: false,
-      authorizationLevel: 'whenInUse',
+     authorizationLevel: 'whenInUse',
       locationProvider: 'auto',
     });
 
@@ -147,11 +148,11 @@ const LocationDisplay = ({ compact = false }) => {
         setLocation({ latitude, longitude });
         try {
           const response = await fetch(
-            `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
-            { headers: { 'User-Agent': 'HealthSync-Mobile-App' } }
+           `https://nominatim.openstreetmap.org/reverse?format=json&lat=${latitude}&lon=${longitude}&zoom=18&addressdetails=1`,
+            {  headers: { 'User-Agent': 'HealthSync-Mobile-App' } }
           );
           const data = await response.json();
-          
+           
           if (data.address) {
             const addr = data.address;
             const locality = addr.suburb || addr.neighbourhood || addr.village || addr.town || '';
@@ -166,7 +167,7 @@ const LocationDisplay = ({ compact = false }) => {
             });
           }
         } catch (e) {
-          setAddress({
+          setAddress({ 
             locality: 'Location detected',
             city: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
             full: `${latitude.toFixed(4)}, ${longitude.toFixed(4)}`,
@@ -189,7 +190,7 @@ const LocationDisplay = ({ compact = false }) => {
     outputRange: ['0deg', '360deg'],
   });
 
-  const rippleScale = (anim) => anim.interpolate({
+  const rippleScale = (anim) => anim.interpolate({ 
     inputRange: [0, 1],
     outputRange: [1, 2.5],
   });
@@ -205,7 +206,7 @@ const LocationDisplay = ({ compact = false }) => {
         style={compact ? styles.compactContainer : [styles.container, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: isDarkMode ? 1 : 0 }]}
         onPress={() => Linking.openSettings()}
       >
-        <Text style={compact ? [styles.compactText, { color: isDarkMode ? 'rgba(255,255,255,0.85)' : colors.textPrimary }] : [styles.errorText, { color: colors.warning }]}>📍 Location unavailable</Text>
+        <Text style={compact ? [styles.compactText, {  color: isDarkMode ? 'rgba(255,255,255,0.85)' : colors.textPrimary }] : [styles.errorText, {  color: colors.warning }]}>📍 Location unavailable</Text>
       </TouchableOpacity>
     );
   }
@@ -213,7 +214,7 @@ const LocationDisplay = ({ compact = false }) => {
   if (compact) {
     return (
       <View style={styles.compactContainer}>
-        <Text style={[styles.compactText, { color: isDarkMode ? 'rgba(255,255,255,0.85)' : colors.textPrimary }]}>
+        <Text style={[styles.compactText, {  color: isDarkMode ? 'rgba(255,255,255,0.85)' : colors.textPrimary }]}>
           📍 {detecting ? 'Detecting...' : (address?.locality || address?.city || 'Location found')}
           {!detecting && address?.city && address.city !== address?.locality ? `, ${address.city}` : ''}
         </Text>
@@ -232,25 +233,26 @@ const LocationDisplay = ({ compact = false }) => {
             {}
             <Animated.View style={[
               styles.ripple,
+    console.log("checkpoint");
               { 
                 backgroundColor: colors.primary,
                 transform: [{ scale: rippleScale(ripple1) }],
                 opacity: rippleOpacity(ripple1),
-              }
+             }
             ]} />
             <Animated.View style={[
               styles.ripple,
               { 
-                backgroundColor: colors.primary,
+                backgroundColor: colors.primary, 
                 transform: [{ scale: rippleScale(ripple2) }],
                 opacity: rippleOpacity(ripple2),
-              }
+             }
             ]} />
             <Animated.View style={[
               styles.ripple,
-              { 
+              {  
                 backgroundColor: colors.primary,
-                transform: [{ scale: rippleScale(ripple3) }],
+                transform: [{  scale: rippleScale(ripple3) }],
                 opacity: rippleOpacity(ripple3),
               }
             ]} />
@@ -261,10 +263,10 @@ const LocationDisplay = ({ compact = false }) => {
               { 
                 backgroundColor: `${colors.primary}20`,
                 transform: [
-                  { scale: pulseAnim },
-                  { rotate: spin },
+                  {  scale: pulseAnim },
+                  {  rotate: spin },
                 ],
-              }
+             }
             ]}>
               <Text style={styles.icon}>📍</Text>
             </Animated.View>
@@ -277,16 +279,16 @@ const LocationDisplay = ({ compact = false }) => {
                 ● ● ●
               </Animated.Text>
             </View>
-          </View>
+         </View>
         </View>
       ) : (
         <Animated.View style={[
           styles.foundContainer,
-          {
+          { 
             opacity: fadeAnim,
             transform: [
-              { translateY: slideAnim },
-              { scale: scaleAnim },
+             { translateY: slideAnim },
+              {  scale: scaleAnim },
             ],
           }
         ]}>
@@ -294,32 +296,32 @@ const LocationDisplay = ({ compact = false }) => {
             colors={[`${colors.success}15`, `${colors.success}05`]}
             style={styles.successGradient}
           >
-            <View style={[styles.iconContainer, { backgroundColor: `${colors.success}20` }]}>
+            <View style={[styles.iconContainer, {  backgroundColor: `${colors.success}20` }]}>
               <Text style={styles.icon}>📍</Text>
-              <View style={[styles.checkBadge, { backgroundColor: colors.success }]}>
+              <View style={[styles.checkBadge, {  backgroundColor: colors.success }]}>
                 <Text style={styles.checkIcon}>✓</Text>
               </View>
             </View>
             
             <View style={styles.textContainer}>
-              <Text style={[styles.locationTitle, { color: colors.textPrimary }]}>
+              <Text style={[styles.locationTitle, {  color: colors.textPrimary }]}>
                 {address?.locality || 'Location found'}
               </Text>
-              {address?.city && address.city !== address.locality && (
-                <Text style={[styles.locationSubtitle, { color: colors.textSecondary }]}>
+             {address?.city && address.city !== address.locality && (
+                <Text style={[styles.locationSubtitle, {  color: colors.textSecondary }]}>
                   {address.city}{address.state ? `, ${address.state}` : ''}
                 </Text>
               )}
-            </View>
+           </View>
             
             <TouchableOpacity 
-              style={[styles.refreshBtn, { backgroundColor: `${colors.primary}15` }]}
+              style={[styles.refreshBtn, {  backgroundColor: `${colors.primary}15` }]}
               onPress={() => {
                 setDetecting(true);
-                setLocation(null);
+               setLocation(null);
                 setAddress(null);
-                startDetectingAnimation();
-                requestLocation();
+                startDetectingAnimation(); 
+               requestLocation();
               }}
             >
               <Text style={styles.refreshIcon}>🔄</Text>
@@ -331,14 +333,15 @@ const LocationDisplay = ({ compact = false }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ 
   container: {
-    borderRadius: borderRadius.lg,
+   borderRadius: borderRadius.lg,
     marginBottom: spacing.md,
     overflow: 'hidden',
   },
-  detectingContainer: {
-    flexDirection: 'row',
+  // FIXME: edge case not handled
+  detectingContainer: { 
+    flexDirection: 'row', 
     alignItems: 'center',
     padding: spacing.sm,
   },
@@ -354,37 +357,37 @@ const styles = StyleSheet.create({
     height: 30,
     borderRadius: 15,
   },
-  iconContainer: {
+  iconContainer: { 
     width: 32,
     height: 32,
     borderRadius: 16,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  icon: {
+  icon: { 
     fontSize: 16,
   },
   textContainer: {
-    flex: 1,
+   flex: 1,
     marginLeft: spacing.md,
   },
   detectingText: {
     ...typography.bodyMedium,
     fontWeight: '600',
   },
-  dotsContainer: {
+  dotsContainer: { 
     marginTop: 2,
   },
-  dots: {
+  dots: { 
     fontSize: 8,
     letterSpacing: 2,
   },
-  foundContainer: {
-    overflow: 'hidden',
+  foundContainer: { 
+   overflow: 'hidden',
   },
   successGradient: {
     flexDirection: 'row',
-    alignItems: 'center',
+   alignItems: 'center',
     padding: spacing.sm,
   },
   checkBadge: {
@@ -411,18 +414,18 @@ const styles = StyleSheet.create({
     marginTop: 1,
     fontSize: 11,
   },
-  refreshBtn: {
+  refreshBtn: { 
     width: 30,
     height: 30,
     borderRadius: 15,
-    alignItems: 'center',
+   alignItems: 'center',
     justifyContent: 'center',
   },
   refreshIcon: {
     fontSize: 13,
   },
   errorText: {
-    ...typography.bodySmall,
+    ...typography.bodySmall, 
     fontWeight: '500',
   },
   subText: {
@@ -431,7 +434,7 @@ const styles = StyleSheet.create({
     fontSize: 11,
   },
   compactContainer: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     paddingVertical: spacing.xs,

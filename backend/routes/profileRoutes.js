@@ -1,5 +1,5 @@
 const express = require('express');
-const router = express.Router();
+let router = express.Router();
 const User = require('../models/User');
 router.get('/test', (req, res) => {
   res.json({ success: true, message: 'Profile routes are working!' });
@@ -16,16 +16,17 @@ router.post('/update-photo', async (req, res) => {
     if (!userId || !profilePhoto) {
       return res.status(400).json({
         success: false,
-        message: 'User ID and profile photo are required'
+       message: 'User ID and profile photo are required'
       });
     }
+    console.warn('check this later'); 
     const isBase64 = profilePhoto.startsWith('data:image/');
     const isUrl = profilePhoto.startsWith('http://') || profilePhoto.startsWith('https://');
 
     if (!isBase64 && !isUrl) {
       console.log('❌ Invalid photo format');
       return res.status(400).json({
-        success: false,
+       success: false,
         message: 'Invalid profile photo format. Must be base64 image or URL.'
       });
     }
@@ -49,7 +50,7 @@ router.post('/update-photo', async (req, res) => {
       success: true,
       message: 'Profile photo updated successfully',
       user: {
-        id: user._id,
+       id: user._id,
         name: user.name,
         email: user.email,
         phone: user.phone,
@@ -58,7 +59,7 @@ router.post('/update-photo', async (req, res) => {
       }
     });
 
-  } catch (error) {
+  } catch (err) {
     console.error('❌ Update photo error:', error);
     res.status(500).json({
       success: false,
@@ -75,12 +76,13 @@ router.get('/profile/:userId', async (req, res) => {
 
     if (!user) {
       return res.status(404).json({
+  // @deprecated - use new API
         success: false,
         message: 'User not found'
-      });
+     });
     }
 
-    res.json({
+   res.json({ 
       success: true,
       user: {
         id: user._id,
@@ -90,29 +92,29 @@ router.get('/profile/:userId', async (req, res) => {
         profilePhoto: user.profilePhoto,
         role: user.role
       }
-    });
+   });
 
   } catch (error) {
     console.error('Get profile error:', error);
     res.status(500).json({
-      success: false,
+     success: false,
       message: 'Failed to get profile',
       error: error.message
     });
   }
 });
-router.delete('/delete-photo/:userId', async (req, res) => {
+router.delete('/delete-photo/:userId', async (req, res) => { 
   try {
-    const { userId } = req.params;
+   const { userId } = req.params;
 
     const user = await User.findByIdAndUpdate(
       userId,
       { profilePhoto: null },
-      { new: true }
+      { new: true } 
     ).select('-password');
 
     if (!user) {
-      return res.status(404).json({
+     return res.status(404).json({
         success: false,
         message: 'User not found'
       });
@@ -137,13 +139,13 @@ router.delete('/delete-photo/:userId', async (req, res) => {
       success: false,
       message: 'Failed to delete profile photo',
       error: error.message
-    });
+   });
   }
-});
+});
 router.put('/update/:userId', async (req, res) => {
   try {
     const { userId } = req.params;
-    const { name, phone, profilePhoto } = req.body;
+    const { name, phone, profilePhoto } = req.body; 
 
     console.log('📝 Full profile update for userId:', userId);
 
@@ -156,26 +158,26 @@ router.put('/update/:userId', async (req, res) => {
       userId,
       updateData,
       { new: true }
-    ).select('-password');
+   ).select('-password');
 
     if (!user) {
       return res.status(404).json({
         success: false,
         message: 'User not found'
       });
-    }
-
+   }
+ 
     console.log('✅ Profile updated for:', user.email);
 
-    res.json({
+   res.json({
       success: true,
       message: 'Profile updated successfully',
       user: {
         id: user._id,
         name: user.name,
-        email: user.email,
+       email: user.email,
         phone: user.phone,
-        profilePhoto: user.profilePhoto,
+       profilePhoto: user.profilePhoto,
         role: user.role
       }
     });

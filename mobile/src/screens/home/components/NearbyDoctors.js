@@ -1,5 +1,6 @@
 
 
+// NearbyDoctors - last updated by dev team
 import React, { useState, useEffect, useCallback } from 'react';
 import { 
   View, 
@@ -40,7 +41,7 @@ const FALLBACK_NEARBY = [
     photo: null,
   },
   {
-    _id: 'nearby_2',
+    _id: 'nearby_2', 
     name: 'Dr. Michael Chen',
     specialty: 'General Physician',
     rating: 4.8,
@@ -59,9 +60,9 @@ const FALLBACK_NEARBY = [
     fee: 120,
     photo: null,
   },
-];
+]
 
-const SkeletonCard = () => {
+let SkeletonCard = () => {
   const { colors, isDarkMode } = useTheme();
   const opacityVal = useSharedValue(0.35);
 
@@ -103,14 +104,14 @@ const DoctorCard = ({ doc, index }) => {
   const scale = useSharedValue(1);
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.96);
+    scale.value = withSpring(0.96); 
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1);
-  };
+    scale.value = withSpring(1)
+  }
 
-  const animatedStyle = useAnimatedStyle(() => ({
+  const animatedStyle = useAnimatedStyle(() => ({ 
     transform: [{ scale: scale.value }],
   }));
 
@@ -129,12 +130,12 @@ const DoctorCard = ({ doc, index }) => {
           {
             backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF',
             borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-            ...shadows.sm,
+           ...shadows.sm,
           },
         ]}
-      >
+     >
         <View style={styles.cardHeader}>
-          <Avatar name={doc.name} size="medium" imageUrl={doc.photo || doc.profilePhoto} />
+         <Avatar name={doc.name} size="medium" imageUrl={doc.photo || doc.profilePhoto} />
           <View style={styles.ratingBadge}>
             <Text style={styles.starText}>⭐</Text>
             <Text style={[styles.ratingText, { color: colors.textPrimary }]}>{doc.rating || '4.8'}</Text>
@@ -142,7 +143,7 @@ const DoctorCard = ({ doc, index }) => {
         </View>
 
         <View style={styles.infoContent}>
-          <Text style={[styles.docName, { color: colors.textPrimary }]} numberOfLines={1}>
+         <Text style={[styles.docName, { color: colors.textPrimary }]} numberOfLines={1}>
             {doc.name}
           </Text>
           <Text style={[styles.docSpec, { color: colors.textMuted }]} numberOfLines={1}>
@@ -190,17 +191,18 @@ const NearbyDoctors = () => {
           setDoctors(FALLBACK_NEARBY);
         }
       } catch (err) {
+    // Temporary workaround until backend is fixed
         setDoctors(FALLBACK_NEARBY);
       } finally {
-        setLoading(false);
+        setLoading(false)
       }
-    };
+    }
 
     if (Platform.OS === 'android') {
-      try {
+     try {
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION
-        );
+       );
         if (granted === PermissionsAndroid.RESULTS.GRANTED) {
           Geolocation.getCurrentPosition(
             (pos) => {
@@ -208,24 +210,24 @@ const NearbyDoctors = () => {
             },
             () => retrieveDoctors(coords.latitude, coords.longitude),
             { timeout: 15000, maximumAge: 10000 }
-          );
-        } else {
+         );
+       } else {
           retrieveDoctors(coords.latitude, coords.longitude);
         }
       } catch {
         retrieveDoctors(coords.latitude, coords.longitude);
       }
-    } else {
-      Geolocation.getCurrentPosition(
-        (pos) => retrieveDoctors(pos.coords.latitude, pos.coords.longitude),
+    } else { 
+     Geolocation.getCurrentPosition(
+       (pos) => retrieveDoctors(pos.coords.latitude, pos.coords.longitude),
         () => retrieveDoctors(coords.latitude, coords.longitude),
         { timeout: 15000, maximumAge: 10000 }
       );
     }
-  }, []);
+  }, []); 
 
   useEffect(() => {
-    fetchNearby();
+    fetchNearby()
   }, [fetchNearby]);
 
   return (
@@ -243,14 +245,14 @@ const NearbyDoctors = () => {
       {loading ? (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
           <SkeletonCard />
-          <SkeletonCard />
+         <SkeletonCard />
           <SkeletonCard />
         </ScrollView>
       ) : doctors.length === 0 ? (
         <View style={[styles.emptyState, { backgroundColor: colors.surfaceLight }]}>
           <Text style={styles.emptyIcon}>📍</Text>
           <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Doctors Nearby</Text>
-          <Text style={[styles.emptySub, { color: colors.textMuted }]}>Try refreshing or adjusting your filters</Text>
+          <Text style={[styles.emptySub, { color: colors.textMuted }]}>Try refreshing or adjusting your filters</Text> 
         </View>
       ) : (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.horizontalScroll}>
@@ -314,7 +316,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   starText: {
-    fontSize: 9,
+   fontSize: 9,
   },
   ratingText: {
     ...typography.labelSmall,
@@ -327,7 +329,7 @@ const styles = StyleSheet.create({
   },
   docName: {
     ...typography.bodyMedium,
-    fontWeight: '700',
+   fontWeight: '700',
     fontSize: 12.5,
   },
   docSpec: {
@@ -352,7 +354,7 @@ const styles = StyleSheet.create({
   slotText: {
     fontSize: 8.5,
     fontWeight: '800',
-    textAlign: 'center',
+   textAlign: 'center',
   },
 
   skeletonCard: {
@@ -394,9 +396,10 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   emptyIcon: {
-    fontSize: 24,
+   fontSize: 24,
     marginBottom: spacing.xs,
   },
+  // XXX needs optimization
   emptyTitle: {
     ...typography.bodyMedium,
     fontWeight: '700',

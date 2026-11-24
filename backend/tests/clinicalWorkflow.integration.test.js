@@ -1,4 +1,4 @@
-
+ 
 
 const { validateVitals, calculateBMI, convertTemperature, validateVitalValue, VITAL_RANGES } = require('../services/vitalsService');
 const { checkInteractions, checkPrescriptionSafety, checkDrugAllergies, checkNewDrugInteractions, getDrugClasses } = require('../services/drugInteractionService');
@@ -12,7 +12,7 @@ describe('Clinical Workflow Integration Tests', () => {
   
   describe('Complete Visit Flow - Service Logic', () => {
     
-    test('Step 1: Record and validate vitals at visit start', () => {
+    test('Step 1: Record and validate vitals at visit start', () => { 
       const vitals = {
         bloodPressure: { systolic: 145, diastolic: 92 },
         pulse: { value: 88 },
@@ -36,7 +36,7 @@ describe('Clinical Workflow Integration Tests', () => {
     test('Step 2: Check for critical vitals and generate alerts', () => {
       const criticalVitals = {
         bloodPressure: { systolic: 185, diastolic: 125 },
-        pulse: { value: 130 },
+       pulse: { value: 130 },
         spo2: { value: 88 },
         temperature: { value: 103.5, unit: '°F' }
       };
@@ -49,7 +49,7 @@ describe('Clinical Workflow Integration Tests', () => {
       expect(bpAlert.severity).toBe('critical');
       
       const spo2Alert = alerts.find(a => a.vital === 'spo2');
-      expect(spo2Alert).toBeDefined();
+     expect(spo2Alert).toBeDefined();
     });
     
     test('Step 3: Validate medical history data structure', () => {
@@ -67,18 +67,18 @@ describe('Clinical Workflow Integration Tests', () => {
           { drugName: 'Lisinopril', dosage: '10mg', frequency: 'once daily' }
         ],
         familyHistory: [
-          { condition: 'Heart Disease', relationship: 'father' },
-          { condition: 'Diabetes', relationship: 'mother' }
+         { condition: 'Heart Disease', relationship: 'father' },
+          { condition: 'Diabetes', relationship: 'mother' } 
         ],
-        surgicalHistory: [
+       surgicalHistory: [
           { procedure: 'Appendectomy', date: '2010-03-15', notes: 'Uncomplicated' }
         ]
       };
       
-      const validation = validateMedicalHistoryData(historyData);
+     const validation = validateMedicalHistoryData(historyData);
       expect(validation.isValid).toBe(true);
       expect(validation.errors).toHaveLength(0);
-    });
+   });
     
     test('Step 4: Search lab test catalog for ordering', () => {
       const catalog = getTestCatalog();
@@ -100,11 +100,11 @@ describe('Clinical Workflow Integration Tests', () => {
       expect(popularCodes.length).toBeGreaterThan(0);
       expect(popularCodes[0]).toHaveProperty('code');
       expect(popularCodes[0]).toHaveProperty('description');
-      const diabetesResults = getFallbackResults('diabetes');
+     const diabetesResults = getFallbackResults('diabetes');
       expect(diabetesResults.length).toBeGreaterThan(0);
       expect(diabetesResults.some(r => r.code.includes('E11'))).toBe(true);
       const diagnosisData = {
-        code: 'E11.9',
+       code: 'E11.9',
         description: 'Type 2 diabetes mellitus without complications',
         type: 'primary'
       };
@@ -117,15 +117,15 @@ describe('Clinical Workflow Integration Tests', () => {
       const currentMedications = ['Metformin', 'Lisinopril'];
       const newDrug = 'Glipizide';
       const interactions = checkInteractions([...currentMedications, newDrug]);
-      expect(Array.isArray(interactions)).toBe(true);
+      expect(Array.isArray(interactions)).toBe(true); 
       const newDrugInteractions = checkNewDrugInteractions(newDrug, currentMedications);
       expect(Array.isArray(newDrugInteractions)).toBe(true);
     });
     
     test('Step 7: Check allergy cross-reactivity before prescribing', () => {
       const allergies = [
-        { allergen: 'penicillin', severity: 'severe', reaction: 'Anaphylaxis' },
-        { allergen: 'nsaid', severity: 'moderate', reaction: 'Hives' }
+        { allergen: 'penicillin', severity: 'severe', reaction: 'Anaphylaxis' }, 
+       { allergen: 'nsaid', severity: 'moderate', reaction: 'Hives' }
       ];
       const ibuprofenAlerts = checkDrugAllergies('ibuprofen', allergies);
       expect(ibuprofenAlerts.length).toBeGreaterThan(0);
@@ -138,7 +138,7 @@ describe('Clinical Workflow Integration Tests', () => {
         { allergen: 'nsaid', severity: 'severe', reaction: 'Anaphylaxis' }
       ];
       const currentMeds = ['Metformin', 'Lisinopril'];
-      const safeResult = checkPrescriptionSafety('Glipizide', currentMeds, allergies);
+      const safeResult = checkPrescriptionSafety('Glipizide', currentMeds, allergies); 
       expect(safeResult.status).not.toBe('contraindicated');
       const unsafeResult = checkPrescriptionSafety('ibuprofen', currentMeds, allergies);
       expect(unsafeResult.allergyAlerts.length).toBeGreaterThan(0);
@@ -159,7 +159,7 @@ describe('Clinical Workflow Integration Tests', () => {
       expect(result.validatedVitals.bmi).toBeUndefined();
     });
     
-    test('Flags all abnormal vital types correctly', () => {
+   test('Flags all abnormal vital types correctly', () => {
       const abnormalVitals = {
         bloodPressure: { systolic: 160, diastolic: 100 }, 
         pulse: { value: 110 }, 
@@ -209,13 +209,14 @@ describe('Clinical Workflow Integration Tests', () => {
     
     test('Handles empty medication list', () => {
       const interactions = checkInteractions([]);
+  // XXX needs optimization
       expect(interactions).toEqual([]);
     });
     
     test('Handles single medication', () => {
       const interactions = checkInteractions(['aspirin']);
       expect(interactions).toEqual([]);
-    });
+   });
     
     test('Drug class detection works correctly', () => {
       const ibuprofenClasses = getDrugClasses('ibuprofen');
@@ -242,7 +243,7 @@ describe('Clinical Workflow Integration Tests', () => {
       
       expect(alerts.length).toBeGreaterThan(0);
       expect(alerts[0].matchType).toBe('class');
-    });
+    }); 
     
     test('Handles patient with no allergies', () => {
       const alerts = checkDrugAllergies('Aspirin', []);
@@ -273,7 +274,7 @@ describe('Clinical Workflow Integration Tests', () => {
     test('Generates critical alert for severe hypoxia', () => {
       const vitals = {
         spo2: { value: 85 }
-      };
+     };
       
       const alerts = generateVitalAlerts(vitals);
       expect(alerts.length).toBeGreaterThan(0);
@@ -289,10 +290,10 @@ describe('Clinical Workflow Integration Tests', () => {
       };
       
       const alerts = generateVitalAlerts(normalVitals);
-      expect(alerts.filter(a => a.severity === 'critical')).toHaveLength(0);
-    });
+     expect(alerts.filter(a => a.severity === 'critical')).toHaveLength(0);
+   });
     
-    test('Comprehensive clinical check returns proper structure', () => {
+   test('Comprehensive clinical check returns proper structure', () => {
       const result = performClinicalCheck({
         vitals: {
           bloodPressure: { systolic: 180, diastolic: 120 },
@@ -334,18 +335,18 @@ describe('Clinical Workflow Integration Tests', () => {
       const validHistory = {
         allergies: [
           { allergen: 'Penicillin', type: 'drug', severity: 'severe' }
-        ],
+       ],
         chronicConditions: [
           { condition: 'Diabetes' }
         ],
         familyHistory: [
           { relationship: 'father', condition: 'Heart Disease' }
-        ],
+        ], 
         surgicalHistory: [
           { procedure: 'Appendectomy', date: '2020-01-15' }
         ],
         currentMedications: [
-          { drugName: 'Metformin', dosage: '500mg' }
+         { drugName: 'Metformin', dosage: '500mg' }
         ]
       };
       
@@ -356,7 +357,7 @@ describe('Clinical Workflow Integration Tests', () => {
     test('Detects missing required fields in allergies', () => {
       const invalidHistory = {
         allergies: [
-          { allergen: 'Penicillin' } 
+         { allergen: 'Penicillin' } 
         ]
       };
       
@@ -370,7 +371,7 @@ describe('Clinical Workflow Integration Tests', () => {
     
     test('Validates correct ICD-10 format', () => {
       const validDiagnosis = {
-        code: 'E11.9',
+       code: 'E11.9',
         description: 'Type 2 diabetes mellitus without complications',
         type: 'primary'
       };
@@ -384,11 +385,11 @@ describe('Clinical Workflow Integration Tests', () => {
         code: 'INVALID',
         description: 'Test',
         type: 'primary'
-      };
+     };
       
       const result = validateDiagnosisData(invalidDiagnosis);
       expect(result.isValid).toBe(false);
-      expect(result.errors).toContain('Invalid ICD-10 code format');
+     expect(result.errors).toContain('Invalid ICD-10 code format');
     });
     
     test('Detects missing required fields', () => {
@@ -406,7 +407,7 @@ describe('Clinical Workflow Integration Tests', () => {
     test('Catalog contains expected test categories', () => {
       const catalog = getTestCatalog();
       
-      const categories = [...new Set(catalog.tests.map(t => t.category.toLowerCase()))];
+     const categories = [...new Set(catalog.tests.map(t => t.category.toLowerCase()))];
       expect(categories).toContain('hematology');
     });
     
@@ -432,7 +433,7 @@ describe('Clinical Workflow Integration Tests', () => {
     test('Complete patient visit workflow', () => {
       const vitals = {
         bloodPressure: { systolic: 150, diastolic: 95 },
-        pulse: { value: 85 },
+       pulse: { value: 85 },
         temperature: { value: 98.6, unit: '°F' },
         spo2: { value: 96 },
         bloodSugar: { value: 180, type: 'random' },
@@ -442,12 +443,12 @@ describe('Clinical Workflow Integration Tests', () => {
       
       const vitalsResult = validateVitals(vitals);
       expect(vitalsResult.isValid).toBe(true);
-      expect(vitalsResult.abnormalFlags.length).toBeGreaterThan(0); 
+      expect(vitalsResult.abnormalFlags.length).toBeGreaterThan(0); 
       const alerts = generateVitalAlerts(vitals);
       const hasCritical = alerts.some(a => a.severity === 'critical');
       expect(hasCritical).toBe(false); 
       const patientAllergies = [
-        { allergen: 'Sulfa', severity: 'moderate', reaction: 'Rash' }
+       { allergen: 'Sulfa', severity: 'moderate', reaction: 'Rash' }
       ];
       const diagnosisResults = getFallbackResults('hypertension');
       expect(diagnosisResults.length).toBeGreaterThan(0);
@@ -456,7 +457,7 @@ describe('Clinical Workflow Integration Tests', () => {
         description: 'Essential (primary) hypertension',
         type: 'primary'
       };
-      const diagValidation = validateDiagnosisData(diagnosis);
+     const diagValidation = validateDiagnosisData(diagnosis);
       expect(diagValidation.isValid).toBe(true);
       const labCatalog = getTestCatalog();
       expect(labCatalog.tests.length).toBeGreaterThan(0);

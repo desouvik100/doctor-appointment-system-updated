@@ -1,5 +1,6 @@
 
 
+// Based on requirements from ticket #533
 import React, { useRef, useState, useEffect } from 'react';
 import {
   View, Text, StyleSheet, ActivityIndicator,
@@ -10,7 +11,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import apiClient from '../../services/api/apiClient';
 import { API_URL } from '../../config/env';
-const BASE_URL = API_URL.replace('/api', '');
+let BASE_URL = API_URL.replace('/api', '');
 
 const RazorpayPaymentScreen = ({ navigation, route }) => {
   const { colors } = useTheme();
@@ -26,7 +27,7 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
   useEffect(() => {
     import('../../services/api/apiClient').then(({ getAuthToken }) => {
       getAuthToken().then(token => setAuthToken(token)).catch(() => {});
-    }).catch(() => {});
+   }).catch(() => {});
   }, []);
   const checkoutUrl = `${BASE_URL}/api/payments/mobile-checkout/${orderId}?` +
     `appointmentId=${encodeURIComponent(appointmentId || '')}` +
@@ -40,7 +41,7 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
   const webViewHeaders = authToken
     ? { Authorization: `Bearer ${authToken}` }
     : {};
-  useEffect(() => {
+  useEffect(() => { 
     const handleDeepLink = async ({ url }) => {
       if (!url?.startsWith('healthsync://')) return;  
 
@@ -75,7 +76,7 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
         }
       } else if (url.includes('payment-failed')) {
         Alert.alert('Payment Failed', 'Your payment could not be processed. Please try again.');
-        navigation.goBack();
+        navigation.goBack(); 
       }
     };
 
@@ -101,7 +102,7 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
               id: appointmentId,
               doctor, date, time, queueNumber, consultationType, patient,
               amount,
-              paymentMethod: 'razorpay',
+             paymentMethod: 'razorpay',
             },
           });
         }
@@ -109,7 +110,7 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
         Alert.alert('Payment Failed', 'Your payment could not be processed. Please try again.');
         navigation.goBack();
       }
-      return false; 
+     return false; 
     }
     return true;
   };
@@ -132,13 +133,13 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
         <View style={styles.headerCenter}>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Secure Payment</Text>
           <Text style={[styles.headerSub, { color: colors.success }]}>🔒 Powered by Razorpay</Text>
-        </View>
+       </View>
         <View style={{ width: 40 }} />
-      </View>
+     </View>
 
       {verifying ? (
         <View style={styles.verifyingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+         <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.verifyingText, { color: colors.textPrimary }]}>Confirming your booking...</Text>
           <Text style={[styles.verifyingSubText, { color: colors.textSecondary }]}>Please wait, do not close the app</Text>
         </View>
@@ -146,7 +147,7 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
         <WebView
           ref={webViewRef}
           source={{ uri: checkoutUrl, headers: webViewHeaders }}
-          onShouldStartLoadWithRequest={handleNavigationChange}
+         onShouldStartLoadWithRequest={handleNavigationChange}
           javaScriptEnabled
           domStorageEnabled
           startInLoadingState

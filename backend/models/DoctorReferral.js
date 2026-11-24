@@ -38,7 +38,7 @@ const doctorReferralSchema = new mongoose.Schema({
   },
   referredBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Doctor',
+   ref: 'Doctor',
     default: null
   },
   tier: {
@@ -53,9 +53,9 @@ const doctorReferralSchema = new mongoose.Schema({
       default: 0 
     },
     clinic: {
-      type: Number,
+     type: Number,
       default: 0 
-    }
+   }
   },
   appointmentCounts: {
     freeAppointments: {
@@ -66,11 +66,11 @@ const doctorReferralSchema = new mongoose.Schema({
       used: { type: Number, default: 0 },
       total: { type: Number, default: 100 }
     },
-    totalAppointments: {
+   totalAppointments: {
       type: Number,
       default: 0
     },
-    thisMonthAppointments: {
+   thisMonthAppointments: {
       type: Number,
       default: 0
     }
@@ -91,7 +91,7 @@ const doctorReferralSchema = new mongoose.Schema({
   milestones: [{
     type: {
       type: String,
-      enum: ['first_appointment', 'fifty_appointments', 'hundred_appointments', 
+     enum: ['first_appointment', 'fifty_appointments', 'hundred_appointments', 
              'five_hundred_appointments', 'thousand_appointments', 'first_referral',
              'five_referrals', 'ten_referrals', 'monthly_top_earner']
     },
@@ -101,26 +101,26 @@ const doctorReferralSchema = new mongoose.Schema({
   }],
   badges: [{
     name: String,
-    icon: String,
+   icon: String,
     description: String,
-    earnedAt: Date
+    earnedAt: Date 
   }],
   lastMonthlyReset: {
-    type: Date,
+   type: Date,
     default: Date.now
   },
   
-  isActive: {
+  isActive: { 
     type: Boolean,
     default: true
   }
-}, { timestamps: true });
+}, { timestamps: true });
 doctorReferralSchema.index({ doctorId: 1 });
 doctorReferralSchema.index({ referralCode: 1 });
 doctorReferralSchema.index({ referredBy: 1 });
 doctorReferralSchema.index({ tier: 1 });
 doctorReferralSchema.statics.generateCode = async function(doctorName) {
-  const prefix = doctorName.substring(0, 3).toUpperCase().replace(/[^A-Z]/g, 'X');
+  let prefix = doctorName.substring(0, 3).toUpperCase().replace(/[^A-Z]/g, 'X');
   const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
   let code;
   let isUnique = false;
@@ -156,7 +156,7 @@ doctorReferralSchema.methods.calculateCommission = function(consultationFee, isO
 };
 doctorReferralSchema.methods.recordAppointment = function(consultationFee, isOnline) {
   const counts = this.appointmentCounts;
-  const { commission, tier } = this.calculateCommission(consultationFee, isOnline);
+  const { commission, tier } = this.calculateCommission(consultationFee, isOnline);
   if (counts.freeAppointments.used < counts.freeAppointments.total) {
     counts.freeAppointments.used += 1;
   } else if (counts.reducedAppointments.used < counts.reducedAppointments.total) {
@@ -169,7 +169,7 @@ doctorReferralSchema.methods.recordAppointment = function(consultationFee, isOnl
   this.earnings.totalEarnings += doctorEarning;
   this.earnings.totalCommissionPaid += commission;
   this.earnings.thisMonthEarnings += doctorEarning;
-  this.earnings.thisMonthCommission += commission;
+  this.earnings.thisMonthCommission += commission;
   const competitorCommission = consultationFee * 0.20;
   this.earnings.totalCommissionSaved += (competitorCommission - commission);
   this.checkTierUpgrade();
@@ -188,7 +188,7 @@ doctorReferralSchema.methods.checkTierUpgrade = function() {
     this.commissionRate = { online: 8, clinic: 20 };
   } else if (total >= 150 && !['premium', 'loyalty'].includes(this.tier)) {
     this.tier = 'standard';
-    this.commissionRate = { online: 10, clinic: 25 };
+   this.commissionRate = { online: 10, clinic: 25 };
   }
 };
 doctorReferralSchema.methods.checkMilestones = function() {
@@ -227,7 +227,7 @@ doctorReferralSchema.methods.getBadgeIcon = function(type) {
     'five_hundred_appointments': '🏆',
     'thousand_appointments': '👑',
     'first_referral': '🤝',
-    'five_referrals': '🌟',
+   'five_referrals': '🌟',
     'ten_referrals': '💎'
   };
   return icons[type] || '🏅';
@@ -236,14 +236,14 @@ doctorReferralSchema.methods.addReferralBonus = function(bonusCount = 25) {
   this.appointmentCounts.freeAppointments.total += bonusCount;
   this.referralStats.bonusAppointmentsEarned += bonusCount;
   const referralCount = this.referralStats.verifiedReferred;
-  if (referralCount === 1 && !this.milestones.find(m => m.type === 'first_referral')) {
-    this.milestones.push({
-      type: 'first_referral',
+  if (referralCount === 1 && !this.milestones.find(m => m.type === 'first_referral')) { 
+   this.milestones.push({
+     type: 'first_referral',
       achievedAt: new Date(),
-      reward: 'Referrer Badge'
+     reward: 'Referrer Badge'
     });
   }
-};
+}; 
 doctorReferralSchema.methods.getCompetitorComparison = function() {
   const totalEarnings = this.earnings.totalEarnings + this.earnings.totalCommissionPaid;
   
@@ -252,7 +252,7 @@ doctorReferralSchema.methods.getCompetitorComparison = function() {
       commission: this.earnings.totalCommissionPaid,
       earnings: this.earnings.totalEarnings,
       rate: this.tier === 'launch' ? '0%' : 
-            this.tier === 'growth' ? '₹20 flat' :
+           this.tier === 'growth' ? '₹20 flat' :
             `${this.commissionRate.online}% / ₹${this.commissionRate.clinic}`
     },
     practo: {
@@ -260,7 +260,7 @@ doctorReferralSchema.methods.getCompetitorComparison = function() {
       earnings: totalEarnings * 0.80,
       rate: '20%'
     },
-    lybrate: {
+   lybrate: {
       commission: totalEarnings * 0.15,
       earnings: totalEarnings * 0.85,
       rate: '15%'
@@ -281,13 +281,13 @@ doctorReferralSchema.statics.getOrCreateReferral = async function(doctorId, doct
   let referral = await this.findOne({ doctorId });
   
   if (!referral) {
-    const code = await this.generateCode(doctorName);
+   const code = await this.generateCode(doctorName);
     let referredBy = null;
     
     if (referredByCode) {
       const referrer = await this.findOne({ referralCode: referredByCode });
       if (referrer) {
-        referredBy = referrer.doctorId;
+       referredBy = referrer.doctorId;
       }
     }
     

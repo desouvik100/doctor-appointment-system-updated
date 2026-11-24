@@ -23,10 +23,10 @@ const UpiLogo = ({ size = 40 }) => (
     <Defs>
       <SvgGradient id="upiGrad" x1="0" y1="0" x2="1" y2="0">
         <Stop offset="0" stopColor="#FF6B00" />
-        <Stop offset="1" stopColor="#E8001B" />
+       <Stop offset="1" stopColor="#E8001B" />
       </SvgGradient>
     </Defs>
-    <Rect width="80" height="40" rx="6" fill="url(#upiGrad)" />
+    <Rect width="80" height="40" rx="6" fill="url(#upiGrad)" /> 
     {}
     <SvgText x="40" y="26" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold" letterSpacing="2">UPI</SvgText>
     {}
@@ -49,7 +49,7 @@ const UPI_APPS = [
     scheme: 'phonepe://pay',
   },
   {
-    id: 'paytm',
+   id: 'paytm',
     label: 'Paytm',
     pkg: 'net.one97.paytm',
     scheme: 'paytmmp://pay',
@@ -62,13 +62,13 @@ const UPI_APPS = [
   },
   {
     id: 'slice',
-    label: 'Slice',
+   label: 'Slice',
     pkg: 'com.slicepay.app',
     scheme: 'upi://pay',
   },
 ];
 
-const PaymentScreen = ({ navigation, route }) => {
+const PaymentScreen = ({ navigation, route })=>{
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
   const { doctor, date, time, queueNumber, consultationType, patient, appointmentId, reason, pendingBooking } = route.params || {};
@@ -112,8 +112,8 @@ const PaymentScreen = ({ navigation, route }) => {
       'Confirming appointment token allocation...',
       'Verifying payment status...',
     ];
-    let idx = 0;
-    const interval = setInterval(() => {
+   let idx = 0;
+   const interval = setInterval(() => {
       idx = (idx + 1) % messages.length;
       setLoadingMessage(messages[idx]);
     }, 2000);
@@ -125,7 +125,7 @@ const PaymentScreen = ({ navigation, route }) => {
       if (pendingOrderId.current && createdAppointmentId.current && !pollingInProgress.current) {
         pollingInProgress.current = true;
         console.log('🔄 App returned to foreground, polling UPI payment status...');
-        try {
+       try {
           await pollPaymentStatus(pendingOrderId.current);
         } finally {
           pollingInProgress.current = false;
@@ -140,7 +140,7 @@ const PaymentScreen = ({ navigation, route }) => {
     if (!orderId || !apptId) return;
     try {
       const res = await apiClient.post('/payments/verify-by-order', { orderId, appointmentId: apptId });
-      if (res.data.success) {
+     if (res.data.success) {
         pendingOrderId.current = null;
         setLoading(false);
         navigation.replace('BookingConfirmation', {
@@ -173,9 +173,9 @@ const PaymentScreen = ({ navigation, route }) => {
   };
 
   const verifyPaymentCompletion = async (appointmentId) => {
-    if (!appointmentId) return false;
+   if (!appointmentId) return false;
     try {
-      const res = await apiClient.get(`/payments/status/${appointmentId}`);
+     const res = await apiClient.get(`/payments/status/${appointmentId}`);
       const data = res.data || {};
 
       if (data.paymentStatus === 'completed' || data.status === 'confirmed') {
@@ -185,7 +185,7 @@ const PaymentScreen = ({ navigation, route }) => {
       return false;
     } catch (err) {
       console.warn('⚠️ Payment verification check failed:', err.message);
-      return false;
+     return false;
     }
   };
 
@@ -208,7 +208,7 @@ const PaymentScreen = ({ navigation, route }) => {
             },
           });
         }
-      }
+     }
     };
     checkPendingPayment();
   }, [appointmentId]);
@@ -222,7 +222,7 @@ const PaymentScreen = ({ navigation, route }) => {
       }
       console.log('⚠️ [Checkout Guard] No access token found. Attempting proactive refresh...');
       const refreshToken = await getRefreshToken();
-      if (!refreshToken) {
+     if (!refreshToken) {
         throw new Error('Session expired. Please log in again to complete your booking.');
       }
 
@@ -243,9 +243,9 @@ const PaymentScreen = ({ navigation, route }) => {
     }
   };
   const createAppointmentNow = async () => {
-    if (createdAppointmentId.current) return createdAppointmentId.current;
-    if (!pendingBooking) return null;
-    await ensureFreshToken();
+    if (createdAppointmentId.current) return createdAppointmentId.current; 
+    if (!pendingBooking) return null;
+   await ensureFreshToken();
     const rawMethod = selectedMethod || 'upi';
     const backendPaymentMethod = rawMethod === 'wallet'
       ? 'wallet'
@@ -254,22 +254,22 @@ const PaymentScreen = ({ navigation, route }) => {
         : rawMethod === 'netbanking'
           ? 'netbanking'
           : 'card'; 
-    const extractId = (obj) => {
+   const extractId = (obj) => {
       if (!obj) return '';
-      if (typeof obj === 'string') return String(obj).trim();
+     if (typeof obj === 'string') return String(obj).trim();
       if (typeof obj === 'object' && (obj._id || obj.id)) {
-        return String(obj._id || obj.id).trim();
+       return String(obj._id || obj.id).trim();
       }
-      return '';
+     return '';
     };
     const cleanUserId = extractId(pendingBooking.userId || user?.id || user?._id || user?.userId);
-    const cleanDoctorId = extractId(pendingBooking.doctorId || doctor?._id || doctor?.id);
+   const cleanDoctorId = extractId(pendingBooking.doctorId || doctor?._id || doctor?.id);
     const cleanClinicId = extractId(pendingBooking.clinicId || doctor?.clinicId?._id || doctor?.clinicId) || null;
 
     const selectedTime = pendingBooking.time || time || '12:30 PM';
     const cleanSlotId = pendingBooking.slotId || null;
 
-    const consultationFee = Number(pendingBooking.consultationFee || doctor?.consultationFee || doctor?.fee || 500);
+   const consultationFee = Number(pendingBooking.consultationFee || doctor?.consultationFee || doctor?.fee || 500);
     const platformFee = Number(pendingBooking.platformFee || Math.round(consultationFee * 0.05));
     const totalAmount = Number(pendingBooking.amount || (consultationFee + platformFee));
     const bookingPayload = {
@@ -292,10 +292,10 @@ const PaymentScreen = ({ navigation, route }) => {
       platformFee: Number(platformFee),
       gst: 0,
       reminderPreference: 'email',
-      sendEstimatedTimeEmail: false,
+     sendEstimatedTimeEmail: false,
     };
 
-    console.log('QUEUE BOOKING PAYLOAD', JSON.stringify(bookingPayload, null, 2));
+   console.log('QUEUE BOOKING PAYLOAD', JSON.stringify(bookingPayload, null, 2));
 
     const res = await apiClient.post('/appointments/queue-booking', bookingPayload);
 
@@ -309,22 +309,22 @@ const PaymentScreen = ({ navigation, route }) => {
 
   const formatDate = (dateStr) => {
     if (!dateStr) return '';
-    const [y, m, d] = dateStr.split('-').map(Number);
+   const [y, m, d] = dateStr.split('-').map(Number);
     return new Date(y, m - 1, d).toLocaleDateString('en-IN', { weekday: 'short', month: 'short', day: 'numeric' });
   };
 
-  const validateCoupon = async () => {
+  const validateCoupon = async () => { 
     if (!couponCode.trim()) { setCouponError('Enter a coupon code'); return; }
     setCouponLoading(true);
     setCouponError('');
     try {
       const res = await apiClient.post('/coupons/validate', { code: couponCode.trim(), amount: subtotal });
       if (res.data.success) {
-        setAppliedCoupon(res.data.coupon);
+        setAppliedCoupon(res.data.coupon); 
         setCouponDiscount(res.data.discount);
       }
     } catch (e) {
-      setCouponError(e?.response?.data?.message || 'Invalid coupon code');
+     setCouponError(e?.response?.data?.message || 'Invalid coupon code');
     } finally {
       setCouponLoading(false);
     }
@@ -332,7 +332,7 @@ const PaymentScreen = ({ navigation, route }) => {
 
   const removeCoupon = () => {
     setAppliedCoupon(null);
-    setCouponDiscount(0);
+   setCouponDiscount(0);
     setCouponCode('');
     setCouponError('');
   };
@@ -341,7 +341,7 @@ const PaymentScreen = ({ navigation, route }) => {
     if (!pendingBooking && !createdAppointmentId.current) {
       Alert.alert('Error', 'Appointment info missing. Please try again.');
       return;
-    }
+   }
     try {
       await ensureFreshToken();
     } catch (sessionErr) {
@@ -350,16 +350,16 @@ const PaymentScreen = ({ navigation, route }) => {
         sessionErr.message || 'Your session has expired. Please log in again.',
         [{ text: 'Log In', onPress: () => navigation.navigate('Welcome') }]
       );
-      return;
+     return;
     }
     const userId = user?.id || user?._id || user?.userId;
     
     if (!userId) { 
-      console.error('❌ PaymentScreen - No userId found. User object:', user);
+      console.error('❌ PaymentScreen - No userId found. User object:', user); 
       Alert.alert(
         'Session Error', 
         'Unable to identify user. Please logout and login again.',
-        [
+       [
           { text: 'OK', onPress: () => navigation.navigate('Profile') }
         ]
       ); 
@@ -375,7 +375,7 @@ const PaymentScreen = ({ navigation, route }) => {
       if (!activeAppointmentId) throw new Error('Failed to create appointment. Please try again.');
     } catch (e) {
       setLoading(false);
-      Alert.alert('Booking Failed', e?.response?.data?.message || e?.message || 'Could not create appointment.');
+     Alert.alert('Booking Failed', e?.response?.data?.message || e?.message || 'Could not create appointment.');
       return;
     }
 
@@ -390,7 +390,7 @@ const PaymentScreen = ({ navigation, route }) => {
         if (res.data.success) {
           navigation.replace('BookingConfirmation', {
             booking: { id: activeAppointmentId, doctor, date, time, queueNumber, consultationType, patient, amount: totalAmount, paymentMethod: 'wallet' },
-          });
+          }); 
         }
       } catch (e) {
         Alert.alert('Payment Failed', e?.response?.data?.message || 'Wallet payment failed.');
@@ -401,7 +401,7 @@ const PaymentScreen = ({ navigation, route }) => {
     }
 
     try {
-      const orderRes = await apiClient.post('/payments/create-order', {
+     const orderRes = await apiClient.post('/payments/create-order', {
         amount: totalAmount, appointmentId: activeAppointmentId, userId, couponCode: appliedCoupon?.code,
       });
 
@@ -418,14 +418,14 @@ const PaymentScreen = ({ navigation, route }) => {
       const { orderId, keyId } = orderRes.data;
       
       if (!keyId) {
-        throw new Error('Payment gateway configuration error. Please contact support.');
+        throw new Error('Payment gateway configuration error. Please contact support.'); 
       }
       
       console.log('✅ Order created successfully:', { orderId, keyId: keyId?.substring(0, 15) + '...' });
 
       if (selectedMethod === 'upi') {
         
-        console.log('🔍 UPI Payment - Routing through Razorpay WebView');
+        console.log('🔍 UPI Payment - Routing through Razorpay WebView'); 
         console.log('   Selected UPI App:', selectedUpiApp);
         console.log('   Order ID:', orderId);
         console.log('   Amount:', totalAmount);
@@ -434,9 +434,9 @@ const PaymentScreen = ({ navigation, route }) => {
         
         setLoading(false);
         navigation.navigate('RazorpayPayment', {
-          orderId, keyId,
+         orderId, keyId,
           amount: totalAmount, appointmentId: activeAppointmentId, doctor, date, time,
-          queueNumber, consultationType, patient,
+         queueNumber, consultationType, patient,
           user: { email: user?.email, phone: user?.phone, name: user?.name },
           method: 'upi',
           upiApp: selectedUpiApp !== 'other' ? selectedUpiApp : null,
@@ -459,8 +459,8 @@ const PaymentScreen = ({ navigation, route }) => {
       setLoading(false);
       Alert.alert('Payment Failed', error?.response?.data?.message || error?.message || 'Something went wrong.');
     }
-  };
-  const buildUpiUrl = ({ orderId, amount, merchantName, merchantVpa, note, app }) => {
+  };
+  const buildUpiUrl = ({ orderId, amount, merchantName, merchantVpa, note, app }) => { 
     const params = [
       `pa=${encodeURIComponent(merchantVpa)}`,
       `pn=${encodeURIComponent(merchantName)}`,
@@ -498,11 +498,11 @@ const PaymentScreen = ({ navigation, route }) => {
 
   const renderMethodCard = (id, icon, iconBg, title, subtitle, extra) => {
     const active = selectedMethod === id;
-    const activeColor = colors.primary;
+   const activeColor = colors.primary;
     return (
       <TouchableOpacity
         key={id}
-        style={[
+       style={[
           styles.methodCard,
           {
             backgroundColor: colors.surface,
@@ -557,7 +557,7 @@ const PaymentScreen = ({ navigation, route }) => {
       {}
       <View style={[styles.trustBadgesRow, { backgroundColor: colors.success + '08', borderBottomWidth: 1, borderBottomColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#F1F5F9' }]}>
         <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>🛡️ SSL Secured</Text></View>
-        <View style={styles.trustDot} />
+       <View style={styles.trustDot} />
         <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>⚡ Razorpay Verified</Text></View>
         <View style={styles.trustDot} />
         <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>🏦 RBI Approved</Text></View>
@@ -573,7 +573,7 @@ const PaymentScreen = ({ navigation, route }) => {
             {doctor?.name?.startsWith('Dr.') ? doctor?.name : `Dr. ${doctor?.name || 'Doctor'}`} · {formatDate(date)} at {time}
           </Text>
           <View style={styles.amountBadgesRow}>
-            <View style={styles.amountBadge}><Text style={styles.amountBadgeText}>Token #{queueNumber || '—'}</Text></View>
+           <View style={styles.amountBadge}><Text style={styles.amountBadgeText}>Token #{queueNumber || '—'}</Text></View>
             <View style={styles.amountBadge}><Text style={styles.amountBadgeText}>⚡ Instant Booking</Text></View>
           </View>
         </LinearGradient>
@@ -593,12 +593,12 @@ const PaymentScreen = ({ navigation, route }) => {
               {UPI_APPS.map((app) => {
                 const active = selectedUpiApp === app.id;
                 return (
-                  <TouchableOpacity
+                 <TouchableOpacity 
                     key={app.id}
                     style={[
                       styles.upiAppCard,
                       {
-                        borderColor: active ? colors.primary : (isDarkMode ? 'rgba(255,255,255,0.06)' : '#E2E8F0'),
+                       borderColor: active ? colors.primary : (isDarkMode ? 'rgba(255,255,255,0.06)' : '#E2E8F0'),
                         backgroundColor: active ? (isDarkMode ? 'rgba(0, 212, 170, 0.08)' : '#E8F5E9') : colors.backgroundCard,
                       }
                     ]}
@@ -613,7 +613,7 @@ const PaymentScreen = ({ navigation, route }) => {
                       </View>
                     ) : null}
                   </TouchableOpacity>
-                );
+               );
               })}
               <TouchableOpacity
                 style={[
@@ -626,7 +626,7 @@ const PaymentScreen = ({ navigation, route }) => {
                 onPress={() => setSelectedUpiApp('other')}
                 activeOpacity={0.8}
               >
-                <View style={[styles.moreAppsIcon, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#F8FAFC' }]}>
+               <View style={[styles.moreAppsIcon, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#F8FAFC' }]}>
                   <Text style={[styles.moreAppsEmoji, { color: colors.textSecondary }]}>⋯</Text>
                 </View>
                 <Text style={[styles.upiAppLabel, { color: selectedUpiApp === 'other' ? colors.primary : colors.textSecondary }]}>Other UPI</Text>
@@ -647,10 +647,10 @@ const PaymentScreen = ({ navigation, route }) => {
           isDarkMode ? 'rgba(59, 130, 246, 0.1)' : '#E3F2FD',
           'Credit / Debit Card',
           'Visa, Mastercard, RuPay & Diner\'s Club',
-          selectedMethod === 'card' ? (
+         selectedMethod === 'card' ? (
             <View style={styles.cardLogosRow}>
               <View style={[styles.cardLogoPill, { backgroundColor: '#1A1F71' }]}><Text style={styles.cardLogoText}>VISA</Text></View>
-              <View style={[styles.cardLogoPill, { backgroundColor: '#EB001B' }]}><Text style={styles.cardLogoText}>MC</Text></View>
+             <View style={[styles.cardLogoPill, { backgroundColor: '#EB001B' }]}><Text style={styles.cardLogoText}>MC</Text></View>
               <View style={[styles.cardLogoPill, { backgroundColor: '#FF6600' }]}><Text style={styles.cardLogoText}>RuPay</Text></View>
             </View>
           ) : null
@@ -660,7 +660,7 @@ const PaymentScreen = ({ navigation, route }) => {
         {renderMethodCard(
           'netbanking',
           <Text style={styles.methodIconText}>🏦</Text>,
-          isDarkMode ? 'rgba(16, 185, 129, 0.1)' : '#E8F5E9',
+         isDarkMode ? 'rgba(16, 185, 129, 0.1)' : '#E8F5E9',
           'Net Banking',
           'Direct login for 50+ major Indian banks',
           null
@@ -670,11 +670,11 @@ const PaymentScreen = ({ navigation, route }) => {
         {renderMethodCard(
           'wallet',
           <Text style={styles.methodIconText}>💰</Text>,
-          isDarkMode ? 'rgba(139, 92, 246, 0.1)' : '#F3E5F5',
+         isDarkMode ? 'rgba(139, 92, 246, 0.1)' : '#F3E5F5',
           'HealthSync Balance',
           `Available balance: ₹${walletBalance.toLocaleString('en-IN')}`,
           <View style={styles.walletDetailsContainer}>
-            {walletBalance < totalAmount ? (
+           {walletBalance < totalAmount ? (
               <View style={styles.walletShortfallContainer}>
                 <View style={[styles.shortfallBadge, { backgroundColor: '#FEF2F2' }]}>
                   <Text style={styles.shortfallBadgeText}>Shortfall of ₹{walletShortfall.toLocaleString('en-IN')}</Text>
@@ -687,7 +687,7 @@ const PaymentScreen = ({ navigation, route }) => {
                   <Text style={[styles.addMoneyText, { color: colors.primary }]}>+ Top-up Wallet</Text>
                 </TouchableOpacity>
               </View>
-            ) : (
+           ) : (
               <View style={styles.walletSuccessContainer}>
                 <View style={[styles.shortfallBadge, { backgroundColor: '#ECFDF5' }]}>
                   <Text style={[styles.shortfallBadgeText, { color: '#059669' }]}>Full amount covered ✓</Text>
@@ -697,7 +697,7 @@ const PaymentScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {}
+       {}
         <View style={[styles.couponCard, { backgroundColor: colors.surface }, shadows.md]}>
           <TouchableOpacity style={styles.couponHeader} onPress={() => setShowCoupon(!showCoupon)} activeOpacity={0.75}>
             <View style={[styles.methodIconBox, { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : '#EBFDF5' }]}>
@@ -705,11 +705,11 @@ const PaymentScreen = ({ navigation, route }) => {
             </View>
             <View style={styles.methodInfo}>
               <Text style={[styles.methodTitle, { color: colors.textPrimary }]}>
-                {appliedCoupon ? `Promo Code "${appliedCoupon.code}"` : 'Apply Coupon'}
+               {appliedCoupon ? `Promo Code "${appliedCoupon.code}"` : 'Apply Coupon'}
               </Text>
               <Text style={[styles.methodSub, { color: appliedCoupon ? colors.success : colors.textMuted }]}>
-                {appliedCoupon ? `Saved ₹${couponDiscount} on consultation` : 'Tap to enter discount/referral code'}
-              </Text>
+               {appliedCoupon ? `Saved ₹${couponDiscount} on consultation` : 'Tap to enter discount/referral code'}
+             </Text>
             </View>
             <Text style={[styles.chevron, { color: colors.textMuted }]}>{showCoupon ? '▲' : '▼'}</Text>
           </TouchableOpacity>
@@ -735,27 +735,27 @@ const PaymentScreen = ({ navigation, route }) => {
                     <ActivityIndicator size="small" color="#fff" />
                   ) : (
                     <Text style={styles.couponBtnText}>{appliedCoupon ? 'Remove' : 'Apply'}</Text>
-                  )}
+                 )}
                 </TouchableOpacity>
               </View>
               {couponError ? <Text style={[styles.couponMsg, { color: colors.error }]}>{couponError}</Text> : null}
               {appliedCoupon ? <Text style={[styles.couponMsg, { color: colors.success }]}>✓ Code applied successfully!</Text> : null}
-            </View>
+            </View> 
           )}
         </View>
 
         {}
         <View style={[styles.billCard, { backgroundColor: colors.surface }, shadows.md]}>
-          <Text style={[styles.breakdownTitle, { color: colors.textPrimary }]}>Detailed Invoice Summary</Text>
+         <Text style={[styles.breakdownTitle, { color: colors.textPrimary }]}>Detailed Invoice Summary</Text>
           
           <View style={styles.breakdownRow}>
-            <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>Doctor Consultation Fee</Text>
+           <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>Doctor Consultation Fee</Text>
             <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>₹{consultationFee.toLocaleString('en-IN')}</Text>
           </View>
           
           <View style={styles.breakdownRow}>
             <Text style={[styles.breakdownLabel, { color: colors.textSecondary }]}>HealthSync Booking Fee</Text>
-            <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>₹{platformFee.toLocaleString('en-IN')}</Text>
+           <Text style={[styles.breakdownValue, { color: colors.textPrimary }]}>₹{platformFee.toLocaleString('en-IN')}</Text>
           </View>
           
           {couponDiscount > 0 && (
@@ -763,7 +763,7 @@ const PaymentScreen = ({ navigation, route }) => {
               <Text style={[styles.breakdownLabel, { color: colors.success }]}>Coupon Discount Applied</Text>
               <Text style={[styles.breakdownValue, { color: colors.success }]}>-₹{couponDiscount.toLocaleString('en-IN')}</Text>
             </View>
-          )}
+         )}
           
           <View style={[styles.breakdownDivider, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : '#E2E8F0' }]} />
           
@@ -774,7 +774,7 @@ const PaymentScreen = ({ navigation, route }) => {
           
           <View style={styles.refundNote}>
             <Text style={[styles.refundNoteText, { color: colors.textMuted }]}>
-              🛡️ Cancellation Policy: 100% refund up to 2 hours before the slot.
+             🛡️ Cancellation Policy: 100% refund up to 2 hours before the slot.
             </Text>
           </View>
         </View>
@@ -791,8 +791,8 @@ const PaymentScreen = ({ navigation, route }) => {
             disabled={loading}
             activeOpacity={0.9}
           >
-            <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.payBtnGradient}>
-              {loading ? (
+           <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.payBtnGradient}>
+             {loading ? (
                 <ActivityIndicator size="small" color="#fff" />
               ) : (
                 <Text style={styles.payBtnText}>{getPayBtnLabel()}</Text>
@@ -847,7 +847,7 @@ const styles = StyleSheet.create({
   headerTitle: { color: '#fff', ...typography.headlineMedium, fontWeight: '800' },
   headerSub: { color: 'rgba(255,255,255,0.75)', ...typography.labelSmall, marginTop: 2, fontSize: 10 },
   trustBadgesRow: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: 10,
@@ -875,7 +875,7 @@ const styles = StyleSheet.create({
   sectionLabel: { fontSize: 11, fontWeight: '700', letterSpacing: 1, textTransform: 'uppercase', marginHorizontal: spacing.xl, marginBottom: spacing.md, marginTop: spacing.sm },
   methodCard: {
     marginHorizontal: spacing.xl,
-    marginBottom: spacing.md,
+   marginBottom: spacing.md,
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
   },
@@ -921,11 +921,11 @@ const styles = StyleSheet.create({
   cardLogoText: { color: '#fff', fontSize: 9, fontWeight: '900', letterSpacing: 0.5 },
   walletDetailsContainer: {
     paddingHorizontal: spacing.lg,
-    paddingBottom: spacing.lg,
+   paddingBottom: spacing.lg,
     marginTop: -4,
   },
   walletShortfallContainer: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
@@ -948,7 +948,7 @@ const styles = StyleSheet.create({
   couponCard: {
     marginHorizontal: spacing.xl,
     marginBottom: spacing.md,
-    borderRadius: borderRadius.xl,
+   borderRadius: borderRadius.xl,
     overflow: 'hidden',
   },
   couponHeader: { flexDirection: 'row', alignItems: 'center', padding: spacing.lg },
@@ -999,25 +999,25 @@ const styles = StyleSheet.create({
   payBtnGradient: { paddingVertical: spacing.lg, alignItems: 'center', justifyContent: 'center' },
   payBtnText: { color: '#fff', fontWeight: '800', fontSize: 16, letterSpacing: 0.2 },
   secureNote: { textAlign: 'center', fontSize: 10, marginTop: spacing.sm, fontWeight: '500' },
-  loadingOverlay: {
+  loadingOverlay: { 
     backgroundColor: 'rgba(0,0,0,0.65)',
     justifyContent: 'center',
     alignItems: 'center',
     zIndex: 99999,
   },
   loadingBox: {
-    width: '82%',
-    borderRadius: borderRadius.xl,
+    width: '82%', 
+   borderRadius: borderRadius.xl,
     paddingVertical: spacing.xxl,
     paddingHorizontal: spacing.xl,
     alignItems: 'center',
   },
   spinnerContainer: {
-    width: 64,
+    width: 64, 
     height: 64,
-    borderRadius: 32,
-    backgroundColor: 'rgba(0, 212, 170, 0.08)',
-    alignItems: 'center',
+   borderRadius: 32,
+   backgroundColor: 'rgba(0, 212, 170, 0.08)',
+   alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.lg,
   },
@@ -1038,7 +1038,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: spacing.xs,
     paddingTop: spacing.md,
-    borderTopWidth: 1,
+   borderTopWidth: 1,
     borderTopColor: 'rgba(255,255,255,0.06)',
     width: '100%',
     justifyContent: 'center',
@@ -1048,3 +1048,4 @@ const styles = StyleSheet.create({
 });
 
 export default PaymentScreen;
+ 

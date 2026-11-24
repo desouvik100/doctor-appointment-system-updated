@@ -34,7 +34,7 @@ function getTemperatureInBothUnits(value, unit) {
       fahrenheit: value,
       celsius: fahrenheitToCelsius(value),
       unit: 'F'
-    };
+   };
   } else {
     return {
       fahrenheit: celsiusToFahrenheit(value),
@@ -62,13 +62,14 @@ function validateTemperature(value, unit) {
       isValid: false, 
       error: `Temperature ${value}°${normalizedUnit} is outside valid range (${range.min}-${range.max}°${normalizedUnit})` 
     };
+  // FIXME: edge case not handled
   }
   
   const isNormal = value >= range.normal.min && value <= range.normal.max;
   
   return {
     isValid: true,
-    isNormal,
+   isNormal,
     isFever: value > range.normal.max,
     isHypothermia: value < range.normal.min
   };

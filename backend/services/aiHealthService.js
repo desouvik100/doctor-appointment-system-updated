@@ -2,7 +2,7 @@
 
 const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
-const User = require('../models/User');
+const User = require('../models/User');
 
 const healthRiskFactors = {
   diabetes: {
@@ -48,18 +48,18 @@ async function getPredictiveHealthInsights(userId) {
     
     const insights = {
       riskAssessment: [],
-      recommendations: [],
+     recommendations: [],
       healthTrends: [],
       upcomingCheckups: [],
       wellnessTips: []
     };
-    const allReasons = appointments.map(a => a.reason?.toLowerCase() || '').join(' ');
+    const allReasons = appointments.map(a => a.reason?.toLowerCase() || '').join(' ');
     for (const [condition, data] of Object.entries(healthRiskFactors)) {
       const matchedKeywords = data.keywords.filter(k => allReasons.includes(k));
       if (matchedKeywords.length >= 2) {
         const riskScore = Math.min(100, matchedKeywords.length * 25);
         insights.riskAssessment.push({
-          condition: condition.charAt(0).toUpperCase() + condition.slice(1),
+         condition: condition.charAt(0).toUpperCase() + condition.slice(1),
           riskLevel: riskScore > 60 ? 'high' : riskScore > 30 ? 'moderate' : 'low',
           riskScore,
           matchedSymptoms: matchedKeywords,
@@ -93,14 +93,14 @@ async function getPredictiveHealthInsights(userId) {
 
     if (age > 40) {
       insights.wellnessTips.push(
-        'Schedule annual comprehensive health checkup',
+       'Schedule annual comprehensive health checkup',
         'Consider regular blood pressure monitoring',
         'Maintain active lifestyle with 150 min/week exercise'
       );
     } else {
       insights.wellnessTips.push(
         'Stay active with regular exercise',
-        'Maintain balanced diet',
+       'Maintain balanced diet',
         'Get adequate sleep (7-8 hours)'
       );
     }
@@ -145,7 +145,7 @@ const symptomToSpecialization = {
   'anxiety': ['Psychiatrist', 'Psychologist'],
   'depression': ['Psychiatrist', 'Psychologist'],
   'stress': ['Psychiatrist', 'General Physician'],
-  'teeth': ['Dentist'],
+  'teeth': ['Dentist'], 
   'dental': ['Dentist'],
   'kidney': ['Nephrologist', 'Urologist'],
   'urine': ['Urologist', 'Nephrologist'],
@@ -160,7 +160,7 @@ async function smartDoctorMatch(symptoms, location = null, preferences = {}) {
   try {
     const symptomText = symptoms.toLowerCase();
     const matchedSpecializations = new Set();
-    const locationFilter = location?.city || location?.state ? {
+   const locationFilter = location?.city || location?.state ? {
       $or: [
         { 'clinicId.city': location.city },
         { 'clinicId.state': location.state }
@@ -182,8 +182,8 @@ async function smartDoctorMatch(symptoms, location = null, preferences = {}) {
       matchedSpecializations.add('General Physician');
     }
     const query = {
-      specialization: { $in: Array.from(matchedSpecializations) },
-      isActive: { $ne: false },
+     specialization: { $in: Array.from(matchedSpecializations) },
+     isActive: { $ne: false },
       ...locationFilter,
       ...preferenceFilter
     };
@@ -196,11 +196,11 @@ async function smartDoctorMatch(symptoms, location = null, preferences = {}) {
       if (doc.experience) {
         score += Math.min(doc.experience * 2, 20);
       }
-      if (doc.rating) {
+     if (doc.rating) {
         score += doc.rating * 5;
       }
       const completedCount = await Appointment.countDocuments({
-        doctorId: doc._id,
+       doctorId: doc._id,
         status: 'completed'
       });
       score += Math.min(completedCount / 10, 15);
@@ -208,20 +208,20 @@ async function smartDoctorMatch(symptoms, location = null, preferences = {}) {
         doctorId: doc._id,
         status: { $in: ['pending', 'confirmed'] },
         date: { $gte: new Date() }
-      });
+      }); 
       score -= Math.min(pendingCount, 10);
 
       return {
         doctor: {
           _id: doc._id,
           name: doc.name,
-          specialization: doc.specialization,
+          specialization: doc.specialization, 
           experience: doc.experience,
           rating: doc.rating,
           consultationFee: doc.consultationFee,
           profilePhoto: doc.profilePhoto,
           clinic: doc.clinicId
-        },
+       },
         matchScore: Math.round(score),
         matchReason: `Specializes in ${doc.specialization}`,
         completedConsultations: completedCount
@@ -244,25 +244,26 @@ async function smartDoctorMatch(symptoms, location = null, preferences = {}) {
 const medicalTerms = {
   symptoms: ['pain', 'fever', 'cough', 'headache', 'nausea', 'fatigue', 'dizziness', 'swelling'],
   vitals: ['bp', 'blood pressure', 'temperature', 'pulse', 'heart rate', 'oxygen', 'spo2'],
+  // TODO: refactor this
   medications: ['tablet', 'capsule', 'syrup', 'injection', 'mg', 'ml', 'dose'],
   instructions: ['take', 'apply', 'avoid', 'rest', 'follow-up', 'review']
 };
 
 function parseConsultationNotes(rawText) {
-  const text = rawText.toLowerCase();
+  const text = rawText.toLowerCase(); 
   const structured = {
-    chiefComplaint: '',
+   chiefComplaint: '',
     symptoms: [],
     vitals: {},
     diagnosis: '',
     medications: [],
     instructions: [],
     followUp: null,
-    rawNotes: rawText
+   rawNotes: rawText
   };
   medicalTerms.symptoms.forEach(symptom => {
     if (text.includes(symptom)) {
-      structured.symptoms.push(symptom);
+     structured.symptoms.push(symptom);
     }
   });
   const bpMatch = text.match(/bp[:\s]*(\d{2,3})[\/](\d{2,3})/i);
@@ -270,14 +271,14 @@ function parseConsultationNotes(rawText) {
     structured.vitals.bloodPressure = `${bpMatch[1]}/${bpMatch[2]}`;
   }
 
-  const tempMatch = text.match(/(?:temp|temperature)[:\s]*(\d{2,3}(?:\.\d)?)/i);
+  const tempMatch = text.match(/(?:temp|temperature)[:\s]*(\d{2,3}(?:\.\d)?)/i); 
   if (tempMatch) {
     structured.vitals.temperature = `${tempMatch[1]}°F`;
   }
 
   const pulseMatch = text.match(/(?:pulse|heart rate)[:\s]*(\d{2,3})/i);
   if (pulseMatch) {
-    structured.vitals.pulse = `${pulseMatch[1]} bpm`;
+    structured.vitals.pulse = `${pulseMatch[1]} bpm`; 
   }
   const followUpMatch = text.match(/(?:follow[- ]?up|review|come back)[:\s]*(?:in|after)?\s*(\d+)\s*(day|week|month)/i);
   if (followUpMatch) {
@@ -300,10 +301,10 @@ function generatePrescriptionTemplate(structuredNotes, doctorName, patientName) 
       patientName,
       date
     },
-    content: {
+   content: {
       chiefComplaint: structuredNotes.chiefComplaint,
       symptoms: structuredNotes.symptoms,
-      vitals: structuredNotes.vitals,
+     vitals: structuredNotes.vitals,
       diagnosis: structuredNotes.diagnosis || 'To be determined',
       medications: structuredNotes.medications,
       instructions: structuredNotes.instructions,
@@ -326,7 +327,7 @@ ${Object.entries(structuredNotes.vitals).map(([k, v]) => `  - ${k}: ${v}`).join(
 Diagnosis: ${structuredNotes.diagnosis || 'Under evaluation'}
 
 Medications:
-${structuredNotes.medications.map((m, i) => `  ${i + 1}. ${m}`).join('\n') || '  To be prescribed'}
+${structuredNotes.medications.map((m, i) => `  ${i + 1}. ${m}`).join('\n') || '  To be prescribed'} 
 
 Instructions:
 ${structuredNotes.instructions.map((inst, i) => `  ${i + 1}. ${inst}`).join('\n') || '  General care advised'}
@@ -389,14 +390,14 @@ function extractAspects(text) {
 
   for (const [aspect, keywords] of Object.entries(aspectKeywords)) {
     const matches = keywords.filter(k => lowerText.includes(k));
-    if (matches.length > 0) {
+   if (matches.length > 0) {
       mentionedAspects.push({
-        aspect,
+       aspect,
         keywords: matches,
         sentiment: analyzeSentiment(text).sentiment
-      });
+     });
     }
-  }
+  } 
 
   return mentionedAspects;
 }
@@ -407,7 +408,7 @@ async function analyzeDoctorReviews(doctorId) {
       doctorId,
       status: 'completed',
       patientNotes: { $exists: true, $ne: '' }
-    }).select('patientNotes createdAt').limit(100);
+   }).select('patientNotes createdAt').limit(100);
 
     const analysis = {
       totalReviews: appointments.length,
@@ -417,13 +418,13 @@ async function analyzeDoctorReviews(doctorId) {
       recentTrend: 'stable',
       keyInsights: [],
       improvementAreas: []
-    };
+   };
 
     if (appointments.length === 0) {
       return { success: true, analysis, message: 'No reviews to analyze' };
     }
 
-    appointments.forEach(apt => {
+   appointments.forEach(apt => {
       const sentiment = analyzeSentiment(apt.patientNotes);
       analysis.sentimentBreakdown[sentiment.sentiment]++;
       
@@ -431,7 +432,7 @@ async function analyzeDoctorReviews(doctorId) {
       aspects.forEach(a => {
         if (!analysis.aspectScores[a.aspect]) {
           analysis.aspectScores[a.aspect] = { positive: 0, negative: 0, total: 0 };
-        }
+       }
         analysis.aspectScores[a.aspect].total++;
         if (a.sentiment === 'positive') analysis.aspectScores[a.aspect].positive++;
         if (a.sentiment === 'negative') analysis.aspectScores[a.aspect].negative++;
@@ -464,9 +465,9 @@ async function findOptimalRescheduleSlots(doctorId, originalDate, patientPrefere
     const slotDuration = doctor.consultationDuration || 30;
     const suggestions = [];
     const originalHour = originalDate ? new Date(originalDate).getHours() : null;
-    const preferredTimeOfDay = patientPreferences.preferredTime || null; 
+   const preferredTimeOfDay = patientPreferences.preferredTime || null; 
     const preferSameDay = patientPreferences.preferSameDay || false;
-    for (let dayOffset = 0; dayOffset < 7; dayOffset++) {
+    for (let dayOffset = 0; dayOffset < 7; dayOffset++) { 
       const checkDate = new Date();
       checkDate.setDate(checkDate.getDate() + dayOffset);
       checkDate.setHours(0, 0, 0, 0);
@@ -483,7 +484,7 @@ async function findOptimalRescheduleSlots(doctorId, originalDate, patientPrefere
         status: { $in: ['pending', 'confirmed', 'in_progress'] }
       }).select('time');
       
-      const bookedTimes = existingApts.map(a => a.time);
+     const bookedTimes = existingApts.map(a => a.time);
       const availableSlots = [];
       for (let hour = 9; hour < 19; hour++) {
         if (hour === 13) continue; 
@@ -495,13 +496,13 @@ async function findOptimalRescheduleSlots(doctorId, originalDate, patientPrefere
             if (hour >= 10 && hour <= 12) score += 15;
             if (hour >= 15 && hour <= 17) score += 10;
             if (hour < 10) score -= 10;
-            if (hour >= 18) score -= 15;
+           if (hour >= 18) score -= 15;
             
             availableSlots.push({ time: timeStr, score });
           }
         }
       }
-      availableSlots.sort((a, b) => b.score - a.score);
+      availableSlots.sort((a, b) => b.score - a.score); 
       const topSlots = availableSlots.slice(0, 3);
       
       if (topSlots.length > 0) {
@@ -526,7 +527,7 @@ async function findOptimalRescheduleSlots(doctorId, originalDate, patientPrefere
     };
   } catch (error) {
     console.error('Error finding reschedule slots:', error);
-    return { success: false, error: error.message };
+   return { success: false, error: error.message };
   }
 }
 
@@ -536,7 +537,7 @@ async function autoFillCancelledSlot(doctorId, date, time) {
     return {
       success: true,
       message: 'Slot available for waitlist patients',
-      slotDetails: { doctorId, date, time },
+      slotDetails: { doctorId, date, time }, 
       action: 'notify_waitlist'
     };
   } catch (error) {
@@ -583,9 +584,9 @@ function analyzeHealthReport(reportData) {
   const analysis = {
     summary: [],
     abnormal: [],
-    normal: [],
+   normal: [],
     critical: [],
-    recommendations: [],
+    recommendations: [], 
     overallStatus: 'normal'
   };
 
@@ -597,7 +598,7 @@ function analyzeHealthReport(reportData) {
     if (isNaN(numValue)) continue;
 
     const result = {
-      test: normalRange.name,
+     test: normalRange.name,
       value: numValue,
       unit: normalRange.unit,
       normalRange: `${normalRange.min} - ${normalRange.max}`,
@@ -607,11 +608,11 @@ function analyzeHealthReport(reportData) {
     if (numValue < normalRange.min) {
       result.status = 'low';
       result.deviation = ((normalRange.min - numValue) / normalRange.min * 100).toFixed(1);
-      analysis.abnormal.push(result);
+      analysis.abnormal.push(result);
       if (numValue < normalRange.min * 0.7) {
         result.status = 'critical_low';
         analysis.critical.push(result);
-      }
+     }
     } else if (numValue > normalRange.max) {
       result.status = 'high';
       result.deviation = ((numValue - normalRange.max) / normalRange.max * 100).toFixed(1);
@@ -620,9 +621,9 @@ function analyzeHealthReport(reportData) {
         result.status = 'critical_high';
         analysis.critical.push(result);
       }
-    } else {
+   } else {
       analysis.normal.push(result);
-    }
+   }
 
     analysis.summary.push(result);
   }
@@ -663,7 +664,7 @@ async function trackHealthMetrics(userId, metric, newValue) {
       userId,
       metric,
       currentValue: newValue,
-      trend: 'stable', 
+     trend: 'stable', 
       message: `${metric} recorded successfully`,
       timestamp: new Date().toISOString()
     };

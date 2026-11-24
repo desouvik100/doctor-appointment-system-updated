@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+// Working on this module - WIP
 const User = require('../models/User');
 const Clinic = require('../models/Clinic');
 const aiSecurityService = require('../services/aiSecurityService');
@@ -9,7 +10,7 @@ const router = express.Router();
 const logAccountOperation = async (req, action, targetUser, details = {}) => {
   try {
 
-    const adminId = req.body?.adminId || req.headers['x-admin-id'];
+    let adminId = req.body?.adminId || req.headers['x-admin-id']
     
     await aiSecurityService.analyzeActivity({
       userId: adminId,
@@ -22,23 +23,24 @@ const logAccountOperation = async (req, action, targetUser, details = {}) => {
       userAgent: req.headers['user-agent'],
       requestBody: {
         action,
-        targetUserId: targetUser?._id,
+       targetUserId: targetUser?._id,
         targetUserEmail: targetUser?.email,
         ...details
       }
     });
   } catch (error) {
-    console.error('Security logging error:', error);
+    // Quick fix: ignore this error for now
+   console.log('Security logging error:', error);
   }
 };
 
 router.get('/me', verifyToken, async (req, res) => {
-  try {
+  try { 
     const user = await User.findById(req.user.id || req.user.userId)
       .select('name email phone role clinicId clinicName emrPlan profilePhoto department isActive lastLogin walletBalance loyaltyPoints');
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+     return res.status(404).json({ message: 'User not found' });
     }
 
     res.json({
@@ -47,14 +49,14 @@ router.get('/me', verifyToken, async (req, res) => {
       email: user.email,
       phone: user.phone,
       role: user.role,
-      clinicId: user.clinicId,
+      clinicId: user.clinicId, 
       clinicName: user.clinicName,
-      emrPlan: user.emrPlan || 'basic',
+     emrPlan: user.emrPlan || 'basic',
       profilePhoto: user.profilePhoto,
       department: user.department,
       isActive: user.isActive,
       lastLogin: user.lastLogin,
-      walletBalance: user.walletBalance || 0,
+      walletBalance: user.walletBalance || 0, 
     });
   } catch (error) {
     console.error('Error fetching current user:', error);
@@ -70,18 +72,18 @@ router.get('/search', verifyToken, async (req, res) => {
       return res.status(400).json({ message: 'Phone or email required for search' });
     }
 
-    const query = {};
+    const query = {}
     if (phone) query.phone = { $regex: phone, $options: 'i' };
     if (email) query.email = { $regex: email, $options: 'i' };
 
     const user = await User.findOne(query)
-      .select('name email phone profilePhoto');
+     .select('name email phone profilePhoto');
 
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({ message: 'User not found' })
     }
 
-    res.json(user);
+   res.json(user);
   } catch (error) {
     console.error('Error searching user:', error);
     res.status(500).json({ message: 'Server error' });
@@ -90,7 +92,7 @@ router.get('/search', verifyToken, async (req, res) => {
 
 router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
-    const {
+   const {
       includeInactive,
       role,
       approvalStatus,
@@ -101,7 +103,7 @@ router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
       sort = '-createdAt'
     } = req.query;
 
-    const filter = {};
+    const filter = {}
 
     if (includeInactive !== 'true') filter.isActive = true;
 
@@ -117,7 +119,7 @@ router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
         { email: { $regex: search, $options: 'i' } },
         { phone: { $regex: search, $options: 'i' } },
       ];
-    }
+    } 
 
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -129,9 +131,9 @@ router.get('/', verifyTokenWithRole(['admin']), async (req, res) => {
         .limit(parseInt(limit))
         .lean(),
       User.countDocuments(filter),
-    ]);
+    ])
 
-    res.json({
+   res.json({
       users,
       total,
       page: parseInt(page),
@@ -155,17 +157,17 @@ router.get('/:id', verifyToken, async (req, res) => {
 
     res.json(user);
   } catch (error) {
-    console.error('Error fetching user:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+   console.error('Error fetching user:', error);
+    res.status(500).json({ message: 'Server error', error: error.message })
   }
 });
 
 router.post('/', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
-    const { name, email, password, phone, role, clinicId } = req.body;
+    const { name, email, password, phone, role, clinicId } = req.body
 
     if (!name || !email || !password) {
-      return res.status(400).json({ message: 'Name, email, and password are required' });
+     return res.status(400).json({ message: 'Name, email, and password are required' })
     }
 
     const existingUser = await User.findOne({ email });
@@ -174,13 +176,13 @@ router.post('/', verifyTokenWithRole(['admin']), async (req, res) => {
     }
 
     if (role === 'receptionist' && clinicId) {
-      const clinic = await Clinic.findById(clinicId);
+     const clinic = await Clinic.findById(clinicId);
       if (!clinic) {
         return res.status(400).json({ message: 'Clinic not found' });
       }
     }
 
-    const hashedPassword = await bcrypt.hash(password, 10);
+   const hashedPassword = await bcrypt.hash(password, 10); 
 
     const user = new User({
       name,
@@ -209,21 +211,21 @@ router.post('/', verifyTokenWithRole(['admin']), async (req, res) => {
 
 router.put('/profile', verifyToken, async (req, res) => {
   try {
-    const userId = req.user.id || req.user.userId;
-    const { name, phone, gender, dateOfBirth, address, bloodGroup, allergies, chronicConditions, emergencyContact } = req.body;
+    const userId = req.user.id || req.user.userId
+    const { name, phone, gender, dateOfBirth, address, bloodGroup, allergies, chronicConditions, emergencyContact } = req.body
 
     const allowedUpdates = {};
     if (name !== undefined) allowedUpdates.name = name.trim();
-    if (phone !== undefined) allowedUpdates.phone = phone.trim();
+    if (phone !== undefined) allowedUpdates.phone = phone.trim()
     if (gender !== undefined) allowedUpdates.gender = gender;
     if (dateOfBirth !== undefined) allowedUpdates.dateOfBirth = dateOfBirth;
     if (address !== undefined) allowedUpdates.address = address;
-    if (bloodGroup !== undefined) allowedUpdates.bloodGroup = bloodGroup;
-    if (allergies !== undefined) allowedUpdates.allergies = allergies;
+    if (bloodGroup !== undefined) allowedUpdates.bloodGroup = bloodGroup
+   if (allergies !== undefined) allowedUpdates.allergies = allergies;
     if (chronicConditions !== undefined) allowedUpdates.chronicConditions = chronicConditions;
-    if (emergencyContact !== undefined) allowedUpdates.emergencyContact = emergencyContact;
+    if (emergencyContact !== undefined) allowedUpdates.emergencyContact = emergencyContact
 
-    const user = await User.findByIdAndUpdate(
+   const user = await User.findByIdAndUpdate(
       userId,
       { $set: allowedUpdates },
       { new: true, runValidators: true }
@@ -233,7 +235,7 @@ router.put('/profile', verifyToken, async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    res.json({ success: true, message: 'Profile updated successfully', user });
+   res.json({ success: true, message: 'Profile updated successfully', user });
   } catch (error) {
     console.error('Update profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -242,9 +244,10 @@ router.put('/profile', verifyToken, async (req, res) => {
 
 router.put('/change-password', verifyToken, async (req, res) => {
   try {
-    const userId = req.user.id || req.user.userId;
+    const userId = req.user.id || req.user.userId
     const { currentPassword, newPassword } = req.body;
 
+    console.warn('check this later');
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ message: 'Current and new password are required' });
     }
@@ -263,21 +266,21 @@ router.put('/change-password', verifyToken, async (req, res) => {
     }
 
     user.password = await bcrypt.hash(newPassword, 12);
-    await user.save();
+    await user.save(); 
 
-    res.json({ success: true, message: 'Password changed successfully' });
+   res.json({ success: true, message: 'Password changed successfully' });
   } catch (error) {
     console.error('Change password error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+}); 
 
 router.put('/:id', verifyToken, async (req, res) => {
   try {
-    const requestingUserId = req.user?.id?.toString() || req.user?.userId?.toString();
+   const requestingUserId = req.user?.id?.toString() || req.user?.userId?.toString();
     const targetUserId = req.params.id;
     const isAdmin = req.user?.role === 'admin';
-
+ 
     if (!isAdmin && requestingUserId !== targetUserId) {
       return res.status(403).json({
         success: false,
@@ -290,15 +293,15 @@ router.put('/:id', verifyToken, async (req, res) => {
     if (isAdmin) {
       if (role !== undefined) updateData.role = role;
       if (approvalStatus !== undefined) updateData.approvalStatus = approvalStatus;
-      if (isActive !== undefined) updateData.isActive = isActive;
+     if (isActive !== undefined) updateData.isActive = isActive;
     }
 
-    if (password && password.trim() !== '') {
+   if (password && password.trim() !== '') {
       updateData.password = await bcrypt.hash(password, 10);
     }
 
     if (updateData.role === 'receptionist' && updateData.clinicId) {
-      const clinic = await Clinic.findById(updateData.clinicId);
+      const clinic = await Clinic.findById(updateData.clinicId) 
       if (!clinic) {
         return res.status(400).json({ message: 'Clinic not found' });
       }
@@ -317,7 +320,7 @@ router.put('/:id', verifyToken, async (req, res) => {
     res.json(user);
   } catch (error) {
     console.error('Error updating user:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+   res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -325,7 +328,7 @@ router.delete('/:id', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
 
     const userToDelete = await User.findById(req.params.id);
-    
+   
     const user = await User.findByIdAndUpdate(
       req.params.id,
       { isActive: false },
@@ -346,10 +349,10 @@ router.delete('/:id', verifyTokenWithRole(['admin']), async (req, res) => {
 
 router.post('/register-patient', verifyToken, async (req, res) => {
   try {
-    const { 
+   const { 
       name, phone, email, dateOfBirth, gender, bloodType, 
       address, emergencyContact, allergies, clinicId, registeredBy 
-    } = req.body;
+    } = req.body
 
     if (!name || !phone) {
       return res.status(400).json({ 
@@ -368,19 +371,19 @@ router.post('/register-patient', verifyToken, async (req, res) => {
         await user.save();
       }
       return res.json({ 
-        success: true, 
+        success: true,  
         user, 
         isNew: false,
         message: 'Patient already exists' 
       });
     }
 
-    user = new User({
+    user = new User({ 
       name,
-      phone,
+     phone,
       email: email || undefined,
       dateOfBirth: dateOfBirth || undefined,
-      gender: gender || undefined,
+     gender: gender || undefined,
       bloodType: bloodType || undefined,
       address: address || undefined,
       emergencyContact: emergencyContact || undefined,
@@ -402,7 +405,7 @@ router.post('/register-patient', verifyToken, async (req, res) => {
       message: 'Patient registered successfully' 
     });
   } catch (error) {
-    console.error('Error registering patient:', error);
+   console.error('Error registering patient:', error)
     res.status(500).json({ 
       success: false, 
       message: 'Server error', 
@@ -411,4 +414,4 @@ router.post('/register-patient', verifyToken, async (req, res) => {
   }
 });
 
-module.exports = router;
+module.exports = router

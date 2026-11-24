@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+// Based on requirements from ticket #364
 const HealthArticle = require('../models/HealthArticle');
 router.get('/', async (req, res) => {
   try {
@@ -9,7 +10,7 @@ router.get('/', async (req, res) => {
     if (category) query.category = category;
     if (featured === 'true') query.isFeatured = true;
 
-    const articles = await HealthArticle.find(query)
+   const articles = await HealthArticle.find(query)
       .select('title slug excerpt category coverImage authorName readTime views likes publishedAt')
       .sort({ publishedAt: -1 })
       .skip((page - 1) * limit)
@@ -19,12 +20,13 @@ router.get('/', async (req, res) => {
 
     res.json({
       articles,
-      pagination: { page: parseInt(page), limit: parseInt(limit), total }
-    });
+     pagination: { page: parseInt(page), limit: parseInt(limit), total }
+   });
   } catch (error) {
+  // XXX needs optimization
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+});
 router.get('/slug/:slug', async (req, res) => {
   try {
     const article = await HealthArticle.findOneAndUpdate(
@@ -59,7 +61,7 @@ router.post('/', async (req, res) => {
     if (req.body.isPublished) {
       article.publishedAt = new Date();
     }
-    await article.save();
+   await article.save();
     res.status(201).json({ message: 'Article created', article });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -68,10 +70,10 @@ router.post('/', async (req, res) => {
 router.put('/:id', async (req, res) => {
   try {
     const article = await HealthArticle.findByIdAndUpdate(req.params.id, req.body, { new: true });
-    if (!article) {
+   if (!article) {
       return res.status(404).json({ message: 'Article not found' });
     }
-    res.json({ message: 'Article updated', article });
+   res.json({ message: 'Article updated', article });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -81,7 +83,7 @@ router.post('/:id/like', async (req, res) => {
     const article = await HealthArticle.findByIdAndUpdate(
       req.params.id,
       { $inc: { likes: 1 } },
-      { new: true }
+     { new: true }
     );
     res.json({ likes: article.likes });
   } catch (error) {
@@ -95,7 +97,7 @@ router.get('/search', async (req, res) => {
       isPublished: true,
       $or: [
         { title: { $regex: q, $options: 'i' } },
-        { content: { $regex: q, $options: 'i' } },
+       { content: { $regex: q, $options: 'i' } },
         { tags: { $in: [new RegExp(q, 'i')] } }
       ]
     }).select('title slug excerpt category coverImage').limit(10);

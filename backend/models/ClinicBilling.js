@@ -1,18 +1,19 @@
 
 
+// Working on this module - WIP
 const mongoose = require('mongoose');
 
 const clinicBillingSchema = new mongoose.Schema({
   clinicId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Clinic',
+   ref: 'Clinic', 
     required: true,
     index: true
   },
   billNumber: {
     type: String,
     unique: true,
-    sparse: true  
+   sparse: true  
   },
   
   billDate: {
@@ -21,8 +22,8 @@ const clinicBillingSchema = new mongoose.Schema({
     index: true
   },
   patientId: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+   type: mongoose.Schema.Types.ObjectId,
+   ref: 'User',
     required: true
   },
   
@@ -30,7 +31,7 @@ const clinicBillingSchema = new mongoose.Schema({
   patientPhone: String,
   patientAddress: String,
   visitId: {
-    type: mongoose.Schema.Types.ObjectId,
+   type: mongoose.Schema.Types.ObjectId,
     ref: 'EMRVisit'
   },
   
@@ -48,6 +49,7 @@ const clinicBillingSchema = new mongoose.Schema({
     enum: ['consultation', 'procedure', 'pharmacy', 'lab', 'imaging', 'package', 'other'],
     default: 'consultation'
   },
+  // @deprecated - use new API
   items: [{
     itemType: {
       type: String,
@@ -60,15 +62,15 @@ const clinicBillingSchema = new mongoose.Schema({
       required: true
     },
     hsnCode: String, 
-    quantity: {
+   quantity: {
       type: Number,
       default: 1
     },
     unitPrice: {
       type: Number,
-      required: true
+     required: true
     },
-    discount: {
+   discount: {
       type: Number,
       default: 0
     },
@@ -77,7 +79,7 @@ const clinicBillingSchema = new mongoose.Schema({
       enum: ['percentage', 'fixed'],
       default: 'fixed'
     },
-    taxRate: {
+   taxRate: {
       type: Number,
       default: 0
     },
@@ -88,7 +90,7 @@ const clinicBillingSchema = new mongoose.Schema({
     total: {
       type: Number,
       required: true
-    }
+    } 
   }],
   subtotal: {
     type: Number,
@@ -102,14 +104,14 @@ const clinicBillingSchema = new mongoose.Schema({
   taxBreakdown: {
     cgst: { type: Number, default: 0 },
     sgst: { type: Number, default: 0 },
-    igst: { type: Number, default: 0 },
+   igst: { type: Number, default: 0 },
     cess: { type: Number, default: 0 }
   },
   
   totalTax: {
     type: Number,
     default: 0
-  },
+  }, 
   
   roundOff: {
     type: Number,
@@ -144,11 +146,11 @@ const clinicBillingSchema = new mongoose.Schema({
       required: true
     },
     paymentMethod: {
-      type: String,
+      type: String, 
       enum: ['cash', 'card', 'upi', 'netbanking', 'cheque', 'wallet', 'insurance', 'other'],
       required: true
     },
-    transactionId: String,
+   transactionId: String,
     paymentGateway: String,
     receivedBy: {
       type: mongoose.Schema.Types.ObjectId,
@@ -170,7 +172,7 @@ const clinicBillingSchema = new mongoose.Schema({
     claimNumber: String,
     claimAmount: Number,
     approvedAmount: Number,
-    status: {
+   status: {
       type: String,
       enum: ['not_claimed', 'submitted', 'under_review', 'approved', 'rejected', 'settled'],
       default: 'not_claimed'
@@ -202,7 +204,7 @@ const clinicBillingSchema = new mongoose.Schema({
   internalNotes: String,
   status: {
     type: String,
-    enum: ['draft', 'finalized', 'cancelled'],
+   enum: ['draft', 'finalized', 'cancelled'],
     default: 'draft'
   },
   createdBy: {
@@ -212,7 +214,7 @@ const clinicBillingSchema = new mongoose.Schema({
   
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+   ref: 'User'
   },
   
   cancelledBy: {
@@ -259,7 +261,7 @@ clinicBillingSchema.pre('save', async function(next) {
   }
   
   next();
-});
+});
 clinicBillingSchema.methods.addPayment = async function(paymentDetails) {
   this.payments.push(paymentDetails);
   this.paidAmount += paymentDetails.amount;
@@ -273,10 +275,10 @@ clinicBillingSchema.statics.getRevenueSummary = async function(clinicId, startDa
         billDate: { $gte: startDate, $lte: endDate },
         status: 'finalized'
       }
-    },
+   },
     {
       $group: {
-        _id: null,
+       _id: null,
         totalBills: { $sum: 1 },
         totalRevenue: { $sum: '$grandTotal' },
         totalCollected: { $sum: '$paidAmount' },
@@ -303,15 +305,15 @@ clinicBillingSchema.statics.getDailyRevenue = async function(clinicId, days = 30
       $group: {
         _id: { $dateToString: { format: '%Y-%m-%d', date: '$billDate' } },
         revenue: { $sum: '$grandTotal' },
-        collected: { $sum: '$paidAmount' },
+       collected: { $sum: '$paidAmount' },
         bills: { $sum: 1 }
       }
     },
-    { $sort: { _id: 1 } }
+   { $sort: { _id: 1 } }
   ]);
 };
 
 clinicBillingSchema.set('toJSON', { virtuals: true });
-clinicBillingSchema.set('toObject', { virtuals: true });
+clinicBillingSchema.set('toObject', { virtuals: true }); 
 
 module.exports = mongoose.model('ClinicBilling', clinicBillingSchema);

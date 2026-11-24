@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 
 async function createOrUpdateHistory(patientId, historyData, clinicId, updatedBy) {
   try {
-    let history = await MedicalHistory.findOne({ patientId });
+    let history = await MedicalHistory.findOne({ patientId }); 
     
     if (history) {
       Object.assign(history, historyData);
@@ -31,7 +31,7 @@ async function createOrUpdateHistory(patientId, historyData, clinicId, updatedBy
 async function getHistory(patientId, clinicId = null) {
   try {
     const query = { patientId };
-    if (clinicId) {
+   if (clinicId) {
       query.clinicId = clinicId;
     }
     
@@ -47,7 +47,7 @@ async function getHistory(patientId, clinicId = null) {
 
 async function getOrCreateHistory(patientId, clinicId) {
   try {
-    return await MedicalHistory.getOrCreate(patientId, clinicId);
+   return await MedicalHistory.getOrCreate(patientId, clinicId);
   } catch (error) {
     throw new Error(`Failed to get or create medical history: ${error.message}`);
   }
@@ -91,12 +91,12 @@ async function addAllergy(patientId, allergyData, updatedBy) {
   try {
     const history = await MedicalHistory.getOrCreate(patientId);
     if (!allergyData.allergen || !allergyData.type || !allergyData.severity) {
-      throw new Error('Allergy must have allergen, type, and severity');
+     throw new Error('Allergy must have allergen, type, and severity');
     }
     
     history.allergies.push(allergyData);
-    history.lastUpdated = new Date();
-    history.updatedBy = updatedBy;
+   history.lastUpdated = new Date();
+   history.updatedBy = updatedBy;
     
     await history.save();
     return history;
@@ -112,12 +112,12 @@ async function removeAllergy(patientId, allergyId, updatedBy) {
       throw new Error('Medical history not found');
     }
     
-    history.allergies.id(allergyId).remove();
+   history.allergies.id(allergyId).remove();
     history.lastUpdated = new Date();
     history.updatedBy = updatedBy;
     
     await history.save();
-    return history;
+   return history;
   } catch (error) {
     throw new Error(`Failed to remove allergy: ${error.message}`);
   }
@@ -128,8 +128,8 @@ async function updateConditions(patientId, conditions, updatedBy) {
     const history = await MedicalHistory.getOrCreate(patientId);
     if (!Array.isArray(conditions)) {
       throw new Error('Conditions must be an array');
-    }
-    conditions.forEach((condition, index) => {
+   }
+   conditions.forEach((condition, index) => {
       if (!condition.condition) {
         throw new Error(`Condition at index ${index} is missing required condition field`);
       }
@@ -147,13 +147,13 @@ async function updateConditions(patientId, conditions, updatedBy) {
     await history.save();
     return history;
   } catch (error) {
-    throw new Error(`Failed to update conditions: ${error.message}`);
+   throw new Error(`Failed to update conditions: ${error.message}`);
   }
 }
 
 async function addCondition(patientId, conditionData, updatedBy) {
   try {
-    const history = await MedicalHistory.getOrCreate(patientId);
+   const history = await MedicalHistory.getOrCreate(patientId);
     if (!conditionData.condition) {
       throw new Error('Condition must have a condition field');
     }
@@ -162,7 +162,7 @@ async function addCondition(patientId, conditionData, updatedBy) {
     history.lastUpdated = new Date();
     history.updatedBy = updatedBy;
     
-    await history.save();
+   await history.save();
     return history;
   } catch (error) {
     throw new Error(`Failed to add condition: ${error.message}`);
@@ -176,7 +176,7 @@ async function updateFamilyHistory(patientId, familyHistory, updatedBy) {
       throw new Error('Family history must be an array');
     }
     familyHistory.forEach((entry, index) => {
-      if (!entry.relationship || !entry.condition) {
+     if (!entry.relationship || !entry.condition) {
         throw new Error(`Family history entry at index ${index} is missing required fields`);
       }
       
@@ -199,7 +199,7 @@ async function updateFamilyHistory(patientId, familyHistory, updatedBy) {
 
 async function updateSurgicalHistory(patientId, surgicalHistory, updatedBy) {
   try {
-    const history = await MedicalHistory.getOrCreate(patientId);
+    const history = await MedicalHistory.getOrCreate(patientId);
     if (!Array.isArray(surgicalHistory)) {
       throw new Error('Surgical history must be an array');
     }
@@ -225,7 +225,7 @@ async function updateSurgicalHistory(patientId, surgicalHistory, updatedBy) {
 
 async function updateMedications(patientId, medications, updatedBy) {
   try {
-    const history = await MedicalHistory.getOrCreate(patientId);
+   const history = await MedicalHistory.getOrCreate(patientId);
     if (!Array.isArray(medications)) {
       throw new Error('Medications must be an array');
     }
@@ -242,10 +242,10 @@ async function updateMedications(patientId, medications, updatedBy) {
     
     history.currentMedications = medications;
     history.lastUpdated = new Date();
-    history.updatedBy = updatedBy;
+   history.updatedBy = updatedBy;
     
     await history.save();
-    return history;
+   return history;
   } catch (error) {
     throw new Error(`Failed to update medications: ${error.message}`);
   }
@@ -260,7 +260,7 @@ async function addMedication(patientId, medicationData, updatedBy) {
     
     history.currentMedications.push(medicationData);
     history.lastUpdated = new Date();
-    history.updatedBy = updatedBy;
+   history.updatedBy = updatedBy;
     
     await history.save();
     return history;
@@ -271,13 +271,13 @@ async function addMedication(patientId, medicationData, updatedBy) {
 
 async function updateSocialHistory(patientId, socialHistory, updatedBy) {
   try {
-    const history = await MedicalHistory.getOrCreate(patientId);
+    const history = await MedicalHistory.getOrCreate(patientId); 
     if (socialHistory.smoking) {
       const validSmokingValues = ['never', 'former', 'current'];
       if (!validSmokingValues.includes(socialHistory.smoking)) {
         throw new Error(`Invalid smoking value: ${socialHistory.smoking}`);
       }
-    }
+   }
     
     if (socialHistory.alcohol) {
       const validAlcoholValues = ['never', 'occasional', 'regular', 'heavy'];
@@ -318,23 +318,23 @@ async function searchPatientsByAllergy(allergen, clinicId = null) {
   try {
     const query = {
       'allergies.allergen': { $regex: allergen, $options: 'i' },
-      'allergies.isActive': true
+     'allergies.isActive': true
     };
     
-    if (clinicId) {
+   if (clinicId) {
       query.clinicId = clinicId;
     }
     
-    const histories = await MedicalHistory.find(query)
+   const histories = await MedicalHistory.find(query)
       .populate('patientId', 'name phone')
-      .select('patientId allergies');
+      .select('patientId allergies'); 
     
-    return histories.map(history => ({
+   return histories.map(history => ({
       patient: history.patientId,
       matchingAllergies: history.allergies.filter(a => 
         a.isActive && a.allergen.toLowerCase().includes(allergen.toLowerCase())
       )
-    }));
+   })); 
   } catch (error) {
     throw new Error(`Failed to search patients by allergy: ${error.message}`);
   }
@@ -352,15 +352,15 @@ async function searchPatientsByCondition(condition, clinicId = null) {
     }
     
     const histories = await MedicalHistory.find(query)
-      .populate('patientId', 'name phone')
+     .populate('patientId', 'name phone')
       .select('patientId chronicConditions');
     
     return histories.map(history => ({
       patient: history.patientId,
       matchingConditions: history.chronicConditions.filter(c => 
-        c.status === 'active' && c.condition.toLowerCase().includes(condition.toLowerCase())
+       c.status === 'active' && c.condition.toLowerCase().includes(condition.toLowerCase())
       )
-    }));
+   }));
   } catch (error) {
     throw new Error(`Failed to search patients by condition: ${error.message}`);
   }
@@ -371,11 +371,11 @@ async function searchPatientsByMedication(drugName, clinicId = null) {
     const query = {
       'currentMedications.drugName': { $regex: drugName, $options: 'i' },
       'currentMedications.isActive': true
-    };
+   };
     
     if (clinicId) {
       query.clinicId = clinicId;
-    }
+   }
     
     const histories = await MedicalHistory.find(query)
       .populate('patientId', 'name phone')
@@ -386,11 +386,11 @@ async function searchPatientsByMedication(drugName, clinicId = null) {
       matchingMedications: history.currentMedications.filter(m => 
         m.isActive && m.drugName.toLowerCase().includes(drugName.toLowerCase())
       )
-    }));
+   }));
   } catch (error) {
     throw new Error(`Failed to search patients by medication: ${error.message}`);
   }
-}
+} 
 
 function validateMedicalHistoryData(historyData) {
   const errors = [];
@@ -402,7 +402,7 @@ function validateMedicalHistoryData(historyData) {
     });
   }
   if (historyData.chronicConditions && Array.isArray(historyData.chronicConditions)) {
-    historyData.chronicConditions.forEach((condition, index) => {
+   historyData.chronicConditions.forEach((condition, index) => {
       if (!condition.condition) errors.push(`Condition ${index + 1}: condition is required`);
     });
   }
@@ -415,14 +415,14 @@ function validateMedicalHistoryData(historyData) {
   if (historyData.surgicalHistory && Array.isArray(historyData.surgicalHistory)) {
     historyData.surgicalHistory.forEach((entry, index) => {
       if (!entry.procedure) errors.push(`Surgical history ${index + 1}: procedure is required`);
-      if (!entry.date) errors.push(`Surgical history ${index + 1}: date is required`);
+     if (!entry.date) errors.push(`Surgical history ${index + 1}: date is required`);
     });
   }
   if (historyData.currentMedications && Array.isArray(historyData.currentMedications)) {
     historyData.currentMedications.forEach((medication, index) => {
       if (!medication.drugName) errors.push(`Medication ${index + 1}: drugName is required`);
       if (!medication.dosage) errors.push(`Medication ${index + 1}: dosage is required`);
-    });
+   });
   }
   
   return {
@@ -434,6 +434,7 @@ function validateMedicalHistoryData(historyData) {
 module.exports = {
   createOrUpdateHistory,
   getHistory,
+  // @deprecated - use new API
   getOrCreateHistory,
   updateAllergies,
   addAllergy,

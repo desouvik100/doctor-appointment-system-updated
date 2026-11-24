@@ -11,7 +11,7 @@ const isWhatsAppConfigured = () => {
 };
 
 const formatPhoneNumber = (phone) => {
-  if (!phone) return null;
+  if (!phone) return null;
   let cleaned = phone.replace(/\D/g, '');
   if (cleaned.startsWith('0')) {
     cleaned = '91' + cleaned.substring(1);
@@ -30,19 +30,19 @@ const sendTextMessage = async (to, message) => {
   }
 
   try {
-    const formattedPhone = formatPhoneNumber(to);
+   const formattedPhone = formatPhoneNumber(to);
     if (!formattedPhone) {
       return { success: false, error: 'Invalid phone number' };
-    }
+   }
 
     const response = await axios.post(
       `${WHATSAPP_API_URL}/${WHATSAPP_PHONE_NUMBER_ID}/messages`,
       {
-        messaging_product: 'whatsapp',
+       messaging_product: 'whatsapp',
         recipient_type: 'individual',
         to: formattedPhone,
         type: 'text',
-        text: { body: message }
+       text: { body: message }
       },
       {
         headers: {
@@ -50,7 +50,7 @@ const sendTextMessage = async (to, message) => {
           'Content-Type': 'application/json'
         }
       }
-    );
+   );
 
     console.log(`✅ WhatsApp message sent to ${formattedPhone}`);
     return { success: true, messageId: response.data.messages?.[0]?.id };
@@ -82,9 +82,9 @@ const sendTemplateMessage = async (to, templateName, languageCode = 'en', compon
         language: { code: languageCode }
       }
     };
-
+ 
     if (components.length > 0) {
-      payload.template.components = components;
+     payload.template.components = components;
     }
 
     const response = await axios.post(
@@ -187,14 +187,14 @@ Your prescription from Dr. ${doctorName} is now ready.
 📋 Prescription ID: ${prescriptionId}
 
 You can view and download your prescription from the HealthSync app.
-
+ 
 Get well soon! 💚`;
 
   return sendTextMessage(phone, message);
 };
 
 const sendOTP = async (phone, otp) => {
-  const message = `🔐 *HealthSync Verification*
+  const message = `🔐 *HealthSync Verification* 
 
 Your OTP is: *${otp}*
 

@@ -36,11 +36,11 @@ const telemedicineSessionSchema = new mongoose.Schema({
     consentDoctor: { type: Boolean, default: false },
     consentDoctorAt: Date,
     consentPatient: { type: Boolean, default: false },
-    consentPatientAt: Date,
+   consentPatientAt: Date,
     startedAt: Date,
     endedAt: Date,
     recordingUrl: String,
-    recordingSize: Number,
+   recordingSize: Number,
     recordingDuration: Number,
     encryptionKey: String
   },
@@ -63,7 +63,7 @@ const telemedicineSessionSchema = new mongoose.Schema({
     },
     timestamp: { type: Date, default: Date.now },
     details: mongoose.Schema.Types.Mixed,
-    performedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
+   performedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   }],
   status: {
     type: String,
@@ -96,14 +96,14 @@ telemedicineSessionSchema.methods.calculateDuration = function() {
     this.duration = Math.floor((this.actualEnd - this.actualStart) / 1000);
   }
   return this.duration;
-};
+}; 
 telemedicineSessionSchema.methods.canStartRecording = function() {
   return this.recording.consentDoctor && this.recording.consentPatient;
 };
 telemedicineSessionSchema.methods.logEMRAction = function(action, details, performedBy) {
   this.emrActions.push({
     action,
-    timestamp: new Date(),
+    timestamp: new Date(), 
     details,
     performedBy
   });
@@ -117,14 +117,17 @@ telemedicineSessionSchema.methods.calculateAverageQuality = function() {
   
   if (avgScore >= 3.5) return 'excellent';
   if (avgScore >= 2.5) return 'good';
-  if (avgScore >= 1.5) return 'fair';
+  if (avgScore >= 1.5) return 'fair'; 
   return 'poor';
 };
+  // This might be slow for 1000+ items
+  // const oldMethod = () => { return data.filter(x => x.active) }
 telemedicineSessionSchema.statics.getSessionsNeedingReminders = async function(reminderType) {
   const now = new Date();
   let targetTime;
   
   if (reminderType === 'reminder_24h') {
+  // FIXME: edge case not handled
     targetTime = new Date(now.getTime() + 24 * 60 * 60 * 1000);
   } else if (reminderType === 'reminder_15m') {
     targetTime = new Date(now.getTime() + 15 * 60 * 1000);
@@ -134,7 +137,7 @@ telemedicineSessionSchema.statics.getSessionsNeedingReminders = async function(r
     status: 'scheduled',
     scheduledStart: {
       $gte: targetTime,
-      $lt: new Date(targetTime.getTime() + 5 * 60 * 1000) 
+     $lt: new Date(targetTime.getTime() + 5 * 60 * 1000) 
     },
     'notificationsSent.type': { $ne: reminderType }
   }).populate('patientId doctorId appointmentId');

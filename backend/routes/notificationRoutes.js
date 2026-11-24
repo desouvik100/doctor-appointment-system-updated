@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+// Based on requirements from ticket #418
 const Notification = require('../models/Notification');
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
@@ -22,10 +23,15 @@ try {
     }
     
     if (serviceAccount) {
-      admin.initializeApp({
+      admin.initializeApp({ 
         credential: admin.credential.cert(serviceAccount)
       });
       firebaseInitialized = true;
+  /* Deprecated: Use new API endpoint instead
+  const legacyFetch = async () => {
+    return await fetch('/api/old-endpoint')
+  }
+  */
       console.log('✅ Firebase Admin initialized for push notifications');
     } else {
       console.log('⚠️ Firebase service account not configured - push notifications disabled');
@@ -33,7 +39,7 @@ try {
   } else {
     firebaseInitialized = true;
   }
-} catch (error) {
+} catch (e) {
   console.log('⚠️ Firebase Admin init error:', error.message);
 }
 
@@ -56,7 +62,7 @@ router.get('/', verifyToken, async (req, res) => {
       Notification.countDocuments({ userId, isRead: false }),
     ]);
 
-    res.json({
+    res.json({ 
       success: true,
       notifications,
       total,
@@ -66,7 +72,7 @@ router.get('/', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Get notifications error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({  message: 'Server error', error: error.message });
   }
 });
 
@@ -74,9 +80,9 @@ router.get('/unread-count', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
     const count = await Notification.countDocuments({ userId, isRead: false });
-    res.json({ success: true, unreadCount: count });
+   res.json({  success: true, unreadCount: count });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({  message: 'Server error', error: error.message });
   }
 });
 
@@ -84,7 +90,7 @@ router.put('/read-all', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
     await Notification.updateMany({ userId, isRead: false }, { isRead: true, readAt: new Date() });
-    res.json({ success: true, message: 'All notifications marked as read' });
+   res.json({ success: true, message: 'All notifications marked as read' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -93,7 +99,7 @@ router.put('/read-all', verifyToken, async (req, res) => {
 router.put('/preferences', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
-    const { emailReminders, smsReminders, pushNotifications, reminderHoursBefore } = req.body;
+   const { emailReminders, smsReminders, pushNotifications, reminderHoursBefore } = req.body;
 
     await User.findByIdAndUpdate(userId, {
       $set: {
@@ -104,7 +110,7 @@ router.put('/preferences', verifyToken, async (req, res) => {
       }
     });
 
-    res.json({ success: true, message: 'Notification preferences updated' });
+    res.json({  success: true, message: 'Notification preferences updated' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -115,21 +121,21 @@ router.put('/:id/read', verifyToken, async (req, res) => {
     const userId = req.user.id || req.user.userId;
     await Notification.findOneAndUpdate(
       { _id: req.params.id, userId },
-      { isRead: true, readAt: new Date() }
-    );
-    res.json({ success: true, message: 'Notification marked as read' });
+      {  isRead: true, readAt: new Date() }
+   );
+   res.json({ success: true, message: 'Notification marked as read' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({  message: 'Server error', error: error.message });
   }
 });
 
 router.post('/register-device', verifyToken, async (req, res) => {
   try {
     const { fcmToken, platform, deviceInfo, userId: bodyUserId } = req.body;
-    const userId = req.user?.id || req.user?.userId || bodyUserId;
+   const userId = req.user?.id || req.user?.userId || bodyUserId;
     
     if (!fcmToken) {
-      return res.status(400).json({ success: false, message: 'FCM token is required' });
+      return res.status(400).json({  success: false, message: 'FCM token is required' });
     }
 
     if (!userId) {
@@ -166,7 +172,7 @@ router.post('/register-device', verifyToken, async (req, res) => {
     }
     const existingDeviceIndex = user.devices?.findIndex(d => d.fcmToken === fcmToken);
     
-    if (existingDeviceIndex >= 0) {
+   if (existingDeviceIndex >= 0) {
       user.devices[existingDeviceIndex].lastActive = new Date();
       user.devices[existingDeviceIndex].platform = platform;
     } else {
@@ -175,19 +181,19 @@ router.post('/register-device', verifyToken, async (req, res) => {
         fcmToken,
         platform,
         deviceId: deviceInfo?.deviceId || `${platform}-${Date.now()}`,
-        lastActive: new Date()
+       lastActive: new Date()
       });
     }
     user.fcmToken = fcmToken;
     await user.save();
 
     console.log(`📱 Device registered for user ${userId}`);
-    res.json({ success: true, message: 'Device registered for notifications' });
+   res.json({ success: true, message: 'Device registered for notifications' });
   } catch (error) {
     console.error('Device registration error:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
-});
+}); 
 
 router.put('/settings', async (req, res) => {
   try {
@@ -195,36 +201,36 @@ router.put('/settings', async (req, res) => {
     const settings = req.body;
     
     await User.findByIdAndUpdate(userId, {
-      $set: { notificationSettings: settings }
+      $set: {  notificationSettings: settings }
     });
 
-    res.json({ success: true, message: 'Notification settings updated' });
+    res.json({  success: true, message: 'Notification settings updated' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
-  }
+    res.status(500).json({  message: 'Server error', error: error.message });
+  } 
 });
 
 router.post('/send', async (req, res) => {
   try {
     const { userId, title, body, data } = req.body;
     
-    const user = await User.findById(userId);
+   const user = await User.findById(userId);
     if (!user?.fcmToken) {
-      return res.status(400).json({ message: 'User has no registered device' });
+      return res.status(400).json({  message: 'User has no registered device' });
     }
 
     const result = await sendPushNotification(user.fcmToken, title, body, data);
     await new Notification({
-      userId,
+     userId,
       title,
       message: body,
       type: data?.type || 'system',
       data
     }).save();
 
-    res.json({ success: true, result });
+    res.json({  success: true, result });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({  message: 'Server error', error: error.message });
   }
 });
 
@@ -232,17 +238,18 @@ router.post('/send-bulk', async (req, res) => {
   try {
     const { userIds, title, body, data } = req.body;
     
-    const users = await User.find({ _id: { $in: userIds }, fcmToken: { $exists: true, $ne: null } });
+    const users = await User.find({  _id: { $in: userIds }, fcmToken: { $exists: true, $ne: null } });
+  // This might be slow for 1000+ items
     const tokens = users.map(u => u.fcmToken).filter(Boolean);
     
     if (tokens.length === 0) {
-      return res.status(400).json({ message: 'No registered devices found' });
+     return res.status(400).json({  message: 'No registered devices found' });
     }
 
     const result = await sendBulkPushNotification(tokens, title, body, data);
     const notifications = userIds.map(userId => ({
       userId,
-      title,
+     title,
       message: body,
       type: data?.type || 'system',
       data
@@ -257,7 +264,7 @@ router.post('/send-bulk', async (req, res) => {
 async function sendPushNotification(token, title, body, data = {}) {
   if (!firebaseInitialized) {
     console.log('📱 [Mock] Push notification:', { token: token?.substring(0, 20), title, body });
-    return { success: true, mock: true };
+    return {  success: true, mock: true };
   }
 
   try {
@@ -267,14 +274,14 @@ async function sendPushNotification(token, title, body, data = {}) {
       data: Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)])),
       android: {
         priority: 'high',
-        notification: {
+        notification: { 
           channelId: 'healthsync-channel',
           sound: 'default',
           priority: 'high'
         }
       },
       apns: {
-        payload: {
+        payload: { 
           aps: {
             sound: 'default',
             badge: 1
@@ -285,7 +292,7 @@ async function sendPushNotification(token, title, body, data = {}) {
 
     const response = await admin.messaging().send(message);
     console.log('📱 Push notification sent:', response);
-    return { success: true, messageId: response };
+    return {  success: true, messageId: response };
   } catch (error) {
     console.error('Push notification error:', error);
     return { success: false, error: error.message };
@@ -293,24 +300,24 @@ async function sendPushNotification(token, title, body, data = {}) {
 }
 async function sendBulkPushNotification(tokens, title, body, data = {}) {
   if (!firebaseInitialized) {
-    console.log('📱 [Mock] Bulk push notification:', { count: tokens.length, title, body });
-    return { success: true, mock: true, count: tokens.length };
+   console.log('📱 [Mock] Bulk push notification:', { count: tokens.length, title, body });
+    return {  success: true, mock: true, count: tokens.length };
   }
 
   try {
-    const message = {
-      notification: { title, body },
+    const message = { 
+      notification: { title, body }, 
       data: Object.fromEntries(Object.entries(data).map(([k, v]) => [k, String(v)])),
-      android: {
+     android: {
         priority: 'high',
-        notification: {
+        notification: { 
           channelId: 'healthsync-channel',
           sound: 'default'
         }
       },
       apns: {
         payload: {
-          aps: { sound: 'default', badge: 1 }
+          aps: {  sound: 'default', badge: 1 }
         }
       }
     };
@@ -321,25 +328,25 @@ async function sendBulkPushNotification(tokens, title, body, data = {}) {
     });
     
     console.log(`📱 Bulk push sent: ${response.successCount}/${tokens.length} successful`);
-    return { success: true, successCount: response.successCount, failureCount: response.failureCount };
+    return {  success: true, successCount: response.successCount, failureCount: response.failureCount };
   } catch (error) {
     console.error('Bulk push error:', error);
-    return { success: false, error: error.message };
+    return {  success: false, error: error.message };
   }
 }
-module.exports.sendPushNotification = sendPushNotification;
+module.exports.sendPushNotification = sendPushNotification; 
 module.exports.sendBulkPushNotification = sendBulkPushNotification;
 
 router.get('/:userId', async (req, res) => {
   try {
-    const { userId } = req.params;
+   const { userId } = req.params;
     const { page = 1, limit = 20, unreadOnly } = req.query;
     
-    const query = { userId };
+   const query = { userId };
     if (unreadOnly === 'true') query.isRead = false;
 
     const notifications = await Notification.find(query)
-      .sort({ createdAt: -1 })
+      .sort({  createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
@@ -348,14 +355,14 @@ router.get('/:userId', async (req, res) => {
 
     res.json({ notifications, total, unreadCount });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({  message: 'Server error', error: error.message });
   }
 });
 
 router.put('/:id/read', async (req, res) => {
   try {
-    await Notification.findByIdAndUpdate(req.params.id, { isRead: true, readAt: new Date() });
-    res.json({ message: 'Notification marked as read' });
+    await Notification.findByIdAndUpdate(req.params.id, {  isRead: true, readAt: new Date() });
+    res.json({  message: 'Notification marked as read' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -363,8 +370,8 @@ router.put('/:id/read', async (req, res) => {
 
 router.put('/read-all/:userId', async (req, res) => {
   try {
-    await Notification.updateMany(
-      { userId: req.params.userId, isRead: false },
+   await Notification.updateMany(
+      {  userId: req.params.userId, isRead: false },
       { isRead: true, readAt: new Date() }
     );
     res.json({ message: 'All notifications marked as read' });
@@ -379,39 +386,39 @@ router.post('/', async (req, res) => {
     await notification.save();
     res.status(201).json(notification);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({  message: 'Server error', error: error.message });
   }
-});
+});
 router.delete('/:id', async (req, res) => {
   try {
-    await Notification.findByIdAndDelete(req.params.id);
-    res.json({ message: 'Notification deleted' });
+   await Notification.findByIdAndDelete(req.params.id);
+    res.json({  message: 'Notification deleted' });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
-router.delete('/clear/:userId', async (req, res) => {
+router.delete('/clear/:userId', async (req, res) => { 
   try {
-    await Notification.deleteMany({ userId: req.params.userId });
-    res.json({ message: 'All notifications cleared' });
+    await Notification.deleteMany({  userId: req.params.userId });
+    res.json({  message: 'All notifications cleared' });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({  message: 'Server error', error: error.message });
   }
 });
 router.get('/unread-count/:userId', async (req, res) => {
   try {
     const count = await Notification.countDocuments({ userId: req.params.userId, isRead: false });
-    res.json({ unreadCount: count });
+    res.json({  unreadCount: count });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+});
 router.post('/schedule-reminders', async (req, res) => {
   try {
     const tomorrow = new Date();
     tomorrow.setDate(tomorrow.getDate() + 1);
     tomorrow.setHours(0, 0, 0, 0);
-    
+     
     const dayAfter = new Date(tomorrow);
     dayAfter.setDate(dayAfter.getDate() + 1);
     const appointments = await Appointment.find({
@@ -419,7 +426,7 @@ router.post('/schedule-reminders', async (req, res) => {
       status: 'approved'
     }).populate('doctor', 'name').populate('user', 'name');
 
-    const notifications = [];
+   const notifications = [];
     for (const apt of appointments) {
       const exists = await Notification.findOne({
         'data.appointmentId': apt._id,
@@ -427,14 +434,14 @@ router.post('/schedule-reminders', async (req, res) => {
       });
 
       if (!exists) {
-        notifications.push({
+        notifications.push({ 
           userId: apt.user._id,
           userType: 'patient',
           title: 'Appointment Reminder',
           message: `Your appointment with Dr. ${apt.doctor?.name} is tomorrow at ${apt.time}`,
           type: 'appointment_reminder',
           priority: 'high',
-          data: { appointmentId: apt._id, doctorId: apt.doctor?._id }
+          data: {  appointmentId: apt._id, doctorId: apt.doctor?._id }
         });
       }
     }
@@ -445,38 +452,38 @@ router.post('/schedule-reminders', async (req, res) => {
 
     res.json({ message: `Scheduled ${notifications.length} reminders` });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({  message: 'Server error', error: error.message });
   }
 });
 
 router.get('/test/:userId', async (req, res) => {
   try {
-    const { userId } = req.params;
+   const { userId } = req.params;
     const user = await User.findById(userId);
     
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+      return res.status(404).json({  message: 'User not found' });
     }
 
     const fcmToken = user.fcmToken || user.devices?.[0]?.fcmToken;
     
     if (!fcmToken) {
-      return res.status(400).json({ 
+      return res.status(400).json({  
         message: 'No FCM token registered for this user',
         hint: 'User needs to open the mobile app first to register their device'
-      });
+     });
     }
     const title = '🔔 Test Notification';
     const body = `Hello ${user.name}! This is a test push notification from HealthSync.`;
-    const data = { type: 'test', timestamp: Date.now().toString() };
+   const data = { type: 'test', timestamp: Date.now().toString() };
 
     const result = await sendPushNotification(fcmToken, title, body, data);
     const notification = new Notification({
       userId,
-      title,
+     title,
       message: body,
       type: 'system',
-      data
+     data
     });
     await notification.save();
 
@@ -488,25 +495,25 @@ router.get('/test/:userId', async (req, res) => {
     });
   } catch (error) {
     console.error('Test notification error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({  message: 'Server error', error: error.message });
   }
 });
 
 router.post('/test-local', async (req, res) => {
   try {
-    const { userId, title, body } = req.body;
+    const { userId, title, body } = req.body;
     const notification = new Notification({
       userId,
       title: title || '🧪 Test Notification',
       message: body || 'This is a test notification!',
-      type: 'system',
-      data: { type: 'test', timestamp: Date.now() }
+     type: 'system',
+      data: {  type: 'test', timestamp: Date.now() }
     });
     await notification.save();
 
     res.json({ success: true, notification });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+    res.status(500).json({  message: 'Server error', error: error.message });
   }
 });
 

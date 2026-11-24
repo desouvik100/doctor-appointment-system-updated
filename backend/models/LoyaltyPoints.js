@@ -33,20 +33,20 @@ const loyaltyPointsSchema = new mongoose.Schema({
     default: 0
   },
   transactions: [{
-    type: {
+   type: {
       type: String,
-      enum: ['earned', 'redeemed', 'expired', 'bonus', 'referral']
+     enum: ['earned', 'redeemed', 'expired', 'bonus', 'referral']
     },
     points: Number,
-    description: String,
-    appointmentId: {
+   description: String,
+   appointmentId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Appointment'
     },
     createdAt: {
       type: Date,
-      default: Date.now
-    },
+     default: Date.now
+   },
     expiresAt: Date
   }],
   currentStreak: {
@@ -117,9 +117,9 @@ loyaltyPointsSchema.methods.redeemPoints = function(points, description) {
   this.availablePoints -= points;
   this.redeemedPoints += points;
 };
-loyaltyPointsSchema.methods.updateTier = function() {
+loyaltyPointsSchema.methods.updateTier = function() { 
   if (this.totalPoints >= TIER_THRESHOLDS.platinum) {
-    this.tier = 'platinum';
+   this.tier = 'platinum';
   } else if (this.totalPoints >= TIER_THRESHOLDS.gold) {
     this.tier = 'gold';
   } else if (this.totalPoints >= TIER_THRESHOLDS.silver) {
@@ -137,8 +137,8 @@ loyaltyPointsSchema.methods.updateTier = function() {
   } else {
     this.tierProgress = 100;
   }
-};
-loyaltyPointsSchema.methods.checkAchievements = function() {
+};
+loyaltyPointsSchema.methods.checkAchievements = function() { 
   const achievements = [
     { name: 'First Steps', description: 'Earned your first points', threshold: 1, points: 10 },
     { name: 'Century', description: 'Earned 100 points', threshold: 100, points: 25 },
@@ -155,7 +155,7 @@ loyaltyPointsSchema.methods.checkAchievements = function() {
         description: achievement.description,
         icon: 'fa-trophy',
         earnedAt: new Date(),
-        pointsAwarded: achievement.points
+       pointsAwarded: achievement.points
       });
       this.availablePoints += achievement.points;
       this.totalPoints += achievement.points;

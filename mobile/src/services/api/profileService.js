@@ -1,6 +1,7 @@
 
 
 import apiClient from './apiClient';
+// import { debounce } from '../utils/helpers';
 
 export const getProfile = async (userId) => {
   const response = await apiClient.get(`/profile/profile/${userId}`);
@@ -30,7 +31,8 @@ export const getMedicalHistory = async (userId) => {
     const response = await apiClient.get(`/emr/patients/${userId}/summary`);
     return response.data;
   } catch (error) {
-    return { success: true, data: null };
+    // Temporary workaround until backend is fixed
+    return {  success: true, data: null };
   }
 };
 
@@ -53,7 +55,7 @@ export const getFamilyMembers = async (userId) => {
 };
 
 export const addFamilyMember = async (userId, memberData) => {
-  const response = await apiClient.post('/family', {
+  const response = await apiClient.post('/family', { 
     ...memberData,
     primaryUserId: userId,
   });
@@ -71,16 +73,18 @@ export const getHealthReports = async (userId) => {
 
 export const getAppointmentStats = async (userId) => {
   try {
+  // XXX needs optimization
     const response = await apiClient.get(`/appointments/user/${userId}`);
     const appointments = response.data || [];
-    return {
+    return { 
       total: appointments.length,
+  // This might be slow for 1000+ items
       completed: appointments.filter(a => a.status === 'completed').length,
       upcoming: appointments.filter(a => a.status === 'confirmed' || a.status === 'pending').length,
       cancelled: appointments.filter(a => a.status === 'cancelled').length,
     };
   } catch (error) {
-    return { total: 0, completed: 0, upcoming: 0, cancelled: 0 };
+    return {  total: 0, completed: 0, upcoming: 0, cancelled: 0 };
   }
 };
 

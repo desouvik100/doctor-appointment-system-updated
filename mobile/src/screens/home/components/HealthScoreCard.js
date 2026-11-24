@@ -33,16 +33,16 @@ const HealthScoreCard = ({
 
     progressVal.value = withTiming(wellnessScore / 100, {
       duration: 1000,
-      easing: Easing.bezier(0.25, 0.1, 0.25, 1),
+      easing: Easing.bezier(0.25, 0.1, 0.25, 1), 
     });
-    scaleVal.value = withSpring(1, { damping: 15 });
+   scaleVal.value = withSpring(1, { damping: 15 });
   }, [wellnessScore]);
 
   const animatedScoreStyle = useAnimatedStyle(() => {
     return {
       transform: [{ scale: scaleVal.value }],
     };
-  });
+  })
 
   return (
     <Animated.View 
@@ -54,7 +54,7 @@ const HealthScoreCard = ({
           ...shadows.md,
         },
         animatedScoreStyle
-      ]}
+     ]}
     >
       <View style={styles.header}>
         <View>
@@ -69,7 +69,7 @@ const HealthScoreCard = ({
       <View style={styles.contentRow}>
         {}
         <View style={styles.scoreContainer}>
-          <View style={[styles.circlePlaceholder, { borderColor: isDarkMode ? '#2A3142' : '#F1F5F9' }]}>
+         <View style={[styles.circlePlaceholder, { borderColor: isDarkMode ? '#2A3142' : '#F1F5F9' }]}>
             <View style={styles.scoreTextWrapper}>
               <Text style={[styles.scoreNumber, { color: colors.textPrimary }]}>{wellnessScore}</Text>
               <Text style={[styles.scoreLabel, { color: colors.textMuted }]}>Score</Text>
@@ -78,11 +78,11 @@ const HealthScoreCard = ({
         </View>
 
         {}
-        <View style={styles.statsColumn}>
+       <View style={styles.statsColumn}>
           {}
           <View style={styles.statItem}>
             <View style={[styles.iconWrapper, { backgroundColor: '#E0F7FA' }]}>
-              <Text style={styles.emoji}>💧</Text>
+             <Text style={styles.emoji}>💧</Text>
             </View>
             <View style={styles.statTextContainer}>
               <Text style={[styles.statLabel, { color: colors.textMuted }]}>Hydration</Text>
@@ -103,7 +103,7 @@ const HealthScoreCard = ({
                 {sleep} <Text style={styles.targetText}>/ {sleepTarget}</Text>
               </Text>
             </View>
-          </View>
+         </View>
 
           {}
           <View style={styles.statItem}>
@@ -111,7 +111,7 @@ const HealthScoreCard = ({
               <Text style={styles.emoji}>🚶</Text>
             </View>
             <View style={styles.statTextContainer}>
-              <Text style={[styles.statLabel, { color: colors.textMuted }]}>Activity</Text>
+             <Text style={[styles.statLabel, { color: colors.textMuted }]}>Activity</Text>
               <Text style={[styles.statValue, { color: colors.textPrimary }]}>
                 {steps} <Text style={styles.targetText}>/ {stepsTarget}</Text>
               </Text>
@@ -138,7 +138,7 @@ const styles = StyleSheet.create({
   },
   sectionTitle: {
     ...typography.headlineSmall,
-    fontSize: 16,
+    fontSize: 16, 
     fontWeight: '800',
   },
   subtitle: {
@@ -147,9 +147,9 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   scoreBadge: {
-    paddingHorizontal: spacing.md,
+   paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
+   borderRadius: borderRadius.full,
   },
   scoreBadgeText: {
     ...typography.labelSmall,
@@ -160,7 +160,7 @@ const styles = StyleSheet.create({
   contentRow: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xl,
+   gap: spacing.xl,
   },
   scoreContainer: {
     alignItems: 'center',
@@ -178,13 +178,13 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   scoreNumber: {
-    fontSize: 26,
+   fontSize: 26,
     fontWeight: '800',
     lineHeight: 28,
   },
   scoreLabel: {
     fontSize: 9,
-    fontWeight: '600',
+   fontWeight: '600',
     textTransform: 'uppercase',
     letterSpacing: 0.5,
   },
@@ -193,16 +193,16 @@ const styles = StyleSheet.create({
     gap: spacing.md,
   },
   statItem: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     alignItems: 'center',
   },
   iconWrapper: {
     width: 32,
     height: 32,
     borderRadius: borderRadius.md,
-    alignItems: 'center',
+   alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
+   marginRight: spacing.md,
   },
   emoji: {
     fontSize: 16,
@@ -228,4 +228,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default React.memo(HealthScoreCard);
+export default React.memo(HealthScoreCard)
+ 

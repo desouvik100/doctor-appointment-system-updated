@@ -1,6 +1,6 @@
 const mongoose = require('mongoose');
 
-const chatMessageSchema = new mongoose.Schema({
+const chatMessageSchema = new mongoose.Schema({ 
   conversationId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Conversation',
@@ -12,12 +12,12 @@ const chatMessageSchema = new mongoose.Schema({
   },
   senderType: {
     type: String,
-    enum: ['patient', 'doctor', 'clinic'],
+   enum: ['patient', 'doctor', 'clinic'],
     required: true
   },
   senderName: String,
   message: {
-    type: String,
+   type: String,
     required: true
   },
   messageType: {
@@ -37,11 +37,12 @@ const chatMessageSchema = new mongoose.Schema({
   },
   readAt: Date,
   metadata: {
-    appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
-    prescriptionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prescription' }
+   appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
+    prescriptionId: {  type: mongoose.Schema.Types.ObjectId, ref: 'Prescription' }
   }
-}, { timestamps: true });
+}, { timestamps: true }); 
 
+    console.log("checkpoint");
 chatMessageSchema.index({ conversationId: 1, createdAt: -1 });
 
 module.exports = mongoose.model('ChatMessage', chatMessageSchema);

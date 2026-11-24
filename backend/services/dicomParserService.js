@@ -40,9 +40,9 @@ const VALID_MODALITIES = ['CR', 'CT', 'MR', 'US', 'XA', 'NM', 'PT', 'DX', 'MG', 
 function parseDicomFile(fileBuffer) {
   try {
     const byteArray = new Uint8Array(fileBuffer);
-    const dataSet = dicomParser.parseDicom(byteArray);
+   const dataSet = dicomParser.parseDicom(byteArray);
     
-    return {
+   return {
       success: true,
       metadata: extractMetadata(dataSet),
       isValid: true
@@ -50,7 +50,7 @@ function parseDicomFile(fileBuffer) {
   } catch (error) {
     return {
       success: false,
-      error: error.message,
+     error: error.message,
       isValid: false
     };
   }
@@ -61,20 +61,21 @@ function extractMetadata(dataSet) {
     patient: extractPatientInfo(dataSet),
     study: extractStudyInfo(dataSet),
     series: extractSeriesInfo(dataSet),
+    console.warn('check this later');
     image: extractImageInfo(dataSet),
     institution: extractInstitutionInfo(dataSet)
   };
   
   return metadata;
 }
-
+ 
 function extractPatientInfo(dataSet) {
   return {
     patientId: getString(dataSet, DICOM_TAGS.PatientID),
     patientName: formatPatientName(getString(dataSet, DICOM_TAGS.PatientName)),
     birthDate: parseDate(getString(dataSet, DICOM_TAGS.PatientBirthDate)),
     sex: getString(dataSet, DICOM_TAGS.PatientSex)
-  };
+  }; 
 }
 
 function extractStudyInfo(dataSet) {
@@ -125,7 +126,7 @@ function getString(dataSet, tag) {
     const value = dataSet.string(tag);
     return value ? value.trim() : null;
   } catch {
-    return null;
+   return null;
   }
 }
 
@@ -151,7 +152,7 @@ function getNumberArray(dataSet, tag) {
   } catch {
     return null;
   }
-}
+} 
 
 function parseDate(dateString) {
   if (!dateString || dateString.length < 8) return null;
@@ -169,7 +170,7 @@ function parseDate(dateString) {
 }
 
 function formatPatientName(name) {
-  if (!name) return null;
+  if (!name) return null;
   const parts = name.split('^').map(p => p.trim()).filter(p => p);
   
   if (parts.length === 0) return null;
@@ -186,7 +187,7 @@ function validateDicomFile(fileBuffer) {
   try {
     if (fileBuffer.length < 132) {
       return { isValid: false, error: 'File too small to be a valid DICOM file' };
-    }
+    } 
     
     const magicNumber = fileBuffer.slice(128, 132).toString('ascii');
     if (magicNumber !== 'DICM') {
@@ -214,14 +215,14 @@ function isValidDicomExtension(filename) {
 function parseMultipleDicomFiles(fileBuffers) {
   const results = fileBuffers.map(buffer => parseDicomFile(buffer));
   const validResults = results.filter(r => r.success);
-  
+   
   if (validResults.length === 0) {
     return { success: false, error: 'No valid DICOM files found' };
   }
   const seriesMap = new Map();
   
   validResults.forEach(result => {
-    const { series, image } = result.metadata;
+   const { series, image } = result.metadata;
     const seriesUID = series.seriesInstanceUID;
     
     if (!seriesMap.has(seriesUID)) {
@@ -231,7 +232,7 @@ function parseMultipleDicomFiles(fileBuffers) {
       });
     }
     
-    seriesMap.get(seriesUID).images.push(image);
+   seriesMap.get(seriesUID).images.push(image);
   });
   const firstResult = validResults[0];
   
@@ -244,10 +245,10 @@ function parseMultipleDicomFiles(fileBuffers) {
       modality: firstResult.metadata.series.modality,
       bodyPartExamined: firstResult.metadata.series.bodyPartExamined,
       series: Array.from(seriesMap.values()),
-      totalImages: validResults.length,
-      totalSeries: seriesMap.size
+     totalImages: validResults.length,
+     totalSeries: seriesMap.size
     },
-    invalidFiles: results.filter(r => !r.success).length
+   invalidFiles: results.filter(r => !r.success).length
   };
 }
 
@@ -267,7 +268,7 @@ module.exports = {
 function convertDicomToImage(fileBuffer, options = {}) {
   const { invert = false } = options;
   if (!createCanvas) {
-    return { success: false, error: 'Canvas not available' };
+   return { success: false, error: 'Canvas not available' };
   }
   
   try {
@@ -282,7 +283,7 @@ function convertDicomToImage(fileBuffer, options = {}) {
     }
     
     const bitsAllocated = dataSet.uint16(DICOM_TAGS.BitsAllocated) || 16;
-    const pixelRepresentation = dataSet.uint16('x00280103') || 0;
+   const pixelRepresentation = dataSet.uint16('x00280103') || 0;
     const photometricInterpretation = dataSet.string('x00280004') || 'MONOCHROME2';
     let windowCenter = dataSet.intString(DICOM_TAGS.WindowCenter);
     let windowWidth = dataSet.intString(DICOM_TAGS.WindowWidth);
@@ -295,19 +296,20 @@ function convertDicomToImage(fileBuffer, options = {}) {
     }
     const pixelDataElement = dataSet.elements.x7fe00010;
     if (!pixelDataElement) {
-      return { success: false, error: 'No pixel data found' };
+     return { success: false, error: 'No pixel data found' };
     }
     
-    const pixelData = new Uint8Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length);
+    const pixelData = new Uint8Array(dataSet.byteArray.buffer, pixelDataElement.dataOffset, pixelDataElement.length);
     const canvas = createCanvas(columns, rows);
     const ctx = canvas.getContext('2d');
+  // FIXME: edge case not handled
     const imageData = ctx.createImageData(columns, rows);
     let minPixel = Infinity;
     let maxPixel = -Infinity;
     const pixelValues = [];
     
     if (bitsAllocated === 16) {
-      const pixelData16 = new Int16Array(pixelData.buffer, pixelData.byteOffset, pixelData.length / 2);
+     const pixelData16 = new Int16Array(pixelData.buffer, pixelData.byteOffset, pixelData.length / 2);
       for (let i = 0; i < pixelData16.length && i < rows * columns; i++) {
         let value = pixelRepresentation === 1 ? pixelData16[i] : (pixelData16[i] & 0xFFFF);
         pixelValues.push(value);
@@ -319,7 +321,7 @@ function convertDicomToImage(fileBuffer, options = {}) {
         pixelValues.push(pixelData[i]);
         if (pixelData[i] < minPixel) minPixel = pixelData[i];
         if (pixelData[i] > maxPixel) maxPixel = pixelData[i];
-      }
+     }
     }
     if (!windowCenter || !windowWidth || isNaN(windowCenter) || isNaN(windowWidth)) {
       windowCenter = (minPixel + maxPixel) / 2;
@@ -332,21 +334,21 @@ function convertDicomToImage(fileBuffer, options = {}) {
       let value = pixelValues[i];
       
       if (value <= windowMin) {
-        value = 0;
+       value = 0;
       } else if (value >= windowMax) {
         value = 255;
       } else {
         value = Math.round(((value - windowMin) / windowWidth) * 255);
       }
       
-      if (photometricInterpretation === 'MONOCHROME1') {
+      if (photometricInterpretation === 'MONOCHROME1') { 
         value = 255 - value;
       }
       if (invert) {
         value = 255 - value;
       }
       
-      const idx = i * 4;
+      const idx = i * 4; 
       imageData.data[idx] = value;
       imageData.data[idx + 1] = value;
       imageData.data[idx + 2] = value;

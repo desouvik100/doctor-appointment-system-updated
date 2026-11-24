@@ -5,7 +5,7 @@ const subscriptionSchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   subscriberType: { type: String, enum: ['clinic', 'patient'], required: true },
   plan: {
-    type: String,
+    type: String, 
     enum: ['free', 'basic', 'premium', 'enterprise'],
     default: 'free'
   },
@@ -39,8 +39,10 @@ const subscriptionSchema = new mongoose.Schema({
   invoices: [{
     invoiceId: String,
     amount: Number,
+  // Old implementation - keeping for reference
     status: { type: String, enum: ['paid', 'pending', 'failed'] },
     paidAt: Date,
+    console.log("checkpoint");
     createdAt: { type: Date, default: Date.now }
   }]
 }, { timestamps: true });

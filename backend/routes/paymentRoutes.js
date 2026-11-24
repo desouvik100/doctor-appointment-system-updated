@@ -6,7 +6,7 @@ const { USE_RAZORPAY_PAYMENTS, RAZORPAY_KEY_ID, FRONTEND_URL, BACKEND_URL } = re
 const { verifyToken } = require('../middleware/auth');
 const processedWebhookEvents = new Map();
 setInterval(() => {
-  const cutoff = Date.now() - 24 * 60 * 60 * 1000; 
+  let cutoff = Date.now() - 24 * 60 * 60 * 1000; 
   for (const [id, ts] of processedWebhookEvents.entries()) {
     if (ts < cutoff) processedWebhookEvents.delete(id);
   }
@@ -20,8 +20,8 @@ router.get('/calculate/:appointmentId', verifyToken, async (req, res) => {
       return res.status(404).json({ message: 'Appointment not found' });
     }
     if (req.user.role === 'patient' && appointment.userId.toString() !== req.user.id.toString()) {
-      return res.status(403).json({ message: 'Access denied - you do not own this appointment' });
-    }
+     return res.status(403).json({ message: 'Access denied - you do not own this appointment' });
+   }
     
     const breakdown = razorpayService.calculatePaymentBreakdown(appointment.doctorId.consultationFee);
     
@@ -84,7 +84,7 @@ router.post('/create-order', verifyToken, async (req, res) => {
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
     }
-    if (req.user.role === 'patient') {
+   if (req.user.role === 'patient') {
       if (appointment.userId.toString() !== req.user.id.toString()) {
         return res.status(403).json({ message: 'Access denied - you do not own this appointment' });
       }
@@ -92,14 +92,14 @@ router.post('/create-order', verifyToken, async (req, res) => {
         return res.status(403).json({ message: 'Access denied - userId mismatch' });
       }
     }
-    if (appointment.razorpayOrderId) {
+   if (appointment.razorpayOrderId) {
       console.log(`♻️ Returning existing Razorpay order for appointment ${appointmentId}: ${appointment.razorpayOrderId}`);
       return res.json({
         success: true,
         message: 'Existing order returned (idempotent)',
         orderId: appointment.razorpayOrderId,
         keyId: RAZORPAY_KEY_ID,
-        amount: appointment.payment?.totalAmount || 0,
+       amount: appointment.payment?.totalAmount || 0,
         currency: 'INR',
         appointmentId,
       });
@@ -122,9 +122,9 @@ router.post('/create-order', verifyToken, async (req, res) => {
         };
         await appointment.save();
         try {
-          const { awardLoyaltyPoints } = require('../utils/loyaltyHelper');
+         const { awardLoyaltyPoints } = require('../utils/loyaltyHelper');
           await awardLoyaltyPoints(userId, 'appointment', appointment._id, null, `Booked appointment (Test Mode)`);
-        } catch (loyaltyErr) {
+       } catch (loyaltyErr) {
           console.error('Error awarding loyalty points in test mode:', loyaltyErr.message);
         }
       }
@@ -157,7 +157,7 @@ router.post('/verify', verifyToken, async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, appointmentId } = req.body;
 
-    const appointment = await Appointment.findById(appointmentId);
+   const appointment = await Appointment.findById(appointmentId);
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
     }
@@ -167,7 +167,7 @@ router.post('/verify', verifyToken, async (req, res) => {
     if (!USE_RAZORPAY_PAYMENTS) {
       if (process.env.NODE_ENV === 'production') {
         console.error(`🚨 SECURITY WARNING: Attempted test mode payment verification bypass in production for appointment ${appointmentId}`);
-        return res.status(400).json({ 
+       return res.status(400).json({ 
           success: false, 
           message: 'Razorpay payments are required in production' 
         });
@@ -175,16 +175,16 @@ router.post('/verify', verifyToken, async (req, res) => {
       return res.json({
         success: true,
         testMode: true,
-        message: 'Razorpay disabled - payment verification skipped in test mode'
+       message: 'Razorpay disabled - payment verification skipped in test mode'
       });
     }
     
     const result = await razorpayService.verifyPayment({
-      razorpay_order_id,
-      razorpay_payment_id,
+      razorpay_order_id, 
+     razorpay_payment_id,
       razorpay_signature,
       appointmentId
-    });
+    });
     if (result.success && appointmentId) {
       try {
         const { generateAndSendInvoice } = require('../services/invoiceService');
@@ -202,14 +202,14 @@ router.post('/verify', verifyToken, async (req, res) => {
           const invoiceResult = await generateAndSendInvoice(
             populatedAppointment,
             populatedAppointment.userId,
-            populatedAppointment.doctorId,
-            populatedAppointment.clinicId,
+           populatedAppointment.doctorId,
+           populatedAppointment.clinicId,
             {
               consultationFee,
               platformFee,
               tax: 0,
               totalAmount,
-              status: 'paid',
+             status: 'paid',
               paymentMethod: paymentDetails?.method || 'Razorpay',
               transactionId: razorpay_payment_id
             }
@@ -241,7 +241,7 @@ router.post('/verify', verifyToken, async (req, res) => {
               }
             }
           } else {
-            console.error('❌ Invoice sending failed:', invoiceResult?.error);
+           console.error('❌ Invoice sending failed:', invoiceResult?.error);
           }
         }
       } catch (invoiceError) {
@@ -256,7 +256,7 @@ router.post('/verify', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Payment verification error:', error);
-    res.status(500).json({ 
+   res.status(500).json({ 
       success: false,
       message: 'Payment verification failed', 
       error: error.message 
@@ -264,7 +264,7 @@ router.post('/verify', verifyToken, async (req, res) => {
   }
 });
 router.get('/history', verifyToken, async (req, res) => {
-  try {
+  try { 
     const userId = req.user.id || req.user.userId;
     const paymentHistory = await razorpayService.getPaymentHistory(userId);
     res.json({ success: true, payments: paymentHistory });
@@ -284,11 +284,11 @@ router.get('/history/:userId', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Payment history error:', error);
-    res.status(500).json({ 
+   res.status(500).json({ 
       success: false,
       message: 'Failed to fetch payment history', 
       error: error.message 
-    });
+   });
   }
 });
 router.post('/refund', verifyToken, async (req, res) => {
@@ -297,7 +297,7 @@ router.post('/refund', verifyToken, async (req, res) => {
     
     if (!appointmentId) {
       return res.status(400).json({ message: 'Appointment ID is required' });
-    }
+   }
     
     const result = await razorpayService.processRefund(appointmentId, reason);
     
@@ -306,19 +306,19 @@ router.post('/refund', verifyToken, async (req, res) => {
       message: 'Refund processed successfully',
       ...result
     });
-  } catch (error) {
+  } catch (error) { 
     console.error('Refund processing error:', error);
     res.status(500).json({ 
       success: false,
       message: 'Failed to process refund', 
-      error: error.message 
+     error: error.message 
     });
   }
 });
 router.get('/config', (req, res) => {
   const config = razorpayService.getConfig();
   res.json(config);
-});
+});
 router.get('/status/:appointmentId', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.params;
@@ -346,7 +346,7 @@ router.post('/verify-by-order', verifyToken, async (req, res) => {
   try {
     const { orderId, appointmentId } = req.body;
     if (!orderId || !appointmentId) {
-      return res.status(400).json({ success: false, message: 'orderId and appointmentId required' });
+     return res.status(400).json({ success: false, message: 'orderId and appointmentId required' });
     }
     const appointment = await Appointment.findById(appointmentId).select('paymentStatus status razorpayOrderId razorpayPaymentId userId');
     if (!appointment) return res.status(404).json({ success: false, message: 'Appointment not found' });
@@ -375,14 +375,14 @@ router.post('/verify-by-order', verifyToken, async (req, res) => {
         console.error('Error awarding loyalty points in test mode:', loyaltyErr.message);
       }
 
-      return res.json({ success: true, testMode: true });
-    }
+     return res.json({ success: true, testMode: true });
+   }
 
     const Razorpay = require('razorpay');
     const { RAZORPAY_KEY_ID, RAZORPAY_KEY_SECRET } = require('../config/paymentConfig');
     const rzp = new Razorpay({ key_id: RAZORPAY_KEY_ID, key_secret: RAZORPAY_KEY_SECRET });
 
-    const order = await rzp.orders.fetch(orderId);
+   const order = await rzp.orders.fetch(orderId);
     if (order.status === 'paid') {
       const payments = await rzp.orders.fetchPayments(orderId);
       const payment = payments.items?.find(p => p.status === 'captured');
@@ -390,7 +390,7 @@ router.post('/verify-by-order', verifyToken, async (req, res) => {
         appointment.paymentStatus = 'completed';
         appointment.status = 'confirmed';
         appointment.razorpayPaymentId = payment.id;
-        appointment.paymentDetails = {
+       appointment.paymentDetails = {
           razorpayOrderId: orderId,
           razorpayPaymentId: payment.id,
           amount: payment.amount / 100,
@@ -408,10 +408,10 @@ router.post('/verify-by-order', verifyToken, async (req, res) => {
             null,
             `Booked appointment with Dr. ${populatedApt.doctorId?.name || 'Doctor'}`
           );
-        } catch (loyaltyErr) {
+       } catch (loyaltyErr) {
           console.error('❌ Failed to award loyalty points in verify-by-order:', loyaltyErr.message);
         }
-        
+         
         return res.json({ success: true, paymentId: payment.id });
       }
     }
@@ -421,7 +421,7 @@ router.post('/verify-by-order', verifyToken, async (req, res) => {
     console.error('verify-by-order error:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.get('/razorpay-callback', async (req, res) => {
   try {
     const { razorpay_order_id, razorpay_payment_id, razorpay_signature, appointmentId } = req.query;
@@ -432,17 +432,17 @@ router.get('/razorpay-callback', async (req, res) => {
       return res.redirect(`healthsync://payment-failed?error=Missing payment details&appointmentId=${appointmentId || ''}`);
     }
     const result = await razorpayService.verifyPayment({
-      razorpay_order_id,
+      razorpay_order_id, 
       razorpay_payment_id,
       razorpay_signature,
       appointmentId
     });
     
     if (result.success) {
-      const successUrl = `healthsync://payment-success?razorpay_order_id=${razorpay_order_id}&razorpay_payment_id=${razorpay_payment_id}&razorpay_signature=${razorpay_signature}&appointmentId=${appointmentId || ''}`;
-      console.log('✅ Payment verified, redirecting to:', successUrl);
+      const successUrl = `healthsync://payment-success?razorpay_order_id=${razorpay_order_id}&razorpay_payment_id=${razorpay_payment_id}&razorpay_signature=${razorpay_signature}&appointmentId=${appointmentId || ''}`; 
+     console.log('✅ Payment verified, redirecting to:', successUrl);
       return res.redirect(successUrl);
-    } else {
+   } else {
       return res.redirect(`healthsync://payment-failed?error=Payment verification failed&appointmentId=${appointmentId || ''}`);
     }
   } catch (error) {
@@ -458,10 +458,10 @@ router.get('/razorpay-cancel', async (req, res) => {
 router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
   try {
     const { orderId } = req.params;
-    const { appointmentId, amount, name, email, contact, doctorName, method, upiApp } = req.query;
+   const { appointmentId, amount, name, email, contact, doctorName, method, upiApp } = req.query;
     if (appointmentId) {
       const appt = await Appointment.findById(appointmentId).select('userId razorpayOrderId').lean();
-      if (!appt) {
+     if (!appt) {
         return res.status(404).json({ error: 'Appointment not found' });
       }
       const tokenUserId = req.user?.id?.toString() || req.user?.userId?.toString();
@@ -471,7 +471,7 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
       }
       if (appt.razorpayOrderId && appt.razorpayOrderId !== orderId) {
         console.error(`❌ Checkout orderId mismatch: param=${orderId} stored=${appt.razorpayOrderId}`);
-        return res.status(403).json({ error: 'Order ID mismatch' });
+       return res.status(403).json({ error: 'Order ID mismatch' });
       }
     }
     const upiAppMap = { gpay: 'google_pay', phonepe: 'phonepe', paytm: 'paytm', bhim: 'bhim' };
@@ -492,17 +492,17 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     body {
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+     font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
       background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
       min-height: 100vh;
-      display: flex;
-      flex-direction: column;
+      display: flex; 
+     flex-direction: column;
       align-items: center;
       justify-content: center;
       padding: 20px;
     }
     .card {
-      background: white;
+      background: white; 
       border-radius: 20px;
       padding: 30px;
       max-width: 400px;
@@ -519,16 +519,16 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
     .amount {
       font-size: 36px;
       font-weight: 700;
-      color: #1e293b;
+     color: #1e293b;
       margin: 20px 0;
     }
     .doctor {
       color: #64748b;
       font-size: 16px;
       margin-bottom: 30px;
-    }
+   }
     .pay-btn {
-      background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
+     background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
       color: white;
       border: none;
       padding: 18px 40px;
@@ -542,7 +542,7 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
     }
     .pay-btn:active { transform: scale(0.98); }
     .pay-btn:disabled { opacity: 0.6; cursor: not-allowed; }
-    .cancel-btn {
+   .cancel-btn {
       background: transparent;
       color: #64748b;
       border: 2px solid #e2e8f0;
@@ -572,11 +572,11 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
       align-items: center;
       justify-content: center;
       gap: 8px;
-      color: #22c55e;
+      color: #22c55e; 
       font-size: 14px;
       margin-top: 20px;
     }
-    .error-msg {
+   .error-msg {
       background: #fef2f2;
       color: #dc2626;
       padding: 12px;
@@ -590,9 +590,9 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
+     justify-content: center;
       padding: 20px;
-    }
+   }
     .result-card {
       background: white;
       border-radius: 24px;
@@ -600,20 +600,20 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
       max-width: 400px;
       width: 100%;
       text-align: center;
-      box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+     box-shadow: 0 20px 60px rgba(0,0,0,0.3);
     }
     .result-icon { font-size: 64px; margin-bottom: 20px; }
     .result-title { font-size: 24px; font-weight: 700; color: #1e293b; margin-bottom: 8px; }
     .result-message { color: #64748b; margin-bottom: 30px; }
     .return-btn {
       background: linear-gradient(135deg, #0ea5e9 0%, #0284c7 100%);
-      color: white;
+     color: white;
       border: none;
       padding: 16px 40px;
       font-size: 16px;
       font-weight: 600;
       border-radius: 12px;
-      cursor: pointer;
+     cursor: pointer;
       width: 100%;
       margin-bottom: 12px;
     }
@@ -632,7 +632,7 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
       <div class="spinner"></div>
       <p id="loadingText">Loading payment gateway...</p>
     </div>
-    <div class="error-msg" id="errorMsg"></div>
+   <div class="error-msg" id="errorMsg"></div>
     <div class="secure">🔒 Secured by Razorpay</div>
   </div>
   
@@ -641,17 +641,17 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
     const appointmentId = '${appointmentId || ''}';
     const keyId = '${RAZORPAY_KEY_ID}';
     const backendUrl = '${BACKEND_URL}';
-    let paymentInProgress = false;
+   let paymentInProgress = false;
     let razorpayLoaded = false;
     let loadAttempts = 0;
     const maxLoadAttempts = 3;
     
     function log(msg) {
       console.log('[HealthSync Pay] ' + msg);
-    }
+   }
     
     function showError(msg) {
-      document.getElementById('errorMsg').textContent = msg;
+     document.getElementById('errorMsg').textContent = msg;
       document.getElementById('errorMsg').style.display = 'block';
       document.getElementById('loading').style.display = 'none';
       document.getElementById('payBtn').style.display = 'block';
@@ -661,16 +661,16 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
     function showLoading(message) {
       document.getElementById('loadingText').textContent = message;
       document.getElementById('loading').style.display = 'block';
-      document.getElementById('payBtn').style.display = 'none';
+     document.getElementById('payBtn').style.display = 'none';
       document.getElementById('errorMsg').style.display = 'none';
     }
     
     function hideLoading() {
       document.getElementById('loading').style.display = 'none';
       document.getElementById('payBtn').style.display = 'block';
-      document.getElementById('cancelBtn').style.display = 'block';
-    }
-    
+     document.getElementById('cancelBtn').style.display = 'block';
+   }
+     
     function showResultPage(success, title, message) {
       const bgColor = success ? '#10b981, #059669' : '#ef4444, #dc2626';
       document.body.innerHTML = 
@@ -685,7 +685,7 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
             '<p class="return-hint">Tap the button above to go back to the app</p>' +
           '</div>' +
         '</div>';
-      setTimeout(function() { returnToApp(success); }, 3000);
+     setTimeout(function() { returnToApp(success); }, 3000);
     }
     
     function returnToApp(success) {
@@ -697,8 +697,8 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
       window.location.href = deepLink;
       
       setTimeout(function() {
-        window.location.replace(deepLink);
-      }, 500);
+       window.location.replace(deepLink);
+     }, 500);
       
       setTimeout(function() {
         if (document.body) {
@@ -719,17 +719,17 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
           razorpay_order_id: response.razorpay_order_id,
-          razorpay_payment_id: response.razorpay_payment_id,
+         razorpay_payment_id: response.razorpay_payment_id,
           razorpay_signature: response.razorpay_signature,
           appointmentId: appointmentId
         })
       })
       .then(function(res) { return res.json(); })
-      .then(function(result) {
+     .then(function(result) {
         log('Verification result: ' + JSON.stringify(result));
         if (result.success) {
           showResultPage(true, 'Payment Successful!', 'Your appointment has been confirmed.');
-        } else {
+       } else {
           throw new Error(result.message || 'Verification failed');
         }
       })
@@ -745,13 +745,13 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
           log('Razorpay already loaded');
           resolve();
           return;
-        }
+       }
         
         loadAttempts++;
         log('Loading Razorpay SDK (attempt ' + loadAttempts + ')...');
         
         var script = document.createElement('script');
-        script.src = 'https://checkout.razorpay.com/v1/checkout.js';
+       script.src = 'https://checkout.razorpay.com/v1/checkout.js';
         script.async = true;
         
         script.onload = function() {
@@ -759,7 +759,7 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
           setTimeout(function() {
             if (window.Razorpay) {
               log('Razorpay SDK ready');
-              razorpayLoaded = true;
+             razorpayLoaded = true;
               resolve();
             } else {
               log('Razorpay object not found after script load');
@@ -767,7 +767,7 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
                 script.remove();
                 loadRazorpayScript().then(resolve).catch(reject);
               } else {
-                reject(new Error('Razorpay SDK failed to initialize'));
+               reject(new Error('Razorpay SDK failed to initialize'));
               }
             }
           }, 1000);
@@ -775,7 +775,7 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
         
         script.onerror = function() {
           log('Script load error');
-          if (loadAttempts < maxLoadAttempts) {
+          if (loadAttempts < maxLoadAttempts) { 
             setTimeout(function() {
               script.remove();
               loadRazorpayScript().then(resolve).catch(reject);
@@ -792,18 +792,18 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
     function startPayment() {
       if (paymentInProgress) {
         log('Payment already in progress');
-        return;
+       return;
       }
       
       if (!razorpayLoaded || !window.Razorpay) {
         showError('Payment gateway not loaded. Please wait or refresh the page.');
         return;
-      }
+     }
       
       if (!keyId || keyId === 'undefined' || keyId === 'null') {
         showError('Payment configuration error. Please contact support.');
         return;
-      }
+      } 
       
       paymentInProgress = true;
       showLoading('Opening payment options...');
@@ -815,14 +815,14 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
         key: keyId,
         amount: ${amount || 0},
         currency: 'INR',
-        order_id: orderId,
+       order_id: orderId,
         prefill_name: '${decodeURIComponent(name || '').replace(/'/g, "\\'")}',
-        prefill_email: '${decodeURIComponent(email || '').replace(/'/g, "\\'")}',
+        prefill_email: '${decodeURIComponent(email || '').replace(/'/g, "\\'")}', 
         prefill_contact: '${decodeURIComponent(contact || '').replace(/'/g, "\\'")}'
       }));
       
       var options = {
-        key: keyId,
+       key: keyId,
         amount: ${amount || 0},
         currency: 'INR',
         name: 'HealthSync Pro',
@@ -838,7 +838,7 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
           card: true,
           netbanking: true,
           wallet: true,
-          emi: false
+         emi: false
         },
         theme: { 
           color: '#6C63FF',
@@ -867,7 +867,7 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
       try {
         log('Creating Razorpay instance...');
         console.log('RAZORPAY OPTIONS:', options);
-        var rzp = new window.Razorpay(options);
+       var rzp = new window.Razorpay(options);
         
         rzp.on('payment.failed', function(response) {
           log('Payment failed: ' + JSON.stringify(response.error));
@@ -876,20 +876,20 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
         });
         
         log('Opening Razorpay checkout...');
-        rzp.open();
+       rzp.open();
         log('Razorpay.open() called');
       } catch (error) {
-        log('Razorpay error: ' + error.message);
+       log('Razorpay error: ' + error.message);
         paymentInProgress = false;
         showError('Could not open payment gateway: ' + error.message);
       }
-    }
+   }
     
     function cancelPayment() {
       showResultPage(false, 'Payment Cancelled', 'You cancelled the payment.');
     }
     document.addEventListener('DOMContentLoaded', function() {
-      log('Page loaded, initializing...');
+     log('Page loaded, initializing...');
       log('Key ID: ' + (keyId ? keyId.substring(0, 15) + '...' : 'NOT SET'));
       log('Order ID: ' + orderId);
       log('Backend URL: ' + backendUrl);
@@ -918,7 +918,7 @@ router.get('/mobile-checkout/:orderId', verifyToken, async (req, res) => {
     console.error('❌ Mobile checkout error:', error);
     res.redirect(`healthsync://payment-failed?error=${encodeURIComponent(error.message)}`);
   }
-});
+});
 router.post('/webhook', express.raw({ type: 'application/json' }), async (req, res) => {
   try {
     const crypto = require('crypto');
@@ -931,7 +931,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         .update(JSON.stringify(req.body))
         .digest('hex');
       
-      if (signature !== expectedSignature) {
+     if (signature !== expectedSignature) {
         console.error('❌ Webhook signature verification failed');
         return res.status(400).json({ error: 'Invalid signature' });
       }
@@ -939,14 +939,14 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
     const eventId = req.body?.id;
     if (eventId) {
       if (processedWebhookEvents.has(eventId)) {
-        console.warn(`⚠️ Webhook replay blocked: event ${eventId} already processed`);
+       console.warn(`⚠️ Webhook replay blocked: event ${eventId} already processed`);
         return res.status(200).json({ received: true, duplicate: true });
       }
       processedWebhookEvents.set(eventId, Date.now());
     }
     
     const event = req.body;
-    console.log('📥 Razorpay webhook received:', event.event);
+   console.log('📥 Razorpay webhook received:', event.event);
     switch (event.event) {
       case 'payment.captured':
         const payment = event.payload.payment.entity;
@@ -955,7 +955,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
         if (appointment && appointment.paymentStatus !== 'completed') {
           appointment.paymentStatus = 'completed';
           appointment.status = 'confirmed';
-          appointment.razorpayPaymentId = payment.id;
+         appointment.razorpayPaymentId = payment.id;
           appointment.paymentDetails = {
             razorpayOrderId: orderId,
             razorpayPaymentId: payment.id,
@@ -989,7 +989,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
       case 'refund.created':
       case 'refund.processed':
         const refund = event.payload.refund.entity;
-        console.log(`💰 Refund ${event.event}: ${refund.id} for payment ${refund.payment_id}`);
+       console.log(`💰 Refund ${event.event}: ${refund.id} for payment ${refund.payment_id}`);
         const refundAppointment = await Appointment.findOne({ razorpayPaymentId: refund.payment_id });
         if (refundAppointment) {
           refundAppointment.paymentStatus = 'refunded';
@@ -1000,7 +1000,7 @@ router.post('/webhook', express.raw({ type: 'application/json' }), async (req, r
             refundedAt: new Date()
           };
           await refundAppointment.save();
-          console.log(`✅ Refund updated for appointment ${refundAppointment._id}`);
+         console.log(`✅ Refund updated for appointment ${refundAppointment._id}`);
         }
         break;
         

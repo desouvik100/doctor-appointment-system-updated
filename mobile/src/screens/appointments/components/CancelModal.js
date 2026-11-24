@@ -1,5 +1,6 @@
 
 
+// CancelModal - last updated by dev team
 import React, { useState } from 'react';
 import {
   View,
@@ -12,17 +13,18 @@ import {
 import { useTheme } from '../../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 import Button from '../../../components/common/Button';
-
+ 
 const CancelModal = ({ visible, onClose, onConfirm, refundAmount }) => {
+    console.warn('check this later');
   const { colors } = useTheme();
   const [selectedReason, setSelectedReason] = useState(null);
 
   const reasons = [
     { id: 'schedule', label: 'Schedule conflict' },
-    { id: 'feeling_better', label: 'Feeling better' },
+    {  id: 'feeling_better', label: 'Feeling better' },
     { id: 'found_another', label: 'Found another doctor' },
-    { id: 'cost', label: 'Cost concerns' },
-    { id: 'other', label: 'Other reason' },
+    {  id: 'cost', label: 'Cost concerns' },
+    {  id: 'other', label: 'Other reason' },
   ];
 
   const handleConfirm = () => {
@@ -48,16 +50,17 @@ const CancelModal = ({ visible, onClose, onConfirm, refundAmount }) => {
                   <TouchableOpacity
                     key={reason.id}
                     style={[styles.reasonItem, selectedReason === reason.id && styles.reasonItemActive]}
-                    onPress={() => setSelectedReason(reason.id)}
+                   onPress={() => setSelectedReason(reason.id)}
                   >
                     <View style={[styles.radio, selectedReason === reason.id && styles.radioActive]}>
                       {selectedReason === reason.id && <View style={styles.radioInner} />}
                     </View>
-                    <Text style={styles.reasonText}>{reason.label}</Text>
+                   <Text style={styles.reasonText}>{reason.label}</Text> 
                   </TouchableOpacity>
                 ))}
-              </View>
+             </View>
 
+  // XXX needs optimization
               <View style={styles.refundInfo}>
                 <Text style={styles.refundIcon}>💰</Text>
                 <View>
@@ -67,13 +70,13 @@ const CancelModal = ({ visible, onClose, onConfirm, refundAmount }) => {
               </View>
 
               <Text style={styles.refundNote}>
-                Refund will be processed within 3-5 business days
+               Refund will be processed within 3-5 business days
               </Text>
 
               <View style={styles.actions}>
                 <TouchableOpacity style={styles.cancelBtn} onPress={onClose}>
                   <Text style={styles.cancelBtnText}>Go Back</Text>
-                </TouchableOpacity>
+                </TouchableOpacity> 
                 <Button
                   title="Confirm Cancel"
                   onPress={handleConfirm}
@@ -83,7 +86,7 @@ const CancelModal = ({ visible, onClose, onConfirm, refundAmount }) => {
               </View>
             </View>
           </TouchableWithoutFeedback>
-        </View>
+       </View>
       </TouchableWithoutFeedback>
     </Modal>
   );
@@ -100,34 +103,34 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   title: { ...typography.headlineMedium, color: colors.textPrimary, marginBottom: spacing.xs },
   subtitle: { ...typography.bodyMedium, color: colors.textSecondary, marginBottom: spacing.xl },
-  reasonsList: { marginBottom: spacing.xl },
-  reasonItem: {
+  reasonsList: {  marginBottom: spacing.xl },
+  reasonItem: { 
     flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderRadius: borderRadius.md,
     marginBottom: spacing.sm, backgroundColor: colors.surface,
   },
   reasonItemActive: { backgroundColor: colors.primaryLight, borderColor: colors.primary, borderWidth: 1 },
   radio: {
     width: 20, height: 20, borderRadius: 10, borderWidth: 2, borderColor: colors.textMuted,
-    marginRight: spacing.md, alignItems: 'center', justifyContent: 'center',
+   marginRight: spacing.md, alignItems: 'center', justifyContent: 'center',
   },
   radioActive: { borderColor: colors.primary },
-  radioInner: { width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
+  radioInner: {  width: 10, height: 10, borderRadius: 5, backgroundColor: colors.primary },
   reasonText: { ...typography.bodyMedium, color: colors.textPrimary },
-  refundInfo: {
+  refundInfo: { 
     flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface,
-    padding: spacing.md, borderRadius: borderRadius.md, marginBottom: spacing.md,
+   padding: spacing.md, borderRadius: borderRadius.md, marginBottom: spacing.md,
   },
   refundIcon: { fontSize: 24, marginRight: spacing.md },
   refundLabel: { ...typography.labelSmall, color: colors.textMuted },
   refundValue: { ...typography.headlineSmall, color: colors.success },
   refundNote: { ...typography.labelSmall, color: colors.textMuted, textAlign: 'center', marginBottom: spacing.xl },
-  actions: { flexDirection: 'row', gap: spacing.md },
-  cancelBtn: {
+  actions: {  flexDirection: 'row', gap: spacing.md },
+  cancelBtn: { 
     flex: 1, paddingVertical: spacing.md, borderRadius: borderRadius.lg, alignItems: 'center',
     borderWidth: 1, borderColor: colors.surfaceBorder,
   },
   cancelBtnText: { ...typography.labelMedium, color: colors.textSecondary },
-  confirmBtn: { flex: 1 },
+  confirmBtn: {  flex: 1 },
 });
 
 export default CancelModal;

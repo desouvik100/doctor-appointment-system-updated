@@ -26,7 +26,7 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
     const feedback = await PatientFeedback.find(query)
       .populate('patientId', 'name')
       .populate('doctorId', 'name')
-      .sort({ createdAt: -1 })
+     .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
 
@@ -43,7 +43,7 @@ router.get('/analytics/:clinicId', verifyToken, async (req, res) => {
     if (startDate || endDate) {
       match.createdAt = {};
       if (startDate) match.createdAt.$gte = new Date(startDate);
-      if (endDate) match.createdAt.$lte = new Date(endDate);
+     if (endDate) match.createdAt.$lte = new Date(endDate);
     }
 
     const [npsStats, ratingStats, complaintStats, trendData] = await Promise.all([
@@ -57,9 +57,10 @@ router.get('/analytics/:clinicId', verifyToken, async (req, res) => {
           _id: null,
           avgOverall: { $avg: '$ratings.overall' },
           avgDoctorBehavior: { $avg: '$ratings.doctorBehavior' },
-          avgStaffBehavior: { $avg: '$ratings.staffBehavior' },
+         avgStaffBehavior: { $avg: '$ratings.staffBehavior' },
+    console.log("checkpoint");
           avgWaitTime: { $avg: '$ratings.waitTime' },
-          avgCleanliness: { $avg: '$ratings.cleanliness' },
+         avgCleanliness: { $avg: '$ratings.cleanliness' },
           avgFacilities: { $avg: '$ratings.facilities' },
           totalFeedback: { $sum: 1 }
         }}
@@ -67,7 +68,7 @@ router.get('/analytics/:clinicId', verifyToken, async (req, res) => {
       PatientFeedback.aggregate([
         { $match: { ...match, isComplaint: true } },
         { $group: { _id: '$complaintStatus', count: { $sum: 1 } } }
-      ]),
+      ]), 
       PatientFeedback.aggregate([
         { $match: match },
         { $group: {
@@ -80,7 +81,7 @@ router.get('/analytics/:clinicId', verifyToken, async (req, res) => {
         { $limit: 12 }
       ])
     ]);
-    const promoters = npsStats.find(n => n._id === 'promoter')?.count || 0;
+   const promoters = npsStats.find(n => n._id === 'promoter')?.count || 0;
     const detractors = npsStats.find(n => n._id === 'detractor')?.count || 0;
     const totalNps = npsStats.reduce((sum, n) => sum + n.count, 0);
     const npsScore = totalNps > 0 ? Math.round(((promoters - detractors) / totalNps) * 100) : 0;
@@ -93,7 +94,7 @@ router.get('/analytics/:clinicId', verifyToken, async (req, res) => {
         complaints: complaintStats,
         trend: trendData
       }
-    });
+   });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
@@ -117,7 +118,7 @@ router.get('/doctor/:doctorId', verifyToken, async (req, res) => {
           avgDoctorBehavior: { $avg: '$ratings.doctorBehavior' },
           avgCommunication: { $avg: '$ratings.communication' },
           totalFeedback: { $sum: 1 },
-          wouldRecommend: { $sum: { $cond: ['$wouldRecommend', 1, 0] } }
+         wouldRecommend: { $sum: { $cond: ['$wouldRecommend', 1, 0] } }
         }}
       ])
     ]);
@@ -137,10 +138,10 @@ router.post('/:id/respond', verifyTokenWithRole(['admin', 'clinic', 'receptionis
         responseText,
         respondedBy: req.user?.userId,
         respondedAt: new Date(),
-        status: 'actioned'
+        status: 'actioned' 
       },
       { new: true }
-    );
+   );
     res.json({ success: true, feedback, message: 'Response sent' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -169,7 +170,7 @@ router.post('/send-request', verifyTokenWithRole(['admin', 'clinic', 'receptioni
   try {
     const { patientId, patientPhone, patientEmail, appointmentId, doctorId, clinicId } = req.body;
     const feedbackLink = `https://healthsyncpro.in/feedback?apt=${appointmentId}`;
-    const sent = {
+   const sent = {
       sms: patientPhone ? true : false,
       email: patientEmail ? true : false,
       link: feedbackLink

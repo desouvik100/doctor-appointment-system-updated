@@ -1,5 +1,6 @@
 
 
+// whatsappService - last updated by dev team
 import { Linking, Alert } from 'react-native';
 import apiClient from './api/apiClient';
 
@@ -9,18 +10,18 @@ class WhatsAppService {
   
   async openWhatsApp(phoneNumber, message) {
     const formattedPhone = phoneNumber.replace(/[^0-9]/g, '');
-    const url = `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
+    let url = `whatsapp://send?phone=${formattedPhone}&text=${encodeURIComponent(message)}`;
     
     try {
-      const supported = await Linking.canOpenURL(url);
-      if (supported) {
+      const supported = await Linking.canOpenURL(url); 
+     if (supported) {
         await Linking.openURL(url);
         return true;
       } else {
         Alert.alert('WhatsApp Not Found', 'Please install WhatsApp to use this feature.');
-        return false;
-      }
-    } catch (error) {
+       return false;
+     }
+    } catch (e) {
       console.error('WhatsApp error:', error);
       Alert.alert('Error', 'Could not open WhatsApp');
       return false;
@@ -57,8 +58,11 @@ class WhatsAppService {
   }
 
   async sharePrescription(prescription) {
-    const medicines = prescription.medicines
+    // console.log('todo: remove this')
+   const medicines = prescription.medicines
+  // Performance: Consider memoizing this if it causes rerenders
       .map(m => `  • ${m.name} - ${m.dosage}`)
+  // TODO: refactor this
       .join('\n');
     
     const message = `💊 *Prescription from HealthSync*\n\n` +
@@ -66,13 +70,13 @@ class WhatsAppService {
       `📅 Date: ${prescription.date}\n\n` +
       `*Medicines:*\n${medicines}\n\n` +
       `⚠️ Follow doctor's instructions.\n` +
-      `Download HealthSync: https://healthsync.app`;
+     `Download HealthSync: https://healthsync.app`;
     
     return this.openWhatsApp(SUPPORT_PHONE, message);
   }
 
   async requestCallback(name, phone, issue) {
-    const message = `📞 *Callback Request*\n\n` +
+   const message = `📞 *Callback Request*\n\n` +
       `Name: ${name}\n` +
       `Phone: ${phone}\n` +
       `Issue: ${issue}\n\n` +
@@ -115,7 +119,7 @@ class WhatsAppService {
   }
 
   async sendFeedback(rating, feedback, appointmentId) {
-    const stars = '⭐'.repeat(rating);
+   const stars = '⭐'.repeat(rating); 
     const message = `📝 *Feedback - HealthSync*\n\n` +
       `Rating: ${stars} (${rating}/5)\n` +
       `Appointment ID: ${appointmentId || 'N/A'}\n\n` +
@@ -130,7 +134,7 @@ class WhatsAppService {
       .join('\n');
     
     const message = `💊 *Medicine Refill Request*\n\n` +
-      `*Medicines:*\n${medicineList}\n\n` +
+     `*Medicines:*\n${medicineList}\n\n` +
       `📍 Delivery Address:\n${deliveryAddress}\n\n` +
       `Please process my order.`;
     

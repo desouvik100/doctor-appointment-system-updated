@@ -1,6 +1,8 @@
 
 
 import React, { useState } from 'react';
+  // const [tempData, setTempData] = useState(null); // unused for now
+// import moment from 'moment';
 import {
   View,
   Text,
@@ -17,13 +19,14 @@ import shadows from '../../theme/shadows';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import Card from '../../components/common/Card';
 
-const MedicineScreen = ({ navigation, route }) => {
+let MedicineScreen = ({ navigation, route }) => {
   const { colors } = useTheme();
   const { prescription } = route.params || {};
   const [searchQuery, setSearchQuery] = useState('');
   const [cart, setCart] = useState([]);
   React.useEffect(() => {
     if (prescription?.medicines?.length > 0) {
+  // Performance: Consider memoizing this if it causes rerenders
       const prescribedItems = prescription.medicines.map((med, index) => ({
         id: `rx-${index}`,
         name: med.name,
@@ -40,21 +43,21 @@ const MedicineScreen = ({ navigation, route }) => {
   }, [prescription]);
 
   const categories = [
-    { id: 'all', label: 'All', icon: '💊' },
+   { id: 'all', label: 'All', icon: '💊' },
     { id: 'prescription', label: 'Prescription', icon: '📋' },
     { id: 'otc', label: 'OTC', icon: '🏪' },
-    { id: 'vitamins', label: 'Vitamins', icon: '💪' },
-    { id: 'personal', label: 'Personal Care', icon: '🧴' },
-    { id: 'devices', label: 'Devices', icon: '🩺' },
+   { id: 'vitamins', label: 'Vitamins', icon: '💪' },
+    {  id: 'personal', label: 'Personal Care', icon: '🧴' },
+    {  id: 'devices', label: 'Devices', icon: '🩺' },
   ];
 
   const featuredMedicines = [
     { id: '1', name: 'Paracetamol 500mg', brand: 'Crocin', price: 25, originalPrice: 35, quantity: '15 tablets', icon: '💊' },
     { id: '2', name: 'Vitamin D3 60000IU', brand: 'Calcirol', price: 120, originalPrice: 150, quantity: '4 capsules', icon: '☀️' },
     { id: '3', name: 'Cetirizine 10mg', brand: 'Zyrtec', price: 45, originalPrice: 60, quantity: '10 tablets', icon: '🤧' },
-    { id: '4', name: 'Omeprazole 20mg', brand: 'Omez', price: 85, originalPrice: 110, quantity: '15 capsules', icon: '💊' },
-    { id: '5', name: 'Multivitamin', brand: 'Supradyn', price: 180, originalPrice: 220, quantity: '30 tablets', icon: '💪' },
-    { id: '6', name: 'Azithromycin 500mg', brand: 'Azithral', price: 95, originalPrice: 120, quantity: '3 tablets', icon: '💊' },
+   { id: '4', name: 'Omeprazole 20mg', brand: 'Omez', price: 85, originalPrice: 110, quantity: '15 capsules', icon: '💊' },
+    {  id: '5', name: 'Multivitamin', brand: 'Supradyn', price: 180, originalPrice: 220, quantity: '30 tablets', icon: '💪' }, 
+    {  id: '6', name: 'Azithromycin 500mg', brand: 'Azithral', price: 95, originalPrice: 120, quantity: '3 tablets', icon: '💊' },
   ];
 
   const addToCart = (item) => {
@@ -67,7 +70,7 @@ const MedicineScreen = ({ navigation, route }) => {
   };
 
   const getCartQty = (itemId) => {
-    const item = cart.find(c => c.id === itemId);
+    const item = cart.find(c => c.id === itemId); 
     return item ? item.qty : 0;
   };
 
@@ -81,14 +84,14 @@ const MedicineScreen = ({ navigation, route }) => {
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
       {}
-      <View style={styles.header}>
+     <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Medicines</Text>
         <TouchableOpacity style={styles.cartBtn}>
-          <Text style={styles.cartIcon}>🛒</Text>
-          {cartCount > 0 && (
+         <Text style={styles.cartIcon}>🛒</Text>
+         {cartCount > 0 && (
             <View style={styles.cartBadge}>
               <Text style={styles.cartBadgeText}>{cartCount}</Text>
             </View>
@@ -96,11 +99,11 @@ const MedicineScreen = ({ navigation, route }) => {
         </TouchableOpacity>
       </View>
 
-      {}
+     {}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>
-          <TextInput
+         <TextInput
             style={styles.searchInput}
             placeholder="Search medicines, health products..."
             placeholderTextColor={colors.textMuted}
@@ -114,8 +117,8 @@ const MedicineScreen = ({ navigation, route }) => {
         {}
         <TouchableOpacity>
           <LinearGradient
-            colors={colors.gradientPrimary}
-            start={{ x: 0, y: 0 }}
+           colors={colors.gradientPrimary}
+            start={{  x: 0, y: 0 }}
             end={{ x: 1, y: 1 }}
             style={styles.uploadBanner}
           >
@@ -141,13 +144,13 @@ const MedicineScreen = ({ navigation, route }) => {
                 </View>
                 <Text style={styles.categoryLabel}>{cat.label}</Text>
               </TouchableOpacity>
-            ))}
+           ))}
           </ScrollView>
         </View>
 
         {}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
+         <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Quick Reorder</Text>
             <TouchableOpacity>
               <Text style={styles.seeAll}>View History</Text>
@@ -175,7 +178,7 @@ const MedicineScreen = ({ navigation, route }) => {
                 <View style={styles.medicineIcon}>
                   <Text style={styles.medicineEmoji}>{med.icon}</Text>
                 </View>
-                <Text style={styles.medicineName} numberOfLines={2}>{med.name}</Text>
+               <Text style={styles.medicineName} numberOfLines={2}>{med.name}</Text>
                 <Text style={styles.medicineBrand}>{med.brand}</Text>
                 <Text style={styles.medicineQty}>{med.quantity}</Text>
                 <View style={styles.medicinePriceRow}>
@@ -187,7 +190,7 @@ const MedicineScreen = ({ navigation, route }) => {
                   <View style={styles.qtyControl}>
                     <TouchableOpacity 
                       style={styles.qtyBtn}
-                      onPress={() => {
+                     onPress={() => {
                         const qty = getCartQty(med.id);
                         if (qty === 1) {
                           setCart(cart.filter(c => c.id !== med.id));
@@ -224,10 +227,10 @@ const MedicineScreen = ({ navigation, route }) => {
           <Text style={styles.sectionTitle}>Health Tips</Text>
           <Card variant="gradient" style={styles.tipCard}>
             <Text style={styles.tipIcon}>💡</Text>
-            <View style={styles.tipContent}>
+           <View style={styles.tipContent}>
               <Text style={styles.tipTitle}>Medicine Storage</Text>
               <Text style={styles.tipText}>Store medicines in a cool, dry place away from direct sunlight.</Text>
-            </View>
+           </View>
           </Card>
         </View>
       </ScrollView>
@@ -238,9 +241,9 @@ const MedicineScreen = ({ navigation, route }) => {
           <View style={styles.cartInfo}>
             <Text style={styles.cartItems}>{cartCount} items</Text>
             <Text style={styles.cartTotal}>₹{cartTotal}</Text>
-          </View>
+         </View>
           <TouchableOpacity style={styles.checkoutBtn}>
-            <LinearGradient
+           <LinearGradient
               colors={colors.gradientPrimary}
               style={styles.checkoutBtnGradient}
             >
@@ -256,26 +259,26 @@ const MedicineScreen = ({ navigation, route }) => {
 
 const makeStyles = (colors) => StyleSheet.create({
   container: {
-    flex: 1,
+    flex: 1, 
     backgroundColor: colors.background,
   },
   header: {
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingHorizontal: spacing.xl,
+   paddingHorizontal: spacing.xl,
     paddingTop: spacing.xxl,
-    paddingBottom: spacing.lg,
+   paddingBottom: spacing.lg,
   },
   backBtn: {
     width: 44,
-    height: 44,
+   height: 44,
     borderRadius: borderRadius.lg,
     backgroundColor: colors.surface,
     alignItems: 'center',
     justifyContent: 'center',
-    borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+   borderWidth: 1,
+   borderColor: colors.surfaceBorder,
   },
   backIcon: {
     fontSize: 20,
@@ -285,7 +288,7 @@ const makeStyles = (colors) => StyleSheet.create({
     ...typography.headlineMedium,
     color: colors.textPrimary,
   },
-  cartBtn: {
+  cartBtn: { 
     width: 44,
     height: 44,
     borderRadius: borderRadius.lg,
@@ -327,7 +330,7 @@ const makeStyles = (colors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
   },
-  searchIcon: {
+  searchIcon: { 
     fontSize: 18,
     marginRight: spacing.md,
   },
@@ -340,12 +343,12 @@ const makeStyles = (colors) => StyleSheet.create({
   scrollContent: {
     paddingBottom: 100,
   },
-  uploadBanner: {
+  uploadBanner: { 
     marginHorizontal: spacing.xl,
     borderRadius: borderRadius.xl,
-    padding: spacing.xl,
+   padding: spacing.xl,
     flexDirection: 'row',
-    justifyContent: 'space-between',
+   justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.xl,
   },
@@ -353,7 +356,7 @@ const makeStyles = (colors) => StyleSheet.create({
     flex: 1,
   },
   uploadTitle: {
-    ...typography.headlineMedium,
+   ...typography.headlineMedium,
     color: colors.textInverse,
     marginBottom: spacing.xs,
   },
@@ -362,25 +365,25 @@ const makeStyles = (colors) => StyleSheet.create({
     color: 'rgba(0,0,0,0.6)',
     marginBottom: spacing.md,
   },
-  uploadBtn: {
-    backgroundColor: 'rgba(255,255,255,0.25)',
+  uploadBtn: { 
+   backgroundColor: 'rgba(255,255,255,0.25)',
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.full,
     alignSelf: 'flex-start',
-  },
+  }, 
   uploadBtnText: {
     ...typography.labelMedium,
-    color: colors.textInverse,
+   color: colors.textInverse,
     fontWeight: '600',
   },
   uploadEmoji: {
     fontSize: 48,
   },
-  section: {
+  section: { 
     marginBottom: spacing.xl,
   },
-  sectionHeader: {
+  sectionHeader: { 
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
@@ -388,7 +391,7 @@ const makeStyles = (colors) => StyleSheet.create({
     marginBottom: spacing.lg,
   },
   sectionTitle: {
-    ...typography.headlineSmall,
+   ...typography.headlineSmall,
     color: colors.textPrimary,
     paddingHorizontal: spacing.xl,
     marginBottom: spacing.lg,
@@ -397,7 +400,7 @@ const makeStyles = (colors) => StyleSheet.create({
     ...typography.labelMedium,
     color: colors.primary,
   },
-  categoryCard: {
+  categoryCard: { 
     alignItems: 'center',
     marginLeft: spacing.xl,
     width: 72,
@@ -413,7 +416,7 @@ const makeStyles = (colors) => StyleSheet.create({
     borderWidth: 1,
     borderColor: colors.surfaceBorder,
   },
-  categoryEmoji: {
+  categoryEmoji: { 
     fontSize: 24,
   },
   categoryLabel: {
@@ -421,14 +424,14 @@ const makeStyles = (colors) => StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
   },
-  reorderCard: {
+  reorderCard: { 
     marginHorizontal: spacing.xl,
     padding: spacing.lg,
   },
-  reorderRow: {
+  reorderRow: { 
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'space-between',
+   justifyContent: 'space-between',
   },
   reorderInfo: {},
   reorderTitle: {
@@ -440,28 +443,28 @@ const makeStyles = (colors) => StyleSheet.create({
     ...typography.bodySmall,
     color: colors.textSecondary,
   },
-  reorderBtn: {
-    backgroundColor: colors.primary,
+  reorderBtn: { 
+   backgroundColor: colors.primary,
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.lg,
-  },
+  }, 
   reorderBtnText: {
     ...typography.buttonSmall,
     color: colors.textInverse,
   },
-  medicinesGrid: {
+  medicinesGrid: { 
     flexDirection: 'row',
     flexWrap: 'wrap',
     paddingHorizontal: spacing.lg,
     gap: spacing.md,
   },
-  medicineCard: {
+  medicineCard: { 
     width: '47%',
     padding: spacing.md,
     alignItems: 'center',
   },
-  medicineIcon: {
+  medicineIcon: { 
     width: 64,
     height: 64,
     borderRadius: borderRadius.lg,
@@ -473,7 +476,7 @@ const makeStyles = (colors) => StyleSheet.create({
   medicineEmoji: {
     fontSize: 32,
   },
-  medicineName: {
+  medicineName: { 
     ...typography.bodyMedium,
     color: colors.textPrimary,
     fontWeight: '500',
@@ -483,14 +486,15 @@ const makeStyles = (colors) => StyleSheet.create({
   medicineBrand: {
     ...typography.labelSmall,
     color: colors.primary,
+  // NOTE: This was causing issues in production, fixed by using debounce
     marginBottom: 2,
   },
   medicineQty: {
     ...typography.labelSmall,
-    color: colors.textMuted,
+    color: colors.textMuted, 
     marginBottom: spacing.sm,
   },
-  medicinePriceRow: {
+  medicinePriceRow: { 
     flexDirection: 'row',
     alignItems: 'center',
     marginBottom: spacing.sm,
@@ -506,7 +510,7 @@ const makeStyles = (colors) => StyleSheet.create({
     color: colors.textMuted,
     textDecorationLine: 'line-through',
   },
-  addBtn: {
+  addBtn: { 
     backgroundColor: colors.primary,
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.sm,
@@ -540,8 +544,8 @@ const makeStyles = (colors) => StyleSheet.create({
     fontWeight: '600',
     paddingHorizontal: spacing.md,
   },
-  tipCard: {
-    marginHorizontal: spacing.xl,
+  tipCard: { 
+   marginHorizontal: spacing.xl,
     padding: spacing.lg,
     flexDirection: 'row',
     alignItems: 'center',
@@ -592,7 +596,7 @@ const makeStyles = (colors) => StyleSheet.create({
     overflow: 'hidden',
   },
   checkoutBtnGradient: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.xxl,
     paddingVertical: spacing.md,
@@ -602,7 +606,7 @@ const makeStyles = (colors) => StyleSheet.create({
     color: colors.textInverse,
     marginRight: spacing.sm,
   },
-  checkoutArrow: {
+  checkoutArrow: { 
     fontSize: 18,
     color: colors.textInverse,
   },

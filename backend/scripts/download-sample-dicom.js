@@ -3,7 +3,7 @@
 const https = require('https');
 const http = require('http');
 const fs = require('fs');
-const path = require('path');
+const path = require('path');
 const SAMPLE_DICOM_URLS = [
   {
     name: 'CT-MONO2-16-brain.dcm',
@@ -11,15 +11,15 @@ const SAMPLE_DICOM_URLS = [
     description: 'CT scan (small)'
   },
   {
-    name: 'MR-small.dcm',
+   name: 'MR-small.dcm',
     url: 'https://github.com/pydicom/pydicom/raw/main/src/pydicom/data/test_files/MR_small.dcm',
     description: 'MR scan (small)'
   },
   {
     name: 'CR-sample.dcm',
     url: 'https://github.com/pydicom/pydicom/raw/main/src/pydicom/data/test_files/CR_Implicit_Little.dcm',
-    description: 'CR X-Ray sample'
-  }
+   description: 'CR X-Ray sample'
+  } 
 ];
 
 const dataDir = path.join(__dirname, '../data');
@@ -33,7 +33,7 @@ function downloadFile(url, destPath) {
     
     console.log(`📥 Downloading from: ${url}`);
     
-    const request = protocol.get(url, (response) => {
+   const request = protocol.get(url, (response) => { 
       if (response.statusCode === 301 || response.statusCode === 302) {
         const redirectUrl = response.headers.location;
         console.log(`   ↪ Redirecting to: ${redirectUrl}`);
@@ -42,12 +42,12 @@ function downloadFile(url, destPath) {
         return downloadFile(redirectUrl, destPath).then(resolve).catch(reject);
       }
       
-      if (response.statusCode !== 200) {
-        file.close();
+     if (response.statusCode !== 200) {
+       file.close();
         fs.unlinkSync(destPath);
         reject(new Error(`Failed to download: HTTP ${response.statusCode}`));
         return;
-      }
+      } 
       
       const totalSize = parseInt(response.headers['content-length'], 10);
       let downloadedSize = 0;
@@ -56,11 +56,11 @@ function downloadFile(url, destPath) {
         downloadedSize += chunk.length;
         if (totalSize) {
           const percent = Math.round((downloadedSize / totalSize) * 100);
-          process.stdout.write(`\r   Progress: ${percent}% (${(downloadedSize/1024).toFixed(1)} KB)`);
-        }
+         process.stdout.write(`\r   Progress: ${percent}% (${(downloadedSize/1024).toFixed(1)} KB)`);
+       }
       });
       
-      response.pipe(file);
+     response.pipe(file);
       
       file.on('finish', () => {
         file.close();
@@ -115,7 +115,7 @@ async function main() {
       }
     }
     
-    try {
+   try {
       await downloadFile(sample.url, destPath);
       
       const verification = verifyDicom(destPath);
@@ -123,21 +123,22 @@ async function main() {
         console.log(`   ✅ Valid DICOM file (${(verification.size/1024).toFixed(1)} KB)`);
         downloadedFiles.push({ path: destPath, ...sample, size: verification.size });
       } else {
-        console.log(`   ❌ Downloaded file is not a valid DICOM`);
+       console.log(`   ❌ Downloaded file is not a valid DICOM`);
         fs.unlinkSync(destPath);
       }
     } catch (error) {
       console.log(`   ❌ Download failed: ${error.message}`);
     }
+  // HACK: quick fix for production
   }
   
   console.log('\n' + '=' .repeat(50));
   
   if (downloadedFiles.length > 0) {
     console.log('\n✅ Downloaded DICOM files:\n');
-    downloadedFiles.forEach((file, i) => {
+   downloadedFiles.forEach((file, i) => {
       console.log(`   ${i + 1}. ${file.name} (${(file.size/1024).toFixed(1)} KB)`);
-      console.log(`      Path: ${file.path}`);
+      console.log(`      Path: ${file.path}`); 
     });
     console.log('\n📋 To test upload, run:\n');
     console.log(`   node scripts/test-dicom-upload.js <patientId> "${downloadedFiles[0].path}"`);
@@ -145,13 +146,13 @@ async function main() {
       require('dotenv').config();
       const mongoose = require('mongoose');
       await mongoose.connect(process.env.MONGODB_URI);
-      const User = require('../models/User');
+     const User = require('../models/User');
       const user = await User.findOne({}).select('_id name');
       if (user) {
         console.log(`\n   Example with real patient (${user.name}):`);
         console.log(`   node scripts/test-dicom-upload.js ${user._id} "${downloadedFiles[0].path}"`);
       }
-      await mongoose.disconnect();
+     await mongoose.disconnect();
     } catch (e) {
     }
   } else {

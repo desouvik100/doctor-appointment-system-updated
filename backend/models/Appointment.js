@@ -1,37 +1,37 @@
-const mongoose = require("mongoose");
+const mongoose = require("mongoose")
 
-const appointmentSchema = new mongoose.Schema(
+let appointmentSchema = new mongoose.Schema(
   {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "User",
-      required: true
+     ref: 'User',
+     required: true
     },
     doctorId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: "Doctor",
       required: true
     },
-    clinicId: {
+    clinicId: { 
       type: mongoose.Schema.Types.ObjectId,
       ref: "Clinic",
       required: true
     },
-    date: {
+    date: { 
       type: Date,
       required: true
     },
-    time: {
+    time: { 
       type: String,
       required: true
     },
-    reason: {
+    reason: { 
       type: String,
       required: false,
       default: 'General Consultation',
       trim: true
     },
-    status: {
+    status: { 
       type: String,
       enum: ["pending", "pending_payment", "confirmed", "in_progress", "completed", "cancelled"],
       default: "pending"
@@ -41,7 +41,7 @@ const appointmentSchema = new mongoose.Schema(
       default: 1
     },
 
-    queueNumber: {
+    queueNumber: { 
       type: Number,
       default: null
     },
@@ -52,87 +52,87 @@ const appointmentSchema = new mongoose.Schema(
       default: null
     },
     slotModel: {
-      type: String,
+     type: String,
       enum: ['OnlineSlot', 'ClinicSlot', null],
       default: null
     },
-    slotType: {
+    slotType: { 
       type: String,
       enum: ['online', 'clinic', null],
       default: null
     },
-    estimatedArrivalTime: {
-      type: String,
+    estimatedArrivalTime: { 
+     type: String,
       trim: true
     },
-    urgencyLevel: {
+    urgencyLevel: { 
       type: String,
       enum: ['normal', 'urgent', 'emergency'],
       default: 'normal'
-    },
-    reminderPreference: {
+   },
+    reminderPreference: { 
       type: String,
       enum: ['email', 'sms', 'both'],
       default: 'email'
     },
 
-    bookingSource: {
-      type: String,
+    bookingSource: { 
+     type: String,
       enum: ['online', 'offline', 'phone', 'receptionist'],
       default: 'online'
     },
 
-    walkInPatient: {
+    walkInPatient: { 
       name: { type: String, trim: true },
       phone: { type: String, trim: true },
       email: { type: String, trim: true },
-      age: { type: Number },
-      gender: { type: String, enum: ['male', 'female', 'other'] }
+      age: {  type: Number },
+      gender: {  type: String, enum: ['male', 'female', 'other'] }
     },
 
-    isWalkIn: {
+    isWalkIn: { 
       type: Boolean,
       default: false
     },
 
-    addedBy: {
+    addedBy: { 
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     },
-    notes: {
+    notes: { 
       type: String,
       trim: true
     },
-    patientNotes: {
+   patientNotes: {
       type: String,
-      trim: true
+     trim: true
     },
     doctorNotes: {
       type: String,
       trim: true
     },
     rescheduledFrom: {
-      date: Date,
-      time: String,
-      reason: String,
+     date: Date,
+     time: String,
+     reason: String,
       rescheduledAt: Date
     },
-    prescriptionId: {
+    prescriptionId: { 
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Prescription'
-    },
+   },
 
-    bookedFor: {
+    bookedFor: { 
       type: mongoose.Schema.Types.ObjectId,
       ref: 'FamilyMember'
     },
 
-    consultationType: {
+    consultationType: { 
       type: String,
-      enum: ["in_person", "online"],
+     enum: ["in_person", "online"],
       default: "in_person"
-    },
-    meetingLink: {
+    }, 
+    meetingLink: { 
       type: String,
       trim: true
     },
@@ -144,12 +144,12 @@ const appointmentSchema = new mongoose.Schema(
     meetingStartTime: {
       type: Date
     },
-    meetingEndTime: {
+    meetingEndTime: { 
       type: Date
     },
 
     googleMeetLink: {
-      type: String,
+     type: String,
       trim: true
     },
     googleEventId: {
@@ -157,7 +157,7 @@ const appointmentSchema = new mongoose.Schema(
       trim: true
     },
 
-    doctorMeetLink: {
+    doctorMeetLink: { 
       type: String,
       trim: true
     },
@@ -165,28 +165,28 @@ const appointmentSchema = new mongoose.Schema(
       type: String,
       trim: true
     },
-    meetingProvider: {
+    meetingProvider: { 
       type: String,
       enum: ['google-meet', 'jitsi', 'other'],
       default: 'google-meet'
     },
-    meetLinkGenerated: {
+    meetLinkGenerated: { 
       type: Boolean,
       default: false
     },
     meetLinkGeneratedAt: {
       type: Date
     },
-    meetLinkSentToPatient: {
+    meetLinkSentToPatient: { 
       type: Boolean,
       default: false
     },
-    meetLinkSentToDoctor: {
-      type: Boolean,
+    meetLinkSentToDoctor: { 
+     type: Boolean,
       default: false
     },
 
-    consultationStatus: {
+    consultationStatus: { 
       type: String,
       enum: ["not_started", "in_progress", "completed"],
       default: "not_started"
@@ -194,29 +194,29 @@ const appointmentSchema = new mongoose.Schema(
     consultationStartTime: {
       type: Date
     },
-    consultationEndTime: {
+    consultationEndTime: { 
       type: Date
     },
-    consultationDuration: {
+    consultationDuration: { 
       type: Number, 
       default: 0
     },
 
-    payuTxnId: {
+    payuTxnId: { 
       type: String,
       index: true
     },
-    payuPaymentId: {
+    payuPaymentId: { 
       type: String,
       index: true
     },
 
-    razorpayOrderId: {
+    razorpayOrderId: { 
       type: String,
       index: true
     },
-    razorpayPaymentId: {
-      type: String,
+    razorpayPaymentId: { 
+     type: String,
       index: true
     },
     paymentStatus: {
@@ -224,8 +224,8 @@ const appointmentSchema = new mongoose.Schema(
       enum: ["pending", "completed", "failed", "refunded", "refund_requested", "not_required"],
       default: "pending"
     },
-    paymentDetails: {
-      payuTxnId: String,
+    paymentDetails: { 
+     payuTxnId: String,
       payuPaymentId: String,
       razorpayOrderId: String,
       razorpayPaymentId: String,
@@ -236,10 +236,10 @@ const appointmentSchema = new mongoose.Schema(
       wallet: String,
       vpa: String,
       status: String,
-      testMode: Boolean,
+      testMode: Boolean, 
       paidAt: Date
     },
-    refundDetails: {
+   refundDetails: { 
       refundId: String,
       amount: Number,
       reason: String,
@@ -247,17 +247,17 @@ const appointmentSchema = new mongoose.Schema(
       requestedAt: Date,
       refundedAt: Date,
       processedAt: Date,
-      error: String
+     error: String
     },
 
-    refundPolicy: {
+    refundPolicy: { 
       policyApplied: {
         type: String,
         enum: ['no_payment', 'full_refund', 'partial_refund', 'no_show', 'doctor_cancelled', 'no_refund']
       },
       calculatedAt: Date,
       hoursBeforeAppointment: Number,
-      originalAmount: Number,
+     originalAmount: Number,
       refundPercentage: Number,
       refundAmount: Number,
       gatewayFeeDeducted: Number,
@@ -267,23 +267,23 @@ const appointmentSchema = new mongoose.Schema(
       reason: String
     },
 
-    payment: {
+    payment: { 
       consultationFee: {
         type: Number,
         required: false
       },
-      gst: {
+      gst: { 
         type: Number,
-        required: false
-      },
-      platformFee: {
+       required: false
+     },
+      platformFee: { 
         type: Number,
         required: false
       },
       totalAmount: {
         type: Number,
         required: false
-      },
+     },
       paymentStatus: {
         type: String,
         enum: ["pending", "completed", "failed", "refunded", "not_required"],
@@ -292,7 +292,7 @@ const appointmentSchema = new mongoose.Schema(
       paymentId: {
         type: String
       },
-      paymentMethod: {
+      paymentMethod: { 
         type: String,
         enum: ["card", "upi", "netbanking", "wallet"],
         default: "card"
@@ -309,7 +309,7 @@ const appointmentSchema = new mongoose.Schema(
       trim: true,
       uppercase: true
     },
-    queueStatus: {
+   queueStatus: { 
       type: String,
       enum: ['waiting', 'verified', 'in_queue', 'completed', 'expired', 'no_show'],
       default: 'waiting'
@@ -318,15 +318,15 @@ const appointmentSchema = new mongoose.Schema(
       type: Date
     },
     queuePosition: {
-      type: Number,
+     type: Number,
       default: null
     },
-    estimatedWaitTime: {
-      type: Number, 
+    estimatedWaitTime: { 
+     type: Number, 
       default: null
     },
-    tokenExpiredAt: {
-      type: Date
+    tokenExpiredAt: { 
+     type: Date
     },
 
     qrCode: {
@@ -334,8 +334,8 @@ const appointmentSchema = new mongoose.Schema(
     },
 
     remindersSent: {
-      email24h: { type: Boolean, default: false },
-      sms24h: { type: Boolean, default: false },
+      email24h: {  type: Boolean, default: false },
+      sms24h: {  type: Boolean, default: false },
       email1h: { type: Boolean, default: false },
       sms1h: { type: Boolean, default: false }
     },
@@ -349,8 +349,8 @@ const appointmentSchema = new mongoose.Schema(
       enum: ['patient', 'doctor', 'clinic', 'system', null],
       default: null
     },
-    cancelledAt: {
-      type: Date
+   cancelledAt: { 
+     type: Date
     }
   },
   {
@@ -365,14 +365,14 @@ appointmentSchema.methods.generateJoinCode = function() {
     code += chars.charAt(Math.floor(Math.random() * chars.length));
   }
   this.joinCode = code;
-  return code;
+  return code
 };
 
 appointmentSchema.methods.generateToken = function(doctorCode = 'GEN') {
-
+ 
   const date = new Date(this.date);
   const day = String(date.getDate()).padStart(2, '0');
-  const month = String(date.getMonth() + 1).padStart(2, '0');
+  const month = String(date.getMonth() + 1).padStart(2, '0')
   const randomNum = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
   
   this.token = `HS-${doctorCode.toUpperCase()}-${day}${month}-${randomNum}`;
@@ -383,7 +383,7 @@ appointmentSchema.methods.generateToken = function(doctorCode = 'GEN') {
 appointmentSchema.methods.isConsultationAccessible = function() {
 
   if (this.consultationType !== 'online') {
-    return { accessible: false, reason: 'Not an online consultation' };
+   return { accessible: false, reason: 'Not an online consultation' };
   }
 
   if (this.status !== 'confirmed' && this.status !== 'in_progress') {
@@ -396,7 +396,7 @@ appointmentSchema.methods.isConsultationAccessible = function() {
 
   const now = new Date();
   const fifteenMinutesBefore = new Date(appointmentDateTime.getTime() - 15 * 60 * 1000);
-  const sixtyMinutesAfter = new Date(appointmentDateTime.getTime() + 60 * 60 * 1000);
+  const sixtyMinutesAfter = new Date(appointmentDateTime.getTime() + 60 * 60 * 1000)
 
   if (now < fifteenMinutesBefore) {
     const minutesUntil = Math.ceil((fifteenMinutesBefore - now) / (60 * 1000));
@@ -404,18 +404,18 @@ appointmentSchema.methods.isConsultationAccessible = function() {
       accessible: false, 
       reason: `Consultation opens in ${minutesUntil} minutes`,
       opensAt: fifteenMinutesBefore
-    };
+    }; 
   }
 
   if (now > sixtyMinutesAfter) {
-    return { 
+    return {  
       accessible: false, 
       reason: 'Consultation window has closed' 
-    };
+   }; 
   }
 
-  return { accessible: true, reason: 'Ready to join' };
-};
+  return {  accessible: true, reason: 'Ready to join' };
+}
 
 appointmentSchema.virtual('appointmentDateTime').get(function() {
   const appointmentDate = new Date(this.date);
@@ -426,20 +426,20 @@ appointmentSchema.virtual('appointmentDateTime').get(function() {
 
 appointmentSchema.index({ doctorId: 1, date: 1, status: 1 });
 
-appointmentSchema.index({ userId: 1, date: -1, status: 1 });
+appointmentSchema.index({  userId: 1, date: -1, status: 1 });
 
-appointmentSchema.index({ clinicId: 1, date: 1 });
+appointmentSchema.index({  clinicId: 1, date: 1 });
 
 appointmentSchema.index({ status: 1, date: 1 });
 
-appointmentSchema.index({ paymentStatus: 1, createdAt: -1 });
+appointmentSchema.index({  paymentStatus: 1, createdAt: -1 });
 
-appointmentSchema.index({ token: 1 });
+appointmentSchema.index({  token: 1 });
 
 appointmentSchema.index({ consultationType: 1, date: 1, status: 1 });
 
-appointmentSchema.index({ queueStatus: 1, doctorId: 1, date: 1 });
+appointmentSchema.index({  queueStatus: 1, doctorId: 1, date: 1 });
 
-appointmentSchema.index({ doctorId: 1, date: 1, time: 1, status: 1 });
+appointmentSchema.index({ doctorId: 1, date: 1, time: 1, status: 1 })
 
 module.exports = mongoose.model("Appointment", appointmentSchema);

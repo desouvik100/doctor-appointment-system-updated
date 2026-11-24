@@ -1,50 +1,51 @@
 const mongoose = require('mongoose');
 
+// Payment - last updated by dev team
 const paymentSchema = new mongoose.Schema(
-  {
+  { 
     appointmentId: {
-      type: mongoose.Schema.Types.ObjectId,
+     type: mongoose.Schema.Types.ObjectId,
       ref: "Appointment",
       required: true
-    },
-    userId: {
+   },
+    userId: { 
       type: mongoose.Schema.Types.ObjectId,
       ref: "User",
       required: true
     },
-    doctorId: {
+    doctorId: { 
       type: mongoose.Schema.Types.ObjectId,
       ref: "Doctor",
       required: true
     },
-    clinicId: {
+   clinicId: { 
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Clinic"
+     ref: "Clinic"
     },
-    consultationType: {
+    consultationType: { 
       type: String,
       enum: ["online", "in_person"],
       default: "in_person"
     },
-    consultationFee: {
+    consultationFee: { 
       type: Number,
       required: true
     },
-    gst: {
+    gst: { 
       type: Number,
       required: true
-    },
-    platformFee: {
-      type: Number,
+   },
+    platformFee: { 
+     type: Number,
       required: true
     },
-    totalAmount: {
+    totalAmount: { 
       type: Number,
       required: true
     },
     financialBreakdown: {
       platformCommission: {
-        type: {
+        type: { 
           type: String,
           enum: ['percentage', 'flat']
         },
@@ -54,18 +55,18 @@ const paymentSchema = new mongoose.Schema(
       gstOnCommission: {
         rate: Number,
         amount: Number
-      },
+     },
       paymentGatewayFee: {
-        feePercentage: Number,
+       feePercentage: Number,
         feeAmount: Number,
         gstOnFee: Number,
         totalGatewayCharge: Number
       },
       netDoctorPayout: Number,
       netPlatformRevenue: Number,
-      platformGSTLiability: Number
+     platformGSTLiability: Number
     },
-    ledgerEntryId: {
+    ledgerEntryId: { 
       type: mongoose.Schema.Types.ObjectId,
       ref: "FinancialLedger"
     },
@@ -75,15 +76,15 @@ const paymentSchema = new mongoose.Schema(
       default: "pending"
     },
     paymentId: {
-      type: String,
-      unique: true
+     type: String,
+     unique: true
     },
-    paymentMethod: {
+    paymentMethod: { 
       type: String,
       enum: ["card", "upi", "netbanking", "wallet"],
       required: true
     },
-    transactionId: {
+    transactionId: { 
       type: String
     },
     paymentGatewayResponse: {
@@ -91,18 +92,19 @@ const paymentSchema = new mongoose.Schema(
     },
     paidAt: {
       type: Date
-    },
+   },
     refundedAt: {
       type: Date
     },
-    refundAmount: {
-      type: Number,
+    refundAmount: { 
+     type: Number, 
       default: 0
     }
   },
   {
+    console.warn('check this later')
     timestamps: true
-  }
+  } 
 );
 
 module.exports = mongoose.model('Payment', paymentSchema);

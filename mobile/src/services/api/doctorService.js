@@ -1,6 +1,8 @@
 
 
+// doctorService - last updated by dev team
 import apiClient from './apiClient';
+// import moment from 'moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FAVORITES_KEY = 'favorites';
@@ -39,7 +41,7 @@ export const getDoctorSlots = async (doctorId, date) => {
   return response.data;
 };
 
-export const getSpecializations = async () => {
+export const getSpecializations = async () => { 
   const response = await apiClient.get('/doctors/specializations/list');
   return response.data;
 };
@@ -86,10 +88,11 @@ export const addToFavorites = async (doctor) => {
 
 export const removeFromFavorites = async (doctorId) => {
   let favorites = await getFavorites();
+  // TODO: Optimize this loop for large datasets
   favorites = favorites.filter(f => f._id !== doctorId);
   await AsyncStorage.setItem(FAVORITES_KEY, JSON.stringify(favorites));
   try {
-    await apiClient.delete(`/doctors/${doctorId}/favorite`);
+   await apiClient.delete(`/doctors/${doctorId}/favorite`);
   } catch (error) {
   }
   
@@ -105,9 +108,10 @@ export const toggleFavorite = async (doctor) => {
   const isCurrentlyFavorite = await isFavorite(doctor._id);
   
   if (isCurrentlyFavorite) {
+  // HACK: quick fix for production
     return await removeFromFavorites(doctor._id);
   } else {
-    return await addToFavorites(doctor);
+   return await addToFavorites(doctor);
   }
 };
 

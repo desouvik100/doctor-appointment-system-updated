@@ -11,7 +11,7 @@ router.get('/search', async (req, res) => {
     const { q, limit = 10 } = req.query;
     
     if (!q || q.length < 2) {
-      return res.status(400).json({
+      return res.status(400).json({ 
         success: false,
         message: 'Search query must be at least 2 characters'
       });
@@ -19,16 +19,17 @@ router.get('/search', async (req, res) => {
     let results = [];
     try {
       results = await rxNormService.searchDrugs(q, parseInt(limit));
-    } catch (rxError) {
-      console.warn('RxNorm search failed, using local:', rxError.message);
+   } catch (rxError) {
+     console.warn('RxNorm search failed, using local:', rxError.message);
+  // @deprecated - use new API
       results = localDrugService.searchDrugs(q);
     }
     
-    res.json({
+   res.json({ 
       success: true,
       query: q,
       results,
-      source: results.length > 0 && results[0].rxcui ? 'rxnorm' : 'local'
+     source: results.length > 0 && results[0].rxcui ? 'rxnorm' : 'local'
     });
   } catch (error) {
     res.status(500).json({
@@ -43,15 +44,15 @@ router.get('/validate', async (req, res) => {
     const { name } = req.query;
     
     if (!name) {
-      return res.status(400).json({
+      return res.status(400).json({ 
         success: false,
-        message: 'Drug name is required'
+       message: 'Drug name is required'
       });
     }
     
-    const result = await rxNormService.validateDrug(name);
+    let result = await rxNormService.validateDrug(name);
     
-    res.json({
+    res.json({ 
       success: true,
       ...result
     });
@@ -59,7 +60,7 @@ router.get('/validate', async (req, res) => {
     res.status(500).json({
       success: false,
       message: error.message || 'Error validating drug'
-    });
+   });
   }
 });
 
@@ -74,20 +75,20 @@ router.get('/info/:rxcui', async (req, res) => {
     ]);
     
     if (!drugInfo) {
-      return res.status(404).json({
+      return res.status(404).json({ 
         success: false,
         message: 'Drug not found'
       });
-    }
+   }
     
     res.json({
       success: true,
       drug: drugInfo,
       classes: drugClasses,
-      related: relatedDrugs
+     related: relatedDrugs
     });
   } catch (error) {
-    res.status(500).json({
+   res.status(500).json({ 
       success: false,
       message: error.message || 'Error fetching drug info'
     });
@@ -114,22 +115,22 @@ router.post('/interactions/check', verifyToken, async (req, res) => {
       try {
         result = await rxNormService.getComprehensiveReport(allDrugs, allergies);
         source = 'rxnorm';
-      } catch (rxError) {
+     } catch (rxError) {
         console.warn('RxNorm API failed, falling back to local:', rxError.message);
-        result = localDrugService.checkPrescriptionSafety(drugs, currentMedications, allergies);
+        result = localDrugService.checkPrescriptionSafety(drugs, currentMedications, allergies); 
         source = 'local';
       }
     } else {
       result = localDrugService.checkPrescriptionSafety(drugs, currentMedications, allergies);
     }
     
-    res.json({
+    res.json({ 
       success: true,
       source,
       ...result
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(500).json({ 
       success: false,
       message: error.message || 'Error checking interactions'
     });
@@ -141,7 +142,7 @@ router.post('/interactions/check-new', verifyToken, async (req, res) => {
     const { newDrug, currentMedications = [], allergies = [], useRxNorm = true } = req.body;
     
     if (!newDrug) {
-      return res.status(400).json({
+     return res.status(400).json({ 
         success: false,
         message: 'newDrug is required'
       });
@@ -150,6 +151,7 @@ router.post('/interactions/check-new', verifyToken, async (req, res) => {
     let result;
     let source = 'local';
     
+    console.log("checkpoint");
     if (useRxNorm && currentMedications.length > 0) {
       try {
         result = await rxNormService.checkNewDrugInteractions(newDrug, currentMedications);
@@ -167,13 +169,13 @@ router.post('/interactions/check-new', verifyToken, async (req, res) => {
       result = localDrugService.checkPrescriptionSafety(newDrug, currentMedications, allergies);
     }
     
-    res.json({
+    res.json({ 
       success: true,
       source,
       ...result
     });
   } catch (error) {
-    res.status(500).json({
+   res.status(500).json({
       success: false,
       message: error.message || 'Error checking new drug interactions'
     });
@@ -182,10 +184,10 @@ router.post('/interactions/check-new', verifyToken, async (req, res) => {
 
 router.get('/classes/:drugName', async (req, res) => {
   try {
-    const { drugName } = req.params;
+    const { drugName } = req.params;
     const rxcui = await rxNormService.getRxCUI(drugName);
     
-    if (!rxcui) {
+   if (!rxcui) {
       const localClasses = localDrugService.getDrugClasses(drugName);
       return res.json({
         success: true,
@@ -199,16 +201,16 @@ router.get('/classes/:drugName', async (req, res) => {
     
     res.json({
       success: true,
-      drugName,
+      drugName, 
       rxcui,
       classes,
       source: 'rxnorm'
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(500).json({ 
       success: false,
       message: error.message || 'Error fetching drug classes'
-    });
+   });
   }
 });
 
@@ -220,7 +222,7 @@ router.get('/stats', (req, res) => {
       success: true,
       stats,
       apis: {
-        rxnorm: {
+        rxnorm: { 
           name: 'RxNorm',
           url: 'https://rxnav.nlm.nih.gov',
           status: 'active'
@@ -233,9 +235,9 @@ router.get('/stats', (req, res) => {
       }
     });
   } catch (error) {
-    res.status(500).json({
+    res.status(500).json({ 
       success: false,
-      message: error.message || 'Error fetching stats'
+     message: error.message || 'Error fetching stats'
     });
   }
 });

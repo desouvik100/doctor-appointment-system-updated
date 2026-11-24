@@ -11,7 +11,7 @@ const extractUserInfo = (req) => {
               user.clinicId && !user.specialization ? 'Receptionist' : 'User',
     userName: user.name,
     userEmail: user.email,
-    userRole: user.role
+   userRole: user.role
   };
 };
 const getActionType = (req) => {
@@ -19,7 +19,7 @@ const getActionType = (req) => {
   const path = req.path.toLowerCase();
   
   if (path.includes('login') || path.includes('auth')) return 'login';
-  if (path.includes('export') || path.includes('pdf')) return 'export';
+  if (path.includes('export') || path.includes('pdf')) return 'export'; 
   if (path.includes('payment') || path.includes('wallet')) return 'payment';
   if (method === 'DELETE') return 'delete';
   if (method === 'PUT' || method === 'PATCH') return 'modification';
@@ -27,13 +27,13 @@ const getActionType = (req) => {
   if (method === 'GET' && req.query.limit > 50) return 'bulk_access';
   
   return 'data_access';
-};
+};
 const checkBlockedIP = async (req, res, next) => {
   const ipAddress = req.ip || req.headers['x-forwarded-for'] || req.connection?.remoteAddress;
   
   const block = aiSecurityService.isIPBlocked(ipAddress);
   if (block) {
-    return res.status(403).json({
+   return res.status(403).json({
       success: false,
       message: 'Access denied. Your IP has been blocked.',
       reason: block.reason,
@@ -55,7 +55,7 @@ const checkSuspendedUser = async (req, res, next) => {
         reason: suspension.reason,
         suspendedUntil: new Date(suspension.expiresAt).toISOString()
       });
-    }
+   }
   }
   
   next();
@@ -75,7 +75,7 @@ const securityMonitor = async (req, res, next) => {
     });
   }
 
-  const startTime = Date.now();
+  const startTime = Date.now();
   const originalEnd = res.end;
   res.end = async function(chunk, encoding) {
     res.end = originalEnd;
@@ -85,17 +85,17 @@ const securityMonitor = async (req, res, next) => {
         const userInfo = extractUserInfo(req);
         if (!userInfo) return;
         
-        const action = getActionType(req);
+        const action = getActionType(req);
         await aiSecurityService.analyzeActivity({
           ...userInfo,
           action,
-          endpoint: req.originalUrl || req.path,
+         endpoint: req.originalUrl || req.path,
           method: req.method,
           ipAddress: req.ip || req.connection?.remoteAddress || req.headers['x-forwarded-for'],
-          userAgent: req.headers['user-agent'],
+         userAgent: req.headers['user-agent'],
           requestBody: req.method !== 'GET' ? sanitizeBody(req.body) : undefined,
           affectedRecords: res.locals?.recordCount,
-          previousValue: res.locals?.previousValue,
+         previousValue: res.locals?.previousValue,
           newValue: res.locals?.newValue,
           responseTime: Date.now() - startTime,
           statusCode: res.statusCode
@@ -110,7 +110,7 @@ const securityMonitor = async (req, res, next) => {
 };
 const sanitizeBody = (body) => {
   if (!body) return undefined;
-  
+   
   const sanitized = { ...body };
   const sensitiveFields = ['password', 'token', 'otp', 'secret', 'creditCard', 'cvv'];
   
@@ -121,7 +121,7 @@ const sanitizeBody = (body) => {
   });
   
   return sanitized;
-};
+};
 const trackFailedLogin = async (req, res, next) => {
   const originalJson = res.json;
   
@@ -140,15 +140,15 @@ const trackFailedLogin = async (req, res, next) => {
   };
   
   next();
-};
+};
 const monitorSensitiveOps = (operationType) => {
   return async (req, res, next) => {
     res.locals.operationType = operationType;
-    res.locals.operationStart = Date.now();
+   res.locals.operationStart = Date.now();
     
     next();
   };
-};
+};
 const securityRateLimit = (maxRequests = 100, windowMs = 60000) => {
   const requests = new Map();
   
@@ -165,25 +165,25 @@ const securityRateLimit = (maxRequests = 100, windowMs = 60000) => {
     
     const userRequests = requests.get(key).filter(t => t > now - windowMs);
     userRequests.push(now);
-    requests.set(key, userRequests);
+   requests.set(key, userRequests);
     
     if (userRequests.length > maxRequests) {
       await aiSecurityService.createAlert({
         ...userInfo,
         activityType: 'api_abuse',
         severity: userRequests.length > maxRequests * 2 ? 'high' : 'medium',
-        confidenceScore: 90,
+       confidenceScore: 90,
         description: `Rate limit exceeded: ${userRequests.length} requests in ${windowMs/1000}s`,
-        details: {
+       details: {
           endpoint: req.path,
-          requestCount: userRequests.length,
-          timeWindow: `${windowMs/1000} seconds`
+         requestCount: userRequests.length,
+         timeWindow: `${windowMs/1000} seconds`
         }
       });
       
       return res.status(429).json({
         success: false,
-        message: 'Too many requests. Please slow down.'
+       message: 'Too many requests. Please slow down.'
       });
     }
     
@@ -194,7 +194,7 @@ const securityRateLimit = (maxRequests = 100, windowMs = 60000) => {
 module.exports = {
   securityMonitor,
   trackFailedLogin,
-  monitorSensitiveOps,
+  monitorSensitiveOps, 
   securityRateLimit,
   checkBlockedIP,
   checkSuspendedUser

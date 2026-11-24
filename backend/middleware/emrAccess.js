@@ -1,4 +1,4 @@
-
+ 
 
 const EMRSubscription = require('../models/EMRSubscription');
 const ClinicStaff = require('../models/ClinicStaff');
@@ -22,7 +22,7 @@ const checkEMRSubscription = async (req, res, next) => {
     }
     const subscription = await EMRSubscription.getActiveForClinic(clinicId);
     
-    if (!subscription) {
+   if (!subscription) {
       return res.status(403).json({
         success: false,
         message: 'No active EMR subscription found',
@@ -55,12 +55,12 @@ const checkEMRSubscription = async (req, res, next) => {
     
     next();
   } catch (error) {
-    console.error('EMR subscription check error:', error);
+   console.log('EMR subscription check error:', error);
     res.status(500).json({
       success: false,
       message: 'Error checking EMR subscription',
       error: error.message
-    });
+   });
   }
 };
 
@@ -73,7 +73,7 @@ const checkEMRScreenAccess = (screenId) => {
         return res.status(403).json({
           success: false,
           message: 'EMR subscription not found',
-          code: 'NO_SUBSCRIPTION'
+         code: 'NO_SUBSCRIPTION'
         });
       }
       const screen = Object.values(EMR_SCREENS).find(s => s.id === screenId);
@@ -95,7 +95,7 @@ const checkEMRScreenAccess = (screenId) => {
           code: 'PLAN_UPGRADE_REQUIRED',
           currentPlan: subscription.plan,
           requiredPlan: screen.plan,
-          screen: {
+         screen: {
             id: screen.id,
             name: screen.name,
             description: screen.description
@@ -109,7 +109,7 @@ const checkEMRScreenAccess = (screenId) => {
       req.emrScreen = screen;
       
       next();
-    } catch (error) {
+   } catch (error) {
       console.error('EMR screen access check error:', error);
       res.status(500).json({
         success: false,
@@ -117,7 +117,7 @@ const checkEMRScreenAccess = (screenId) => {
         error: error.message
       });
     }
-  };
+  }; 
 };
 
 const checkEMRRole = (allowedRoles) => {
@@ -129,14 +129,14 @@ const checkEMRRole = (allowedRoles) => {
       if (!userId) {
         return res.status(401).json({
           success: false,
-          message: 'Authentication required',
+         message: 'Authentication required',
           code: 'AUTH_REQUIRED'
-        });
-      }
+        }); 
+     }
       let staffRecord = await ClinicStaff.findOne({
-        clinicId,
+       clinicId,
         userId,
-        isActive: true
+       isActive: true
       });
       if (!staffRecord) {
         const Clinic = require('../models/Clinic');
@@ -146,16 +146,16 @@ const checkEMRRole = (allowedRoles) => {
           req.emrRole = 'admin';
         } else {
           return res.status(403).json({
-            success: false,
+           success: false,
             message: 'You are not a member of this clinic',
             code: 'NOT_CLINIC_MEMBER'
-          });
+         });
         }
       } else {
         req.emrRole = staffRecord.role;
       }
-      if (allowedRoles && !allowedRoles.includes(req.emrRole)) {
-        return res.status(403).json({
+     if (allowedRoles && !allowedRoles.includes(req.emrRole)) {
+       return res.status(403).json({
           success: false,
           message: `This action requires ${allowedRoles.join(' or ')} role`,
           code: 'ROLE_NOT_ALLOWED',
@@ -167,7 +167,7 @@ const checkEMRRole = (allowedRoles) => {
       next();
     } catch (error) {
       console.error('EMR role check error:', error);
-      res.status(500).json({
+     res.status(500).json({
         success: false,
         message: 'Error checking EMR role',
         error: error.message
@@ -178,7 +178,7 @@ const checkEMRRole = (allowedRoles) => {
 
 const checkEMRAccess = (screenId) => {
   return async (req, res, next) => {
-    try {
+   try {
       const clinicId = req.params.clinicId || req.body.clinicId || req.query.clinicId;
       const userId = req.user?.id || req.user?._id;
       
@@ -188,7 +188,7 @@ const checkEMRAccess = (screenId) => {
           message: 'Clinic ID is required',
           code: 'CLINIC_ID_REQUIRED'
         });
-      }
+     }
       
       if (!userId) {
         return res.status(401).json({
@@ -212,13 +212,13 @@ const checkEMRAccess = (screenId) => {
       if (subscription.isExpired) {
         return res.status(403).json({
           success: false,
-          message: 'EMR subscription expired',
-          code: 'SUBSCRIPTION_EXPIRED',
+         message: 'EMR subscription expired',
+         code: 'SUBSCRIPTION_EXPIRED',
           locked: true,
           upgrade: { url: '/emr/renew' }
         });
       }
-      let userRole = null;
+     let userRole = null;
       const staffRecord = await ClinicStaff.findOne({ clinicId, userId, isActive: true });
       
       if (staffRecord) {
@@ -240,11 +240,11 @@ const checkEMRAccess = (screenId) => {
       }
       const screen = Object.values(EMR_SCREENS).find(s => s.id === screenId);
       
-      if (!screen) {
+     if (!screen) {
         return res.status(404).json({
           success: false,
           message: 'Screen not found',
-          code: 'SCREEN_NOT_FOUND'
+         code: 'SCREEN_NOT_FOUND'
         });
       }
       const userPlanLevel = PLAN_HIERARCHY[subscription.plan] || 0;
@@ -277,14 +277,14 @@ const checkEMRAccess = (screenId) => {
       req.clinicId = clinicId;
       
       next();
-    } catch (error) {
+   } catch (error) {
       console.error('EMR access check error:', error);
       res.status(500).json({
         success: false,
-        message: 'Error checking EMR access',
+       message: 'Error checking EMR access',
         error: error.message
       });
-    }
+   }
   };
 };
 
@@ -312,8 +312,8 @@ const getAvailableScreens = async (clinicId, userId) => {
       return { screens: [], subscription: null, error: 'Not a clinic member' };
     }
     
-    const screens = getScreensForRole(userRole, subscription.plan);
-    const allScreens = Object.values(EMR_SCREENS);
+   const screens = getScreensForRole(userRole, subscription.plan);
+    const allScreens = Object.values(EMR_SCREENS); 
     const lockedScreens = allScreens.filter(screen => {
       const planLevel = PLAN_HIERARCHY[subscription.plan] || 0;
       const screenPlanLevel = PLAN_HIERARCHY[screen.plan] || 0;
@@ -324,7 +324,7 @@ const getAvailableScreens = async (clinicId, userId) => {
       screens,
       lockedScreens,
       subscription: {
-        plan: subscription.plan,
+       plan: subscription.plan,
         daysRemaining: subscription.daysRemaining,
         expiryDate: subscription.expiryDate
       },

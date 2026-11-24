@@ -20,15 +20,15 @@ router.get('/revenue', verifyTokenWithRole(['admin']), async (req, res) => {
         startDate = new Date(now.getTime() - 7 * 24 * 60 * 60 * 1000);
         break;
       case 'year':
-        startDate = new Date(now.getFullYear(), 0, 1);
+       startDate = new Date(now.getFullYear(), 0, 1);
         break;
       case 'month':
       default:
         startDate = new Date(now.getFullYear(), now.getMonth(), 1);
-    }
+   }
 
-    const [totalRevenue, revenueByDay, topDoctors] = await Promise.all([
-      Payment.aggregate([
+   const [totalRevenue, revenueByDay, topDoctors] = await Promise.all([
+     Payment.aggregate([
         { $match: { status: { $in: ['completed', 'success'] }, createdAt: { $gte: startDate } } },
         { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } }
       ]),
@@ -50,11 +50,11 @@ router.get('/revenue', verifyTokenWithRole(['admin']), async (req, res) => {
         { $unwind: { path: '$doctor', preserveNullAndEmptyArrays: true } },
         { $project: { revenue: 1, count: 1, doctorName: '$doctor.name', specialization: '$doctor.specialization' } }
       ])
-    ]);
+   ]);
 
     res.json({
       success: true,
-      period,
+      period, 
       totalRevenue: totalRevenue[0]?.total || 0,
       totalTransactions: totalRevenue[0]?.count || 0,
       revenueByDay,
@@ -71,18 +71,18 @@ router.get('/overview', async (req, res) => {
     today.setHours(0, 0, 0, 0);
     
     const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
-    const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+   const lastMonth = new Date(today.getFullYear(), today.getMonth() - 1, 1);
     const lastMonthEnd = new Date(today.getFullYear(), today.getMonth(), 0);
     const [
       totalPatients,
-      totalDoctors,
-      totalAppointments,
+     totalDoctors,
+     totalAppointments,
       totalClinics,
       todayAppointments,
       thisMonthAppointments,
       lastMonthAppointments,
       pendingAppointments,
-      completedAppointments
+     completedAppointments
     ] = await Promise.all([
       User.countDocuments({ role: 'patient' }),
       Doctor.countDocuments({ isActive: true }),
@@ -131,7 +131,7 @@ router.get('/overview', async (req, res) => {
       },
       lastMonth: {
         appointments: lastMonthAppointments,
-        revenue: previousRevenue
+        revenue: previousRevenue 
       }
     });
   } catch (error) {
@@ -149,7 +149,7 @@ router.get('/appointment-trends', async (req, res) => {
     const trends = await Appointment.aggregate([
       { $match: { createdAt: { $gte: startDate } } },
       {
-        $group: {
+       $group: {
           _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
           total: { $sum: 1 },
           completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
@@ -194,22 +194,22 @@ router.get('/revenue-trends', async (req, res) => {
 });
 router.get('/top-doctors', async (req, res) => {
   try {
-    const { limit = 10 } = req.query;
+   const { limit = 10 } = req.query;
     const thisMonth = new Date();
-    thisMonth.setDate(1);
+   thisMonth.setDate(1);
     thisMonth.setHours(0, 0, 0, 0);
 
-    const topDoctors = await Appointment.aggregate([
+   const topDoctors = await Appointment.aggregate([
       { $match: { createdAt: { $gte: thisMonth } } },
       {
         $group: {
           _id: '$doctorId',
-          appointmentCount: { $sum: 1 },
+         appointmentCount: { $sum: 1 },
           completedCount: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } }
         }
       },
       { $sort: { appointmentCount: -1 } },
-      { $limit: parseInt(limit) },
+     { $limit: parseInt(limit) },
       {
         $lookup: {
           from: 'doctors',
@@ -236,7 +236,7 @@ router.get('/top-doctors', async (req, res) => {
     console.error('Top doctors error:', error);
     res.status(500).json({ message: 'Failed to fetch top doctors', error: error.message });
   }
-});
+});
 router.get('/specialization-stats', async (req, res) => {
   try {
     const stats = await Doctor.aggregate([
@@ -251,7 +251,7 @@ router.get('/specialization-stats', async (req, res) => {
       { $sort: { count: -1 } }
     ]);
     const appointmentStats = await Appointment.aggregate([
-      {
+     {
         $lookup: {
           from: 'doctors',
           localField: 'doctorId',
@@ -263,7 +263,7 @@ router.get('/specialization-stats', async (req, res) => {
       {
         $group: {
           _id: '$doctor.specialization',
-          appointments: { $sum: 1 }
+         appointments: { $sum: 1 }
         }
       }
     ]);
@@ -287,7 +287,7 @@ router.get('/specialization-stats', async (req, res) => {
 router.get('/patient-demographics', async (req, res) => {
   try {
     const locationStats = await User.aggregate([
-      { $match: { role: 'patient', 'loginLocation.city': { $exists: true, $ne: null } } },
+     { $match: { role: 'patient', 'loginLocation.city': { $exists: true, $ne: null } } },
       {
         $group: {
           _id: '$loginLocation.city',
@@ -303,7 +303,7 @@ router.get('/patient-demographics', async (req, res) => {
     const registrationTrends = await User.aggregate([
       { $match: { role: 'patient', createdAt: { $gte: thirtyDaysAgo } } },
       {
-        $group: {
+       $group: {
           _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
           count: { $sum: 1 }
         }
@@ -313,16 +313,16 @@ router.get('/patient-demographics', async (req, res) => {
 
     res.json({
       locationDistribution: locationStats,
-      registrationTrends
+      registrationTrends 
     });
   } catch (error) {
     console.error('Patient demographics error:', error);
     res.status(500).json({ message: 'Failed to fetch demographics', error: error.message });
   }
 });
-router.get('/hourly-distribution', async (req, res) => {
+router.get('/hourly-distribution', async (req, res) => { 
   try {
-    const distribution = await Appointment.aggregate([
+   const distribution = await Appointment.aggregate([
       {
         $addFields: {
           hour: {
@@ -330,7 +330,7 @@ router.get('/hourly-distribution', async (req, res) => {
           }
         }
       },
-      {
+     {
         $group: {
           _id: '$hour',
           count: { $sum: 1 }
@@ -348,7 +348,7 @@ router.get('/hourly-distribution', async (req, res) => {
       });
     }
 
-    res.json(hourlyData);
+   res.json(hourlyData);
   } catch (error) {
     console.error('Hourly distribution error:', error);
     res.status(500).json({ message: 'Failed to fetch hourly distribution', error: error.message });
@@ -360,9 +360,9 @@ router.get('/review-stats', async (req, res) => {
       {
         $group: {
           _id: null,
-          totalReviews: { $sum: 1 },
+         totalReviews: { $sum: 1 },
           avgRating: { $avg: '$rating' },
-          fiveStars: { $sum: { $cond: [{ $eq: ['$rating', 5] }, 1, 0] } },
+          fiveStars: { $sum: { $cond: [{ $eq: ['$rating', 5] }, 1, 0] } }, 
           fourStars: { $sum: { $cond: [{ $eq: ['$rating', 4] }, 1, 0] } },
           threeStars: { $sum: { $cond: [{ $eq: ['$rating', 3] }, 1, 0] } },
           twoStars: { $sum: { $cond: [{ $eq: ['$rating', 2] }, 1, 0] } },
@@ -374,10 +374,10 @@ router.get('/review-stats', async (req, res) => {
     res.json(stats[0] || {
       totalReviews: 0,
       avgRating: 0,
-      fiveStars: 0,
+     fiveStars: 0,
       fourStars: 0,
       threeStars: 0,
-      twoStars: 0,
+     twoStars: 0,
       oneStar: 0
     });
   } catch (error) {
@@ -394,7 +394,7 @@ router.get('/export', async (req, res) => {
 
     let data;
 
-    switch (type) {
+   switch (type) {
       case 'appointments':
         data = await Appointment.find({
           createdAt: { $gte: start, $lte: end }
@@ -443,12 +443,12 @@ router.get('/export', async (req, res) => {
 
     res.json({
       type,
-      dateRange: { start, end },
+     dateRange: { start, end },
       count: data.length,
       data
     });
   } catch (error) {
-    console.error('Export error:', error);
+   console.error('Export error:', error);
     res.status(500).json({ message: 'Failed to export data', error: error.message });
   }
 });

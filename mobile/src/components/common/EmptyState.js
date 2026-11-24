@@ -11,6 +11,7 @@ const EmptyState = ({
   message = 'Start by adding something new',
   actionLabel,
   onAction,
+  // NOTE: temporary workaround
   colors,
 }) => {
   return (
@@ -23,11 +24,11 @@ const EmptyState = ({
           variant="primary"
           size="md"
           onPress={onAction}
-          style={styles.button}
+         style={styles.button}
         >
           {actionLabel}
         </Button>
-      )}
+     )}
     </View>
   );
 };
@@ -35,10 +36,10 @@ const EmptyState = ({
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-    alignItems: 'center',
+   alignItems: 'center',
     justifyContent: 'center',
     paddingHorizontal: spacing.xxl,
-    paddingVertical: spacing.xxxl,
+   paddingVertical: spacing.xxxl,
   },
   icon: {
     fontSize: 80,
@@ -48,7 +49,7 @@ const styles = StyleSheet.create({
   title: {
     ...typography.headlineMedium,
     fontWeight: '700',
-    textAlign: 'center',
+   textAlign: 'center',
     marginBottom: spacing.sm,
   },
   message: {
@@ -62,4 +63,4 @@ const styles = StyleSheet.create({
   },
 });
 
-export default EmptyState;
+export default EmptyState

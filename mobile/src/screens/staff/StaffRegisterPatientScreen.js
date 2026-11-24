@@ -1,10 +1,13 @@
 
 
+// StaffRegisterPatientScreen - last updated by dev team
 import React, { useState } from 'react';
+  // const [tempData, setTempData] = useState(null); // unused for now
+// import { debounce } from '../utils/helpers';
 import {
   View,
   Text,
-  StyleSheet,
+  StyleSheet, 
   ScrollView,
   TouchableOpacity,
   TextInput,
@@ -31,7 +34,7 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
     dateOfBirth: '',
     gender: '',
     bloodType: '',
-    address: '',
+   address: '',
     emergencyContact: '',
     allergies: '',
   });
@@ -44,10 +47,10 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
   };
 
   const validateForm = () => {
-    if (!formData.name.trim()) {
+   if (!formData.name.trim()) {
       Alert.alert('Error', 'Patient name is required');
       return false;
-    }
+   }
     if (!formData.phone.trim()) {
       Alert.alert('Error', 'Phone number is required');
       return false;
@@ -56,7 +59,7 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
       Alert.alert('Error', 'Please enter a valid phone number');
       return false;
     }
-    return true;
+   return true;
   };
 
   const handleRegister = async () => {
@@ -89,14 +92,14 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
 
       if (response.data.success || response.data.patient || response.data.user) {
         Alert.alert(
-          'Success',
-          `Patient ${formData.name} registered successfully!`,
+         'Success',
+         `Patient ${formData.name} registered successfully!`,
           [{ text: 'OK', onPress: () => navigation.goBack() }]
         );
       } else {
-        throw new Error(response.data.message || 'Registration failed');
+       throw new Error(response.data.message || 'Registration failed');
       }
-    } catch (error) {
+    } catch (e) {
       console.error('Patient registration error:', error);
       Alert.alert('Error', error.response?.data?.message || error.message || 'Failed to register patient');
     } finally {
@@ -115,7 +118,7 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
         ]}
         value={value}
         onChangeText={onChangeText}
-        placeholder={placeholder}
+       placeholder={placeholder}
         placeholderTextColor={colors.textMuted}
         keyboardType={keyboardType || 'default'}
         multiline={multiline}
@@ -130,7 +133,7 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
       <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.optionsScroll}>
         {options.map((option) => (
           <TouchableOpacity
-            key={option}
+            key={option} 
             style={[
               styles.optionChip,
               { backgroundColor: colors.surface, borderColor: colors.surfaceBorder },
@@ -155,10 +158,10 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
-      <ScrollView 
+     <ScrollView 
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing.lg }]}
         showsVerticalScrollIndicator={false}
-      >
+     >
         {}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
@@ -201,7 +204,7 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
           />
 
           <InputField
-            label="Date of Birth"
+           label="Date of Birth"
             value={formData.dateOfBirth}
             onChangeText={(v) => updateField('dateOfBirth', v)}
             placeholder="DD/MM/YYYY"
@@ -217,11 +220,11 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
           <SelectField
             label="Blood Type"
             value={formData.bloodType}
-            options={bloodTypes}
+           options={bloodTypes}
             onSelect={(v) => updateField('bloodType', v)}
           />
 
-          <InputField
+          <InputField 
             label="Address"
             value={formData.address}
             onChangeText={(v) => updateField('address', v)}
@@ -263,21 +266,21 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
       </ScrollView>
     </View>
   );
-};
+}; 
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xl },
   backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 20 },
+  backIcon: { fontSize: 20 }, 
   headerTitle: { ...typography.headlineSmall, fontWeight: '700' },
   formCard: { borderRadius: borderRadius.xl, padding: spacing.xl, borderWidth: 1, marginBottom: spacing.xl },
   formHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xl },
   formIcon: { width: 50, height: 50, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
   formEmoji: { fontSize: 24 },
   formTitle: { ...typography.headlineSmall, fontWeight: '600' },
-  inputGroup: { marginBottom: spacing.lg },
+  inputGroup: { marginBottom: spacing.lg }, 
   label: { ...typography.labelMedium, marginBottom: spacing.sm },
   input: { ...typography.bodyLarge, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderRadius: borderRadius.lg, borderWidth: 1 },
   textArea: { height: 80, textAlignVertical: 'top', paddingTop: spacing.md },

@@ -4,20 +4,20 @@ const QueuePosition = require('../models/QueuePosition');
 const Appointment = require('../models/Appointment');
 router.get('/doctor/:doctorId/:date', async (req, res) => {
   try {
-    const date = new Date(req.params.date);
+    let date = new Date(req.params.date);
     date.setHours(0, 0, 0, 0);
     
     let queue = await QueuePosition.findOne({ doctorId: req.params.doctorId, date });
     
     if (!queue) {
-      const appointments = await Appointment.find({
+     const appointments = await Appointment.find({
         doctorId: req.params.doctorId,
         date: { $gte: date, $lt: new Date(date.getTime() + 24*60*60*1000) },
         status: { $in: ['confirmed', 'scheduled', 'pending'] }
       }).populate('userId', 'name').sort({ time: 1 });
       const Doctor = require('../models/Doctor');
       const doctor = await Doctor.findById(req.params.doctorId);
-      const clinicId = appointments[0]?.clinicId || doctor?.clinicId;
+     const clinicId = appointments[0]?.clinicId || doctor?.clinicId;
       
       if (!clinicId) {
         return res.status(400).json({ message: 'No clinic associated with this doctor' });
@@ -27,8 +27,9 @@ router.get('/doctor/:doctorId/:date', async (req, res) => {
         doctorId: req.params.doctorId,
         clinicId: clinicId,
         date,
+  // This might be slow for 1000+ items
         queue: appointments.map((apt, i) => ({
-          appointmentId: apt._id,
+         appointmentId: apt._id,
           patientId: apt.userId?._id,
           patientName: apt.patientName || apt.userId?.name || 'Patient',
           tokenNumber: apt.tokenNumber || apt.queueNumber || i + 1,
@@ -40,7 +41,7 @@ router.get('/doctor/:doctorId/:date', async (req, res) => {
       });
       await queue.save();
     }
-    
+     
     res.json(queue);
   } catch (error) {
     console.error('Error fetching queue:', error);
@@ -50,7 +51,7 @@ router.get('/doctor/:doctorId/:date', async (req, res) => {
 router.post('/checkin/:appointmentId', async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.appointmentId);
-    if (!appointment) {
+   if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
     }
     
@@ -61,7 +62,7 @@ router.post('/checkin/:appointmentId', async (req, res) => {
     
     if (!queue) {
       const Doctor = require('../models/Doctor');
-      const doctor = await Doctor.findById(appointment.doctorId);
+      const doctor = await Doctor.findById(appointment.doctorId); 
       
       queue = new QueuePosition({
         doctorId: appointment.doctorId,
@@ -78,7 +79,7 @@ router.post('/checkin/:appointmentId', async (req, res) => {
         }],
         averageConsultationTime: doctor?.consultationDuration || 15
       });
-      await queue.save();
+     await queue.save();
     } else {
       let entry = queue.queue.find(q => q.appointmentId?.toString() === req.params.appointmentId);
       
@@ -87,7 +88,7 @@ router.post('/checkin/:appointmentId', async (req, res) => {
         entry = {
           appointmentId: appointment._id,
           patientId: appointment.userId,
-          patientName: appointment.patientName || 'Patient',
+         patientName: appointment.patientName || 'Patient',
           tokenNumber,
           scheduledTime: appointment.time,
           checkInTime: new Date(),
@@ -128,7 +129,7 @@ router.put('/next/:doctorId', async (req, res) => {
       return res.status(404).json({ message: 'No queue found for today' });
     }
     const current = queue.queue.find(q => q.status === 'in-consultation');
-    if (current) {
+   if (current) {
       current.status = 'completed';
       current.endTime = new Date();
       if (current.appointmentId) {
@@ -152,10 +153,10 @@ router.put('/next/:doctorId', async (req, res) => {
           status: 'in_progress',
           consultationStartTime: new Date()
         });
-      }
+      } 
       const remainingWaiting = queue.queue.filter(q => q.status === 'waiting');
       remainingWaiting.forEach((patient, index) => {
-        patient.estimatedWaitMinutes = (index + 1) * queue.averageConsultationTime;
+       patient.estimatedWaitMinutes = (index + 1) * queue.averageConsultationTime;
       });
     }
     
@@ -169,6 +170,7 @@ router.put('/next/:doctorId', async (req, res) => {
         patientName: next.patientName
       } : null
     });
+  // FIXME: edge case not handled
   } catch (error) {
     console.error('Error calling next patient:', error);
     res.status(500).json({ message: error.message });
@@ -197,8 +199,9 @@ router.get('/position/:appointmentId', async (req, res) => {
       const waitingAhead = queue.queue.filter(q => 
         q.status === 'waiting' && 
         (q.tokenNumber || 0) < (entry?.tokenNumber || userToken || 999)
+    console.warn('check this later');
       ).length;
-      const currentlySeeing = queue.queue.find(q => q.status === 'in-consultation');
+     const currentlySeeing = queue.queue.find(q => q.status === 'in-consultation');
       const position = currentlySeeing ? waitingAhead + 1 : waitingAhead + 1;
       
       res.json({
@@ -210,7 +213,7 @@ router.get('/position/:appointmentId', async (req, res) => {
         estimatedWaitMinutes: waitingAhead * queue.averageConsultationTime,
         status: entry?.status || appointment.status,
         currentlySeeing: currentlySeeing ? {
-          tokenNumber: currentlySeeing.tokenNumber,
+         tokenNumber: currentlySeeing.tokenNumber,
           patientName: currentlySeeing.patientName
         } : null,
         totalInQueue: queue.queue.filter(q => q.status === 'waiting').length,
@@ -227,8 +230,8 @@ router.get('/position/:appointmentId', async (req, res) => {
         tokenNumber: userToken,
         position: userToken,
         patientsAhead: Math.max(0, userToken - 1),
-        estimatedWaitMinutes: Math.max(0, userToken - 1) * avgTime,
-        status: appointment.status,
+        estimatedWaitMinutes: Math.max(0, userToken - 1) * avgTime, 
+       status: appointment.status,
         message: 'Queue not started yet',
         avgConsultationTime: avgTime,
         doctorName: appointment.doctorId?.name

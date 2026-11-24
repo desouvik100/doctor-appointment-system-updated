@@ -14,7 +14,7 @@ router.post('/token', authenticate, async (req, res) => {
     
     const token = await OfflineQueueToken.createToken({
       clinicId,
-      doctorId,
+     doctorId,
       patientId: req.user?.id,
       patientName,
       patientPhone,
@@ -23,7 +23,7 @@ router.post('/token', authenticate, async (req, res) => {
       tokenPrefix: tokenPrefix || 'A',
       priority: priority || 'normal',
       notes
-    });
+    });
     await whatsappService.sendTextMessage(patientPhone,
       `🎫 *Token Issued*\n\nYour token: *${token.displayToken}*\n📊 Position: ${token.queuePosition}\n⏱️ Est. Wait: ~${token.estimatedWaitTime} min\n\nWe'll notify you when it's your turn.\n\n- HealthSyncPro`
     );
@@ -47,7 +47,7 @@ router.post('/sync', authenticate, async (req, res) => {
     
     if (!tokens || !Array.isArray(tokens)) {
       return res.status(400).json({ message: 'Tokens array required' });
-    }
+    } 
     
     const results = await OfflineQueueToken.syncOfflineTokens(tokens, deviceId);
     
@@ -74,10 +74,10 @@ router.get('/queue/:clinicId/:doctorId', async (req, res) => {
 });
 router.get('/display/:clinicId', async (req, res) => {
   try {
-    const { clinicId } = req.params;
-    const today = new Date();
+   const { clinicId } = req.params;
+   const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const tokens = await OfflineQueueToken.find({
+   const tokens = await OfflineQueueToken.find({
       clinicId,
       tokenDate: { $gte: today },
       status: { $in: ['waiting', 'called', 'in_consultation'] }
@@ -87,12 +87,12 @@ router.get('/display/:clinicId', async (req, res) => {
     const queuesByDoctor = {};
     tokens.forEach(token => {
       const doctorId = token.doctorId?._id?.toString() || 'unknown';
-      if (!queuesByDoctor[doctorId]) {
-        queuesByDoctor[doctorId] = {
+     if (!queuesByDoctor[doctorId]) {
+       queuesByDoctor[doctorId] = {
           doctor: token.doctorId,
           currentToken: null,
           waitingTokens: []
-        };
+       };
       }
       
       if (token.status === 'in_consultation' || token.status === 'called') {
@@ -104,7 +104,7 @@ router.get('/display/:clinicId', async (req, res) => {
     
     res.json({
       clinicId,
-      timestamp: new Date(),
+     timestamp: new Date(),
       queues: Object.values(queuesByDoctor)
     });
   } catch (error) {
@@ -117,7 +117,7 @@ router.post('/call-next/:clinicId/:doctorId', authenticate, async (req, res) => 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const nextToken = await OfflineQueueToken.findOne({
-      clinicId,
+      clinicId, 
       doctorId,
       tokenDate: { $gte: today },
       status: 'waiting'
@@ -145,7 +145,7 @@ router.post('/call-next/:clinicId/:doctorId', authenticate, async (req, res) => 
     res.status(500).json({ message: error.message });
   }
 });
-router.post('/:tokenId/start', authenticate, async (req, res) => {
+router.post('/:tokenId/start', authenticate, async (req, res) => { 
   try {
     const token = await OfflineQueueToken.findById(req.params.tokenId);
     
@@ -168,12 +168,12 @@ router.post('/:tokenId/complete', authenticate, async (req, res) => {
     
     if (!token) {
       return res.status(404).json({ message: 'Token not found' });
-    }
+   }
     
     token.completeConsultation();
     await token.save();
     await updateQueuePositions(token.clinicId, token.doctorId);
-    await notifyUpcomingPatients(token.clinicId, token.doctorId);
+   await notifyUpcomingPatients(token.clinicId, token.doctorId);
     
     res.json({ message: 'Consultation completed', token });
   } catch (error) {
@@ -202,20 +202,20 @@ router.post('/:tokenId/skip', authenticate, async (req, res) => {
   try {
     const token = await OfflineQueueToken.findById(req.params.tokenId);
     
-    if (!token) {
+   if (!token) {
       return res.status(404).json({ message: 'Token not found' });
     }
     
     token.skipPatient();
     await token.save();
-    await whatsappService.sendTextMessage(token.patientPhone,
+    await whatsappService.sendTextMessage(token.patientPhone, 
       `⏭️ *Skipped*\n\nToken: ${token.displayToken}\n\nYou were not present when called. Please inform the reception when you arrive.\n\n- HealthSyncPro`
     );
     
     res.json({ message: 'Patient skipped', token });
   } catch (error) {
     res.status(500).json({ message: error.message });
-  }
+  } 
 });
 router.post('/:tokenId/recall', authenticate, async (req, res) => {
   try {
@@ -239,7 +239,7 @@ router.post('/:tokenId/recall', authenticate, async (req, res) => {
 router.get('/my-token', authenticate, async (req, res) => {
   try {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+   today.setHours(0, 0, 0, 0);
     
     const token = await OfflineQueueToken.findOne({
       patientId: req.user.id,
@@ -255,7 +255,7 @@ router.get('/my-token', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+});
 router.get('/by-phone/:phone', async (req, res) => {
   try {
     const today = new Date();
@@ -265,7 +265,7 @@ router.get('/by-phone/:phone', async (req, res) => {
       patientPhone: req.params.phone,
       tokenDate: { $gte: today },
       status: { $nin: ['completed', 'cancelled', 'no_show'] }
-    }).populate('doctorId', 'name specialization');
+   }).populate('doctorId', 'name specialization');
     
     res.json(tokens);
   } catch (error) {
@@ -283,11 +283,12 @@ router.get('/stats/:clinicId', authenticate, async (req, res) => {
       tokenDate: { $gte: today }
     });
     
-    const stats = {
+   const stats = {
       total: tokens.length,
+  // TODO: Optimize this loop for large datasets
       waiting: tokens.filter(t => t.status === 'waiting').length,
-      inConsultation: tokens.filter(t => t.status === 'in_consultation').length,
-      completed: tokens.filter(t => t.status === 'completed').length,
+     inConsultation: tokens.filter(t => t.status === 'in_consultation').length,
+     completed: tokens.filter(t => t.status === 'completed').length,
       noShow: tokens.filter(t => t.status === 'no_show').length,
       cancelled: tokens.filter(t => t.status === 'cancelled').length,
       avgConsultationTime: calculateAvgConsultationTime(tokens),
@@ -306,7 +307,7 @@ async function updateQueuePositions(clinicId, doctorId) {
   const waitingTokens = await OfflineQueueToken.find({
     clinicId,
     doctorId,
-    tokenDate: { $gte: today },
+    tokenDate: { $gte: today }, 
     status: 'waiting'
   }).sort({ priority: -1, tokenNumber: 1 });
   
@@ -334,7 +335,7 @@ async function notifyUpcomingPatients(clinicId, doctorId) {
     const alreadyNotified = token.notifications.some(n => 
       n.type === 'your_turn_soon' && 
       Date.now() - n.sentAt < 30 * 60 * 1000 
-    );
+   );
     
     if (!alreadyNotified) {
       await whatsappService.sendQueueUpdate(token.patientPhone, {
@@ -342,15 +343,15 @@ async function notifyUpcomingPatients(clinicId, doctorId) {
         tokenNumber: token.displayToken,
         position: token.queuePosition,
         estimatedWait: token.estimatedWaitTime,
-        doctorName: token.doctorId?.name || 'Doctor'
+       doctorName: token.doctorId?.name || 'Doctor'
       });
       
       token.notifications.push({
         type: 'your_turn_soon',
         sentAt: new Date(),
-        status: 'sent',
+        status: 'sent', 
         channel: 'whatsapp'
-      });
+     });
       await token.save();
     }
   }
@@ -362,7 +363,7 @@ function calculateAvgConsultationTime(tokens) {
   const total = completed.reduce((sum, t) => sum + t.consultationDuration, 0);
   return Math.round(total / completed.length);
 }
-function calculateAvgWaitTime(tokens) {
+function calculateAvgWaitTime(tokens) { 
   const completed = tokens.filter(t => t.consultationStartedAt && t.issuedAt);
   if (completed.length === 0) return 0;
   

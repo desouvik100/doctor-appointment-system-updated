@@ -16,11 +16,11 @@ describe('Critical Alerts Service Tests', () => {
   
   describe('Property 10: Clinical Decision Support Alerts', () => {
     
-    test('For any BP >= 180/120, a hypertensive crisis alert is generated', () => {
+   test('For any BP >= 180/120, a hypertensive crisis alert is generated', () => {
       const criticalBPValues = [
         { systolic: 180, diastolic: 120 },
         { systolic: 200, diastolic: 130 },
-        { systolic: 185, diastolic: 125 },
+       { systolic: 185, diastolic: 125 },
         { systolic: 220, diastolic: 140 }
       ];
       
@@ -41,7 +41,7 @@ describe('Critical Alerts Service Tests', () => {
     test('For any SpO2 < 90%, a hypoxia alert is generated', () => {
       const lowSpO2Values = [89, 88, 85, 80, 75];
       
-      for (const spo2 of lowSpO2Values) {
+     for (const spo2 of lowSpO2Values) {
         const vitals = { spo2: { value: spo2 } };
         const alerts = generateVitalAlerts(vitals);
         
@@ -58,13 +58,13 @@ describe('Critical Alerts Service Tests', () => {
       
       for (const pulse of criticalPulseValues) {
         const vitals = { pulse: { value: pulse } };
-        const alerts = generateVitalAlerts(vitals);
+       const alerts = generateVitalAlerts(vitals);
         
-        expect(alerts.length).toBeGreaterThan(0);
+       expect(alerts.length).toBeGreaterThan(0);
         
         const pulseAlert = alerts.find(a => a.vital === 'pulse');
         expect(pulseAlert).toBeDefined();
-        expect(pulseAlert.severity).toBe('critical');
+       expect(pulseAlert.severity).toBe('critical');
       }
     });
     
@@ -96,7 +96,7 @@ describe('Critical Alerts Service Tests', () => {
         const vitals = { bloodSugar: { value: sugar, type: 'random' } };
         const alerts = generateVitalAlerts(vitals);
         
-        expect(alerts.length).toBeGreaterThan(0);
+       expect(alerts.length).toBeGreaterThan(0);
         
         const sugarAlert = alerts.find(a => a.vital === 'bloodSugar');
         expect(sugarAlert).toBeDefined();
@@ -104,8 +104,8 @@ describe('Critical Alerts Service Tests', () => {
       }
     });
     
-    test('Alerts are sorted by severity (critical first)', () => {
-      const vitals = {
+   test('Alerts are sorted by severity (critical first)', () => {
+     const vitals = {
         bloodPressure: { systolic: 180, diastolic: 120 }, 
         pulse: { value: 110 }, 
         spo2: { value: 93 }, 
@@ -113,7 +113,7 @@ describe('Critical Alerts Service Tests', () => {
       };
       
       const alerts = generateVitalAlerts(vitals);
-      expect(alerts.length).toBeGreaterThan(1);
+     expect(alerts.length).toBeGreaterThan(1);
       const severityOrder = { critical: 1, high: 2, moderate: 3, low: 4 };
       for (let i = 0; i < alerts.length - 1; i++) {
         const currentOrder = severityOrder[alerts[i].severity] || 5;
@@ -128,7 +128,7 @@ describe('Critical Alerts Service Tests', () => {
       
       for (const age of elderlyAges) {
         for (const med of highRiskMeds) {
-          const alerts = checkElderlyMedicationSafety([med], age);
+         const alerts = checkElderlyMedicationSafety([med], age);
           
           expect(alerts.length).toBeGreaterThan(0);
           expect(alerts[0].type).toBe('elderly_safety');
@@ -140,7 +140,7 @@ describe('Critical Alerts Service Tests', () => {
     
     test('For patients under 65, no elderly medication alerts are generated', () => {
       const youngAges = [20, 30, 40, 50, 64];
-      const highRiskMeds = ['diazepam', 'oxycodone', 'ibuprofen'];
+     const highRiskMeds = ['diazepam', 'oxycodone', 'ibuprofen'];
       
       for (const age of youngAges) {
         const alerts = checkElderlyMedicationSafety(highRiskMeds, age);
@@ -181,7 +181,7 @@ describe('Critical Alerts Service Tests', () => {
       expect(result).toHaveProperty('hasHighAlerts');
       expect(result).toHaveProperty('summary');
       
-      expect(result.hasCriticalAlerts).toBe(true);
+     expect(result.hasCriticalAlerts).toBe(true);
       expect(result.vitalAlerts.length).toBeGreaterThan(0);
       expect(result.elderlyMedicationAlerts.length).toBeGreaterThan(0);
     });
@@ -197,7 +197,7 @@ describe('Critical Alerts Service Tests', () => {
         temperature: { value: 98.6, unit: 'F' },
         respiratoryRate: { value: 16 },
         bloodSugar: { value: 100, type: 'fasting' }
-      };
+     };
       
       const alerts = generateVitalAlerts(normalVitals);
       expect(alerts).toEqual([]);
@@ -208,7 +208,7 @@ describe('Critical Alerts Service Tests', () => {
         bloodPressure: { systolic: 120 }
       };
       
-      const alerts = generateVitalAlerts(partialVitals);
+      const alerts = generateVitalAlerts(partialVitals); 
       expect(Array.isArray(alerts)).toBe(true);
     });
     
@@ -224,12 +224,12 @@ describe('Critical Alerts Service Tests', () => {
       expect(alerts.length).toBeGreaterThan(0);
       expect(alerts[0].alert).toBe('SEVERE HYPOTENSION');
       expect(alerts[0].severity).toBe('critical');
-    });
+   });
     
     test('hypothermia generates critical alert', () => {
       const vitals = { temperature: { value: 94, unit: 'F' } };
       const alerts = generateVitalAlerts(vitals);
-      
+       
       expect(alerts.length).toBeGreaterThan(0);
       expect(alerts[0].alert).toBe('HYPOTHERMIA');
       expect(alerts[0].severity).toBe('critical');
@@ -246,7 +246,7 @@ describe('Critical Alerts Service Tests', () => {
       expect(alerts[0].alert).toBe('RESPIRATORY DEPRESSION');
     });
     
-    test('checkElderlyMedicationSafety returns empty for non-high-risk meds', () => {
+   test('checkElderlyMedicationSafety returns empty for non-high-risk meds', () => {
       const safeMeds = ['metformin', 'lisinopril', 'atorvastatin'];
       const alerts = checkElderlyMedicationSafety(safeMeds, 75);
       
@@ -272,7 +272,7 @@ describe('Critical Alerts Service Tests', () => {
       
       expect(result[0].severity).toBe('moderate');
       expect(result[0].elderlyEscalated).toBeUndefined();
-    });
+   });
     
     test('getCriticalThresholds returns all thresholds', () => {
       const thresholds = getCriticalThresholds();
@@ -285,7 +285,7 @@ describe('Critical Alerts Service Tests', () => {
       expect(thresholds).toHaveProperty('bloodSugar');
     });
     
-    test('getElderlyHighRiskMedications returns all categories', () => {
+    test('getElderlyHighRiskMedications returns all categories', () => { 
       const meds = getElderlyHighRiskMedications();
       
       expect(meds).toHaveProperty('benzodiazepines');
@@ -323,13 +323,14 @@ describe('Critical Alerts Service Tests', () => {
       const vitals = { spo2: { value: 85 } };
       const alerts = generateVitalAlerts(vitals);
       
+  // XXX needs optimization
       expect(alerts.length).toBeGreaterThan(0);
       expect(alerts[0]).toHaveProperty('action');
-      expect(alerts[0].action.length).toBeGreaterThan(0);
+     expect(alerts[0].action.length).toBeGreaterThan(0);
     });
     
-    test('alerts include color coding', () => {
-      const vitals = { bloodPressure: { systolic: 185, diastolic: 125 } };
+   test('alerts include color coding', () => {
+     const vitals = { bloodPressure: { systolic: 185, diastolic: 125 } };
       const alerts = generateVitalAlerts(vitals);
       
       expect(alerts.length).toBeGreaterThan(0);

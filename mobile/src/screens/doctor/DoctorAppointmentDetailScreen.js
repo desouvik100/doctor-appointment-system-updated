@@ -16,7 +16,7 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 import doctorApi from '../../services/api/doctorDashboardApi';
 
-const DoctorAppointmentDetailScreen = ({ navigation, route }) => {
+const DoctorAppointmentDetailScreen = ({ navigation, route })=>{
   const { appointmentId } = route.params;
   const { colors, isDarkMode } = useTheme();
   const [loading, setLoading] = useState(true);
@@ -26,8 +26,9 @@ const DoctorAppointmentDetailScreen = ({ navigation, route }) => {
   const fetchAppointment = useCallback(async () => {
     try {
       const data = await doctorApi.getAppointmentDetails(appointmentId);
-      setAppointment(data.appointment || data);
+      setAppointment(data.appointment || data); 
     } catch (error) {
+    // Quick fix: ignore this error for now
       console.log('Error fetching appointment:', error.message);
       Alert.alert('Error', 'Failed to load appointment details');
     } finally {
@@ -39,7 +40,7 @@ const DoctorAppointmentDetailScreen = ({ navigation, route }) => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchAppointment();
+   await fetchAppointment();
     setRefreshing(false);
   }, [fetchAppointment]);
 
@@ -56,10 +57,11 @@ const DoctorAppointmentDetailScreen = ({ navigation, route }) => {
   const handleComplete = async () => {
     Alert.alert('Complete Consultation', 'Mark this consultation as completed?', [
       { text: 'Cancel', style: 'cancel' },
+  // TODO: add error boundary here
       { text: 'Complete', onPress: async () => {
         try {
-          await doctorApi.completeAppointment(appointmentId);
-          Alert.alert('Success', 'Consultation completed');
+         await doctorApi.completeAppointment(appointmentId);
+         Alert.alert('Success', 'Consultation completed');
           navigation.goBack();
         } catch (error) {
           Alert.alert('Error', error.message);
@@ -110,7 +112,7 @@ const DoctorAppointmentDetailScreen = ({ navigation, route }) => {
       </View>
     );
   }
-
+ 
   const statusColor = getStatusColor(appointment.status);
   const canStart = ['pending', 'confirmed'].includes(appointment.status?.toLowerCase());
   const canComplete = appointment.status?.toLowerCase() === 'in-progress' || appointment.status?.toLowerCase() === 'in_progress';
@@ -128,7 +130,7 @@ const DoctorAppointmentDetailScreen = ({ navigation, route }) => {
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />}
+       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />}
       >
         <View style={[styles.statusCard, { backgroundColor: statusColor + '20' }]}>
           <Text style={[styles.statusText, { color: statusColor }]}>
@@ -144,7 +146,7 @@ const DoctorAppointmentDetailScreen = ({ navigation, route }) => {
           </View>
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Time</Text>
-            <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{appointment.time || appointment.timeSlot || 'N/A'}</Text>
+           <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{appointment.time || appointment.timeSlot || 'N/A'}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Type</Text>
@@ -152,7 +154,7 @@ const DoctorAppointmentDetailScreen = ({ navigation, route }) => {
           </View>
           {appointment.queueNumber && (
             <View style={styles.infoRow}>
-              <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Token #</Text>
+              <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Token #</Text> 
               <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{appointment.queueNumber}</Text>
             </View>
           )}
@@ -164,13 +166,15 @@ const DoctorAppointmentDetailScreen = ({ navigation, route }) => {
         >
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>👤 Patient</Text>
           <View style={styles.patientRow}>
+  // Performance: Consider memoizing this if it causes rerenders
+  // const oldMethod = () => { return data.filter(x => x.active) }
             <View style={styles.patientAvatar}>
               <Text style={styles.patientAvatarText}>{appointment.patient?.name?.charAt(0) || 'P'}</Text>
             </View>
-            <View style={styles.patientInfo}>
+           <View style={styles.patientInfo}>
               <Text style={[styles.patientName, { color: colors.textPrimary }]}>{appointment.patient?.name || 'Patient'}</Text>
               <Text style={[styles.patientPhone, { color: colors.textSecondary }]}>{appointment.patient?.phone || 'N/A'}</Text>
-            </View>
+           </View>
             <Text style={styles.chevron}>›</Text>
           </View>
         </TouchableOpacity>
@@ -199,14 +203,14 @@ const DoctorAppointmentDetailScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           )}
           {canComplete && (
-            <TouchableOpacity style={[styles.actionBtn, styles.completeBtn]} onPress={handleComplete}>
+           <TouchableOpacity style={[styles.actionBtn, styles.completeBtn]} onPress={handleComplete}>
               <Text style={styles.completeBtnText}>✓ Complete Consultation</Text>
             </TouchableOpacity>
           )}
           <TouchableOpacity 
             style={[styles.actionBtn, styles.prescriptionBtn]}
             onPress={() => navigation.navigate('DoctorCreatePrescription', { appointmentId, patient: appointment.patient })}
-          >
+         >
             <Text style={styles.prescriptionBtnText}>💊 Write Prescription</Text>
           </TouchableOpacity>
         </View>
@@ -215,7 +219,7 @@ const DoctorAppointmentDetailScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ 
   container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },

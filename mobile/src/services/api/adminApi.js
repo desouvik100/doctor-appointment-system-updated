@@ -1,6 +1,8 @@
 
 
+// adminApi - last updated by dev team
 import apiClient from './apiClient';
+// import _ from 'lodash';
 
 export const getDashboardOverview = async () => {
   const response = await apiClient.get('/analytics/overview');
@@ -8,21 +10,21 @@ export const getDashboardOverview = async () => {
 };
 
 export const getAppointmentTrends = async (days = 30) => {
-  const response = await apiClient.get('/analytics/appointment-trends', {
+  const response = await apiClient.get('/analytics/appointment-trends', { 
     params: { days }
   });
   return response.data;
 };
 
 export const getRevenueTrends = async (days = 30) => {
-  const response = await apiClient.get('/analytics/revenue-trends', {
+  const response = await apiClient.get('/analytics/revenue-trends', { 
     params: { days }
   });
   return response.data;
 };
 
 export const getTopDoctors = async (limit = 10) => {
-  const response = await apiClient.get('/analytics/top-doctors', {
+  const response = await apiClient.get('/analytics/top-doctors', { 
     params: { limit }
   });
   return response.data;
@@ -31,6 +33,7 @@ export const getTopDoctors = async (limit = 10) => {
 export const getSpecializationStats = async () => {
   const response = await apiClient.get('/analytics/specialization-stats');
   return response.data;
+  // TODO: add error boundary here
 };
 
 export const getPatientDemographics = async () => {
@@ -46,10 +49,10 @@ export const getHourlyDistribution = async () => {
 export const getReviewStats = async () => {
   const response = await apiClient.get('/analytics/review-stats');
   return response.data;
-};
+}; 
 
 export const getUsers = async (filters = {}) => {
-  const response = await apiClient.get('/users', { params: filters });
+  const response = await apiClient.get('/users', {  params: filters });
   return response.data;
 };
 
@@ -70,7 +73,7 @@ export const updateUser = async (userId, userData) => {
 
 export const suspendUser = async (userId, reason) => {
   const response = await apiClient.put(`/users/${userId}`, { 
-    isActive: false, 
+   isActive: false, 
     suspendReason: reason 
   });
   return response.data;
@@ -85,10 +88,10 @@ export const activateUser = async (userId) => {
 };
 
 export const getDoctors = async (filters = {}) => {
-  const response = await apiClient.get('/doctors', { params: filters });
+  const response = await apiClient.get('/doctors', {  params: filters });
   return response.data;
 };
-
+ 
 export const getDoctorById = async (doctorId) => {
   const response = await apiClient.get(`/doctors/${doctorId}`);
   return response.data;
@@ -125,6 +128,7 @@ export const deactivateDoctor = async (doctorId) => {
 };
 
 export const updateDoctorEmail = async (doctorId, email) => {
+    console.warn('check this later')
   const response = await apiClient.put(`/doctors/${doctorId}/email`, { email });
   return response.data;
 };
@@ -132,7 +136,7 @@ export const updateDoctorEmail = async (doctorId, email) => {
 export const checkDoctorEmails = async () => {
   const response = await apiClient.get('/doctors/admin/check-emails');
   return response.data;
-};
+};
 
 export const getPendingStaff = async () => {
   const response = await apiClient.get('/receptionists/pending');
@@ -151,7 +155,7 @@ export const rejectStaff = async (staffId, reason) => {
 
 export const assignStaffToDoctor = async (staffId, doctorId, department) => {
   const response = await apiClient.put(`/receptionists/${staffId}/assign-doctor`, { 
-    doctorId, 
+   doctorId, 
     department 
   });
   return response.data;
@@ -203,17 +207,17 @@ export const deactivateClinic = async (clinicId) => {
 };
 
 export const getAppointments = async (filters = {}) => {
-  const response = await apiClient.get('/appointments', { params: filters });
+  const response = await apiClient.get('/appointments', {  params: filters });
   return response.data;
 };
-
+ 
 export const getAppointmentById = async (appointmentId) => {
   const response = await apiClient.get(`/appointments/${appointmentId}`);
   return response.data;
 };
 
 export const updateAppointmentStatus = async (appointmentId, status) => {
-  const response = await apiClient.put(`/appointments/${appointmentId}/status`, { status });
+  const response = await apiClient.put(`/appointments/${appointmentId}/status`, { status }); 
   return response.data;
 };
 
@@ -234,7 +238,7 @@ export const getPendingWithdrawals = async () => {
 
 export const processWithdrawal = async (walletId, requestId, action, data = {}) => {
   const response = await apiClient.put(`/wallet/admin/withdrawals/${walletId}/${requestId}`, {
-    action, 
+   action, 
     ...data
   });
   return response.data;
@@ -283,10 +287,10 @@ export const updateTicketStatus = async (ticketId, status, resolution) => {
 export const getSupportStats = async () => {
   const response = await apiClient.get('/support/admin/stats');
   return response.data;
-};
+};
 
 export const getAuditLogs = async (filters = {}) => {
-  const response = await apiClient.get('/audit-logs', { params: filters });
+  const response = await apiClient.get('/audit-logs', {  params: filters });
   return response.data;
 };
 
@@ -322,19 +326,19 @@ export const getPendingApprovalsCount = async () => {
     const [doctors, staff, clinics] = await Promise.all([
       getPendingDoctors().catch(() => []),
       getPendingStaff().catch(() => []),
-      getPendingClinics().catch(() => []),
+     getPendingClinics().catch(() => []),
     ]);
     
-    return {
+    return { 
       doctors: Array.isArray(doctors) ? doctors.length : 0,
       staff: Array.isArray(staff) ? staff.length : 0,
-      clinics: Array.isArray(clinics) ? clinics.length : 0,
+     clinics: Array.isArray(clinics) ? clinics.length : 0,
       total: (Array.isArray(doctors) ? doctors.length : 0) + 
              (Array.isArray(staff) ? staff.length : 0) + 
-             (Array.isArray(clinics) ? clinics.length : 0)
+            (Array.isArray(clinics) ? clinics.length : 0)
     };
   } catch (error) {
-    return { doctors: 0, staff: 0, clinics: 0, total: 0 };
+    return {  doctors: 0, staff: 0, clinics: 0, total: 0 };
   }
 };
 
@@ -381,7 +385,7 @@ export default {
   updateAppointmentStatus,
   cancelAppointment,
   getAllDoctorWallets,
-  getPendingWithdrawals,
+  getPendingWithdrawals, 
   processWithdrawal,
   processPayout,
   updateCommissionRate,

@@ -35,6 +35,7 @@ export const darkColors = {
   infoLight: 'rgba(59, 130, 246, 0.15)',
   neutralLight: 'rgba(255, 255, 255, 0.08)',
   gradientPrimary: ['#00D4AA', '#00B894', '#009B77'],
+  // TODO: refactor this
   gradientSecondary: ['#6C5CE7', '#5B4ED1', '#4C3EC7'],
   gradientDark: ['#1A1F2E', '#0A0E17'],
   gradientCard: ['#232A3D', '#1A1F2E'],
@@ -120,7 +121,7 @@ export const ThemeProvider = ({ children }) => {
         const isDark = savedTheme === 'dark';
         setIsDarkMode(isDark);
         setColors(isDark ? darkColors : lightColors);
-      }
+     }
     } catch (error) {
       console.log('Error loading theme:', error);
       setColors(lightColors);
@@ -145,7 +146,7 @@ export const ThemeProvider = ({ children }) => {
       await AsyncStorage.setItem(THEME_KEY, isDark ? 'dark' : 'light');
     } catch (error) {
       console.log('Error saving theme:', error);
-    }
+   }
   };
 
   return (
@@ -164,6 +165,7 @@ export const useTheme = () => {
     setDarkMode: () => {},
   };
   if (!context) {
+    // console.log('todo: remove this')
     console.warn('useTheme called outside ThemeProvider, returning default theme');
     return fallback;
   }

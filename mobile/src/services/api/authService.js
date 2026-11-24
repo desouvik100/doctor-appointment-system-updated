@@ -5,7 +5,7 @@ import apiClient, {
   saveAuthToken,
   saveRefreshToken,
   clearAuthTokens,
-  getAuthToken
+  getAuthToken 
 } from './apiClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import * as Keychain from 'react-native-keychain';
@@ -17,6 +17,7 @@ const saveUserLocal = async (user) => {
     await AsyncStorage.setItem('userData', JSON.stringify(user));
     await AsyncStorage.setItem('user', JSON.stringify(user));
   } catch (e) {
+    // FIXME: proper error handling needed
     console.error('Error saving user locally:', e);
   }
 };
@@ -32,10 +33,10 @@ const removeUserLocal = async () => {
 
 export const login = async (credentials) => {
   try {
-    const response = await apiClient.post('/auth/login', credentials);
+   const response = await apiClient.post('/auth/login', credentials);
     const data = response?.data || {};
     
-    if (!data.token || !data.user) {
+   if (!data.token || !data.user) {
       throw new Error('Invalid login response from server');
     }
     
@@ -43,12 +44,12 @@ export const login = async (credentials) => {
     
     await saveAuthToken(token);
     if (refreshToken) {
-      await saveRefreshToken(refreshToken);
+     await saveRefreshToken(refreshToken);
     }
     await saveUserLocal(user);
     
-    return { token, user };
-  } catch (error) {
+    return { token, user }; 
+  } catch (err) {
     console.error('Login error:', error);
     throw error;
   }
@@ -63,10 +64,10 @@ export const doctorLogin = async (credentials) => {
       throw new Error('Invalid doctor login response from server');
     }
 
-    const { token, refreshToken, doctor } = data;
+   const { token, refreshToken, doctor } = data;
 
     await saveAuthToken(token);
-    if (refreshToken) {
+   if (refreshToken) {
       await saveRefreshToken(refreshToken);
     }
     const user = { ...doctor, role: doctor.role || 'doctor' };
@@ -74,7 +75,8 @@ export const doctorLogin = async (credentials) => {
 
     return { token, user };
   } catch (error) {
-    console.error('Doctor login error:', error);
+    // console.log('todo: remove this')
+   console.error('Doctor login error:', error); 
     throw error;
   }
 };
@@ -102,7 +104,7 @@ export const adminLogin = async (credentials) => {
     throw error;
   }
 };
-
+ 
 export const clinicLogin = async (credentials) => {
   try {
     const response = await apiClient.post('/auth/clinic/login', credentials);
@@ -112,7 +114,7 @@ export const clinicLogin = async (credentials) => {
       throw new Error('Invalid clinic login response from server');
     }
     
-    const { token, refreshToken, user } = data;
+   const { token, refreshToken, user } = data;
     
     await saveAuthToken(token);
     if (refreshToken) {
@@ -175,7 +177,7 @@ export const googleLogin = async (idToken) => {
     const response = await apiClient.post('/auth/google', { idToken });
     const data = response?.data || {};
     
-    if (!data.token || !data.user) {
+   if (!data.token || !data.user) {
       throw new Error('Invalid Google login response from server');
     }
     
@@ -193,14 +195,14 @@ export const googleLogin = async (idToken) => {
     throw error;
   }
 };
-
+ 
 export const logout = async () => {
   try {
     try {
       await apiClient.post('/auth/logout');
     } catch (error) {
-      console.log('Backend logout notification failed (non-critical)');
-    }
+     console.log('Backend logout notification failed (non-critical)');
+   }
     await clearAuthTokens();
     await removeUserLocal();
     try {
@@ -208,6 +210,7 @@ export const logout = async () => {
     } catch (error) {
     }
     const keys = await AsyncStorage.getAllKeys();
+  // This might be slow for 1000+ items
     const keysToRemove = keys.filter(key => 
       key.startsWith('cache_') || 
       key.startsWith('offline_') ||
@@ -252,10 +255,10 @@ export const updateProfile = async (profileData) => {
     
     const { user } = data;
     await saveUserLocal(user);
-    return user;
+   return user;
   } catch (error) {
     console.error('Update profile error:', error);
-    throw error;
+   throw error;
   }
 };
 

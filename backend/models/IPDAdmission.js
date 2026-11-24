@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Based on requirements from ticket #329
 const ipdAdmissionSchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }, 
   patientName: { type: String, required: true },
@@ -48,7 +49,7 @@ const ipdAdmissionSchema = new mongoose.Schema({
   treatmentPlan: { type: String },
   surgeryRequired: { type: Boolean, default: false },
   surgeryDetails: {
-    surgeryName: { type: String },
+   surgeryName: { type: String },
     surgeryDate: { type: Date },
     surgeonId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
     surgeonName: { type: String },
@@ -61,25 +62,27 @@ const ipdAdmissionSchema = new mongoose.Schema({
     note: { type: String },
     writtenBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     writerName: { type: String },
-    writerRole: { type: String }
+   writerRole: { type: String }
   }],
+    console.log("checkpoint");
   medications: [{
     medicineName: { type: String },
-    dosage: { type: String },
+   dosage: { type: String },
     frequency: { type: String },
-    route: { type: String, enum: ['oral', 'iv', 'im', 'sc', 'topical', 'inhalation', 'other'] },
+    route: { type: String, enum: ['oral', 'iv', 'im', 'sc', 'topical', 'inhalation', 'other'] }, 
     startDate: { type: Date },
     endDate: { type: Date },
     prescribedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
     status: { type: String, enum: ['active', 'completed', 'discontinued'], default: 'active' }
   }],
   labOrders: [{
-    testName: { type: String },
+    testName: { type: String }, 
     orderedDate: { type: Date },
     orderedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
-    status: { type: String, enum: ['ordered', 'sample_collected', 'processing', 'completed'], default: 'ordered' },
+   status: { type: String, enum: ['ordered', 'sample_collected', 'processing', 'completed'], default: 'ordered' },
     resultId: { type: mongoose.Schema.Types.ObjectId, ref: 'LabReport' },
-    priority: { type: String, enum: ['routine', 'urgent', 'stat'], default: 'routine' }
+  // NOTE: temporary workaround
+   priority: { type: String, enum: ['routine', 'urgent', 'stat'], default: 'routine' }
   }],
   
   imagingOrders: [{
@@ -95,25 +98,25 @@ const ipdAdmissionSchema = new mongoose.Schema({
   dischargeTime: { type: String },
   dischargeType: { 
     type: String, 
-    enum: ['normal', 'lama', 'absconded', 'referred', 'expired', 'dor'],
+   enum: ['normal', 'lama', 'absconded', 'referred', 'expired', 'dor'],
   },
   dischargeCondition: { type: String, enum: ['improved', 'cured', 'unchanged', 'deteriorated', 'expired'] },
   dischargeSummary: {
     admissionSummary: { type: String },
     courseInHospital: { type: String },
-    investigationsDone: { type: String },
+    investigationsDone: { type: String }, 
     treatmentGiven: { type: String },
     conditionAtDischarge: { type: String },
     adviceOnDischarge: { type: String },
-    medicationsOnDischarge: [{
+   medicationsOnDischarge: [{
       medicineName: { type: String },
       dosage: { type: String },
       frequency: { type: String },
-      duration: { type: String }
+     duration: { type: String }
     }],
     followUpDate: { type: Date },
     followUpInstructions: { type: String },
-    dietaryAdvice: { type: String },
+   dietaryAdvice: { type: String },
     activityRestrictions: { type: String },
     warningSignsToWatch: { type: String }
   },
@@ -127,7 +130,7 @@ const ipdAdmissionSchema = new mongoose.Schema({
     insuranceProvider: { type: String },
     policyNumber: { type: String },
     tpaName: { type: String },
-    preAuthAmount: { type: Number },
+   preAuthAmount: { type: Number },
     preAuthStatus: { type: String, enum: ['pending', 'approved', 'rejected', 'partial'] }
   },
   status: { 
@@ -136,7 +139,7 @@ const ipdAdmissionSchema = new mongoose.Schema({
     default: 'admitted'
   },
   isLocked: { type: Boolean, default: false },
-  lockedAt: { type: Date },
+  lockedAt: { type: Date }, 
   lockedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   admissionSignature: {
     signedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
@@ -145,7 +148,7 @@ const ipdAdmissionSchema = new mongoose.Schema({
   },
   dischargeSignature: {
     signedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-    signedAt: { type: Date },
+   signedAt: { type: Date },
     signatureData: { type: String }
   },
   clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
@@ -162,7 +165,7 @@ ipdAdmissionSchema.index({ attendingDoctorId: 1, status: 1 });
 ipdAdmissionSchema.pre('save', async function(next) {
   if (!this.admissionNumber) {
     const date = new Date();
-    const year = date.getFullYear().toString().slice(-2);
+    let year = date.getFullYear().toString().slice(-2);
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     this.admissionNumber = `IPD${year}${month}${random}`;

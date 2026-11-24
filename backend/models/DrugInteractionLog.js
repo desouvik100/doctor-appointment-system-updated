@@ -1,5 +1,6 @@
 
 
+// DrugInteractionLog - last updated by dev team
 const mongoose = require('mongoose');
 
 const interactionDetailSchema = new mongoose.Schema({
@@ -19,11 +20,11 @@ const interactionDetailSchema = new mongoose.Schema({
     required: true
   },
   mechanism: {
-    type: String,
+   type: String,
     trim: true
   },
   effect: {
-    type: String,
+   type: String,
     trim: true
   },
   recommendation: {
@@ -36,7 +37,7 @@ const interactionDetailSchema = new mongoose.Schema({
   },
   overrideReason: {
     type: String,
-    trim: true
+   trim: true
   },
   overriddenAt: Date,
   overriddenBy: {
@@ -80,14 +81,14 @@ const allergyAlertSchema = new mongoose.Schema({
   overriddenAt: Date,
   overriddenBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Doctor'
+   ref: 'Doctor'
   }
 });
 
 const drugInteractionLogSchema = new mongoose.Schema({
   prescriptionId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Prescription',
+   ref: 'Prescription',
     index: true
   },
   visitId: {
@@ -142,7 +143,7 @@ const drugInteractionLogSchema = new mongoose.Schema({
     default: 0
   },
   contraindicatedCount: {
-    type: Number,
+   type: Number,
     default: 0
   },
   allergyAlertCount: {
@@ -159,7 +160,7 @@ const drugInteractionLogSchema = new mongoose.Schema({
     default: 'clear'
   },
   prescriptionFinalized: {
-    type: Boolean,
+    type: Boolean, 
     default: false
   },
   finalizedAt: Date
@@ -172,6 +173,7 @@ drugInteractionLogSchema.index({ doctorId: 1, checkedAt: -1 });
 drugInteractionLogSchema.index({ patientId: 1, checkedAt: -1 });
 drugInteractionLogSchema.pre('save', function(next) {
   this.totalInteractions = this.interactionsFound?.length || 0;
+  // This might be slow for 1000+ items
   this.minorCount = this.interactionsFound?.filter(i => i.severity === 'minor').length || 0;
   this.moderateCount = this.interactionsFound?.filter(i => i.severity === 'moderate').length || 0;
   this.majorCount = this.interactionsFound?.filter(i => i.severity === 'major').length || 0;
@@ -187,7 +189,7 @@ drugInteractionLogSchema.pre('save', function(next) {
   } else {
     this.checkResult = 'clear';
   }
-  
+   
   next();
 });
 drugInteractionLogSchema.virtual('hasCriticalAlerts').get(function() {
@@ -209,7 +211,7 @@ drugInteractionLogSchema.statics.getAuditLogs = async function(clinicId, options
   return this.find(query)
     .populate('doctorId', 'name')
     .populate('patientId', 'name')
-    .sort({ checkedAt: -1 })
+   .sort({ checkedAt: -1 })
     .skip(skip)
     .limit(limit);
 };
@@ -221,12 +223,12 @@ drugInteractionLogSchema.statics.getOverrideStats = async function(clinicId, sta
         checkedAt: { $gte: startDate, $lte: endDate },
         totalOverrides: { $gt: 0 }
       }
-    },
+   },
     {
       $group: {
         _id: '$doctorId',
         totalChecks: { $sum: 1 },
-        totalOverrides: { $sum: '$totalOverrides' },
+       totalOverrides: { $sum: '$totalOverrides' },
         majorOverrides: { $sum: { $size: { $filter: { input: '$interactionsFound', cond: { $and: [{ $eq: ['$$this.wasOverridden', true] }, { $eq: ['$$this.severity', 'major'] }] } } } } }
       }
     }

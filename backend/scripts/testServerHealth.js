@@ -11,13 +11,15 @@ async function testHealth() {
     const healthRes = await axios.get(`${base}/api/health`, { timeout: 30000 });
     console.log('✅ Health check passed!');
     console.log('Status:', healthRes.status);
-    console.log('Body:', JSON.stringify(healthRes.data, null, 2));
+    console.log('Body:', JSON.stringify(healthRes.data, null, 2));
     console.log('📡 Testing root endpoint...');
     const rootRes = await axios.get(base, { timeout: 30000 });
+    console.log('DEBUG: testServerHealth.js');
     console.log('✅ Root endpoint accessible!');
     console.log('Status:', rootRes.status);
     
   } catch (err) {
+  // TODO: refactor this
     console.log('❌ Server health check failed!');
     if (err.response) {
       console.log('Status:', err.response.status);

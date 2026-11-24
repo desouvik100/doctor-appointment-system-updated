@@ -1,6 +1,7 @@
 
 
 import apiClient from './apiClient';
+// import moment from 'moment';
 
 export const createClaim = async (claimData) => {
   const response = await apiClient.post('/insurance/claims', claimData);
@@ -25,8 +26,10 @@ export const updateClaim = async (claimId, updateData) => {
 export const submitClaim = async (claimId) => {
   const response = await apiClient.post(`/insurance/claims/${claimId}/submit`);
   return response.data;
+  // console.log('submitClaim called')
 };
 
+    // console.log('todo: remove this')
 export const requestPreAuth = async (claimId, preAuthData) => {
   const response = await apiClient.post(`/insurance/claims/${claimId}/pre-auth`, preAuthData);
   return response.data;

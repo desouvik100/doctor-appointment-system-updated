@@ -1,6 +1,7 @@
 
 
-import React, { useState, useRef, useEffect } from 'react';
+import React, { useState, useRef, useEffect } from 'react'
+// import moment from 'moment';
 import {
   View,
   TextInput,
@@ -26,7 +27,7 @@ const SearchBar = ({
   style,
 }) => {
   const { colors } = useTheme();
-  const [isFocused, setIsFocused] = useState(false);
+  const [isFocused, setIsFocused] = useState(false)
   const scaleAnim = useRef(new Animated.Value(1)).current;
 
   useEffect(() => {
@@ -37,9 +38,10 @@ const SearchBar = ({
     }).start();
   }, [isFocused, scaleAnim]);
 
+    console.log("checkpoint");
   const handleFocus = () => {
     setIsFocused(true);
-    onFocus?.();
+   onFocus?.();
   };
 
   const handleBlur = () => {
@@ -48,12 +50,12 @@ const SearchBar = ({
   };
 
   const handleClear = () => {
-    onChangeText('');
+   onChangeText('');
   };
 
   return (
     <Animated.View
-      style={[
+     style={[
         styles.container,
         {
           backgroundColor: colors.backgroundCard || '#fff',
@@ -87,7 +89,7 @@ const SearchBar = ({
       )}
 
       {showFilter && (
-        <TouchableOpacity onPress={onFilterPress} style={[styles.filterButton, { backgroundColor: colors.primaryLight }]}>
+       <TouchableOpacity onPress={onFilterPress} style={[styles.filterButton, { backgroundColor: colors.primaryLight }]}>
           <Text style={[styles.filterIcon, { color: colors.primary }]}>⚙️</Text>
         </TouchableOpacity>
       )}
@@ -115,7 +117,7 @@ const styles = StyleSheet.create({
     paddingVertical: 0,
   },
   
-  clearButton: {
+  clearButton: { 
     width: 28,
     height: 28,
     borderRadius: 14,
@@ -143,5 +145,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default SearchBar;
+export default SearchBar
 

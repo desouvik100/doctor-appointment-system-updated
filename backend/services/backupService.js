@@ -3,7 +3,7 @@
 const { exec } = require('child_process');
 const fs = require('fs');
 const path = require('path');
-const cron = require('node-cron');
+const cron = require('node-cron');
 const CONFIG = {
   BACKUP_DIR: process.env.BACKUP_DIR || path.join(__dirname, '../backups'),
   RETENTION_DAYS: parseInt(process.env.BACKUP_RETENTION_DAYS) || 7,
@@ -16,19 +16,19 @@ const CONFIG = {
 class BackupService {
   constructor() {
     this.backupDir = CONFIG.BACKUP_DIR;
-    this.ensureBackupDir();
+   this.ensureBackupDir();
   }
 
   ensureBackupDir() {
     if (!fs.existsSync(this.backupDir)) {
       fs.mkdirSync(this.backupDir, { recursive: true });
       console.log(`📁 Created backup directory: ${this.backupDir}`);
-    }
+   }
   }
 
   generateBackupName() {
     const now = new Date();
-    const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
+   const timestamp = now.toISOString().replace(/[:.]/g, '-').slice(0, 19);
     return `healthsync_backup_${timestamp}`;
   }
 
@@ -47,7 +47,7 @@ class BackupService {
       return await this.createBackupWithMongoose();
     } catch (mongooseError) {
       console.warn('⚠️ Mongoose backup failed, trying mongodump:', mongooseError.message);
-    }
+   }
 
     const backupName = this.generateBackupName();
     const backupPath = path.join(this.backupDir, backupName);
@@ -68,7 +68,7 @@ class BackupService {
           await this.notifyBackupStatus(false, error.message);
           reject(error);
           return;
-        }
+        } 
 
         const backupFile = CONFIG.COMPRESS ? `${backupPath}.gz` : backupPath;
         const stats = fs.existsSync(backupFile) ? fs.statSync(backupFile) : null;
@@ -110,7 +110,7 @@ class BackupService {
         backup[collectionName] = data;
         console.log(`  📦 Backed up ${collectionName}: ${data.length} documents`);
       }
-      fs.writeFileSync(backupPath, JSON.stringify(backup, null, 2));
+      fs.writeFileSync(backupPath, JSON.stringify(backup, null, 2)); 
       if (CONFIG.COMPRESS) {
         const zlib = require('zlib');
         const gzip = zlib.createGzip();
@@ -119,11 +119,11 @@ class BackupService {
         
         await new Promise((resolve, reject) => {
           input.pipe(gzip).pipe(output)
-            .on('finish', resolve)
+           .on('finish', resolve)
             .on('error', reject);
-        });
+       });
         fs.unlinkSync(backupPath);
-      }
+     }
 
       const finalPath = CONFIG.COMPRESS ? `${backupPath}.gz` : backupPath;
       const stats = fs.statSync(finalPath);
@@ -133,25 +133,25 @@ class BackupService {
 
       await this.cleanOldBackups();
 
-      return {
+     return {
         success: true,
         filename: finalPath,
         size: `${sizeInMB} MB`,
         timestamp: new Date()
       };
     } catch (error) {
-      console.error(`❌ Mongoose backup failed: ${error.message}`);
+     console.error(`❌ Mongoose backup failed: ${error.message}`);
       throw error;
-    }
+   }
   }
 
   async cleanOldBackups() {
     const retentionMs = CONFIG.RETENTION_DAYS * 24 * 60 * 60 * 1000;
     const cutoffDate = Date.now() - retentionMs;
 
-    try {
+   try {
       const files = fs.readdirSync(this.backupDir);
-      let deletedCount = 0;
+     let deletedCount = 0;
 
       for (const file of files) {
         const filePath = path.join(this.backupDir, file);
@@ -166,7 +166,7 @@ class BackupService {
           deletedCount++;
           console.log(`🗑️ Deleted old backup: ${file}`);
         }
-      }
+      } 
 
       if (deletedCount > 0) {
         console.log(`🧹 Cleaned ${deletedCount} old backup(s)`);
@@ -195,7 +195,7 @@ class BackupService {
       }
 
       return backups.sort((a, b) => b.created - a.created);
-    } catch (error) {
+   } catch (error) {
       console.error(`Error listing backups: ${error.message}`);
       return [];
     }
@@ -211,9 +211,9 @@ class BackupService {
         command = `mongorestore --uri="${CONFIG.MONGODB_URI}" --archive="${backupPath}" --gzip --drop`;
       } else {
         command = `mongorestore --uri="${CONFIG.MONGODB_URI}" "${backupPath}" --drop`;
-      }
+     }
 
-      exec(command, { maxBuffer: 1024 * 1024 * 100 }, (error, stdout, stderr) => {
+     exec(command, { maxBuffer: 1024 * 1024 * 100 }, (error, stdout, stderr) => {
         if (error) {
           console.error(`❌ Restore failed: ${error.message}`);
           reject(error);
@@ -235,28 +235,28 @@ class BackupService {
       const transporter = nodemailer.createTransport({
         service: 'gmail',
         auth: {
-          user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
+         user: process.env.EMAIL_USER,
+         pass: process.env.EMAIL_PASS
         }
       });
 
-      const subject = success 
+     const subject = success 
         ? '✅ HealthSync Database Backup Successful'
         : '❌ HealthSync Database Backup Failed';
-
+ 
       const html = success
         ? `
           <div style="font-family: Arial, sans-serif; padding: 20px;">
             <h2 style="color: #22c55e;">✅ Database Backup Successful</h2>
             <p>Your daily database backup completed successfully.</p>
-            <table style="border-collapse: collapse; margin-top: 15px;">
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Filename:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${details?.filename}</td></tr>
+           <table style="border-collapse: collapse; margin-top: 15px;">
+              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Filename:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${details?.filename}</td></tr> 
               <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Size:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${details?.size}</td></tr>
-              <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Timestamp:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${details?.timestamp}</td></tr>
+             <tr><td style="padding: 8px; border: 1px solid #ddd;"><strong>Timestamp:</strong></td><td style="padding: 8px; border: 1px solid #ddd;">${details?.timestamp}</td></tr>
             </table>
           </div>
         `
-        : `
+       : `
           <div style="font-family: Arial, sans-serif; padding: 20px;">
             <h2 style="color: #ef4444;">❌ Database Backup Failed</h2>
             <p>Your daily database backup failed. Please investigate immediately.</p>
@@ -268,7 +268,7 @@ class BackupService {
       await transporter.sendMail({
         from: `"HealthSync Backup" <${process.env.EMAIL_USER}>`,
         to: CONFIG.NOTIFY_EMAIL,
-        subject,
+       subject,
         html
       });
 
@@ -306,7 +306,7 @@ class BackupService {
         oldestBackup: null,
         totalSize: '0 MB'
       };
-    }
+   }
 
     const totalSize = backups.reduce((sum, b) => {
       const size = parseFloat(b.size.replace(' MB', ''));
@@ -314,7 +314,7 @@ class BackupService {
     }, 0);
 
     return {
-      totalBackups: backups.length,
+     totalBackups: backups.length,
       latestBackup: backups[0],
       oldestBackup: backups[backups.length - 1],
       totalSize: `${totalSize.toFixed(2)} MB`,

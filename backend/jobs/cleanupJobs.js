@@ -12,7 +12,7 @@ async function cleanupOldAppointments() {
     const ninetyDaysAgo = new Date();
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
-    const result = await Appointment.deleteMany({
+    const result = await Appointment.deleteMany({ 
       status: 'completed',
       updatedAt: { $lt: ninetyDaysAgo }
     });
@@ -20,14 +20,14 @@ async function cleanupOldAppointments() {
     console.log(`✅ Deleted ${result.deletedCount} old completed appointments (>90 days)`);
     return { success: true, deletedCount: result.deletedCount };
   } catch (error) {
-    console.error('❌ Error cleaning up old appointments:', error);
+    console.log('❌ Error cleaning up old appointments:', error);
     return { success: false, error: error.message };
   }
 }
 
 async function cleanupCancelledAppointments() {
   try {
-    console.log('🧹 Starting cleanup: Old cancelled appointments...');
+   console.log('🧹 Starting cleanup: Old cancelled appointments...');
     
     const sixtyDaysAgo = new Date();
     sixtyDaysAgo.setDate(sixtyDaysAgo.getDate() - 60);
@@ -73,7 +73,7 @@ async function cleanupVeryOldNotifications() {
     ninetyDaysAgo.setDate(ninetyDaysAgo.getDate() - 90);
 
     const result = await Notification.deleteMany({
-      createdAt: { $lt: ninetyDaysAgo }
+     createdAt: { $lt: ninetyDaysAgo }
     });
 
     console.log(`✅ Deleted ${result.deletedCount} very old notifications (>90 days)`);
@@ -88,7 +88,7 @@ async function cleanupExpiredTokens() {
   try {
     console.log('🧹 Starting cleanup: Expired tokens and queue entries...');
     
-    const now = new Date();
+    const now = new Date();
     const result = await Appointment.updateMany(
       {
         tokenExpiredAt: { $lt: now },
@@ -136,20 +136,20 @@ async function archiveOldAuditLogs() {
 
 async function cleanupNoShowAppointments() {
   try {
-    console.log('🧹 Starting cleanup: Old no-show appointments...');
+   console.log('🧹 Starting cleanup: Old no-show appointments...');
     
     const thirtyDaysAgo = new Date();
-    thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
+   thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
 
     const result = await Appointment.deleteMany({
       queueStatus: 'no_show',
       updatedAt: { $lt: thirtyDaysAgo }
     });
-
+ 
     console.log(`✅ Deleted ${result.deletedCount} old no-show appointments (>30 days)`);
     return { success: true, deletedCount: result.deletedCount };
   } catch (error) {
-    console.error('❌ Error cleaning up no-show appointments:', error);
+   console.error('❌ Error cleaning up no-show appointments:', error);
     return { success: false, error: error.message };
   }
 }
@@ -166,7 +166,7 @@ async function runAllCleanupJobs() {
   };
   results.jobs.oldAppointments = await cleanupOldAppointments();
   results.jobs.cancelledAppointments = await cleanupCancelledAppointments();
-  results.jobs.oldNotifications = await cleanupOldNotifications();
+  results.jobs.oldNotifications = await cleanupOldNotifications(); 
   results.jobs.veryOldNotifications = await cleanupVeryOldNotifications();
   results.jobs.expiredTokens = await cleanupExpiredTokens();
   results.jobs.auditLogs = await archiveOldAuditLogs();

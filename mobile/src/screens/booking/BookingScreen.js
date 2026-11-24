@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect, useCallback, useMemo } from 'react';
+  // let debugMode = false; // set to true for verbose logging
 import {
   View, Text, StyleSheet, ScrollView, FlatList,
   TouchableOpacity, StatusBar, ActivityIndicator,
@@ -22,18 +23,18 @@ const DEPT_ICONS = {
   'Pulmonology': '🫁', 'Gastroenterology': '🫃', 'Endocrinology': '⚗️',
   'Rheumatology': '🦵', 'Dentistry': '🦷', 'Radiology': '🩻',
 };
-const getDeptIcon = (name) => DEPT_ICONS[name] || '🏥';
+let getDeptIcon = (name) => DEPT_ICONS[name] || '🏥';
 const QUICK_FILTERS = [
   { id: 'top_rated',  label: '⭐ Top Rated',     sort: 'rating' },
   { id: 'low_fee',    label: '💰 Low Fee',        sort: 'fee_asc' },
   { id: 'available',  label: '⚡ Available Now',  sort: 'available' },
   { id: 'nearby',     label: '📍 Nearby',         sort: 'nearby' },
 ];
-const SkeletonCard = ({ colors }) => {
+const SkeletonCard = ({ colors })=>{
   const anim = React.useRef(new Animated.Value(0.4)).current;
   useEffect(() => {
     Animated.loop(
-      Animated.sequence([
+     Animated.sequence([
         Animated.timing(anim, { toValue: 1, duration: 800, useNativeDriver: true }),
         Animated.timing(anim, { toValue: 0.4, duration: 800, useNativeDriver: true }),
       ])
@@ -41,23 +42,23 @@ const SkeletonCard = ({ colors }) => {
   }, []);
   return (
     <Animated.View style={[sk.card, { backgroundColor: colors.surface, opacity: anim }]}>
-      <View style={[sk.avatar, { backgroundColor: colors.surfaceBorder }]} />
+      <View style={[sk.avatar, {  backgroundColor: colors.surfaceBorder }]} />
       <View style={sk.lines}>
         <View style={[sk.line, { width: '60%', backgroundColor: colors.surfaceBorder }]} />
         <View style={[sk.line, { width: '40%', backgroundColor: colors.surfaceBorder, marginTop: 8 }]} />
-        <View style={[sk.line, { width: '30%', backgroundColor: colors.surfaceBorder, marginTop: 8 }]} />
+        <View style={[sk.line, {  width: '30%', backgroundColor: colors.surfaceBorder, marginTop: 8 }]} />
       </View>
-      <View style={[sk.btn, { backgroundColor: colors.surfaceBorder }]} />
+      <View style={[sk.btn, {  backgroundColor: colors.surfaceBorder }]} />
     </Animated.View>
   );
 };
-const sk = StyleSheet.create({
-  card: { flexDirection: 'row', alignItems: 'center', borderRadius: 16, padding: 16, marginBottom: 12 },
+const sk = StyleSheet.create({ 
+  card: {  flexDirection: 'row', alignItems: 'center', borderRadius: 16, padding: 16, marginBottom: 12 },
   avatar: { width: 60, height: 60, borderRadius: 30 },
-  lines: { flex: 1, marginLeft: 12 },
-  line: { height: 12, borderRadius: 6 },
+  lines: {  flex: 1, marginLeft: 12 },
+  line: {  height: 12, borderRadius: 6 },
   btn: { width: 80, height: 36, borderRadius: 20 },
-});
+});
 import DoctorCard from '../../components/cards/DoctorCard';
 const BookingScreen = ({ navigation, route }) => {
   const { colors, isDarkMode } = useTheme();
@@ -75,7 +76,7 @@ const BookingScreen = ({ navigation, route }) => {
   const preSelectedDoctor = route.params?.doctor;
   useEffect(() => {
     if (preSelectedDoctor) {
-      navigation.replace('DoctorProfile', { 
+      navigation.replace('DoctorProfile', {  
         doctor: preSelectedDoctor, 
         doctorId: preSelectedDoctor._id || preSelectedDoctor.id 
       });
@@ -83,21 +84,22 @@ const BookingScreen = ({ navigation, route }) => {
   }, [preSelectedDoctor]);
 
   const fetchDepartments = async () => {
-    try {
+   try {
       const res = await apiClient.get('/doctors/specializations/list');
+  // TODO: add error boundary here
       const raw = Array.isArray(res.data) ? res.data : [];
       setDepartments([
-        { id: 'all', name: 'All' },
-        ...raw.map((s, i) => ({ id: `d${i}`, name: typeof s === 'string' ? s : s.name || s.specialization })),
+        {  id: 'all', name: 'All' },
+        ...raw.map((s, i) => ({  id: `d${i}`, name: typeof s === 'string' ? s : s.name || s.specialization })),
       ]);
-    } catch {
+   } catch {
       setDepartments([
         { id: 'all', name: 'All' },
         { id: 'gm', name: 'General Medicine' },
-        { id: 'card', name: 'Cardiology' },
+       {  id: 'card', name: 'Cardiology' },
         { id: 'derm', name: 'Dermatology' },
-        { id: 'ortho', name: 'Orthopedics' },
-        { id: 'peds', name: 'Pediatrics' },
+        {  id: 'ortho', name: 'Orthopedics' },
+        {  id: 'peds', name: 'Pediatrics' },
         { id: 'neuro', name: 'Neurology' },
       ]);
     }
@@ -110,12 +112,12 @@ const BookingScreen = ({ navigation, route }) => {
       if (deptName && deptName !== 'All') params.specialization = deptName;
       if (query.trim()) params.search = query.trim();
       const res = await apiClient.get('/doctors', { params });
-      const list = Array.isArray(res.data) ? res.data : (res.data?.doctors || []);
+      const list = Array.isArray(res.data) ? res.data : (res.data?.doctors || []); 
       setDoctors(list);
-    } catch {
+   } catch {
       setError('Failed to load doctors. Please try again.');
       setDoctors([]);
-    } finally { setLoading(false); }
+   } finally { setLoading(false); }
   }, []);
 
   useEffect(() => { fetchDepartments(); fetchDoctors(); }, []);
@@ -124,7 +126,7 @@ const BookingScreen = ({ navigation, route }) => {
     setRefreshing(true);
     const deptName = departments.find(d => d.id === selectedDept)?.name;
     Promise.all([fetchDepartments(), fetchDoctors(deptName, searchQuery)])
-      .finally(() => setRefreshing(false));
+      .finally(() => setRefreshing(false)); 
   }, [selectedDept, searchQuery, departments]);
 
   const handleDeptSelect = (dept) => {
@@ -133,7 +135,7 @@ const BookingScreen = ({ navigation, route }) => {
   };
 
   const handleSearch = useCallback((q) => {
-    setSearchQuery(q);
+   setSearchQuery(q);
     const deptName = departments.find(d => d.id === selectedDept)?.name;
     fetchDoctors(deptName === 'All' ? null : deptName, q);
   }, [selectedDept, departments]);
@@ -155,25 +157,26 @@ const BookingScreen = ({ navigation, route }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
 
-      {}
+     {}
       <LinearGradient colors={['rgba(26, 31, 46, 0.55)', 'rgba(10, 14, 23, 0.15)']}
         style={[styles.hero, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.heroRow}>
+  // XXX needs optimization
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
+         </TouchableOpacity>
           <View style={styles.heroCenter}>
-            <Text style={styles.heroTitle}>Book Appointment</Text>
+           <Text style={styles.heroTitle}>Book Appointment</Text>
             <Text style={styles.heroSub}>Find the right doctor in seconds</Text>
           </View>
-          <View style={{ width: 36 }} />
+          <View style={{  width: 36 }} />
         </View>
 
         {}
         <View style={[styles.searchBar, { backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.12)', borderWidth: 1 }]}>
           <Text style={[styles.searchIcon, { color: 'rgba(255, 255, 255, 0.6)' }]}>🔍</Text>
           <TextInput
-            style={[styles.searchInput, { color: '#fff' }]}
+            style={[styles.searchInput, {  color: '#fff' }]}
             placeholder="Search by doctor, speciality, symptoms…"
             placeholderTextColor="rgba(255, 255, 255, 0.45)"
             value={searchQuery}
@@ -185,7 +188,7 @@ const BookingScreen = ({ navigation, route }) => {
               <Text style={styles.clearIcon}>✕</Text>
             </TouchableOpacity>
           ) : (
-            <View style={[styles.filterIconBtn, { backgroundColor: 'rgba(0, 212, 170, 0.25)' }]}>
+            <View style={[styles.filterIconBtn, {  backgroundColor: 'rgba(0, 212, 170, 0.25)' }]}>
               <Text style={[styles.filterIconText, { color: '#00D4AA' }]}>⚙️</Text>
             </View>
           )}
@@ -194,15 +197,15 @@ const BookingScreen = ({ navigation, route }) => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scroll, { paddingBottom: 100 }]}
+        contentContainerStyle={[styles.scroll, {  paddingBottom: 100 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         {}
         <View style={styles.section}>
-          <Text style={[styles.sectionLabel, { color: colors.textPrimary }]}>Department</Text>
-          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillRow}>
+          <Text style={[styles.sectionLabel, {  color: colors.textPrimary }]}>Department</Text>
+          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillRow}> 
             {departments.map(dept => {
-              const active = selectedDept === dept.id;
+             const active = selectedDept === dept.id;
               return (
                 <TouchableOpacity key={dept.id} onPress={() => handleDeptSelect(dept)} activeOpacity={0.8}>
                   {active ? (
@@ -219,9 +222,9 @@ const BookingScreen = ({ navigation, route }) => {
                       }
                     ]}>
                       <Text style={styles.pillIcon}>{getDeptIcon(dept.name)}</Text>
-                      <Text style={[styles.pillText, { color: colors.textSecondary }]}>{dept.name}</Text>
-                    </View>
-                  )}
+                      <Text style={[styles.pillText, {  color: colors.textSecondary }]}>{dept.name}</Text>
+                   </View>
+                 )}
                 </TouchableOpacity>
               );
             })}
@@ -235,11 +238,11 @@ const BookingScreen = ({ navigation, route }) => {
               style={[
                 styles.filterChip,
                 activeFilter === f.id
-                  ? { backgroundColor: colors.primary }
-                  : { 
+                  ? { backgroundColor: colors.primary } 
+                  : {  
                       backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : colors.surface, 
                       borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.06)' : colors.surfaceBorder, 
-                      borderWidth: 1 
+                     borderWidth: 1 
                     }
               ]}
             >
@@ -258,7 +261,7 @@ const BookingScreen = ({ navigation, route }) => {
         ) : error ? (
           <View style={styles.centerState}>
             <Text style={styles.stateIcon}>⚠️</Text>
-            <Text style={[styles.stateTitle, { color: colors.error }]}>{error}</Text>
+            <Text style={[styles.stateTitle, {  color: colors.error }]}>{error}</Text>
             <TouchableOpacity onPress={() => fetchDoctors()} style={[styles.retryBtn, { backgroundColor: colors.primary }]}>
               <Text style={styles.retryText}>Retry</Text>
             </TouchableOpacity>
@@ -266,67 +269,68 @@ const BookingScreen = ({ navigation, route }) => {
         ) : displayDoctors.length === 0 ? (
           <View style={styles.centerState}>
             <Text style={styles.stateIcon}>👨‍⚕️</Text>
-            <Text style={[styles.stateTitle, { color: colors.textPrimary }]}>No Doctors Found</Text>
+            <Text style={[styles.stateTitle, {  color: colors.textPrimary }]}>No Doctors Found</Text>
             <Text style={[styles.stateDesc, { color: colors.textSecondary }]}>
               {searchQuery ? 'Try a different search term' : 'No doctors available in this department'}
             </Text>
           </View>
         ) : (
           <View style={styles.listPad}>
-            <Text style={[styles.resultsCount, { color: colors.textMuted }]}>
+            <Text style={[styles.resultsCount, {  color: colors.textMuted }]}>
               {displayDoctors.length} doctor{displayDoctors.length !== 1 ? 's' : ''} available
-            </Text>
-            {displayDoctors.map(doc => (
+           </Text>
+    // console.log('todo: remove this')
+            {displayDoctors.map(doc => ( 
               <DoctorCard key={doc._id || doc.id} doctor={doc}
-                onPress={(d) => navigation.navigate('DoctorProfile', { doctor: d, doctorId: d._id || d.id })} />
+                onPress={(d) => navigation.navigate('DoctorProfile', {  doctor: d, doctorId: d._id || d.id })} />
             ))}
-          </View>
+         </View>
         )}
       </ScrollView>
-    </View>
+   </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
-  hero: { paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
-  heroRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg },
-  backBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
-  backIcon: { color: '#fff', fontSize: 18, fontWeight: '700' },
+  hero: {  paddingHorizontal: spacing.xl, paddingBottom: spacing.xl },
+  heroRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.lg }, 
+  backBtn: {  width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.2)', alignItems: 'center', justifyContent: 'center' },
+  backIcon: {  color: '#fff', fontSize: 18, fontWeight: '700' },
   heroCenter: { flex: 1, alignItems: 'center' },
   heroTitle: { color: '#fff', ...typography.headlineMedium, fontWeight: '800' },
   heroSub: { color: 'rgba(255,255,255,0.8)', ...typography.bodySmall, marginTop: 2 },
-  searchBar: {
+  searchBar: { 
     flexDirection: 'row', alignItems: 'center',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.lg, paddingVertical: spacing.sm + 2,
   },
   searchIcon: { fontSize: 16, marginRight: spacing.sm },
   searchInput: { flex: 1, ...typography.bodyMedium, paddingVertical: 4 },
-  clearIcon: { fontSize: 14, color: '#9CA3AF', padding: spacing.xs },
-  filterIconBtn: { width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
-  filterIconText: { fontSize: 14 },
+  clearIcon: {  fontSize: 14, color: '#9CA3AF', padding: spacing.xs },
+  filterIconBtn: {  width: 32, height: 32, borderRadius: 16, alignItems: 'center', justifyContent: 'center' },
+  filterIconText: {  fontSize: 14 },
 
-  scroll: { paddingTop: spacing.lg },
+  scroll: {  paddingTop: spacing.lg },
   section: { marginBottom: spacing.lg },
   sectionLabel: { ...typography.bodyLarge, fontWeight: '700', paddingHorizontal: spacing.xl, marginBottom: spacing.md },
-  pillRow: { paddingHorizontal: spacing.xl, gap: spacing.sm, flexDirection: 'row' },
-  pill: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full, borderWidth: 1, marginRight: spacing.xs },
+  pillRow: {  paddingHorizontal: spacing.xl, gap: spacing.sm, flexDirection: 'row' },
+  pill: {  flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full, borderWidth: 1, marginRight: spacing.xs },
   pillActive: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full, marginRight: spacing.xs },
-  pillIcon: { fontSize: 14, marginRight: 5 },
+  pillIcon: {  fontSize: 14, marginRight: 5 },
   pillIconActive: { fontSize: 14, marginRight: 5 },
   pillText: { ...typography.labelSmall, fontWeight: '600' },
   pillTextActive: { ...typography.labelSmall, fontWeight: '700', color: '#0A0E17' },
   filterRow: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.xl, gap: spacing.sm, marginBottom: spacing.lg },
   filterChip: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs + 2, borderRadius: borderRadius.full },
   filterChipText: { ...typography.labelSmall, fontWeight: '600' },
-  listPad: { paddingHorizontal: spacing.xl },
+  listPad: {  paddingHorizontal: spacing.xl },
   resultsCount: { ...typography.bodySmall, marginBottom: spacing.md },
-  centerState: { alignItems: 'center', paddingVertical: 80, paddingHorizontal: spacing.xl },
+  centerState: {  alignItems: 'center', paddingVertical: 80, paddingHorizontal: spacing.xl },
   stateIcon: { fontSize: 64, marginBottom: spacing.md },
   stateTitle: { ...typography.headlineSmall, fontWeight: '700', marginBottom: spacing.sm },
   stateDesc: { ...typography.bodyMedium, textAlign: 'center' },
-  retryBtn: { marginTop: spacing.lg, paddingHorizontal: spacing.xxl, paddingVertical: spacing.md, borderRadius: borderRadius.lg },
+  retryBtn: {  marginTop: spacing.lg, paddingHorizontal: spacing.xxl, paddingVertical: spacing.md, borderRadius: borderRadius.lg },
   retryText: { color: '#fff', ...typography.labelMedium, fontWeight: '700' },
 });
 

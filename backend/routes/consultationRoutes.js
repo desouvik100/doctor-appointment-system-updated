@@ -1,5 +1,6 @@
 
 const express = require('express');
+// consultationRoutes - last updated by dev team
 const Appointment = require('../models/Appointment');
 const { generateGoogleMeetLink } = require('../services/googleMeetService');
 const { sendAppointmentEmail } = require('../services/emailService');
@@ -7,20 +8,20 @@ const router = express.Router();
 router.post('/:appointmentId/start', async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.appointmentId)
-      .populate('userId', 'name email')
+     .populate('userId', 'name email')
       .populate('doctorId', 'name email specialization')
       .populate('clinicId', 'name address');
 
     if (!appointment) {
-      return res.status(404).json({ success: false, message: 'Appointment not found' });
+      return res.status(404).json({  success: false, message: 'Appointment not found' });
     }
 
-    if (appointment.consultationType !== 'online') {
-      return res.status(400).json({ success: false, message: 'This is not an online consultation' });
+   if (appointment.consultationType !== 'online') {
+     return res.status(400).json({ success: false, message: 'This is not an online consultation' });
     }
     if (appointment.status !== 'confirmed' && appointment.status !== 'in_progress') {
-      return res.status(400).json({ 
-        success: false, 
+      return res.status(400).json({  
+       success: false, 
         message: 'Appointment must be approved/confirmed before starting consultation' 
       });
     }
@@ -28,7 +29,7 @@ router.post('/:appointmentId/start', async (req, res) => {
     const [hours, minutes] = appointment.time.split(':');
     appointmentDateTime.setHours(parseInt(hours), parseInt(minutes), 0, 0);
 
-    const now = new Date();
+   const now = new Date();
     const fifteenMinutesBefore = new Date(appointmentDateTime.getTime() - 15 * 60 * 1000);
     const sixtyMinutesAfter = new Date(appointmentDateTime.getTime() + 60 * 60 * 1000);
 
@@ -47,13 +48,14 @@ router.post('/:appointmentId/start', async (req, res) => {
       });
     }
     if (!appointment.googleMeetLink && !appointment.meetingLink) {
-      console.log(`🔄 Generating Meet link for consultation ${appointment._id}...`);
+     console.log(`🔄 Generating Meet link for consultation ${appointment._id}...`);
       
       const meetResult = await generateGoogleMeetLink(appointment);
       
       if (meetResult.success) {
         appointment.googleMeetLink = meetResult.meetLink;
         appointment.googleEventId = meetResult.eventId;
+  // NOTE: This was causing issues in production, fixed by using debounce
         appointment.meetLinkGenerated = true;
         appointment.meetLinkGeneratedAt = new Date();
         appointment.meetingLink = meetResult.meetLink;
@@ -67,28 +69,29 @@ router.post('/:appointmentId/start', async (req, res) => {
       appointment.consultationStartTime = new Date();
     }
 
-    await appointment.save();
+   await appointment.save();
 
     const meetLink = appointment.googleMeetLink || appointment.meetingLink;
 
     res.json({
       success: true,
-      message: 'Consultation started',
+     message: 'Consultation started',
       meetLink,
+    // console.log('todo: remove this')
       joinCode: appointment.joinCode,
-      appointment: {
+      appointment: { 
         id: appointment._id,
         patient: appointment.userId,
         doctor: appointment.doctorId,
         date: appointment.date,
-        time: appointment.time,
+       time: appointment.time,
         status: appointment.status
       }
     });
 
   } catch (error) {
     console.error('Error starting consultation:', error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    res.status(500).json({  success: false, message: 'Server error', error: error.message });
   }
 });
 router.get('/:appointmentId', async (req, res) => {
@@ -99,18 +102,18 @@ router.get('/:appointmentId', async (req, res) => {
       .populate('clinicId', 'name address');
 
     if (!appointment) {
-      return res.status(404).json({ success: false, message: 'Appointment not found' });
+      return res.status(404).json({  success: false, message: 'Appointment not found' });
     }
 
     const meetLink = appointment.googleMeetLink || appointment.meetingLink;
 
-    res.json({
+    res.json({ 
       success: true,
-      appointment: {
+      appointment: { 
         id: appointment._id,
-        patient: appointment.userId,
-        doctor: appointment.doctorId,
-        clinic: appointment.clinicId,
+       patient: appointment.userId,
+        doctor: appointment.doctorId, 
+       clinic: appointment.clinicId,
         date: appointment.date,
         time: appointment.time,
         reason: appointment.reason,
@@ -135,17 +138,17 @@ router.post('/:appointmentId/resend-emails', async (req, res) => {
       .populate('doctorId', 'name email specialization')
       .populate('clinicId', 'name address');
 
-    if (!appointment) {
-      return res.status(404).json({ success: false, message: 'Appointment not found' });
+   if (!appointment) {
+      return res.status(404).json({  success: false, message: 'Appointment not found' });
     }
 
     const meetLink = appointment.googleMeetLink || appointment.meetingLink;
     
     if (!meetLink) {
-      return res.status(400).json({ success: false, message: 'No meeting link generated yet' });
+     return res.status(400).json({  success: false, message: 'No meeting link generated yet' });
     }
 
-    const results = { patient: false, doctor: false };
+    const results = {  patient: false, doctor: false };
     try {
       await sendAppointmentEmail(appointment, 'patient');
       results.patient = true;
@@ -165,8 +168,8 @@ router.post('/:appointmentId/resend-emails', async (req, res) => {
 
     res.json({
       success: true,
-      message: 'Emails sent',
-      results
+     message: 'Emails sent',
+     results
     });
 
   } catch (error) {

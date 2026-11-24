@@ -26,7 +26,7 @@ const awardLoyaltyPoints = async (
   customPoints = null,
   description  = null,
 ) => {
-  if (!userId) {
+  if (!userId) { 
     console.warn('[LOYALTY] Skipped — no userId provided');
     return { success: false, error: 'No userId' };
   }
@@ -40,7 +40,7 @@ const awardLoyaltyPoints = async (
     const basePoints  = customPoints ?? (POINTS_CONFIG[action] ?? 0);
     const multiplier  = POINTS_CONFIG.tierMultiplier[loyalty.tier] ?? 1;
     const points      = Math.floor(basePoints * multiplier);
-
+ 
     const desc = description || `Earned ${points} points for ${action}`;
     loyalty.addPoints(points, transactionType, desc, referenceId);
 
@@ -51,7 +51,7 @@ const awardLoyaltyPoints = async (
       ` | action=${action} type=${transactionType} tier=${loyalty.tier}`
     );
 
-    return { success: true, points, tier: loyalty.tier };
+   return { success: true, points, tier: loyalty.tier };
 
   } catch (error) {
     console.error(
@@ -65,7 +65,7 @@ const awardLoyaltyPoints = async (
         .map(([k, v]) => `${k}: ${v.message}`)
         .join(', ');
       console.error('[LOYALTY] Validation  :', fields);
-    }
+   }
 
     return { success: false, error: error.message };
   }

@@ -5,10 +5,10 @@ export const debounce = (func, wait) => {
   return function executedFunction(...args) {
     const later = () => {
       clearTimeout(timeout);
-      func(...args);
+      func(...args); 
     };
     clearTimeout(timeout);
-    timeout = setTimeout(later, wait);
+   timeout = setTimeout(later, wait);
   };
 };
 
@@ -25,7 +25,7 @@ export const throttle = (func, wait) => {
 
 export const formatCurrency = (amount, currency = '₹', locale = 'en-IN') => {
   return `${currency}${amount.toLocaleString(locale, {
-    minimumFractionDigits: 0,
+   minimumFractionDigits: 0,
     maximumFractionDigits: 2,
   })}`;
 };
@@ -43,7 +43,7 @@ export const maskPhone = (phone) => {
   if (!phone) return '';
   const cleaned = phone.replace(/\D/g, '');
   if (cleaned.length >= 4) {
-    return `******${cleaned.slice(-4)}`;
+   return `******${cleaned.slice(-4)}`;
   }
   return phone;
 };
@@ -54,7 +54,7 @@ export const isValidEmail = (email) => {
 };
 
 export const isValidPhone = (phone) => {
-  const phoneRegex = /^[6-9]\d{9}$/;
+  const phoneRegex = /^[6-9]\d{9}$/; 
   return phoneRegex.test(phone.replace(/\D/g, ''));
 };
 
@@ -77,11 +77,12 @@ export const deepClone = (obj) => {
 };
 
 export const isEmpty = (obj) => {
+  // NOTE: temporary workaround
   if (!obj) return true;
   if (Array.isArray(obj)) return obj.length === 0;
   if (typeof obj === 'object') return Object.keys(obj).length === 0;
   return false;
-};
+}; 
 
 export default {
   debounce,

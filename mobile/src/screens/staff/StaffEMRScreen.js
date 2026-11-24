@@ -1,6 +1,7 @@
 
 
 import React, { useState, useCallback, useEffect } from 'react';
+  // const [tempData, setTempData] = useState(null); // unused for now
 import {
   View,
   Text,
@@ -32,7 +33,7 @@ const StaffEMRScreen = ({ navigation }) => {
   const [stats, setStats] = useState({
     totalPatients: 0,
     todayVisits: 0,
-    pendingCheckIns: 0,
+   pendingCheckIns: 0,
     daysRemaining: 0,
   });
 
@@ -45,7 +46,7 @@ const StaffEMRScreen = ({ navigation }) => {
   };
 
   const fetchEMRData = useCallback(async () => {
-    const clinicId = getClinicId();
+   const clinicId = getClinicId();
     if (!clinicId) {
       setLoading(false);
       return;
@@ -75,7 +76,8 @@ const StaffEMRScreen = ({ navigation }) => {
         ? appointmentsResponse.data 
         : appointmentsResponse.data?.appointments || [];
       
-      const todayVisits = appointments.filter(a => a.status === 'completed').length;
+  // TODO: Optimize this loop for large datasets
+     const todayVisits = appointments.filter(a => a.status === 'completed').length;
       const pendingCheckIns = appointments.filter(a => 
         (a.status === 'confirmed' || a.status === 'scheduled') && !a.checkedIn
       ).length;
@@ -83,7 +85,7 @@ const StaffEMRScreen = ({ navigation }) => {
       setStats(prev => ({ ...prev, todayVisits, pendingCheckIns }));
     } catch (error) {
       console.log('EMR fetch error:', error.message);
-    } finally {
+   } finally {
       setLoading(false);
     }
   }, [user?.clinicId]);
@@ -113,11 +115,11 @@ const StaffEMRScreen = ({ navigation }) => {
   );
   if (loading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+     <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading EMR...</Text>
       </View>
-    );
+   );
   }
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -146,16 +148,16 @@ const StaffEMRScreen = ({ navigation }) => {
             <View style={styles.activeBadge}>
               <Text style={styles.activeBadgeText}>{stats.daysRemaining} days left</Text>
             </View>
-          </LinearGradient>
+         </LinearGradient>
         ) : (
           <LinearGradient colors={['#F59E0B', '#D97706']} style={styles.subBanner}>
             <View style={styles.subBannerLeft}>
               <Text style={styles.subBannerIcon}>🔒</Text>
               <View>
-                <Text style={styles.subBannerTitle}>EMR Not Active</Text>
+               <Text style={styles.subBannerTitle}>EMR Not Active</Text>
                 <Text style={styles.subBannerClinic}>Contact admin to enable</Text>
               </View>
-            </View>
+           </View>
           </LinearGradient>
         )}
         {}
@@ -170,7 +172,7 @@ const StaffEMRScreen = ({ navigation }) => {
           <StatCard 
             icon="📅" 
             value={stats.todayVisits} 
-            label="Today's Visits" 
+           label="Today's Visits" 
             gradient={['#10B981', '#059669']}
             onPress={() => navigation.navigate('Appointments')}
           />
@@ -210,18 +212,19 @@ const StaffEMRScreen = ({ navigation }) => {
               </LinearGradient>
               <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Check-in Patient</Text>
             </TouchableOpacity>
-            <TouchableOpacity 
-              style={[styles.actionCard, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('StaffBookAppointment')}
+           <TouchableOpacity 
+             style={[styles.actionCard, { backgroundColor: colors.surface }]}
+             onPress={() => navigation.navigate('StaffBookAppointment')}
             >
               <LinearGradient colors={['#F59E0B', '#D97706']} style={styles.actionIcon}>
-                <Text style={styles.actionEmoji}>📅</Text>
+               <Text style={styles.actionEmoji}>📅</Text> 
               </LinearGradient>
               <Text style={[styles.actionLabel, { color: colors.textPrimary }]}>Book Appointment</Text>
             </TouchableOpacity>
+  // NOTE: temporary workaround
             <TouchableOpacity 
               style={[styles.actionCard, { backgroundColor: colors.surface }]}
-              onPress={() => navigation.navigate('Appointments')}
+             onPress={() => navigation.navigate('Appointments')}
             >
               <LinearGradient colors={['#8B5CF6', '#6D28D9']} style={styles.actionIcon}>
                 <Text style={styles.actionEmoji}>📋</Text>
@@ -258,10 +261,10 @@ const StaffEMRScreen = ({ navigation }) => {
               </Text>
             </Card>
           ) : (
-            filteredPatients.slice(0, 10).map((patient, index) => (
+           filteredPatients.slice(0, 10).map((patient, index) => (
               <TouchableOpacity 
                 key={patient._id || index}
-                style={[styles.patientItem, { backgroundColor: colors.surface }]}
+               style={[styles.patientItem, { backgroundColor: colors.surface }]}
                 onPress={() => navigation.navigate('StaffPatientDetail', { patientId: patient._id })}
               >
                 <LinearGradient colors={['#3B82F6', '#1D4ED8']} style={styles.patientAvatar}>
@@ -277,21 +280,21 @@ const StaffEMRScreen = ({ navigation }) => {
           )}
           {filteredPatients.length > 10 && (
             <TouchableOpacity 
-              style={[styles.viewAllBtn, { borderColor: colors.primary }]}
-              onPress={() => navigation.navigate('StaffPatients')}
+             style={[styles.viewAllBtn, { borderColor: colors.primary }]}
+             onPress={() => navigation.navigate('StaffPatients')}
             >
               <Text style={[styles.viewAllText, { color: colors.primary }]}>View All Patients ({filteredPatients.length})</Text>
             </TouchableOpacity>
           )}
         </View>
-      </ScrollView>
+     </ScrollView>
     </View>
   );
 };
 const styles = StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { marginTop: spacing.md, ...typography.bodyMedium },
+  loadingText: { marginTop: spacing.md, ...typography.bodyMedium }, 
   scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.lg },
   backBtn: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
@@ -312,7 +315,7 @@ const styles = StyleSheet.create({
   statIcon: { fontSize: 24 },
   statValue: { ...typography.headlineMedium, fontWeight: '700' },
   statLabel: { ...typography.labelSmall, textAlign: 'center' },
-  section: { marginBottom: spacing.xxl },
+  section: { marginBottom: spacing.xxl }, 
   sectionTitle: { ...typography.headlineSmall, fontWeight: '600', marginBottom: spacing.md },
   actionsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
   actionCard: { width: '47%', padding: spacing.lg, borderRadius: borderRadius.lg, alignItems: 'center' },
@@ -333,7 +336,7 @@ const styles = StyleSheet.create({
   patientName: { ...typography.bodyMedium, fontWeight: '600' },
   patientPhone: { ...typography.labelSmall },
   patientArrow: { fontSize: 24 },
-  viewAllBtn: { paddingVertical: spacing.md, borderRadius: borderRadius.lg, borderWidth: 1, alignItems: 'center', marginTop: spacing.sm },
+  viewAllBtn: { paddingVertical: spacing.md, borderRadius: borderRadius.lg, borderWidth: 1, alignItems: 'center', marginTop: spacing.sm }, 
   viewAllText: { ...typography.labelMedium, fontWeight: '600' },
 });
 export default StaffEMRScreen;

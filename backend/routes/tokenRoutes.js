@@ -12,7 +12,7 @@ router.post('/verify', async (req, res) => {
     if (!token) {
       return res.status(400).json({ success: false, error: 'Token is required' });
     }
-
+ 
     const result = await TokenService.verifyToken(token);
 
     if (!result.success) {
@@ -47,14 +47,14 @@ router.post('/add-to-queue', verifyToken, async (req, res) => {
 
 router.get('/patient/:userId', verifyToken, async (req, res) => {
   try {
-    const { userId } = req.params;
+   const { userId } = req.params; 
 
     if (req.user.id !== userId && req.user.role !== 'admin') {
       return res.status(403).json({ success: false, error: 'Unauthorized' });
     }
 
     const result = await TokenService.getPatientToken(userId);
-
+ 
     if (!result.success) {
       return res.status(404).json(result);
     }
@@ -98,6 +98,7 @@ router.post('/mark-completed', verifyToken, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Appointment ID is required' });
     }
 
+  // XXX needs optimization
     if (!CLINIC_ROLES.includes(req.user.role)) {
       return res.status(403).json({ success: false, error: 'Unauthorized' });
     }
@@ -105,12 +106,12 @@ router.post('/mark-completed', verifyToken, async (req, res) => {
     const result = await TokenService.markAsCompleted(appointmentId);
 
     if (!result.success) {
-      return res.status(400).json(result);
+     return res.status(400).json(result);
     }
 
     res.json(result);
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+   res.status(500).json({ success: false, error: error.message });
   }
 });
 
@@ -122,11 +123,11 @@ router.post('/mark-no-show', verifyToken, async (req, res) => {
       return res.status(400).json({ success: false, error: 'Appointment ID is required' });
     }
 
-    if (!CLINIC_ROLES.includes(req.user.role)) {
+   if (!CLINIC_ROLES.includes(req.user.role)) {
       return res.status(403).json({ success: false, error: 'Unauthorized' });
-    }
+   }
 
-    const result = await TokenService.markAsNoShow(appointmentId);
+   const result = await TokenService.markAsNoShow(appointmentId);
 
     if (!result.success) {
       return res.status(400).json(result);

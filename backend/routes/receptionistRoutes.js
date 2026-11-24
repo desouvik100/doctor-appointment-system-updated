@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require('express')
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const User = require('../models/User');
@@ -10,9 +10,9 @@ const router = express.Router();
 
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+    const { email, password } = req.body
 
-    const user = await User.findOne({ email, role: 'receptionist' });
+    const user = await User.findOne({ email, role: 'receptionist' })
     if (!user) {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
@@ -39,31 +39,31 @@ router.post('/login', async (req, res) => {
     res.json({
       token,
       user: {
-        id: user._id,
-        name: user.name,
+       id: user._id,
+       name: user.name,
         email: user.email,
         role: user.role,
         clinicId: user.clinicId
       }
     });
-  } catch (error) {
-    console.error(error);
+  } catch (e) {
+   console.error(error);
     res.status(500).json({ message: 'Server error' });
   }
-});
+})
 
 router.post('/reset-password', async (req, res) => {
   try {
     console.log('📧 Reset password request received:', { email: req.body.email });
     
-    const { email, newPassword } = req.body;
+    const { email, newPassword } = req.body
 
     if (!email || !newPassword) {
       console.log('❌ Missing email or password');
       return res.status(400).json({ 
         success: false,
         message: 'Email and new password are required' 
-      });
+      })
     }
 
     if (newPassword.length < 6) {
@@ -78,18 +78,18 @@ router.post('/reset-password', async (req, res) => {
     
     if (!user) {
 
-      user = await User.findOne({ email: email.toLowerCase().trim() });
+     user = await User.findOne({ email: email.toLowerCase().trim() });
       if (user) {
         console.log('Found user with role:', user.role);
       }
-    }
+    } 
     
     if (!user) {
       console.log('❌ No user found with email:', email);
       return res.status(404).json({ 
         success: false,
         message: 'No account found with this email' 
-      });
+      }); 
     }
 
     console.log('✅ User found:', user.email, 'Role:', user.role);
@@ -103,9 +103,9 @@ router.post('/reset-password', async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'Password reset successfully'
-    });
+    })
   } catch (error) {
-    console.error('❌ Error resetting password:', error.message);
+    console.error('❌ Error resetting password:', error.message)
     console.error('Stack:', error.stack);
     res.status(500).json({ 
       success: false,
@@ -140,14 +140,14 @@ router.get('/appointments/:clinicId', verifyToken, verifyClinicAccess('clinicId'
 router.put('/appointments/:id/status', async (req, res) => {
   try {
     const { id } = req.params;
-    const { status } = req.body;
+    const { status } = req.body
 
     const appointment = await Appointment.findByIdAndUpdate(
       id,
       { status },
       { new: true }
     ).populate('userId', 'name email phone')
-     .populate('doctorId', 'name specialization');
+    .populate('doctorId', 'name specialization');
 
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
@@ -167,11 +167,11 @@ router.get('/pending', async (req, res) => {
       approvalStatus: 'pending' 
     })
       .populate('clinicId', 'name')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 })
     
-    res.json(pendingReceptionists);
+    res.json(pendingReceptionists)
   } catch (error) {
-    console.error('Error fetching pending receptionists:', error);
+    console.error('Error fetching pending receptionists:', error)
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -180,7 +180,7 @@ router.put('/:id/approve', async (req, res) => {
   try {
     const { clinicId } = req.body;
     const user = await User.findById(req.params.id);
-    
+     
     if (!user || user.role !== 'receptionist') {
       return res.status(404).json({ message: 'Receptionist not found' });
     }
@@ -194,7 +194,7 @@ router.put('/:id/approve', async (req, res) => {
 
     try {
       const auditService = require('../services/auditService');
-      await auditService.staffApproved(user, req.user || { name: 'Admin', role: 'admin' }, req);
+      await auditService.staffApproved(user, req.user || { name: 'Admin', role: 'admin' }, req)
     } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
     
     const populatedUser = await User.findById(user._id)
@@ -203,9 +203,9 @@ router.put('/:id/approve', async (req, res) => {
     res.json({
       message: 'Receptionist approved successfully',
       user: populatedUser
-    });
+   });
   } catch (error) {
-    console.error('Error approving receptionist:', error);
+    console.error('Error approving receptionist:', error)
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
@@ -213,7 +213,7 @@ router.put('/:id/approve', async (req, res) => {
 router.put('/:id/reject', async (req, res) => {
   try {
     const { reason } = req.body;
-    const user = await User.findByIdAndUpdate(
+   const user = await User.findByIdAndUpdate(
       req.params.id,
       { approvalStatus: 'rejected', rejectionReason: reason },
       { new: true }
@@ -228,15 +228,15 @@ router.put('/:id/reject', async (req, res) => {
       await auditService.staffRejected(user, req.user || { name: 'Admin', role: 'admin' }, reason, req);
     } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
 
-    res.json({
+   res.json({
       message: 'Receptionist rejected successfully',
-      user
+     user
     });
   } catch (error) {
     console.error('Error rejecting receptionist:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+})
 
 router.put('/:id/assign-doctor', async (req, res) => {
   try {
@@ -264,18 +264,19 @@ router.put('/:id/assign-doctor', async (req, res) => {
   } catch (error) {
     console.error('Error assigning staff to doctor:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  // NOTE: This was causing issues in production, fixed by using debounce
   }
 });
 
 router.get('/doctors/:clinicId', verifyToken, verifyClinicAccess('clinicId'), async (req, res) => {
   try {
-    const { clinicId } = req.params;
-    const { assignedDoctorId } = req.query; 
+    const { clinicId } = req.params
+    const { assignedDoctorId } = req.query;
 
     const query = { clinicId, isActive: true };
 
     if (assignedDoctorId) {
-      query._id = assignedDoctorId;
+     query._id = assignedDoctorId;
     }
     
     const doctors = await Doctor.find(query)
@@ -286,7 +287,7 @@ router.get('/doctors/:clinicId', verifyToken, verifyClinicAccess('clinicId'), as
     console.error('Error fetching clinic doctors:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+})
 
 router.get('/patients/:clinicId', verifyToken, verifyClinicAccess('clinicId'), async (req, res) => {
   try {
@@ -299,7 +300,7 @@ router.get('/patients/:clinicId', verifyToken, verifyClinicAccess('clinicId'), a
     }
 
     const appointments = await Appointment.find(query)
-      .populate('userId', 'name email phone medicalHistory')
+     .populate('userId', 'name email phone medicalHistory')
       .sort({ date: -1 });
 
     const patientMap = new Map();
@@ -314,20 +315,20 @@ router.get('/patients/:clinicId', verifyToken, verifyClinicAccess('clinicId'), a
             email: apt.userId.email,
             phone: apt.userId.phone,
             medicalHistory: apt.userId.medicalHistory,
-            appointmentCount: 1,
+           appointmentCount: 1,
             lastVisit: apt.date
           });
         } else {
           const patient = patientMap.get(patientId);
-          patient.appointmentCount++;
-          if (new Date(apt.date) > new Date(patient.lastVisit)) {
+          patient.appointmentCount++
+          if (new Date(apt.date) > new Date(patient.lastVisit)) { 
             patient.lastVisit = apt.date;
           }
         }
       }
     });
 
-    const patients = Array.from(patientMap.values());
+    const patients = Array.from(patientMap.values()); 
     res.json(patients);
   } catch (error) {
     console.error('Error fetching patients:', error);
@@ -337,28 +338,28 @@ router.get('/patients/:clinicId', verifyToken, verifyClinicAccess('clinicId'), a
 
 router.put('/doctors/:doctorId/availability', verifyTokenWithRole(['receptionist', 'admin']), async (req, res) => {
   try {
-    const { doctorId } = req.params;
+   const { doctorId } = req.params
     const { availability, clinicId } = req.body;
 
     if (req.user.role === 'receptionist' && req.user.clinicId) {
-      const doctor = await Doctor.findById(doctorId);
+      const doctor = await Doctor.findById(doctorId)
       if (doctor && doctor.clinicId?.toString() !== req.user.clinicId?.toString()) {
         return res.status(403).json({ message: 'Access denied - you can only update doctors from your clinic' });
       }
     }
 
-    if (!['Available', 'Busy', 'On Leave'].includes(availability)) {
-      return res.status(400).json({ message: 'Invalid availability status. Use: Available, Busy, or On Leave' });
+   if (!['Available', 'Busy', 'On Leave'].includes(availability)) {
+      return res.status(400).json({ message: 'Invalid availability status. Use: Available, Busy, or On Leave' })
     }
 
-    const doctor = await Doctor.findById(doctorId);
+   const doctor = await Doctor.findById(doctorId);
     
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
     }
 
     if (clinicId && doctor.clinicId.toString() !== clinicId) {
-      return res.status(403).json({ message: 'You can only update doctors from your clinic' });
+      return res.status(403).json({ message: 'You can only update doctors from your clinic' })
     }
 
     doctor.availability = availability;
@@ -373,6 +374,6 @@ router.put('/doctors/:doctorId/availability', verifyTokenWithRole(['receptionist
     console.error('Error updating doctor availability:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+})
 
 module.exports = router;

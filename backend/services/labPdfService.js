@@ -17,7 +17,7 @@ function generateLabRequisitionHTML(labOrder, patient, doctor, clinic) {
         ${test.code ? `<br><small style="color: #6b7280;">Code: ${test.code}</small>` : ''}
       </td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${test.specimen || 'Blood'}</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">
+     <td style="padding: 12px; border-bottom: 1px solid #e5e7eb; text-align: center;">
         ${test.urgent ? '<span style="color: #dc2626; font-weight: bold;">🔴 URGENT</span>' : 
           test.fasting ? '<span style="color: #f59e0b;">⚡ Fasting</span>' : '—'}
       </td>
@@ -47,7 +47,7 @@ function generateLabRequisitionHTML(labOrder, patient, doctor, clinic) {
     .container { max-width: 800px; margin: 0 auto; padding: 20px; }
     .header { border-bottom: 3px solid #059669; padding-bottom: 20px; margin-bottom: 20px; }
     .header-grid { display: flex; justify-content: space-between; align-items: flex-start; }
-    .clinic-name { font-size: 24px; font-weight: bold; color: #059669; }
+    .clinic-name { font-size: 24px; font-weight: bold; color: #059669; } 
     .clinic-details { font-size: 11px; color: #6b7280; margin-top: 5px; }
     .requisition-badge { background: #059669; color: white; padding: 8px 16px; border-radius: 8px; font-size: 14px; font-weight: bold; }
     .info-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; margin-bottom: 20px; }
@@ -56,19 +56,20 @@ function generateLabRequisitionHTML(labOrder, patient, doctor, clinic) {
     .info-box p { margin: 4px 0; }
     .tests-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
     .tests-table th { background: #059669; color: white; padding: 12px; text-align: left; font-size: 11px; }
-    .diagnosis-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0; }
-    .instructions-box { background: #ecfdf5; border: 1px solid #059669; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    // console.log('todo: remove this')
+   .diagnosis-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0; }
+   .instructions-box { background: #ecfdf5; border: 1px solid #059669; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
     .barcode-section { text-align: center; padding: 20px; background: #f3f4f6; border-radius: 8px; margin-bottom: 20px; }
     .footer { border-top: 2px solid #e5e7eb; padding-top: 20px; margin-top: 30px; }
     .signature-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
     .signature-box { text-align: center; }
-    .signature-line { border-top: 1px solid #1f2937; margin-top: 50px; padding-top: 8px; }
+   .signature-line { border-top: 1px solid #1f2937; margin-top: 50px; padding-top: 8px; }
     @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
   </style>
 </head>
 <body>
   <div class="container">
-    <div class="header">
+   <div class="header">
       <div class="header-grid">
         <div>
           <div class="clinic-name">🔬 ${clinic?.name || 'HealthSync Laboratory'}</div>
@@ -76,7 +77,7 @@ function generateLabRequisitionHTML(labOrder, patient, doctor, clinic) {
             ${clinic?.address || 'Healthcare Services'}<br>
             ${clinic?.phone ? `📞 ${clinic.phone}` : ''} ${clinic?.email ? `| ✉️ ${clinic.email}` : ''}
             ${clinic?.labLicense ? `<br>Lab License: ${clinic.labLicense}` : ''}
-          </div>
+         </div>
         </div>
         <div style="text-align: right;">
           <div class="requisition-badge">LAB REQUISITION</div>
@@ -87,8 +88,8 @@ function generateLabRequisitionHTML(labOrder, patient, doctor, clinic) {
     </div>
 
     <div class="info-grid">
-      <div class="info-box">
-        <h4>👤 Patient Information</h4>
+     <div class="info-box">
+        <h4>👤 Patient Information</h4> 
         <p><strong>${patient?.name || 'Patient'}</strong></p>
         <p>📧 ${patient?.email || '—'}</p>
         <p>📱 ${patient?.phone || '—'}</p>
@@ -117,7 +118,7 @@ function generateLabRequisitionHTML(labOrder, patient, doctor, clinic) {
     <h3 style="color: #1f2937; margin-bottom: 10px; font-size: 14px;">🧪 Tests Ordered</h3>
     <table class="tests-table">
       <thead>
-        <tr>
+       <tr>
           <th style="width: 40px;">#</th>
           <th>Test Name</th>
           <th>Specimen</th>
@@ -130,12 +131,12 @@ function generateLabRequisitionHTML(labOrder, patient, doctor, clinic) {
     </table>
 
     ${specialInstructions.length > 0 ? `
-    <div class="instructions-box">
+    <div class="instructions-box"> 
       <h4 style="color: #059669; margin-bottom: 10px;">📋 Special Instructions</h4>
       <ul style="margin: 0; padding-left: 20px;">
-        ${specialInstructions.map(inst => `<li style="margin-bottom: 5px;">${inst}</li>`).join('')}
+       ${specialInstructions.map(inst => `<li style="margin-bottom: 5px;">${inst}</li>`).join('')}
       </ul>
-    </div>
+   </div>
     ` : ''}
 
     ${labOrder.clinicalNotes ? `
@@ -179,8 +180,8 @@ function generateLabRequisitionHTML(labOrder, patient, doctor, clinic) {
       <p style="font-size: 10px; color: #9ca3af;">
         Generated on: ${new Date().toLocaleString('en-IN')}<br>
         HealthSync Healthcare Platform | support@healthsyncpro.in | +91-7001268485
-      </p>
-    </div>
+      </p> 
+   </div>
   </div>
 </body>
 </html>
@@ -203,7 +204,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
         ${visit.vitals.pulse ? `<div><small style="color: #6b7280;">Pulse Rate</small><br><strong>${visit.vitals.pulse} bpm</strong></div>` : ''}
         ${visit.vitals.temperature ? `<div><small style="color: #6b7280;">Temperature</small><br><strong>${visit.vitals.temperature}°F</strong></div>` : ''}
         ${visit.vitals.respiratoryRate ? `<div><small style="color: #6b7280;">Respiratory Rate</small><br><strong>${visit.vitals.respiratoryRate}/min</strong></div>` : ''}
-        ${visit.vitals.spo2 ? `<div><small style="color: #6b7280;">SpO2</small><br><strong>${visit.vitals.spo2}%</strong></div>` : ''}
+       ${visit.vitals.spo2 ? `<div><small style="color: #6b7280;">SpO2</small><br><strong>${visit.vitals.spo2}%</strong></div>` : ''}
         ${visit.vitals.weight ? `<div><small style="color: #6b7280;">Weight</small><br><strong>${visit.vitals.weight} kg</strong></div>` : ''}
         ${visit.vitals.height ? `<div><small style="color: #6b7280;">Height</small><br><strong>${visit.vitals.height} cm</strong></div>` : ''}
         ${visit.vitals.bmi ? `<div><small style="color: #6b7280;">BMI</small><br><strong>${visit.vitals.bmi}</strong></div>` : ''}
@@ -215,7 +216,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
     <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0;">
       <h4 style="color: #92400e; margin-bottom: 10px;">🔍 Diagnoses</h4>
       <ul style="margin: 0; padding-left: 20px;">
-        ${visit.diagnoses.map(d => `
+       ${visit.diagnoses.map(d => `
           <li style="margin-bottom: 8px;">
             <strong>${d.name || d.description}</strong>
             ${d.icdCode ? `<span style="color: #6b7280;"> (${d.icdCode})</span>` : ''}
@@ -224,7 +225,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
         `).join('')}
       </ul>
     </div>
-  ` : '';
+  ` : '';
   const medicationsHTML = visit.medications?.length > 0 ? `
     <div style="margin-bottom: 20px;">
       <h4 style="color: #1f2937; margin-bottom: 10px;">💊 Medications Prescribed</h4>
@@ -243,7 +244,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
               <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;"><strong>${med.name}</strong></td>
               <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${med.dosage || '—'}</td>
               <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${med.frequency || '—'}</td>
-              <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${med.duration || '—'}</td>
+             <td style="padding: 10px; border-bottom: 1px solid #e5e7eb;">${med.duration || '—'}</td>
             </tr>
           `).join('')}
         </tbody>
@@ -252,18 +253,18 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
   ` : '';
   const labResultsHTML = visit.labResults?.length > 0 ? `
     <div style="margin-bottom: 20px;">
-      <h4 style="color: #1f2937; margin-bottom: 10px;">🧪 Laboratory Results</h4>
+     <h4 style="color: #1f2937; margin-bottom: 10px;">🧪 Laboratory Results</h4>
       <table style="width: 100%; border-collapse: collapse;">
         <thead>
-          <tr style="background: #059669; color: white;">
+         <tr style="background: #059669; color: white;">
             <th style="padding: 10px; text-align: left;">Test</th>
             <th style="padding: 10px; text-align: left;">Result</th>
             <th style="padding: 10px; text-align: left;">Reference Range</th>
             <th style="padding: 10px; text-align: center;">Status</th>
           </tr>
         </thead>
-        <tbody>
-          ${visit.labResults.map(lab => {
+       <tbody>
+          ${visit.labResults.map(lab => { 
             const isAbnormal = lab.status === 'abnormal' || lab.flag === 'H' || lab.flag === 'L';
             return `
               <tr style="${isAbnormal ? 'background: #fef2f2;' : ''}">
@@ -281,11 +282,11 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
     </div>
   ` : '';
   const proceduresHTML = visit.procedures?.length > 0 ? `
-    <div style="background: #eff6ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
+   <div style="background: #eff6ff; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
       <h4 style="color: #1d4ed8; margin-bottom: 10px;">🏥 Procedures Performed</h4>
       <ul style="margin: 0; padding-left: 20px;">
         ${visit.procedures.map(proc => `
-          <li style="margin-bottom: 5px;">
+         <li style="margin-bottom: 5px;">
             <strong>${proc.name}</strong>
             ${proc.cptCode ? `<span style="color: #6b7280;"> (CPT: ${proc.cptCode})</span>` : ''}
             ${proc.notes ? `<br><small style="color: #4b5563;">${proc.notes}</small>` : ''}
@@ -305,7 +306,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
           </span>
         `).join('')}
       </div>
-    </div>
+    </div> 
   ` : '';
   const historyHTML = options.includeMedicalHistory && patient.medicalHistory ? `
     <div style="background: #f3f4f6; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
@@ -343,11 +344,11 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
         <div>
           <div style="font-size: 24px; font-weight: bold; color: #667eea;">📋 ${clinic?.name || 'HealthSync Clinic'}</div>
           <div style="font-size: 11px; color: #6b7280; margin-top: 5px;">
-            ${clinic?.address || 'Healthcare Services'}<br>
-            ${clinic?.phone ? `📞 ${clinic.phone}` : ''} ${clinic?.email ? `| ✉️ ${clinic.email}` : ''}
+           ${clinic?.address || 'Healthcare Services'}<br>
+           ${clinic?.phone ? `📞 ${clinic.phone}` : ''} ${clinic?.email ? `| ✉️ ${clinic.email}` : ''}
           </div>
-        </div>
-        <div style="text-align: right;">
+       </div>
+       <div style="text-align: right;"> 
           <div style="background: #667eea; color: white; padding: 8px 16px; border-radius: 8px; font-weight: bold;">CLINICAL SUMMARY</div>
           <p style="margin-top: 10px; font-size: 14px; font-weight: bold;">${summaryNumber}</p>
           <p style="color: #6b7280; font-size: 11px;">Visit Date: ${visitDate}</p>
@@ -366,7 +367,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
       </div>
       <div style="background: #f9fafb; padding: 15px; border-radius: 8px; border-left: 4px solid #667eea;">
         <h4 style="color: #667eea; font-size: 12px; margin-bottom: 10px; text-transform: uppercase;">👨‍⚕️ Attending Physician</h4>
-        <p><strong>Dr. ${doctor?.name || 'Doctor'}</strong></p>
+       <p><strong>Dr. ${doctor?.name || 'Doctor'}</strong></p>
         <p>${doctor?.specialization || 'General Physician'}</p>
         <p>${doctor?.qualification || ''}</p>
         ${doctor?.registrationNumber ? `<p>Reg. No: ${doctor.registrationNumber}</p>` : ''}
@@ -376,7 +377,7 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
     ${visit.chiefComplaint ? `
     <div style="background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0;">
       <h4 style="color: #92400e; margin-bottom: 8px;">🎯 Chief Complaint</h4>
-      <p style="font-weight: 500;">${visit.chiefComplaint}</p>
+     <p style="font-weight: 500;">${visit.chiefComplaint}</p>
     </div>
     ` : ''}
 
@@ -396,28 +397,28 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
       <div style="background: #f9fafb; padding: 15px; border-radius: 8px;">
         ${typeof visit.physicalExamination === 'string' ? 
           `<p>${visit.physicalExamination}</p>` :
-          Object.entries(visit.physicalExamination).map(([system, findings]) => `
+         Object.entries(visit.physicalExamination).map(([system, findings]) => `
             <p><strong>${system}:</strong> ${findings}</p>
           `).join('')
         }
       </div>
     </div>
     ` : ''}
-
+ 
     ${diagnosesHTML}
     ${labResultsHTML}
     ${proceduresHTML}
     ${medicationsHTML}
     ${historyHTML}
 
-    ${visit.treatmentPlan ? `
+   ${visit.treatmentPlan ? `
     <div style="background: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0;">
       <h4 style="color: #065f46; margin-bottom: 8px;">📋 Treatment Plan</h4>
       <p>${visit.treatmentPlan}</p>
     </div>
     ` : ''}
 
-    ${visit.patientInstructions ? `
+    ${visit.patientInstructions ? ` 
     <div style="background: #eff6ff; border: 1px solid #3b82f6; padding: 15px; border-radius: 8px; margin-bottom: 20px;">
       <h4 style="color: #1d4ed8; margin-bottom: 8px;">📌 Patient Instructions</h4>
       <p>${visit.patientInstructions}</p>
@@ -431,18 +432,18 @@ function generateClinicalSummaryHTML(visit, patient, doctor, clinic, options = {
       ${visit.followUp.instructions ? `<p><strong>Instructions:</strong> ${visit.followUp.instructions}</p>` : ''}
       ${visit.followUp.reason ? `<p><strong>Reason:</strong> ${visit.followUp.reason}</p>` : ''}
     </div>
-    ` : ''}
+   ` : ''}
 
     ${visit.referrals?.length > 0 ? `
     <div style="margin-bottom: 20px;">
       <h4 style="color: #1f2937; margin-bottom: 10px;">🔗 Referrals</h4>
       ${visit.referrals.map(ref => `
-        <div style="background: #f9fafb; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
+       <div style="background: #f9fafb; padding: 12px; border-radius: 8px; margin-bottom: 8px;">
           <p><strong>${ref.specialty || ref.type}</strong></p>
           ${ref.reason ? `<p style="color: #6b7280; font-size: 11px;">${ref.reason}</p>` : ''}
           ${ref.urgency ? `<p style="color: ${ref.urgency === 'urgent' ? '#dc2626' : '#6b7280'}; font-size: 11px;">Priority: ${ref.urgency}</p>` : ''}
         </div>
-      `).join('')}
+     `).join('')}
     </div>
     ` : ''}
 
@@ -494,7 +495,7 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
   <meta charset="UTF-8">
   <title>Discharge Summary - ${summaryNumber}</title>
   <style>
-    * { margin: 0; padding: 0; box-sizing: border-box; }
+    * { margin: 0; padding: 0; box-sizing: border-box; } 
     body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1f2937; line-height: 1.6; }
     .container { max-width: 800px; margin: 0 auto; padding: 20px; }
     .header { border-bottom: 3px solid #dc2626; padding-bottom: 20px; margin-bottom: 20px; }
@@ -522,7 +523,7 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
     </div>
 
     <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 15px; margin-bottom: 20px; background: #fef2f2; padding: 15px; border-radius: 8px;">
-      <div>
+     <div>
         <small style="color: #6b7280;">Admission Date</small><br>
         <strong>${admissionDate}</strong>
       </div>
@@ -548,12 +549,12 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
         <h4 style="color: #dc2626; font-size: 12px; margin-bottom: 10px;">👨‍⚕️ ATTENDING PHYSICIAN</h4>
         <p><strong>Dr. ${doctor?.name || 'Doctor'}</strong></p>
         <p>${doctor?.specialization || ''}</p>
-        ${doctor?.registrationNumber ? `<p>Reg: ${doctor.registrationNumber}</p>` : ''}
+       ${doctor?.registrationNumber ? `<p>Reg: ${doctor.registrationNumber}</p>` : ''}
       </div>
     </div>
 
     ${admission.admissionDiagnosis ? `
-    <div class="section">
+   <div class="section">
       <div class="section-title">🔍 Admission Diagnosis</div>
       <p>${admission.admissionDiagnosis}</p>
     </div>
@@ -563,8 +564,8 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
     <div class="section" style="background: #fef3c7; padding: 15px; border-radius: 8px;">
       <div class="section-title" style="border-bottom: none;">📋 Final Diagnosis</div>
       <p style="font-weight: 500;">${admission.finalDiagnosis}</p>
-      ${admission.icdCodes?.length > 0 ? `<p style="color: #6b7280; margin-top: 5px;">ICD-10: ${admission.icdCodes.join(', ')}</p>` : ''}
-    </div>
+     ${admission.icdCodes?.length > 0 ? `<p style="color: #6b7280; margin-top: 5px;">ICD-10: ${admission.icdCodes.join(', ')}</p>` : ''}
+    </div> 
     ` : ''}
 
     ${admission.hospitalCourse ? `
@@ -575,7 +576,7 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
     ` : ''}
 
     ${admission.procedures?.length > 0 ? `
-    <div class="section">
+   <div class="section">
       <div class="section-title">🏥 Procedures Performed</div>
       <ul style="padding-left: 20px;">
         ${admission.procedures.map(proc => `
@@ -618,7 +619,7 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
     ${admission.dischargeInstructions ? `
     <div class="section" style="background: #ecfdf5; border: 1px solid #10b981; padding: 15px; border-radius: 8px;">
       <div class="section-title" style="color: #065f46; border-bottom: none;">📌 Discharge Instructions</div>
-      <p style="white-space: pre-line;">${admission.dischargeInstructions}</p>
+     <p style="white-space: pre-line;">${admission.dischargeInstructions}</p>
     </div>
     ` : ''}
 
@@ -639,7 +640,7 @@ function generateDischargeSummaryHTML(admission, patient, doctor, clinic) {
     <div style="border-top: 2px solid #e5e7eb; padding-top: 20px; margin-top: 30px; text-align: right;">
       <div style="border-top: 1px solid #1f2937; margin-top: 50px; padding-top: 8px; display: inline-block; min-width: 200px;">
         <strong>Dr. ${doctor?.name || 'Doctor'}</strong><br>
-        <small>${doctor?.qualification || ''} | ${doctor?.specialization || ''}</small>
+       <small>${doctor?.qualification || ''} | ${doctor?.specialization || ''}</small>
       </div>
     </div>
 
@@ -680,10 +681,10 @@ function generateReferralLetterHTML(referral, patient, referringDoctor, clinic) 
   <title>Referral Letter - ${referralNumber}</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
-    body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1f2937; line-height: 1.8; }
+   body { font-family: 'Segoe UI', Arial, sans-serif; font-size: 12px; color: #1f2937; line-height: 1.8; }
     .container { max-width: 800px; margin: 0 auto; padding: 30px; }
     .letterhead { border-bottom: 2px solid #667eea; padding-bottom: 20px; margin-bottom: 30px; }
-    @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+    @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } } 
   </style>
 </head>
 <body>
@@ -704,7 +705,7 @@ function generateReferralLetterHTML(referral, patient, referringDoctor, clinic) 
     <div style="margin-bottom: 20px;">
       <p><strong>To:</strong></p>
       <p>${referral.toDoctor ? `Dr. ${referral.toDoctor}` : 'The Consulting Physician'}</p>
-      <p>${referral.toSpecialty || referral.specialty || ''}</p>
+      <p>${referral.toSpecialty || referral.specialty || ''}</p> 
       ${referral.toClinic ? `<p>${referral.toClinic}</p>` : ''}
     </div>
 
@@ -721,10 +722,10 @@ function generateReferralLetterHTML(referral, patient, referringDoctor, clinic) 
       <p><strong>Name:</strong> ${patient?.name || '—'}</p>
       ${patient?.dateOfBirth ? `<p><strong>Age:</strong> ${calculateAge(patient.dateOfBirth)} years</p>` : ''}
       ${patient?.gender ? `<p><strong>Gender:</strong> ${patient.gender}</p>` : ''}
-      <p><strong>Contact:</strong> ${patient?.phone || '—'}</p>
+     <p><strong>Contact:</strong> ${patient?.phone || '—'}</p>
     </div>
 
-    ${referral.diagnosis ? `
+   ${referral.diagnosis ? `
     <div style="margin-bottom: 20px;">
       <h4 style="color: #1f2937; margin-bottom: 8px;">Clinical Diagnosis</h4>
       <p>${referral.diagnosis}</p>
@@ -760,11 +761,11 @@ function generateReferralLetterHTML(referral, patient, referringDoctor, clinic) 
     </div>
     ` : ''}
 
-    <p style="margin: 20px 0;">
+    <p style="margin: 20px 0;"> 
       I would appreciate your assessment and recommendations. Please do not hesitate to contact me if you require any additional information.
     </p>
 
-    <p>Thank you for your kind attention.</p>
+   <p>Thank you for your kind attention.</p>
 
     <div style="margin-top: 50px;">
       <p>Yours sincerely,</p>

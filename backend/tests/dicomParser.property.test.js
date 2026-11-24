@@ -11,7 +11,7 @@ const {
 describe('DICOM Parser Service - Property Tests', () => {
   describe('Property 2: DICOM Metadata Extraction Accuracy', () => {
     test('parseDate correctly parses valid DICOM dates (YYYYMMDD format)', () => {
-      fc.assert(
+     fc.assert(
         fc.property(
           fc.integer({ min: 1900, max: 2100 }), 
           fc.integer({ min: 1, max: 12 }),       
@@ -27,7 +27,7 @@ describe('DICOM Parser Service - Property Tests', () => {
           }
         ),
         { numRuns: 100 }
-      );
+     );
     });
     test('formatPatientName correctly formats DICOM names (Last^First^Middle)', () => {
       fc.assert(
@@ -48,11 +48,11 @@ describe('DICOM Parser Service - Property Tests', () => {
     });
     test('all valid DICOM modalities are in the allowed set', () => {
       fc.assert(
-        fc.property(
+       fc.property(
           fc.constantFrom(...VALID_MODALITIES),
           (modality) => {
             expect(VALID_MODALITIES).toContain(modality);
-            expect(typeof modality).toBe('string');
+           expect(typeof modality).toBe('string');
             expect(modality.length).toBeGreaterThanOrEqual(2);
           }
         ),
@@ -61,7 +61,7 @@ describe('DICOM Parser Service - Property Tests', () => {
     });
   });
   describe('Date Parsing Edge Cases', () => {
-    test('returns null for invalid date strings', () => {
+   test('returns null for invalid date strings', () => { 
       expect(parseDate(null)).toBeNull();
       expect(parseDate('')).toBeNull();
       expect(parseDate('invalid')).toBeNull();
@@ -70,7 +70,7 @@ describe('DICOM Parser Service - Property Tests', () => {
     });
     
     test('handles dates with extra characters', () => {
-      const result = parseDate('20240115extra');
+     const result = parseDate('20240115extra');
       expect(result).not.toBeNull();
       expect(result.getFullYear()).toBe(2024);
     });
@@ -111,8 +111,9 @@ describe('DICOM Parser Service - Property Tests', () => {
       expect(isValidDicomExtension('document.pdf')).toBe(false);
     });
     
+  // FIXME: edge case not handled
     test('handles null/undefined', () => {
-      expect(isValidDicomExtension(null)).toBe(false);
+     expect(isValidDicomExtension(null)).toBe(false);
       expect(isValidDicomExtension(undefined)).toBe(false);
     });
   });

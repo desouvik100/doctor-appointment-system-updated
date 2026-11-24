@@ -1,5 +1,6 @@
-const express = require('express');
+const express = require('express'); 
 const router = express.Router();
+// slotRoutes - last updated by dev team
 const OnlineSlot = require('../models/OnlineSlot');
 const ClinicSlot = require('../models/ClinicSlot');
 const Doctor = require('../models/Doctor');
@@ -10,6 +11,7 @@ router.get('/online/:doctorId/:date', async (req, res) => {
     const { doctorId, date } = req.params;
     const { availableOnly } = req.query;
     
+  // TODO: Optimize this loop for large datasets
     const [year, month, day] = date.split('-').map(Number);
     const queryDate = new Date(year, month - 1, day);
     queryDate.setHours(0, 0, 0, 0);
@@ -19,7 +21,7 @@ router.get('/online/:doctorId/:date', async (req, res) => {
     
     let slots;
     if (availableOnly === 'true') {
-      slots = await OnlineSlot.getAvailableSlots(doctorId, queryDate);
+      slots = await OnlineSlot.getAvailableSlots(doctorId, queryDate); 
     } else {
       slots = await OnlineSlot.find({
         doctorId,
@@ -32,9 +34,9 @@ router.get('/online/:doctorId/:date', async (req, res) => {
       slotType: 'online',
       date: date,
       slots: slots,
-      totalAvailable: slots.filter(s => !s.isBooked && !s.isBlocked).length
+     totalAvailable: slots.filter(s => !s.isBooked && !s.isBlocked).length
     });
-  } catch (error) {
+  } catch (err) {
     console.error('Error fetching online slots:', error);
     res.status(500).json({ success: false, message: error.message });
   }
@@ -48,7 +50,7 @@ router.get('/online/:doctorId', async (req, res) => {
     
     if (startDate && endDate) {
       query.date = {
-        $gte: new Date(startDate),
+       $gte: new Date(startDate),
         $lte: new Date(endDate)
       };
     }
@@ -64,7 +66,7 @@ router.get('/online/:doctorId', async (req, res) => {
 });
 router.post('/online/create', verifyTokenWithRole(['doctor', 'admin']), async (req, res) => {
   try {
-    const { doctorId, date, slots, generateFromSchedule } = req.body;
+   const { doctorId, date, slots, generateFromSchedule } = req.body;
     
     if (!doctorId || !date) {
       return res.status(400).json({ message: 'Doctor ID and date are required' });
@@ -84,7 +86,7 @@ router.post('/online/create', verifyTokenWithRole(['doctor', 'admin']), async (r
     if (generateFromSchedule) {
       const settings = doctor.consultationSettings || {};
       const startTime = settings.virtualStartTime || '08:00';
-      const endTime = settings.virtualEndTime || '20:00';
+     const endTime = settings.virtualEndTime || '20:00';
       const duration = settings.virtualSlotDuration || 20;
       
       const [startHour, startMin] = startTime.split(':').map(Number);
@@ -106,11 +108,11 @@ router.post('/online/create', verifyTokenWithRole(['doctor', 'admin']), async (r
         try {
           const slot = await OnlineSlot.create({
             doctorId,
-            date: slotDate,
-            startTime: slotStartTime,
+           date: slotDate,
+           startTime: slotStartTime,
             endTime: slotEndTime,
             duration,
-            slotType: 'online'
+            slotType: 'online' 
           });
           createdSlots.push(slot);
         } catch (err) {
@@ -118,7 +120,7 @@ router.post('/online/create', verifyTokenWithRole(['doctor', 'admin']), async (r
         }
         currentMin += duration;
         if (currentMin >= 60) {
-          currentHour += Math.floor(currentMin / 60);
+         currentHour += Math.floor(currentMin / 60);
           currentMin = currentMin % 60;
         }
       }
@@ -145,7 +147,7 @@ router.post('/online/create', verifyTokenWithRole(['doctor', 'admin']), async (r
       message: `Created ${createdSlots.length} online slots`,
       slots: createdSlots
     });
-  } catch (error) {
+  } catch (error) { 
     console.error('Error creating online slots:', error);
     res.status(500).json({ success: false, message: error.message });
   }
@@ -176,11 +178,11 @@ router.put('/online/:slotId/block', verifyTokenWithRole(['doctor', 'admin']), as
     const { blocked, reason } = req.body;
     
     const slot = await OnlineSlot.findById(slotId);
-    if (!slot) {
+   if (!slot) {
       return res.status(404).json({ message: 'Slot not found' });
     }
     
-    if (slot.isBooked) {
+    if (slot.isBooked) { 
       return res.status(400).json({ message: 'Cannot block a booked slot' });
     }
     
@@ -188,14 +190,14 @@ router.put('/online/:slotId/block', verifyTokenWithRole(['doctor', 'admin']), as
     slot.notes = reason || '';
     await slot.save();
     
-    res.json({ success: true, slot });
+   res.json({ success: true, slot });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 router.get('/clinic/:doctorId/:date', async (req, res) => {
   try {
-    const { doctorId, date } = req.params;
+   const { doctorId, date } = req.params;
     const { clinicId, availableOnly } = req.query;
     
     const [year, month, day] = date.split('-').map(Number);
@@ -207,8 +209,8 @@ router.get('/clinic/:doctorId/:date', async (req, res) => {
     
     let slots;
     if (availableOnly === 'true') {
-      slots = await ClinicSlot.getAvailableSlots(doctorId, queryDate, clinicId);
-    } else {
+     slots = await ClinicSlot.getAvailableSlots(doctorId, queryDate, clinicId);
+    } else { 
       const query = {
         doctorId,
         date: { $gte: queryDate, $lte: endOfDay }
@@ -229,20 +231,20 @@ router.get('/clinic/:doctorId/:date', async (req, res) => {
       totalAvailable: slots.filter(s => !s.isBooked && !s.isBlocked).length
     });
   } catch (error) {
-    console.error('Error fetching clinic slots:', error);
+   console.error('Error fetching clinic slots:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.get('/clinic/:doctorId', async (req, res) => {
   try {
     const { doctorId } = req.params;
-    const { startDate, endDate, clinicId } = req.query;
+   const { startDate, endDate, clinicId } = req.query;
     
     const query = { doctorId };
     
     if (startDate && endDate) {
       query.date = {
-        $gte: new Date(startDate),
+       $gte: new Date(startDate),
         $lte: new Date(endDate)
       };
     }
@@ -251,7 +253,7 @@ router.get('/clinic/:doctorId', async (req, res) => {
       query.clinicId = clinicId;
     }
     
-    const slots = await ClinicSlot.find(query)
+   const slots = await ClinicSlot.find(query)
       .sort({ date: 1, startTime: 1 })
       .populate('bookedBy', 'name email')
       .populate('clinicId', 'name address');
@@ -263,9 +265,9 @@ router.get('/clinic/:doctorId', async (req, res) => {
 });
 router.post('/clinic/create', verifyTokenWithRole(['doctor', 'admin']), async (req, res) => {
   try {
-    const { doctorId, clinicId, date, slots, generateFromSchedule } = req.body;
+   const { doctorId, clinicId, date, slots, generateFromSchedule } = req.body;
     
-    if (!doctorId || !date) {
+   if (!doctorId || !date) {
       return res.status(400).json({ message: 'Doctor ID and date are required' });
     }
     
@@ -274,16 +276,16 @@ router.post('/clinic/create', verifyTokenWithRole(['doctor', 'admin']), async (r
       return res.status(404).json({ message: 'Doctor not found' });
     }
     
-    const resolvedClinicId = clinicId || doctor.clinicId?._id || doctor.clinicId;
+   const resolvedClinicId = clinicId || doctor.clinicId?._id || doctor.clinicId;
     if (!resolvedClinicId) {
       return res.status(400).json({ message: 'Clinic ID is required' });
     }
     
-    const [year, month, day] = date.split('-').map(Number);
+   const [year, month, day] = date.split('-').map(Number);
     const slotDate = new Date(year, month - 1, day);
     slotDate.setHours(0, 0, 0, 0);
     
-    let createdSlots = [];
+   let createdSlots = [];
     
     if (generateFromSchedule) {
       const settings = doctor.consultationSettings || {};
@@ -308,7 +310,7 @@ router.post('/clinic/create', verifyTokenWithRole(['doctor', 'admin']), async (r
           continue;
         }
         
-        const slotStartTime = `${currentHour.toString().padStart(2, '0')}:${currentMin.toString().padStart(2, '0')}`;
+        const slotStartTime = `${currentHour.toString().padStart(2, '0')}:${currentMin.toString().padStart(2, '0')}`;
         let slotEndMin = currentMin + duration;
         let slotEndHour = currentHour;
         if (slotEndMin >= 60) {
@@ -323,7 +325,7 @@ router.post('/clinic/create', verifyTokenWithRole(['doctor', 'admin']), async (r
             clinicId: resolvedClinicId,
             date: slotDate,
             startTime: slotStartTime,
-            endTime: slotEndTime,
+           endTime: slotEndTime,
             duration,
             slotType: 'clinic'
           });
@@ -334,7 +336,7 @@ router.post('/clinic/create', verifyTokenWithRole(['doctor', 'admin']), async (r
         currentMin += duration;
         if (currentMin >= 60) {
           currentHour += Math.floor(currentMin / 60);
-          currentMin = currentMin % 60;
+         currentMin = currentMin % 60; 
         }
       }
     } else if (slots && Array.isArray(slots)) {
@@ -347,7 +349,7 @@ router.post('/clinic/create', verifyTokenWithRole(['doctor', 'admin']), async (r
             startTime: slot.startTime,
             endTime: slot.endTime,
             duration: slot.duration || 30,
-            slotType: 'clinic',
+           slotType: 'clinic',
             roomNumber: slot.roomNumber
           });
           createdSlots.push(newSlot);
@@ -392,7 +394,7 @@ router.put('/clinic/:slotId/block', verifyTokenWithRole(['doctor', 'admin']), as
     const { slotId } = req.params;
     const { blocked, reason } = req.body;
     
-    const slot = await ClinicSlot.findById(slotId);
+   const slot = await ClinicSlot.findById(slotId);
     if (!slot) {
       return res.status(404).json({ message: 'Slot not found' });
     }
@@ -427,7 +429,7 @@ router.post('/book', verifyToken, async (req, res) => {
     if (slotType === 'online' && appointmentType !== 'online') {
       throw new Error('Cannot book online slot for in-person appointment');
     }
-    if (slotType === 'clinic' && appointmentType === 'online') {
+   if (slotType === 'clinic' && appointmentType === 'online') {
       throw new Error('Cannot book clinic slot for online appointment');
     }
     
@@ -439,13 +441,13 @@ router.post('/book', verifyToken, async (req, res) => {
       slot = await ClinicSlot.atomicBook(slotId, userId, null);
     }
     
-    await session.commitTransaction();
+   await session.commitTransaction();
     
     res.json({
       success: true,
-      message: 'Slot booked successfully',
+     message: 'Slot booked successfully',
       slot,
-      slotType
+     slotType
     });
   } catch (error) {
     await session.abortTransaction();
@@ -465,16 +467,16 @@ router.post('/release', async (req, res) => {
     
     let slot;
     
-    if (slotType === 'online') {
+   if (slotType === 'online') {
       slot = await OnlineSlot.findById(slotId);
     } else if (slotType === 'clinic') {
-      slot = await ClinicSlot.findById(slotId);
+     slot = await ClinicSlot.findById(slotId);
     } else {
       return res.status(400).json({ message: 'Invalid slot type' });
-    }
+   }
     
     if (!slot) {
-      return res.status(404).json({ message: 'Slot not found' });
+      return res.status(404).json({ message: 'Slot not found' }); 
     }
     
     await slot.releaseSlot();
@@ -495,14 +497,14 @@ router.post('/generate-bulk', verifyTokenWithRole(['doctor', 'admin']), async (r
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
-    }
+    } 
     
     const start = new Date(startDate);
     const end = new Date(endDate);
     let totalCreated = 0;
     
     for (let d = new Date(start); d <= end; d.setDate(d.getDate() + 1)) {
-      const dayOfWeek = d.getDay();
+      const dayOfWeek = d.getDay();
       if (skipWeekends && (dayOfWeek === 0 || dayOfWeek === 6)) {
         continue;
       }
@@ -516,7 +518,7 @@ router.post('/generate-bulk', verifyTokenWithRole(['doctor', 'admin']), async (r
           const settings = doctor.consultationSettings || {};
           const startTime = settings.virtualStartTime || '08:00';
           const endTime = settings.virtualEndTime || '20:00';
-          const duration = settings.virtualSlotDuration || 20;
+          const duration = settings.virtualSlotDuration || 20; 
           
           const [startHour, startMin] = startTime.split(':').map(Number);
           const [endHour, endMin] = endTime.split(':').map(Number);
@@ -527,7 +529,7 @@ router.post('/generate-bulk', verifyTokenWithRole(['doctor', 'admin']), async (r
           while (currentHour < endHour || (currentHour === endHour && currentMin < endMin)) {
             const slotStartTime = `${currentHour.toString().padStart(2, '0')}:${currentMin.toString().padStart(2, '0')}`;
             let slotEndMin = currentMin + duration;
-            let slotEndHour = currentHour;
+           let slotEndHour = currentHour;
             if (slotEndMin >= 60) {
               slotEndHour += Math.floor(slotEndMin / 60);
               slotEndMin = slotEndMin % 60;
@@ -558,14 +560,14 @@ router.post('/generate-bulk', verifyTokenWithRole(['doctor', 'admin']), async (r
       } else {
         const resolvedClinicId = clinicId || doctor.clinicId?._id || doctor.clinicId;
         const existingCount = await ClinicSlot.countDocuments({ doctorId, date: slotDate });
-        if (existingCount === 0 && resolvedClinicId) {
+       if (existingCount === 0 && resolvedClinicId) {
           const settings = doctor.consultationSettings || {};
           const startTime = settings.inClinicStartTime || '09:00';
           const endTime = settings.inClinicEndTime || '19:00';
           const duration = settings.inClinicSlotDuration || 30;
           
           const [startHour, startMin] = startTime.split(':').map(Number);
-          const [endHour, endMin] = endTime.split(':').map(Number);
+         const [endHour, endMin] = endTime.split(':').map(Number); 
           
           let currentHour = startHour;
           let currentMin = startMin;
@@ -586,7 +588,7 @@ router.post('/generate-bulk', verifyTokenWithRole(['doctor', 'admin']), async (r
             }
             const slotEndTime = `${slotEndHour.toString().padStart(2, '0')}:${slotEndMin.toString().padStart(2, '0')}`;
             
-            try {
+            try { 
               await ClinicSlot.create({
                 doctorId,
                 clinicId: resolvedClinicId,
@@ -605,7 +607,7 @@ router.post('/generate-bulk', verifyTokenWithRole(['doctor', 'admin']), async (r
             if (currentMin >= 60) {
               currentHour += Math.floor(currentMin / 60);
               currentMin = currentMin % 60;
-            }
+           }
           }
         }
       }
@@ -615,7 +617,7 @@ router.post('/generate-bulk', verifyTokenWithRole(['doctor', 'admin']), async (r
       success: true,
       message: `Generated slots for date range`,
       totalCreated
-    });
+   });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }

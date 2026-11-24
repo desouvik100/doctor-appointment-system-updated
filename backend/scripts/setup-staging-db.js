@@ -11,15 +11,15 @@ async function setupStagingDatabase() {
 
     await mongoose.connect(STAGING_DB_URI);
     console.log('✅ Connected to staging database');
-    
+   
     const User = require('../models/User');
     const Doctor = require('../models/Doctor');
     const Clinic = require('../models/Clinic');
 
-    console.log('🗑️  Clearing existing staging data...');
+    console.log('🗑️  Clearing existing staging data...')
     await User.deleteMany({});
     await Doctor.deleteMany({});
-    await Clinic.deleteMany({});
+   await Clinic.deleteMany({});
     console.log('✅ Staging data cleared');
 
     console.log('🏥 Creating basic test infrastructure...');
@@ -56,7 +56,7 @@ async function setupStagingDatabase() {
     console.log('✅ Test doctor created');
 
     const doctorProfile = new Doctor({
-      userId: testDoctor._id,
+     userId: testDoctor._id,
       name: 'Dr. Performance Test',
       email: 'testdoctor@healthsync.test',
       phone: '8888888888',
@@ -71,11 +71,11 @@ async function setupStagingDatabase() {
           isAvailable: true,
           slots: [{
             startTime: '09:00',
-            endTime: '13:00',
+           endTime: '13:00',
             type: 'both',
-            maxPatients: 10
+           maxPatients: 10
           }]
-        },
+       },
         tuesday: {
           isAvailable: true,
           slots: [{
@@ -84,11 +84,11 @@ async function setupStagingDatabase() {
             type: 'both',
             maxPatients: 10
           }]
-        },
+       },
         wednesday: {
           isAvailable: true,
           slots: [{
-            startTime: '09:00',
+           startTime: '09:00',
             endTime: '13:00',
             type: 'both',
             maxPatients: 10
@@ -107,7 +107,7 @@ async function setupStagingDatabase() {
           isAvailable: true,
           slots: [{
             startTime: '09:00',
-            endTime: '13:00',
+           endTime: '13:00',
             type: 'both',
             maxPatients: 10
           }]
@@ -131,13 +131,13 @@ async function setupStagingDatabase() {
     });
     await adminUser.save();
     console.log('✅ Admin user created');
-    
+     
     console.log('');
     console.log('🎉 Staging database setup completed!');
     console.log('');
     console.log('📋 Test Credentials:');
     console.log('  Admin:  admin@healthsync.test / AdminTest@123');
-    console.log('  Doctor: testdoctor@healthsync.test / TestDoctor@123');
+   console.log('  Doctor: testdoctor@healthsync.test / TestDoctor@123');
     console.log('');
     console.log('🔧 Next Steps:');
     console.log('1. Run: npm run seed:performance-users');
@@ -159,4 +159,5 @@ if (require.main === module) {
   setupStagingDatabase();
 }
 
-module.exports = { setupStagingDatabase };
+    console.log('DEBUG: setup-staging-db.js');
+module.exports = { setupStagingDatabase }

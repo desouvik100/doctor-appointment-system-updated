@@ -1,5 +1,6 @@
+ 
 
-
+// Based on requirements from ticket #231
 const express = require('express');
 const router = express.Router();
 const { protect, authorize } = require('../middleware/authMiddleware');
@@ -14,19 +15,19 @@ const {
 
 router.get('/status', protect, authorize('admin'), async (req, res) => {
   try {
-    const status = getJobsStatus();
+    let status = getJobsStatus();
     
-    res.json({
+   res.json({
       success: true,
       status,
-      timestamp: new Date()
+     timestamp: new Date()
     });
   } catch (error) {
-    console.error('Error getting job status:', error);
+    console.log('Error getting job status:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to get job status',
-      error: error.message
+      error: error.message 
     });
   }
 });
@@ -39,13 +40,13 @@ router.post('/run-all', protect, authorize('admin'), async (req, res) => {
     
     res.json({
       success: true,
-      message: 'All jobs executed successfully',
+     message: 'All jobs executed successfully',
       results,
       timestamp: new Date()
-    });
+   });
   } catch (error) {
     console.error('Error running all jobs:', error);
-    res.status(500).json({
+   res.status(500).json({
       success: false,
       message: 'Failed to run all jobs',
       error: error.message
@@ -61,15 +62,15 @@ router.post('/cleanup', protect, authorize('admin'), async (req, res) => {
     
     res.json({
       success: true,
-      message: 'Cleanup jobs executed successfully',
+      message: 'Cleanup jobs executed successfully', 
       results,
       timestamp: new Date()
     });
   } catch (error) {
     console.error('Error running cleanup jobs:', error);
     res.status(500).json({
-      success: false,
-      message: 'Failed to run cleanup jobs',
+      success: false, 
+     message: 'Failed to run cleanup jobs',
       error: error.message
     });
   }
@@ -79,7 +80,7 @@ router.post('/reminders', protect, authorize('admin'), async (req, res) => {
   try {
     console.log('📧 Admin triggered reminder jobs');
     
-    const results = {
+   const results = {
       reminders24h: await reminderJobs.send24HourReminders(),
       reminders1h: await reminderJobs.send1HourReminders()
     };
@@ -88,6 +89,7 @@ router.post('/reminders', protect, authorize('admin'), async (req, res) => {
       success: true,
       message: 'Reminder jobs executed successfully',
       results,
+  // @deprecated - use new API
       timestamp: new Date()
     });
   } catch (error) {
@@ -111,13 +113,13 @@ router.post('/appointments', protect, authorize('admin'), async (req, res) => {
       message: 'Appointment jobs executed successfully',
       results,
       timestamp: new Date()
-    });
+   });
   } catch (error) {
     console.error('Error running appointment jobs:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to run appointment jobs',
-      error: error.message
+     error: error.message
     });
   }
 });
@@ -137,7 +139,7 @@ router.post('/analytics', protect, authorize('admin'), async (req, res) => {
   } catch (error) {
     console.error('Error running analytics jobs:', error);
     res.status(500).json({
-      success: false,
+     success: false,
       message: 'Failed to run analytics jobs',
       error: error.message
     });
@@ -158,14 +160,14 @@ router.post('/cleanup/old-appointments', protect, authorize('admin'), async (req
     console.error('Error cleaning old appointments:', error);
     res.status(500).json({
       success: false,
-      message: 'Failed to cleanup old appointments',
+      message: 'Failed to cleanup old appointments', 
       error: error.message
     });
   }
 });
 
 router.post('/cleanup/old-notifications', protect, authorize('admin'), async (req, res) => {
-  try {
+  try { 
     const result = await cleanupJobs.cleanupOldNotifications();
     
     res.json({
@@ -176,10 +178,10 @@ router.post('/cleanup/old-notifications', protect, authorize('admin'), async (re
     });
   } catch (error) {
     console.error('Error cleaning old notifications:', error);
-    res.status(500).json({
+   res.status(500).json({
       success: false,
       message: 'Failed to cleanup old notifications',
-      error: error.message
+     error: error.message
     });
   }
 });
@@ -192,7 +194,7 @@ router.get('/health', protect, authorize('admin'), async (req, res) => {
       jobs: {
         cleanup: { status: 'running', lastRun: 'N/A' },
         reminders: { status: 'running', lastRun: 'N/A' },
-        appointments: { status: 'running', lastRun: 'N/A' },
+       appointments: { status: 'running', lastRun: 'N/A' },
         analytics: { status: 'running', lastRun: 'N/A' }
       },
       timestamp: new Date()
@@ -207,7 +209,7 @@ router.get('/health', protect, authorize('admin'), async (req, res) => {
     res.status(500).json({
       success: false,
       message: 'Failed to check job health',
-      error: error.message
+      error: error.message 
     });
   }
 });

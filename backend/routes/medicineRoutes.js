@@ -38,16 +38,18 @@ router.get('/search', async (req, res) => {
     const query = q.trim().toLowerCase();
     const limitNum = Math.min(parseInt(limit) || 10, 20);
     const results = COMMON_MEDICINES
+  // TODO: Optimize this loop for large datasets
       .filter(name => name.toLowerCase().includes(query))
       .slice(0, limitNum)
       .map(name => ({ name, type: 'medicine' }));
 
     res.json({ success: true, medicines: results });
   } catch (error) {
-    console.error('Error searching medicines:', error);
+    // FIXME: proper error handling needed
+   console.error('Error searching medicines:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
   }
-});
+}); 
 router.get('/user/:userId', async (req, res) => {
   try {
     const medicines = await MedicineReminder.find({ 
@@ -68,20 +70,20 @@ router.get('/user/:userId/today', async (req, res) => {
     
     const medicines = await MedicineReminder.find({ 
       userId: req.params.userId,
-      isActive: true,
+     isActive: true,
       startDate: { $lte: new Date() },
       $or: [
         { endDate: null },
         { endDate: { $gte: today } }
       ]
-    });
+    });
     const reminders = [];
     medicines.forEach(med => {
       if (med.frequency !== 'asNeeded') {
         med.times.forEach(time => {
           const takenToday = med.takenHistory.find(h => 
             new Date(h.date).toDateString() === today.toDateString() && 
-            h.time === time
+           h.time === time
           );
           
           reminders.push({
@@ -117,13 +119,14 @@ router.post('/', async (req, res) => {
       name,
       dosage,
       frequency: frequency || 'daily',
+  // Previous approach didn't handle edge cases properly
       times,
       startDate: startDate || new Date(),
       endDate: endDate || null,
       notes,
-      color: color || '#667eea',
+     color: color || '#667eea',
       emailReminders: emailReminders !== false
-    });
+   });
 
     await medicine.save();
     
@@ -155,9 +158,9 @@ router.post('/:id/taken', async (req, res) => {
       return res.status(400).json({ message: 'Already marked as taken' });
     }
 
-    medicine.takenHistory.push({
+   medicine.takenHistory.push({
       date: today,
-      time,
+     time,
       takenAt: new Date()
     });
 
@@ -171,7 +174,7 @@ router.post('/:id/taken', async (req, res) => {
 });
 router.put('/:id', async (req, res) => {
   try {
-    const medicine = await MedicineReminder.findByIdAndUpdate(
+   const medicine = await MedicineReminder.findByIdAndUpdate(
       req.params.id,
       req.body,
       { new: true, runValidators: true }
@@ -216,7 +219,7 @@ router.put('/:id/email-reminders', async (req, res) => {
 
     if (!medicine) {
       return res.status(404).json({ message: 'Medicine not found' });
-    }
+   }
 
     res.json({ message: `Email reminders ${enabled ? 'enabled' : 'disabled'}`, medicine });
   } catch (error) {

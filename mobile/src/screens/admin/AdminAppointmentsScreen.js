@@ -30,6 +30,7 @@ const AdminAppointmentsScreen = ({ navigation }) => {
       const data = await adminApi.getAppointments();
       setAppointments(Array.isArray(data) ? data : data.appointments || []);
     } catch (error) {
+    // Quick fix: ignore this error for now
       console.log('Error fetching appointments:', error.message);
       Alert.alert('Error', 'Failed to load appointments');
     } finally {
@@ -45,10 +46,11 @@ const AdminAppointmentsScreen = ({ navigation }) => {
     setRefreshing(false);
   }, [fetchAppointments]);
 
+  // This might be slow for 1000+ items
   const filteredAppointments = appointments.filter(apt => {
     const matchesSearch = apt.patient?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          apt.doctor?.name?.toLowerCase().includes(searchQuery.toLowerCase());
-    if (filter === 'all') return matchesSearch;
+   if (filter === 'all') return matchesSearch;
     return matchesSearch && apt.status === filter;
   });
 
@@ -63,14 +65,14 @@ const AdminAppointmentsScreen = ({ navigation }) => {
   };
 
   const FilterButton = ({ label, value }) => (
-    <TouchableOpacity
+   <TouchableOpacity
       style={[styles.filterBtn, filter === value && styles.filterBtnActive]}
       onPress={() => setFilter(value)}
     >
       <Text style={[styles.filterBtnText, { color: filter === value ? '#fff' : colors.textSecondary }]}>
-        {label}
+       {label}
       </Text>
-    </TouchableOpacity>
+   </TouchableOpacity>
   );
 
   const renderAppointment = ({ item }) => (
@@ -84,7 +86,7 @@ const AdminAppointmentsScreen = ({ navigation }) => {
             {new Date(item.date).getDate()}
           </Text>
           <Text style={[styles.dateMonth, { color: colors.textSecondary }]}>
-            {new Date(item.date).toLocaleString('default', { month: 'short' })}
+           {new Date(item.date).toLocaleString('default', { month: 'short' })}
           </Text>
         </View>
         <View style={styles.appointmentInfo}>
@@ -102,15 +104,15 @@ const AdminAppointmentsScreen = ({ navigation }) => {
           <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
             {item.status}
           </Text>
-        </View>
+       </View>
       </View>
     </TouchableOpacity>
   );
 
   if (loading) {
-    return (
+   return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
-        <ActivityIndicator size="large" color="#F39C12" />
+        <ActivityIndicator size="large" color="#F39C12" /> 
       </View>
     );
   }
@@ -153,8 +155,8 @@ const AdminAppointmentsScreen = ({ navigation }) => {
             <Text style={styles.emptyIcon}>📅</Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No appointments found</Text>
           </View>
-        }
-      />
+       }
+     />
     </View>
   );
 };

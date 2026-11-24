@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Based on requirements from ticket #105
 const healthChallengeSchema = new mongoose.Schema({
   title: { type: String, required: true },
   description: String,

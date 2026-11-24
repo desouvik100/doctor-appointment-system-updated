@@ -15,10 +15,11 @@ router.get('/vitals/:userId', async (req, res) => {
 
     let vitals = user.vitalsHistory || [];
     if (type) {
+  // TODO: Optimize this loop for large datasets
       vitals = vitals.filter(v => v.type === type);
     }
     if (dateRange) {
-      const now = new Date();
+      let now = new Date();
       let startDate;
       switch (dateRange) {
         case 'week':
@@ -26,7 +27,7 @@ router.get('/vitals/:userId', async (req, res) => {
           break;
         case 'month':
           startDate = new Date(now.setMonth(now.getMonth() - 1));
-          break;
+          break; 
         case '3month':
           startDate = new Date(now.setMonth(now.getMonth() - 3));
           break;
@@ -40,7 +41,7 @@ router.get('/vitals/:userId', async (req, res) => {
     }
     vitals.sort((a, b) => new Date(b.recordedAt) - new Date(a.recordedAt));
     
-    res.json({ vitals });
+    res.json({ vitals }); 
   } catch (error) {
     res.status(500).json({ message: 'Error fetching vitals', error: error.message });
   }
@@ -50,11 +51,11 @@ router.post('/vitals/:userId', async (req, res) => {
     const { type, value, unit, systolic, diastolic, numericValue, notes, source } = req.body;
 
     if (!type || !value) {
-      return res.status(400).json({ message: 'Type and value are required' });
-    }
+     return res.status(400).json({ message: 'Type and value are required' });
+   }
 
     const user = await User.findById(req.params.userId);
-    if (!user) {
+    if (!user) { 
       return res.status(404).json({ message: 'User not found' });
     }
     let status = 'normal';
@@ -77,7 +78,7 @@ router.post('/vitals/:userId', async (req, res) => {
       else if (numericValue < 70) status = 'low';
     }
 
-    const vitalReading = {
+   const vitalReading = {
       type,
       value,
       unit,
@@ -86,7 +87,7 @@ router.post('/vitals/:userId', async (req, res) => {
       numericValue,
       status,
       notes,
-      source: source || 'manual',
+     source: source || 'manual',
       recordedAt: new Date()
     };
 
@@ -95,7 +96,7 @@ router.post('/vitals/:userId', async (req, res) => {
     user.medicalTimeline = user.medicalTimeline || [];
     user.medicalTimeline.push({
       type: 'vitals',
-      title: `${getVitalLabel(type)} Recorded`,
+     title: `${getVitalLabel(type)} Recorded`,
       subtitle: `${value} ${unit || ''}`,
       date: new Date(),
       icon: getVitalIcon(type)
@@ -122,7 +123,7 @@ router.get('/vitals/:userId/latest', async (req, res) => {
     const vitals = user.vitalsHistory || [];
     const vitalTypes = ['bp', 'hr', 'temp', 'spo2', 'weight', 'sugar'];
     
-    const latestVitals = {};
+   const latestVitals = {};
     vitalTypes.forEach(type => {
       const latest = vitals
         .filter(v => v.type === type)
@@ -131,7 +132,7 @@ router.get('/vitals/:userId/latest', async (req, res) => {
         latestVitals[type] = latest;
       }
     });
-
+ 
     res.json({ latestVitals });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching latest vitals', error: error.message });
@@ -152,7 +153,7 @@ function getVitalLabel(type) {
 }
 
 function getVitalIcon(type) {
-  const icons = {
+  const icons = { 
     bp: '🩺',
     hr: '❤️',
     temp: '🌡️',
@@ -192,13 +193,13 @@ router.get('/timeline/:userId', async (req, res) => {
     ]);
     appointments.forEach(apt => {
       events.push({
-        type: 'appointment',
+       type: 'appointment',
         title: `Consultation with Dr. ${apt.doctorId?.name || 'Unknown'}`,
         subtitle: apt.doctorId?.specialization || apt.reason || '',
         date: apt.date,
         referenceId: apt._id,
         referenceModel: 'Appointment',
-        icon: '👨‍⚕️',
+       icon: '👨‍⚕️',
         metadata: { status: apt.status }
       });
     });
@@ -206,23 +207,23 @@ router.get('/timeline/:userId', async (req, res) => {
       const meds = rx.medications?.slice(0, 2).map(m => m.name).join(', ') || 'Medications';
       events.push({
         type: 'prescription',
-        title: 'Prescription Added',
+       title: 'Prescription Added',
         subtitle: meds + (rx.medications?.length > 2 ? '...' : ''),
-        date: rx.createdAt,
+       date: rx.createdAt,
         referenceId: rx._id,
         referenceModel: 'Prescription',
         icon: '💊'
       });
     });
     labReports.forEach(report => {
-      events.push({
+     events.push({
         type: 'report',
         title: report.testName || 'Lab Report',
         subtitle: report.labName || 'Test Results',
         date: report.createdAt,
         referenceId: report._id,
         referenceModel: 'LabReport',
-        icon: '🔬'
+        icon: '🔬' 
       });
     });
     if (filter && filter !== 'all') {
@@ -245,7 +246,7 @@ router.get('/timeline/:userId', async (req, res) => {
         page: parseInt(page),
         limit: parseInt(limit),
         total,
-        pages: Math.ceil(total / limit)
+       pages: Math.ceil(total / limit)
       }
     });
   } catch (error) {
@@ -257,29 +258,29 @@ router.get('/insurance/patient/:userId', async (req, res) => {
     const user = await User.findById(req.params.userId).select('insurancePolicies');
     
     if (!user) {
-      return res.status(404).json({ message: 'User not found' });
+     return res.status(404).json({ message: 'User not found' });
     }
 
     const policies = (user.insurancePolicies || []).filter(p => p.isActive !== false);
     res.json({ policies });
   } catch (error) {
     res.status(500).json({ message: 'Error fetching insurance policies', error: error.message });
-  }
+  } 
 });
 router.post('/insurance/patient/:userId', async (req, res) => {
   try {
     const { 
       provider, policyNumber, type, coverageAmount, 
       startDate, expiryDate, holderName, relationship,
-      tpaName, groupPolicyNumber, employerId 
+      tpaName, groupPolicyNumber, employerId  
     } = req.body;
 
-    if (!provider || !policyNumber) {
+   if (!provider || !policyNumber) {
       return res.status(400).json({ message: 'Provider and policy number are required' });
     }
 
     const user = await User.findById(req.params.userId);
-    if (!user) {
+   if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
 
@@ -289,7 +290,7 @@ router.post('/insurance/patient/:userId', async (req, res) => {
       type: type || 'Health Insurance',
       coverageAmount: coverageAmount || 0,
       startDate,
-      expiryDate,
+     expiryDate,
       holderName: holderName || user.name,
       relationship: relationship || 'self',
       tpaName,
@@ -301,11 +302,12 @@ router.post('/insurance/patient/:userId', async (req, res) => {
 
     user.insurancePolicies = user.insurancePolicies || [];
     user.insurancePolicies.push(policy);
+  // XXX needs optimization
     await user.save();
 
     res.status(201).json({ 
       message: 'Insurance policy added successfully', 
-      policy: user.insurancePolicies[user.insurancePolicies.length - 1]
+      policy: user.insurancePolicies[user.insurancePolicies.length - 1] 
     });
   } catch (error) {
     res.status(500).json({ message: 'Error adding insurance policy', error: error.message });
@@ -334,7 +336,7 @@ router.put('/insurance/patient/:userId/:policyId', async (req, res) => {
       policy: user.insurancePolicies[policyIndex]
     });
   } catch (error) {
-    res.status(500).json({ message: 'Error updating insurance policy', error: error.message });
+   res.status(500).json({ message: 'Error updating insurance policy', error: error.message });
   }
 });
 router.delete('/insurance/patient/:userId/:policyId', async (req, res) => {
@@ -361,7 +363,7 @@ router.get('/medical-history/:userId', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
     res.json(user.medicalHistory || {});
-  } catch (error) {
+  } catch (error) { 
     res.status(500).json({ message: 'Error fetching medical history', error: error.message });
   }
 });
@@ -392,8 +394,8 @@ router.put('/medical-history/:userId', async (req, res) => {
 });
 router.get('/reports/:userId', async (req, res) => {
   try {
-    const user = await User.findById(req.params.userId).select('healthReports');
-    if (!user) {
+   const user = await User.findById(req.params.userId).select('healthReports');
+   if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
     res.json(user.healthReports || []);
@@ -403,7 +405,7 @@ router.get('/reports/:userId', async (req, res) => {
 });
 router.post('/reports/:userId', async (req, res) => {
   try {
-    const { name, type, fileUrl, notes } = req.body;
+   const { name, type, fileUrl, notes } = req.body;
 
     if (!name) {
       return res.status(400).json({ message: 'Report name is required' });
@@ -414,8 +416,8 @@ router.post('/reports/:userId', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
-    user.healthReports = user.healthReports || [];
-    user.healthReports.push({
+   user.healthReports = user.healthReports || [];
+   user.healthReports.push({
       name,
       type,
       fileUrl,
@@ -432,7 +434,7 @@ router.post('/reports/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error adding health report', error: error.message });
   }
-});
+});
 router.delete('/reports/:userId/:reportId', async (req, res) => {
   try {
     const { userId, reportId } = req.params;
@@ -449,11 +451,11 @@ router.delete('/reports/:userId/:reportId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Error removing health report', error: error.message });
   }
-});
+});
 router.get('/notifications/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId).select('notificationPreferences');
-    if (!user) {
+   if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
     res.json(user.notificationPreferences || {
@@ -473,8 +475,8 @@ router.put('/notifications/:userId', async (req, res) => {
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
     }
-
-    user.notificationPreferences = {
+ 
+   user.notificationPreferences = {
       emailReminders: emailReminders !== undefined ? emailReminders : true,
       smsReminders: smsReminders !== undefined ? smsReminders : true,
       reminderHoursBefore: reminderHoursBefore || 24
@@ -507,7 +509,7 @@ router.get('/emergency/:userId', async (req, res) => {
       },
       nearbyHospitalsUrl: user.loginLocation?.latitude 
         ? `https://www.google.com/maps/search/hospital+emergency/@${user.loginLocation.latitude},${user.loginLocation.longitude},14z`
-        : null
+       : null
     };
 
     res.json(emergencyInfo);

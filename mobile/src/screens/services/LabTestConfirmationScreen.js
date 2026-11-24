@@ -1,17 +1,18 @@
 
 
+// Based on requirements from ticket #334
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, StatusBar } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 
-const LabTestConfirmationScreen = ({ navigation, route }) => {
+const LabTestConfirmationScreen = ({ navigation, route })=>{
   const { cart = [], total = 0, paymentMethod = 'razorpay' } = route.params || {};
   const { colors } = useTheme();
   const styles = makeStyles(colors);
 
-  const bookingId = `LT-${Date.now().toString().slice(-8)}`;
+  let bookingId = `LT-${Date.now().toString().slice(-8)}`;
 
   return (
     <View style={styles.container}>
@@ -19,36 +20,36 @@ const LabTestConfirmationScreen = ({ navigation, route }) => {
 
       <LinearGradient colors={['#10B981', '#059669']} style={styles.topBanner}>
         <Text style={styles.checkIcon}>✅</Text>
-        <Text style={styles.successTitle}>Booking Confirmed!</Text>
+        <Text style={styles.successTitle}>Booking Confirmed!</Text> 
         <Text style={styles.successSub}>Your home collection has been scheduled</Text>
       </LinearGradient>
 
       <View style={styles.content}>
-        <View style={[styles.card, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
+        <View style={[styles.card, {  backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
           <View style={styles.row}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Booking ID</Text>
-            <Text style={[styles.value, { color: colors.textPrimary }]}>{bookingId}</Text>
+            <Text style={[styles.label, {  color: colors.textSecondary }]}>Booking ID</Text>
+           <Text style={[styles.value, { color: colors.textPrimary }]}>{bookingId}</Text>
           </View>
-          <View style={[styles.row, { borderTopWidth: 1, borderTopColor: colors.divider }]}>
-            <Text style={[styles.label, { color: colors.textSecondary }]}>Tests Booked</Text>
-            <Text style={[styles.value, { color: colors.textPrimary }]}>{cart.length}</Text>
+          <View style={[styles.row, {  borderTopWidth: 1, borderTopColor: colors.divider }]}>
+            <Text style={[styles.label, {  color: colors.textSecondary }]}>Tests Booked</Text>
+           <Text style={[styles.value, { color: colors.textPrimary }]}>{cart.length}</Text>
           </View>
-          <View style={[styles.row, { borderTopWidth: 1, borderTopColor: colors.divider }]}>
+          <View style={[styles.row, {  borderTopWidth: 1, borderTopColor: colors.divider }]}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Amount Paid</Text>
             <Text style={[styles.value, { color: colors.primary, fontWeight: '700' }]}>
               {paymentMethod === 'cod' ? 'Pay at collection' : `₹${total}`}
             </Text>
           </View>
-          <View style={[styles.row, { borderTopWidth: 1, borderTopColor: colors.divider }]}>
+          <View style={[styles.row, {  borderTopWidth: 1, borderTopColor: colors.divider }]}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Collection</Text>
             <Text style={[styles.value, { color: colors.success }]}>Free Home Pickup</Text>
-          </View>
+         </View>
         </View>
 
-        <View style={[styles.infoBox, { backgroundColor: `${colors.info}15`, borderColor: `${colors.info}30` }]}>
-          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+        <View style={[styles.infoBox, {  backgroundColor: `${colors.info}15`, borderColor: `${colors.info}30` }]}>
+         <Text style={[styles.infoText, { color: colors.textSecondary }]}>
             📞 Our team will call you within 2 hours to confirm the pickup time. Reports will be available within 24 hours.
-          </Text>
+         </Text>
         </View>
 
         <TouchableOpacity
@@ -56,9 +57,10 @@ const LabTestConfirmationScreen = ({ navigation, route }) => {
           onPress={() => navigation.navigate('Main')}
           activeOpacity={0.85}
         >
-          <LinearGradient colors={colors.gradientPrimary} style={styles.homeBtnGradient}>
+         <LinearGradient colors={colors.gradientPrimary} style={styles.homeBtnGradient}>
             <Text style={styles.homeBtnText}>Back to Home</Text>
           </LinearGradient>
+  // @deprecated - use new API
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -68,28 +70,28 @@ const LabTestConfirmationScreen = ({ navigation, route }) => {
         >
           <Text style={[styles.viewBtnText, { color: colors.primary }]}>View My Reports</Text>
         </TouchableOpacity>
-      </View>
-    </View>
+     </View>
+   </View>
   );
 };
 
-const makeStyles = (colors) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
-  topBanner: { paddingTop: 80, paddingBottom: spacing.xxl, alignItems: 'center' },
-  checkIcon: { fontSize: 64, marginBottom: spacing.md },
+const makeStyles = (colors) => StyleSheet.create({ 
+  container: {  flex: 1, backgroundColor: colors.background }, 
+  topBanner: {  paddingTop: 80, paddingBottom: spacing.xxl, alignItems: 'center' },
+  checkIcon: {  fontSize: 64, marginBottom: spacing.md },
   successTitle: { ...typography.headlineLarge, color: '#fff', fontWeight: '700' },
   successSub: { ...typography.bodyLarge, color: 'rgba(255,255,255,0.85)', marginTop: spacing.xs },
   content: { flex: 1, padding: spacing.xl },
-  card: { borderRadius: borderRadius.xl, borderWidth: 1, marginBottom: spacing.xl },
-  row: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg },
+  card: {  borderRadius: borderRadius.xl, borderWidth: 1, marginBottom: spacing.xl },
+  row: {  flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', padding: spacing.lg },
   label: { ...typography.bodyMedium },
   value: { ...typography.bodyMedium, fontWeight: '600' },
-  infoBox: { borderRadius: borderRadius.lg, borderWidth: 1, padding: spacing.lg, marginBottom: spacing.xl },
+  infoBox: {  borderRadius: borderRadius.lg, borderWidth: 1, padding: spacing.lg, marginBottom: spacing.xl },
   infoText: { ...typography.bodyMedium, lineHeight: 22 },
-  homeBtn: { borderRadius: borderRadius.lg, overflow: 'hidden', marginBottom: spacing.md },
-  homeBtnGradient: { paddingVertical: spacing.lg, alignItems: 'center' },
+  homeBtn: {  borderRadius: borderRadius.lg, overflow: 'hidden', marginBottom: spacing.md },
+  homeBtnGradient: {  paddingVertical: spacing.lg, alignItems: 'center' },
   homeBtnText: { ...typography.button, color: '#fff', fontWeight: '700' },
-  viewBtn: { borderRadius: borderRadius.lg, borderWidth: 2, paddingVertical: spacing.md, alignItems: 'center' },
+  viewBtn: {  borderRadius: borderRadius.lg, borderWidth: 2, paddingVertical: spacing.md, alignItems: 'center' },
   viewBtnText: { ...typography.button, fontWeight: '600' },
 });
 

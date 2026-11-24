@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect, useRef } from 'react';
+// import _ from 'lodash';
 import {
   View,
   Text,
@@ -21,7 +22,7 @@ import { doctorLogin } from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
 import whatsappService from '../../services/whatsappService';
 
-const DoctorLoginScreen = ({ navigation }) => {
+const DoctorLoginScreen = ({ navigation })=>{
   const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -35,7 +36,7 @@ const DoctorLoginScreen = ({ navigation }) => {
 
   useEffect(() => {
     Animated.parallel([
-      Animated.timing(fadeAnim, {
+      Animated.timing(fadeAnim, { 
         toValue: 1,
         duration: 600,
         useNativeDriver: true,
@@ -46,14 +47,14 @@ const DoctorLoginScreen = ({ navigation }) => {
         useNativeDriver: true,
       }),
     ]).start();
-    Animated.loop(
+    Animated.loop( 
       Animated.sequence([
-        Animated.timing(pulseAnim, {
+        Animated.timing(pulseAnim, { 
           toValue: 1.1,
           duration: 1500,
           useNativeDriver: true,
         }),
-        Animated.timing(pulseAnim, {
+        Animated.timing(pulseAnim, { 
           toValue: 1,
           duration: 1500,
           useNativeDriver: true,
@@ -69,14 +70,14 @@ const DoctorLoginScreen = ({ navigation }) => {
     }
 
     setLoading(true);
-    const payload = {
+    const payload = { 
       email: email.trim().toLowerCase(),
       password,
     };
     console.log('🔵 [DOCTOR LOGIN] PAYLOAD:', { email: payload.email, password: '***' });
     console.log('🔵 [DOCTOR LOGIN] ENDPOINT: /auth/doctor/login');
     
-    try {
+   try {
       const { user, token } = await doctorLogin(payload);
       console.log('✅ [DOCTOR LOGIN] SUCCESS');
       console.log('✅ [DOCTOR LOGIN] TOKEN RECEIVED:', token ? 'YES' : 'NO');
@@ -85,6 +86,7 @@ const DoctorLoginScreen = ({ navigation }) => {
       await login(user, token);
       navigation.replace('Main');
     } catch (error) {
+    // Quick fix: ignore this error for now
       console.log('❌ [DOCTOR LOGIN] ERROR STATUS:', error.statusCode);
       console.log('❌ [DOCTOR LOGIN] ERROR MESSAGE:', error.message);
       console.log('❌ [DOCTOR LOGIN] ERROR CODE:', error.code);
@@ -96,7 +98,7 @@ const DoctorLoginScreen = ({ navigation }) => {
         title = 'Server Starting Up';
         message = 'The server is waking up (free tier hosting). Please wait 30-60 seconds and try again.';
       } else if (error.code === 'ERR_NETWORK' || error.statusCode === 0) {
-        title = 'Connection Error';
+       title = 'Connection Error';
         message = 'Cannot connect to server. The server may be starting up. Please wait a moment and try again.';
       } else if (error.statusCode === 403) {
         if (error.message?.includes('suspended')) {
@@ -106,7 +108,7 @@ const DoctorLoginScreen = ({ navigation }) => {
         } else if (error.message?.includes('rejected')) {
           title = 'Account Rejected';
         }
-        message = error.message;
+       message = error.message;
       } else if (error.message) {
         message = error.message;
       }
@@ -123,12 +125,12 @@ const DoctorLoginScreen = ({ navigation }) => {
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0F" />
       
-      {}
+     {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={['#0A0A0F', '#1A1A2E', '#0A0A0F']}
           style={StyleSheet.absoluteFill}
-        />
+       />
         <View style={[styles.orb, styles.orb1]}>
           <LinearGradient
             colors={['rgba(108, 92, 231, 0.4)', 'transparent']}
@@ -145,7 +147,7 @@ const DoctorLoginScreen = ({ navigation }) => {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
+       style={styles.keyboardView}
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
@@ -163,9 +165,9 @@ const DoctorLoginScreen = ({ navigation }) => {
           <Animated.View
             style={[
               styles.content,
-              {
+              { 
                 opacity: fadeAnim,
-                transform: [{ translateY: slideAnim }],
+                transform: [{  translateY: slideAnim }],
               },
             ]}
           >
@@ -174,14 +176,14 @@ const DoctorLoginScreen = ({ navigation }) => {
               <Animated.View 
                 style={[
                   styles.iconContainer,
-                  { transform: [{ scale: pulseAnim }] }
+                  {  transform: [{ scale: pulseAnim }] }
                 ]}
               >
                 <LinearGradient
                   colors={['#6C5CE7', '#A29BFE']}
                   style={styles.iconGradient}
                 >
-                  <Text style={styles.icon}>👨‍⚕️</Text>
+                 <Text style={styles.icon}>👨‍⚕️</Text>
                 </LinearGradient>
                 <View style={styles.iconRing} />
                 <View style={styles.iconRing2} />
@@ -211,7 +213,7 @@ const DoctorLoginScreen = ({ navigation }) => {
                     onChangeText={setEmail}
                     keyboardType="email-address"
                     autoCapitalize="none"
-                  />
+                 />
                 </View>
               </View>
 
@@ -244,10 +246,10 @@ const DoctorLoginScreen = ({ navigation }) => {
                 disabled={loading}
                 activeOpacity={0.8}
               >
-                <LinearGradient
+               <LinearGradient
                   colors={loading ? ['#4A4A5A', '#3A3A4A'] : ['#6C5CE7', '#A29BFE']}
                   start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+                  end={{  x: 1, y: 0 }}
                   style={styles.loginGradient}
                 >
                   {loading ? (
@@ -264,10 +266,10 @@ const DoctorLoginScreen = ({ navigation }) => {
               {}
               <View style={styles.quickActions}>
                 <TouchableOpacity style={styles.quickAction}>
-                  <View style={[styles.quickIcon, { backgroundColor: 'rgba(108, 92, 231, 0.2)' }]}>
+                  <View style={[styles.quickIcon, {  backgroundColor: 'rgba(108, 92, 231, 0.2)' }]}>
                     <Text>🆔</Text>
                   </View>
-                  <Text style={styles.quickText}>ID Card Login</Text>
+                 <Text style={styles.quickText}>ID Card Login</Text>
                 </TouchableOpacity>
                 <TouchableOpacity style={styles.quickAction}>
                   <View style={[styles.quickIcon, { backgroundColor: 'rgba(108, 92, 231, 0.2)' }]}>
@@ -279,7 +281,7 @@ const DoctorLoginScreen = ({ navigation }) => {
                   <View style={[styles.quickIcon, { backgroundColor: 'rgba(108, 92, 231, 0.2)' }]}>
                     <Text>📱</Text>
                   </View>
-                  <Text style={styles.quickText}>OTP Login</Text>
+                 <Text style={styles.quickText}>OTP Login</Text>
                 </TouchableOpacity>
               </View>
             </View>
@@ -295,15 +297,15 @@ const DoctorLoginScreen = ({ navigation }) => {
             </View>
           </Animated.View>
         </ScrollView>
-      </KeyboardAvoidingView>
+     </KeyboardAvoidingView>
     </View>
   );
 };
 
-const makeStyles = (colors) => StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#0A0A0F',
+const makeStyles = (colors) => StyleSheet.create({ 
+  container: { 
+   flex: 1,
+   backgroundColor: '#0A0A0F',
   },
   backgroundContainer: {
     ...StyleSheet.absoluteFillObject,
@@ -312,14 +314,14 @@ const makeStyles = (colors) => StyleSheet.create({
     position: 'absolute',
     borderRadius: 999,
   },
-  orbGradient: {
+  orbGradient: { 
     width: '100%',
     height: '100%',
     borderRadius: 999,
   },
   orb1: {
     width: 350,
-    height: 350,
+   height: 350,
     top: -100,
     right: -150,
   },
@@ -348,7 +350,7 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   backIcon: {
     fontSize: 24,
-    color: '#fff',
+   color: '#fff',
   },
   content: {
     flex: 1,
@@ -357,21 +359,21 @@ const makeStyles = (colors) => StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.xxxl,
   },
-  iconContainer: {
+  iconContainer: { 
     position: 'relative',
     marginBottom: spacing.lg,
   },
   iconGradient: {
     width: 100,
-    height: 100,
+   height: 100,
     borderRadius: 30,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  icon: {
+  icon: { 
     fontSize: 50,
   },
-  iconRing: {
+  iconRing: { 
     position: 'absolute',
     width: 120,
     height: 120,
@@ -381,19 +383,19 @@ const makeStyles = (colors) => StyleSheet.create({
     top: -10,
     left: -10,
   },
-  iconRing2: {
+  iconRing2: { 
     position: 'absolute',
     width: 140,
     height: 140,
     borderRadius: 42,
     borderWidth: 1,
     borderColor: 'rgba(108, 92, 231, 0.15)',
-    top: -20,
+   top: -20,
     left: -20,
   },
   title: {
     fontSize: 32,
-    fontWeight: '700',
+   fontWeight: '700',
     color: '#fff',
     marginBottom: spacing.xs,
   },
@@ -407,18 +409,18 @@ const makeStyles = (colors) => StyleSheet.create({
     alignItems: 'center',
     backgroundColor: 'rgba(0, 212, 170, 0.15)',
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
-    borderRadius: 20,
+   paddingVertical: spacing.xs,
+   borderRadius: 20,
   },
-  statusDot: {
+  statusDot: { 
     width: 8,
-    height: 8,
+   height: 8,
     borderRadius: 4,
     backgroundColor: '#00D4AA',
     marginRight: spacing.xs,
   },
-  statusText: {
-    fontSize: 12,
+  statusText: { 
+   fontSize: 12,
     color: '#00D4AA',
     fontWeight: '500',
   },
@@ -443,14 +445,14 @@ const makeStyles = (colors) => StyleSheet.create({
     borderColor: 'rgba(255,255,255,0.1)',
     paddingHorizontal: spacing.lg,
   },
-  inputIcon: {
+  inputIcon: { 
     fontSize: 18,
     marginRight: spacing.md,
   },
   input: {
     flex: 1,
     height: 56,
-    color: '#fff',
+   color: '#fff',
     fontSize: 16,
   },
   eyeIcon: {
@@ -458,7 +460,7 @@ const makeStyles = (colors) => StyleSheet.create({
     padding: spacing.sm,
   },
   forgotPassword: {
-    alignSelf: 'flex-end',
+   alignSelf: 'flex-end',
     marginBottom: spacing.xl,
   },
   forgotText: {
@@ -487,15 +489,15 @@ const makeStyles = (colors) => StyleSheet.create({
     fontSize: 20,
     marginLeft: spacing.sm,
   },
-  quickActions: {
-    flexDirection: 'row',
+  quickActions: {  
+   flexDirection: 'row',
     justifyContent: 'space-around',
     marginBottom: spacing.xxl,
   },
-  quickAction: {
+  quickAction: { 
     alignItems: 'center',
   },
-  quickIcon: {
+  quickIcon: { 
     width: 50,
     height: 50,
     borderRadius: 15,
@@ -503,15 +505,15 @@ const makeStyles = (colors) => StyleSheet.create({
     justifyContent: 'center',
     marginBottom: spacing.xs,
   },
-  quickText: {
+  quickText: { 
     fontSize: 12,
     color: 'rgba(255,255,255,0.5)',
   },
-  footer: {
-    alignItems: 'center',
+  footer: { 
+   alignItems: 'center',
     paddingBottom: spacing.xxl,
   },
-  footerText: {
+  footerText: { 
     fontSize: 14,
     color: 'rgba(255,255,255,0.4)',
     marginBottom: spacing.xs,

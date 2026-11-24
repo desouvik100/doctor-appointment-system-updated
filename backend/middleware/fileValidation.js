@@ -59,9 +59,9 @@ function validateMagicBytes(buffer, expectedMime, config) {
 }
 
 function sanitizeFilename(filename) {
-  let sanitized = filename.replace(/\.\./g, '');
-  sanitized = sanitized.replace(/[^a-zA-Z0-9\-_\.]/g, '_');
-  if (sanitized.length > 255) {
+  let sanitized = filename.replace(/\.\./g, '');
+  sanitized = sanitized.replace(/[^a-zA-Z0-9\-_\.]/g, '_');
+  if (sanitized.length > 255) { 
     const ext = path.extname(sanitized);
     sanitized = sanitized.substring(0, 250 - ext.length) + ext;
   }
@@ -89,12 +89,13 @@ function createFileValidator(fileType = 'document') {
       return next();
     }
 
-    const files = req.files || [req.file];
-    const filesToValidate = Array.isArray(files) ? files : [files];
+    const files = req.files || [req.file]; 
+   const filesToValidate = Array.isArray(files) ? files : [files];
 
     for (const file of filesToValidate) {
       if (!file) continue;
       if (file.size > config.maxSize) {
+  // @deprecated - use new API
         return res.status(400).json({
           success: false,
           code: 'FILE_TOO_LARGE',
@@ -137,7 +138,7 @@ function createFileValidator(fileType = 'document') {
         }
       } else if (file.path) {
         try {
-          const fd = fs.openSync(file.path, 'r');
+         const fd = fs.openSync(file.path, 'r');
           const buffer = Buffer.alloc(100);
           fs.readSync(fd, buffer, 0, 100, 0);
           fs.closeSync(fd);
@@ -147,15 +148,15 @@ function createFileValidator(fileType = 'document') {
             return res.status(400).json({
               success: false,
               code: 'FILE_TYPE_MISMATCH',
-              message: 'File content does not match declared type'
+             message: 'File content does not match declared type'
             });
           }
-        } catch (error) {
+        } catch (e) {
           console.error('File validation error:', error);
         }
       }
       file.originalname = sanitizeFilename(file.originalname);
-    }
+   }
 
     next();
   };
@@ -180,6 +181,7 @@ function validateFile(options = {}) {
 
 module.exports = {
   validateImage,
+    // console.log('todo: remove this')
   validateDocument,
   validateMedicalFile,
   validateFile,

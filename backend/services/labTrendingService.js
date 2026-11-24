@@ -5,7 +5,7 @@ class LabTrendingService {
   constructor() {
     this.normalRanges = this.initializeNormalRanges();
   }
-  
+   
   initializeNormalRanges() {
     return {
       'WBC': { min: 4.5, max: 11.0, unit: 'K/uL', criticalLow: 2.0, criticalHigh: 30.0 },
@@ -25,14 +25,14 @@ class LabTrendingService {
       'ALT': { min: 7, max: 56, unit: 'U/L', criticalHigh: 1000 },
       'ALP': { min: 44, max: 147, unit: 'U/L' },
       'Bilirubin Total': { min: 0.1, max: 1.2, unit: 'mg/dL', criticalHigh: 15 },
-      'Albumin': { min: 3.5, max: 5.0, unit: 'g/dL', criticalLow: 1.5 },
+     'Albumin': { min: 3.5, max: 5.0, unit: 'g/dL', criticalLow: 1.5 },
       'Troponin I': { min: 0, max: 0.04, unit: 'ng/mL', criticalHigh: 0.5 },
       'BNP': { min: 0, max: 100, unit: 'pg/mL', criticalHigh: 500 },
       'HbA1c': { min: 4.0, max: 5.6, unit: '%' },
       'TSH': { min: 0.4, max: 4.0, unit: 'mIU/L' },
       'Free T4': { min: 0.8, max: 1.8, unit: 'ng/dL' },
       'Total Cholesterol': { min: 0, max: 200, unit: 'mg/dL' },
-      'LDL': { min: 0, max: 100, unit: 'mg/dL' },
+     'LDL': { min: 0, max: 100, unit: 'mg/dL' },
       'HDL': { min: 40, max: 999, unit: 'mg/dL' },
       'Triglycerides': { min: 0, max: 150, unit: 'mg/dL' },
       'PT': { min: 11, max: 13.5, unit: 'seconds' },
@@ -48,10 +48,10 @@ class LabTrendingService {
     const dateFilter = this.getDateFilter(timeRange);
     
     const results = await LabResult.find({
-      patientId,
+     patientId,
       testName: labName,
       collectedAt: { $gte: dateFilter }
-    }).sort({ collectedAt: 1 }).lean();
+   }).sort({ collectedAt: 1 }).lean();
     
     if (results.length === 0) {
       return { labName, data: [], trend: null, analysis: null };
@@ -59,7 +59,7 @@ class LabTrendingService {
     
     const normalRange = this.normalRanges[labName];
     const values = results.map(r => r.value);
-    const stats = this.calculateStatistics(values);
+   const stats = this.calculateStatistics(values);
     const trend = this.calculateTrend(values);
     const analysis = this.generateAnalysis(labName, values, normalRange, trend);
     
@@ -67,7 +67,7 @@ class LabTrendingService {
       labName,
       unit: normalRange?.unit || results[0]?.unit,
       normalRange: normalRange ? { min: normalRange.min, max: normalRange.max } : null,
-      data: results.map(r => ({
+     data: results.map(r => ({
         date: r.collectedAt,
         value: r.value,
         status: this.getValueStatus(r.value, normalRange)
@@ -82,7 +82,7 @@ class LabTrendingService {
     const trends = {};
     
     for (const labName of labNames) {
-      trends[labName] = await this.analyzeLabTrends(patientId, labName, timeRange);
+      trends[labName] = await this.analyzeLabTrends(patientId, labName, timeRange); 
     }
     
     return trends;
@@ -93,7 +93,7 @@ class LabTrendingService {
     const labs = await LabResult.distinct('testName', { patientId });
     return labs.map(name => ({
       name,
-      hasNormalRange: !!this.normalRanges[name],
+     hasNormalRange: !!this.normalRanges[name],
       unit: this.normalRanges[name]?.unit
     }));
   }
@@ -115,7 +115,7 @@ class LabTrendingService {
       median: sorted[Math.floor(sorted.length / 2)],
       stdDev: Math.round(stdDev * 100) / 100,
       latest: values[values.length - 1],
-      previous: values.length > 1 ? values[values.length - 2] : null,
+     previous: values.length > 1 ? values[values.length - 2] : null,
       change: values.length > 1 ? 
         Math.round((values[values.length - 1] - values[values.length - 2]) * 100) / 100 : null,
       changePercent: values.length > 1 && values[values.length - 2] !== 0 ?
@@ -124,7 +124,7 @@ class LabTrendingService {
   }
   calculateTrend(values) {
     if (values.length < 2) return { direction: 'stable', confidence: 0 };
-    const n = values.length;
+    const n = values.length; 
     const xMean = (n - 1) / 2;
     const yMean = values.reduce((a, b) => a + b, 0) / n;
     
@@ -144,8 +144,8 @@ class LabTrendingService {
     const slopePercent = yMean !== 0 ? (slope / yMean) * 100 : 0;
     
     let direction;
-    if (Math.abs(slopePercent) < 1) {
-      direction = 'stable';
+   if (Math.abs(slopePercent) < 1) {
+     direction = 'stable';
     } else if (slopePercent > 5) {
       direction = 'increasing_rapidly';
     } else if (slopePercent > 0) {
@@ -166,7 +166,7 @@ class LabTrendingService {
   generateAnalysis(labName, values, normalRange, trend) {
     const latest = values[values.length - 1];
     const analysis = [];
-    if (normalRange) {
+   if (normalRange) {
       if (latest < normalRange.min) {
         analysis.push(`Current ${labName} is below normal range (${latest} ${normalRange.unit})`);
       } else if (latest > normalRange.max) {
@@ -185,10 +185,10 @@ class LabTrendingService {
       analysis.push('Values show gradual downward trend');
     } else {
       analysis.push('Values are relatively stable');
-    }
+   }
     if (normalRange?.criticalLow && latest < normalRange.criticalLow) {
-      analysis.unshift(`⚠️ CRITICAL LOW VALUE - Immediate attention required`);
-    } else if (normalRange?.criticalHigh && latest > normalRange.criticalHigh) {
+      analysis.unshift(`⚠️ CRITICAL LOW VALUE - Immediate attention required`); 
+   } else if (normalRange?.criticalHigh && latest > normalRange.criticalHigh) {
       analysis.unshift(`⚠️ CRITICAL HIGH VALUE - Immediate attention required`);
     }
     
@@ -201,14 +201,14 @@ class LabTrendingService {
     if (!normalRange) return alerts;
     
     if (normalRange.criticalLow && latest < normalRange.criticalLow) {
-      alerts.push({ type: 'critical', message: `${labName} critically low: ${latest}` });
+      alerts.push({ type: 'critical', message: `${labName} critically low: ${latest}` }); 
     } else if (normalRange.criticalHigh && latest > normalRange.criticalHigh) {
       alerts.push({ type: 'critical', message: `${labName} critically high: ${latest}` });
     } else if (latest < normalRange.min) {
-      alerts.push({ type: 'abnormal', message: `${labName} below normal: ${latest}` });
+     alerts.push({ type: 'abnormal', message: `${labName} below normal: ${latest}` });
     } else if (latest > normalRange.max) {
       alerts.push({ type: 'abnormal', message: `${labName} above normal: ${latest}` });
-    }
+   }
     if (values.length >= 2) {
       const previous = values[values.length - 2];
       const changePercent = ((latest - previous) / previous) * 100;
@@ -230,7 +230,7 @@ class LabTrendingService {
     if (normalRange.criticalHigh && value > normalRange.criticalHigh) return 'critical_high';
     if (value < normalRange.min) return 'low';
     if (value > normalRange.max) return 'high';
-    return 'normal';
+   return 'normal';
   }
   getDateFilter(timeRange) {
     const now = new Date();
@@ -242,7 +242,7 @@ class LabTrendingService {
       case '2y': return new Date(now.setFullYear(now.getFullYear() - 2));
       case '5y': return new Date(now.setFullYear(now.getFullYear() - 5));
       default: return new Date(now.setFullYear(now.getFullYear() - 1));
-    }
+   }
   }
   getNormalRanges() {
     return this.normalRanges;

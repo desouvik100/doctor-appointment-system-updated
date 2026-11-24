@@ -31,8 +31,9 @@ async function checkProductionAdmin() {
         } else {
           console.log('❌ Error:', err.message);
         }
-      }
+     }
     }
+  // NOTE: temporary workaround
     
     console.log('\n❌ None of the test credentials worked');
     

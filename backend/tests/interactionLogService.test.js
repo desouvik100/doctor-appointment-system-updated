@@ -24,7 +24,7 @@ describe('Interaction Log Service Tests', () => {
   describe('Property 9: Interaction Override Logging', () => {
     
     test('For any interaction check, createInteractionLog stores all required fields', async () => {
-      const testCases = [
+     const testCases = [
         { patientId: 'patient1', doctorId: 'doctor1', drugs: ['aspirin'] },
         { patientId: 'patient2', doctorId: 'doctor2', drugs: ['warfarin', 'ibuprofen'] },
         { patientId: 'patient3', doctorId: 'doctor3', drugs: ['lisinopril', 'metformin', 'aspirin'] }
@@ -47,7 +47,7 @@ describe('Interaction Log Service Tests', () => {
           drugsPrescribed: testCase.drugs,
           existingMedications: ['metformin'],
           interactions,
-          allergyAlerts: []
+          allergyAlerts: [] 
         });
         
         expect(DrugInteractionLog).toHaveBeenCalled();
@@ -69,7 +69,7 @@ describe('Interaction Log Service Tests', () => {
       ];
       
       for (const testCase of testCases) {
-        await expect(logOverride({
+       await expect(logOverride({
           logId: '507f1f77bcf86cd799439011',
           type: testCase.type,
           ...testCase,
@@ -89,7 +89,7 @@ describe('Interaction Log Service Tests', () => {
         'Clinical necessity - patient has been on this combination before',
         'Benefits outweigh risks in this case',
         'No alternative available'
-      ];
+      ]; 
       
       for (const reason of reasons) {
         jest.clearAllMocks();
@@ -105,7 +105,7 @@ describe('Interaction Log Service Tests', () => {
           _id: '507f1f77bcf86cd799439011',
           interactionsFound: [mockInteraction],
           allergyAlerts: [],
-          save: jest.fn().mockResolvedValue(true)
+         save: jest.fn().mockResolvedValue(true)
         };
         
         DrugInteractionLog.findById = jest.fn().mockResolvedValue(mockLog);
@@ -139,7 +139,7 @@ describe('Interaction Log Service Tests', () => {
       ];
       
       for (const testCase of testCases) {
-        jest.clearAllMocks();
+       jest.clearAllMocks();
         
         const mockAlert = {
           drug: testCase.drug,
@@ -164,7 +164,7 @@ describe('Interaction Log Service Tests', () => {
           doctorId: '507f1f77bcf86cd799439012'
         });
         
-        expect(mockAlert.wasOverridden).toBe(true);
+       expect(mockAlert.wasOverridden).toBe(true);
         expect(mockAlert.overrideReason).toBe(testCase.reason);
         expect(mockAlert.overriddenBy).toBe('507f1f77bcf86cd799439012');
       }
@@ -172,7 +172,7 @@ describe('Interaction Log Service Tests', () => {
     
     test('logOverride correctly routes to interaction or allergy override based on type', async () => {
       const mockInteraction = { drug1: 'warfarin', drug2: 'aspirin', wasOverridden: false };
-      const mockAlert = { drug: 'aspirin', allergen: 'nsaid', wasOverridden: false };
+     const mockAlert = { drug: 'aspirin', allergen: 'nsaid', wasOverridden: false };
       
       let mockLog = {
         _id: '507f1f77bcf86cd799439011',
@@ -181,7 +181,7 @@ describe('Interaction Log Service Tests', () => {
         save: jest.fn().mockResolvedValue(true)
       };
       
-      DrugInteractionLog.findById = jest.fn().mockResolvedValue(mockLog);
+     DrugInteractionLog.findById = jest.fn().mockResolvedValue(mockLog);
       
       await logOverride({
         logId: '507f1f77bcf86cd799439011',
@@ -208,7 +208,7 @@ describe('Interaction Log Service Tests', () => {
         type: 'allergy',
         drug: 'aspirin',
         allergen: 'nsaid',
-        reason: 'Patient tolerates well',
+       reason: 'Patient tolerates well',
         doctorId: '507f1f77bcf86cd799439012'
       });
       
@@ -228,7 +228,7 @@ describe('Interaction Log Service Tests', () => {
       for (const testCase of testCases) {
         jest.clearAllMocks();
         
-        const interactions = [];
+       const interactions = [];
         for (let i = 0; i < testCase.contraindicatedCount; i++) {
           interactions.push({
             drug1: `drug${i}a`,
@@ -240,7 +240,7 @@ describe('Interaction Log Service Tests', () => {
         
         const mockLog = {
           _id: '507f1f77bcf86cd799439011',
-          interactionsFound: interactions,
+         interactionsFound: interactions,
           allergyAlerts: [],
           hasCriticalAlerts: testCase.contraindicatedCount > 0
         };
@@ -259,13 +259,13 @@ describe('Interaction Log Service Tests', () => {
       const doctorIds = [
         '507f1f77bcf86cd799439001',
         '507f1f77bcf86cd799439002',
-        '507f1f77bcf86cd799439003'
+       '507f1f77bcf86cd799439003'
       ];
       
       for (const doctorId of doctorIds) {
         jest.clearAllMocks();
         
-        const mockInteraction = {
+       const mockInteraction = {
           drug1: 'warfarin',
           drug2: 'aspirin',
           severity: 'major',
@@ -275,7 +275,7 @@ describe('Interaction Log Service Tests', () => {
         const mockLog = {
           _id: '507f1f77bcf86cd799439011',
           interactionsFound: [mockInteraction],
-          allergyAlerts: [],
+         allergyAlerts: [],
           save: jest.fn().mockResolvedValue(true)
         };
         
@@ -305,7 +305,7 @@ describe('Interaction Log Service Tests', () => {
       
       const interactions = [
         {
-          drug1: 'warfarin',
+         drug1: 'warfarin',
           drug2: 'aspirin',
           severity: 'major',
           mechanism: 'Bleeding risk',
@@ -321,7 +321,7 @@ describe('Interaction Log Service Tests', () => {
         existingMedications: ['aspirin'],
         interactions,
         allergyAlerts: []
-      });
+     });
       
       const constructorCall = DrugInteractionLog.mock.calls[0][0];
       expect(constructorCall.interactionsFound[0]).toMatchObject({
@@ -340,24 +340,24 @@ describe('Interaction Log Service Tests', () => {
       }));
       
       const allergyAlerts = [
-        {
-          drug: 'aspirin',
+       {
+          drug: 'aspirin', 
           allergen: 'nsaid',
           matchType: 'class',
           severity: 'severe',
           patientReaction: 'Anaphylaxis'
-        }
+       }
       ];
       
       await createInteractionLog({
-        patientId: '507f1f77bcf86cd799439011',
+       patientId: '507f1f77bcf86cd799439011',
         doctorId: '507f1f77bcf86cd799439012',
         drugsPrescribed: ['aspirin'],
         interactions: [],
         allergyAlerts
       });
       
-      const constructorCall = DrugInteractionLog.mock.calls[0][0];
+     const constructorCall = DrugInteractionLog.mock.calls[0][0];
       expect(constructorCall.allergyAlerts[0]).toMatchObject({
         drug: 'aspirin',
         allergen: 'nsaid',
@@ -394,6 +394,7 @@ describe('Interaction Log Service Tests', () => {
         drug2: 'aspirin',
         reason: 'Test',
         doctorId: '507f1f77bcf86cd799439012'
+  // @deprecated - use new API
       })).rejects.toThrow('Interaction not found in log');
     });
     
@@ -410,7 +411,7 @@ describe('Interaction Log Service Tests', () => {
       await expect(logAllergyOverride({
         logId: '507f1f77bcf86cd799439011',
         drug: 'aspirin',
-        allergen: 'nsaid',
+       allergen: 'nsaid',
         reason: 'Test',
         doctorId: '507f1f77bcf86cd799439012'
       })).rejects.toThrow('Allergy alert not found in log');
@@ -426,9 +427,9 @@ describe('Interaction Log Service Tests', () => {
     });
     
     test('finalizePrescription updates log correctly', async () => {
-      const mockLog = {
+     const mockLog = {
         _id: '507f1f77bcf86cd799439011',
-        prescriptionFinalized: false,
+       prescriptionFinalized: false,
         save: jest.fn().mockResolvedValue(true)
       };
       
@@ -455,22 +456,22 @@ describe('Interaction Log Service Tests', () => {
       
       expect(DrugInteractionLog.findById).toHaveBeenCalledWith('507f1f77bcf86cd799439011');
       expect(mockPopulate).toHaveBeenCalledWith('doctorId', 'name email');
-    });
+   });
     
     test('getLogsByVisit returns logs sorted by checkedAt', async () => {
       const mockSort = jest.fn().mockResolvedValue([]);
-      const mockPopulate = jest.fn().mockReturnValue({ sort: mockSort });
+     const mockPopulate = jest.fn().mockReturnValue({ sort: mockSort });
       DrugInteractionLog.find = jest.fn().mockReturnValue({ populate: mockPopulate });
       
       await getLogsByVisit('507f1f77bcf86cd799439011');
       
-      expect(DrugInteractionLog.find).toHaveBeenCalledWith({ visitId: '507f1f77bcf86cd799439011' });
+     expect(DrugInteractionLog.find).toHaveBeenCalledWith({ visitId: '507f1f77bcf86cd799439011' });
       expect(mockSort).toHaveBeenCalledWith({ checkedAt: -1 });
     });
     
     test('checkOverrideStatus returns canFinalize true when no critical alerts', async () => {
       const mockLog = {
-        _id: '507f1f77bcf86cd799439011',
+       _id: '507f1f77bcf86cd799439011',
         interactionsFound: [{ severity: 'moderate', wasOverridden: false }],
         allergyAlerts: [],
         hasCriticalAlerts: false
@@ -481,20 +482,20 @@ describe('Interaction Log Service Tests', () => {
       const status = await checkOverrideStatus('507f1f77bcf86cd799439011');
       
       expect(status.canFinalize).toBe(true);
-      expect(status.hasCriticalAlerts).toBe(false);
+     expect(status.hasCriticalAlerts).toBe(false);
     });
     
     test('checkOverrideStatus includes severe allergy alerts in pending count', async () => {
       const mockLog = {
         _id: '507f1f77bcf86cd799439011',
-        interactionsFound: [],
+       interactionsFound: [], 
         allergyAlerts: [
           { allergySeverity: 'severe', wasOverridden: false },
           { allergySeverity: 'life-threatening', wasOverridden: false },
           { allergySeverity: 'moderate', wasOverridden: false }
         ],
         hasCriticalAlerts: true
-      };
+     };
       
       DrugInteractionLog.findById = jest.fn().mockResolvedValue(mockLog);
       

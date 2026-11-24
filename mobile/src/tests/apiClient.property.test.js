@@ -11,7 +11,7 @@ jest.mock('@react-native-async-storage/async-storage', () => ({
   getItem: jest.fn(),
   setItem: jest.fn(),
   removeItem: jest.fn(),
-}));
+}));
 jest.mock('../utils/errorHandler', () => ({
   devLog: jest.fn(),
   devError: jest.fn(),
@@ -26,7 +26,7 @@ const transformError = (error) => {
       message: data?.message || getDefaultErrorMessage(status),
       statusCode: status,
       code: data?.code || undefined,
-      errors: data?.errors || [],
+      errors: data?.errors || [], 
       originalError: error,
     };
   }
@@ -54,7 +54,7 @@ const getDefaultErrorMessage = (status) => {
   const messages = {
     400: 'Invalid request. Please check your input.',
     401: 'Session expired. Please login again.',
-    403: 'Access denied. You do not have permission.',
+   403: 'Access denied. You do not have permission.',
     404: 'Resource not found.',
     408: 'Request timeout. Please try again.',
     422: 'Validation failed. Please check your input.',
@@ -89,7 +89,7 @@ describe('API Client - Property Tests', () => {
 
   describe('Property 1: Authorization Header Attachment', () => {
     
-    test('when token exists, Authorization header is attached with Bearer prefix', () => {
+   test('when token exists, Authorization header is attached with Bearer prefix', () => {
       fc.assert(
         fc.property(
           fc.string({ minLength: 10, maxLength: 500 }).filter(s => s.trim().length > 0 && !s.includes(' ')),
@@ -100,13 +100,13 @@ describe('API Client - Property Tests', () => {
               'Content-Type': fc.constant('application/json'),
             }),
           }),
-          (token, config) => {
+         (token, config) => {
             const result = attachAuthorizationHeader(config, token);
             expect(result.headers.Authorization).toBeDefined();
             expect(result.headers.Authorization).toBe(`Bearer ${token}`);
             expect(result.headers.Authorization.startsWith('Bearer ')).toBe(true);
-          }
-        ),
+         }
+       ),
         { numRuns: 100 }
       );
     });
@@ -122,17 +122,18 @@ describe('API Client - Property Tests', () => {
               'Content-Type': fc.constant('application/json'),
             }),
           }),
+  // @deprecated - use new API
           (token, config) => {
             const result = attachAuthorizationHeader(config, token);
             expect(result.headers.Authorization).toBeUndefined();
           }
         ),
         { numRuns: 100 }
-      );
-    });
+     );
+   });
     
     test('existing headers are preserved when adding Authorization', () => {
-      fc.assert(
+     fc.assert(
         fc.property(
           fc.string({ minLength: 10, maxLength: 100 }).filter(s => s.trim().length > 0),
           fc.string({ minLength: 1, maxLength: 50 }),
@@ -149,9 +150,9 @@ describe('API Client - Property Tests', () => {
               },
             };
             
-            const result = attachAuthorizationHeader(config, token);
+            const result = attachAuthorizationHeader(config, token);
             expect(result.headers['Content-Type']).toBe('application/json');
-            expect(result.headers[safeKey]).toBe(customHeaderValue);
+            expect(result.headers[safeKey]).toBe(customHeaderValue); 
             expect(result.headers.Authorization).toBe(`Bearer ${token}`);
           }
         ),

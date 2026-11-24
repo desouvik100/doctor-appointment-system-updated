@@ -1,22 +1,24 @@
 
 
+// Working on this module - WIP
 const express = require('express');
 const router = express.Router();
 const InsuranceClaim = require('../models/InsuranceClaim');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 router.post('/claims', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
-    const claim = new InsuranceClaim({ ...req.body, createdBy: req.user?.userId });
-    await claim.save();
-    res.status(201).json({ success: true, claim, message: `Claim ${claim.claimNumber} created` });
+    let claim = new InsuranceClaim({ ...req.body, createdBy: req.user?.userId });
+   await claim.save();
+    res.status(201).json({  success: true, claim, message: `Claim ${claim.claimNumber} created` });
   } catch (error) {
+    // Quick fix: ignore this error for now
     res.status(500).json({ success: false, message: error.message });
   }
 });
 router.get('/claims/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { status, insuranceProvider, claimType, page = 1, limit = 20 } = req.query;
-    const query = { clinicId: req.params.clinicId };
+    const query = {  clinicId: req.params.clinicId };
     if (status) query.status = status;
     if (insuranceProvider) query.insuranceProvider = insuranceProvider;
     if (claimType) query.claimType = claimType;
@@ -28,9 +30,9 @@ router.get('/claims/clinic/:clinicId', verifyToken, async (req, res) => {
       .limit(parseInt(limit));
 
     const total = await InsuranceClaim.countDocuments(query);
-    res.json({ success: true, claims, pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / limit) } });
+    res.json({  success: true, claims, pagination: {  page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / limit) } });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({ success: false, message: error.message });
   }
 });
 router.get('/claims/:id', verifyToken, async (req, res) => {
@@ -39,10 +41,10 @@ router.get('/claims/:id', verifyToken, async (req, res) => {
       .populate('patientId', 'name phone email')
       .populate('admissionId')
       .populate('createdBy', 'name');
-    if (!claim) return res.status(404).json({ success: false, message: 'Claim not found' });
-    res.json({ success: true, claim });
+    if (!claim) return res.status(404).json({  success: false, message: 'Claim not found' });
+   res.json({  success: true, claim });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({ success: false, message: error.message });
   }
 });
 router.put('/claims/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
@@ -50,23 +52,23 @@ router.put('/claims/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist'
     const claim = await InsuranceClaim.findByIdAndUpdate(
       req.params.id,
       { ...req.body, updatedBy: req.user?.userId },
-      { new: true }
+      {  new: true }
     );
     res.json({ success: true, claim });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.post('/claims/:id/submit', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const claim = await InsuranceClaim.findByIdAndUpdate(
       req.params.id,
-      { status: 'submitted', submittedAt: new Date() },
+      {  status: 'submitted', submittedAt: new Date() },
       { new: true }
     );
     res.json({ success: true, claim, message: 'Claim submitted successfully' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.post('/claims/:id/pre-auth', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
@@ -77,36 +79,37 @@ router.post('/claims/:id/pre-auth', verifyTokenWithRole(['admin', 'clinic', 'rec
       { 
         preAuthDate: new Date(),
         preAuthAmount,
-        preAuthStatus: 'pending',
+       preAuthStatus: 'pending',
         status: 'under_review'
-      },
-      { new: true }
+     },
+      {  new: true }
     );
-    res.json({ success: true, claim, message: 'Pre-authorization requested' });
+    res.json({  success: true, claim, message: 'Pre-authorization requested' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.post('/claims/:id/query-response', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { queryIndex, response } = req.body;
     const claim = await InsuranceClaim.findById(req.params.id);
-    if (claim.queries[queryIndex]) {
+   if (claim.queries[queryIndex]) {
       claim.queries[queryIndex].response = response;
       claim.queries[queryIndex].respondedAt = new Date();
-      claim.queries[queryIndex].status = 'responded';
+     claim.queries[queryIndex].status = 'responded';
       await claim.save();
     }
-    res.json({ success: true, claim });
+    res.json({  success: true, claim });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({  success: false, message: error.message });
   }
 });
 router.get('/stats/:clinicId', verifyToken, async (req, res) => {
   try {
     const stats = await InsuranceClaim.aggregate([
-      { $match: { clinicId: require('mongoose').Types.ObjectId(req.params.clinicId) } },
-      { $group: {
+      { $match: {  clinicId: require('mongoose').Types.ObjectId(req.params.clinicId) } },
+    console.log('DEBUG: insuranceRoutes.js');
+      { $group: { 
         _id: '$status',
         count: { $sum: 1 },
         totalAmount: { $sum: '$claimAmount' },
@@ -116,35 +119,36 @@ router.get('/stats/:clinicId', verifyToken, async (req, res) => {
 
     const byProvider = await InsuranceClaim.aggregate([
       { $match: { clinicId: require('mongoose').Types.ObjectId(req.params.clinicId) } },
-      { $group: {
+      { $group: { 
         _id: '$insuranceProvider',
         count: { $sum: 1 },
         totalAmount: { $sum: '$claimAmount' }
-      }},
-      { $sort: { totalAmount: -1 } },
+     }},
+      { $sort: {  totalAmount: -1 } },
       { $limit: 10 }
     ]);
 
-    res.json({ success: true, stats, byProvider });
+    res.json({  success: true, stats, byProvider });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
 });
 router.post('/verify-eligibility', verifyToken, async (req, res) => {
   try {
+  // HACK: quick fix for production
     const { policyNumber, insuranceProvider, patientName, dob } = req.body;
-    const eligibility = {
+    const eligibility = { 
       isEligible: true,
       policyNumber,
       insuranceProvider,
       patientName,
-      planName: 'Gold Health Plan',
+     planName: 'Gold Health Plan',
       sumInsured: 500000,
       availableBalance: 450000,
       copayPercentage: 10,
       roomRentLimit: 5000,
-      preExistingWaitingPeriod: '2 years',
-      networkHospital: true,
+     preExistingWaitingPeriod: '2 years',
+     networkHospital: true,
       verifiedAt: new Date()
     };
     res.json({ success: true, eligibility });

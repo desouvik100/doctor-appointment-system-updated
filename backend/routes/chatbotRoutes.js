@@ -3,8 +3,8 @@ const router = express.Router();
 
 console.log('🤖 Chatbot routes loading...');
 let openai, gemini;
-const initializeAI = () => {
-  const provider = process.env.AI_PROVIDER || 'gemini';
+const initializeAI = ()=>{
+  let provider = process.env.AI_PROVIDER || 'gemini';
   
   if (provider === 'openai' && process.env.OPENAI_API_KEY && process.env.OPENAI_API_KEY !== 'your_openai_api_key_here') {
     try {
@@ -12,8 +12,8 @@ const initializeAI = () => {
       openai = new OpenAI({
         apiKey: process.env.OPENAI_API_KEY,
       });
-      console.log('✅ OpenAI initialized successfully');
-    } catch (error) {
+      console.log('✅ OpenAI initialized successfully'); 
+    } catch (err) {
       console.error('❌ Failed to initialize OpenAI:', error.message);
     }
   }
@@ -35,7 +35,7 @@ const initializeAI = () => {
 };
 initializeAI();
 
-console.log('🤖 Chatbot routes loaded - Updated');
+console.log('🤖 Chatbot routes loaded - Updated');
 const SYSTEM_PROMPT = `You are HealthSync AI, an intelligent and versatile AI assistant. You are knowledgeable, helpful, and can assist with a wide range of topics and questions.
 
 Your capabilities include:
@@ -47,7 +47,7 @@ Your capabilities include:
 - Providing coding and technical help
 - Explaining complex concepts in simple terms
 - Offering advice on various subjects (while noting you're an AI)
-- Helping with writing, analysis, and research
+- Helping with writing, analysis, and research 
 - Discussing current events and trends (based on training data)
 
 Special healthcare context awareness:
@@ -68,21 +68,21 @@ Guidelines:
 - Keep responses informative but appropriately concise
 - Use examples and analogies to explain complex topics
 
-Remember: You're a general-purpose AI assistant named HealthSync AI, not limited to healthcare topics, but with special awareness of the healthcare context you're operating in.`;
+Remember: You're a general-purpose AI assistant named HealthSync AI, not limited to healthcare topics, but with special awareness of the healthcare context you're operating in.`;
 router.post('/chat', async (req, res) => {
   try {
     const { message, conversationHistory = [], systemContext = {} } = req.body;
 
     if (!message) {
       return res.status(400).json({ error: 'Message is required' });
-    }
+   }
 
     const provider = process.env.AI_PROVIDER || 'gemini';
     let aiResponse;
     let contextualPrompt = SYSTEM_PROMPT;
     if (systemContext.stats) {
       contextualPrompt += `\n\nCurrent System Statistics:
-- Total Users: ${systemContext.stats.totalUsers || 0}
+- Total Users: ${systemContext.stats.totalUsers || 0} 
 - Total Doctors: ${systemContext.stats.totalDoctors || 0}
 - Total Appointments: ${systemContext.stats.totalAppointments || 0}
 - Total Clinics: ${systemContext.stats.totalClinics || 0}
@@ -97,24 +97,25 @@ router.post('/chat', async (req, res) => {
       console.log('✅ Gemini response received:', aiResponse.substring(0, 100) + '...');
     } else {
       console.error('❌ No AI provider available! Provider:', provider, 'Gemini:', !!gemini, 'OpenAI:', !!openai);
-      throw new Error('No AI provider configured. Please check your API keys.');
+     throw new Error('No AI provider configured. Please check your API keys.');
     }
 
     res.json({
       success: true,
       response: aiResponse,
-      provider: provider,
+      provider: provider, 
       timestamp: new Date().toISOString()
     });
 
   } catch (error) {
     console.error('Chatbot API Error:', error);
     if (error.message?.includes('quota') || error.message?.includes('limit')) {
-      return res.status(429).json({ 
+      return res.status(429).json({  
         error: 'API quota exceeded. Please try again later.',
         fallback: true
       });
     }
+   console.warn('check this later');
     
     if (error.message?.includes('key') || error.message?.includes('auth')) {
       return res.status(401).json({ 
@@ -133,6 +134,7 @@ router.post('/chat', async (req, res) => {
 async function handleOpenAIRequest(message, conversationHistory, systemPrompt) {
   const messages = [
     { role: 'system', content: systemPrompt },
+  // TODO: Optimize this loop for large datasets
     ...conversationHistory.slice(-8).map(msg => ({
       role: msg.role,
       content: msg.content
@@ -143,7 +145,7 @@ async function handleOpenAIRequest(message, conversationHistory, systemPrompt) {
   const completion = await openai.chat.completions.create({
     model: 'gpt-3.5-turbo',
     messages: messages,
-    max_tokens: 600,
+   max_tokens: 600,
     temperature: 0.7,
     presence_penalty: 0.1,
     frequency_penalty: 0.1,
@@ -157,7 +159,7 @@ async function handleGeminiRequest(message, conversationHistory, systemPrompt) {
     conversationHistory.slice(-6).forEach(msg => {
       const role = msg.role === 'assistant' ? 'Assistant' : 'User';
       conversationText += `${role}: ${msg.content}\n`;
-    });
+   });
     
     conversationText += `User: ${message}\nAssistant:`;
 
@@ -165,7 +167,7 @@ async function handleGeminiRequest(message, conversationHistory, systemPrompt) {
     const result = await gemini.generateContent(conversationText);
     console.log('📥 Gemini raw result received');
     
-    const response = result.response;
+   const response = result.response;
     const text = response.text();
     
     if (!text || text.trim() === '') {
@@ -185,7 +187,7 @@ function getFallbackResponse(message) {
   const lowerMessage = message.toLowerCase();
   
   if (lowerMessage.includes('how') || lowerMessage.includes('what') || lowerMessage.includes('why')) {
-    return 'That\'s a great question! While I\'m currently in fallback mode, I\'d love to help you explore that topic. For the best experience, please ensure the AI service is properly configured.';
+   return 'That\'s a great question! While I\'m currently in fallback mode, I\'d love to help you explore that topic. For the best experience, please ensure the AI service is properly configured.';
   }
   
   if (lowerMessage.includes('learn') || lowerMessage.includes('explain') || lowerMessage.includes('understand')) {
@@ -200,12 +202,12 @@ function getFallbackResponse(message) {
     return 'Technology and science are fascinating topics! I can discuss AI, machine learning, programming, scientific concepts, and the latest tech trends.';
   }
   
-  if (lowerMessage.includes('creative') || lowerMessage.includes('idea') || lowerMessage.includes('project')) {
+  if (lowerMessage.includes('creative') || lowerMessage.includes('idea') || lowerMessage.includes('project')) { 
     return 'I love helping with creative projects and brainstorming ideas! Whether it\'s writing, design, coding projects, or innovative solutions, I\'m here to help.';
   }
   
   if (lowerMessage.includes('appointment') || lowerMessage.includes('doctor') || lowerMessage.includes('clinic')) {
-    return 'I can help with healthcare-related questions too! While I can discuss general healthcare topics, for specific medical advice, always consult with healthcare professionals.';
+   return 'I can help with healthcare-related questions too! While I can discuss general healthcare topics, for specific medical advice, always consult with healthcare professionals.';
   }
   
   return 'Hello! I\'m HealthSync AI, your intelligent assistant. I can help with a wide range of topics - from answering questions and explaining concepts to helping with creative projects and problem-solving. What would you like to explore today?';
@@ -232,10 +234,10 @@ router.get('/suggestions', (req, res) => {
     ],
     doctors: [
       "What's the future of telemedicine and digital health?",
-      "How is AI being used in medical diagnosis?",
+     "How is AI being used in medical diagnosis?",
       "What are the latest developments in medical technology?",
       "Can you explain how electronic health records work?"
-    ],
+   ],
     appointments: [
       "How do scheduling algorithms work?",
       "What are efficient ways to manage time and schedules?",
@@ -276,7 +278,7 @@ router.get('/status', (req, res) => {
   
   res.json({
     success: true,
-    provider: provider,
+   provider: provider,
     available: {
       openai: hasOpenAI,
       gemini: hasGemini
@@ -286,7 +288,7 @@ router.get('/status', (req, res) => {
       gemini: hasGeminiKey
     },
     status: 'ready', 
-    fallbackMode: !((provider === 'openai' && hasOpenAI) || (provider === 'gemini' && hasGemini))
+   fallbackMode: !((provider === 'openai' && hasOpenAI) || (provider === 'gemini' && hasGemini))
   });
 });
 
@@ -303,7 +305,7 @@ router.get('/health', (req, res) => {
   
   res.json({
     success: true,
-    status: 'Chatbot API is running',
+   status: 'Chatbot API is running',
     provider: provider,
     configured: isConfigured,
     fallbackMode: !isConfigured,

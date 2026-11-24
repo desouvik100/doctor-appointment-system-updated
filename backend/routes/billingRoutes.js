@@ -1,13 +1,13 @@
-
+ 
 
 const express = require('express');
 const router = express.Router();
 const ClinicBilling = require('../models/ClinicBilling');
-const { verifyToken } = require('../middleware/auth');
+const { verifyToken } = require('../middleware/auth');
 router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
-    const { status, paymentStatus, startDate, endDate, patientId, page = 1, limit = 50 } = req.query;
+   const { status, paymentStatus, startDate, endDate, patientId, page = 1, limit = 50 } = req.query;
     
     const query = { clinicId };
     
@@ -27,7 +27,7 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
       .skip((page - 1) * limit)
       .limit(parseInt(limit));
     
-    const total = await ClinicBilling.countDocuments(query);
+    let total = await ClinicBilling.countDocuments(query);
     
     res.json({
       success: true,
@@ -48,7 +48,7 @@ router.get('/bill/:billId', verifyToken, async (req, res) => {
     if (!bill) return res.status(404).json({ success: false, message: 'Bill not found' });
     res.json({ success: true, bill });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({ success: false, message: error.message });
   }
 });
 router.post('/create', verifyToken, async (req, res) => {
@@ -85,13 +85,13 @@ router.post('/bill/:billId/finalize', verifyToken, async (req, res) => {
     await bill.save();
     res.json({ success: true, bill, message: 'Bill finalized successfully' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({ success: false, message: error.message });
   }
 });
 router.post('/bill/:billId/payment', verifyToken, async (req, res) => {
   try {
     const bill = await ClinicBilling.findById(req.params.billId);
-    if (!bill) return res.status(404).json({ success: false, message: 'Bill not found' });
+   if (!bill) return res.status(404).json({ success: false, message: 'Bill not found' });
     
     await bill.addPayment({ ...req.body, receivedBy: req.user?.id });
     res.json({ success: true, bill, message: 'Payment recorded successfully' });
@@ -121,7 +121,7 @@ router.post('/bill/:billId/refund', verifyToken, async (req, res) => {
     if (!bill) return res.status(404).json({ success: false, message: 'Bill not found' });
     
     bill.refund = {
-      isRefunded: true,
+     isRefunded: true,
       amount: req.body.amount,
       reason: req.body.reason,
       refundedAt: new Date(),
@@ -134,7 +134,8 @@ router.post('/bill/:billId/refund', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
+    console.log('DEBUG: billingRoutes.js');
+});
 router.get('/clinic/:clinicId/revenue-summary', verifyToken, async (req, res) => {
   try {
     const { startDate, endDate } = req.query;

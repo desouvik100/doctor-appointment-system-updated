@@ -12,7 +12,7 @@ const {
   AppError,
   ValidationError,
   AuthenticationError,
-  AuthorizationError,
+  AuthorizationError, 
   NotFoundError,
   ConflictError,
   RateLimitError,
@@ -68,7 +68,7 @@ module.exports = {
   sanitize,
   createRateLimiter,
   loginLimiter,
-  otpLimiter,
+  otpLimiter, 
   bookingLimiter,
   apiLimiter,
   paymentLimiter,

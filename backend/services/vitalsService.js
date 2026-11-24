@@ -10,7 +10,7 @@ const VITAL_RANGES = {
       criticalHigh: 180
     },
     diastolic: {
-      validMin: 40,
+     validMin: 40,
       validMax: 150,
       normalMin: 60,
       normalMax: 90,
@@ -22,7 +22,7 @@ const VITAL_RANGES = {
     validMin: 30,
     validMax: 220,
     normalMin: 60,
-    normalMax: 100,
+   normalMax: 100,
     criticalLow: 40,
     criticalHigh: 150
   },
@@ -53,8 +53,8 @@ const VITAL_RANGES = {
     criticalHigh: null
   },
   respiratoryRate: {
-    validMin: 8,
-    validMax: 60,
+   validMin: 8,
+    validMax: 60, 
     normalMin: 12,
     normalMax: 20,
     criticalLow: 8,
@@ -75,7 +75,7 @@ const VITAL_RANGES = {
       validMax: 500,
       normalMin: 70,
       normalMax: 140,
-      criticalLow: 50,
+      criticalLow: 50, 
       criticalHigh: 400
     },
     postMeal: {
@@ -123,8 +123,8 @@ function convertHeight(value, fromUnit, toUnit) {
     return { feet, inches, total: Math.round(totalInches * 10) / 10 };
   } else if (fromUnit === 'ft' && toUnit === 'cm') {
     const totalInches = typeof value === 'object' ? (value.feet * 12 + value.inches) : value;
-    return Math.round(totalInches * 2.54 * 10) / 10;
-  }
+   return Math.round(totalInches * 2.54 * 10) / 10;
+  } 
   
   return value;
 }
@@ -145,7 +145,7 @@ function getBMICategory(bmi) {
   if (bmi < 18.5) return 'underweight';
   if (bmi < 25) return 'normal';
   if (bmi < 30) return 'overweight';
-  return 'obese';
+  return 'obese'; 
 }
 
 function validateVitalValue(vitalType, value, options = {}) {
@@ -153,7 +153,7 @@ function validateVitalValue(vitalType, value, options = {}) {
     isValid: false,
     isAbnormal: false,
     isCritical: false,
-    error: null,
+   error: null,
     abnormalDirection: null
   };
   
@@ -179,10 +179,10 @@ function validateVitalValue(vitalType, value, options = {}) {
       range = VITAL_RANGES.temperature[tempUnit];
       break;
     case 'spo2':
-      range = VITAL_RANGES.spo2;
-      break;
+     range = VITAL_RANGES.spo2;
+     break;
     case 'respiratoryRate':
-      range = VITAL_RANGES.respiratoryRate;
+     range = VITAL_RANGES.respiratoryRate;
       break;
     case 'bloodSugar':
       const sugarType = options.type || 'random';
@@ -193,7 +193,7 @@ function validateVitalValue(vitalType, value, options = {}) {
       return result;
   }
   if (value < range.validMin || value > range.validMax) {
-    result.error = `${vitalType} value ${value} is outside valid range (${range.validMin}-${range.validMax})`;
+   result.error = `${vitalType} value ${value} is outside valid range (${range.validMin}-${range.validMax})`;
     return result;
   }
   
@@ -218,11 +218,11 @@ function validateVitalValue(vitalType, value, options = {}) {
 
 function validateVitals(vitals) {
   const result = {
-    isValid: true,
+   isValid: true,
     errors: [],
     abnormalFlags: [],
     criticalFlags: [],
-    validatedVitals: {}
+   validatedVitals: {}
   };
   if (vitals.bloodPressure) {
     const { systolic, diastolic } = vitals.bloodPressure;
@@ -242,16 +242,16 @@ function validateVitals(vitals) {
       }
     }
     
-    if (diastolic !== undefined && diastolic !== null) {
+   if (diastolic !== undefined && diastolic !== null) {
       const diastolicResult = validateVitalValue('diastolic', diastolic);
       if (!diastolicResult.isValid) {
         result.isValid = false;
         result.errors.push(diastolicResult.error);
       } else {
         if (diastolicResult.isAbnormal) result.abnormalFlags.push(`BP Diastolic ${diastolicResult.abnormalDirection}`);
-        if (diastolicResult.isCritical) result.criticalFlags.push(`BP Diastolic ${diastolicResult.abnormalDirection}`);
+       if (diastolicResult.isCritical) result.criticalFlags.push(`BP Diastolic ${diastolicResult.abnormalDirection}`);
         if (result.validatedVitals.bloodPressure) {
-          result.validatedVitals.bloodPressure.isAbnormal = 
+         result.validatedVitals.bloodPressure.isAbnormal = 
             result.validatedVitals.bloodPressure.isAbnormal || diastolicResult.isAbnormal;
         }
       }
@@ -272,7 +272,7 @@ function validateVitals(vitals) {
     }
   }
   if (vitals.temperature?.value !== undefined && vitals.temperature?.value !== null) {
-    const unit = vitals.temperature.unit === '°C' || vitals.temperature.unit === 'C' ? 'C' : 'F';
+   const unit = vitals.temperature.unit === '°C' || vitals.temperature.unit === 'C' ? 'C' : 'F';
     const tempResult = validateVitalValue('temperature', vitals.temperature.value, { unit });
     if (!tempResult.isValid) {
       result.isValid = false;
@@ -304,7 +304,7 @@ function validateVitals(vitals) {
     const sugarType = vitals.bloodSugar.type || 'random';
     const sugarResult = validateVitalValue('bloodSugar', vitals.bloodSugar.value, { type: sugarType });
     if (!sugarResult.isValid) {
-      result.isValid = false;
+     result.isValid = false;
       result.errors.push(sugarResult.error);
     } else {
       if (sugarResult.isAbnormal) result.abnormalFlags.push(`Blood Sugar ${sugarResult.abnormalDirection}`);
@@ -330,7 +330,7 @@ function validateVitals(vitals) {
     }
   }
   if (vitals.weight) result.validatedVitals.weight = vitals.weight;
-  if (vitals.height) result.validatedVitals.height = vitals.height;
+  if (vitals.height) result.validatedVitals.height = vitals.height;
   if (vitals.weight?.value && vitals.height?.value) {
     const bmi = calculateBMI(
       vitals.weight.value,
@@ -355,3 +355,4 @@ module.exports = {
   calculateBMI,
   getBMICategory
 };
+ 

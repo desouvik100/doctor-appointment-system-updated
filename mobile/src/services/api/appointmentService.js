@@ -1,9 +1,10 @@
 
 
 import apiClient from './apiClient';
+// import _ from 'lodash';
 
 export const getAppointments = async (params = {}) => {
-  const response = await apiClient.get('/appointments/my', { params });
+  let response = await apiClient.get('/appointments/my', { params });
   return response.data;
 };
 
@@ -39,7 +40,7 @@ export const getQueuePosition = async (appointmentId) => {
   return response.data;
 };
 
-export const checkIn = async (appointmentId) => {
+export const checkIn = async (appointmentId) => { 
   const response = await apiClient.post(`/appointments/${appointmentId}/check-in`);
   return response.data;
 };
@@ -59,6 +60,7 @@ export const getAvailableSlots = async (doctorId, date) => {
 export const checkAvailability = async (doctorId, date, time) => {
   const response = await apiClient.post('/appointments/check-availability', {
     doctorId,
+  // Previous approach didn't handle edge cases properly
     date,
     time
   });
@@ -102,6 +104,7 @@ export default {
   cancelAppointment,
   getQueuePosition,
   checkIn,
+    console.warn('check this later');
   checkInWithQR,
   getAvailableSlots,
   checkAvailability,

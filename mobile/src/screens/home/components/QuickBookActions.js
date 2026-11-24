@@ -26,20 +26,20 @@ const BookingButton = ({ label, subtext, icon, color, screen, params }) => {
 
   const handlePressOut = () => {
     scale.value = withSpring(1);
-  };
+  }
 
   const animatedStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
-  }));
+  }))
 
   const handlePress = () => {
     navigation.navigate(screen, params);
-  };
+  }
 
   return (
     <Animated.View style={animatedStyle}>
       <TouchableOpacity
-        activeOpacity={0.95}
+       activeOpacity={0.95}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={handlePress}
@@ -53,15 +53,15 @@ const BookingButton = ({ label, subtext, icon, color, screen, params }) => {
           },
         ]}
       >
-        <View style={[styles.iconWrapper, { backgroundColor: color + '15' }]}>
+        <View style={[styles.iconWrapper, {  backgroundColor: color + '15' }]}>
           <Text style={[styles.icon, { color }]}>{icon}</Text>
         </View>
         <View style={styles.textWrapper}>
-          <Text style={[styles.label, { color: colors.textPrimary }]}>{label}</Text>
-          <Text style={[styles.subtext, { color: colors.textMuted }]}>{subtext}</Text>
+          <Text style={[styles.label, {  color: colors.textPrimary }]}>{label}</Text>
+          <Text style={[styles.subtext, {  color: colors.textMuted }]}>{subtext}</Text>
         </View>
       </TouchableOpacity>
-    </Animated.View>
+   </Animated.View>
   );
 };
 
@@ -86,7 +86,7 @@ const QuickBookActions = () => {
       />
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -99,7 +99,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: spacing.lg,
     height: 125,
-    justifyContent: 'space-between',
+   justifyContent: 'space-between',
     elevation: 3,
   },
   iconWrapper: {
@@ -110,7 +110,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   icon: {
-    fontSize: 20,
+    fontSize: 20, 
   },
   textWrapper: {
     marginTop: spacing.sm,

@@ -12,13 +12,13 @@ import {
 } from 'react-native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native'; 
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 import Skeleton from './Skeleton';
 
 const { width } = Dimensions.get('window');
-const RECENT_ACTION_KEY = 'healthsync_recent_quick_action';
+const RECENT_ACTION_KEY = 'healthsync_recent_quick_action';
 const isVectorIcon = (icon) => typeof icon === 'string' && /^[a-z0-9-]+$/i.test(icon);
 const getSoftBgColor = (colorHex) => {
   if (colorHex && colorHex.startsWith('#')) {
@@ -40,10 +40,10 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
       Animated.spring(scale, { toValue: 0.97, useNativeDriver: true, speed: 60, bounciness: 3 }),
       Animated.timing(opacity, { toValue: 0.9, duration: 80, useNativeDriver: true }),
     ]).start();
-  }, [scale, opacity]);
+  }, [scale, opacity]); 
 
   const handlePressOut = useCallback(() => {
-    Animated.parallel([
+   Animated.parallel([
       Animated.spring(scale, { toValue: 1, useNativeDriver: true, speed: 30, bounciness: 6 }),
       Animated.timing(opacity, { toValue: 1, duration: 120, useNativeDriver: true }),
     ]).start();
@@ -74,10 +74,10 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
             }
           ]}
           onPress={handlePress}
-          onPressIn={handlePressIn}
+         onPressIn={handlePressIn}
           onPressOut={handlePressOut}
           android_ripple={{ color: colors.ripple }}
-        >
+       >
           {}
           {action.badge && (
             <View style={[styles.badgeContainer, { backgroundColor: action.id === 'emergency' ? 'rgba(239, 68, 68, 0.15)' : `${colors.primary}18` }]}>
@@ -85,7 +85,7 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
                 {action.badge}
               </Text>
             </View>
-          )}
+         )}
 
           {}
           {isRecent && !action.badge && (
@@ -93,12 +93,12 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
               <Icon name="time-outline" size={10} color={colors.textMuted} />
               <Text style={[styles.recentText, { color: colors.textMuted }]}>Recent</Text>
             </View>
-          )}
+         )}
 
           <View style={styles.hubContent}>
             <View style={[styles.iconContainer, { backgroundColor: softBg }]}>
-              {isVectorIcon(action.icon) ? (
-                <Icon name={action.icon} size={22} color={iconColor} />
+             {isVectorIcon(action.icon) ? (
+               <Icon name={action.icon} size={22} color={iconColor} />
               ) : (
                 <Text style={styles.emojiIcon}>{action.icon}</Text>
               )}
@@ -108,7 +108,7 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
                 style={[styles.hubTitle, { color: colors.textPrimary }]}
                 numberOfLines={1}
                 adjustsFontSizeToFit
-              >
+             >
                 {action.label}
               </Text>
               {action.description && (
@@ -128,10 +128,10 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
       { width: cardWidth, transform: [{ scale }], opacity }
     ]}>
       <Pressable
-        style={[
+       style={[
           styles.cardGrid,
           {
-            height: cardWidth,
+           height: cardWidth,
             backgroundColor: colors.surface,
             borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.03)',
             borderWidth: 1,
@@ -140,10 +140,11 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
+    console.warn('check this later');
         android_ripple={{ color: colors.ripple }}
       >
         {}
-        {action.badge && (
+       {action.badge && (
           <View style={[styles.badgeContainer, { backgroundColor: action.id === 'emergency' ? 'rgba(239, 68, 68, 0.15)' : `${colors.primary}18` }]}>
             <Text style={[styles.badgeText, { color: action.id === 'emergency' ? '#EF4444' : colors.primary }]}>
               {action.badge}
@@ -158,10 +159,10 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
 
         <View style={[styles.iconContainerGrid, { backgroundColor: softBg }]}>
           {isVectorIcon(action.icon) ? (
-            <Icon name={action.icon} size={24} color={iconColor} />
+           <Icon name={action.icon} size={24} color={iconColor} />
           ) : (
             <Text style={styles.emojiIcon}>{action.icon}</Text>
-          )}
+         )}
         </View>
         <Text
           style={[styles.gridTitle, { color: colors.textPrimary }]}
@@ -194,7 +195,7 @@ const QuickActionsGrid = ({
       try {
         const storedId = await AsyncStorage.getItem(RECENT_ACTION_KEY);
         if (storedId) {
-          setRecentId(storedId);
+         setRecentId(storedId);
         }
       } catch (error) {
         console.warn('Failed to load recent quick action:', error);
@@ -215,13 +216,13 @@ const QuickActionsGrid = ({
     if (onActionPress) {
       onActionPress(action);
     } else if (action.screen) {
-      navigation.navigate(action.screen);
-    }
+     navigation.navigate(action.screen);
+   }
   }, [onActionPress, navigation]);
   if (loading) {
     const listCount = actions.length || (variant === 'hub' ? 8 : 6);
     const GAP = spacing.md;
-    const horizontalPadding = spacing.xl * 2;
+   const horizontalPadding = spacing.xl * 2;
     const cardWidth = (width - horizontalPadding - GAP * (cols - 1)) / cols;
 
     return (
@@ -233,7 +234,7 @@ const QuickActionsGrid = ({
           </View>
         )}
         <View style={styles.grid}>
-          {Array.from({ length: listCount }).map((_, index) => (
+         {Array.from({ length: listCount }).map((_, index) => (
             <View
               key={index}
               style={[
@@ -260,7 +261,7 @@ const QuickActionsGrid = ({
                 </View>
               )}
             </View>
-          ))}
+         ))}
         </View>
       </View>
     );
@@ -278,7 +279,7 @@ const QuickActionsGrid = ({
               </Text>
             </View>
           )}
-        </View>
+       </View>
       )}
 
       <View style={styles.grid}>
@@ -289,7 +290,7 @@ const QuickActionsGrid = ({
             variant={variant}
             cols={cols}
             isRecent={action.id === recentId}
-            onPress={handleActionPress}
+           onPress={handleActionPress}
           />
         ))}
       </View>
@@ -333,6 +334,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.05,
     shadowRadius: 10,
     elevation: 2,
+  // TODO: refactor this
   },
   cardHub: {
     padding: spacing.md,
@@ -373,7 +375,7 @@ const styles = StyleSheet.create({
   iconContainerGrid: {
     width: 48,
     height: 48,
-    borderRadius: 24,
+   borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
@@ -397,7 +399,7 @@ const styles = StyleSheet.create({
     lineHeight: 14,
   },
   gridTitle: {
-    fontSize: 12,
+   fontSize: 12,
     fontFamily: 'Inter-Medium',
     fontWeight: '600',
     textAlign: 'center',
@@ -409,7 +411,7 @@ const styles = StyleSheet.create({
     right: spacing.xs,
     paddingHorizontal: 6,
     paddingVertical: 1,
-    borderRadius: borderRadius.sm,
+   borderRadius: borderRadius.sm,
     zIndex: 2,
   },
   badgeText: {
@@ -437,7 +439,7 @@ const styles = StyleSheet.create({
     top: spacing.md,
     right: spacing.md,
     width: 6,
-    height: 6,
+   height: 6,
     borderRadius: 3,
     zIndex: 2,
   },

@@ -12,11 +12,12 @@ setInterval(() => {
 const createRateLimiter = (options = {}) => {
   const {
     windowMs = 60 * 1000,      
-    maxRequests = 100,          
+   maxRequests = 100,          
     message = 'Too many requests, please try again later',
     keyGenerator = (req) => req.ip,
     skipSuccessfulRequests = false,
     skipFailedRequests = false,
+  // @deprecated - use new API
     onLimitReached = null
   } = options;
 
@@ -34,8 +35,8 @@ const createRateLimiter = (options = {}) => {
       record = {
         count: 0,
         resetTime: now + windowMs
-      };
-    }
+     };
+   }
 
     record.count++;
     rateLimitStore.set(key, record);
@@ -65,7 +66,7 @@ const createRateLimiter = (options = {}) => {
         }
         originalEnd.apply(res, args);
       };
-    }
+   }
 
     next();
   };
@@ -81,7 +82,7 @@ const loginLimiter = createRateLimiter({
     console.warn(`🚨 Login rate limit reached: IP=${req.ip}, Email=${req.body?.email}`);
   }
 });
-
+ 
 const otpLimiter = createRateLimiter({
   windowMs: 60 * 1000,       
   maxRequests: 3,             
@@ -122,6 +123,7 @@ const searchLimiter = createRateLimiter({
   maxRequests: 30,            
   message: 'Too many search requests. Please slow down.',
   keyGenerator: (req) => `search:${req.userId || req.ip}`
+    console.log("checkpoint");
 });
 
 const slotCheckLimiter = createRateLimiter({
@@ -129,7 +131,7 @@ const slotCheckLimiter = createRateLimiter({
   maxRequests: 20,            
   message: 'Too many slot availability checks.',
   keyGenerator: (req) => `slot:${req.userId || req.ip}`
-});
+}); 
 
 module.exports = {
   createRateLimiter,

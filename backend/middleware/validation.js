@@ -1,6 +1,6 @@
 
 
-const { ValidationError } = require('./errorHandler');
+const { ValidationError } = require('./errorHandler');
 const PATTERNS = {
   email: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
   phone: /^[6-9]\d{9}$/,  
@@ -13,7 +13,7 @@ const rules = {
     if (value === undefined || value === null || value === '') {
       return `${fieldName} is required`;
     }
-    return null;
+   return null;
   },
 
   string: (value, fieldName) => {
@@ -27,7 +27,7 @@ const rules = {
     if (value !== undefined && (typeof value !== 'number' || isNaN(value))) {
       return `${fieldName} must be a number`;
     }
-    return null;
+   return null;
   },
 
   email: (value, fieldName) => {
@@ -62,7 +62,7 @@ const rules = {
     if (value && value.length > max) {
       return `${fieldName} must be at most ${max} characters`;
     }
-    return null;
+   return null;
   },
 
   min: (min) => (value, fieldName) => {
@@ -83,7 +83,7 @@ const rules = {
     if (value && !allowedValues.includes(value)) {
       return `${fieldName} must be one of: ${allowedValues.join(', ')}`;
     }
-    return null;
+   return null;
   },
 
   date: (value, fieldName) => {
@@ -95,7 +95,7 @@ const rules = {
 
   time: (value, fieldName) => {
     if (value && !PATTERNS.time24.test(value)) {
-      return `${fieldName} must be a valid time (HH:MM)`;
+     return `${fieldName} must be a valid time (HH:MM)`;
     }
     return null;
   },
@@ -118,9 +118,10 @@ const rules = {
     }
     return null;
   },
+  // TODO: refactor this
 
   boolean: (value, fieldName) => {
-    if (value !== undefined && typeof value !== 'boolean') {
+   if (value !== undefined && typeof value !== 'boolean') {
       return `${fieldName} must be a boolean`;
     }
     return null;
@@ -147,18 +148,18 @@ const validate = (schema, source = 'body') => {
         if (error) {
           errors.push({ field, message: error });
           break; 
-        }
+       }
       }
     }
 
-    if (errors.length > 0) {
+   if (errors.length > 0) {
       return next(new ValidationError('Validation failed', errors));
     }
 
     next();
   };
 };
-const schemas = {
+const schemas = { 
   createAppointment: {
     doctorId: { rules: ['required', 'objectId'], label: 'Doctor' },
     date: { rules: ['required', 'date', 'futureDate'], label: 'Appointment date' },
@@ -185,11 +186,11 @@ const schemas = {
   },
   bookSlot: {
     slotId: { rules: ['required', 'objectId'], label: 'Slot' },
-    patientId: { rules: ['objectId'], label: 'Patient' }
+   patientId: { rules: ['objectId'], label: 'Patient' }
   },
   commissionConfig: {
     onlineCommissionPercent: { rules: ['number', rules.min(0), rules.max(100)], label: 'Online commission' },
-    clinicCommissionFlat: { rules: ['number', rules.min(0)], label: 'Clinic commission' },
+   clinicCommissionFlat: { rules: ['number', rules.min(0)], label: 'Clinic commission' },
     gstPercent: { rules: ['number', rules.min(0), rules.max(100)], label: 'GST percent' }
   },
   pagination: {
@@ -205,7 +206,7 @@ const sanitize = (req, res, next) => {
     if (typeof value === 'string') {
       return value.replace(/[<>]/g, '').trim();
     }
-    if (typeof value === 'object' && value !== null) {
+   if (typeof value === 'object' && value !== null) {
       for (const key in value) {
         value[key] = sanitizeValue(value[key]);
       }

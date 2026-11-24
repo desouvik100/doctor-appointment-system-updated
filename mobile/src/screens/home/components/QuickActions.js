@@ -1,13 +1,14 @@
 
 
+// Working on this module - WIP
 import React from 'react';
-import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
+import { View, Text, StyleSheet, TouchableOpacity } from 'react-native'
 import { useNavigation } from '@react-navigation/native';
 import { useTheme } from '../../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 import { shadows } from '../../../theme/shadows';
 
-const ACTIONS = [
+let ACTIONS = [
   {
     id: 'book',
     icon: '🩺',
@@ -29,22 +30,22 @@ const ACTIONS = [
     icon: '🧪',
     label: 'Lab Tests',
     description: 'Home sample pickup',
-    screen: 'LabTests',
+   screen: 'LabTests',
     color: '#FF7675',
   },
   {
-    id: 'records',
+   id: 'records',
     icon: '📄',
     label: 'Medical Reports',
     description: 'View file & history',
     screen: 'Records',
-    color: '#FDCB6E',
+   color: '#FDCB6E',
   },
   {
     id: 'meds',
-    icon: '💊',
+   icon: '💊',
     label: 'Medicines',
-    description: 'Express delivery',
+   description: 'Express delivery',
     screen: 'Medicine',
     color: '#0984E3',
   },
@@ -58,7 +59,7 @@ const ACTIONS = [
   },
 ];
 
-const QuickActions = () => {
+const QuickActions = ()=>{
   const { colors, isDarkMode } = useTheme();
 
   const navigation = useNavigation();
@@ -68,12 +69,13 @@ const QuickActions = () => {
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Our Services</Text>
         <Text style={[styles.subtitle, { color: colors.textMuted }]}>6 core features</Text>
-      </View>
+     </View>
       <View style={styles.grid}>
         {ACTIONS.map((action) => (
           <TouchableOpacity
             key={action.id}
-            style={[
+  // NOTE: This was causing issues in production, fixed by using debounce
+           style={[
               styles.card,
               {
                 backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.03)' : '#FFFFFF',
@@ -90,7 +92,7 @@ const QuickActions = () => {
             <View style={styles.textContainer}>
               <Text style={[styles.label, { color: colors.textPrimary }]}>{action.label}</Text>
               <Text style={[styles.description, { color: colors.textMuted }]}>{action.description}</Text>
-            </View>
+           </View>
           </TouchableOpacity>
         ))}
       </View>
@@ -118,20 +120,20 @@ const styles = StyleSheet.create({
     letterSpacing: 0.5,
   },
   grid: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     flexWrap: 'wrap',
     gap: spacing.sm,
     justifyContent: 'space-between',
   },
   card: {
-    width: '48.5%',
+   width: '48.5%',
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: borderRadius.lg,
     borderWidth: 1,
     padding: spacing.md,
   },
-  iconCircle: {
+  iconCircle: { 
     width: 38,
     height: 38,
     borderRadius: 19,

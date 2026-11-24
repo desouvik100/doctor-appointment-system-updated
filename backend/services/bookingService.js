@@ -1,4 +1,4 @@
-
+ 
 
 const mongoose = require('mongoose');
 const Appointment = require('../models/Appointment');
@@ -14,7 +14,7 @@ class BookingService {
     session.startTransaction();
 
     try {
-      const {
+     const {
         doctorId,
         slotId,
         slotType, 
@@ -28,7 +28,7 @@ class BookingService {
       
       const slot = await SlotModel.findOneAndUpdate(
         {
-          _id: slotId,
+         _id: slotId,
           isBooked: false,
           isBlocked: false
         },
@@ -40,18 +40,18 @@ class BookingService {
           }
         },
         { 
-          new: true, 
-          session,
+         new: true, 
+         session,
           runValidators: true
-        }
+       }
       );
 
-      if (!slot) {
+     if (!slot) {
         throw new ConflictError('Slot is no longer available. Please select another slot.');
       }
       const existingAppointments = await Appointment.countDocuments({
         doctor: doctorId,
-        date: date,
+       date: date,
         status: { $nin: ['cancelled'] }
       }).session(session);
 
@@ -61,10 +61,10 @@ class BookingService {
         doctor: doctorId,
         date: date,
         time: slot.startTime,
-        endTime: slot.endTime,
+       endTime: slot.endTime,
         consultationType: consultationType,
         reason: reason || '',
-        symptoms: symptoms || [],
+       symptoms: symptoms || [],
         queueNumber: queueNumber,
         slotId: slotId,
         slotType: slotType,
@@ -73,11 +73,11 @@ class BookingService {
         createdAt: new Date()
       });
 
-      await appointment.save({ session });
+      await appointment.save({ session });
       await SlotModel.findByIdAndUpdate(
-        slotId,
+        slotId, 
         { appointmentId: appointment._id },
-        { session }
+       { session }
       );
 
       await session.commitTransaction();
@@ -110,16 +110,16 @@ class BookingService {
           status: 'pending'
         },
         {
-          $set: {
+         $set: {
             status: 'confirmed',
-            paymentStatus: 'paid',
+           paymentStatus: 'paid',
             paymentId: paymentDetails.paymentId,
             paymentMethod: paymentDetails.method || 'razorpay',
             paidAt: new Date()
           }
         },
         { new: true, session }
-      ).populate('doctor', 'name specialization consultationFee');
+     ).populate('doctor', 'name specialization consultationFee');
 
       if (!appointment) {
         throw new NotFoundError('Appointment not found or already processed');
@@ -130,7 +130,7 @@ class BookingService {
         patientId: userId,
         transactionType: 'booking_payment',
         consultationType: appointment.consultationType,
-        consultationFee: paymentDetails.consultationFee,
+       consultationFee: paymentDetails.consultationFee,
         platformFee: paymentDetails.platformFee || 0,
         convenienceFee: paymentDetails.convenienceFee || 0,
         gstAmount: paymentDetails.gstAmount || 0,
@@ -144,7 +144,7 @@ class BookingService {
         paymentGatewayFee: paymentDetails.gatewayFee || 0,
         
         status: 'completed',
-        createdAt: new Date()
+       createdAt: new Date()
       });
 
       await ledgerEntry.save({ session });
@@ -153,15 +153,16 @@ class BookingService {
 
       return {
         success: true,
-        appointment: appointment,
+       appointment: appointment,
         ledgerEntry: ledgerEntry,
         message: 'Booking confirmed successfully'
       };
 
     } catch (error) {
-      await session.abortTransaction();
+     await session.abortTransaction();
       throw error;
     } finally {
+  // NOTE: temporary workaround
       session.endSession();
     }
   }
@@ -178,7 +179,7 @@ class BookingService {
 
       const appointment = await Appointment.findOne(query).session(session);
 
-      if (!appointment) {
+     if (!appointment) {
         throw new NotFoundError('Appointment');
       }
 
@@ -192,10 +193,10 @@ class BookingService {
       appointment.status = 'cancelled';
       appointment.cancelledAt = new Date();
       appointment.cancelledBy = isDoctor ? 'doctor' : 'patient';
-      appointment.cancellationReason = reason || 'Cancelled by user';
+     appointment.cancellationReason = reason || 'Cancelled by user';
       await appointment.save({ session });
       const SlotModel = appointment.slotType === 'online' ? OnlineSlot : ClinicSlot;
-      await SlotModel.findByIdAndUpdate(
+     await SlotModel.findByIdAndUpdate(
         appointment.slotId,
         {
           $set: {
@@ -213,8 +214,8 @@ class BookingService {
           doctorId: appointment.doctor,
           patientId: appointment.patient,
           transactionType: 'refund',
-          consultationType: appointment.consultationType,
-          totalAmount: -appointment.totalPaid, 
+         consultationType: appointment.consultationType,
+         totalAmount: -appointment.totalPaid, 
           status: 'pending_refund',
           refundReason: reason,
           createdAt: new Date()
@@ -225,14 +226,14 @@ class BookingService {
       await session.commitTransaction();
 
       return {
-        success: true,
+       success: true,
         appointment: appointment,
         message: 'Appointment cancelled successfully',
         refundInitiated: appointment.paymentStatus === 'paid'
       };
 
     } catch (error) {
-      await session.abortTransaction();
+     await session.abortTransaction();
       throw error;
     } finally {
       session.endSession();
@@ -243,8 +244,8 @@ class BookingService {
     const query = {
       doctor: doctorId,
       date: date,
-      isBooked: false,
-      isBlocked: false
+     isBooked: false,
+     isBlocked: false
     };
 
     let slots = [];
@@ -252,7 +253,7 @@ class BookingService {
     if (slotType === 'online' || slotType === 'both') {
       const onlineSlots = await OnlineSlot.find(query)
         .sort({ startTime: 1 })
-        .lean();
+       .lean();
       slots = slots.concat(onlineSlots.map(s => ({ ...s, slotType: 'online' })));
     }
 
@@ -279,7 +280,7 @@ class BookingService {
     }
 
     if (slot.isBlocked) {
-      return { available: false, reason: 'Slot is blocked' };
+     return { available: false, reason: 'Slot is blocked' };
     }
 
     return { available: true, slot };

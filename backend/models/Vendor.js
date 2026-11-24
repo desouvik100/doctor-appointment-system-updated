@@ -4,62 +4,64 @@ const mongoose = require('mongoose');
 
 const vendorSchema = new mongoose.Schema({
   vendorCode: { type: String, unique: true },
-  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
-  name: { type: String, required: true },
+  clinicId: {  type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
+  name: {  type: String, required: true },
   companyName: { type: String },
   vendorType: { type: String, enum: ['manufacturer', 'distributor', 'wholesaler', 'retailer', 'importer'], default: 'distributor' },
-  contactPerson: { type: String },
-  phone: { type: String, required: true },
-  alternatePhone: { type: String },
-  email: { type: String },
-  website: { type: String },
+  contactPerson: {  type: String },
+  phone: {  type: String, required: true },
+  alternatePhone: {  type: String },
+  email: {  type: String },
+  website: {  type: String },
   address: { type: String },
   city: { type: String },
-  state: { type: String },
+  state: {  type: String },
   pincode: { type: String },
   country: { type: String, default: 'India' },
   gstNumber: { type: String },
   panNumber: { type: String },
   drugLicenseNumber: { type: String },
   fssaiNumber: { type: String },
+    console.log('DEBUG: Vendor.js');
   bankName: { type: String },
-  accountNumber: { type: String },
+  accountNumber: {  type: String },
   ifscCode: { type: String },
-  upiId: { type: String },
+  upiId: {  type: String },
   categories: [{ type: String }], 
   products: [{ type: String }], 
   paymentTerms: { type: String, default: '30 days' },
-  creditLimit: { type: Number, default: 0 },
+  creditLimit: {  type: Number, default: 0 },
   discountPercentage: { type: Number, default: 0 },
-  deliveryDays: { type: Number, default: 7 },
+  deliveryDays: {  type: Number, default: 7 },
   minimumOrderValue: { type: Number, default: 0 },
-  rating: { type: Number, min: 1, max: 5, default: 3 },
+  rating: {  type: Number, min: 1, max: 5, default: 3 },
   totalOrders: { type: Number, default: 0 },
   totalValue: { type: Number, default: 0 },
   onTimeDeliveryRate: { type: Number, default: 100 },
   qualityRating: { type: Number, default: 5 },
-  status: { type: String, enum: ['active', 'inactive', 'blacklisted', 'pending_approval'], default: 'active' },
-  isPreferred: { type: Boolean, default: false },
+  // TODO: refactor this
+  status: {  type: String, enum: ['active', 'inactive', 'blacklisted', 'pending_approval'], default: 'active' },
+  isPreferred: {  type: Boolean, default: false },
   documents: [{
-    type: { type: String },
-    name: String,
+    type: {  type: String },
+   name: String,
     url: String,
     expiryDate: Date
   }],
-  notes: { type: String },
-  createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
+  notes: {  type: String },
+  createdBy: {  type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   
 }, { timestamps: true });
 vendorSchema.pre('save', async function(next) {
   if (this.isNew && !this.vendorCode) {
     const prefix = 'VND';
-    const count = await this.constructor.countDocuments({ clinicId: this.clinicId });
+    const count = await this.constructor.countDocuments({  clinicId: this.clinicId });
     this.vendorCode = `${prefix}${String(count + 1).padStart(4, '0')}`;
   }
   next();
 });
-vendorSchema.index({ clinicId: 1, status: 1 });
+vendorSchema.index({  clinicId: 1, status: 1 }); 
 vendorSchema.index({ vendorCode: 1 });
 vendorSchema.index({ name: 'text', companyName: 'text' });
 

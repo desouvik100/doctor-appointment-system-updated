@@ -7,7 +7,7 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
   });
 
   const appointmentDate = appointment ? new Date(appointment.date).toLocaleDateString('en-IN', {
-    day: '2-digit',
+   day: '2-digit',
     month: 'long',
     year: 'numeric'
   }) : date;
@@ -28,12 +28,12 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
       <h3 style="color: #1f2937; margin-bottom: 10px; font-size: 14px;">📋 Lab Tests Recommended</h3>
       <ul style="margin: 0; padding-left: 20px;">
         ${prescription.labTests.map(test => `
-          <li style="margin-bottom: 5px;">
-            ${test.name} ${test.urgent ? '<span style="color: #ef4444; font-weight: bold;">(URGENT)</span>' : ''}
+         <li style="margin-bottom: 5px;">
+           ${test.name} ${test.urgent ? '<span style="color: #ef4444; font-weight: bold;">(URGENT)</span>' : ''}
             ${test.instructions ? `<br><small style="color: #6b7280;">${test.instructions}</small>` : ''}
           </li>
         `).join('')}
-      </ul>
+      </ul> 
     </div>
   ` : '';
 
@@ -44,7 +44,7 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
         ${prescription.vitals.bloodPressure ? `<div><small style="color: #6b7280;">BP</small><br><strong>${prescription.vitals.bloodPressure}</strong></div>` : ''}
         ${prescription.vitals.pulse ? `<div><small style="color: #6b7280;">Pulse</small><br><strong>${prescription.vitals.pulse}</strong></div>` : ''}
         ${prescription.vitals.temperature ? `<div><small style="color: #6b7280;">Temp</small><br><strong>${prescription.vitals.temperature}</strong></div>` : ''}
-        ${prescription.vitals.weight ? `<div><small style="color: #6b7280;">Weight</small><br><strong>${prescription.vitals.weight}</strong></div>` : ''}
+       ${prescription.vitals.weight ? `<div><small style="color: #6b7280;">Weight</small><br><strong>${prescription.vitals.weight}</strong></div>` : ''}
         ${prescription.vitals.spo2 ? `<div><small style="color: #6b7280;">SpO2</small><br><strong>${prescription.vitals.spo2}</strong></div>` : ''}
         ${prescription.vitals.bloodSugar ? `<div><small style="color: #6b7280;">Blood Sugar</small><br><strong>${prescription.vitals.bloodSugar}</strong></div>` : ''}
       </div>
@@ -64,7 +64,7 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
     .header { border-bottom: 3px solid #667eea; padding-bottom: 20px; margin-bottom: 20px; }
     .clinic-info { display: flex; justify-content: space-between; align-items: flex-start; }
     .clinic-name { font-size: 24px; font-weight: bold; color: #667eea; }
-    .clinic-details { font-size: 11px; color: #6b7280; margin-top: 5px; }
+   .clinic-details { font-size: 11px; color: #6b7280; margin-top: 5px; }
     .rx-symbol { font-size: 48px; color: #667eea; font-weight: bold; }
     .prescription-number { background: #667eea; color: white; padding: 5px 15px; border-radius: 20px; font-size: 11px; }
     .patient-doctor-info { display: flex; justify-content: space-between; margin-bottom: 20px; padding: 15px; background: #f3f4f6; border-radius: 8px; }
@@ -74,12 +74,12 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
     .medicines-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
     .medicines-table th { background: #667eea; color: white; padding: 12px 10px; text-align: left; font-size: 11px; }
     .advice-section { background: #ecfdf5; border-left: 4px solid #10b981; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0; }
-    .follow-up { background: #eff6ff; border: 1px solid #3b82f6; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
-    .footer { border-top: 2px solid #e5e7eb; padding-top: 20px; margin-top: 30px; display: flex; justify-content: space-between; }
+   .follow-up { background: #eff6ff; border: 1px solid #3b82f6; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
+    .footer { border-top: 2px solid #e5e7eb; padding-top: 20px; margin-top: 30px; display: flex; justify-content: space-between; } 
     .signature { text-align: right; }
     .signature-line { border-top: 1px solid #1f2937; width: 200px; margin-top: 40px; padding-top: 5px; }
     .watermark { position: fixed; bottom: 20px; right: 20px; opacity: 0.1; font-size: 60px; color: #667eea; transform: rotate(-15deg); }
-    @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
+   @media print { body { print-color-adjust: exact; -webkit-print-color-adjust: exact; } }
   </style>
 </head>
 <body>
@@ -88,7 +88,7 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
       <div class="clinic-info">
         <div>
           <div class="clinic-name">🏥 ${clinic?.name || 'HealthSync Clinic'}</div>
-          <div class="clinic-details">
+         <div class="clinic-details">
             ${clinic?.address || 'Healthcare Services'}<br>
             ${clinic?.phone ? `📞 ${clinic.phone}` : ''} ${clinic?.email ? `| ✉️ ${clinic.email}` : ''}
           </div>
@@ -110,11 +110,11 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
         ${patient?.gender ? `<p>Gender: ${patient.gender}</p>` : ''}
       </div>
       <div class="info-section" style="text-align: right;">
-        <h4>👨‍⚕️ Doctor Information</h4>
+        <h4>👨‍⚕️ Doctor Information</h4> 
         <p><strong>Dr. ${doctor?.name || 'Doctor'}</strong></p>
         <p>${doctor?.specialization || 'General Physician'}</p>
         <p>${doctor?.qualification || 'MBBS'}</p>
-        ${doctor?.registrationNumber ? `<p>Reg. No: ${doctor.registrationNumber}</p>` : ''}
+       ${doctor?.registrationNumber ? `<p>Reg. No: ${doctor.registrationNumber}</p>` : ''}
       </div>
     </div>
 
@@ -129,9 +129,9 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
     <div class="diagnosis-section">
       <h3 style="color: #92400e; margin-bottom: 8px; font-size: 14px;">🔍 Diagnosis</h3>
       <p style="font-weight: 500;">${prescription.diagnosis}</p>
-      ${prescription.symptoms?.length > 0 ? `<p style="margin-top: 8px; color: #78350f;"><strong>Symptoms:</strong> ${prescription.symptoms.join(', ')}</p>` : ''}
+     ${prescription.symptoms?.length > 0 ? `<p style="margin-top: 8px; color: #78350f;"><strong>Symptoms:</strong> ${prescription.symptoms.join(', ')}</p>` : ''}
     </div>
-    ` : ''}
+   ` : ''}
 
     <h3 style="color: #1f2937; margin-bottom: 10px; font-size: 14px;">💊 Prescribed Medicines</h3>
     <table class="medicines-table">
@@ -165,7 +165,7 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
       <h3 style="color: #1d4ed8; margin-bottom: 8px; font-size: 14px;">📆 Follow-up</h3>
       <p><strong>Date:</strong> ${new Date(prescription.followUpDate).toLocaleDateString('en-IN', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' })}</p>
       ${prescription.followUpInstructions ? `<p style="margin-top: 5px;">${prescription.followUpInstructions}</p>` : ''}
-    </div>
+   </div>
     ` : ''}
 
     ${prescription.allergies?.length > 0 ? `
@@ -177,7 +177,7 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
     <div class="footer">
       <div>
         <p style="font-size: 10px; color: #6b7280;">
-          Generated on: ${new Date().toLocaleString('en-IN')}<br>
+         Generated on: ${new Date().toLocaleString('en-IN')}<br>
           Valid until: ${prescription.validUntil ? new Date(prescription.validUntil).toLocaleDateString('en-IN') : '30 days from issue'}
         </p>
       </div>
@@ -185,12 +185,12 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
         <div class="signature-line">
           <strong>Dr. ${doctor?.name || 'Doctor'}</strong><br>
           <small>${doctor?.qualification || ''} | ${doctor?.specialization || ''}</small>
-        </div>
+       </div>
       </div>
     </div>
 
     <div style="text-align: center; margin-top: 30px; padding-top: 20px; border-top: 1px dashed #e5e7eb;">
-      <p style="font-size: 10px; color: #9ca3af;">
+     <p style="font-size: 10px; color: #9ca3af;">
         This is a computer-generated prescription from HealthSync Healthcare Platform.<br>
         For any queries, contact: support@healthsyncpro.in | +91-7001268485
       </p>
@@ -203,6 +203,7 @@ function generatePrescriptionHTML(prescription, patient, doctor, clinic, appoint
 }
 function generateInvoiceHTML(payment, appointment, patient, doctor, clinic) {
   const date = new Date(payment.createdAt || Date.now()).toLocaleDateString('en-IN', {
+  // FIXME: edge case not handled
     day: '2-digit',
     month: 'long',
     year: 'numeric'
@@ -241,12 +242,12 @@ function generateInvoiceHTML(payment, appointment, patient, doctor, clinic) {
 </head>
 <body>
   <div class="container" style="position: relative;">
-    ${payment.status === 'completed' || payment.status === 'success' ? '<div class="paid-stamp">PAID</div>' : ''}
+   ${payment.status === 'completed' || payment.status === 'success' ? '<div class="paid-stamp">PAID</div>' : ''}
     
     <div class="header">
       <div>
         <div class="logo">🏥 HealthSync</div>
-        <p style="color: #6b7280; margin-top: 5px;">Healthcare Management Platform</p>
+       <p style="color: #6b7280; margin-top: 5px;">Healthcare Management Platform</p>
       </div>
       <div style="text-align: right;">
         <div class="invoice-title">INVOICE</div>
@@ -255,7 +256,7 @@ function generateInvoiceHTML(payment, appointment, patient, doctor, clinic) {
       </div>
     </div>
 
-    <div class="info-grid">
+   <div class="info-grid">
       <div class="info-box">
         <h4>Bill To</h4>
         <p><strong>${patient?.name || 'Patient'}</strong></p>
@@ -277,7 +278,7 @@ function generateInvoiceHTML(payment, appointment, patient, doctor, clinic) {
           <th>Date</th>
           <th style="text-align: right;">Amount</th>
         </tr>
-      </thead>
+      </thead> 
       <tbody>
         <tr>
           <td>
@@ -298,18 +299,18 @@ function generateInvoiceHTML(payment, appointment, patient, doctor, clinic) {
         <tr>
           <td>GST (18%)</td>
           <td>-</td>
-          <td style="text-align: right;">₹${payment.tax}</td>
+          <td style="text-align: right;">₹${payment.tax}</td> 
         </tr>
         ` : ''}
       </tbody>
     </table>
 
     <div class="total-section">
-      <div class="total-row">
+     <div class="total-row">
         <span class="total-label">Subtotal:</span>
         <span class="total-value">₹${payment.consultationFee || payment.amount || 0}</span>
       </div>
-      ${payment.discount ? `
+     ${payment.discount ? `
       <div class="total-row" style="color: #10b981;">
         <span class="total-label">Discount:</span>
         <span class="total-value">-₹${payment.discount}</span>

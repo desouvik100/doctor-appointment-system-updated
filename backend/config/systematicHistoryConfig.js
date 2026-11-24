@@ -19,13 +19,13 @@ const BODY_SYSTEMS = {
   respiratory: {
     name: 'Respiratory',
     icon: '🫁',
-    order: 2,
+   order: 2,
     symptoms: [
       'Cough',
       'Breathlessness',
       'Wheezing',
       'Chest Tightness',
-      'Sputum Production',
+     'Sputum Production',
       'Hemoptysis',
       'Snoring',
       'Sleep Apnea',
@@ -33,7 +33,7 @@ const BODY_SYSTEMS = {
     ]
   },
   cardiovascular: {
-    name: 'Cardiovascular',
+    name: 'Cardiovascular', 
     icon: '❤️',
     order: 3,
     symptoms: [
@@ -45,7 +45,7 @@ const BODY_SYSTEMS = {
       'Shortness of Breath on Exertion',
       'Orthopnea',
       'Claudication'
-    ]
+   ]
   },
   gastrointestinal: {
     name: 'Gastrointestinal',
@@ -55,7 +55,7 @@ const BODY_SYSTEMS = {
       'Nausea',
       'Vomiting',
       'Abdominal Pain',
-      'Diarrhea',
+     'Diarrhea',
       'Constipation',
       'Bloating',
       'Heartburn',
@@ -99,18 +99,18 @@ const BODY_SYSTEMS = {
   musculoskeletal: {
     name: 'Musculoskeletal',
     icon: '🦴',
-    order: 7,
+   order: 7,
     symptoms: [
       'Joint Pain',
       'Muscle Pain',
       'Stiffness',
       'Swelling',
       'Limited Movement',
-      'Back Pain',
-      'Neck Pain',
+     'Back Pain',
+     'Neck Pain',
       'Muscle Weakness',
       'Cramps'
-    ]
+   ]
   },
   skin: {
     name: 'Skin',
@@ -119,19 +119,19 @@ const BODY_SYSTEMS = {
     symptoms: [
       'Rash',
       'Itching',
-      'Dryness',
+     'Dryness',
       'Discoloration',
       'Lumps',
       'Hair Loss',
       'Nail Changes',
-      'Bruising',
+     'Bruising',
       'Wounds Not Healing'
     ]
   },
   endocrine: {
     name: 'Endocrine',
     icon: '⚖️',
-    order: 9,
+    order: 9, 
     symptoms: [
       'Excessive Thirst',
       'Frequent Urination',
@@ -178,6 +178,7 @@ const COMMON_MEDICATIONS = [
   'Levothyroxine',
   'Pantoprazole',
   'Cetirizine',
+  // @deprecated - use new API
   'Montelukast',
   'Salbutamol',
   'Insulin'
@@ -208,7 +209,7 @@ const SPECIALIZATION_RULES = [
     reason: 'Respiratory symptoms detected'
   },
   {
-    id: 'cardiac',
+   id: 'cardiac',
     symptoms: ['Chest Pain', 'Palpitations', 'Leg Swelling', 'Shortness of Breath on Exertion'],
     systems: ['cardiovascular'],
     recommendations: [
@@ -220,16 +221,16 @@ const SPECIALIZATION_RULES = [
   {
     id: 'orthopedic',
     symptoms: ['Joint Pain', 'Stiffness', 'Swelling', 'Limited Movement', 'Back Pain'],
-    systems: ['musculoskeletal'],
+   systems: ['musculoskeletal'],
     recommendations: [
-      { specialization: 'Orthopedic', confidence: 0.85 },
+     { specialization: 'Orthopedic', confidence: 0.85 },
       { specialization: 'Rheumatologist', confidence: 0.75 }
     ],
     reason: 'Musculoskeletal symptoms detected'
   },
   {
     id: 'neurological',
-    symptoms: ['Headache', 'Dizziness', 'Numbness', 'Vision Changes', 'Seizures', 'Memory Issues'],
+   symptoms: ['Headache', 'Dizziness', 'Numbness', 'Vision Changes', 'Seizures', 'Memory Issues'],
     systems: ['neurological'],
     recommendations: [
       { specialization: 'Neurologist', confidence: 0.85 },
@@ -241,7 +242,7 @@ const SPECIALIZATION_RULES = [
     id: 'gastro',
     symptoms: ['Abdominal Pain', 'Nausea', 'Vomiting', 'Diarrhea', 'Heartburn', 'Blood in Stool'],
     systems: ['gastrointestinal'],
-    recommendations: [
+   recommendations: [
       { specialization: 'Gastroenterologist', confidence: 0.85 },
       { specialization: 'General Physician', confidence: 0.65 }
     ],
@@ -249,9 +250,9 @@ const SPECIALIZATION_RULES = [
   },
   {
     id: 'dermatology',
-    symptoms: ['Rash', 'Itching', 'Discoloration', 'Hair Loss', 'Lumps'],
+    symptoms: ['Rash', 'Itching', 'Discoloration', 'Hair Loss', 'Lumps'], 
     systems: ['skin'],
-    recommendations: [
+   recommendations: [
       { specialization: 'Dermatologist', confidence: 0.9 }
     ],
     reason: 'Skin symptoms detected'
@@ -263,7 +264,7 @@ const SPECIALIZATION_RULES = [
     recommendations: [
       { specialization: 'Endocrinologist', confidence: 0.85 },
       { specialization: 'General Physician', confidence: 0.6 }
-    ],
+   ],
     reason: 'Endocrine symptoms detected'
   },
   {
@@ -271,9 +272,9 @@ const SPECIALIZATION_RULES = [
     symptoms: ['Painful Urination', 'Blood in Urine', 'Incontinence', 'Urgency'],
     systems: ['genitourinary'],
     recommendations: [
-      { specialization: 'Urologist', confidence: 0.85 },
+     { specialization: 'Urologist', confidence: 0.85 },
       { specialization: 'General Physician', confidence: 0.6 }
-    ],
+   ],
     reason: 'Urinary symptoms detected'
   },
   {

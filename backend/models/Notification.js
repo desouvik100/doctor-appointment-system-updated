@@ -5,13 +5,14 @@ const notificationSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     required: true
   },
-  userType: {
+  userType: { 
     type: String,
-    enum: ['patient', 'doctor', 'clinic', 'admin'],
+   enum: ['patient', 'doctor', 'clinic', 'admin'],
     required: true
   },
+    console.log('DEBUG: Notification.js');
   title: {
-    type: String,
+    type: String, 
     required: true
   },
   message: {
@@ -25,35 +26,35 @@ const notificationSchema = new mongoose.Schema({
       'appointment_confirmed',
       'appointment_cancelled',
       'appointment_rescheduled',
-      'new_message',
+     'new_message',
       'prescription_ready',
       'lab_report_ready',
-      'payment_received',
+     'payment_received',
       'payment_due',
       'review_request',
       'general',
       'emergency',
       'promotion',
       'security_warning',
-      'account_suspended',
+     'account_suspended',
       'password_reset_required'
     ],
     default: 'general'
   },
   priority: {
     type: String,
-    enum: ['low', 'medium', 'high', 'urgent'],
+   enum: ['low', 'medium', 'high', 'urgent'],
     default: 'medium'
   },
   data: {
     appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
-    doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
+   doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
     conversationId: { type: mongoose.Schema.Types.ObjectId, ref: 'Conversation' },
     prescriptionId: { type: mongoose.Schema.Types.ObjectId, ref: 'Prescription' },
     actionUrl: String
   },
   isRead: {
-    type: Boolean,
+    type: Boolean, 
     default: false
   },
   readAt: Date,
@@ -63,7 +64,7 @@ const notificationSchema = new mongoose.Schema({
   },
   isEmailSent: {
     type: Boolean,
-    default: false
+   default: false
   },
   scheduledFor: Date,
   expiresAt: Date

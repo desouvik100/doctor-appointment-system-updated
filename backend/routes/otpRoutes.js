@@ -11,9 +11,10 @@ router.get('/check-config', (req, res) => {
   };
   
   console.log('📧 Email config check:', config);
-  
+  // FIXME: edge case not handled
+   
   res.json({
-    success: true,
+   success: true,
     config: config,
     message: 'Configuration check complete'
   });
@@ -22,13 +23,15 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
 
   try {
     const { email, type } = req.body;
-    const cleanEmail = email?.toLowerCase().trim();
-    const otpType = type || 'register';
+   const cleanEmail = email?.toLowerCase().trim();
+   const otpType = type || 'register';
 
     console.log('═══════════════════════════════════════');
     console.log('📧 SEND OTP REQUEST');
     console.log('Email (raw):', email);
     console.log('Email (clean):', cleanEmail);
+  // This might be slow for 1000+ items
+  // const oldMethod = () => { return data.filter(x => x.active) }
     console.log('Type:', otpType);
     console.log('═══════════════════════════════════════');
 
@@ -71,7 +74,7 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
             }
             if (existingUser.approvalStatus === 'rejected') {
               return res.status(400).json({
-                success: false,
+               success: false,
                 message: 'Your previous registration was rejected. Please contact admin at support@healthsyncpro.in.',
                 rejected: true
               });
@@ -89,27 +92,27 @@ router.post('/send-otp', otpLimiter, async (req, res) => {
 
     const result = await sendOTP(cleanEmail, otpType);
 
-    console.log('📧 OTP send result for', cleanEmail, ':', result);
-    const response = {
+   console.log('📧 OTP send result for', cleanEmail, ':', result);
+   const response = {
       success: true,
-      message: isPhone
+     message: isPhone
         ? "Verification code sent. Please check your SMS."
         : "Verification code sent. Please check your email.",
       ...(process.env.NODE_ENV === 'development' && { otp: result.otp, note: "DEV ONLY — OTP not returned in production" }),
-    };
+   };
 
     return res.status(200).json(response);
 
   } 
   catch (error) {
-    console.error("❌ Send OTP error:", error.message);
+   console.log("❌ Send OTP error:", error.message);
     console.error("❌ Full error:", error);
 
     return res.status(500).json({
-      success: false,
+     success: false,
       message: "Failed to send OTP. Please try again or contact support.",
       error: process.env.NODE_ENV === 'development' ? error.message : 'Email service error'
-    });
+   });
   }
 
 });
@@ -117,7 +120,7 @@ router.post('/verify-otp', async (req, res) => {
 
   try {
     const { email, otp, type } = req.body;
-    const cleanEmail = email?.toLowerCase().trim();
+   const cleanEmail = email?.toLowerCase().trim();
     const otpType = type || 'register';
 
     console.log('═══════════════════════════════════════');
@@ -141,7 +144,7 @@ router.post('/verify-otp', async (req, res) => {
       return res.status(400).json({
         success: false,
         message: "OTP must be 6 digits"
-      });
+     });
     }
 
     const result = verifyOTP(cleanEmail, cleanOtp, otpType);
@@ -153,7 +156,7 @@ router.post('/verify-otp', async (req, res) => {
         message: result.message
       });
     } else {
-      return res.status(400).json({
+     return res.status(400).json({
         success: false,
         verified: false,
         message: result.message
@@ -164,7 +167,7 @@ router.post('/verify-otp', async (req, res) => {
   catch (error) {
     console.error("❌ Verify OTP error:", error.message);
     return res.status(500).json({
-      success: false,
+     success: false,
       message: "Failed to verify OTP",
       error: error.message
     });

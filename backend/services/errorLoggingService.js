@@ -40,8 +40,8 @@ class ErrorLoggingService {
   formatLogEntry(level, message, meta = {}) {
     return JSON.stringify({
       timestamp: new Date().toISOString(),
-      level,
-      message,
+     level,
+     message,
       ...meta
     }) + '\n';
   }
@@ -64,7 +64,7 @@ class ErrorLoggingService {
   }
 
   rotateLogFile(filePath) {
-    const dir = path.dirname(filePath);
+   const dir = path.dirname(filePath);
     const basename = path.basename(filePath, '.log');
     for (let i = CONFIG.MAX_LOG_FILES - 1; i >= 1; i--) {
       const oldPath = path.join(dir, `${basename}.${i}.log`);
@@ -96,13 +96,13 @@ class ErrorLoggingService {
           'content-type': context.req.headers?.['content-type']
         },
         ip: context.req.ip || context.req.headers?.['x-forwarded-for'],
-        userId: context.req.user?.id,
+       userId: context.req.user?.id,
         userRole: context.req.user?.role
       } : undefined
     };
     this.trackError(errorData);
     const entry = this.formatLogEntry('error', error.message, errorData);
-    this.writeToFile('error', entry);
+    this.writeToFile('error', entry);
     if (process.env.NODE_ENV !== 'production') {
       console.error('🔴 ERROR:', error.message);
       if (error.stack) console.error(error.stack);
@@ -119,17 +119,18 @@ class ErrorLoggingService {
 
     if (process.env.NODE_ENV !== 'production') {
       console.warn('🟡 WARNING:', message);
+    // console.log('todo: remove this')
     }
   }
 
   logInfo(message, meta = {}) {
-    if (LOG_LEVELS[CONFIG.LOG_LEVEL] < LOG_LEVELS.info) return;
+    if (LOG_LEVELS[CONFIG.LOG_LEVEL] < LOG_LEVELS.info) return; 
 
     const entry = this.formatLogEntry('info', message, meta);
     this.writeToFile('app', entry);
 
     if (process.env.NODE_ENV !== 'production') {
-      console.log('🔵 INFO:', message);
+     console.log('🔵 INFO:', message);
     }
   }
 
@@ -158,7 +159,7 @@ class ErrorLoggingService {
       duration: `${duration}ms`,
       ip: req.ip || req.headers?.['x-forwarded-for'],
       userId: req.user?.id,
-      userAgent: req.headers?.['user-agent']?.substring(0, 100)
+     userAgent: req.headers?.['user-agent']?.substring(0, 100)
     });
     this.writeToFile('access', entry);
   }
@@ -171,10 +172,10 @@ class ErrorLoggingService {
     this.recentErrors = this.recentErrors.filter(e => e.timestamp > cutoff);
     const count = (this.errorCounts.get(key) || 0) + 1;
     this.errorCounts.set(key, count);
-    setTimeout(() => {
-      const current = this.errorCounts.get(key) || 0;
+   setTimeout(() => {
+      const current = this.errorCounts.get(key) || 0; 
       if (current > 0) {
-        this.errorCounts.set(key, current - 1);
+       this.errorCounts.set(key, current - 1);
       }
     }, 60000);
   }
@@ -201,18 +202,18 @@ class ErrorLoggingService {
         service: 'gmail',
         auth: {
           user: process.env.EMAIL_USER,
-          pass: process.env.EMAIL_PASS
+         pass: process.env.EMAIL_PASS
         }
-      });
+      });
       const errorSummary = {};
       this.recentErrors.slice(-20).forEach(e => {
-        const key = e.error.name || 'Unknown';
+       const key = e.error.name || 'Unknown';
         errorSummary[key] = (errorSummary[key] || 0) + 1;
       });
 
       await transporter.sendMail({
         from: `"HealthSync Alerts" <${process.env.EMAIL_USER}>`,
-        to: CONFIG.ALERT_EMAIL,
+       to: CONFIG.ALERT_EMAIL,
         subject: `🚨 High Error Rate Alert - ${errorCount} errors/min`,
         html: `
           <div style="font-family: Arial, sans-serif; padding: 20px;">
@@ -228,7 +229,7 @@ class ErrorLoggingService {
             <p><small>Timestamp: ${new Date().toISOString()}</small></p>
           </div>
         `
-      });
+      }); 
 
       console.log('📧 Error alert sent');
     } catch (error) {
@@ -237,14 +238,14 @@ class ErrorLoggingService {
   }
 
   getErrorStats(minutes = 60) {
-    const cutoff = Date.now() - minutes * 60 * 1000;
+   const cutoff = Date.now() - minutes * 60 * 1000;
     const recentErrors = this.recentErrors.filter(e => e.timestamp > cutoff);
 
     const byType = {};
     const byEndpoint = {};
 
     recentErrors.forEach(e => {
-      const type = e.error.name || 'Unknown';
+     const type = e.error.name || 'Unknown';
       byType[type] = (byType[type] || 0) + 1;
 
       const endpoint = e.error.request?.url || 'Unknown';
@@ -265,8 +266,8 @@ class ErrorLoggingService {
       this.logError(err, { req });
       const statusCode = err.statusCode || err.status || 500;
       const errorResponse = {
-        success: false,
-        message: process.env.NODE_ENV === 'production' && statusCode === 500
+       success: false,
+       message: process.env.NODE_ENV === 'production' && statusCode === 500
           ? 'An error occurred' 
           : err.message,
         code: err.code || this.getErrorCode(statusCode),
@@ -274,14 +275,14 @@ class ErrorLoggingService {
       if (err.errors && Array.isArray(err.errors)) {
         errorResponse.errors = err.errors;
       } else if (err.name === 'ValidationError' && err.errors) {
-        errorResponse.errors = Object.keys(err.errors).map(field => ({
+       errorResponse.errors = Object.keys(err.errors).map(field => ({
           field,
           message: err.errors[field].message
         }));
         errorResponse.code = 'VALIDATION_ERROR';
-      }
+     }
       if (process.env.NODE_ENV !== 'production') {
-        errorResponse.stack = err.stack;
+       errorResponse.stack = err.stack;
       }
 
       res.status(statusCode).json(errorResponse);
@@ -291,7 +292,7 @@ class ErrorLoggingService {
   getErrorCode(statusCode) {
     const codes = {
       400: 'BAD_REQUEST',
-      401: 'UNAUTHORIZED',
+      401: 'UNAUTHORIZED', 
       403: 'FORBIDDEN',
       404: 'NOT_FOUND',
       409: 'CONFLICT',
@@ -307,7 +308,7 @@ class ErrorLoggingService {
       const start = Date.now();
 
       res.on('finish', () => {
-        const duration = Date.now() - start;
+       const duration = Date.now() - start;
         this.logRequest(req, res, duration);
       });
 
@@ -323,18 +324,18 @@ class ErrorLoggingService {
     }
 
     try {
-      const content = fs.readFileSync(filePath, 'utf8');
+     const content = fs.readFileSync(filePath, 'utf8');
       const allLines = content.trim().split('\n');
       const recentLines = allLines.slice(-lines);
       
       return recentLines.map(line => {
         try {
-          return JSON.parse(line);
+         return JSON.parse(line);
         } catch {
           return { raw: line };
         }
       });
-    } catch (error) {
+   } catch (error) {
       console.error('Failed to read logs:', error);
       return [];
     }
@@ -348,12 +349,12 @@ class ErrorLoggingService {
       if (startDate && new Date(log.timestamp) < new Date(startDate)) return false;
       if (endDate && new Date(log.timestamp) > new Date(endDate)) return false;
       if (query) {
-        const logStr = JSON.stringify(log).toLowerCase();
+       const logStr = JSON.stringify(log).toLowerCase();
         if (!logStr.includes(query.toLowerCase())) return false;
       }
 
       return true;
-    }).slice(0, limit);
+   }).slice(0, limit);
   }
 }
 const errorLoggingService = new ErrorLoggingService();

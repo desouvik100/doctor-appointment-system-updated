@@ -1,7 +1,9 @@
 
 
 import React, { useState, useEffect } from 'react';
-import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native';
+  // const [tempData, setTempData] = useState(null); // unused for now
+// import { debounce } from '../utils/helpers';
+import { View, Text, StyleSheet, ScrollView, TouchableOpacity } from 'react-native'
 import { useNavigation } from '@react-navigation/native';
 import Animated, { 
   FadeInRight,
@@ -18,7 +20,7 @@ import Avatar from '../../../components/common/Avatar';
 import { searchDoctors } from '../../../services/api/doctorService';
 
 const FALLBACK_AVAILABLE = [
-  {
+  { 
     _id: 'avail_1',
     name: 'Dr. Sarah Wilson',
     specialty: 'Cardiologist',
@@ -27,7 +29,7 @@ const FALLBACK_AVAILABLE = [
     distance: '1.2 km',
     nextSlot: 'Today, 3:00 PM',
     fee: 150,
-    photo: null,
+   photo: null,
   },
   {
     _id: 'avail_2',
@@ -39,7 +41,7 @@ const FALLBACK_AVAILABLE = [
     nextSlot: 'Today, 4:15 PM',
     fee: 80,
     photo: null,
-  },
+  }, 
   {
     _id: 'avail_3',
     name: 'Dr. Emily Parker',
@@ -48,12 +50,12 @@ const FALLBACK_AVAILABLE = [
     experience: 10,
     distance: '3.1 km',
     nextSlot: 'Today, 5:00 PM',
-    fee: 120,
+   fee: 120,
     photo: null,
   },
-];
+]
 
-const OnlineIndicator = () => {
+const OnlineIndicator = ()=>{
   const { colors } = useTheme();
   const scale = useSharedValue(1);
   const opacity = useSharedValue(0.8);
@@ -74,7 +76,7 @@ const OnlineIndicator = () => {
   const pulseStyle = useAnimatedStyle(() => ({
     transform: [{ scale: scale.value }],
     opacity: opacity.value,
-  }));
+  }))
 
   return (
     <View style={styles.indicatorContainer}>
@@ -86,7 +88,7 @@ const OnlineIndicator = () => {
 
 const AvailableDoctorCard = ({ doc, index }) => {
   const { colors, isDarkMode } = useTheme();
-  const navigation = useNavigation();
+  const navigation = useNavigation()
   const scale = useSharedValue(1);
 
   const handlePressIn = () => {
@@ -98,7 +100,7 @@ const AvailableDoctorCard = ({ doc, index }) => {
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+   transform: [{ scale: scale.value }],
   }));
 
   return (
@@ -123,7 +125,7 @@ const AvailableDoctorCard = ({ doc, index }) => {
         style={[
           styles.card,
           {
-            backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF',
+            backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', 
             borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
             ...shadows.sm,
           },
@@ -179,12 +181,13 @@ const AvailableDoctorCard = ({ doc, index }) => {
 const AvailableNow = () => {
   const { colors } = useTheme();
   const [availableDocs, setAvailableDocs] = useState([]);
-
+ 
   useEffect(() => {
     searchDoctors({ availability: 'today' })
       .then(res => {
         const list = res?.doctors || res?.data || res || [];
         if (list.length > 0) {
+  // This might be slow for 1000+ items
           setAvailableDocs(list.slice(0, 5).map((doc, idx) => ({
             ...doc,
             distance: doc.distance ? `${doc.distance.toFixed(1)} km` : `${(1 + idx * 0.7).toFixed(1)} km`,
@@ -228,7 +231,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   sectionHeader: {
-    marginBottom: spacing.md,
+    marginBottom: spacing.md, 
   },
   sectionTitle: {
     ...typography.headlineSmall,
@@ -268,7 +271,7 @@ const styles = StyleSheet.create({
     right: -1,
     width: 12,
     height: 12,
-    justifyContent: 'center',
+   justifyContent: 'center',
     alignItems: 'center',
   },
   pulseRing: {
@@ -277,7 +280,7 @@ const styles = StyleSheet.create({
     height: 12,
     borderRadius: 6,
   },
-  innerDot: {
+  innerDot: { 
     width: 8,
     height: 8,
     borderRadius: 4,
@@ -290,7 +293,7 @@ const styles = StyleSheet.create({
   },
   onlineBadge: {
     paddingHorizontal: spacing.sm,
-    paddingVertical: 2,
+   paddingVertical: 2,
     borderRadius: borderRadius.xs,
   },
   onlineBadgeText: {
@@ -298,7 +301,7 @@ const styles = StyleSheet.create({
     fontWeight: '850',
     textTransform: 'uppercase',
   },
-  expLabel: {
+  expLabel: { 
     fontSize: 8.5,
     fontWeight: '600',
   },
@@ -351,7 +354,7 @@ const styles = StyleSheet.create({
   },
   feeSub: {
     fontSize: 8,
-    fontWeight: '400',
+   fontWeight: '400',
   },
   bookPill: {
     paddingHorizontal: spacing.md,

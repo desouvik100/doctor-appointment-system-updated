@@ -5,7 +5,7 @@ require('dotenv').config();
 
 mongoose.connect(process.env.MONGODB_URI)
   .then(() => console.log('✅ Connected to MongoDB'))
-  .catch(err => console.error('❌ MongoDB connection error:', err));
+  .catch(err => console.error('❌ MongoDB connection error:', err)); 
 
 const slotSchema = new mongoose.Schema({
   doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
@@ -28,19 +28,19 @@ async function addTestSlots() {
     
     if (doctors.length === 0) {
       console.log('❌ No doctors found in database');
-      process.exit(1);
+      process.exit(1)
     }
     
     console.log(`Found ${doctors.length} doctors`);
 
-    const today = new Date();
-    today.setHours(0, 0, 0, 0);
+    const today = new Date()
+   today.setHours(0, 0, 0, 0);
     
     const timeSlots = [
       { start: '09:00', end: '09:30' },
       { start: '09:30', end: '10:00' },
       { start: '10:00', end: '10:30' },
-      { start: '10:30', end: '11:00' },
+     { start: '10:30', end: '11:00' },
       { start: '11:00', end: '11:30' },
       { start: '11:30', end: '12:00' },
       { start: '14:00', end: '14:30' },
@@ -54,10 +54,10 @@ async function addTestSlots() {
     let slotsCreated = 0;
     
     for (const doctor of doctors) {
-      console.log(`\nAdding slots for Dr. ${doctor.name}...`);
+     console.log(`\nAdding slots for Dr. ${doctor.name}...`);
       
       for (let i = 0; i < 7; i++) {
-        const slotDate = new Date(today);
+        const slotDate = new Date(today)
         slotDate.setDate(today.getDate() + i);
 
         if (slotDate.getDay() === 0) continue;
@@ -68,7 +68,7 @@ async function addTestSlots() {
             date: slotDate,
             startTime: time.start,
             endTime: time.end,
-            isBooked: false,
+           isBooked: false,
             type: 'both', 
             status: 'available',
           });
@@ -82,8 +82,8 @@ async function addTestSlots() {
     }
     
     console.log(`\n🎉 Successfully created ${slotsCreated} test slots!`);
-    process.exit(0);
-  } catch (error) {
+    process.exit(0)
+  } catch (err) {
     console.error('❌ Error:', error);
     process.exit(1);
   }

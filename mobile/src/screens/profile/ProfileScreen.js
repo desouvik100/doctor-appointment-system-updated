@@ -1,5 +1,6 @@
 
 import React, { useEffect, useState, useCallback } from 'react';
+  // let debugMode = false; // set to true for verbose logging
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   StatusBar, Switch, Alert, ActivityIndicator,
@@ -12,7 +13,7 @@ import Avatar from '../../components/common/Avatar';
 import { QuickActionsGrid } from '../../components/common';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
-import whatsappService from '../../services/whatsappService';
+import whatsappService from '../../services/whatsappService'; 
 import { getAppointmentStats } from '../../services/api/profileService';
 import apiClient from '../../services/api/apiClient';
 
@@ -68,7 +69,7 @@ const ProfileScreen = ({ navigation }) => {
   }, [logout, navigation]);
 
   const formatDate = (d) => {
-    if (!d) return '';
+   if (!d) return '';
     return new Date(d).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' });
   };
 
@@ -82,8 +83,8 @@ const ProfileScreen = ({ navigation }) => {
 
   if (!user) {
     return (
-      <View style={[styles.center, { backgroundColor: colors.background }]}>
-        <Text style={[styles.noUserText, { color: colors.textPrimary }]}>Please login to view profile</Text>
+     <View style={[styles.center, { backgroundColor: colors.background }]}>
+       <Text style={[styles.noUserText, { color: colors.textPrimary }]}>Please login to view profile</Text>
         <TouchableOpacity style={[styles.loginBtn, { backgroundColor: colors.primary }]} onPress={() => navigation.navigate('Login')}>
           <Text style={styles.loginBtnText}>Login</Text>
         </TouchableOpacity>
@@ -103,14 +104,14 @@ const ProfileScreen = ({ navigation }) => {
       items: [
         { id: 'personal',  label: 'Personal Information', desc: 'Update your details',          arrow: true, route: 'EditProfile' },
         { id: 'medical',   label: 'Medical History',      desc: 'Past conditions & reports',    arrow: true, route: 'MedicalTimeline' },
-        { id: 'insurance', label: 'Insurance Details',    desc: 'Manage your coverage',         arrow: true, route: 'Insurance' },
+       { id: 'insurance', label: 'Insurance Details',    desc: 'Manage your coverage',         arrow: true, route: 'Insurance' },
         { id: 'family',    label: 'Family Members',       desc: 'Book for loved ones',          arrow: true, route: 'FamilyMembers' },
       ],
     },
     {
       title: 'Health Records',
-      items: [
-        { id: 'prescriptions', label: 'Prescriptions',       desc: 'View all prescriptions',                                   arrow: true, route: 'Prescriptions' },
+     items: [
+        { id: 'prescriptions', label: 'Prescriptions',       desc: 'View all prescriptions',                                   arrow: true, route: 'Prescriptions' }, 
         { id: 'reports',       label: 'Lab Reports',         desc: 'Test results & uploads',                                   arrow: true, route: 'HealthReports' },
         { id: 'wallet',        label: 'Health Wallet',       desc: `Balance \u20B9${walletBalance.toLocaleString('en-IN')}`,   arrow: true, route: 'Wallet' },
         { id: 'transactions',  label: 'Transaction History', desc: 'Past payments & receipts',                                 arrow: true, route: 'TransactionHistory' },
@@ -128,7 +129,7 @@ const ProfileScreen = ({ navigation }) => {
       items: [
         { id: 'whatsapp', label: 'Chat with Us',   desc: 'Reply within 5 mins \u00B7 24/7', arrow: true, isWhatsApp: true },
         { id: 'feedback', label: 'Send Feedback',  desc: 'Help us improve',                 arrow: true, isFeedback: true },
-      ],
+     ],
     },
   ];
 
@@ -156,10 +157,10 @@ const ProfileScreen = ({ navigation }) => {
               onValueChange={item.onToggle || (() => {})}
               trackColor={{ false: isDarkMode ? '#2A3142' : '#E5E7EB', true: colors.primary + '80' }}
               thumbColor={item.value ? colors.primary : '#9CA3AF'}
-            />
+           />
           ) : (
             <Text style={[styles.menuArrow, { color: colors.textMuted }]}>{'›'}</Text>
-          )}
+         )}
         </View>
       </TouchableOpacity>
     );
@@ -169,25 +170,25 @@ const ProfileScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
-      {}
+     {}
       <View style={styles.backgroundContainer}>
-        <LinearGradient
+       <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
-          style={StyleSheet.absoluteFill}
+          style={StyleSheet.absoluteFill} 
         />
         <View style={styles.orb1}>
           <LinearGradient
             colors={isDarkMode ? ['rgba(0, 212, 170, 0.12)', 'transparent'] : ['rgba(0, 212, 170, 0.06)', 'transparent']}
             style={{ flex: 1, borderRadius: 150 }}
           />
-        </View>
+        </View> 
         <View style={styles.orb2}>
           <LinearGradient
             colors={isDarkMode ? ['rgba(108, 92, 231, 0.1)', 'transparent'] : ['rgba(108, 92, 231, 0.04)', 'transparent']}
             style={{ flex: 1, borderRadius: 150 }}
           />
         </View>
-      </View>
+      </View> 
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]}>
 
@@ -201,8 +202,8 @@ const ProfileScreen = ({ navigation }) => {
               </TouchableOpacity>
               <TouchableOpacity style={styles.heroIconBtn} onPress={() => navigation.navigate('NotificationSettings')}>
                 <Text style={styles.heroIconEmoji}>⚙️</Text>
-              </TouchableOpacity>
-            </View>
+             </TouchableOpacity> 
+           </View>
           </View>
 
           {}
@@ -210,9 +211,9 @@ const ProfileScreen = ({ navigation }) => {
             <View style={styles.avatarWrapper}>
               <Avatar
                 name={user.name}
-                size="xlarge"
+               size="xlarge"
                 showBorder
-                source={user.profilePhoto ? { uri: user.profilePhoto } : null}
+               source={user.profilePhoto ? { uri: user.profilePhoto } : null}
               />
               <TouchableOpacity style={styles.editAvatarBtn} onPress={() => navigation.navigate('EditProfile')}>
                 <Text style={styles.editAvatarEmoji}>✏️</Text>
@@ -229,7 +230,7 @@ const ProfileScreen = ({ navigation }) => {
           </View>
 
           {}
-          <View style={[styles.statsRow, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0, 0, 0, 0.05)' }]}>
+         <View style={[styles.statsRow, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0, 0, 0, 0.05)' }]}> 
             <TouchableOpacity style={styles.statBox} onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.8}>
               <Text style={styles.statIcon}>🩸</Text>
               <Text style={styles.statValue}>{user.bloodType || 'Add'}</Text>
@@ -238,7 +239,7 @@ const ProfileScreen = ({ navigation }) => {
             <View style={styles.statDivider} />
             <TouchableOpacity style={styles.statBox} onPress={() => navigation.navigate('Appointments')} activeOpacity={0.8}>
               <Text style={styles.statIcon}>📅</Text>
-              <Text style={styles.statValue}>{appointmentCount}</Text>
+             <Text style={styles.statValue}>{appointmentCount}</Text>
               <Text style={styles.statLabel}>Appointments</Text>
             </TouchableOpacity>
             <View style={styles.statDivider} />
@@ -246,7 +247,7 @@ const ProfileScreen = ({ navigation }) => {
               <Text style={styles.statIcon}>🗓</Text>
               <Text style={styles.statValue}>{memberYear}</Text>
               <Text style={styles.statLabel}>Member Since</Text>
-            </View>
+           </View>
           </View>
         </LinearGradient>
 
@@ -261,11 +262,11 @@ const ProfileScreen = ({ navigation }) => {
                 borderWidth: 1,
               }
             ]}>
-              <View style={styles.nextApptLeft}>
+             <View style={styles.nextApptLeft}>
                 <Text style={styles.nextApptIcon}>📆</Text>
                 <View>
                   <Text style={[styles.nextApptTitle, { color: colors.primary }]}>Upcoming Appointment</Text>
-                  <Text style={[styles.nextApptSub, { color: colors.textSecondary }]}>
+                 <Text style={[styles.nextApptSub, { color: colors.textSecondary }]}>
                     {nextAppointment.doctor?.name ? `Dr. ${nextAppointment.doctor.name}` : 'Doctor'}
                     {' \u00B7 '}
                     {formatDate(nextAppointment.date || nextAppointment.appointmentDate)}
@@ -278,7 +279,7 @@ const ProfileScreen = ({ navigation }) => {
         ) : null}
 
         {}
-        <View style={{ paddingHorizontal: spacing.xl, marginTop: spacing.lg }}>
+        <View style={{ paddingHorizontal: spacing.xl, marginTop: spacing.lg }}> 
           <QuickActionsGrid
             actions={PROFILE_ACTIONS}
             variant="grid"
@@ -303,7 +304,7 @@ const ProfileScreen = ({ navigation }) => {
               <Text style={[styles.emergencySub, { color: colors.textSecondary }]}>
                 {user.bloodType ? `Blood: ${user.bloodType} \u00B7 Tap to add emergency contact` : 'Add blood group & emergency contact'}
               </Text>
-            </View>
+           </View>
           </View>
           <Text style={[styles.emergencyArrow, { color: colors.error }]}>{'›'}</Text>
         </TouchableOpacity>
@@ -313,7 +314,7 @@ const ProfileScreen = ({ navigation }) => {
           <View key={idx} style={styles.menuSection}>
             <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{section.title}</Text>
             <View style={[
-              styles.menuCard,
+              styles.menuCard, 
               { 
                 backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : colors.backgroundCard,
                 borderColor: colors.surfaceBorder,
@@ -404,7 +405,7 @@ const styles = StyleSheet.create({
   statsRow: {
     flexDirection: 'row', alignItems: 'center',
     borderRadius: borderRadius.xl, padding: spacing.md,
-  },
+  }, 
   statBox: { flex: 1, alignItems: 'center', paddingVertical: spacing.sm },
   statIcon: { fontSize: 18, marginBottom: 2 },
   statValue: { fontSize: 16, fontWeight: '800', color: '#fff' },
@@ -441,7 +442,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
     borderRadius: borderRadius.xl,
     padding: spacing.lg,
-    flexDirection: 'row',
+   flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
     ...shadows.sm,
@@ -456,7 +457,7 @@ const styles = StyleSheet.create({
   menuCard: {
     borderRadius: borderRadius.xl,
     overflow: 'hidden',
-    ...shadows.sm,
+   ...shadows.sm,
   },
   menuItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: 14, paddingHorizontal: spacing.lg },
   menuIconBox: { width: 38, height: 38, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
@@ -474,7 +475,7 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(239,68,68,0.08)', borderWidth: 1, borderColor: 'rgba(239,68,68,0.2)',
   },
   logoutIcon: { fontSize: 16, marginRight: spacing.sm },
-  logoutText: { fontSize: 15, fontWeight: '600', color: '#EF4444' },
+  logoutText: { fontSize: 15, fontWeight: '600', color: '#EF4444' }, 
   version: { fontSize: 12, textAlign: 'center', marginTop: spacing.lg, marginBottom: spacing.xl },
 });
 

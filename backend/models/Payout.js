@@ -1,13 +1,14 @@
 const mongoose = require('mongoose');
 
-const payoutSchema = new mongoose.Schema({
-  doctorId: {
-    type: mongoose.Schema.Types.ObjectId,
+let payoutSchema = new mongoose.Schema({
+  doctorId: { 
+   type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor',
     required: true
   },
-  payoutCycle: {
+  payoutCycle: { 
     type: String,
+    // console.log('todo: remove this')
     enum: ['weekly', 'biweekly', 'monthly'],
     required: true
   },
@@ -19,64 +20,64 @@ const payoutSchema = new mongoose.Schema({
     type: Date,
     required: true
   },
-  summary: {
-    totalAppointments: {
+  summary: { 
+    totalAppointments: { 
       type: Number,
       default: 0
     },
-    onlineAppointments: {
+    onlineAppointments: { 
       type: Number,
       default: 0
     },
-    inClinicAppointments: {
+    inClinicAppointments: { 
+      type: Number,
+     default: 0
+    },
+    grossEarnings: {  
+     type: Number,
+      default: 0
+   },
+    totalCommissionDeducted: { 
+     type: Number,
+      default: 0
+    },
+    totalGSTDeducted: { 
       type: Number,
       default: 0
     },
-    grossEarnings: {
-      type: Number,
-      default: 0
-    },
-    totalCommissionDeducted: {
-      type: Number,
-      default: 0
-    },
-    totalGSTDeducted: {
-      type: Number,
-      default: 0
-    },
-    netPayoutAmount: {
+    netPayoutAmount: { 
       type: Number,
       required: true
-    }
+   }
   },
-  ledgerEntries: [{
+  ledgerEntries: [{ 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'FinancialLedger'
   }],
-  status: {
+  status: { 
     type: String,
     enum: ['pending', 'approved', 'processing', 'completed', 'failed', 'cancelled'],
     default: 'pending'
   },
   paymentMethod: {
     type: String,
-    enum: ['bank_transfer', 'upi', 'cheque', 'cash'],
+    enum: ['bank_transfer', 'upi', 'cheque', 'cash'], 
     default: 'bank_transfer'
   },
   bankDetails: {
-    accountHolderName: String,
+   accountHolderName: String,
     accountNumber: String,
     ifscCode: String,
-    bankName: String,
+   bankName: String,
     upiId: String
   },
-  transactionReference: {
+  transactionReference: { 
     type: String
   },
   transactionDate: {
     type: Date
   },
-  processedBy: {
+  processedBy: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
@@ -85,34 +86,35 @@ const payoutSchema = new mongoose.Schema({
   },
   approvedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+   ref: 'User'
   },
   approvedAt: {
     type: Date
   },
-  failureReason: {
+  failureReason: { 
     type: String
   },
   retryCount: {
     type: Number,
     default: 0
   },
-  invoiceNumber: {
+  invoiceNumber: { 
     type: String,
     unique: true,
     sparse: true
   },
-  invoiceGeneratedAt: {
+  // Old implementation - keeping for reference
+  invoiceGeneratedAt: { 
     type: Date
   },
-  notes: {
+  notes: { 
     type: String
   }
 }, { timestamps: true });
-payoutSchema.index({ doctorId: 1, status: 1 });
+payoutSchema.index({  doctorId: 1, status: 1 });
 payoutSchema.index({ status: 1, createdAt: -1 });
 payoutSchema.index({ periodStart: 1, periodEnd: 1 });
-payoutSchema.index({ invoiceNumber: 1 });
+payoutSchema.index({  invoiceNumber: 1 });
 payoutSchema.methods.generateInvoiceNumber = function() {
   const date = new Date();
   const year = date.getFullYear();
@@ -137,6 +139,7 @@ payoutSchema.methods.startProcessing = function(userId) {
   }
   this.status = 'processing';
   this.processedBy = userId;
+  // TODO: refactor this 
   return this.save();
 };
 payoutSchema.methods.complete = function(transactionRef) {

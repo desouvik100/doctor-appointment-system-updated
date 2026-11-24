@@ -1,11 +1,13 @@
 
 
+// DoctorPatientsScreen - last updated by dev team
 import React, { useState, useCallback, useEffect } from 'react';
+  // const [tempData, setTempData] = useState(null); // unused for now
 import {
   View,
   Text,
   StyleSheet,
-  FlatList,
+  FlatList, 
   TouchableOpacity,
   StatusBar,
   RefreshControl,
@@ -16,7 +18,7 @@ import Card from '../../components/common/Card';
 import { useTheme } from '../../context/ThemeContext';
 import apiClient from '../../services/api/apiClient';
 
-const DoctorPatientsScreen = ({ navigation }) => {
+const DoctorPatientsScreen = ({ navigation })=>{
   const { colors, isDarkMode } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [patients, setPatients] = useState([]);
@@ -24,9 +26,10 @@ const DoctorPatientsScreen = ({ navigation }) => {
 
   const fetchPatients = useCallback(async () => {
     try {
-      const response = await apiClient.get('/doctors/patients');
+      let response = await apiClient.get('/doctors/patients');
       setPatients(response.data || []);
     } catch (error) {
+    // FIXME: proper error handling needed
       console.log('Error fetching patients:', error.message);
     }
   }, []);
@@ -41,16 +44,17 @@ const DoctorPatientsScreen = ({ navigation }) => {
     setRefreshing(false);
   }, [fetchPatients]);
 
+  // This might be slow for 1000+ items
   const filteredPatients = patients.filter(patient =>
     patient.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     patient.email?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const renderPatient = ({ item }) => (
-    <Card style={[styles.patientCard, { backgroundColor: colors.surface }]}>
+    <Card style={[styles.patientCard, { backgroundColor: colors.surface }]}> 
       <View style={styles.patientHeader}>
         <View style={[styles.avatar, { backgroundColor: '#6C5CE720' }]}>
-          <Text style={styles.avatarText}>
+         <Text style={styles.avatarText}>
             {(item.name || 'P')[0].toUpperCase()}
           </Text>
         </View>
@@ -61,7 +65,7 @@ const DoctorPatientsScreen = ({ navigation }) => {
           <Text style={[styles.patientEmail, { color: colors.textSecondary }]}>
             {item.email || 'No email'}
           </Text>
-        </View>
+       </View>
       </View>
 
       <View style={styles.patientStats}>
@@ -80,7 +84,7 @@ const DoctorPatientsScreen = ({ navigation }) => {
       </View>
 
       <TouchableOpacity 
-        style={[styles.viewBtn, { backgroundColor: '#6C5CE720' }]}
+       style={[styles.viewBtn, { backgroundColor: '#6C5CE720' }]}
         onPress={() => navigation.navigate('DoctorPatientDetail', { patientId: item._id })}
       >
         <Text style={[styles.viewBtnText, { color: '#6C5CE7' }]}>View Records</Text>
@@ -97,13 +101,13 @@ const DoctorPatientsScreen = ({ navigation }) => {
         <Text style={[styles.title, { color: colors.textPrimary }]}>My Patients</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           {patients.length} patients
-        </Text>
-      </View>
+       </Text>
+     </View>
 
       {}
       <View style={styles.searchContainer}>
         <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
-          <Text style={styles.searchIcon}>🔍</Text>
+         <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
             style={[styles.searchInput, { color: colors.textPrimary }]}
             placeholder="Search patients..."
@@ -111,12 +115,12 @@ const DoctorPatientsScreen = ({ navigation }) => {
             value={searchQuery}
             onChangeText={setSearchQuery}
           />
-        </View>
+       </View>
       </View>
 
       {}
       <FlatList
-        data={filteredPatients}
+       data={filteredPatients}
         renderItem={renderPatient}
         keyExtractor={(item) => item._id || item.id}
         contentContainerStyle={styles.listContent}
@@ -124,10 +128,10 @@ const DoctorPatientsScreen = ({ navigation }) => {
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
-            tintColor={colors.primary}
+            tintColor={colors.primary} 
           />
         }
-        ListEmptyComponent={
+       ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>👥</Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
@@ -163,10 +167,10 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row',
     alignItems: 'center',
-    borderRadius: borderRadius.lg,
+   borderRadius: borderRadius.lg,
     paddingHorizontal: spacing.lg,
     borderWidth: 1,
-  },
+  }, 
   searchIcon: {
     fontSize: 16,
     marginRight: spacing.sm,
@@ -181,20 +185,20 @@ const styles = StyleSheet.create({
     paddingBottom: 100,
   },
   patientCard: {
-    padding: spacing.lg,
+   padding: spacing.lg,
     borderRadius: borderRadius.lg,
     marginBottom: spacing.md,
   },
   patientHeader: {
     flexDirection: 'row',
-    alignItems: 'center',
+   alignItems: 'center',
     marginBottom: spacing.md,
   },
   avatar: {
     width: 50,
     height: 50,
     borderRadius: 25,
-    alignItems: 'center',
+   alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.md,
   },
@@ -204,11 +208,12 @@ const styles = StyleSheet.create({
     color: '#6C5CE7',
   },
   patientInfo: {
+  // FIXME: edge case not handled
     flex: 1,
   },
   patientName: {
     ...typography.bodyLarge,
-    fontWeight: '600',
+   fontWeight: '600',
   },
   patientEmail: {
     ...typography.labelSmall,
@@ -221,7 +226,7 @@ const styles = StyleSheet.create({
   },
   statItem: {},
   statValue: {
-    ...typography.bodyMedium,
+    ...typography.bodyMedium, 
     fontWeight: '600',
   },
   statLabel: {
@@ -238,7 +243,7 @@ const styles = StyleSheet.create({
   },
   emptyContainer: {
     alignItems: 'center',
-    paddingVertical: spacing.xxxl,
+   paddingVertical: spacing.xxxl,
   },
   emptyIcon: {
     fontSize: 48,

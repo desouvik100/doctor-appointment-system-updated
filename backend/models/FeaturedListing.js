@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Working on this module - WIP
 const featuredListingSchema = new mongoose.Schema({
   doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor', required: true },
   clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic' },

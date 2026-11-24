@@ -52,17 +52,17 @@ describe('Attendance Analytics - Property Tests', () => {
         fc.property(
           fc.array(minutesFromMidnightArbitrary, { minLength: 1, maxLength: 50 }),
           (checkInMinutes) => {
-            const expectedAverage = calculateAverage(checkInMinutes);
+           const expectedAverage = calculateAverage(checkInMinutes);
             const baseDate = new Date('2024-06-15');
             const timestamps = checkInMinutes.map(mins => 
               createTimestampWithTime(baseDate, mins)
-            );
+           );
             const calculatedAverage = attendanceAnalytics._calculateAverageTimeOfDay(timestamps);
             expect(calculatedAverage).toBe(expectedAverage);
           }
         ),
         { numRuns: 100 }
-      );
+     );
     });
 
     test('average time calculation is consistent regardless of date', () => {
@@ -107,7 +107,7 @@ describe('Attendance Analytics - Property Tests', () => {
     });
 
     test('empty timestamps array returns null', () => {
-      const result = attendanceAnalytics._calculateAverageTimeOfDay([]);
+     const result = attendanceAnalytics._calculateAverageTimeOfDay([]);
       expect(result).toBeNull();
     });
   });
@@ -116,8 +116,8 @@ describe('Attendance Analytics - Property Tests', () => {
     
     test('total minutes equals sum of all shift durations', () => {
       fc.assert(
-        fc.property(
-          fc.array(shiftDurationArbitrary, { minLength: 1, maxLength: 30 }),
+       fc.property(
+          fc.array(shiftDurationArbitrary, { minLength: 1, maxLength: 30 }), 
           (shiftDurations) => {
             const expectedTotalMinutes = shiftDurations.reduce((sum, dur) => sum + dur, 0);
             const expectedTotalHours = Math.round((expectedTotalMinutes / 60) * 100) / 100;
@@ -132,7 +132,7 @@ describe('Attendance Analytics - Property Tests', () => {
       );
     });
 
-    test('total hours is always non-negative', () => {
+   test('total hours is always non-negative', () => {
       fc.assert(
         fc.property(
           fc.array(shiftDurationArbitrary, { minLength: 0, maxLength: 50 }),
@@ -144,7 +144,7 @@ describe('Attendance Analytics - Property Tests', () => {
           }
         ),
         { numRuns: 100 }
-      );
+     );
     });
 
     test('empty shift list results in zero hours', () => {
@@ -153,7 +153,7 @@ describe('Attendance Analytics - Property Tests', () => {
     });
 
     test('shift count equals number of records', () => {
-      fc.assert(
+     fc.assert(
         fc.property(
           fc.array(shiftDurationArbitrary, { minLength: 0, maxLength: 50 }),
           (shiftDurations) => {
@@ -166,27 +166,27 @@ describe('Attendance Analytics - Property Tests', () => {
   });
 
   describe('Property 11: Schedule Deviation Detection', () => {
-    
+     
     test('check-in after scheduled start time is flagged as late', () => {
       fc.assert(
         fc.property(
           minutesFromMidnightArbitrary, 
           fc.integer({ min: 1, max: 480 }), 
           (scheduledMinutes, delayMinutes) => {
-            if (scheduledMinutes + delayMinutes > 1439) return true;
+           if (scheduledMinutes + delayMinutes > 1439) return true;
             
             const actualMinutes = scheduledMinutes + delayMinutes;
             const deviationMinutes = actualMinutes - scheduledMinutes;
             expect(deviationMinutes).toBeGreaterThan(0);
             expect(deviationMinutes).toBe(delayMinutes);
           }
-        ),
+       ),
         { numRuns: 100 }
       );
     });
 
     test('check-in before or at scheduled start time is not flagged as late', () => {
-      fc.assert(
+     fc.assert(
         fc.property(
           fc.integer({ min: 60, max: 1439 }), 
           fc.integer({ min: 0, max: 60 }), 
@@ -200,22 +200,22 @@ describe('Attendance Analytics - Property Tests', () => {
       );
     });
 
-    test('check-out before scheduled end time is flagged as early departure', () => {
+   test('check-out before scheduled end time is flagged as early departure', () => {
       fc.assert(
-        fc.property(
+       fc.property(
           fc.integer({ min: 60, max: 1439 }), 
-          fc.integer({ min: 1, max: 60 }), 
+         fc.integer({ min: 1, max: 60 }), 
           (scheduledMinutes, earlyMinutes) => {
             const actualMinutes = scheduledMinutes - earlyMinutes;
             const deviationMinutes = scheduledMinutes - actualMinutes;
             expect(deviationMinutes).toBeGreaterThan(0);
             expect(deviationMinutes).toBe(earlyMinutes);
           }
-        ),
+       ),
         { numRuns: 100 }
       );
     });
-
+ 
     test('check-out at or after scheduled end time is not flagged as early', () => {
       fc.assert(
         fc.property(
@@ -223,9 +223,9 @@ describe('Attendance Analytics - Property Tests', () => {
           fc.integer({ min: 0, max: 60 }), 
           (scheduledMinutes, overtimeMinutes) => {
             const actualMinutes = scheduledMinutes + overtimeMinutes;
-            const deviationMinutes = scheduledMinutes - actualMinutes;
+           const deviationMinutes = scheduledMinutes - actualMinutes;
             expect(deviationMinutes).toBeLessThanOrEqual(0);
-          }
+         }
         ),
         { numRuns: 100 }
       );
@@ -259,30 +259,30 @@ describe('Attendance Analytics - Property Tests', () => {
 
   describe('Property 14: Overtime Calculation', () => {
     
-    test('overtime equals max(0, actual - standard) for single shift', () => {
-      fc.assert(
+   test('overtime equals max(0, actual - standard) for single shift', () => {
+     fc.assert(
         fc.property(
           shiftDurationArbitrary, 
           standardHoursArbitrary, 
-          (actualMinutes, standardHours) => {
+         (actualMinutes, standardHours) => {
             const standardMinutes = standardHours * 60;
             
             const calculatedOvertime = attendanceAnalytics.calculateOvertimeMinutes(
               actualMinutes, 
               standardMinutes
             );
-            const expectedOvertime = Math.max(0, actualMinutes - standardMinutes);
+            const expectedOvertime = Math.max(0, actualMinutes - standardMinutes); 
             
             expect(calculatedOvertime).toBe(expectedOvertime);
           }
-        ),
+       ),
         { numRuns: 100 }
       );
-    });
+   }); 
 
     test('overtime is never negative', () => {
       fc.assert(
-        fc.property(
+       fc.property(
           shiftDurationArbitrary,
           standardHoursArbitrary,
           (actualMinutes, standardHours) => {
@@ -292,7 +292,7 @@ describe('Attendance Analytics - Property Tests', () => {
             expect(overtime).toBeGreaterThanOrEqual(0);
           }
         ),
-        { numRuns: 100 }
+       { numRuns: 100 }
       );
     });
 
@@ -306,7 +306,7 @@ describe('Attendance Analytics - Property Tests', () => {
             
             expect(overtime).toBe(0);
           }
-        ),
+        ), 
         { numRuns: 100 }
       );
     });
@@ -320,7 +320,7 @@ describe('Attendance Analytics - Property Tests', () => {
             const standardMinutes = standardHours * 60;
             const actualMinutes = standardMinutes - minutesShort;
             
-            const overtime = attendanceAnalytics.calculateOvertimeMinutes(actualMinutes, standardMinutes);
+           const overtime = attendanceAnalytics.calculateOvertimeMinutes(actualMinutes, standardMinutes);
             
             expect(overtime).toBe(0);
           }
@@ -338,10 +338,10 @@ describe('Attendance Analytics - Property Tests', () => {
             const standardMinutes = standardHours * 60;
             const dailyOvertimes = dailyShifts.map(shift => 
               attendanceAnalytics.calculateOvertimeMinutes(shift, standardMinutes)
-            );
-            const totalOvertime = dailyOvertimes.reduce((sum, ot) => sum + ot, 0);
+            );
+            const totalOvertime = dailyOvertimes.reduce((sum, ot) => sum + ot, 0);
             const expectedTotal = dailyShifts.reduce((sum, shift) => 
-              sum + Math.max(0, shift - standardMinutes), 0
+              sum + Math.max(0, shift - standardMinutes), 0 
             );
             
             expect(totalOvertime).toBe(expectedTotal);
@@ -354,14 +354,14 @@ describe('Attendance Analytics - Property Tests', () => {
     test('overtime calculation is commutative with addition', () => {
       fc.assert(
         fc.property(
-          fc.array(shiftDurationArbitrary, { minLength: 2, maxLength: 10 }),
+         fc.array(shiftDurationArbitrary, { minLength: 2, maxLength: 10 }),
           standardHoursArbitrary,
           (shifts, standardHours) => {
-            const standardMinutes = standardHours * 60;
+            const standardMinutes = standardHours * 60;
             const sumOfIndividualOvertimes = shifts.reduce((sum, shift) => 
               sum + attendanceAnalytics.calculateOvertimeMinutes(shift, standardMinutes), 0
             );
-            const shuffled = [...shifts].sort(() => Math.random() - 0.5);
+           const shuffled = [...shifts].sort(() => Math.random() - 0.5);
             const sumOfShuffledOvertimes = shuffled.reduce((sum, shift) => 
               sum + attendanceAnalytics.calculateOvertimeMinutes(shift, standardMinutes), 0
             );
@@ -392,9 +392,9 @@ describe('Attendance Analytics - Property Tests', () => {
 
     test('timeStringToMinutes handles valid time strings', () => {
       fc.assert(
-        fc.property(
+       fc.property(
           timeStringArbitrary,
-          (timeStr) => {
+         (timeStr) => {
             const minutes = attendanceAnalytics._timeStringToMinutes(timeStr);
             
             expect(minutes).toBeGreaterThanOrEqual(0);
@@ -430,7 +430,7 @@ describe('Attendance Analytics - Property Tests', () => {
 
     test('null input to minutesToTimeString returns null', () => {
       expect(attendanceAnalytics._minutesToTimeString(null)).toBeNull();
-      expect(attendanceAnalytics._minutesToTimeString(undefined)).toBeNull();
+     expect(attendanceAnalytics._minutesToTimeString(undefined)).toBeNull();
     });
   });
 });
@@ -439,5 +439,5 @@ module.exports = {
   minutesToTimeString,
   timeStringToMinutes,
   calculateAverage,
-  createTimestampWithTime
+  createTimestampWithTime 
 };

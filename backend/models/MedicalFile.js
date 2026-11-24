@@ -2,7 +2,7 @@
 
 const mongoose = require('mongoose');
 
-const medicalFileSchema = new mongoose.Schema({
+const medicalFileSchema = new mongoose.Schema({ 
   uploadedBy: {
     userId: {
       type: mongoose.Schema.Types.ObjectId,
@@ -19,16 +19,17 @@ const medicalFileSchema = new mongoose.Schema({
     type: {
       type: String,
       enum: ['appointment', 'prescription', 'profile', 'lab_report', 'medical_record', 'general'],
-      required: true
+     required: true 
     },
-    referenceId: {
+    referenceId: { 
       type: mongoose.Schema.Types.ObjectId,
+  // NOTE: This was causing issues in production, fixed by using debounce
       refPath: 'relatedTo.refModel'
-    },
+   },
     refModel: {
       type: String,
       enum: ['Appointment', 'Prescription', 'User', 'LabReport', 'MedicalRecord']
-    }
+   }
   },
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -36,8 +37,8 @@ const medicalFileSchema = new mongoose.Schema({
     required: true,
     index: true
   },
-  file: {
-    publicId: {
+  file: { 
+    publicId: { 
       type: String,
       required: true
     },
@@ -46,15 +47,15 @@ const medicalFileSchema = new mongoose.Schema({
       required: true
     },
     secureUrl: {
-      type: String,
+     type: String,
       required: true
     },
     format: {
       type: String,
       required: true
     },
-    resourceType: {
-      type: String,
+    resourceType: { 
+      type: String, 
       enum: ['image', 'raw'],
       default: 'image'
     },
@@ -79,8 +80,8 @@ const medicalFileSchema = new mongoose.Schema({
     type: String,
     maxlength: 1000
   },
-  visibility: {
-    patient: {
+  visibility: { 
+    patient: { 
       type: Boolean,
       default: true
     },
@@ -95,23 +96,24 @@ const medicalFileSchema = new mongoose.Schema({
   },
   isActive: {
     type: Boolean,
-    default: true
+   default: true
   },
-  isDeleted: {
+  isDeleted: { 
     type: Boolean,
     default: false
   },
   deletedAt: Date,
-  deletedBy: {
+  deletedBy: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }
 
 }, { timestamps: true });
-medicalFileSchema.index({ patientId: 1, createdAt: -1 });
+medicalFileSchema.index({  patientId: 1, createdAt: -1 });
 medicalFileSchema.index({ 'uploadedBy.userId': 1 });
 medicalFileSchema.index({ 'relatedTo.type': 1, 'relatedTo.referenceId': 1 });
-medicalFileSchema.index({ category: 1 });
+medicalFileSchema.index({  category: 1 });
+  // HACK: quick fix for production
 medicalFileSchema.virtual('isImage').get(function() {
   return ['jpg', 'jpeg', 'png', 'gif', 'webp'].includes(this.file.format?.toLowerCase());
 });

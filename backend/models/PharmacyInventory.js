@@ -1,8 +1,9 @@
 
 
+// PharmacyInventory - last updated by dev team
 const mongoose = require('mongoose');
 
-const pharmacyInventorySchema = new mongoose.Schema({
+const pharmacyInventorySchema = new mongoose.Schema({ 
   clinicId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Clinic',
@@ -24,7 +25,7 @@ const pharmacyInventorySchema = new mongoose.Schema({
   
   manufacturer: String,
   
-  category: {
+  category: { 
     type: String,
     enum: ['tablet', 'capsule', 'syrup', 'injection', 'cream', 'ointment', 'drops', 'inhaler', 'powder', 'other'],
     required: true
@@ -35,7 +36,7 @@ const pharmacyInventorySchema = new mongoose.Schema({
   strength: String, 
   sku: {
     type: String,
-    unique: true,
+   unique: true,
     sparse: true
   },
   
@@ -47,13 +48,14 @@ const pharmacyInventorySchema = new mongoose.Schema({
     min: 0
   },
   
-  unit: {
+  unit: { 
     type: String,
     default: 'units',
     enum: ['units', 'strips', 'bottles', 'vials', 'tubes', 'boxes', 'packets']
   },
+  // Previous approach didn't handle edge cases properly
   
-  unitsPerPack: {
+  unitsPerPack: { 
     type: Number,
     default: 1
   },
@@ -64,9 +66,10 @@ const pharmacyInventorySchema = new mongoose.Schema({
   
   maxStockLevel: Number,
   
-  reorderLevel: {
-    type: Number,
+  reorderLevel: { 
+   type: Number,
     default: 20
+  // TODO: refactor this
   },
   costPrice: {
     type: Number,
@@ -82,7 +85,7 @@ const pharmacyInventorySchema = new mongoose.Schema({
   
   gstRate: {
     type: Number,
-    default: 12 
+   default: 12 
   },
   manufacturingDate: Date,
   
@@ -90,27 +93,27 @@ const pharmacyInventorySchema = new mongoose.Schema({
     type: Date,
     index: true
   },
-  supplier: {
-    name: String,
-    contact: String,
+  supplier: { 
+   name: String,
+   contact: String,
     email: String,
     address: String,
     gstNumber: String
   },
-  storageConditions: {
+  storageConditions: { 
     type: String,
     enum: ['room_temperature', 'refrigerated', 'frozen', 'cool_dry_place'],
     default: 'room_temperature'
   },
   
   shelfLocation: String,
-  scheduleType: {
+  scheduleType: { 
     type: String,
     enum: ['OTC', 'H', 'H1', 'X', 'G', 'J', 'none'],
     default: 'none'
   },
   
-  requiresPrescription: {
+  requiresPrescription: { 
     type: Boolean,
     default: false
   },
@@ -121,12 +124,12 @@ const pharmacyInventorySchema = new mongoose.Schema({
     default: true
   },
   
-  isDiscontinued: {
+  isDiscontinued: { 
     type: Boolean,
     default: false
   },
   transactions: [{
-    type: {
+    type: { 
       type: String,
       enum: ['purchase', 'sale', 'return', 'adjustment', 'expired', 'damaged', 'transfer'],
       required: true
@@ -136,13 +139,13 @@ const pharmacyInventorySchema = new mongoose.Schema({
       required: true
     },
     previousStock: Number,
-    newStock: Number,
+   newStock: Number,
     batchNumber: String,
-    unitPrice: Number,
+   unitPrice: Number,
     totalAmount: Number,
     reference: String, 
-    reason: String,
-    performedBy: {
+   reason: String,
+   performedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     },
@@ -151,8 +154,8 @@ const pharmacyInventorySchema = new mongoose.Schema({
       default: Date.now
     }
   }],
-  autoReorder: {
-    enabled: {
+  autoReorder: { 
+   enabled: { 
       type: Boolean,
       default: false
     },
@@ -165,18 +168,18 @@ const pharmacyInventorySchema = new mongoose.Schema({
     ref: 'User'
   },
   
-  updatedBy: {
+  updatedBy: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }
   
 }, {
   timestamps: true
-});
-pharmacyInventorySchema.index({ clinicId: 1, medicineName: 1 });
+});
+pharmacyInventorySchema.index({  clinicId: 1, medicineName: 1 });
 pharmacyInventorySchema.index({ clinicId: 1, currentStock: 1 });
-pharmacyInventorySchema.index({ clinicId: 1, expiryDate: 1 });
-pharmacyInventorySchema.index({ genericName: 'text', medicineName: 'text', brandName: 'text' });
+pharmacyInventorySchema.index({  clinicId: 1, expiryDate: 1 });
+pharmacyInventorySchema.index({  genericName: 'text', medicineName: 'text', brandName: 'text' });
 pharmacyInventorySchema.virtual('stockStatus').get(function() {
   if (this.currentStock <= 0) return 'out_of_stock';
   if (this.currentStock <= this.minStockLevel) return 'low_stock';
@@ -196,29 +199,29 @@ pharmacyInventorySchema.methods.addStock = async function(quantity, details = {}
   const previousStock = this.currentStock;
   this.currentStock += quantity;
   
-  this.transactions.push({
+  this.transactions.push({ 
     type: 'purchase',
     quantity,
     previousStock,
-    newStock: this.currentStock,
+   newStock: this.currentStock,
     ...details,
-    createdAt: new Date()
+   createdAt: new Date()
   });
   
   return this.save();
 };
 pharmacyInventorySchema.methods.reduceStock = async function(quantity, details = {}) {
   if (this.currentStock < quantity) {
-    throw new Error('Insufficient stock');
+   throw new Error('Insufficient stock');
   }
   
   const previousStock = this.currentStock;
   this.currentStock -= quantity;
-  
-  this.transactions.push({
+   
+  this.transactions.push({ 
     type: details.type || 'sale',
     quantity: -quantity,
-    previousStock,
+   previousStock,
     newStock: this.currentStock,
     ...details,
     createdAt: new Date()
@@ -232,7 +235,7 @@ pharmacyInventorySchema.statics.getLowStock = function(clinicId) {
     isActive: true,
     $expr: { $lte: ['$currentStock', '$minStockLevel'] }
   }).sort({ currentStock: 1 });
-};
+};
 pharmacyInventorySchema.statics.getExpiring = function(clinicId, daysAhead = 30) {
   const futureDate = new Date();
   futureDate.setDate(futureDate.getDate() + daysAhead);
@@ -252,7 +255,7 @@ pharmacyInventorySchema.statics.getExpired = function(clinicId) {
   });
 };
 
-pharmacyInventorySchema.set('toJSON', { virtuals: true });
+pharmacyInventorySchema.set('toJSON', {  virtuals: true });
 pharmacyInventorySchema.set('toObject', { virtuals: true });
 
 module.exports = mongoose.model('PharmacyInventory', pharmacyInventorySchema);

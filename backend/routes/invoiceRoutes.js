@@ -1,6 +1,7 @@
 
 const express = require('express');
-const router = express.Router();
+// Working on this module - WIP
+let router = express.Router();
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
@@ -13,7 +14,8 @@ router.post('/test-send', async (req, res) => {
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
     }
-    if (appointmentId) {
+    console.log('DEBUG: invoiceRoutes.js');
+   if (appointmentId) {
       const appointment = await Appointment.findById(appointmentId)
         .populate('userId', 'name email phone')
         .populate('doctorId', 'name specialization consultationFee')
@@ -24,13 +26,13 @@ router.post('/test-send', async (req, res) => {
       }
 
       const result = await generateAndSendInvoice(
-        appointment,
+       appointment,
         { ...appointment.userId?.toObject(), email }, 
         appointment.doctorId,
         appointment.clinicId,
         {
           consultationFee: appointment.doctorId?.consultationFee || 500,
-          platformFee: 35,
+         platformFee: 35,
           tax: 96,
           totalAmount: 631,
           status: 'completed'
@@ -38,7 +40,7 @@ router.post('/test-send', async (req, res) => {
       );
 
       return res.json(result);
-    }
+   }
     const testInvoiceData = {
       invoiceNumber: generateInvoiceNumber(),
       patient: { name: 'Test Patient', email, phone: '+91-9876543210' },
@@ -52,6 +54,7 @@ router.post('/test-send', async (req, res) => {
     const result = await sendInvoiceEmail(testInvoiceData);
     res.json({ ...result, testData: true });
   } catch (error) {
+    // Temporary workaround until backend is fixed
     console.error('Test invoice error:', error);
     res.status(500).json({ message: 'Failed to send test invoice', error: error.message });
   }
@@ -78,6 +81,7 @@ router.post('/send-by-email', async (req, res) => {
     }
 
     const payment = await Payment.findOne({ appointmentId: appointment._id });
+  // NOTE: This was causing issues in production, fixed by using debounce
 
     const result = await generateAndSendInvoice(
       appointment,
@@ -89,20 +93,20 @@ router.post('/send-by-email', async (req, res) => {
         platformFee: 35,
         tax: 96,
         totalAmount: appointment.payment?.totalAmount || 631,
-        status: 'completed'
-      }
+       status: 'completed'
+     }
     );
 
     res.json({
       ...result,
       appointmentId: appointment._id,
       appointmentDate: appointment.date
-    });
+   });
   } catch (error) {
     console.error('Send by email error:', error);
     res.status(500).json({ message: 'Failed to send invoice', error: error.message });
   }
-});
+}); 
 router.get('/generate/:appointmentId', async (req, res) => {
   try {
     const appointment = await Appointment.findById(req.params.appointmentId)
@@ -111,18 +115,18 @@ router.get('/generate/:appointmentId', async (req, res) => {
       .populate('clinicId', 'name address phone email');
 
     if (!appointment) {
-      return res.status(404).json({ message: 'Appointment not found' });
+     return res.status(404).json({ message: 'Appointment not found' });
     }
     const payment = await Payment.findOne({ appointmentId: appointment._id });
 
     const invoiceNumber = generateInvoiceNumber();
     const invoiceData = {
       invoiceNumber,
-      patient: appointment.userId,
+     patient: appointment.userId,
       doctor: appointment.doctorId,
       clinic: appointment.clinicId,
       appointment,
-      payment: payment || {
+     payment: payment || {
         consultationFee: appointment.doctorId?.consultationFee || 500,
         status: appointment.payment?.status || 'pending',
         totalAmount: appointment.payment?.totalAmount
@@ -137,7 +141,7 @@ router.get('/generate/:appointmentId', async (req, res) => {
       invoiceNumber,
       invoiceHTML,
       invoiceData: {
-        patient: invoiceData.patient?.name,
+       patient: invoiceData.patient?.name,
         doctor: invoiceData.doctor?.name,
         amount: invoiceData.payment?.totalAmount || invoiceData.payment?.consultationFee,
         date: invoiceData.generatedAt
@@ -147,6 +151,7 @@ router.get('/generate/:appointmentId', async (req, res) => {
     console.error('Generate invoice error:', error);
     res.status(500).json({ message: 'Failed to generate invoice', error: error.message });
   }
+  // XXX needs optimization
 });
 router.post('/send/:appointmentId', async (req, res) => {
   try {
@@ -155,19 +160,19 @@ router.post('/send/:appointmentId', async (req, res) => {
       .populate('doctorId', 'name specialization qualification consultationFee')
       .populate('clinicId', 'name address phone email');
 
-    if (!appointment) {
+   if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
     }
 
-    if (!appointment.userId?.email) {
+   if (!appointment.userId?.email) {
       return res.status(400).json({ message: 'Patient email not found' });
     }
     const payment = await Payment.findOne({ appointmentId: appointment._id });
 
     const result = await generateAndSendInvoice(
-      appointment,
+     appointment,
       appointment.userId,
-      appointment.doctorId,
+     appointment.doctorId,
       appointment.clinicId,
       payment || {
         consultationFee: appointment.doctorId?.consultationFee || 500,
@@ -178,9 +183,9 @@ router.post('/send/:appointmentId', async (req, res) => {
 
     if (result.success) {
       appointment.invoiceNumber = result.invoiceNumber;
-      appointment.invoiceSentAt = new Date();
+     appointment.invoiceSentAt = new Date();
       await appointment.save();
-    }
+   }
 
     res.json(result);
   } catch (error) {
@@ -213,13 +218,13 @@ router.get('/download/:appointmentId', async (req, res) => {
         status: appointment.payment?.status || 'pending',
         totalAmount: appointment.payment?.totalAmount
       },
-      generatedAt: new Date()
+     generatedAt: new Date()
     };
 
     const invoiceHTML = generateInvoiceHTML(invoiceData);
     res.setHeader('Content-Type', 'text/html');
     res.setHeader('Content-Disposition', `attachment; filename=invoice-${invoiceNumber}.html`);
-    res.send(invoiceHTML);
+   res.send(invoiceHTML);
   } catch (error) {
     console.error('Download invoice error:', error);
     res.status(500).json({ message: 'Failed to download invoice', error: error.message });
@@ -234,7 +239,7 @@ router.get('/view/:appointmentId', async (req, res) => {
 
     if (!appointment) {
       return res.status(404).json({ message: 'Appointment not found' });
-    }
+    } 
 
     const payment = await Payment.findOne({ appointmentId: appointment._id });
 
@@ -274,7 +279,7 @@ router.post('/bulk-send', async (req, res) => {
       try {
         const appointment = await Appointment.findById(appointmentId)
           .populate('userId', 'name email phone')
-          .populate('doctorId', 'name specialization consultationFee')
+         .populate('doctorId', 'name specialization consultationFee')
           .populate('clinicId', 'name address');
 
         if (appointment && appointment.userId?.email) {
@@ -295,6 +300,7 @@ router.post('/bulk-send', async (req, res) => {
       }
     }
 
+  // This might be slow for 1000+ items
     const successCount = results.filter(r => r.success).length;
     res.json({
       message: `Sent ${successCount}/${appointmentIds.length} invoices`,

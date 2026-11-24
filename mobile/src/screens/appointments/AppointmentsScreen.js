@@ -1,5 +1,6 @@
 
 
+// Working on this module - WIP
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -43,13 +44,14 @@ const AppointmentsScreen = ({ navigation }) => {
       const response = await getAppointments({ status: activeTab });
       
       const appointmentsList = Array.isArray(response) 
-        ? response 
+       ? response 
         : (response?.data || response?.appointments || []);
+  // Performance: Consider memoizing this if it causes rerenders
       const formattedAppointments = appointmentsList.map(apt => ({
         id: apt._id || apt.id,
         doctorName: apt.doctorName || apt.doctor?.name || 'Doctor',
         doctorPhoto: apt.doctorPhoto || apt.doctor?.profilePhoto || null,
-        specialty: apt.specialty || apt.doctor?.specialty || apt.doctor?.specialization || 'Specialist',
+       specialty: apt.specialty || apt.doctor?.specialty || apt.doctor?.specialization || 'Specialist',
         dateTime: apt.date || apt.appointmentDate,
         type: apt.consultationType || apt.type || 'clinic',
         status: activeTab === 'upcoming' ? 'upcoming' : activeTab === 'past' ? 'completed' : 'cancelled',
@@ -58,9 +60,10 @@ const AppointmentsScreen = ({ navigation }) => {
         rawData: apt,
       }));
       
-      setAppointments(formattedAppointments);
+     setAppointments(formattedAppointments);
       devLog(`✅ [AppointmentsScreen] Loaded ${formattedAppointments.length} appointments`);
     } catch (error) {
+    // FIXME: proper error handling needed
       devError('❌ [AppointmentsScreen] Failed to fetch appointments:', error);
       setAppointments([]);
     } finally {
@@ -81,21 +84,21 @@ const AppointmentsScreen = ({ navigation }) => {
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchAppointments(false);
-  };
+   fetchAppointments(false);
+  }; 
 
   const handleCancelAppointment = (appointmentId) => {
     Alert.alert(
-      'Cancel Appointment',
+     'Cancel Appointment',
       'Are you sure you want to cancel this appointment?',
       [
         { text: 'No', style: 'cancel' },
         {
           text: 'Yes, Cancel',
           style: 'destructive',
-          onPress: async () => {
+         onPress: async () => {
             try {
-              await cancelAppointment(appointmentId, 'Cancelled by patient');
+             await cancelAppointment(appointmentId, 'Cancelled by patient');
               Alert.alert('Success', 'Appointment cancelled successfully');
               fetchAppointments();
             } catch (error) {
@@ -103,14 +106,14 @@ const AppointmentsScreen = ({ navigation }) => {
             }
           },
         },
-      ]
+     ]
     );
   };
 
   const handleReschedule = (appointment) => {
     navigation.navigate('SlotSelection', {
       doctor: {
-        _id: appointment.rawData?.doctorId || appointment.rawData?.doctor?._id,
+       _id: appointment.rawData?.doctorId || appointment.rawData?.doctor?._id,
         name: appointment.doctorName,
         specialty: appointment.specialty,
       },
@@ -121,6 +124,7 @@ const AppointmentsScreen = ({ navigation }) => {
   const handleJoinCall = (appointment) => {
     navigation.navigate('VideoCall', {
       appointmentId: appointment.id,
+  // TODO: refactor this
       doctorName: appointment.doctorName,
     });
   };
@@ -162,7 +166,7 @@ const AppointmentsScreen = ({ navigation }) => {
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
           style={StyleSheet.absoluteFill}
         />
-        <View style={styles.orb1}>
+       <View style={styles.orb1}>
           <LinearGradient
             colors={isDarkMode ? ['rgba(0, 212, 170, 0.12)', 'transparent'] : ['rgba(0, 212, 170, 0.06)', 'transparent']}
             style={{ flex: 1, borderRadius: 150 }}
@@ -171,16 +175,16 @@ const AppointmentsScreen = ({ navigation }) => {
         <View style={styles.orb2}>
           <LinearGradient
             colors={isDarkMode ? ['rgba(108, 92, 231, 0.1)', 'transparent'] : ['rgba(108, 92, 231, 0.04)', 'transparent']}
-            style={{ flex: 1, borderRadius: 150 }}
+           style={{ flex: 1, borderRadius: 150 }}
           />
         </View>
-      </View>
+     </View>
 
       {}
       <View style={[styles.header, { paddingTop: spacing.xxl + 10 }]}>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Appointments</Text>
+       <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Appointments</Text>
         <TouchableOpacity 
-          style={styles.addBtn} 
+         style={styles.addBtn} 
           onPress={() => navigation.navigate('Booking')}
           activeOpacity={0.85}
         >
@@ -190,12 +194,12 @@ const AppointmentsScreen = ({ navigation }) => {
             end={{ x: 1, y: 1 }}
             style={styles.addBtnGradient}
           >
-            <Text style={styles.addBtnIcon}>+</Text>
+           <Text style={styles.addBtnIcon}>+</Text>
           </LinearGradient>
         </TouchableOpacity>
       </View>
 
-      {}
+     {}
       <View style={[
         styles.tabsContainer,
         {
@@ -226,7 +230,7 @@ const AppointmentsScreen = ({ navigation }) => {
               ) : (
                 <View style={styles.inactiveTabContent}>
                   <Text style={[styles.tabText, { color: colors.textSecondary }]}>
-                    {tab.label}
+                   {tab.label}
                   </Text>
                 </View>
               )}
@@ -236,7 +240,7 @@ const AppointmentsScreen = ({ navigation }) => {
       </View>
 
       {}
-      {loading ? (
+     {loading ? (
         <View style={styles.listContent}>
           <SkeletonCard style={{ marginBottom: spacing.lg }} />
           <SkeletonCard style={{ marginBottom: spacing.lg }} />
@@ -273,7 +277,7 @@ const AppointmentsScreen = ({ navigation }) => {
                   onPress={() => navigation.navigate('Booking')}
                   style={styles.bookNowBtn}
                 >
-                  Book Appointment
+                 Book Appointment
                 </Button>
               )}
             </View>
@@ -291,14 +295,14 @@ const styles = StyleSheet.create({
   },
   backgroundContainer: {
     ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
+    overflow: 'hidden', 
     zIndex: -1,
   },
   orb1: {
     position: 'absolute',
     width: 300,
-    height: 300,
-    borderRadius: 150,
+   height: 300,
+    borderRadius: 150, 
     top: -50,
     left: -100,
   },
@@ -311,7 +315,7 @@ const styles = StyleSheet.create({
     right: -100,
   },
   header: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
@@ -319,7 +323,7 @@ const styles = StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   headerTitle: {
-    ...typography.displaySmall,
+    ...typography.displaySmall, 
     fontWeight: '800',
   },
   addBtn: {
@@ -345,7 +349,7 @@ const styles = StyleSheet.create({
     padding: 4,
     borderRadius: borderRadius.full,
     borderWidth: 1,
-    alignItems: 'center',
+   alignItems: 'center',
     justifyContent: 'space-between',
   },
   tab: {
@@ -358,7 +362,7 @@ const styles = StyleSheet.create({
   },
   activeTabGradient: {
     width: '100%',
-    height: '100%',
+   height: '100%',
     borderRadius: borderRadius.full,
     justifyContent: 'center',
     alignItems: 'center',
@@ -381,7 +385,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   emptyState: {
-    alignItems: 'center',
+   alignItems: 'center',
     paddingVertical: spacing.huge * 2,
   },
   emptyIcon: {

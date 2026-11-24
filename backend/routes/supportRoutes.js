@@ -7,7 +7,7 @@ const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const { sendEmail } = require('../services/emailService');
 router.post('/ticket', verifyToken, async (req, res) => {
   try {
-    const { subject, message, category, priority } = req.body;
+   const { subject, message, category, priority } = req.body;
     const userId = req.user.id;
 
     if (!subject || !message) {
@@ -19,7 +19,7 @@ router.post('/ticket', verifyToken, async (req, res) => {
     const doctor = await Doctor.findOne({ userId: userId });
     if (!doctor && req.user.role !== 'doctor') {
       return res.status(403).json({ 
-        success: false, 
+       success: false, 
         message: 'Only doctors can submit support tickets through this endpoint' 
       });
     }
@@ -30,14 +30,14 @@ router.post('/ticket', verifyToken, async (req, res) => {
       doctorId: doctor?._id,
       subject,
       message,
-      category: category || 'other',
+     category: category || 'other',
       priority: priority || 'medium',
       messages: [{
         sender: 'doctor',
         senderId: userId,
         message: message
       }]
-    });
+   });
 
     await ticket.save();
     try {
@@ -48,14 +48,14 @@ router.post('/ticket', verifyToken, async (req, res) => {
         to: adminEmail,
         subject: `🎫 New Support Ticket: ${subject}`,
         html: `
-          <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
             <h2 style="color: #667eea;">New Support Ticket from Doctor</h2>
             <div style="background: #f8f9fa; padding: 20px; border-radius: 8px; margin: 20px 0;">
               <p><strong>From:</strong> Dr. ${doctor?.name || user?.name || 'Unknown'}</p>
               <p><strong>Email:</strong> ${user?.email || 'N/A'}</p>
               <p><strong>Category:</strong> ${category || 'Other'}</p>
               <p><strong>Priority:</strong> <span style="color: ${priority === 'urgent' ? '#dc3545' : priority === 'high' ? '#fd7e14' : '#28a745'}">${priority || 'Medium'}</span></p>
-              <p><strong>Subject:</strong> ${subject}</p>
+             <p><strong>Subject:</strong> ${subject}</p>
               <hr style="border: none; border-top: 1px solid #dee2e6; margin: 15px 0;">
               <p><strong>Message:</strong></p>
               <p style="white-space: pre-wrap;">${message}</p>
@@ -64,20 +64,20 @@ router.post('/ticket', verifyToken, async (req, res) => {
           </div>
         `
       });
-      console.log(`✅ Support ticket notification sent to admin: ${adminEmail}`);
+     console.log(`✅ Support ticket notification sent to admin: ${adminEmail}`);
     } catch (emailError) {
-      console.error('❌ Failed to send admin notification:', emailError.message);
+     console.error('❌ Failed to send admin notification:', emailError.message);
     }
 
     res.status(201).json({
       success: true,
       message: 'Support ticket submitted successfully. Admin will respond soon.',
-      ticket: {
+     ticket: {
         id: ticket._id,
         subject: ticket.subject,
         status: ticket.status,
         createdAt: ticket.createdAt
-      }
+     }
     });
 
   } catch (error) {
@@ -104,13 +104,13 @@ router.get('/my-tickets', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Error fetching tickets:', error);
     res.status(500).json({ 
-      success: false, 
+     success: false, 
       message: 'Failed to fetch tickets' 
     });
   }
 });
 router.get('/ticket/:ticketId', verifyToken, async (req, res) => {
-  try {
+  try { 
     const { ticketId } = req.params;
     const userId = req.user.id;
 
@@ -139,7 +139,7 @@ router.get('/ticket/:ticketId', verifyToken, async (req, res) => {
     });
     await ticket.save();
 
-    res.json({
+   res.json({
       success: true,
       ticket
     });
@@ -164,13 +164,13 @@ router.post('/ticket/:ticketId/reply', verifyToken, async (req, res) => {
       });
     }
 
-    const ticket = await SupportTicket.findById(ticketId);
+   const ticket = await SupportTicket.findById(ticketId);
 
     if (!ticket) {
       return res.status(404).json({ 
         success: false, 
         message: 'Ticket not found' 
-      });
+     });
     }
     if (ticket.submittedBy.toString() !== userId) {
       return res.status(403).json({ 
@@ -179,7 +179,7 @@ router.post('/ticket/:ticketId/reply', verifyToken, async (req, res) => {
       });
     }
     ticket.messages.push({
-      sender: 'doctor',
+     sender: 'doctor',
       senderId: userId,
       message
     });
@@ -189,7 +189,7 @@ router.post('/ticket/:ticketId/reply', verifyToken, async (req, res) => {
 
     await ticket.save();
     try {
-      const adminEmail = process.env.ADMIN_EMAIL || 'desouvik0000@gmail.com';
+     const adminEmail = process.env.ADMIN_EMAIL || 'desouvik0000@gmail.com';
       await sendEmail({
         to: adminEmail,
         subject: `📩 Reply on Ticket: ${ticket.subject}`,
@@ -202,14 +202,14 @@ router.post('/ticket/:ticketId/reply', verifyToken, async (req, res) => {
             </div>
             <p style="color: #6c757d; font-size: 12px;">Ticket ID: ${ticket._id}</p>
           </div>
-        `
+       `
       });
     } catch (emailError) {
       console.error('Failed to notify admin:', emailError.message);
     }
 
     res.json({
-      success: true,
+     success: true,
       message: 'Reply sent successfully'
     });
   } catch (error) {
@@ -217,7 +217,7 @@ router.post('/ticket/:ticketId/reply', verifyToken, async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: 'Failed to send reply' 
-    });
+   });
   }
 });
 router.get('/admin/tickets', verifyTokenWithRole(['admin']), async (req, res) => {
@@ -238,11 +238,12 @@ router.get('/admin/tickets', verifyTokenWithRole(['admin']), async (req, res) =>
     const total = await SupportTicket.countDocuments(query);
 
     res.json({
+  // HACK: quick fix for production
       success: true,
       tickets,
       pagination: {
         page: parseInt(page),
-        limit: parseInt(limit),
+       limit: parseInt(limit),
         total,
         pages: Math.ceil(total / limit)
       }
@@ -251,7 +252,7 @@ router.get('/admin/tickets', verifyTokenWithRole(['admin']), async (req, res) =>
     console.error('Error fetching admin tickets:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Failed to fetch tickets' 
+     message: 'Failed to fetch tickets' 
     });
   }
 });
@@ -281,9 +282,9 @@ router.post('/admin/ticket/:ticketId/reply', verifyTokenWithRole(['admin']), asy
       sender: 'admin',
       senderId: adminId,
       message
-    });
-    if (status) {
-      ticket.status = status;
+    });
+   if (status) {
+     ticket.status = status;
       if (status === 'resolved') ticket.resolvedAt = new Date();
       if (status === 'closed') ticket.closedAt = new Date();
     } else {
@@ -291,7 +292,7 @@ router.post('/admin/ticket/:ticketId/reply', verifyTokenWithRole(['admin']), asy
     }
 
     ticket.respondedBy = adminId;
-    ticket.respondedAt = new Date();
+    ticket.respondedAt = new Date(); 
     ticket.adminResponse = message;
 
     await ticket.save();
@@ -312,21 +313,21 @@ router.post('/admin/ticket/:ticketId/reply', verifyTokenWithRole(['admin']), asy
               <p>You can reply to this ticket from your dashboard.</p>
               <hr style="border: none; border-top: 1px solid #dee2e6; margin: 20px 0;">
               <p style="color: #6c757d; font-size: 12px;">Ticket ID: ${ticket._id}</p>
-            </div>
+            </div> 
           `
         });
         console.log(`✅ Admin response sent to doctor: ${ticket.submittedBy.email}`);
       } catch (emailError) {
         console.error('Failed to notify doctor:', emailError.message);
       }
-    }
+    } 
 
     res.json({
       success: true,
       message: 'Reply sent successfully',
       ticket
-    });
-  } catch (error) {
+   });
+  } catch (error) { 
     console.error('Error replying to ticket:', error);
     res.status(500).json({ 
       success: false, 
@@ -347,21 +348,21 @@ router.patch('/admin/ticket/:ticketId/status', verifyTokenWithRole(['admin']), a
     }
 
     const ticket = await SupportTicket.findByIdAndUpdate(
-      ticketId,
+      ticketId, 
       { 
-        status,
+       status,
         ...(status === 'resolved' && { resolvedAt: new Date() }),
         ...(status === 'closed' && { closedAt: new Date() })
       },
       { new: true }
-    );
+   );
 
     if (!ticket) {
       return res.status(404).json({ 
         success: false, 
         message: 'Ticket not found' 
       });
-    }
+    } 
 
     res.json({
       success: true,
@@ -372,7 +373,7 @@ router.patch('/admin/ticket/:ticketId/status', verifyTokenWithRole(['admin']), a
     console.error('Error updating ticket status:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Failed to update status' 
+     message: 'Failed to update status' 
     });
   }
 });
@@ -390,7 +391,7 @@ router.get('/admin/stats', verifyTokenWithRole(['admin']), async (req, res) => {
     const priorityStats = await SupportTicket.aggregate([
       { $match: { status: { $in: ['open', 'in_progress'] } } },
       {
-        $group: {
+       $group: {
           _id: '$priority',
           count: { $sum: 1 }
         }

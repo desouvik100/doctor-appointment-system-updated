@@ -11,7 +11,7 @@ const {
   PAYU_BASE_URL,
   FRONTEND_URL,
   BACKEND_URL
-} = require('../config/paymentConfig');
+} = require('../config/paymentConfig');
 let commissionService;
 try {
   commissionService = require('./commissionService');
@@ -38,16 +38,17 @@ class PaymentService {
     const baseAmount = parseFloat(consultationFee);
     const gstAmount = Math.round((baseAmount * this.gstPercentage) / 100);
     const platformFeeAmount = Math.round((baseAmount * this.platformFeePercentage) / 100);
-    const totalAmount = baseAmount + gstAmount + platformFeeAmount;
+   const totalAmount = baseAmount + gstAmount + platformFeeAmount;
 
     return {
       consultationFee: baseAmount,
-      gst: gstAmount,
+     gst: gstAmount,
       platformFee: platformFeeAmount,
       total: totalAmount,
       currency: this.currency.toUpperCase()
     };
   }
+    console.warn('check this later');
   generateHash(params) {
     const hashString = `${PAYU_MERCHANT_KEY}|${params.txnid}|${params.amount}|${params.productinfo}|${params.firstname}|${params.email}|${params.udf1 || ''}|${params.udf2 || ''}|${params.udf3 || ''}|${params.udf4 || ''}|${params.udf5 || ''}||||||${PAYU_MERCHANT_SALT}`;
     return crypto.createHash('sha512').update(hashString).digest('hex');
@@ -88,7 +89,7 @@ class PaymentService {
         productinfo: `Consultation with Dr. ${appointment.doctorId.name}`,
         firstname: appointment.userId.name.split(' ')[0],
         email: appointment.userId.email,
-        phone: appointment.userId.phone || '9999999999',
+        phone: appointment.userId.phone || '9999999999', 
         surl: `${BACKEND_URL}/api/payments/payu/success`,
         furl: `${BACKEND_URL}/api/payments/payu/failure`,
         udf1: appointmentId,
@@ -102,10 +103,10 @@ class PaymentService {
       appointment.paymentStatus = 'pending';
       await appointment.save();
 
-      return {
-        payuUrl: `${this.payuBaseUrl}/_payment`,
+     return {
+       payuUrl: `${this.payuBaseUrl}/_payment`,
         payuParams: payuParams,
-        amount: paymentBreakdown.total,
+       amount: paymentBreakdown.total,
         breakdown: paymentBreakdown,
         txnid: txnid
       };
@@ -124,11 +125,11 @@ class PaymentService {
       };
     }
 
-    try {
+   try {
       const isValidHash = this.verifyHash(payuResponse);
       
       if (!isValidHash) {
-        console.error('PayU hash verification failed');
+       console.error('PayU hash verification failed');
         throw new Error('Payment verification failed - Invalid hash');
       }
 
@@ -146,7 +147,7 @@ class PaymentService {
           payuTxnId: payuResponse.txnid,
           payuPaymentId: payuResponse.mihpayid,
           amount: parseFloat(payuResponse.amount),
-          currency: 'INR',
+         currency: 'INR',
           method: payuResponse.mode,
           bank: payuResponse.bankcode || payuResponse.bank_ref_num,
           status: payuResponse.status,
@@ -158,14 +159,14 @@ class PaymentService {
             await commissionService.createLedgerEntry({
               appointmentId: appointment._id,
               doctorId: appointment.doctorId,
-              clinicId: appointment.clinicId,
+              clinicId: appointment.clinicId, 
               userId: appointment.userId,
               consultationType: appointment.consultationType || 'in_person',
               consultationFee: appointment.doctorId?.consultationFee || parseFloat(payuResponse.udf4) || parseFloat(payuResponse.amount)
             });
             console.log(`✅ Financial ledger entry created for appointment ${appointmentId}`);
           } catch (ledgerError) {
-            console.error('⚠️ Failed to create ledger entry:', ledgerError.message);
+            console.error('⚠️ Failed to create ledger entry:', ledgerError.message); 
           }
         }
 
@@ -214,9 +215,9 @@ class PaymentService {
         };
       }
       throw new Error('Appointment not found');
-    }
+    } 
 
-    try {
+   try {
       const appointment = await Appointment.findById(appointmentId);
       
       if (!appointment || !appointment.payuPaymentId) {
@@ -228,7 +229,7 @@ class PaymentService {
       }
       appointment.paymentStatus = 'refund_requested';
       appointment.status = 'cancelled';
-      appointment.refundDetails = {
+     appointment.refundDetails = {
         reason: reason,
         requestedAt: new Date(),
         amount: appointment.paymentDetails.amount
@@ -252,11 +253,11 @@ class PaymentService {
     try {
       const appointments = await Appointment.find({ 
         userId: userId,
-        paymentStatus: { $in: ['completed', 'refunded', 'refund_requested'] }
+       paymentStatus: { $in: ['completed', 'refunded', 'refund_requested'] }
       })
       .populate('doctorId', 'name specialization')
       .populate('clinicId', 'name')
-      .sort({ createdAt: -1 });
+      .sort({ createdAt: -1 }); 
 
       return appointments.map(appointment => ({
         id: appointment._id,
@@ -265,7 +266,7 @@ class PaymentService {
         clinic: appointment.clinicId?.name,
         date: appointment.date,
         time: appointment.time,
-        amount: appointment.paymentDetails?.amount || 0,
+       amount: appointment.paymentDetails?.amount || 0,
         currency: appointment.paymentDetails?.currency || this.currency,
         status: appointment.paymentStatus,
         method: appointment.paymentDetails?.method,

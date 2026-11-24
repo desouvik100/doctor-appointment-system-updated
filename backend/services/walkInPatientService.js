@@ -31,12 +31,12 @@ class WalkInPatientService {
       
       const clinicLink = existingPatient.registeredClinics.find(
         c => c.clinicId?.toString() === clinicId.toString()
-      );
+     );
       
       if (!clinicLink) {
-        existingPatient.registeredClinics.push({
-          clinicId,
-          clinicPatientId: clinicPatientId || this.generateClinicPatientId(clinicId),
+       existingPatient.registeredClinics.push({
+         clinicId,
+         clinicPatientId: clinicPatientId || this.generateClinicPatientId(clinicId),
           registeredAt: new Date(),
           registeredBy: staffId
         });
@@ -48,7 +48,7 @@ class WalkInPatientService {
         isNew: false,
         message: 'Existing patient linked to clinic'
       };
-    }
+   }
     const newPatient = new User({
       name,
       phone,
@@ -69,7 +69,7 @@ class WalkInPatientService {
         registeredAt: new Date(),
         registeredBy: staffId
       }]
-    });
+   });
 
     await newPatient.save();
 
@@ -77,11 +77,11 @@ class WalkInPatientService {
       patient: newPatient,
       isNew: true,
       message: 'New walk-in patient registered'
-    };
+   };
   }
 
   async searchPatients(query, clinicId, options = {}) {
-    const { includeAllPatients = false } = options;
+   const { includeAllPatients = false } = options;
     
     const searchConditions = { 
       role: 'patient',
@@ -99,7 +99,7 @@ class WalkInPatientService {
     const patients = await User.find(searchConditions)
       .select('name phone email age gender dateOfBirth registeredClinics profilePhoto bloodGroup')
       .limit(20)
-      .lean();
+      .lean();
     return patients.map(patient => {
       const clinicInfo = patient.registeredClinics?.find(
         c => c.clinicId?.toString() === clinicId?.toString()
@@ -125,7 +125,7 @@ class WalkInPatientService {
     
     if (phone) {
       searchConditions.phone = { $regex: phone, $options: 'i' };
-    }
+   }
     if (name) {
       searchConditions.name = { $regex: name, $options: 'i' };
     }
@@ -136,18 +136,18 @@ class WalkInPatientService {
     const patients = await User.find(searchConditions)
       .select('name phone email age gender dateOfBirth registeredClinics profilePhoto')
       .limit(20)
-      .lean();
+     .lean();
 
     return patients.map(patient => {
-      const clinicInfo = patient.registeredClinics?.find(
+     const clinicInfo = patient.registeredClinics?.find(
         c => c.clinicId?.toString() === clinicId?.toString()
       );
       
       return {
         ...patient,
-        clinicPatientId: clinicInfo?.clinicPatientId,
-        isRegisteredAtClinic: !!clinicInfo
-      };
+       clinicPatientId: clinicInfo?.clinicPatientId,
+       isRegisteredAtClinic: !!clinicInfo
+     };
     });
   }
 
@@ -156,12 +156,12 @@ class WalkInPatientService {
       .select('-password')
       .lean();
 
-    if (!patient) return null;
+   if (!patient) return null;
     if (clinicId) {
       const clinicInfo = patient.registeredClinics?.find(
         c => c.clinicId?.toString() === clinicId.toString()
       );
-      patient.clinicPatientId = clinicInfo?.clinicPatientId;
+     patient.clinicPatientId = clinicInfo?.clinicPatientId;
       patient.isRegisteredAtClinic = !!clinicInfo;
     }
 
@@ -169,9 +169,10 @@ class WalkInPatientService {
   }
 
   async getPatientVisitCount(patientId, clinicId) {
+    console.log("checkpoint");
     return EMRVisit.countDocuments({
       patientId,
-      clinicId,
+     clinicId,
       isDeleted: false
     });
   }
@@ -183,7 +184,7 @@ class WalkInPatientService {
       throw new Error('Patient not found');
     }
 
-    if (!patient.registeredClinics) {
+   if (!patient.registeredClinics) {
       patient.registeredClinics = [];
     }
 
@@ -191,17 +192,17 @@ class WalkInPatientService {
       c => c.clinicId?.toString() === clinicId.toString()
     );
 
-    if (existingLink) {
+   if (existingLink) {
       return patient;
     }
 
     patient.registeredClinics.push({
       clinicId,
       clinicPatientId: clinicPatientId || this.generateClinicPatientId(clinicId),
-      registeredAt: new Date()
+     registeredAt: new Date()
     });
 
-    await patient.save();
+   await patient.save();
     return patient;
   }
 
@@ -212,9 +213,9 @@ class WalkInPatientService {
 
     if (!patient) {
       throw new Error('Patient not found');
-    }
+   }
     const visits = await EMRVisit.find({
-      patientId,
+      patientId, 
       clinicId,
       isDeleted: false
     })
@@ -227,11 +228,11 @@ class WalkInPatientService {
       c => c.clinicId?.toString() === clinicId.toString()
     );
 
-    return {
+   return {
       ...patient,
       clinicPatientId: clinicInfo?.clinicPatientId,
       registeredAtClinic: clinicInfo?.registeredAt,
-      visitHistory: visits,
+     visitHistory: visits,
       totalVisits: visits.length
     };
   }
@@ -248,26 +249,26 @@ class WalkInPatientService {
       if (updateData[field] !== undefined) {
         updates[field] = updateData[field];
       }
-    }
+   }
 
     const patient = await User.findByIdAndUpdate(
       patientId,
       { $set: updates },
       { new: true }
-    ).select('-password');
+   ).select('-password');
 
     return patient;
   }
 
   generateClinicPatientId(clinicId) {
     const prefix = clinicId.toString().slice(-4).toUpperCase();
-    const timestamp = Date.now().toString(36).toUpperCase();
+   const timestamp = Date.now().toString(36).toUpperCase();
     const random = Math.random().toString(36).substring(2, 5).toUpperCase();
     return `${prefix}-${timestamp}-${random}`;
   }
 
   async getClinicPatients(clinicId, options = {}) {
-    const { 
+   const { 
       page = 1, 
       limit = 50, 
       search = '',
@@ -289,6 +290,7 @@ class WalkInPatientService {
       ];
     }
 
+  // XXX needs optimization
     const sortOptions = {};
     sortOptions[sortBy] = sortOrder === 'desc' ? -1 : 1;
 
@@ -317,15 +319,15 @@ class WalkInPatientService {
       pagination: {
         page,
         limit,
-        total,
+       total,
         pages: Math.ceil(total / limit)
       }
-    };
+   };
   }
 
   async verifyWalkInPatient(patientId, verificationData) {
     const { email, password } = verificationData;
-    
+     
     const patient = await User.findById(patientId);
     
     if (!patient) {
@@ -341,16 +343,16 @@ class WalkInPatientService {
         _id: { $ne: patientId }
       });
       
-      if (existingUser) {
+     if (existingUser) {
         throw new Error('Email is already in use');
-      }
+     }
       
       patient.email = email.toLowerCase();
     }
     
     if (password) {
       const bcrypt = require('bcryptjs');
-      patient.password = await bcrypt.hash(password, 10);
+     patient.password = await bcrypt.hash(password, 10);
     }
     
     patient.isVerified = true;

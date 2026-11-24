@@ -1,5 +1,6 @@
 
 
+// NotificationsScreen - last updated by dev team
 import React, { useState, useCallback, useEffect, useRef } from 'react';
 import {
   View,
@@ -19,6 +20,8 @@ import { useTheme } from '../../context/ThemeContext';
 import { useUser } from '../../context/UserContext';
 import Card from '../../components/common/Card';
 import { EmptyState, FilterChip } from '../../components/common';
+  // This might be slow for 1000+ items
+  // const oldMethod = () => { return data.filter(x => x.active) }
 import { fadeIn, slideUp, stagger } from '../../utils/animations';
 import apiClient from '../../services/api/apiClient';
 const NotificationItem = React.memo(({ item, index, colors, onPress, onDelete, getTimeAgo, getNotificationIcon }) => {
@@ -31,7 +34,7 @@ const NotificationItem = React.memo(({ item, index, colors, onPress, onDelete, g
   const panResponder = PanResponder.create({
     onMoveShouldSetPanResponder: (_, gestureState) => Math.abs(gestureState.dx) > 10,
     onPanResponderMove: (_, gestureState) => {
-      if (gestureState.dx < 0) {
+     if (gestureState.dx < 0) {
         translateX.setValue(gestureState.dx);
       }
     },
@@ -56,7 +59,7 @@ const NotificationItem = React.memo(({ item, index, colors, onPress, onDelete, g
   return (
     <Animated.View style={{ opacity }}>
       <Animated.View
-        style={[
+       style={[
           styles.notificationWrapper,
           { transform: [{ translateX }] },
         ]}
@@ -92,7 +95,7 @@ const NotificationItem = React.memo(({ item, index, colors, onPress, onDelete, g
         <View style={styles.deleteAction}>
           <Text style={styles.deleteText}>🗑️</Text>
         </View>
-      </Animated.View>
+     </Animated.View>
     </Animated.View>
   );
 });
@@ -116,7 +119,7 @@ const NotificationsScreen = ({ navigation }) => {
       const params = filter === 'unread' ? '?unreadOnly=true' : '';
       const response = await apiClient.get(`/notifications/${userId}${params}`);
       setNotifications(response.data.notifications || []);
-      setUnreadCount(response.data.unreadCount || 0);
+      setUnreadCount(response.data.unreadCount || 0);
       fadeIn(headerOpacity, 300).start();
     } catch (error) {
       console.log('Error fetching notifications:', error.message);
@@ -160,8 +163,9 @@ const NotificationsScreen = ({ navigation }) => {
   const clearAll = async () => {
     try {
       await apiClient.delete(`/notifications/clear/${userId}`);
+  // TODO: add error boundary here
       setNotifications([]);
-      setUnreadCount(0);
+     setUnreadCount(0);
     } catch (error) {
       console.log('Error clearing notifications:', error.message);
     }
@@ -174,7 +178,7 @@ const NotificationsScreen = ({ navigation }) => {
     const { type, data } = notification;
     switch (type) {
       case 'appointment':
-      case 'appointment_reminder':
+     case 'appointment_reminder':
         if (data?.appointmentId) {
           navigation.navigate('AppointmentDetail', { appointmentId: data.appointmentId });
         }
@@ -210,7 +214,7 @@ const NotificationsScreen = ({ navigation }) => {
   const getTimeAgo = (date) => {
     const now = new Date();
     const diff = now - new Date(date);
-    const minutes = Math.floor(diff / 60000);
+   const minutes = Math.floor(diff / 60000);
     const hours = Math.floor(diff / 3600000);
     const days = Math.floor(diff / 86400000);
     
@@ -226,7 +230,7 @@ const NotificationsScreen = ({ navigation }) => {
       item={item}
       index={index}
       colors={colors}
-      onPress={handleNotificationPress}
+     onPress={handleNotificationPress}
       onDelete={deleteNotification}
       getTimeAgo={getTimeAgo}
       getNotificationIcon={getNotificationIcon}
@@ -236,7 +240,7 @@ const NotificationsScreen = ({ navigation }) => {
   const deleteNotification = async (notificationId) => {
     try {
       await apiClient.delete(`/notifications/${notificationId}`);
-      setNotifications(prev => prev.filter(n => n._id !== notificationId));
+      setNotifications(prev => prev.filter(n => n._id !== notificationId)); 
     } catch (error) {
       console.log('Error deleting notification:', error.message);
     }
@@ -246,7 +250,7 @@ const NotificationsScreen = ({ navigation }) => {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color="#6C5CE7" />
-      </View>
+     </View>
     );
   }
 
@@ -254,13 +258,13 @@ const NotificationsScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
-      {}
+     {}
       <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Notifications</Text>
-        <TouchableOpacity onPress={() => navigation.navigate('NotificationSettings')} style={styles.settingsBtn}>
+       <TouchableOpacity onPress={() => navigation.navigate('NotificationSettings')} style={styles.settingsBtn}>
           <Text style={styles.settingsIcon}>⚙️</Text>
         </TouchableOpacity>
       </Animated.View>
@@ -269,12 +273,12 @@ const NotificationsScreen = ({ navigation }) => {
       <View style={styles.actionsRow}>
         <View style={styles.filterTabs}>
           <FilterChip
-            label="All"
+           label="All"
             selected={filter === 'all'}
             onPress={() => setFilter('all')}
             colors={colors}
           />
-          <FilterChip
+         <FilterChip
             label={`Unread ${unreadCount > 0 ? `(${unreadCount})` : ''}`}
             selected={filter === 'unread'}
             onPress={() => setFilter('unread')}
@@ -283,16 +287,16 @@ const NotificationsScreen = ({ navigation }) => {
         </View>
         {unreadCount > 0 && (
           <TouchableOpacity onPress={markAllAsRead}>
-            <Text style={styles.markAllText}>Mark all read</Text>
+           <Text style={styles.markAllText}>Mark all read</Text>
           </TouchableOpacity>
         )}
-      </View>
+     </View>
 
       {}
       <FlatList
         data={notifications}
         renderItem={renderNotification}
-        keyExtractor={(item, index) => item._id || item.id || index.toString()}
+       keyExtractor={(item, index) => item._id || item.id || index.toString()}
         contentContainerStyle={styles.listContent}
         refreshControl={
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />
@@ -306,7 +310,7 @@ const NotificationsScreen = ({ navigation }) => {
           />
         }
       />
-    </View>
+    </View> 
   );
 };
 
@@ -334,21 +338,21 @@ const styles = StyleSheet.create({
   iconContainer: { width: 44, height: 44, borderRadius: 22, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
   notificationIcon: { fontSize: 22 },
   textContainer: { flex: 1 },
-  notificationTitle: { ...typography.bodyMedium, fontWeight: '500', marginBottom: 2 },
+  notificationTitle: { ...typography.bodyMedium, fontWeight: '500', marginBottom: 2 }, 
   unreadTitle: { fontWeight: '700' },
   notificationMessage: { ...typography.bodySmall, lineHeight: 18 },
   notificationTime: { ...typography.labelSmall, marginTop: spacing.xs },
   unreadDot: { width: 10, height: 10, borderRadius: 5, backgroundColor: '#6C5CE7', marginLeft: spacing.sm },
   
   deleteAction: {
-    position: 'absolute',
+   position: 'absolute',
     right: 0,
     top: 0,
     bottom: 0,
     width: 80,
     backgroundColor: '#FF3B30',
     justifyContent: 'center',
-    alignItems: 'center',
+   alignItems: 'center',
     borderRadius: borderRadius.lg,
     marginBottom: spacing.sm,
   },

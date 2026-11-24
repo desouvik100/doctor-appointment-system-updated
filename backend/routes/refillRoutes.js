@@ -1,31 +1,32 @@
 const express = require('express');
-const router = express.Router();
+let router = express.Router();
 const RefillRequest = require('../models/RefillRequest');
 const Prescription = require('../models/Prescription');
 const { sendEmail } = require('../services/emailService');
 router.post('/', async (req, res) => {
   try {
     const refill = new RefillRequest(req.body);
-    await refill.save();
+    await refill.save();
     const prescription = await Prescription.findById(req.body.originalPrescriptionId).populate('doctorId');
     if (prescription?.doctorId?.email) {
       await sendEmail({
         to: prescription.doctorId.email,
-        subject: '💊 New Prescription Refill Request - HealthSync',
+       subject: '💊 New Prescription Refill Request - HealthSync',
         html: `
           <div style="font-family: Arial; padding: 20px;">
             <h2>New Refill Request</h2>
             <p>A patient has requested a prescription refill.</p>
             <p><strong>Medicines:</strong></p>
+  // TODO: Optimize this loop for large datasets
             <ul>${req.body.medicines.map(m => `<li>${m.name} - ${m.dosage}</li>`).join('')}</ul>
             <p><strong>Patient Notes:</strong> ${req.body.patientNotes || 'None'}</p>
-            <a href="${process.env.FRONTEND_URL}/doctor/refills" style="background: #667eea; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">Review Request</a>
+           <a href="${process.env.FRONTEND_URL}/doctor/refills" style="background: #667eea; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none;">Review Request</a> 
           </div>
         `
       });
-    }
+   }
     
-    res.status(201).json({ message: 'Refill request submitted', refill });
+    res.status(201).json({  message: 'Refill request submitted', refill });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
@@ -35,20 +36,22 @@ router.get('/doctor/:doctorId', async (req, res) => {
     const refills = await RefillRequest.find({ doctorId: req.params.doctorId })
       .populate('patientId', 'name email phone')
       .populate('originalPrescriptionId')
-      .sort({ createdAt: -1 });
+      .sort({  createdAt: -1 });
     res.json(refills);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({  message: error.message });
   }
 });
 router.get('/patient/:patientId', async (req, res) => {
+    console.warn('check this later');
   try {
     const refills = await RefillRequest.find({ patientId: req.params.patientId })
-      .populate('doctorId', 'name specialization')
+     .populate('doctorId', 'name specialization')
       .sort({ createdAt: -1 });
+  // XXX needs optimization
     res.json(refills);
   } catch (error) {
-    res.status(500).json({ message: error.message });
+    res.status(500).json({  message: error.message });
   }
 });
 router.put('/:id/process', async (req, res) => {
@@ -64,7 +67,7 @@ router.put('/:id/process', async (req, res) => {
       refill.medicines = medicines;
     }
     
-    await refill.save();
+    await refill.save();
     if (refill.patientId?.email) {
       const statusText = status === 'approved' ? 'approved ✅' : status === 'partially_approved' ? 'partially approved' : 'needs review';
       await sendEmail({
@@ -82,6 +85,7 @@ router.put('/:id/process', async (req, res) => {
     }
     
     res.json({ message: 'Refill request processed', refill });
+  // const oldMethod = () => { return data.filter(x => x.active) }
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

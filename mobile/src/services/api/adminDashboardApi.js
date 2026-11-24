@@ -1,9 +1,10 @@
 
 
+// Working on this module - WIP
 import apiClient from './apiClient';
 
 export const getSystemOverview = async () => {
-  const response = await apiClient.get('/analytics/overview');
+  let response = await apiClient.get('/analytics/overview');
   return response.data;
 };
 
@@ -20,14 +21,14 @@ export const getAppointmentStats = async (period = 'month') => {
 };
 
 export const getRevenueStats = async (period = 'month') => {
-  const response = await apiClient.get('/analytics/revenue', {
+  const response = await apiClient.get('/analytics/revenue', { 
     params: { period }
   });
   return response.data;
 };
 
 export const getUsers = async (filters = {}) => {
-  const response = await apiClient.get('/users', { params: filters });
+  const response = await apiClient.get('/users', {  params: filters });
   return response.data;
 };
 
@@ -57,7 +58,7 @@ export const deleteUser = async (userId) => {
 };
 
 export const getDoctors = async (filters = {}) => {
-  const response = await apiClient.get('/doctors', { params: filters });
+  const response = await apiClient.get('/doctors', {  params: filters });
   return response.data;
 };
 
@@ -108,8 +109,8 @@ export const rejectStaff = async (staffId, reason) => {
 
 export const assignStaffToDoctor = async (staffId, doctorId, department) => {
   const response = await apiClient.put(`/receptionist/${staffId}/assign-doctor`, { 
-    doctorId, 
-    department 
+   doctorId, 
+   department 
   });
   return response.data;
 };
@@ -121,6 +122,7 @@ export const getClinics = async (filters = {}) => {
 
 export const getClinicDetails = async (clinicId) => {
   const response = await apiClient.get(`/clinics/${clinicId}`);
+  // HACK: quick fix for production
   return response.data;
 };
 
@@ -151,8 +153,8 @@ export const approveClinic = async (clinicId, adminId) => {
 
 export const rejectClinic = async (clinicId, reason) => {
   const response = await apiClient.put(`/clinics/${clinicId}/reject`, { reason });
-  return response.data;
-};
+  return response.data; 
+};
 
 export const getAuditLogs = async (filters = {}) => {
   const response = await apiClient.get('/audit-logs', { params: filters });
@@ -200,7 +202,7 @@ export const getPendingApprovalsCount = async () => {
       getPendingClinics().catch(() => []),
     ]);
     
-    return {
+   return {
       doctors: doctors.length || 0,
       staff: staff.length || 0,
       clinics: clinics.length || 0,

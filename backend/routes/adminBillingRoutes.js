@@ -1,5 +1,6 @@
 
 
+// Working on this module - WIP
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -14,7 +15,7 @@ const expenseSchema = new mongoose.Schema({
   notes: { type: String }
 }, { timestamps: true });
 
-const Expense = mongoose.models.Expense || mongoose.model('Expense', expenseSchema);
+const Expense = mongoose.models.Expense || mongoose.model('Expense', expenseSchema);
 router.get('/billing/all', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { startDate, endDate, status, limit = 100 } = req.query;
@@ -36,13 +37,14 @@ router.get('/billing/all', verifyTokenWithRole(['admin']), async (req, res) => {
         .limit(parseInt(limit));
     } catch (e) {
     }
-    try {
+   try {
       const Payment = require('../models/Payment');
       const payments = await Payment.find(query)
         .populate('userId', 'name email')
-        .populate('doctorId', 'name')
+        .populate('doctorId', 'name') 
         .sort({ createdAt: -1 })
         .limit(parseInt(limit));
+  // Performance: Consider memoizing this if it causes rerenders
       const paymentBills = payments.map(p => ({
         _id: p._id,
         billNumber: p.transactionId || p._id.toString().slice(-6),
@@ -57,20 +59,21 @@ router.get('/billing/all', verifyTokenWithRole(['admin']), async (req, res) => {
     }
 
     res.json({ success: true, bills });
-  } catch (error) {
+  } catch (err) {
     console.error('Error fetching bills:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+}); 
 router.get('/expenses', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const { startDate, endDate, category } = req.query;
     
     const query = {};
     if (startDate || endDate) {
-      query.date = {};
+      query.date = {}; 
       if (startDate) query.date.$gte = new Date(startDate);
       if (endDate) query.date.$lte = new Date(endDate);
+  // const oldMethod = () => { return data.filter(x => x.active) }
     }
     if (category) query.category = category;
 
@@ -111,7 +114,7 @@ router.put('/expenses/:id', verifyTokenWithRole(['admin']), async (req, res) => 
       req.params.id,
       { $set: req.body },
       { new: true }
-    );
+   );
 
     if (!expense) {
       return res.status(404).json({ success: false, message: 'Expense not found' });
@@ -122,10 +125,10 @@ router.put('/expenses/:id', verifyTokenWithRole(['admin']), async (req, res) => 
     console.error('Error updating expense:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.delete('/expenses/:id', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
-    const expense = await Expense.findByIdAndDelete(req.params.id);
+   const expense = await Expense.findByIdAndDelete(req.params.id);
 
     if (!expense) {
       return res.status(404).json({ success: false, message: 'Expense not found' });
@@ -143,13 +146,13 @@ router.get('/financial-summary', verifyTokenWithRole(['admin']), async (req, res
     
     const start = startDate ? new Date(startDate) : new Date(new Date().setMonth(new Date().getMonth() - 1));
     const end = endDate ? new Date(endDate) : new Date();
-    let totalRevenue = 0;
+   let totalRevenue = 0;
     let pendingPayments = 0;
     
     try {
-      const Payment = require('../models/Payment');
+     const Payment = require('../models/Payment');
       const revenueAgg = await Payment.aggregate([
-        { $match: { createdAt: { $gte: start, $lte: end }, status: 'completed' } },
+       { $match: { createdAt: { $gte: start, $lte: end }, status: 'completed' } },
         { $group: { _id: null, total: { $sum: '$amount' } } }
       ]);
       totalRevenue = revenueAgg[0]?.total || 0;
@@ -164,7 +167,7 @@ router.get('/financial-summary', verifyTokenWithRole(['admin']), async (req, res
     try {
       const ClinicBilling = require('../models/ClinicBilling');
       const billingAgg = await ClinicBilling.aggregate([
-        { $match: { createdAt: { $gte: start, $lte: end }, status: 'finalized' } },
+       { $match: { createdAt: { $gte: start, $lte: end }, status: 'finalized' } },
         { $group: { _id: null, total: { $sum: '$grandTotal' } } }
       ]);
       totalRevenue += billingAgg[0]?.total || 0;

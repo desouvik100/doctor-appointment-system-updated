@@ -4,34 +4,34 @@ const mongoose = require('mongoose');
 require('dotenv').config();
 
 const aiSecurityService = require('../services/aiSecurityService');
-const SuspiciousActivity = require('../models/SuspiciousActivity');
+const SuspiciousActivity = require('../models/SuspiciousActivity');
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/healthsync');
-    console.log('✅ Connected to MongoDB');
+   console.log('✅ Connected to MongoDB');
   } catch (error) {
-    console.error('❌ MongoDB connection error:', error);
+    console.log('❌ MongoDB connection error:', error);
     process.exit(1);
-  }
+  } 
 };
 const testScenarios = [
   {
     name: '🔐 Multiple Failed Login Attempts (Brute Force)',
     test: async () => {
       console.log('\n--- Simulating 6 failed login attempts ---');
-      const email = 'hacker@test.com';
+      const email = 'hacker@test.com'; 
       const ip = '192.168.1.100';
       
       for (let i = 0; i < 6; i++) {
         const alert = await aiSecurityService.trackFailedLogin(email, ip, 'Mozilla/5.0 Suspicious Bot');
         if (alert) {
-          console.log(`⚠️ ALERT TRIGGERED: ${alert.description}`);
-          console.log(`   Severity: ${alert.severity}, Confidence: ${alert.confidenceScore}%`);
+         console.log(`⚠️ ALERT TRIGGERED: ${alert.description}`);
+          console.log(`   Severity: ${alert.severity}, Confidence: ${alert.confidenceScore}%`); 
           return alert;
         }
         console.log(`   Attempt ${i + 1} logged...`);
       }
-    }
+   }
   },
   {
     name: '⚡ Rapid Actions (Bot Detection)',
@@ -47,7 +47,7 @@ const testScenarios = [
           action: 'data_access',
           endpoint: '/api/patients',
           method: 'GET',
-          ipAddress: '10.0.0.50'
+         ipAddress: '10.0.0.50'
         });
       }
       const alert = await SuspiciousActivity.findOne({
@@ -66,11 +66,11 @@ const testScenarios = [
     name: '📊 Bulk Data Access',
     test: async () => {
       console.log('\n--- Simulating bulk data access (100 records) ---');
-      const userId = new mongoose.Types.ObjectId();
+     const userId = new mongoose.Types.ObjectId();
       
       const alerts = await aiSecurityService.analyzeActivity({
         userId,
-        userType: 'Receptionist',
+       userType: 'Receptionist',
         userName: 'Suspicious Staff',
         userEmail: 'staff@test.com',
         action: 'data_access',
@@ -103,7 +103,7 @@ const testScenarios = [
           userId,
           userType: 'Admin',
           userName: 'Night Admin',
-          userEmail: 'admin@test.com',
+          userEmail: 'admin@test.com', 
           action: 'login',
           endpoint: '/api/auth/admin/login',
           method: 'POST',
@@ -112,7 +112,7 @@ const testScenarios = [
         
         if (alerts.length > 0) {
           const alert = alerts.find(a => a.activityType === 'off_hours_access');
-          if (alert) {
+         if (alert) {
             console.log(`⚠️ ALERT TRIGGERED: ${alert.description}`);
             return alert;
           }
@@ -130,20 +130,20 @@ const testScenarios = [
           description: '[TEST] System access during off-hours (2:00 AM)',
           details: { ipAddress: '192.168.1.1', timeWindow: '2:00 local time' }
         });
-        console.log(`⚠️ TEST ALERT CREATED: ${alert.description}`);
+       console.log(`⚠️ TEST ALERT CREATED: ${alert.description}`);
         return alert;
       }
     }
   },
   {
     name: '🔓 Unauthorized Access Attempt',
-    test: async () => {
+   test: async () => {
       console.log('\n--- Simulating unauthorized admin endpoint access ---');
       const userId = new mongoose.Types.ObjectId();
       
       const alerts = await aiSecurityService.analyzeActivity({
         userId,
-        userType: 'User', 
+       userType: 'User', 
         userName: 'Sneaky Patient',
         userEmail: 'patient@test.com',
         action: 'data_access',
@@ -153,13 +153,13 @@ const testScenarios = [
       });
       
       if (alerts.length > 0) {
-        const alert = alerts.find(a => a.activityType === 'unauthorized_access');
-        if (alert) {
+       const alert = alerts.find(a => a.activityType === 'unauthorized_access');
+       if (alert) {
           console.log(`⚠️ ALERT TRIGGERED: ${alert.description}`);
           console.log(`   Severity: ${alert.severity}, Confidence: ${alert.confidenceScore}%`);
           return alert;
         }
-      }
+      } 
     }
   },
   {
@@ -169,18 +169,18 @@ const testScenarios = [
       const userId = new mongoose.Types.ObjectId();
       
       const alerts = await aiSecurityService.analyzeActivity({
-        userId,
+       userId,
         userType: 'Doctor',
-        userName: 'Dr. Big Spender',
+       userName: 'Dr. Big Spender',
         userEmail: 'doctor@test.com',
         action: 'payment',
         endpoint: '/api/payments/process',
         method: 'POST',
         ipAddress: '10.0.0.100',
-        requestBody: { amount: 75000, type: 'consultation' }
+       requestBody: { amount: 75000, type: 'consultation' }
       });
       
-      if (alerts.length > 0) {
+      if (alerts.length > 0) { 
         const alert = alerts.find(a => a.activityType === 'payment_anomaly');
         if (alert) {
           console.log(`⚠️ ALERT TRIGGERED: ${alert.description}`);
@@ -196,7 +196,7 @@ const testScenarios = [
       console.log('\n--- Simulating multiple account operations ---');
       const userId = new mongoose.Types.ObjectId();
       for (let i = 0; i < 6; i++) {
-        await aiSecurityService.analyzeActivity({
+       await aiSecurityService.analyzeActivity({
           userId,
           userType: 'Admin',
           userName: 'Rogue Admin',
@@ -204,13 +204,13 @@ const testScenarios = [
           action: i % 2 === 0 ? 'create_user' : 'delete_user',
           endpoint: '/api/users',
           method: i % 2 === 0 ? 'POST' : 'DELETE',
-          ipAddress: '192.168.100.1'
+         ipAddress: '192.168.100.1'
         });
       }
       
       const alert = await SuspiciousActivity.findOne({
         userEmail: 'rogue.admin@test.com',
-        activityType: 'account_manipulation'
+       activityType: 'account_manipulation'
       }).sort({ createdAt: -1 });
       
       if (alert) {
@@ -220,7 +220,7 @@ const testScenarios = [
       return alert;
     }
   }
-];
+];
 const runTests = async () => {
   console.log('═══════════════════════════════════════════════════════════');
   console.log('       🛡️  AI SECURITY DETECTION TEST SUITE  🛡️');
@@ -229,11 +229,11 @@ const runTests = async () => {
   await connectDB();
   
   let passed = 0;
-  let failed = 0;
+  let failed = 0; 
   
   for (const scenario of testScenarios) {
     console.log(`\n📋 TEST: ${scenario.name}`);
-    console.log('─'.repeat(50));
+   console.log('─'.repeat(50));
     
     try {
       const result = await scenario.test();
@@ -263,7 +263,7 @@ const runTests = async () => {
     console.log('\n📋 Recent Alerts:');
     recentAlerts.forEach((alert, i) => {
       console.log(`   ${i + 1}. [${alert.severity.toUpperCase()}] ${alert.activityType}: ${alert.description}`);
-    });
+   });
   }
   
   console.log('\n═══════════════════════════════════════════════════════════');

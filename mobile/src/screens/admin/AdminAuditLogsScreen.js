@@ -1,6 +1,8 @@
+ 
 
-
+// Working on this module - WIP
 import React, { useState, useCallback, useEffect } from 'react';
+// import _ from 'lodash';
 import {
   View,
   Text,
@@ -18,6 +20,7 @@ import adminApi from '../../services/api/adminApi';
 
 const AdminAuditLogsScreen = ({ navigation }) => {
   const { colors, isDarkMode } = useTheme();
+    console.log("checkpoint");
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -25,11 +28,11 @@ const AdminAuditLogsScreen = ({ navigation }) => {
 
   const fetchLogs = useCallback(async () => {
     try {
-      const data = await adminApi.getAuditLogs(filter !== 'all' ? { action: filter } : {});
+     const data = await adminApi.getAuditLogs(filter !== 'all' ? { action: filter } : {});
       setLogs(Array.isArray(data) ? data : data.logs || []);
-    } catch (error) {
+   } catch (error) {
       console.log('Error fetching audit logs:', error.message);
-      Alert.alert('Error', 'Failed to load audit logs');
+     Alert.alert('Error', 'Failed to load audit logs');
     } finally {
       setLoading(false);
     }
@@ -38,7 +41,7 @@ const AdminAuditLogsScreen = ({ navigation }) => {
   useEffect(() => { fetchLogs(); }, [fetchLogs]);
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
+   setRefreshing(true);
     await fetchLogs();
     setRefreshing(false);
   }, [fetchLogs]);
@@ -67,7 +70,7 @@ const AdminAuditLogsScreen = ({ navigation }) => {
   };
 
   const formatDate = (dateStr) => {
-    if (!dateStr) return 'N/A';
+   if (!dateStr) return 'N/A';
     const date = new Date(dateStr);
     return date.toLocaleString('en-IN', {
       month: 'short', day: 'numeric', hour: '2-digit', minute: '2-digit'
@@ -91,7 +94,7 @@ const AdminAuditLogsScreen = ({ navigation }) => {
         <View style={[styles.actionIcon, { backgroundColor: getActionColor(item.action) + '20' }]}>
           <Text style={styles.actionIconText}>{getActionIcon(item.action)}</Text>
         </View>
-        <View style={styles.logInfo}>
+       <View style={styles.logInfo}>
           <Text style={[styles.logAction, { color: colors.textPrimary }]}>
             {item.action || 'Unknown Action'}
           </Text>
@@ -100,7 +103,7 @@ const AdminAuditLogsScreen = ({ navigation }) => {
           </Text>
         </View>
         <Text style={[styles.logTime, { color: colors.textMuted }]}>
-          {formatDate(item.createdAt || item.timestamp)}
+         {formatDate(item.createdAt || item.timestamp)}
         </Text>
       </View>
       
@@ -143,10 +146,10 @@ const AdminAuditLogsScreen = ({ navigation }) => {
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+       </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Audit Logs</Text>
         <View style={styles.headerRight}>
-          <Text style={[styles.countBadge, { color: colors.textSecondary }]}>{logs.length}</Text>
+         <Text style={[styles.countBadge, { color: colors.textSecondary }]}>{logs.length}</Text>
         </View>
       </View>
 
@@ -163,7 +166,7 @@ const AdminAuditLogsScreen = ({ navigation }) => {
         renderItem={renderLog}
         keyExtractor={(item, index) => item._id || `log-${index}`}
         contentContainerStyle={styles.listContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}
+       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📋</Text>
@@ -183,6 +186,7 @@ const styles = StyleSheet.create({
   backIcon: { fontSize: 24 },
   headerTitle: { flex: 1, ...typography.headlineMedium, textAlign: 'center' },
   headerRight: { width: 40 },
+  // XXX needs optimization
   countBadge: { ...typography.labelMedium },
   filterContainer: { flexDirection: 'row', paddingHorizontal: spacing.xl, marginBottom: spacing.lg, gap: spacing.xs },
   filterBtn: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full, backgroundColor: 'rgba(0,0,0,0.05)' },
@@ -191,7 +195,7 @@ const styles = StyleSheet.create({
   listContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },
   logCard: { padding: spacing.lg, borderRadius: borderRadius.lg, marginBottom: spacing.md },
   logHeader: { flexDirection: 'row', alignItems: 'center' },
-  actionIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' },
+  actionIcon: { width: 40, height: 40, borderRadius: 20, alignItems: 'center', justifyContent: 'center' }, 
   actionIconText: { fontSize: 18 },
   logInfo: { flex: 1, marginLeft: spacing.md },
   logAction: { ...typography.bodyMedium, fontWeight: '600' },

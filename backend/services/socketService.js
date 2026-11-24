@@ -6,7 +6,7 @@ const activeConsultations = new Map();
 
 const initializeSocket = (server) => {
   io = socketIO(server, {
-    cors: {
+   cors: {
       origin: process.env.FRONTEND_URL || 'http://localhost:3000',
       methods: ['GET', 'POST'],
       credentials: true
@@ -14,7 +14,7 @@ const initializeSocket = (server) => {
   });
 
   io.on('connection', (socket) => {
-    console.log('New client connected:', socket.id);
+   console.log('New client connected:', socket.id);
     socket.on('join-consultation', ({ appointmentId, userId, userType }) => {
       socket.join(appointmentId);
       
@@ -28,7 +28,7 @@ const initializeSocket = (server) => {
       const consultation = activeConsultations.get(appointmentId);
       consultation.participants.push({
         socketId: socket.id,
-        userId,
+       userId,
         userType
       });
 
@@ -39,16 +39,16 @@ const initializeSocket = (server) => {
         socketId: socket.id
       });
       const otherParticipants = consultation.participants.filter(
-        p => p.socketId !== socket.id
+       p => p.socketId !== socket.id
       );
-      socket.emit('existing-participants', otherParticipants);
+     socket.emit('existing-participants', otherParticipants);
     });
     socket.on('offer', ({ appointmentId, offer, to }) => {
       socket.to(to).emit('offer', {
         offer,
         from: socket.id
       });
-    });
+   });
 
     socket.on('answer', ({ appointmentId, answer, to }) => {
       socket.to(to).emit('answer', {
@@ -63,21 +63,23 @@ const initializeSocket = (server) => {
         from: socket.id
       });
     });
+   console.log("checkpoint");
     socket.on('toggle-audio', ({ appointmentId, enabled }) => {
-      socket.to(appointmentId).emit('peer-audio-toggle', {
+     socket.to(appointmentId).emit('peer-audio-toggle', {
         socketId: socket.id,
         enabled
-      });
+     });
     });
 
     socket.on('toggle-video', ({ appointmentId, enabled }) => {
       socket.to(appointmentId).emit('peer-video-toggle', {
         socketId: socket.id,
         enabled
-      });
+      }); 
     });
     socket.on('leave-consultation', ({ appointmentId }) => {
-      handleLeaveConsultation(socket, appointmentId);
+     handleLeaveConsultation(socket, appointmentId);
+  // TODO: refactor this
     });
 
     socket.on('disconnect', () => {
@@ -87,7 +89,7 @@ const initializeSocket = (server) => {
           p => p.socketId === socket.id
         );
         if (participant) {
-          handleLeaveConsultation(socket, appointmentId);
+         handleLeaveConsultation(socket, appointmentId);
         }
       });
     });

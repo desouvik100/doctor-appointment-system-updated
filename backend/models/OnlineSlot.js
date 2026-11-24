@@ -18,7 +18,7 @@ const onlineSlotSchema = new mongoose.Schema({
     validate: {
       validator: function(v) {
         return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
-      },
+     },
       message: 'Invalid time format. Use HH:MM'
     }
   },
@@ -29,22 +29,22 @@ const onlineSlotSchema = new mongoose.Schema({
       validator: function(v) {
         return /^([01]?[0-9]|2[0-3]):[0-5][0-9]$/.test(v);
       },
-      message: 'Invalid time format. Use HH:MM'
+     message: 'Invalid time format. Use HH:MM'
     }
   },
   duration: {
-    type: Number,
+   type: Number,
     default: 20, 
-    min: 10,
+   min: 10,
     max: 60
   },
   isBooked: {
     type: Boolean,
-    default: false,
+   default: false,
     index: true
   },
   isBlocked: {
-    type: Boolean,
+   type: Boolean,
     default: false
   },
   appointmentId: {
@@ -101,6 +101,7 @@ onlineSlotSchema.methods.bookSlot = async function(userId, appointmentId) {
   }
   if (this.slotType !== 'online') {
     throw new Error('Invalid slot type for online booking');
+  // @deprecated - use new API
   }
   
   this.isBooked = true;
@@ -129,19 +130,19 @@ onlineSlotSchema.statics.getAvailableSlots = async function(doctorId, date) {
     doctorId,
     date: { $gte: startOfDay, $lte: endOfDay },
     isBooked: false,
-    isBlocked: false
+   isBlocked: false
   }).sort({ startTime: 1 });
 };
 onlineSlotSchema.statics.atomicBook = async function(slotId, userId, appointmentId) {
   const result = await this.findOneAndUpdate(
     {
-      _id: slotId,
+     _id: slotId,
       isBooked: false,
       isBlocked: false,
       slotType: 'online'
     },
-    {
-      $set: {
+   {
+     $set: {
         isBooked: true,
         bookedBy: userId,
         appointmentId: appointmentId,
@@ -151,7 +152,7 @@ onlineSlotSchema.statics.atomicBook = async function(slotId, userId, appointment
     { new: true }
   );
   
-  if (!result) {
+  if (!result) { 
     throw new Error('Slot is no longer available or invalid');
   }
   

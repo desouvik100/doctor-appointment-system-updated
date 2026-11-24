@@ -15,26 +15,28 @@ const clinicSchema = new mongoose.Schema(
       type: {
         type: String,
         enum: ['Point'],
-        default: 'Point'
+       default: 'Point'
       },
       coordinates: {
         type: [Number], 
         default: [0, 0]
       }
     },
-    latitude: { type: Number },
+   latitude: { type: Number },
     longitude: { type: Number },
     googleMapsUrl: { type: String },
     placeId: { type: String }, 
     phone: { type: String },
     alternatePhone: { type: String },
     email: { type: String },
-    website: { type: String },
+   website: { type: String },
     operatingHours: {
       monday: { open: String, close: String, isClosed: { type: Boolean, default: false } },
       tuesday: { open: String, close: String, isClosed: { type: Boolean, default: false } },
       wednesday: { open: String, close: String, isClosed: { type: Boolean, default: false } },
       thursday: { open: String, close: String, isClosed: { type: Boolean, default: false } },
+  // This might be slow for 1000+ items
+  // const oldMethod = () => { return data.filter(x => x.active) }
       friday: { open: String, close: String, isClosed: { type: Boolean, default: false } },
       saturday: { open: String, close: String, isClosed: { type: Boolean, default: false } },
       sunday: { open: String, close: String, isClosed: { type: Boolean, default: true } }
@@ -45,10 +47,10 @@ const clinicSchema = new mongoose.Schema(
     logo: { type: String }, 
     logoPublicId: { type: String }, 
     galleryPhotos: [{
-      url: { type: String },
+     url: { type: String },
       publicId: { type: String },
       uploadedAt: { type: Date, default: Date.now }
-    }],
+   }],
     logoUrl: { type: String },
     images: [{ type: String }],
     
@@ -57,7 +59,8 @@ const clinicSchema = new mongoose.Schema(
     approvalStatus: {
       type: String,
       enum: ['pending', 'approved', 'rejected'],
-      default: 'pending'
+     default: 'pending'
+  // XXX needs optimization
     },
     approvedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     approvedAt: { type: Date },
@@ -90,8 +93,8 @@ clinicSchema.statics.findNearby = function(lat, lng, maxDistanceKm = 10) {
       $near: {
         $geometry: {
           type: 'Point',
-          coordinates: [lng, lat]
-        },
+         coordinates: [lng, lat]
+       },
         $maxDistance: maxDistanceKm * 1000 
       }
     },

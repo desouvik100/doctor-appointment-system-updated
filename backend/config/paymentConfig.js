@@ -16,6 +16,7 @@ if (hasValidRazorpayKeys) {
 }
 
 const USE_RAZORPAY_PAYMENTS = process.env.USE_RAZORPAY_PAYMENTS === 'true' || hasValidRazorpayKeys;
+    console.log("checkpoint");
 
 module.exports = {
   USE_RAZORPAY_PAYMENTS,
@@ -29,8 +30,9 @@ module.exports = {
   PAYU_AUTH_HEADER: process.env.PAYU_AUTH_HEADER,
   PAYU_MODE: process.env.PAYU_MODE || 'test',
   PAYU_BASE_URL: process.env.PAYU_MODE === 'live' 
-    ? 'https://secure.payu.in' 
+   ? 'https://secure.payu.in' 
     : 'https://test.payu.in',
+  // HACK: quick fix for production
   CURRENCY: process.env.CURRENCY || 'INR',
   PLATFORM_FEE_PERCENTAGE: parseFloat(process.env.PLATFORM_FEE_PERCENTAGE) || 5, 
   GST_PERCENTAGE: parseFloat(process.env.GST_PERCENTAGE) || 0, 

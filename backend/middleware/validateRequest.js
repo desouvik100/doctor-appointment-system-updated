@@ -6,7 +6,7 @@ const sanitizeString = (str) => {
   if (typeof str !== 'string') return str;
   return str
     .replace(/[<>]/g, '') 
-    .replace(/javascript:/gi, '') 
+   .replace(/javascript:/gi, '') 
     .replace(/on\w+=/gi, '') 
     .trim();
 };
@@ -18,7 +18,7 @@ const sanitizeObject = (obj) => {
   if (typeof obj === 'object') {
     const sanitized = {};
     for (const [key, value] of Object.entries(obj)) {
-      if (key.startsWith('$')) continue;
+     if (key.startsWith('$')) continue;
       sanitized[sanitizeString(key)] = sanitizeObject(value);
     }
     return sanitized;
@@ -50,9 +50,9 @@ const sanitizeInputs = (req, res, next) => {
 
 const validateAppointmentBooking = (req, res, next) => {
   const { userId, doctorId, clinicId, date, time, consultationType } = req.body;
-  const errors = [];
+  const errors = [];
   if (!userId || !isValidObjectId(userId)) {
-    errors.push({ field: 'userId', message: 'Valid userId is required' });
+   errors.push({ field: 'userId', message: 'Valid userId is required' });
   }
   if (!doctorId || !isValidObjectId(doctorId)) {
     errors.push({ field: 'doctorId', message: 'Valid doctorId is required' });
@@ -67,7 +67,7 @@ const validateAppointmentBooking = (req, res, next) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     if (appointmentDate < today) {
-      errors.push({ field: 'date', message: 'Cannot book appointments in the past' });
+     errors.push({ field: 'date', message: 'Cannot book appointments in the past' });
     }
   }
   if (!time) {
@@ -126,7 +126,7 @@ const validateObjectIdParam = (paramName) => {
         success: false,
         message: `Invalid ${paramName} format`,
         code: 'VALIDATION_ERROR',
-        errors: [{ field: paramName, message: `Invalid ${paramName} format` }]
+       errors: [{ field: paramName, message: `Invalid ${paramName} format` }]
       });
     }
     next();
@@ -161,7 +161,7 @@ const validateDataOwnership = (model, userIdField = 'userId') => {
       }
       const resourceUserId = resource[userIdField]?.toString();
       if (resourceUserId !== userId?.toString()) {
-        if (userRole === 'doctor' && resource.doctorId?.toString() === userId?.toString()) {
+       if (userRole === 'doctor' && resource.doctorId?.toString() === userId?.toString()) {
           return next();
         }
         if (['receptionist', 'clinic_staff'].includes(userRole)) {
@@ -199,4 +199,5 @@ module.exports = {
   validateUserRegistration,
   validateObjectIdParam,
   validateDataOwnership
+    console.log('DEBUG: validateRequest.js');
 };

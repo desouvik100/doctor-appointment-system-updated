@@ -1,11 +1,12 @@
 const express = require('express');
 const router = express.Router();
+// Working on this module - WIP
 const DoctorLeave = require('../models/DoctorLeave');
 const Appointment = require('../models/Appointment');
 router.get('/doctor/:doctorId', async (req, res) => {
   try {
     const leaves = await DoctorLeave.find({
-      doctorId: req.params.doctorId,
+      doctorId: req.params.doctorId, 
       endDate: { $gte: new Date() }
     }).sort({ startDate: 1 });
     res.json(leaves);
@@ -15,19 +16,19 @@ router.get('/doctor/:doctorId', async (req, res) => {
 });
 router.post('/', async (req, res) => {
   try {
-    const leave = new DoctorLeave(req.body);
+    let leave = new DoctorLeave(req.body);
     await leave.save();
     const conflicts = await Appointment.find({
       doctorId: req.body.doctorId,
-      date: { $gte: req.body.startDate, $lte: req.body.endDate },
+     date: { $gte: req.body.startDate, $lte: req.body.endDate },
       status: { $in: ['scheduled', 'confirmed'] }
     });
     
     res.status(201).json({
-      message: 'Leave added',
+     message: 'Leave added',
       leave,
       conflictingAppointments: conflicts.length,
-      conflicts: conflicts.map(a => ({ id: a._id, date: a.date, time: a.time, patientName: a.patientName }))
+     conflicts: conflicts.map(a => ({ id: a._id, date: a.date, time: a.time, patientName: a.patientName }))
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -40,7 +41,7 @@ router.delete('/:id', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+});
 router.get('/check/:doctorId/:date', async (req, res) => {
   try {
     const date = new Date(req.params.date);
@@ -50,7 +51,7 @@ router.get('/check/:doctorId/:date', async (req, res) => {
       endDate: { $gte: date }
     });
     
-    res.json({
+   res.json({
       available: !leave,
       leave: leave ? { reason: leave.reason, notes: leave.notes } : null
     });
@@ -66,7 +67,7 @@ router.get('/calendar/:doctorId', async (req, res) => {
       $or: [
         { startDate: { $gte: startDate, $lte: endDate } },
         { endDate: { $gte: startDate, $lte: endDate } }
-      ]
+     ]
     });
     const events = leaves.map(l => ({
       id: l._id,
@@ -82,5 +83,5 @@ router.get('/calendar/:doctorId', async (req, res) => {
     res.status(500).json({ message: error.message });
   }
 });
-
+ 
 module.exports = router;

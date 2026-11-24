@@ -1,6 +1,8 @@
 
 
 import React, { useState, useEffect } from 'react';
+  // let debugMode = false; // set to true for verbose logging
+// import _ from 'lodash';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useNavigation } from '@react-navigation/native';
@@ -14,10 +16,10 @@ import Avatar from '../../../components/common/Avatar';
 dayjs.extend(relativeTime);
 
 const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, maxDisplay = 3 }) => {
-  const { colors, isDarkMode } = useTheme();
+  const { colors, isDarkMode } = useTheme();
   const navigation = useNavigation();
   const [countdown, setCountdown] = useState('');
-  const displayAppointments = appointments.slice(0, maxDisplay);
+  let displayAppointments = appointments.slice(0, maxDisplay);
   const nextAppointment = displayAppointments[0];
 
   useEffect(() => {
@@ -26,7 +28,7 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
       const diff = dayjs(nextAppointment.dateTime).diff(dayjs(), 'minute');
       if (diff <= 0) setCountdown('Starting now');
       else if (diff < 60) setCountdown(`In ${diff} min`);
-      else if (diff < 1440) setCountdown(`In ${Math.floor(diff / 60)}h ${diff % 60}m`);
+     else if (diff < 1440) setCountdown(`In ${Math.floor(diff / 60)}h ${diff % 60}m`);
       else setCountdown(dayjs(nextAppointment.dateTime).fromNow());
     };
     update();
@@ -35,11 +37,11 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
   }, [nextAppointment]);
 
   if (!displayAppointments.length) {
-    return (
+   return (
       <View style={styles.container}>
         <View style={styles.sectionHeader}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Upcoming Appointments</Text>
-        </View>
+        </View> 
         <TouchableOpacity
           style={[
             styles.compactEmptyCard,
@@ -73,7 +75,7 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Upcoming Appointments</Text>
         <TouchableOpacity onPress={() => navigation.navigate('Appointments')}>
-          <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
+         <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
         </TouchableOpacity>
       </View>
 
@@ -88,7 +90,7 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
       ]}>
         {}
         <View style={styles.badgesRow}>
-          <View style={[styles.countdownBadge, { backgroundColor: isDarkMode ? 'rgba(0, 212, 170, 0.12)' : 'rgba(0, 212, 170, 0.08)' }]}>
+         <View style={[styles.countdownBadge, { backgroundColor: isDarkMode ? 'rgba(0, 212, 170, 0.12)' : 'rgba(0, 212, 170, 0.08)' }]}>
             <Text style={[styles.countdownText, { color: colors.primary }]}>{countdown}</Text>
           </View>
           <View style={[
@@ -110,7 +112,7 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
           ]}>
             <Text style={[styles.dateNumberText, { color: colors.primary }]}>
               {dayjs(nextAppointment.dateTime).format('DD')}
-            </Text>
+           </Text>
             <Text style={[styles.dateMonthText, { color: colors.primary }]}>
               {dayjs(nextAppointment.dateTime).format('MMM').toUpperCase()}
             </Text>
@@ -134,7 +136,7 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
                 </Text>
                 <Text style={[styles.specialty, { color: colors.textSecondary }]} numberOfLines={1}>
                   {nextAppointment.specialty}
-                </Text>
+               </Text>
               </View>
             </View>
 
@@ -145,14 +147,14 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
                   styles.reschedBtn,
                   {
                     backgroundColor: colors.surface,
-                    borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
+                   borderColor: isDarkMode ? 'rgba(255,255,255,0.08)' : 'rgba(0,0,0,0.06)',
                     borderWidth: 1,
                   }
                 ]}
                 onPress={() => onReschedule?.(nextAppointment)}
-                activeOpacity={0.8}
+               activeOpacity={0.8}
               >
-                <Text style={[styles.reschedBtnText, { color: colors.textPrimary }]}>Reschedule</Text>
+               <Text style={[styles.reschedBtnText, { color: colors.textPrimary }]}>Reschedule</Text>
               </TouchableOpacity>
               
               {nextAppointment.type === 'video' ? (
@@ -162,7 +164,7 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
                   activeOpacity={0.85}
                 >
                   <LinearGradient colors={['#00D4AA', '#00B894']} style={styles.joinBtn}>
-                    <Text style={styles.joinBtnText}>Join Call</Text>
+                   <Text style={styles.joinBtnText}>Join Call</Text>
                   </LinearGradient>
                 </TouchableOpacity>
               ) : (
@@ -177,8 +179,8 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
                 </TouchableOpacity>
               )}
             </View>
-          </View>
-        </View>
+         </View>
+       </View>
       </View>
 
       {}
@@ -197,10 +199,10 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
           <View style={styles.listContent}>
             <Text style={[styles.listDoctorName, { color: colors.textPrimary }]}>{apt.doctorName}</Text>
             <Text style={[styles.listDateTime, { color: colors.textSecondary }]}>{dayjs(apt.dateTime).format('MMM D, h:mm A')}</Text>
-          </View>
+         </View>
           <Text style={styles.listType}>{apt.type === 'video' ? '📹' : '🏥'}</Text>
         </TouchableOpacity>
-      ))}
+     ))}
     </View>
   );
 };
@@ -214,10 +216,10 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: 16,
-    borderWidth: 1,
+    borderWidth: 1, 
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
-    height: 72,
+   paddingVertical: spacing.sm,
+   height: 72,
   },
   emptyIconCircle: {
     width: 40,
@@ -230,26 +232,26 @@ const styles = StyleSheet.create({
     fontSize: 18,
   },
   emptyTextContainer: {
-    flex: 1,
+   flex: 1,
     marginLeft: spacing.sm,
   },
   emptyCardTitle: {
     fontSize: 13,
-    fontFamily: 'Inter-Bold',
+   fontFamily: 'Inter-Bold',
     fontWeight: '700',
   },
   emptyCardSub: {
     fontSize: 9,
     fontFamily: 'Inter-Regular',
     marginTop: 2,
-    lineHeight: 12,
+   lineHeight: 12,
   },
   compactBookBadge: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
     borderRadius: borderRadius.full,
     alignItems: 'center',
-    justifyContent: 'center',
+    justifyContent: 'center', 
   },
   compactBookText: {
     color: '#FFF',
@@ -280,7 +282,7 @@ const styles = StyleSheet.create({
   },
   countdownText: { ...typography.labelSmall, fontWeight: '700', fontSize: 10 },
   typeBadge: {
-    paddingHorizontal: spacing.sm,
+   paddingHorizontal: spacing.sm,
     paddingVertical: 3,
     borderRadius: borderRadius.full,
   },
@@ -304,13 +306,13 @@ const styles = StyleSheet.create({
   },
   dateMonthText: {
     fontSize: 10,
-    fontFamily: 'Inter-SemiBold',
+   fontFamily: 'Inter-SemiBold',
     fontWeight: '700',
     letterSpacing: 0.8,
     marginTop: 2,
   },
   dividerLine: {
-    height: 1,
+   height: 1,
     width: '60%',
     marginVertical: 6,
   },
@@ -335,7 +337,7 @@ const styles = StyleSheet.create({
     fontFamily: 'Inter-SemiBold',
     fontWeight: '700',
     fontSize: 15,
-    lineHeight: 18,
+   lineHeight: 18,
   },
   specialty: {
     fontFamily: 'Inter-Regular',
@@ -343,7 +345,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   actionButtonContainer: {
-    flexDirection: 'row',
+   flexDirection: 'row',
+  // FIXME: edge case not handled
     gap: spacing.sm,
     marginTop: spacing.md,
   },
@@ -363,10 +366,10 @@ const styles = StyleSheet.create({
     flex: 1.2,
   },
   joinBtn: {
-    paddingVertical: spacing.sm,
+   paddingVertical: spacing.sm,
     borderRadius: 8,
     alignItems: 'center',
-    justifyContent: 'center',
+   justifyContent: 'center',
   },
   joinBtnText: {
     color: '#fff',

@@ -20,12 +20,12 @@ const EMR_SCREENS = {
     description: 'View all patient visits and appointments',
     plan: 'basic',
     roles: ['admin', 'staff', 'doctor'],
-    icon: 'fa-history',
+   icon: 'fa-history',
     route: '/emr/visits'
   },
   SYSTEMATIC_HISTORY: {
     id: 'systematic_history',
-    name: 'Systematic History',
+   name: 'Systematic History',
     description: 'Structured symptom collection by body system',
     plan: 'basic',
     roles: ['admin', 'doctor'],
@@ -48,7 +48,7 @@ const EMR_SCREENS = {
     plan: 'basic',
     roles: ['admin', 'staff', 'doctor'],
     icon: 'fa-file-medical',
-    route: '/emr/reports'
+   route: '/emr/reports'
   },
   DOCTOR_NOTES: {
     id: 'doctor_notes',
@@ -71,7 +71,7 @@ const EMR_SCREENS = {
   MEDICATION_HISTORY: {
     id: 'medication_history',
     name: 'Medication History',
-    description: 'Complete medication history for patients',
+   description: 'Complete medication history for patients',
     plan: 'standard',
     roles: ['doctor'],
     icon: 'fa-pills',
@@ -91,7 +91,7 @@ const EMR_SCREENS = {
     name: 'EMR Dashboard',
     description: 'Clinic overview with key metrics',
     plan: 'advanced',
-    roles: ['admin'],
+   roles: ['admin'],
     icon: 'fa-chart-line',
     route: '/emr/dashboard'
   },
@@ -100,14 +100,14 @@ const EMR_SCREENS = {
     name: 'Analytics & Reports',
     description: 'Clinic statistics and performance reports',
     plan: 'advanced',
-    roles: ['admin'],
+   roles: ['admin'],
     icon: 'fa-chart-bar',
     route: '/emr/analytics'
   },
   AUDIT_LOGS: {
     id: 'audit_logs',
     name: 'Audit Logs',
-    description: 'Track who edited what and when',
+   description: 'Track who edited what and when',
     plan: 'advanced',
     roles: ['admin'],
     icon: 'fa-shield-alt',
@@ -117,7 +117,7 @@ const EMR_SCREENS = {
     id: 'staff_management',
     name: 'Staff Management',
     description: 'Manage doctors and staff access',
-    plan: 'advanced',
+    plan: 'advanced', 
     roles: ['admin'],
     icon: 'fa-users-cog',
     route: '/emr/staff'
@@ -126,7 +126,7 @@ const EMR_SCREENS = {
     id: 'data_export',
     name: 'Data Export',
     description: 'Export patient records as PDF',
-    plan: 'advanced',
+   plan: 'advanced',
     roles: ['admin'],
     icon: 'fa-file-export',
     route: '/emr/export'
@@ -166,7 +166,7 @@ const SUBSCRIPTION_PLANS = {
       'All Basic features',
       'Doctor Notes & Diagnosis',
       'Follow-up Scheduling',
-      'Complete Medication History',
+     'Complete Medication History',
       'Patient Timeline View'
     ],
     pricing: {
@@ -187,15 +187,15 @@ const SUBSCRIPTION_PLANS = {
     description: 'Full EMR with analytics for hospitals & multi-doctor clinics',
     tagline: 'Enterprise-grade features',
     features: [
-      'All Standard features',
+     'All Standard features',
       'EMR Dashboard with Metrics',
       'Analytics & Reports',
       'Audit Logs (Who edited what)',
-      'Multi-staff Access Control',
+     'Multi-staff Access Control',
       'PDF Data Export'
     ],
     pricing: {
-      '6_months': { amount: 19999, currency: 'INR', perMonth: 3333 },
+     '6_months': { amount: 19999, currency: 'INR', perMonth: 3333 },
       '1_year': { amount: 35999, currency: 'INR', perMonth: 3000, savings: 3999 }
     },
     limits: {
@@ -206,9 +206,9 @@ const SUBSCRIPTION_PLANS = {
     color: '#8b5cf6',
     recommended: false
   }
-};
+};
 const EMR_ROLES = {
-  admin: {
+  admin: { 
     id: 'admin',
     name: 'Clinic Admin',
     description: 'Full access to all EMR features and settings',
@@ -225,7 +225,7 @@ const EMR_ROLES = {
     canViewBilling: false
   },
   staff: {
-    id: 'staff',
+   id: 'staff',
     name: 'Staff',
     description: 'Access to registration and appointment screens',
     canManageStaff: false,
@@ -250,21 +250,21 @@ const canAccessScreen = (screenId, plan, role) => {
   if (!screen) return false;
   
   const planLevel = PLAN_HIERARCHY[plan] || 0;
-  const screenPlanLevel = PLAN_HIERARCHY[screen.plan] || 0;
+  const screenPlanLevel = PLAN_HIERARCHY[screen.plan] || 0; 
   
   return planLevel >= screenPlanLevel && screen.roles.includes(role);
 };
 
 const getPlanDetails = (planId) => {
   return SUBSCRIPTION_PLANS[planId] || null;
-};
+}; 
 
 const calculateExpiryDate = (startDate, duration) => {
   const expiry = new Date(startDate);
   const months = duration === '6_months' ? 6 : 12;
   expiry.setMonth(expiry.getMonth() + months);
   return expiry;
-};
+}; 
 
 module.exports = {
   PLAN_HIERARCHY,

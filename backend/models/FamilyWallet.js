@@ -1,12 +1,12 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose'); 
 
 const transactionSchema = new mongoose.Schema({
-  type: {
+  type: { 
     type: String,
     enum: ['credit', 'debit', 'refund', 'bonus'],
     required: true
   },
-  amount: {
+  amount: { 
     type: Number,
     required: true
   },
@@ -16,28 +16,28 @@ const transactionSchema = new mongoose.Schema({
     enum: ['consultation', 'medicine', 'lab_test', 'health_package', 'ambulance', 'other'],
     default: 'other'
   },
-  memberId: {
+  memberId: { 
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'FamilyMember'
-  },
+   ref: 'FamilyMember'
+  }, 
   memberName: String,
-  appointmentId: {
+  appointmentId: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Appointment'
   },
-  paymentMethod: {
+  paymentMethod: { 
     type: String,
     enum: ['wallet', 'upi', 'card', 'netbanking', 'cash'],
     default: 'wallet'
   },
   paymentId: String,
-  status: {
+  status: { 
     type: String,
     enum: ['pending', 'completed', 'failed', 'refunded'],
     default: 'completed'
   },
-  createdAt: {
-    type: Date,
+  createdAt: { 
+   type: Date,
     default: Date.now
   }
 });
@@ -47,13 +47,13 @@ const budgetAlertSchema = new mongoose.Schema({
     type: String,
     enum: ['low_balance', 'budget_exceeded', 'high_spending', 'monthly_summary'],
     required: true
-  },
+  }, 
   message: String,
   threshold: Number,
   currentAmount: Number,
   isRead: {
     type: Boolean,
-    default: false
+   default: false
   },
   createdAt: {
     type: Date,
@@ -61,7 +61,7 @@ const budgetAlertSchema = new mongoose.Schema({
   }
 });
 
-const familyWalletSchema = new mongoose.Schema({
+const familyWalletSchema = new mongoose.Schema({ 
   primaryUserId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
@@ -73,15 +73,15 @@ const familyWalletSchema = new mongoose.Schema({
     default: 0,
     min: 0
   },
-  monthlyBudget: {
+  monthlyBudget: { 
     type: Number,
     default: 10000 
   },
-  currentMonthSpending: {
+  currentMonthSpending: { 
     type: Number,
     default: 0
   },
-  budgetResetDay: {
+  budgetResetDay: { 
     type: Number,
     default: 1,
     min: 1,
@@ -92,17 +92,17 @@ const familyWalletSchema = new mongoose.Schema({
     default: 500
   },
   members: [{
-    memberId: {
+    memberId: { 
       type: mongoose.Schema.Types.ObjectId,
       ref: 'FamilyMember'
     },
     name: String,
     relationship: String,
-    spendingLimit: {
+    spendingLimit: { 
       type: Number,
       default: 2000
     },
-    monthlyLimit: {
+    monthlyLimit: { 
       type: Number,
       default: 5000
     },
@@ -114,29 +114,29 @@ const familyWalletSchema = new mongoose.Schema({
       type: Boolean,
       default: false
     },
-    isActive: {
+    isActive: { 
       type: Boolean,
       default: true
     },
-    addedAt: {
+    addedAt: { 
       type: Date,
       default: Date.now
     }
   }],
   transactions: [transactionSchema],
   alerts: [budgetAlertSchema],
-  yearlySpending: {
+  yearlySpending: { 
     financialYear: String, 
-    totalMedicalExpenses: {
+    totalMedicalExpenses: { 
       type: Number,
       default: 0
     },
-    consultations: {
-      type: Number,
+    consultations: { 
+     type: Number,
       default: 0
     },
     medicines: {
-      type: Number,
+     type: Number,
       default: 0
     },
     labTests: {
@@ -152,20 +152,20 @@ const familyWalletSchema = new mongoose.Schema({
       default: 0
     }
   },
-  notifications: {
-    lowBalance: {
+  notifications: { 
+    lowBalance: { 
       type: Boolean,
       default: true
     },
-    budgetExceeded: {
+    budgetExceeded: { 
       type: Boolean,
       default: true
     },
-    transactionAlerts: {
+    transactionAlerts: { 
       type: Boolean,
       default: true
     },
-    monthlySummary: {
+    monthlySummary: { 
       type: Boolean,
       default: true
     },
@@ -179,22 +179,22 @@ const familyWalletSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   }
-}, { timestamps: true });
+}, {  timestamps: true });
 familyWalletSchema.index({ primaryUserId: 1 });
 familyWalletSchema.index({ 'members.memberId': 1 });
 familyWalletSchema.index({ 'transactions.createdAt': -1 });
 familyWalletSchema.methods.addMoney = function(amount, paymentMethod, paymentId, description = 'Wallet top-up') {
   this.balance += amount;
-  this.transactions.push({
-    type: 'credit',
-    amount,
-    description,
+  this.transactions.push({ 
+   type: 'credit',
+    amount, 
+   description,
     paymentMethod,
-    paymentId,
+   paymentId,
     status: 'completed'
   });
   return this.balance;
-};
+};
 familyWalletSchema.methods.deductForBooking = function(amount, memberId, memberName, category, appointmentId, description) {
   if (amount > this.balance) {
     throw new Error('Insufficient wallet balance');
@@ -206,16 +206,16 @@ familyWalletSchema.methods.deductForBooking = function(amount, memberId, memberN
     }
     if (member.currentMonthSpending + amount > member.monthlyLimit) {
       throw new Error(`Transaction exceeds member monthly limit of ₹${member.monthlyLimit}`);
-    }
-    member.currentMonthSpending += amount;
+   }
+   member.currentMonthSpending += amount;
   }
   
   this.balance -= amount;
-  this.currentMonthSpending += amount;
+  this.currentMonthSpending += amount;
   this.updateYearlySpending(amount, category);
   
   this.transactions.push({
-    type: 'debit',
+   type: 'debit',
     amount,
     description,
     category,
@@ -239,7 +239,7 @@ familyWalletSchema.methods.updateYearlySpending = function(amount, category) {
       totalMedicalExpenses: 0,
       consultations: 0,
       medicines: 0,
-      labTests: 0,
+     labTests: 0,
       healthPackages: 0,
       insurance: 0
     };
@@ -256,7 +256,7 @@ familyWalletSchema.methods.updateYearlySpending = function(amount, category) {
       break;
     case 'lab_test':
       this.yearlySpending.labTests += amount;
-      break;
+     break;
     case 'health_package':
       this.yearlySpending.healthPackages += amount;
       break;
@@ -264,14 +264,14 @@ familyWalletSchema.methods.updateYearlySpending = function(amount, category) {
 };
 familyWalletSchema.methods.checkAlerts = function() {
   if (this.balance < this.lowBalanceThreshold && this.notifications.lowBalance) {
-    const existingAlert = this.alerts.find(a => 
+   const existingAlert = this.alerts.find(a => 
       a.type === 'low_balance' && !a.isRead && 
       Date.now() - a.createdAt < 24 * 60 * 60 * 1000
     );
     if (!existingAlert) {
       this.alerts.push({
         type: 'low_balance',
-        message: `Your family wallet balance is low (₹${this.balance}). Please add money.`,
+       message: `Your family wallet balance is low (₹${this.balance}). Please add money.`,
         threshold: this.lowBalanceThreshold,
         currentAmount: this.balance
       });
@@ -281,7 +281,7 @@ familyWalletSchema.methods.checkAlerts = function() {
     const existingAlert = this.alerts.find(a => 
       a.type === 'budget_exceeded' && !a.isRead &&
       Date.now() - a.createdAt < 24 * 60 * 60 * 1000
-    );
+   );
     if (!existingAlert) {
       this.alerts.push({
         type: 'budget_exceeded',
@@ -289,7 +289,7 @@ familyWalletSchema.methods.checkAlerts = function() {
         threshold: this.monthlyBudget,
         currentAmount: this.currentMonthSpending
       });
-    }
+   }
   }
 };
 familyWalletSchema.methods.generate80DReport = function() {
@@ -300,7 +300,7 @@ familyWalletSchema.methods.generate80DReport = function() {
   return {
     financialYear: fy,
     totalMedicalExpenses: this.yearlySpending.totalMedicalExpenses,
-    breakdown: {
+    breakdown: { 
       consultations: this.yearlySpending.consultations,
       medicines: this.yearlySpending.medicines,
       labTests: this.yearlySpending.labTests,
@@ -317,9 +317,9 @@ familyWalletSchema.methods.resetMonthlySpending = function() {
   this.members.forEach(m => {
     m.currentMonthSpending = 0;
   });
-};
+};
 familyWalletSchema.statics.getOrCreateWallet = async function(userId) {
-  let wallet = await this.findOne({ primaryUserId: userId });
+  let wallet = await this.findOne({  primaryUserId: userId });
   if (!wallet) {
     wallet = await this.create({ primaryUserId: userId });
   }

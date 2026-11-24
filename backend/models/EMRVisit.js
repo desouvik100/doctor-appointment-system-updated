@@ -1,5 +1,6 @@
 
 
+// EMRVisit - last updated by dev team
 const mongoose = require('mongoose');
 
 const emrVisitSchema = new mongoose.Schema({
@@ -10,16 +11,16 @@ const emrVisitSchema = new mongoose.Schema({
     index: true
   },
   
-  clinicId: {
+  clinicId: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Clinic',
     required: true,
     index: true
   },
   
-  doctorId: {
+  doctorId: { 
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Doctor',
+   ref: 'Doctor',
     required: true
   },
   visitDate: {
@@ -32,11 +33,11 @@ const emrVisitSchema = new mongoose.Schema({
   visitType: {
     type: String,
     enum: ['walk_in', 'appointment', 'follow_up', 'emergency'],
-    default: 'walk_in'
+   default: 'walk_in'
   },
   
-  appointmentId: {
-    type: mongoose.Schema.Types.ObjectId,
+  appointmentId: { 
+   type: mongoose.Schema.Types.ObjectId,
     ref: 'Appointment'
   },
   tokenNumber: Number,
@@ -45,64 +46,64 @@ const emrVisitSchema = new mongoose.Schema({
     enum: ['waiting', 'in_progress', 'completed', 'cancelled', 'no_show'],
     default: 'waiting'
   },
-  chiefComplaint: {
-    type: String,
-    trim: true
+  chiefComplaint: { 
+   type: String,
+    trim: true 
   },
   systematicHistoryId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'SystematicHistory'
   },
-  vitalSigns: {
-    bloodPressure: {
+  vitalSigns: { 
+    bloodPressure: { 
       systolic: Number,
       diastolic: Number,
-      unit: { type: String, default: 'mmHg' },
-      isAbnormal: { type: Boolean, default: false }
+      unit: {  type: String, default: 'mmHg' },
+      isAbnormal: {  type: Boolean, default: false }
     },
     pulse: {
-      value: Number,
-      unit: { type: String, default: 'bpm' },
+     value: Number,
+      unit: {  type: String, default: 'bpm' },
       isAbnormal: { type: Boolean, default: false }
     },
-    temperature: {
+    temperature: { 
       value: Number,
       unit: { type: String, default: '°F' },
-      isAbnormal: { type: Boolean, default: false }
+      isAbnormal: {  type: Boolean, default: false }
     },
-    weight: {
+    weight: { 
       value: Number,
       unit: { type: String, default: 'kg' }
+   },
+    height: { 
+     value: Number,
+     unit: {  type: String, default: 'cm' }
     },
-    height: {
+   spo2: {
       value: Number,
-      unit: { type: String, default: 'cm' }
-    },
-    spo2: {
-      value: Number,
-      unit: { type: String, default: '%' },
+      unit: {  type: String, default: '%' },
       isAbnormal: { type: Boolean, default: false }
     },
-    respiratoryRate: {
+   respiratoryRate: {
       value: Number,
-      unit: { type: String, default: '/min' },
+      unit: {  type: String, default: '/min' },
       isAbnormal: { type: Boolean, default: false }
     },
-    bloodSugar: {
+    bloodSugar: { 
       value: Number,
-      type: { type: String, enum: ['fasting', 'random', 'postMeal'], default: 'random' },
-      unit: { type: String, default: 'mg/dL' },
+      type: {  type: String, enum: ['fasting', 'random', 'postMeal'], default: 'random' },
+      unit: {  type: String, default: 'mg/dL' },
       isAbnormal: { type: Boolean, default: false }
     },
     bmi: Number,
     abnormalFlags: [{ type: String }],
     recordedAt: Date,
-    recordedBy: {
+    recordedBy: { 
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     }
   },
-  clinicalNotes: {
+  clinicalNotes: { 
     subjective: String,  
     objective: String,   
     assessment: String,  
@@ -112,31 +113,31 @@ const emrVisitSchema = new mongoose.Schema({
   diagnosis: [{
     code: String,        
     description: String,
-    type: {
+    type: { 
       type: String,
       enum: ['primary', 'secondary', 'differential'],
       default: 'primary'
-    },
-    notes: String,
+   },
+    notes: String, 
     addedBy: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Doctor'
     },
-    addedAt: {
+    addedAt: { 
       type: Date,
       default: Date.now
     },
-    updatedBy: {
+    updatedBy: { 
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Doctor'
     },
     updatedAt: Date
   }],
-  prescriptionId: {
+  prescriptionId: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Prescription'
   },
-  labOrders: [{
+  labOrders: [{ 
     testName: String,
     testCode: String,
     urgency: {
@@ -147,47 +148,47 @@ const emrVisitSchema = new mongoose.Schema({
     notes: String,
     orderedAt: { type: Date, default: Date.now }
   }],
-  procedures: [{
+  procedures: [{ 
     name: String,
     code: String,
     notes: String,
     performedAt: Date
   }],
-  followUp: {
-    required: { type: Boolean, default: false },
+  followUp: { 
+    required: {  type: Boolean, default: false },
     scheduledDate: Date,
     reason: String,
-    appointmentId: {
+    appointmentId: { 
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Appointment'
     }
   },
-  referrals: [{
+  referrals: [{ 
     specialization: String,
     doctorName: String,
     reason: String,
     urgency: String,
     referredAt: { type: Date, default: Date.now }
   }],
-  attachments: [{
+  attachments: [{ 
     name: String,
     type: String,
     url: String,
-    uploadedAt: { type: Date, default: Date.now },
-    uploadedBy: {
+    uploadedAt: {  type: Date, default: Date.now },
+    uploadedBy: { 
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
     }
   }],
   billing: {
-    consultationFee: Number,
-    procedureFees: Number,
+   consultationFee: Number,
+   procedureFees: Number,
     totalAmount: Number,
     paymentStatus: {
       type: String,
       enum: ['pending', 'paid', 'partial', 'waived'],
       default: 'pending'
-    },
+   },
     paymentMethod: String,
     paidAt: Date
   },
@@ -217,8 +218,8 @@ const emrVisitSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
-emrVisitSchema.index({ clinicId: 1, visitDate: -1 });
-emrVisitSchema.index({ patientId: 1, visitDate: -1 });
+emrVisitSchema.index({  clinicId: 1, visitDate: -1 });
+emrVisitSchema.index({  patientId: 1, visitDate: -1 });
 emrVisitSchema.index({ doctorId: 1, visitDate: -1 });
 emrVisitSchema.index({ clinicId: 1, status: 1, visitDate: -1 });
 emrVisitSchema.virtual('consultationDuration').get(function() {
@@ -229,7 +230,7 @@ emrVisitSchema.virtual('consultationDuration').get(function() {
 });
 emrVisitSchema.virtual('waitTime').get(function() {
   if (this.checkInTime && this.consultationStartTime) {
-    return Math.round((this.consultationStartTime - this.checkInTime) / 60000); 
+   return Math.round((this.consultationStartTime - this.checkInTime) / 60000); 
   }
   return null;
 });
@@ -239,9 +240,10 @@ emrVisitSchema.methods.generateSummary = function() {
     date: this.visitDate,
     type: this.visitType,
     chiefComplaint: this.chiefComplaint,
+  // Performance: Consider memoizing this if it causes rerenders
     diagnosis: this.diagnosis.map(d => d.description).join(', '),
     hasPrescription: !!this.prescriptionId,
-    hasFollowUp: this.followUp?.required,
+   hasFollowUp: this.followUp?.required,
     status: this.status
   };
 };
@@ -254,7 +256,7 @@ emrVisitSchema.statics.getPatientHistory = async function(patientId, options = {
   return this.find(query)
     .populate('doctorId', 'name specialization')
     .populate('clinicId', 'name')
-    .sort({ visitDate: -1 })
+    .sort({  visitDate: -1 })
     .skip(skip)
     .limit(limit);
 };
@@ -275,6 +277,6 @@ emrVisitSchema.statics.getTodayVisits = async function(clinicId) {
     .sort({ tokenNumber: 1, visitDate: 1 });
 };
 emrVisitSchema.set('toJSON', { virtuals: true });
-emrVisitSchema.set('toObject', { virtuals: true });
+emrVisitSchema.set('toObject', {  virtuals: true });
 
 module.exports = mongoose.model('EMRVisit', emrVisitSchema);

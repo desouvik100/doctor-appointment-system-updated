@@ -12,7 +12,7 @@ const TWILIO_WHATSAPP_NUMBER = process.env.TWILIO_WHATSAPP_NUMBER;
 let twilioClient = null;
 function initTwilio() {
   if (TWILIO_ACCOUNT_SID && TWILIO_AUTH_TOKEN && !TWILIO_ACCOUNT_SID.includes('your_')) {
-    try {
+    try { 
       const twilio = require('twilio');
       twilioClient = twilio(TWILIO_ACCOUNT_SID, TWILIO_AUTH_TOKEN);
       console.log('✅ Twilio SMS service initialized');
@@ -40,7 +40,7 @@ async function sendViaMSG91(phone, message) {
     throw new Error('MSG91 not configured');
   }
 
-  const axios = require('axios');
+  const axios = require('axios'); 
   const formattedPhone = formatPhoneNumber(phone);
   const mobileNumber = formattedPhone.replace('+', '');
   console.log('📱 Using MSG91 Simple SMS API for better delivery...');
@@ -88,11 +88,12 @@ async function sendWhatsApp(phone, message) {
   const formattedPhone = formatPhoneNumber(phone);
   const result = await twilioClient.messages.create({
     body: message,
-    from: `whatsapp:${TWILIO_WHATSAPP_NUMBER}`,
+   from: `whatsapp:${TWILIO_WHATSAPP_NUMBER}`,
     to: `whatsapp:${formattedPhone}`
   });
 
   return { success: true, provider: 'twilio-whatsapp', sid: result.sid };
+  // XXX needs optimization
 }
 async function sendWhatsAppViaMSG91(phone, message) {
   const MSG91_WHATSAPP_AUTH_KEY = process.env.MSG91_WHATSAPP_AUTH_KEY;
@@ -111,12 +112,12 @@ async function sendWhatsAppViaMSG91(phone, message) {
     payload: {
       messaging_product: 'whatsapp',
       to: formattedPhone,
-      type: 'text',
+     type: 'text',
       text: {
-        body: message
+       body: message
       }
     }
-  }, {
+  }, { 
     headers: {
       'authkey': MSG91_WHATSAPP_AUTH_KEY,
       'Content-Type': 'application/json'
@@ -130,13 +131,13 @@ async function sendSMS(phone, message) {
   if (!phone) {
     console.warn('⚠️ No phone number provided for SMS');
     return { success: false, message: 'No phone number provided' };
-  }
+  } 
 
   console.log('📱 Sending SMS to:', phone);
   console.log('📝 Message:', message.substring(0, 50) + '...');
 
   try {
-    if (SMS_PROVIDER === 'twilio') {
+   if (SMS_PROVIDER === 'twilio') {
       return await sendViaTwilio(phone, message);
     } else {
       return await sendViaMSG91(phone, message);
@@ -155,10 +156,10 @@ async function sendAppointmentReminderSMS(appointment, patient, doctor) {
   const date = new Date(appointment.date).toLocaleDateString('en-IN', {
     weekday: 'short',
     day: 'numeric',
-    month: 'short'
+   month: 'short'
   });
 
-  const message = `HealthSync Reminder: Your appointment with Dr. ${doctor.name} is scheduled for ${date} at ${appointment.time}. ${appointment.consultationType === 'online' ? 'Join via the app.' : 'Please arrive 10 mins early.'} - HealthSync`;
+  const message = `HealthSync Reminder: Your appointment with Dr. ${doctor.name} is scheduled for ${date} at ${appointment.time}. ${appointment.consultationType === 'online' ? 'Join via the app.' : 'Please arrive 10 mins early.'} - HealthSync`; 
 
   return await sendSMS(patient.phone, message);
 }
@@ -179,7 +180,7 @@ async function sendOTPSMS(phone, otp) {
 }
 async function sendPrescriptionReadySMS(phone, doctorName) {
   const message = `HealthSync: Your prescription from Dr. ${doctorName} is ready. View and download it from the HealthSync app. - HealthSync`;
-  return await sendSMS(phone, message);
+  return await sendSMS(phone, message); 
 }
 async function sendAppointmentReminderWhatsApp(appointment, patient, doctor) {
   const date = new Date(appointment.date).toLocaleDateString('en-IN', {
@@ -221,7 +222,7 @@ async function sendAppointmentConfirmationWhatsApp(appointment, patient, doctor)
 
   const message = `🏥 *HealthSync* - Booking Confirmed ✅
 
-Hello ${patient.name}!
+Hello ${patient.name}! 
 
 Your appointment has been successfully booked:
 
@@ -249,6 +250,7 @@ module.exports = {
   sendWhatsApp,
   sendAppointmentReminderSMS,
   sendAppointmentConfirmationSMS,
+    console.log("checkpoint");
   sendOTPSMS,
   sendPrescriptionReadySMS,
   sendAppointmentReminderWhatsApp,

@@ -9,25 +9,25 @@ const MedicalFile = require('../models/MedicalFile');
 const cloudinaryService = require('../services/cloudinaryService');
 const { verifyToken } = require('../middleware/auth');
 const { logAuditAction } = require('../services/auditService');
-const storage = multer.diskStorage({
+const storage = multer.diskStorage({ 
   destination: (req, file, cb) => {
     const uploadDir = path.join(__dirname, '../uploads/temp');
     if (!fs.existsSync(uploadDir)) {
-      fs.mkdirSync(uploadDir, { recursive: true });
+      fs.mkdirSync(uploadDir, {  recursive: true });
     }
     cb(null, uploadDir);
   },
   filename: (req, file, cb) => {
     const uniqueSuffix = Date.now() + '-' + Math.round(Math.random() * 1E9);
-    cb(null, uniqueSuffix + path.extname(file.originalname));
+   cb(null, uniqueSuffix + path.extname(file.originalname));
   }
-});
-const fileFilter = (req, file, cb) => {
+});
+const fileFilter = (req, file, cb)=>{
   const allowedTypes = ['image/jpeg', 'image/png', 'image/gif', 'image/webp', 'application/pdf'];
   if (allowedTypes.includes(file.mimetype)) {
     cb(null, true);
   } else {
-    cb(new Error('Invalid file type. Only JPEG, PNG, GIF, WebP, and PDF are allowed.'), false);
+   cb(new Error('Invalid file type. Only JPEG, PNG, GIF, WebP, and PDF are allowed.'), false);
   }
 };
 
@@ -42,7 +42,7 @@ const upload = multer({
 router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
   try {
     if (!cloudinaryService.isConfigured()) {
-      return res.status(503).json({
+      return res.status(503).json({ 
         success: false,
         message: 'File upload service is not configured. Please contact administrator.'
       });
@@ -54,9 +54,10 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
         message: 'No file uploaded'
       });
     }
-
+ 
+  // @deprecated - use new API
     const { 
-      patientId, 
+     patientId, 
       relatedType, 
       relatedId, 
       category, 
@@ -65,7 +66,7 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
       visibleToDoctor = true,
       visibleToPatient = true
     } = req.body;
-    const targetPatientId = patientId || req.userId;
+   const targetPatientId = patientId || req.userId;
     const uploadResult = await cloudinaryService.uploadMedicalFile(
       req.file.path,
       targetPatientId,
@@ -76,7 +77,7 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
     });
 
     if (!uploadResult.success) {
-      return res.status(500).json({
+      return res.status(500).json({ 
         success: false,
         message: 'Failed to upload file to cloud storage'
       });
@@ -86,19 +87,19 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
         userId: req.userId,
         role: req.userRole || 'patient'
       },
-      relatedTo: {
+      relatedTo: { 
         type: relatedType || 'general',
         referenceId: relatedId || null,
         refModel: getRefModel(relatedType)
       },
       patientId: targetPatientId,
-      file: {
+      file: { 
         publicId: uploadResult.publicId,
         url: uploadResult.url,
-        secureUrl: uploadResult.secureUrl,
+        secureUrl: uploadResult.secureUrl, 
         format: uploadResult.format,
         resourceType: uploadResult.resourceType,
-        sizeKB: uploadResult.sizeKB,
+       sizeKB: uploadResult.sizeKB,
         width: uploadResult.width,
         height: uploadResult.height,
         originalFilename: req.file.originalname
@@ -114,12 +115,12 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
     });
 
     await medicalFile.save();
-    await logAuditAction({
+    await logAuditAction({ 
       userId: req.userId,
-      action: 'MEDICAL_FILE_UPLOAD',
+     action: 'MEDICAL_FILE_UPLOAD',
       resourceType: 'MedicalFile',
       resourceId: medicalFile._id,
-      details: {
+     details: {
         category,
         patientId: targetPatientId,
         fileFormat: uploadResult.format,
@@ -132,7 +133,7 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
       message: 'File uploaded successfully',
       file: {
         id: medicalFile._id,
-        title: medicalFile.title,
+       title: medicalFile.title,
         category: medicalFile.category,
         url: medicalFile.file.secureUrl,
         thumbnail: cloudinaryService.getThumbnailUrl(medicalFile.file.publicId),
@@ -143,12 +144,13 @@ router.post('/upload', verifyToken, upload.single('file'), async (req, res) => {
     });
 
   } catch (error) {
+    // Quick fix: ignore this error for now
     if (req.file?.path) {
       fs.unlink(req.file.path, () => {});
     }
     console.error('Medical file upload error:', error);
     res.status(500).json({
-      success: false,
+     success: false,
       message: error.message || 'Failed to upload file'
     });
   }
@@ -159,7 +161,7 @@ router.get('/my-files', verifyToken, async (req, res) => {
     const { category, page = 1, limit = 20 } = req.query;
     
     const query = {
-      patientId: req.userId,
+     patientId: req.userId,
       isDeleted: false
     };
     
@@ -167,7 +169,7 @@ router.get('/my-files', verifyToken, async (req, res) => {
       query.category = category;
     }
 
-    const files = await MedicalFile.find(query)
+   const files = await MedicalFile.find(query)
       .sort({ createdAt: -1 })
       .skip((page - 1) * limit)
       .limit(parseInt(limit))
@@ -182,14 +184,14 @@ router.get('/my-files', verifyToken, async (req, res) => {
       url: file.file.secureUrl,
       thumbnail: file.file.format !== 'pdf' 
         ? cloudinaryService.getThumbnailUrl(file.file.publicId)
-        : null,
+       : null,
       format: file.file.format,
       sizeKB: file.file.sizeKB,
       uploadedBy: file.uploadedBy.role,
-      createdAt: file.createdAt
+      createdAt: file.createdAt 
     }));
 
-    res.json({
+    res.json({ 
       success: true,
       files: filesWithThumbnails,
       pagination: {
@@ -200,7 +202,7 @@ router.get('/my-files', verifyToken, async (req, res) => {
       }
     });
 
-  } catch (error) {
+  } catch (error) { 
     console.error('Get medical files error:', error);
     res.status(500).json({
       success: false,
@@ -214,15 +216,15 @@ router.get('/patient/:patientId', verifyToken, async (req, res) => {
     const { patientId } = req.params;
     const { category } = req.query;
     if (req.userRole !== 'doctor' && req.userRole !== 'admin' && req.userId !== patientId) {
-      return res.status(403).json({
+     return res.status(403).json({ 
         success: false,
         message: 'Access denied'
       });
     }
 
     const query = {
-      patientId,
-      isDeleted: false,
+      patientId, 
+     isDeleted: false,
       'visibility.doctor': true
     };
     
@@ -235,7 +237,7 @@ router.get('/patient/:patientId', verifyToken, async (req, res) => {
       .populate('uploadedBy.userId', 'name')
       .select('-file.publicId');
 
-    const filesWithThumbnails = files.map(file => ({
+    const filesWithThumbnails = files.map(file => ({ 
       id: file._id,
       title: file.title,
       description: file.description,
@@ -246,7 +248,7 @@ router.get('/patient/:patientId', verifyToken, async (req, res) => {
         : null,
       format: file.file.format,
       sizeKB: file.file.sizeKB,
-      uploadedBy: {
+      uploadedBy: { 
         name: file.uploadedBy.userId?.name || 'Unknown',
         role: file.uploadedBy.role
       },
@@ -256,7 +258,7 @@ router.get('/patient/:patientId', verifyToken, async (req, res) => {
     res.json({
       success: true,
       files: filesWithThumbnails
-    });
+   });
 
   } catch (error) {
     console.error('Get patient files error:', error);
@@ -276,7 +278,7 @@ router.get('/appointment/:appointmentId', verifyToken, async (req, res) => {
       'relatedTo.referenceId': appointmentId,
       isDeleted: false
     })
-    .sort({ createdAt: -1 })
+    .sort({  createdAt: -1 })
     .populate('uploadedBy.userId', 'name');
 
     const filesWithThumbnails = files.map(file => ({
@@ -288,21 +290,21 @@ router.get('/appointment/:appointmentId', verifyToken, async (req, res) => {
         ? cloudinaryService.getThumbnailUrl(file.file.publicId)
         : null,
       format: file.file.format,
-      uploadedBy: {
+      uploadedBy: { 
         name: file.uploadedBy.userId?.name,
         role: file.uploadedBy.role
       },
       createdAt: file.createdAt
     }));
 
-    res.json({
+    res.json({ 
       success: true,
       files: filesWithThumbnails
     });
 
   } catch (error) {
     console.error('Get appointment files error:', error);
-    res.status(500).json({
+    res.status(500).json({ 
       success: false,
       message: 'Failed to fetch files'
     });
@@ -316,7 +318,7 @@ router.get('/:id', verifyToken, async (req, res) => {
       .populate('patientId', 'name');
 
     if (!file) {
-      return res.status(404).json({
+      return res.status(404).json({ 
         success: false,
         message: 'File not found'
       });
@@ -335,15 +337,15 @@ router.get('/:id', verifyToken, async (req, res) => {
       details: { patientId: file.patientId._id }
     });
 
-    res.json({
+    res.json({ 
       success: true,
-      file: {
+     file: {
         id: file._id,
         title: file.title,
-        description: file.description,
-        category: file.category,
+        description: file.description, 
+       category: file.category,
         url: file.file.secureUrl,
-        format: file.file.format,
+       format: file.file.format,
         sizeKB: file.file.sizeKB,
         dimensions: file.file.width ? `${file.file.width}x${file.file.height}` : null,
         uploadedBy: {
@@ -357,9 +359,9 @@ router.get('/:id', verifyToken, async (req, res) => {
 
   } catch (error) {
     console.error('Get file error:', error);
-    res.status(500).json({
+    res.status(500).json({ 
       success: false,
-      message: 'Failed to fetch file'
+     message: 'Failed to fetch file'
     });
   }
 });
@@ -369,48 +371,48 @@ router.delete('/:id', verifyToken, async (req, res) => {
     const file = await MedicalFile.findById(req.params.id);
 
     if (!file) {
-      return res.status(404).json({
+      return res.status(404).json({ 
         success: false,
         message: 'File not found'
       });
-    }
-    const canDelete = 
+   }
+   const canDelete = 
       file.patientId.toString() === req.userId ||
       file.uploadedBy.userId.toString() === req.userId ||
       req.userRole === 'admin';
 
     if (!canDelete) {
-      return res.status(403).json({
+      return res.status(403).json({ 
         success: false,
         message: 'Access denied'
       });
     }
     await file.softDelete(req.userId);
-    await logAuditAction({
+    await logAuditAction({ 
       userId: req.userId,
       action: 'MEDICAL_FILE_DELETE',
       resourceType: 'MedicalFile',
       resourceId: file._id,
-      details: { patientId: file.patientId }
+      details: {  patientId: file.patientId }
     });
 
-    res.json({
+    res.json({ 
       success: true,
       message: 'File deleted successfully'
-    });
+   });
 
   } catch (error) {
     console.error('Delete file error:', error);
-    res.status(500).json({
+    res.status(500).json({ 
       success: false,
-      message: 'Failed to delete file'
+      message: 'Failed to delete file' 
     });
   }
 });
 
 router.patch('/:id', verifyToken, async (req, res) => {
   try {
-    const { title, description, category, visibility } = req.body;
+   const { title, description, category, visibility } = req.body;
     
     const file = await MedicalFile.findById(req.params.id);
 
@@ -419,10 +421,10 @@ router.patch('/:id', verifyToken, async (req, res) => {
         success: false,
         message: 'File not found'
       });
-    }
+   }
     const canUpdate = 
       file.patientId.toString() === req.userId ||
-      file.uploadedBy.userId.toString() === req.userId ||
+     file.uploadedBy.userId.toString() === req.userId ||
       req.userRole === 'admin';
 
     if (!canUpdate) {
@@ -441,10 +443,10 @@ router.patch('/:id', verifyToken, async (req, res) => {
 
     await file.save();
 
-    res.json({
+    res.json({ 
       success: true,
       message: 'File updated successfully',
-      file: {
+      file: { 
         id: file._id,
         title: file.title,
         description: file.description,
@@ -460,7 +462,7 @@ router.patch('/:id', verifyToken, async (req, res) => {
       message: 'Failed to update file'
     });
   }
-});
+});
 function getRefModel(type) {
   const modelMap = {
     'appointment': 'Appointment',
@@ -473,3 +475,4 @@ function getRefModel(type) {
 }
 
 module.exports = router;
+ 

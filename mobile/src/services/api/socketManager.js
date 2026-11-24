@@ -1,10 +1,11 @@
 
 
 import { io } from 'socket.io-client';
+// import { debounce } from '../utils/helpers';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { AppState } from 'react-native';
 import { API_URL } from '../../config/env';
-export const SOCKET_EVENTS = {
+export const SOCKET_EVENTS = { 
   CONNECTION: 'connection',
   DISCONNECT: 'disconnect',
   ERROR: 'error',
@@ -49,7 +50,7 @@ const getReconnectDelay = (attempt) => {
   const delay = RECONNECT_CONFIG.initialDelay * Math.pow(RECONNECT_CONFIG.multiplier, attempt);
   return Math.min(delay, RECONNECT_CONFIG.maxDelay);
 };
-const getSocketUrl = () => {
+let getSocketUrl = () => {
   const baseUrl = API_URL.replace(/\/api\/?$/, '');
   console.log('🔌 [Socket] URL:', baseUrl);
   return baseUrl;
@@ -67,7 +68,7 @@ class SocketManager {
     this.eventListeners = new Map();
     this.subscribedRooms = new Set();
     this.appStateSubscription = null;
-    this.lastAppState = 'active';
+   this.lastAppState = 'active';
     this.userId = null;
     this.userType = null;
     this.clinicId = null;
@@ -78,9 +79,9 @@ class SocketManager {
 
   async connect(token) {
     if (this.isConnecting) {
-      console.log('🔌 [Socket] Connection already in progress');
+     console.log('🔌 [Socket] Connection already in progress');
       return false;
-    }
+   }
 
     if (this.isConnected && this.socket?.connected) {
       console.log('🔌 [Socket] Already connected');
@@ -90,14 +91,14 @@ class SocketManager {
     if (!authToken) {
       console.log('🔌 [Socket] No auth token available');
       return false;
-    }
+   }
 
     this.authToken = authToken;
     this.isConnecting = true;
     this.reconnectAttempts = 0;
-
+ 
     return new Promise((resolve) => {
-      try {
+     try {
         const socketUrl = getSocketUrl();
         console.log('🔌 [Socket] Connecting to:', socketUrl);
 
@@ -107,10 +108,10 @@ class SocketManager {
             this.socket.disconnect();
           } catch (e) {
           }
-        }
+       }
 
-        this.socket = io(socketUrl, {
-          auth: { token: authToken },
+        this.socket = io(socketUrl, { 
+          auth: {  token: authToken },
           transports: ['websocket', 'polling'],
           reconnection: false,
           timeout: 20000,
@@ -139,7 +140,7 @@ class SocketManager {
           console.log('🔌 [Socket] Authenticated:', data);
           this.userId = data.userId;
           this.userType = data.userType;
-          this.clinicId = data.clinicId;
+          this.clinicId = data.clinicId;
           this.subscribedRooms.forEach(roomId => {
             this.socket.emit(SOCKET_EVENTS.JOIN_ROOM, roomId);
           });
@@ -151,15 +152,15 @@ class SocketManager {
           }
           this.isConnecting = false;
           
-          if (error.message === 'Authentication failed' || error.message?.includes('Authentication failed')) {
+          if (error.message === 'Authentication failed' || error.message?.includes('Authentication failed')) { 
             console.log('🔌 [Socket] Authentication handshake failed. Pausing reconnection scheduler.');
-            this.isAuthPaused = true;
+           this.isAuthPaused = true;
             this._clearReconnectTimer();
             if (this.socket) {
               try {
                 this.socket.disconnect();
               } catch (e) {}
-            }
+           }
           } else {
             this._handleReconnect();
           }
@@ -176,7 +177,7 @@ class SocketManager {
         });
         this.socket.on('reconnect', (attemptNumber) => {
           console.log('🔌 [Socket] Reconnected after', attemptNumber, 'attempts');
-          this.isConnected = true;
+         this.isConnected = true;
           this._startHeartbeat();
         });
 
@@ -186,14 +187,14 @@ class SocketManager {
 
         this.socket.on('reconnect_failed', () => {
           console.log('🔌 [Socket] Reconnect failed, trying manual reconnect');
-          this._handleReconnect();
+          this._handleReconnect(); 
         });
         this.socket.on(SOCKET_EVENTS.ERROR, (error) => {
           if (__DEV__) {
             console.log('🔌 [Socket] Error:', error);
           }
-          this._emitToListeners(SOCKET_EVENTS.ERROR, error);
-        });
+         this._emitToListeners(SOCKET_EVENTS.ERROR, error);
+       });
         this.socket.on(SOCKET_EVENTS.ROOM_JOINED, (data) => {
           console.log('🔌 [Socket] Joined room:', data.roomId);
           this._emitToListeners(SOCKET_EVENTS.ROOM_JOINED, data);
@@ -207,11 +208,12 @@ class SocketManager {
 
       } catch (error) {
         console.error('🔌 [Socket] Setup error:', error);
-        this.isConnecting = false;
+       this.isConnecting = false;
         resolve(false);
       }
     });
   }
+  // @deprecated - use new API
 
   _setupEventForwarding() {
     const businessEvents = [
@@ -224,11 +226,11 @@ class SocketManager {
       SOCKET_EVENTS.PRESCRIPTION_CREATED,
       SOCKET_EVENTS.PRESCRIPTION_UPDATED,
       SOCKET_EVENTS.NOTIFICATION_NEW,
-      SOCKET_EVENTS.NOTIFICATION_READ,
-      SOCKET_EVENTS.QUEUE_UPDATED,
+     SOCKET_EVENTS.NOTIFICATION_READ,
+     SOCKET_EVENTS.QUEUE_UPDATED,
       SOCKET_EVENTS.QUEUE_POSITION_CHANGED,
       SOCKET_EVENTS.QUEUE_YOUR_TURN,
-      SOCKET_EVENTS.CHAT_MESSAGE,
+     SOCKET_EVENTS.CHAT_MESSAGE,
       SOCKET_EVENTS.CHAT_TYPING,
       SOCKET_EVENTS.LAB_REPORT_READY,
       SOCKET_EVENTS.IMAGING_REPORT_READY,
@@ -236,7 +238,7 @@ class SocketManager {
 
     businessEvents.forEach(event => {
       this.socket.on(event, (data) => {
-        console.log(`🔌 [Socket] Event received: ${event}`, data);
+       console.log(`🔌 [Socket] Event received: ${event}`, data);
         this._emitToListeners(event, data);
       });
     });
@@ -248,15 +250,15 @@ class SocketManager {
     this._stopHeartbeat();
     this._removeAppStateListener();
     
-    if (this.socket) {
+   if (this.socket) { 
       try {
-        this.socket.disconnect();
-      } catch (error) {
+       this.socket.disconnect();
+     } catch (error) {
         if (!error.message?.includes('not configurable')) {
           console.log('🔌 [Socket] Disconnect error:', error.message);
         }
       }
-      this.socket = null;
+     this.socket = null;
     }
     
     this.isConnected = false;
@@ -273,8 +275,8 @@ class SocketManager {
     if (!this.eventListeners.has(event)) {
       this.eventListeners.set(event, new Set());
     }
-    this.eventListeners.get(event).add(callback);
-    return () => {
+    this.eventListeners.get(event).add(callback);
+   return () => {
       const listeners = this.eventListeners.get(event);
       if (listeners) {
         listeners.delete(callback);
@@ -283,7 +285,7 @@ class SocketManager {
   }
 
   unsubscribe(event, callback) {
-    if (callback) {
+   if (callback) {
       const listeners = this.eventListeners.get(event);
       if (listeners) {
         listeners.delete(callback);
@@ -312,12 +314,12 @@ class SocketManager {
       this.socket.emit(event, data);
     } else {
       console.warn('🔌 [Socket] Cannot emit - not connected');
-    }
+   }
   }
 
   getStatus() {
     return {
-      isConnected: this.isConnected,
+     isConnected: this.isConnected,
       isConnecting: this.isConnecting,
       reconnectAttempts: this.reconnectAttempts,
       socketId: this.socket?.id || null,
@@ -332,9 +334,9 @@ class SocketManager {
     if (!token) return;
     console.log('🔌 [Socket] Updating auth token and resetting paused state');
     this.authToken = token;
-    this.isAuthPaused = false;
+   this.isAuthPaused = false;
     this.reconnectAttempts = 0;
-    if (this.socket) {
+   if (this.socket) {
       this.socket.auth = { token };
     }
     if (!this.isConnected && !this.isConnecting) {
@@ -362,26 +364,26 @@ class SocketManager {
           callback(data);
         } catch (error) {
           console.error(`🔌 [Socket] Listener error for ${event}:`, error);
-        }
+       }
       });
     }
   }
 
-  _handleReconnect() {
+  _handleReconnect() { 
     if (this.isConnecting) {
       return;
     }
 
     if (this.isAuthPaused) {
       console.log('🔌 [Socket] Reconnection scheduler is paused — awaiting token refresh signal');
-      return;
+      return; 
     }
 
     if (this.reconnectAttempts >= RECONNECT_CONFIG.maxAttempts) {
       console.log('🔌 [Socket] Max reconnect attempts reached, will retry on app foreground');
       this.reconnectAttempts = 0; 
       return;
-    }
+   }
 
     const delay = getReconnectDelay(this.reconnectAttempts);
     console.log(`🔌 [Socket] Exponential backoff reconnect in ${delay}ms (attempt ${this.reconnectAttempts + 1}/${RECONNECT_CONFIG.maxAttempts})`);
@@ -410,7 +412,7 @@ class SocketManager {
     this.heartbeatTimer = setInterval(() => {
       if (this.isConnected && this.socket) {
         if (!this.socket.connected) {
-          console.log('🔌 [Socket] Heartbeat detected disconnection');
+         console.log('🔌 [Socket] Heartbeat detected disconnection');
           this.isConnected = false;
           this._stopHeartbeat();
           this._handleReconnect();
@@ -447,7 +449,7 @@ class SocketManager {
   }
 
   _removeAppStateListener() {
-    if (this.appStateSubscription) {
+   if (this.appStateSubscription) {
       this.appStateSubscription.remove();
       this.appStateSubscription = null;
     }

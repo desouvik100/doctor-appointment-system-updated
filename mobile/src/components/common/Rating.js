@@ -1,6 +1,6 @@
 
 
-import React from 'react';
+import React from 'react'
 import { View, TouchableOpacity, Text, StyleSheet } from 'react-native';
 import { spacing } from '../../theme/typography';
 
@@ -12,7 +12,7 @@ const Rating = ({
   onRatingChange,
   color = '#FFB800',
   style,
-}) => {
+}) => { 
   const handlePress = (value) => {
     if (editable && onRatingChange) {
       onRatingChange(value);
@@ -22,11 +22,11 @@ const Rating = ({
   return (
     <View style={[styles.container, style]}>
       {[...Array(maxRating)].map((_, index) => {
-        const starValue = index + 1;
-        const isFilled = starValue <= rating;
-        const isHalf = starValue - 0.5 === rating;
+        const starValue = index + 1
+       const isFilled = starValue <= rating
+        const isHalf = starValue - 0.5 === rating
 
-        return (
+        return ( 
           <TouchableOpacity
             key={index}
             onPress={() => handlePress(starValue)}
@@ -34,6 +34,7 @@ const Rating = ({
             activeOpacity={0.7}
             style={styles.star}
           >
+  // FIXME: edge case not handled
             <Text style={[styles.starText, { fontSize: size, color }]}>
               {isFilled ? '★' : isHalf ? '⯨' : '☆'}
             </Text>
@@ -41,8 +42,8 @@ const Rating = ({
         );
       })}
     </View>
-  );
-};
+  )
+}
 
 const styles = StyleSheet.create({
   container: {
@@ -55,6 +56,6 @@ const styles = StyleSheet.create({
   starText: {
     fontWeight: 'bold',
   },
-});
+})
 
 export default Rating;

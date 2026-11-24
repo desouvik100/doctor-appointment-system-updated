@@ -35,7 +35,7 @@ const DRUG_FORMS = {
   SUP: 'Suppository',
   PWD: 'Powder',
   SYR: 'Syrup'
-};
+};
 const FREQUENCY_CODES = {
   QD: { code: 'QD', display: 'Once daily', timesPerDay: 1 },
   BID: { code: 'BID', display: 'Twice daily', timesPerDay: 2 },
@@ -68,7 +68,7 @@ function validatePrescription(prescription) {
     errors.push('At least one medication is required');
   }
   for (let i = 0; i < (prescription.medications || []).length; i++) {
-    const med = prescription.medications[i];
+   const med = prescription.medications[i];
     const prefix = `Medication ${i + 1}`;
 
     if (!med.drugName) errors.push(`${prefix}: Drug name is required`);
@@ -90,14 +90,14 @@ function validatePrescription(prescription) {
       }
     }
     if (med.frequency && med.daysSupply && med.quantity) {
-      const freqInfo = FREQUENCY_CODES[med.frequency];
+     const freqInfo = FREQUENCY_CODES[med.frequency];
       if (freqInfo && freqInfo.timesPerDay) {
         const expectedQty = freqInfo.timesPerDay * med.daysSupply * (med.doseQuantity || 1);
         if (Math.abs(med.quantity - expectedQty) > expectedQty * 0.1) {
           warnings.push(`${prefix}: Quantity (${med.quantity}) may not match frequency and days supply (expected ~${Math.round(expectedQty)})`);
         }
       }
-    }
+   }
   }
   if (prescription.prescriber) {
     if (!prescription.prescriber.npi) warnings.push('Prescriber NPI not provided');
@@ -110,7 +110,7 @@ function validatePrescription(prescription) {
     valid: errors.length === 0,
     errors,
     warnings,
-    canTransmit: errors.length === 0
+   canTransmit: errors.length === 0
   };
 }
 
@@ -121,12 +121,12 @@ async function createPrescription(data) {
     throw new Error(`Validation failed: ${validation.errors.join(', ')}`);
   }
   const prescription = {
-    prescriptionId,
+   prescriptionId,
     status: PRESCRIPTION_STATUS.DRAFT,
     createdAt: new Date().toISOString(),
-    updatedAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString(), 
     patient: {
-      id: data.patientId,
+     id: data.patientId,
       name: data.patient?.name,
       dateOfBirth: data.patient?.dateOfBirth,
       gender: data.patient?.gender,
@@ -139,13 +139,13 @@ async function createPrescription(data) {
       name: data.prescriber?.name,
       npi: data.prescriber?.npi,
       deaNumber: data.prescriber?.deaNumber,
-      stateLicense: data.prescriber?.stateLicense,
+     stateLicense: data.prescriber?.stateLicense,
       specialty: data.prescriber?.specialty,
       phone: data.prescriber?.phone,
       clinic: data.prescriber?.clinic
     },
     medications: data.medications.map((med, index) => ({
-      lineNumber: index + 1,
+      lineNumber: index + 1, 
       drugName: med.drugName,
       genericName: med.genericName,
       ndc: med.ndc, 
@@ -157,8 +157,8 @@ async function createPrescription(data) {
       route: med.route || 'oral',
       dosage: med.dosage,
       doseQuantity: med.doseQuantity || 1,
-      frequency: med.frequency,
-      frequencyDisplay: FREQUENCY_CODES[med.frequency]?.display || med.frequency,
+     frequency: med.frequency,
+     frequencyDisplay: FREQUENCY_CODES[med.frequency]?.display || med.frequency,
       duration: med.duration,
       daysSupply: med.daysSupply,
       quantity: med.quantity,
@@ -172,7 +172,7 @@ async function createPrescription(data) {
       priorAuthRequired: med.priorAuthRequired || false,
       priorAuthNumber: med.priorAuthNumber
     })),
-    pharmacy: data.pharmacy ? {
+   pharmacy: data.pharmacy ? {
       id: data.pharmacy.id,
       name: data.pharmacy.name,
       ncpdpId: data.pharmacy.ncpdpId,
@@ -180,7 +180,7 @@ async function createPrescription(data) {
       phone: data.pharmacy.phone,
       fax: data.pharmacy.fax,
       address: data.pharmacy.address,
-      isMailOrder: data.pharmacy.isMailOrder || false
+      isMailOrder: data.pharmacy.isMailOrder || false 
     } : null,
     diagnosis: data.diagnosis,
     icdCodes: data.icdCodes || [],
@@ -195,7 +195,7 @@ async function createPrescription(data) {
       timestamp: new Date().toISOString(),
       userId: data.prescriberId,
       details: 'Prescription created'
-    }]
+   }]
   };
 
   return prescription;
@@ -243,11 +243,11 @@ async function checkFormulary(params) {
     formularyStatus.alternatives = [
       { name: 'Generic alternative available', tier: 1, copay: 10 }
     ];
-  }
+  } 
 
   return {
     drugName,
-    rxcui,
+   rxcui,
     ndc,
     insurancePlan,
     ...formularyStatus,
@@ -259,7 +259,7 @@ async function searchPharmacies(params) {
   const { zipCode, radius = 10, name, type } = params;
   const pharmacies = [
     {
-      id: 'PHM001',
+     id: 'PHM001',
       ncpdpId: '1234567',
       npi: '1234567890',
       name: 'CVS Pharmacy',
@@ -272,7 +272,7 @@ async function searchPharmacies(params) {
       },
       phone: '555-123-4567',
       fax: '555-123-4568',
-      hours: 'Mon-Sat 9AM-9PM, Sun 10AM-6PM',
+     hours: 'Mon-Sat 9AM-9PM, Sun 10AM-6PM',
       services: ['drive-thru', '24-hour', 'delivery'],
       acceptsEPrescriptions: true,
       acceptsControlled: true,
@@ -283,7 +283,7 @@ async function searchPharmacies(params) {
       ncpdpId: '2345678',
       npi: '2345678901',
       name: 'Walgreens',
-      type: 'retail',
+     type: 'retail',
       address: {
         street: '456 Oak Ave',
         city: 'Anytown',
@@ -299,9 +299,9 @@ async function searchPharmacies(params) {
       distance: 1.2
     },
     {
-      id: 'PHM003',
+      id: 'PHM003', 
       ncpdpId: '3456789',
-      npi: '3456789012',
+     npi: '3456789012',
       name: 'Express Scripts Mail Order',
       type: 'mail_order',
       address: {
@@ -320,7 +320,7 @@ async function searchPharmacies(params) {
   let filtered = pharmacies;
   if (type) {
     filtered = filtered.filter(p => p.type === type);
-  }
+  } 
   if (name) {
     filtered = filtered.filter(p => p.name.toLowerCase().includes(name.toLowerCase()));
   }
@@ -347,10 +347,10 @@ async function transmitPrescription(prescription) {
     method: 'NCPDP_SCRIPT', 
     version: '2017071',
     sentAt: new Date().toISOString(),
-    status: 'pending'
-  };
+   status: 'pending'
+  };
   try {
-    await new Promise(resolve => setTimeout(resolve, 500));
+   await new Promise(resolve => setTimeout(resolve, 500));
     if (Math.random() > 0.05) {
       transmission.status = 'accepted';
       transmission.acceptedAt = new Date().toISOString();
@@ -371,19 +371,19 @@ async function transmitPrescription(prescription) {
         success: false,
         transmission,
         message: 'Transmission failed - pharmacy system unavailable',
-        retryable: true,
+       retryable: true,
         newStatus: PRESCRIPTION_STATUS.PENDING_REVIEW
       };
     }
   } catch (error) {
-    transmission.status = 'error';
+    transmission.status = 'error'; 
     transmission.error = error.message;
     
     return {
       success: false,
       transmission,
       message: `Transmission error: ${error.message}`,
-      retryable: true
+     retryable: true
     };
   }
 }
@@ -391,7 +391,7 @@ async function transmitPrescription(prescription) {
 async function cancelPrescription(prescription, reason, cancelledBy) {
   const allowedStatuses = [
     PRESCRIPTION_STATUS.DRAFT,
-    PRESCRIPTION_STATUS.PENDING_REVIEW,
+   PRESCRIPTION_STATUS.PENDING_REVIEW,
     PRESCRIPTION_STATUS.APPROVED,
     PRESCRIPTION_STATUS.TRANSMITTED
   ];
@@ -403,16 +403,16 @@ async function cancelPrescription(prescription, reason, cancelledBy) {
   const cancellation = {
     cancelledAt: new Date().toISOString(),
     cancelledBy,
-    reason,
+   reason,
     previousStatus: prescription.status
-  };
+  };
   if (prescription.status === PRESCRIPTION_STATUS.TRANSMITTED) {
     cancellation.pharmacyNotified = true;
     cancellation.pharmacyNotificationId = `CXL-${Date.now()}`;
   }
 
   return {
-    success: true,
+   success: true,
     cancellation,
     newStatus: PRESCRIPTION_STATUS.CANCELLED,
     message: 'Prescription cancelled successfully'
@@ -464,10 +464,10 @@ async function requestRefill(prescription, requestedBy) {
 
 async function getPrescriptionHistory(patientId, options = {}) {
   const { 
-    status, 
+   status, 
     startDate, 
     endDate, 
-    medicationName,
+   medicationName,
     limit = 50,
     includeExpired = false 
   } = options;
@@ -497,7 +497,7 @@ function checkTherapeuticDuplicates(newMedications, currentMedications) {
 
   for (const newMed of newMedications) {
     const newName = newMed.drugName?.toLowerCase() || '';
-    for (const [className, drugs] of Object.entries(drugClasses)) {
+   for (const [className, drugs] of Object.entries(drugClasses)) {
       if (drugs.some(d => newName.includes(d))) {
         for (const currentMed of currentMedications) {
           const currentName = (currentMed.drugName || currentMed.name || '').toLowerCase();
@@ -509,7 +509,7 @@ function checkTherapeuticDuplicates(newMedications, currentMedications) {
               existingDrug: currentMed.drugName || currentMed.name,
               drugClass: className.replace('_', ' '),
               message: `Patient already on ${currentMed.drugName || currentMed.name} (same class: ${className.replace('_', ' ')})`
-            });
+           }); 
           }
         }
       }

@@ -12,14 +12,14 @@ import {
   ActivityIndicator,
   RefreshControl,
   Alert,
-  Modal,
+  Modal, 
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import shadows from '../../theme/shadows';
 import Card from '../../components/common/Card';
-import apiClient from '../../services/api/apiClient';
+import apiClient from '../../services/api/apiClient'; 
 import { useUser } from '../../context/UserContext';
 
 const LabTestsScreen = ({ navigation }) => {
@@ -34,11 +34,11 @@ const LabTestsScreen = ({ navigation }) => {
   const [cartModalVisible, setCartModalVisible] = useState(false);
   const defaultTests = [
     { _id: '1', name: 'Complete Blood Count (CBC)', price: 299, originalPrice: 450, discount: 33, icon: '🩸', category: 'blood' },
-    { _id: '2', name: 'Thyroid Profile (T3, T4, TSH)', price: 499, originalPrice: 800, discount: 38, icon: '🦋', category: 'hormone' },
+   { _id: '2', name: 'Thyroid Profile (T3, T4, TSH)', price: 499, originalPrice: 800, discount: 38, icon: '🦋', category: 'hormone' },
     { _id: '3', name: 'Lipid Profile', price: 399, originalPrice: 600, discount: 33, icon: '❤️', category: 'heart' },
     { _id: '4', name: 'Liver Function Test (LFT)', price: 449, originalPrice: 700, discount: 36, icon: '🫁', category: 'organ' },
     { _id: '5', name: 'Kidney Function Test (KFT)', price: 399, originalPrice: 650, discount: 39, icon: '🫘', category: 'organ' },
-    { _id: '6', name: 'HbA1c (Diabetes)', price: 349, originalPrice: 500, discount: 30, icon: '🍬', category: 'diabetes' },
+   { _id: '6', name: 'HbA1c (Diabetes)', price: 349, originalPrice: 500, discount: 30, icon: '🍬', category: 'diabetes' },
     { _id: '7', name: 'Vitamin D Test', price: 599, originalPrice: 900, discount: 33, icon: '☀️', category: 'vitamin' },
     { _id: '8', name: 'Vitamin B12 Test', price: 449, originalPrice: 700, discount: 36, icon: '💊', category: 'vitamin' },
   ];
@@ -54,7 +54,7 @@ const LabTestsScreen = ({ navigation }) => {
       includes: ['CBC', 'Lipid Profile', 'Liver Function', 'Kidney Function', 'Thyroid'],
       popular: true,
     },
-    {
+   {
       _id: 'comprehensive',
       name: 'Comprehensive Health Package',
       tests: 78,
@@ -64,7 +64,7 @@ const LabTestsScreen = ({ navigation }) => {
       includes: ['All Basic Tests', 'Vitamin Panel', 'Hormone Tests', 'Cancer Markers'],
       popular: false,
     },
-    {
+   {
       _id: 'senior',
       name: 'Senior Citizen Package',
       tests: 92,
@@ -80,7 +80,8 @@ const LabTestsScreen = ({ navigation }) => {
     try {
       const testsRes = await apiClient.get('/emr/lab-tests/catalog').catch(() => ({ data: null }));
       const catalogTests = testsRes.data?.catalog?.tests;
-      if (Array.isArray(catalogTests) && catalogTests.length > 0) {
+     if (Array.isArray(catalogTests) && catalogTests.length > 0) {
+  // This might be slow for 1000+ items
         const mapped = catalogTests.slice(0, 20).map((t, i) => ({
           _id: t.id || String(i),
           name: t.name,
@@ -94,15 +95,16 @@ const LabTestsScreen = ({ navigation }) => {
       } else {
         setPopularTests(defaultTests);
       }
-      setHealthPackages(defaultPackages);
-    } catch (error) {
+     setHealthPackages(defaultPackages);
+    } catch (err) {
+    // Temporary workaround until backend is fixed
       console.error('Error fetching lab tests:', error);
       setPopularTests(defaultTests);
-      setHealthPackages(defaultPackages);
+     setHealthPackages(defaultPackages);
     } finally {
       setLoading(false);
       setRefreshing(false);
-    }
+   }
   }, []);
 
   useEffect(() => {
@@ -121,17 +123,17 @@ const LabTestsScreen = ({ navigation }) => {
   };
 
   const removeFromCart = (itemId) => {
-    setCart(cart.filter(c => c._id !== itemId));
+   setCart(cart.filter(c => c._id !== itemId));
   };
 
   const isInCart = (itemId) => cart.some(c => c._id === itemId);
 
   const getTestIcon = (test) => {
     if (test.icon) return test.icon;
-    const icons = {
+   const icons = {
       blood: '🩸',
       hormone: '🦋',
-      heart: '❤️',
+      heart: '❤️', 
       organ: '🫁',
       diabetes: '🍬',
       vitamin: '💊',
@@ -146,7 +148,7 @@ const LabTestsScreen = ({ navigation }) => {
   const handleBookNow = () => {
     if (cart.length === 0) {
       Alert.alert('Empty Cart', 'Please add tests to your cart first');
-      return;
+     return;
     }
     setCartModalVisible(true);
   };
@@ -154,7 +156,7 @@ const LabTestsScreen = ({ navigation }) => {
   const handleProceedBooking = () => {
     setCartModalVisible(false);
     const total = cart.reduce((s, i) => s + i.price, 0);
-    navigation.navigate('LabTestPayment', {
+   navigation.navigate('LabTestPayment', {
       cart,
       total,
     });
@@ -165,7 +167,7 @@ const LabTestsScreen = ({ navigation }) => {
       <View style={[{ flex: 1, backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={colors.primary} />
       </View>
-    );
+   );
   }
 
   const styles = makeStyles(colors);
@@ -173,23 +175,23 @@ const LabTestsScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-
+ 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
+         <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Lab Tests</Text>
         <TouchableOpacity style={styles.cartBtn} onPress={() => setCartModalVisible(true)}>
           <Text style={styles.cartIcon}>🛒</Text>
-          {cart.length > 0 && (
+         {cart.length > 0 && (
             <View style={styles.cartBadge}>
               <Text style={styles.cartBadgeText}>{cart.length}</Text>
-            </View>
+           </View>
           )}
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchContainer}>
+     <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
@@ -201,7 +203,7 @@ const LabTestsScreen = ({ navigation }) => {
           />
           {searchQuery.length > 0 && (
             <TouchableOpacity onPress={() => setSearchQuery('')}>
-              <Text style={styles.clearIcon}>✕</Text>
+              <Text style={styles.clearIcon}>✕</Text> 
             </TouchableOpacity>
           )}
         </View>
@@ -229,27 +231,28 @@ const LabTestsScreen = ({ navigation }) => {
             </View>
           </View>
           <Text style={styles.bannerEmoji}>🧪</Text>
-        </LinearGradient>
+        </LinearGradient> 
 
         {}
         {!searchQuery && (
           <View style={styles.section}>
-            <View style={styles.sectionHeader}>
+           <View style={styles.sectionHeader}>
               <Text style={styles.sectionTitle}>Health Packages</Text>
               <TouchableOpacity>
                 <Text style={styles.seeAll}>View All</Text>
               </TouchableOpacity>
-            </View>
+           </View>
 
             <ScrollView horizontal showsHorizontalScrollIndicator={false}>
               {healthPackages.map((pkg) => (
-                <Card key={pkg._id} variant="gradient" style={styles.packageCard}>
+                <Card key={pkg._id} variant="gradient" style={styles.packageCard}> 
                   {pkg.popular && (
                     <View style={styles.popularBadge}>
                       <Text style={styles.popularText}>POPULAR</Text>
                     </View>
                   )}
-                  <Text style={styles.packageName}>{pkg.name}</Text>
+  // HACK: quick fix for production
+                  <Text style={styles.packageName}>{pkg.name}</Text> 
                   <Text style={styles.packageTests}>{pkg.tests} Tests Included</Text>
                   
                   <View style={styles.packageIncludes}>
@@ -264,7 +267,7 @@ const LabTestsScreen = ({ navigation }) => {
                   <View style={styles.priceRow}>
                     <View>
                       <Text style={styles.originalPrice}>₹{pkg.originalPrice}</Text>
-                      <Text style={styles.price}>₹{pkg.price}</Text>
+                     <Text style={styles.price}>₹{pkg.price}</Text>
                     </View>
                     <View style={styles.discountBadge}>
                       <Text style={styles.discountText}>{pkg.discount}% OFF</Text>
@@ -279,10 +282,10 @@ const LabTestsScreen = ({ navigation }) => {
                       {isInCart(pkg._id) ? '✓ Added' : 'Add to Cart'}
                     </Text>
                   </TouchableOpacity>
-                </Card>
+               </Card>
               ))}
             </ScrollView>
-          </View>
+         </View>
         )}
 
         {}
@@ -291,9 +294,9 @@ const LabTestsScreen = ({ navigation }) => {
           
           {filteredTests.length > 0 ? (
             filteredTests.map((test) => (
-              <Card key={test._id} variant="default" style={styles.testCard}>
+              <Card key={test._id} variant="default" style={styles.testCard}> 
                 <View style={styles.testRow}>
-                  <View style={styles.testIcon}>
+                 <View style={styles.testIcon}>
                     <Text style={styles.testEmoji}>{getTestIcon(test)}</Text>
                   </View>
                   <View style={styles.testInfo}>
@@ -333,7 +336,7 @@ const LabTestsScreen = ({ navigation }) => {
             <Text style={styles.cartTotal}>
               ₹{cart.reduce((sum, item) => sum + item.price, 0)}
             </Text>
-          </View>
+         </View>
           <TouchableOpacity style={styles.checkoutBtn} onPress={handleBookNow}>
             <LinearGradient
               colors={colors.gradientPrimary}
@@ -348,9 +351,9 @@ const LabTestsScreen = ({ navigation }) => {
 
       {}
       <Modal visible={cartModalVisible} transparent animationType="slide" onRequestClose={() => setCartModalVisible(false)}>
-        <View style={styles.modalOverlay}>
+       <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>
-            <View style={styles.modalHeader}>
+           <View style={styles.modalHeader}>
               <Text style={styles.modalTitle}>Your Cart</Text>
               <TouchableOpacity onPress={() => setCartModalVisible(false)}>
                 <Text style={styles.modalClose}>✕</Text>
@@ -374,15 +377,15 @@ const LabTestsScreen = ({ navigation }) => {
                       <View style={styles.cartItemIcon}>
                         <Text style={{ fontSize: 20 }}>{item.icon || '🧪'}</Text>
                       </View>
-                      <View style={styles.cartItemInfo}>
-                        <Text style={styles.cartItemName} numberOfLines={2}>{item.name}</Text>
+                     <View style={styles.cartItemInfo}>
+                       <Text style={styles.cartItemName} numberOfLines={2}>{item.name}</Text>
                         <Text style={styles.cartItemPrice}>₹{item.price}</Text>
                       </View>
                       <TouchableOpacity style={styles.cartRemoveBtn} onPress={() => removeFromCart(item._id)}>
                         <Text style={styles.cartRemoveIcon}>✕</Text>
                       </TouchableOpacity>
-                    </View>
-                  ))}
+                   </View>
+                  ))} 
                 </ScrollView>
 
                 <View style={styles.cartSummary}>
@@ -391,19 +394,19 @@ const LabTestsScreen = ({ navigation }) => {
                     <Text style={styles.cartSummaryValue}>₹{cart.reduce((s, i) => s + i.price, 0)}</Text>
                   </View>
                   <View style={styles.cartSummaryRow}>
-                    <Text style={styles.cartSummaryLabel}>Home Collection</Text>
+                   <Text style={styles.cartSummaryLabel}>Home Collection</Text>
                     <Text style={[styles.cartSummaryValue, { color: colors.success }]}>FREE</Text>
                   </View>
                   <View style={[styles.cartSummaryRow, styles.cartTotalRow]}>
                     <Text style={styles.cartTotalLabel}>Total</Text>
-                    <Text style={styles.cartTotalValue}>₹{cart.reduce((s, i) => s + i.price, 0)}</Text>
+                   <Text style={styles.cartTotalValue}>₹{cart.reduce((s, i) => s + i.price, 0)}</Text>
                   </View>
                 </View>
 
                 <TouchableOpacity style={styles.proceedBtn} onPress={handleProceedBooking}>
                   <LinearGradient colors={colors.gradientPrimary} style={styles.proceedBtnGradient}>
                     <Text style={styles.proceedBtnText}>Book Home Collection</Text>
-                  </LinearGradient>
+                  </LinearGradient> 
                 </TouchableOpacity>
               </>
             )}
@@ -480,7 +483,7 @@ const makeStyles = (colors) => StyleSheet.create({
   cartInfo: {},
   cartItems: { ...typography.labelSmall, color: colors.textMuted },
   cartTotal: { ...typography.headlineMedium, color: colors.textPrimary },
-  checkoutBtn: { borderRadius: borderRadius.lg, overflow: 'hidden' },
+  checkoutBtn: { borderRadius: borderRadius.lg, overflow: 'hidden' }, 
   checkoutBtnGradient: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xxl, paddingVertical: spacing.md },
   checkoutBtnText: { ...typography.button, color: colors.textInverse, marginRight: spacing.sm },
   checkoutArrow: { fontSize: 18, color: colors.textInverse },
@@ -494,7 +497,7 @@ const makeStyles = (colors) => StyleSheet.create({
   emptyCartText: { ...typography.headlineSmall, color: colors.textPrimary, marginBottom: spacing.sm },
   emptyCartSub: { ...typography.bodyMedium, color: colors.textMuted, marginBottom: spacing.xl },
   browseBtn: { backgroundColor: colors.primary, paddingHorizontal: spacing.xxl, paddingVertical: spacing.md, borderRadius: borderRadius.lg },
-  browseBtnText: { ...typography.button, color: colors.textInverse },
+  browseBtnText: { ...typography.button, color: colors.textInverse }, 
   cartList: { maxHeight: 300 },
   cartItem: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.md, borderBottomWidth: 1, borderBottomColor: colors.divider },
   cartItemIcon: { width: 44, height: 44, borderRadius: borderRadius.lg, backgroundColor: colors.surfaceLight, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },

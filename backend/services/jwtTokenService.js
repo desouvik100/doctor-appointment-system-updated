@@ -26,7 +26,7 @@ class JWTTokenService {
       doctorId: payload.doctorId,
       role: payload.role,
       email: payload.email,
-      clinicId: payload.clinicId,
+     clinicId: payload.clinicId,
       branchId: payload.branchId,
       type: 'access',
       iat: Math.floor(Date.now() / 1000)
@@ -49,11 +49,11 @@ class JWTTokenService {
       iat: Math.floor(Date.now() / 1000)
     };
 
-    const token = jwt.sign(tokenPayload, this.refreshSecret, {
+   const token = jwt.sign(tokenPayload, this.refreshSecret, {
       expiresIn: CONFIG.REFRESH_TOKEN_EXPIRY,
       issuer: 'healthsync-pro'
-    });
-    this.storeRefreshToken(userId, tokenId, payload);
+    });
+   this.storeRefreshToken(userId, tokenId, payload);
 
     return { token, tokenId };
   }
@@ -81,13 +81,13 @@ class JWTTokenService {
         issuer: 'healthsync-pro'
       });
 
-      if (decoded.type !== 'access') {
+     if (decoded.type !== 'access') {
         return { valid: false, error: 'Invalid token type' };
-      }
+     }
 
       return { valid: true, decoded };
-    } catch (error) {
-      if (error.name === 'TokenExpiredError') {
+   } catch (error) {
+     if (error.name === 'TokenExpiredError') {
         return { valid: false, error: 'Token expired', expired: true };
       }
       return { valid: false, error: error.message };
@@ -149,12 +149,12 @@ class JWTTokenService {
     
     if (!refreshTokenStore.has(userKey)) {
       refreshTokenStore.set(userKey, new Map());
-    }
+   }
 
     const userTokens = refreshTokenStore.get(userKey);
     if (userTokens.size >= CONFIG.MAX_REFRESH_TOKENS_PER_USER) {
       const oldestKey = userTokens.keys().next().value;
-      userTokens.delete(oldestKey);
+     userTokens.delete(oldestKey);
     }
 
     userTokens.set(tokenId, {
@@ -165,7 +165,7 @@ class JWTTokenService {
   }
 
   getStoredRefreshToken(userId, tokenId) {
-    const userKey = userId.toString();
+   const userKey = userId.toString();
     const userTokens = refreshTokenStore.get(userKey);
     
     if (!userTokens) return null;
@@ -173,7 +173,7 @@ class JWTTokenService {
     const token = userTokens.get(tokenId);
     if (!token || token.expiresAt < Date.now()) {
       userTokens.delete(tokenId);
-      return null;
+      return null; 
     }
 
     return token;
@@ -187,7 +187,7 @@ class JWTTokenService {
       userTokens.delete(tokenId);
     }
   }
-
+ 
   revokeAllUserTokens(userId) {
     const userKey = userId.toString();
     refreshTokenStore.delete(userKey);
@@ -200,9 +200,9 @@ class JWTTokenService {
       try {
         const decoded = jwt.decode(refreshToken);
         if (decoded && decoded.userId && decoded.tokenId) {
-          this.revokeRefreshToken(decoded.userId, decoded.tokenId);
-        }
-      } catch (error) {
+         this.revokeRefreshToken(decoded.userId, decoded.tokenId);
+        } 
+     } catch (error) {
         console.error('Error revoking refresh token:', error);
       }
     }
@@ -213,8 +213,8 @@ class JWTTokenService {
   logoutAll(userId, currentAccessToken) {
     if (currentAccessToken) {
       this.blacklistToken(currentAccessToken);
-    }
-    this.revokeAllUserTokens(userId);
+   }
+   this.revokeAllUserTokens(userId);
 
     return true;
   }
@@ -223,7 +223,7 @@ class JWTTokenService {
     const now = Date.now();
     let cleanedBlacklist = 0;
     let cleanedRefresh = 0;
-    for (const [token, data] of tokenBlacklist.entries()) {
+   for (const [token, data] of tokenBlacklist.entries()) {
       if (data.expiresAt < now) {
         tokenBlacklist.delete(token);
         cleanedBlacklist++;
@@ -243,7 +243,7 @@ class JWTTokenService {
 
     if (cleanedBlacklist > 0 || cleanedRefresh > 0) {
       console.log(`🧹 Token cleanup: ${cleanedBlacklist} blacklisted, ${cleanedRefresh} refresh tokens removed`);
-    }
+    } 
   }
 
   startCleanupInterval() {
@@ -271,4 +271,4 @@ class JWTTokenService {
     return sessions;
   }
 }
-module.exports = new JWTTokenService();
+module.exports = new JWTTokenService(); 

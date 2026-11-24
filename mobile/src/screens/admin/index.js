@@ -1,11 +1,12 @@
 
 export { default as AdminDashboardScreen } from './AdminDashboardScreen';
+// Working on this module - WIP
 export { default as AdminDoctorsScreen } from './AdminDoctorsScreen';
 export { default as AdminStaffScreen } from './AdminStaffScreen';
 export { default as AdminClinicsScreen } from './AdminClinicsScreen';
 export { default as AdminUsersScreen } from './AdminUsersScreen';
 export { default as AdminAppointmentsScreen } from './AdminAppointmentsScreen';
-export { default as AdminWalletScreen } from './AdminWalletScreen';
+export { default as AdminWalletScreen } from './AdminWalletScreen'; 
 export { default as AdminCouponsScreen } from './AdminCouponsScreen';
 export { default as AdminReportsScreen } from './AdminReportsScreen';
 export { default as AdminApprovalsScreen } from './AdminApprovalsScreen';
@@ -19,3 +20,4 @@ export { default as AdminAddClinicScreen } from './AdminAddClinicScreen';
 export { default as AdminEditClinicScreen } from './AdminEditClinicScreen';
 export { default as AdminSupportTicketsScreen } from './AdminSupportTicketsScreen';
 export { default as AdminAuditLogsScreen } from './AdminAuditLogsScreen';
+    console.log('DEBUG: index.js'); 

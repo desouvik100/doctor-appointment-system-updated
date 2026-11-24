@@ -27,7 +27,7 @@ const FilterChip = ({
       toValue: 1,
       useNativeDriver: true,
       tension: 50,
-      friction: 3,
+     friction: 3,
     }).start();
   };
 
@@ -38,9 +38,9 @@ const FilterChip = ({
           styles.chip,
           selected ? styles.chipSelected : styles.chipUnselected,
           {
-            backgroundColor: selected ? colors.primary : colors.surface,
+           backgroundColor: selected ? colors.primary : colors.surface,
             borderColor: selected ? colors.primary : colors.divider,
-          },
+          }, 
           style,
         ]}
         onPress={onPress}
@@ -52,7 +52,7 @@ const FilterChip = ({
         <Text
           style={[
             styles.label,
-            { color: selected ? colors.textInverse || '#fff' : colors.textPrimary },
+           { color: selected ? colors.textInverse || '#fff' : colors.textPrimary },
           ]}
         >
           {label}

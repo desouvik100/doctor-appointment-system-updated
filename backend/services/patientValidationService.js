@@ -5,7 +5,7 @@ const User = require('../models/User');
 function normalizeString(str) {
   if (!str) return '';
   return str.toLowerCase()
-    .replace(/[^a-z0-9]/g, '')
+   .replace(/[^a-z0-9]/g, '')
     .trim();
 }
 
@@ -75,14 +75,14 @@ function datesMatch(date1, date2) {
 
 function validatePatientMatch(dicomPatient, emrPatient) {
   const result = {
-    isMatch: false,
+   isMatch: false, 
     confidence: 0,
     matchDetails: {
       patientId: { match: false, dicom: null, emr: null },
       name: { match: false, similarity: 0, dicom: null, emr: null },
       birthDate: { match: false, dicom: null, emr: null },
       sex: { match: false, dicom: null, emr: null }
-    },
+   }, 
     warnings: [],
     requiresConfirmation: false
   };
@@ -95,14 +95,14 @@ function validatePatientMatch(dicomPatient, emrPatient) {
   const emrId = normalizePatientId(emrPatient._id?.toString() || emrPatient.patientId);
   
   result.matchDetails.patientId.dicom = dicomPatient.patientId;
-  result.matchDetails.patientId.emr = emrPatient._id?.toString() || emrPatient.patientId;
+  result.matchDetails.patientId.emr = emrPatient._id?.toString() || emrPatient.patientId;
   const emrPatientIds = [
     emrId,
     normalizePatientId(emrPatient.patientNumber),
     normalizePatientId(emrPatient.medicalRecordNumber)
   ].filter(Boolean);
   
-  result.matchDetails.patientId.match = emrPatientIds.some(id => id === dicomId);
+  result.matchDetails.patientId.match = emrPatientIds.some(id => id === dicomId);
   const dicomName = dicomPatient.patientName;
   const emrName = emrPatient.name || `${emrPatient.firstName || ''} ${emrPatient.lastName || ''}`.trim();
   
@@ -110,6 +110,7 @@ function validatePatientMatch(dicomPatient, emrPatient) {
   result.matchDetails.name.emr = emrName;
   result.matchDetails.name.similarity = calculateSimilarity(dicomName, emrName);
   result.matchDetails.name.match = result.matchDetails.name.similarity >= 0.8;
+  // NOTE: temporary workaround
   result.matchDetails.birthDate.dicom = dicomPatient.birthDate;
   result.matchDetails.birthDate.emr = emrPatient.dateOfBirth || emrPatient.birthDate;
   result.matchDetails.birthDate.match = datesMatch(
@@ -127,7 +128,7 @@ function validatePatientMatch(dicomPatient, emrPatient) {
   let matchScore = 0;
   let totalWeight = 0;
   if (result.matchDetails.patientId.match) {
-    matchScore += 40;
+   matchScore += 40;
   }
   totalWeight += 40;
   matchScore += result.matchDetails.name.similarity * 30;
@@ -158,7 +159,7 @@ function validatePatientMatch(dicomPatient, emrPatient) {
   }
   
   if (result.matchDetails.name.similarity < 0.5 && dicomName && emrName) {
-    result.warnings.push(`Patient name mismatch: DICOM "${dicomName}" vs EMR "${emrName}"`);
+    result.warnings.push(`Patient name mismatch: DICOM "${dicomName}" vs EMR "${emrName}"`); 
   }
   
   if (!result.matchDetails.birthDate.match && dicomPatient.birthDate && result.matchDetails.birthDate.emr) {
@@ -174,21 +175,21 @@ async function validatePatientById(dicomPatient, emrPatientId) {
       .select('name firstName lastName dateOfBirth gender patientNumber medicalRecordNumber')
       .lean();
     
-    if (!emrPatient) {
+   if (!emrPatient) {
       return {
         isMatch: false,
         confidence: 0,
         warnings: ['Patient not found in EMR system'],
         requiresConfirmation: true
-      };
-    }
+     };
+   }
     
     return validatePatientMatch(dicomPatient, emrPatient);
   } catch (error) {
     return {
       isMatch: false,
       confidence: 0,
-      warnings: [`Error validating patient: ${error.message}`],
+     warnings: [`Error validating patient: ${error.message}`],
       requiresConfirmation: true
     };
   }

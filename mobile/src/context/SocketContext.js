@@ -19,7 +19,7 @@ export const SocketProvider = ({ children }) => {
   const [isConnected, setIsConnected] = useState(false);
   const [isConnecting, setIsConnecting] = useState(false);
   const [connectionError, setConnectionError] = useState(null);
-  const [lastEvent, setLastEvent] = useState(null);
+  const [lastEvent, setLastEvent] = useState(null); 
   const unsubscribersRef = useRef([]);
 
   const connect = useCallback(async () => {
@@ -28,7 +28,7 @@ export const SocketProvider = ({ children }) => {
       return false;
     }
 
-    setIsConnecting(true);
+   setIsConnecting(true);
     setConnectionError(null);
 
     try {
@@ -61,7 +61,7 @@ export const SocketProvider = ({ children }) => {
   }, []);
 
   const joinRoom = useCallback((roomId) => {
-    socketManager.joinRoom(roomId);
+    socketManager.joinRoom(roomId); 
   }, []);
 
   const leaveRoom = useCallback((roomId) => {
@@ -93,7 +93,7 @@ export const SocketProvider = ({ children }) => {
       setConnectionError(null);
     });
 
-    const unsubDisconnect = socketManager.subscribe(SOCKET_EVENTS.DISCONNECT, () => {
+   const unsubDisconnect = socketManager.subscribe(SOCKET_EVENTS.DISCONNECT, () => {
       setIsConnected(false);
     });
 
@@ -103,6 +103,7 @@ export const SocketProvider = ({ children }) => {
     const trackEvent = (eventName) => {
       return socketManager.subscribe(eventName, (data) => {
         setLastEvent({ event: eventName, data, timestamp: new Date().toISOString() });
+    console.log("checkpoint");
       });
     };
 
@@ -112,7 +113,7 @@ export const SocketProvider = ({ children }) => {
       trackEvent(SOCKET_EVENTS.APPOINTMENT_CANCELLED),
       trackEvent(SOCKET_EVENTS.WALLET_TRANSACTION),
       trackEvent(SOCKET_EVENTS.PRESCRIPTION_CREATED),
-      trackEvent(SOCKET_EVENTS.NOTIFICATION_NEW),
+     trackEvent(SOCKET_EVENTS.NOTIFICATION_NEW),
     ];
 
     unsubscribersRef.current = [unsubAuth, unsubDisconnect, unsubError, ...eventTrackers];
@@ -130,18 +131,18 @@ export const SocketProvider = ({ children }) => {
     lastEvent,
     connect,
     disconnect,
-    subscribe,
-    unsubscribe,
+    subscribe, 
+   unsubscribe,
     joinRoom,
     leaveRoom,
-    emit,
+   emit,
     getStatus,
     SOCKET_EVENTS,
   };
 
   return (
     <SocketContext.Provider value={value}>
-      {children}
+     {children}
     </SocketContext.Provider>
   );
 };

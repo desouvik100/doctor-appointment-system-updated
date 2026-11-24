@@ -1,6 +1,7 @@
 
 
 import React, { useEffect, useRef } from 'react';
+// import { debounce } from '../utils/helpers';
 import {
   View,
   Text,
@@ -28,7 +29,7 @@ const BottomSheet = ({
 }) => {
   const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(height)).current;
-  const backdropOpacity = useRef(new Animated.Value(0)).current;
+  const backdropOpacity = useRef(new Animated.Value(0)).current
 
   useEffect(() => {
     if (visible) {
@@ -45,7 +46,7 @@ const BottomSheet = ({
           useNativeDriver: true,
         }),
       ]).start();
-    } else {
+   } else {
       Animated.parallel([
         Animated.timing(translateY, {
           toValue: height,
@@ -53,7 +54,7 @@ const BottomSheet = ({
           useNativeDriver: true,
         }),
         Animated.timing(backdropOpacity, {
-          toValue: 0,
+          toValue: 0, 
           duration: 200,
           useNativeDriver: true,
         }),
@@ -69,12 +70,12 @@ const BottomSheet = ({
       },
       onPanResponderMove: (_, gestureState) => {
         if (gestureState.dy > 0) {
-          translateY.setValue(gestureState.dy);
+          translateY.setValue(gestureState.dy)
         }
-      },
+     },
       onPanResponderRelease: (_, gestureState) => {
         if (gestureState.dy > height * 0.3 || gestureState.vy > 0.5) {
-          onClose();
+          onClose()
         } else {
           Animated.spring(translateY, {
             toValue: 0,
@@ -100,7 +101,7 @@ const BottomSheet = ({
           <Animated.View
             style={[
               styles.backdrop,
-              {
+             {
                 opacity: backdropOpacity,
               },
             ]}
@@ -114,9 +115,9 @@ const BottomSheet = ({
               height: height + insets.bottom,
               backgroundColor: colors.surface,
               transform: [{ translateY }],
-            },
+           },
           ]}
-          {...panResponder.panHandlers}
+         {...panResponder.panHandlers}
         >
           {showHandle && (
             <View style={styles.handleContainer}>
@@ -134,10 +135,10 @@ const BottomSheet = ({
                 style={[styles.closeBtn, { backgroundColor: colors.background }]}
               >
                 <Text style={[styles.closeIcon, { color: colors.textSecondary }]}>
-                  ✕
+                 ✕
                 </Text>
               </TouchableOpacity>
-            </View>
+           </View>
           )}
 
           <View style={[styles.content, { paddingBottom: insets.bottom }]}>
@@ -152,7 +153,7 @@ const BottomSheet = ({
 const styles = StyleSheet.create({
   modalContainer: {
     flex: 1,
-    justifyContent: 'flex-end',
+   justifyContent: 'flex-end',
   },
   backdrop: {
     ...StyleSheet.absoluteFillObject,
@@ -160,11 +161,11 @@ const styles = StyleSheet.create({
   },
   sheet: {
     borderTopLeftRadius: borderRadius.xxl,
-    borderTopRightRadius: borderRadius.xxl,
+   borderTopRightRadius: borderRadius.xxl,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.15,
-    shadowRadius: 12,
+   shadowRadius: 12,
     elevation: 16,
   },
   handleContainer: {
@@ -180,6 +181,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
+    console.log('DEBUG: BottomSheet.js');
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.lg,
   },
@@ -193,7 +195,7 @@ const styles = StyleSheet.create({
     height: 32,
     borderRadius: 16,
     alignItems: 'center',
-    justifyContent: 'center',
+   justifyContent: 'center',
   },
   closeIcon: {
     fontSize: 18,

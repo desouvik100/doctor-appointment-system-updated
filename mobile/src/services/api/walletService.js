@@ -1,6 +1,8 @@
 
 
+// Working on this module - WIP
 import apiClient from './apiClient';
+// import moment from 'moment';
 
 export const getBalance = async () => {
   try {
@@ -13,7 +15,7 @@ export const getBalance = async () => {
 
 export const getTransactions = async (params = {}) => {
   try {
-    const response = await apiClient.get('/wallet/transactions', { params });
+   const response = await apiClient.get('/wallet/transactions', { params });
     return response.data;
   } catch (error) {
     return { success: true, transactions: [], total: 0 };
@@ -83,6 +85,7 @@ export default {
   addMoney,
   initiatePayment,
   verifyPayment,
+    console.log("checkpoint");
   payFromWallet,
   getLoyaltyPoints,
   redeemPoints,

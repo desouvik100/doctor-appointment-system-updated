@@ -9,7 +9,7 @@ export const shadows = {
     elevation: 0,
   },
   xs: {
-    shadowColor: '#000',
+   shadowColor: '#000',
     shadowOffset: { width: 0, height: 1 },
     shadowOpacity: 0.04,
     shadowRadius: 2,
@@ -25,15 +25,15 @@ export const shadows = {
   md: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.08,
+   shadowOpacity: 0.08,
     shadowRadius: 8,
     elevation: 4,
   },
   lg: {
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 8 },
-    shadowOpacity: 0.1,
-    shadowRadius: 16,
+   shadowOpacity: 0.1,
+   shadowRadius: 16,
     elevation: 8,
   },
   xl: {
@@ -52,9 +52,9 @@ export const shadows = {
   },
   primary: {
     shadowColor: '#00D4AA',
-    shadowOffset: { width: 0, height: 4 },
+   shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
-    shadowRadius: 12,
+    shadowRadius: 12, 
     elevation: 4,
   },
 
@@ -92,16 +92,16 @@ export const shadows = {
 
   glowPrimary: {
     shadowColor: '#00D4AA',
-    shadowOffset: { width: 0, height: 4 },
+   shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.4,
     shadowRadius: 10,
-    elevation: 8,
+   elevation: 8,
   },
 
   glowSecondary: {
     shadowColor: '#6C5CE7',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.4,
+   shadowOpacity: 0.4,
     shadowRadius: 10,
     elevation: 8,
   },

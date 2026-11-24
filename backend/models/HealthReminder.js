@@ -16,7 +16,7 @@ const healthReminderSchema = new mongoose.Schema({
       'follow_up',         
       'screening',         
       'dental',            
-      'eye',               
+     'eye',               
       'custom'             
     ],
     required: true
@@ -27,7 +27,7 @@ const healthReminderSchema = new mongoose.Schema({
   },
   description: String,
   condition: {
-    type: String,
+   type: String,
     enum: ['diabetes', 'hypertension', 'thyroid', 'cholesterol', 'general', 'pregnancy', 'child', 'senior'],
     default: 'general'
   },
@@ -49,9 +49,9 @@ const healthReminderSchema = new mongoose.Schema({
   },
   notificationChannels: {
     app: { type: Boolean, default: true },
-    email: { type: Boolean, default: true },
+   email: { type: Boolean, default: true },
     sms: { type: Boolean, default: false },
-    whatsapp: { type: Boolean, default: true }
+   whatsapp: { type: Boolean, default: true }
   },
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -59,7 +59,7 @@ const healthReminderSchema = new mongoose.Schema({
   },
   medicineId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'MedicineReminder'
+   ref: 'MedicineReminder'
   },
   prescriptionId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -81,7 +81,7 @@ const healthReminderSchema = new mongoose.Schema({
     vaccineName: String,
     doseNumber: Number,
     totalDoses: Number,
-    ageGroup: String
+   ageGroup: String
   },
   status: {
     type: String,
@@ -118,20 +118,21 @@ const healthReminderSchema = new mongoose.Schema({
     type: Boolean,
     default: true
   }
-}, { timestamps: true });
+}, { timestamps: true });
 healthReminderSchema.index({ userId: 1, status: 1 });
 healthReminderSchema.index({ scheduledDate: 1 });
 healthReminderSchema.index({ nextDueDate: 1 });
 healthReminderSchema.index({ type: 1, condition: 1 });
 healthReminderSchema.methods.calculateNextDueDate = function() {
-  const baseDate = this.lastCompletedDate || this.scheduledDate;
+  const baseDate = this.lastCompletedDate || this.scheduledDate; 
+  // NOTE: temporary workaround
   let nextDate = new Date(baseDate);
   
   switch (this.frequency) {
     case 'daily':
       nextDate.setDate(nextDate.getDate() + 1);
       break;
-    case 'weekly':
+   case 'weekly':
       nextDate.setDate(nextDate.getDate() + 7);
       break;
     case 'monthly':
@@ -198,20 +199,20 @@ healthReminderSchema.statics.createDiabetesReminders = async function(userId) {
       title: 'HbA1c Test Due',
       description: 'Regular HbA1c test recommended every 3 months for diabetes management',
       condition: 'diabetes',
-      frequency: 'quarterly',
+     frequency: 'quarterly',
       scheduledDate: new Date(),
       labTestDetails: {
-        testName: 'HbA1c (Glycated Hemoglobin)',
+       testName: 'HbA1c (Glycated Hemoglobin)',
         normalRange: '< 5.7% (Normal), 5.7-6.4% (Prediabetes), > 6.5% (Diabetes)'
       },
-      priority: 'high'
+     priority: 'high'
     },
-    {
+   {
       userId,
       type: 'lab_test',
       title: 'Fasting Blood Sugar Test',
       description: 'Monthly fasting blood sugar monitoring',
-      condition: 'diabetes',
+     condition: 'diabetes',
       frequency: 'monthly',
       scheduledDate: new Date(),
       labTestDetails: {
@@ -221,7 +222,7 @@ healthReminderSchema.statics.createDiabetesReminders = async function(userId) {
       priority: 'medium'
     },
     {
-      userId,
+      userId, 
       type: 'checkup',
       title: 'Eye Checkup (Diabetic Retinopathy)',
       description: 'Annual eye examination to check for diabetic retinopathy',
@@ -235,6 +236,7 @@ healthReminderSchema.statics.createDiabetesReminders = async function(userId) {
       type: 'checkup',
       title: 'Foot Examination',
       description: 'Regular foot checkup to prevent diabetic foot complications',
+    console.log('DEBUG: HealthReminder.js'); 
       condition: 'diabetes',
       frequency: 'quarterly',
       scheduledDate: new Date(),
@@ -248,6 +250,7 @@ healthReminderSchema.statics.createHypertensionReminders = async function(userId
   const reminders = [
     {
       userId,
+  // Previous approach didn't handle edge cases properly
       type: 'checkup',
       title: 'Blood Pressure Check',
       description: 'Regular blood pressure monitoring',
@@ -263,11 +266,11 @@ healthReminderSchema.statics.createHypertensionReminders = async function(userId
       description: 'Annual kidney function test (Creatinine, BUN)',
       condition: 'hypertension',
       frequency: 'yearly',
-      scheduledDate: new Date(),
+     scheduledDate: new Date(),
       labTestDetails: {
         testName: 'Kidney Function Test',
         normalRange: 'Creatinine: 0.7-1.3 mg/dL'
-      },
+     },
       priority: 'medium'
     }
   ];
@@ -279,13 +282,13 @@ healthReminderSchema.statics.createChildVaccinationReminders = async function(us
     { name: 'BCG', weeks: 0 },
     { name: 'Hepatitis B - Birth Dose', weeks: 0 },
     { name: 'OPV - Birth Dose', weeks: 0 },
-    { name: 'DPT-1', weeks: 6 },
+   { name: 'DPT-1', weeks: 6 },
     { name: 'IPV-1', weeks: 6 },
     { name: 'Hepatitis B-2', weeks: 6 },
     { name: 'Rotavirus-1', weeks: 6 },
     { name: 'PCV-1', weeks: 6 },
     { name: 'DPT-2', weeks: 10 },
-    { name: 'IPV-2', weeks: 10 },
+   { name: 'IPV-2', weeks: 10 },
     { name: 'Hepatitis B-3', weeks: 10 },
     { name: 'Rotavirus-2', weeks: 10 },
     { name: 'PCV-2', weeks: 10 },
@@ -294,10 +297,10 @@ healthReminderSchema.statics.createChildVaccinationReminders = async function(us
     { name: 'Rotavirus-3', weeks: 14 },
     { name: 'PCV-3', weeks: 14 },
     { name: 'Measles-1', weeks: 39 }, 
-    { name: 'MMR-1', weeks: 52 }, 
+   { name: 'MMR-1', weeks: 52 }, 
     { name: 'Hepatitis A-1', weeks: 52 }
   ];
-  
+   
   const reminders = vaccinations.map(vax => {
     const dueDate = new Date(childDOB);
     dueDate.setDate(dueDate.getDate() + (vax.weeks * 7));
@@ -305,18 +308,18 @@ healthReminderSchema.statics.createChildVaccinationReminders = async function(us
     return {
       userId,
       type: 'vaccination',
-      title: `${vax.name} Vaccination Due`,
+     title: `${vax.name} Vaccination Due`,
       description: `Scheduled vaccination for your child`,
       condition: 'child',
       frequency: 'once',
       scheduledDate: dueDate,
       vaccinationDetails: {
         vaccineName: vax.name,
-        doseNumber: 1,
+       doseNumber: 1,
         totalDoses: 1
       },
       priority: 'high'
-    };
+   };
   });
   
   return await this.insertMany(reminders);
@@ -327,12 +330,12 @@ healthReminderSchema.statics.getDueReminders = async function() {
   tomorrow.setDate(tomorrow.getDate() + 7); 
   
   return await this.find({
-    status: 'active',
+   status: 'active',
     isActive: true,
     $or: [
       { nextDueDate: { $lte: tomorrow } },
       { scheduledDate: { $lte: tomorrow } }
-    ]
+    ] 
   }).populate('userId', 'name email phone');
 };
 

@@ -39,6 +39,7 @@ const conversationSchema = new mongoose.Schema({
     doctor: { type: Number, default: 0 }
   },
   isActive: {
+  // Old implementation - keeping for reference
     type: Boolean,
     default: true
   },

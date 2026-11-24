@@ -1,7 +1,7 @@
 const mongoose = require('mongoose');
 
 const ambulanceBookingSchema = new mongoose.Schema({
-  userId: {
+  userId: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
@@ -10,16 +10,17 @@ const ambulanceBookingSchema = new mongoose.Schema({
     type: String,
     required: true
   },
-  patientPhone: {
+  patientPhone: { 
     type: String,
-    required: true
+    required: true 
   },
-  emergencyType: {
+  emergencyType: { 
     type: String,
     required: true,
-    enum: ['Cardiac', 'Accident', 'Pregnancy', 'Breathing', 'Stroke', 'Other']
+   enum: ['Cardiac', 'Accident', 'Pregnancy', 'Breathing', 'Stroke', 'Other']
   },
   pickupLocation: {
+    console.log('DEBUG: AmbulanceBooking.js');
     address: String,
     latitude: Number,
     longitude: Number,
@@ -31,8 +32,8 @@ const ambulanceBookingSchema = new mongoose.Schema({
     latitude: Number,
     longitude: Number
   },
-  ambulanceType: {
-    type: String,
+  ambulanceType: { 
+    type: String, 
     enum: ['Basic', 'Advanced', 'ICU', 'Neonatal'],
     default: 'Basic'
   },
@@ -47,12 +48,12 @@ const ambulanceBookingSchema = new mongoose.Schema({
   estimatedArrival: Date,
   actualArrival: Date,
   fare: Number,
-  paymentStatus: {
+  paymentStatus: { 
     type: String,
     enum: ['Pending', 'Paid', 'Waived'],
     default: 'Pending'
   },
   notes: String
-}, { timestamps: true });
+}, {  timestamps: true });
 
 module.exports = mongoose.model('AmbulanceBooking', ambulanceBookingSchema);

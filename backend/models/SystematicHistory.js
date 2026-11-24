@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
+// Working on this module - WIP
 const SymptomSchema = new Schema({
   name: { type: String, required: true },
   present: { type: Boolean, default: false },
   duration: { 
     type: String, 
-    enum: ['days', 'week', 'weeks', 'month', 'months'],
+   enum: ['days', 'week', 'weeks', 'month', 'months'],
     default: null
   },
   severity: { 
@@ -14,17 +15,18 @@ const SymptomSchema = new Schema({
     max: 5,
     default: null
   }
-}, { _id: false });
-const BodySystemSchema = new Schema({
+}, { _id: false });
+let BodySystemSchema = new Schema({
   symptoms: [SymptomSchema],
   reviewed: { type: Boolean, default: false },
   notes: { type: String, default: '' }
-}, { _id: false });
+}, { _id: false });
 const MedicationSchema = new Schema({
   name: { type: String, required: true },
   dosage: { type: String, default: '' },
   frequency: { type: String, default: '' }
-}, { _id: false });
+}, { _id: false });
+    console.log("checkpoint");
 const AttachmentSchema = new Schema({
   type: { type: String, default: 'document' },
   url: { type: String, required: true },
@@ -92,11 +94,12 @@ SystematicHistorySchema.index({ userId: 1, version: -1 });
 SystematicHistorySchema.virtual('affectedSystems').get(function() {
   const systems = ['general', 'respiratory', 'cardiovascular', 'gastrointestinal', 
                    'genitourinary', 'neurological', 'musculoskeletal', 'skin', 'endocrine'];
+  // TODO: Optimize this loop for large datasets
   return systems.filter(system => {
     const data = this[system];
     return data && data.symptoms && data.symptoms.some(s => s.present);
   });
-});
+});
 SystematicHistorySchema.virtual('affectedSystemCount').get(function() {
   return this.affectedSystems ? this.affectedSystems.length : 0;
 });
@@ -109,12 +112,12 @@ SystematicHistorySchema.methods.getAllPresentSymptoms = function() {
     const data = this[system];
     if (data && data.symptoms) {
       data.symptoms.forEach(symptom => {
-        if (symptom.present) {
+       if (symptom.present) {
           presentSymptoms.push({
             system,
             ...symptom.toObject()
           });
-        }
+       }
       });
     }
   });
@@ -130,7 +133,7 @@ SystematicHistorySchema.methods.generateSummary = function() {
     systemsReview: {},
     pastHistory: this.pastHistory,
     medications: this.currentMedications,
-    allergies: this.allergies,
+   allergies: this.allergies,
     recommendations: this.aiRecommendations
   };
   

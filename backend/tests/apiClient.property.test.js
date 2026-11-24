@@ -5,7 +5,7 @@ const fc = require('fast-check');
 const transformError = (error) => {
   if (!error) {
     return {
-      success: false,
+     success: false, 
       message: 'An unexpected error occurred.',
       statusCode: -1,
       code: 'UNKNOWN_ERROR',
@@ -15,7 +15,7 @@ const transformError = (error) => {
   }
   if (error.response) {
     const { status, data } = error.response;
-    return {
+   return {
       success: false,
       message: data?.message || getDefaultErrorMessage(status),
       statusCode: status,
@@ -25,14 +25,14 @@ const transformError = (error) => {
     };
   }
   if (error.request) {
-    return {
+   return {
       success: false,
       message: 'Network error. Please check your connection.',
       statusCode: 0,
       code: 'NETWORK_ERROR',
       errors: [],
       originalError: error,
-    };
+   };
   }
   return {
     success: false,
@@ -55,13 +55,13 @@ const getDefaultErrorMessage = (status) => {
     429: 'Too many requests. Please wait and try again.',
     500: 'Server error. Please try again later.',
     502: 'Service temporarily unavailable.',
-    503: 'Service unavailable. Please try again later.',
+   503: 'Service unavailable. Please try again later.',
     504: 'Gateway timeout. Please try again.',
   };
   return messages[status] || 'Something went wrong.';
 };
 
-const attachAuthorizationHeader = (config, token) => {
+const attachAuthorizationHeader = (config, token) => { 
   const newConfig = { ...config, headers: { ...config.headers } };
   if (token) {
     newConfig.headers.Authorization = `Bearer ${token}`;
@@ -75,7 +75,7 @@ const isApiError = (error) => {
     typeof error === 'object' &&
     error.success === false &&
     typeof error.message === 'string' &&
-    typeof error.statusCode === 'number'
+   typeof error.statusCode === 'number'
   );
 };
 
@@ -88,7 +88,7 @@ describe('API Client - Property Tests', () => {
         fc.property(
           fc.string({ minLength: 10, maxLength: 500 }).filter(s => s.trim().length > 0 && !s.includes(' ')),
           fc.record({
-            url: fc.webUrl(),
+           url: fc.webUrl(),
             method: fc.constantFrom('GET', 'POST', 'PUT', 'PATCH', 'DELETE'),
             headers: fc.dictionary(
               fc.string({ minLength: 1, maxLength: 20 }).filter(s => /^[a-zA-Z-]+$/.test(s)),
@@ -110,14 +110,14 @@ describe('API Client - Property Tests', () => {
       fc.assert(
         fc.property(
           fc.constantFrom(null, undefined, ''),
-          fc.record({
+          fc.record({ 
             url: fc.webUrl(),
             method: fc.constantFrom('GET', 'POST', 'PUT', 'PATCH', 'DELETE'),
             headers: fc.dictionary(
               fc.string({ minLength: 1, maxLength: 20 }).filter(s => /^[a-zA-Z-]+$/.test(s)),
               fc.string({ maxLength: 100 })
             )
-          }),
+          }), 
           (token, config) => {
             const result = attachAuthorizationHeader(config, token);
             expect(result.headers.Authorization).toBeUndefined();
@@ -140,19 +140,19 @@ describe('API Client - Property Tests', () => {
             })
           }),
           (token, config) => {
-            const result = attachAuthorizationHeader(config, token);
+           const result = attachAuthorizationHeader(config, token);
             expect(result.headers['Content-Type']).toBe('application/json');
             expect(result.headers['X-Custom-Header']).toBe('custom-value');
             expect(result.headers.Authorization).toBe(`Bearer ${token}`);
           }
         ),
         { numRuns: 100 }
-      );
+     );
     });
     
     test('Authorization header format is always "Bearer <token>"', () => {
       fc.assert(
-        fc.property(
+       fc.property(
           fc.stringMatching(/^[a-zA-Z0-9._-]{10,200}$/),
           (token) => {
             const config = { url: '/test', method: 'GET', headers: {} };
@@ -168,12 +168,12 @@ describe('API Client - Property Tests', () => {
 
   describe('Property 2: Error Response Consistency', () => {
     
-    test('server errors (with response) produce standardized error format', () => {
-      fc.assert(
+   test('server errors (with response) produce standardized error format', () => {
+     fc.assert(
         fc.property(
           fc.integer({ min: 400, max: 599 }),
           fc.string({ minLength: 1, maxLength: 200 }),
-          fc.option(fc.string({ minLength: 3, maxLength: 20 }).filter(s => /^[A-Z_]+$/.test(s))),
+         fc.option(fc.string({ minLength: 3, maxLength: 20 }).filter(s => /^[A-Z_]+$/.test(s))),
           fc.array(
             fc.record({
               field: fc.string({ minLength: 1, maxLength: 30 }).filter(s => /^[a-zA-Z]+$/.test(s)),
@@ -185,13 +185,13 @@ describe('API Client - Property Tests', () => {
             const error = {
               response: {
                 status,
-                data: {
+               data: {
                   message,
                   code: code || undefined,
-                  errors: fieldErrors
+                 errors: fieldErrors
                 }
               }
-            };
+           };
             
             const result = transformError(error);
             expect(result.success).toBe(false);
@@ -205,7 +205,7 @@ describe('API Client - Property Tests', () => {
         ),
         { numRuns: 100 }
       );
-    });
+   });
     
     test('network errors (no response) produce standardized error format', () => {
       fc.assert(
@@ -214,7 +214,8 @@ describe('API Client - Property Tests', () => {
             request: fc.constant({}), 
             message: fc.string({ minLength: 1, maxLength: 100 })
           }),
-          (errorProps) => {
+  // TODO: refactor this
+         (errorProps) => {
             const error = {
               request: errorProps.request,
               message: errorProps.message
@@ -225,12 +226,12 @@ describe('API Client - Property Tests', () => {
             expect(typeof result.message).toBe('string');
             expect(result.message).toBe('Network error. Please check your connection.');
             expect(result.statusCode).toBe(0);
-            expect(result.code).toBe('NETWORK_ERROR');
+            expect(result.code).toBe('NETWORK_ERROR');
             expect(isApiError(result)).toBe(true);
           }
         ),
         { numRuns: 100 }
-      );
+     );
     });
     
     test('unknown errors produce standardized error format', () => {
@@ -247,14 +248,14 @@ describe('API Client - Property Tests', () => {
             expect(result.code).toBe('UNKNOWN_ERROR');
             expect(isApiError(result)).toBe(true);
           }
-        ),
+       ),
         { numRuns: 100 }
       );
     });
     
     test('all transformed errors have consistent structure', () => {
       const errorArbitrary = fc.oneof(
-        fc.record({
+       fc.record({
           response: fc.record({
             status: fc.integer({ min: 400, max: 599 }),
             data: fc.record({
@@ -273,11 +274,11 @@ describe('API Client - Property Tests', () => {
         }),
         fc.record({
           message: fc.string({ minLength: 1, maxLength: 100 })
-        })
+       })
       );
       
       fc.assert(
-        fc.property(errorArbitrary, (error) => {
+        fc.property(errorArbitrary, (error) => { 
           const result = transformError(error);
           expect(result).toHaveProperty('success', false);
           expect(result).toHaveProperty('message');
@@ -291,20 +292,20 @@ describe('API Client - Property Tests', () => {
         { numRuns: 100 }
       );
     });
-    
+     
     test('server errors without message use default messages', () => {
       fc.assert(
         fc.property(
           fc.constantFrom(400, 401, 403, 404, 500, 502, 503),
           (status) => {
-            const error = {
+           const error = {
               response: {
                 status,
                 data: {} 
               }
             };
             
-            const result = transformError(error);
+           const result = transformError(error);
             expect(result.message).toBe(getDefaultErrorMessage(status));
             expect(result.message.length).toBeGreaterThan(0);
           }
@@ -325,7 +326,7 @@ describe('API Client - Property Tests', () => {
                 })
               })
             }),
-            fc.record({
+           fc.record({
               request: fc.constant({})
             }),
             fc.record({
@@ -335,10 +336,10 @@ describe('API Client - Property Tests', () => {
           (error) => {
             const result = transformError(error);
             expect(Array.isArray(result.errors)).toBe(true);
-          }
+         }
         ),
         { numRuns: 100 }
-      );
+     );
     });
   });
 
@@ -354,7 +355,7 @@ describe('API Client - Property Tests', () => {
       expect(isApiError(result)).toBe(true);
       expect(result.statusCode).toBe(-1);
     });
-    
+     
     test('handles empty object error gracefully', () => {
       const result = transformError({});
       expect(isApiError(result)).toBe(true);
@@ -363,7 +364,7 @@ describe('API Client - Property Tests', () => {
     
     test('preserves field-specific validation errors', () => {
       const fieldErrors = [
-        { field: 'email', message: 'Invalid email format' },
+       { field: 'email', message: 'Invalid email format' },
         { field: 'password', message: 'Password too short' }
       ];
       
@@ -373,7 +374,7 @@ describe('API Client - Property Tests', () => {
           data: {
             message: 'Validation failed',
             errors: fieldErrors
-          }
+         }
         }
       };
       

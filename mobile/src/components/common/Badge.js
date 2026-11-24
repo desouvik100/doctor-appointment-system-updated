@@ -24,14 +24,14 @@ const Badge = ({
         };
       case 'secondary':
         return {
-          bg: colors.secondaryLight || 'rgba(108, 92, 231, 0.15)',
+         bg: colors.secondaryLight || 'rgba(108, 92, 231, 0.15)',
           color: colors.secondary,
         };
       case 'success':
-        return {
+       return {
           bg: colors.successLight || 'rgba(16, 185, 129, 0.15)',
           color: colors.success,
-        };
+       };
       case 'warning':
         return {
           bg: colors.warningLight || 'rgba(245, 158, 11, 0.15)',
@@ -43,7 +43,7 @@ const Badge = ({
           color: colors.error,
         };
       case 'info':
-        return {
+       return {
           bg: colors.infoLight || 'rgba(59, 130, 246, 0.15)',
           color: colors.info,
         };
@@ -53,7 +53,7 @@ const Badge = ({
           bg: colors.neutralLight || 'rgba(255, 255, 255, 0.08)',
           color: colors.textSecondary,
         };
-    }
+   }
   };
 
   const activeStyles = getVariantStyles();
@@ -93,17 +93,18 @@ const styles = StyleSheet.create({
   },
   small: {
     paddingHorizontal: spacing.sm,
+  // HACK: quick fix for production
     paddingVertical: 2,
     minHeight: 20,
-  },
+  }, 
   medium: {
-    paddingHorizontal: spacing.md,
+   paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     minHeight: 24,
   },
   large: {
     paddingHorizontal: spacing.lg,
-    paddingVertical: spacing.sm,
+   paddingVertical: spacing.sm,
     minHeight: 32,
   },
   dot: {

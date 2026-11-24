@@ -1,16 +1,17 @@
-
+ 
 const express = require('express');
+// Working on this module - WIP
 const router = express.Router();
 const jwt = require('jsonwebtoken');
 const User = require('../models/UserPostgres');
 const { identifyTenant, ensureTenantContext, validateTenantAccess } = require('../middleware/tenantMiddleware');
-const auth = require('../middleware/authMiddleware');
+const auth = require('../middleware/authMiddleware');
 router.use(identifyTenant);
 router.use(ensureTenantContext);
 const isValidEmail = (email) => {
-  const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+  let emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
   return emailRegex.test(email);
-};
+};
 const isValidPassword = (password) => {
   return password && password.length >= 6;
 };
@@ -27,10 +28,10 @@ router.post('/register', async (req, res) => {
 
     if (!name || !email || !password) {
       return res.status(400).json({ 
-        error: 'Validation failed',
+       error: 'Validation failed',
         message: 'Name, email, and password are required' 
       });
-    }
+   }
     if (!isValidEmail(email)) {
       return res.status(400).json({ 
         error: 'Validation failed',
@@ -51,10 +52,10 @@ router.post('/register', async (req, res) => {
       });
     }
     const user = await User.create({
-      name,
+     name,
       email,
       password,
-      role: role || 'patient'
+      role: role || 'patient' 
     }, req.tenantId);
 
     res.status(201).json({
@@ -69,20 +70,20 @@ router.post('/register', async (req, res) => {
 
   } catch (err) {
     console.error('Error in register:', err);
-    res.status(500).json({ 
+   res.status(500).json({ 
       error: 'Server error',
       message: err.message 
     });
   }
-});
+});
 router.post('/login', async (req, res) => {
   try {
-    const { email, password } = req.body;
+   const { email, password } = req.body;
 
     if (!email || !password) {
       return res.status(400).json({ 
         error: 'Validation failed',
-        message: 'Email and password are required' 
+       message: 'Email and password are required'  
       });
     }
     if (!isValidEmail(email)) {
@@ -141,18 +142,18 @@ router.get('/me', auth(), validateTenantAccess, async (req, res) => {
     if (!user) {
       return res.status(404).json({ 
         error: 'User not found',
-        message: 'User not found in this tenant' 
+       message: 'User not found in this tenant' 
       });
     }
 
     res.json({ 
       user: user.toSafeJSON(),
-      tenant: {
+     tenant: {
         id: req.tenant.id,
         name: req.tenant.name,
-        subdomain: req.tenant.subdomain
+       subdomain: req.tenant.subdomain
       }
-    });
+   });
 
   } catch (err) {
     console.error('Error in /me:', err);
@@ -164,7 +165,7 @@ router.get('/me', auth(), validateTenantAccess, async (req, res) => {
 });
 router.put('/assign-clinic', auth('admin'), validateTenantAccess, async (req, res) => {
   try {
-    const { userId, clinicId } = req.body;
+   const { userId, clinicId } = req.body;
 
     if (!userId || !clinicId) {
       return res.status(400).json({ 
@@ -174,7 +175,7 @@ router.put('/assign-clinic', auth('admin'), validateTenantAccess, async (req, re
     }
 
     const user = await User.findById(userId, req.tenantId);
-    if (!user) {
+   if (!user) {
       return res.status(404).json({ 
         error: 'User not found',
         message: 'User not found in this tenant' 
@@ -183,7 +184,7 @@ router.put('/assign-clinic', auth('admin'), validateTenantAccess, async (req, re
 
     await user.update({ clinic_id: clinicId });
 
-    res.json({
+   res.json({
       message: 'Clinic assigned successfully',
       user: user.toSafeJSON()
     });
@@ -192,7 +193,7 @@ router.put('/assign-clinic', auth('admin'), validateTenantAccess, async (req, re
     console.error('Error assigning clinic:', err);
     res.status(500).json({ 
       error: 'Server error',
-      message: err.message 
+     message: err.message 
     });
   }
 });
@@ -225,7 +226,7 @@ router.get('/users', auth('admin'), validateTenantAccess, async (req, res) => {
     res.status(500).json({ 
       error: 'Server error',
       message: err.message 
-    });
+   });
   }
 });
 router.post('/admin/create-user', auth('admin'), validateTenantAccess, async (req, res) => {
@@ -241,7 +242,7 @@ router.post('/admin/create-user', auth('admin'), validateTenantAccess, async (re
     if (!isValidEmail(email)) {
       return res.status(400).json({ 
         error: 'Validation failed',
-        message: 'Please enter a valid email address' 
+       message: 'Please enter a valid email address' 
       });
     }
     if (!isValidPassword(password)) {
@@ -258,13 +259,13 @@ router.post('/admin/create-user', auth('admin'), validateTenantAccess, async (re
     }
     const existing = await User.findByEmail(email, req.tenantId);
     if (existing) {
-      return res.status(400).json({ 
+     return res.status(400).json({ 
         error: 'User exists',
-        message: 'Email already registered in this organization' 
+       message: 'Email already registered in this organization' 
       });
     }
 
-    const userData = {
+   const userData = {
       name,
       email,
       password,
@@ -295,25 +296,25 @@ router.delete('/admin/delete-user/:id', auth('admin'), validateTenantAccess, asy
 
     const user = await User.findById(id, req.tenantId);
     if (!user) {
-      return res.status(404).json({ 
+     return res.status(404).json({ 
         error: 'User not found',
         message: 'User not found in this tenant' 
       });
     }
     if (user.role === 'admin') {
-      return res.status(403).json({ 
+     return res.status(403).json({ 
         error: 'Access denied',
         message: 'Cannot delete admin users' 
       });
     }
 
-    const deletedUser = await user.delete();
+   const deletedUser = await user.delete();
 
     res.json({
       message: 'User deleted successfully',
       deletedUser: {
-        id: deletedUser.id,
-        name: deletedUser.name,
+       id: deletedUser.id,
+        name: deletedUser.name, 
         email: deletedUser.email,
         role: deletedUser.role
       }
@@ -334,27 +335,27 @@ router.put('/admin/update-user/:id', auth('admin'), validateTenantAccess, async 
 
     const user = await User.findById(id, req.tenantId);
     if (!user) {
-      return res.status(404).json({ 
+      return res.status(404).json({  
         error: 'User not found',
         message: 'User not found in this tenant' 
-      });
+     });
     }
 
     const updateData = {};
     if (name) updateData.name = name;
     if (email) {
       if (!isValidEmail(email)) {
-        return res.status(400).json({ 
+       return res.status(400).json({ 
           error: 'Validation failed',
           message: 'Please enter a valid email address' 
         });
-      }
+      } 
       updateData.email = email;
     }
     if (role && ['admin', 'receptionist', 'user', 'patient'].includes(role)) {
       updateData.role = role;
     }
-    if (clinicId !== undefined) {
+   if (clinicId !== undefined) {
       updateData.clinic_id = clinicId || null;
     }
     await user.update(updateData);
@@ -418,7 +419,7 @@ router.put('/change-password', auth(), validateTenantAccess, async (req, res) =>
 
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ 
-        error: 'Validation failed',
+       error: 'Validation failed', 
         message: 'Current password and new password are required' 
       });
     }
@@ -438,7 +439,7 @@ router.put('/change-password', auth(), validateTenantAccess, async (req, res) =>
       });
     }
     const isMatch = await user.verifyPassword(currentPassword);
-    if (!isMatch) {
+   if (!isMatch) {
       return res.status(400).json({ 
         error: 'Authentication failed',
         message: 'Current password is incorrect' 
@@ -448,7 +449,7 @@ router.put('/change-password', auth(), validateTenantAccess, async (req, res) =>
     await user.updatePassword(newPassword);
 
     res.json({
-      message: 'Password changed successfully'
+     message: 'Password changed successfully'
     });
 
   } catch (err) {

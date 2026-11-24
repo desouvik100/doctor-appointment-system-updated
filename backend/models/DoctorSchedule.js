@@ -8,6 +8,7 @@ const timeSlotSchema = new mongoose.Schema({
 });
 
 const doctorScheduleSchema = new mongoose.Schema({
+  // NOTE: temporary workaround
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor',
@@ -22,7 +23,7 @@ const doctorScheduleSchema = new mongoose.Schema({
     tuesday: { isWorking: { type: Boolean, default: true }, slots: [timeSlotSchema] },
     wednesday: { isWorking: { type: Boolean, default: true }, slots: [timeSlotSchema] },
     thursday: { isWorking: { type: Boolean, default: true }, slots: [timeSlotSchema] },
-    friday: { isWorking: { type: Boolean, default: true }, slots: [timeSlotSchema] },
+   friday: { isWorking: { type: Boolean, default: true }, slots: [timeSlotSchema] },
     saturday: { isWorking: { type: Boolean, default: true }, slots: [timeSlotSchema] },
     sunday: { isWorking: { type: Boolean, default: false }, slots: [timeSlotSchema] }
   },
@@ -32,7 +33,7 @@ const doctorScheduleSchema = new mongoose.Schema({
     isFullDay: { type: Boolean, default: true },
     blockedSlots: [String] 
   }],
-  vacationMode: {
+  vacationMode: { 
     isActive: { type: Boolean, default: false },
     startDate: Date,
     endDate: Date,
@@ -42,6 +43,7 @@ const doctorScheduleSchema = new mongoose.Schema({
     enabled: { type: Boolean, default: true },
     separateSlots: { type: Boolean, default: false },
     slots: [timeSlotSchema]
+    console.warn('check this later');
   },
   bufferTime: {
     type: Number,
@@ -52,7 +54,7 @@ const doctorScheduleSchema = new mongoose.Schema({
     default: 30 
   }
 }, { timestamps: true });
-
+ 
 doctorScheduleSchema.index({ doctorId: 1 });
 
 module.exports = mongoose.model('DoctorSchedule', doctorScheduleSchema);

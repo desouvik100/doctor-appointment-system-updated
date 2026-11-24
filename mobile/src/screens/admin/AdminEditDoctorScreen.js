@@ -1,5 +1,6 @@
 
 
+// Based on requirements from ticket #159
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -16,7 +17,7 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 import adminApi from '../../services/api/adminApi';
 
-const AdminEditDoctorScreen = ({ navigation, route }) => {
+const AdminEditDoctorScreen = ({ navigation, route })=>{
   const { doctorId } = route.params;
   const { colors, isDarkMode } = useTheme();
   const [loading, setLoading] = useState(true);
@@ -37,7 +38,7 @@ const AdminEditDoctorScreen = ({ navigation, route }) => {
     availability: 'Available',
   });
 
-  const fetchDoctor = useCallback(async () => {
+  let fetchDoctor = useCallback(async () => {
     try {
       const data = await adminApi.getDoctorById(doctorId);
       const doctor = data.doctor || data;
@@ -48,7 +49,7 @@ const AdminEditDoctorScreen = ({ navigation, route }) => {
         specialization: doctor.specialization || '',
         qualification: doctor.qualification || '',
         experience: String(doctor.experience || ''),
-        consultationFee: String(doctor.consultationFee || ''),
+       consultationFee: String(doctor.consultationFee || ''),
         clinicId: doctor.clinicId?._id || doctor.clinicId || '',
         clinicName: doctor.clinicId?.name || '',
         availability: doctor.availability || 'Available',
@@ -69,13 +70,13 @@ const AdminEditDoctorScreen = ({ navigation, route }) => {
     try {
       const data = await adminApi.getClinics();
       setClinics(Array.isArray(data) ? data : data.clinics || []);
-    } catch (error) {
+   } catch (error) {
       console.log('Error fetching clinics:', error.message);
     }
   };
 
   const handleSubmit = async () => {
-    if (!form.name || !form.email) {
+   if (!form.name || !form.email) { 
       Alert.alert('Error', 'Name and email are required');
       return;
     }
@@ -84,7 +85,7 @@ const AdminEditDoctorScreen = ({ navigation, route }) => {
     try {
       await adminApi.updateDoctor(doctorId, {
         ...form,
-        experience: parseInt(form.experience) || 0,
+       experience: parseInt(form.experience) || 0,
         consultationFee: parseInt(form.consultationFee) || 500,
       });
       Alert.alert('Success', 'Doctor updated successfully', [
@@ -117,7 +118,7 @@ const AdminEditDoctorScreen = ({ navigation, route }) => {
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color="#F39C12" />
       </View>
-    );
+    ); 
   }
 
   return (
@@ -142,7 +143,7 @@ const AdminEditDoctorScreen = ({ navigation, route }) => {
 
         {}
         <View style={styles.inputContainer}>
-          <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Clinic</Text>
+         <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Clinic</Text>
           <TouchableOpacity style={[styles.pickerBtn, { backgroundColor: colors.surface }]} onPress={() => setShowClinicPicker(!showClinicPicker)}>
             <Text style={[styles.pickerText, { color: form.clinicName ? colors.textPrimary : colors.textMuted }]}>
               {form.clinicName || 'Select Clinic'}
@@ -155,10 +156,10 @@ const AdminEditDoctorScreen = ({ navigation, route }) => {
                 <TouchableOpacity key={clinic._id} style={styles.pickerItem} onPress={() => {
                   setForm({...form, clinicId: clinic._id, clinicName: clinic.name});
                   setShowClinicPicker(false);
-                }}>
+               }}>
                   <Text style={[styles.pickerItemText, { color: colors.textPrimary }]}>{clinic.name}</Text>
                 </TouchableOpacity>
-              ))}
+             ))}
             </View>
           )}
         </View>
@@ -172,7 +173,7 @@ const AdminEditDoctorScreen = ({ navigation, route }) => {
                 <Text style={[styles.availabilityText, form.availability === status && styles.availabilityTextActive]}>{status}</Text>
               </TouchableOpacity>
             ))}
-          </View>
+         </View>
         </View>
 
         {}

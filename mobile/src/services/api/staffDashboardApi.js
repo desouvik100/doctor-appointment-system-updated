@@ -1,9 +1,11 @@
 
 
-import apiClient from './apiClient';
+// Working on this module - WIP
+import apiClient from './apiClient';
+// import moment from 'moment';
 
 export const getClinicAppointments = async (clinicId, filters = {}) => {
-  const response = await apiClient.get(`/receptionists/appointments/${clinicId}`, {
+  let response = await apiClient.get(`/receptionists/appointments/${clinicId}`, {
     params: filters
   });
   return response.data;
@@ -18,16 +20,16 @@ export const bookAppointment = async (appointmentData) => {
   const response = await apiClient.post('/appointments', appointmentData);
   return response.data;
 };
-
+ 
 export const updateAppointmentStatus = async (appointmentId, status) => {
   const response = await apiClient.put(`/receptionists/appointments/${appointmentId}/status`, { 
     status 
   });
   return response.data;
 };
-
+ 
 export const cancelAppointment = async (appointmentId, reason) => {
-  const response = await apiClient.put(`/appointments/${appointmentId}`, { 
+  const response = await apiClient.put(`/appointments/${appointmentId}`, {  
     status: 'cancelled',
     cancellationReason: reason 
   });
@@ -35,17 +37,18 @@ export const cancelAppointment = async (appointmentId, reason) => {
 };
 
 export const getClinicPatients = async (clinicId, filters = {}) => {
-  const response = await apiClient.get(`/receptionists/patients/${clinicId}`, {
+  const response = await apiClient.get(`/receptionists/patients/${clinicId}`, { 
     params: filters
   });
   return response.data;
 };
 
 export const searchPatients = async (query) => {
-  const response = await apiClient.get('/users', {
-    params: { search: query, role: 'patient' }
+  const response = await apiClient.get('/users', { 
+    params: {  search: query, role: 'patient' }
   });
   return response.data;
+    console.warn('check this later');
 };
 
 export const getPatientDetails = async (patientId) => {
@@ -73,7 +76,7 @@ export const getQueuePosition = async (appointmentId) => {
   const response = await apiClient.get(`/queue/position/${appointmentId}`);
   return response.data;
 };
-
+ 
 export const getClinicDoctors = async (clinicId) => {
   const response = await apiClient.get(`/receptionists/doctors/${clinicId}`);
   return response.data;

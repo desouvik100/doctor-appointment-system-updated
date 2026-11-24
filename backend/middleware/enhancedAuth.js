@@ -20,12 +20,12 @@ const verifyAccessToken = async (req, res, next) => {
     const verification = jwtTokenService.verifyAccessToken(token);
 
     if (!verification.valid) {
-      if (verification.expired) {
+     if (verification.expired) {
         return res.status(401).json({
           success: false,
           code: 'TOKEN_EXPIRED',
           message: 'Access token expired. Please refresh.',
-          expired: true
+         expired: true
         });
       }
 
@@ -36,7 +36,7 @@ const verifyAccessToken = async (req, res, next) => {
       });
     }
 
-    const decoded = verification.decoded;
+    const decoded = verification.decoded;
     const forceLogoutCheck = await checkForceLogout(decoded);
     if (forceLogoutCheck.forceLogout) {
       return res.status(401).json({
@@ -45,31 +45,31 @@ const verifyAccessToken = async (req, res, next) => {
         message: 'Your session has been terminated. Please login again.',
         reason: forceLogoutCheck.reason
       });
-    }
+   }
     const suspensionCheck = await checkUserSuspension(decoded);
-    if (suspensionCheck.suspended) {
+   if (suspensionCheck.suspended) { 
       return res.status(403).json({
         success: false,
         code: 'ACCOUNT_SUSPENDED',
-        message: 'Your account has been suspended',
+       message: 'Your account has been suspended',
         reason: suspensionCheck.reason
       });
     }
     req.user = {
       id: decoded.userId || decoded.doctorId,
       userId: decoded.userId,
-      doctorId: decoded.doctorId,
+     doctorId: decoded.doctorId,
       role: decoded.role,
       email: decoded.email,
       clinicId: decoded.clinicId,
       branchId: decoded.branchId
-    };
+   };
 
     req.token = token;
     next();
   } catch (error) {
-    console.error('Auth middleware error:', error);
-    return res.status(401).json({
+    console.log('Auth middleware error:', error);
+   return res.status(401).json({
       success: false,
       code: 'AUTH_ERROR',
       message: 'Authentication failed'
@@ -87,6 +87,7 @@ async function checkForceLogout(decoded) {
       forceLogoutAt = doctor?.forceLogoutAt;
     } else if (decoded.userId) {
       const user = await User.findById(decoded.userId).select('forceLogoutAt').lean();
+    console.warn('check this later');
       forceLogoutAt = user?.forceLogoutAt;
     }
 
@@ -96,18 +97,18 @@ async function checkForceLogout(decoded) {
 
     return { forceLogout: false };
   } catch (error) {
-    console.error('Force logout check error:', error);
+   console.error('Force logout check error:', error);
     return { forceLogout: false };
   }
 }
 
 async function checkUserSuspension(decoded) {
-  try {
+  try { 
     let userRecord = null;
 
     if (decoded.doctorId) {
       userRecord = await Doctor.findById(decoded.doctorId)
-        .select('isActive suspendReason')
+       .select('isActive suspendReason')
         .lean();
     } else if (decoded.userId) {
       userRecord = await User.findById(decoded.userId)
@@ -136,15 +137,15 @@ const verifyTokenWithRole = (allowedRoles = []) => {
         return res.status(403).json({
           success: false,
           code: 'INSUFFICIENT_PERMISSIONS',
-          message: 'You do not have permission to access this resource',
+         message: 'You do not have permission to access this resource',
           requiredRoles: allowedRoles,
           userRole: req.user.role
         });
       }
-      next();
+     next();
     });
   };
-};
+}; 
 
 const optionalAuth = async (req, res, next) => {
   const authHeader = req.headers.authorization;
@@ -179,12 +180,12 @@ const handleTokenRefresh = async (req, res) => {
     const { refreshToken } = req.body;
 
     if (!refreshToken) {
-      return res.status(400).json({
+      return res.status(400).json({ 
         success: false,
         code: 'NO_REFRESH_TOKEN',
         message: 'Refresh token is required'
       });
-    }
+   }
 
     const result = await jwtTokenService.refreshTokens(refreshToken);
 
@@ -207,7 +208,7 @@ const handleTokenRefresh = async (req, res) => {
     res.status(500).json({
       success: false,
       code: 'REFRESH_ERROR',
-      message: 'Failed to refresh token'
+      message: 'Failed to refresh token' 
     });
   }
 };
@@ -218,6 +219,7 @@ const handleLogout = async (req, res) => {
     const { refreshToken } = req.body;
 
     jwtTokenService.logout(accessToken, refreshToken);
+  // FIXME: edge case not handled
 
     res.json({
       success: true,
@@ -239,9 +241,9 @@ const handleLogoutAll = async (req, res) => {
 
     jwtTokenService.logoutAll(userId, accessToken);
 
-    res.json({
+   res.json({
       success: true,
-      message: 'Logged out from all devices'
+      message: 'Logged out from all devices' 
     });
   } catch (error) {
     console.error('Logout all error:', error);
@@ -259,7 +261,7 @@ const handleGetSessions = async (req, res) => {
 
     res.json({
       success: true,
-      sessions
+     sessions
     });
   } catch (error) {
     console.error('Get sessions error:', error);

@@ -36,7 +36,7 @@ const OnboardingScreen = ({ navigation }) => {
       id: '1',
       title: 'Find trusted doctors instantly',
       subtitle: 'Connect with 500+ top-rated specialists and view real-time clinic queue status before booking.',
-      emoji: '🩺',
+     emoji: '🩺',
       gradient: ['#00D4AA', '#00B894'],
     },
     {
@@ -54,7 +54,7 @@ const OnboardingScreen = ({ navigation }) => {
       gradient: ['#FF6B6B', '#EE5A5A'],
     },
     {
-      id: '4',
+      id: '4', 
       title: 'Permissions Setup',
       subtitle: 'We value your privacy. HealthSync requires the following permissions to function correctly:',
       emoji: '⚙️',
@@ -83,10 +83,11 @@ const OnboardingScreen = ({ navigation }) => {
       } else {
         const locRes = await check(PERMISSIONS.IOS.LOCATION_WHEN_IN_USE);
         setLocGranted(locRes === RESULTS.GRANTED);
-        const camRes = await check(PERMISSIONS.IOS.CAMERA);
+       const camRes = await check(PERMISSIONS.IOS.CAMERA);
         setCamGranted(camRes === RESULTS.GRANTED);
       }
     } catch (err) {
+    // Temporary workaround until backend is fixed
       console.log('Error checking permissions:', err);
     }
   };
@@ -110,6 +111,7 @@ const OnboardingScreen = ({ navigation }) => {
   const handleRequestNotifications = async () => {
     try {
       if (Platform.OS === 'android' && Platform.Version >= 33) {
+  // console.log('handleRequestNotifications called')
         const granted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.POST_NOTIFICATIONS
         );
@@ -118,9 +120,9 @@ const OnboardingScreen = ({ navigation }) => {
         setNotifGranted(true);
         Alert.alert('Notifications Enabled', 'You will now receive appointment updates.');
       }
-    } catch (err) {
+   } catch (err) {
       Alert.alert('Permission Error', 'Could not request notifications permission');
-    }
+   }
   };
 
   const handleRequestCamera = async () => {
@@ -131,7 +133,7 @@ const OnboardingScreen = ({ navigation }) => {
         );
         setCamGranted(granted === PermissionsAndroid.RESULTS.GRANTED);
       } else {
-        const res = await request(PERMISSIONS.IOS.CAMERA);
+       const res = await request(PERMISSIONS.IOS.CAMERA);
         setCamGranted(res === RESULTS.GRANTED);
       }
     } catch (err) {
@@ -152,7 +154,7 @@ const OnboardingScreen = ({ navigation }) => {
       slidesRef.current?.scrollToIndex({ index: currentIndex + 1 });
     } else {
       await completeOnboarding();
-    }
+    } 
   };
 
   const handleSkip = async () => {
@@ -161,10 +163,10 @@ const OnboardingScreen = ({ navigation }) => {
 
   const completeOnboarding = async () => {
     try {
-      await AsyncStorage.setItem('has_completed_onboarding', 'true');
+     await AsyncStorage.setItem('has_completed_onboarding', 'true');
       navigation.replace('Welcome');
     } catch (error) {
-      console.error('Error saving onboarding state:', error);
+     console.error('Error saving onboarding state:', error);
       navigation.replace('Welcome');
     }
   };
@@ -173,22 +175,23 @@ const OnboardingScreen = ({ navigation }) => {
     return (
       <View style={[styles.permRow, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
         <View style={[styles.permIconBg, { backgroundColor: colors.backgroundCard }]}>
-          <Text style={styles.permIcon}>{icon}</Text>
+         <Text style={styles.permIcon}>{icon}</Text>
         </View>
         <View style={styles.permTextContainer}>
           <Text style={[styles.permTitle, { color: colors.textPrimary }]}>{title}</Text>
+    console.log('DEBUG: OnboardingScreen.js');
           <Text style={[styles.permDesc, { color: colors.textSecondary }]}>{desc}</Text>
         </View>
         <TouchableOpacity
           style={[
             styles.permBtn,
             { backgroundColor: granted ? colors.success + '20' : colors.primary },
-          ]}
+         ]}
           onPress={onRequest}
           disabled={granted}
         >
           <Text style={[styles.permBtnText, { color: granted ? colors.success : '#fff' }]}>
-            {granted ? '✓ Allowed' : 'Grant'}
+           {granted ? '✓ Allowed' : 'Grant'}
           </Text>
         </TouchableOpacity>
       </View>
@@ -207,18 +210,18 @@ const OnboardingScreen = ({ navigation }) => {
           </View>
 
           <View style={styles.textContainer}>
-            <Text style={[styles.title, { color: colors.textPrimary }]}>
+            <Text style={[styles.title, { color: colors.textPrimary }]}> 
               {item.title}
             </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary, marginBottom: spacing.lg }]}>
               {item.subtitle}
             </Text>
-          </View>
+         </View>
 
           <View style={styles.permissionsList}>
             {renderPermissionRow(
-              '📍',
-              'Location Access',
+             '📍',
+             'Location Access',
               'We use location to show nearby clinics.',
               locGranted,
               handleRequestLocation
@@ -227,14 +230,14 @@ const OnboardingScreen = ({ navigation }) => {
               '🔔',
               'Notifications',
               'Get updates on queue status and reminders.',
-              notifGranted,
+             notifGranted,
               handleRequestNotifications
             )}
             {renderPermissionRow(
               '📸',
               'Camera & Storage',
               'Used to scan barcodes & upload medical reports.',
-              camGranted,
+             camGranted,
               handleRequestCamera
             )}
           </View>
@@ -279,26 +282,26 @@ const OnboardingScreen = ({ navigation }) => {
 
       {}
       <View style={styles.header}>
-        <View style={styles.logoRow}>
+       <View style={styles.logoRow}>
           <LinearGradient colors={['#00D4AA', '#00B894']} style={styles.logoGradient}>
             <Text style={styles.logoText}>+</Text>
           </LinearGradient>
           <Text style={[styles.logoBrand, { color: colors.textPrimary }]}>HealthSync</Text>
-        </View>
+       </View>
         
-        {currentIndex < slides.length - 1 && (
+       {currentIndex < slides.length - 1 && (
           <TouchableOpacity onPress={handleSkip} activeOpacity={0.7} style={styles.skipBtn}>
             <Text style={[styles.skipText, { color: colors.textSecondary }]}>Skip</Text>
           </TouchableOpacity>
         )}
-      </View>
+      </View> 
 
       {}
       <FlatList
         data={slides}
         renderItem={renderItem}
         horizontal
-        pagingEnabled
+        pagingEnabled 
         showsHorizontalScrollIndicator={false}
         bounces={false}
         keyExtractor={(item) => item.id}
@@ -321,7 +324,7 @@ const OnboardingScreen = ({ navigation }) => {
 
             const dotWidth = scrollX.interpolate({
               inputRange,
-              outputRange: [8, 24, 8],
+             outputRange: [8, 24, 8],
               extrapolate: 'clamp',
             });
 
@@ -331,9 +334,9 @@ const OnboardingScreen = ({ navigation }) => {
               extrapolate: 'clamp',
             });
 
-            const activeColor = slides[currentIndex]?.gradient[0] || colors.primary;
+           const activeColor = slides[currentIndex]?.gradient[0] || colors.primary;
 
-            return (
+            return ( 
               <Animated.View
                 key={i}
                 style={[
@@ -354,7 +357,7 @@ const OnboardingScreen = ({ navigation }) => {
           onPress={handleNext}
           activeOpacity={0.88}
           style={styles.nextButton}
-        >
+       > 
           <LinearGradient
             colors={slides[currentIndex]?.gradient || ['#00D4AA', '#00B894']}
             style={styles.btnGradient}
@@ -362,9 +365,9 @@ const OnboardingScreen = ({ navigation }) => {
             <Text style={styles.btnText}>
               {currentIndex === slides.length - 1 ? 'Get Started' : 'Next →'}
             </Text>
-          </LinearGradient>
-        </TouchableOpacity>
-      </View>
+         </LinearGradient>
+       </TouchableOpacity>
+     </View>
     </SafeAreaView>
   );
 };
@@ -398,7 +401,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   logoBrand: {
-    fontSize: 18,
+   fontSize: 18,
     fontWeight: '800',
     letterSpacing: -0.5,
   },
@@ -414,13 +417,13 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   slide: {
-    width,
+   width,
     alignItems: 'center',
-    justifyContent: 'center',
+   justifyContent: 'center',
     paddingHorizontal: spacing.huge,
   },
   glowContainer: {
-    position: 'absolute',
+   position: 'absolute',
     top: height * 0.05,
     width: width * 0.8,
     height: width * 0.8,
@@ -431,27 +434,27 @@ const styles = StyleSheet.create({
     width: '100%',
     height: '100%',
     borderRadius: (width * 0.8) / 2,
-  },
+  }, 
   emojiContainer: {
     position: 'relative',
-    marginBottom: spacing.huge,
+   marginBottom: spacing.huge,
     zIndex: 1,
   },
   emojiBg: {
-    width: 140,
+    width: 140, 
     height: 140,
     borderRadius: 48,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 10 },
+    shadowOffset: { width: 0, height: 10 }, 
     shadowOpacity: 0.08,
     shadowRadius: 20,
     elevation: 8,
   },
   emojiText: {
-    fontSize: 64,
+   fontSize: 64,
   },
   emojiRing: {
     position: 'absolute',
@@ -471,7 +474,7 @@ const styles = StyleSheet.create({
     fontWeight: '800',
     textAlign: 'center',
     marginBottom: spacing.md,
-    letterSpacing: -0.5,
+   letterSpacing: -0.5,
   },
   subtitle: {
     ...typography.bodyLarge,
@@ -499,7 +502,7 @@ const styles = StyleSheet.create({
     width: 42,
     height: 42,
     borderRadius: borderRadius.lg,
-    alignItems: 'center',
+   alignItems: 'center',
     justifyContent: 'center',
   },
   permIcon: {
@@ -508,7 +511,7 @@ const styles = StyleSheet.create({
   permTextContainer: {
     flex: 1,
     marginLeft: spacing.md,
-    marginRight: spacing.sm,
+   marginRight: spacing.sm,
   },
   permTitle: {
     ...typography.labelLarge,
@@ -519,7 +522,7 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   permBtn: {
-    paddingHorizontal: spacing.md,
+   paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs + 2,
     borderRadius: borderRadius.lg,
   },
@@ -544,7 +547,7 @@ const styles = StyleSheet.create({
   },
   nextButton: {
     borderRadius: borderRadius.lg,
-    overflow: 'hidden',
+   overflow: 'hidden',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.15,
@@ -564,5 +567,5 @@ const styles = StyleSheet.create({
   },
 });
 
-export default OnboardingScreen;
+export default OnboardingScreen; 
 

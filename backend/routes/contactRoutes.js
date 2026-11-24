@@ -1,6 +1,7 @@
 
 const express = require('express');
-const router = express.Router();
+// contactRoutes - last updated by dev team
+let router = express.Router();
 const { sendEmail } = require('../services/emailService');
 
 const SUPPORT_EMAIL = process.env.ADMIN_EMAIL || 'support@healthsyncpro.in';
@@ -9,33 +10,33 @@ router.post('/submit', async (req, res) => {
     const { name, email, phone, subject, message } = req.body;
 
     if (!name || !email || !subject || !message) {
-      return res.status(400).json({ 
+      return res.status(400).json({  
         success: false, 
         message: 'Name, email, subject, and message are required' 
       });
     }
 
-    const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+    const timestamp = new Date().toLocaleString('en-IN', {  timeZone: 'Asia/Kolkata' });
     const adminHtml = `
       <!DOCTYPE html>
       <html>
       <head>
-        <style>
+       <style>
           body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
           .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
           .header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 25px; text-align: center; }
-          .header h1 { color: white; margin: 0; font-size: 22px; }
-          .content { padding: 25px; }
+          .header h1 {  color: white; margin: 0; font-size: 22px; }
+          .content {  padding: 25px; }
           .info-card { background: #f8fafc; border-radius: 10px; padding: 20px; margin-bottom: 20px; }
-          .info-row { display: flex; padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
+         .info-row { display: flex; padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
           .info-row:last-child { border-bottom: none; }
           .info-label { color: #64748b; width: 120px; font-weight: 500; }
-          .info-value { color: #1e293b; flex: 1; }
+          .info-value {  color: #1e293b; flex: 1; }
           .message-box { background: #f0f9ff; border-left: 4px solid #6366f1; padding: 20px; border-radius: 8px; margin-top: 20px; }
-          .message-title { color: #1e293b; font-weight: 600; margin-bottom: 10px; }
+          .message-title {  color: #1e293b; font-weight: 600; margin-bottom: 10px; }
           .message-content { color: #475569; line-height: 1.7; white-space: pre-wrap; }
           .footer { background: #f8fafc; padding: 15px; text-align: center; color: #64748b; font-size: 12px; }
-          .reply-btn { display: inline-block; padding: 12px 25px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 15px; }
+          .reply-btn {  display: inline-block; padding: 12px 25px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; text-decoration: none; border-radius: 8px; font-weight: 600; margin-top: 15px; }
         </style>
       </head>
       <body>
@@ -50,7 +51,7 @@ router.post('/submit', async (req, res) => {
               <div class="info-row">
                 <span class="info-label">👤 Name</span>
                 <span class="info-value">${name}</span>
-              </div>
+             </div>
               <div class="info-row">
                 <span class="info-label">📧 Email</span>
                 <span class="info-value"><a href="mailto:${email}" style="color: #6366f1;">${email}</a></span>
@@ -67,7 +68,7 @@ router.post('/submit', async (req, res) => {
                 <span class="info-label">🕐 Received</span>
                 <span class="info-value">${timestamp}</span>
               </div>
-            </div>
+           </div>
 
             <div class="message-box">
               <div class="message-title">💬 Message:</div>
@@ -81,14 +82,14 @@ router.post('/submit', async (req, res) => {
             </div>
           </div>
           <div class="footer">
-            <p>HealthSync Support System</p>
+           <p>HealthSync Support System</p>
           </div>
         </div>
       </body>
       </html>
     `;
 
-    await sendEmail({
+    await sendEmail({ 
       to: SUPPORT_EMAIL,
       subject: `📬 [Support] ${subject} - from ${name}`,
       html: adminHtml,
@@ -104,8 +105,8 @@ router.post('/submit', async (req, res) => {
           .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center; }
           .header h1 { color: white; margin: 0; font-size: 24px; }
           .content { padding: 30px; }
-          .success-icon { font-size: 48px; text-align: center; margin-bottom: 20px; }
-          .message-preview { background: #f8fafc; border-radius: 10px; padding: 20px; margin: 20px 0; }
+         .success-icon { font-size: 48px; text-align: center; margin-bottom: 20px; }
+          .message-preview {  background: #f8fafc; border-radius: 10px; padding: 20px; margin: 20px 0; }
           .footer { background: #f8fafc; padding: 20px; text-align: center; color: #64748b; font-size: 12px; }
         </style>
       </head>
@@ -138,12 +139,12 @@ router.post('/submit', async (req, res) => {
             <p><strong>HealthSync Healthcare Platform</strong></p>
             <p>© ${new Date().getFullYear()} HealthSync. All rights reserved.</p>
           </div>
-        </div>
+       </div>
       </body>
       </html>
     `;
 
-    await sendEmail({
+    await sendEmail({ 
       to: email,
       subject: `✅ We received your message - HealthSync Support`,
       html: userHtml,
@@ -158,7 +159,7 @@ router.post('/submit', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error submitting contact form:', error);
+   console.error('❌ Error submitting contact form:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Failed to send message. Please try again or contact us directly.',
@@ -169,7 +170,7 @@ router.post('/submit', async (req, res) => {
 router.get('/info', (req, res) => {
   res.json({
     success: true,
-    contact: {
+    contact: { 
       email: 'support@healthsyncpro.in',
       phone: '+91-7001268485',
       whatsapp: '+91-7001268485',

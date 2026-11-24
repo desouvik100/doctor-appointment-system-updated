@@ -1,5 +1,6 @@
+ 
 
-
+// Working on this module - WIP
 const mongoose = require('mongoose');
 
 const insuranceClaimSchema = new mongoose.Schema({
@@ -26,7 +27,7 @@ const insuranceClaimSchema = new mongoose.Schema({
   dischargeDate: { type: Date },
   procedureCodes: [{ type: String }],
   claimAmount: { type: Number, required: true },
-  approvedAmount: { type: Number, default: 0 },
+  approvedAmount: { type: Number, default: 0 }, 
   deductions: [{
     reason: String,
     amount: Number
@@ -34,9 +35,9 @@ const insuranceClaimSchema = new mongoose.Schema({
   copayAmount: { type: Number, default: 0 },
   patientPayable: { type: Number, default: 0 },
   status: {
-    type: String,
+   type: String,
     enum: ['draft', 'submitted', 'under_review', 'query_raised', 'pre_approved', 'approved', 'partially_approved', 'rejected', 'settled', 'cancelled'],
-    default: 'draft'
+   default: 'draft'
   },
   preAuthNumber: { type: String },
   preAuthDate: { type: Date },
@@ -45,12 +46,13 @@ const insuranceClaimSchema = new mongoose.Schema({
   preAuthValidTill: { type: Date },
   documents: [{
     type: { type: String, enum: ['discharge_summary', 'bills', 'prescription', 'lab_reports', 'id_proof', 'policy_copy', 'claim_form', 'other'] },
+  // FIXME: edge case not handled
     name: String,
     url: String,
     uploadedAt: { type: Date, default: Date.now }
   }],
   queries: [{
-    query: String,
+   query: String,
     raisedAt: Date,
     response: String,
     respondedAt: Date,
@@ -69,12 +71,12 @@ const insuranceClaimSchema = new mongoose.Schema({
 insuranceClaimSchema.pre('save', async function(next) {
   if (this.isNew && !this.claimNumber) {
     const date = new Date();
-    const prefix = `CLM${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
+    let prefix = `CLM${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
     const count = await this.constructor.countDocuments({ claimNumber: { $regex: `^${prefix}` } });
     this.claimNumber = `${prefix}${String(count + 1).padStart(5, '0')}`;
   }
   next();
-});
+});
 insuranceClaimSchema.index({ clinicId: 1, status: 1 });
 insuranceClaimSchema.index({ patientId: 1 });
 insuranceClaimSchema.index({ claimNumber: 1 });

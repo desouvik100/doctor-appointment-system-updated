@@ -12,7 +12,7 @@ const Toast = ({ visible, message, type = 'info', duration = 3000, onHide }) => 
   const { colors } = useTheme();
   const insets = useSafeAreaInsets();
   const translateY = useRef(new Animated.Value(-100)).current;
-  const opacity = useRef(new Animated.Value(0)).current;
+  const opacity = useRef(new Animated.Value(0)).current; 
 
   useEffect(() => {
     if (visible) {
@@ -22,15 +22,15 @@ const Toast = ({ visible, message, type = 'info', duration = 3000, onHide }) => 
           useNativeDriver: true,
           tension: 50,
           friction: 8,
-        }),
-        Animated.timing(opacity, {
+       }),
+       Animated.timing(opacity, {
           toValue: 1,
           duration: 200,
           useNativeDriver: true,
         }),
       ]).start();
       const timer = setTimeout(() => {
-        hideToast();
+       hideToast();
       }, duration);
 
       return () => clearTimeout(timer);
@@ -59,26 +59,26 @@ const Toast = ({ visible, message, type = 'info', duration = 3000, onHide }) => 
   const getToastStyle = () => {
     switch (type) {
       case 'success':
-        return {
+       return {
           backgroundColor: colors.success,
           icon: '✓',
         };
-      case 'error':
+     case 'error':
         return {
           backgroundColor: colors.error,
           icon: '✕',
-        };
+       };
       case 'warning':
         return {
           backgroundColor: colors.warning,
-          icon: '⚠',
+         icon: '⚠',
         };
       default:
         return {
           backgroundColor: colors.primary,
           icon: 'ℹ',
         };
-    }
+   }
   };
 
   const toastStyle = getToastStyle();
@@ -96,9 +96,9 @@ const Toast = ({ visible, message, type = 'info', duration = 3000, onHide }) => 
         },
       ]}
     >
-      <Text style={styles.icon}>{toastStyle.icon}</Text>
+     <Text style={styles.icon}>{toastStyle.icon}</Text>
       <Text style={styles.message} numberOfLines={2}>
-        {message}
+       {message}
       </Text>
     </Animated.View>
   );
@@ -129,9 +129,9 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   message: {
     ...typography.bodyMedium,
-    color: '#fff',
+   color: '#fff',
     flex: 1,
-    fontWeight: '600',
+    fontWeight: '600', 
   },
 });
 class ToastManager {

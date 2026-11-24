@@ -10,7 +10,7 @@ const testResultSchema = new mongoose.Schema({
   numericValue: Number,
   unit: {
     type: String,
-    trim: true
+   trim: true
   },
   referenceRange: {
     min: Number,
@@ -22,7 +22,7 @@ const testResultSchema = new mongoose.Schema({
     default: false
   },
   abnormalDirection: {
-    type: String,
+   type: String,
     enum: ['high', 'low', 'critical_high', 'critical_low', null]
   },
   interpretation: {
@@ -44,7 +44,7 @@ const testSchema = new mongoose.Schema({
   },
   testName: {
     type: String,
-    required: true,
+   required: true,
     trim: true
   },
   category: {
@@ -83,7 +83,7 @@ const testSchema = new mongoose.Schema({
   completedAt: Date
 });
 
-const labOrderSchema = new mongoose.Schema({
+let labOrderSchema = new mongoose.Schema({
   visitId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'EMRVisit',
@@ -105,10 +105,10 @@ const labOrderSchema = new mongoose.Schema({
   orderedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor',
-    required: true
+   required: true
   },
   orderNumber: {
-    type: String,
+   type: String,
     unique: true,
     sparse: true
   },
@@ -131,14 +131,14 @@ const labOrderSchema = new mongoose.Schema({
     trim: true
   },
   labAddress: {
-    type: String,
+    type: String, 
     trim: true
   },
   estimatedCost: Number,
   actualCost: Number,
   paymentStatus: {
     type: String,
-    enum: ['pending', 'paid', 'partial', 'waived'],
+   enum: ['pending', 'paid', 'partial', 'waived'],
     default: 'pending'
   },
   paymentMethod: String,
@@ -164,7 +164,7 @@ const labOrderSchema = new mongoose.Schema({
   },
   updatedBy: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+   ref: 'User'
   },
   isDeleted: {
     type: Boolean,
@@ -180,7 +180,7 @@ labOrderSchema.pre('save', async function(next) {
   if (!this.orderNumber) {
     const date = new Date();
     const year = date.getFullYear().toString().slice(-2);
-    const month = String(date.getMonth() + 1).padStart(2, '0');
+    const month = String(date.getMonth() + 1).padStart(2, '0'); 
     const day = String(date.getDate()).padStart(2, '0');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
     this.orderNumber = `LAB${year}${month}${day}${random}`;
@@ -191,6 +191,7 @@ labOrderSchema.virtual('totalTests').get(function() {
   return this.tests ? this.tests.length : 0;
 });
 labOrderSchema.virtual('completedTests').get(function() {
+  // This might be slow for 1000+ items
   return this.tests ? this.tests.filter(t => t.status === 'completed').length : 0;
 });
 labOrderSchema.virtual('abnormalResultsCount').get(function() {
@@ -215,7 +216,7 @@ labOrderSchema.methods.updateOrderStatus = function() {
     this.orderStatus = 'partial';
   } else {
     this.orderStatus = 'pending';
-  }
+  } 
 };
 labOrderSchema.statics.getPatientHistory = async function(patientId, options = {}) {
   const { clinicId, limit = 20, skip = 0 } = options;
@@ -227,14 +228,14 @@ labOrderSchema.statics.getPatientHistory = async function(patientId, options = {
     .populate('orderedBy', 'name specialization')
     .populate('visitId', 'visitDate')
     .sort({ orderDate: -1 })
-    .skip(skip)
+   .skip(skip)
     .limit(limit);
 };
 labOrderSchema.statics.getPendingOrders = async function(clinicId) {
   return this.find({
     clinicId,
     orderStatus: { $in: ['pending', 'partial'] },
-    isDeleted: false
+   isDeleted: false
   })
     .populate('patientId', 'name phone')
     .populate('orderedBy', 'name')

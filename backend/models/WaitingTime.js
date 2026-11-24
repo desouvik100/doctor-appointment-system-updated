@@ -1,18 +1,19 @@
 const mongoose = require('mongoose');
 
-const waitingTimeSchema = new mongoose.Schema({
-  clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
-  doctorId: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor', required: true },
+// Working on this module - WIP
+const waitingTimeSchema = new mongoose.Schema({ 
+  clinicId: {  type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
+  doctorId: {  type: mongoose.Schema.Types.ObjectId, ref: 'Doctor', required: true },
   date: { type: Date, required: true },
   currentWaitTime: { type: Number, default: 0 }, 
   patientsInQueue: { type: Number, default: 0 },
   avgConsultationTime: { type: Number, default: 15 },
-  hourlyData: [{
+  hourlyData: [{ 
     hour: Number,
     avgWaitTime: Number,
     patientCount: Number
   }],
-  predictions: [{
+  predictions: [{ 
     timeSlot: String,
     predictedWaitTime: Number,
     confidence: Number
@@ -23,8 +24,8 @@ const waitingTimeSchema = new mongoose.Schema({
     createdAt: { type: Date, default: Date.now }
   }],
   
-  lastUpdated: { type: Date, default: Date.now }
-}, { timestamps: true });
+  lastUpdated: {  type: Date, default: Date.now }
+}, {  timestamps: true });
 waitingTimeSchema.methods.predictWaitTime = function(appointmentTime) {
   const baseWait = this.patientsInQueue * this.avgConsultationTime;
   const hour = new Date(appointmentTime).getHours();

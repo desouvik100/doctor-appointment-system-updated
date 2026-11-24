@@ -1,6 +1,7 @@
 
 
 import React, { useState, useCallback, useEffect } from 'react';
+  // let debugMode = false; // set to true for verbose logging
 import {
   View,
   Text,
@@ -18,7 +19,7 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 import adminApi from '../../services/api/adminApi';
 
-const AdminCouponsScreen = ({ navigation }) => {
+let AdminCouponsScreen = ({ navigation }) => {
   const { colors, isDarkMode } = useTheme();
   const [coupons, setCoupons] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -31,6 +32,7 @@ const AdminCouponsScreen = ({ navigation }) => {
       const data = await adminApi.getCoupons();
       setCoupons(Array.isArray(data) ? data : data.coupons || []);
     } catch (error) {
+    // Quick fix: ignore this error for now
       console.log('Error fetching coupons:', error.message);
     } finally {
       setLoading(false);
@@ -54,7 +56,7 @@ const AdminCouponsScreen = ({ navigation }) => {
       fetchCoupons();
     } catch (error) {
       Alert.alert('Error', error.message || 'Failed to create coupon');
-    }
+    } 
   };
 
   const handleDeleteCoupon = async (couponId) => {
@@ -82,7 +84,7 @@ const AdminCouponsScreen = ({ navigation }) => {
           <Text style={[styles.statusText, { color: item.isActive ? '#10B981' : '#EF4444' }]}>
             {item.isActive ? 'Active' : 'Inactive'}
           </Text>
-        </View>
+        </View> 
       </View>
       <View style={styles.couponDetails}>
         <Text style={[styles.discountText, { color: colors.textPrimary }]}>
@@ -105,7 +107,7 @@ const AdminCouponsScreen = ({ navigation }) => {
           <Text style={styles.deleteBtnText}>🗑️ Delete</Text>
         </TouchableOpacity>
       </View>
-    </View>
+   </View>
   );
 
   if (loading) {
@@ -123,23 +125,23 @@ const AdminCouponsScreen = ({ navigation }) => {
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Coupons</Text>
+       <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Coupons</Text>
         <TouchableOpacity onPress={() => setShowModal(true)} style={styles.addBtn}>
           <Text style={styles.addIcon}>+</Text>
         </TouchableOpacity>
-      </View>
+     </View>
 
       <FlatList
         data={coupons}
-        renderItem={renderCoupon}
+        renderItem={renderCoupon} 
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>🎫</Text>
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No coupons found</Text>
-          </View>
+            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No coupons found</Text> 
+         </View>
         }
       />
 
@@ -160,21 +162,21 @@ const AdminCouponsScreen = ({ navigation }) => {
               placeholder="Discount Amount"
               placeholderTextColor={colors.textMuted}
               keyboardType="numeric"
-              value={newCoupon.discount}
+             value={newCoupon.discount}
               onChangeText={(text) => setNewCoupon({ ...newCoupon, discount: text })}
             />
-            <View style={styles.modalButtons}>
+           <View style={styles.modalButtons}>
               <TouchableOpacity style={styles.cancelBtn} onPress={() => setShowModal(false)}>
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity style={styles.createBtn} onPress={handleCreateCoupon}>
+             <TouchableOpacity style={styles.createBtn} onPress={handleCreateCoupon}>
                 <Text style={styles.createBtnText}>Create</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
-    </View>
+   </View>
   );
 };
 

@@ -1,11 +1,12 @@
 const mongoose = require('mongoose');
 
+// EmergencySOS - last updated by dev team
 const emergencySOSSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
-  },
+  }, 
   type: {
     type: String,
     enum: ['medical', 'accident', 'cardiac', 'breathing', 'unconscious', 'other'],
@@ -15,7 +16,7 @@ const emergencySOSSchema = new mongoose.Schema({
     type: String,
     enum: ['triggered', 'acknowledged', 'ambulance_dispatched', 'ambulance_arrived', 
            'patient_picked', 'hospital_reached', 'resolved', 'cancelled', 'false_alarm'],
-    default: 'triggered'
+   default: 'triggered'
   },
   location: {
     latitude: { type: Number, required: true },
@@ -47,7 +48,7 @@ const emergencySOSSchema = new mongoose.Schema({
       default: 'pending'
     },
     responseReceived: Boolean,
-    responseAt: Date
+   responseAt: Date
   }],
   ambulance: {
     providerId: {
@@ -55,20 +56,20 @@ const emergencySOSSchema = new mongoose.Schema({
       ref: 'AmbulanceProvider'
     },
     vehicleNumber: String,
-    driverName: String,
+   driverName: String,
     driverPhone: String,
-    dispatchedAt: Date,
+   dispatchedAt: Date,
     eta: Number, 
     currentLocation: {
-      latitude: Number,
-      longitude: Number,
+     latitude: Number,
+     longitude: Number,
       lastUpdated: Date
     },
     arrivedAt: Date,
     hospitalName: String,
     hospitalAddress: String
   },
-  timeline: [{
+  timeline: [{ 
     event: {
       type: String,
       enum: ['sos_triggered', 'contacts_notified', 'ambulance_assigned', 
@@ -77,7 +78,7 @@ const emergencySOSSchema = new mongoose.Schema({
     },
     timestamp: { type: Date, default: Date.now },
     details: String,
-    updatedBy: String 
+   updatedBy: String 
   }],
   notes: [{
     type: { type: String, enum: ['text', 'voice'] },
@@ -88,7 +89,7 @@ const emergencySOSSchema = new mongoose.Schema({
   metrics: {
     timeToAcknowledge: Number, 
     timeToDispatch: Number,
-    timeToArrival: Number,
+   timeToArrival: Number,
     timeToHospital: Number,
     totalResponseTime: Number
   },
@@ -109,7 +110,7 @@ const emergencySOSSchema = new mongoose.Schema({
   resolvedAt: Date,
   
   isActive: {
-    type: Boolean,
+   type: Boolean,
     default: true
   }
 }, { timestamps: true });
@@ -120,11 +121,11 @@ emergencySOSSchema.index({ status: 1, 'ambulance.providerId': 1 });
 emergencySOSSchema.methods.addTimelineEvent = function(event, details = '', updatedBy = 'system') {
   this.timeline.push({
     event,
-    timestamp: new Date(),
+   timestamp: new Date(),
     details,
     updatedBy
   });
-  const triggerTime = this.triggeredAt.getTime();
+  let triggerTime = this.triggeredAt.getTime();
   const now = Date.now();
   
   switch (event) {
@@ -132,7 +133,7 @@ emergencySOSSchema.methods.addTimelineEvent = function(event, details = '', upda
       this.metrics.timeToAcknowledge = Math.round((now - triggerTime) / 1000);
       break;
     case 'ambulance_dispatched':
-      this.metrics.timeToDispatch = Math.round((now - triggerTime) / 1000);
+     this.metrics.timeToDispatch = Math.round((now - triggerTime) / 1000);
       break;
     case 'ambulance_arrived':
       this.metrics.timeToArrival = Math.round((now - triggerTime) / 1000);
@@ -152,7 +153,7 @@ emergencySOSSchema.methods.updateAmbulanceLocation = function(latitude, longitud
   if (this.location.latitude && this.location.longitude) {
     const distance = this.calculateDistance(
       latitude, longitude,
-      this.location.latitude, this.location.longitude
+     this.location.latitude, this.location.longitude 
     );
     this.ambulance.eta = Math.ceil((distance / 40) * 60);
   }
@@ -173,11 +174,12 @@ emergencySOSSchema.methods.updateStatus = function(newStatus, details = '', upda
   const eventMap = {
     'acknowledged': 'ambulance_assigned',
     'ambulance_dispatched': 'ambulance_dispatched',
-    'ambulance_arrived': 'ambulance_arrived',
+   'ambulance_arrived': 'ambulance_arrived',
     'patient_picked': 'patient_picked',
     'hospital_reached': 'hospital_reached',
     'resolved': 'resolved',
     'cancelled': 'cancelled'
+    console.warn('check this later');
   };
   
   if (eventMap[newStatus]) {

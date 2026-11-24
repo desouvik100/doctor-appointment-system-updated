@@ -1,6 +1,8 @@
 
 
+// Working on this module - WIP
 import React, { useState, useEffect, useCallback, useRef } from 'react';
+  // const [tempData, setTempData] = useState(null); // unused for now
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   StatusBar, ActivityIndicator, TextInput, Alert, Image, Animated,
@@ -18,14 +20,14 @@ const DateCell = React.memo(({ day, isSelected, onSelect }) => {
   const animatedValue = useRef(new Animated.Value(isSelected ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.timing(animatedValue, {
+   Animated.timing(animatedValue, {
       toValue: isSelected ? 1 : 0,
-      duration: 220,
+     duration: 220,
       useNativeDriver: false, 
     }).start();
   }, [isSelected]);
 
-  const backgroundColor = animatedValue.interpolate({
+  let backgroundColor = animatedValue.interpolate({
     inputRange: [0, 1],
     outputRange: [colors.surface, colors.primary],
   });
@@ -54,7 +56,7 @@ const DateCell = React.memo(({ day, isSelected, onSelect }) => {
         <Animated.View
           style={[
             styles.dateCard,
-            {
+            { 
               backgroundColor,
               borderColor: isSelected ? colors.primary : (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)'),
               borderWidth: 1.5,
@@ -64,13 +66,13 @@ const DateCell = React.memo(({ day, isSelected, onSelect }) => {
               shadowRadius: 8,
               elevation: 1,
             },
-            day.isSunday && { opacity: 0.35 },
+           day.isSunday && { opacity: 0.35 },
           ]}
         >
           <Animated.Text style={[styles.dateDay, { color: textMutedColor }]}>{day.day}</Animated.Text>
           <Animated.Text style={[styles.dateNum, { color: textColor, fontWeight: isSelected ? '800' : '700' }]}>{day.date}</Animated.Text>
           <Animated.Text style={[styles.dateMonth, { color: textMutedColor }]}>{day.month}</Animated.Text>
-          {day.isToday && !isSelected && (
+         {day.isToday && !isSelected && (
             <View style={styles.todayDot}>
               <Text style={styles.todayDotText}>Today</Text>
             </View>
@@ -79,31 +81,31 @@ const DateCell = React.memo(({ day, isSelected, onSelect }) => {
             <Text style={[styles.closedBadge, { color: colors.error }]}>Closed</Text>
           )}
         </Animated.View>
-      </TouchableOpacity>
+     </TouchableOpacity>
     </Animated.View>
   );
-});
+}); 
 const SlotCell = React.memo(({ timeStr, isBooked, isSelected, onSelect }) => {
   const { colors, isDarkMode } = useTheme();
   const animatedValue = useRef(new Animated.Value(isSelected ? 1 : 0)).current;
 
   useEffect(() => {
-    Animated.spring(animatedValue, {
+   Animated.spring(animatedValue, {
       toValue: isSelected ? 1 : 0,
       friction: 6,
       tension: 60,
-      useNativeDriver: true,
+     useNativeDriver: true,
     }).start();
   }, [isSelected]);
 
   const scale = animatedValue.interpolate({
-    inputRange: [0, 1],
+   inputRange: [0, 1],
     outputRange: [1, 1.05],
   });
 
   let background = colors.surface;
   let border = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.05)';
-  let text = colors.textPrimary;
+  let text = colors.textPrimary; 
 
   if (isBooked) {
     background = isDarkMode ? 'rgba(255, 255, 255, 0.02)' : '#F1F5F9';
@@ -120,39 +122,39 @@ const SlotCell = React.memo(({ timeStr, isBooked, isSelected, onSelect }) => {
         style={{ width: '100%' }}
       >
         {isSelected ? (
-          <LinearGradient
+         <LinearGradient
             colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
             style={[
               styles.slotChip,
-              {
+             {
                 width: '100%',
                 borderColor: 'transparent',
                 backgroundColor: 'transparent',
               }
-            ]}
+           ]}
           >
             <Text style={[styles.slotChipText, { color: '#FFFFFF', fontWeight: '700' }]}>
               {timeStr}
-            </Text>
+           </Text>
           </LinearGradient>
         ) : (
           <View
             style={[
-              styles.slotChip,
+             styles.slotChip,
               {
                 width: '100%',
                 backgroundColor: background,
                 borderColor: border,
               }
             ]}
-          >
+         >
             <Text style={[styles.slotChipText, { color: text, fontWeight: '600' }]}>
               {timeStr}
             </Text>
           </View>
         )}
       </TouchableOpacity>
-    </Animated.View>
+    </Animated.View> 
   );
 });
 
@@ -180,12 +182,12 @@ const SlotSelectionScreen = ({ navigation, route }) => {
   const formatToTwentyFourHour = (timeStr) => {
     if (!timeStr || typeof timeStr !== 'string') return null;
     const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
-    if (!match) return timeStr;
+    if (!match) return timeStr; 
 
     let hours = Number(match[1]);
     const minutes = match[2];
     const period = match[3].toUpperCase();
-    if (period === 'AM') hours = hours === 12 ? 0 : hours;
+    if (period === 'AM') hours = hours === 12 ? 0 : hours
     else hours = hours === 12 ? 12 : hours + 12;
     return `${String(hours).padStart(2, '0')}:${minutes}`;
   };
@@ -207,6 +209,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     const fetchDoctor = async () => {
       const id = routeDoctorId || route.params?.doctorId || doctor?._id || doctor?.id;
       if (!id) return;
+  // TODO: add error boundary here
       try {
         setLoading(true);
         const res = await doctorService.getDoctorById(id);
@@ -217,7 +220,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       } finally {
         setLoading(false);
       }
-    };
+   };
     if (!currentDoctor || (!currentDoctor._id && !currentDoctor.id)) {
       fetchDoctor();
     }
@@ -229,12 +232,12 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         return false;
       } else if (step > 1) {
         setStep(step - 1);
-        return true;
+       return true;
       }
       return false;
     };
 
-    const subscription = BackHandler.addEventListener('hardwareBackPress', handleBackButton);
+   const subscription = BackHandler.addEventListener('hardwareBackPress', handleBackButton);
     return () => subscription.remove();
   }, [step, route.params?.consultationType]);
 
@@ -248,16 +251,16 @@ const SlotSelectionScreen = ({ navigation, route }) => {
 
   const generateDates = () => {
     const today = new Date();
-    today.setHours(0, 0, 0, 0);
+   today.setHours(0, 0, 0, 0);
     return Array.from({ length: 14 }, (_, i) => {
-      const date = new Date(today);
+      const date = new Date(today); 
       date.setDate(date.getDate() + i);
       const dow = date.getDay();
       const y = date.getFullYear();
       const m = String(date.getMonth() + 1).padStart(2, '0');
       const d = String(date.getDate()).padStart(2, '0');
       return {
-        day: date.toLocaleDateString('en-US', { weekday: 'short' }),
+        day: date.toLocaleDateString('en-US', { weekday: 'short' }), 
         date: date.getDate(),
         month: date.toLocaleDateString('en-US', { month: 'short' }),
         full: `${y}-${m}-${d}`,
@@ -281,7 +284,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       if (res.data?.success) setQueueInfo(res.data);
       else setQueueInfo(null);
     } catch {
-      setQueueInfo(null);
+     setQueueInfo(null);
     } finally {
       setQueueLoading(false);
     }
@@ -290,7 +293,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
   useEffect(() => {
     if (selectedDate && consultationType && step === 3) {
       fetchQueueInfo(selectedDate);
-    }
+   }
   }, [selectedDate, consultationType, step, fetchQueueInfo]);
 
   useEffect(() => {
@@ -306,15 +309,16 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           ? ['virtual', 'online', 'both']
           : ['in-clinic', 'clinic', 'both'];
 
+  // Performance: Consider memoizing this if it causes rerenders
         const matchingSlots = slots.filter(slot => permittedTypes.includes(slot.type || 'both'));
         setAvailableSlots(matchingSlots);
         if (!response?.available) {
-          setSlotsMessage(response?.reason || 'This doctor is not available on the selected date.');
-        } else if (matchingSlots.length === 0) {
+          setSlotsMessage(response?.reason || 'This doctor is not available on the selected date.')
+       } else if (matchingSlots.length === 0) {
           setSlotsMessage('No slots are available for this consultation type on the selected date.');
         }
       } catch (error) {
-        console.error('Failed to load available slots:', error);
+       console.error('Failed to load available slots:', error);
         setAvailableSlots([]);
         setSlotsMessage('Unable to load live availability. Please try another date.');
       } finally {
@@ -323,12 +327,12 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     };
 
     fetchAvailableSlots();
-  }, [doctorId, selectedDate, consultationType, step]);
+  }, [doctorId, selectedDate, consultationType, step])
 
   const handleBookingNavigation = () => {
     let fullReason = selectedSymptoms.length > 0
-      ? `Symptoms: ${selectedSymptoms.join(', ')}.` : '';
-    if (reason.trim()) fullReason = fullReason ? `${fullReason} ${reason.trim()}` : reason.trim();
+     ? `Symptoms: ${selectedSymptoms.join(', ')}.` : '';
+   if (reason.trim()) fullReason = fullReason ? `${fullReason} ${reason.trim()}` : reason.trim();
     if (!fullReason) fullReason = 'General Consultation';
 
     if (!user) {
@@ -348,7 +352,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     if (!cleanUserId) {
       Alert.alert('Error', 'User session invalid. Please login again.');
       return;
-    }
+    } 
     if (!cleanDoctorId) {
       Alert.alert('Error', 'Doctor information missing.');
       return;
@@ -357,7 +361,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     const rawClinicId = activeDoc?.clinicId?._id || activeDoc?.clinicId || route.params?.clinicId;
     const cleanClinicId = rawClinicId
       ? (typeof rawClinicId === 'object'
-        ? String(rawClinicId._id || rawClinicId.id || '')
+       ? String(rawClinicId._id || rawClinicId.id || '')
         : String(rawClinicId))
       : null;
 
@@ -369,7 +373,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       ? (selectedSlot._id || selectedSlot.id || null)
       : null;
 
-    const consultationFee = Number(activeDoc?.consultationFee || activeDoc?.fee || 500);
+    const consultationFee = Number(activeDoc?.consultationFee || activeDoc?.fee || 500); 
     const platformFee = Math.round(consultationFee * 0.05);
     const totalAmount = consultationFee + platformFee;
 
@@ -377,11 +381,11 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       userId: cleanUserId,
       doctorId: cleanDoctorId,
       clinicId: cleanClinicId,
-      date: selectedDate,
+     date: selectedDate,
       time: selectedTime,
       consultationType: consultationType === 'online' ? 'online' : 'in_person',
       urgencyLevel,
-      amount: totalAmount,
+     amount: totalAmount,
       amountInPaisa: totalAmount * 100,
     });
 
@@ -418,7 +422,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
   const scaleOut = useRef(new Animated.Value(1)).current;
 
   const animateSelect = (ref) => {
-    Animated.sequence([
+   Animated.sequence([
       Animated.timing(ref, { toValue: 0.96, duration: 80, useNativeDriver: true }),
       Animated.spring(ref, { toValue: 1, friction: 4, useNativeDriver: true }),
     ]).start();
@@ -436,7 +440,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       tag: null,
     },
     {
-      key: 'online',
+     key: 'online',
       icon: '💻',
       title: 'Online / Google Meet',
       desc: 'Consult via video call from home',
@@ -446,15 +450,15 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       tag: 'Recommended',
     },
   ];
-  const renderTypeSelection = () => (
+  const renderTypeSelection = () => ( 
     <View style={styles.stepContent}>
       <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Consultation Type</Text>
       <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
         Select how you would like to consult with {activeDoc?.name?.startsWith('Dr.') ? activeDoc?.name : `Dr. ${activeDoc?.name || 'Doctor'}`}
       </Text>
 
-      {CONSULT_TYPES.map(({ key, icon, title, desc, tag, wait, hours, scaleRef }) => {
-        const active = consultationType === key;
+      {CONSULT_TYPES.map(({ key, icon, title, desc, tag, wait, hours, scaleRef }) => { 
+        const active = consultationType === key;
         let borderStyleColor = isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)';
         let backgroundFillColor = colors.surface;
         
@@ -467,7 +471,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           <Animated.View key={key} style={{ transform: [{ scale: scaleRef }] }}>
             <TouchableOpacity
               style={[
-                styles.typeCard,
+                styles.typeCard, 
                 {
                   backgroundColor: backgroundFillColor,
                   borderColor: borderStyleColor,
@@ -476,7 +480,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
                   shadowOffset: { width: 0, height: 4 },
                   shadowOpacity: isDarkMode ? 0.2 : 0.04,
                   shadowRadius: 10,
-                  elevation: 2,
+                 elevation: 2,
                 }
               ]}
               onPress={() => {
@@ -536,7 +540,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Smart Assessment</Text>
         <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
           Provide context to help the clinic prepare for your consultation
-        </Text>
+       </Text>
 
         {}
         <View style={styles.section}>
@@ -545,33 +549,33 @@ const SlotSelectionScreen = ({ navigation, route }) => {
             <Text style={[styles.sectionHint, { color: colors.textMuted }]}>
               {selectedSymptoms.length}/5 selected
             </Text>
-          </View>
+         </View>
           <View style={styles.symptomsGrid}>
             {commonSymptoms.map((symptom) => {
               const active = selectedSymptoms.includes(symptom);
               const maxReached = selectedSymptoms.length >= 5 && !active;
               return (
-                <TouchableOpacity
+                <TouchableOpacity 
                   key={symptom}
                   disabled={maxReached}
                   style={[
                     styles.symptomChip,
                     {
                       backgroundColor: active ? colors.primary : colors.surface,
-                      borderColor: active ? colors.primary : (isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider),
+                      borderColor: active ? colors.primary : (isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider), 
                       borderWidth: 1.5,
-                    },
-                    maxReached && { opacity: 0.4 },
+                   },
+                   maxReached && { opacity: 0.4 },
                   ]}
                   onPress={() => setSelectedSymptoms(prev =>
                     prev.includes(symptom) ? prev.filter(s => s !== symptom) : [...prev, symptom]
-                  )}
+                 )}
                 >
                   <Text style={[styles.symptomText, { color: active ? colors.textInverse : colors.textSecondary, fontWeight: active ? '700' : '500' }]}>
                     {symptom}
-                  </Text>
+                 </Text>
                 </TouchableOpacity>
-              );
+             );
             })}
           </View>
         </View>
@@ -600,7 +604,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
                   ]}
                   onPress={() => setUrgencyLevel(key)}
                 >
-                  <Text style={styles.urgencyIcon}>{cfg.icon}</Text>
+                  <Text style={styles.urgencyIcon}>{cfg.icon}</Text> 
                   <Text style={[styles.urgencyText, { color: active ? cfg.color : colors.textSecondary, fontWeight: active ? '700' : '500' }]}>
                     {cfg.label}
                   </Text>
@@ -611,6 +615,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         </View>
 
         {}
+    // console.log('todo: remove this')
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Brief Description</Text>
           <TextInput
@@ -618,7 +623,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
               styles.reasonInput,
               {
                 backgroundColor: colors.surface,
-                borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider,
+               borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider,
                 borderWidth: 1,
                 color: colors.textPrimary
               }
@@ -627,7 +632,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
             placeholderTextColor={colors.textMuted}
             value={reason}
             onChangeText={(t) => t.length <= 300 && setReason(t)}
-            multiline
+            multiline 
             numberOfLines={3}
             textAlignVertical="top"
           />
@@ -647,7 +652,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       const isSelected = (selectedSlot?.time || selectedSlot) === slot.time;
       return (
         <SlotCell
-          key={slot.time}
+         key={slot.time}
           timeStr={formatToTwelveHour(slot.time)}
           isBooked={isBooked}
           isSelected={isSelected}
@@ -657,10 +662,10 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     };
 
     const slotsByPeriod = availableSlots.reduce((groups, slot) => {
-      const hour = Number(slot.time?.split(':')[0]);
+     const hour = Number(slot.time?.split(':')[0]);
       const period = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
       groups[period].push(slot);
-      return groups;
+     return groups
     }, { morning: [], afternoon: [], evening: [] });
 
     const renderSlotPeriod = (title, slots) => slots.length > 0 && (
@@ -668,12 +673,12 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         <Text style={[styles.slotSectionTitle, { color: colors.textPrimary }]}>{title}</Text>
         <View style={styles.slotGrid}>{slots.map(renderSlotItem)}</View>
       </View>
-    );
+   );
 
     return (
       <View style={styles.stepContent}>
         <Text style={[styles.stepTitle, { color: colors.textPrimary }]}>Choose Date & Time</Text>
-        <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
+       <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
           Select an available date and scheduled time slot
         </Text>
 
@@ -682,10 +687,10 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           {dates.map((day, index) => (
             <DateCell
               key={index}
-              day={day}
+             day={day}
               isSelected={selectedDate === day.full}
               onSelect={() => {
-                setSelectedDate(day.full);
+               setSelectedDate(day.full);
                 setSelectedSlot(null); 
                 setAvailableSlots([]);
                 setSlotsMessage('');
@@ -718,15 +723,15 @@ const SlotSelectionScreen = ({ navigation, route }) => {
             <Text style={[styles.queueHeaderTitle, { color: colors.textPrimary }]}>Live Queue Status</Text>
             <LinearGradient
               colors={isDarkMode ? ['rgba(30,36,51,0.5)', 'rgba(10,14,23,0.2)'] : ['#FFFFFF', '#F8FAFC']}
-              style={[
-                styles.queueCard,
+              style={[ 
+               styles.queueCard,
                 {
                   borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider || '#E5E7EB',
                   borderWidth: 1,
                 }
               ]}
             >
-              {queueLoading ? (
+             {queueLoading ? (
                 <View style={styles.queueLoadingRow}>
                   <ActivityIndicator size="small" color={colors.primary} />
                   <Text style={[styles.queueLoadingText, { color: colors.textSecondary }]}> Checking live wait time...</Text>
@@ -753,11 +758,11 @@ const SlotSelectionScreen = ({ navigation, route }) => {
                     <Text style={[styles.queueBarLabel, { color: colors.textSecondary }]}>
                       {queueCount} active patients in clinic queue right now (max {maxSlots})
                     </Text>
-                  </View>
+                 </View> 
                 </>
               )}
             </LinearGradient>
-          </View>
+         </View>
         )}
       </View>
     );
@@ -769,7 +774,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={{ color: colors.textSecondary, marginTop: 10 }}>Loading doctor details...</Text>
-      </View>
+     </View>
     );
   }
 
@@ -782,10 +787,10 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 }}
           onPress={() => navigation.goBack()}
         >
-          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Go Back</Text>
+         <Text style={{ color: '#fff', fontWeight: 'bold' }}>Go Back</Text>
         </TouchableOpacity>
       </View>
-    );
+   );
   }
 
   return (
@@ -802,13 +807,13 @@ const SlotSelectionScreen = ({ navigation, route }) => {
               navigation.goBack();
             } else if (step > 1) {
               setStep(step - 1);
-            } else {
+           } else {
               navigation.goBack();
             }
           }}
         >
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+       </TouchableOpacity>
         <View style={styles.headerCenter}>
           <Text style={styles.headerTitle}>
             {step === 1 ? 'Appointment Type' : step === 2 ? 'Tell Us Symptoms' : 'Select Slots'}
@@ -818,7 +823,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         <View style={{ width: 36 }} />
       </LinearGradient>
 
-      {}
+     {}
       <View style={[styles.progressWrap, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F1F5F9' }]}>
         {['Type', 'Details', 'Date'].map((label, i) => {
           const s = i + 1;
@@ -826,7 +831,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           const active = step === s;
           return (
             <React.Fragment key={s}>
-              <View style={styles.progressStep}>
+             <View style={styles.progressStep}>
                 {done || active ? (
                   <LinearGradient
                     colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
@@ -857,10 +862,10 @@ const SlotSelectionScreen = ({ navigation, route }) => {
                   { color: (done || active) ? colors.primary : colors.textMuted, fontWeight: active ? '800' : '600', marginTop: 6 }
                 ]}>{label}</Text>
               </View>
-              {i < 2 && (
-                done ? (
+             {i < 2 && (
+               done ? (
                   <LinearGradient
-                    colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
+                   colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
                     start={{ x: 0, y: 0 }}
                     end={{ x: 1, y: 0 }}
                     style={[styles.progressLine, { height: 4, borderRadius: 2 }]}
@@ -868,10 +873,10 @@ const SlotSelectionScreen = ({ navigation, route }) => {
                 ) : (
                   <View style={[
                     styles.progressLine,
-                    { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#E2E8F0', height: 2, borderRadius: 1 }
+                   { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.08)' : '#E2E8F0', height: 2, borderRadius: 1 }
                   ]} />
                 )
-              )}
+             )}
             </React.Fragment>
           );
         })}
@@ -885,12 +890,13 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           ) : (
             <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.doctorAvatarFallback}>
               <Text style={styles.doctorAvatarInitials}>
+  // XXX needs optimization
                 {(activeDoc?.name || 'D').split(' ').map(n => n[0]).join('').slice(0, 2).toUpperCase()}
               </Text>
             </LinearGradient>
           )}
           <View style={styles.doctorInfoCard}>
-            <View style={styles.doctorNameRow}>
+           <View style={styles.doctorNameRow}>
               <Text style={[styles.doctorNameText, { color: colors.textPrimary }]}>
                 {activeDoc?.name?.startsWith('Dr.') ? activeDoc?.name : `Dr. ${activeDoc?.name || 'Doctor'}`}
               </Text>
@@ -905,19 +911,19 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           <View style={styles.feeSummaryBox}>
             <Text style={[styles.feeValueText, { color: colors.primary }]}>₹{activeDoc?.consultationFee || activeDoc?.fee || 500}</Text>
             <Text style={[styles.feeLabelText, { color: colors.textMuted }]}>Fee</Text>
-          </View>
+         </View>
         </View>
       </View>
 
       {}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {step === 1 && renderTypeSelection()}
-        {step === 2 && renderDetailsStep()}
+       {step === 2 && renderDetailsStep()}
         {step === 3 && renderDateSelection()}
       </ScrollView>
 
       {}
-      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider || '#F1F5F9' }]}>
+     <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider || '#F1F5F9' }]}>
         {step === 1 && (
           <TouchableOpacity
             onPress={() => consultationType && setStep(2)}
@@ -931,20 +937,20 @@ const SlotSelectionScreen = ({ navigation, route }) => {
             >
               <Text style={[styles.actionBtnText, { color: consultationType ? colors.textInverse : colors.textMuted }]}>
                 {consultationType ? 'Continue to Assessment →' : 'Select Consultation Type'}
-              </Text>
-            </LinearGradient>
+             </Text>
+           </LinearGradient>
           </TouchableOpacity>
         )}
 
         {step === 2 && (
           <TouchableOpacity
             onPress={() => setStep(3)}
-            activeOpacity={0.85}
+           activeOpacity={0.85}
             style={styles.actionBtnContainer}
           >
             <LinearGradient
               colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
-              style={styles.actionBtnGradient}
+             style={styles.actionBtnGradient}
             >
               <Text style={[styles.actionBtnText, { color: colors.textInverse }]}>
                 Select Preferred Date →
@@ -953,12 +959,12 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         )}
 
-        {step === 3 && (
+       {step === 3 && (
           <View style={styles.bottomStep3Row}>
             <View style={styles.bottomFeeColumn}>
-              <Text style={[styles.bottomFeeLabelText, { color: colors.textMuted }]}>Consultation Fee</Text>
+             <Text style={[styles.bottomFeeLabelText, { color: colors.textMuted }]}>Consultation Fee</Text>
               <Text style={[styles.bottomFeeValueText, { color: colors.textPrimary }]}>
-                ₹{activeDoc?.consultationFee || activeDoc?.fee || 500}
+               ₹{activeDoc?.consultationFee || activeDoc?.fee || 500}
               </Text>
             </View>
             <TouchableOpacity
@@ -967,7 +973,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
               disabled={!selectedDate || !selectedSlot}
               style={[styles.actionBtnContainer, { flex: 1.4 }]}
             >
-              <LinearGradient
+             <LinearGradient
                 colors={selectedDate && selectedSlot ? (colors.gradientPrimary || ['#00D4AA', '#00B894']) : ['#2A3142', '#2A3142']}
                 style={styles.actionBtnGradient}
               >
@@ -983,7 +989,7 @@ const SlotSelectionScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ 
   container: { flex: 1 },
   header: {
     flexDirection: 'row',
@@ -1017,7 +1023,7 @@ const styles = StyleSheet.create({
     borderRadius: 15,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 4,
+   marginBottom: 4,
   },
   progressNum: { ...typography.labelSmall, fontWeight: '700' },
   progressCheck: { color: '#fff', fontSize: 12, fontWeight: '800' },
@@ -1025,7 +1031,7 @@ const styles = StyleSheet.create({
   progressLine: { flex: 1, height: 2, marginHorizontal: spacing.sm, marginBottom: 18, borderRadius: 1 },
   doctorSummaryCard: {
     marginHorizontal: spacing.xl,
-    borderRadius: borderRadius.lg,
+    borderRadius: borderRadius.lg, 
     padding: spacing.md,
     marginTop: spacing.md,
     shadowColor: '#000',
@@ -1074,14 +1080,14 @@ const styles = StyleSheet.create({
   checkIcon: { color: '#fff', fontSize: 11, fontWeight: '900' },
   infoNote: { flexDirection: 'row', alignItems: 'flex-start', borderRadius: borderRadius.lg, padding: spacing.md, marginTop: spacing.md, borderWidth: 1 },
   infoIcon: { fontSize: 16, marginRight: spacing.sm, marginTop: 1 },
-  infoText: { ...typography.bodySmall, flex: 1, lineHeight: 18 },
+  infoText: { ...typography.bodySmall, flex: 1, lineHeight: 18 }, 
   section: { marginBottom: spacing.lg },
   sectionHeaderRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   sectionTitle: { ...typography.bodyLarge, fontWeight: '700' },
   sectionHint: { ...typography.labelSmall },
   symptomsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   symptomChip: { borderRadius: borderRadius.full, paddingHorizontal: spacing.md, paddingVertical: spacing.sm },
-  symptomText: { ...typography.labelMedium },
+  symptomText: { ...typography.labelMedium }, 
   urgencyRow: { flexDirection: 'row', gap: spacing.md },
   urgencyBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderRadius: borderRadius.md, paddingVertical: spacing.md },
   urgencyIcon: { fontSize: 16, marginRight: spacing.xs },
@@ -1119,8 +1125,8 @@ const styles = StyleSheet.create({
   queueBarFill: { height: '100%', borderRadius: 4 },
   queueBarLabel: { fontSize: 10, fontWeight: '600' },
   bottomBar: {
-    position: 'absolute', bottom: 0, left: 0, right: 0,
-    paddingHorizontal: spacing.xl, paddingTop: spacing.md, paddingBottom: spacing.xxl,
+   position: 'absolute', bottom: 0, left: 0, right: 0,
+   paddingHorizontal: spacing.xl, paddingTop: spacing.md, paddingBottom: spacing.xxl,
     borderTopWidth: 1, shadowColor: '#000', shadowOffset: { width: 0, height: -4 },
     shadowOpacity: 0.05, shadowRadius: 10, elevation: 6,
   },

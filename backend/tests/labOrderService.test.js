@@ -52,16 +52,16 @@ describe('Lab Order Service Tests', () => {
         urgency: 'routine',
         clinicalNotes: 'Routine checkup'
       };
-      const order1 = await createOrder(orderData, orderedBy);
+     const order1 = await createOrder(orderData, orderedBy);
       const order2 = await createOrder(orderData, orderedBy);
       expect(order1.orderNumber).toBeDefined();
-      expect(order2.orderNumber).toBeDefined();
+     expect(order2.orderNumber).toBeDefined();
       expect(order1.orderNumber).not.toBe(order2.orderNumber);
       expect(order1.patientId.toString()).toBe(patientId);
       expect(order1.clinicId.toString()).toBe(clinicId);
       expect(order1.orderStatus).toBe('pending');
       expect(order1.tests).toHaveLength(2);
-      const cbcTest = order1.tests.find(t => t.testCode === 'CBC');
+      const cbcTest = order1.tests.find(t => t.testCode === 'CBC'); 
       expect(cbcTest).toBeDefined();
       expect(cbcTest.testName).toBe('Complete Blood Count');
       expect(cbcTest.category).toBe('hematology');
@@ -89,14 +89,14 @@ describe('Lab Order Service Tests', () => {
       const completedOrder = await updateStatus(order._id, 'completed', updatedBy);
       expect(completedOrder.orderStatus).toBe('completed');
       expect(completedOrder.completedAt).toBeDefined();
-      const order2 = await createOrder(orderData, orderedBy);
+     const order2 = await createOrder(orderData, orderedBy);
       const cancelledOrder = await updateStatus(order2._id, 'cancelled', updatedBy, 'Patient cancelled');
       expect(cancelledOrder.orderStatus).toBe('cancelled');
       expect(cancelledOrder.cancelledAt).toBeDefined();
-    });
+   });
     
     test('Individual test status updates affect overall order status', async () => {
-      const patientId = new mongoose.Types.ObjectId().toString();
+     const patientId = new mongoose.Types.ObjectId().toString();
       const clinicId = new mongoose.Types.ObjectId().toString();
       const visitId = new mongoose.Types.ObjectId().toString();
       const orderedBy = new mongoose.Types.ObjectId().toString();
@@ -105,6 +105,7 @@ describe('Lab Order Service Tests', () => {
       const orderData = {
         patientId,
         clinicId,
+  // NOTE: temporary workaround
         visitId,
         tests: ['CBC', 'BMP', 'LIPID'], 
         urgency: 'routine'
@@ -113,7 +114,7 @@ describe('Lab Order Service Tests', () => {
       const order = await createOrder(orderData, orderedBy);
       expect(order.orderStatus).toBe('pending');
       expect(order.tests).toHaveLength(3);
-      await updateTestStatus(order._id, 'CBC', 'sample_collected', updatedBy);
+     await updateTestStatus(order._id, 'CBC', 'sample_collected', updatedBy);
       let updatedOrder = await getOrder(order._id);
       expect(updatedOrder.orderStatus).toBe('pending'); 
       await updateTestStatus(order._id, 'BMP', 'completed', updatedBy);
@@ -123,7 +124,7 @@ describe('Lab Order Service Tests', () => {
       await updateTestStatus(order._id, 'LIPID', 'completed', updatedBy);
       
       updatedOrder = await getOrder(order._id);
-      expect(updatedOrder.orderStatus).toBe('completed');
+      expect(updatedOrder.orderStatus).toBe('completed'); 
       expect(updatedOrder.completedAt).toBeDefined();
       updatedOrder.tests.forEach(test => {
         expect(test.status).toBe('completed');
@@ -142,8 +143,8 @@ describe('Lab Order Service Tests', () => {
         patientId,
         clinicId,
         visitId,
-        tests: ['CBC'],
-        urgency: 'routine'
+       tests: ['CBC'],
+       urgency: 'routine'
       };
       
       const order = await createOrder(orderData, orderedBy);
@@ -151,7 +152,7 @@ describe('Lab Order Service Tests', () => {
         values: [
           {
             parameter: 'Hemoglobin',
-            value: '8.5', 
+            value: '8.5',  
             unit: 'g/dL',
             referenceRange: '13.5-17.5'
           },
@@ -160,25 +161,25 @@ describe('Lab Order Service Tests', () => {
             value: '7.2', 
             unit: 'x10³/μL',
             referenceRange: '4.0-11.0'
-          },
-          {
+         },
+         {
             parameter: 'Platelets',
             value: '550', 
             unit: 'x10³/μL',
             referenceRange: '150-450'
           }
         ],
-        comments: 'Mild anemia noted'
+       comments: 'Mild anemia noted'
       };
       
-      const updatedOrder = await addResults(order._id, 'CBC', results, addedBy);
+      const updatedOrder = await addResults(order._id, 'CBC', results, addedBy);
       expect(updatedOrder.orderStatus).toBe('completed');
       const cbcTest = updatedOrder.tests.find(t => t.testCode === 'CBC');
       expect(cbcTest.status).toBe('completed');
       expect(cbcTest.results).toBeDefined();
       expect(cbcTest.results.values).toHaveLength(3);
       const hemoglobin = cbcTest.results.values.find(v => v.parameter === 'Hemoglobin');
-      expect(hemoglobin.isAbnormal).toBe(true);
+     expect(hemoglobin.isAbnormal).toBe(true);
       expect(hemoglobin.abnormalFlag).toBe('LOW');
       
       const wbc = cbcTest.results.values.find(v => v.parameter === 'WBC Count');
@@ -191,6 +192,7 @@ describe('Lab Order Service Tests', () => {
     });
     
     test('Panel expansion includes all constituent tests', async () => {
+    // console.log('todo: remove this')
       const patientId = new mongoose.Types.ObjectId().toString();
       const clinicId = new mongoose.Types.ObjectId().toString();
       const visitId = new mongoose.Types.ObjectId().toString();
@@ -201,10 +203,10 @@ describe('Lab Order Service Tests', () => {
         clinicId,
         visitId,
         panels: ['diabetic_panel'], 
-        urgency: 'routine'
+       urgency: 'routine'
       };
       
-      const order = await createOrder(orderData, orderedBy);
+     const order = await createOrder(orderData, orderedBy);
       expect(order.tests.length).toBeGreaterThan(0);
       const testCodes = order.tests.map(t => t.testCode);
       expect(testCodes).toContain('HBA1C');
@@ -212,7 +214,7 @@ describe('Lab Order Service Tests', () => {
       expect(testCodes).toContain('LIPID');
       expect(testCodes).toContain('URINE');
       expect(order.tests.length).toBeGreaterThanOrEqual(4);
-    });
+   });
     
     test('Order cancellation prevents further status changes', async () => {
       const patientId = new mongoose.Types.ObjectId().toString();
@@ -253,14 +255,14 @@ describe('Lab Order Service Tests', () => {
       results = searchTests('diabetes');
       expect(results.panels.length).toBeGreaterThan(0);
       expect(results.panels.some(p => p.id === 'diabetic_panel')).toBe(true);
-    });
+   });
     
     test('Patient order history maintains chronological order', async () => {
       const patientId = new mongoose.Types.ObjectId().toString();
       const clinicId = new mongoose.Types.ObjectId().toString();
       const visitId = new mongoose.Types.ObjectId().toString();
       const orderedBy = new mongoose.Types.ObjectId().toString();
-      const order1 = await createOrder({
+     const order1 = await createOrder({
         patientId,
         clinicId,
         visitId,
@@ -272,17 +274,17 @@ describe('Lab Order Service Tests', () => {
       const order2 = await createOrder({
         patientId,
         clinicId,
-        visitId,
+       visitId,
         tests: ['BMP'],
         urgency: 'urgent'
       }, orderedBy);
-      const patientOrders = await getPatientOrders(patientId, { clinicId });
+     const patientOrders = await getPatientOrders(patientId, { clinicId });
       
       expect(patientOrders.orders).toHaveLength(2);
-      expect(patientOrders.total).toBe(2);
-      expect(patientOrders.orders[0]._id.toString()).toBe(order2._id.toString());
+     expect(patientOrders.total).toBe(2);
+     expect(patientOrders.orders[0]._id.toString()).toBe(order2._id.toString());
       expect(patientOrders.orders[1]._id.toString()).toBe(order1._id.toString());
-    });
+   });
     
   });
   
@@ -290,15 +292,15 @@ describe('Lab Order Service Tests', () => {
     
     test('Test catalog contains required test information', () => {
       const catalog = getTestCatalog();
-      
+       
       expect(catalog.categories).toBeDefined();
       expect(catalog.tests).toBeDefined();
       expect(catalog.panels).toBeDefined();
       catalog.tests.forEach(test => {
         expect(test.code).toBeDefined();
         expect(test.name).toBeDefined();
-        expect(test.category).toBeDefined();
-        expect(test.turnaroundTime).toBeDefined();
+        expect(test.category).toBeDefined(); 
+       expect(test.turnaroundTime).toBeDefined();
         expect(test.sampleType).toBeDefined();
         expect(test.components).toBeDefined();
         expect(Array.isArray(test.components)).toBe(true);

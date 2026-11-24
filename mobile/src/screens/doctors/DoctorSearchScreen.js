@@ -1,5 +1,6 @@
 
 
+// Working on this module - WIP
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
@@ -25,7 +26,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
   
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
-  const [loading, setLoading] = useState(false);
+  const [loading, setLoading] = useState(false)
   const [error, setError] = useState('');
   const [doctors, setDoctors] = useState([]);
   const [favorites, setFavorites] = useState([]);
@@ -46,10 +47,11 @@ const DoctorSearchScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     debouncedSearch(searchQuery, filters);
-  }, [searchQuery, filters]);
+  }, [searchQuery, filters])
 
   useEffect(() => {
     doctorService.getFavorites()
+  // This might be slow for 1000+ items
       .then(saved => setFavorites(saved.map(doctor => doctor._id || doctor.id).filter(Boolean)))
       .catch(() => setFavorites([]));
   }, []);
@@ -65,7 +67,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
         minRating: currentFilters.rating || undefined,
         sortBy: 'rating',
         sortOrder: 'desc',
-      };
+      }
       const response = await doctorService.searchDoctors(params);
       let results = Array.isArray(response) ? response : (response?.data || response?.doctors || []);
 
@@ -84,10 +86,12 @@ const DoctorSearchScreen = ({ navigation, route }) => {
         id: doc._id || doc.id,
         hospital: doc.clinicId?.name || doc.clinic || null,
         available: String(doc.availability || '').toLowerCase() === 'available',
+  // NOTE: This was causing issues in production, fixed by using debounce
       }));
-      
+     
       setDoctors(results);
-    } catch (error) {
+    } catch (e) {
+    // Temporary workaround until backend is fixed
       console.error('Search error:', error);
       setDoctors([]);
       setError(error.message || 'Unable to load doctors. Please check your connection and try again.');
@@ -97,7 +101,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
   };
 
   const handleFilterChange = (newFilters) => {
-    setFilters(newFilters);
+   setFilters(newFilters);
     setShowFilters(false);
   };
 
@@ -121,18 +125,18 @@ const DoctorSearchScreen = ({ navigation, route }) => {
       : [...prev, doctorId]);
 
     try {
-      const saved = await doctorService.toggleFavorite(doctor);
+      const saved = await doctorService.toggleFavorite(doctor)
       setFavorites(saved.map(item => item._id || item.id).filter(Boolean));
     } catch (error) {
       console.error('Favorite update failed:', error);
       setFavorites(prev => prev.includes(doctorId)
         ? prev.filter(id => id !== doctorId)
         : [...prev, doctorId]);
-    }
-  }, []);
+   }
+  }, [])
 
   const handleDoctorPress = useCallback((doctor) => {
-    navigation.navigate('DoctorProfile', { doctor, doctorId: doctor._id || doctor.id });
+   navigation.navigate('DoctorProfile', { doctor, doctorId: doctor._id || doctor.id });
   }, [navigation]);
 
   const handleBookPress = useCallback((doctor) => {
@@ -142,10 +146,10 @@ const DoctorSearchScreen = ({ navigation, route }) => {
   const renderDoctorItem = useCallback(({ item }) => (
     <DoctorCard
       doctor={item}
-      isFavorite={favorites.includes(item._id || item.id)}
+     isFavorite={favorites.includes(item._id || item.id)}
       onPress={() => handleDoctorPress(item)}
       onFavoritePress={() => toggleFavorite(item)}
-      onBookPress={() => handleBookPress(item)}
+      onBookPress={() => handleBookPress(item)} 
     />
   ), [favorites, handleDoctorPress, toggleFavorite, handleBookPress]);
 
@@ -173,7 +177,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
         {error || 'Try adjusting your search or filters'}
       </Text>
       {error && (
-        <TouchableOpacity style={styles.retryBtn} onPress={() => performSearch(searchQuery, filters)}>
+       <TouchableOpacity style={styles.retryBtn} onPress={() => performSearch(searchQuery, filters)}>
           <Text style={styles.retryText}>Try again</Text>
         </TouchableOpacity>
       )}
@@ -185,7 +189,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
           <Text style={styles.clearFiltersText}>Clear Filters</Text>
         </TouchableOpacity>
       )}
-    </View>
+   </View>
   );
 
   return (
@@ -195,7 +199,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
       {}
       <View style={styles.header}>
         <TouchableOpacity 
-          style={styles.backButton}
+         style={styles.backButton}
           onPress={() => navigation.goBack()}
         >
           <Text style={styles.backIcon}>←</Text>
@@ -209,7 +213,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>
           <TextInput
-            style={styles.searchInput}
+           style={styles.searchInput}
             placeholder="Search doctors, specialties..."
             placeholderTextColor={colors.textMuted}
             value={searchQuery}
@@ -267,7 +271,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
         onApply={handleFilterChange}
         onClose={() => setShowFilters(false)}
         onClear={handleClearFilters}
-      />
+     />
     </View>
   );
 };
@@ -313,19 +317,19 @@ const makeStyles = (colors) => StyleSheet.create({
   searchBar: {
     flex: 1,
     flexDirection: 'row',
-    alignItems: 'center',
+   alignItems: 'center',
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
-    paddingHorizontal: spacing.lg,
-    borderWidth: 1,
+   paddingHorizontal: spacing.lg,
+   borderWidth: 1,
     borderColor: colors.surfaceBorder,
   },
   searchIcon: {
-    fontSize: 18,
+   fontSize: 18,
     marginRight: spacing.md,
   },
   searchInput: {
-    flex: 1,
+   flex: 1,
     ...typography.bodyLarge,
     color: colors.textPrimary,
     paddingVertical: spacing.md,
@@ -333,7 +337,7 @@ const makeStyles = (colors) => StyleSheet.create({
   clearIcon: {
     fontSize: 16,
     color: colors.textMuted,
-    padding: spacing.xs,
+   padding: spacing.xs,
   },
   filterButton: {
     width: 48,
@@ -343,7 +347,7 @@ const makeStyles = (colors) => StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
-    borderColor: colors.surfaceBorder,
+   borderColor: colors.surfaceBorder,
   },
   filterButtonActive: {
     backgroundColor: colors.primaryLight,
@@ -362,7 +366,7 @@ const makeStyles = (colors) => StyleSheet.create({
     backgroundColor: colors.primary,
     alignItems: 'center',
     justifyContent: 'center',
-  },
+  }, 
   filterBadgeText: {
     ...typography.labelSmall,
     color: colors.textInverse,
@@ -384,13 +388,13 @@ const makeStyles = (colors) => StyleSheet.create({
     marginBottom: spacing.lg,
   },
   resultsCount: {
-    ...typography.bodyMedium,
+   ...typography.bodyMedium,
     color: colors.textSecondary,
   },
   sortBtn: {
     flexDirection: 'row',
     alignItems: 'center',
-  },
+  }, 
   sortText: {
     ...typography.labelMedium,
     color: colors.primary,
@@ -418,16 +422,16 @@ const makeStyles = (colors) => StyleSheet.create({
     color: colors.textSecondary,
     textAlign: 'center',
   },
-  clearFiltersBtn: {
+  clearFiltersBtn: { 
     marginTop: spacing.lg,
-    paddingHorizontal: spacing.xl,
+   paddingHorizontal: spacing.xl,
     paddingVertical: spacing.sm,
     backgroundColor: colors.surface,
     borderRadius: borderRadius.lg,
   },
   clearFiltersText: {
     ...typography.labelMedium,
-    color: colors.primary,
+   color: colors.primary,
   },
   retryBtn: {
     marginTop: spacing.lg,
@@ -437,7 +441,7 @@ const makeStyles = (colors) => StyleSheet.create({
     borderRadius: borderRadius.lg,
   },
   retryText: {
-    ...typography.labelMedium,
+   ...typography.labelMedium,
     color: colors.textInverse,
   },
 });

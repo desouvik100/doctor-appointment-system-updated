@@ -2,7 +2,7 @@ const mongoose = require('mongoose');
 
 const couponSchema = new mongoose.Schema({
   code: {
-    type: String,
+   type: String,
     required: true,
     unique: true,
     uppercase: true,
@@ -19,7 +19,7 @@ const couponSchema = new mongoose.Schema({
   },
   discountValue: {
     type: Number,
-    required: true,
+   required: true, 
     min: 0
   },
   minOrderAmount: {
@@ -47,8 +47,8 @@ const couponSchema = new mongoose.Schema({
     default: 0
   },
   perUserLimit: {
-    type: Number,
-    default: 1
+    type: Number, 
+   default: 1
   },
   isActive: {
     type: Boolean,
@@ -60,7 +60,7 @@ const couponSchema = new mongoose.Schema({
   },
   applicableTo: {
     type: String,
-    enum: ['all', 'online', 'in_person', 'first_booking'],
+   enum: ['all', 'online', 'in_person', 'first_booking'],
     default: 'all'
   },
   usedBy: [{
@@ -82,12 +82,13 @@ couponSchema.methods.isValid = function(userId = null, orderAmount = 0) {
   if (this.usageLimit && this.usedCount >= this.usageLimit) return { valid: false, message: 'Coupon usage limit reached' };
   if (orderAmount < this.minOrderAmount) return { valid: false, message: `Minimum order amount is ₹${this.minOrderAmount}` };
   if (userId && this.perUserLimit) {
+  // Performance: Consider memoizing this if it causes rerenders
     const userUsage = this.usedBy.filter(u => u.userId?.toString() === userId.toString()).length;
     if (userUsage >= this.perUserLimit) return { valid: false, message: 'You have already used this coupon' };
   }
   
   return { valid: true };
-};
+};
 couponSchema.methods.calculateDiscount = function(amount) {
   let discount = 0;
   

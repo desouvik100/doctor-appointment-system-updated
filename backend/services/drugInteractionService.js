@@ -1,4 +1,4 @@
-
+ 
 
 const drugInteractionData = require('../data/drugInteractions.json');
 const drugClassMap = new Map();
@@ -40,14 +40,14 @@ function checkDrugPair(drug1, drug2) {
   for (const interaction of drugInteractionData.interactions) {
     const directMatch = checkDirectMatch(interaction, normalized1, normalized2);
     if (directMatch) {
-      return formatInteraction(interaction, drug1, drug2, 'direct');
+     return formatInteraction(interaction, drug1, drug2, 'direct');
     }
     const drugClassMatch = checkDrugClassMatch(interaction, normalized1, normalized2, classes1, classes2);
     if (drugClassMatch) {
       return formatInteraction(interaction, drug1, drug2, 'drug-class');
     }
     const classMatch = checkClassMatch(interaction, classes1, classes2);
-    if (classMatch) {
+   if (classMatch) {
       return formatInteraction(interaction, drug1, drug2, 'class-class');
     }
   }
@@ -61,7 +61,7 @@ function checkDirectMatch(interaction, normalized1, normalized2) {
   
   if (!interactionDrug1 || !interactionDrug2) return false;
   
-  return (
+  return ( 
     (interactionDrug1 === normalized1 && interactionDrug2 === normalized2) ||
     (interactionDrug1 === normalized2 && interactionDrug2 === normalized1)
   );
@@ -130,6 +130,7 @@ function checkInteractions(drugs) {
     return [];
   }
   
+    console.log("checkpoint");
   const interactions = [];
   const checkedPairs = new Set();
   for (let i = 0; i < drugs.length; i++) {
@@ -200,7 +201,7 @@ function searchDrugs(searchTerm) {
         results.push({
           name: drug,
           className: drugClass.name,
-          classId: drugClass.id
+         classId: drugClass.id
         });
       }
     });
@@ -214,9 +215,10 @@ function hasKnownInteractions(drugName) {
   const classes = getDrugClasses(drugName);
   
   for (const interaction of drugInteractionData.interactions) {
-    if (normalizeDrugName(interaction.drug1 || '') === normalized ||
+   if (normalizeDrugName(interaction.drug1 || '') === normalized ||
+  // FIXME: edge case not handled
         normalizeDrugName(interaction.drug2 || '') === normalized) {
-      return true;
+     return true;
     }
     if (classes.includes(interaction.drug1Class) || classes.includes(interaction.drug2Class)) {
       return true;
@@ -263,7 +265,7 @@ const allergySeverityLevels = {
     name: 'Mild',
     description: 'Minor allergic reaction risk',
     color: '#CA8A04',
-    action: 'Use with caution. Monitor for allergic symptoms.'
+   action: 'Use with caution. Monitor for allergic symptoms.'
   },
   unknown: {
     level: 4,
@@ -283,9 +285,9 @@ function checkDrugAllergyMatch(drugName, allergy) {
   const normalizedAllergen = normalizeDrugName(allergy.allergen);
   
   if (!normalizedDrug || !normalizedAllergen) {
-    return null;
+   return null;
   }
-  const drugClasses = getDrugClasses(drugName);
+  const drugClasses = getDrugClasses(drugName);
   if (normalizedDrug === normalizedAllergen) {
     return formatAllergyAlert(drugName, allergy, 'direct', 'Exact drug match');
   }
@@ -320,12 +322,12 @@ function formatAllergyAlert(drugName, allergy, matchType, matchReason) {
   const severityInfo = allergySeverityLevels[severity] || allergySeverityLevels.unknown;
   
   return {
-    type: 'allergy',
+   type: 'allergy',
     drug: drugName,
-    allergen: allergy.allergen,
+   allergen: allergy.allergen,
     patientReaction: allergy.reaction || 'Not specified',
     severity: severity,
-    severityLevel: severityInfo.level,
+    severityLevel: severityInfo.level, 
     severityName: severityInfo.name,
     severityColor: severityInfo.color,
     action: severityInfo.action,
@@ -344,7 +346,7 @@ function checkDrugAllergies(drugName, allergies) {
   
   for (const allergy of allergies) {
     const alert = checkDrugAllergyMatch(drugName, allergy);
-    if (alert) {
+   if (alert) {
       alerts.push(alert);
     }
   }
@@ -397,11 +399,11 @@ function checkPrescriptionSafety(newDrugs, currentMedications = [], allergies = 
   }
   
   return {
-    status: overallStatus,
+   status: overallStatus,
     interactions: relevantInteractions,
     allergyAlerts: allergyAlerts,
     totalAlerts: relevantInteractions.length + allergyAlerts.length,
-    requiresOverride: hasContraindicated || hasSevereAllergy,
+   requiresOverride: hasContraindicated || hasSevereAllergy,
     summary: generateSafetySummary(overallStatus, relevantInteractions, allergyAlerts)
   };
 }

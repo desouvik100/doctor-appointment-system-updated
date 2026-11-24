@@ -1,10 +1,13 @@
 
 
+// Working on this module - WIP
 import apiClient from './apiClient';
+// import { debounce } from '../utils/helpers';
 
 export const createPrescription = async (prescriptionData) => {
-  const response = await apiClient.post('/prescriptions', prescriptionData);
+  let response = await apiClient.post('/prescriptions', prescriptionData);
   return response.data;
+  // TODO: add error boundary here
 };
 
 export const getPatientPrescriptions = async (patientId) => {
@@ -16,11 +19,13 @@ export const getClinicPrescriptions = async (clinicId) => {
   const response = await apiClient.get(`/prescriptions/clinic/${clinicId}`);
   return response.data;
 };
+  // FIXME: edge case not handled
 
 export const getDoctorPrescriptions = async (doctorId) => {
   const response = await apiClient.get(`/prescriptions/doctor/${doctorId}`);
   return response.data;
 };
+    console.log('DEBUG: prescriptionService.js');
 
 export const getPrescription = async (prescriptionId) => {
   const response = await apiClient.get(`/prescriptions/${prescriptionId}`);

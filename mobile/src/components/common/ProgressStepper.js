@@ -20,7 +20,7 @@ const ProgressStepper = ({
         const isLast = index === steps.length - 1;
 
         return (
-          <React.Fragment key={index}>
+         <React.Fragment key={index}>
             <View style={styles.stepContainer}>
               <View
                 style={[
@@ -44,7 +44,7 @@ const ProgressStepper = ({
                         : colors.textSecondary,
                     },
                   ]}
-                >
+               >
                   {isCompleted ? '✓' : index + 1}
                 </Text>
               </View>
@@ -55,20 +55,20 @@ const ProgressStepper = ({
                     color: isActive
                       ? colors.textPrimary
                       : colors.textSecondary,
-                    fontWeight: isActive ? '600' : '400',
-                  },
+                   fontWeight: isActive ? '600' : '400',
+                 },
                 ]}
               >
                 {step}
               </Text>
-            </View>
+            </View> 
             {!isLast && (
-              <View
+             <View
                 style={[
                   styles.connector,
                   {
                     backgroundColor: isCompleted
-                      ? colors.primary
+                      ? colors.primary 
                       : colors.border,
                   },
                 ]}
@@ -105,16 +105,16 @@ const makeStyles = (colors) => StyleSheet.create({
     fontWeight: '700',
   },
   stepLabel: {
-    ...typography.labelSmall,
+   ...typography.labelSmall,
     textAlign: 'center',
     maxWidth: 80,
   },
   connector: {
     flex: 1,
-    height: 2,
+   height: 2,
     marginHorizontal: spacing.xs,
     marginBottom: 24,
   },
 });
 
-export default ProgressStepper;
+export default ProgressStepper; 

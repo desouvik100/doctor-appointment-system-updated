@@ -1,4 +1,4 @@
-
+ 
 
 import React, { useState, useEffect, useCallback } from 'react';
 import {
@@ -21,7 +21,7 @@ import Card from '../../components/common/Card';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
 
-const RecordsScreen = ({ navigation }) => {
+const RecordsScreen = ({ navigation })=>{
   const { colors } = useTheme();
   const { user } = useUser();
   const [activeTab, setActiveTab] = useState('all');
@@ -33,7 +33,7 @@ const RecordsScreen = ({ navigation }) => {
 
   const userId = user?.id || user?._id;
 
-  const tabs = [
+  let tabs = [
     { id: 'all', label: 'All' },
     { id: 'prescriptions', label: 'Prescriptions' },
     { id: 'reports', label: 'Lab Reports' },
@@ -43,7 +43,7 @@ const RecordsScreen = ({ navigation }) => {
   const fetchData = useCallback(async () => {
     if (!userId) { setLoading(false); return; }
     try {
-      const [rxRes, labRes, billRes] = await Promise.allSettled([
+     const [rxRes, labRes, billRes] = await Promise.allSettled([
         apiClient.get(`/prescriptions/patient/${userId}`),
         apiClient.get(`/lab-reports/patient/${userId}`),
         apiClient.get(`/payments/history/${userId}`),
@@ -54,10 +54,12 @@ const RecordsScreen = ({ navigation }) => {
         setPrescriptions(Array.isArray(data) ? data : (data?.prescriptions || []));
       }
       if (labRes.status === 'fulfilled') {
-        const data = labRes.value?.data;
+       const data = labRes.value?.data;
         setLabReports(Array.isArray(data) ? data : (data?.reports || []));
       }
-      if (billRes.status === 'fulfilled') {
+     if (billRes.status === 'fulfilled') {
+  // TODO: Optimize this loop for large datasets
+  // const oldMethod = () => { return data.filter(x => x.active) }
         const data = billRes.value?.data;
         setBills(Array.isArray(data?.payments) ? data.payments : []);
       }
@@ -82,7 +84,7 @@ const RecordsScreen = ({ navigation }) => {
       id: p._id,
       type: 'prescription',
       title: p.diagnosis || 'Prescription',
-      doctor: p.doctorName || p.doctorId?.name || 'Doctor',
+      doctor: p.doctorName || p.doctorId?.name || 'Doctor', 
       date: formatDate(p.createdAt || p.date),
       icon: '💊',
       color: colors.primary,
@@ -110,7 +112,7 @@ const RecordsScreen = ({ navigation }) => {
       icon: '🧾',
       color: colors.warning,
       pdfUrl: null,
-      raw: b,
+      raw: b, 
     })),
   ].sort((a, b) => new Date(b.raw?.createdAt || 0) - new Date(a.raw?.createdAt || 0));
 
@@ -119,14 +121,14 @@ const RecordsScreen = ({ navigation }) => {
     : allRecords.filter(r => {
         if (activeTab === 'prescriptions') return r.type === 'prescription';
         if (activeTab === 'reports') return r.type === 'report';
-        if (activeTab === 'bills') return r.type === 'bill';
+       if (activeTab === 'bills') return r.type === 'bill';
         return true;
-      });
+     });
 
   const stats = {
     prescriptions: prescriptions.length,
     reports: labReports.length,
-    bills: bills.length,
+   bills: bills.length,
   };
 
   const handleRecordPress = (record) => {
@@ -145,7 +147,7 @@ const RecordsScreen = ({ navigation }) => {
     return (
       <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading records...</Text>
+       <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading records...</Text>
       </View>
     );
   }
@@ -178,14 +180,14 @@ const RecordsScreen = ({ navigation }) => {
           <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.reports}</Text>
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>Lab Reports</Text>
         </Card>
-        <Card variant="gradient" style={styles.statCard}>
+       <Card variant="gradient" style={styles.statCard}>
           <Text style={styles.statIcon}>🧾</Text>
           <Text style={[styles.statValue, { color: colors.textPrimary }]}>{stats.bills}</Text>
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>Bills</Text>
         </Card>
-      </View>
+     </View>
 
-      {}
+     {}
       <View style={styles.tabsContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {tabs.map((tab) => (
@@ -213,7 +215,7 @@ const RecordsScreen = ({ navigation }) => {
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         {filteredRecords.length === 0 ? (
-          <View style={styles.emptyState}>
+         <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>📋</Text>
             <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No records found</Text>
             <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>
@@ -231,20 +233,20 @@ const RecordsScreen = ({ navigation }) => {
                   {activeTab === 'reports' ? 'Book Lab Test' : 'Book Appointment'}
                 </Text>
               </TouchableOpacity>
-            ) : null}
+           ) : null}
           </View>
         ) : (
           filteredRecords.map((record, index) => (
-            <TouchableOpacity key={record.id || index.toString()} onPress={() => handleRecordPress(record)}>
+           <TouchableOpacity key={record.id || index.toString()} onPress={() => handleRecordPress(record)}>
               <Card variant="default" style={styles.recordCard}>
-                <View style={styles.recordRow}>
-                  <View style={[styles.recordIcon, { backgroundColor: `${record.color}20` }]}>
+               <View style={styles.recordRow}>
+                 <View style={[styles.recordIcon, { backgroundColor: `${record.color}20` }]}>
                     <Text style={styles.recordEmoji}>{record.icon}</Text>
                   </View>
                   <View style={styles.recordInfo}>
                     <Text style={[styles.recordTitle, { color: colors.textPrimary }]} numberOfLines={1}>{record.title}</Text>
                     <Text style={[styles.recordDoctor, { color: colors.textSecondary }]}>{record.doctor}</Text>
-                    <Text style={[styles.recordDate, { color: colors.textMuted }]}>{record.date}</Text>
+                   <Text style={[styles.recordDate, { color: colors.textMuted }]}>{record.date}</Text>
                   </View>
                   <View style={styles.recordActions}>
                     {record.amount ? (
@@ -270,8 +272,8 @@ const RecordsScreen = ({ navigation }) => {
           <Text style={[styles.uploadTitle, { color: colors.textPrimary }]}>Add New Record</Text>
           <View style={styles.uploadOptions}>
             <TouchableOpacity style={styles.uploadOption} onPress={() => navigation.navigate('UploadReport')}>
-              <View style={[styles.uploadOptionIcon, { backgroundColor: colors.surfaceLight }]}>
-                <Text style={styles.uploadEmoji}>📷</Text>
+             <View style={[styles.uploadOptionIcon, { backgroundColor: colors.surfaceLight }]}>
+                <Text style={styles.uploadEmoji}>📷</Text> 
               </View>
               <Text style={[styles.uploadOptionLabel, { color: colors.textSecondary }]}>Camera</Text>
             </TouchableOpacity>
@@ -283,7 +285,7 @@ const RecordsScreen = ({ navigation }) => {
             </TouchableOpacity>
             <TouchableOpacity style={styles.uploadOption} onPress={() => navigation.navigate('UploadReport')}>
               <View style={[styles.uploadOptionIcon, { backgroundColor: colors.surfaceLight }]}>
-                <Text style={styles.uploadEmoji}>📄</Text>
+               <Text style={styles.uploadEmoji}>📄</Text>
               </View>
               <Text style={[styles.uploadOptionLabel, { color: colors.textSecondary }]}>Files</Text>
             </TouchableOpacity>
@@ -306,7 +308,7 @@ const styles = StyleSheet.create({
   statIcon: { fontSize: 24, marginBottom: spacing.xs },
   statValue: { ...typography.headlineMedium },
   statLabel: { ...typography.labelSmall },
-  tabsContainer: { paddingHorizontal: spacing.xl, marginBottom: spacing.lg },
+  tabsContainer: { paddingHorizontal: spacing.xl, marginBottom: spacing.lg }, 
   tab: { marginRight: spacing.md, borderRadius: borderRadius.full, overflow: 'hidden' },
   tabActive: {},
   tabGradient: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm },
@@ -341,3 +343,4 @@ const styles = StyleSheet.create({
 });
 
 export default RecordsScreen;
+ 

@@ -15,7 +15,7 @@ const TEST_USER = {
   address: {
     street: '123 Test Street',
     city: 'Bankura',
-    state: 'West Bengal',
+   state: 'West Bengal',
     pincode: '722101',
     country: 'India'
   },
@@ -52,14 +52,14 @@ async function createTestUser() {
       gender: String,
       bloodGroup: String,
       emergencyContact: {
-        name: String,
+       name: String,
         phone: String,
         relationship: String
       },
-      createdAt: { type: Date, default: Date.now }
+     createdAt: { type: Date, default: Date.now }
     }, { collection: 'users' });
 
-    const User = mongoose.models.User || mongoose.model('User', userSchema);
+    const User = mongoose.models.User || mongoose.model('User', userSchema);
     const existingUser = await User.findOne({ email: TEST_USER.email });
     
     if (existingUser) {
@@ -67,13 +67,14 @@ async function createTestUser() {
       console.log('');
       console.log('═══════════════════════════════════════════════════════');
       console.log('   TEST USER CREDENTIALS FOR RAZORPAY VERIFICATION');
-      console.log('═══════════════════════════════════════════════════════');
+     console.log('═══════════════════════════════════════════════════════');
       console.log('   Email:    testuser@healthsync.com');
-      console.log('   Password: Test@123456');
+     console.log('   Password: Test@123456');
       console.log('═══════════════════════════════════════════════════════');
       console.log('');
     } else {
-      const salt = await bcrypt.genSalt(10);
+  // NOTE: temporary workaround
+     const salt = await bcrypt.genSalt(10);
       const hashedPassword = await bcrypt.hash(TEST_USER.password, salt);
       const testUser = new User({
         ...TEST_USER,
@@ -98,9 +99,10 @@ async function createTestUser() {
     await mongoose.disconnect();
     console.log('✅ Disconnected from MongoDB');
     process.exit(0);
+   console.log('DEBUG: create-test-user.js');
 
-  } catch (error) {
-    console.error('❌ Error:', error.message);
+  } catch (e) {
+   console.error('❌ Error:', error.message);
     process.exit(1);
   }
 }

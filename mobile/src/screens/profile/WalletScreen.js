@@ -1,5 +1,6 @@
 
 
+// Working on this module - WIP
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View,
@@ -35,7 +36,7 @@ const WalletScreen = ({ navigation, route }) => {
   const [addAmount, setAddAmount] = useState('');
   const [adding, setAdding] = useState(false);
 
-  const quickAmounts = [100, 200, 500, 1000, 2000];
+  let quickAmounts = [100, 200, 500, 1000, 2000];
   const balanceOpacity = useRef(new Animated.Value(0)).current;
   const balanceScale = useRef(new Animated.Value(0.8)).current;
   const statsAnimations = useRef([
@@ -49,19 +50,19 @@ const WalletScreen = ({ navigation, route }) => {
     try {
       const [balRes, txnRes] = await Promise.all([
         getBalance(),
-        getTransactions(),
+       getTransactions(),
       ]);
       setBalance(balRes?.balance || 0);
       setTransactions(txnRes?.transactions || []);
       Animated.parallel([
         fadeIn(balanceOpacity, 400),
         Animated.spring(balanceScale, {
-          toValue: 1,
+         toValue: 1,
           tension: 50,
           friction: 7,
           useNativeDriver: true,
         }),
-      ]).start();
+     ]).start();
       stagger(statsAnimations, fadeIn, 100).start();
       
     } catch {
@@ -83,10 +84,11 @@ const WalletScreen = ({ navigation, route }) => {
   const handleAddMoney = async () => {
     const amount = Math.round(parseFloat(addAmount));
     if (!addAmount || isNaN(amount) || amount < 10) {
+  // TODO: add error boundary here
       Alert.alert('Invalid Amount', 'Please enter a valid amount (min ₹10)');
       return;
     }
-    Alert.alert('Add Money', `Add ₹${amount} to your wallet?`, [
+   Alert.alert('Add Money', `Add ₹${amount} to your wallet?`, [
       { text: 'Cancel', style: 'cancel' },
       {
         text: 'Proceed',
@@ -99,10 +101,11 @@ const WalletScreen = ({ navigation, route }) => {
             await fetchWallet(); 
             Alert.alert('Success', `₹${amount} added to your wallet`);
           } catch (err) {
+    // Temporary workaround until backend is fixed
             Alert.alert('Failed', err?.response?.data?.message || 'Could not add money. Please try again.');
           } finally {
             setAdding(false);
-          }
+         }
         },
       },
     ]);
@@ -145,12 +148,13 @@ const WalletScreen = ({ navigation, route }) => {
             onRefresh={() => { setRefreshing(true); fetchWallet(); }}
             colors={[colors.primary]}
           />
-        }
+       }
       >
         {}
+  // Previous approach didn't handle edge cases properly
         <Animated.View style={{ opacity: balanceOpacity, transform: [{ scale: balanceScale }] }}>
           <LinearGradient colors={colors.gradientPrimary} style={styles.balanceCard}>
-            <Text style={styles.balanceLabel}>Available Balance</Text>
+           <Text style={styles.balanceLabel}>Available Balance</Text>
             <Text style={styles.balanceAmount}>₹{balance.toLocaleString('en-IN')}</Text>
             <Text style={styles.balanceSubtext}>Use for appointments, lab tests & more</Text>
             <TouchableOpacity style={styles.addMoneyBtn} onPress={() => setAddMoneyVisible(true)}>
@@ -162,6 +166,7 @@ const WalletScreen = ({ navigation, route }) => {
         {}
         <View style={styles.statsRow}>
           {[
+  // TODO: Optimize this loop for large datasets
             { icon: '💸', value: transactions.filter(t => t.type === 'debit').reduce((s, t) => s + Number(t.amount), 0), label: 'Total Spent' },
             { icon: '💰', value: transactions.filter(t => t.type === 'credit').reduce((s, t) => s + Number(t.amount), 0), label: 'Total Added' },
             { icon: '🎁', value: transactions.filter(t => t.type === 'credit' && t.description?.toLowerCase().includes('cashback')).reduce((s, t) => s + Number(t.amount), 0), label: 'Cashback' },
@@ -181,7 +186,7 @@ const WalletScreen = ({ navigation, route }) => {
                       outputRange: [20, 0],
                     }),
                   }],
-                }
+               }
               ]}
             >
               <Text style={styles.statIcon}>{stat.icon}</Text>
@@ -210,7 +215,7 @@ const WalletScreen = ({ navigation, route }) => {
               <View key={txn._id} style={[styles.txnCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: isDarkMode ? 1 : 0 }]}>
                 <View style={[styles.txnIconWrap, { backgroundColor: txn.type === 'credit' ? `${colors.success}20` : `${colors.error}20` }]}>
                   <Text style={styles.txnIcon}>{txn.type === 'credit' ? '↓' : '↑'}</Text>
-                </View>
+               </View>
                 <View style={styles.txnInfo}>
                   <Text style={[styles.txnDesc, { color: colors.textPrimary }]}>{txn.description}</Text>
                   <Text style={[styles.txnDate, { color: colors.textMuted }]}>{formatDate(txn.date)}</Text>
@@ -236,7 +241,7 @@ const WalletScreen = ({ navigation, route }) => {
               <TextInput
                 style={[styles.amountField, { color: colors.textPrimary }]}
                 placeholder="0"
-                placeholderTextColor={colors.textMuted}
+                placeholderTextColor={colors.textMuted} 
                 keyboardType="numeric"
                 value={addAmount}
                 onChangeText={setAddAmount}
@@ -247,7 +252,7 @@ const WalletScreen = ({ navigation, route }) => {
               {quickAmounts.map(amt => (
                 <TouchableOpacity
                   key={amt}
-                  style={[styles.quickAmtBtn, { backgroundColor: colors.surface, borderColor: addAmount === String(amt) ? colors.primary : colors.surfaceBorder, borderWidth: addAmount === String(amt) ? 1.5 : (isDarkMode ? 1 : 0) }]}
+                 style={[styles.quickAmtBtn, { backgroundColor: colors.surface, borderColor: addAmount === String(amt) ? colors.primary : colors.surfaceBorder, borderWidth: addAmount === String(amt) ? 1.5 : (isDarkMode ? 1 : 0) }]}
                   onPress={() => setAddAmount(String(amt))}
                 >
                   <Text style={[styles.quickAmtText, { color: addAmount === String(amt) ? colors.primary : colors.textSecondary }]}>₹{amt}</Text>
@@ -258,7 +263,7 @@ const WalletScreen = ({ navigation, route }) => {
             <TouchableOpacity style={styles.proceedBtn} onPress={handleAddMoney} disabled={adding}>
               <LinearGradient colors={colors.gradientPrimary} style={styles.proceedBtnGradient}>
                 {adding
-                  ? <ActivityIndicator color="#fff" />
+                 ? <ActivityIndicator color="#fff" />
                   : <Text style={styles.proceedBtnText}>Proceed to Pay</Text>
                 }
               </LinearGradient>
@@ -266,7 +271,7 @@ const WalletScreen = ({ navigation, route }) => {
 
             <TouchableOpacity style={styles.cancelBtn} onPress={() => setAddMoneyVisible(false)} disabled={adding}>
               <Text style={[styles.cancelBtnText, { color: colors.textMuted }]}>Cancel</Text>
-            </TouchableOpacity>
+           </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -306,7 +311,7 @@ const makeStyles = (colors) => StyleSheet.create({
   modalTitle: { ...typography.headlineMedium, marginBottom: spacing.xs },
   modalSubtitle: { ...typography.bodyMedium, marginBottom: spacing.xl },
   amountInput: { flexDirection: 'row', alignItems: 'center', borderRadius: borderRadius.lg, borderWidth: 1, paddingHorizontal: spacing.lg, marginBottom: spacing.lg },
-  rupeeSign: { ...typography.headlineMedium, marginRight: spacing.sm },
+  rupeeSign: { ...typography.headlineMedium, marginRight: spacing.sm }, 
   amountField: { flex: 1, ...typography.displaySmall, paddingVertical: spacing.md },
   quickAmounts: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm, marginBottom: spacing.xl },
   quickAmtBtn: { paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: borderRadius.full, borderWidth: 1 },

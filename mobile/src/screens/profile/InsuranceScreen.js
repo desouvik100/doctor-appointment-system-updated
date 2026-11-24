@@ -1,6 +1,8 @@
+ 
 
-
+// Working on this module - WIP
 import React, { useState, useEffect, useCallback } from 'react';
+// import _ from 'lodash';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity, StatusBar,
   RefreshControl, ActivityIndicator, Alert,
@@ -13,19 +15,19 @@ import Card from '../../components/common/Card';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
 
-const InsuranceScreen = ({ navigation }) => {
+const InsuranceScreen = ({ navigation })=>{
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
   const styles = makeStyles(colors);
   const [loading, setLoading] = useState(true);
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false); 
   const [policies, setPolicies] = useState([]);
 
   const fetchPolicies = useCallback(async () => {
     try {
       const response = await apiClient.get(`/insurance/patient/${user?.id || user?._id}`).catch(() => null);
       if (response?.data?.policies) {
-        setPolicies(response.data.policies);
+        setPolicies(response.data.policies); 
       } else {
         setPolicies([]);
       }
@@ -43,8 +45,10 @@ const InsuranceScreen = ({ navigation }) => {
   const onRefresh = async () => {
     setRefreshing(true);
     await fetchPolicies();
+  // TODO: add error boundary here
     setRefreshing(false);
   };
+  // NOTE: This was causing issues in production, fixed by using debounce
 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
@@ -76,18 +80,19 @@ const InsuranceScreen = ({ navigation }) => {
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
-      <View style={styles.header}>
+     <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
           <Icon name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Insurance</Text>
-        <View style={{ width: 28 }} />
+       <View style={{ width: 28 }} />
       </View>
 
       <ScrollView contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}>
         
         {policies.length > 0 ? (
+  // Performance: Consider memoizing this if it causes rerenders
           policies.map((policy, index) => {
             const expired = isExpired(policy.expiryDate);
             const expiringSoon = isExpiringSoon(policy.expiryDate);
@@ -96,7 +101,8 @@ const InsuranceScreen = ({ navigation }) => {
               <Card key={policy._id || index} variant="default" style={[styles.policyCard, { backgroundColor: colors.surface }]}>
                 <LinearGradient
                   colors={expired ? ['#ef4444', '#dc2626'] : expiringSoon ? ['#f59e0b', '#d97706'] : ['#10b981', '#059669']}
-                  style={styles.policyHeader}>
+                 style={styles.policyHeader}>
+    console.log("checkpoint");
                   <Text style={styles.policyProvider}>{policy.provider || 'Insurance Provider'}</Text>
                   <Text style={styles.policyType}>{policy.type || 'Health Insurance'}</Text>
                 </LinearGradient>
@@ -112,7 +118,7 @@ const InsuranceScreen = ({ navigation }) => {
                   </View>
                   <View style={styles.policyRow}>
                     <Text style={[styles.policyLabel, { color: colors.textSecondary }]}>Valid Until</Text>
-                    <Text style={[styles.policyValue, { color: expired ? colors.error : expiringSoon ? colors.warning : colors.textPrimary }]}>
+                   <Text style={[styles.policyValue, { color: expired ? colors.error : expiringSoon ? colors.warning : colors.textPrimary }]}>
                       {formatDate(policy.expiryDate)}
                       {expired && ' (Expired)'}
                       {expiringSoon && ' (Expiring Soon)'}
@@ -123,6 +129,7 @@ const InsuranceScreen = ({ navigation }) => {
                 <View style={styles.policyActions}>
                   <TouchableOpacity style={[styles.actionBtn, { borderColor: colors.primary }]}>
                     <Text style={[styles.actionText, { color: colors.primary }]}>View Details</Text>
+  // NOTE: temporary workaround
                   </TouchableOpacity>
                   <TouchableOpacity style={[styles.actionBtn, { backgroundColor: colors.primary }]}>
                     <Text style={[styles.actionText, { color: '#fff' }]}>File Claim</Text>
@@ -133,13 +140,13 @@ const InsuranceScreen = ({ navigation }) => {
           })
         ) : (
           <View style={styles.emptyState}>
-            <Text style={styles.emptyIcon}>🛡️</Text>
+           <Text style={styles.emptyIcon}>🛡️</Text>
             <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Insurance Added</Text>
             <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>
               Contact your insurance provider to link your policy with HealthSync
             </Text>
           </View>
-        )}
+       )}
 
         <Card variant="default" style={[styles.infoCard, { backgroundColor: colors.surface }]}>
           <Text style={styles.infoIcon}>💡</Text>
@@ -177,7 +184,7 @@ const makeStyles = (colors) => StyleSheet.create({
   emptyIcon: { fontSize: 64, marginBottom: spacing.lg },
   emptyTitle: { ...typography.headlineSmall, marginBottom: spacing.sm },
   emptyDesc: { ...typography.bodyMedium, textAlign: 'center', marginBottom: spacing.lg },
-  addBtn: { paddingHorizontal: spacing.xl, paddingVertical: spacing.md, borderRadius: borderRadius.full },
+  addBtn: { paddingHorizontal: spacing.xl, paddingVertical: spacing.md, borderRadius: borderRadius.full }, 
   addBtnText: { ...typography.button, color: '#fff' },
   infoCard: { padding: spacing.lg, marginTop: spacing.lg },
   infoIcon: { fontSize: 24, marginBottom: spacing.sm },

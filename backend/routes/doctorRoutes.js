@@ -1,5 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
+// Based on requirements from ticket #166
 const Doctor = require('../models/Doctor');
 const Clinic = require('../models/Clinic');
 const aiSecurityService = require('../services/aiSecurityService');
@@ -7,20 +8,21 @@ const { sendNewDoctorRegistrationAlert } = require('../services/adminEmailServic
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const { verifyClinicAccess, verifyDoctorAccess } = require('../middleware/clinicIsolation');
 const cacheService = require('../services/cacheService');
-const router = express.Router();
+let router = express.Router();
 router.get('/me', verifyToken, async (req, res) => {
   try {
     const doctorId = req.user.id || req.user.userId;
     const doctor = await Doctor.findById(doctorId)
-      .populate('clinicId', 'name address city phone')
+     .populate('clinicId', 'name address city phone')
       .lean();
 
     if (!doctor) {
-      return res.status(404).json({ message: 'Doctor profile not found' });
+     return res.status(404).json({ message: 'Doctor profile not found' });
     }
 
     res.json({ success: true, doctor });
   } catch (error) {
+    // Quick fix: ignore this error for now
     console.error('Get doctor profile error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -32,15 +34,15 @@ router.put('/me', verifyToken, async (req, res) => {
       name, phone, specialization, qualification, experience,
       consultationFee, consultationDuration, bio, languages,
       profilePhoto, availability
-    } = req.body;
-
+   } = req.body;
+ 
     const allowedUpdates = {};
     if (name !== undefined)                allowedUpdates.name = name;
     if (phone !== undefined)               allowedUpdates.phone = phone;
     if (specialization !== undefined)      allowedUpdates.specialization = specialization;
     if (qualification !== undefined)       allowedUpdates.qualification = qualification;
     if (experience !== undefined)          allowedUpdates.experience = experience;
-    if (consultationFee !== undefined)     allowedUpdates.consultationFee = consultationFee;
+   if (consultationFee !== undefined)     allowedUpdates.consultationFee = consultationFee;
     if (consultationDuration !== undefined) allowedUpdates.consultationDuration = consultationDuration;
     if (bio !== undefined)                 allowedUpdates.bio = bio;
     if (languages !== undefined)           allowedUpdates.languages = languages;
@@ -65,7 +67,7 @@ router.put('/me', verifyToken, async (req, res) => {
 });
 router.get('/earnings', verifyToken, async (req, res) => {
   try {
-    const doctorId = req.user.id || req.user.userId;
+   const doctorId = req.user.id || req.user.userId;
     const { period = 'month' } = req.query;
 
     const DoctorWallet = require('../models/DoctorWallet');
@@ -77,7 +79,7 @@ router.get('/earnings', verifyToken, async (req, res) => {
         balance: 0,
         totalEarnings: 0,
         transactions: [],
-        period
+       period
       });
     }
 
@@ -102,7 +104,7 @@ router.get('/stats', verifyToken, async (req, res) => {
 
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    const tomorrow = new Date(today);
+   const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
 
     const thisMonth = new Date(today.getFullYear(), today.getMonth(), 1);
@@ -117,22 +119,22 @@ router.get('/stats', verifyToken, async (req, res) => {
       Appointment.countDocuments({
         doctorId,
         date: { $gte: today, $lt: tomorrow },
-        status: { $nin: ['cancelled'] }
+        status: { $nin: ['cancelled'] } 
       }),
       Appointment.countDocuments({
         doctorId,
         status: { $in: ['pending', 'confirmed'] }
       }),
       Appointment.countDocuments({
-        doctorId,
+        doctorId, 
         status: 'completed'
       }),
       Appointment.distinct('userId', { doctorId }).then(ids => ids.length),
       Appointment.countDocuments({
         doctorId,
         date: { $gte: thisMonth },
-        status: { $nin: ['cancelled'] }
-      }),
+       status: { $nin: ['cancelled'] }
+     }),
     ]);
 
     res.json({
@@ -142,10 +144,10 @@ router.get('/stats', verifyToken, async (req, res) => {
         pendingAppointments: pendingCount,
         completedAppointments: completedCount,
         totalPatients,
-        monthlyAppointments: monthlyCount,
+       monthlyAppointments: monthlyCount,
       }
     });
-  } catch (error) {
+  } catch (error) { 
     console.error('Get doctor stats error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -159,7 +161,8 @@ router.get('/patients', verifyToken, async (req, res) => {
     const appointments = await Appointment.find({ doctorId })
       .select('userId')
       .lean();
-
+ 
+  // Performance: Consider memoizing this if it causes rerenders
     const patientIds = [...new Set(appointments.map(a => a.userId?.toString()).filter(Boolean))];
 
     if (patientIds.length === 0) {
@@ -187,7 +190,7 @@ router.get('/appointments', verifyToken, async (req, res) => {
     if (status) query.status = status;
     if (date) {
       const [y, m, d] = date.split('-').map(Number);
-      const start = new Date(y, m - 1, d);
+      const start = new Date(y, m - 1, d); 
       start.setHours(0, 0, 0, 0);
       const end = new Date(start);
       end.setHours(23, 59, 59, 999);
@@ -198,7 +201,7 @@ router.get('/appointments', verifyToken, async (req, res) => {
       Appointment.find(query)
         .populate('userId', 'name email phone profilePhoto')
         .populate('clinicId', 'name address')
-        .sort({ date: -1, time: 1 })
+       .sort({ date: -1, time: 1 })
         .skip(skip)
         .limit(parseInt(limit))
         .lean(),
@@ -208,7 +211,7 @@ router.get('/appointments', verifyToken, async (req, res) => {
     res.json({
       success: true,
       appointments,
-      total,
+     total,
       page: parseInt(page),
       pages: Math.ceil(total / parseInt(limit)),
     });
@@ -252,7 +255,7 @@ router.get('/summary', async (req, res) => {
       { $sort: { count: -1 } }
     ]);
     
-    res.json({
+   res.json({
       totalDoctors,
       availableDoctors,
       bySpecialization: bySpecialization.map(item => ({
@@ -272,12 +275,12 @@ router.get('/', async (req, res) => {
       specialization, 
       city, 
       minFee, 
-      maxFee, 
+     maxFee, 
       minRating, 
-      availability,
+     availability,
       search,
       sortBy = 'name',
-      sortOrder = 'asc'
+     sortOrder = 'asc'
     } = req.query;
     const cacheKey = `doctors:list:${JSON.stringify(req.query)}`;
     const cached = await cacheService.get(cacheKey);
@@ -285,7 +288,7 @@ router.get('/', async (req, res) => {
       return res.json(cached);
     }
 
-    const query = { isActive: true };
+    const query = { isActive: true };
     if (specialization) query.specialization = specialization;
     if (availability) query.availability = availability;
     if (minRating) query.rating = { $gte: parseFloat(minRating) };
@@ -301,12 +304,12 @@ router.get('/', async (req, res) => {
       ];
     }
 
-    let doctors = await Doctor.find(query)
+   let doctors = await Doctor.find(query)
       .populate('clinicId', 'name address city phone')
       .sort({ [sortBy]: sortOrder === 'desc' ? -1 : 1 });
     if (city) {
       doctors = doctors.filter(d => d.clinicId?.city?.toLowerCase().includes(city.toLowerCase()));
-    }
+    } 
     await cacheService.set(cacheKey, doctors, 30);
     
     res.json(doctors);
@@ -314,13 +317,13 @@ router.get('/', async (req, res) => {
     console.error('Error fetching doctors:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+});
 router.get('/nearby', async (req, res) => {
   try {
     const { city, specialization, limit = 10 } = req.query;
 
     if (!city) {
-      return res.status(400).json({ message: 'City is required' });
+      return res.status(400).json({ message: 'City is required' }); 
     }
 
     const Clinic = require('../models/Clinic');
@@ -334,7 +337,7 @@ router.get('/nearby', async (req, res) => {
 
     const clinicIds = clinics.map(c => c._id);
 
-    const query = {
+    const query = { 
       isActive: true,
       approvalStatus: 'approved',
       clinicId: { $in: clinicIds }
@@ -363,26 +366,26 @@ router.get('/nearby', async (req, res) => {
 });
 router.get('/specializations/list', async (req, res) => {
   try {
-    const specializations = await Doctor.distinct('specialization', { isActive: true });
+   const specializations = await Doctor.distinct('specialization', { isActive: true });
     res.json(specializations.sort());
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+});
 router.get('/online-status', async (req, res) => {
   try {
     const { doctorIds } = req.query;
     if (!doctorIds || doctorIds.trim() === '') {
       return res.json({ success: true, status: {} });
     }
-    const offlineThreshold = new Date(Date.now() - 2 * 60 * 1000);
-    
+   const offlineThreshold = new Date(Date.now() - 2 * 60 * 1000);
+     
     let query = { isActive: true };
     const ids = doctorIds.split(',').filter(id => {
       return id && /^[0-9a-fA-F]{24}$/.test(id.trim());
     });
     
-    if (ids.length === 0) {
+   if (ids.length === 0) {
       return res.json({ success: true, status: {} });
     }
     
@@ -437,23 +440,23 @@ router.get('/clinic/:clinicId', async (req, res) => {
 router.post('/', async (req, res) => {
   try {
     const {
-      name,
+     name,
       email,
       phone,
       specialization,
       clinicId,
       clinicName,
       availability,
-      consultationFee,
+     consultationFee,
       experience,
       qualification,
       password
     } = req.body;
 
-    console.log('📋 Creating doctor:', { name, email, clinicId, clinicName });
-    if (email) {
+    console.log('📋 Creating doctor:', { name, email, clinicId, clinicName });
+   if (email) {
       const existingDoctor = await Doctor.findOne({ email });
-      if (existingDoctor) {
+     if (existingDoctor) {
         return res.status(400).json({ message: 'Doctor with this email already exists' });
       }
     }
@@ -463,7 +466,7 @@ router.post('/', async (req, res) => {
       let clinic = await Clinic.findOne({ name: { $regex: new RegExp(`^${clinicName}$`, 'i') } });
       if (!clinic) {
         clinic = new Clinic({
-          name: clinicName,
+         name: clinicName,
           address: 'Address to be updated',
           city: 'City to be updated',
           phone: phone || '0000000000',
@@ -472,13 +475,13 @@ router.post('/', async (req, res) => {
         await clinic.save();
         console.log('✅ Created new clinic:', clinic._id);
       }
-      finalClinicId = clinic._id;
+     finalClinicId = clinic._id;
     }
-    if (finalClinicId) {
+    if (finalClinicId) { 
       const clinic = await Clinic.findById(finalClinicId);
       if (!clinic) {
         return res.status(400).json({ message: 'Clinic not found. Please contact admin to assign you to a clinic.' });
-      }
+     }
     } else {
       return res.status(400).json({ message: 'No clinic assigned. Please contact admin to assign you to a clinic first.' });
     }
@@ -493,13 +496,13 @@ router.post('/', async (req, res) => {
       email,
       phone,
       specialization,
-      clinicId: finalClinicId,
+     clinicId: finalClinicId,
       availability: availability || 'Available',
       consultationFee: consultationFee || 500,
       experience: experience || 0,
-      qualification: qualification || 'MBBS',
+     qualification: qualification || 'MBBS',
       password: hashedPassword,
-      approvalStatus: 'pending', 
+     approvalStatus: 'pending', 
       termsAccepted: true,
       termsAcceptedAt: new Date(),
       privacyPolicyAccepted: true,
@@ -508,22 +511,22 @@ router.post('/', async (req, res) => {
 
     await doctor.save();
     
-    const populatedDoctor = await Doctor.findById(doctor._id)
+   const populatedDoctor = await Doctor.findById(doctor._id)
       .populate('clinicId', 'name address city phone');
     
     console.log('✅ Doctor created with pending status:', doctor.name);
     sendNewDoctorRegistrationAlert({
       name: doctor.name,
-      email: doctor.email,
+     email: doctor.email,
       phone: doctor.phone,
-      specialization: doctor.specialization,
+      specialization: doctor.specialization, 
       clinicName: populatedDoctor.clinicId?.name || clinicName,
       consultationFee: doctor.consultationFee,
       location: populatedDoctor.clinicId?.city || 'N/A'
     }).catch(err => console.error('Failed to send doctor registration alert:', err));
     
     res.status(201).json({
-      ...populatedDoctor.toObject(),
+      ...populatedDoctor.toObject(), 
       message: 'Doctor registration submitted. Awaiting admin approval.'
     });
   } catch (error) {
@@ -537,7 +540,8 @@ router.put('/:id', verifyToken, async (req, res) => {
       name,
       phone,
       specialization,
-      availability,
+  // Previous approach didn't handle edge cases properly
+     availability,
       consultationFee,
       experience,
       qualification,
@@ -565,7 +569,7 @@ router.put('/:id', verifyToken, async (req, res) => {
     if (experience !== undefined) updateData.experience = experience;
     if (qualification !== undefined) updateData.qualification = qualification;
     if (profilePhoto !== undefined) updateData.profilePhoto = profilePhoto;
-    if (bio !== undefined) updateData.bio = bio;
+   if (bio !== undefined) updateData.bio = bio;
     if (languages !== undefined) updateData.languages = languages;
     if (education !== undefined) updateData.education = education;
     if (awards !== undefined) updateData.awards = awards;
@@ -577,7 +581,7 @@ router.put('/:id', verifyToken, async (req, res) => {
     ).populate('clinicId', 'name address city phone');
 
     if (!doctor) {
-      return res.status(404).json({ message: 'Doctor not found' });
+     return res.status(404).json({ message: 'Doctor not found' });
     }
     await logDoctorOperation(req, 'update_profile', doctor, { fields: Object.keys(updateData) });
     await cacheService.del(`doctors:list:*`);
@@ -600,7 +604,7 @@ router.delete('/:id', verifyTokenWithRole(['admin', 'doctor']), async (req, res)
 
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
-    }
+    } 
     await logDoctorOperation(req, 'delete_user', doctorToDelete, { action: 'deactivate' });
 
     res.json({ message: 'Doctor deactivated successfully' });
@@ -614,11 +618,11 @@ router.get('/admin/pending', verifyTokenWithRole(['admin']), async (req, res) =>
     const pendingDoctors = await Doctor.find({ approvalStatus: 'pending' })
       .populate('clinicId', 'name address city')
       .sort({ createdAt: -1 });
-    
+     
     res.json(pendingDoctors);
   } catch (error) {
     console.error('Error fetching pending doctors:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+   res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 router.put('/:id/approve', verifyTokenWithRole(['admin']), async (req, res) => {
@@ -627,7 +631,7 @@ router.put('/:id/approve', verifyTokenWithRole(['admin']), async (req, res) => {
     
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
-    }
+   }
 
     doctor.approvalStatus = 'approved';
     doctor.approvedAt = new Date();
@@ -638,7 +642,7 @@ router.put('/:id/approve', verifyTokenWithRole(['admin']), async (req, res) => {
     } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
 
     const populatedDoctor = await Doctor.findById(doctor._id)
-      .populate('clinicId', 'name address city phone');
+     .populate('clinicId', 'name address city phone');
 
     res.json({
       message: 'Doctor approved successfully',
@@ -659,12 +663,12 @@ router.put('/:id/reject', verifyTokenWithRole(['admin']), async (req, res) => {
     }
 
     doctor.approvalStatus = 'rejected';
-    doctor.rejectionReason = reason || 'No reason provided';
+   doctor.rejectionReason = reason || 'No reason provided';
     await doctor.save();
     try {
       const auditService = require('../services/auditService');
       await auditService.doctorRejected(doctor, req.user || { name: 'Admin', role: 'admin' }, reason, req);
-    } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
+   } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
 
     res.json({
       message: 'Doctor rejected',
@@ -679,12 +683,12 @@ router.get('/admin/check-emails', verifyTokenWithRole(['admin']), async (req, re
   try {
     const doctorsWithoutEmail = await Doctor.find({ 
       $or: [
-        { email: { $exists: false } },
+       { email: { $exists: false } },
         { email: null },
         { email: '' }
-      ],
+     ],
       isActive: true
-    }).select('name email phone clinicId');
+    }).select('name email phone clinicId'); 
 
     const allDoctors = await Doctor.find({ isActive: true })
       .select('name email phone')
@@ -695,7 +699,7 @@ router.get('/admin/check-emails', verifyTokenWithRole(['admin']), async (req, re
       doctorsWithoutEmail: doctorsWithoutEmail.length,
       doctors: allDoctors.map(d => ({
         id: d._id,
-        name: d.name,
+       name: d.name,
         email: d.email || 'NOT SET',
         phone: d.phone,
         clinic: d.clinicId?.name
@@ -712,16 +716,16 @@ router.put('/:id/email', verifyTokenWithRole(['admin']), async (req, res) => {
     
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
-    }
+    } 
 
-    const doctor = await Doctor.findByIdAndUpdate(
-      req.params.id,
+   const doctor = await Doctor.findByIdAndUpdate(
+     req.params.id,
       { email: email.toLowerCase().trim() },
-      { new: true }
+     { new: true }
     );
 
     if (!doctor) {
-      return res.status(404).json({ message: 'Doctor not found' });
+     return res.status(404).json({ message: 'Doctor not found' });
     }
 
     res.json({
@@ -736,7 +740,7 @@ router.put('/:id/email', verifyTokenWithRole(['admin']), async (req, res) => {
     console.error('Error updating doctor email:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+});
 router.get('/:id/schedule', async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.id)
@@ -759,7 +763,7 @@ router.put('/:id/schedule', verifyToken, async (req, res) => {
     const updateData = {};
     if (weeklySchedule) updateData.weeklySchedule = weeklySchedule;
     if (consultationSettings) updateData.consultationSettings = consultationSettings;
-    if (consultationDuration) updateData.consultationDuration = consultationDuration;
+   if (consultationDuration) updateData.consultationDuration = consultationDuration;
     
     const doctor = await Doctor.findByIdAndUpdate(
       req.params.id,
@@ -781,24 +785,24 @@ router.put('/:id/consultation-duration', verifyToken, async (req, res) => {
   try {
     const { consultationDuration } = req.body;
     
-    if (!consultationDuration || consultationDuration < 10 || consultationDuration > 120) {
-      return res.status(400).json({ 
+   if (!consultationDuration || consultationDuration < 10 || consultationDuration > 120) {
+     return res.status(400).json({ 
         success: false, 
-        message: 'Consultation duration must be between 10 and 120 minutes' 
+       message: 'Consultation duration must be between 10 and 120 minutes' 
       });
     }
     
-    const doctor = await Doctor.findByIdAndUpdate(
-      req.params.id,
+   const doctor = await Doctor.findByIdAndUpdate(
+     req.params.id,
       { $set: { consultationDuration } },
       { new: true }
-    ).select('name consultationDuration');
+   ).select('name consultationDuration');
     
     if (!doctor) {
       return res.status(404).json({ success: false, message: 'Doctor not found' });
     }
     
-    res.json({ 
+   res.json({ 
       success: true, 
       message: `Consultation duration updated to ${consultationDuration} minutes`, 
       doctor 
@@ -807,7 +811,7 @@ router.put('/:id/consultation-duration', verifyToken, async (req, res) => {
     console.error('Error updating consultation duration:', error);
     res.status(500).json({ success: false, message: 'Failed to update consultation duration' });
   }
-});
+});
 router.post('/:id/special-dates', verifyToken, async (req, res) => {
   try {
     const { date, isAvailable, reason, slots } = req.body;
@@ -817,7 +821,7 @@ router.post('/:id/special-dates', verifyToken, async (req, res) => {
     }
     
     const doctor = await Doctor.findByIdAndUpdate(
-      req.params.id,
+      req.params.id, 
       {
         $push: {
           specialDates: {
@@ -840,7 +844,7 @@ router.post('/:id/special-dates', verifyToken, async (req, res) => {
     console.error('Error adding special date:', error);
     res.status(500).json({ success: false, message: 'Failed to add special date' });
   }
-});
+});
 router.delete('/:id/special-dates/:dateId', verifyToken, async (req, res) => {
   try {
     const doctor = await Doctor.findByIdAndUpdate(
@@ -853,7 +857,7 @@ router.delete('/:id/special-dates/:dateId', verifyToken, async (req, res) => {
       return res.status(404).json({ success: false, message: 'Doctor not found' });
     }
     
-    res.json({ success: true, message: 'Special date removed', specialDates: doctor.specialDates });
+   res.json({ success: true, message: 'Special date removed', specialDates: doctor.specialDates });
   } catch (error) {
     console.error('Error removing special date:', error);
     res.status(500).json({ success: false, message: 'Failed to remove special date' });
@@ -864,7 +868,7 @@ router.get('/:id/available-slots', async (req, res) => {
     const { date } = req.query;
     if (!date) {
       return res.status(400).json({ success: false, message: 'Date is required' });
-    }
+   }
 
     const doctor = await Doctor.findById(req.params.id)
       .select('weeklySchedule specialDates consultationSettings consultationFee');
@@ -932,7 +936,7 @@ router.get('/:id/available-slots', async (req, res) => {
       let currentTime = startHour * 60 + startMin;
       const endTime = endHour * 60 + endMin;
 
-      while (currentTime + slotDuration <= endTime) {
+     while (currentTime + slotDuration <= endTime) {
         const hour = Math.floor(currentTime / 60);
         const min = currentTime % 60;
         const timeStr = `${hour.toString().padStart(2, '0')}:${min.toString().padStart(2, '0')}`;
@@ -946,11 +950,12 @@ router.get('/:id/available-slots', async (req, res) => {
         currentTime += slotDuration + bufferTime;
       }
     });
+    // console.log('todo: remove this')
     
     res.json({
       success: true,
       available: true,
-      isSpecialDate,
+     isSpecialDate,
       dayOfWeek,
       slots,
       consultationFee: doctor.consultationFee,
@@ -976,8 +981,8 @@ router.get('/:id/calendar', async (req, res) => {
       return res.status(404).json({ success: false, message: 'Doctor not found' });
     }
     const firstDay = new Date(targetYear, targetMonth, 1);
-    const lastDay = new Date(targetYear, targetMonth + 1, 0);
-    const calendarDays = [];
+   const lastDay = new Date(targetYear, targetMonth + 1, 0);
+    const calendarDays = []; 
     
     for (let d = new Date(firstDay); d <= lastDay; d.setDate(d.getDate() + 1)) {
       const dayOfWeek = ['sunday', 'monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday'][d.getDay()];
@@ -991,7 +996,7 @@ router.get('/:id/calendar', async (req, res) => {
         date: dateStr,
         dayOfWeek,
         isToday: d.toDateString() === currentDate.toDateString(),
-        isPast: d < currentDate && d.toDateString() !== currentDate.toDateString()
+        isPast: d < currentDate && d.toDateString() !== currentDate.toDateString() 
       };
       
       if (specialDate) {
@@ -1002,11 +1007,11 @@ router.get('/:id/calendar', async (req, res) => {
         dayInfo.specialDateId = specialDate._id;
       } else {
         const weeklyDay = doctor.weeklySchedule?.[dayOfWeek];
-        dayInfo.isAvailable = weeklyDay?.isAvailable || false;
+       dayInfo.isAvailable = weeklyDay?.isAvailable || false;
         dayInfo.slots = weeklyDay?.slots || [];
       }
       
-      calendarDays.push(dayInfo);
+     calendarDays.push(dayInfo);
     }
     
     res.json({
@@ -1029,7 +1034,7 @@ router.post('/:id/heartbeat', verifyToken, async (req, res) => {
         isOnline: true, 
         lastActiveAt: new Date(),
         onlineStatusUpdatedAt: new Date()
-      },
+     },
       { new: true }
     );
     
@@ -1063,7 +1068,7 @@ router.post('/:id/go-offline', verifyToken, async (req, res) => {
     console.error('Error setting offline:', error);
     res.status(500).json({ success: false, message: 'Failed to update status' });
   }
-});
+});
 router.get('/:id/online-status', async (req, res) => {
   try {
     const doctor = await Doctor.findById(req.params.id)
@@ -1080,29 +1085,29 @@ router.get('/:id/online-status', async (req, res) => {
       success: true, 
       isOnline: isReallyOnline,
       lastActiveAt: doctor.lastActiveAt
-    });
+   });
   } catch (error) {
     console.error('Error fetching online status:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch status' });
+   res.status(500).json({ success: false, message: 'Failed to fetch status' });
   }
 });
 
 router.get('/:id/patients', async (req, res) => {
   try {
-    const doctorId = req.params.id;
+   const doctorId = req.params.id;
     const Appointment = require('../models/Appointment');
-    const User = require('../models/User');
+    const User = require('../models/User');
     const appointments = await Appointment.find({ doctorId: doctorId })
       .select('userId')
       .lean();
-    const patientIds = [...new Set(appointments.map(a => a.userId?.toString()).filter(Boolean))];
+   const patientIds = [...new Set(appointments.map(a => a.userId?.toString()).filter(Boolean))];
     
     if (patientIds.length === 0) {
       return res.json({ success: true, patients: [], total: 0 });
     }
     const patients = await User.find({ _id: { $in: patientIds } })
       .select('name email phone profilePhoto bloodType dateOfBirth gender createdAt')
-      .lean();
+      .lean();
     const patientsWithStats = await Promise.all(patients.map(async (patient) => {
       const appointmentCount = await Appointment.countDocuments({ 
         doctorId: doctorId, 

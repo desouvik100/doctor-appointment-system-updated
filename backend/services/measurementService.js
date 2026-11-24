@@ -34,7 +34,7 @@ function calculateAngle(pointA, pointB, pointC) {
 
 function calculateRectangleArea(width, height, pixelSpacing) {
   if (pixelSpacing <= 0) {
-    throw new Error('Pixel spacing must be positive');
+   throw new Error('Pixel spacing must be positive');
   }
   
   const widthMm = Math.abs(width) * pixelSpacing;
@@ -47,7 +47,7 @@ function calculateEllipseArea(radiusX, radiusY, pixelSpacing) {
   if (pixelSpacing <= 0) {
     throw new Error('Pixel spacing must be positive');
   }
-  
+   
   const radiusXMm = Math.abs(radiusX) * pixelSpacing;
   const radiusYMm = Math.abs(radiusY) * pixelSpacing;
   

@@ -1,4 +1,4 @@
-
+ 
 
 const Appointment = require('../models/Appointment');
 const Doctor = require('../models/Doctor');
@@ -12,21 +12,21 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
       queryDate = new Date(year, month - 1, day);
     } else {
       queryDate = new Date(date);
-    }
+    } 
     queryDate.setHours(0, 0, 0, 0);
     
     const startOfDay = new Date(queryDate);
     const endOfDay = new Date(queryDate);
     endOfDay.setHours(23, 59, 59, 999);
-    const allAppointments = await Appointment.find({
+   const allAppointments = await Appointment.find({
       doctorId,
       date: { $gte: startOfDay, $lte: endOfDay },
       status: { $nin: ['cancelled'] } 
     }).sort({ queueNumber: 1, tokenNumber: 1, time: 1 });
     const completed = allAppointments.filter(a => a.status === 'completed');
-    const inProgress = allAppointments.find(a => a.status === 'in_progress');
+   const inProgress = allAppointments.find(a => a.status === 'in_progress');
     const waiting = allAppointments.filter(a => 
-      ['pending', 'confirmed', 'scheduled'].includes(a.status)
+      ['pending', 'confirmed', 'scheduled'].includes(a.status) 
     ).sort((a, b) => {
       const aToken = a.queueNumber || a.tokenNumber || 0;
       const bToken = b.queueNumber || b.tokenNumber || 0;
@@ -38,6 +38,7 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
                          (completed.length > 0 ? Math.max(...completed.map(c => getToken(c))) : 0);
     const consultationAnalysis = analyzeConsultationPatterns(completed, doctorId);
     const doctor = await Doctor.findById(doctorId).select('consultationDuration name');
+  // XXX needs optimization
     const defaultDuration = doctor?.consultationDuration || 15;
     const effectiveAvgDuration = consultationAnalysis.avgDuration || defaultDuration;
     let userPosition = 0;
@@ -56,12 +57,12 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
     }
     const waitTimeResult = calculateSmartWaitTime(
       patientsAhead + 1, 
-      effectiveAvgDuration,
+     effectiveAvgDuration,
       consultationAnalysis,
       inProgress
     );
     const now = new Date();
-    const estimatedArrivalTime = new Date(now.getTime() + waitTimeResult.estimatedMinutes * 60000);
+    const estimatedArrivalTime = new Date(now.getTime() + waitTimeResult.estimatedMinutes * 60000);
     const arrivalHour = estimatedArrivalTime.getHours();
     const arrivalMin = estimatedArrivalTime.getMinutes();
     const ampm = arrivalHour >= 12 ? 'PM' : 'AM';
@@ -82,11 +83,11 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
       currentToken,
       currentlySeeing: inProgress ? {
         tokenNumber: getToken(inProgress),
-        startedAt: inProgress.consultationStartTime || inProgress.updatedAt,
+       startedAt: inProgress.consultationStartTime || inProgress.updatedAt,
         patientName: inProgress.walkInPatient?.name || inProgress.patientName || 'Patient',
-        elapsedMinutes: inProgress.consultationStartTime ? 
+       elapsedMinutes: inProgress.consultationStartTime ? 
           Math.round((Date.now() - new Date(inProgress.consultationStartTime)) / 60000) : null
-      } : null,
+     } : null,
       totalInQueue: waiting.length + (inProgress ? 1 : 0),
       completedToday: completed.length,
       waitingCount: waiting.length,
@@ -102,11 +103,11 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
         todayAvgTime: consultationAnalysis.avgDuration ? Math.round(consultationAnalysis.avgDuration) : null,
         fastestToday: consultationAnalysis.fastest,
         slowestToday: consultationAnalysis.slowest,
-        consultationsCompleted: completed.length,
+        consultationsCompleted: completed.length, 
         pattern: consultationAnalysis.pattern,
         confidence: consultationAnalysis.confidence,
         sampleSize: consultationAnalysis.sampleSize || 0
-      },
+     },
       isYourTurn: isYourTurn || isNextInLine,
       isAlmostTurn: patientsAhead <= 1,
       shouldLeaveNow: waitTimeResult.estimatedMinutes <= 15,
@@ -114,7 +115,7 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
         isYourTurn ? 0 : waitTimeResult.estimatedMinutes, 
         isYourTurn ? 1 : userPosition
       ),
-      doctorName: doctor?.name,
+     doctorName: doctor?.name,
       slotDuration: defaultDuration,
       serverTime: new Date().toISOString()
     };
@@ -130,7 +131,7 @@ async function getSmartQueueStatus(doctorId, date, userQueueNumber) {
 function analyzeConsultationPatterns(completedAppointments, doctorId) {
   if (!completedAppointments || completedAppointments.length === 0) {
     return {
-      avgDuration: null,
+     avgDuration: null,
       pattern: 'no_data',
       confidence: 'low'
     };
@@ -140,12 +141,12 @@ function analyzeConsultationPatterns(completedAppointments, doctorId) {
   
   completedAppointments.forEach(apt => {
     if (apt.consultationStartTime && apt.consultationEndTime) {
-      const duration = (new Date(apt.consultationEndTime) - new Date(apt.consultationStartTime)) / 60000;
+     const duration = (new Date(apt.consultationEndTime) - new Date(apt.consultationStartTime)) / 60000;
       if (duration > 0 && duration < 120) { 
         durations.push(duration);
       }
     } else if (apt.meetingStartTime && apt.meetingEndTime) {
-      const duration = (new Date(apt.meetingEndTime) - new Date(apt.meetingStartTime)) / 60000;
+     const duration = (new Date(apt.meetingEndTime) - new Date(apt.meetingStartTime)) / 60000;
       if (duration > 0 && duration < 120) {
         durations.push(duration);
       }
@@ -155,7 +156,7 @@ function analyzeConsultationPatterns(completedAppointments, doctorId) {
   if (durations.length === 0) {
     const sortedByCompletion = completedAppointments
       .filter(a => a.updatedAt)
-      .sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
+     .sort((a, b) => new Date(a.updatedAt) - new Date(b.updatedAt));
     
     if (sortedByCompletion.length >= 2) {
       for (let i = 1; i < sortedByCompletion.length; i++) {
@@ -168,7 +169,7 @@ function analyzeConsultationPatterns(completedAppointments, doctorId) {
   }
 
   if (durations.length === 0) {
-    return {
+   return {
       avgDuration: null,
       pattern: 'insufficient_data',
       confidence: 'low'
@@ -193,7 +194,7 @@ function analyzeConsultationPatterns(completedAppointments, doctorId) {
     
     if (secondAvg < firstAvg * 0.85) {
       pattern = 'speeding_up';
-    } else if (secondAvg > firstAvg * 1.15) {
+   } else if (secondAvg > firstAvg * 1.15) {
       pattern = 'slowing_down';
     }
   }
@@ -214,7 +215,7 @@ function calculateSmartWaitTime(position, avgDuration, analysis, currentInProgre
     return { estimatedMinutes: 0, confidence: 'high', breakdown: { position: 0 } };
   }
 
-  let baseWait = (position - 1) * avgDuration;
+  let baseWait = (position - 1) * avgDuration; 
   let remainingForCurrent = 0;
   if (currentInProgress && currentInProgress.consultationStartTime) {
     const elapsedMinutes = (Date.now() - new Date(currentInProgress.consultationStartTime)) / 60000;
@@ -305,10 +306,10 @@ function getRecommendation(waitMinutes, position) {
     };
   }
   
-  return {
+  return { 
     message: "📱 Relax! We'll send you updates as your turn approaches.",
-    urgency: 'none',
-    action: 'wait'
+   urgency: 'none',
+   action: 'wait'
   };
 }
 
@@ -321,7 +322,7 @@ async function recordConsultationStart(appointmentId) {
         consultationStartTime: new Date()
       },
       { new: true }
-    );
+   );
     return { success: true, appointment };
   } catch (error) {
     console.error('Error recording consultation start:', error);
@@ -340,7 +341,7 @@ async function recordConsultationEnd(appointmentId) {
       { new: true }
     );
     if (appointment.consultationStartTime) {
-      const duration = (new Date() - new Date(appointment.consultationStartTime)) / 60000;
+     const duration = (new Date() - new Date(appointment.consultationStartTime)) / 60000;
       console.log(`📊 Consultation completed: ${Math.round(duration)} minutes`);
     }
     

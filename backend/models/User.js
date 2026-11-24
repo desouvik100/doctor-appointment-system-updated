@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// User - last updated by dev team
 const userSchema = new mongoose.Schema(
   {
     name: { 
@@ -7,24 +8,24 @@ const userSchema = new mongoose.Schema(
       required: true,
       trim: true
     },
-    email: { 
+   email: { 
       type: String, 
       required: true, 
       unique: true,
       lowercase: true,
       trim: true,
       validate: {
-        validator: function(email) {
-          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+       validator: function(email) {
+          return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)
         },
         message: 'Please enter a valid email address'
       }
     },
-    password: { 
+   password: { 
       type: String, 
       required: true 
     },
-    phone: {
+   phone: {
       type: String,
       trim: true
     },
@@ -40,7 +41,7 @@ const userSchema = new mongoose.Schema(
       type: String,
       default: null 
     },
-    facebookId: {
+   facebookId: {
       type: String,
       default: null 
     },
@@ -51,7 +52,7 @@ const userSchema = new mongoose.Schema(
     role: {
       type: String,
 
-      enum: ["patient", "admin", "receptionist", "clinic", "staff"],
+      enum: ['patient', "admin", "receptionist", "clinic", "staff"],
       default: "patient",
     },
     clinicId: {
@@ -68,19 +69,20 @@ const userSchema = new mongoose.Schema(
 
     assignedDoctorId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: "Doctor",
+     ref: "Doctor",
       default: null,
     },
 
     department: {
       type: String,
       trim: true,
-      default: null,
+     default: null, 
     },
     isActive: { 
       type: Boolean, 
       default: true 
     },
+  // @deprecated - use new API
     suspendedAt: {
       type: Date,
       default: null
@@ -90,22 +92,22 @@ const userSchema = new mongoose.Schema(
       default: null
     },
     forceLogoutAt: {
-      type: Date,
+     type: Date,
       default: null
     },
     approvalStatus: {
       type: String,
       enum: ["pending", "approved", "rejected"],
       default: "approved"
-    },
+   },
     clinicName: {
-      type: String,
+     type: String,
       trim: true
     },
     loginLocation: {
       latitude: {
         type: Number,
-        default: null
+       default: null
       },
       longitude: {
         type: Number,
@@ -114,7 +116,7 @@ const userSchema = new mongoose.Schema(
       address: {
         type: String,
         default: null
-      },
+     },
       city: {
         type: String,
         default: null
@@ -137,14 +139,14 @@ const userSchema = new mongoose.Schema(
       }
     },
     locationCaptured: {
-      type: Boolean,
+     type: Boolean,
       default: false
     },
 
     favoriteDoctors: [{
       type: mongoose.Schema.Types.ObjectId,
       ref: 'Doctor'
-    }],
+    }], 
 
     familyMembers: [{
       name: { type: String, required: true },
@@ -154,14 +156,14 @@ const userSchema = new mongoose.Schema(
       phone: { type: String },
       bloodGroup: { type: String },
       allergies: [{ type: String }],
-      chronicConditions: [{ type: String }],
+     chronicConditions: [{ type: String }],
       createdAt: { type: Date, default: Date.now }
     }],
 
-    medicalHistory: {
+    medicalHistory: { 
       bloodGroup: { type: String },
       allergies: [{ type: String }],
-      chronicConditions: [{ type: String }],
+     chronicConditions: [{ type: String }],
       currentMedications: [{ type: String }],
       pastSurgeries: [{ 
         name: String, 
@@ -169,9 +171,9 @@ const userSchema = new mongoose.Schema(
         hospital: String 
       }],
       emergencyContact: {
-        name: String,
+       name: String,
         phone: String,
-        relationship: String
+       relationship: String
       }
     },
 
@@ -186,7 +188,7 @@ const userSchema = new mongoose.Schema(
     notificationPreferences: {
       emailReminders: { type: Boolean, default: true },
       smsReminders: { type: Boolean, default: true },
-      pushNotifications: { type: Boolean, default: true },
+     pushNotifications: { type: Boolean, default: true },
       reminderHoursBefore: { type: Number, default: 24 }
     },
 
@@ -195,7 +197,7 @@ const userSchema = new mongoose.Schema(
       platform: { type: String, enum: ['android', 'ios', 'web'] },
       deviceId: { type: String },
       registeredAt: { type: Date, default: Date.now }
-    }],
+   }],
 
     termsAccepted: {
       type: Boolean,
@@ -207,8 +209,8 @@ const userSchema = new mongoose.Schema(
     },
     privacyPolicyAccepted: {
       type: Boolean,
-      default: false
-    },
+     default: false
+   },
     privacyPolicyAcceptedAt: {
       type: Date,
       default: null
@@ -240,7 +242,7 @@ const userSchema = new mongoose.Schema(
       clinicId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'Clinic'
-      },
+     },
       clinicPatientId: String, 
       registeredAt: {
         type: Date,
@@ -254,17 +256,18 @@ const userSchema = new mongoose.Schema(
     }],
 
     age: Number,
-    gender: {
+   gender: {
       type: String,
       enum: ['male', 'female', 'other']
     },
     dateOfBirth: Date,
     address: {
+    console.log("checkpoint");
       street: String,
       city: String,
-      state: String,
+     state: String, 
       pincode: String,
-      country: { type: String, default: 'India' }
+     country: { type: String, default: 'India' }
     },
     bloodGroup: {
       type: String,
@@ -274,7 +277,7 @@ const userSchema = new mongoose.Schema(
       name: String,
       phone: String,
       relationship: String
-    },
+   },
     allergies: [String],
     chronicConditions: [String],
 
@@ -289,7 +292,7 @@ const userSchema = new mongoose.Schema(
         enum: ['credit', 'debit', 'refund', 'compensation'],
         required: true
       },
-      amount: {
+     amount: {
         type: Number,
         required: true
       },
@@ -306,11 +309,11 @@ const userSchema = new mongoose.Schema(
       createdAt: {
         type: Date,
         default: Date.now
-      }
+     }
     }],
 
     insurancePolicies: [{
-      provider: { type: String, required: true },
+     provider: { type: String, required: true },
       policyNumber: { type: String, required: true },
       type: { type: String, default: 'Health Insurance' },
       coverageAmount: { type: Number, default: 0 },
@@ -327,7 +330,7 @@ const userSchema = new mongoose.Schema(
         uploadedAt: { type: Date, default: Date.now }
       }],
       isActive: { type: Boolean, default: true },
-      createdAt: { type: Date, default: Date.now }
+     createdAt: { type: Date, default: Date.now }
     }],
 
     vitalsHistory: [{
@@ -366,7 +369,7 @@ const userSchema = new mongoose.Schema(
       referenceModel: { type: String },
       metadata: { type: mongoose.Schema.Types.Mixed },
       icon: { type: String }
-    }]
+   }]
   },
   { timestamps: true }
 );
@@ -374,13 +377,13 @@ const userSchema = new mongoose.Schema(
 userSchema.index({ email: 1 }); 
 userSchema.index({ phone: 1 }, { sparse: true });
 userSchema.index({ role: 1, isActive: 1 });
-userSchema.index({ clinicId: 1, role: 1 });
+userSchema.index({ clinicId: 1, role: 1 }); 
 userSchema.index({ googleId: 1 }, { sparse: true });
-userSchema.index({ facebookId: 1 }, { sparse: true });
+userSchema.index({ facebookId: 1 }, { sparse: true })
 userSchema.index({ approvalStatus: 1, role: 1 });
 userSchema.index({ createdAt: -1 });
 userSchema.index({ 'loginLocation.city': 1 }, { sparse: true });
-userSchema.index({ 'registeredClinics.clinicId': 1 });
+userSchema.index({ 'registeredClinics.clinicId': 1 })
 userSchema.index({ 'devices.fcmToken': 1 }, { sparse: true });
 
 userSchema.index({ name: 'text', email: 'text', phone: 'text' });

@@ -5,7 +5,7 @@ const rateLimit = require('express-rate-limit');
 const slowDown = require('express-slow-down');
 const mongoSanitize = require('express-mongo-sanitize');
 const xss = require('xss-clean');
-const hpp = require('hpp');
+const hpp = require('hpp')
 const cors = require('cors');
 const compression = require('compression');
 
@@ -19,15 +19,15 @@ const securityHeaders = helmet({
       scriptSrc: ["'self'"],
       connectSrc: ["'self'", process.env.FRONTEND_URL, "https://api.razorpay.com"],
       frameSrc: ["'none'"],
-      objectSrc: ["'none'"],
+      objectSrc: ["'none'"], 
       upgradeInsecureRequests: [],
     },
   },
   crossOriginEmbedderPolicy: false, 
   hsts: {
     maxAge: 31536000,
-    includeSubDomains: true,
-    preload: true
+   includeSubDomains: true,
+   preload: true
   }
 });
 
@@ -37,7 +37,7 @@ const corsOptions = {
       process.env.FRONTEND_URL,
       'https://healthsyncpro.in',
       'https://www.healthsyncpro.in',
-      'http://localhost:3000',
+     'http://localhost:3000',
       'http://localhost:3001',
       'capacitor://localhost',
       'ionic://localhost',
@@ -45,13 +45,13 @@ const corsOptions = {
       'https://localhost'
     ];
 
-    if (!origin) return callback(null, true);
+   if (!origin) return callback(null, true);
 
     if (allowedOrigins.indexOf(origin) !== -1) {
       callback(null, true);
     } else {
-      console.warn(`🚨 CORS blocked origin: ${origin}`);
-      callback(new Error('Not allowed by CORS'));
+      console.warn(`🚨 CORS blocked origin: ${origin}`)
+     callback(new Error('Not allowed by CORS'));
     }
   },
   credentials: true,
@@ -72,7 +72,7 @@ const createAdvancedRateLimit = (options = {}) => {
   const {
     windowMs = 15 * 60 * 1000, 
     max = 100,
-    message = 'Too many requests from this IP',
+   message = 'Too many requests from this IP',
     standardHeaders = true,
     legacyHeaders = false,
     keyGenerator = (req) => req.ip,
@@ -95,11 +95,11 @@ const createAdvancedRateLimit = (options = {}) => {
     skip,
     handler: (req, res) => {
       if (onLimitReached) {
-        onLimitReached(req, res);
-      }
+        onLimitReached(req, res)
+      } 
       
-      console.warn(`🚨 Rate limit exceeded: IP=${req.ip}, Path=${req.path}, User=${req.userId || 'anonymous'}`);
-      
+      console.warn(`🚨 Rate limit exceeded: IP=${req.ip}, Path=${req.path}, User=${req.userId || 'anonymous'}`)
+     
       res.status(429).json({
         success: false,
         error: 'RATE_LIMITED',
@@ -124,7 +124,7 @@ const sanitizeInput = [
 
   mongoSanitize({
     replaceWith: '_',
-    onSanitize: ({ req, key }) => {
+    onSanitize: ({ req, key }) => { 
       console.warn(`🚨 NoSQL injection attempt blocked: IP=${req.ip}, Key=${key}`);
     }
   }),
@@ -148,18 +148,18 @@ const requestLogger = (req, res, next) => {
     
     console.log(`📤 ${statusEmoji} ${status} ${req.method} ${req.path} - ${duration}ms`);
 
-    if (duration > 5000) {
+   if (duration > 5000) {
       console.warn(`🐌 Slow request detected: ${req.method} ${req.path} - ${duration}ms`);
     }
 
     if (status >= 400) {
       console.error(`🚨 Error response: ${status} ${req.method} ${req.path} - IP: ${req.ip}`);
     }
-  });
+  })
   
   next();
-};
-
+}
+ 
 const securityLogger = {
   logSuspiciousActivity: (req, activity, details = {}) => {
     const logEntry = {
@@ -182,11 +182,11 @@ const securityLogger = {
   },
   
   logUnauthorizedAccess: (req, resource) => {
-    securityLogger.logSuspiciousActivity(req, 'UNAUTHORIZED_ACCESS', { resource });
+    securityLogger.logSuspiciousActivity(req, 'UNAUTHORIZED_ACCESS', { resource })
   },
   
   logDataAccess: (req, dataType, recordId) => {
-    console.log(`📋 Data access: ${dataType}:${recordId} by user ${req.userId || 'anonymous'} from IP ${req.ip}`);
+    console.log(`📋 Data access: ${dataType}:${recordId} by user ${req.userId || 'anonymous'} from IP ${req.ip}`)
   }
 };
 
@@ -194,7 +194,7 @@ const fileUploadSecurity = {
 
   allowedMimeTypes: [
     'image/jpeg',
-    'image/png',
+    'image/png', 
     'image/gif',
     'application/pdf',
     'application/dicom', 
@@ -207,7 +207,7 @@ const fileUploadSecurity = {
     const errors = [];
     
     if (!fileUploadSecurity.allowedMimeTypes.includes(file.mimetype)) {
-      errors.push(`File type ${file.mimetype} not allowed`);
+     errors.push(`File type ${file.mimetype} not allowed`);
     }
     
     if (file.size > fileUploadSecurity.maxFileSize) {
@@ -226,7 +226,7 @@ const validateApiKey = (req, res, next) => {
   const apiKey = req.headers['x-api-key'];
   
   if (!apiKey) {
-    return res.status(401).json({
+   return res.status(401).json({
       success: false,
       error: 'API_KEY_REQUIRED',
       message: 'API key is required'
@@ -252,7 +252,7 @@ const ipWhitelist = (allowedIPs = []) => {
     const clientIP = req.ip;
     
     if (allowedIPs.length > 0 && !allowedIPs.includes(clientIP)) {
-      securityLogger.logSuspiciousActivity(req, 'IP_NOT_WHITELISTED', { clientIP });
+      securityLogger.logSuspiciousActivity(req, 'IP_NOT_WHITELISTED', { clientIP })
       return res.status(403).json({
         success: false,
         error: 'IP_NOT_ALLOWED',
@@ -292,14 +292,14 @@ const securityStack = [
   ...sanitizeInput,
 
   honeypot
-];
+]; 
 
 module.exports = {
   securityStack,
   securityHeaders,
   corsOptions,
   createAdvancedRateLimit,
-  speedLimiter,
+  speedLimiter, 
   sanitizeInput,
   requestLogger,
   securityLogger,

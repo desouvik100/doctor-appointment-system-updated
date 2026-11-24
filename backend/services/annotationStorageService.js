@@ -1,10 +1,10 @@
 
 
-const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const annotationSchema = new mongoose.Schema({
   annotationId: {
     type: String,
-    required: true,
+   required: true,
     unique: true,
     default: () => new mongoose.Types.ObjectId().toString()
   },
@@ -41,7 +41,7 @@ const annotationSchema = new mongoose.Schema({
       value: Number,
       unit: String
     },
-    text: String,
+   text: String,
     color: String,
     lineWidth: Number
   },
@@ -66,7 +66,7 @@ const annotationSchema = new mongoose.Schema({
     type: Boolean,
     default: false
   }
-});
+});
 const Annotation = mongoose.models.Annotation || mongoose.model('Annotation', annotationSchema);
 
 async function saveAnnotation(annotationData) {
@@ -100,7 +100,7 @@ async function deleteAnnotation(annotationId, userId) {
     throw new Error('Annotation not found');
   }
   if (annotation.createdBy.toString() !== userId.toString()) {
-    throw new Error('Not authorized to delete this annotation');
+   throw new Error('Not authorized to delete this annotation');
   }
   
   await Annotation.deleteOne({ annotationId });
@@ -180,11 +180,11 @@ async function exportAnnotationsForReport(studyId) {
   }).populate('createdBy', 'name role');
   
   return annotations.map(a => ({
-    type: a.toolType,
+   type: a.toolType,
     measurement: a.data.measurement,
     text: a.data.text,
     imageIndex: a.imageIndex,
-    createdBy: a.createdBy?.name || 'Unknown',
+   createdBy: a.createdBy?.name || 'Unknown',
     createdAt: a.createdAt
   }));
 }
@@ -194,7 +194,7 @@ module.exports = {
   saveAnnotation,
   updateAnnotation,
   deleteAnnotation,
-  getAnnotationsForImage,
+  getAnnotationsForImage, 
   getAnnotationsForStudy,
   getAnnotationsByUser,
   toggleAnnotationVisibility,

@@ -1,8 +1,8 @@
 const mongoose = require('mongoose');
 
 const reviewVoteSchema = new mongoose.Schema({
-  reviewId: {
-    type: mongoose.Schema.Types.ObjectId,
+  reviewId: { 
+   type: mongoose.Schema.Types.ObjectId,
     ref: 'Review',
     required: true
   },
@@ -11,7 +11,7 @@ const reviewVoteSchema = new mongoose.Schema({
     ref: 'User',
     required: true
   },
-  voteType: {
+  voteType: { 
     type: String,
     enum: ['helpful', 'unhelpful'],
     required: true

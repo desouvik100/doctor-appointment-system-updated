@@ -29,7 +29,7 @@ async function sendAppointmentReminder(appointment, user, doctor) {
 
   const appointmentDate = new Date(appointment.date);
   const formattedDate = appointmentDate.toLocaleDateString('en-US', {
-    weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
+   weekday: 'long', year: 'numeric', month: 'long', day: 'numeric'
   });
 
   const subject = `⏰ Appointment Reminder - Dr. ${doctor.name} Tomorrow`;
@@ -57,7 +57,7 @@ async function sendAppointmentReminder(appointment, user, doctor) {
           <p>Appointment Reminder</p>
         </div>
         <div class="content">
-          <h2>Hi ${user.name}! 👋</h2>
+         <h2>Hi ${user.name}! 👋</h2>
           <div class="reminder-box">
             <strong>⏰ Reminder:</strong> You have an appointment tomorrow!
           </div>
@@ -66,9 +66,9 @@ async function sendAppointmentReminder(appointment, user, doctor) {
               <div class="detail-label">Doctor:</div>
               <div class="detail-value">Dr. ${doctor.name}</div>
             </div>
-            <div class="detail-row">
+           <div class="detail-row">
               <div class="detail-label">Date:</div>
-              <div class="detail-value">${formattedDate}</div>
+             <div class="detail-value">${formattedDate}</div>
             </div>
             <div class="detail-row">
               <div class="detail-label">Time:</div>
@@ -102,22 +102,22 @@ async function sendAppointmentReminder(appointment, user, doctor) {
       to: user.email,
       subject,
       html
-    });
+   });
     console.log(`✅ Appointment reminder sent to ${user.email}`);
     return { success: true };
   } catch (error) {
-    console.error('❌ Failed to send appointment reminder:', error.message);
+   console.error('❌ Failed to send appointment reminder:', error.message);
     return { success: false, error: error.message };
   }
 }
-async function sendMedicineReminder(user, medicines) {
+async function sendMedicineReminder(user, medicines) { 
   const transport = getTransporter();
   if (!transport) {
     console.log('📧 Email not configured - skipping medicine reminder');
     return { success: false, reason: 'Email not configured' };
   }
 
-  const subject = `💊 Medicine Reminder - Time to take your medicines`;
+  const subject = `💊 Medicine Reminder - Time to take your medicines`; 
   
   const medicineList = medicines.map(m => `
     <tr>
@@ -131,19 +131,19 @@ async function sendMedicineReminder(user, medicines) {
     <!DOCTYPE html>
     <html>
     <head>
-      <style>
+     <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 12px rgba(0,0,0,0.1); }
-        .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; }
+       .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 30px; text-align: center; }
         .content { padding: 30px; }
         table { width: 100%; border-collapse: collapse; margin: 20px 0; }
         th { background: #f3f4f6; padding: 12px; text-align: left; font-weight: 600; color: #374151; }
-        .footer { background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; font-size: 13px; }
+        .footer { background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; font-size: 13px; } 
       </style>
     </head>
-    <body>
+   <body>
       <div class="container">
-        <div class="header">
+       <div class="header">
           <h1>💊 Medicine Reminder</h1>
           <p>Time to take your medicines!</p>
         </div>
@@ -180,7 +180,7 @@ async function sendMedicineReminder(user, medicines) {
       to: user.email,
       subject,
       html
-    });
+   });
     console.log(`✅ Medicine reminder sent to ${user.email}`);
     return { success: true };
   } catch (error) {
@@ -229,14 +229,14 @@ async function sendWaterReminder(user) {
           <p>© ${new Date().getFullYear()} HealthSync</p>
         </div>
       </div>
-    </body>
+   </body>
     </html>
   `;
 
   try {
     await transport.sendMail({
       from: process.env.EMAIL_USER,
-      to: user.email,
+      to: user.email, 
       subject,
       html
     });
@@ -254,9 +254,10 @@ async function sendHealthCheckupReminder(user, checkupType = 'Annual') {
   const html = `
     <!DOCTYPE html>
     <html>
-    <head>
+   <head>
       <style>
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
+  // XXX needs optimization
         .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; }
         .header { background: linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%); color: white; padding: 30px; text-align: center; }
         .content { padding: 30px; }
@@ -283,7 +284,7 @@ async function sendHealthCheckupReminder(user, checkupType = 'Annual') {
               <li>Get personalized health advice</li>
             </ul>
           </div>
-          <div style="text-align: center;">
+         <div style="text-align: center;">
             <a href="${process.env.FRONTEND_URL || 'http://localhost:3001'}" class="cta-button">
               Book Your Checkup Now
             </a>
@@ -291,7 +292,7 @@ async function sendHealthCheckupReminder(user, checkupType = 'Annual') {
         </div>
         <div class="footer">
           <p>© ${new Date().getFullYear()} HealthSync</p>
-        </div>
+       </div>
       </div>
     </body>
     </html>
@@ -312,7 +313,7 @@ async function sendHealthCheckupReminder(user, checkupType = 'Annual') {
 
 module.exports = {
   sendAppointmentReminder,
-  sendMedicineReminder,
+  sendMedicineReminder, 
   sendWaterReminder,
   sendHealthCheckupReminder
 };

@@ -68,9 +68,9 @@ function generateInvoiceHTML(invoiceData) {
       font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; 
       font-size: 14px; 
       color: #1a1a2e; 
-      line-height: 1.6; 
+      line-height: 1.6;  
       background: #f0f2f5;
-      padding: 20px;
+     padding: 20px;
     }
     
     .invoice-wrapper {
@@ -96,7 +96,7 @@ function generateInvoiceHTML(invoiceData) {
       top: -50%;
       right: -20%;
       width: 400px;
-      height: 400px;
+     height: 400px;
       background: rgba(255,255,255,0.1);
       border-radius: 50%;
     }
@@ -116,8 +116,8 @@ function generateInvoiceHTML(invoiceData) {
       display: flex;
       justify-content: space-between;
       align-items: flex-start;
-      position: relative;
-      z-index: 1;
+     position: relative;
+      z-index: 1; 
     }
     
     .company-brand {
@@ -134,7 +134,7 @@ function generateInvoiceHTML(invoiceData) {
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 36px;
+     font-size: 36px;
       box-shadow: 0 8px 20px rgba(0,0,0,0.2);
     }
     
@@ -142,7 +142,7 @@ function generateInvoiceHTML(invoiceData) {
       font-size: 32px;
       font-weight: 700;
       margin-bottom: 5px;
-      letter-spacing: -0.5px;
+     letter-spacing: -0.5px;
     }
     
     .company-info p {
@@ -154,8 +154,8 @@ function generateInvoiceHTML(invoiceData) {
       text-align: right;
     }
     
-    .invoice-title {
-      font-size: 42px;
+   .invoice-title {
+     font-size: 42px;
       font-weight: 300;
       letter-spacing: 3px;
       margin-bottom: 15px;
@@ -168,7 +168,7 @@ function generateInvoiceHTML(invoiceData) {
       border-radius: 30px;
       font-size: 14px;
       font-weight: 500;
-      display: inline-block;
+     display: inline-block;
     }
     
     .invoice-date {
@@ -181,10 +181,10 @@ function generateInvoiceHTML(invoiceData) {
       position: absolute;
       top: 25px;
       right: -35px;
-      background: ${payment?.status === 'completed' || payment?.status === 'success' ? '#10b981' : '#f59e0b'};
+     background: ${payment?.status === 'completed' || payment?.status === 'success' ? '#10b981' : '#f59e0b'};
       color: white;
       padding: 8px 50px;
-      font-size: 12px;
+     font-size: 12px;
       font-weight: 700;
       text-transform: uppercase;
       letter-spacing: 1px;
@@ -198,29 +198,29 @@ function generateInvoiceHTML(invoiceData) {
 
     .parties-section {
       display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
+     grid-template-columns: 1fr 1fr;
+     gap: 40px;
       margin-bottom: 40px;
     }
     
-    .party-card {
+   .party-card {
       background: linear-gradient(145deg, #f8fafc 0%, #f1f5f9 100%);
       border-radius: 16px;
-      padding: 25px;
+     padding: 25px;
       border: 1px solid #e2e8f0;
     }
     
     .party-card h3 {
       font-size: 11px;
-      text-transform: uppercase;
+     text-transform: uppercase;
       letter-spacing: 2px;
       color: #667eea;
       margin-bottom: 15px;
       font-weight: 600;
     }
     
-    .party-card .name {
-      font-size: 20px;
+   .party-card .name {
+     font-size: 20px;
       font-weight: 700;
       color: #1a1a2e;
       margin-bottom: 12px;
@@ -240,10 +240,10 @@ function generateInvoiceHTML(invoiceData) {
       color: #667eea;
     }
 
-    .appointment-section {
+   .appointment-section {
       background: linear-gradient(135deg, #667eea15 0%, #764ba215 100%);
       border-radius: 16px;
-      padding: 30px;
+      padding: 30px; 
       margin-bottom: 40px;
       border: 2px solid #667eea30;
     }
@@ -271,9 +271,9 @@ function generateInvoiceHTML(invoiceData) {
       border-radius: 12px;
       box-shadow: 0 2px 10px rgba(0,0,0,0.05);
     }
-    
+     
     .appointment-item .icon {
-      font-size: 24px;
+     font-size: 24px;
       margin-bottom: 8px;
     }
     
@@ -326,8 +326,8 @@ function generateInvoiceHTML(invoiceData) {
     }
     
     .items-table th:last-child {
-      text-align: right;
-    }
+     text-align: right;
+    } 
     
     .items-table td {
       padding: 20px;
@@ -337,19 +337,19 @@ function generateInvoiceHTML(invoiceData) {
     
     .items-table tr:last-child td {
       border-bottom: none;
-    }
+   }
     
     .items-table tr:hover td {
       background: #f8fafc;
-    }
+   } 
     
     .items-table td:last-child {
       text-align: right;
-      font-weight: 600;
-    }
+     font-weight: 600;
+   }
     
     .item-name {
-      font-weight: 600;
+     font-weight: 600;
       color: #1a1a2e;
       margin-bottom: 4px;
     }
@@ -396,7 +396,7 @@ function generateInvoiceHTML(invoiceData) {
       margin-bottom: 10px;
     }
     
-    .total-row.discount {
+   .total-row.discount {
       color: #10b981;
     }
     
@@ -415,13 +415,13 @@ function generateInvoiceHTML(invoiceData) {
       color: #64748b;
       font-style: italic;
       margin-top: 15px;
-      padding-top: 15px;
+     padding-top: 15px;
       border-top: 1px dashed #e2e8f0;
     }
 
     .payment-info {
       display: grid;
-      grid-template-columns: 1fr 1fr;
+     grid-template-columns: 1fr 1fr;
       gap: 30px;
       margin-bottom: 40px;
     }
@@ -429,7 +429,7 @@ function generateInvoiceHTML(invoiceData) {
     .payment-card {
       background: white;
       border-radius: 12px;
-      padding: 20px;
+     padding: 20px;
       border: 1px solid #e2e8f0;
     }
     
@@ -476,7 +476,7 @@ function generateInvoiceHTML(invoiceData) {
     .terms-section {
       background: #f8fafc;
       border-radius: 12px;
-      padding: 25px;
+     padding: 25px;
       margin-bottom: 40px;
     }
     
@@ -495,8 +495,8 @@ function generateInvoiceHTML(invoiceData) {
     .terms-section li {
       display: flex;
       align-items: flex-start;
-      gap: 10px;
-      margin: 10px 0;
+      gap: 10px; 
+     margin: 10px 0;
       font-size: 12px;
       color: #64748b;
     }
@@ -508,11 +508,11 @@ function generateInvoiceHTML(invoiceData) {
     }
 
     .invoice-footer {
-      background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
+     background: linear-gradient(135deg, #1a1a2e 0%, #2d2d44 100%);
       color: white;
       padding: 40px 50px;
       text-align: center;
-    }
+   }
     
     .footer-brand {
       font-size: 24px;
@@ -532,17 +532,17 @@ function generateInvoiceHTML(invoiceData) {
       display: flex;
       align-items: center;
       gap: 8px;
-      font-size: 13px;
+     font-size: 13px;
       opacity: 0.9;
     }
     
-    .footer-divider {
+   .footer-divider {
       height: 1px;
       background: linear-gradient(90deg, transparent, rgba(255,255,255,0.3), transparent);
       margin: 25px 0;
     }
     
-    .footer-legal {
+   .footer-legal {
       font-size: 11px;
       opacity: 0.7;
       line-height: 1.8;
@@ -551,7 +551,7 @@ function generateInvoiceHTML(invoiceData) {
     .qr-section {
       display: flex;
       align-items: center;
-      justify-content: center;
+     justify-content: center;
       gap: 20px;
       padding: 20px;
       background: rgba(255,255,255,0.1);
@@ -583,7 +583,7 @@ function generateInvoiceHTML(invoiceData) {
     
     .download-btn {
       display: inline-flex;
-      align-items: center;
+     align-items: center;
       gap: 8px;
       padding: 12px 24px;
       background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
@@ -628,16 +628,16 @@ function generateInvoiceHTML(invoiceData) {
 <body>
   
   <div class="download-bar">
-    <button class="download-btn" onclick="window.print()">
-      📄 Download as PDF
+   <button class="download-btn" onclick="window.print()">
+     📄 Download as PDF
     </button>
-    <button class="download-btn secondary" onclick="window.print()">
+   <button class="download-btn secondary" onclick="window.print()">
       🖨️ Print Invoice
-    </button>
+   </button>
   </div>
 
   <div class="invoice-wrapper">
-    <div class="status-ribbon">${payment?.status === 'completed' || payment?.status === 'success' ? 'PAID' : 'PENDING'}</div>
+   <div class="status-ribbon">${payment?.status === 'completed' || payment?.status === 'success' ? 'PAID' : 'PENDING'}</div>
 
     <div class="invoice-header">
       <div class="header-content">
@@ -661,23 +661,23 @@ function generateInvoiceHTML(invoiceData) {
     <div class="invoice-body">
       
       <div class="parties-section">
-        <div class="party-card">
+       <div class="party-card">
           <h3>📋 Billed To</h3>
           <div class="name">${patient?.name || 'Patient'}</div>
           <div class="detail"><span>📧</span> ${patient?.email || 'Not provided'}</div>
           <div class="detail"><span>📱</span> ${patient?.phone || 'Not provided'}</div>
           ${patient?.address ? `<div class="detail"><span>📍</span> ${patient.address}</div>` : ''}
-        </div>
+       </div>
         <div class="party-card">
           <h3>🏥 Service Provider</h3>
           <div class="name">${clinic?.name || 'HealthSync Clinic'}</div>
           <div class="detail"><span>👨‍⚕️</span> Dr. ${doctor?.name || 'Doctor'} (${doctor?.specialization || 'General Physician'})</div>
           <div class="detail"><span>🎓</span> ${doctor?.qualification || 'MBBS'}</div>
-          ${doctor?.registrationNumber ? `<div class="detail"><span>📋</span> Reg. No: ${doctor.registrationNumber}</div>` : ''}
+         ${doctor?.registrationNumber ? `<div class="detail"><span>📋</span> Reg. No: ${doctor.registrationNumber}</div>` : ''}
           ${clinic?.address ? `<div class="detail"><span>📍</span> ${clinic.address}</div>` : ''}
         </div>
-      </div>
-
+     </div>
+ 
       <div class="appointment-section">
         <h3>📅 Appointment Details</h3>
         <div class="appointment-grid">
@@ -698,7 +698,7 @@ function generateInvoiceHTML(invoiceData) {
           </div>
           <div class="appointment-item">
             <div class="icon">🎫</div>
-            <div class="label">Token</div>
+           <div class="label">Token</div>
             <div class="value">${appointment?.tokenNumber || 'N/A'}</div>
           </div>
         </div>
@@ -711,18 +711,18 @@ function generateInvoiceHTML(invoiceData) {
             <tr>
               <th style="width: 50%;">Description</th>
               <th>HSN/SAC</th>
-              <th>Qty</th>
+             <th>Qty</th>
               <th>Rate</th>
-              <th>Amount</th>
-            </tr>
-          </thead>
+             <th>Amount</th>
+           </tr>
+         </thead>
           <tbody>
             <tr>
               <td>
                 <div class="item-name">Medical Consultation</div>
                 <div class="item-desc">Professional consultation with Dr. ${doctor?.name || 'Doctor'}</div>
                 <div class="item-code">SAC: 999312</div>
-              </td>
+             </td>
               <td>999312</td>
               <td>1</td>
               <td>${formatCurrency(consultationFee)}</td>
@@ -733,14 +733,14 @@ function generateInvoiceHTML(invoiceData) {
                 <div class="item-name">Platform Service Fee</div>
                 <div class="item-desc">HealthSync booking, scheduling & support services</div>
                 <div class="item-code">SAC: 998314</div>
-              </td>
+              </td> 
               <td>998314</td>
               <td>1</td>
               <td>${formatCurrency(platformFee)}</td>
               <td>${formatCurrency(platformFee)}</td>
             </tr>
           </tbody>
-        </table>
+       </table>
       </div>
 
       <div class="totals-section">
@@ -753,17 +753,17 @@ function generateInvoiceHTML(invoiceData) {
             <span>CGST (${taxRate/2}%)</span>
             <span>${formatCurrency(tax/2)}</span>
           </div>
-          <div class="total-row">
+         <div class="total-row">
             <span>SGST (${taxRate/2}%)</span>
             <span>${formatCurrency(tax/2)}</span>
           </div>
           ${discount > 0 ? `
-          <div class="total-row discount">
+         <div class="total-row discount">
             <span>Discount</span>
-            <span>- ${formatCurrency(discount)}</span>
+           <span>- ${formatCurrency(discount)}</span>
           </div>
           ` : ''}
-          <div class="total-row grand-total">
+         <div class="total-row grand-total">
             <span>Total Amount</span>
             <span>${formatCurrency(totalAmount)}</span>
           </div>
@@ -774,7 +774,7 @@ function generateInvoiceHTML(invoiceData) {
       </div>
 
       <div class="payment-info">
-        <div class="payment-card">
+       <div class="payment-card">
           <h4>Payment Status</h4>
           <div class="payment-status ${payment?.status === 'completed' || payment?.status === 'success' ? 'paid' : 'pending'}">
             ${payment?.status === 'completed' || payment?.status === 'success' ? '✅ Payment Received' : '⏳ Payment Pending'}
@@ -789,11 +789,11 @@ function generateInvoiceHTML(invoiceData) {
         </div>
       </div>
 
-      <div class="terms-section">
+     <div class="terms-section">
         <h4>📜 Terms & Conditions</h4>
-        <ul>
+       <ul>
           <li>This invoice is generated electronically and is valid without signature.</li>
-          <li>Payment is due immediately unless otherwise agreed upon.</li>
+         <li>Payment is due immediately unless otherwise agreed upon.</li>
           <li>For refund policy, please refer to our terms of service at healthsyncpro.in/terms</li>
           <li>Medical consultations are subject to the doctor's professional judgment.</li>
           <li>Please retain this invoice for your records and tax purposes.</li>
@@ -801,7 +801,7 @@ function generateInvoiceHTML(invoiceData) {
       </div>
     </div>
 
-    <div class="invoice-footer">
+   <div class="invoice-footer">
       <div class="footer-brand">🏥 HealthSync</div>
       <p>Your Trusted Healthcare Management Platform</p>
       
@@ -815,15 +815,15 @@ function generateInvoiceHTML(invoiceData) {
       <div class="footer-divider"></div>
       
       <div class="footer-legal">
-        <p>This is a computer-generated invoice and does not require a physical signature.</p>
+       <p>This is a computer-generated invoice and does not require a physical signature.</p>
         <p>© ${new Date().getFullYear()} HealthSync Healthcare Platform. All rights reserved.</p>
         <p>For any queries regarding this invoice, please contact our support team.</p>
       </div>
       
-      <div class="qr-section">
+     <div class="qr-section">
         <img class="qr-code" src="https://api.qrserver.com/v1/create-qr-code/?size=80x80&data=${encodeURIComponent(`HealthSync Invoice\nInvoice: ${invoiceNumber}\nAmount: ${formatCurrency(totalAmount)}\nDate: ${formatDate(generatedAt, 'short')}\nPatient: ${patient?.name || 'N/A'}\nDoctor: Dr. ${doctor?.name || 'N/A'}`)}" alt="Invoice QR Code" />
         <div class="qr-info">
-          <strong>Scan to verify</strong><br>
+         <strong>Scan to verify</strong><br>
           Invoice: ${invoiceNumber}<br>
           Generated: ${formatDate(generatedAt, 'short')}
         </div>
@@ -854,7 +854,7 @@ function numberToWords(num) {
     let result = '';
     if (n >= 10000000) {
       result += convertLessThanThousand(Math.floor(n / 10000000)) + ' Crore ';
-      n %= 10000000;
+     n %= 10000000;
     }
     if (n >= 100000) {
       result += convertLessThanThousand(Math.floor(n / 100000)) + ' Lakh ';
@@ -901,7 +901,7 @@ async function sendInvoiceEmail(invoiceData) {
 <html>
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"> 
   <style>
     body { font-family: 'Segoe UI', Arial, sans-serif; line-height: 1.6; color: #1a1a2e; margin: 0; padding: 0; background: #f0f2f5; }
     .email-container { max-width: 600px; margin: 0 auto; }
@@ -915,11 +915,11 @@ async function sendInvoiceEmail(invoiceData) {
     .btn { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 15px 35px; text-decoration: none; border-radius: 30px; font-weight: 600; margin-top: 20px; }
     .email-footer { background: #1a1a2e; color: white; padding: 30px; text-align: center; border-radius: 0 0 16px 16px; }
     .email-footer p { margin: 5px 0; opacity: 0.9; font-size: 13px; }
-  </style>
+  </style> 
 </head>
 <body>
   <div class="email-container">
-    <div class="email-header">
+   <div class="email-header">
       <h1>🏥 HealthSync</h1>
       <p>Your Invoice is Ready!</p>
     </div>
@@ -929,8 +929,8 @@ async function sendInvoiceEmail(invoiceData) {
       
       <div class="invoice-card">
         <h3>📋 Invoice Summary</h3>
-        <div class="invoice-detail"><span>Invoice Number</span><span>${invoiceNumber}</span></div>
-        <div class="invoice-detail"><span>Invoice Date</span><span>${formatDate(invoiceData.generatedAt, 'short')}</span></div>
+       <div class="invoice-detail"><span>Invoice Number</span><span>${invoiceNumber}</span></div>
+       <div class="invoice-detail"><span>Invoice Date</span><span>${formatDate(invoiceData.generatedAt, 'short')}</span></div>
         <div class="invoice-detail"><span>Doctor</span><span>Dr. ${invoiceData.doctor?.name || 'Doctor'}</span></div>
         <div class="invoice-detail"><span>Appointment</span><span>${formatDate(invoiceData.appointment?.date, 'short')} at ${invoiceData.appointment?.time || 'N/A'}</span></div>
         <div class="invoice-detail"><span>Total Amount</span><span>${formatCurrency(totalAmount)}</span></div>
@@ -942,7 +942,7 @@ async function sendInvoiceEmail(invoiceData) {
         <a href="${viewInvoiceUrl}" class="btn" target="_blank">View Full Invoice</a>
       </p>
       
-      <p>If you have any questions about this invoice, please don't hesitate to contact our support team.</p>
+     <p>If you have any questions about this invoice, please don't hesitate to contact our support team.</p>
       
       <p>Best regards,<br><strong>The HealthSync Team</strong></p>
     </div>
@@ -975,7 +975,7 @@ async function sendInvoiceEmail(invoiceData) {
     console.error('❌ Failed to send invoice email:', error.message);
     return { 
       success: false, 
-      message: 'Failed to send invoice email',
+     message: 'Failed to send invoice email',
       error: error.message 
     };
   }
@@ -984,7 +984,7 @@ async function generateAndSendInvoice(appointment, patient, doctor, clinic, paym
   const invoiceNumber = generateInvoiceNumber();
   
   const invoiceData = {
-    invoiceNumber,
+   invoiceNumber,
     patient,
     doctor,
     clinic,
@@ -996,7 +996,7 @@ async function generateAndSendInvoice(appointment, patient, doctor, clinic, paym
 
   return {
     ...emailResult,
-    invoiceNumber,
+   invoiceNumber,
     invoiceHTML: generateInvoiceHTML(invoiceData)
   };
 }

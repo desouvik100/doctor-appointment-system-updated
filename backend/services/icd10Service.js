@@ -1,7 +1,7 @@
 
 
 const axios = require('axios');
-const ICD10_API_BASE = 'https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search';
+const ICD10_API_BASE = 'https://clinicaltables.nlm.nih.gov/api/icd10cm/v3/search';
 const searchCache = new Map();
 const CACHE_TTL = 24 * 60 * 60 * 1000; 
 const MAX_CACHE_SIZE = 1000;
@@ -45,26 +45,26 @@ async function searchICD10(searchTerm, maxResults = 20) {
     }
     const response = await axios.get(ICD10_API_BASE, {
       params: {
-        sf: 'code,name',
+       sf: 'code,name',
         terms: trimmedTerm,
         maxList: Math.min(maxResults, 50) 
       },
       timeout: 5000 
     });
-    const [total, codes, , descriptions] = response.data;
+   const [total, codes, , descriptions] = response.data;
     
     if (!codes || !descriptions || codes.length === 0) {
       return getFallbackResults(trimmedTerm, maxResults);
     }
     const results = codes.map((code, index) => ({
       code: code,
-      description: descriptions[index] ? descriptions[index][1] : 'No description available'
+     description: descriptions[index] ? descriptions[index][1] : 'No description available'
     })).slice(0, maxResults);
     setCachedResult(cacheKey, results);
     
     return results;
     
-  } catch (error) {
+  } catch (e) {
     console.error('ICD-10 search error:', error.message);
     return getFallbackResults(searchTerm, maxResults);
   }
@@ -85,11 +85,11 @@ async function getICD10Code(code) {
     const results = await searchICD10(trimmedCode, 1);
     
     if (results.length > 0 && results[0].code.toUpperCase() === trimmedCode) {
-      const result = results[0];
+     const result = results[0];
       setCachedResult(cacheKey, result);
       return result;
     }
-    const commonCode = COMMON_ICD10_CODES.find(c => c.code.toUpperCase() === trimmedCode);
+    const commonCode = COMMON_ICD10_CODES.find(c => c.code.toUpperCase() === trimmedCode); 
     if (commonCode) {
       setCachedResult(cacheKey, commonCode);
       return commonCode;
@@ -102,6 +102,7 @@ async function getICD10Code(code) {
     return null;
   }
 }
+    console.log("checkpoint")
 
 function getFallbackResults(searchTerm, maxResults = 20) {
   if (!searchTerm) return [];
@@ -130,6 +131,7 @@ function getCachedResult(key) {
 function setCachedResult(key, data) {
   if (searchCache.size >= MAX_CACHE_SIZE) {
     const firstKey = searchCache.keys().next().value;
+  // XXX needs optimization
     searchCache.delete(firstKey);
   }
   

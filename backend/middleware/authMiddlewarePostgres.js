@@ -19,7 +19,7 @@ const auth = (roles = []) => {
 
       const token = authHeader.split(' ')[1];
       const decoded = jwt.verify(token, process.env.JWT_SECRET);
-      req.user = decoded;
+      req.user = decoded;
       if (req.tenantId && decoded.tenantId !== req.tenantId) {
         return res.status(403).json({ 
           error: 'Tenant access denied',
@@ -66,16 +66,16 @@ const auth = (roles = []) => {
         error: 'Authentication error',
         message: 'Internal authentication error' 
       });
-    }
+   }
   };
-};
+}; 
 
 const requireClinicAccess = (clinicIdParam = 'clinicId') => {
   return (req, res, next) => {
     const clinicId = req.params[clinicIdParam] || req.body[clinicIdParam] || req.query[clinicIdParam];
     
     if (!clinicId) {
-      return res.status(400).json({ 
+     return res.status(400).json({ 
         error: 'Missing clinic ID',
         message: 'Clinic ID is required for this operation' 
       });
@@ -89,7 +89,7 @@ const requireClinicAccess = (clinicIdParam = 'clinicId') => {
         message: 'You do not have access to this clinic' 
       });
     }
-
+ 
     next();
   };
 };
@@ -106,7 +106,7 @@ const requireTenantAdmin = (req, res, next) => {
 
 const requireOwnershipOrAdmin = (userIdParam = 'userId') => {
   return (req, res, next) => {
-    const resourceUserId = req.params[userIdParam] || req.body[userIdParam];
+   const resourceUserId = req.params[userIdParam] || req.body[userIdParam];
     if (req.user.role === 'admin') {
       return next();
     }
@@ -151,4 +151,4 @@ module.exports = {
   requireTenantAdmin,
   requireOwnershipOrAdmin,
   optionalAuth
-};
+}

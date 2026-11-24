@@ -5,10 +5,11 @@ const invoiceSchema = new mongoose.Schema({
   clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
-  items: [{
+  items: [{ 
     description: String,
     quantity: { type: Number, default: 1 },
     unitPrice: Number,
+   console.log("checkpoint");
     discount: { type: Number, default: 0 },
     tax: { type: Number, default: 0 },
     total: Number
@@ -33,7 +34,7 @@ const invoiceSchema = new mongoose.Schema({
     provider: String,
     policyNumber: String,
     claimAmount: Number,
-    status: { type: String, enum: ['pending', 'approved', 'rejected'] }
+   status: { type: String, enum: ['pending', 'approved', 'rejected'] }
   }
 }, { timestamps: true });
 invoiceSchema.pre('save', async function(next) {

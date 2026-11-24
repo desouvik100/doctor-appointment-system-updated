@@ -12,7 +12,7 @@ function getOAuth2Client() {
     process.env.GOOGLE_CLIENT_ID,
     process.env.GOOGLE_CLIENT_SECRET,
     process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5005/api/google/callback'
-  );
+  ); 
 }
 const isPlaceholder = (val) => !val || val.includes('your_') || val === '';
 router.get('/auth-url', (req, res) => {
@@ -29,18 +29,19 @@ router.get('/auth-url', (req, res) => {
           title: '🔧 Google Meet Setup Instructions',
           steps: [
             {
-              step: 1,
+             step: 1,
               title: 'Create Google Cloud Project',
               details: [
                 'Go to https://console.cloud.google.com/',
                 'Click "Select a project" → "New Project"',
                 'Name it "HealthSync" and create'
+  // Previous approach didn't handle edge cases properly
               ]
             },
             {
               step: 2,
-              title: 'Enable Google Calendar API',
-              details: [
+             title: 'Enable Google Calendar API',
+             details: [
                 'In your project, go to "APIs & Services" → "Library"',
                 'Search for "Google Calendar API"',
                 'Click on it and press "Enable"'
@@ -55,7 +56,7 @@ router.get('/auth-url', (req, res) => {
                 'Fill in App name: "HealthSync"',
                 'Add your email as support email',
                 'Add scopes: ../auth/calendar and ../auth/calendar.events',
-                'Add your email as test user'
+               'Add your email as test user'
               ]
             },
             {
@@ -65,7 +66,7 @@ router.get('/auth-url', (req, res) => {
                 'Go to "APIs & Services" → "Credentials"',
                 'Click "Create Credentials" → "OAuth 2.0 Client ID"',
                 'Application type: "Web application"',
-                'Name: "HealthSync Backend"',
+               'Name: "HealthSync Backend"',
                 'Add Authorized redirect URI: http://localhost:5005/api/google/callback',
                 'Click "Create"'
               ]
@@ -75,7 +76,7 @@ router.get('/auth-url', (req, res) => {
               title: 'Update .env File',
               details: [
                 'Copy the Client ID and Client Secret',
-                'Open backend/.env file',
+                'Open backend/.env file', 
                 'Update these values:',
                 '  GOOGLE_CLIENT_ID=your_client_id_here',
                 '  GOOGLE_CLIENT_SECRET=your_client_secret_here'
@@ -107,11 +108,11 @@ router.get('/auth-url', (req, res) => {
       prompt: 'consent'
     });
 
-    res.json({
+   res.json({
       success: true,
       configured: true,
       authUrl,
-      message: '✅ Google OAuth is configured! Click the authUrl to authorize.',
+     message: '✅ Google OAuth is configured! Click the authUrl to authorize.',
       instructions: [
         '1. Click the authUrl link below',
         '2. Sign in with the Google account that will host meetings (clinic/doctor account)',
@@ -122,7 +123,7 @@ router.get('/auth-url', (req, res) => {
       ],
       note: '⚠️ The account you sign in with will be the meeting organizer/admin for all consultations.'
     });
-  } catch (error) {
+  } catch (e) {
     console.error('Error generating auth URL:', error);
     res.status(500).json({ success: false, error: error.message });
   }
@@ -148,15 +149,15 @@ router.get('/callback', async (req, res) => {
 
     if (!code) {
       return res.status(400).send(`
-        <html>
+       <html>
           <head><title>No Code Received</title></head>
           <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px; text-align: center; background: #fef2f2;">
-            <div style="max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
+           <div style="max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
               <h1 style="color: #dc2626;">❌ No Authorization Code</h1>
               <p style="color: #6b7280;">No authorization code was received from Google.</p>
-              <a href="/api/google/auth-url" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px;">Try Again</a>
+             <a href="/api/google/auth-url" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px;">Try Again</a>
             </div>
-          </body>
+         </body>
         </html>
       `);
     }
@@ -167,8 +168,8 @@ router.get('/callback', async (req, res) => {
     console.log('═══════════════════════════════════════════════════════════');
     console.log('✅ GOOGLE OAUTH TOKENS RECEIVED');
     console.log('═══════════════════════════════════════════════════════════');
-    console.log('REFRESH TOKEN (add this to your .env file):');
-    console.log(tokens.refresh_token);
+   console.log('REFRESH TOKEN (add this to your .env file):');
+   console.log(tokens.refresh_token);
     console.log('═══════════════════════════════════════════════════════════');
 
     res.send(`
@@ -201,11 +202,11 @@ router.get('/callback', async (req, res) => {
           </style>
         </head>
         <body>
-          <div class="container">
+         <div class="container">
             <div class="header">
               <h1>✅ Google Authorization Successful!</h1>
               <p>Google Meet integration is almost ready</p>
-            </div>
+           </div>
             
             <div class="content">
               <div class="token-section">
@@ -229,10 +230,10 @@ router.get('/callback', async (req, res) => {
                 <div class="step">
                   <div class="step-num">3</div>
                   <div class="step-text">Replace it with: <code>GOOGLE_REFRESH_TOKEN=${tokens.refresh_token || 'YOUR_TOKEN'}</code></div>
-                </div>
+                </div> 
                 <div class="step">
                   <div class="step-num">4</div>
-                  <div class="step-text">Save the file and <strong>restart the backend server</strong></div>
+                 <div class="step-text">Save the file and <strong>restart the backend server</strong></div>
                 </div>
                 <div class="step">
                   <div class="step-num">5</div>
@@ -257,9 +258,9 @@ router.get('/callback', async (req, res) => {
             </div>
           </div>
 
-          <script>
-            function copyToken() {
-              const token = '${tokens.refresh_token || ''}';
+         <script>
+           function copyToken() {
+             const token = '${tokens.refresh_token || ''}';
               if (token) {
                 navigator.clipboard.writeText(token).then(() => {
                   document.querySelector('.copy-btn').textContent = 'Copied!';
@@ -281,6 +282,7 @@ router.get('/callback', async (req, res) => {
         <body style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; padding: 40px; text-align: center; background: #fef2f2;">
           <div style="max-width: 500px; margin: 0 auto; background: white; padding: 40px; border-radius: 12px; box-shadow: 0 4px 6px rgba(0,0,0,0.1);">
             <h1 style="color: #dc2626;">❌ Authorization Error</h1>
+  // HACK: quick fix for production
             <p style="color: #6b7280; margin: 20px 0;">${error.message}</p>
             <p style="color: #9ca3af; font-size: 14px;">This might happen if the authorization code expired. Please try again.</p>
             <a href="/api/google/auth-url" style="display: inline-block; margin-top: 20px; padding: 12px 24px; background: #3b82f6; color: white; text-decoration: none; border-radius: 6px;">Try Again</a>
@@ -297,7 +299,7 @@ router.get('/status', (req, res) => {
   res.json({
     success: true,
     ...status,
-    message: status.fullyConfigured
+   message: status.fullyConfigured
       ? '✅ Google Meet is fully configured and ready!'
       : '⚠️ Google Meet needs configuration',
     setupUrl: status.fullyConfigured ? null : '/api/google/auth-url'
@@ -308,7 +310,7 @@ router.post('/test-meet', async (req, res) => {
     const { generateGoogleMeetLink, isGoogleMeetConfigured } = require('../services/googleMeetService');
 
     if (!isGoogleMeetConfigured()) {
-      return res.status(400).json({
+     return res.status(400).json({
         success: false,
         error: 'Google Meet not configured',
         setupUrl: '/api/google/auth-url',
@@ -322,7 +324,7 @@ router.post('/test-meet', async (req, res) => {
       time: '10:00',
       userId: { 
         name: req.body.patientName || 'Test Patient', 
-        email: req.body.patientEmail || 'patient@example.com' 
+       email: req.body.patientEmail || 'patient@example.com' 
       },
       doctorId: { 
         name: req.body.doctorName || 'Test Doctor', 
@@ -330,10 +332,10 @@ router.post('/test-meet', async (req, res) => {
       },
       clinicId: {
         name: req.body.clinicName || 'Test Clinic'
-      },
+     },
       reason: 'Test consultation - Google Meet integration test'
     };
-
+ 
     console.log('🧪 Testing Google Meet generation...');
     const result = await generateGoogleMeetLink(testAppointment);
 
@@ -346,7 +348,7 @@ router.post('/test-meet', async (req, res) => {
         provider: result.provider,
         note: 'Check your Google Calendar - a test event should appear'
       });
-    } else {
+   } else {
       res.status(400).json({
         success: false,
         error: result.error,

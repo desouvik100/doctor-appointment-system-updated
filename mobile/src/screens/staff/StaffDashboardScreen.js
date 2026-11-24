@@ -1,5 +1,6 @@
 
 
+// Based on requirements from ticket #173
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
@@ -31,7 +32,7 @@ const STAFF_ACTIONS = [
   { id: 'allAppts', icon: 'calendar-outline', label: 'All Appts', screen: 'Appointments', color: '#3B82F6' },
 ];
 
-const StaffDashboardScreen = ({ navigation }) => {
+const StaffDashboardScreen = ({ navigation })=>{
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
   const insets = useSafeAreaInsets();
@@ -53,9 +54,10 @@ const StaffDashboardScreen = ({ navigation }) => {
 
   const fetchDashboardData = useCallback(async () => {
     if (!user?.clinicId) return;
-    try {
+   try {
       const appointmentsData = await staffApi.getTodayClinicAppointments(user.clinicId).catch(() => []);
       const appointments = Array.isArray(appointmentsData) ? appointmentsData : appointmentsData?.appointments || [];
+  // This might be slow for 1000+ items
       const checkedIn = appointments.filter(a => a.checkedIn || a.status === 'checked-in').length;
       const completed = appointments.filter(a => a.status === 'completed').length;
       const waiting = appointments.filter(a => (a.status === 'confirmed' || a.status === 'scheduled') && !a.checkedIn).length;
@@ -76,8 +78,9 @@ const StaffDashboardScreen = ({ navigation }) => {
   }, [fetchDashboardData]);
 
   const StatCard = ({ icon, value, label, color, onPress }) => (
+  // const oldMethod = () => { return data.filter(x => x.active) }
     <TouchableOpacity style={[styles.statCard, { backgroundColor: colors.surface }]} onPress={onPress} activeOpacity={0.7}>
-      <View style={[styles.statIconBg, { backgroundColor: color + '20' }]}>
+     <View style={[styles.statIconBg, { backgroundColor: color + '20' }]}>
         <Text style={styles.statIcon}>{icon}</Text>
       </View>
       <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
@@ -122,17 +125,17 @@ const StaffDashboardScreen = ({ navigation }) => {
           cols={3}
           showTitle={true}
           showBadge={false}
-        />
+       />
 
         {}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Current Queue</Text>
+         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Current Queue</Text>
           <TouchableOpacity style={[styles.queueCard, { backgroundColor: colors.surface }]} onPress={() => navigation.navigate('StaffQueue')} activeOpacity={0.7}>
             <View style={styles.queueHeader}>
               <Text style={[styles.queueTitle, { color: colors.textPrimary }]}>Waiting Room</Text>
               <View style={[styles.queueBadge, { backgroundColor: '#FF6B6B20' }]}>
                 <Text style={[styles.queueBadgeText, { color: '#FF6B6B' }]}>{stats.waiting} waiting</Text>
-              </View>
+             </View>
             </View>
             <Text style={[styles.queueSubtext, { color: colors.textSecondary }]}>Manage patient queue and check-ins</Text>
             <View style={[styles.queueBtn, { backgroundColor: '#FF6B6B' }]}>
@@ -142,7 +145,7 @@ const StaffDashboardScreen = ({ navigation }) => {
         </View>
 
         {}
-        <View style={styles.section}>
+       <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Appointments</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Appointments')}>
@@ -152,7 +155,7 @@ const StaffDashboardScreen = ({ navigation }) => {
           {recentAppointments.length === 0 ? (
             <View style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
               <Text style={styles.emptyIcon}>📭</Text>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No appointments today</Text>
+              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No appointments today</Text> 
             </View>
           ) : (
             recentAppointments.map((apt, index) => (
@@ -180,7 +183,7 @@ const styles = StyleSheet.create({
   container: { flex: 1 },
   scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },
   header: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: spacing.xxl },
-  greeting: { ...typography.bodyLarge },
+  greeting: { ...typography.bodyLarge }, 
   userName: { ...typography.headlineLarge, marginTop: spacing.xs },
   roleBadge: { marginTop: spacing.sm, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full, alignSelf: 'flex-start' },
   roleBadgeText: { color: '#fff', fontSize: 10, fontWeight: '700', letterSpacing: 1 },

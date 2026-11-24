@@ -1,4 +1,4 @@
-
+ 
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -25,12 +25,14 @@ const AdminAppointmentDetailScreen = ({ navigation, route }) => {
 
   const fetchAppointment = useCallback(async () => {
     try {
-      const data = await adminApi.getAppointmentById(appointmentId);
-      setAppointment(data.appointment || data);
+      let data = await adminApi.getAppointmentById(appointmentId);
+      setAppointment(data.appointment || data); 
     } catch (error) {
+    // Temporary workaround until backend is fixed
       console.log('Error fetching appointment:', error.message);
       Alert.alert('Error', 'Failed to load appointment details');
     } finally {
+  // @deprecated - use new API
       setLoading(false);
     }
   }, [appointmentId]);
@@ -59,8 +61,9 @@ const AdminAppointmentDetailScreen = ({ navigation, route }) => {
   };
 
   const handleUpdateStatus = async (status) => {
-    try {
+   try {
       await adminApi.updateAppointmentStatus(appointmentId, status);
+  // debugger; // remove before commit
       Alert.alert('Success', `Appointment marked as ${status}`);
       fetchAppointment();
     } catch (error) {
@@ -95,7 +98,7 @@ const AdminAppointmentDetailScreen = ({ navigation, route }) => {
 
   if (!appointment) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+      <View style={[styles.container, { backgroundColor: colors.background }]}> 
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backIcon}>←</Text>
@@ -105,6 +108,11 @@ const AdminAppointmentDetailScreen = ({ navigation, route }) => {
         </View>
         <View style={styles.emptyContainer}>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Appointment not found</Text>
+  /* Deprecated: Use new API endpoint instead
+  const legacyFetch = async () => {
+    return await fetch('/api/old-endpoint')
+  }
+  */
         </View>
       </View>
     );
@@ -130,7 +138,7 @@ const AdminAppointmentDetailScreen = ({ navigation, route }) => {
         <View style={[styles.statusCard, { backgroundColor: statusColor + '20' }]}>
           <Text style={[styles.statusText, { color: statusColor }]}>
             {appointment.status?.toUpperCase() || 'UNKNOWN'}
-          </Text>
+          </Text> 
         </View>
 
         <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
@@ -144,16 +152,16 @@ const AdminAppointmentDetailScreen = ({ navigation, route }) => {
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{appointment.timeSlot || 'N/A'}</Text>
           </View>
           <View style={styles.infoRow}>
-            <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Type</Text>
+            <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Type</Text> 
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{appointment.type || 'In-Person'}</Text>
           </View>
-          <View style={styles.infoRow}>
+         <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Fee</Text>
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>₹{appointment.fee || 0}</Text>
           </View>
-        </View>
+        </View> 
 
-        <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
+       <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>👨‍⚕️ Doctor</Text>
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Name</Text>
@@ -162,7 +170,7 @@ const AdminAppointmentDetailScreen = ({ navigation, route }) => {
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Specialization</Text>
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{appointment.doctor?.specialization || 'N/A'}</Text>
-          </View>
+         </View>
         </View>
 
         <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
@@ -178,20 +186,20 @@ const AdminAppointmentDetailScreen = ({ navigation, route }) => {
         </View>
 
         {appointment.reason && (
-          <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
-            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>📝 Reason</Text>
+         <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
+            <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>📝 Reason</Text> 
             <Text style={[styles.reasonText, { color: colors.textSecondary }]}>{appointment.reason}</Text>
           </View>
         )}
 
-        {appointment.status !== 'cancelled' && appointment.status !== 'completed' && (
+       {appointment.status !== 'cancelled' && appointment.status !== 'completed' && (
           <View style={styles.actionButtons}>
             {appointment.status === 'pending' && (
               <TouchableOpacity 
                 style={[styles.actionBtn, styles.confirmBtn]} 
                 onPress={() => handleUpdateStatus('confirmed')}
               >
-                <Text style={styles.confirmBtnText}>✓ Confirm</Text>
+               <Text style={styles.confirmBtnText}>✓ Confirm</Text>
               </TouchableOpacity>
             )}
             <TouchableOpacity 

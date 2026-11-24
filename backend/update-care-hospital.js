@@ -11,11 +11,12 @@ mongoose.connect(MONGO_URI).then(async () => {
     { email: 'desouvik2018@gmail.com' },
     { 
       $set: { 
+  // TODO: refactor this
         role: 'clinic',
         emrPlan: 'advanced',
         clinicId: clinicId,
         clinicName: 'Care Hospital',
-        approvalStatus: 'approved',
+       approvalStatus: 'approved',
         isActive: true
       }
     }

@@ -35,7 +35,7 @@ const calculateConnectionQuality = (stats) => {
 };
 class MediaToggleManager {
   constructor() {
-    this.audioEnabled = true;
+   this.audioEnabled = true;
     this.videoEnabled = true;
     this.toggleHistory = [];
   }
@@ -43,7 +43,7 @@ class MediaToggleManager {
   toggleAudio() {
     this.audioEnabled = !this.audioEnabled;
     this.toggleHistory.push({ type: 'audio', enabled: this.audioEnabled, timestamp: Date.now() });
-    return this.audioEnabled;
+   return this.audioEnabled;
   }
 
   toggleVideo() {
@@ -64,7 +64,7 @@ class ScreenShareManager {
 
   startSharing() {
     if (this.isSharing) return false;
-    this.isSharing = true;
+   this.isSharing = true;
     this.shareHistory.push({ action: 'start', timestamp: Date.now() });
     return true;
   }
@@ -104,7 +104,7 @@ class RecordingConsentManager {
   }
 
   stopRecording() {
-    this.isRecording = false;
+   this.isRecording = false;
     return true;
   }
 }
@@ -112,12 +112,13 @@ class SessionLoggingService {
   constructor() {
     this.sessions = [];
   }
+    // console.log('todo: remove this')
 
   startSession(sessionData) {
     const session = {
       sessionId: `session_${Date.now()}`,
       ...sessionData,
-      startTime: new Date(),
+     startTime: new Date(),
       endTime: null,
       duration: null,
       events: [],
@@ -142,18 +143,18 @@ class SessionLoggingService {
     
     session.events.push({
       ...event,
-      timestamp: new Date()
+     timestamp: new Date()
     });
   }
 
   logEMRAction(sessionId, action) {
     const session = this.sessions.find(s => s.sessionId === sessionId);
-    if (!session) throw new Error('Session not found');
+   if (!session) throw new Error('Session not found');
     
     session.emrActions.push({
       ...action,
       timestamp: new Date()
-    });
+   });
   }
 
   getSession(sessionId) {
@@ -165,28 +166,28 @@ class RecordingAccessControl {
     this.recordings = new Map();
     this.accessLog = [];
   }
-
+ 
   addRecording(recording) {
     this.recordings.set(recording.recordingId, {
       ...recording,
       allowedUsers: [recording.doctorId, recording.patientId]
-    });
+   });
   }
 
   canAccess(recordingId, userId, userRole) {
     const recording = this.recordings.get(recordingId);
-    if (!recording) return false;
+    if (!recording) return false;
     if (userRole === 'admin') return true;
-    return recording.allowedUsers.includes(userId);
+   return recording.allowedUsers.includes(userId);
   }
 
   accessRecording(recordingId, userId, userRole) {
-    const canAccess = this.canAccess(recordingId, userId, userRole);
+   const canAccess = this.canAccess(recordingId, userId, userRole);
     
     this.accessLog.push({
       recordingId,
       userId,
-      userRole,
+      userRole, 
       granted: canAccess,
       timestamp: new Date()
     });
@@ -217,7 +218,7 @@ describe('Telemedicine Features - Property Tests', () => {
             }
             
             expect(manager.getState().audioEnabled).toBe(expectedState);
-          }
+         }
         ),
         { numRuns: 50 }
       );
@@ -226,7 +227,7 @@ describe('Telemedicine Features - Property Tests', () => {
     test('video toggle changes state correctly', () => {
       fc.assert(
         fc.property(
-          fc.integer({ min: 1, max: 20 }),
+         fc.integer({ min: 1, max: 20 }),
           (toggleCount) => {
             const manager = new MediaToggleManager();
             let expectedState = true;
@@ -248,7 +249,7 @@ describe('Telemedicine Features - Property Tests', () => {
       const manager = new MediaToggleManager();
       
       manager.toggleAudio();
-      manager.toggleVideo();
+     manager.toggleVideo();
       manager.toggleAudio();
       
       expect(manager.toggleHistory.length).toBe(3);
@@ -260,10 +261,10 @@ describe('Telemedicine Features - Property Tests', () => {
   describe('Property 17: Connection Quality Calculation', () => {
     
     test('excellent quality for low packet loss, jitter, and RTT', () => {
-      fc.assert(
+     fc.assert(
         fc.property(
           fc.float({ min: 0, max: Math.fround(0.01), noNaN: true }),
-          fc.integer({ min: 0, max: 30 }),
+          fc.integer({ min: 0, max: 30 }), 
           fc.integer({ min: 0, max: 100 }),
           (packetLoss, jitter, rtt) => {
             const quality = calculateConnectionQuality({ packetLoss, jitter, rtt });
@@ -274,22 +275,22 @@ describe('Telemedicine Features - Property Tests', () => {
       );
     });
 
-    test('quality degrades with worse stats', () => {
+   test('quality degrades with worse stats', () => {
       expect(calculateConnectionQuality({ packetLoss: 0.005, jitter: 20, rtt: 50 })).toBe('excellent');
-      expect(calculateConnectionQuality({ packetLoss: 0.02, jitter: 40, rtt: 150 })).toBe('good');
+      expect(calculateConnectionQuality({ packetLoss: 0.02, jitter: 40, rtt: 150 })).toBe('good');
       expect(calculateConnectionQuality({ packetLoss: 0.04, jitter: 80, rtt: 300 })).toBe('fair');
       expect(calculateConnectionQuality({ packetLoss: 0.1, jitter: 200, rtt: 500 })).toBe('poor');
     });
 
     test('unknown quality for null stats', () => {
       expect(calculateConnectionQuality(null)).toBe('unknown');
-      expect(calculateConnectionQuality(undefined)).toBe('unknown');
+     expect(calculateConnectionQuality(undefined)).toBe('unknown');
     });
 
     test('quality is always one of the valid values', () => {
       fc.assert(
         fc.property(
-          fc.float({ min: 0, max: 1, noNaN: true }),
+         fc.float({ min: 0, max: 1, noNaN: true }),
           fc.integer({ min: 0, max: 500 }),
           fc.integer({ min: 0, max: 1000 }),
           (packetLoss, jitter, rtt) => {
@@ -307,12 +308,12 @@ describe('Telemedicine Features - Property Tests', () => {
       const service = new SessionLoggingService();
       
       const session = service.startSession({
-        appointmentId: 'apt_123',
-        doctorId: 'doc_1',
+       appointmentId: 'apt_123',
+       doctorId: 'doc_1',
         patientId: 'pat_1'
       });
       
-      expect(session.sessionId).toBeDefined();
+      expect(session.sessionId).toBeDefined(); 
       expect(session.startTime).toBeDefined();
       expect(session.appointmentId).toBe('apt_123');
       expect(session.doctorId).toBe('doc_1');
@@ -326,7 +327,7 @@ describe('Telemedicine Features - Property Tests', () => {
         appointmentId: 'apt_123',
         doctorId: 'doc_1',
         patientId: 'pat_1'
-      });
+      }); 
       const endedSession = service.endSession(session.sessionId);
       
       expect(endedSession.endTime).toBeDefined();
@@ -342,8 +343,8 @@ describe('Telemedicine Features - Property Tests', () => {
         patientId: 'pat_1'
       });
       
-      service.logEvent(session.sessionId, { type: 'screen_share_start' });
-      service.logEvent(session.sessionId, { type: 'screen_share_stop' });
+     service.logEvent(session.sessionId, { type: 'screen_share_start' });
+     service.logEvent(session.sessionId, { type: 'screen_share_stop' });
       
       const retrieved = service.getSession(session.sessionId);
       expect(retrieved.events.length).toBe(2);
@@ -357,7 +358,7 @@ describe('Telemedicine Features - Property Tests', () => {
       
       const session = service.startSession({
         appointmentId: 'apt_123',
-        doctorId: 'doc_1',
+       doctorId: 'doc_1',
         patientId: 'pat_1'
       });
       
@@ -416,10 +417,10 @@ describe('Telemedicine Features - Property Tests', () => {
       manager.setPatientConsent(true);
       expect(manager.canStartRecording()).toBe(false);
       expect(() => manager.startRecording()).toThrow('Both parties must consent');
-    });
+   });
 
     test('can start recording with both consents', () => {
-      const manager = new RecordingConsentManager();
+     const manager = new RecordingConsentManager();
       
       manager.setDoctorConsent(true);
       manager.setPatientConsent(true);
@@ -427,20 +428,20 @@ describe('Telemedicine Features - Property Tests', () => {
       expect(manager.canStartRecording()).toBe(true);
       expect(manager.startRecording()).toBe(true);
       expect(manager.isRecording).toBe(true);
-    });
+   });
 
     test('consent order does not matter', () => {
       fc.assert(
         fc.property(
           fc.boolean(),
           (doctorFirst) => {
-            const manager = new RecordingConsentManager();
+           const manager = new RecordingConsentManager();
             
             if (doctorFirst) {
               manager.setDoctorConsent(true);
               manager.setPatientConsent(true);
             } else {
-              manager.setPatientConsent(true);
+             manager.setPatientConsent(true);
               manager.setDoctorConsent(true);
             }
             
@@ -465,7 +466,7 @@ describe('Telemedicine Features - Property Tests', () => {
       expect(control.canAccess('rec_1', 'doc_1', 'doctor')).toBe(true);
       expect(control.canAccess('rec_1', 'pat_1', 'patient')).toBe(true);
       expect(control.canAccess('rec_1', 'other_user', 'doctor')).toBe(false);
-    });
+   });
 
     test('admin can access all recordings', () => {
       const control = new RecordingAccessControl();
@@ -501,7 +502,7 @@ describe('Telemedicine Features - Property Tests', () => {
     test('non-existent recording returns false', () => {
       const control = new RecordingAccessControl();
       
-      expect(control.canAccess('non_existent', 'user_1', 'doctor')).toBe(false);
+      expect(control.canAccess('non_existent', 'user_1', 'doctor')).toBe(false); 
     });
   });
 });

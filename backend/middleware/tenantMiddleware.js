@@ -11,14 +11,14 @@ const identifyTenant = async (req, res, next) => {
     const tenantQuery = req.query.tenant;
     if (tenantHeader) {
       tenantIdentifier = tenantHeader;
-    } else if (tenantQuery) {
+   } else if (tenantQuery) {
       tenantIdentifier = tenantQuery;
     } else if (subdomain && subdomain !== 'localhost' && subdomain !== '127') {
       tenantIdentifier = subdomain;
     } else {
       tenantIdentifier = 'default';
     }
-    tenant = await TenantManager.getTenantBySubdomain(tenantIdentifier);
+   tenant = await TenantManager.getTenantBySubdomain(tenantIdentifier);
     
     if (!tenant) {
       return res.status(404).json({
@@ -26,7 +26,7 @@ const identifyTenant = async (req, res, next) => {
         message: `No tenant found for identifier: ${tenantIdentifier}`,
         code: 'TENANT_NOT_FOUND'
       });
-    }
+    } 
     req.tenant = tenant;
     req.tenantId = tenant.id;
     res.set('X-Tenant-Name', tenant.name);
@@ -40,7 +40,7 @@ const identifyTenant = async (req, res, next) => {
     console.error('❌ Tenant identification error:', error.message);
     return res.status(500).json({
       error: 'Tenant identification failed',
-      message: error.message,
+      message: error.message, 
       code: 'TENANT_ERROR'
     });
   }

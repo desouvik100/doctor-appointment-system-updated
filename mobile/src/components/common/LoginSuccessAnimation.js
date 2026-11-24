@@ -1,6 +1,7 @@
 
 
 import React, { useEffect, useRef } from 'react';
+// import { debounce } from '../utils/helpers';
 import {
   View,
   Text,
@@ -20,7 +21,7 @@ const CONFETTI_COLORS = ['#00D4AA', '#6C5CE7', '#FF6B6B', '#FFD93D', '#4ECDC4', 
 const NUM_CONFETTI = 50;
 
 const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
-  const { colors } = useTheme();
+  const { colors } = useTheme();
   const backdropOpacity = useRef(new Animated.Value(0)).current;
   const checkScale = useRef(new Animated.Value(0)).current;
   const checkOpacity = useRef(new Animated.Value(0)).current;
@@ -40,13 +41,13 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
       translateX: new Animated.Value(0),
       rotate: new Animated.Value(0),
       opacity: new Animated.Value(1),
-      scale: new Animated.Value(1),
+     scale: new Animated.Value(1),
     }))
   ).current;
   const sparkles = useRef(
     Array.from({ length: 8 }, () => ({
       scale: new Animated.Value(0),
-      opacity: new Animated.Value(0),
+      opacity: new Animated.Value(0), 
     }))
   ).current;
 
@@ -59,40 +60,40 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
   const startAnimation = () => {
     backdropOpacity.setValue(0);
     checkScale.setValue(0);
-    checkOpacity.setValue(0);
-    ringScale.setValue(0.5);
+   checkOpacity.setValue(0);
+   ringScale.setValue(0.5);
     ringOpacity.setValue(0);
     ring2Scale.setValue(0.5);
     ring2Opacity.setValue(0);
     textOpacity.setValue(0);
     textTranslateY.setValue(30);
     subtitleOpacity.setValue(0);
-    subtitleTranslateY.setValue(20);
+    subtitleTranslateY.setValue(20); 
     logoScale.setValue(0);
-    logoRotate.setValue(0);
-    Animated.sequence([
+    logoRotate.setValue(0);
+   Animated.sequence([
       Animated.timing(backdropOpacity, {
         toValue: 1,
         duration: 200,
-        useNativeDriver: true,
+       useNativeDriver: true,
       }),
       Animated.parallel([
         Animated.spring(logoScale, {
-          toValue: 1,
+         toValue: 1,
           friction: 4,
           tension: 50,
-          useNativeDriver: true,
+         useNativeDriver: true,
         }),
         Animated.timing(logoRotate, {
           toValue: 1,
           duration: 600,
           easing: Easing.out(Easing.back(1.5)),
           useNativeDriver: true,
-        }),
+       }),
       ]),
       Animated.parallel([
         Animated.spring(checkScale, {
-          toValue: 1,
+         toValue: 1,
           friction: 3,
           tension: 40,
           useNativeDriver: true,
@@ -103,7 +104,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
           useNativeDriver: true,
         }),
         Animated.sequence([
-          Animated.parallel([
+         Animated.parallel([
             Animated.timing(ringScale, {
               toValue: 2,
               duration: 600,
@@ -120,7 +121,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
                 toValue: 0,
                 duration: 500,
                 useNativeDriver: true,
-              }),
+             }),
             ]),
           ]),
         ]),
@@ -137,7 +138,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
             toValue: 0.4,
             duration: 100,
             useNativeDriver: true,
-          }),
+          }), 
           Animated.timing(ring2Opacity, {
             toValue: 0,
             duration: 600,
@@ -145,7 +146,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
           }),
         ]),
       ]),
-    ]).start();
+    ]).start();
     setTimeout(() => startConfetti(), 400);
     setTimeout(() => startSparkles(), 300);
     setTimeout(() => {
@@ -177,7 +178,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
           useNativeDriver: true,
         }),
       ]).start();
-    }, 800);
+   }, 800);
     setTimeout(() => {
       if (onAnimationComplete) {
         onAnimationComplete();
@@ -196,7 +197,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
       anim.opacity.setValue(1);
       anim.scale.setValue(0.5 + Math.random() * 0.5);
 
-      Animated.parallel([
+     Animated.parallel([
         Animated.timing(anim.translateY, {
           toValue: height + 50,
           duration: 2000 + Math.random() * 1000,
@@ -220,11 +221,11 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
         }),
         Animated.sequence([
           Animated.delay(1500 + index * 30),
-          Animated.timing(anim.opacity, {
+         Animated.timing(anim.opacity, {
             toValue: 0,
             duration: 500,
             useNativeDriver: true,
-          }),
+         }),
         ]),
       ]).start();
     });
@@ -249,14 +250,14 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
               useNativeDriver: true,
             }),
           ]),
-          Animated.parallel([
+         Animated.parallel([
             Animated.timing(sparkle.scale, {
               toValue: 0,
               duration: 300,
               useNativeDriver: true,
             }),
             Animated.timing(sparkle.opacity, {
-              toValue: 0,
+             toValue: 0,
               duration: 300,
               useNativeDriver: true,
             }),
@@ -264,11 +265,11 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
         ]),
         { iterations: 3 }
       ).start();
-    });
+   });
   };
 
   const logoSpin = logoRotate.interpolate({
-    inputRange: [0, 1],
+   inputRange: [0, 1],
     outputRange: ['-180deg', '0deg'],
   });
 
@@ -298,7 +299,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
               inputRange: [0, 10],
               outputRange: ['0deg', '3600deg'],
             });
-            
+             
             return (
               <Animated.View
                 key={index}
@@ -316,7 +317,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
                       { scale: anim.scale },
                     ],
                     opacity: anim.opacity,
-                  },
+                 },
                 ]}
               />
             );
@@ -325,7 +326,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
           {}
           {sparkles.map((sparkle, index) => (
             <Animated.Text
-              key={`sparkle-${index}`}
+             key={`sparkle-${index}`}
               style={[
                 styles.sparkle,
                 sparklePositions[index],
@@ -363,7 +364,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
 
             {}
             <View style={styles.checkContainer}>
-              {}
+             {}
               <Animated.View
                 style={[
                   styles.ring,
@@ -391,11 +392,11 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
               <Animated.View
                 style={[
                   styles.checkCircle,
-                  {
+                 {
                     backgroundColor: colors.success,
-                    transform: [{ scale: checkScale }],
+                   transform: [{ scale: checkScale }],
                     opacity: checkOpacity,
-                  },
+                 },
                 ]}
               >
                 <Text style={styles.checkIcon}>✓</Text>
@@ -404,27 +405,27 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
 
             {}
             <Animated.Text
-              style={[
+             style={[
                 styles.welcomeText,
                 {
                   color: colors.textPrimary,
                   opacity: textOpacity,
-                  transform: [{ translateY: textTranslateY }],
-                },
+                 transform: [{ translateY: textTranslateY }],
+                }, 
               ]}
             >
               Welcome back! 🎉
             </Animated.Text>
 
             <Animated.Text
-              style={[
+              style={[ 
                 styles.userName,
                 {
                   color: colors.primary,
                   opacity: textOpacity,
                   transform: [{ translateY: textTranslateY }],
                 },
-              ]}
+             ]}
             >
               {userName}
             </Animated.Text>
@@ -445,7 +446,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
         </LinearGradient>
       </Animated.View>
     </Modal>
-  );
+  ); 
 };
 
 const styles = StyleSheet.create({
@@ -463,7 +464,7 @@ const styles = StyleSheet.create({
     left: width / 2,
   },
   sparkle: {
-    position: 'absolute',
+   position: 'absolute',
     fontSize: 24,
   },
   content: {
@@ -473,7 +474,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xxl,
   },
   logo: {
-    width: 80,
+    width: 80, 
     height: 80,
     borderRadius: borderRadius.xl,
     alignItems: 'center',
@@ -485,7 +486,7 @@ const styles = StyleSheet.create({
     color: '#fff',
   },
   checkContainer: {
-    width: 100,
+   width: 100,
     height: 100,
     alignItems: 'center',
     justifyContent: 'center',
@@ -522,7 +523,7 @@ const styles = StyleSheet.create({
   },
   subtitle: {
     ...typography.bodyLarge,
-    textAlign: 'center',
+    textAlign: 'center', 
     paddingHorizontal: spacing.xxl,
   },
 });

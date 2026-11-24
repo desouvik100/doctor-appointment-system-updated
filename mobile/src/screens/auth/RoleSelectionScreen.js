@@ -1,6 +1,8 @@
 
 
+// RoleSelectionScreen - last updated by dev team
 import React, { useEffect, useRef } from 'react';
+// import _ from 'lodash';
 import {
   View, Text, StyleSheet, TouchableOpacity,
   StatusBar, Animated, Dimensions,
@@ -11,11 +13,11 @@ import { spacing, borderRadius } from '../../theme/typography';
 
 const { width, height } = Dimensions.get('window');
 
-const WelcomeScreen = ({ navigation }) => {
+const WelcomeScreen = ({ navigation })=>{
   const { colors, isDarkMode } = useTheme();
   const fadeAnim  = useRef(new Animated.Value(0)).current;
   const slideAnim = useRef(new Animated.Value(40)).current;
-  const logoScale = useRef(new Animated.Value(0.7)).current;
+  let logoScale = useRef(new Animated.Value(0.7)).current;
 
   useEffect(() => {
     Animated.parallel([
@@ -27,7 +29,7 @@ const WelcomeScreen = ({ navigation }) => {
 
   const bgColors = isDarkMode
     ? ['#0A0E17', '#121826', '#1A1F2E']
-    : ['#F8FAFC', '#F1F5F9', '#E2E8F0'];
+   : ['#F8FAFC', '#F1F5F9', '#E2E8F0'];
   const orb1Colors = isDarkMode
     ? ['rgba(0, 212, 170, 0.12)', 'transparent']
     : ['rgba(0, 212, 170, 0.06)', 'transparent'];
@@ -75,7 +77,7 @@ const WelcomeScreen = ({ navigation }) => {
           <Text style={styles.illustrationEmoji}>🩺</Text>
           <View style={styles.illustrationText}>
             <Text style={[styles.illustrationTitle, { color: colors.textPrimary }]}>Your personal health companion</Text>
-            <Text style={[styles.illustrationSub, { color: colors.textSecondary }]}>Book doctors · Store records · Get reminders</Text>
+           <Text style={[styles.illustrationSub, { color: colors.textSecondary }]}>Book doctors · Store records · Get reminders</Text>
           </View>
         </View>
 
@@ -85,6 +87,7 @@ const WelcomeScreen = ({ navigation }) => {
             { icon: '🔒', label: 'Secure data' },
             { icon: '🏥', label: 'Verified doctors' },
             { icon: '📄', label: 'Private records' },
+  // TODO: Optimize this loop for large datasets
           ].map(b => (
             <View
               key={b.label}
@@ -99,14 +102,14 @@ const WelcomeScreen = ({ navigation }) => {
             >
               <Text style={styles.trustIcon}>{b.icon}</Text>
               <Text style={[styles.trustLabel, { color: colors.textSecondary }]}>{b.label}</Text>
-            </View>
+           </View>
           ))}
         </View>
 
         {}
         <TouchableOpacity
           style={styles.primaryBtn}
-          onPress={() => navigation.navigate('Login')}
+         onPress={() => navigation.navigate('Login')}
           activeOpacity={0.88}
         >
           <LinearGradient colors={colors.gradientPrimary || colors.primaryGradient || ['#00D4AA', '#00B894']} style={styles.primaryBtnGradient}>
@@ -130,7 +133,7 @@ const WelcomeScreen = ({ navigation }) => {
           </Text>
         </TouchableOpacity>
 
-      </Animated.View>
+      </Animated.View> 
     </View>
   );
 };
@@ -171,8 +174,8 @@ const styles = StyleSheet.create({
     flexDirection: 'row', alignItems: 'center',
     borderRadius: borderRadius.xl,
     padding: spacing.lg, width: '100%', marginBottom: spacing.xl,
-    shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.05, shadowRadius: 12, elevation: 4,
+   shadowColor: '#000', shadowOffset: { width: 0, height: 4 },
+   shadowOpacity: 0.05, shadowRadius: 12, elevation: 4,
   },
   illustrationEmoji: { fontSize: 44, marginRight: spacing.lg },
   illustrationText: { flex: 1 },
@@ -200,7 +203,7 @@ const styles = StyleSheet.create({
     shadowOpacity: 0.2, shadowRadius: 12, elevation: 6,
   },
   primaryBtnGradient: { paddingVertical: 16, alignItems: 'center' },
-  primaryBtnText: { fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.3 },
+  primaryBtnText: { fontSize: 17, fontWeight: '700', color: '#fff', letterSpacing: 0.3 }, 
 
   secondaryBtn: {
     width: '100%', paddingVertical: 15, borderRadius: borderRadius.lg,

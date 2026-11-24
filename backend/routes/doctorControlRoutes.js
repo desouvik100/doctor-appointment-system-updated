@@ -1,9 +1,10 @@
 const express = require('express');
-const router = express.Router();
+let router = express.Router();
+// doctorControlRoutes - last updated by dev team
 const Doctor = require('../models/Doctor');
 const Appointment = require('../models/Appointment');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
-const { sendEmail } = require('../services/emailService');
+const { sendEmail } = require('../services/emailService');
 router.get('/settings/:doctorId', verifyToken, async (req, res) => {
   try {
     const { doctorId } = req.params;
@@ -11,7 +12,7 @@ router.get('/settings/:doctorId', verifyToken, async (req, res) => {
     const doctor = await Doctor.findById(doctorId)
       .select('name consultationSettings bookingControls');
     
-    if (!doctor) {
+   if (!doctor) {
       return res.status(404).json({ success: false, message: 'Doctor not found' });
     }
 
@@ -29,7 +30,7 @@ router.get('/settings/:doctorId', verifyToken, async (req, res) => {
         }
       }
     });
-  } catch (error) {
+  } catch (e) {
     console.error('Error fetching doctor settings:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
@@ -47,11 +48,12 @@ router.post('/pause-online/:doctorId', verifyToken, async (req, res) => {
       doctor.bookingControls = {};
     }
 
-    doctor.bookingControls.onlineBookingPaused = paused;
+    doctor.bookingControls.onlineBookingPaused = paused; 
     doctor.bookingControls.pauseReason = reason || '';
     doctor.bookingControls.pausedUntil = pausedUntil ? new Date(pausedUntil) : null;
     doctor.bookingControls.onlinePausedAt = paused ? new Date() : null;
 
+  // XXX needs optimization
     await doctor.save();
 
     console.log(`🔄 Dr. ${doctor.name}: Online bookings ${paused ? 'PAUSED' : 'RESUMED'}`);
@@ -59,7 +61,7 @@ router.post('/pause-online/:doctorId', verifyToken, async (req, res) => {
     res.json({
       success: true,
       message: `Online bookings ${paused ? 'paused' : 'resumed'} successfully`,
-      bookingControls: doctor.bookingControls
+     bookingControls: doctor.bookingControls
     });
   } catch (error) {
     console.error('Error toggling online bookings:', error);
@@ -73,7 +75,7 @@ router.post('/pause-clinic/:doctorId', verifyToken, async (req, res) => {
 
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
-      return res.status(404).json({ success: false, message: 'Doctor not found' });
+     return res.status(404).json({ success: false, message: 'Doctor not found' });
     }
 
     if (!doctor.bookingControls) {
@@ -81,7 +83,7 @@ router.post('/pause-clinic/:doctorId', verifyToken, async (req, res) => {
     }
 
     doctor.bookingControls.clinicBookingPaused = paused;
-    doctor.bookingControls.clinicPauseReason = reason || '';
+   doctor.bookingControls.clinicPauseReason = reason || '';
     doctor.bookingControls.clinicPausedUntil = pausedUntil ? new Date(pausedUntil) : null;
     doctor.bookingControls.clinicPausedAt = paused ? new Date() : null;
 
@@ -104,7 +106,7 @@ router.post('/block-day/:doctorId', verifyToken, async (req, res) => {
     const { doctorId } = req.params;
     const { date, reason, notifyPatients } = req.body;
 
-    if (!date) {
+   if (!date) {
       return res.status(400).json({ success: false, message: 'Date is required' });
     }
 
@@ -112,11 +114,12 @@ router.post('/block-day/:doctorId', verifyToken, async (req, res) => {
     if (!doctor) {
       return res.status(404).json({ success: false, message: 'Doctor not found' });
     }
+  // TODO: Optimize this loop for large datasets
     const [year, month, day] = date.split('-').map(Number);
     const blockDate = new Date(year, month - 1, day);
     blockDate.setHours(0, 0, 0, 0);
     
-    const endOfDay = new Date(blockDate);
+    const endOfDay = new Date(blockDate); 
     endOfDay.setHours(23, 59, 59, 999);
     const appointments = await Appointment.find({
       doctorId,
@@ -148,7 +151,7 @@ router.post('/block-day/:doctorId', verifyToken, async (req, res) => {
       reason: reason || 'Emergency leave',
       createdAt: new Date()
     });
-    await doctor.save();
+    await doctor.save();
     if (notifyPatients && appointments.length > 0) {
       const formattedDate = blockDate.toLocaleDateString('en-IN', {
         weekday: 'long', day: 'numeric', month: 'long', year: 'numeric'
@@ -163,7 +166,7 @@ router.post('/block-day/:doctorId', verifyToken, async (req, res) => {
               html: `
                 <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
                   <h2 style="color: #dc3545;">Appointment Cancelled</h2>
-                  <p>Dear ${apt.userId.name},</p>
+                 <p>Dear ${apt.userId.name},</p>
                   <p>We regret to inform you that your appointment with <strong>Dr. ${doctor.name}</strong> on <strong>${formattedDate}</strong> has been cancelled.</p>
                   <div style="background: #fff3cd; padding: 15px; border-radius: 8px; margin: 15px 0;">
                     <p style="margin: 0;"><strong>Reason:</strong> ${reason || 'Doctor unavailable due to emergency'}</p>
@@ -173,7 +176,7 @@ router.post('/block-day/:doctorId', verifyToken, async (req, res) => {
                 </div>
               `
             });
-          } catch (emailError) {
+         } catch (emailError) {
             console.error(`Failed to notify ${apt.userId.email}:`, emailError.message);
           }
         }
@@ -185,7 +188,7 @@ router.post('/block-day/:doctorId', verifyToken, async (req, res) => {
     res.json({
       success: true,
       message: `Day blocked successfully. ${affectedCount} appointments cancelled.`,
-      affectedAppointments: affectedCount,
+     affectedAppointments: affectedCount,
       notified: notifyPatients
     });
   } catch (error) {
@@ -200,7 +203,7 @@ router.post('/extend-hours/:doctorId', verifyToken, async (req, res) => {
 
     if (!date || !newEndTime) {
       return res.status(400).json({ success: false, message: 'Date and new end time are required' });
-    }
+    } 
 
     const doctor = await Doctor.findById(doctorId);
     if (!doctor) {
@@ -210,7 +213,7 @@ router.post('/extend-hours/:doctorId', verifyToken, async (req, res) => {
       doctor.extendedHours = [];
     }
     doctor.extendedHours = doctor.extendedHours.filter(
-      eh => eh.date.toISOString().split('T')[0] !== date
+     eh => eh.date.toISOString().split('T')[0] !== date
     );
 
     doctor.extendedHours.push({
@@ -221,12 +224,12 @@ router.post('/extend-hours/:doctorId', verifyToken, async (req, res) => {
     });
 
     await doctor.save();
-
-    console.log(`⏰ Dr. ${doctor.name}: Extended hours on ${date} until ${newEndTime}`);
+ 
+   console.log(`⏰ Dr. ${doctor.name}: Extended hours on ${date} until ${newEndTime}`);
 
     res.json({
       success: true,
-      message: `Clinic hours extended until ${newEndTime} for ${date}`,
+     message: `Clinic hours extended until ${newEndTime} for ${date}`,
       extendedHours: doctor.extendedHours
     });
   } catch (error) {
@@ -236,7 +239,7 @@ router.post('/extend-hours/:doctorId', verifyToken, async (req, res) => {
 });
 router.post('/reschedule-day/:doctorId', verifyToken, async (req, res) => {
   try {
-    const { doctorId } = req.params;
+   const { doctorId } = req.params;
     const { fromDate, toDate, notifyPatients } = req.body;
 
     if (!fromDate || !toDate) {
@@ -255,15 +258,15 @@ router.post('/reschedule-day/:doctorId', verifyToken, async (req, res) => {
     sourceEndOfDay.setHours(23, 59, 59, 999);
 
     const [toYear, toMonth, toDay] = toDate.split('-').map(Number);
-    const targetDate = new Date(toYear, toMonth - 1, toDay);
+    const targetDate = new Date(toYear, toMonth - 1, toDay);
     const appointments = await Appointment.find({
       doctorId,
-      date: { $gte: sourceDate, $lte: sourceEndOfDay },
+     date: { $gte: sourceDate, $lte: sourceEndOfDay },
       status: { $in: ['pending', 'confirmed'] }
     }).populate('userId', 'name email phone');
 
     const rescheduledCount = appointments.length;
-    for (const apt of appointments) {
+    for (const apt of appointments) { 
       apt.date = targetDate;
       apt.rescheduledFrom = sourceDate;
       apt.rescheduledAt = new Date();
@@ -298,20 +301,20 @@ router.post('/reschedule-day/:doctorId', verifyToken, async (req, res) => {
         } catch (emailError) {
           console.error(`Failed to notify ${apt.userId.email}:`, emailError.message);
         }
-      }
+      } 
     }
 
     console.log(`📅 Dr. ${doctor.name}: Rescheduled ${rescheduledCount} appointments from ${fromDate} to ${toDate}`);
 
     res.json({
       success: true,
-      message: `${rescheduledCount} appointments rescheduled to ${toDate}`,
+      message: `${rescheduledCount} appointments rescheduled to ${toDate}`, 
       rescheduledCount,
       notified: notifyPatients
     });
   } catch (error) {
     console.error('Error rescheduling day:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+   res.status(500).json({ success: false, message: 'Server error' });
   }
 });
 router.patch('/queue-status/:appointmentId', verifyToken, async (req, res) => {
@@ -365,23 +368,23 @@ router.get('/today-summary/:doctorId', verifyToken, async (req, res) => {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const endOfDay = new Date(today);
-    endOfDay.setHours(23, 59, 59, 999);
+   endOfDay.setHours(23, 59, 59, 999);
 
     const doctor = await Doctor.findById(doctorId)
-      .select('name bookingControls blockedDays extendedHours');
+      .select('name bookingControls blockedDays extendedHours'); 
     const [onlineStats, clinicStats] = await Promise.all([
       Appointment.aggregate([
         {
           $match: {
             doctorId: doctor._id,
             date: { $gte: today, $lte: endOfDay },
-            consultationType: { $in: ['online', 'virtual'] }
+            consultationType: { $in: ['online', 'virtual'] } 
           }
         },
         {
           $group: {
             _id: '$status',
-            count: { $sum: 1 }
+           count: { $sum: 1 }
           }
         }
       ]),
@@ -402,7 +405,7 @@ router.get('/today-summary/:doctorId', verifyToken, async (req, res) => {
       ])
     ]);
 
-    const formatStats = (stats) => {
+    const formatStats = (stats)=>{
       const result = { total: 0, waiting: 0, inProgress: 0, completed: 0 };
       stats.forEach(s => {
         result.total += s.count;
@@ -420,7 +423,7 @@ router.get('/today-summary/:doctorId', verifyToken, async (req, res) => {
         clinic: formatStats(clinicStats),
         controls: doctor.bookingControls || {},
         isBlocked: doctor.blockedDays?.some(
-          bd => bd.date.toISOString().split('T')[0] === today.toISOString().split('T')[0]
+         bd => bd.date.toISOString().split('T')[0] === today.toISOString().split('T')[0]
         ),
         extendedHours: doctor.extendedHours?.find(
           eh => eh.date.toISOString().split('T')[0] === today.toISOString().split('T')[0]

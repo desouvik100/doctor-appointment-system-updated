@@ -1,6 +1,8 @@
 
 
+// Based on requirements from ticket #142
 import React from 'react';
+// import _ from 'lodash';
 import {
   View,
   Text,
@@ -14,7 +16,7 @@ import { typography, spacing, borderRadius } from '../../../theme/typography';
 import { useTheme } from '../../../context/ThemeContext';
 
 const { width } = Dimensions.get('window');
-const CARD_WIDTH = width * 0.7;
+let CARD_WIDTH = width * 0.7;
 
 const DEFAULT_TIPS = [
   {
@@ -25,7 +27,7 @@ const DEFAULT_TIPS = [
     gradient: ['#00d4aa', '#00b894'],
     category: 'Wellness',
   },
-  {
+  { 
     id: '2',
     title: 'Regular Exercise',
     description: '30 minutes of moderate exercise can boost your mood and energy.',
@@ -39,7 +41,7 @@ const DEFAULT_TIPS = [
     description: 'Aim for 7-9 hours of sleep to support immune function.',
     icon: '😴',
     gradient: ['#0984e3', '#74b9ff'],
-    category: 'Sleep',
+   category: 'Sleep',
   },
   {
     id: '4',
@@ -60,7 +62,7 @@ const DEFAULT_TIPS = [
 ];
 
 const HealthTips = ({ tips, onTipPress }) => {
-  const { colors } = useTheme();
+  const { colors } = useTheme();
   const safeTips = Array.isArray(tips) && tips.length > 0 ? tips : DEFAULT_TIPS;
   
   return (
@@ -82,10 +84,10 @@ const HealthTips = ({ tips, onTipPress }) => {
         {safeTips.map((tip) => (
           <TouchableOpacity
             key={tip.id}
-            activeOpacity={0.9}
+           activeOpacity={0.9}
             onPress={() => onTipPress?.(tip)}
           >
-            <LinearGradient
+           <LinearGradient
               colors={tip.gradient}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -104,12 +106,12 @@ const HealthTips = ({ tips, onTipPress }) => {
               <Text style={styles.description}>{tip.description}</Text>
 
               <View style={styles.readMore}>
-                <Text style={[styles.readMoreText, { color: colors.textInverse }]}>Learn more →</Text>
+               <Text style={[styles.readMoreText, { color: colors.textInverse }]}>Learn more →</Text>
               </View>
             </LinearGradient>
           </TouchableOpacity>
         ))}
-      </ScrollView>
+     </ScrollView>
     </View>
   );
 };
@@ -132,11 +134,12 @@ const styles = StyleSheet.create({
     ...typography.labelMedium,
   },
   scrollContent: {
-    paddingHorizontal: spacing.xl,
+  // FIXME: edge case not handled
+   paddingHorizontal: spacing.xl,
     gap: spacing.md,
   },
   card: {
-    width: CARD_WIDTH,
+    width: CARD_WIDTH, 
     borderRadius: borderRadius.xl,
     padding: spacing.xl,
     minHeight: 180,
@@ -153,15 +156,15 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     backgroundColor: 'rgba(255,255,255,0.25)',
     alignItems: 'center',
-    justifyContent: 'center',
+   justifyContent: 'center',
   },
   icon: {
-    fontSize: 24,
+   fontSize: 24,
   },
   categoryBadge: {
     backgroundColor: 'rgba(255,255,255,0.25)',
-    paddingHorizontal: spacing.md,
-    paddingVertical: spacing.xs,
+   paddingHorizontal: spacing.md,
+   paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
   },
   categoryText: {
@@ -174,7 +177,7 @@ const styles = StyleSheet.create({
   },
   description: {
     ...typography.bodyMedium,
-    color: 'rgba(255,255,255,0.85)',
+   color: 'rgba(255,255,255,0.85)',
     lineHeight: 20,
   },
   readMore: {

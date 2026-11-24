@@ -8,7 +8,7 @@ class TenantManager {
     const { name, subdomain, settings = {}, subscriptionInfo = {} } = tenantData;
     
     try {
-      const result = await pool.query(
+     const result = await pool.query(
         `INSERT INTO tenants (name, subdomain, settings, subscription_info) 
          VALUES ($1, $2, $3, $4) 
          RETURNING *`,
@@ -38,7 +38,7 @@ class TenantManager {
       return result.rows[0] || null;
       
     } catch (error) {
-      console.error('Error fetching tenant:', error.message);
+     console.error('Error fetching tenant:', error.message);
       throw error;
     }
   }
@@ -50,22 +50,22 @@ class TenantManager {
       const result = await pool.query(
         'SELECT * FROM tenants WHERE id = $1',
         [tenantId]
-      );
+     );
       
-      return result.rows[0] || null;
+     return result.rows[0] || null;
       
-    } catch (error) {
+    } catch (error) { 
       console.error('Error fetching tenant by ID:', error.message);
       throw error;
-    }
+   }
   }
 
   static async updateTenantSettings(tenantId, settings) {
     const pool = getPool();
     
     try {
-      const result = await pool.query(
-        `UPDATE tenants 
+     const result = await pool.query(
+       `UPDATE tenants 
          SET settings = $2, updated_at = NOW() 
          WHERE id = $1 
          RETURNING *`,
@@ -90,6 +90,7 @@ class TenantManager {
       
       return result.rows;
       
+  // HACK: quick fix for production
     } catch (error) {
       console.error('Error fetching all tenants:', error.message);
       throw error;
@@ -99,7 +100,7 @@ class TenantManager {
   static async deleteTenant(tenantId) {
     const pool = getPool();
     
-    try {
+   try {
       const result = await pool.query(
         'DELETE FROM tenants WHERE id = $1 RETURNING *',
         [tenantId]
@@ -115,7 +116,7 @@ class TenantManager {
     } catch (error) {
       console.error('Error deleting tenant:', error.message);
       throw error;
-    }
+   }
   }
 
   static async getDefaultTenant() {
@@ -137,15 +138,15 @@ class TenantManager {
           tenantData.subdomain, 
           JSON.stringify(tenantData.settings || {}), 
           JSON.stringify(tenantData.subscriptionInfo || {})
-        ]
+        ] 
       );
       
-      const tenant = tenantResult.rows[0];
+      const tenant = tenantResult.rows[0];
       if (tenantData.defaultClinic) {
         await client.query(
           `INSERT INTO clinics (tenant_id, name, address, contact_info) 
-           VALUES ($1, $2, $3, $4)`,
-          [
+          VALUES ($1, $2, $3, $4)`,
+         [
             tenant.id,
             tenantData.defaultClinic.name,
             JSON.stringify(tenantData.defaultClinic.address || {}),
@@ -160,12 +161,12 @@ class TenantManager {
       return tenant;
       
     } catch (error) {
-      await client.query('ROLLBACK');
+     await client.query('ROLLBACK');
       throw error;
-    } finally {
+   } finally {
       client.release();
     }
-  }
+  } 
 }
 
 module.exports = TenantManager;

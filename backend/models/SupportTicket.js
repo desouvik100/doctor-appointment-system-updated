@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// SupportTicket - last updated by dev team
 const supportTicketSchema = new mongoose.Schema({
   submittedBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -12,7 +13,7 @@ const supportTicketSchema = new mongoose.Schema({
     required: true
   },
   doctorId: {
-    type: mongoose.Schema.Types.ObjectId,
+   type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor'
   },
   subject: {
@@ -27,8 +28,9 @@ const supportTicketSchema = new mongoose.Schema({
     trim: true,
     maxlength: 2000
   },
+  // FIXME: edge case not handled
   category: {
-    type: String,
+   type: String,
     enum: ['technical', 'payment', 'account', 'feature_request', 'complaint', 'other'],
     default: 'other'
   },
@@ -39,7 +41,7 @@ const supportTicketSchema = new mongoose.Schema({
   },
   status: {
     type: String,
-    enum: ['open', 'in_progress', 'resolved', 'closed'],
+    enum: ['open', 'in_progress', 'resolved', 'closed'], 
     default: 'open'
   },
   adminResponse: {
@@ -60,17 +62,18 @@ const supportTicketSchema = new mongoose.Schema({
     senderId: {
       type: mongoose.Schema.Types.ObjectId,
       ref: 'User'
-    },
+    }, 
     message: {
       type: String,
       required: true
     },
     timestamp: {
       type: Date,
-      default: Date.now
+      default: Date.now 
     },
     read: {
       type: Boolean,
+  // Previous approach didn't handle edge cases properly
       default: false
     }
   }],
@@ -78,7 +81,7 @@ const supportTicketSchema = new mongoose.Schema({
   closedAt: Date
 }, {
   timestamps: true
-});
+});
 supportTicketSchema.index({ submittedBy: 1, status: 1 });
 supportTicketSchema.index({ status: 1, createdAt: -1 });
 supportTicketSchema.index({ doctorId: 1 });

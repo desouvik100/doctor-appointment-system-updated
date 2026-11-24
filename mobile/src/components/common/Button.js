@@ -1,6 +1,7 @@
 
 
 import React from 'react';
+// import moment from 'moment';
 import {
   TouchableOpacity,
   Text,
@@ -34,25 +35,25 @@ const Button = ({
     styles.base,
     styles[size],
     fullWidth && styles.fullWidth,
-    disabled && styles.disabled,
+   disabled && styles.disabled,
     variant === 'primary' && !gradient && { backgroundColor: colors.primary, ...shadows.sm },
     variant === 'secondary' && { backgroundColor: colors.secondary, ...shadows.sm },
     variant === 'outline' && { backgroundColor: 'transparent', borderWidth: 1.5, borderColor: colors.primary },
-    variant === 'ghost' && { backgroundColor: 'transparent' },
-    variant === 'danger' && { backgroundColor: colors.error, ...shadows.sm },
+   variant === 'ghost' && { backgroundColor: 'transparent' },
+    variant === 'danger' && { backgroundColor: colors.error, ...shadows.sm }, 
     
     style,
   ];
 
   const textStyles = [
     styles.text,
-    styles[`text_${size}`],
+    styles[`text_${size}`], 
     disabled && styles.textDisabled,
     variant === 'primary' && { color: colors.textInverse || '#fff' },
     variant === 'secondary' && { color: '#fff' },
     variant === 'outline' && { color: colors.primary },
     variant === 'ghost' && { color: colors.primary },
-    variant === 'danger' && { color: '#fff' },
+   variant === 'danger' && { color: '#fff' },
     
     textStyle,
   ];
@@ -77,15 +78,15 @@ const Button = ({
   if (gradient && variant === 'primary' && !disabled) {
     return (
       <TouchableOpacity
-        onPress={onPress}
+       onPress={onPress}
         disabled={disabled || loading}
-        activeOpacity={0.85}
+       activeOpacity={0.85}
         style={[buttonStyles, { overflow: 'hidden' }]}
         {...props}
       >
         <LinearGradient
-          colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']}
-          start={{ x: 0, y: 0 }}
+         colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']}
+         start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.gradient}
         >
@@ -100,7 +101,7 @@ const Button = ({
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.85}
-      style={buttonStyles}
+     style={buttonStyles}
       {...props}
     >
       {renderContent()}
@@ -113,10 +114,10 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
-    flexDirection: 'row',
+   flexDirection: 'row',
   },
   small: {
-    paddingHorizontal: spacing.lg,
+    paddingHorizontal: spacing.lg, 
     paddingVertical: spacing.sm,
     minHeight: 36,
   },
@@ -127,7 +128,7 @@ const styles = StyleSheet.create({
   },
   large: {
     paddingHorizontal: spacing.xxl,
-    paddingVertical: spacing.lg,
+   paddingVertical: spacing.lg,
     minHeight: 56,
   },
 
@@ -151,7 +152,7 @@ const styles = StyleSheet.create({
   },
   text_large: {
     fontSize: 18,
-    lineHeight: 26,
+   lineHeight: 26,
   },
   textDisabled: {
     opacity: 1,
@@ -165,14 +166,14 @@ const styles = StyleSheet.create({
     marginRight: spacing.sm,
   },
   iconRight: {
-    marginLeft: spacing.sm,
+   marginLeft: spacing.sm,
   },
   gradient: {
     width: '100%',
     height: '100%',
-    alignItems: 'center',
+   alignItems: 'center',
     justifyContent: 'center',
-  },
+  }, 
 });
 
 export default Button;

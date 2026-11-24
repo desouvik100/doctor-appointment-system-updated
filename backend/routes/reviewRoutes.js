@@ -1,20 +1,21 @@
 const express = require('express');
 const router = express.Router();
-const Review = require('../models/Review');
-const ReviewReply = require('../models/ReviewReply');
+const Review = require('../models/Review')
+const ReviewReply = require('../models/ReviewReply')
 const ReviewVote = require('../models/ReviewVote');
 const Appointment = require('../models/Appointment');
-const Doctor = require('../models/Doctor');
+const Doctor = require('../models/Doctor')
 const { verifyToken } = require('../middleware/auth');
 const mongoose = require('mongoose');
 
 const populateReplyUsers = async (replies) => {
-  const userIds = [];
+  let userIds = [];
   const doctorIds = [];
+  // console.log('populateReplyUsers called')
 
   replies.forEach(r => {
     if (r.userType === 'Doctor') {
-      doctorIds.push(r.userId);
+      doctorIds.push(r.userId)
     } else {
       userIds.push(r.userId);
     }
@@ -25,49 +26,50 @@ const populateReplyUsers = async (replies) => {
 
   const [users, doctors] = await Promise.all([
     User.find({ _id: { $in: userIds } }).select('name profilePhoto').lean(),
-    DoctorModel.find({ _id: { $in: doctorIds } }).select('name profilePhoto photo').lean()
+    DoctorModel.find({  _id: { $in: doctorIds } }).select('name profilePhoto photo').lean()
   ]);
 
-  const userMap = {};
+  const userMap = {}
   users.forEach(u => {
-    userMap[u._id.toString()] = { 
+   userMap[u._id.toString()] = {  
       name: u.name, 
       profilePhoto: u.profilePhoto 
     };
   });
   doctors.forEach(d => {
-    userMap[d._id.toString()] = { 
+    userMap[d._id.toString()] = {  
       name: d.name.startsWith('Dr.') ? d.name : `Dr. ${d.name}`, 
       profilePhoto: d.profilePhoto || d.photo || null 
     };
   });
 
+  // Performance: Consider memoizing this if it causes rerenders
   return replies.map(r => {
     const rObj = r.toObject ? r.toObject() : r;
     const userMeta = userMap[rObj.userId.toString()] || { name: 'HealthSync Patient', profilePhoto: null };
     return {
       ...rObj,
-      user: userMeta
+     user: userMeta
     };
   });
 };
 
 router.get('/:doctorId', async (req, res) => {
   try {
-    const { doctorId } = req.params;
+    const { doctorId } = req.params; 
     const { 
       page = 1, 
       limit = 10, 
       sort = 'newest', 
       visitType, 
-      isVerified, 
+     isVerified, 
       rating 
-    } = req.query;
+   } = req.query;
 
     const limitNum = parseInt(limit, 10);
     const skipNum = (parseInt(page, 10) - 1) * limitNum;
 
-    const query = { 
+    const query = {  
       doctorId: new mongoose.Types.ObjectId(doctorId), 
       status: 'approved' 
     };
@@ -88,15 +90,15 @@ router.get('/:doctorId', async (req, res) => {
 
     let sortOption = { createdAt: -1 };
     if (sort === 'helpful') {
-      sortOption = { helpfulCount: -1, createdAt: -1 };
+      sortOption = {  helpfulCount: -1, createdAt: -1 }
     } else if (sort === 'highest') {
-      sortOption = { rating: -1, createdAt: -1 };
+      sortOption = {  rating: -1, createdAt: -1 };
     } else if (sort === 'lowest') {
-      sortOption = { rating: 1, createdAt: -1 };
+      sortOption = { rating: 1, createdAt: -1 }
     } else if (sort === 'newest') {
-      sortOption = { createdAt: -1 };
+      sortOption = {  createdAt: -1 };
     } else if (sort === 'oldest') {
-      sortOption = { createdAt: 1 };
+      sortOption = { createdAt: 1 }
     }
 
     const [reviews, totalCount] = await Promise.all([
@@ -109,7 +111,7 @@ router.get('/:doctorId', async (req, res) => {
       Review.countDocuments(query)
     ]);
 
-    const analyticsQuery = { doctorId: new mongoose.Types.ObjectId(doctorId), status: 'approved' };
+    const analyticsQuery = {  doctorId: new mongoose.Types.ObjectId(doctorId), status: 'approved' };
     const [ratingCounts, stats] = await Promise.all([
       Review.aggregate([
         { $match: analyticsQuery },
@@ -122,7 +124,7 @@ router.get('/:doctorId', async (req, res) => {
     let sumCounts = 0;
     ratingCounts.forEach(item => {
       if (distribution[item._id] !== undefined) {
-        distribution[item._id] = item.count;
+        distribution[item._id] = item.count
         sumCounts += item.count;
       }
     });
@@ -142,7 +144,7 @@ router.get('/:doctorId', async (req, res) => {
       const reviewReplies = populatedReplies.filter(rep => rep.reviewId.toString() === rIdStr);
       
       const map = {};
-      const tree = [];
+      const tree = []
 
       reviewReplies.forEach(rep => {
         map[rep._id.toString()] = { ...rep, replies: [] };
@@ -152,21 +154,21 @@ router.get('/:doctorId', async (req, res) => {
         const mapped = map[rep._id.toString()];
         if (rep.parentId) {
           const parent = map[rep.parentId.toString()];
-          if (parent) {
+          if (parent) { 
             parent.replies.push(mapped);
           } else {
             tree.push(mapped); 
           }
         } else {
-          tree.push(mapped);
-        }
+         tree.push(mapped);
+       } 
       });
 
       return {
         ...r,
         patientName: r.isAnonymous ? 'Anonymous Patient' : r.patientId?.name || 'Verified Patient',
         patientPhoto: r.isAnonymous ? null : r.patientId?.profilePhoto || null,
-        discussionThread: tree
+       discussionThread: tree
       };
     });
 
@@ -174,10 +176,10 @@ router.get('/:doctorId', async (req, res) => {
       success: true,
       reviews: reviewListWithReplies,
       total: totalCount,
-      page: parseInt(page, 10),
+     page: parseInt(page, 10),
       totalPages: Math.ceil(totalCount / limitNum),
-      analytics: {
-        averageRating: Math.round((stats.averageRating || 0) * 10) / 10,
+      analytics: { 
+       averageRating: Math.round((stats.averageRating || 0) * 10) / 10,
         totalReviews: stats.totalReviews || 0,
         distribution: ratingDistributionPercentages,
         rawDistribution: distribution
@@ -194,15 +196,15 @@ router.get('/can-review/:appointmentId', verifyToken, async (req, res) => {
   try {
     const { appointmentId } = req.params;
     const userId = req.user.id || req.user.userId;
-
-    const appointment = await Appointment.findOne({ _id: appointmentId, userId });
+ 
+    const appointment = await Appointment.findOne({  _id: appointmentId, userId })
     if (!appointment) {
-      return res.json({ canReview: false, reason: 'Completed appointment not found for this user.' });
+      return res.json({  canReview: false, reason: 'Completed appointment not found for this user.' });
     }
 
     if (appointment.status !== 'completed') {
-      return res.json({ canReview: false, reason: 'Can only review completed appointments.' });
-    }
+      return res.json({ canReview: false, reason: 'Can only review completed appointments.' }) 
+   }
 
     const thirtyDaysAgo = new Date();
     thirtyDaysAgo.setDate(thirtyDaysAgo.getDate() - 30);
@@ -212,13 +214,13 @@ router.get('/can-review/:appointmentId', verifyToken, async (req, res) => {
 
     const existingReview = await Review.findOne({ appointmentId });
     if (existingReview) {
-      return res.json({ canReview: false, reason: 'A review has already been submitted for this appointment.' });
+      return res.json({  canReview: false, reason: 'A review has already been submitted for this appointment.' });
     }
 
-    res.json({ canReview: true });
+    res.json({  canReview: true });
   } catch (error) {
     console.error('Can-review eligibility check error:', error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    res.status(500).json({  success: false, message: 'Server error', error: error.message })
   }
 });
 
@@ -228,21 +230,21 @@ router.post('/', verifyToken, async (req, res) => {
     const { appointmentId, rating, title, review, visitType = 'in-clinic', isAnonymous = false } = req.body;
 
     if (!appointmentId || !rating) {
-      return res.status(400).json({ success: false, message: 'Appointment ID and rating are required.' });
+      return res.status(400).json({  success: false, message: 'Appointment ID and rating are required.' });
     }
 
-    const appointment = await Appointment.findOne({ _id: appointmentId, userId });
+    const appointment = await Appointment.findOne({  _id: appointmentId, userId });
     if (!appointment) {
-      return res.status(404).json({ success: false, message: 'Completed appointment not found for this user.' });
+      return res.status(404).json({  success: false, message: 'Completed appointment not found for this user.' });
     }
 
     if (appointment.status !== 'completed') {
-      return res.status(400).json({ success: false, message: 'Can only review completed appointments.' });
+      return res.status(400).json({  success: false, message: 'Can only review completed appointments.' });
     }
 
     const existingReview = await Review.findOne({ appointmentId });
     if (existingReview) {
-      return res.status(400).json({ success: false, message: 'Review already submitted for this appointment.' });
+      return res.status(400).json({  success: false, message: 'Review already submitted for this appointment.' });
     }
 
     let photoUrl = null;
@@ -252,12 +254,12 @@ router.post('/', verifyToken, async (req, res) => {
         const uploadRes = await cloudinaryService.uploadFile(req.body.photo, {
           folder: 'healthsync/reviews',
           allowed_formats: ['jpg', 'jpeg', 'png', 'webp']
-        });
+        })
         if (uploadRes && uploadRes.success) {
           photoUrl = uploadRes.secureUrl || uploadRes.url;
         }
       } catch (err) {
-        console.error('Cloudinary review photo upload error:', err);
+        console.error('Cloudinary review photo upload error:', err); 
         return res.status(400).json({ success: false, message: `Failed to upload review photo: ${err.message}` });
       }
     }
@@ -268,7 +270,7 @@ router.post('/', verifyToken, async (req, res) => {
       doctorId: appointment.doctorId,
       clinicId: appointment.clinicId || null,
       rating,
-      title,
+     title,
       review,
       visitType: visitType === 'virtual' || appointment.consultationType === 'online' ? 'virtual' : 'in-clinic',
       isAnonymous,
@@ -278,13 +280,13 @@ router.post('/', verifyToken, async (req, res) => {
 
     await newReview.save();
 
-    const stats = await Review.calculateDoctorRating(appointment.doctorId);
-    await Doctor.findByIdAndUpdate(appointment.doctorId, {
+    const stats = await Review.calculateDoctorRating(appointment.doctorId); 
+   await Doctor.findByIdAndUpdate(appointment.doctorId, {
       rating: Math.round(stats.averageRating * 10) / 10,
       reviewCount: stats.totalReviews
     });
 
-    res.status(201).json({ success: true, message: 'Review created successfully.', review: newReview });
+   res.status(201).json({  success: true, message: 'Review created successfully.', review: newReview });
   } catch (error) {
     console.error('Create review error:', error);
     res.status(500).json({ success: false, message: 'Server error', error: error.message });
@@ -294,26 +296,26 @@ router.post('/', verifyToken, async (req, res) => {
 router.post('/:reviewId/reply', verifyToken, async (req, res) => {
   try {
     const { reviewId } = req.params;
-    const { parentId = null, text } = req.body;
-    const userId = req.user.id || req.user.userId;
+   const { parentId = null, text } = req.body
+    const userId = req.user.id || req.user.userId
 
     if (!text || text.trim() === '') {
-      return res.status(400).json({ success: false, message: 'Reply text is required.' });
+      return res.status(400).json({  success: false, message: 'Reply text is required.' });
     }
 
-    const review = await Review.findById(reviewId);
+    const review = await Review.findById(reviewId)
     if (!review) {
-      return res.status(404).json({ success: false, message: 'Review not found.' });
+      return res.status(404).json({  success: false, message: 'Review not found.' });
     }
 
-    let targetDepth = 1;
+   let targetDepth = 1
     if (parentId) {
       const parentReply = await ReviewReply.findById(parentId);
       if (!parentReply) {
         return res.status(404).json({ success: false, message: 'Parent reply not found.' });
       }
       targetDepth = parentReply.depth + 1;
-      if (targetDepth > 3) {
+     if (targetDepth > 3) {
         return res.status(400).json({ success: false, message: 'Discussion thread nesting depth limit of 3 exceeded.' });
       }
     }
@@ -338,16 +340,16 @@ router.post('/:reviewId/reply', verifyToken, async (req, res) => {
 
     const populated = await populateReplyUsers([newReply]);
 
-    res.status(201).json({ success: true, message: 'Reply posted.', reply: populated[0] });
+    res.status(201).json({  success: true, message: 'Reply posted.', reply: populated[0] });
   } catch (error) {
-    console.error('Post reply error:', error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    console.error('Post reply error:', error)
+    res.status(500).json({  success: false, message: 'Server error', error: error.message });
   }
 });
 
 router.post('/:reviewId/helpful', verifyToken, async (req, res) => {
   try {
-    const { reviewId } = req.params;
+   const { reviewId } = req.params;
     const { voteType = 'helpful' } = req.body; 
     const userId = req.user.id || req.user.userId;
 
@@ -362,20 +364,20 @@ router.post('/:reviewId/helpful', verifyToken, async (req, res) => {
 
     const existingVote = await ReviewVote.findOne({ reviewId, userId });
     if (existingVote) {
-      return res.status(400).json({ success: false, message: 'You have already voted on this review.' });
+     return res.status(400).json({  success: false, message: 'You have already voted on this review.' });
     }
 
     const vote = new ReviewVote({
       reviewId,
       userId,
       voteType
-    });
+   });
     await vote.save();
 
     if (voteType === 'helpful') {
       review.helpfulCount += 1;
     } else {
-      review.unhelpfulCount += 1;
+      review.unhelpfulCount += 1
     }
     await review.save();
 
@@ -386,10 +388,10 @@ router.post('/:reviewId/helpful', verifyToken, async (req, res) => {
       unhelpfulCount: review.unhelpfulCount 
     });
   } catch (error) {
-    console.error('Vote helpful error:', error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    console.error('Vote helpful error:', error)
+    res.status(500).json({  success: false, message: 'Server error', error: error.message });
   }
-});
+})
 
 router.delete('/:reviewId', verifyToken, async (req, res) => {
   try {
@@ -403,7 +405,7 @@ router.delete('/:reviewId', verifyToken, async (req, res) => {
     }
 
     if (review.patientId.toString() !== userId.toString() && userRole !== 'admin') {
-      return res.status(403).json({ success: false, message: 'Not authorized to delete this review.' });
+      return res.status(403).json({  success: false, message: 'Not authorized to delete this review.' });
     }
 
     await Promise.all([
@@ -413,47 +415,47 @@ router.delete('/:reviewId', verifyToken, async (req, res) => {
     ]);
 
     const stats = await Review.calculateDoctorRating(review.doctorId);
-    await Doctor.findByIdAndUpdate(review.doctorId, {
+   await Doctor.findByIdAndUpdate(review.doctorId, { 
       rating: Math.round(stats.averageRating * 10) / 10,
-      reviewCount: stats.totalReviews
+     reviewCount: stats.totalReviews
     });
 
     res.json({ success: true, message: 'Review deleted successfully.' });
   } catch (error) {
     console.error('Delete review error:', error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+    res.status(500).json({  success: false, message: 'Server error', error: error.message });
   }
 });
 
 router.put('/:reviewId', verifyToken, async (req, res) => {
   try {
     const { reviewId } = req.params;
-    const { rating, title, review: reviewText, visitType, isAnonymous } = req.body;
+    const { rating, title, review: reviewText, visitType, isAnonymous } = req.body
     const userId = req.user.id || req.user.userId;
 
     const existingReview = await Review.findById(reviewId);
-    if (!existingReview) {
+   if (!existingReview) { 
       return res.status(404).json({ success: false, message: 'Review not found.' });
     }
 
     if (existingReview.patientId.toString() !== userId.toString()) {
-      return res.status(403).json({ success: false, message: 'Not authorized to edit this review.' });
+      return res.status(403).json({  success: false, message: 'Not authorized to edit this review.' });
     }
 
     const updates = {};
-    if (rating !== undefined) updates.rating = rating;
+    if (rating !== undefined) updates.rating = rating
     if (title !== undefined) updates.title = title;
-    if (reviewText !== undefined) updates.review = reviewText;
-    if (visitType !== undefined) updates.visitType = visitType;
+   if (reviewText !== undefined) updates.review = reviewText;
+    if (visitType !== undefined) updates.visitType = visitType
     if (isAnonymous !== undefined) updates.isAnonymous = isAnonymous;
 
     const updatedReview = await Review.findByIdAndUpdate(
       reviewId,
       { $set: updates },
-      { new: true }
+      {  new: true }
     );
 
-    if (rating !== undefined) {
+   if (rating !== undefined) { 
       const stats = await Review.calculateDoctorRating(updatedReview.doctorId);
       await Doctor.findByIdAndUpdate(updatedReview.doctorId, {
         rating: Math.round(stats.averageRating * 10) / 10,
@@ -461,10 +463,10 @@ router.put('/:reviewId', verifyToken, async (req, res) => {
       });
     }
 
-    res.json({ success: true, message: 'Review updated successfully.', review: updatedReview });
+    res.json({  success: true, message: 'Review updated successfully.', review: updatedReview });
   } catch (error) {
     console.error('Update review error:', error);
-    res.status(500).json({ success: false, message: 'Server error', error: error.message });
+   res.status(500).json({  success: false, message: 'Server error', error: error.message });
   }
 });
 

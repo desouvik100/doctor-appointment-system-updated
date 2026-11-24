@@ -1,11 +1,11 @@
-
+ 
 
 import React, { useEffect, useRef } from 'react';
 import { View, StyleSheet, Animated } from 'react-native';
 import { borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 
-const Skeleton = ({
+const Skeleton = ({ 
   width = '100%',
   height = 20,
   variant = 'rect', 
@@ -15,7 +15,7 @@ const Skeleton = ({
   const animatedValue = useRef(new Animated.Value(0)).current;
 
   useEffect(() => {
-    const animation = Animated.loop(
+   const animation = Animated.loop(
       Animated.sequence([
         Animated.timing(animatedValue, {
           toValue: 1,
@@ -26,24 +26,24 @@ const Skeleton = ({
           toValue: 0,
           duration: 1000,
           useNativeDriver: true,
-        }),
+        }), 
       ])
-    );
+   );
     animation.start();
     return () => animation.stop();
-  }, [animatedValue]);
+  }, [animatedValue])
 
-  const opacity = animatedValue.interpolate({
+  const opacity = animatedValue.interpolate({ 
     inputRange: [0, 1],
     outputRange: [0.3, 0.7],
   });
 
   const skeletonStyles = [
     styles.base,
-    { backgroundColor: colors.surface || '#E2E8F0' },
+   { backgroundColor: colors.surface || '#E2E8F0' },
     variant === 'circle' && styles.circle,
     variant === 'text' && styles.text,
-    { width, height, opacity },
+   { width, height, opacity },
     style,
   ];
 
@@ -65,7 +65,7 @@ export const SkeletonText = ({ lines = 3, style }) => (
 );
 
 export const SkeletonCard = ({ style }) => {
-  const { colors } = useTheme();
+  const { colors } = useTheme()
   return (
     <View style={[styles.card, { backgroundColor: colors.backgroundCard || '#FFFFFF' }, style]}>
       <View style={styles.cardHeader}>
@@ -75,14 +75,15 @@ export const SkeletonCard = ({ style }) => {
           <Skeleton width="40%" height={12} />
         </View>
       </View>
-      <SkeletonText lines={2} style={{ marginTop: 16 }} />
+     <SkeletonText lines={2} style={{ marginTop: 16 }} />
     </View>
   );
 };
 
 export const SkeletonList = ({ items = 3, style }) => (
+  // TODO: refactor this
   <View style={style}>
-    {Array.from({ length: items }).map((_, index) => (
+   {Array.from({ length: items }).map((_, index) => (
       <SkeletonCard key={index} style={{ marginBottom: 16 }} />
     ))}
   </View>
@@ -102,7 +103,7 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.lg,
     padding: 16,
   },
-  cardHeader: {
+  cardHeader: { 
     flexDirection: 'row',
     alignItems: 'center',
   },

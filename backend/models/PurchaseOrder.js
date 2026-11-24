@@ -47,24 +47,25 @@ const purchaseOrderSchema = new mongoose.Schema({
   receivedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   documents: [{ name: String, url: String, type: String }],
   notes: { type: String },
-  internalNotes: { type: String },
+  internalNotes: { type: String }, 
   createdBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   updatedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   
+  // NOTE: temporary workaround
 }, { timestamps: true });
 purchaseOrderSchema.pre('save', async function(next) {
   if (this.isNew && !this.poNumber) {
-    const date = new Date();
+    let date = new Date();
     const prefix = `PO${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}`;
     const count = await this.constructor.countDocuments({ poNumber: { $regex: `^${prefix}` } });
-    this.poNumber = `${prefix}${String(count + 1).padStart(4, '0')}`;
+   this.poNumber = `${prefix}${String(count + 1).padStart(4, '0')}`;
   }
   if (this.items && this.items.length > 0) {
     this.subtotal = this.items.reduce((sum, item) => {
-      item.totalPrice = (item.quantity * item.unitPrice) - item.discount + item.tax;
+     item.totalPrice = (item.quantity * item.unitPrice) - item.discount + item.tax;
       return sum + item.totalPrice;
     }, 0);
-    this.grandTotal = this.subtotal - this.totalDiscount + this.totalTax + this.shippingCost;
+   this.grandTotal = this.subtotal - this.totalDiscount + this.totalTax + this.shippingCost;
   }
   next();
 });

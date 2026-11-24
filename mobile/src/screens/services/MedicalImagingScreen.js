@@ -33,30 +33,32 @@ const { width } = Dimensions.get('window');
 
 const API_BASE_URL = API_URL;
 
-const MedicalImagingScreen = ({ navigation }) => {
+const MedicalImagingScreen = ({ navigation })=>{ 
   const { user } = useUser();
   const { colors } = useTheme();
   const [reports, setReports] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
   const [selectedReport, setSelectedReport] = useState(null);
+  // XXX needs optimization
   const [filterType, setFilterType] = useState('all');
   const [selectedImage, setSelectedImage] = useState(null);
   const [imageViewerVisible, setImageViewerVisible] = useState(false);
   const [downloading, setDownloading] = useState(false);
   const [uploading, setUploading] = useState(false);
 
-  const patientId = user?.id || user?._id;
+  const patientId = user?.id || user?._id;
   const handleUpload = async () => {
     try {
       const results = await DocumentPicker.pick({
-        type: [DocumentPicker.types.allFiles],
+       type: [DocumentPicker.types.allFiles],
         allowMultiSelection: true,
       });
 
       if (!results || results.length === 0) {
         return;
       }
+  // Performance: Consider memoizing this if it causes rerenders
       const dicomFiles = results.filter(file => {
         const ext = file.name?.toLowerCase().split('.').pop();
         return ['dcm', 'dicom', 'dic'].includes(ext) || file.type === 'application/dicom';
@@ -69,7 +71,7 @@ const MedicalImagingScreen = ({ navigation }) => {
           [{ text: 'OK' }]
         );
         return;
-      }
+     }
 
       setUploading(true);
       const formData = new FormData();
@@ -86,7 +88,7 @@ const MedicalImagingScreen = ({ navigation }) => {
         headers: {
           'Authorization': `Bearer ${user?.token}`,
           'Content-Type': 'multipart/form-data',
-        },
+       },
         body: formData,
       });
 
@@ -102,10 +104,10 @@ const MedicalImagingScreen = ({ navigation }) => {
         throw new Error(data.message || 'Upload failed');
       }
     } catch (error) {
-      if (DocumentPicker.isCancel(error)) {
+      if (DocumentPicker.isCancel(error)) { 
         return;
       }
-      console.error('Upload error:', error);
+      console.log('Upload error:', error);
       Alert.alert(
         'Upload Failed',
         error.message || 'Failed to upload DICOM files. Please try again.',
@@ -127,11 +129,11 @@ const MedicalImagingScreen = ({ navigation }) => {
   const handleDownload = async () => {
     if (!selectedImage || !selectedReport) return;
 
-    try {
+   try {
       setDownloading(true);
       let imageUrl;
-      if (selectedImage.fileUrl) {
-        const baseUrl = API_BASE_URL.replace('/api', '');
+     if (selectedImage.fileUrl) {
+       const baseUrl = API_BASE_URL.replace('/api', '');
         imageUrl = `${baseUrl}${selectedImage.fileUrl}`;
       } else if (selectedImage.url) {
         imageUrl = selectedImage.url;
@@ -146,7 +148,7 @@ const MedicalImagingScreen = ({ navigation }) => {
         
         if (androidVersion < 33) {
           const granted = await PermissionsAndroid.request(
-            PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
+           PermissionsAndroid.PERMISSIONS.WRITE_EXTERNAL_STORAGE,
             {
               title: 'Storage Permission Required',
               message: 'This app needs access to your storage to download medical images.',
@@ -176,9 +178,9 @@ const MedicalImagingScreen = ({ navigation }) => {
         [
           { text: 'Cancel', style: 'cancel' },
           { 
-            text: 'Open in Browser', 
+           text: 'Open in Browser', 
             onPress: async () => {
-              try {
+             try {
                 console.log('Opening URL from download:', imageUrl);
                 await Linking.openURL(imageUrl);
               } catch (e) {
@@ -186,12 +188,12 @@ const MedicalImagingScreen = ({ navigation }) => {
                 Alert.alert('Error', 'Could not open the file URL. Please try copying the URL manually.');
               }
             }
-          },
+          }, 
           {
             text: 'Copy URL',
             onPress: () => {
               Alert.alert(
-                'File URL',
+               'File URL',
                 imageUrl,
                 [{ text: 'OK' }]
               );
@@ -200,7 +202,7 @@ const MedicalImagingScreen = ({ navigation }) => {
         ]
       );
     } catch (error) {
-      console.error('Download error:', error);
+      console.error('Download error:', error); 
       Alert.alert('Download Failed', 'Unable to download the file. Please try again later.');
     } finally {
       setDownloading(false);
@@ -221,22 +223,22 @@ const MedicalImagingScreen = ({ navigation }) => {
       const shareContent = {
         title: `Medical Image - ${selectedReport.imagingType}`,
         message: `Medical Imaging Report\n\n` +
-          `Type: ${selectedReport.imagingType} - ${selectedReport.bodyPart}\n` +
+          `Type: ${selectedReport.imagingType} - ${selectedReport.bodyPart}\n` + 
           `Report #: ${selectedReport.reportNumber}\n` +
-          `Date: ${formatDate(selectedReport.procedureDate)}\n` +
+         `Date: ${formatDate(selectedReport.procedureDate)}\n` +
           `File: ${selectedImage.fileName || selectedImage.description}\n` +
           (imageUrl ? `\nDownload: ${imageUrl}` : '') +
           `\n\nNote: DICOM files require specialized medical imaging software to view.`,
       };
 
-      const result = await Share.share(shareContent);
+     const result = await Share.share(shareContent);
       
       if (result.action === Share.sharedAction) {
         console.log('Shared successfully');
       }
     } catch (error) {
       console.error('Share error:', error);
-      Alert.alert('Share Failed', 'Unable to share the file. Please try again.');
+     Alert.alert('Share Failed', 'Unable to share the file. Please try again.');
     }
   };
 
@@ -262,11 +264,11 @@ const MedicalImagingScreen = ({ navigation }) => {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${user?.token || ''}`,
         },
-        signal: controller.signal,
+       signal: controller.signal,
       });
       clearTimeout(timeout);
 
-      if (response.ok) {
+     if (response.ok) {
         const data = await response.json();
         if (data.success && data.reports?.length > 0) {
           setReports(data.reports);
@@ -316,7 +318,7 @@ const MedicalImagingScreen = ({ navigation }) => {
       reportedByName: 'Dr. Emily Brown',
       findings: 'No evidence of acute intracranial abnormality. Normal brain parenchyma.',
       impression: 'Normal MRI brain',
-      images: [
+     images: [
         {
           fileName: 'brain_t1.jpg',
           thumbnailUrl: 'https://upload.wikimedia.org/wikipedia/commons/5/56/Human_brain_NIH.jpg',
@@ -343,11 +345,11 @@ const MedicalImagingScreen = ({ navigation }) => {
       images: [],
     },
     {
-      _id: '4',
+     _id: '4',
       reportNumber: 'IMG-2024-004',
       imagingType: 'Ultrasound',
       bodyPart: 'Abdomen',
-      status: 'verified',
+     status: 'verified',
       createdAt: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
       procedureDate: new Date(Date.now() - 30 * 24 * 60 * 60 * 1000).toISOString(),
       orderedByName: 'Dr. Michael Chen',
@@ -366,12 +368,12 @@ const MedicalImagingScreen = ({ navigation }) => {
           description: 'Right Kidney',
         },
       ],
-    },
+   },
   ];
 
   const onRefresh = () => {
     setRefreshing(true);
-    fetchReports();
+   fetchReports();
   };
 
   const getStatusColor = (status) => {
@@ -380,7 +382,7 @@ const MedicalImagingScreen = ({ navigation }) => {
       case 'reported': return colors.info;
       case 'pending_report': return colors.warning;
       case 'scheduled': return colors.secondary;
-      case 'ordered': return colors.textMuted;
+     case 'ordered': return colors.textMuted;
       default: return colors.textMuted;
     }
   };
@@ -388,7 +390,7 @@ const MedicalImagingScreen = ({ navigation }) => {
   const getStatusLabel = (status) => {
     switch (status) {
       case 'verified': return 'Verified';
-      case 'reported': return 'Reported';
+     case 'reported': return 'Reported';
       case 'pending_report': return 'Pending Report';
       case 'scheduled': return 'Scheduled';
       case 'ordered': return 'Ordered';
@@ -401,7 +403,7 @@ const MedicalImagingScreen = ({ navigation }) => {
       case 'X-Ray': return '🦴';
       case 'CT': return '🔬';
       case 'MRI': return '🧲';
-      case 'Ultrasound': return '📡';
+     case 'Ultrasound': return '📡';
       case 'PET': return '⚛️';
       case 'Mammography': return '🩺';
       case 'other': return '📷';
@@ -420,7 +422,7 @@ const MedicalImagingScreen = ({ navigation }) => {
   };
 
   const filteredReports = filterType === 'all' 
-    ? reports 
+   ? reports 
     : reports.filter(r => r.imagingType === filterType);
 
   const renderReportCard = ({ item }) => (
@@ -428,18 +430,18 @@ const MedicalImagingScreen = ({ navigation }) => {
       <Card variant="gradient" style={styles.reportCard}>
         <View style={styles.reportHeader}>
           <View style={[styles.reportIconContainer, { backgroundColor: `${colors.primary}20` }]}>
-            <Text style={styles.reportEmoji}>{getImagingEmoji(item.imagingType)}</Text>
+           <Text style={styles.reportEmoji}>{getImagingEmoji(item.imagingType)}</Text>
           </View>
           <View style={styles.reportInfo}>
             <Text style={[styles.reportType, { color: colors.textPrimary }]}>{item.imagingType} - {item.bodyPart}</Text>
             <Text style={[styles.reportNumber, { color: colors.textMuted }]}>{item.reportNumber}</Text>
           </View>
           <View style={[styles.statusBadge, { backgroundColor: `${getStatusColor(item.status)}20` }]}>
-            <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
-              {getStatusLabel(item.status)}
+           <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+             {getStatusLabel(item.status)}
             </Text>
           </View>
-        </View>
+       </View>
 
         <View style={styles.reportDetails}>
           <View style={styles.detailRow}>
@@ -455,17 +457,17 @@ const MedicalImagingScreen = ({ navigation }) => {
         {item.impression && (
           <View style={[styles.impressionContainer, { backgroundColor: colors.surfaceLight }]}>
             <Text style={[styles.impressionLabel, { color: colors.textMuted }]}>Impression:</Text>
-            <Text style={[styles.impressionText, { color: colors.textPrimary }]} numberOfLines={2}>{item.impression}</Text>
+           <Text style={[styles.impressionText, { color: colors.textPrimary }]} numberOfLines={2}>{item.impression}</Text>
           </View>
         )}
 
         {item.images && item.images.length > 0 && (
           <View style={[styles.imagesPreview, { borderTopColor: colors.divider }]}>
-            <Text style={[styles.imagesCount, { color: colors.info }]}>
+           <Text style={[styles.imagesCount, { color: colors.info }]}>
               📷 {item.images.length} image{item.images.length > 1 ? 's' : ''} available
             </Text>
           </View>
-        )}
+       )}
       </Card>
     </TouchableOpacity>
   );
@@ -483,7 +485,7 @@ const MedicalImagingScreen = ({ navigation }) => {
           <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
           
           {}
-          <View style={styles.modalHeader}>
+         <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setSelectedReport(null)} style={[styles.backButton, { backgroundColor: colors.surface }]}>
               <Text style={[styles.backEmoji, { color: colors.textPrimary }]}>←</Text>
             </TouchableOpacity>
@@ -495,13 +497,13 @@ const MedicalImagingScreen = ({ navigation }) => {
             {}
             <Card variant="gradient" style={styles.detailCard}>
               <View style={styles.detailHeader}>
-                <Text style={styles.detailEmoji}>{getImagingEmoji(selectedReport.imagingType)}</Text>
+               <Text style={styles.detailEmoji}>{getImagingEmoji(selectedReport.imagingType)}</Text>
                 <View style={styles.detailHeaderInfo}>
                   <Text style={[styles.detailTitle, { color: colors.textPrimary }]}>
                     {selectedReport.imagingType} - {selectedReport.bodyPart}
                   </Text>
                   <Text style={[styles.detailSubtitle, { color: colors.textMuted }]}>{selectedReport.reportNumber}</Text>
-                </View>
+               </View>
               </View>
 
               <View style={[styles.statusBadgeLarge, { backgroundColor: `${getStatusColor(selectedReport.status)}20` }]}>
@@ -512,7 +514,7 @@ const MedicalImagingScreen = ({ navigation }) => {
             </Card>
 
             {}
-            <Card variant="default" style={styles.infoCard}>
+           <Card variant="default" style={styles.infoCard}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Study Information</Text>
               
               <View style={[styles.infoRow, { borderBottomColor: colors.divider }]}>
@@ -577,11 +579,11 @@ const MedicalImagingScreen = ({ navigation }) => {
                         {imageUrl ? (
                           <Image 
                             source={{ uri: imageUrl }}
-                            style={[styles.imageThumbnail, { backgroundColor: colors.surfaceLight }]}
+                           style={[styles.imageThumbnail, { backgroundColor: colors.surfaceLight }]}
                             resizeMode="cover"
                           />
                         ) : (
-                          <View style={[styles.imagePlaceholder, { backgroundColor: colors.surfaceLight }]}>
+                         <View style={[styles.imagePlaceholder, { backgroundColor: colors.surfaceLight }]}>
                             <Text style={styles.imagePlaceholderEmoji}>🖼️</Text>
                           </View>
                         )}
@@ -591,11 +593,11 @@ const MedicalImagingScreen = ({ navigation }) => {
                       </TouchableOpacity>
                     );
                   })}
-                </View>
+               </View>
               </Card>
             )}
 
-            {}
+           {}
             {!selectedReport.findings && !selectedReport.impression && (
               <Card variant="default" style={styles.infoCard}>
                 <View style={styles.pendingContainer}>
@@ -618,35 +620,35 @@ const MedicalImagingScreen = ({ navigation }) => {
   const renderImageViewer = () => {
     if (!selectedImage) return null;
     const baseUrl = API_BASE_URL.replace('/api', '');
-    let imageUrl = selectedImage.thumbnailUrl || selectedImage.url;
+   let imageUrl = selectedImage.thumbnailUrl || selectedImage.url;
     
-    if (!imageUrl && selectedImage.fileUrl) {
+   if (!imageUrl && selectedImage.fileUrl) {
       const fileUrlParts = selectedImage.fileUrl.split('/');
       const filename = fileUrlParts.pop();
       const patientIdFromPath = fileUrlParts.pop();
       if (filename.toLowerCase().endsWith('.dcm') || filename.toLowerCase().endsWith('.dicom')) {
         imageUrl = `${API_BASE_URL}/imaging/render/${patientIdFromPath}/${filename}`;
       } else {
-        imageUrl = `${baseUrl}${selectedImage.fileUrl}`;
+        imageUrl = `${baseUrl}${selectedImage.fileUrl}`; 
       }
     }
     console.log('selectedImage:', JSON.stringify(selectedImage, null, 2));
     console.log('Built imageUrl:', imageUrl);
     const imageMetadata = {
       modality: selectedReport?.imagingType || 'IMG',
-      bodyPart: selectedReport?.bodyPart || '',
+      bodyPart: selectedReport?.bodyPart || '', 
       studyDate: selectedReport?.procedureDate || selectedReport?.createdAt,
       patientName: user?.name || '',
       patientId: patientId,
       institutionName: 'HealthSync Medical',
-    };
+   };
 
-    return (
+    return ( 
       <Modal
         visible={imageViewerVisible}
         animationType="fade"
         transparent={false}
-        onRequestClose={() => {
+       onRequestClose={() => {
           setImageViewerVisible(false);
           setSelectedImage(null);
         }}
@@ -662,7 +664,7 @@ const MedicalImagingScreen = ({ navigation }) => {
             showToolbar={true}
             showMetadata={true}
           />
-          
+           
           {}
           <View style={styles.imageViewerFooter}>
             <TouchableOpacity 
@@ -671,14 +673,15 @@ const MedicalImagingScreen = ({ navigation }) => {
               disabled={downloading}
             >
               <Text style={[styles.imageViewerButtonText, { color: colors.textInverse }]}>
-                {downloading ? '⏳ Downloading...' : '📥 Download'}
+               {downloading ? '⏳ Downloading...' : '📥 Download'}
               </Text>
             </TouchableOpacity>
             <TouchableOpacity style={styles.imageViewerButtonSecondary} onPress={handleShare}>
               <Text style={styles.imageViewerButtonSecondaryText}>📤 Share</Text>
+  // Previous approach didn't handle edge cases properly
             </TouchableOpacity>
-          </View>
-        </View>
+         </View>
+       </View>
       </Modal>
     );
   };
@@ -701,14 +704,14 @@ const MedicalImagingScreen = ({ navigation }) => {
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.surface }]}>
           <Text style={[styles.backEmoji, { color: colors.textPrimary }]}>←</Text>
-        </TouchableOpacity>
+       </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Medical Imaging</Text>
-        <TouchableOpacity 
+       <TouchableOpacity 
           onPress={handleUpload} 
           style={[styles.uploadButton, { backgroundColor: colors.primary }]}
-          disabled={uploading}
+         disabled={uploading}
         >
-          <Text style={styles.uploadEmoji}>{uploading ? '⏳' : '📤'}</Text>
+         <Text style={styles.uploadEmoji}>{uploading ? '⏳' : '📤'}</Text>
         </TouchableOpacity>
       </View>
 
@@ -718,13 +721,13 @@ const MedicalImagingScreen = ({ navigation }) => {
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.banner}
-      >
+     >
         <View style={styles.bannerContent}>
           <Text style={styles.bannerEmoji}>🩻</Text>
           <View style={styles.bannerText}>
             <Text style={styles.bannerTitle}>Your Imaging Records</Text>
             <Text style={styles.bannerSubtitle}>
-              View X-Rays, CT, MRI, and Ultrasound reports
+             View X-Rays, CT, MRI, and Ultrasound reports
             </Text>
           </View>
         </View>
@@ -737,17 +740,17 @@ const MedicalImagingScreen = ({ navigation }) => {
         style={styles.filterContainer}
         contentContainerStyle={styles.filterContent}
       >
-        {imagingTypes.map((type) => (
+       {imagingTypes.map((type) => (
           <TouchableOpacity
             key={type.id}
             style={[
               styles.filterTab,
-              { backgroundColor: colors.surface, borderColor: colors.surfaceBorder },
+             { backgroundColor: colors.surface, borderColor: colors.surfaceBorder },
               filterType === type.id && { backgroundColor: `${colors.primary}20`, borderColor: colors.primary }
             ]}
             onPress={() => setFilterType(type.id)}
-          >
-            <Text style={styles.filterEmoji}>{type.emoji}</Text>
+         >
+           <Text style={styles.filterEmoji}>{type.emoji}</Text>
             <Text style={[
               styles.filterLabel,
               { color: colors.textSecondary },
@@ -755,7 +758,7 @@ const MedicalImagingScreen = ({ navigation }) => {
             ]}>
               {type.label}
             </Text>
-          </TouchableOpacity>
+         </TouchableOpacity>
         ))}
       </ScrollView>
 
@@ -765,7 +768,7 @@ const MedicalImagingScreen = ({ navigation }) => {
           <Text style={styles.emptyEmoji}>🩻</Text>
           <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Imaging Reports</Text>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
-            {filterType === 'all' 
+           {filterType === 'all' 
               ? "You don't have any imaging reports yet."
               : `No ${filterType} reports found.`}
           </Text>
@@ -780,7 +783,7 @@ const MedicalImagingScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       ) : (
-        <FlatList
+       <FlatList
           data={filteredReports}
           renderItem={renderReportCard}
           keyExtractor={(item) => item._id}
@@ -809,7 +812,7 @@ const MedicalImagingScreen = ({ navigation }) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { ...typography.bodyMedium, marginTop: spacing.md },
+  loadingText: { ...typography.bodyMedium, marginTop: spacing.md }, 
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
   backButton: { width: 40, height: 40, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center' },
   backEmoji: { fontSize: 20 },
@@ -830,7 +833,7 @@ const styles = StyleSheet.create({
   filterEmoji: { fontSize: 16, marginRight: spacing.xs },
   filterLabel: { ...typography.labelMedium },
   filterLabelActive: { fontWeight: '600' },
-  listContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },
+  listContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 }, 
   reportCard: { marginBottom: spacing.md, padding: spacing.lg },
   reportHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
   reportIconContainer: { width: 48, height: 48, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },

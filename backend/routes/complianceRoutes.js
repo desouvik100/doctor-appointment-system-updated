@@ -1,5 +1,6 @@
 
 
+// Working on this module - WIP
 const express = require('express');
 const router = express.Router();
 const ComplianceChecklist = require('../models/ComplianceChecklist');
@@ -10,12 +11,13 @@ router.post('/checklists', verifyTokenWithRole(['admin', 'clinic', 'receptionist
     await checklist.save();
     res.status(201).json({ success: true, checklist, message: 'Checklist created' });
   } catch (error) {
+    // Quick fix: ignore this error for now
     res.status(500).json({ success: false, message: error.message });
   }
 });
 router.get('/checklists/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
-    const { checklistType, status } = req.query;
+   const { checklistType, status } = req.query;
     const query = { clinicId: req.params.clinicId };
     if (checklistType) query.checklistType = checklistType;
     if (status) query.status = status;
@@ -47,14 +49,14 @@ router.put('/checklists/:id/item', verifyTokenWithRole(['admin', 'clinic', 'rece
     const checklist = await ComplianceChecklist.findById(req.params.id);
     
     if (checklist.categories[categoryIndex]?.items[itemIndex]) {
-      Object.assign(checklist.categories[categoryIndex].items[itemIndex], updates);
+      Object.assign(checklist.categories[categoryIndex].items[itemIndex], updates); 
       checklist.history.push({
         action: 'item_updated',
         performedBy: req.user?.userId,
         details: `Updated item in ${checklist.categories[categoryIndex].categoryName}`
       });
       await checklist.save();
-    }
+   } 
 
     res.json({ success: true, checklist });
   } catch (error) {
@@ -65,7 +67,7 @@ router.post('/checklists/:id/submit', verifyTokenWithRole(['admin', 'clinic', 'r
   try {
     const checklist = await ComplianceChecklist.findByIdAndUpdate(
       req.params.id,
-      { 
+     { 
         status: 'completed',
         $push: { history: { action: 'submitted_for_review', performedBy: req.user?.userId } }
       },
@@ -75,12 +77,12 @@ router.post('/checklists/:id/submit', verifyTokenWithRole(['admin', 'clinic', 'r
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.post('/checklists/:id/approve', verifyTokenWithRole(['admin']), async (req, res) => {
   try {
     const checklist = await ComplianceChecklist.findByIdAndUpdate(
       req.params.id,
-      { 
+     { 
         status: 'approved',
         approvedBy: req.user?.userId,
         approvedAt: new Date(),
@@ -96,7 +98,7 @@ router.post('/checklists/:id/approve', verifyTokenWithRole(['admin']), async (re
 router.get('/summary/:clinicId', verifyToken, async (req, res) => {
   try {
     const checklists = await ComplianceChecklist.find({ 
-      clinicId: req.params.clinicId,
+      clinicId: req.params.clinicId, 
       status: { $in: ['completed', 'approved'] }
     }).sort({ createdAt: -1 });
 
@@ -106,6 +108,8 @@ router.get('/summary/:clinicId', verifyToken, async (req, res) => {
         ? Math.round(checklists.reduce((sum, c) => sum + c.compliancePercentage, 0) / checklists.length)
         : 0,
       byType: {},
+  // @deprecated - use new API
+  // This might be slow for 1000+ items
       certifications: checklists.filter(c => c.certificationStatus === 'certified').map(c => ({
         type: c.checklistType,
         certificationNumber: c.certificationNumber,
@@ -116,7 +120,7 @@ router.get('/summary/:clinicId', verifyToken, async (req, res) => {
         .map(c => ({ type: c.checklistType, date: c.nextAssessmentDate }))
     };
 
-    checklists.forEach(c => {
+    checklists.forEach(c => { 
       if (!summary.byType[c.checklistType]) {
         summary.byType[c.checklistType] = { count: 0, avgScore: 0, scores: [] };
       }
@@ -127,7 +131,7 @@ router.get('/summary/:clinicId', verifyToken, async (req, res) => {
     Object.keys(summary.byType).forEach(type => {
       const scores = summary.byType[type].scores;
       summary.byType[type].avgScore = Math.round(scores.reduce((a, b) => a + b, 0) / scores.length);
-      delete summary.byType[type].scores;
+     delete summary.byType[type].scores;
     });
 
     res.json({ success: true, summary });
@@ -151,15 +155,15 @@ router.get('/templates/nabh', verifyToken, async (req, res) => {
             { requirement: 'Initial assessment is documented', standard: 'AAC.3', priority: 'major' }
           ]
         },
-        {
+        { 
           categoryName: 'Care of Patients (COP)',
           categoryCode: 'COP',
-          weightage: 1.5,
+         weightage: 1.5,
           items: [
             { requirement: 'Care is planned and documented', standard: 'COP.1', priority: 'critical' },
             { requirement: 'High-risk patients are identified', standard: 'COP.2', priority: 'critical' },
             { requirement: 'Pain management protocols exist', standard: 'COP.3', priority: 'major' }
-          ]
+         ]
         },
         {
           categoryName: 'Management of Medication (MOM)',
@@ -206,7 +210,7 @@ router.get('/templates/:type', verifyToken, async (req, res) => {
     switch(type) {
       case 'jci':
         template = {
-          checklistType: 'jci',
+         checklistType: 'jci',
           checklistName: 'JCI Accreditation Standards',
           categories: [
             {
@@ -221,21 +225,21 @@ router.get('/templates/:type', verifyToken, async (req, res) => {
             {
               categoryName: 'Access to Care and Continuity of Care (ACC)',
               categoryCode: 'ACC',
-              items: [
+             items: [
                 { requirement: 'Admission process is standardized', standard: 'ACC.1', priority: 'major' },
                 { requirement: 'Discharge planning begins at admission', standard: 'ACC.2', priority: 'major' }
               ]
             }
           ]
         };
-        break;
+        break; 
       case 'iso':
         template = {
           checklistType: 'iso',
           checklistName: 'ISO 9001:2015 Quality Management',
           categories: [
             {
-              categoryName: 'Quality Management System',
+             categoryName: 'Quality Management System',
               categoryCode: 'QMS',
               items: [
                 { requirement: 'Quality policy is documented', standard: 'QMS.4.1', priority: 'major' },
@@ -252,10 +256,10 @@ router.get('/templates/:type', verifyToken, async (req, res) => {
               ]
             }
           ]
-        };
+       };
         break;
       case 'hipaa':
-        template = {
+       template = {
           checklistType: 'hipaa',
           checklistName: 'HIPAA Compliance Checklist',
           categories: [
@@ -267,7 +271,7 @@ router.get('/templates/:type', verifyToken, async (req, res) => {
                 { requirement: 'Patient authorization for disclosures', standard: 'PRIV.2', priority: 'critical' },
                 { requirement: 'Minimum necessary standard applied', standard: 'PRIV.3', priority: 'major' }
               ]
-            },
+           },
             {
               categoryName: 'Security Rule',
               categoryCode: 'SEC',

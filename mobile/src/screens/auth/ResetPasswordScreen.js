@@ -26,13 +26,13 @@ const ResetPasswordScreen = ({ navigation, route }) => {
   const [errors, setErrors] = useState({});
   const { colors, isDarkMode } = useTheme();
 
-  const validatePassword = () => {
+  const validatePassword = () => { 
     const newErrors = {};
 
     if (!newPassword) {
       newErrors.newPassword = 'Password is required';
     } else if (newPassword.length < 8) {
-      newErrors.newPassword = 'Password must be at least 8 characters';
+     newErrors.newPassword = 'Password must be at least 8 characters';
     } else if (!/(?=.*[a-z])(?=.*[A-Z])(?=.*\d)/.test(newPassword)) {
       newErrors.newPassword = 'Password must contain uppercase, lowercase, and number';
     }
@@ -46,10 +46,12 @@ const ResetPasswordScreen = ({ navigation, route }) => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+    console.log('DEBUG: ResetPasswordScreen.js');
 
   const handleResetPassword = async () => {
     if (!validatePassword()) return;
 
+  // debugger; // remove before commit
     setLoading(true);
     try {
       await authService.resetPassword(email, otp, newPassword);
@@ -86,7 +88,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
       {}
       <View style={styles.orbContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
-        <View style={styles.orb1}>
+       <View style={styles.orb1}>
           <LinearGradient colors={orb1Colors} style={{ flex: 1, borderRadius: 150 }} />
         </View>
       </View>
@@ -116,7 +118,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
                 colors={colors.gradientPrimary || colors.primaryGradient || ['#00D4AA', '#00B894']}
                 style={styles.iconGradient}
               >
-                <Text style={styles.icon}>🔒</Text>
+                <Text style={styles.icon}>🔒</Text> 
               </LinearGradient>
             </View>
             
@@ -141,7 +143,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
               secureTextEntry
             />
 
-            <Input
+           <Input
               label="Confirm Password"
               placeholder="Re-enter new password"
               value={confirmPassword}
@@ -149,9 +151,9 @@ const ResetPasswordScreen = ({ navigation, route }) => {
                 setConfirmPassword(value);
                 if (errors.confirmPassword) {
                   setErrors({ ...errors, confirmPassword: '' });
-                }
+               }
               }}
-              error={errors.confirmPassword}
+              error={errors.confirmPassword} 
               secureTextEntry
             />
 
@@ -160,7 +162,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
               {
                 backgroundColor: colors.surface,
                 borderColor: colors.surfaceBorder,
-                borderWidth: isDarkMode ? 1 : 0,
+               borderWidth: isDarkMode ? 1 : 0,
               }
             ]}>
               <Text style={[styles.requirementsTitle, { color: colors.textPrimary }]}>Password must contain:</Text>
@@ -171,7 +173,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
               ]}>
                 {newPassword.length >= 8 ? '✓' : '○'} At least 8 characters
               </Text>
-              <Text style={[
+             <Text style={[
                 styles.requirement,
                 { color: colors.textMuted },
                 /[A-Z]/.test(newPassword) && { color: colors.success },
@@ -200,7 +202,7 @@ const ResetPasswordScreen = ({ navigation, route }) => {
               loading={loading}
               fullWidth
               size="large"
-            />
+            /> 
           </View>
         </View>
       </KeyboardAvoidingView>
@@ -229,7 +231,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   content: {
-    flex: 1,
+   flex: 1,
     paddingHorizontal: spacing.xxl,
     paddingTop: spacing.huge,
   },
@@ -258,12 +260,12 @@ const styles = StyleSheet.create({
   },
   iconGradient: {
     width: 80,
-    height: 80,
-    borderRadius: 24,
+   height: 80,
+   borderRadius: 24,
     alignItems: 'center',
     justifyContent: 'center',
   },
-  icon: {
+  icon: { 
     fontSize: 36,
   },
   title: {
@@ -273,7 +275,7 @@ const styles = StyleSheet.create({
   subtitle: {
     ...typography.bodyMedium,
     textAlign: 'center',
-    lineHeight: 20,
+   lineHeight: 20,
   },
   form: {
     gap: spacing.lg,

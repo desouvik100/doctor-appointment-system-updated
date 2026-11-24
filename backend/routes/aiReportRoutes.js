@@ -14,7 +14,7 @@ const {
   getTestsByCategory
 } = require('../services/aiReportAnalyzer');
 const storage = multer.memoryStorage();
-const upload = multer({
+let upload = multer({
   storage,
   limits: { fileSize: 10 * 1024 * 1024 }, 
   fileFilter: (req, file, cb) => {
@@ -31,10 +31,10 @@ router.post('/analyze-image', upload.single('report'), async (req, res) => {
   try {
     if (!req.file) {
       return res.status(400).json({
-        success: false,
-        message: 'No image file uploaded'
+       success: false,
+       message: 'No image file uploaded'
       });
-    }
+   }
 
     const imageBase64 = req.file.buffer.toString('base64');
     const patientInfo = req.body.patientInfo ? JSON.parse(req.body.patientInfo) : {};
@@ -45,10 +45,10 @@ router.post('/analyze-image', upload.single('report'), async (req, res) => {
     
     res.json(result);
   } catch (error) {
-    console.error('Error analyzing report image:', error);
+   console.error('Error analyzing report image:', error);
     res.status(500).json({
-      success: false,
-      message: 'Failed to analyze report',
+     success: false,
+     message: 'Failed to analyze report',
       error: error.message
     });
   }
@@ -56,7 +56,7 @@ router.post('/analyze-image', upload.single('report'), async (req, res) => {
 
 router.post('/analyze-manual', async (req, res) => {
   try {
-    const { values, patientInfo } = req.body;
+   const { values, patientInfo } = req.body;
     
     if (!values || Object.keys(values).length === 0) {
       return res.status(400).json({
@@ -103,7 +103,7 @@ router.post('/analyze-diabetes', async (req, res) => {
       success: false,
       message: 'Failed to analyze diabetes report',
       error: error.message
-    });
+   });
   }
 });
 
@@ -117,6 +117,7 @@ router.get('/supported-tests', (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
+    console.log('DEBUG: aiReportRoutes.js');
       success: false,
       error: error.message
     });
@@ -129,7 +130,7 @@ router.get('/tests-by-category/:category', (req, res) => {
     const validCategories = ['diabetes', 'lipid', 'cbc', 'kidney', 'liver', 'thyroid', 'vitamin', 'electrolyte'];
     
     if (!validCategories.includes(category)) {
-      return res.status(400).json({
+     return res.status(400).json({
         success: false,
         message: 'Invalid category',
         validCategories
@@ -146,17 +147,17 @@ router.get('/tests-by-category/:category', (req, res) => {
     res.status(500).json({
       success: false,
       error: error.message
-    });
+   });
   }
 });
 
 router.get('/categories', (req, res) => {
   res.json({
-    success: true,
+   success: true,
     categories: [
       { id: 'diabetes', name: 'Diabetes Panel', icon: '🩸' },
       { id: 'lipid', name: 'Lipid Profile', icon: '❤️' },
-      { id: 'cbc', name: 'Complete Blood Count', icon: '🔬' },
+     { id: 'cbc', name: 'Complete Blood Count', icon: '🔬' },
       { id: 'kidney', name: 'Kidney Function', icon: '🫘' },
       { id: 'liver', name: 'Liver Function', icon: '🫀' },
       { id: 'thyroid', name: 'Thyroid Panel', icon: '🦋' },
@@ -166,4 +167,4 @@ router.get('/categories', (req, res) => {
   });
 });
 
-module.exports = router;
+module.exports = router

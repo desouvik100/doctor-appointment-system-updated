@@ -13,13 +13,13 @@ function scheduleNotifications(appointment) {
   const now = new Date();
   notifications.push({
     type: NOTIFICATION_TYPES.APPOINTMENT_CONFIRMATION,
-    scheduledFor: now,
+   scheduledFor: now,
     appointmentId: appointment._id
   });
   const reminder24h = new Date(appointmentTime);
   reminder24h.setHours(reminder24h.getHours() - 24);
   if (reminder24h > now) {
-    notifications.push({
+   notifications.push({
       type: NOTIFICATION_TYPES.REMINDER_24H,
       scheduledFor: reminder24h,
       appointmentId: appointment._id
@@ -40,14 +40,14 @@ function scheduleNotifications(appointment) {
 
 function markAsTelemedicine(appointment) {
   return {
-    ...appointment,
-    type: 'telemedicine',
+    ...appointment, 
+   type: 'telemedicine',
     isVideoConsultation: true,
     requiresIdentityVerification: true
   };
 }
 
-function verifyPatientIdentity(verificationData) {
+function verifyPatientIdentity(verificationData) { 
   const checks = {
     dateOfBirth: !!verificationData.dateOfBirth,
     lastFourSSN: verificationData.lastFourSSN?.length === 4,
@@ -58,7 +58,7 @@ function verifyPatientIdentity(verificationData) {
   return {
     isVerified: passedChecks >= 2,
     passedChecks,
-    requiredChecks: 2
+   requiredChecks: 2
   };
 }
 class RecordingService {
@@ -79,7 +79,7 @@ class RecordingService {
   }
 
   linkToVisit(recordingId, visitId) {
-    const recording = this.recordings.get(recordingId);
+   const recording = this.recordings.get(recordingId);
     if (!recording) throw new Error('Recording not found');
     recording.visitId = visitId;
     return recording;
@@ -96,11 +96,11 @@ describe('Scheduling and Notifications - Property Tests', () => {
     test('telemedicine appointments are marked correctly', () => {
       fc.assert(
         fc.property(
-          fc.record({
+          fc.record({ 
             _id: fc.string({ minLength: 5, maxLength: 20 }),
             patientId: fc.string({ minLength: 5, maxLength: 20 }),
             doctorId: fc.string({ minLength: 5, maxLength: 20 }),
-            dateTime: fc.date({ min: new Date(), max: new Date('2030-12-31') })
+           dateTime: fc.date({ min: new Date(), max: new Date('2030-12-31') })
           }),
           (appointment) => {
             const marked = markAsTelemedicine(appointment);
@@ -124,7 +124,7 @@ describe('Scheduling and Notifications - Property Tests', () => {
         patientId: 'pat_1',
         doctorId: 'doc_1'
       };
-      expect(regularAppointment.isVideoConsultation).toBeUndefined();
+      expect(regularAppointment.isVideoConsultation).toBeUndefined(); 
       expect(regularAppointment.requiresIdentityVerification).toBeUndefined();
     });
   });
@@ -133,7 +133,7 @@ describe('Scheduling and Notifications - Property Tests', () => {
     test('confirmation notification is always scheduled', () => {
       fc.assert(
         fc.property(
-          fc.date({ min: new Date(), max: new Date('2030-12-31') }),
+         fc.date({ min: new Date(), max: new Date('2030-12-31') }),
           (appointmentDate) => {
             const appointment = {
               _id: 'apt_123',
@@ -157,9 +157,9 @@ describe('Scheduling and Notifications - Property Tests', () => {
       const futureDate = new Date();
       futureDate.setHours(futureDate.getHours() + 48);
       
-      const appointment = {
+     const appointment = {
         _id: 'apt_123',
-        dateTime: futureDate
+        dateTime: futureDate 
       };
       
       const notifications = scheduleNotifications(appointment);
@@ -168,16 +168,16 @@ describe('Scheduling and Notifications - Property Tests', () => {
         n => n.type === NOTIFICATION_TYPES.REMINDER_24H
       );
       
-      expect(reminder24h).toBeDefined();
+     expect(reminder24h).toBeDefined();
       expect(reminder24h.scheduledFor < futureDate).toBe(true);
-    });
+   });
 
     test('15min reminder is scheduled if appointment is more than 15min away', () => {
       const futureDate = new Date();
       futureDate.setHours(futureDate.getHours() + 1);
       
       const appointment = {
-        _id: 'apt_123',
+       _id: 'apt_123',
         dateTime: futureDate
       };
       
@@ -196,7 +196,7 @@ describe('Scheduling and Notifications - Property Tests', () => {
       
       const appointment = {
         _id: 'apt_123',
-        dateTime: pastDate
+       dateTime: pastDate
       };
       
       const notifications = scheduleNotifications(appointment);
@@ -211,11 +211,11 @@ describe('Scheduling and Notifications - Property Tests', () => {
       fc.assert(
         fc.property(
           fc.string({ minLength: 5, maxLength: 20 }),
-          (appointmentId) => {
+         (appointmentId) => {
             const futureDate = new Date();
-            futureDate.setDate(futureDate.getDate() + 7);
+           futureDate.setDate(futureDate.getDate() + 7);
             
-            const appointment = {
+            const appointment = { 
               _id: appointmentId,
               dateTime: futureDate
             };
@@ -239,9 +239,9 @@ describe('Scheduling and Notifications - Property Tests', () => {
       });
       expect(oneCheck.isVerified).toBe(false);
       expect(oneCheck.passedChecks).toBe(1);
-      const twoChecks = verifyPatientIdentity({
+     const twoChecks = verifyPatientIdentity({
         dateOfBirth: '1990-01-01',
-        phoneVerified: true
+       phoneVerified: true
       });
       expect(twoChecks.isVerified).toBe(true);
       expect(twoChecks.passedChecks).toBe(2);
@@ -291,13 +291,13 @@ describe('Scheduling and Notifications - Property Tests', () => {
     
     test('recording is linked to visit on creation', () => {
       fc.assert(
-        fc.property(
+       fc.property(
           fc.string({ minLength: 5, maxLength: 20 }),
           fc.string({ minLength: 5, maxLength: 20 }),
           (visitId, sessionId) => {
             const service = new RecordingService();
             
-            const recording = service.createRecording({
+           const recording = service.createRecording({
               sessionId,
               visitId,
               doctorId: 'doc_1',
@@ -315,7 +315,7 @@ describe('Scheduling and Notifications - Property Tests', () => {
       const service = new RecordingService();
       
       const recording = service.createRecording({
-        sessionId: 'session_1',
+       sessionId: 'session_1',
         visitId: null,
         doctorId: 'doc_1',
         patientId: 'pat_1'
@@ -327,7 +327,7 @@ describe('Scheduling and Notifications - Property Tests', () => {
     });
 
     test('recording maintains visit link after retrieval', () => {
-      fc.assert(
+     fc.assert( 
         fc.property(
           fc.string({ minLength: 5, maxLength: 20 }),
           (visitId) => {
@@ -337,23 +337,23 @@ describe('Scheduling and Notifications - Property Tests', () => {
               sessionId: 'session_1',
               visitId,
               doctorId: 'doc_1',
-              patientId: 'pat_1'
+             patientId: 'pat_1'
             });
             
             const retrieved = service.getRecording(recording.recordingId);
             
             expect(retrieved.visitId).toBe(visitId);
           }
-        ),
+       ),
         { numRuns: 30 }
-      );
+     );
     });
 
     test('linking non-existent recording throws error', () => {
-      const service = new RecordingService();
+     const service = new RecordingService();
       
       expect(() => service.linkToVisit('non_existent', 'visit_123'))
         .toThrow('Recording not found');
     });
-  });
+  }); 
 });

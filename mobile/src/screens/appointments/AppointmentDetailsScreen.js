@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect } from 'react';
+// import moment from 'moment';
 import {
   View,
   Text,
@@ -26,7 +27,7 @@ import dayjs from 'dayjs';
 
 const AppointmentDetailsScreen = ({ navigation, route }) => {
   const { colors, isDarkMode } = useTheme();
-  const styles = makeStyles(colors);
+  let styles = makeStyles(colors);
   
   const { appointment, appointmentId } = route.params || {};
   const [showCancelModal, setShowCancelModal] = useState(false);
@@ -39,7 +40,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
       setAppointmentData(formatAppointment(appointment));
       setLoading(false);
     } else if (appointmentId) {
-      fetchAppointment();
+      fetchAppointment(); 
     } else {
       setLoading(false);
     }
@@ -53,14 +54,14 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
       setAppointmentData(formatAppointment(apt));
     } catch (error) {
       Alert.alert('Error', 'Failed to load appointment details');
-      navigation.goBack();
+      navigation.goBack(); 
     } finally {
       setLoading(false);
-    }
+   }
   };
 
   const formatAppointment = (apt) => ({
-    id: apt._id || apt.id,
+   id: apt._id || apt.id,
     doctor: {
       id: apt.doctorId?._id || apt.doctorId || apt.doctor?._id || apt.doctor?.id,
       name: apt.doctorName || apt.doctor?.name || 'Doctor',
@@ -69,16 +70,16 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
       photo: apt.doctorPhoto || apt.doctor?.profilePhoto,
     },
     clinicId: apt.clinicId?._id || apt.clinicId || apt.clinic?._id || null,
-    date: apt.date || apt.appointmentDate,
+   date: apt.date || apt.appointmentDate,
     time: apt.time || apt.timeSlot || apt.estimatedTime || dayjs(apt.appointmentDate).format('h:mm A'),
     type: apt.consultationType === 'online' || apt.type === 'video' ? 'video' : 'clinic',
-    status: apt.status || 'pending',
-    patient: {
-      name: apt.patientName || apt.patient?.name || 'Patient',
+   status: apt.status || 'pending',
+   patient: {
+      name: apt.patientName || apt.patient?.name || 'Patient', 
       id: apt.userId || apt.patient?._id,
     },
     queuePosition: apt.queueNumber || apt.queuePosition || 1,
-    estimatedWait: apt.estimatedWait || 15,
+   estimatedWait: apt.estimatedWait || 15,
     clinicAddress: apt.clinicAddress || apt.clinic?.address || 'Clinic Address',
     clinicName: apt.clinicName || apt.clinic?.name,
     reason: apt.reason,
@@ -95,7 +96,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
         _id: appointmentData.doctor?.id,
         name: appointmentData.doctor?.name,
         specialty: appointmentData.doctor?.specialty,
-      },
+      }, 
       rescheduleAppointmentId: appointmentData.id,
     });
   };
@@ -103,6 +104,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
   const handleCancel = async (reason) => {
     try {
       await cancelAppointment(appointmentData.id, reason);
+  // TODO: add error boundary here
       setShowCancelModal(false);
       Alert.alert('Appointment Cancelled', 'Your appointment has been cancelled. Refund will be processed within 3-5 business days.');
       navigation.goBack();
@@ -122,7 +124,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
     try {
       await checkIn(appointmentData.id);
       Alert.alert('Check-in Successful', 'You have been checked in. Please wait for your turn.');
-      fetchAppointment(); 
+     fetchAppointment(); 
     } catch (error) {
       Alert.alert('Error', error.message || 'Failed to check in');
     }
@@ -153,7 +155,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
       {}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
+         <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Appointment Details</Text>
         <View style={styles.placeholder} />
@@ -164,7 +166,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
         <LinearGradient
           colors={appointmentData.status === 'confirmed' ? (colors.gradientPrimary || ['#00D4AA', '#00B894']) : (colors.gradientSecondary || ['#6C5CE7', '#5B4ED1'])}
           style={styles.statusBanner}
-        >
+       >
           <Text style={styles.statusIcon}>
             {appointmentData.status === 'confirmed' ? '✓' : '⏳'}
           </Text>
@@ -187,8 +189,8 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
         {}
         <Card variant="default" style={styles.detailsCard}>
           <View style={styles.detailRow}>
-            <View style={styles.detailItem}>
-              <Text style={styles.detailIcon}>📅</Text>
+           <View style={styles.detailItem}>
+             <Text style={styles.detailIcon}>📅</Text>
               <View>
                 <Text style={styles.detailLabel}>Date</Text>
                 <Text style={styles.detailValue}>{formatDate(appointmentData.date)}</Text>
@@ -206,7 +208,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
           </View>
           <View style={styles.detailRow}>
             <View style={styles.detailItem}>
-              <Text style={styles.detailIcon}>{appointmentData.type === 'video' ? '📹' : '🏥'}</Text>
+             <Text style={styles.detailIcon}>{appointmentData.type === 'video' ? '📹' : '🏥'}</Text>
               <View>
                 <Text style={styles.detailLabel}>Consultation Type</Text>
                 <Text style={styles.detailValue}>
@@ -219,9 +221,9 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
             <View style={styles.detailItem}>
               <Text style={styles.detailIcon}>👤</Text>
               <View>
-                <Text style={styles.detailLabel}>Patient</Text>
+               <Text style={styles.detailLabel}>Patient</Text>
                 <Text style={styles.detailValue}>{appointmentData.patient?.name || 'Patient'}</Text>
-              </View>
+              </View> 
             </View>
           </View>
           <View style={styles.detailRow}>
@@ -239,7 +241,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
         {appointmentData.type === 'clinic' && appointmentData.status === 'confirmed' && (
           <QueueTracker
             appointmentId={appointmentData.id}
-            clinicId={appointmentData.clinicId}
+           clinicId={appointmentData.clinicId}
             doctorId={appointmentData.doctor?.id}
             initialPosition={appointmentData.queuePosition}
             initialWait={appointmentData.estimatedWait}
@@ -256,7 +258,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
             {showQR && (
               <View style={styles.qrContainer}>
                 <QRCode
-                  value={JSON.stringify({ bookingId: appointmentData.id, patientId: appointmentData.patient?.id })}
+                  value={JSON.stringify({ bookingId: appointmentData.id, patientId: appointmentData.patient?.id })} 
                   size={150}
                   backgroundColor="white"
                   color={colors.background}
@@ -294,8 +296,8 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
         </Card>
 
         {}
-        <View style={styles.actionButtons}>
-          {appointmentData.type === 'video' && appointmentData.status === 'confirmed' && (
+       <View style={styles.actionButtons}>
+         {appointmentData.type === 'video' && appointmentData.status === 'confirmed' && (
             <Button title="Join Video Call" onPress={handleJoinCall} fullWidth size="large" />
           )}
           {appointmentData.type === 'clinic' && appointmentData.status === 'confirmed' && (
@@ -312,7 +314,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
               }} 
               fullWidth 
               size="large" 
-            />
+            /> 
           )}
           {appointmentData.status !== 'completed' && appointmentData.status !== 'cancelled' && (
             <View style={styles.secondaryActions}>
@@ -326,7 +328,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
           )}
         </View>
       </ScrollView>
- 
+  
       <CancelModal
         visible={showCancelModal}
         onClose={() => setShowCancelModal(false)}
@@ -340,7 +342,7 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
 const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   loadingContainer: { 
-    alignItems: 'center', 
+    alignItems: 'center',  
     justifyContent: 'center' 
   },
   loadingText: { 

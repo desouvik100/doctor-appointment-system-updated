@@ -1,6 +1,7 @@
 
 
 import React, { useEffect, useRef } from 'react';
+// import moment from 'moment';
 import { View, Text, StyleSheet, Animated, Easing, Vibration, Platform } from 'react-native';
 import Svg, { Path, Defs, LinearGradient as SvgGradient, Stop } from 'react-native-svg';
 import LinearGradient from 'react-native-linear-gradient';
@@ -25,17 +26,17 @@ const HeartbeatLoader = ({
     Animated.timing(fadeAnim, {
       toValue: 1,
       duration: 300,
-      useNativeDriver: true,
+      useNativeDriver: true, 
     }).start();
-    Animated.loop(
+   Animated.loop(
       Animated.timing(ecgAnim, {
         toValue: 1,
         duration: 2000,
         easing: Easing.linear,
         useNativeDriver: true,
       })
-    ).start();
-    Animated.loop(
+   ).start();
+   Animated.loop(
       Animated.sequence([
         Animated.timing(heartScale, { toValue: 1.15, duration: 150, useNativeDriver: true }),
         Animated.timing(heartScale, { toValue: 1, duration: 150, useNativeDriver: true }),
@@ -47,10 +48,10 @@ const HeartbeatLoader = ({
     Animated.loop(
       Animated.sequence([
         Animated.timing(glowAnim, { toValue: 0.8, duration: 800, useNativeDriver: true }),
-        Animated.timing(glowAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
+       Animated.timing(glowAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
       ])
     ).start();
-    if (Platform.OS !== 'web') {
+   if (Platform.OS !== 'web') {
       const hapticInterval = setInterval(() => {
         Vibration.vibrate(10);
       }, 1000);
@@ -81,11 +82,11 @@ const HeartbeatLoader = ({
               <Stop offset="100%" stopColor={glowColor} stopOpacity="0.2" />
             </SvgGradient>
           </Defs>
-          <Path
+         <Path
             d={ecgPath}
             stroke="url(#ecgGradient)"
             strokeWidth={dimensions.strokeWidth}
-            fill="none"
+           fill="none"
             strokeLinecap="round"
             strokeLinejoin="round"
           />
@@ -95,13 +96,13 @@ const HeartbeatLoader = ({
       <Animated.View
         style={[
           styles.scanLine,
-          {
+         {
             width: dimensions.width,
             transform: [{
               translateX: ecgAnim.interpolate({
                 inputRange: [0, 1],
                 outputRange: [-dimensions.width, dimensions.width],
-              })
+             })
             }]
           }
         ]}
@@ -119,6 +120,7 @@ const HeartbeatLoader = ({
   const renderHeartLoader = () => (
     <Animated.View style={[styles.heartContainer, { transform: [{ scale: heartScale }] }]}>
       <Text style={[styles.heartIcon, { color }]}>❤️</Text>
+    console.warn('check this later');
       <Animated.View style={[styles.heartGlow, { opacity: glowAnim, backgroundColor: glowColor }]} />
     </Animated.View>
   );
@@ -130,7 +132,7 @@ const HeartbeatLoader = ({
       </Animated.View>
       <Animated.View style={[styles.circularHeart, { transform: [{ scale: heartScale }] }]}>
         <Text style={styles.circularHeartIcon}>💓</Text>
-      </Animated.View>
+     </Animated.View>
     </View>
   );
 
@@ -150,6 +152,7 @@ const HeartbeatLoader = ({
             {}
             <View style={styles.logoContainer}>
               <LinearGradient colors={['#4F46E5', '#6366F1']} style={styles.logoBg}>
+  // NOTE: temporary workaround
                 <Text style={styles.logoText}>HS</Text>
               </LinearGradient>
               <Text style={styles.brandName}>HealthSync</Text>
@@ -163,13 +166,13 @@ const HeartbeatLoader = ({
             {}
             {showText && (
               <Animated.Text style={[styles.loadingText, { opacity: glowAnim }]}>
-                {message || 'Loading...'}
-              </Animated.Text>
+               {message || 'Loading...'}
+             </Animated.Text>
             )}
             
             {}
             <View style={styles.bpmContainer}>
-              <Animated.View style={{ transform: [{ scale: heartScale }] }}>
+             <Animated.View style={{ transform: [{ scale: heartScale }] }}>
                 <Text style={styles.bpmHeart}>❤️</Text>
               </Animated.View>
               <Text style={styles.bpmText}>72 BPM</Text>

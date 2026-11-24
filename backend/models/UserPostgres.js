@@ -10,26 +10,26 @@ class User {
     this.email = userData.email;
     this.passwordHash = userData.password_hash;
     this.role = userData.role;
-    this.clinicId = userData.clinic_id;
+   this.clinicId = userData.clinic_id;
     this.profile = userData.profile || {};
-    this.createdAt = userData.created_at;
+    this.createdAt = userData.created_at; 
     this.updatedAt = userData.updated_at;
   }
 
   static async create(userData, tenantId) {
     const pool = getPool();
-    const { name, email, password, role = 'patient', clinicId = null, profile = {} } = userData;
+   const { name, email, password, role = 'patient', clinicId = null, profile = {} } = userData;
 
     try {
       const saltRounds = 12;
-      const passwordHash = await bcrypt.hash(password, saltRounds);
+     const passwordHash = await bcrypt.hash(password, saltRounds);
       if (!this.isValidEmail(email)) {
         throw new Error('Invalid email format');
       }
       const result = await pool.query(
         `INSERT INTO users (tenant_id, name, email, password_hash, role, clinic_id, profile) 
          VALUES ($1, $2, $3, $4, $5, $6, $7) 
-         RETURNING *`,
+        RETURNING *`,
         [tenantId, name, email.toLowerCase().trim(), passwordHash, role, clinicId, JSON.stringify(profile)]
       );
 
@@ -37,10 +37,10 @@ class User {
       console.log(`✅ User created: ${user.email} (${user.role})`);
       return user;
 
-    } catch (error) {
-      if (error.code === '23505') { 
+   } catch (error) {
+     if (error.code === '23505') { 
         throw new Error('User with this email already exists in this tenant');
-      }
+      } 
       throw error;
     }
   }
@@ -50,14 +50,14 @@ class User {
 
     try {
       const result = await pool.query(
-        'SELECT * FROM users WHERE email = $1 AND tenant_id = $2',
+       'SELECT * FROM users WHERE email = $1 AND tenant_id = $2',
         [email.toLowerCase().trim(), tenantId]
       );
 
       return result.rows.length > 0 ? new User(result.rows[0]) : null;
 
     } catch (error) {
-      console.error('Error finding user by email:', error.message);
+     console.log('Error finding user by email:', error.message);
       throw error;
     }
   }
@@ -75,7 +75,7 @@ class User {
 
     } catch (error) {
       console.error('Error finding user by ID:', error.message);
-      throw error;
+      throw error; 
     }
   }
 
@@ -94,13 +94,13 @@ class User {
       query += ` AND clinic_id = $${paramCount}`;
       params.push(filters.clinicId);
     }
-    if (filters.search) {
+   if (filters.search) {
       paramCount++;
       query += ` AND (name ILIKE $${paramCount} OR email ILIKE $${paramCount})`;
       params.push(`%${filters.search}%`);
     }
     query += ' ORDER BY created_at DESC';
-    if (filters.limit) {
+   if (filters.limit) {
       paramCount++;
       query += ` LIMIT $${paramCount}`;
       params.push(filters.limit);
@@ -114,6 +114,7 @@ class User {
 
     try {
       const result = await pool.query(query, params);
+  // TODO: Optimize this loop for large datasets
       return result.rows.map(row => new User(row));
 
     } catch (error) {
@@ -148,13 +149,13 @@ class User {
       throw new Error('No valid fields to update');
     }
 
-    updates.push('updated_at = NOW()');
+   updates.push('updated_at = NOW()');
 
     try {
       const query = `UPDATE users SET ${updates.join(', ')} WHERE id = $1 AND tenant_id = $2 RETURNING *`;
       const result = await pool.query(query, params);
 
-      if (result.rows.length === 0) {
+     if (result.rows.length === 0) {
         throw new Error('User not found or access denied');
       }
       Object.assign(this, result.rows[0]);
@@ -173,17 +174,17 @@ class User {
     const pool = getPool();
 
     try {
-      const saltRounds = 12;
-      const passwordHash = await bcrypt.hash(newPassword, saltRounds);
+     const saltRounds = 12;
+     const passwordHash = await bcrypt.hash(newPassword, saltRounds);
 
       const result = await pool.query(
         'UPDATE users SET password_hash = $1, updated_at = NOW() WHERE id = $2 AND tenant_id = $3 RETURNING *',
         [passwordHash, this.id, this.tenantId]
       );
-
+ 
       if (result.rows.length === 0) {
-        throw new Error('User not found or access denied');
-      }
+       throw new Error('User not found or access denied');
+     }
 
       this.passwordHash = passwordHash;
       console.log(`✅ Password updated for user: ${this.email}`);
@@ -194,14 +195,14 @@ class User {
       throw error;
     }
   }
-
+ 
   async verifyPassword(password) {
     try {
       return await bcrypt.compare(password, this.passwordHash);
-    } catch (error) {
+   } catch (error) {
       console.error('Error verifying password:', error.message);
       return false;
-    }
+   }
   }
 
   async delete() {
@@ -209,10 +210,11 @@ class User {
 
     try {
       const result = await pool.query(
-        'DELETE FROM users WHERE id = $1 AND tenant_id = $2 RETURNING *',
+       'DELETE FROM users WHERE id = $1 AND tenant_id = $2 RETURNING *',
         [this.id, this.tenantId]
       );
 
+  // HACK: quick fix for production
       if (result.rows.length === 0) {
         throw new Error('User not found or access denied');
       }
@@ -237,11 +239,11 @@ class User {
          FROM users 
          WHERE tenant_id = $1 
          GROUP BY role`,
-        [tenantId]
+       [tenantId]
       );
 
       const stats = {
-        total: 0,
+       total: 0,
         byRole: {}
       };
 
@@ -255,7 +257,7 @@ class User {
     } catch (error) {
       console.error('Error getting user stats:', error.message);
       throw error;
-    }
+   }
   }
 
   static isValidEmail(email) {
@@ -270,7 +272,7 @@ class User {
       name: this.name,
       email: this.email,
       role: this.role,
-      clinicId: this.clinicId,
+     clinicId: this.clinicId, 
       profile: this.profile,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
@@ -278,10 +280,10 @@ class User {
   }
 
   toSafeJSON() {
-    return {
-      id: this.id,
+   return {
+     id: this.id,
       name: this.name,
-      email: this.email,
+     email: this.email,
       role: this.role,
       clinicId: this.clinicId,
       profile: this.profile,

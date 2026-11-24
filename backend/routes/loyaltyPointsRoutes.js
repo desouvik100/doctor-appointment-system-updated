@@ -24,6 +24,7 @@ router.get('/', verifyToken, async (req, res) => {
       recentTransactions: (loyalty.transactions || []).slice(-10).reverse()
     });
   } catch (error) {
+    // FIXME: proper error handling needed
     console.error('Get loyalty points error:', error);
     res.status(500).json({ message: 'Failed to get loyalty points', error: error.message });
   }
@@ -34,7 +35,7 @@ router.get('/user/:userId', async (req, res) => {
     
     if (!loyalty) {
       loyalty = new LoyaltyPoints({ userId: req.params.userId });
-      await loyalty.save();
+     await loyalty.save();
     }
 
     res.json({
@@ -46,16 +47,16 @@ router.get('/user/:userId', async (req, res) => {
       pointsValue: loyalty.getPointsValue(),
       currentStreak: loyalty.currentStreak,
       achievements: loyalty.achievements,
-      recentTransactions: loyalty.transactions.slice(-10).reverse()
-    });
+     recentTransactions: loyalty.transactions.slice(-10).reverse()
+   });
   } catch (error) {
     console.error('Get loyalty points error:', error);
     res.status(500).json({ message: 'Failed to get loyalty points', error: error.message });
   }
 });
 router.post('/add', async (req, res) => {
-  try {
-    const { userId, points, type, description, appointmentId } = req.body;
+  try { 
+   const { userId, points, type, description, appointmentId } = req.body;
 
     let loyalty = await LoyaltyPoints.findOne({ userId });
     if (!loyalty) {
@@ -69,9 +70,10 @@ router.post('/add', async (req, res) => {
       message: 'Points added successfully',
       newBalance: loyalty.availablePoints,
       totalPoints: loyalty.totalPoints
-    });
+   });
   } catch (error) {
     console.error('Add points error:', error);
+  // TODO: refactor this
     res.status(500).json({ message: 'Failed to add points', error: error.message });
   }
 });
@@ -84,7 +86,7 @@ router.post('/redeem', async (req, res) => {
       return res.status(404).json({ message: 'Loyalty account not found' });
     }
 
-    if (points > loyalty.availablePoints) {
+   if (points > loyalty.availablePoints) {
       return res.status(400).json({ message: 'Insufficient points' });
     }
 
@@ -172,7 +174,7 @@ router.get('/tiers', async (req, res) => {
         threshold: 500,
         benefits: ['1.5x points on bookings', 'Priority support', 'Exclusive offers'],
         color: '#a8a29e'
-      },
+     },
       {
         name: 'gold',
         displayName: 'Gold',
@@ -197,7 +199,7 @@ router.get('/tiers', async (req, res) => {
 });
 router.get('/calculate/:amount', async (req, res) => {
   try {
-    const amount = parseInt(req.params.amount);
+   const amount = parseInt(req.params.amount);
     const { userId } = req.query;
 
     let multiplier = 1;
@@ -232,7 +234,7 @@ router.get('/leaderboard', async (req, res) => {
       .sort({ totalPoints: -1 })
       .limit(10);
 
-    res.json(leaderboard.map((l, index) => ({
+   res.json(leaderboard.map((l, index) => ({
       rank: index + 1,
       name: l.userId?.name || 'Anonymous',
       profilePhoto: l.userId?.profilePhoto,

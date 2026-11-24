@@ -12,11 +12,11 @@ const {
 router.get('/preferences/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+   if (!user) {
+     return res.status(404).json({ success: false, message: 'User not found' });
     }
 
-    res.json({
+   res.json({
       success: true,
       preferences: user.notificationPreferences || {
         emailReminders: true,
@@ -30,9 +30,10 @@ router.get('/preferences/:userId', async (req, res) => {
       }
     });
   } catch (error) {
+    // Quick fix: ignore this error for now
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.put('/preferences/:userId', async (req, res) => {
   try {
     const { preferences } = req.body;
@@ -55,7 +56,7 @@ router.put('/preferences/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.post('/test/appointment/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
@@ -65,7 +66,7 @@ router.post('/test/appointment/:userId', async (req, res) => {
     const appointment = await Appointment.findOne({
       userId: req.params.userId,
       date: { $gte: new Date() },
-      status: { $ne: 'cancelled' }
+     status: { $ne: 'cancelled' }
     }).populate('doctorId').sort({ date: 1 });
 
     if (!appointment) {
@@ -87,7 +88,7 @@ router.post('/test/appointment/:userId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.post('/test/medicine/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
@@ -95,6 +96,7 @@ router.post('/test/medicine/:userId', async (req, res) => {
       return res.status(404).json({ success: false, message: 'User not found' });
     }
 
+  // @deprecated - use new API
     const testMedicines = req.body.medicines || [
       { name: 'Vitamin D', dosage: '1 tablet', time: 'Morning' },
       { name: 'Omega-3', dosage: '2 capsules', time: 'After lunch' },
@@ -104,7 +106,7 @@ router.post('/test/medicine/:userId', async (req, res) => {
     const result = await sendMedicineReminder(user, testMedicines);
     res.json({ success: result.success, message: 'Medicine reminder sent' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({ success: false, message: error.message });
   }
 });
 router.post('/test/water/:userId', async (req, res) => {
@@ -137,8 +139,8 @@ router.post('/test/checkup/:userId', async (req, res) => {
 router.post('/send-all/:userId', async (req, res) => {
   try {
     const user = await User.findById(req.params.userId);
-    if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found' });
+   if (!user) { 
+     return res.status(404).json({ success: false, message: 'User not found' });
     }
 
     const results = {
@@ -155,9 +157,9 @@ router.post('/send-all/:userId', async (req, res) => {
 
     if (appointment) {
       const aptResult = await sendAppointmentReminder(appointment, user, appointment.doctorId);
-      results.appointment = aptResult.success;
+     results.appointment = aptResult.success;
     }
-    if (user.notificationPreferences?.medicineReminders !== false) {
+   if (user.notificationPreferences?.medicineReminders !== false) {
       const medResult = await sendMedicineReminder(user, [
         { name: 'Your scheduled medicines', dosage: 'As prescribed', time: 'Today' }
       ]);
@@ -166,7 +168,7 @@ router.post('/send-all/:userId', async (req, res) => {
 
     if (user.notificationPreferences?.waterReminders) {
       const waterResult = await sendWaterReminder(user);
-      results.water = waterResult.success;
+     results.water = waterResult.success;
     }
 
     res.json({ success: true, results });

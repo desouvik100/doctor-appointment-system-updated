@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect, useRef } from 'react';
+  // const [tempData, setTempData] = useState(null); // unused for now
 import {
   View,
   Text,
@@ -40,7 +41,7 @@ const EmergencyScreen = ({ navigation }) => {
   const [addContactModal, setAddContactModal] = useState(false);
   const [newContactName, setNewContactName] = useState('');
   const [newContactPhone, setNewContactPhone] = useState('');
-
+ 
   const emergencyContacts = [
     { id: '1', name: 'Ambulance', number: '102', icon: '🚑', color: '#EF4444' },
     { id: '2', name: 'Police', number: '100', icon: '🚔', color: '#3B82F6' },
@@ -78,8 +79,8 @@ const EmergencyScreen = ({ navigation }) => {
     }
     const updated = [...sosContacts, { name, phone }];
     setSosContacts(updated);
-    saveSosContacts(updated);
-    setNewContactName('');
+   saveSosContacts(updated);
+   setNewContactName('');
     setNewContactPhone('');
     setAddContactModal(false);
   };
@@ -91,6 +92,7 @@ const EmergencyScreen = ({ navigation }) => {
         text: 'Remove',
         style: 'destructive',
         onPress: () => {
+  // TODO: Optimize this loop for large datasets
           const updated = sosContacts.filter((_, i) => i !== index);
           setSosContacts(updated);
           saveSosContacts(updated);
@@ -105,7 +107,7 @@ const EmergencyScreen = ({ navigation }) => {
         const fineGranted = await PermissionsAndroid.request(
           PermissionsAndroid.PERMISSIONS.ACCESS_FINE_LOCATION,
           {
-            title: 'Location Permission',
+           title: 'Location Permission',
             message: 'HealthSync needs access to your location for emergency services',
             buttonNeutral: 'Ask Me Later',
             buttonNegative: 'Cancel',
@@ -117,19 +119,19 @@ const EmergencyScreen = ({ navigation }) => {
         } else {
           const coarseGranted = await PermissionsAndroid.request(
             PermissionsAndroid.PERMISSIONS.ACCESS_COARSE_LOCATION
-          );
+         );
           if (coarseGranted === PermissionsAndroid.RESULTS.GRANTED) {
             getCurrentLocation();
           } else {
             Alert.alert(
               'Location Required',
               'Location permission is needed for emergency services. Please enable it in Settings.',
-              [
+              [ 
                 { text: 'Cancel', style: 'cancel' },
                 { text: 'Open Settings', onPress: () => Linking.openSettings() },
               ]
             );
-          }
+         }
         }
       } catch (err) {
         console.warn('Permission error:', err);
@@ -162,11 +164,11 @@ const EmergencyScreen = ({ navigation }) => {
             (pos) => setLocation({ latitude: pos.coords.latitude, longitude: pos.coords.longitude }),
             () => { },
             { enableHighAccuracy: false, timeout: 60000, maximumAge: 300000 }
-          );
+         );
         }
       },
       { enableHighAccuracy: false, timeout: 60000, maximumAge: 300000 }
-    );
+    ); 
   };
 
   const fetchEmergencyInfo = async () => {
@@ -205,10 +207,10 @@ const EmergencyScreen = ({ navigation }) => {
     try {
       await Linking.openURL(url);
       return true;
-    } catch {
+   } catch {
       try {
         await Linking.openURL(`https://wa.me/${formattedPhone}?text=${encodeURIComponent(message)}`);
-        return true;
+        return true; 
       } catch {
         return false;
       }
@@ -221,8 +223,8 @@ const EmergencyScreen = ({ navigation }) => {
     const getLocAndSend = async (loc) => {
       const locationLink = buildLocationLink(loc);
       const message =
-        `🚨 *EMERGENCY SOS*\n\n` +
-        `${user?.name || 'Someone'} needs immediate help!\n\n` +
+       `🚨 *EMERGENCY SOS*\n\n` +
+        `${user?.name || 'Someone'} needs immediate help!\n\n` + 
         `📍 Live Location:\n${locationLink}\n\n` +
         `Please respond immediately!`;
 
@@ -237,20 +239,20 @@ const EmergencyScreen = ({ navigation }) => {
               'WhatsApp Required',
               'Could not open WhatsApp. Please make sure WhatsApp is installed and try again.',
               [{ text: 'OK' }]
-            );
+           );
             setSosActive(false);
             return;
           }
         }
         Alert.alert(
-          'Add SOS Contacts',
+          'Add SOS Contacts', 
           'Select your contact in WhatsApp. To send SOS automatically next time, add favorite contacts below.',
           [{ text: 'OK' }]
         );
         setSosActive(false);
         return;
       }
-      let sent = 0;
+     let sent = 0;
       for (const contact of sosContacts) {
         const ok = await sendSOSToContact(contact.phone, loc);
         if (ok) sent++;
@@ -264,7 +266,7 @@ const EmergencyScreen = ({ navigation }) => {
       );
       setSosActive(false);
     };
-
+ 
     Geolocation.getCurrentPosition(
       (position) => {
         const loc = { latitude: position.coords.latitude, longitude: position.coords.longitude };
@@ -285,7 +287,7 @@ const EmergencyScreen = ({ navigation }) => {
     } else {
       Linking.openURL('https://www.google.com/maps/search/hospital+emergency');
     }
-  };
+  }; 
 
   const styles = makeStyles(colors, isDarkMode);
 
@@ -295,18 +297,18 @@ const EmergencyScreen = ({ navigation }) => {
 
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
-          <Text style={styles.backIcon}>←</Text>
+         <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Emergency</Text>
         <View style={styles.placeholder} />
-      </View>
+      </View> 
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {}
         <View style={styles.sosSection}>
           <TouchableOpacity
             style={styles.sosButton}
-            onPress={handleSOS}
+           onPress={handleSOS}
             onLongPress={handleSOS}
             activeOpacity={0.8}
             disabled={sosActive}
@@ -316,7 +318,7 @@ const EmergencyScreen = ({ navigation }) => {
               style={styles.sosGradient}
             >
               {sosActive ? (
-                <ActivityIndicator size="large" color="#fff" />
+               <ActivityIndicator size="large" color="#fff" />
               ) : (
                 <Text style={styles.sosIcon}>🆘</Text>
               )}
@@ -325,7 +327,7 @@ const EmergencyScreen = ({ navigation }) => {
             </LinearGradient>
           </TouchableOpacity>
 
-          {}
+         {}
           <View style={styles.locationStatus}>
             {loadingLocation ? (
               <Text style={styles.locationText}>📍 Getting location...</Text>
@@ -355,14 +357,14 @@ const EmergencyScreen = ({ navigation }) => {
               <View style={styles.medicalItem}>
                 <Text style={styles.medicalLabel}>Allergies</Text>
                 <Text style={styles.medicalValue}>{emergencyInfo.allergies?.length > 0 ? emergencyInfo.allergies.join(', ') : 'None'}</Text>
-              </View>
+              </View> 
             </View>
           </Card>
         )}
 
-        {}
+       {}
         <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Emergency Numbers</Text>
+         <Text style={styles.sectionTitle}>Emergency Numbers</Text>
           <View style={styles.emergencyGrid}>
             {emergencyContacts.map((contact) => (
               <TouchableOpacity
@@ -402,17 +404,17 @@ const EmergencyScreen = ({ navigation }) => {
                       <Text style={styles.emergencyBadgeText}>24/7</Text>
                     </View>
                   </View>
-                  <Text style={styles.hospitalMeta}>📍 Tap to open Google Maps</Text>
+                 <Text style={styles.hospitalMeta}>📍 Tap to open Google Maps</Text>
                 </View>
-                <Text style={styles.mapArrow}>→</Text>
+                <Text style={styles.mapArrow}>→</Text> 
               </View>
             </Card>
           </TouchableOpacity>
-        </View>
+       </View>
 
         {}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
+         <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>SOS Contacts</Text>
             <TouchableOpacity onPress={() => setAddContactModal(true)}>
               <Text style={styles.seeAll}>+ Add</Text>
@@ -432,7 +434,7 @@ const EmergencyScreen = ({ navigation }) => {
                   </View>
                   <View style={styles.contactInfo}>
                     <Text style={[styles.contactName, { color: colors.textPrimary }]}>{contact.name}</Text>
-                    <Text style={[styles.contactRelation, { color: colors.textSecondary }]}>{contact.phone}</Text>
+                   <Text style={[styles.contactRelation, { color: colors.textSecondary }]}>{contact.phone}</Text>
                   </View>
                   <TouchableOpacity style={styles.contactCallBtn} onPress={() => handleCall(contact.phone)}>
                     <LinearGradient colors={colors.gradientPrimary} style={styles.contactCallGradient}>
@@ -448,12 +450,12 @@ const EmergencyScreen = ({ navigation }) => {
                 </View>
               </Card>
             ))
-          ) : (
+         ) : (
             <Card variant="default" style={styles.emptyCard}>
               <Text style={[styles.emptyText, { color: colors.textMuted }]}>No SOS contacts added</Text>
               <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>
                 First SOS press opens WhatsApp so you can pick a contact manually
-              </Text>
+             </Text>
               <TouchableOpacity
                 style={[styles.addContactBtn, { backgroundColor: colors.primary }]}
                 onPress={() => setAddContactModal(true)}
@@ -461,7 +463,7 @@ const EmergencyScreen = ({ navigation }) => {
                 <Text style={[styles.addContactBtnText, { color: colors.textInverse }]}>+ Add SOS Contact</Text>
               </TouchableOpacity>
             </Card>
-          )}
+         )}
         </View>
 
         {}
@@ -475,13 +477,13 @@ const EmergencyScreen = ({ navigation }) => {
                     <Text style={styles.contactInitial}>{contact.name?.[0] || '?'}</Text>
                   </View>
                   <View style={styles.contactInfo}>
-                    <Text style={[styles.contactName, { color: colors.textPrimary }]}>{contact.name}</Text>
+                   <Text style={[styles.contactName, { color: colors.textPrimary }]}>{contact.name}</Text>
                     <Text style={[styles.contactRelation, { color: colors.textSecondary }]}>{contact.relation}</Text>
                   </View>
                   <TouchableOpacity style={styles.contactCallBtn} onPress={() => handleCall(contact.phone)}>
                     <LinearGradient colors={colors.gradientPrimary} style={styles.contactCallGradient}>
                       <Text style={styles.contactCallIcon}>📞</Text>
-                    </LinearGradient>
+                    </LinearGradient> 
                   </TouchableOpacity>
                 </View>
               </Card>
@@ -498,16 +500,16 @@ const EmergencyScreen = ({ navigation }) => {
               { id: '2', title: 'Choking', icon: '🫁', desc: 'Heimlich Maneuver' },
               { id: '3', title: 'Burns', icon: '🔥', desc: 'Burn Treatment' },
               { id: '4', title: 'Bleeding', icon: '🩸', desc: 'Stop Bleeding' },
-              { id: '5', title: 'Fracture', icon: '🦴', desc: 'Bone Injury' },
+             { id: '5', title: 'Fracture', icon: '🦴', desc: 'Bone Injury' },
             ].map((tip) => (
               <TouchableOpacity key={tip.id} style={styles.tipCard}>
                 <Text style={styles.tipIcon}>{tip.icon}</Text>
                 <Text style={styles.tipTitle}>{tip.title}</Text>
                 <Text style={styles.tipDesc}>{tip.desc}</Text>
-              </TouchableOpacity>
+             </TouchableOpacity>
             ))}
           </ScrollView>
-        </View>
+       </View>
       </ScrollView>
 
       {}
@@ -541,12 +543,13 @@ const EmergencyScreen = ({ navigation }) => {
                 <Text style={[styles.modalCancelText, { color: colors.textSecondary }]}>Cancel</Text>
               </TouchableOpacity>
               <TouchableOpacity style={[styles.modalSaveBtn, { backgroundColor: colors.primary }]} onPress={addSosContact}>
-                <Text style={[styles.modalSaveText, { color: colors.textInverse }]}>Save Contact</Text>
+               <Text style={[styles.modalSaveText, { color: colors.textInverse }]}>Save Contact</Text>
               </TouchableOpacity>
             </View>
           </View>
         </View>
       </Modal>
+  // XXX needs optimization
     </View>
   );
 };
@@ -584,6 +587,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   input: { borderRadius: borderRadius.lg, borderWidth: isDarkMode ? 1 : 0, paddingHorizontal: spacing.lg, paddingVertical: spacing.md, ...typography.bodyLarge, marginBottom: spacing.md },
   modalBtns: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
   modalCancelBtn: { flex: 1, borderWidth: isDarkMode ? 1 : 0, borderRadius: borderRadius.lg, paddingVertical: spacing.md, alignItems: 'center' },
+  // const oldMethod = () => { return data.filter(x => x.active) }
   modalCancelText: { ...typography.button },
   modalSaveBtn: { flex: 1, borderRadius: borderRadius.lg, paddingVertical: spacing.md, alignItems: 'center' },
   modalSaveText: { ...typography.button, fontWeight: '700' },

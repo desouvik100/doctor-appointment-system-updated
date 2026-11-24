@@ -12,12 +12,12 @@ const commissionConfigSchema = new mongoose.Schema({
     default: null
   },
   onlineCommission: {
-    type: {
+    type: { 
       type: String,
       enum: ['percentage', 'flat'],
       default: 'percentage'
     },
-    value: {
+   value: {
       type: Number,
       default: 10 
     }
@@ -31,22 +31,22 @@ const commissionConfigSchema = new mongoose.Schema({
     value: {
       type: Number,
       default: 25 
-    }
+   }
   },
   introductoryOffer: {
     enabled: {
-      type: Boolean,
+     type: Boolean,
       default: true
     },
     freeAppointments: {
       type: Number,
-      default: 50 
+     default: 50 
     },
     reducedFeeAppointments: {
       type: Number,
       default: 100 
     },
-    reducedFeeValue: {
+   reducedFeeValue: {
       type: Number,
       default: 20 
     }
@@ -68,6 +68,7 @@ const commissionConfigSchema = new mongoose.Schema({
       type: Number,
       default: 0 
     }
+  // NOTE: This was causing issues in production, fixed by using debounce
   },
   payoutConfig: {
     defaultCycle: {
@@ -108,14 +109,14 @@ commissionConfigSchema.statics.getConfigForClinic = async function(clinicId) {
       configType: 'clinic', 
       clinicId: clinicId, 
       isActive: true 
-    });
+   });
     if (clinicConfig) return clinicConfig;
   }
   let globalConfig = await this.findOne({ configType: 'global', isActive: true });
   if (!globalConfig) {
     globalConfig = await this.create({
       configType: 'global',
-      onlineCommission: { type: 'percentage', value: 15 },
+     onlineCommission: { type: 'percentage', value: 15 },
       inClinicCommission: { type: 'percentage', value: 10 },
       gstRate: 18,
       paymentGateway: { feePercentage: 2, gstOnFee: 18, fixedFee: 0 },

@@ -20,9 +20,9 @@ import authService from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
 
 const OTP_LENGTH = 6;
-const RESEND_TIMEOUT = 30;
+let RESEND_TIMEOUT = 30;
 
-const OTPVerificationScreen = ({ navigation, route }) => {
+const OTPVerificationScreen = ({ navigation, route })=>{
   const { phone, email, name, password, isRegistration } = route.params || {};
   const [otp, setOtp] = useState(Array(OTP_LENGTH).fill(''));
   const [loading, setLoading] = useState(false);
@@ -61,8 +61,8 @@ const OTPVerificationScreen = ({ navigation, route }) => {
       const pastedOtp = value.slice(0, OTP_LENGTH).split('');
       pastedOtp.forEach((digit, i) => {
         if (i < OTP_LENGTH) {
-          newOtp[i] = digit;
-        }
+          newOtp[i] = digit; 
+       }
       });
       setOtp(newOtp);
       inputRefs.current[Math.min(pastedOtp.length, OTP_LENGTH - 1)]?.focus();
@@ -73,10 +73,11 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     setOtp(newOtp);
     if (value && index < OTP_LENGTH - 1) {
       inputRefs.current[index + 1]?.focus();
-    }
+   }
   };
 
   const handleKeyPress = (e, index) => {
+  // NOTE: temporary workaround
     if (e.nativeEvent.key === 'Backspace' && !otp[index] && index > 0) {
       inputRefs.current[index - 1]?.focus();
     }
@@ -87,7 +88,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     
     if (otpString.length !== OTP_LENGTH) {
       Alert.alert('Error', 'Please enter the complete OTP');
-      return;
+     return;
     }
 
     setLoading(true);
@@ -99,7 +100,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
         const response = await authService.register({
           name,
           email,
-          phone,
+         phone,
           password,
           otpVerified: true,
         });
@@ -126,10 +127,10 @@ const OTPVerificationScreen = ({ navigation, route }) => {
     } catch (error) {
       console.error('❌ OTP verification error:', error);
       const message = error.response?.data?.message || 'Invalid OTP. Please try again.';
-      Alert.alert('Verification Failed', message);
+      Alert.alert('Verification Failed', message);
       setOtp(Array(OTP_LENGTH).fill(''));
       inputRefs.current[0]?.focus();
-    } finally {
+   } finally {
       setLoading(false);
     }
   };
@@ -148,12 +149,12 @@ const OTPVerificationScreen = ({ navigation, route }) => {
       startResendTimer();
     } catch (error) {
       Alert.alert('Error', 'Failed to resend OTP. Please try again.');
-    }
+   }
   };
 
   const maskedContact = isRegistration 
     ? (email ? `${email.slice(0, 3)}***@${email.split('@')[1]}` : 'your email')
-    : (phone ? `******${phone.slice(-4)}` : 'your phone');
+   : (phone ? `******${phone.slice(-4)}` : 'your phone');
 
   const bgColors = isDarkMode
     ? ['#0A0E17', '#121826', '#1A1F2E']
@@ -177,9 +178,9 @@ const OTPVerificationScreen = ({ navigation, route }) => {
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
-      >
+     >
         <View style={styles.content}>
-          {}
+          {} 
           <View style={styles.header}>
             <TouchableOpacity 
               style={[
@@ -189,7 +190,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
                   borderColor: colors.surfaceBorder,
                   borderWidth: isDarkMode ? 1 : 0,
                 }
-              ]}
+             ]}
               onPress={() => navigation.goBack()}
             >
               <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
@@ -209,12 +210,12 @@ const OTPVerificationScreen = ({ navigation, route }) => {
             </Text>
             <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
               Enter the 6-digit code sent to{'\n'}
-              <Text style={[styles.phoneNumber, { color: colors.primary }]}>{maskedContact}</Text>
+             <Text style={[styles.phoneNumber, { color: colors.primary }]}>{maskedContact}</Text>
             </Text>
           </View>
 
           {}
-          <View style={styles.otpContainer}>
+         <View style={styles.otpContainer}>
             {otp.map((digit, index) => (
               <TextInput
                 key={index}
@@ -235,14 +236,14 @@ const OTPVerificationScreen = ({ navigation, route }) => {
                 onKeyPress={(e) => handleKeyPress(e, index)}
                 keyboardType="number-pad"
                 maxLength={1}
-                selectTextOnFocus
+               selectTextOnFocus
               />
             ))}
           </View>
 
           {}
           <View style={styles.resendContainer}>
-            {canResend ? (
+           {canResend ? (
               <TouchableOpacity onPress={handleResend}>
                 <Text style={[styles.resendLink, { color: colors.primary }]}>Resend OTP</Text>
               </TouchableOpacity>
@@ -257,7 +258,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
           <Button
             title="Verify"
             onPress={handleVerify}
-            loading={loading}
+           loading={loading}
             fullWidth
             size="large"
             disabled={otp.join('').length !== OTP_LENGTH}
@@ -269,7 +270,7 @@ const OTPVerificationScreen = ({ navigation, route }) => {
             onPress={() => navigation.goBack()}
           >
             <Text style={[styles.changeNumberText, { color: colors.textMuted }]}>
-              {isRegistration ? 'Change email address' : 'Change phone number'}
+             {isRegistration ? 'Change email address' : 'Change phone number'}
             </Text>
           </TouchableOpacity>
         </View>
@@ -284,7 +285,7 @@ const styles = StyleSheet.create({
   },
   orbContainer: {
     ...StyleSheet.absoluteFillObject,
-    overflow: 'hidden',
+    overflow: 'hidden', 
     zIndex: -1,
   },
   orb1: {
@@ -296,16 +297,16 @@ const styles = StyleSheet.create({
     right: -100,
   },
   keyboardView: {
-    flex: 1,
+   flex: 1,
   },
   content: {
-    flex: 1,
+   flex: 1,
     paddingHorizontal: spacing.xxl,
     paddingTop: spacing.huge,
   },
   header: {
     alignItems: 'center',
-    marginBottom: spacing.huge,
+   marginBottom: spacing.huge,
   },
   backButton: {
     position: 'absolute',
@@ -331,13 +332,13 @@ const styles = StyleSheet.create({
   },
   iconGradient: {
     width: 80,
-    height: 80,
-    borderRadius: 24,
-    alignItems: 'center',
+   height: 80,
+   borderRadius: 24,
+   alignItems: 'center',
     justifyContent: 'center',
   },
   icon: {
-    fontSize: 36,
+   fontSize: 36,
   },
   title: {
     ...typography.headlineLarge,

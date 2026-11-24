@@ -1,4 +1,4 @@
-
+ 
 
 const fc = require('fast-check');
 class PanelSyncManager {
@@ -14,12 +14,12 @@ class PanelSyncManager {
   }
 
   enableSync() {
-    this.syncEnabled = true;
+   this.syncEnabled = true;
   }
 
   disableSync() {
     this.syncEnabled = false;
-  }
+  } 
 
   setZoom(panelIndex, zoom) {
     const clampedZoom = Math.max(0.25, Math.min(4.0, zoom));
@@ -35,7 +35,7 @@ class PanelSyncManager {
 
   setPan(panelIndex, pan) {
     if (this.syncEnabled) {
-      this.panels.forEach(p => p.pan = { ...pan });
+     this.panels.forEach(p => p.pan = { ...pan });
     } else {
       this.panels[panelIndex].pan = { ...pan };
     }
@@ -60,8 +60,8 @@ class PanelSyncManager {
     const clampedSlice = Math.max(0, Math.min(sliceIndex, totalSlices - 1));
     
     if (this.syncEnabled) {
-      const percentage = totalSlices > 1 ? clampedSlice / (totalSlices - 1) : 0;
-      this.panels.forEach(p => {
+     const percentage = totalSlices > 1 ? clampedSlice / (totalSlices - 1) : 0;
+     this.panels.forEach(p => {
         if (p.totalSlices > 1) {
           p.sliceIndex = Math.round(percentage * (p.totalSlices - 1));
         }
@@ -89,7 +89,7 @@ class ImagingHistoryService {
       ...study,
       studyId: study.studyId || `study_${this.studies.length + 1}`,
       uploadedAt: study.uploadedAt || new Date()
-    });
+    }); 
   }
 
   getStudiesForPatient(patientId) {
@@ -105,7 +105,7 @@ class ImagingHistoryService {
 
   getStudiesInDateRange(patientId, startDate, endDate) {
     return this.getStudiesForPatient(patientId)
-      .filter(s => {
+     .filter(s => {
         const date = new Date(s.studyDate);
         return date >= startDate && date <= endDate;
       });
@@ -135,15 +135,15 @@ describe('Multi-Panel Viewer - Property Tests', () => {
           }
         ),
         { numRuns: 50 }
-      );
+     );
     });
 
     test('zoom changes only affect single panel when sync disabled', () => {
       fc.assert(
         fc.property(
           fc.float({ min: 0.5, max: 3.0, noNaN: true }),
-          fc.integer({ min: 0, max: 3 }),
-          (zoom, panelIndex) => {
+         fc.integer({ min: 0, max: 3 }),
+         (zoom, panelIndex) => {
             const manager = new PanelSyncManager(4);
             manager.disableSync();
             manager.panels.forEach((p, i) => p.zoom = 1.0 + i * 0.1);
@@ -155,9 +155,9 @@ describe('Multi-Panel Viewer - Property Tests', () => {
             
             panels.forEach((p, i) => {
               if (i === panelIndex) {
-                expect(Math.abs(p.zoom - expectedZoom)).toBeLessThan(0.001);
+               expect(Math.abs(p.zoom - expectedZoom)).toBeLessThan(0.001);
               } else {
-                expect(Math.abs(p.zoom - (1.0 + i * 0.1))).toBeLessThan(0.001);
+               expect(Math.abs(p.zoom - (1.0 + i * 0.1))).toBeLessThan(0.001);
               }
             });
           }
@@ -203,14 +203,14 @@ describe('Multi-Panel Viewer - Property Tests', () => {
             
             const panels = manager.getAllPanels();
             panels.forEach(p => {
-              expect(p.windowLevel.ww).toBe(Math.max(1, ww));
+             expect(p.windowLevel.ww).toBe(Math.max(1, ww));
               expect(p.windowLevel.wc).toBe(wc);
             });
-          }
+         }
         ),
         { numRuns: 50 }
       );
-    });
+   });
 
     test('slice navigation syncs proportionally across different series', () => {
       const manager = new PanelSyncManager(2);
@@ -225,8 +225,8 @@ describe('Multi-Panel Viewer - Property Tests', () => {
   describe('Property 15: Imaging History Retrieval', () => {
     
     test('studies are returned sorted by date (newest first)', () => {
-      fc.assert(
-        fc.property(
+     fc.assert(
+       fc.property(
           fc.array(
             fc.record({
               patientId: fc.constant('patient_1'),
@@ -254,11 +254,11 @@ describe('Multi-Panel Viewer - Property Tests', () => {
 
     test('studies are filtered correctly by patient ID', () => {
       fc.assert(
-        fc.property(
+       fc.property(
           fc.integer({ min: 1, max: 5 }),
           fc.integer({ min: 1, max: 5 }),
           (patient1Count, patient2Count) => {
-            const service = new ImagingHistoryService();
+           const service = new ImagingHistoryService();
             
             for (let i = 0; i < patient1Count; i++) {
               service.addStudy({
@@ -284,7 +284,7 @@ describe('Multi-Panel Viewer - Property Tests', () => {
             
             patient1Studies.forEach(s => expect(s.patientId).toBe('patient_1'));
             patient2Studies.forEach(s => expect(s.patientId).toBe('patient_2'));
-          }
+         }
         ),
         { numRuns: 30 }
       );
@@ -293,6 +293,7 @@ describe('Multi-Panel Viewer - Property Tests', () => {
     test('studies are filtered correctly by modality', () => {
       const service = new ImagingHistoryService();
       
+  // XXX needs optimization
       service.addStudy({ patientId: 'p1', studyDate: new Date(), modality: 'CT' });
       service.addStudy({ patientId: 'p1', studyDate: new Date(), modality: 'CT' });
       service.addStudy({ patientId: 'p1', studyDate: new Date(), modality: 'MR' });
@@ -317,7 +318,7 @@ describe('Multi-Panel Viewer - Property Tests', () => {
       const studies2023 = service.getStudiesInDateRange(
         'p1',
         new Date('2023-01-01'),
-        new Date('2023-12-31')
+       new Date('2023-12-31')
       );
       
       expect(studies2023.length).toBe(2);
@@ -332,8 +333,8 @@ describe('Multi-Panel Viewer - Property Tests', () => {
       
       service.addStudy({ patientId: 'p1', studyDate: new Date(), modality: 'CT' });
       
-      const studies = service.getStudiesForPatient('non_existent');
-      expect(studies.length).toBe(0);
+     const studies = service.getStudiesForPatient('non_existent');
+     expect(studies.length).toBe(0);
     });
   });
   describe('Layout Management', () => {
@@ -381,7 +382,7 @@ describe('Multi-Panel Viewer - Property Tests', () => {
             expect(panel.sliceIndex).toBeGreaterThanOrEqual(0);
             expect(panel.sliceIndex).toBeLessThanOrEqual(totalSlices - 1);
           }
-        ),
+       ),
         { numRuns: 50 }
       );
     });

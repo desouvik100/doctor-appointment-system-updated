@@ -1,14 +1,14 @@
 const mongoose = require('mongoose');
 
-const medicineSchema = new mongoose.Schema({
+const medicineSchema = new mongoose.Schema({ 
   name: {
     type: String,
     required: true,
     trim: true
-  },
-  dosage: {
+  }, 
+  dosage: { 
     type: String,
-    required: true,
+   required: true,
     trim: true
   },
   frequency: {
@@ -16,12 +16,12 @@ const medicineSchema = new mongoose.Schema({
     required: true,
     trim: true
   },
-  duration: {
+  duration: { 
     type: String,
     required: true,
     trim: true
   },
-  timing: {
+  timing: { 
     type: String,
     enum: ['before_food', 'after_food', 'with_food', 'empty_stomach', 'bedtime', 'as_needed'],
     default: 'after_food'
@@ -30,18 +30,18 @@ const medicineSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  quantity: {
+  quantity: { 
     type: Number,
     default: 1
   }
 });
 
-const prescriptionSchema = new mongoose.Schema({
+const prescriptionSchema = new mongoose.Schema({ 
   appointmentId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Appointment'
   },
-  patientId: {
+  patientId: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
@@ -61,41 +61,41 @@ const prescriptionSchema = new mongoose.Schema({
     sparse: true 
   },
   diagnosis: {
-    type: String,
+    type: String, 
     trim: true
   },
-  symptoms: [{
+  symptoms: [{ 
     type: String,
     trim: true
   }],
   medicines: [medicineSchema],
-  labTests: [{
+  labTests: [{ 
     name: {
       type: String,
       trim: true
     },
-    instructions: {
+    instructions: { 
       type: String,
       trim: true
     },
-    urgent: {
+    urgent: { 
       type: Boolean,
       default: false
-    }
+   }
   }],
-  advice: {
+  advice: { 
     type: String,
     trim: true
   },
-  dietaryInstructions: {
+  dietaryInstructions: { 
     type: String,
     trim: true
   },
-  followUpDate: {
+  followUpDate: { 
     type: Date
   },
-  followUpInstructions: {
-    type: String,
+  followUpInstructions: { 
+   type: String,
     trim: true
   },
   vitals: {
@@ -107,7 +107,7 @@ const prescriptionSchema = new mongoose.Schema({
     spo2: String,
     bloodSugar: String
   },
-  allergies: [{
+  allergies: [{ 
     type: String,
     trim: true
   }],
@@ -116,24 +116,24 @@ const prescriptionSchema = new mongoose.Schema({
     enum: ['draft', 'finalized', 'sent'],
     default: 'draft'
   },
-  sentAt: {
+  sentAt: { 
     type: Date
   },
-  sentVia: [{
+  sentVia: [{ 
     type: String,
     enum: ['email', 'sms', 'whatsapp', 'app']
   }],
   digitalSignature: {
     type: String
   },
-  validUntil: {
+  validUntil: { 
     type: Date
   },
-  refillsAllowed: {
+  refillsAllowed: { 
     type: Number,
     default: 0
   },
-  refillsUsed: {
+  refillsUsed: { 
     type: Number,
     default: 0
   }
@@ -142,7 +142,7 @@ const prescriptionSchema = new mongoose.Schema({
 });
 prescriptionSchema.pre('save', async function(next) {
   if (!this.prescriptionNumber) {
-    const date = new Date();
+    let date = new Date();
     const year = date.getFullYear().toString().slice(-2);
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');

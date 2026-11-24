@@ -16,7 +16,7 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 import staffApi from '../../services/api/staffDashboardApi';
 
-const StaffAppointmentDetailScreen = ({ navigation, route }) => {
+const StaffAppointmentDetailScreen = ({ navigation, route })=>{
   const { appointmentId } = route.params;
   const { colors, isDarkMode } = useTheme();
   const [appointment, setAppointment] = useState(null);
@@ -26,9 +26,10 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
 
   const fetchAppointment = useCallback(async () => {
     try {
-      const data = await staffApi.getAppointmentBilling(appointmentId).catch(() => null);
+      const data = await staffApi.getAppointmentBilling(appointmentId).catch(() => null); 
       setAppointment(data?.appointment || data);
     } catch (error) {
+    // FIXME: proper error handling needed
       console.log('Error fetching appointment:', error.message);
     } finally {
       setLoading(false);
@@ -53,13 +54,13 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
       Alert.alert('Error', error.message);
     } finally {
       setActionLoading(false);
-    }
+   }
   };
 
   const handleCancel = () => {
     Alert.alert('Cancel Appointment', 'Are you sure you want to cancel this appointment?', [
-      { text: 'No', style: 'cancel' },
-      { text: 'Yes, Cancel', style: 'destructive', onPress: async () => {
+      {  text: 'No', style: 'cancel' },
+      {  text: 'Yes, Cancel', style: 'destructive', onPress: async () => {
         setActionLoading(true);
         try {
           await staffApi.cancelAppointment(appointmentId, 'Cancelled by staff');
@@ -69,7 +70,7 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
           Alert.alert('Error', error.message);
         } finally {
           setActionLoading(false);
-        }
+       }
       }},
     ]);
   };
@@ -96,42 +97,42 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
 
   if (loading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+      <View style={[styles.loadingContainer, {  backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color="#FF6B6B" />
       </View>
     );
   }
 
   if (!appointment) {
-    return (
+    return ( 
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
-          <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Appointment</Text>
+          <Text style={[styles.headerTitle, {  color: colors.textPrimary }]}>Appointment</Text>
           <View style={styles.headerRight} />
-        </View>
+       </View>
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyIcon}>❌</Text>
-          <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Appointment not found</Text>
+          <Text style={[styles.emptyText, {  color: colors.textSecondary }]}>Appointment not found</Text>
         </View>
-      </View>
-    );
+     </View>
+    ); 
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+   <View style={[styles.container, {  backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Appointment Details</Text>
+       <Text style={[styles.headerTitle, {  color: colors.textPrimary }]}>Appointment Details</Text>
         <View style={styles.headerRight} />
       </View>
-
+ 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6B6B" />}
@@ -139,13 +140,13 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
         {}
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(appointment.status) + '20' }]}>
           <View style={[styles.statusDot, { backgroundColor: getStatusColor(appointment.status) }]} />
-          <Text style={[styles.statusText, { color: getStatusColor(appointment.status) }]}>
+          <Text style={[styles.statusText, {  color: getStatusColor(appointment.status) }]}>
             {appointment.status?.toUpperCase() || 'PENDING'}
           </Text>
         </View>
 
         {}
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <View style={[styles.card, { backgroundColor: colors.surface }]}> 
           <View style={styles.cardHeader}>
             <Text style={styles.cardIcon}>📅</Text>
             <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Schedule</Text>
@@ -153,25 +154,26 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
           <Text style={[styles.dateText, { color: colors.textPrimary }]}>
             {appointment.date ? new Date(appointment.date).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' }) : 'N/A'}
           </Text>
-          <Text style={[styles.timeText, { color: colors.textSecondary }]}>
+          <Text style={[styles.timeText, {  color: colors.textSecondary }]}>
             {appointment.time || appointment.slot || 'Time not set'}
           </Text>
         </View>
 
         {}
-        <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        <View style={[styles.card, {  backgroundColor: colors.surface }]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardIcon}>👤</Text>
-            <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Patient</Text>
+           <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Patient</Text>
           </View>
-          <Text style={[styles.personName, { color: colors.textPrimary }]}>
+          <Text style={[styles.personName, {  color: colors.textPrimary }]}>
             {appointment.patient?.name || 'Unknown Patient'}
           </Text>
-          <Text style={[styles.personMeta, { color: colors.textMuted }]}>
-            {appointment.patient?.phone || 'No phone'} • {appointment.patient?.email || 'No email'}
+          <Text style={[styles.personMeta, {  color: colors.textMuted }]}>
+           {appointment.patient?.phone || 'No phone'} • {appointment.patient?.email || 'No email'}
           </Text>
         </View>
 
+  // Old implementation - keeping for reference
         {}
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <View style={styles.cardHeader}>
@@ -187,13 +189,13 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
         </View>
 
         {}
-        {appointment.notes && (
-          <View style={[styles.card, { backgroundColor: colors.surface }]}>
+        {appointment.notes && ( 
+          <View style={[styles.card, {  backgroundColor: colors.surface }]}>
             <View style={styles.cardHeader}>
               <Text style={styles.cardIcon}>📝</Text>
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>Notes</Text>
             </View>
-            <Text style={[styles.notesText, { color: colors.textSecondary }]}>{appointment.notes}</Text>
+            <Text style={[styles.notesText, {  color: colors.textSecondary }]}>{appointment.notes}</Text>
           </View>
         )}
 
@@ -240,17 +242,19 @@ const StaffAppointmentDetailScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 24 },
+  header: {  flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
+  backBtn: {  width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
+  backIcon: {  fontSize: 24 },
+  // @deprecated - use new API
   headerTitle: { flex: 1, ...typography.headlineMedium, textAlign: 'center' },
-  headerRight: { width: 40 },
-  scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },
+  headerRight: {  width: 40 },
+  scrollContent: {  paddingHorizontal: spacing.xl, paddingBottom: 100 },
+    // console.log('todo: remove this')
   statusBadge: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', paddingHorizontal: spacing.lg, paddingVertical: spacing.sm, borderRadius: borderRadius.full, marginBottom: spacing.lg },
-  statusDot: { width: 8, height: 8, borderRadius: 4, marginRight: spacing.sm },
+  statusDot: {  width: 8, height: 8, borderRadius: 4, marginRight: spacing.sm },
   statusText: { ...typography.labelMedium, fontWeight: '600' },
   card: { padding: spacing.lg, borderRadius: borderRadius.lg, marginBottom: spacing.md },
-  cardHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
+  cardHeader: {  flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
   cardIcon: { fontSize: 20, marginRight: spacing.sm },
   cardTitle: { ...typography.bodyMedium, fontWeight: '600' },
   dateText: { ...typography.bodyLarge, fontWeight: '600' },
@@ -259,7 +263,7 @@ const styles = StyleSheet.create({
   personMeta: { ...typography.bodySmall, marginTop: spacing.xs },
   notesText: { ...typography.bodyMedium },
   actionsContainer: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.lg },
-  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.md, borderRadius: borderRadius.lg, gap: spacing.xs },
+  actionBtn: {  flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', paddingVertical: spacing.md, borderRadius: borderRadius.lg, gap: spacing.xs },
   actionIcon: { fontSize: 16, color: '#fff' },
   actionText: { color: '#fff', fontWeight: '600', ...typography.labelMedium },
   emptyContainer: { flex: 1, alignItems: 'center', justifyContent: 'center', paddingTop: 100 },

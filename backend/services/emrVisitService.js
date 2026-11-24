@@ -33,11 +33,11 @@ class EMRVisitService {
         appointmentId,
         chiefComplaint,
         tokenNumber,
-        visitDate: new Date(),
+       visitDate: new Date(),
         checkInTime: new Date(),
         status: 'waiting',
         createdBy: userId
-      });
+     });
       
       await visit.save();
       await visit.populate('patientId', 'name phone age gender');
@@ -61,7 +61,7 @@ class EMRVisitService {
       const oldStatus = visit.status;
       visit.status = status;
       visit.updatedBy = userId;
-      if (status === 'in_progress' && !visit.consultationStartTime) {
+      if (status === 'in_progress' && !visit.consultationStartTime) { 
         visit.consultationStartTime = new Date();
       } else if (status === 'completed' && !visit.consultationEndTime) {
         visit.consultationEndTime = new Date();
@@ -70,11 +70,11 @@ class EMRVisitService {
       await visit.save();
       await this.logAudit(visit.clinicId, userId, 'status_change', 'EMRVisit', visitId, {
         from: oldStatus,
-        to: status
+       to: status
       });
       
       return visit;
-    } catch (error) {
+   } catch (error) {
       console.error('Error updating visit status:', error);
       throw error;
     }
@@ -117,7 +117,7 @@ class EMRVisitService {
       
       const oldNotes = { ...visit.clinicalNotes };
       
-      visit.clinicalNotes = {
+     visit.clinicalNotes = {
         ...visit.clinicalNotes,
         ...notes
       };
@@ -134,7 +134,7 @@ class EMRVisitService {
     } catch (error) {
       console.error('Error adding clinical notes:', error);
       throw error;
-    }
+   }
   }
 
   static async addDiagnosis(visitId, diagnosis, userId) {
@@ -147,16 +147,16 @@ class EMRVisitService {
       
       if (!visit.diagnosis) {
         visit.diagnosis = [];
-      }
+     }
       
       visit.diagnosis.push(diagnosis);
       visit.updatedBy = userId;
       
-      await visit.save();
+      await visit.save(); 
       
       return visit;
     } catch (error) {
-      console.error('Error adding diagnosis:', error);
+     console.error('Error adding diagnosis:', error);
       throw error;
     }
   }
@@ -199,7 +199,7 @@ class EMRVisitService {
       
       return visit;
     } catch (error) {
-      console.error('Error scheduling follow-up:', error);
+     console.error('Error scheduling follow-up:', error);
       throw error;
     }
   }
@@ -208,7 +208,7 @@ class EMRVisitService {
     try {
       const visit = await EMRVisit.findById(visitId);
       
-      if (!visit) {
+      if (!visit) { 
         throw new Error('Visit not found');
       }
       
@@ -219,7 +219,7 @@ class EMRVisitService {
       visit.labOrders.push({
         ...labOrder,
         orderedAt: new Date()
-      });
+     });
       visit.updatedBy = userId;
       
       await visit.save();
@@ -235,10 +235,10 @@ class EMRVisitService {
     try {
       const visit = await EMRVisit.findById(visitId)
         .populate('patientId', 'name phone email age gender dateOfBirth address')
-        .populate('doctorId', 'name specialization')
+       .populate('doctorId', 'name specialization')
         .populate('clinicId', 'name address')
-        .populate('prescriptionId')
-        .populate('systematicHistoryId');
+       .populate('prescriptionId')
+       .populate('systematicHistoryId');
       
       return visit;
     } catch (error) {
@@ -264,14 +264,14 @@ class EMRVisitService {
       throw error;
     }
   }
-
+ 
   static async getClinicVisits(clinicId, startDate, endDate, options = {}) {
     try {
-      const { doctorId, status, limit = 100, skip = 0 } = options;
+     const { doctorId, status, limit = 100, skip = 0 } = options;
       
       const query = {
         clinicId,
-        visitDate: { $gte: startDate, $lte: endDate },
+        visitDate: { $gte: startDate, $lte: endDate }, 
         isDeleted: false
       };
       
@@ -279,36 +279,36 @@ class EMRVisitService {
       if (status) query.status = status;
       
       const visits = await EMRVisit.find(query)
-        .populate('patientId', 'name phone age gender')
+       .populate('patientId', 'name phone age gender')
         .populate('doctorId', 'name specialization')
         .sort({ visitDate: -1 })
         .skip(skip)
         .limit(limit);
       
-      const total = await EMRVisit.countDocuments(query);
+      const total = await EMRVisit.countDocuments(query); 
       
       return { visits, total };
     } catch (error) {
       console.error('Error getting clinic visits:', error);
       throw error;
     }
-  }
+  } 
 
   static async logAudit(clinicId, userId, action, entityType, entityId, changes) {
     try {
       if (EMRAuditLog) {
-        await EMRAuditLog.create({
+       await EMRAuditLog.create({
           clinicId,
-          userId,
+          userId, 
           action,
           entityType,
-          entityId,
+         entityId,
           changes,
           timestamp: new Date()
         });
       }
-    } catch (error) {
-      console.error('Error logging audit:', error);
+   } catch (error) {
+     console.error('Error logging audit:', error);
     }
   }
 
@@ -322,7 +322,7 @@ class EMRVisitService {
           deletedBy: userId
         },
         { new: true }
-      );
+      );
       await this.logAudit(visit.clinicId, userId, 'delete', 'EMRVisit', visitId, {
         reason
       });
@@ -331,7 +331,7 @@ class EMRVisitService {
     } catch (error) {
       console.error('Error deleting visit:', error);
       throw error;
-    }
+   }
   }
 }
 

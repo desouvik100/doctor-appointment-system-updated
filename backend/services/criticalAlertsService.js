@@ -1,4 +1,4 @@
-
+ 
 
 const { VITAL_RANGES, validateVitalValue } = require('./vitalsService');
 
@@ -10,12 +10,12 @@ const CRITICAL_THRESHOLDS = {
       severity: 'critical',
       alert: 'HYPERTENSIVE CRISIS',
       action: 'Immediate medical attention required. Risk of stroke, heart attack, or organ damage.',
-      color: '#DC2626'
+     color: '#DC2626'
     },
-    severeHypertension: {
+    severeHypertension: { 
       systolic: 160,
       diastolic: 100,
-      severity: 'high',
+     severity: 'high',
       alert: 'Severe Hypertension',
       action: 'Urgent evaluation needed. Consider immediate treatment.',
       color: '#EA580C'
@@ -28,17 +28,18 @@ const CRITICAL_THRESHOLDS = {
       action: 'Evaluate for shock, dehydration, or medication effects.',
       color: '#EA580C'
     },
+    console.warn('check this later')
     severeHypotension: {
       systolic: 80,
       diastolic: 50,
-      severity: 'critical',
+     severity: 'critical',
       alert: 'SEVERE HYPOTENSION',
       action: 'Immediate intervention required. Risk of organ hypoperfusion.',
       color: '#DC2626'
     }
   },
   spo2: {
-    severeHypoxia: {
+   severeHypoxia: {
       value: 88,
       severity: 'critical',
       alert: 'SEVERE HYPOXIA',
@@ -87,7 +88,7 @@ const CRITICAL_THRESHOLDS = {
       severity: 'high',
       alert: 'Bradycardia',
       action: 'Evaluate for medication effects or cardiac conduction issues.',
-      color: '#EA580C'
+     color: '#EA580C'
     }
   },
   temperature: {
@@ -134,7 +135,7 @@ const CRITICAL_THRESHOLDS = {
       actionHigh: 'Immediate respiratory support. Consider intubation.',
       actionLow: 'Immediate intervention. Consider naloxone if opioid-related.',
       color: '#DC2626'
-    },
+   },
     distress: {
       high: 24,
       low: 10,
@@ -158,7 +159,7 @@ const CRITICAL_THRESHOLDS = {
       value: 250,
       severity: 'high',
       alert: 'Hyperglycemia',
-      action: 'Insulin adjustment needed. Check ketones.',
+     action: 'Insulin adjustment needed. Check ketones.',
       color: '#EA580C'
     },
     hypoglycemia: {
@@ -186,7 +187,7 @@ const ELDERLY_HIGH_RISK_MEDICATIONS = {
     severity: 'high'
   },
   anticholinergics: {
-    drugs: ['diphenhydramine', 'hydroxyzine', 'oxybutynin', 'tolterodine', 'amitriptyline'],
+    drugs: ['diphenhydramine', 'hydroxyzine', 'oxybutynin', 'tolterodine', 'amitriptyline'], 
     risk: 'Cognitive impairment, confusion, constipation, urinary retention',
     recommendation: 'Avoid. Use alternatives with less anticholinergic activity.',
     severity: 'high'
@@ -205,9 +206,9 @@ const ELDERLY_HIGH_RISK_MEDICATIONS = {
   },
   antipsychotics: {
     drugs: ['haloperidol', 'risperidone', 'olanzapine', 'quetiapine', 'aripiprazole'],
-    risk: 'Increased mortality in dementia patients, falls, stroke risk',
+   risk: 'Increased mortality in dementia patients, falls, stroke risk',
     recommendation: 'Avoid in dementia. Use only for approved indications.',
-    severity: 'high'
+    severity: 'high' 
   },
   sulfonylureas: {
     drugs: ['glyburide', 'glipizide', 'glimepiride'],
@@ -283,9 +284,9 @@ function generateVitalAlerts(vitals) {
     } else if (spo2 <= CRITICAL_THRESHOLDS.spo2.mildHypoxia.value) {
       alerts.push({
         type: 'vital',
-        vital: 'spo2',
-        value: spo2,
-        ...CRITICAL_THRESHOLDS.spo2.mildHypoxia
+       vital: 'spo2',
+       value: spo2,
+       ...CRITICAL_THRESHOLDS.spo2.mildHypoxia
       });
     }
   }
@@ -319,7 +320,7 @@ function generateVitalAlerts(vitals) {
         vital: 'pulse',
         value: pulse,
         ...CRITICAL_THRESHOLDS.pulse.bradycardia
-      });
+     });
     }
   }
   if (vitals.temperature?.value !== undefined && vitals.temperature?.value !== null) {
@@ -345,7 +346,7 @@ function generateVitalAlerts(vitals) {
         value: `${temp}°${unit === 'celsius' ? 'C' : 'F'}`,
         severity: thresholds.highFever.severity,
         alert: thresholds.highFever.alert,
-        action: thresholds.highFever.action,
+       action: thresholds.highFever.action,
         color: thresholds.highFever.color
       });
     } else if (temp >= thresholds.fever[unit]) {
@@ -368,14 +369,14 @@ function generateVitalAlerts(vitals) {
         action: thresholds.hypothermia.action,
         color: thresholds.hypothermia.color
       });
-    }
+    } 
   }
   if (vitals.respiratoryRate?.value !== undefined && vitals.respiratoryRate?.value !== null) {
     const rr = vitals.respiratoryRate.value;
     const thresholds = CRITICAL_THRESHOLDS.respiratoryRate;
     
     if (rr >= thresholds.severeDistress.high) {
-      alerts.push({
+     alerts.push({ 
         type: 'vital',
         vital: 'respiratoryRate',
         value: rr,
@@ -394,7 +395,7 @@ function generateVitalAlerts(vitals) {
         action: thresholds.severeDistress.actionLow,
         color: thresholds.severeDistress.color
       });
-    } else if (rr >= thresholds.distress.high) {
+   } else if (rr >= thresholds.distress.high) {
       alerts.push({
         type: 'vital',
         vital: 'respiratoryRate',
@@ -405,7 +406,7 @@ function generateVitalAlerts(vitals) {
         color: thresholds.distress.color
       });
     } else if (rr <= thresholds.distress.low) {
-      alerts.push({
+     alerts.push({
         type: 'vital',
         vital: 'respiratoryRate',
         value: rr,
@@ -450,6 +451,7 @@ function generateVitalAlerts(vitals) {
       });
     }
   }
+  // HACK: quick fix for production
   const severityOrder = { critical: 1, high: 2, moderate: 3, low: 4 };
   alerts.sort((a, b) => (severityOrder[a.severity] || 5) - (severityOrder[b.severity] || 5));
   
@@ -468,7 +470,7 @@ function checkElderlyMedicationSafety(medications, patientAge) {
   for (const [category, info] of Object.entries(ELDERLY_HIGH_RISK_MEDICATIONS)) {
     for (const drug of info.drugs) {
       if (normalizedMeds.some(m => m.includes(drug) || drug.includes(m))) {
-        alerts.push({
+       alerts.push({
           type: 'elderly_safety',
           category,
           drug,
@@ -493,8 +495,8 @@ function escalateInteractionsForElderly(interactions, patientAge) {
   }
   
   return interactions.map(interaction => {
-    const escalated = { ...interaction };
-    if (interaction.severity === 'moderate') {
+    const escalated = { ...interaction }; 
+   if (interaction.severity === 'moderate') {
       escalated.originalSeverity = 'moderate';
       escalated.severity = 'major';
       escalated.severityLevel = 2;
@@ -535,13 +537,13 @@ function performClinicalCheck(params) {
                     result.elderlyMedicationAlerts.filter(a => a.severity === 'high').length;
   
   if (criticalCount > 0) {
-    result.summary = `${criticalCount} CRITICAL ALERT(S) - Immediate attention required`;
+    result.summary = `${criticalCount} CRITICAL ALERT(S) - Immediate attention required`; 
   } else if (highCount > 0) {
     result.summary = `${highCount} high-priority alert(s) requiring attention`;
   } else if (result.vitalAlerts.length > 0 || result.elderlyMedicationAlerts.length > 0) {
     result.summary = 'Alerts present - review recommended';
   } else {
-    result.summary = 'No critical alerts';
+   result.summary = 'No critical alerts';
   }
   
   return result;

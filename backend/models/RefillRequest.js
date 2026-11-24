@@ -8,7 +8,7 @@ const refillRequestSchema = new mongoose.Schema({
     name: String,
     dosage: String,
     quantity: String,
-    approved: { type: Boolean, default: false }
+   approved: { type: Boolean, default: false }
   }],
   patientNotes: String,
   doctorNotes: String,

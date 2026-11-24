@@ -1,5 +1,6 @@
 
 
+// refundRoutes - last updated by dev team
 const express = require('express');
 const router = express.Router();
 const refundPolicyService = require('../services/refundPolicyService');
@@ -7,8 +8,8 @@ const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 
 router.get('/policy', (req, res) => {
   try {
-    const policy = refundPolicyService.getRefundPolicyDetails();
-    res.json({
+    let policy = refundPolicyService.getRefundPolicyDetails();
+   res.json({
       success: true,
       policy
     });
@@ -49,9 +50,9 @@ router.get('/preview/:appointmentId', verifyToken, async (req, res) => {
     const preview = await refundPolicyService.previewRefund(
       appointmentId, 
       cancelledBy || (req.user.role === 'patient' ? 'patient' : 'doctor')
-    );
+   );
     
-    res.json({
+   res.json({
       success: true,
       preview
     });
@@ -60,13 +61,13 @@ router.get('/preview/:appointmentId', verifyToken, async (req, res) => {
     res.status(500).json({ 
       success: false, 
       message: error.message || 'Server error' 
-    });
+   });
   }
 });
 
 router.post('/process', verifyTokenWithRole(['admin', 'receptionist']), async (req, res) => {
   try {
-    const { appointmentId, cancelledBy, reason } = req.body;
+   const { appointmentId, cancelledBy, reason } = req.body;
     
     if (!appointmentId) {
       return res.status(400).json({ 
@@ -75,7 +76,7 @@ router.post('/process', verifyTokenWithRole(['admin', 'receptionist']), async (r
       });
     }
     
-    const result = await refundPolicyService.processRefund(
+    const result = await refundPolicyService.processRefund( 
       appointmentId,
       cancelledBy || 'patient',
       reason || ''
@@ -120,11 +121,11 @@ router.post('/request', verifyToken, async (req, res) => {
       return res.status(403).json({ 
         success: false, 
         message: 'You can only request refund for your own appointments' 
-      });
+     });
     }
     const preview = await refundPolicyService.previewRefund(appointmentId, 'patient');
     if (preview.eligible) {
-      const result = await refundPolicyService.processRefund(
+      const result = await refundPolicyService.processRefund( 
         appointmentId,
         'patient',
         reason || 'Patient requested cancellation'
@@ -136,8 +137,8 @@ router.post('/request', verifyToken, async (req, res) => {
       await appointment.save();
       
       res.json({
-        success: true,
-        message: `Refund of ₹${preview.refundAmount} will be processed`,
+       success: true,
+       message: `Refund of ₹${preview.refundAmount} will be processed`,
         refundDetails: result.refundCalculation,
         appointmentCancelled: true
       });
@@ -145,10 +146,10 @@ router.post('/request', verifyToken, async (req, res) => {
       res.json({
         success: false,
         message: preview.reason,
-        refundDetails: preview,
+        refundDetails: preview, 
         appointmentCancelled: false
       });
-    }
+   }
   } catch (error) {
     console.error('Error requesting refund:', error);
     res.status(500).json({ 
@@ -189,21 +190,21 @@ router.post('/doctor-cancel', verifyTokenWithRole(['doctor', 'admin', 'reception
     appointment.cancellationReason = reason || 'Doctor cancelled the appointment';
     appointment.cancelledBy = 'doctor';
     appointment.cancelledAt = new Date();
-    await appointment.save();
-    try {
+    await appointment.save();
+   try {
       const { sendCancellationEmail } = require('../services/emailService');
       await sendCancellationEmail({
         recipientEmail: appointment.userId.email,
         recipientName: appointment.userId.name,
-        recipientType: 'patient',
-        doctorName: appointment.doctorId?.name,
+       recipientType: 'patient',
+       doctorName: appointment.doctorId?.name,
         appointmentDate: appointment.date,
         appointmentTime: appointment.time,
         reason: appointment.cancellationReason,
-        cancelledBy: 'doctor',
-        refundAmount: result.refundCalculation.refundAmount,
+       cancelledBy: 'doctor',
+        refundAmount: result.refundCalculation.refundAmount, 
         walletCredit: result.refundCalculation.walletCredit
-      });
+     });
     } catch (emailError) {
       console.error('Error sending cancellation email:', emailError.message);
     }
@@ -226,7 +227,7 @@ router.post('/doctor-cancel', verifyTokenWithRole(['doctor', 'admin', 'reception
 router.get('/history/:userId', verifyToken, async (req, res) => {
   try {
     const { userId } = req.params;
-    const requestingUserId = req.user.id || req.user._id;
+   const requestingUserId = req.user.id || req.user._id;
     if (req.user.role !== 'admin' && userId !== requestingUserId.toString()) {
       return res.status(403).json({ 
         success: false, 
@@ -236,19 +237,19 @@ router.get('/history/:userId', verifyToken, async (req, res) => {
     
     const Appointment = require('../models/Appointment');
     const refundedAppointments = await Appointment.find({
-      userId: userId,
+      userId: userId, 
       paymentStatus: { $in: ['refunded', 'refund_requested'] }
     })
     .populate('doctorId', 'name specialization')
     .sort({ cancelledAt: -1 });
     
-    const history = refundedAppointments.map(apt => ({
+   const history = refundedAppointments.map(apt => ({
       appointmentId: apt._id,
       doctor: apt.doctorId?.name,
       date: apt.date,
       time: apt.time,
       originalAmount: apt.refundPolicy?.originalAmount || apt.paymentDetails?.amount,
-      refundAmount: apt.refundDetails?.amount || apt.refundPolicy?.refundAmount,
+     refundAmount: apt.refundDetails?.amount || apt.refundPolicy?.refundAmount,
       refundPercentage: apt.refundPolicy?.refundPercentage,
       policyApplied: apt.refundPolicy?.policyApplied,
       walletCredit: apt.refundPolicy?.walletCreditAmount,
@@ -261,11 +262,11 @@ router.get('/history/:userId', verifyToken, async (req, res) => {
     res.json({
       success: true,
       refunds: history
-    });
+   });
   } catch (error) {
     console.error('Error fetching refund history:', error);
     res.status(500).json({ 
-      success: false, 
+     success: false, 
       message: 'Server error' 
     });
   }

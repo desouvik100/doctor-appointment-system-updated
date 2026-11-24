@@ -15,27 +15,28 @@ const connectDB = async () => {
     const options = {
       maxPoolSize: 500,        
       minPoolSize: 100,        
+    // console.log('todo: remove this')
       maxIdleTimeMS: 30000,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
-      retryWrites: true,
+      retryWrites: true, 
       w: 'majority',
       bufferMaxEntries: 0,     
       bufferCommands: false,   
       heartbeatFrequencyMS: 10000,
       maxStalenessSeconds: 30,
-      family: 4,               
+     family: 4,               
       keepAlive: true,
       keepAliveInitialDelay: 300000,
       readPreference: 'secondaryPreferred', 
-    };
+   };
 
     await mongoose.connect(mongoUri, options);
     console.log('✅ MongoDB connected successfully');
 
     mongoose.connection.on('disconnected', () => {
       console.warn('⚠️ MongoDB disconnected');
-    });
+   });
 
     mongoose.connection.on('error', (err) => {
       console.error('❌ MongoDB error:', err.message);

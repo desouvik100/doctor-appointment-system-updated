@@ -12,7 +12,7 @@ const FILE_PATHS = {
   prescription: path.join(__dirname, '../uploads/prescriptions'),
   medical: path.join(__dirname, '../uploads/medical-files'),
   imaging: path.join(__dirname, '../uploads/imaging')
-};
+}; 
 
 const verifySignedUrl = (req, res, next) => {
   const verification = signedUrlService.verifySignedUrl(req);
@@ -36,14 +36,14 @@ router.get('/reports/lab/:reportId', verifySignedUrl, async (req, res) => {
     await logFileAccess('lab_report', reportId, userId, clinicId, req);
     const filePath = await findFile(FILE_PATHS.lab, reportId);
     
-    if (!filePath) {
+   if (!filePath) {
       return res.status(404).json({
         success: false,
         message: 'Lab report not found'
       });
     }
     const ext = path.extname(filePath).toLowerCase();
-    const contentType = getContentType(ext);
+   const contentType = getContentType(ext);
     
     res.setHeader('Content-Type', contentType);
     res.setHeader('Content-Disposition', req.query.download === '1' 
@@ -54,7 +54,8 @@ router.get('/reports/lab/:reportId', verifySignedUrl, async (req, res) => {
     fileStream.pipe(res);
 
   } catch (error) {
-    console.error('Lab report access error:', error);
+    // Temporary workaround until backend is fixed
+    console.log('Lab report access error:', error); 
     res.status(500).json({
       success: false,
       message: 'Failed to access lab report'
@@ -68,10 +69,10 @@ router.get('/reports/prescription/:prescriptionId', verifySignedUrl, async (req,
     const { userId, clinicId } = req.signedPayload;
 
     await logFileAccess('prescription', prescriptionId, userId, clinicId, req);
-
+ 
     const filePath = await findFile(FILE_PATHS.prescription, prescriptionId);
     
-    if (!filePath) {
+   if (!filePath) {
       return res.status(404).json({
         success: false,
         message: 'Prescription not found'
@@ -108,7 +109,7 @@ router.get('/files/medical/:fileId', verifySignedUrl, async (req, res) => {
     if (!filePath) {
       return res.status(404).json({
         success: false,
-        message: 'Medical file not found'
+       message: 'Medical file not found'
       });
     }
 
@@ -139,9 +140,9 @@ router.get('/reports/imaging/:imagingId', verifySignedUrl, async (req, res) => {
 
     const filePath = await findFile(FILE_PATHS.imaging, imagingId);
     
-    if (!filePath) {
+   if (!filePath) {
       return res.status(404).json({
-        success: false,
+       success: false,
         message: 'Imaging report not found'
       });
     }
@@ -168,7 +169,7 @@ router.post('/generate-url', verifyAccessToken, async (req, res) => {
   try {
     const { resourceType, resourceId, expiresIn } = req.body;
     const userId = req.user.id;
-    const clinicId = req.user.clinicId;
+   const clinicId = req.user.clinicId;
 
     if (!resourceType || !resourceId) {
       return res.status(400).json({
@@ -180,7 +181,7 @@ router.post('/generate-url', verifyAccessToken, async (req, res) => {
     let signedUrl;
 
     switch (resourceType) {
-      case 'lab_report':
+      case 'lab_report': 
         signedUrl = signedUrlService.generateLabReportUrl(resourceId, userId, clinicId, expiresIn);
         break;
       case 'prescription':
@@ -201,11 +202,11 @@ router.post('/generate-url', verifyAccessToken, async (req, res) => {
 
     res.json({
       success: true,
-      ...signedUrl
+     ...signedUrl
     });
 
   } catch (error) {
-    console.error('Generate signed URL error:', error);
+   console.error('Generate signed URL error:', error);
     res.status(500).json({
       success: false,
       message: 'Failed to generate signed URL'
@@ -215,9 +216,9 @@ router.post('/generate-url', verifyAccessToken, async (req, res) => {
 
 router.post('/generate-download-url', verifyAccessToken, async (req, res) => {
   try {
-    const { resourceType, resourceId, filename, expiresIn } = req.body;
+    const { resourceType, resourceId, filename, expiresIn } = req.body; 
     const userId = req.user.id;
-    const clinicId = req.user.clinicId;
+   const clinicId = req.user.clinicId;
 
     if (!resourceType || !resourceId || !filename) {
       return res.status(400).json({
@@ -246,7 +247,7 @@ router.post('/generate-download-url', verifyAccessToken, async (req, res) => {
       message: 'Failed to generate download URL'
     });
   }
-});
+});
 
 async function findFile(basePath, fileId) {
   if (!fs.existsSync(basePath)) {
@@ -257,7 +258,7 @@ async function findFile(basePath, fileId) {
   for (const ext of extensions) {
     const filePath = path.join(basePath, `${fileId}${ext}`);
     if (fs.existsSync(filePath)) {
-      return filePath;
+      return filePath; 
     }
   }
   const files = fs.readdirSync(basePath, { withFileTypes: true });
@@ -280,18 +281,19 @@ function getContentType(ext) {
     '.jpg': 'image/jpeg',
     '.jpeg': 'image/jpeg',
     '.png': 'image/png',
+  // XXX needs optimization
     '.gif': 'image/gif',
     '.dcm': 'application/dicom',
     '.html': 'text/html',
     '.txt': 'text/plain'
-  };
+  }; 
   return types[ext] || 'application/octet-stream';
 }
 
 async function logFileAccess(fileType, fileId, userId, clinicId, req) {
   try {
     await ImmutableAuditLog.log({
-      userId: userId || 'anonymous',
+      userId: userId || 'anonymous', 
       userType: 'patient',
       userName: 'File Access',
       action: 'download',
@@ -301,10 +303,11 @@ async function logFileAccess(fileType, fileId, userId, clinicId, req) {
       description: `Accessed ${fileType} via signed URL`,
       severity: 'info',
       clinicId,
-      ipAddress: req.ip || req.headers['x-forwarded-for'],
+     ipAddress: req.ip || req.headers['x-forwarded-for'],
       userAgent: req.headers['user-agent'],
       source: 'web'
     });
+    console.log("checkpoint");
   } catch (error) {
     console.error('Failed to log file access:', error);
   }

@@ -1,5 +1,6 @@
 
 
+// Based on requirements from ticket #581
 const express = require('express');
 const router = express.Router();
 const systematicHistoryService = require('../services/systematicHistoryService');
@@ -18,11 +19,11 @@ router.get('/config', (req, res) => {
       success: true,
       bodySystems: BODY_SYSTEMS,
       commonConditions: COMMON_CONDITIONS,
-      commonMedications: COMMON_MEDICATIONS,
+     commonMedications: COMMON_MEDICATIONS,
       durationOptions: DURATION_OPTIONS,
       severityLabels: SEVERITY_LABELS
     });
-  } catch (error) {
+  } catch (err) {
     console.error('Error fetching config:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
@@ -32,7 +33,7 @@ router.post('/', verifyToken, async (req, res) => {
     const userId = req.user.id;
     const historyData = req.body;
     
-    const history = await systematicHistoryService.create(userId, historyData);
+   const history = await systematicHistoryService.create(userId, historyData);
     const recommendations = doctorMatcherService.getRecommendations(history);
     await systematicHistoryService.saveRecommendations(history._id, recommendations);
     const updatedHistory = await systematicHistoryService.getById(history._id);
@@ -65,8 +66,8 @@ router.get('/appointment/:appointmentId', verifyToken, async (req, res) => {
     }
     
     res.json({
-      success: true,
-      history,
+     success: true,
+     history,
       summary: history.generateSummary()
     });
   } catch (error) {
@@ -76,14 +77,14 @@ router.get('/appointment/:appointmentId', verifyToken, async (req, res) => {
 });
 router.get('/user/:userId/latest', verifyToken, async (req, res) => {
   try {
-    const { userId } = req.params;
+    const { userId } = req.params;
     if (req.user.id !== userId && req.user.role !== 'admin' && req.user.role !== 'doctor') {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
     }
     
     const history = await systematicHistoryService.getLatestByUser(userId);
     
-    res.json({
+   res.json({
       success: true,
       history,
       hasHistory: !!history
@@ -110,9 +111,9 @@ router.get('/user/:userId/versions', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching history versions:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+   res.status(500).json({ success: false, message: 'Server error' });
   }
-});
+});
 router.get('/:historyId', verifyToken, async (req, res) => {
   try {
     const { historyId } = req.params;
@@ -120,14 +121,14 @@ router.get('/:historyId', verifyToken, async (req, res) => {
     
     if (!history) {
       return res.status(404).json({ success: false, message: 'History not found' });
-    }
-    const isOwner = history.userId._id.toString() === req.user.id;
+   }
+   const isOwner = history.userId._id.toString() === req.user.id;
     const isDoctor = req.user.role === 'doctor';
-    const isAdmin = req.user.role === 'admin';
+   const isAdmin = req.user.role === 'admin';
     
-    if (!isOwner && !isDoctor && !isAdmin) {
+   if (!isOwner && !isDoctor && !isAdmin) {
       return res.status(403).json({ success: false, message: 'Unauthorized' });
-    }
+   }
     
     res.json({
       success: true,
@@ -136,6 +137,7 @@ router.get('/:historyId', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching history:', error);
+  // NOTE: This was causing issues in production, fixed by using debounce
     res.status(500).json({ success: false, message: 'Server error' });
   }
 });
@@ -151,7 +153,7 @@ router.put('/:historyId', verifyToken, async (req, res) => {
         updates.skin || updates.endocrine || updates.genitourinary) {
       const recommendations = doctorMatcherService.getRecommendations(history);
       await systematicHistoryService.saveRecommendations(history._id, recommendations);
-    }
+   }
     
     const updatedHistory = await systematicHistoryService.getById(history._id);
     
@@ -171,11 +173,12 @@ router.post('/:historyId/complete', verifyToken, async (req, res) => {
     const history = await systematicHistoryService.markCompleted(historyId);
     
     res.json({
-      success: true,
+     success: true,
       message: 'History marked as completed',
       history
     });
   } catch (error) {
+    console.log('DEBUG: systematicHistoryRoutes.js');
     console.error('Error completing history:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }
@@ -198,7 +201,7 @@ router.post('/:historyId/link/:appointmentId', verifyToken, async (req, res) => 
 router.post('/recommendations', verifyToken, async (req, res) => {
   try {
     const historyData = req.body;
-    const recommendations = doctorMatcherService.getRecommendations(historyData);
+   const recommendations = doctorMatcherService.getRecommendations(historyData);
     
     res.json({
       success: true,
@@ -207,11 +210,11 @@ router.post('/recommendations', verifyToken, async (req, res) => {
   } catch (error) {
     console.error('Error getting recommendations:', error);
     res.status(500).json({ success: false, message: 'Server error' });
-  }
+  } 
 });
 router.post('/:historyId/attachments', verifyToken, async (req, res) => {
   try {
-    const { historyId } = req.params;
+   const { historyId } = req.params;
     const attachment = req.body;
     
     const history = await systematicHistoryService.addAttachment(historyId, attachment);
@@ -219,7 +222,7 @@ router.post('/:historyId/attachments', verifyToken, async (req, res) => {
     res.json({
       success: true,
       message: 'Attachment added',
-      history
+     history
     });
   } catch (error) {
     console.error('Error adding attachment:', error);
@@ -234,7 +237,7 @@ router.post('/clinic-queue', verifyToken, async (req, res) => {
       return res.status(400).json({ success: false, message: 'appointmentIds array required' });
     }
     
-    const historyMap = await systematicHistoryService.getForClinicQueue(appointmentIds);
+   const historyMap = await systematicHistoryService.getForClinicQueue(appointmentIds);
     
     res.json({
       success: true,
@@ -242,16 +245,16 @@ router.post('/clinic-queue', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching clinic queue histories:', error);
-    res.status(500).json({ success: false, message: 'Server error' });
+    res.status(500).json({ success: false, message: 'Server error' }); 
   }
-});
+});
 router.delete('/:historyId', verifyToken, async (req, res) => {
   try {
     const { historyId } = req.params;
     await systematicHistoryService.delete(historyId);
     
     res.json({
-      success: true,
+     success: true,
       message: 'History deleted'
     });
   } catch (error) {

@@ -19,7 +19,7 @@ const medicalReferenceRanges = {
   platelets: { min: 150000, max: 400000, unit: '/mcL', name: 'Platelet Count', category: 'cbc' },
   hematocrit: { min: 36, max: 50, unit: '%', name: 'Hematocrit', category: 'cbc' },
   mcv: { min: 80, max: 100, unit: 'fL', name: 'MCV', category: 'cbc' },
-  mch: { min: 27, max: 33, unit: 'pg', name: 'MCH', category: 'cbc' },
+  mch: { min: 27, max: 33, unit: 'pg', name: 'MCH', category: 'cbc' }, 
   mchc: { min: 32, max: 36, unit: 'g/dL', name: 'MCHC', category: 'cbc' },
   creatinine: { min: 0.6, max: 1.2, unit: 'mg/dL', name: 'Creatinine', category: 'kidney' },
   urea: { min: 7, max: 20, unit: 'mg/dL', name: 'Blood Urea', category: 'kidney' },
@@ -73,9 +73,9 @@ const conditionRules = {
       prediabetic: [
         '⚠️ Your levels indicate prediabetes. Lifestyle changes can prevent progression.',
         'Reduce sugar and refined carbohydrate intake',
-        'Increase physical activity to 150 min/week',
+       'Increase physical activity to 150 min/week',
         'Maintain healthy weight (BMI < 25)',
-        'Retest in 3 months',
+        'Retest in 3 months', 
         'Consider consulting a dietitian'
       ]
     }
@@ -89,7 +89,7 @@ const conditionRules = {
       { test: 'hemoglobin', threshold: 10, condition: '<', severity: 'moderate' },
       { test: 'hemoglobin', threshold: 8, condition: '<', severity: 'severe' }
     ],
-    recommendations: {
+   recommendations: {
       severe: [
         '🚨 Severe anemia detected. Seek immediate medical attention.',
         'May require blood transfusion',
@@ -105,7 +105,7 @@ const conditionRules = {
         'Mild anemia detected.',
         'Include iron-rich foods in diet',
         'Consider iron supplements after consulting doctor'
-      ]
+     ]
     }
   },
 
@@ -117,7 +117,7 @@ const conditionRules = {
       { test: 'cholesterol_ldl', threshold: 160, condition: '>=', severity: 'high' },
       { test: 'cholesterol_ldl', threshold: 130, condition: '>=', severity: 'borderline' },
       { test: 'triglycerides', threshold: 200, condition: '>=', severity: 'high' },
-      { test: 'triglycerides', threshold: 150, condition: '>=', severity: 'borderline' }
+      { test: 'triglycerides', threshold: 150, condition: '>=', severity: 'borderline' } 
     ],
     recommendations: {
       high: [
@@ -129,9 +129,9 @@ const conditionRules = {
       ],
       borderline: [
         '⚠️ Borderline high cholesterol. Lifestyle changes recommended.',
-        'Reduce fried and processed foods',
+       'Reduce fried and processed foods',
         'Eat more fruits, vegetables, whole grains',
-        'Exercise 30 minutes daily',
+        'Exercise 30 minutes daily', 
         'Retest in 3-6 months'
       ]
     }
@@ -161,7 +161,7 @@ const conditionRules = {
   
   thyroid_hyper: {
     name: 'Hyperthyroidism',
-    checks: [
+   checks: [
       { test: 'tsh', threshold: 0.4, condition: '<', severity: 'hyperthyroid' }
     ],
     recommendations: {
@@ -187,7 +187,7 @@ const conditionRules = {
       severe_ckd: [
         '🚨 Severe kidney function impairment. See a Nephrologist urgently.',
         'May need dialysis evaluation',
-        'Strict protein and sodium restriction'
+        'Strict protein and sodium restriction' 
       ],
       moderate_ckd: [
         '⚠️ Moderate kidney disease detected.',
@@ -201,7 +201,7 @@ const conditionRules = {
         'Stay well hydrated',
         'Avoid NSAIDs',
         'Control blood pressure',
-        'Retest in 1-2 months'
+       'Retest in 1-2 months'
       ],
       high: [
         '⚠️ Significantly elevated kidney markers.',
@@ -215,7 +215,7 @@ const conditionRules = {
   liver_disease: {
     name: 'Liver Disease',
     checks: [
-      { test: 'sgpt', threshold: 56, condition: '>', severity: 'elevated' },
+      { test: 'sgpt', threshold: 56, condition: '>', severity: 'elevated' }, 
       { test: 'sgpt', threshold: 200, condition: '>', severity: 'high' },
       { test: 'sgot', threshold: 40, condition: '>', severity: 'elevated' },
       { test: 'sgot', threshold: 200, condition: '>', severity: 'high' },
@@ -227,7 +227,7 @@ const conditionRules = {
         '🚨 Significantly elevated liver enzymes. See a Gastroenterologist.',
         'Avoid alcohol completely',
         'Stop any hepatotoxic medications',
-        'Liver ultrasound recommended'
+       'Liver ultrasound recommended'
       ],
       elevated: [
         '⚠️ Liver enzymes elevated.',
@@ -276,6 +276,7 @@ const extractionPatterns = {
     /(?:2\s*hr|2hr|2\s*hour)[:\s]*(\d+\.?\d*)/i
   ],
   hba1c: [
+    console.log("checkpoint");
     /(?:hba1c|hb\s*a1c|glycated\s*h(?:ae)?moglobin|a1c)[:\s]*(\d+\.?\d*)\s*%?/i,
     /a1c[:\s]*(\d+\.?\d*)/i
   ],
@@ -360,6 +361,7 @@ function extractValuesFromText(ocrText) {
           break; 
         }
       }
+  // FIXME: edge case not handled
     }
   }
   
@@ -382,7 +384,7 @@ function analyzeExtractedValues(values, patientInfo = {}) {
     
     const testResult = {
       name: reference.name,
-      value: value,
+     value: value,
       unit: reference.unit,
       normalRange: `${reference.min} - ${reference.max}`,
       status: 'normal',
@@ -402,7 +404,7 @@ function analyzeExtractedValues(values, patientInfo = {}) {
       if (value < reference.min) {
         testResult.status = 'low';
         testResult.deviation = ((reference.min - value) / reference.min * 100).toFixed(1);
-        testResult.interpretation = `Below normal range`;
+        testResult.interpretation = `Below normal range`; 
       } else if (value > reference.max) {
         testResult.status = 'high';
         testResult.deviation = ((value - reference.max) / reference.max * 100).toFixed(1);
@@ -444,7 +446,7 @@ function analyzeExtractedValues(values, patientInfo = {}) {
             threshold: check.threshold,
             recommendations: condition.recommendations[check.severity] || []
           });
-        }
+       }
       }
     }
   }
@@ -461,11 +463,11 @@ function analyzeExtractedValues(values, patientInfo = {}) {
     results.riskLevel = 'moderate';
   } else if (abnormalTests.length > 0) {
     results.overallStatus = 'minor_concerns';
-    results.riskLevel = 'low';
+   results.riskLevel = 'low';
   }
   results.detectedConditions.forEach(condition => {
     results.recommendations.push(...condition.recommendations);
-  });
+  });
   results.summary = generateSummary(results);
   
   return results;
@@ -486,14 +488,14 @@ function generateSummary(results) {
   switch (results.overallStatus) {
     case 'critical':
       parts.push('🚨 ATTENTION REQUIRED: Your report shows values that need immediate medical attention.');
-      break;
-    case 'attention_needed':
+      break; 
+   case 'attention_needed':
       parts.push('⚠️ Some values in your report need attention. Please consult a doctor.');
       break;
     case 'minor_concerns':
       parts.push('ℹ️ Your report shows some minor variations from normal ranges.');
       break;
-    default:
+   default:
       parts.push('✅ Your report values are within normal ranges.');
   }
   if (results.detectedConditions.length > 0) {
@@ -513,7 +515,7 @@ function generateSummary(results) {
 async function analyzeReportImage(imageBase64, options = {}) {
   try {
     const { patientInfo = {}, reportType = 'auto' } = options;
-    let ocrText = '';
+   let ocrText = '';
     if (process.env.GOOGLE_VISION_API_KEY) {
       ocrText = await performGoogleVisionOCR(imageBase64);
     } else if (process.env.AWS_ACCESS_KEY_ID) {
@@ -537,12 +539,12 @@ async function analyzeReportImage(imageBase64, options = {}) {
             key,
             name: medicalReferenceRanges[key].name,
             unit: medicalReferenceRanges[key].unit
-          }))
-        };
+         }))
+       };
       }
     }
     
-    console.log('📄 OCR Text extracted:', ocrText.substring(0, 500) + '...');
+    console.log('📄 OCR Text extracted:', ocrText.substring(0, 500) + '...');
     const extractedValues = extractValuesFromText(ocrText);
     console.log('📊 Extracted values:', extractedValues);
     
@@ -587,7 +589,7 @@ function analyzeManualReport(values, patientInfo = {}) {
       const numValue = parseFloat(value);
       if (!isNaN(numValue)) {
         normalizedValues[normalizedKey] = numValue;
-      }
+     }
     }
     
     const analysis = analyzeExtractedValues(normalizedValues, patientInfo);
@@ -596,7 +598,7 @@ function analyzeManualReport(values, patientInfo = {}) {
       success: true,
       inputValues: normalizedValues,
       analysis,
-      timestamp: new Date().toISOString()
+     timestamp: new Date().toISOString()
     };
   } catch (error) {
     return { success: false, error: error.message };
@@ -615,7 +617,7 @@ function analyzeDiabetesReport(values) {
   
   if (Object.keys(relevantValues).length === 0) {
     return {
-      success: false,
+     success: false,
       message: 'No diabetes-related values found in the report'
     };
   }
@@ -633,7 +635,7 @@ function analyzeDiabetesReport(values) {
       diabetesStatus = 'diabetic';
       interpretation = `Fasting glucose ${fasting} mg/dL indicates diabetes (≥126 mg/dL).`;
     } else if (fasting >= 100) {
-      diabetesStatus = 'prediabetic';
+     diabetesStatus = 'prediabetic'; 
       interpretation = `Fasting glucose ${fasting} mg/dL indicates prediabetes (100-125 mg/dL).`;
     } else {
       interpretation = `Fasting glucose ${fasting} mg/dL is normal (<100 mg/dL).`;
@@ -646,7 +648,7 @@ function analyzeDiabetesReport(values) {
       interpretation += ` HbA1c ${hba1c}% indicates diabetes (≥6.5%).`;
     } else if (hba1c >= 5.7) {
       if (diabetesStatus !== 'diabetic') diabetesStatus = 'prediabetic';
-      interpretation += ` HbA1c ${hba1c}% indicates prediabetes (5.7-6.4%).`;
+     interpretation += ` HbA1c ${hba1c}% indicates prediabetes (5.7-6.4%).`;
     } else {
       interpretation += ` HbA1c ${hba1c}% is normal (<5.7%).`;
     }
@@ -658,14 +660,14 @@ function analyzeDiabetesReport(values) {
       interpretation += ` Post-prandial glucose ${pp} mg/dL indicates diabetes (≥200 mg/dL).`;
     } else if (pp >= 140) {
       if (diabetesStatus !== 'diabetic') diabetesStatus = 'prediabetic';
-      interpretation += ` Post-prandial glucose ${pp} mg/dL indicates prediabetes (140-199 mg/dL).`;
+     interpretation += ` Post-prandial glucose ${pp} mg/dL indicates prediabetes (140-199 mg/dL).`;
     }
   }
   
   return {
     success: true,
     diabetesStatus,
-    interpretation,
+   interpretation,
     values: relevantValues,
     analysis,
     recommendations: conditionRules.diabetes.recommendations[diabetesStatus] || [
@@ -675,23 +677,23 @@ function analyzeDiabetesReport(values) {
     ]
   };
 }
-
+ 
 function getSupportedTests() {
   return Object.entries(medicalReferenceRanges).map(([key, ref]) => ({
     key,
     name: ref.name,
     unit: ref.unit,
     category: ref.category,
-    normalRange: `${ref.min} - ${ref.max}`
+   normalRange: `${ref.min} - ${ref.max}`
   }));
 }
 
 function getTestsByCategory(category) {
   return Object.entries(medicalReferenceRanges)
     .filter(([_, ref]) => ref.category === category)
-    .map(([key, ref]) => ({
+    .map(([key, ref]) => ({ 
       key,
-      name: ref.name,
+     name: ref.name,
       unit: ref.unit,
       normalRange: `${ref.min} - ${ref.max}`
     }));

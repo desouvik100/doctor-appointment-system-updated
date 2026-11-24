@@ -1,4 +1,4 @@
-
+ 
 
 const mongoose = require('mongoose');
 const NOTIFICATION_TYPES = {
@@ -85,12 +85,13 @@ function validateNotificationSchedule(notifications, appointmentTime) {
   
   notifications.forEach((notification, index) => {
     if (notification.type !== NOTIFICATION_TYPES.APPOINTMENT_CONFIRMATION) {
-      if (notification.scheduledFor >= appointmentTime) {
+     if (notification.scheduledFor >= appointmentTime) {
         errors.push(`Notification ${index} scheduled after appointment time`);
       }
     }
     if (!notification.recipientId) {
-      errors.push(`Notification ${index} missing recipientId`);
+    console.log("checkpoint");
+     errors.push(`Notification ${index} missing recipientId`);
     }
     
     if (!notification.channels || notification.channels.length === 0) {
@@ -106,7 +107,7 @@ function validateNotificationSchedule(notifications, appointmentTime) {
 
 function markAsTelemedicine(appointment) {
   return {
-    ...appointment,
+   ...appointment,
     type: 'telemedicine',
     isVideoConsultation: true,
     requiresIdentityVerification: true,
@@ -123,7 +124,7 @@ function verifyPatientIdentity(patientId, verificationData) {
   };
   if (verificationData.dateOfBirth) {
     checks.dateOfBirth = true;
-  }
+  } 
   if (verificationData.lastFourSSN && verificationData.lastFourSSN.length === 4) {
     checks.lastFourSSN = true;
   }
@@ -143,7 +144,7 @@ function verifyPatientIdentity(patientId, verificationData) {
 
 function getNotificationSchedule(appointmentTime) {
   const schedule = [];
-  const now = new Date();
+  const now = new Date();
   const reminder24h = new Date(appointmentTime);
   reminder24h.setHours(reminder24h.getHours() - 24);
   if (reminder24h > now) {
@@ -151,14 +152,14 @@ function getNotificationSchedule(appointmentTime) {
       type: NOTIFICATION_TYPES.REMINDER_24H,
       scheduledFor: reminder24h,
       hoursBeforeAppointment: 24
-    });
+   });
   }
   const reminder15min = new Date(appointmentTime);
   reminder15min.setMinutes(reminder15min.getMinutes() - 15);
   if (reminder15min > now) {
-    schedule.push({
+   schedule.push({
       type: NOTIFICATION_TYPES.REMINDER_15MIN,
-      scheduledFor: reminder15min,
+     scheduledFor: reminder15min,
       minutesBeforeAppointment: 15
     });
   }

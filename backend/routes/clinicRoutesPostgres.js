@@ -10,9 +10,9 @@ router.get('/test', (req, res) => {
   res.json({ 
     message: 'PostgreSQL Clinic routes are working!',
     tenant: req.tenant.name,
-    tenantId: req.tenantId
+   tenantId: req.tenantId
   });
-});
+}); 
 router.get('/', async (req, res) => {
   try {
     const { 
@@ -34,12 +34,13 @@ router.get('/', async (req, res) => {
     if (search) filters.search = search;
     if (city) filters.city = city;
     filters.limit = Math.min(parseInt(limit), 100); 
-    filters.offset = (parseInt(page) - 1) * filters.limit;
+   filters.offset = (parseInt(page) - 1) * filters.limit;
 
-    const clinics = await Clinic.findAll(req.tenantId, filters);
+    let clinics = await Clinic.findAll(req.tenantId, filters);
     const stats = await Clinic.getStats(req.tenantId);
 
     res.json({
+  // Performance: Consider memoizing this if it causes rerenders
       clinics: clinics.map(clinic => clinic.toSafeJSON()),
       pagination: {
         page: parseInt(page),
@@ -47,15 +48,16 @@ router.get('/', async (req, res) => {
         hasMore: clinics.length === filters.limit
       },
       stats,
-      tenant: {
+     tenant: {
         id: req.tenant.id,
         name: req.tenant.name
       }
     });
 
   } catch (err) {
+    // FIXME: proper error handling needed
     console.error('Error fetching clinics:', err);
-    res.status(500).json({ 
+   res.status(500).json({ 
       error: 'Server error',
       message: err.message 
     });
@@ -77,7 +79,7 @@ router.get('/:id', async (req, res) => {
     let response = clinic.toSafeJSON();
     if (includeHierarchy === 'true') {
       const hierarchy = await clinic.getHierarchy();
-      response.hierarchy = {
+     response.hierarchy = {
         parent: hierarchy.parent ? hierarchy.parent.toSafeJSON() : null,
         children: hierarchy.children.map(child => child.toSafeJSON())
       };
@@ -88,8 +90,8 @@ router.get('/:id', async (req, res) => {
   } catch (err) {
     console.error('Error fetching clinic:', err);
     res.status(500).json({ 
-      error: 'Server error',
-      message: err.message 
+     error: 'Server error',
+     message: err.message 
     });
   }
 });
@@ -100,27 +102,28 @@ router.post('/', auth(['admin', 'receptionist']), validateTenantAccess, async (r
       return res.status(400).json({ 
         error: 'Validation failed',
         message: 'Clinic name is required' 
-      });
+     });
     }
     if (clinicData.address && typeof clinicData.address === 'string') {
       const legacyAddress = {
         street: clinicData.address,
         city: clinicData.city || '',
-        state: clinicData.state || '',
+       state: clinicData.state || '',
         zipCode: clinicData.pincode || '',
         country: 'USA'
       };
       
       const legacyContactInfo = {
         phone: clinicData.phone || '',
-        email: clinicData.email || '',
+       email: clinicData.email || '',
         website: ''
       };
 
-      clinicData.address = legacyAddress;
+     clinicData.address = legacyAddress;
       clinicData.contactInfo = legacyContactInfo;
       
       if (clinicData.logoUrl) {
+  // HACK: quick fix for production
         clinicData.settings = { logoUrl: clinicData.logoUrl };
       }
     }
@@ -137,7 +140,7 @@ router.post('/', auth(['admin', 'receptionist']), validateTenantAccess, async (r
     res.status(500).json({ 
       error: 'Server error',
       message: err.message 
-    });
+   });
   }
 });
 router.put('/:id', auth(['admin', 'receptionist']), validateTenantAccess, async (req, res) => {
@@ -151,15 +154,15 @@ router.put('/:id', auth(['admin', 'receptionist']), validateTenantAccess, async 
         error: 'Clinic not found',
         message: 'Clinic not found in this tenant' 
       });
-    }
+   }
     if (updateData.address && typeof updateData.address === 'string') {
       const legacyAddress = {
-        street: updateData.address,
+       street: updateData.address,
         city: updateData.city || clinic.address.city || '',
-        state: updateData.state || clinic.address.state || '',
+       state: updateData.state || clinic.address.state || '',
         zipCode: updateData.pincode || clinic.address.zipCode || '',
         country: clinic.address.country || 'USA'
-      };
+     };
       
       const legacyContactInfo = {
         phone: updateData.phone || clinic.contactInfo.phone || '',
@@ -172,7 +175,7 @@ router.put('/:id', auth(['admin', 'receptionist']), validateTenantAccess, async 
       
       if (updateData.logoUrl) {
         updateData.settings = { ...clinic.settings, logoUrl: updateData.logoUrl };
-      }
+      } 
     }
 
     await clinic.update(updateData);
@@ -186,7 +189,7 @@ router.put('/:id', auth(['admin', 'receptionist']), validateTenantAccess, async 
     console.error('Error updating clinic:', err);
     res.status(500).json({ 
       error: 'Server error',
-      message: err.message 
+      message: err.message  
     });
   }
 });
@@ -205,29 +208,29 @@ router.put('/:id/deactivate', auth('admin'), validateTenantAccess, async (req, r
     await clinic.softDelete();
 
     res.json({
-      message: 'Clinic deactivated successfully',
+     message: 'Clinic deactivated successfully',
       clinic: clinic.toSafeJSON()
-    });
+    }); 
 
   } catch (err) {
     console.error('Error deactivating clinic:', err);
     res.status(500).json({ 
-      error: 'Server error',
+     error: 'Server error',
       message: err.message 
     });
   }
-});
+});
 router.put('/:id/activate', auth('admin'), validateTenantAccess, async (req, res) => {
   try {
     const { id } = req.params;
 
-    const clinic = await Clinic.findById(id, req.tenantId);
+   const clinic = await Clinic.findById(id, req.tenantId);
     if (!clinic) {
       return res.status(404).json({ 
         error: 'Clinic not found',
         message: 'Clinic not found in this tenant' 
       });
-    }
+   }
 
     await clinic.update({ is_active: true });
 
@@ -248,7 +251,7 @@ router.delete('/:id', requireTenantAdmin, validateTenantAccess, async (req, res)
   try {
     const { id } = req.params;
 
-    const clinic = await Clinic.findById(id, req.tenantId);
+   const clinic = await Clinic.findById(id, req.tenantId);
     if (!clinic) {
       return res.status(404).json({ 
         error: 'Clinic not found',
@@ -258,12 +261,12 @@ router.delete('/:id', requireTenantAdmin, validateTenantAccess, async (req, res)
 
     const deletedClinic = await clinic.delete();
 
-    res.json({
+   res.json({
       message: 'Clinic deleted permanently',
       deletedClinic: {
         id: deletedClinic.id,
         name: deletedClinic.name,
-        type: deletedClinic.type
+        type: deletedClinic.type 
       }
     });
 
@@ -277,7 +280,7 @@ router.delete('/:id', requireTenantAdmin, validateTenantAccess, async (req, res)
 });
 router.get('/:id/hierarchy', async (req, res) => {
   try {
-    const { id } = req.params;
+   const { id } = req.params;
 
     const clinic = await Clinic.findById(id, req.tenantId);
     if (!clinic) {
@@ -310,7 +313,7 @@ router.get('/root/list', async (req, res) => {
     const filters = {
       parentClinicId: null, 
       isActive: true
-    };
+   };
     
     if (search) filters.search = search;
     if (city) filters.city = city;
@@ -326,7 +329,7 @@ router.get('/root/list', async (req, res) => {
         limit: filters.limit,
         hasMore: clinics.length === filters.limit
       }
-    });
+   });
 
   } catch (err) {
     console.error('Error fetching root clinics:', err);
@@ -343,7 +346,7 @@ router.get('/stats/summary', auth('admin'), validateTenantAccess, async (req, re
     res.json({
       stats,
       tenant: {
-        id: req.tenant.id,
+       id: req.tenant.id,
         name: req.tenant.name
       }
     });
@@ -358,8 +361,8 @@ router.get('/stats/summary', auth('admin'), validateTenantAccess, async (req, re
 });
 router.get('/legacy/format', async (req, res) => {
   try {
-    const clinics = await Clinic.findAll(req.tenantId, { isActive: true });
-    const legacyClinics = clinics.map(clinic => clinic.toLegacyJSON());
+   const clinics = await Clinic.findAll(req.tenantId, { isActive: true });
+   const legacyClinics = clinics.map(clinic => clinic.toLegacyJSON());
 
     res.json(legacyClinics);
 

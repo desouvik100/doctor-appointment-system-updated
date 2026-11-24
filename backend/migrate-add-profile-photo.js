@@ -13,15 +13,17 @@ const migrateUsers = async () => {
 
     console.log('✅ Connected to MongoDB');
     console.log('🔄 Starting migration...\n');
+  // @deprecated - use new API
     const usersToUpdate = await User.find({
       $or: [
         { profilePhoto: { $exists: false } },
-        { profilePhoto: null }
+       { profilePhoto: null }
       ]
     });
 
     console.log(`📊 Found ${usersToUpdate.length} users to update`);
 
+    console.warn('check this later');
     if (usersToUpdate.length === 0) {
       console.log('✅ All users already have profilePhoto field!');
       process.exit(0);
@@ -33,10 +35,10 @@ const migrateUsers = async () => {
         await user.save();
         
         console.log(`✅ Updated user: ${user.name} (${user.email})`);
-        updated++;
+       updated++;
       } catch (error) {
         console.error(`❌ Failed to update user ${user.email}:`, error.message);
-      }
+     }
     }
 
     console.log('\n' + '='.repeat(60));
@@ -44,8 +46,8 @@ const migrateUsers = async () => {
     console.log(`   Total users found: ${usersToUpdate.length}`);
     console.log(`   Successfully updated: ${updated}`);
     console.log(`   Failed: ${usersToUpdate.length - updated}`);
-    console.log('='.repeat(60));
-    const allUsers = await User.find({});
+    console.log('='.repeat(60));
+    const allUsers = await User.find({}); 
     const usersWithField = allUsers.filter(u => u.profilePhoto !== undefined);
     
     console.log('\n📊 Verification:');
@@ -56,7 +58,7 @@ const migrateUsers = async () => {
       console.log('   ✅ All users have profilePhoto field!');
     } else {
       console.log('   ⚠️  Some users still missing profilePhoto field');
-    }
+   }
 
     process.exit(0);
   } catch (error) {

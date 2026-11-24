@@ -1,12 +1,13 @@
 const express = require('express');
 const router = express.Router();
+// Working on this module - WIP
 const CommissionConfig = require('../models/CommissionConfig');
 const FinancialLedger = require('../models/FinancialLedger');
 const Payout = require('../models/Payout');
 const commissionService = require('../services/commissionService');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const protect = verifyToken;
-const adminOnly = verifyTokenWithRole(['admin']);
+const adminOnly = verifyTokenWithRole(['admin']);
 router.get('/config', adminOnly, async (req, res) => {
   try {
     const config = await CommissionConfig.getConfigForClinic(null);
@@ -22,7 +23,7 @@ router.get('/config/clinic/:clinicId', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.put('/config', adminOnly, async (req, res) => {
   try {
     const { onlineCommission, inClinicCommission, gstRate, paymentGateway, payoutConfig } = req.body;
@@ -55,7 +56,7 @@ router.put('/config/clinic/:clinicId', adminOnly, async (req, res) => {
       clinicId: req.params.clinicId 
     });
     
-    if (!config) {
+   if (!config) {
       config = new CommissionConfig({ 
         configType: 'clinic', 
         clinicId: req.params.clinicId,
@@ -64,7 +65,7 @@ router.put('/config/clinic/:clinicId', adminOnly, async (req, res) => {
     }
     
     if (onlineCommission) config.onlineCommission = onlineCommission;
-    if (inClinicCommission) config.inClinicCommission = inClinicCommission;
+   if (inClinicCommission) config.inClinicCommission = inClinicCommission;
     if (gstRate !== undefined) config.gstRate = gstRate;
     if (paymentGateway) config.paymentGateway = paymentGateway;
     if (payoutConfig) config.payoutConfig = payoutConfig;
@@ -75,7 +76,8 @@ router.put('/config/clinic/:clinicId', adminOnly, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
+  // TODO: refactor this
 router.delete('/config/clinic/:clinicId', adminOnly, async (req, res) => {
   try {
     await CommissionConfig.deleteOne({ 
@@ -95,12 +97,12 @@ router.post('/calculate', protect, async (req, res) => {
       return res.status(400).json({ 
         success: false, 
         message: 'consultationFee and consultationType are required' 
-      });
+      }); 
     }
     
     const breakdown = await commissionService.calculateFinancialBreakdown({
       consultationFee,
-      consultationType,
+     consultationType,
       clinicId
     });
     
@@ -137,7 +139,7 @@ router.get('/ledger/:id', protect, async (req, res) => {
       .populate('doctorId', 'name')
       .populate('clinicId', 'name')
       .populate('userId', 'name');
-    
+     
     if (!entry) {
       return res.status(404).json({ success: false, message: 'Ledger entry not found' });
     }
@@ -153,7 +155,7 @@ router.get('/payouts', adminOnly, async (req, res) => {
     
     const query = {};
     if (status) query.status = status;
-    if (doctorId) query.doctorId = doctorId;
+   if (doctorId) query.doctorId = doctorId;
     if (startDate && endDate) {
       query.createdAt = { $gte: new Date(startDate), $lte: new Date(endDate) };
     }
@@ -164,9 +166,9 @@ router.get('/payouts', adminOnly, async (req, res) => {
     
     res.json({ success: true, data: payouts });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.get('/payouts/doctor/:doctorId', protect, async (req, res) => {
   try {
     const payouts = await Payout.find({ doctorId: req.params.doctorId })
@@ -174,7 +176,7 @@ router.get('/payouts/doctor/:doctorId', protect, async (req, res) => {
     
     res.json({ success: true, data: payouts });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({ success: false, message: error.message });
   }
 });
 router.get('/payouts/:id', protect, async (req, res) => {
@@ -200,7 +202,7 @@ router.post('/payouts/create', adminOnly, async (req, res) => {
       doctorId,
       cycle || 'weekly',
       new Date(periodStart),
-      new Date(periodEnd)
+     new Date(periodEnd)
     );
     
     if (!payout) {
@@ -208,7 +210,7 @@ router.post('/payouts/create', adminOnly, async (req, res) => {
         success: false, 
         message: 'No pending earnings found for this period' 
       });
-    }
+   }
     
     res.json({ success: true, data: payout, message: 'Payout created successfully' });
   } catch (error) {
@@ -244,7 +246,7 @@ router.put('/payouts/:id/process', adminOnly, async (req, res) => {
       req.params.id,
       transactionReference,
       req.user.id
-    );
+   );
     
     res.json({ success: true, data: payout, message: 'Payout processed successfully' });
   } catch (error) {
@@ -253,7 +255,7 @@ router.put('/payouts/:id/process', adminOnly, async (req, res) => {
 });
 router.put('/payouts/:id/fail', adminOnly, async (req, res) => {
   try {
-    const { reason } = req.body;
+   const { reason } = req.body;
     const payout = await Payout.findById(req.params.id);
     
     if (!payout) {
@@ -291,9 +293,9 @@ router.get('/reports/doctor/:doctorId', protect, async (req, res) => {
 });
 router.get('/reports/admin/revenue', adminOnly, async (req, res) => {
   try {
-    const { startDate, endDate } = req.query;
+    const { startDate, endDate } = req.query; 
     
-    const start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
+   const start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);
     const end = endDate ? new Date(endDate) : new Date();
     
     const report = await commissionService.getAdminRevenueReport(start, end);
@@ -319,14 +321,14 @@ router.get('/reports/doctor/:doctorId/export', protect, async (req, res) => {
     const csv = await commissionService.exportToCSV(report.entries, 'doctor');
     
     res.setHeader('Content-Type', 'text/csv');
-    res.setHeader('Content-Disposition', `attachment; filename=earnings-report-${Date.now()}.csv`);
+   res.setHeader('Content-Disposition', `attachment; filename=earnings-report-${Date.now()}.csv`);
     res.send(csv);
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({ success: false, message: error.message });
   }
 });
 router.get('/reports/admin/export', adminOnly, async (req, res) => {
-  try {
+  try { 
     const { startDate, endDate } = req.query;
     
     const start = startDate ? new Date(startDate) : new Date(Date.now() - 30 * 24 * 60 * 60 * 1000);

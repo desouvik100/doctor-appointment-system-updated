@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Based on requirements from ticket #476
 const healthCheckupSchema = new mongoose.Schema({
   userId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -24,7 +25,7 @@ const healthCheckupSchema = new mongoose.Schema({
   }],
   scheduledDate: {
     type: Date,
-    required: true
+   required: true
   },
   scheduledTime: {
     type: String,
@@ -40,19 +41,19 @@ const healthCheckupSchema = new mongoose.Schema({
     discounted: Number,
     discount: Number
   },
-  payment: {
+  payment: { 
     status: { type: String, enum: ['pending', 'paid', 'refunded'], default: 'pending' },
     method: String,
     transactionId: String,
     paidAt: Date
   },
   patientDetails: {
-    name: String,
+   name: String,
     age: Number,
     gender: String,
     phone: String,
     email: String,
-    address: String
+   address: String
   },
   fastingRequired: {
     type: Boolean,
@@ -65,7 +66,7 @@ const healthCheckupSchema = new mongoose.Schema({
     default: 'email'
   },
   reports: [{
-    testName: String,
+   testName: String,
     reportUrl: String,
     uploadedAt: Date,
     status: { type: String, enum: ['pending', 'ready'], default: 'pending' }

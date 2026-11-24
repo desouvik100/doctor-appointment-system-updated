@@ -1,6 +1,8 @@
 
 
 import React, { useState, useCallback, useEffect } from 'react';
+  // let debugMode = false; // set to true for verbose logging
+// import moment from 'moment';
 import {
   View,
   Text,
@@ -15,13 +17,13 @@ import Card from '../../components/common/Card';
 import { useTheme } from '../../context/ThemeContext';
 import apiClient from '../../services/api/apiClient';
 
-const DoctorAppointmentsScreen = ({ navigation }) => {
+const DoctorAppointmentsScreen = ({ navigation })=>{
   const { colors, isDarkMode } = useTheme();
   const [refreshing, setRefreshing] = useState(false);
   const [appointments, setAppointments] = useState([]);
   const [filter, setFilter] = useState('all'); 
 
-  const fetchAppointments = useCallback(async () => {
+  let fetchAppointments = useCallback(async () => {
     try {
       const response = await apiClient.get('/doctors/appointments');
       setAppointments(response.data || []);
@@ -53,32 +55,32 @@ const DoctorAppointmentsScreen = ({ navigation }) => {
   const renderAppointment = ({ item }) => (
     <Card style={[styles.appointmentCard, { backgroundColor: colors.surface }]}>
       <View style={styles.cardHeader}>
-        <View style={styles.patientInfo}>
+        <View style={styles.patientInfo}> 
           <View style={[styles.avatar, { backgroundColor: '#6C5CE720' }]}>
             <Text style={styles.avatarText}>
               {(item.patient?.name || 'P')[0].toUpperCase()}
             </Text>
           </View>
           <View>
-            <Text style={[styles.patientName, { color: colors.textPrimary }]}>
+            <Text style={[styles.patientName, {  color: colors.textPrimary }]}>
               {item.patient?.name || 'Patient'}
             </Text>
-            <Text style={[styles.appointmentType, { color: colors.textSecondary }]}>
+            <Text style={[styles.appointmentType, {  color: colors.textSecondary }]}>
               {item.type || 'Consultation'}
             </Text>
           </View>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(item.status) + '20' }]}>
-          <Text style={[styles.statusText, { color: getStatusColor(item.status) }]}>
+          <Text style={[styles.statusText, {  color: getStatusColor(item.status) }]}>
             {item.status || 'Scheduled'}
           </Text>
         </View>
-      </View>
+     </View>
 
       <View style={styles.cardBody}>
         <View style={styles.infoRow}>
           <Text style={styles.infoIcon}>📅</Text>
-          <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+          <Text style={[styles.infoText, {  color: colors.textSecondary }]}>
             {new Date(item.date).toLocaleDateString('en-US', { 
               weekday: 'short', 
               month: 'short', 
@@ -102,13 +104,13 @@ const DoctorAppointmentsScreen = ({ navigation }) => {
           <Text style={[styles.actionBtnText, { color: '#6C5CE7' }]}>View Details</Text>
         </TouchableOpacity>
         {item.status === 'confirmed' && (
-          <TouchableOpacity 
+          <TouchableOpacity  
             style={[styles.actionBtn, { backgroundColor: '#10B98120' }]}
-            onPress={() => navigation.navigate('DoctorAppointmentDetail', { appointmentId: item._id, startConsultation: true })}
+            onPress={() => navigation.navigate('DoctorAppointmentDetail', {  appointmentId: item._id, startConsultation: true })}
           >
-            <Text style={[styles.actionBtnText, { color: '#10B981' }]}>Start Consultation</Text>
+            <Text style={[styles.actionBtnText, {  color: '#10B981' }]}>Start Consultation</Text>
           </TouchableOpacity>
-        )}
+       )}
       </View>
     </Card>
   );
@@ -117,13 +119,13 @@ const DoctorAppointmentsScreen = ({ navigation }) => {
     <TouchableOpacity
       style={[
         styles.filterBtn,
-        { backgroundColor: filter === value ? '#6C5CE7' : colors.surface }
+        {  backgroundColor: filter === value ? '#6C5CE7' : colors.surface }
       ]}
       onPress={() => setFilter(value)}
     >
       <Text style={[
         styles.filterBtnText,
-        { color: filter === value ? '#fff' : colors.textSecondary }
+        {  color: filter === value ? '#fff' : colors.textSecondary }
       ]}>
         {label}
       </Text>
@@ -139,11 +141,11 @@ const DoctorAppointmentsScreen = ({ navigation }) => {
         <Text style={[styles.title, { color: colors.textPrimary }]}>Appointments</Text>
       </View>
 
-      {}
+     {}
       <View style={styles.filters}>
         <FilterButton label="All" value="all" />
-        <FilterButton label="Today" value="today" />
-        <FilterButton label="Upcoming" value="upcoming" />
+       <FilterButton label="Today" value="today" />
+       <FilterButton label="Upcoming" value="upcoming" />
         <FilterButton label="Completed" value="completed" />
       </View>
 
@@ -151,9 +153,9 @@ const DoctorAppointmentsScreen = ({ navigation }) => {
       <FlatList
         data={appointments}
         renderItem={renderAppointment}
-        keyExtractor={(item) => item._id || item.id}
+       keyExtractor={(item) => item._id || item.id} 
         contentContainerStyle={styles.listContent}
-        refreshControl={
+       refreshControl={
           <RefreshControl
             refreshing={refreshing}
             onRefresh={onRefresh}
@@ -161,9 +163,9 @@ const DoctorAppointmentsScreen = ({ navigation }) => {
           />
         }
         ListEmptyComponent={
-          <View style={styles.emptyContainer}>
+         <View style={styles.emptyContainer}>
             <Text style={styles.emptyIcon}>📭</Text>
-            <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+            <Text style={[styles.emptyText, {  color: colors.textSecondary }]}>
               No appointments found
             </Text>
           </View>
@@ -174,7 +176,7 @@ const DoctorAppointmentsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  container: { 
     flex: 1,
   },
   header: {
@@ -193,12 +195,12 @@ const styles = StyleSheet.create({
   },
   filterBtn: {
     paddingHorizontal: spacing.md,
-    paddingVertical: spacing.sm,
+    paddingVertical: spacing.sm, 
     borderRadius: borderRadius.full,
   },
   filterBtnText: {
     ...typography.labelSmall,
-    fontWeight: '600',
+   fontWeight: '600',
   },
   listContent: {
     paddingHorizontal: spacing.xl,
@@ -215,35 +217,35 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  patientInfo: {
+  patientInfo: { 
     flexDirection: 'row',
     alignItems: 'center',
   },
-  avatar: {
+  avatar: { 
     width: 44,
     height: 44,
     borderRadius: 22,
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
+   marginRight: spacing.md,
   },
-  avatarText: {
+  avatarText: { 
     fontSize: 18,
     fontWeight: '600',
     color: '#6C5CE7',
   },
   patientName: {
-    ...typography.bodyMedium,
+   ...typography.bodyMedium,
     fontWeight: '600',
   },
   appointmentType: {
     ...typography.labelSmall,
     marginTop: 2,
   },
-  statusBadge: {
+  statusBadge: { 
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
+   borderRadius: borderRadius.full,
   },
   statusText: {
     ...typography.labelSmall,
@@ -254,7 +256,7 @@ const styles = StyleSheet.create({
     gap: spacing.lg,
     marginBottom: spacing.md,
   },
-  infoRow: {
+  infoRow: { 
     flexDirection: 'row',
     alignItems: 'center',
   },
@@ -263,17 +265,17 @@ const styles = StyleSheet.create({
     marginRight: spacing.xs,
   },
   infoText: {
-    ...typography.labelSmall,
+   ...typography.labelSmall,
   },
   cardActions: {
     flexDirection: 'row',
     gap: spacing.sm,
   },
-  actionBtn: {
+  actionBtn: { 
     flex: 1,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
-    alignItems: 'center',
+   alignItems: 'center',
   },
   actionBtnText: {
     ...typography.labelSmall,

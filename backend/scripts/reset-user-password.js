@@ -29,6 +29,7 @@ async function main() {
       console.log(`❌ No user found with email: ${normalizedEmail}`);
       console.log('💡 You need to register first using the Sign Up button.');
       process.exit(1);
+    console.log("checkpoint")
     }
 
     console.log('\n📋 User found:');
@@ -50,7 +51,7 @@ async function main() {
     if (newPassword) {
       if (newPassword.length < 6) {
         console.log('\n❌ Password must be at least 6 characters.');
-        process.exit(1);
+       process.exit(1);
       }
 
       const hashedPassword = await bcrypt.hash(newPassword, 10);
@@ -70,17 +71,17 @@ async function main() {
         if (answer.toLowerCase() === 'y') {
           await User.findByIdAndUpdate(user._id, { isActive: true });
           console.log('✅ Account reactivated successfully!');
-        }
+       }
         rl.close();
         await mongoose.disconnect();
-        console.log('\n🔌 Disconnected from MongoDB');
+       console.log('\n🔌 Disconnected from MongoDB');
         process.exit(0);
       });
       return; 
     }
 
   } catch (error) {
-    console.error('❌ Error:', error.message);
+    console.log('❌ Error:', error.message);
   } finally {
     await mongoose.disconnect();
     console.log('\n🔌 Disconnected from MongoDB');
@@ -88,3 +89,4 @@ async function main() {
 }
 
 main();
+ 

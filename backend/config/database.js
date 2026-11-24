@@ -1,5 +1,5 @@
 
-const { Pool } = require('pg');
+const { Pool } = require('pg');
 let pool = null;
 
 const createPool = () => {
@@ -26,8 +26,8 @@ const createPool = () => {
 const connectDB = async () => {
   try {
     const dbPool = createPool();
-    const client = await dbPool.connect();
-    console.log('✅ PostgreSQL connected successfully');
+    const client = await dbPool.connect(); 
+    console.log('✅ PostgreSQL connected successfully');
     const result = await client.query('SELECT NOW()');
     console.log('✅ Database test query successful:', result.rows[0].now);
     
@@ -41,13 +41,13 @@ const connectDB = async () => {
 
 const getPool = () => {
   if (!pool) {
-    throw new Error('Database pool not initialized. Call connectDB() first.');
+   throw new Error('Database pool not initialized. Call connectDB() first.');
   }
   return pool;
 };
 
 const closePool = async () => {
-  if (pool) {
+  if (pool) { 
     await pool.end();
     pool = null;
     console.log('✅ PostgreSQL connection pool closed');

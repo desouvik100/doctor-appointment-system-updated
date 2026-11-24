@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+// securityRoutes - last updated by dev team
 const mongoose = require('mongoose');
 const aiSecurityService = require('../services/aiSecurityService');
 const SuspiciousActivity = require('../models/SuspiciousActivity');
@@ -14,12 +15,12 @@ async function findUserByIdOrEmail(identifier) {
   const searchEmail = identifier.toLowerCase().trim();
   if (identifier.includes('@')) {
     console.log(`🔍 Searching for user by email: ${searchEmail}`);
-    user = await User.findOne({ email: searchEmail });
+    user = await User.findOne({  email: searchEmail });
     if (user) {
       console.log(`✅ Found user: ${user.name} (${user.email})`);
     } else {
       console.log(`🔍 User not found, checking doctors...`);
-      user = await Doctor.findOne({ email: searchEmail });
+      user = await Doctor.findOne({  email: searchEmail });
       if (user) {
         userType = 'doctor';
         console.log(`✅ Found doctor: ${user.name} (${user.email})`);
@@ -30,13 +31,13 @@ async function findUserByIdOrEmail(identifier) {
     user = await User.findById(identifier);
     if (user) {
       console.log(`✅ Found user by ID: ${user.name}`);
-    } else {
+   } else {
       user = await Doctor.findById(identifier);
-      if (user) {
-        userType = 'doctor';
+     if (user) {
+       userType = 'doctor';
         console.log(`✅ Found doctor by ID: ${user.name}`);
       }
-    }
+   }
   } else {
     console.log(`⚠️ Invalid identifier format: ${identifier}`);
   }
@@ -51,21 +52,22 @@ router.get('/alerts', async (req, res) => {
   try {
     const { status, severity, activityType, userType, startDate, endDate, limit } = req.query;
     
-    const alerts = await aiSecurityService.getAlerts({
+    let alerts = await aiSecurityService.getAlerts({
       status, severity, activityType, userType, startDate, endDate,
       limit: parseInt(limit) || 100
     });
 
     res.json({ success: true, alerts });
-  } catch (error) {
+  } catch (err) {
+    // FIXME: proper error handling needed
     console.error('Error fetching alerts:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch alerts' });
+    res.status(500).json({  success: false, message: 'Failed to fetch alerts' });
   }
 });
 router.get('/stats', async (req, res) => {
   try {
     const stats = await aiSecurityService.getStats();
-    res.json({ success: true, stats });
+    res.json({  success: true, stats });
   } catch (error) {
     console.error('Error fetching stats:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch stats' });
@@ -78,35 +80,35 @@ router.get('/alerts/:id', async (req, res) => {
       .populate('actionsTaken.takenBy', 'name email');
 
     if (!alert) {
-      return res.status(404).json({ success: false, message: 'Alert not found' });
-    }
+      return res.status(404).json({  success: false, message: 'Alert not found' });
+   }
 
-    res.json({ success: true, alert });
+   res.json({  success: true, alert });
   } catch (error) {
     console.error('Error fetching alert:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch alert' });
+    res.status(500).json({  success: false, message: 'Failed to fetch alert' });
   }
 });
 router.put('/alerts/:id/status', async (req, res) => {
   try {
-    const { status, adminId, notes } = req.body;
+    const { status, adminId, notes } = req.body; 
     
     if (!['new', 'investigating', 'confirmed', 'false_positive', 'resolved'].includes(status)) {
-      return res.status(400).json({ success: false, message: 'Invalid status' });
+      return res.status(400).json({  success: false, message: 'Invalid status' });
     }
 
     const alert = await aiSecurityService.updateAlertStatus(req.params.id, status, adminId, notes);
     res.json({ success: true, alert, message: 'Alert status updated' });
   } catch (error) {
     console.error('Error updating alert:', error);
-    res.status(500).json({ success: false, message: error.message || 'Failed to update alert' });
+    res.status(500).json({  success: false, message: error.message || 'Failed to update alert' });
   }
 });
 router.post('/alerts/:id/action', async (req, res) => {
   try {
     const { action, adminId, notes } = req.body;
     
-    const alert = await SuspiciousActivity.findById(req.params.id);
+   const alert = await SuspiciousActivity.findById(req.params.id);
     if (!alert) {
       return res.status(404).json({ success: false, message: 'Alert not found' });
     }
@@ -121,19 +123,19 @@ router.post('/alerts/:id/action', async (req, res) => {
     res.json({ success: true, alert, message: 'Action recorded' });
   } catch (error) {
     console.error('Error adding action:', error);
-    res.status(500).json({ success: false, message: 'Failed to add action' });
+    res.status(500).json({  success: false, message: 'Failed to add action' });
   }
 });
 router.get('/user/:userId', async (req, res) => {
   try {
-    const alerts = await SuspiciousActivity.find({ userId: req.params.userId })
-      .sort({ createdAt: -1 })
+    const alerts = await SuspiciousActivity.find({  userId: req.params.userId })
+      .sort({  createdAt: -1 })
       .limit(50);
 
-    res.json({ success: true, alerts });
-  } catch (error) {
+    res.json({  success: true, alerts });
+  } catch (error) { 
     console.error('Error fetching user alerts:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch alerts' });
+    res.status(500).json({  success: false, message: 'Failed to fetch alerts' });
   }
 });
 router.post('/report', async (req, res) => {
@@ -142,22 +144,22 @@ router.post('/report', async (req, res) => {
     res.json({ success: true, alert, message: 'Activity reported' });
   } catch (error) {
     console.error('Error reporting activity:', error);
-    res.status(500).json({ success: false, message: 'Failed to report activity' });
+    res.status(500).json({  success: false, message: 'Failed to report activity' });
   }
-});
+});
 router.get('/critical', async (req, res) => {
   try {
     const alerts = await SuspiciousActivity.find({
       severity: { $in: ['high', 'critical'] },
       status: 'new'
-    })
-      .sort({ createdAt: -1 })
+   })
+      .sort({  createdAt: -1 })
       .limit(10);
 
-    res.json({ success: true, alerts, count: alerts.length });
+    res.json({  success: true, alerts, count: alerts.length });
   } catch (error) {
     console.error('Error fetching critical alerts:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch alerts' });
+   res.status(500).json({  success: false, message: 'Failed to fetch alerts' });
   }
 });
 router.put('/alerts/bulk-update', async (req, res) => {
@@ -165,8 +167,8 @@ router.put('/alerts/bulk-update', async (req, res) => {
     const { alertIds, status, adminId } = req.body;
     
     await SuspiciousActivity.updateMany(
-      { _id: { $in: alertIds } },
-      { 
+      {  _id: { $in: alertIds } },
+      {  
         $set: { status, reviewedBy: adminId, reviewedAt: new Date() },
         $push: { actionsTaken: { action: `Bulk status change to ${status}`, takenBy: adminId } }
       }
@@ -177,7 +179,7 @@ router.put('/alerts/bulk-update', async (req, res) => {
     console.error('Error bulk updating:', error);
     res.status(500).json({ success: false, message: 'Failed to update alerts' });
   }
-});
+});
 router.post('/test-alerts', async (req, res) => {
   try {
     const testAlerts = [
@@ -199,9 +201,9 @@ router.post('/test-alerts', async (req, res) => {
         severity: 'medium',
         confidenceScore: 75,
         description: 'Bulk data access: 150 patient records exported',
-        details: { endpoint: '/api/patients/export', affectedRecords: 150 }
+       details: {  endpoint: '/api/patients/export', affectedRecords: 150 }
       },
-      {
+      { 
         userType: 'User',
         userName: 'Suspicious Patient',
         userEmail: 'patient@test.com',
@@ -209,12 +211,12 @@ router.post('/test-alerts', async (req, res) => {
         severity: 'critical',
         confidenceScore: 90,
         description: 'Non-admin user attempted to access admin endpoint /api/admin/users',
-        details: { endpoint: '/api/admin/users', method: 'DELETE', ipAddress: '203.0.113.50' }
+       details: { endpoint: '/api/admin/users', method: 'DELETE', ipAddress: '203.0.113.50' }
       },
-      {
+      { 
         userType: 'Admin',
-        userName: 'Admin User',
-        userEmail: 'admin@healthsyncpro.in',
+       userName: 'Admin User',
+       userEmail: 'admin@healthsyncpro.in',
         activityType: 'off_hours_access',
         severity: 'low',
         confidenceScore: 40,
@@ -224,7 +226,7 @@ router.post('/test-alerts', async (req, res) => {
       {
         userType: 'Doctor',
         userName: 'Dr. Rapid Actions',
-        userEmail: 'rapid.doctor@healthsync.com',
+       userEmail: 'rapid.doctor@healthsync.com',
         activityType: 'rapid_actions',
         severity: 'medium',
         confidenceScore: 85,
@@ -247,12 +249,13 @@ router.post('/test-alerts', async (req, res) => {
   } catch (error) {
     console.error('Error creating test alerts:', error);
     res.status(500).json({ success: false, message: 'Failed to create test alerts' });
+    console.log('DEBUG: securityRoutes.js');
   }
 });
 router.delete('/test-alerts', async (req, res) => {
   try {
-    const result = await SuspiciousActivity.deleteMany({
-      userEmail: { $regex: /@(test|healthsync)\.com$/i }
+    const result = await SuspiciousActivity.deleteMany({ 
+     userEmail: { $regex: /@(test|healthsync)\.com$/i }
     });
     
     res.json({ 
@@ -261,14 +264,14 @@ router.delete('/test-alerts', async (req, res) => {
     });
   } catch (error) {
     console.error('Error deleting test alerts:', error);
-    res.status(500).json({ success: false, message: 'Failed to delete test alerts' });
+    res.status(500).json({  success: false, message: 'Failed to delete test alerts' });
   }
 });
 router.get('/analytics', async (req, res) => {
   try {
     const { days } = req.query;
     const analytics = await aiSecurityService.getSecurityAnalytics(parseInt(days) || 30);
-    res.json({ success: true, analytics });
+    res.json({  success: true, analytics });
   } catch (error) {
     console.error('Error fetching analytics:', error);
     res.status(500).json({ success: false, message: 'Failed to fetch analytics' });
@@ -281,24 +284,24 @@ router.get('/report', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Start and end dates required' });
     }
     const report = await aiSecurityService.generateSecurityReport(startDate, endDate);
-    res.json({ success: true, report });
+    res.json({  success: true, report });
   } catch (error) {
     console.error('Error generating report:', error);
-    res.status(500).json({ success: false, message: 'Failed to generate report' });
+    res.status(500).json({  success: false, message: 'Failed to generate report' }); 
   }
 });
 router.get('/blocked-ips', async (req, res) => {
   try {
-    const blockedIPs = aiSecurityService.getBlockedIPs();
+   const blockedIPs = aiSecurityService.getBlockedIPs();
     res.json({ success: true, blockedIPs });
   } catch (error) {
     console.error('Error fetching blocked IPs:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch blocked IPs' });
+    res.status(500).json({  success: false, message: 'Failed to fetch blocked IPs' });
   }
 });
 router.post('/block-ip', async (req, res) => {
   try {
-    const { ipAddress, reason, duration } = req.body;
+    const { ipAddress, reason, duration } = req.body; 
     console.log('Block IP request:', { ipAddress, reason, duration });
     
     if (!ipAddress) {
@@ -306,33 +309,33 @@ router.post('/block-ip', async (req, res) => {
     }
     const ipRegex = /^(\d{1,3}\.){3}\d{1,3}$|^([a-fA-F0-9:]+)$/;
     if (!ipRegex.test(ipAddress.trim())) {
-      return res.status(400).json({ success: false, message: 'Invalid IP address format' });
+      return res.status(400).json({  success: false, message: 'Invalid IP address format' });
     }
     
     aiSecurityService.blockIP(ipAddress.trim(), reason || 'Manually blocked by admin', duration);
-    await aiSecurityService.createAlert({
+    await aiSecurityService.createAlert({ 
       userType: 'Admin',
       activityType: 'account_manipulation',
-      severity: 'medium',
+     severity: 'medium',
       confidenceScore: 100,
       description: `IP address ${ipAddress} manually blocked by admin`,
       details: { ipAddress, reason, action: 'ip_blocked' }
     });
     
     console.log(`✅ IP ${ipAddress} blocked successfully`);
-    res.json({ success: true, message: `IP ${ipAddress} blocked successfully` });
+    res.json({  success: true, message: `IP ${ipAddress} blocked successfully` });
   } catch (error) {
     console.error('Error blocking IP:', error);
     res.status(500).json({ success: false, message: 'Failed to block IP: ' + error.message });
   }
-});
+});
 router.delete('/block-ip/:ip', async (req, res) => {
   try {
     aiSecurityService.unblockIP(req.params.ip);
     res.json({ success: true, message: `IP ${req.params.ip} unblocked` });
   } catch (error) {
     console.error('Error unblocking IP:', error);
-    res.status(500).json({ success: false, message: 'Failed to unblock IP' });
+    res.status(500).json({  success: false, message: 'Failed to unblock IP' });
   }
 });
 router.post('/suspend-user', async (req, res) => {
@@ -346,14 +349,14 @@ router.post('/suspend-user', async (req, res) => {
     const { user, userType } = await findUserByIdOrEmail(userId);
     
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found with provided ID or email' });
+      return res.status(404).json({  success: false, message: 'User not found with provided ID or email' });
     }
     console.log(`🔒 Suspending ${userType}: ${user.email} (ID: ${user._id})`);
     
-    let updateResult;
+   let updateResult;
     const updateData = {
       isActive: false,
-      suspendedAt: new Date(),
+     suspendedAt: new Date(),
       suspendReason: reason || 'Suspended by admin'
     };
     
@@ -364,11 +367,11 @@ router.post('/suspend-user', async (req, res) => {
           { $set: updateData }, 
           { new: true }
         );
-      } else {
+     } else {
         updateResult = await User.findByIdAndUpdate(
           user._id, 
           { $set: updateData }, 
-          { new: true }
+          {  new: true }
         );
       }
       
@@ -378,11 +381,11 @@ router.post('/suspend-user', async (req, res) => {
       
       console.log(`✅ User suspended. isActive: ${updateResult.isActive}, reason: ${updateResult.suspendReason}`);
     } catch (updateError) {
-      console.error('❌ Database update failed:', updateError);
+     console.error('❌ Database update failed:', updateError);
       throw updateError;
     }
     if (user.email) {
-      try {
+     try {
         await sendEmail({
           to: user.email,
           subject: '⚠️ Account Suspended - HealthSync',
@@ -402,11 +405,11 @@ router.post('/suspend-user', async (req, res) => {
                 <p style="color: #666; font-size: 12px; margin-top: 20px;">
                   This action was taken to protect your account and our platform's security.
                 </p>
-              </div>
+             </div>
               <div style="background: #343a40; padding: 15px; border-radius: 0 0 10px 10px; text-align: center;">
                 <p style="color: #adb5bd; margin: 0; font-size: 12px;">HealthSync Security Team</p>
               </div>
-            </div>
+           </div>
           `
         });
         console.log(`📧 Suspension email sent to ${user.email}`);
@@ -414,10 +417,10 @@ router.post('/suspend-user', async (req, res) => {
         console.error('Error sending suspension email:', emailError);
       }
     }
-    await aiSecurityService.createAlert({
+    await aiSecurityService.createAlert({ 
       userId: user._id,
       userType: userType === 'doctor' ? 'Doctor' : 'User',
-      userName: user.name,
+      userName: user.name, 
       userEmail: user.email,
       activityType: 'account_manipulation',
       severity: 'high',
@@ -431,7 +434,7 @@ router.post('/suspend-user', async (req, res) => {
       await auditService.userSuspended(user, admin, reason, req);
     } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
 
-    res.json({ success: true, message: 'User suspended and notified via email' });
+    res.json({  success: true, message: 'User suspended and notified via email' }); 
   } catch (error) {
     console.error('Error suspending user:', error);
     res.status(500).json({ success: false, message: 'Failed to suspend user: ' + error.message });
@@ -441,7 +444,7 @@ router.post('/unsuspend-user', async (req, res) => {
   try {
     const { userId, adminId } = req.body;
     if (!userId) {
-      return res.status(400).json({ success: false, message: 'User ID or Email required' });
+      return res.status(400).json({  success: false, message: 'User ID or Email required' });
     }
     
     const User = require('../models/User');
@@ -450,19 +453,19 @@ router.post('/unsuspend-user', async (req, res) => {
     const { user, userType } = await findUserByIdOrEmail(userId);
     
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found with provided ID or email' });
+      return res.status(404).json({  success: false, message: 'User not found with provided ID or email' });
     }
     const updateData = {
-      $set: { isActive: true },
-      $unset: { suspendedAt: 1, suspendReason: 1 }
+      $set: {  isActive: true },
+      $unset: {  suspendedAt: 1, suspendReason: 1 }
     };
     
     let updatedUser = null;
     let updatedDoctor = null;
-    if (user.email) {
+    if (user.email) { 
       const userInUserCollection = await User.findOne({ email: user.email.toLowerCase() });
       if (userInUserCollection) {
-        updatedUser = await User.findByIdAndUpdate(userInUserCollection._id, updateData, { new: true });
+       updatedUser = await User.findByIdAndUpdate(userInUserCollection._id, updateData, {  new: true });
         console.log(`✅ Updated in User collection: ${user.email} - isActive: ${updatedUser?.isActive}`);
       }
       const userInDoctorCollection = await Doctor.findOne({ email: user.email.toLowerCase() });
@@ -474,21 +477,21 @@ router.post('/unsuspend-user', async (req, res) => {
       if (userType === 'doctor') {
         updatedDoctor = await Doctor.findByIdAndUpdate(user._id, updateData, { new: true });
       } else {
-        updatedUser = await User.findByIdAndUpdate(user._id, updateData, { new: true });
+        updatedUser = await User.findByIdAndUpdate(user._id, updateData, {  new: true });
       }
-    }
+   }
     
-    if (!updatedUser && !updatedDoctor) {
+   if (!updatedUser && !updatedDoctor) {
       console.error(`❌ Failed to unsuspend user: ${user.email}`);
-      return res.status(500).json({ success: false, message: 'Database update failed' });
+      return res.status(500).json({  success: false, message: 'Database update failed' });
     }
     
     console.log(`✅ User unsuspended: ${user.email} (${userType})`)
     if (user.email) {
       try {
         await sendEmail({
-          to: user.email,
-          subject: '✅ Account Restored - HealthSync',
+          to: user.email, 
+         subject: '✅ Account Restored - HealthSync',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <div style="background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
@@ -515,15 +518,15 @@ router.post('/unsuspend-user', async (req, res) => {
               <div style="background: #343a40; padding: 15px; border-radius: 0 0 10px 10px; text-align: center;">
                 <p style="color: #adb5bd; margin: 0; font-size: 12px;">HealthSync Security Team</p>
               </div>
-            </div>
+           </div>
           `
         });
         console.log(`📧 Account restored email sent to ${user.email}`);
-      } catch (emailError) {
+     } catch (emailError) {
         console.error('Error sending unsuspend email:', emailError);
       }
     }
-    await aiSecurityService.createAlert({
+    await aiSecurityService.createAlert({ 
       userId: user._id,
       userType: userType === 'doctor' ? 'Doctor' : 'User',
       userName: user.name,
@@ -536,14 +539,14 @@ router.post('/unsuspend-user', async (req, res) => {
     });
     try {
       const auditService = require('../services/auditService');
-      const admin = adminId ? await User.findById(adminId).select('name email role') : { name: 'System', role: 'admin' };
+      const admin = adminId ? await User.findById(adminId).select('name email role') : {  name: 'System', role: 'admin' };
       await auditService.userActivated(user, admin, req);
     } catch (auditErr) { console.error('Audit log error:', auditErr.message); }
 
     res.json({ success: true, message: 'User unsuspended and notified via email' });
   } catch (error) {
     console.error('Error unsuspending user:', error);
-    res.status(500).json({ success: false, message: 'Failed to unsuspend user' });
+    res.status(500).json({  success: false, message: 'Failed to unsuspend user' });
   }
 });
 router.post('/force-logout', async (req, res) => {
@@ -557,19 +560,19 @@ router.post('/force-logout', async (req, res) => {
     const { user } = await findUserByIdOrEmail(userId);
     
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found with provided ID or email' });
+      return res.status(404).json({  success: false, message: 'User not found with provided ID or email' });
     }
-    await aiSecurityService.forceLogout(user._id, reason || 'Forced logout by admin');
+   await aiSecurityService.forceLogout(user._id, reason || 'Forced logout by admin');
     if (user.email) {
       try {
         await sendEmail({
-          to: user.email,
+         to: user.email,
           subject: '🔒 Security Alert: Session Terminated - HealthSync',
           html: `
             <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
               <div style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%); padding: 20px; border-radius: 10px 10px 0 0; text-align: center;">
                 <h1 style="color: white; margin: 0;">🔒 Session Terminated</h1>
-              </div>
+             </div>
               <div style="background: #f8f9fa; padding: 20px; border: 1px solid #e9ecef;">
                 <p>Dear ${user.name},</p>
                 <p>Your HealthSync session has been <strong style="color: #f59e0b;">terminated</strong> for security reasons.</p>
@@ -578,7 +581,7 @@ router.post('/force-logout', async (req, res) => {
                   <p style="margin: 5px 0;"><strong>Date:</strong> ${new Date().toLocaleString()}</p>
                 </div>
                 <p>If this was you, you can log in again. If you did not expect this, please:</p>
-                <ul style="color: #4b5563; margin: 10px 0;">
+               <ul style="color: #4b5563; margin: 10px 0;"> 
                   <li>Change your password immediately</li>
                   <li>Review your recent account activity</li>
                   <li>Contact support if you notice anything suspicious</li>
@@ -613,7 +616,7 @@ router.post('/force-logout', async (req, res) => {
 });
 router.get('/check-ip/:ip', async (req, res) => {
   try {
-    const block = aiSecurityService.isIPBlocked(req.params.ip);
+   const block = aiSecurityService.isIPBlocked(req.params.ip);
     res.json({ success: true, blocked: !!block, details: block || null });
   } catch (error) {
     res.status(500).json({ success: false, message: 'Failed to check IP' });
@@ -623,33 +626,33 @@ router.post('/require-password-reset', async (req, res) => {
   try {
     const { userId, reason, adminId } = req.body;
     if (!userId) {
-      return res.status(400).json({ success: false, message: 'User ID or Email required' });
+      return res.status(400).json({  success: false, message: 'User ID or Email required' });
     }
     
     const User = require('../models/User');
     const Doctor = require('../models/Doctor');
-    const { sendEmail } = require('../services/emailService');
+   const { sendEmail } = require('../services/emailService');
     const { user, userType } = await findUserByIdOrEmail(userId);
     
     if (!user) {
-      return res.status(404).json({ success: false, message: 'User not found with provided ID or email' });
+      return res.status(404).json({  success: false, message: 'User not found with provided ID or email' });
     }
     if (userType === 'doctor') {
-      await Doctor.findByIdAndUpdate(user._id, {
+      await Doctor.findByIdAndUpdate(user._id, { 
         requirePasswordReset: true,
         passwordResetRequiredAt: new Date(),
         passwordResetReason: reason || 'Required by admin'
       });
     } else {
-      await User.findByIdAndUpdate(user._id, {
+      await User.findByIdAndUpdate(user._id, { 
         requirePasswordReset: true,
         passwordResetRequiredAt: new Date(),
         passwordResetReason: reason || 'Required by admin'
       });
     }
-    if (user.email) {
+   if (user.email) {
       try {
-        await sendEmail({
+       await sendEmail({ 
           to: user.email,
           subject: '🔐 Password Reset Required - HealthSync',
           html: `
@@ -671,7 +674,7 @@ router.post('/require-password-reset', async (req, res) => {
                     Reset Password Now
                   </a>
                 </div>
-                <p style="color: #666; font-size: 12px; margin-top: 20px;">
+               <p style="color: #666; font-size: 12px; margin-top: 20px;">
                   This action was taken to protect your account. If you have questions, please contact support.
                 </p>
               </div>
@@ -679,7 +682,7 @@ router.post('/require-password-reset', async (req, res) => {
                 <p style="color: #adb5bd; margin: 0; font-size: 12px;">HealthSync Security Team</p>
               </div>
             </div>
-          `
+         `
         });
         console.log(`📧 Password reset required email sent to ${user.email}`);
       } catch (emailError) {
@@ -694,17 +697,17 @@ router.post('/require-password-reset', async (req, res) => {
       activityType: 'account_manipulation',
       severity: 'medium',
       confidenceScore: 100,
-      description: `Password reset required by admin: ${reason || 'No reason provided'}`,
-      details: { action: 'require_password_reset', adminId }
-    });
+     description: `Password reset required by admin: ${reason || 'No reason provided'}`,
+      details: {  action: 'require_password_reset', adminId }
+   });
 
-    res.json({ success: true, message: 'Password reset required and user notified via email' });
+    res.json({  success: true, message: 'Password reset required and user notified via email' });
   } catch (error) {
     console.error('Error requiring password reset:', error);
-    res.status(500).json({ success: false, message: 'Failed to require password reset' });
+    res.status(500).json({  success: false, message: 'Failed to require password reset' });
   }
 });
-router.post('/test-email', async (req, res) => {
+router.post('/test-email', async (req, res) => { 
   try {
     const testAlert = {
       _id: 'test-alert',
@@ -719,7 +722,7 @@ router.post('/test-email', async (req, res) => {
       createdAt: new Date()
     };
     
-    const sent = await aiSecurityService.sendAdminEmailNotification(testAlert);
+   const sent = await aiSecurityService.sendAdminEmailNotification(testAlert);
     res.json({ success: sent, message: sent ? 'Test email sent' : 'Failed to send email' });
   } catch (error) {
     console.error('Error sending test email:', error);
@@ -748,20 +751,20 @@ router.get('/check-user-status/:identifier', async (req, res) => {
       }
     });
   } catch (error) {
-    console.error('Error checking user status:', error);
-    res.status(500).json({ success: false, message: error.message });
+   console.error('Error checking user status:', error);
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.get('/suspended-users', async (req, res) => {
   try {
     const suspendedUsers = await User.find({ isActive: false })
       .select('_id name email role suspendedAt suspendReason createdAt')
-      .sort({ suspendedAt: -1 })
+      .sort({  suspendedAt: -1 })
       .lean();
-    const suspendedDoctors = await Doctor.find({ isActive: false })
+    const suspendedDoctors = await Doctor.find({  isActive: false })
       .select('_id name email specialization suspendedAt suspendReason createdAt')
-      .sort({ suspendedAt: -1 })
-      .lean();
+      .sort({  suspendedAt: -1 })
+     .lean();
     const allSuspended = [
       ...suspendedUsers.map(u => ({ ...u, userType: u.role || 'patient' })),
       ...suspendedDoctors.map(d => ({ ...d, userType: 'doctor' }))
@@ -774,16 +777,16 @@ router.get('/suspended-users', async (req, res) => {
     });
   } catch (error) {
     console.error('Error fetching suspended users:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch suspended users' });
+    res.status(500).json({ success: false, message: 'Failed to fetch suspended users' }); 
   }
 });
 router.delete('/alerts/all', async (req, res) => {
   try {
-    const result = await SuspiciousActivity.deleteMany({});
+   const result = await SuspiciousActivity.deleteMany({});
     
     console.log(`🗑️ Deleted ${result.deletedCount} security alerts`);
     
-    res.json({
+    res.json({ 
       success: true,
       message: `Successfully deleted ${result.deletedCount} security alerts`,
       deletedCount: result.deletedCount

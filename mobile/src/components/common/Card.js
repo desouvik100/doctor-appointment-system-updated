@@ -26,7 +26,7 @@ const Card = ({
     }
   };
 
-  const borderStyle = {
+  const borderStyle = { 
     borderWidth: isDarkMode ? 1 : 0,
     borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
   };
@@ -35,12 +35,12 @@ const Card = ({
     const base = [
       styles.base,
       { padding: getPadding() }
-    ];
+   ];
 
     if (variant === 'elevated' || variant === 'default') {
       return [
         ...base,
-        {
+       {
           backgroundColor: colors.backgroundCard,
           ...borderStyle,
           ...shadows.sm,
@@ -72,16 +72,16 @@ const Card = ({
     if (variant === 'glass') {
       return [
         ...base,
-        {
+       {
           backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : 'rgba(255, 255, 255, 0.95)',
           borderWidth: isDarkMode ? 1 : 0,
-          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'transparent',
+          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'transparent', 
           ...shadows.sm,
         }
       ];
     }
 
-    return base;
+   return base;
   };
 
   const finalStyles = [getCardStyles(), style];

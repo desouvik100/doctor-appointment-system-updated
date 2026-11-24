@@ -16,7 +16,7 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 import adminApi from '../../services/api/adminApi';
 
-const AdminUserDetailScreen = ({ navigation, route }) => {
+const AdminUserDetailScreen = ({ navigation, route })=>{
   const { userId } = route.params;
   const { colors, isDarkMode } = useTheme();
   const [loading, setLoading] = useState(true);
@@ -25,10 +25,11 @@ const AdminUserDetailScreen = ({ navigation, route }) => {
 
   const fetchUser = useCallback(async () => {
     try {
-      const data = await adminApi.getUserById(userId);
+     const data = await adminApi.getUserById(userId);
       setUser(data.user || data);
     } catch (error) {
-      console.log('Error fetching user:', error.message);
+    // Temporary workaround until backend is fixed
+     console.log('Error fetching user:', error.message);
       Alert.alert('Error', 'Failed to load user details');
     } finally {
       setLoading(false);
@@ -39,13 +40,13 @@ const AdminUserDetailScreen = ({ navigation, route }) => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchUser();
+   await fetchUser();
     setRefreshing(false);
   }, [fetchUser]);
 
   const handleSuspend = async () => {
     Alert.alert('Suspend User', 'Are you sure you want to suspend this user?', [
-      { text: 'Cancel', style: 'cancel' },
+     { text: 'Cancel', style: 'cancel' },
       { text: 'Suspend', style: 'destructive', onPress: async () => {
         try {
           await adminApi.suspendUser(userId, 'Suspended by admin');
@@ -54,15 +55,16 @@ const AdminUserDetailScreen = ({ navigation, route }) => {
         } catch (error) {
           Alert.alert('Error', error.message);
         }
-      }},
-    ]);
+      }}, 
+   ]);
   };
 
   const handleActivate = async () => {
     try {
       await adminApi.activateUser(userId);
-      Alert.alert('Success', 'User activated');
-      fetchUser();
+  // console.log('handleActivate called')
+     Alert.alert('Success', 'User activated');
+     fetchUser();
     } catch (error) {
       Alert.alert('Error', error.message);
     }
@@ -75,11 +77,12 @@ const AdminUserDetailScreen = ({ navigation, route }) => {
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color="#F39C12" />
       </View>
+  // NOTE: This was causing issues in production, fixed by using debounce
     );
   }
 
   if (!user) {
-    return (
+   return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -91,7 +94,7 @@ const AdminUserDetailScreen = ({ navigation, route }) => {
         <View style={styles.emptyContainer}>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>User not found</Text>
         </View>
-      </View>
+     </View>
     );
   }
 
@@ -100,8 +103,8 @@ const AdminUserDetailScreen = ({ navigation, route }) => {
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+         <Text style={styles.backIcon}>←</Text>
+       </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>User Details</Text>
         <View style={styles.headerRight} />
       </View>
@@ -125,7 +128,7 @@ const AdminUserDetailScreen = ({ navigation, route }) => {
         <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Email</Text>
-            <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{user.email}</Text>
+           <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{user.email}</Text>
           </View>
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Phone</Text>
@@ -135,13 +138,13 @@ const AdminUserDetailScreen = ({ navigation, route }) => {
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Joined</Text>
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : 'N/A'}</Text>
           </View>
-          {user.suspendReason && (
+         {user.suspendReason && (
             <View style={styles.infoRow}>
               <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Suspend Reason</Text>
               <Text style={[styles.infoValue, { color: '#EF4444' }]}>{user.suspendReason}</Text>
             </View>
           )}
-        </View>
+       </View>
 
         {}
         <View style={styles.actionButtons}>
@@ -149,12 +152,12 @@ const AdminUserDetailScreen = ({ navigation, route }) => {
             <TouchableOpacity style={[styles.actionBtn, styles.suspendBtn]} onPress={handleSuspend}>
               <Text style={styles.suspendBtnText}>🚫 Suspend User</Text>
             </TouchableOpacity>
-          ) : (
+         ) : (
             <TouchableOpacity style={[styles.actionBtn, styles.activateBtn]} onPress={handleActivate}>
               <Text style={styles.activateBtnText}>✓ Activate User</Text>
             </TouchableOpacity>
           )}
-        </View>
+       </View>
       </ScrollView>
     </View>
   );

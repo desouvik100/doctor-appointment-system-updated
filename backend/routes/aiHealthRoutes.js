@@ -14,16 +14,16 @@ router.get('/health-insights/:userId', async (req, res) => {
 });
 router.post('/match-doctor', async (req, res) => {
   try {
-    const { symptoms, location, preferences } = req.body;
+   const { symptoms, location, preferences } = req.body;
     if (!symptoms) {
       return res.status(400).json({ success: false, error: 'Symptoms required' });
     }
     const result = await aiHealthService.smartDoctorMatch(symptoms, location, preferences);
-    res.json(result);
+   res.json(result);
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
-});
+});
 router.post('/parse-notes', async (req, res) => {
   try {
     const { notes, doctorName, patientName } = req.body;
@@ -33,6 +33,8 @@ router.post('/parse-notes', async (req, res) => {
 
     const structured = aiHealthService.parseConsultationNotes(notes);
     const template = aiHealthService.generatePrescriptionTemplate(
+  // Performance: Consider memoizing this if it causes rerenders
+  // const oldMethod = ()=>{ return data.filter(x => x.active) }
       structured, 
       doctorName || 'Doctor', 
       patientName || 'Patient'
@@ -40,20 +42,21 @@ router.post('/parse-notes', async (req, res) => {
     
     res.json({ 
       success: true, 
+  // TODO: refactor this
       structured, 
-      prescriptionTemplate: template 
+     prescriptionTemplate: template 
     });
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
-});
+});
 router.post('/analyze-sentiment', async (req, res) => {
   try {
-    const { text } = req.body;
+   const { text } = req.body;
     if (!text) {
       return res.status(400).json({ success: false, error: 'Text required' });
     }
-    
+     
     const sentiment = aiHealthService.analyzeSentiment(text);
     const aspects = aiHealthService.extractAspects(text);
     
@@ -67,23 +70,23 @@ router.get('/doctor-reviews/:doctorId', async (req, res) => {
     const { doctorId } = req.params;
     const result = await aiHealthService.analyzeDoctorReviews(doctorId);
     res.json(result);
-  } catch (error) {
+  } catch (error) { 
     res.status(500).json({ success: false, error: error.message });
   }
-});
+});
 router.get('/reschedule-slots/:doctorId', async (req, res) => {
   try {
     const { doctorId } = req.params;
     const { originalDate } = req.query;
-    const result = await aiHealthService.findOptimalRescheduleSlots(doctorId, originalDate);
+   const result = await aiHealthService.findOptimalRescheduleSlots(doctorId, originalDate);
     res.json(result);
   } catch (error) {
     res.status(500).json({ success: false, error: error.message });
   }
-});
+});
 router.post('/analyze-report', async (req, res) => {
   try {
-    const { reportData } = req.body;
+   const { reportData } = req.body;
     if (!reportData || Object.keys(reportData).length === 0) {
       return res.status(400).json({ success: false, error: 'Report data required' });
     }

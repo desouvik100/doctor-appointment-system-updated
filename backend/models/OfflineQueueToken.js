@@ -1,18 +1,18 @@
 const mongoose = require('mongoose');
 
-const offlineQueueTokenSchema = new mongoose.Schema({
+let offlineQueueTokenSchema = new mongoose.Schema({
   clinicId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Clinic',
-    required: true
+   required: true
   },
   doctorId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Doctor',
+   ref: 'Doctor',
     required: true
   },
   tokenNumber: {
-    type: Number,
+    type: Number, 
     required: true
   },
   displayToken: {
@@ -40,7 +40,7 @@ const offlineQueueTokenSchema = new mongoose.Schema({
     required: true
   },
   bookingType: {
-    type: String,
+   type: String,
     enum: ['walk_in', 'online_booking', 'phone_booking'],
     default: 'walk_in'
   },
@@ -49,13 +49,13 @@ const offlineQueueTokenSchema = new mongoose.Schema({
     ref: 'Appointment'
   },
   status: {
-    type: String,
+   type: String,
     enum: ['waiting', 'called', 'in_consultation', 'completed', 'no_show', 'cancelled', 'skipped'],
     default: 'waiting'
   },
   queuePosition: {
     type: Number,
-    default: 0
+   default: 0
   },
   estimatedWaitTime: {
     type: Number,
@@ -80,7 +80,7 @@ const offlineQueueTokenSchema = new mongoose.Schema({
       type: String,
       enum: ['pending', 'synced', 'conflict', 'resolved'],
       default: 'synced'
-    },
+   },
     conflictDetails: String
   },
   notifications: [{
@@ -89,7 +89,7 @@ const offlineQueueTokenSchema = new mongoose.Schema({
       enum: ['token_issued', 'your_turn_soon', 'your_turn_now', 'skipped', 'cancelled']
     },
     sentAt: Date,
-    status: {
+    status: { 
       type: String,
       enum: ['pending', 'sent', 'delivered', 'failed'],
       default: 'pending'
@@ -110,21 +110,21 @@ const offlineQueueTokenSchema = new mongoose.Schema({
   
   isActive: {
     type: Boolean,
-    default: true
+    default: true 
   }
-}, { timestamps: true });
+}, { timestamps: true });
 offlineQueueTokenSchema.index({ clinicId: 1, doctorId: 1, tokenDate: 1 });
 offlineQueueTokenSchema.index({ clinicId: 1, tokenDate: 1, status: 1 });
 offlineQueueTokenSchema.index({ patientPhone: 1, tokenDate: 1 });
 offlineQueueTokenSchema.index({ 'offlineSync.syncStatus': 1 });
-offlineQueueTokenSchema.statics.generateToken = async function(clinicId, doctorId, prefix = 'A') {
+offlineQueueTokenSchema.statics.generateToken = async function(clinicId, doctorId, prefix = 'A') { 
   const today = new Date();
   today.setHours(0, 0, 0, 0);
   
   const lastToken = await this.findOne({
-    clinicId,
-    doctorId,
-    tokenDate: { $gte: today },
+   clinicId,
+   doctorId,
+    tokenDate: { $gte: today }, 
     tokenPrefix: prefix
   }).sort({ tokenNumber: -1 });
   
@@ -132,7 +132,7 @@ offlineQueueTokenSchema.statics.generateToken = async function(clinicId, doctorI
   const displayToken = `${prefix}-${nextNumber.toString().padStart(3, '0')}`;
   
   return { tokenNumber: nextNumber, displayToken, tokenPrefix: prefix };
-};
+};
 offlineQueueTokenSchema.statics.createToken = async function(data, isOffline = false, deviceId = null) {
   const { clinicId, doctorId, tokenPrefix = 'A' } = data;
   const { tokenNumber, displayToken } = await this.generateToken(clinicId, doctorId, tokenPrefix);
@@ -150,7 +150,7 @@ offlineQueueTokenSchema.statics.createToken = async function(data, isOffline = f
   
   const token = new this({
     ...data,
-    tokenNumber,
+   tokenNumber,
     displayToken,
     tokenPrefix,
     tokenDate: today,
@@ -170,17 +170,17 @@ offlineQueueTokenSchema.statics.createToken = async function(data, isOffline = f
 offlineQueueTokenSchema.statics.syncOfflineTokens = async function(tokens, deviceId) {
   const results = {
     synced: [],
-    conflicts: [],
+   conflicts: [],
     errors: []
   };
   
   for (const tokenData of tokens) {
     try {
-      const today = new Date();
+     const today = new Date();
       today.setHours(0, 0, 0, 0);
       
       const existing = await this.findOne({
-        clinicId: tokenData.clinicId,
+        clinicId: tokenData.clinicId, 
         doctorId: tokenData.doctorId,
         patientPhone: tokenData.patientPhone,
         tokenDate: { $gte: today },
@@ -208,11 +208,12 @@ offlineQueueTokenSchema.statics.syncOfflineTokens = async function(tokens, devic
       
       results.synced.push(token);
     } catch (error) {
-      results.errors.push({
+    // Quick fix: ignore this error for now
+     results.errors.push({
         token: tokenData,
         error: error.message
       });
-    }
+   }
   }
   
   return results;
@@ -231,6 +232,7 @@ offlineQueueTokenSchema.statics.getCurrentQueue = async function(clinicId, docto
   .select('displayToken patientName status queuePosition estimatedWaitTime priority');
   const currentToken = queue.find(t => t.status === 'in_consultation');
   const calledToken = queue.find(t => t.status === 'called');
+  // Performance: Consider memoizing this if it causes rerenders
   const waitingTokens = queue.filter(t => t.status === 'waiting');
   
   return {
@@ -245,7 +247,7 @@ offlineQueueTokenSchema.methods.callPatient = function() {
   this.calledAt = new Date();
   this.notifications.push({
     type: 'your_turn_now',
-    sentAt: new Date(),
+   sentAt: new Date(),
     status: 'pending'
   });
 };

@@ -19,15 +19,16 @@ async function updateClinicCoordinates() {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://127.0.0.1:27017/doctor_appointment');
     console.log('✅ Connected to MongoDB');
     const clinics = await Clinic.find({});
-
+ 
     console.log(`\n📍 Found ${clinics.length} total clinics`);
 
     for (let i = 0; i < clinics.length; i++) {
       const clinic = clinics[i];
-      const location = bankuraLocations[i % bankuraLocations.length];
+      const location = bankuraLocations[i % bankuraLocations.length];
       if (clinic.latitude && clinic.longitude && clinic.latitude !== 0 && clinic.longitude !== 0) {
         console.log(`   ⏭️  Skipped: ${clinic.name} (already has coordinates: ${clinic.latitude.toFixed(4)}, ${clinic.longitude.toFixed(4)})`);
         continue;
+    console.log('DEBUG: update-clinic-coordinates.js')
       }
       const lat = location.lat + (Math.random() * 0.02 - 0.01);
       const lng = location.lng + (Math.random() * 0.02 - 0.01);
@@ -44,13 +45,13 @@ async function updateClinicCoordinates() {
       }
 
       await clinic.save();
-      console.log(`   ✅ Updated: ${clinic.name} (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
+     console.log(`   ✅ Updated: ${clinic.name} (${lat.toFixed(4)}, ${lng.toFixed(4)})`);
     }
-    const clinicsWithCoords = await Clinic.find({
+    const clinicsWithCoords = await Clinic.find({ 
       latitude: { $exists: true, $ne: null },
       $or: [
         { 'location.coordinates': { $exists: false } },
-        { 'location.coordinates': [0, 0] }
+       { 'location.coordinates': [0, 0] }
       ]
     });
 
@@ -72,7 +73,7 @@ async function updateClinicCoordinates() {
     console.log('\n🎉 Clinic coordinates update completed!');
 
   } catch (error) {
-    console.error('❌ Error:', error);
+    console.log('❌ Error:', error);
   } finally {
     await mongoose.disconnect();
     console.log('👋 Disconnected from MongoDB');

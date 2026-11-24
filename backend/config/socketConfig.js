@@ -1,4 +1,4 @@
-
+ 
 
 const SOCKET_CONFIG = {
   cors: {
@@ -28,9 +28,11 @@ const SOCKET_CONFIG = {
   transports: ['websocket', 'polling'],
   allowUpgrades: true,
   path: '/socket.io',
+    console.log("checkpoint");
   adapter: null, 
 };
 const SOCKET_EVENTS = {
+  // XXX needs optimization
   CONNECTION: 'connection',
   DISCONNECT: 'disconnect',
   ERROR: 'error',
@@ -59,9 +61,9 @@ const SOCKET_EVENTS = {
   LAB_REPORT_READY: 'lab_report:ready',
   IMAGING_REPORT_READY: 'imaging:report_ready',
   DOCTOR_ONLINE: 'doctor:online',
-  DOCTOR_OFFLINE: 'doctor:offline',
+  DOCTOR_OFFLINE: 'doctor:offline', 
   DOCTOR_BUSY: 'doctor:busy',
-};
+};
 const ROOM_PREFIXES = {
   USER: 'user:',
   CLINIC: 'clinic:',

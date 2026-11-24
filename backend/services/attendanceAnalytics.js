@@ -9,12 +9,12 @@ class AttendanceAnalyticsService {
   
   async getAverageTimings(orgId, dateRange, filters = {}) {
     const matchStage = {
-      organizationId: orgId,
-      timestamp: {
+     organizationId: orgId,
+     timestamp: {
         $gte: new Date(dateRange.startDate),
         $lte: new Date(dateRange.endDate)
       }
-    };
+   };
 
     if (filters.staffId) matchStage.staffId = filters.staffId;
     if (filters.branchId) matchStage.branchId = filters.branchId;
@@ -32,7 +32,7 @@ class AttendanceAnalyticsService {
     
     for (const record of records) {
       const staffId = record._id.staffId.toString();
-      const eventType = record._id.eventType;
+     const eventType = record._id.eventType;
       
       if (!staffTimings[staffId]) {
         staffTimings[staffId] = { avgCheckIn: null, avgCheckOut: null };
@@ -57,11 +57,11 @@ class AttendanceAnalyticsService {
       eventType: 'check_out',
       shiftDuration: { $exists: true, $ne: null },
       timestamp: {
-        $gte: new Date(dateRange.startDate),
+       $gte: new Date(dateRange.startDate),
         $lte: new Date(dateRange.endDate)
       }
     };
-
+ 
     const groupByExpression = this._getGroupByExpression(groupBy);
 
     const results = await AttendanceRecord.aggregate([
@@ -69,18 +69,18 @@ class AttendanceAnalyticsService {
       {
         $group: {
           _id: {
-            staffId: '$staffId',
+           staffId: '$staffId',
             period: groupByExpression
           },
           totalMinutes: { $sum: '$shiftDuration' },
           shiftCount: { $sum: 1 }
-        }
+       }
       },
       {
         $group: {
           _id: '$_id.staffId',
           periods: {
-            $push: {
+           $push: {
               period: '$_id.period',
               totalMinutes: '$totalMinutes',
               totalHours: { $divide: ['$totalMinutes', 60] },
@@ -120,7 +120,7 @@ class AttendanceAnalyticsService {
   }
 
   _minutesToTimeString(minutes) {
-    if (minutes === null || minutes === undefined) return null;
+   if (minutes === null || minutes === undefined) return null;
     const hours = Math.floor(minutes / 60);
     const mins = minutes % 60;
     return `${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`;
@@ -134,6 +134,7 @@ class AttendanceAnalyticsService {
 
   _getGroupByExpression(groupBy) {
     switch (groupBy) {
+  // HACK: quick fix for production
       case 'week':
         return { $isoWeek: '$timestamp' };
       case 'month':
@@ -144,10 +145,10 @@ class AttendanceAnalyticsService {
   }
 
   async getLateArrivals(orgId, dateRange, thresholdMinutes = 0) {
-    const checkIns = await AttendanceRecord.find({
+    const checkIns = await AttendanceRecord.find({ 
       organizationId: orgId,
       eventType: 'check_in',
-      timestamp: {
+     timestamp: {
         $gte: new Date(dateRange.startDate),
         $lte: new Date(dateRange.endDate)
       }
@@ -158,7 +159,7 @@ class AttendanceAnalyticsService {
     for (const record of checkIns) {
       if (!record.staffId?.scheduledStartTime) continue;
 
-      const scheduledMinutes = this._timeStringToMinutes(record.staffId.scheduledStartTime);
+      const scheduledMinutes = this._timeStringToMinutes(record.staffId.scheduledStartTime); 
       const actualDate = new Date(record.timestamp);
       const actualMinutes = actualDate.getHours() * 60 + actualDate.getMinutes();
 
@@ -175,7 +176,7 @@ class AttendanceAnalyticsService {
           recordId: record._id
         });
       }
-    }
+   }
 
     return lateArrivals;
   }
@@ -207,7 +208,7 @@ class AttendanceAnalyticsService {
           staffName: record.staffId.name,
           date: actualDate.toISOString().split('T')[0],
           scheduledTime: record.staffId.scheduledEndTime,
-          actualTime: this._minutesToTimeString(actualMinutes),
+         actualTime: this._minutesToTimeString(actualMinutes),
           deviationMinutes: deviationMinutes,
           recordId: record._id
         });
@@ -218,17 +219,17 @@ class AttendanceAnalyticsService {
   }
 
   async getOvertimeReport(orgId, dateRange, standardHoursPerDay = 8) {
-    const standardMinutesPerDay = standardHoursPerDay * 60;
+    const standardMinutesPerDay = standardHoursPerDay * 60;
     const checkOuts = await AttendanceRecord.find({
       organizationId: orgId,
-      eventType: 'check_out',
+      eventType: 'check_out', 
       shiftDuration: { $exists: true, $ne: null },
       timestamp: {
         $gte: new Date(dateRange.startDate),
         $lte: new Date(dateRange.endDate)
       }
     }).populate('staffId', 'name');
-    const staffOvertime = {};
+    const staffOvertime = {}; 
 
     for (const record of checkOuts) {
       if (!record.staffId) continue;
@@ -243,7 +244,7 @@ class AttendanceAnalyticsService {
           totalOvertimeMinutes: 0,
           dailyRecords: [],
           shiftCount: 0
-        };
+       };
       }
 
       const dailyOvertimeMinutes = Math.max(0, record.shiftDuration - standardMinutesPerDay);
@@ -293,7 +294,7 @@ class AttendanceAnalyticsService {
     const branchMap = new Map(branches.map(b => [b._id.toString(), b]));
     const matchStage = {
       organizationId: orgObjectId,
-      branchId: { $in: branchIds },
+     branchId: { $in: branchIds },
       timestamp: {
         $gte: new Date(dateRange.startDate),
         $lte: new Date(dateRange.endDate)
@@ -325,10 +326,10 @@ class AttendanceAnalyticsService {
         } 
       },
       {
-        $group: {
+       $group: {
           _id: '$branchId',
           totalMinutes: { $sum: '$shiftDuration' },
-          shiftCount: { $sum: 1 }
+         shiftCount: { $sum: 1 }
         }
       }
     ]);
@@ -345,7 +346,7 @@ class AttendanceAnalyticsService {
         $project: {
           branchId: 1,
           hour: { $hour: '$timestamp' }
-        }
+       }
       },
       {
         $group: {
@@ -357,8 +358,8 @@ class AttendanceAnalyticsService {
         $sort: { count: -1 }
       },
       {
-        $group: {
-          _id: '$_id.branchId',
+       $group: {
+         _id: '$_id.branchId',
           peakHour: { $first: '$_id.hour' },
           peakCount: { $first: '$count' }
         }
@@ -368,9 +369,9 @@ class AttendanceAnalyticsService {
     const peakHoursMap = new Map(
       peakHoursAgg.map(p => [p._id.toString(), {
         peakHour: p.peakHour,
-        peakCount: p.peakCount
+        peakCount: p.peakCount 
       }])
-    );
+    );
     const branchResults = branches.map(branch => {
       const branchIdStr = branch._id.toString();
       const staffCount = staffCountMap.get(branchIdStr) || 0;
@@ -395,12 +396,12 @@ class AttendanceAnalyticsService {
         peakHourFormatted: peakData.peakHour !== null 
           ? `${String(peakData.peakHour).padStart(2, '0')}:00` 
           : null,
-        peakCheckInCount: peakData.peakCount,
+       peakCheckInCount: peakData.peakCount,
         normalizedHours: avgHoursPerStaff,
         normalizedShifts: staffCount > 0 
           ? Math.round((hoursData.shiftCount / staffCount) * 100) / 100 
           : 0
-      };
+     };
     });
     const totalStaff = branchResults.reduce((sum, b) => sum + b.staffCount, 0);
     const totalHours = branchResults.reduce((sum, b) => sum + b.totalHoursWorked, 0);
@@ -411,7 +412,7 @@ class AttendanceAnalyticsService {
     return {
       branches: branchResults,
       summary: {
-        totalBranches: branches.length,
+       totalBranches: branches.length,
         totalStaff,
         totalHoursWorked: Math.round(totalHours * 100) / 100,
         avgHoursPerBranch,
@@ -443,12 +444,12 @@ class AttendanceAnalyticsService {
     }
 
     let peakHour = null;
-    let maxCount = 0;
+   let maxCount = 0;
     for (const [hour, count] of Object.entries(hourCounts)) {
       if (count > maxCount) {
         maxCount = count;
         peakHour = parseInt(hour);
-      }
+     }
     }
 
     return { peakHour, count: maxCount };
@@ -457,7 +458,7 @@ class AttendanceAnalyticsService {
   async detectPatterns(orgId, dateRange, consecutiveThreshold = 3) {
     const lateArrivals = await this.getLateArrivals(orgId, dateRange, 0);
     const earlyDepartures = await this.getEarlyDepartures(orgId, dateRange, 0);
-    const lateByStaff = this._groupByStaff(lateArrivals);
+   const lateByStaff = this._groupByStaff(lateArrivals);
     const earlyByStaff = this._groupByStaff(earlyDepartures);
 
     const patterns = [];
@@ -467,7 +468,7 @@ class AttendanceAnalyticsService {
       );
       
       if (consecutiveCount >= consecutiveThreshold) {
-        patterns.push({
+       patterns.push({
           staffId,
           staffName: records[0]?.staffName || 'Unknown',
           patternType: 'consecutive_late_arrivals',
@@ -490,7 +491,7 @@ class AttendanceAnalyticsService {
           patternType: 'consecutive_early_departures',
           consecutiveCount,
           totalOccurrences: records.length,
-          dates: records.map(r => r.date),
+         dates: records.map(r => r.date),
           severity: this._calculateSeverity(consecutiveCount, consecutiveThreshold)
         });
       }
@@ -500,19 +501,19 @@ class AttendanceAnalyticsService {
   }
 
   async getExcessiveOvertime(orgId, dateRange, thresholdHours = 10, standardHoursPerDay = 8) {
-    const overtimeReport = await this.getOvertimeReport(orgId, dateRange, standardHoursPerDay);
-    
+   const overtimeReport = await this.getOvertimeReport(orgId, dateRange, standardHoursPerDay);
+     
     const excessiveOvertimeStaff = [];
     
     for (const [staffId, data] of Object.entries(overtimeReport)) {
       if (data.totalOvertimeHours >= thresholdHours) {
         excessiveOvertimeStaff.push({
           staffId: data.staffId,
-          staffName: data.staffName,
+          staffName: data.staffName, 
           totalOvertimeHours: data.totalOvertimeHours,
           totalOvertimeMinutes: data.totalOvertimeMinutes,
           totalHoursWorked: data.totalHoursWorked,
-          shiftCount: data.shiftCount,
+         shiftCount: data.shiftCount,
           thresholdExceededBy: Math.round((data.totalOvertimeHours - thresholdHours) * 100) / 100,
           severity: this._calculateOvertimeSeverity(data.totalOvertimeHours, thresholdHours)
         });
@@ -522,7 +523,7 @@ class AttendanceAnalyticsService {
     return excessiveOvertimeStaff.sort((a, b) => b.totalOvertimeHours - a.totalOvertimeHours);
   }
 
-  detectConsecutivePattern(dates) {
+  detectConsecutivePattern(dates) { 
     if (!dates || dates.length === 0) return 0;
     if (dates.length === 1) return 1;
     const sortedDates = [...dates].sort();
@@ -567,7 +568,7 @@ class AttendanceAnalyticsService {
     const earlyRecordIds = new Set(earlyDepartures.map(r => r.recordId?.toString()));
     const overtimeStaffIds = new Set(
       Object.values(overtimeReport)
-        .filter(r => r.totalOvertimeHours > 0)
+       .filter(r => r.totalOvertimeHours > 0)
         .map(r => r.staffId?.toString())
     );
     const rows = this.buildCSVRows(records, lateRecordIds, earlyRecordIds, overtimeStaffIds);
@@ -605,7 +606,7 @@ class AttendanceAnalyticsService {
           groupedRecords[key].customStatus = record.customStatus;
         }
       } else if (record.eventType === 'check_out') {
-        groupedRecords[key].checkOut = record.timestamp;
+       groupedRecords[key].checkOut = record.timestamp;
         groupedRecords[key].checkOutRecordId = record._id?.toString();
         groupedRecords[key].shiftDuration = record.shiftDuration;
       }
@@ -624,7 +625,7 @@ class AttendanceAnalyticsService {
       
       const isLate = data.checkInRecordId && lateRecordIds.has(data.checkInRecordId) ? 'Yes' : 'No';
       const isEarly = data.checkOutRecordId && earlyRecordIds.has(data.checkOutRecordId) ? 'Yes' : 'No';
-      const hasOvertime = overtimeStaffIds.has(data.staffId) ? 'Yes' : 'No';
+      const hasOvertime = overtimeStaffIds.has(data.staffId) ? 'Yes' : 'No';
       const escapedName = this._escapeCSV(data.staffName);
       const escapedStatus = this._escapeCSV(data.customStatus || '');
       
@@ -634,7 +635,7 @@ class AttendanceAnalyticsService {
     return rows;
   }
 
-  _groupByStaff(records) {
+  _groupByStaff(records) { 
     const grouped = {};
     for (const record of records) {
       const staffId = record.staffId?.toString() || 'unknown';

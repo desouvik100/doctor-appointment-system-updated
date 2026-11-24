@@ -33,7 +33,7 @@ async function getRxCUI(drugName) {
     const response = await axios.get(`${RXNORM_BASE_URL}/approximateTerm.json`, {
       params: { term: drugName, maxEntries: 1 },
       timeout: 10000
-    });
+    }); 
     
     let rxcui = null;
     
@@ -61,7 +61,7 @@ async function getDrugInfo(rxcui) {
   if (!rxcui) return null;
   
   const cacheKey = `druginfo:${rxcui}`;
-  
+   
   if (drugCache.has(cacheKey)) {
     const cached = drugCache.get(cacheKey);
     if (Date.now() - cached.timestamp < CACHE_TTL) {
@@ -81,14 +81,14 @@ async function getDrugInfo(rxcui) {
       rxcui,
       name: properties.name,
       synonym: properties.synonym,
-      tty: properties.tty, 
-      language: properties.language
+     tty: properties.tty, 
+     language: properties.language 
     };
     
     drugCache.set(cacheKey, { data: drugInfo, timestamp: Date.now() });
     return drugInfo;
   } catch (error) {
-    console.error(`Error getting drug info for ${rxcui}:`, error.message);
+   console.error(`Error getting drug info for ${rxcui}:`, error.message);
     return null;
   }
 }
@@ -104,7 +104,7 @@ async function searchDrugs(searchTerm, maxResults = 10) {
     
     const suggestions = response.data?.suggestionGroup?.suggestionList?.suggestion || [];
     const results = await Promise.all(
-      suggestions.slice(0, maxResults).map(async (name) => {
+     suggestions.slice(0, maxResults).map(async (name) => {
         const rxcui = await getRxCUI(name);
         return { name, rxcui };
       })
@@ -113,7 +113,7 @@ async function searchDrugs(searchTerm, maxResults = 10) {
     return results.filter(r => r.rxcui);
   } catch (error) {
     console.error('Error searching drugs:', error.message);
-    return [];
+   return [];
   }
 }
 
@@ -140,7 +140,7 @@ async function getDrugClasses(rxcui) {
     const drugClasses = classes.map(c => ({
       classId: c.rxclassMinConceptItem?.classId,
       className: c.rxclassMinConceptItem?.className,
-      classType: c.rxclassMinConceptItem?.classType
+     classType: c.rxclassMinConceptItem?.classType
     })).filter(c => c.classId);
     
     drugCache.set(cacheKey, { data: drugClasses, timestamp: Date.now() });
@@ -157,7 +157,7 @@ async function checkPairInteraction(rxcui1, rxcui2) {
   try {
     const response = await axios.get(`${INTERACTION_BASE_URL}/interaction.json`, {
       params: { rxcui: rxcui1 },
-      timeout: 15000
+     timeout: 15000
     });
     
     const interactionGroups = response.data?.interactionTypeGroup || [];
@@ -173,7 +173,7 @@ async function checkPairInteraction(rxcui1, rxcui2) {
           
           if (involvesSecondDrug) {
             interactions.push({
-              source: group.sourceName,
+             source: group.sourceName,
               severity: mapSeverity(pair.severity),
               description: pair.description,
               drug1: concepts[0]?.minConceptItem?.name,
@@ -201,7 +201,7 @@ async function checkInteractions(drugNames) {
   try {
     const drugsWithRxcui = await Promise.all(
       drugNames.map(async (name) => {
-        const rxcui = await getRxCUI(name);
+        const rxcui = await getRxCUI(name); 
         return { name, rxcui };
       })
     );
@@ -213,9 +213,9 @@ async function checkInteractions(drugNames) {
         interactions: [],
         drugs: drugsWithRxcui,
         warning: 'Could not find RxCUI for some drugs'
-      };
+     };
     }
-    const rxcuiList = validDrugs.map(d => d.rxcui).join('+');
+    const rxcuiList = validDrugs.map(d => d.rxcui).join('+'); 
     
     const response = await axios.get(`${INTERACTION_BASE_URL}/list.json`, {
       params: { rxcuis: rxcuiList },
@@ -226,17 +226,17 @@ async function checkInteractions(drugNames) {
     const interactions = [];
     
     for (const group of interactionGroups) {
-      for (const type of group.fullInteractionType || []) {
+     for (const type of group.fullInteractionType || []) {
         for (const pair of type.interactionPair || []) {
           const concepts = pair.interactionConcept || [];
           
           interactions.push({
             id: `${concepts[0]?.minConceptItem?.rxcui}-${concepts[1]?.minConceptItem?.rxcui}`,
             source: group.sourceName,
-            severity: mapSeverity(pair.severity),
+           severity: mapSeverity(pair.severity),
             severityLevel: getSeverityLevel(pair.severity),
-            description: pair.description,
-            drug1: concepts[0]?.minConceptItem?.name || 'Unknown',
+           description: pair.description,
+           drug1: concepts[0]?.minConceptItem?.name || 'Unknown',
             drug2: concepts[1]?.minConceptItem?.name || 'Unknown',
             rxcui1: concepts[0]?.minConceptItem?.rxcui,
             rxcui2: concepts[1]?.minConceptItem?.rxcui
@@ -277,7 +277,7 @@ async function checkNewDrugInteractions(newDrug, currentMedications) {
   return {
     ...result,
     interactions: relevantInteractions,
-    newDrugRxcui,
+   newDrugRxcui,
     totalFound: relevantInteractions.length
   };
 }
@@ -306,7 +306,7 @@ function mapSeverity(rxnormSeverity) {
 function getSeverityLevel(severity) {
   const mapped = mapSeverity(severity);
   const levels = {
-    contraindicated: 1,
+   contraindicated: 1,
     major: 2,
     moderate: 3,
     minor: 4,
@@ -320,7 +320,7 @@ async function getNDCCodes(rxcui) {
   
   try {
     const response = await axios.get(`${RXNORM_BASE_URL}/rxcui/${rxcui}/ndcs.json`, {
-      timeout: 10000
+      timeout: 10000 
     });
     
     return response.data?.ndcGroup?.ndcList?.ndc || [];
@@ -341,17 +341,17 @@ async function getRelatedDrugs(rxcui) {
     
     const groups = response.data?.relatedGroup?.conceptGroup || [];
     const related = {};
-    
+     
     for (const group of groups) {
       const concepts = group.conceptProperties || [];
       related[group.tty] = concepts.map(c => ({
         rxcui: c.rxcui,
         name: c.name,
         synonym: c.synonym
-      }));
+     }));
     }
     
-    return related;
+   return related;
   } catch (error) {
     console.error(`Error getting related drugs for ${rxcui}:`, error.message);
     return {};
@@ -363,7 +363,7 @@ async function validateDrug(drugName) {
   
   if (!rxcui) {
     return {
-      valid: false,
+     valid: false,
       drugName,
       message: 'Drug not found in RxNorm database'
     };
@@ -372,7 +372,7 @@ async function validateDrug(drugName) {
   const drugInfo = await getDrugInfo(rxcui);
   
   return {
-    valid: true,
+   valid: true,
     drugName,
     rxcui,
     standardName: drugInfo?.name,
@@ -381,18 +381,18 @@ async function validateDrug(drugName) {
 }
 
 async function getComprehensiveReport(drugs, allergies = []) {
-  const result = await checkInteractions(drugs);
+  const result = await checkInteractions(drugs);
   const drugDetails = await Promise.all(
     result.drugs.filter(d => d.rxcui).map(async (drug) => {
       const classes = await getDrugClasses(drug.rxcui);
       const info = await getDrugInfo(drug.rxcui);
       return {
         ...drug,
-        info,
+       info,
         classes
       };
-    })
-  );
+   })
+  );
   const allergyAlerts = [];
   
   for (const drug of drugDetails) {

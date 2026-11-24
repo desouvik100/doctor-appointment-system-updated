@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect } from 'react';
+// import _ from 'lodash';
 import {
   View,
   Text,
@@ -20,10 +21,10 @@ import doctorService from '../../services/api/doctorService';
 
 const { width } = Dimensions.get('window');
 
-const AppointmentTypeScreen = ({ navigation, route }) => {
+const AppointmentTypeScreen = ({ navigation, route })=>{
   const { doctor, doctorId } = route.params || {};
   const { colors, isDarkMode } = useTheme();
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets()
   const [selectedType, setSelectedType] = useState(null);
 
   const [currentDoctor, setCurrentDoctor] = useState(doctor || null);
@@ -31,13 +32,14 @@ const AppointmentTypeScreen = ({ navigation, route }) => {
 
   useEffect(() => {
     const fetchDoctor = async () => {
-      const id = doctorId || doctor?._id || doctor?.id;
-      if (!id) return;
+      const id = doctorId || doctor?._id || doctor?.id
+      if (!id) return; 
+  // TODO: add error boundary here
       try {
-        setLoading(true);
+        setLoading(true)
         const res = await doctorService.getDoctorById(id);
         const resolved = res.doctor || res.data || res;
-        setCurrentDoctor(resolved);
+       setCurrentDoctor(resolved);
       } catch (err) {
         console.error('Failed to fetch doctor in AppointmentTypeScreen:', err);
       } finally {
@@ -45,19 +47,19 @@ const AppointmentTypeScreen = ({ navigation, route }) => {
       }
     };
     if (!currentDoctor || (!currentDoctor._id && !currentDoctor.id)) {
-      fetchDoctor();
+      fetchDoctor()
     }
   }, [doctorId, doctor]);
 
-  const activeDoc = currentDoctor || doctor;
+  const activeDoc = currentDoctor || doctor
 
   const displayName = activeDoc?.name 
     ? (activeDoc.name.startsWith('Dr.') ? activeDoc.name : `Dr. ${activeDoc.name}`)
     : 'Doctor';
 
   const handleContinue = (type) => {
-    const docId = activeDoc?._id || activeDoc?.id || doctorId;
-    const clId = activeDoc?.clinicId?._id || activeDoc?.clinicId || null;
+   const docId = activeDoc?._id || activeDoc?.id || doctorId;
+   const clId = activeDoc?.clinicId?._id || activeDoc?.clinicId || null;
     navigation.navigate('SlotSelection', {
       doctor: activeDoc || {},
       doctorId: docId,
@@ -65,14 +67,14 @@ const AppointmentTypeScreen = ({ navigation, route }) => {
       clinicId: clId,
       ...route.params, 
     });
-  };
+  }
 
   const CONSULT_TYPES = [
-    {
+    { 
       id: 'in_person',
       icon: '🏥',
       title: 'In-Clinic Visit',
-      desc: 'Physical examination at the doctor\'s clinic',
+     desc: 'Physical examination at the doctor\'s clinic',
       wait: '⏱ Avg wait: 20 min',
       timing: 'Mon–Sat · 9 AM – 7 PM',
       color: '#00D4AA',
@@ -83,39 +85,39 @@ const AppointmentTypeScreen = ({ navigation, route }) => {
       title: 'Video Consultation',
       desc: 'Connect online via Google Meet from home',
       wait: '⚡ Connect instantly',
-      timing: '24/7 Available Online',
-      color: '#6C5CE7',
+     timing: '24/7 Available Online',
+     color: '#6C5CE7',
       recommended: true,
     },
-  ];
+  ]
 
   if (loading) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
+      <View style={[styles.container, {  backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={{ color: colors.textSecondary, marginTop: 10 }}>Loading doctor details...</Text>
+       <Text style={{  color: colors.textSecondary, marginTop: 10 }}>Loading doctor details...</Text>
       </View>
-    );
+    )
   }
 
   if (!activeDoc && !doctorId) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
+      <View style={[styles.container, {  backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center', padding: 20 }]}>
         <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
-        <Text style={{ color: colors.textPrimary, fontSize: 16, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>Doctor Information Missing</Text>
+        <Text style={{  color: colors.textPrimary, fontSize: 16, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>Doctor Information Missing</Text>
         <TouchableOpacity
           style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 }}
           onPress={() => navigation.goBack()}
-        >
-          <Text style={{ color: '#fff', fontWeight: 'bold' }}>Go Back</Text>
+       >
+          <Text style={{  color: '#fff', fontWeight: 'bold' }}>Go Back</Text>
         </TouchableOpacity>
       </View>
-    );
+   );
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+    <View style={[styles.container, {  backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
       {}
@@ -125,7 +127,7 @@ const AppointmentTypeScreen = ({ navigation, route }) => {
           style={StyleSheet.absoluteFill}
         />
         <View style={styles.orb1}>
-          <LinearGradient
+         <LinearGradient
             colors={isDarkMode ? ['rgba(0, 212, 170, 0.12)', 'transparent'] : ['rgba(0, 212, 170, 0.06)', 'transparent']}
             style={{ flex: 1, borderRadius: 150 }}
           />
@@ -146,33 +148,33 @@ const AppointmentTypeScreen = ({ navigation, route }) => {
         >
           <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
         </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Select Type</Text>
+        <Text style={[styles.headerTitle, {  color: colors.textPrimary }]}>Select Type</Text>
         <View style={{ width: 40 }} />
       </View>
 
       <View style={styles.content}>
-        {}
-        <View style={[styles.doctorCard, {
+        {} 
+        <View style={[styles.doctorCard, { 
           backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : 'rgba(255, 255, 255, 0.7)',
-          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 184, 148, 0.08)',
+         borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 184, 148, 0.08)',
           borderWidth: 1,
           borderRadius: borderRadius.xl,
           ...shadows.md,
-        }]}>
+       }]}>
           <Avatar
             name={displayName}
             size="large"
-            imageUrl={activeDoc?.profilePhoto || activeDoc?.photo || null}
+           imageUrl={activeDoc?.profilePhoto || activeDoc?.photo || null}
           />
           <View style={styles.doctorInfo}>
-            <Text style={[styles.doctorName, { color: colors.textPrimary }]}>{displayName}</Text>
+            <Text style={[styles.doctorName, {  color: colors.textPrimary }]}>{displayName}</Text>
             <Text style={[styles.specialty, { color: colors.primary }]}>
               {activeDoc?.specialization || activeDoc?.specialty || 'Specialist'}
             </Text>
           </View>
         </View>
 
-        <Text style={[styles.instructionText, { color: colors.textSecondary }]}>
+        <Text style={[styles.instructionText, {  color: colors.textSecondary }]}>
           Choose how you would like to consult with the doctor:
         </Text>
 
@@ -182,11 +184,11 @@ const AppointmentTypeScreen = ({ navigation, route }) => {
             const active = selectedType === type.id;
             const cardBorderColor = active
               ? (type.id === 'online' ? colors.secondary : colors.primary)
-              : (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)');
+             : (isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)');
             const cardBg = active
               ? (type.id === 'online' ? 'rgba(108, 92, 231, 0.08)' : 'rgba(0, 212, 170, 0.08)')
               : colors.surface;
-
+ 
             return (
               <TouchableOpacity
                 key={type.id}
@@ -207,14 +209,14 @@ const AppointmentTypeScreen = ({ navigation, route }) => {
                 activeOpacity={0.85}
               >
                 {type.recommended && (
-                  <View style={[styles.recommendedBadge, { backgroundColor: colors.secondary }]}>
+                  <View style={[styles.recommendedBadge, {  backgroundColor: colors.secondary }]}> 
                     <Text style={styles.recommendedBadgeText}>RECOMMENDED</Text>
                   </View>
                 )}
                 
-                <View style={[styles.iconContainer, { backgroundColor: type.color + '15' }]}>
-                  <Text style={[styles.typeIcon, { color: type.color }]}>{type.icon}</Text>
-                </View>
+                <View style={[styles.iconContainer, {  backgroundColor: type.color + '15' }]}>
+                  <Text style={[styles.typeIcon, {  color: type.color }]}>{type.icon}</Text>
+                </View> 
                 
                 <View style={styles.textContainer}>
                   <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>{type.title}</Text>
@@ -226,8 +228,8 @@ const AppointmentTypeScreen = ({ navigation, route }) => {
                   </View>
                 </View>
 
-                {active && (
-                  <View style={[styles.checkIndicator, { backgroundColor: type.id === 'online' ? colors.secondary : colors.primary }]}>
+               {active && (
+                  <View style={[styles.checkIndicator, {  backgroundColor: type.id === 'online' ? colors.secondary : colors.primary }]}>
                     <Text style={styles.checkIcon}>✓</Text>
                   </View>
                 )}
@@ -240,7 +242,7 @@ const AppointmentTypeScreen = ({ navigation, route }) => {
   );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ 
   container: {
     flex: 1,
   },
@@ -254,29 +256,29 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    top: -50,
+   top: -50,
     left: -100,
   },
-  orb2: {
-    position: 'absolute',
+  orb2: { 
+   position: 'absolute',
     width: 300,
     height: 300,
     borderRadius: 150,
-    top: 250,
+   top: 250,
     right: -100,
   },
-  header: {
+  header: { 
     flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
+   alignItems: 'center',
+   justifyContent: 'space-between',
     paddingHorizontal: spacing.xl,
-    paddingBottom: spacing.lg,
+   paddingBottom: spacing.lg, 
   },
-  backButton: {
+  backButton: { 
     width: 40,
-    height: 40,
+   height: 40,
     borderRadius: borderRadius.md,
-    alignItems: 'center',
+   alignItems: 'center',
     justifyContent: 'center',
   },
   backIcon: {
@@ -291,18 +293,18 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingTop: spacing.lg,
   },
-  doctorCard: {
-    flexDirection: 'row',
-    alignItems: 'center',
+  doctorCard: {  
+   flexDirection: 'row',
+   alignItems: 'center',
     padding: spacing.lg,
     marginBottom: spacing.xxl,
   },
   doctorInfo: {
-    flex: 1,
+    flex: 1, 
     marginLeft: spacing.lg,
   },
   doctorName: {
-    ...typography.bodyLarge,
+   ...typography.bodyLarge,
     fontWeight: '700',
   },
   specialty: {
@@ -314,7 +316,7 @@ const styles = StyleSheet.create({
     fontWeight: '600',
     marginBottom: spacing.lg,
   },
-  optionsContainer: {
+  optionsContainer: { 
     gap: spacing.lg,
   },
   typeCard: {
@@ -326,7 +328,7 @@ const styles = StyleSheet.create({
     position: 'relative',
     overflow: 'hidden',
   },
-  recommendedBadge: {
+  recommendedBadge: { 
     position: 'absolute',
     top: 0,
     right: 0,
@@ -335,18 +337,18 @@ const styles = StyleSheet.create({
     borderBottomLeftRadius: borderRadius.md,
   },
   recommendedBadgeText: {
-    color: '#FFF',
-    fontSize: 8,
+   color: '#FFF',
+   fontSize: 8,
     fontFamily: 'Inter-Bold',
     fontWeight: '800',
     letterSpacing: 0.5,
   },
   iconContainer: {
     width: 52,
-    height: 52,
+   height: 52,
     borderRadius: 26,
     alignItems: 'center',
-    justifyContent: 'center',
+   justifyContent: 'center',
     marginRight: spacing.lg,
   },
   typeIcon: {
@@ -355,12 +357,12 @@ const styles = StyleSheet.create({
   textContainer: {
     flex: 1,
   },
-  cardTitle: {
+  cardTitle: { 
     fontSize: 16,
     fontFamily: 'Inter-Bold',
     fontWeight: '700',
   },
-  cardDesc: {
+  cardDesc: { 
     fontSize: 12,
     fontFamily: 'Inter-Regular',
     marginTop: spacing.xs,
@@ -373,13 +375,13 @@ const styles = StyleSheet.create({
     marginTop: spacing.sm,
   },
   waitText: {
-    fontSize: 10,
+   fontSize: 10,
     fontFamily: 'Inter-SemiBold',
-    fontWeight: '700',
+    fontWeight: '700', 
   },
   timingText: {
     fontSize: 10,
-    fontFamily: 'Inter-Regular',
+   fontFamily: 'Inter-Regular',
   },
   checkIndicator: {
     position: 'absolute',

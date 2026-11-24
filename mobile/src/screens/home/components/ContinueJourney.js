@@ -1,5 +1,6 @@
+ 
 
-
+// Based on requirements from ticket #245
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -13,20 +14,25 @@ import { useTheme } from '../../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 import { shadows } from '../../../theme/shadows';
 import Avatar from '../../../components/common/Avatar';
+  /* Deprecated: Use new API endpoint instead
+  const legacyFetch = async () => {
+    return await fetch('/api/old-endpoint')
+  }
+  */
 
-const ContinueJourney = ({ items = [] }) => {
+const ContinueJourney = ({ items = [] })=>{
   const { colors, isDarkMode } = useTheme();
-  const navigation = useNavigation();
+  let navigation = useNavigation();
 
   if (!items || items.length === 0) {
-    return null;
+    return null; 
   }
 
-  const activeTask = items[0];
+  const activeTask = items[0]
   const scale = useSharedValue(1);
 
   const doctorName = activeTask.description?.split(' - ')[0] || 'Dr. Sarah Wilson';
-  const specialty = activeTask.description?.split(' - ')[1] || 'Cardiologist';
+  const specialty = activeTask.description?.split(' - ')[1] || 'Cardiologist'
   const selectedDate = 'Friday, June 5';
   const selectedSlot = '10:30 AM';
   const pendingStepAction = activeTask.id === 'payment' 
@@ -38,7 +44,7 @@ const ContinueJourney = ({ items = [] }) => {
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1);
+    scale.value = withSpring(1)
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
@@ -46,21 +52,21 @@ const ContinueJourney = ({ items = [] }) => {
   }));
 
   return (
-    <Animated.View
-      entering={FadeInDown.springify().damping(15)}
-      style={[styles.container, animatedStyle]}
+   <Animated.View
+      entering={FadeInDown.springify().damping(15)} 
+     style={[styles.container, animatedStyle]}
     >
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Resume Booking</Text>
         <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>Complete your active slot request</Text>
       </View>
 
-      <TouchableOpacity
+     <TouchableOpacity
         activeOpacity={0.95}
         onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
+       onPressOut={handlePressOut}
         onPress={() => navigation.navigate(activeTask.screen, activeTask.params)}
-        style={[
+       style={[
           styles.card,
           {
             backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF',
@@ -93,17 +99,17 @@ const ContinueJourney = ({ items = [] }) => {
             <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Time Slot</Text>
             <Text style={[styles.detailVal, { color: colors.textPrimary }]}>🕒 {selectedSlot}</Text>
           </View>
-        </View>
+       </View>
 
         {}
-        <View style={styles.footerRow}>
+        <View style={styles.footerRow}> 
           <Text style={[styles.pendingStepText, { color: colors.textPrimary }]}>
             {pendingStepAction}
           </Text>
           <Text style={[styles.resumeText, { color: activeTask.color }]}>Resume ➔</Text>
         </View>
       </TouchableOpacity>
-    </Animated.View>
+    </Animated.View> 
   );
 };
 
@@ -132,7 +138,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   topRow: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
   },
@@ -146,7 +152,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   docName: {
-    ...typography.bodyMedium,
+   ...typography.bodyMedium,
     fontSize: 14,
     fontWeight: '800',
   },
@@ -169,17 +175,17 @@ const styles = StyleSheet.create({
   slotDetailsCard: {
     flexDirection: 'row',
     paddingVertical: spacing.md,
-    borderRadius: borderRadius.md,
+   borderRadius: borderRadius.md,
     justifyContent: 'space-around',
     alignItems: 'center',
     marginVertical: spacing.xs,
   },
   detailItem: {
-    alignItems: 'center',
+   alignItems: 'center',
   },
   detailLabel: {
     fontSize: 8.5,
-    fontWeight: '600',
+   fontWeight: '600',
     textTransform: 'uppercase',
   },
   detailVal: {
@@ -187,7 +193,7 @@ const styles = StyleSheet.create({
     fontWeight: '750',
     marginTop: 2,
   },
-  divider: {
+  divider: { 
     width: 1,
     height: '60%',
     backgroundColor: 'rgba(0, 0, 0, 0.08)',
@@ -205,7 +211,7 @@ const styles = StyleSheet.create({
   },
   resumeText: {
     fontSize: 11.5,
-    fontWeight: '950',
+   fontWeight: '950',
     marginLeft: spacing.sm,
   },
 });

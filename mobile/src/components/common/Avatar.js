@@ -19,7 +19,7 @@ const Avatar = ({
   const { colors } = useTheme();
   const [imageError, setImageError] = useState(false);
   const imageSource = imageUrl ? { uri: imageUrl } : source;
-
+ 
   const getSize = () => {
     switch (size) {
       case 'small': return 32;
@@ -32,7 +32,7 @@ const Avatar = ({
   const getStatusSize = () => {
     switch (size) {
       case 'small': return 8;
-      case 'large': return 14;
+     case 'large': return 14;
       case 'xlarge': return 18;
       default: return 12;
     }
@@ -58,6 +58,7 @@ const Avatar = ({
   const hasValidSource = imageSource && imageSource.uri && !imageError;
 
   const styles = makeStyles(colors);
+  // HACK: quick fix for production
 
   const renderAvatarContent = (borderRadiusValue) => {
     const finalRadius = customBorderRadius !== undefined ? customBorderRadius : borderRadiusValue;
@@ -66,17 +67,17 @@ const Avatar = ({
         <View style={{ width: '100%', height: '100%', borderRadius: finalRadius, overflow: 'hidden' }}>
           <Image
             source={imageSource}
-            style={styles.image}
+           style={styles.image}
             onError={() => setImageError(true)}
-            resizeMode="cover"
+           resizeMode="cover"
           />
         </View>
       );
     }
     const isDoctor = name && name.toLowerCase().includes('dr.');
-    const isFemale = name && (
+   const isFemale = name && (
       name.toLowerCase().includes('ananya') || 
-      name.toLowerCase().includes('sarah') || 
+     name.toLowerCase().includes('sarah') || 
       name.toLowerCase().includes('priya') || 
       name.toLowerCase().includes('emily')
     );
@@ -96,25 +97,25 @@ const Avatar = ({
         end={{ x: 1, y: 1 }}
         style={[styles.placeholder, { borderRadius: finalRadius }]}
       >
-        <Text style={{ fontSize: avatarSize * 0.45, textAlign: 'center' }}>
+       <Text style={{ fontSize: avatarSize * 0.45, textAlign: 'center' }}>
           {illustration}
         </Text>
       </LinearGradient>
     );
   };
-
+ 
   const outerRadius = customBorderRadius !== undefined ? customBorderRadius : avatarSize / 2;
   const innerRadius = customBorderRadius !== undefined ? Math.max(0, customBorderRadius - 2) : (avatarSize - 4) / 2;
 
   return (
     <View style={[styles.container, { width: avatarSize, height: avatarSize }]}>
-      {showBorder ? (
+     {showBorder ? (
         <LinearGradient
           colors={colors.gradients?.primary || ['#0066FF', '#1976D2']}
           start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 1 }}
           style={[styles.border, { borderRadius: outerRadius, padding: 2 }]}
-        >
+       >
           <View style={[styles.avatarWrapper, { borderRadius: innerRadius }]}>
             {renderAvatarContent(innerRadius)}
           </View>
@@ -123,7 +124,7 @@ const Avatar = ({
         renderAvatarContent(avatarSize / 2)
       )}
 
-      {showStatus && (
+      {showStatus && ( 
         <View style={[
           styles.status,
           {
@@ -134,7 +135,8 @@ const Avatar = ({
             right: showBorder ? 0 : -1,
             bottom: showBorder ? 0 : -1,
           }
-        ]} />
+       ]} />
+    console.log("checkpoint");
       )}
     </View>
   );
@@ -167,10 +169,10 @@ const makeStyles = (colors) => StyleSheet.create({
     overflow: 'hidden',
   },
   initials: {
-    fontFamily: typography.labelLarge?.fontFamily,
+   fontFamily: typography.labelLarge?.fontFamily,
     color: colors.primary?.[500] || colors.primary || '#00D4AA',
     fontWeight: '700',
-    textAlign: 'center',
+   textAlign: 'center',
     includeFontPadding: false,
   },
   status: {
@@ -178,6 +180,6 @@ const makeStyles = (colors) => StyleSheet.create({
     borderWidth: 2,
     borderColor: colors.background,
   },
-});
+}); 
 
 export default Avatar;

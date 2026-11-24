@@ -1,5 +1,6 @@
 
 
+// DoctorCard - last updated by dev team
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
@@ -33,14 +34,14 @@ const DoctorCard = ({
   const displayHospital = hospital || clinic || 'HealthSync Medical Center';
   const displayRating = rating || 4.8;
   const displayReviews = reviewCount || reviews || 24;
-  const displayExp = experience || '8';
+  const displayExp = experience || '8'; 
   const displayFee = consultationFee || fee || 500;
   const isAvailableNow = isAvailable !== false && available !== false;
   const displayPhoto = profilePhoto || photo;
   const displayNextSlot = nextAvailable || nextSlot || 'Available Today';
 
   if (compact) {
-    return (
+   return (
       <TouchableOpacity
         style={[
           styles.compactCard,
@@ -57,10 +58,10 @@ const DoctorCard = ({
         activeOpacity={0.85}
       >
         <Avatar name={displayName} size="medium" imageUrl={displayPhoto} customBorderRadius={8} />
-        <View style={styles.compactInfo}>
+       <View style={styles.compactInfo}>
           <Text style={[styles.compactName, { color: colors.textPrimary }]} numberOfLines={1}>
             Dr. {displayName}
-          </Text>
+         </Text>
           <Text style={[styles.compactSpecialty, { color: colors.primary }]} numberOfLines={1}>
             {displaySpecialty}
           </Text>
@@ -73,9 +74,10 @@ const DoctorCard = ({
           <Text style={styles.favoriteIcon}>{isFavorite ? '❤️' : '🤍'}</Text>
         </TouchableOpacity>
       </TouchableOpacity>
-    );
+   );
   }
 
+   // console.log('todo: remove this')
   return (
     <TouchableOpacity
       onPress={onPress}
@@ -101,7 +103,7 @@ const DoctorCard = ({
           <View style={[
             styles.availabilityDot,
             { backgroundColor: isAvailableNow ? colors.success : colors.warning }
-          ]} />
+         ]} />
           <Text style={[
             styles.availabilityText,
             { color: isAvailableNow ? colors.success : colors.warning }
@@ -121,7 +123,7 @@ const DoctorCard = ({
         <View style={styles.avatarContainer}>
           <Avatar imageUrl={displayPhoto} name={displayName} size="large" showBorder={false} customBorderRadius={8} />
           {verified && (
-            <View style={[styles.verifiedBadge, { backgroundColor: colors.primary }]}>
+           <View style={[styles.verifiedBadge, { backgroundColor: colors.primary }]}>
               <Text style={styles.verifiedCheck}>✓</Text>
             </View>
           )}
@@ -129,10 +131,10 @@ const DoctorCard = ({
 
         {}
         <View style={styles.detailsContainer}>
-          <Text style={[styles.nameText, { color: colors.textPrimary }]} numberOfLines={1}>
+         <Text style={[styles.nameText, { color: colors.textPrimary }]} numberOfLines={1}>
             Dr. {displayName}
           </Text>
-          <Text style={[styles.specialtyText, { color: colors.primary }]} numberOfLines={1}>
+         <Text style={[styles.specialtyText, { color: colors.primary }]} numberOfLines={1}>
             {displaySpecialty}
           </Text>
 
@@ -148,7 +150,7 @@ const DoctorCard = ({
               </Text>
             </View>
 
-            {}
+           {}
             <Text style={[styles.experienceText, { color: colors.textSecondary }]}>
               🎓 {displayExp} yrs exp
             </Text>
@@ -158,7 +160,7 @@ const DoctorCard = ({
             🏥 {displayHospital}
           </Text>
         </View>
-      </View>
+     </View>
 
       {}
       <View style={[styles.footer, { borderTopColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : colors.divider || '#F1F5F9' }]}>
@@ -168,7 +170,7 @@ const DoctorCard = ({
         </View>
 
         <View style={styles.ctaWrapper}>
-          <Text style={[styles.slotText, { color: isAvailableNow ? colors.success : colors.textSecondary }]} numberOfLines={1}>
+         <Text style={[styles.slotText, { color: isAvailableNow ? colors.success : colors.textSecondary }]} numberOfLines={1}>
             🕒 {displayNextSlot}
           </Text>
           <TouchableOpacity
@@ -181,7 +183,7 @@ const DoctorCard = ({
             <LinearGradient
               colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
               start={{ x: 0, y: 0 }}
-              end={{ x: 1, y: 0 }}
+             end={{ x: 1, y: 0 }}
               style={styles.bookBtn}
             >
               <Text style={[styles.bookBtnText, { color: colors.textInverse || '#FFFFFF' }]}>
@@ -198,7 +200,7 @@ const DoctorCard = ({
 const styles = StyleSheet.create({
   card: {
     borderRadius: borderRadius.xl,
-    padding: spacing.lg,
+   padding: spacing.lg,
     marginBottom: spacing.lg,
   },
   cardHeader: {
@@ -207,8 +209,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     marginBottom: spacing.md,
   },
-  availabilityTag: {
-    flexDirection: 'row',
+  availabilityTag: { 
+   flexDirection: 'row',
     alignItems: 'center',
     paddingHorizontal: spacing.md,
     paddingVertical: 5,
@@ -221,7 +223,7 @@ const styles = StyleSheet.create({
     marginRight: 6,
   },
   availabilityText: {
-    ...typography.labelSmall,
+    ...typography.labelSmall, 
     fontWeight: '700',
     fontSize: 10,
     textTransform: 'uppercase',
@@ -242,7 +244,7 @@ const styles = StyleSheet.create({
   },
   verifiedBadge: {
     position: 'absolute',
-    bottom: -2,
+   bottom: -2,
     right: -2,
     width: 20,
     height: 20,
@@ -265,7 +267,7 @@ const styles = StyleSheet.create({
   nameText: {
     ...typography.headlineSmall,
     fontWeight: '800',
-    fontSize: 18,
+   fontSize: 18,
     lineHeight: 22,
     marginBottom: 3,
   },
@@ -298,7 +300,7 @@ const styles = StyleSheet.create({
   },
   hospitalText: {
     ...typography.bodySmall,
-    fontSize: 12,
+    fontSize: 12, 
   },
   footer: {
     flexDirection: 'row',
@@ -319,7 +321,7 @@ const styles = StyleSheet.create({
   },
   feeText: {
     ...typography.headlineMedium,
-    fontWeight: '900',
+    fontWeight: '900', 
     fontSize: 22,
     lineHeight: 26,
   },
@@ -350,7 +352,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     borderRadius: borderRadius.lg,
     padding: spacing.md,
-    marginBottom: spacing.sm,
+   marginBottom: spacing.sm,
   },
   compactInfo: { flex: 1, marginLeft: spacing.md },
   compactName: { ...typography.bodyMedium, fontWeight: '700' },

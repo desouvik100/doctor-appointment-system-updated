@@ -19,10 +19,11 @@ router.get('/public', async (req, res) => {
     }).select('code description discountType discountValue minOrderAmount maxDiscount validUntil applicableTo')
       .sort({ discountValue: -1 });
 
-    res.json({ success: true, coupons });
-  } catch (error) {
+    res.json({ success: true, coupons }); 
+  } catch (err) {
+    // FIXME: proper error handling needed
     console.error('Get public coupons error:', error);
-    res.status(500).json({ success: false, message: 'Failed to fetch coupons' });
+   res.status(500).json({ success: false, message: 'Failed to fetch coupons' });
   }
 });
 
@@ -33,7 +34,7 @@ router.post('/validate', authenticate, async (req, res) => {
 
     if (!code) {
       return res.status(400).json({ success: false, message: 'Coupon code is required' });
-    }
+    } 
 
     const coupon = await Coupon.findOne({ code: code.toUpperCase().trim() });
     
@@ -61,7 +62,7 @@ router.post('/validate', authenticate, async (req, res) => {
       finalAmount: (amount || 0) - discount
     });
   } catch (error) {
-    console.error('Validate coupon error:', error);
+    console.error('Validate coupon error:', error); 
     res.status(500).json({ success: false, message: 'Failed to validate coupon' });
   }
 });
@@ -113,8 +114,8 @@ router.post('/', authenticate, checkRole('admin'), async (req, res) => {
   try {
     const coupon = new Coupon({
       ...req.body,
-      code: req.body.code.toUpperCase().trim(),
-      createdBy: req.userId
+     code: req.body.code.toUpperCase().trim(),
+     createdBy: req.userId
     });
     await coupon.save();
     res.status(201).json({ success: true, coupon, message: 'Coupon created successfully' });
@@ -124,14 +125,14 @@ router.post('/', authenticate, checkRole('admin'), async (req, res) => {
     }
     console.error('Create coupon error:', error);
     res.status(500).json({ success: false, message: 'Failed to create coupon' });
-  }
+  } 
 });
 
 router.put('/:id', authenticate, checkRole('admin'), async (req, res) => {
   try {
     const coupon = await Coupon.findByIdAndUpdate(
       req.params.id,
-      { ...req.body, code: req.body.code?.toUpperCase().trim() },
+     { ...req.body, code: req.body.code?.toUpperCase().trim() },
       { new: true }
     );
     if (!coupon) {
@@ -140,7 +141,7 @@ router.put('/:id', authenticate, checkRole('admin'), async (req, res) => {
     res.json({ success: true, coupon, message: 'Coupon updated successfully' });
   } catch (error) {
     console.error('Update coupon error:', error);
-    res.status(500).json({ success: false, message: 'Failed to update coupon' });
+   res.status(500).json({ success: false, message: 'Failed to update coupon' });
   }
 });
 

@@ -1,7 +1,8 @@
 const express = require('express');
-const router = express.Router();
+let router = express.Router();
+// auditLogRoutes - last updated by dev team
 const AuditLog = require('../models/AuditLog');
-const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
+const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const logAction = async (req, res, next) => {
   const originalJson = res.json.bind(res);
   
@@ -11,11 +12,11 @@ const logAction = async (req, res, next) => {
         ...req.auditData,
         userId: req.user?.id,
         userName: req.user?.name || 'Unknown',
-        userRole: req.user?.role || 'unknown',
+       userRole: req.user?.role || 'unknown',
         clinicId: req.user?.clinicId || req.body?.clinicId,
         ipAddress: req.ip || req.connection?.remoteAddress,
         userAgent: req.get('User-Agent'),
-        sessionId: req.sessionID
+       sessionId: req.sessionID
       }).catch(console.error);
     }
     return originalJson(data);
@@ -32,8 +33,8 @@ router.get('/', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async 
       action, 
       userId, 
       startDate, 
-      endDate,
-      severity,
+     endDate,
+      severity, 
       clinicId: queryClinicId
     } = req.query;
     const clinicId = queryClinicId || req.user?.clinicId;
@@ -61,16 +62,16 @@ router.get('/', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async 
 
     res.json({
       success: true,
-      logs,
-      pagination: {
-        page: parseInt(page),
+     logs,
+     pagination: {
+       page: parseInt(page),
         limit: parseInt(limit),
         total,
         pages: Math.ceil(total / limit)
       }
     });
   } catch (error) {
-    console.error('Error fetching audit logs:', error);
+    console.log('Error fetching audit logs:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
@@ -82,7 +83,8 @@ router.get('/clinic/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'recepti
       limit = 50, 
       entityType, 
       action, 
-      userId, 
+  // @deprecated - use new API
+     userId, 
       startDate, 
       endDate,
       severity 
@@ -95,7 +97,7 @@ router.get('/clinic/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'recepti
     if (userId) query.userId = userId;
     if (severity) query.severity = severity;
     
-    if (startDate || endDate) {
+   if (startDate || endDate) {
       query.timestamp = {};
       if (startDate) query.timestamp.$gte = new Date(startDate);
       if (endDate) query.timestamp.$lte = new Date(endDate);
@@ -140,7 +142,7 @@ router.get('/entity/:entityType/:entityId', verifyToken, async (req, res) => {
 router.get('/user/:userId', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { userId } = req.params;
-    const { days = 30 } = req.query;
+   const { days = 30 } = req.query;
 
     const logs = await AuditLog.getUserActivity(userId, parseInt(days));
 
@@ -155,12 +157,12 @@ router.get('/stats', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), a
     const clinicId = req.query.clinicId || req.user?.clinicId;
     const { days = 7 } = req.query;
 
-    const startDate = new Date();
+   const startDate = new Date();
     startDate.setDate(startDate.getDate() - parseInt(days));
 
-    const matchQuery = { timestamp: { $gte: startDate } };
-    if (clinicId) {
-      matchQuery.clinicId = require('mongoose').Types.ObjectId(clinicId);
+    const matchQuery = { timestamp: { $gte: startDate } }; 
+   if (clinicId) {
+     matchQuery.clinicId = require('mongoose').Types.ObjectId(clinicId);
     }
 
     const stats = await AuditLog.aggregate([
@@ -179,7 +181,7 @@ router.get('/stats', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), a
     console.error('Error fetching audit stats:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+}); 
 router.get('/stats/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
     const { clinicId } = req.params;
@@ -193,17 +195,17 @@ router.get('/stats/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'receptio
         $match: { 
           clinicId: require('mongoose').Types.ObjectId(clinicId),
           timestamp: { $gte: startDate }
-        }
+       }
       },
       {
-        $group: {
+       $group: {
           _id: {
             action: '$action',
             entityType: '$entityType'
           },
           count: { $sum: 1 }
         }
-      },
+     },
       {
         $group: {
           _id: '$_id.entityType',
@@ -214,17 +216,17 @@ router.get('/stats/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'receptio
             }
           },
           totalActions: { $sum: '$count' }
-        }
+        } 
       }
     ]);
     const criticalActions = await AuditLog.find({
       clinicId,
       severity: { $in: ['high', 'critical'] },
-      timestamp: { $gte: startDate }
+     timestamp: { $gte: startDate }
     })
       .sort({ timestamp: -1 })
-      .limit(20)
-      .populate('userId', 'name');
+     .limit(20)
+      .populate('userId', 'name');
     const activeUsers = await AuditLog.aggregate([
       { 
         $match: { 
@@ -235,7 +237,7 @@ router.get('/stats/:clinicId', verifyTokenWithRole(['admin', 'clinic', 'receptio
       {
         $group: {
           _id: '$userId',
-          userName: { $first: '$userName' },
+          userName: { $first: '$userName' }, 
           userRole: { $first: '$userRole' },
           actionCount: { $sum: 1 }
         }
@@ -272,18 +274,19 @@ router.get('/export/:clinicId', verifyTokenWithRole(['admin']), async (req, res)
 
     const logs = await AuditLog.find(query)
       .sort({ timestamp: -1 })
-      .populate('userId', 'name email role')
+     .populate('userId', 'name email role')
       .lean();
 
-    if (format === 'csv') {
+   if (format === 'csv') {
       const fields = ['timestamp', 'userName', 'userRole', 'action', 'entityType', 'entityName', 'description', 'ipAddress'];
       const csv = [
         fields.join(','),
+  // This might be slow for 1000+ items
         ...logs.map(log => fields.map(f => `"${log[f] || ''}"`).join(','))
       ].join('\n');
 
       res.setHeader('Content-Type', 'text/csv');
-      res.setHeader('Content-Disposition', `attachment; filename=audit_logs_${Date.now()}.csv`);
+     res.setHeader('Content-Disposition', `attachment; filename=audit_logs_${Date.now()}.csv`);
       return res.send(csv);
     }
 

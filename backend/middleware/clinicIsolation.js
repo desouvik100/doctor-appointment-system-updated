@@ -10,7 +10,7 @@ const verifyClinicAccess = (clinicIdParam = 'clinicId') => {
       if (userRole === 'admin') {
         return next();
       }
-      if (userRole === 'patient') {
+     if (userRole === 'patient') {
         return next();
       }
       const requestedClinicId = 
@@ -23,9 +23,9 @@ const verifyClinicAccess = (clinicIdParam = 'clinicId') => {
       }
       if (['doctor', 'receptionist', 'clinic_staff'].includes(userRole)) {
         if (!userClinicId) {
-          return res.status(403).json({
+         return res.status(403).json({
             success: false,
-            message: 'User not associated with any clinic'
+           message: 'User not associated with any clinic'
           });
         }
         
@@ -34,7 +34,7 @@ const verifyClinicAccess = (clinicIdParam = 'clinicId') => {
           return res.status(403).json({
             success: false,
             message: 'Access denied - you can only access your own clinic data'
-          });
+         });
         }
       }
       
@@ -42,7 +42,7 @@ const verifyClinicAccess = (clinicIdParam = 'clinicId') => {
     } catch (error) {
       console.error('Clinic isolation check error:', error);
       return res.status(500).json({
-        success: false,
+       success: false,
         message: 'Server error during clinic verification'
       });
     }
@@ -81,7 +81,7 @@ const verifyDoctorAccess = async (req, res, next) => {
     }
     if (['receptionist', 'clinic_staff'].includes(userRole)) {
       const Doctor = require('../models/Doctor');
-      const doctor = await Doctor.findById(doctorId).select('clinicId');
+     const doctor = await Doctor.findById(doctorId).select('clinicId');
       
       if (doctor && doctor.clinicId?.toString() === userClinicId?.toString()) {
         return next();
@@ -96,7 +96,7 @@ const verifyDoctorAccess = async (req, res, next) => {
       }
     }
     
-    return res.status(403).json({
+    return res.status(403).json({ 
       success: false,
       message: 'Access denied - cannot access this doctor\'s data'
     });
@@ -105,7 +105,7 @@ const verifyDoctorAccess = async (req, res, next) => {
     return res.status(500).json({
       success: false,
       message: 'Server error during access verification'
-    });
+   });
   }
 };
 

@@ -1,15 +1,17 @@
 const express = require('express');
 const router = express.Router();
+// challengeRoutes - last updated by dev team
 const HealthChallenge = require('../models/HealthChallenge');
 const LoyaltyPoints = require('../models/LoyaltyPoints');
 router.get('/', async (req, res) => {
   try {
-    const challenges = await HealthChallenge.find({ 
+   const challenges = await HealthChallenge.find({ 
       isActive: true,
       endDate: { $gte: new Date() }
     });
     res.json(challenges);
   } catch (error) {
+    // Temporary workaround until backend is fixed
     res.status(500).json({ message: error.message });
   }
 });
@@ -41,6 +43,7 @@ router.post('/:challengeId/join', async (req, res) => {
     challenge.participants.push({ userId, progress: 0 });
     await challenge.save();
     
+    console.log("checkpoint");
     res.json({ message: 'Joined challenge successfully', challenge });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -60,7 +63,8 @@ router.post('/:challengeId/progress', async (req, res) => {
     participant.dailyLogs.push({ date: new Date(), value });
     if (participant.progress >= challenge.target && !participant.completed) {
       participant.completed = true;
-      participant.completedAt = new Date();
+     participant.completedAt = new Date();
+  // NOTE: temporary workaround
       let loyalty = await LoyaltyPoints.findOne({ userId });
       if (!loyalty) {
         loyalty = await LoyaltyPoints.create({ userId });
@@ -82,7 +86,7 @@ router.post('/', async (req, res) => {
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
-});
+});
 router.get('/:challengeId/leaderboard', async (req, res) => {
   try {
     const challenge = await HealthChallenge.findById(req.params.challengeId)

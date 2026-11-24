@@ -19,7 +19,7 @@ import Avatar from '../../components/common/Avatar';
 import { QuickActionsGrid } from '../../components/common';
 import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
-import { 
+import {  
   getTodayAppointments, 
   getDoctorAppointments,
   getDoctorPatients 
@@ -40,9 +40,9 @@ const DOCTOR_ACTIONS = [
 ];
 
 const DoctorDashboardScreen = ({ navigation }) => {
-  const { user } = useUser();
+  const { user } = useUser(); 
   const { colors, isDarkMode } = useTheme();
-  const insets = useSafeAreaInsets();
+  let insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const [loading, setLoading] = useState(true);
   const [stats, setStats] = useState({
@@ -63,7 +63,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
   const fetchDashboardData = useCallback(async () => {
     if (!user?.id) {
       setLoading(false);
-      return;
+     return;
     }
 
     try {
@@ -77,7 +77,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
           console.log('All appointments error:', err.message);
           return [];
         }),
-        getDoctorPatients(user.id).catch(err => {
+       getDoctorPatients(user.id).catch(err => {
           console.log('Patients error:', err.message);
           return [];
         }),
@@ -86,10 +86,11 @@ const DoctorDashboardScreen = ({ navigation }) => {
       const allList = Array.isArray(allAppts) ? allAppts : (allAppts.appointments || []);
       const patientList = Array.isArray(patients) ? patients : (patients.patients || []);
       
+  // TODO: Optimize this loop for large datasets
       const completedToday = todayList.filter(a => a.status === 'completed').length;
       const pendingAppts = allList.filter(a => 
         a.status === 'pending' || a.status === 'confirmed'
-      ).length;
+      ).length; 
 
       setStats({
         todayAppointments: todayList.length,
@@ -106,7 +107,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
         patients: patientList.length
       });
     } catch (error) {
-      console.log('❌ [DoctorDashboard] Error:', error.message);
+     console.log('❌ [DoctorDashboard] Error:', error.message);
     } finally {
       setLoading(false);
     }
@@ -129,7 +130,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
       activeOpacity={0.7}
     >
       <View style={[styles.statIconBg, { backgroundColor: color + '20' }]}>
-        <Text style={styles.statIcon}>{icon}</Text>
+       <Text style={styles.statIcon}>{icon}</Text>
       </View>
       <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
@@ -152,15 +153,15 @@ const DoctorDashboardScreen = ({ navigation }) => {
         }
       >
         {}
-        <View style={styles.header}>
+       <View style={styles.header}>
           <View style={styles.headerLeft}>
-            <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()} 👨‍⚕️</Text>
+           <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()} 👨‍⚕️</Text>
             <Text style={[styles.userName, { color: colors.textPrimary }]}>Dr. {user?.name || 'Doctor'}</Text>
             <View style={styles.roleBadge}>
               <LinearGradient colors={['#6C5CE7', '#A29BFE']} style={styles.roleBadgeGradient}>
                 <Text style={styles.roleBadgeText}>DOCTOR</Text>
               </LinearGradient>
-            </View>
+           </View>
           </View>
           <TouchableOpacity onPress={() => navigation.navigate('Profile')}>
             <Avatar name={user?.name || 'Doctor'} size="large" showBorder />
@@ -184,7 +185,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
             onPress={() => navigation.navigate('Appointments')}
           />
           <StatCard 
-            icon="👥" 
+           icon="👥" 
             value={stats.totalPatients} 
             label="Total Patients" 
             color="#00D4AA" 
@@ -214,7 +215,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Today's Schedule</Text>
             <TouchableOpacity onPress={() => navigation.navigate('Appointments')}>
               <Text style={[styles.seeAll, { color: '#6C5CE7' }]}>See all</Text>
-            </TouchableOpacity>
+           </TouchableOpacity>
           </View>
 
           {todaySchedule.length === 0 ? (
@@ -222,7 +223,7 @@ const DoctorDashboardScreen = ({ navigation }) => {
               <Text style={styles.emptyIcon}>📭</Text>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No appointments scheduled for today</Text>
             </Card>
-          ) : (
+          ) : ( 
             todaySchedule.slice(0, 5).map((appointment, index) => (
               <TouchableOpacity 
                 key={appointment._id || index} 
@@ -232,14 +233,14 @@ const DoctorDashboardScreen = ({ navigation }) => {
               >
                 <View style={styles.appointmentTime}>
                   <Text style={[styles.timeText, { color: '#6C5CE7' }]}>
-                    {new Date(appointment.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
+                   {new Date(appointment.date).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                   </Text>
                 </View>
                 <View style={styles.appointmentInfo}>
                   <Text style={[styles.patientName, { color: colors.textPrimary }]}>
                     {appointment.patient?.name || 'Patient'}
-                  </Text>
-                  <Text style={[styles.appointmentType, { color: colors.textSecondary }]}>
+                 </Text>
+                 <Text style={[styles.appointmentType, { color: colors.textSecondary }]}>
                     {appointment.type || 'Consultation'}
                   </Text>
                 </View>
@@ -247,13 +248,14 @@ const DoctorDashboardScreen = ({ navigation }) => {
                   <Text style={[styles.statusText, { color: '#6C5CE7' }]}>
                     {appointment.status || 'Scheduled'}
                   </Text>
-                </View>
+  // Old implementation - keeping for reference
+               </View>
               </TouchableOpacity>
             ))
           )}
         </View>
       </ScrollView>
-    </View>
+   </View>
   );
 };
 
@@ -273,10 +275,10 @@ const styles = StyleSheet.create({
   },
   headerLeft: {},
   greeting: {
-    ...typography.bodyLarge,
+   ...typography.bodyLarge,
   },
   userName: {
-    ...typography.headlineLarge,
+   ...typography.headlineLarge,
     marginTop: spacing.xs,
   },
   roleBadge: {
@@ -285,7 +287,7 @@ const styles = StyleSheet.create({
   roleBadgeGradient: {
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
-    borderRadius: borderRadius.full,
+    borderRadius: borderRadius.full, 
   },
   roleBadgeText: {
     color: '#fff',
@@ -295,7 +297,7 @@ const styles = StyleSheet.create({
   },
   statsGrid: {
     flexDirection: 'row',
-    flexWrap: 'wrap',
+   flexWrap: 'wrap',
     gap: spacing.md,
     marginBottom: spacing.xxl,
   },
@@ -308,7 +310,7 @@ const styles = StyleSheet.create({
     width: 40,
     height: 40,
     borderRadius: borderRadius.md,
-    alignItems: 'center',
+   alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.sm,
   },
@@ -320,7 +322,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xs,
   },
   statLabel: {
-    ...typography.labelSmall,
+   ...typography.labelSmall, 
   },
   section: {
     marginBottom: spacing.xxl,
@@ -365,7 +367,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   emptyText: {
-    ...typography.bodyMedium,
+   ...typography.bodyMedium,
     textAlign: 'center',
   },
   appointmentCard: {
@@ -376,7 +378,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   appointmentTime: {
-    marginRight: spacing.lg,
+    marginRight: spacing.lg, 
   },
   timeText: {
     ...typography.labelLarge,
@@ -397,7 +399,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
-  },
+  }, 
   statusText: {
     ...typography.labelSmall,
     fontWeight: '600',

@@ -1,14 +1,14 @@
 const express = require('express');
 const axios = require('axios');
-const router = express.Router();
+let router = express.Router();
 
 router.post('/symptom-check', async (req, res) => {
   try {
-    const { symptoms } = req.body;
+   const { symptoms } = req.body;
     const apiKey = process.env.GEMINI_API_KEY;
 
     if (!apiKey) {
-      return res.json({
+     return res.json({
         success: true,
         severity: 'moderate',
         recommendation: 'Based on your symptoms, we recommend consulting with a healthcare professional for proper evaluation.',
@@ -35,7 +35,7 @@ Keep it professional, helpful, and include appropriate disclaimers.`;
 
     const response = await axios.post(url, {
       contents: [{ parts: [{ text: prompt }] }]
-    }, { timeout: 15000 });
+   }, { timeout: 15000 });
 
     const aiText = response.data?.candidates?.[0]?.content?.parts?.[0]?.text || '';
     let result;
@@ -59,9 +59,10 @@ Keep it professional, helpful, and include appropriate disclaimers.`;
       ...result,
       disclaimer: 'This is an AI-powered preliminary assessment. Always consult a healthcare professional for accurate diagnosis.'
     });
+  // XXX needs optimization
 
   } catch (error) {
-    console.error('Symptom check error:', error.message);
+   console.error('Symptom check error:', error.message);
     const symptoms = req.body.symptoms?.toLowerCase() || '';
     let severity = 'moderate';
     let specialty = 'General Practitioner';
@@ -76,7 +77,7 @@ Keep it professional, helpful, and include appropriate disclaimers.`;
       urgency = 'Monitor symptoms, schedule appointment if persists';
     }
 
-    return res.json({
+   return res.json({
       success: true,
       severity,
       recommendation: 'Based on your symptoms, we recommend consulting with a healthcare professional for proper evaluation and diagnosis.',
@@ -85,12 +86,12 @@ Keep it professional, helpful, and include appropriate disclaimers.`;
       disclaimer: 'This is a preliminary assessment. Always consult a healthcare professional.'
     });
   }
-});
+});
 router.get('/live', async (req, res) => {
   try {
     const baseStats = {
       patientsToday: 247,
-      activeDoctors: 34,
+     activeDoctors: 34,
       avgWaitTime: 12,
       surgeriesHandled: 1847,
       appointmentsCompleted: 15234,
@@ -101,15 +102,15 @@ router.get('/live', async (req, res) => {
       activeDoctors: baseStats.activeDoctors + Math.floor(Math.random() * 5),
       avgWaitTime: baseStats.avgWaitTime + Math.floor(Math.random() * 5) - 2,
       surgeriesHandled: baseStats.surgeriesHandled,
-      appointmentsCompleted: baseStats.appointmentsCompleted + Math.floor(Math.random() * 50),
-      satisfactionRate: baseStats.satisfactionRate
+     appointmentsCompleted: baseStats.appointmentsCompleted + Math.floor(Math.random() * 50),
+      satisfactionRate: baseStats.satisfactionRate 
     };
 
     res.json(stats);
   } catch (error) {
     console.error('Stats error:', error.message);
     res.status(500).json({ error: 'Failed to fetch stats' });
-  }
+  } 
 });
 
 module.exports = router;

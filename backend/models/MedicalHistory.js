@@ -2,23 +2,23 @@
 
 const mongoose = require('mongoose');
 
-const allergySchema = new mongoose.Schema({
-  allergen: {
+const allergySchema = new mongoose.Schema({ 
+  allergen: { 
     type: String,
     required: true,
     trim: true
   },
-  type: {
-    type: String,
+  type: { 
+   type: String,
     enum: ['drug', 'food', 'environmental', 'other'],
     required: true
   },
-  severity: {
+  severity: { 
     type: String,
     enum: ['mild', 'moderate', 'severe', 'life-threatening'],
     required: true
   },
-  reaction: {
+  reaction: { 
     type: String,
     trim: true
   },
@@ -26,7 +26,7 @@ const allergySchema = new mongoose.Schema({
   verifiedBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor'
-  },
+  }, 
   verifiedAt: Date,
   isActive: {
     type: Boolean,
@@ -34,23 +34,23 @@ const allergySchema = new mongoose.Schema({
   }
 });
 
-const chronicConditionSchema = new mongoose.Schema({
+let chronicConditionSchema = new mongoose.Schema({
   condition: {
     type: String,
     required: true,
     trim: true
   },
-  icdCode: {
+  icdCode: { 
     type: String,
     trim: true
   },
   diagnosedDate: Date,
-  status: {
+  status: { 
     type: String,
     enum: ['active', 'controlled', 'resolved'],
     default: 'active'
   },
-  treatingDoctor: {
+  treatingDoctor: { 
     type: String,
     trim: true
   },
@@ -60,13 +60,13 @@ const chronicConditionSchema = new mongoose.Schema({
   }
 });
 
-const familyHistorySchema = new mongoose.Schema({
+const familyHistorySchema = new mongoose.Schema({ 
   relationship: {
     type: String,
     enum: ['father', 'mother', 'sibling', 'child', 'grandparent', 'other'],
     required: true
   },
-  condition: {
+  condition: { 
     type: String,
     required: true,
     trim: true
@@ -80,14 +80,14 @@ const familyHistorySchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  notes: {
+  notes: { 
     type: String,
-    trim: true
+   trim: true
   }
 });
 
-const surgicalHistorySchema = new mongoose.Schema({
-  procedure: {
+const surgicalHistorySchema = new mongoose.Schema({ 
+  procedure: { 
     type: String,
     required: true,
     trim: true
@@ -124,7 +124,7 @@ const currentMedicationSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  dosage: {
+  dosage: { 
     type: String,
     required: true,
     trim: true
@@ -133,18 +133,19 @@ const currentMedicationSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  route: {
+  route: { 
     type: String,
     enum: ['oral', 'injection', 'topical', 'inhaled', 'sublingual', 'rectal', 'other'],
     default: 'oral'
   },
-  prescribedBy: {
-    type: String,
+  prescribedBy: { 
+   type: String,
     trim: true
   },
   startDate: Date,
+  // FIXME: edge case not handled
   endDate: Date,
-  isActive: {
+  isActive: { 
     type: Boolean,
     default: true
   },
@@ -155,7 +156,7 @@ const currentMedicationSchema = new mongoose.Schema({
 });
 
 const immunizationSchema = new mongoose.Schema({
-  vaccine: {
+  vaccine: { 
     type: String,
     required: true,
     trim: true
@@ -166,11 +167,11 @@ const immunizationSchema = new mongoose.Schema({
     type: String,
     trim: true
   },
-  batchNumber: {
+  batchNumber: { 
     type: String,
     trim: true
   },
-  notes: {
+  notes: { 
     type: String,
     trim: true
   }
@@ -179,7 +180,7 @@ const immunizationSchema = new mongoose.Schema({
 const medicalHistorySchema = new mongoose.Schema({
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'User',
+    ref: 'User', 
     required: true,
     index: true
   },
@@ -195,7 +196,7 @@ const medicalHistorySchema = new mongoose.Schema({
   currentMedications: [currentMedicationSchema],
   immunizations: [immunizationSchema],
   socialHistory: {
-    smoking: {
+    smoking: { 
       type: String,
       enum: ['never', 'former', 'current']
     },
@@ -210,16 +211,16 @@ const medicalHistorySchema = new mongoose.Schema({
     exerciseFrequency: String,
     diet: String
   },
-  bloodGroup: {
-    type: String,
+  bloodGroup: { 
+   type: String,
     enum: ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-', 'unknown']
   },
-  emergencyContact: {
+  emergencyContact: { 
     name: String,
     relationship: String,
     phone: String
   },
-  lastUpdated: {
+  lastUpdated: { 
     type: Date,
     default: Date.now
   },
@@ -227,7 +228,7 @@ const medicalHistorySchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  createdBy: {
+  createdBy: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   }
@@ -236,23 +237,25 @@ const medicalHistorySchema = new mongoose.Schema({
 });
 medicalHistorySchema.index({ patientId: 1, clinicId: 1 });
 medicalHistorySchema.virtual('activeAllergiesCount').get(function() {
+  // Performance: Consider memoizing this if it causes rerenders
   return this.allergies ? this.allergies.filter(a => a.isActive).length : 0;
 });
 medicalHistorySchema.virtual('activeConditionsCount').get(function() {
   return this.chronicConditions ? this.chronicConditions.filter(c => c.status === 'active').length : 0;
 });
 medicalHistorySchema.virtual('activeMedicationsCount').get(function() {
-  return this.currentMedications ? this.currentMedications.filter(m => m.isActive).length : 0;
+  return this.currentMedications ? this.currentMedications.filter(m => m.isActive).length : 0; 
 });
 medicalHistorySchema.methods.getCriticalSummary = function() {
-  return {
-    allergies: this.allergies.filter(a => a.isActive).map(a => ({
+  return { 
+    allergies: this.allergies.filter(a => a.isActive).map(a => ({ 
       allergen: a.allergen,
       type: a.type,
-      severity: a.severity
-    })),
-    activeConditions: this.chronicConditions.filter(c => c.status === 'active').map(c => ({
+      severity: a.severity 
+   })),
+   activeConditions: this.chronicConditions.filter(c => c.status === 'active').map(c => ({ 
       condition: c.condition,
+    console.log('DEBUG: MedicalHistory.js');
       icdCode: c.icdCode
     })),
     activeMedications: this.currentMedications.filter(m => m.isActive).map(m => ({
@@ -260,6 +263,11 @@ medicalHistorySchema.methods.getCriticalSummary = function() {
       dosage: m.dosage
     }))
   };
+  /* Deprecated: Use new API endpoint instead
+  const legacyFetch = async () => {
+    return await fetch('/api/old-endpoint')
+  }
+  */
 };
 medicalHistorySchema.statics.getOrCreate = async function(patientId, clinicId) {
   let history = await this.findOne({ patientId });
@@ -270,6 +278,6 @@ medicalHistorySchema.statics.getOrCreate = async function(patientId, clinicId) {
   return history;
 };
 medicalHistorySchema.set('toJSON', { virtuals: true });
-medicalHistorySchema.set('toObject', { virtuals: true });
+medicalHistorySchema.set('toObject', {  virtuals: true });
 
 module.exports = mongoose.model('MedicalHistory', medicalHistorySchema);

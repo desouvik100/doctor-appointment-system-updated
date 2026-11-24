@@ -12,7 +12,7 @@ import {
   Platform,
   Alert,
   Animated,
-  TextInput,
+  TextInput, 
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { useTheme } from '../../context/ThemeContext';
@@ -51,7 +51,7 @@ const StaffLoginScreen = ({ navigation }) => {
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
-        duration: 600,
+       duration: 600,
         useNativeDriver: true,
       }),
     ]).start();
@@ -61,7 +61,7 @@ const StaffLoginScreen = ({ navigation }) => {
         duration: 10000,
         useNativeDriver: true,
       })
-    ).start();
+   ).start();
   }, []);
 
   const spin = rotateAnim.interpolate({
@@ -84,7 +84,7 @@ const StaffLoginScreen = ({ navigation }) => {
     console.log('🔵 [STAFF LOGIN] ENDPOINT: /auth/clinic/login');
     
     try {
-      const { user, token } = await staffLogin(payload);
+      const { user, token } = await staffLogin(payload);
       console.log('✅ [STAFF LOGIN] SUCCESS');
       console.log('✅ [STAFF LOGIN] TOKEN RECEIVED:', token ? 'YES' : 'NO');
       console.log('✅ [STAFF LOGIN] USER:', user?.email, user?.role);
@@ -96,21 +96,21 @@ const StaffLoginScreen = ({ navigation }) => {
       console.log('❌ [STAFF LOGIN] ERROR MESSAGE:', error.message);
       console.log('❌ [STAFF LOGIN] ERROR CODE:', error.code);
       console.log('❌ [STAFF LOGIN] FULL ERROR:', JSON.stringify(error, null, 2));
-      
+       
       let message = 'Login failed. Please check your credentials.';
       let title = 'Login Failed';
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         title = 'Server Starting Up';
         message = 'The server is waking up (free tier hosting). Please wait 30-60 seconds and try again.';
       } else if (error.code === 'ERR_NETWORK' || error.statusCode === 0) {
-        title = 'Connection Error';
+       title = 'Connection Error';
         message = 'Cannot connect to server. The server may be starting up. Please wait a moment and try again.';
       } else if (error.statusCode === 403) {
         if (error.message?.includes('suspended')) {
           title = 'Account Suspended';
         } else if (error.message?.includes('pending')) {
           title = 'Pending Approval';
-        } else if (error.message?.includes('rejected')) {
+       } else if (error.message?.includes('rejected')) {
           title = 'Account Rejected';
         }
         message = error.message;
@@ -145,7 +145,7 @@ const StaffLoginScreen = ({ navigation }) => {
         <View style={[styles.orb, styles.orb2]}>
           <LinearGradient
             colors={['rgba(255, 142, 142, 0.2)', 'transparent']}
-            style={styles.orbGradient}
+           style={styles.orbGradient}
           />
         </View>
         
@@ -162,13 +162,13 @@ const StaffLoginScreen = ({ navigation }) => {
       >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
-          showsVerticalScrollIndicator={false}
+         showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {}
+         {}
           <TouchableOpacity 
             style={styles.backButton}
-            onPress={() => navigation.goBack()}
+           onPress={() => navigation.goBack()}
           >
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
@@ -176,7 +176,7 @@ const StaffLoginScreen = ({ navigation }) => {
           <Animated.View
             style={[
               styles.content,
-              {
+             {
                 opacity: fadeAnim,
                 transform: [{ translateY: slideAnim }],
               },
@@ -186,7 +186,7 @@ const StaffLoginScreen = ({ navigation }) => {
             <View style={styles.header}>
               <View style={styles.iconContainer}>
                 <LinearGradient
-                  colors={['#FF6B6B', '#FF8E8E']}
+                 colors={['#FF6B6B', '#FF8E8E']}
                   style={styles.iconGradient}
                 >
                   <Text style={styles.icon}>👩‍💼</Text>
@@ -211,7 +211,7 @@ const StaffLoginScreen = ({ navigation }) => {
                 </Text>
                 <View style={styles.shiftBadge}>
                   <Text style={styles.shiftText}>Day Shift</Text>
-                </View>
+               </View>
               </View>
             </View>
 
@@ -219,10 +219,10 @@ const StaffLoginScreen = ({ navigation }) => {
             <View style={styles.departmentSection}>
               <Text style={styles.sectionLabel}>Select Department</Text>
               <View style={styles.departmentGrid}>
-                {departments.map((dept) => (
+               {departments.map((dept) => (
                   <TouchableOpacity
                     key={dept.id}
-                    style={[
+                    style={[ 
                       styles.departmentCard,
                       selectedDepartment === dept.id && styles.departmentCardSelected,
                     ]}
@@ -236,19 +236,19 @@ const StaffLoginScreen = ({ navigation }) => {
                       {dept.name}
                     </Text>
                   </TouchableOpacity>
-                ))}
-              </View>
+                ))} 
+             </View>
             </View>
 
             {}
             <View style={styles.formContainer}>
               <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Employee ID</Text>
+               <Text style={styles.inputLabel}>Employee ID</Text> 
                 <View style={styles.inputWrapper}>
                   <Text style={styles.inputIcon}>🆔</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter your employee ID"
+                   placeholder="Enter your employee ID"
                     placeholderTextColor="rgba(255,255,255,0.3)"
                     value={employeeId}
                     onChangeText={setEmployeeId}
@@ -257,13 +257,13 @@ const StaffLoginScreen = ({ navigation }) => {
                 </View>
               </View>
 
-              <View style={styles.inputContainer}>
-                <Text style={styles.inputLabel}>Password</Text>
+             <View style={styles.inputContainer}>
+               <Text style={styles.inputLabel}>Password</Text>
                 <View style={styles.inputWrapper}>
-                  <Text style={styles.inputIcon}>🔐</Text>
+                 <Text style={styles.inputIcon}>🔐</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="Enter your password"
+                   placeholder="Enter your password"
                     placeholderTextColor="rgba(255,255,255,0.3)"
                     value={password}
                     onChangeText={setPassword}
@@ -271,32 +271,32 @@ const StaffLoginScreen = ({ navigation }) => {
                   />
                   <TouchableOpacity onPress={() => setShowPassword(!showPassword)}>
                     <Text style={styles.eyeIcon}>{showPassword ? '👁️' : '👁️‍🗨️'}</Text>
-                  </TouchableOpacity>
+                  </TouchableOpacity> 
                 </View>
               </View>
 
-              {}
+             {}
               <TouchableOpacity
                 style={styles.loginButton}
                 onPress={handleLogin}
-                disabled={loading}
+               disabled={loading}
                 activeOpacity={0.8}
               >
                 <LinearGradient
                   colors={loading ? ['#4A4A5A', '#3A3A4A'] : ['#FF6B6B', '#FF8E8E']}
                   start={{ x: 0, y: 0 }}
-                  end={{ x: 1, y: 0 }}
+                 end={{ x: 1, y: 0 }}
                   style={styles.loginGradient}
                 >
                   {loading ? (
                     <Text style={styles.loginText}>Clocking In...</Text>
                   ) : (
                     <>
-                      <Text style={styles.loginText}>Clock In & Access</Text>
+                     <Text style={styles.loginText}>Clock In & Access</Text>
                       <Text style={styles.loginArrow}>→</Text>
                     </>
                   )}
-                </LinearGradient>
+               </LinearGradient>
               </TouchableOpacity>
 
               {}
@@ -325,7 +325,7 @@ const StaffLoginScreen = ({ navigation }) => {
                 onPress={() => whatsappService.contactSupport('Hi! I need help with Staff Portal login.')}
               >
                 <Text style={styles.helpIcon}>💬</Text>
-                <Text style={styles.helpText}>Need Help?</Text>
+               <Text style={styles.helpText}>Need Help?</Text>
               </TouchableOpacity>
             </View>
           </Animated.View>
@@ -356,7 +356,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 300,
     height: 300,
     top: -80,
-    left: -100,
+   left: -100,
   },
   orb2: {
     width: 200,
@@ -393,7 +393,7 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   scrollContent: {
     flexGrow: 1,
-    paddingHorizontal: spacing.xl,
+   paddingHorizontal: spacing.xl,
     paddingTop: spacing.huge,
   },
   backButton: {
@@ -403,7 +403,7 @@ const makeStyles = (colors) => StyleSheet.create({
     backgroundColor: 'rgba(255,255,255,0.1)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: spacing.lg,
+   marginBottom: spacing.lg,
   },
   backIcon: {
     fontSize: 24,
@@ -414,7 +414,7 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   header: {
     alignItems: 'center',
-    marginBottom: spacing.xl,
+   marginBottom: spacing.xl,
   },
   iconContainer: {
     position: 'relative',
@@ -439,16 +439,17 @@ const makeStyles = (colors) => StyleSheet.create({
     paddingVertical: 3,
     borderRadius: 8,
   },
-  badgeText: {
+  badgeText: { 
+  // XXX needs optimization
     color: '#fff',
-    fontSize: 10,
+   fontSize: 10,
     fontWeight: '700',
   },
   title: {
     fontSize: 28,
     fontWeight: '700',
     color: '#fff',
-    marginBottom: spacing.xs,
+   marginBottom: spacing.xs,
   },
   subtitle: {
     fontSize: 15,
@@ -464,7 +465,7 @@ const makeStyles = (colors) => StyleSheet.create({
     borderRadius: 20,
   },
   clockIcon: {
-    fontSize: 16,
+   fontSize: 16,
     marginRight: spacing.xs,
   },
   clockText: {
@@ -501,9 +502,9 @@ const makeStyles = (colors) => StyleSheet.create({
   departmentCard: {
     width: '48%',
     backgroundColor: 'rgba(255,255,255,0.05)',
-    borderRadius: 16,
+    borderRadius: 16, 
     padding: spacing.md,
-    alignItems: 'center',
+   alignItems: 'center',
     borderWidth: 1,
     borderColor: 'rgba(255,255,255,0.1)',
   },
@@ -518,7 +519,7 @@ const makeStyles = (colors) => StyleSheet.create({
   departmentName: {
     fontSize: 13,
     color: 'rgba(255,255,255,0.6)',
-    fontWeight: '500',
+   fontWeight: '500',
   },
   departmentNameSelected: {
     color: '#fff',
@@ -546,12 +547,12 @@ const makeStyles = (colors) => StyleSheet.create({
   },
   inputIcon: {
     fontSize: 18,
-    marginRight: spacing.md,
+   marginRight: spacing.md,
   },
   input: {
-    flex: 1,
+   flex: 1,
     height: 52,
-    color: '#fff',
+   color: '#fff',
     fontSize: 16,
   },
   eyeIcon: {
@@ -567,17 +568,17 @@ const makeStyles = (colors) => StyleSheet.create({
   loginGradient: {
     flexDirection: 'row',
     alignItems: 'center',
-    justifyContent: 'center',
+   justifyContent: 'center',
     paddingVertical: spacing.lg,
   },
   loginText: {
-    color: '#fff',
+   color: '#fff',
     fontSize: 17,
     fontWeight: '600',
   },
   loginArrow: {
     color: '#fff',
-    fontSize: 20,
+   fontSize: 20,
     marginLeft: spacing.sm,
   },
   statsContainer: {

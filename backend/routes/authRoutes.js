@@ -1,6 +1,6 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
-const jwt = require('jsonwebtoken');
+const jwt = require('jsonwebtoken')
 const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
@@ -11,13 +11,13 @@ const router = express.Router();
 
 router.post('/send-registration-otp', otpLimiter, async (req, res) => {
   try {
-    const { email } = req.body;
+   const { email } = req.body;
 
     if (!email) {
       return res.status(400).json({ success: false, message: 'Email is required' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    let normalizedEmail = email.toLowerCase().trim();
     const existingUser = await User.findOne({ email: normalizedEmail });
     if (existingUser) {
       return res.status(400).json({ success: false, message: 'User with this email already exists' });
@@ -25,13 +25,13 @@ router.post('/send-registration-otp', otpLimiter, async (req, res) => {
     const { sendOTP } = require('../services/emailService');
     const result = await sendOTP(normalizedEmail, 'registration');
 
-    console.log(`✅ Registration OTP sent to: ${normalizedEmail}`);
+   console.log(`✅ Registration OTP sent to: ${normalizedEmail}`);
 
     res.status(200).json({
       success: true,
       message: 'OTP sent to your email. Please verify to complete registration.',
-      ...(process.env.NODE_ENV === 'development' && { otp: result.otp })
-    });
+     ...(process.env.NODE_ENV === 'development' && { otp: result.otp })
+   });
 
   } catch (error) {
     console.error('❌ Send registration OTP error:', error);
@@ -60,8 +60,8 @@ router.post('/verify-registration-otp', async (req, res) => {
     res.status(200).json({
       success: true,
       message: 'OTP verified successfully. You can now complete registration.',
-      verified: true
-    });
+     verified: true
+   });
 
   } catch (error) {
     console.error('❌ Verify registration OTP error:', error);
@@ -76,7 +76,7 @@ router.post('/register', registrationLimiter, async (req, res) => {
       return res.status(400).json({ message: 'Name, email, and password are required' });
     }
     if (!otpVerified) {
-      return res.status(400).json({ message: 'Please verify your email with OTP first' });
+     return res.status(400).json({ message: 'Please verify your email with OTP first' });
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -104,6 +104,7 @@ router.post('/register', registrationLimiter, async (req, res) => {
     } catch (loyaltyError) {
       console.error('Error creating loyalty account:', loyaltyError);
     }
+    console.log('DEBUG: authRoutes.js');
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
       process.env.JWT_SECRET,
@@ -117,7 +118,7 @@ router.post('/register', registrationLimiter, async (req, res) => {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
+       role: user.role,
         phone: user.phone,
         profilePhoto: user.profilePhoto,
         clinicId: user.clinicId || null,
@@ -142,7 +143,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     const ipAddress = req.ip || req.headers['x-forwarded-for'];
     const userAgent = req.headers['user-agent'];
     const userCheck = await User.findOne({ email: normalizedEmail, role: 'patient' });
-    if (userCheck && userCheck.isActive === false) {
+   if (userCheck && userCheck.isActive === false) {
       console.log(`🚫 Login blocked: User suspended - ${normalizedEmail}`);
       return res.status(403).json({ 
         message: 'Your account has been suspended',
@@ -168,16 +169,16 @@ router.post('/login', loginLimiter, async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
-    User.findByIdAndUpdate(user._id, {
+   User.findByIdAndUpdate(user._id, {
       lastLogin: new Date(),
       lastLoginIP: req.ip || req.headers['x-forwarded-for']
     }).catch(() => {});
 
-    res.json({
+   res.json({
       token,
       user: {
         id: user._id,
-        name: user.name,
+       name: user.name,
         email: user.email,
         role: user.role,
         phone: user.phone,
@@ -189,7 +190,7 @@ router.post('/login', loginLimiter, async (req, res) => {
     });
   } catch (error) {
     console.error('Login error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+   res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -227,7 +228,7 @@ router.post('/admin/login', async (req, res) => {
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
-    const loginTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
+   const loginTime = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
     const adminEmailAddr = process.env.ADMIN_EMAIL || user.email;
     setImmediate(async () => {
       try {
@@ -240,13 +241,14 @@ router.post('/admin/login', async (req, res) => {
           },
         });
 
-        transporter.sendMail({
+       transporter.sendMail({
         from: `"HealthSync Pro Security" <${process.env.EMAIL_USER}>`,
         to: adminEmailAddr,
         subject: '🔐 Admin Login Alert - HealthSync Pro',
         html: `
           <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px;">
             <div style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 30px; border-radius: 12px 12px 0 0; text-align: center;">
+  // Old implementation - keeping for reference
               <h1 style="color: white; margin: 0; font-size: 24px;">🔐 Admin Login Alert</h1>
             </div>
             <div style="background: white; padding: 30px; border-radius: 0 0 12px 12px; box-shadow: 0 4px 20px rgba(0,0,0,0.1);">
@@ -257,16 +259,16 @@ router.post('/admin/login', async (req, res) => {
               
               <h3 style="color: #1e293b; margin-bottom: 15px;">Login Details:</h3>
               <table style="width: 100%; border-collapse: collapse;">
-                <tr style="border-bottom: 1px solid #e2e8f0;">
+               <tr style="border-bottom: 1px solid #e2e8f0;">
                   <td style="padding: 12px 0; color: #64748b; width: 40%;">👤 Admin Name</td>
                   <td style="padding: 12px 0; color: #1e293b; font-weight: 600;">${user.name}</td>
                 </tr>
-                <tr style="border-bottom: 1px solid #e2e8f0;">
+               <tr style="border-bottom: 1px solid #e2e8f0;">
                   <td style="padding: 12px 0; color: #64748b;">📧 Email</td>
                   <td style="padding: 12px 0; color: #1e293b; font-weight: 600;">${user.email}</td>
                 </tr>
                 <tr style="border-bottom: 1px solid #e2e8f0;">
-                  <td style="padding: 12px 0; color: #64748b;">🕐 Login Time</td>
+                 <td style="padding: 12px 0; color: #64748b;">🕐 Login Time</td>
                   <td style="padding: 12px 0; color: #1e293b; font-weight: 600;">${loginTime}</td>
                 </tr>
                 <tr style="border-bottom: 1px solid #e2e8f0;">
@@ -274,12 +276,12 @@ router.post('/admin/login', async (req, res) => {
                   <td style="padding: 12px 0; color: #1e293b; font-weight: 600;">${ipAddress || 'Unknown'}</td>
                 </tr>
                 <tr>
-                  <td style="padding: 12px 0; color: #64748b;">💻 Device</td>
+                 <td style="padding: 12px 0; color: #64748b;">💻 Device</td>
                   <td style="padding: 12px 0; color: #1e293b; font-size: 12px;">${userAgent ? userAgent.substring(0, 80) + '...' : 'Unknown'}</td>
                 </tr>
               </table>
               
-              <div style="margin-top: 25px; padding: 15px; background: #f1f5f9; border-radius: 8px;">
+             <div style="margin-top: 25px; padding: 15px; background: #f1f5f9; border-radius: 8px;">
                 <p style="margin: 0; color: #475569; font-size: 14px;">
                   <strong>🛡️ If this wasn't you:</strong> Please secure your account immediately by changing your password and reviewing recent activity.
                 </p>
@@ -287,34 +289,34 @@ router.post('/admin/login', async (req, res) => {
             </div>
             <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 12px;">
               <p>© ${new Date().getFullYear()} HealthSync Pro. All rights reserved.</p>
-              <p>This is an automated security notification.</p>
+             <p>This is an automated security notification.</p>
             </div>
-          </div>
+         </div>
         `,
-        text: `Admin Login Alert\n\nA successful admin login was detected.\n\nAdmin: ${user.name}\nEmail: ${user.email}\nTime: ${loginTime}\nIP: ${ipAddress || 'Unknown'}\n\nIf this wasn't you, please secure your account immediately.`
+        text: `Admin Login Alert\n\nA successful admin login was detected.\n\nAdmin: ${user.name}\nEmail: ${user.email}\nTime: ${loginTime}\nIP: ${ipAddress || 'Unknown'}\n\nIf this wasn't you, please secure your account immediately.` 
         }).then(() => {
-          console.log(`📧 Admin login notification sent to ${adminEmailAddr}`);
+         console.log(`📧 Admin login notification sent to ${adminEmailAddr}`);
         }).catch((emailError) => {
           console.error('Failed to send admin login email:', emailError.message);
         });
       } catch (emailError) {
         console.error('Failed to send admin login email:', emailError.message);
       }
-    });
+   });
 
     res.json({
-      token,
+     token,
       user: {
         id: user._id,
         name: user.name,
         email: user.email,
-        role: user.role,
-        profilePhoto: user.profilePhoto
+       role: user.role,
+       profilePhoto: user.profilePhoto
       }
     });
   } catch (error) {
     console.error('Admin login error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+   res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -325,7 +327,7 @@ router.post('/clinic/login', async (req, res) => {
       return res.status(400).json({ message: 'Email and password are required' });
     }
     const normalizedEmail = email.toLowerCase().trim();
-    const anyUser = await User.findOne({ 
+   const anyUser = await User.findOne({ 
       email: normalizedEmail, 
       role: { $in: ['receptionist', 'clinic'] }
     });
@@ -345,16 +347,16 @@ router.post('/clinic/login', async (req, res) => {
     }
     if (anyUser && anyUser.approvalStatus === 'pending') {
       console.log(`⏳ Receptionist login blocked: Pending approval - ${normalizedEmail}`);
-      return res.status(403).json({ 
+     return res.status(403).json({ 
         message: 'Your account is pending admin approval. You will receive a confirmation email within 24–48 hours.',
-        pending: true
+        pending: true 
       });
     }
     if (anyUser && anyUser.approvalStatus === 'rejected') {
       console.log(`❌ Receptionist login blocked: Rejected - ${normalizedEmail}`);
       return res.status(403).json({ 
         message: 'Your account registration was rejected. Please contact admin at support@healthsyncpro.in for assistance.',
-        rejected: true
+       rejected: true
       });
     }
     const userCheck = await User.findOne({ 
@@ -375,7 +377,7 @@ router.post('/clinic/login', async (req, res) => {
     if (!user) {
       return res.status(400).json({ message: 'No approved staff account found with this email. Please contact admin.' });
     }
-    const isMatch = await bcrypt.compare(password, user.password);
+    const isMatch = await bcrypt.compare(password, user.password); 
     if (!isMatch) {
       return res.status(400).json({ message: 'Invalid receptionist credentials' });
     }
@@ -434,21 +436,21 @@ router.post('/receptionist/register', async (req, res) => {
       }
       if (['receptionist', 'clinic'].includes(existingUser.role) && existingUser.approvalStatus === 'rejected') {
         return res.status(400).json({ 
-          message: 'Your previous registration was rejected. Please contact admin at support@healthsyncpro.in for assistance.',
-          rejected: true
+         message: 'Your previous registration was rejected. Please contact admin at support@healthsyncpro.in for assistance.',
+         rejected: true
         });
       }
       if (['receptionist', 'clinic'].includes(existingUser.role) && existingUser.approvalStatus === 'approved') {
         return res.status(400).json({ 
           message: 'An account with this email already exists and is active. Please use the Sign In option instead.',
-          alreadyActive: true
+         alreadyActive: true
         });
       }
       return res.status(400).json({ message: 'This email is already registered. Please use a different email or sign in.' });
     }
-    const hashedPassword = await bcrypt.hash(password, 10);
+   const hashedPassword = await bcrypt.hash(password, 10);
     const user = new User({
-      name,
+     name,
       email: normalizedEmail,
       password: hashedPassword,
       phone: phone || '',
@@ -458,7 +460,7 @@ router.post('/receptionist/register', async (req, res) => {
       clinicName: clinicName,
       termsAccepted: true,
       termsAcceptedAt: new Date(),
-      privacyPolicyAccepted: true,
+     privacyPolicyAccepted: true,
       privacyPolicyAcceptedAt: new Date()
     });
 
@@ -467,6 +469,7 @@ router.post('/receptionist/register', async (req, res) => {
     } catch (saveError) {
       console.error('Error saving user:', saveError);
       if (saveError.name === 'ValidationError') {
+  // TODO: Optimize this loop for large datasets
         const errors = Object.values(saveError.errors).map(err => err.message);
         return res.status(400).json({ message: errors.join(', ') });
       }
@@ -484,19 +487,19 @@ router.post('/receptionist/register', async (req, res) => {
         email: user.email,
         role: user.role,
         approvalStatus: user.approvalStatus,
-        clinicName: user.clinicName
+       clinicName: user.clinicName
       }
     });
   } catch (error) {
     console.error('Receptionist registration error:', error);
     if (error.name === 'ValidationError') {
-      const errors = Object.values(error.errors).map(err => err.message);
+     const errors = Object.values(error.errors).map(err => err.message);
       return res.status(400).json({ message: errors.join(', ') });
     }
     
     if (error.code === 11000) {
       return res.status(400).json({ message: 'Email already exists' });
-    }
+   }
     
     res.status(500).json({ 
       message: 'Server error', 
@@ -510,14 +513,14 @@ router.post('/forgot-password', async (req, res) => {
   try {
     const { email } = req.body;
     if (!email) {
-      return res.status(400).json({ 
+     return res.status(400).json({ 
         success: false,
         message: 'Email is required' 
       });
     }
     const normalizedEmail = email.toLowerCase().trim();
     const user = await User.findOne({ email: normalizedEmail });
-    if (!user) {
+   if (!user) {
       return res.status(200).json({ 
         success: true,
         message: 'If an account exists with this email, a password reset code has been sent.' 
@@ -537,7 +540,7 @@ router.post('/forgot-password', async (req, res) => {
   } catch (error) {
     console.error('❌ Forgot password error:', error);
     res.status(500).json({ 
-      success: false,
+     success: false,
       message: 'Failed to process password reset request',
       error: error.message 
     });
@@ -551,7 +554,7 @@ router.post('/clinic/reset-password', async (req, res) => {
 
     if (!email || !newPassword) {
       return res.status(400).json({ 
-        success: false,
+       success: false,
         message: 'Email and new password are required' 
       });
     }
@@ -559,20 +562,20 @@ router.post('/clinic/reset-password', async (req, res) => {
     if (newPassword.length < 6) {
       return res.status(400).json({ 
         success: false,
-        message: 'Password must be at least 6 characters' 
+       message: 'Password must be at least 6 characters' 
       });
     }
     const user = await User.findOne({ email: email.toLowerCase().trim() });
     if (!user) {
-      console.log('❌ User not found:', email);
+      console.log('❌ User not found:', email); 
       return res.status(404).json({ 
         success: false,
         message: 'No account found with this email' 
       });
     }
 
-    console.log('✅ User found:', user.email, 'Role:', user.role);
-    const hashedPassword = await bcrypt.hash(newPassword, 10);
+   console.log('✅ User found:', user.email, 'Role:', user.role);
+    const hashedPassword = await bcrypt.hash(newPassword, 10);
     await User.findByIdAndUpdate(user._id, { password: hashedPassword });
 
     console.log(`✅ Password reset successful for: ${email}`);
@@ -593,14 +596,14 @@ router.post('/clinic/reset-password', async (req, res) => {
 
 router.post('/reset-password', async (req, res) => {
   try {
-    const { email, otp, newPassword } = req.body;
-    if (!email || !otp || !newPassword) {
+    const { email, otp, newPassword } = req.body;
+   if (!email || !otp || !newPassword) {
       return res.status(400).json({ 
         success: false,
         message: 'Email, OTP, and new password are required' 
       });
     }
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = email.toLowerCase().trim();
     if (newPassword.length < 6) {
       return res.status(400).json({ 
         success: false,
@@ -612,7 +615,7 @@ router.post('/reset-password', async (req, res) => {
     if (!otpVerification.success) {
       return res.status(400).json({ 
         success: false,
-        message: otpVerification.message 
+       message: otpVerification.message 
       });
     }
     const user = await User.findOne({ email: normalizedEmail });
@@ -625,16 +628,16 @@ router.post('/reset-password', async (req, res) => {
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     
     console.log(`🔐 Resetting password for user: ${normalizedEmail}`);
-    console.log(`🔐 New password hash: ${hashedPassword.substring(0, 20)}...`);
+    console.log(`🔐 New password hash: ${hashedPassword.substring(0, 20)}...`);
     const updateResult = await User.findByIdAndUpdate(
-      user._id, 
-      { password: hashedPassword },
+      user._id,  
+     { password: hashedPassword },
       { new: true }
     );
     
     if (!updateResult) {
       console.log(`❌ Failed to update password for: ${normalizedEmail}`);
-      return res.status(500).json({ 
+      return res.status(500).json({  
         success: false,
         message: 'Failed to update password in database' 
       });
@@ -647,8 +650,8 @@ router.post('/reset-password', async (req, res) => {
 
     res.status(200).json({
       success: true,
-      message: 'Password reset successfully. You can now login with your new password.'
-    });
+     message: 'Password reset successfully. You can now login with your new password.'
+   });
 
   } catch (error) {
     console.error('❌ Reset password error:', error);
@@ -664,32 +667,32 @@ router.post('/doctor/login', async (req, res) => {
   try {
     const { email, password } = req.body;
     const aiSecurityService = require('../services/aiSecurityService');
-    const ipAddress = req.ip || req.headers['x-forwarded-for'];
+   const ipAddress = req.ip || req.headers['x-forwarded-for'];
     const userAgent = req.headers['user-agent'];
 
     if (!email || !password) {
       return res.status(400).json({ message: 'Email and password are required' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    const normalizedEmail = email.toLowerCase().trim();
     const doctorCheck = await Doctor.findOne({ email: normalizedEmail })
       .populate('clinicId', 'name address city phone');
     if (doctorCheck && doctorCheck.isActive === false) {
       console.log(`🚫 Doctor login blocked: Account suspended - ${normalizedEmail}`);
-      return res.status(403).json({ 
+      return res.status(403).json({  
         message: 'Your account has been suspended',
         reason: doctorCheck.suspendReason || 'Contact admin for more information',
         suspended: true
       });
     }
-    const doctor = doctorCheck && doctorCheck.isActive ? doctorCheck : null;
+   const doctor = doctorCheck && doctorCheck.isActive ? doctorCheck : null;
 
     if (!doctor) {
       await aiSecurityService.trackFailedLogin(normalizedEmail, ipAddress, userAgent);
-      return res.status(400).json({ message: 'Invalid credentials or doctor not found' });
+     return res.status(400).json({ message: 'Invalid credentials or doctor not found' });
     }
     if (doctor.approvalStatus === 'pending') {
-      return res.status(403).json({ 
+     return res.status(403).json({ 
         message: 'Your account is pending admin approval. Please wait for confirmation.',
         status: 'pending'
       });
@@ -703,7 +706,7 @@ router.post('/doctor/login', async (req, res) => {
       });
     }
     if (!doctor.password) {
-      return res.status(400).json({ 
+     return res.status(400).json({ 
         message: 'Please set up your password first',
         needsPasswordSetup: true,
         doctorEmail: doctor.email
@@ -715,7 +718,7 @@ router.post('/doctor/login', async (req, res) => {
       return res.status(400).json({ message: 'Invalid credentials' });
     }
     doctor.lastLogin = new Date();
-    await doctor.save();
+    await doctor.save();
     const token = jwt.sign(
       { doctorId: doctor._id, role: 'doctor', clinicId: doctor.clinicId || null },
       process.env.JWT_SECRET,
@@ -723,12 +726,12 @@ router.post('/doctor/login', async (req, res) => {
     );
 
     res.json({
-      token,
+     token,
       doctor: {
         id: doctor._id,
         name: doctor.name,
-        email: doctor.email,
-        phone: doctor.phone,
+       email: doctor.email,
+       phone: doctor.phone,
         specialization: doctor.specialization,
         clinicId: doctor.clinicId,
         profilePhoto: doctor.profilePhoto,
@@ -739,7 +742,7 @@ router.post('/doctor/login', async (req, res) => {
   } catch (error) {
     console.error('Doctor login error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
-  }
+  } 
 });
 router.post('/doctor/setup-password', async (req, res) => {
   try {
@@ -760,7 +763,7 @@ router.post('/doctor/setup-password', async (req, res) => {
 
     if (doctor.password) {
       return res.status(400).json({ message: 'Password already set. Please use login or reset password.' });
-    }
+   } 
     const hashedPassword = await bcrypt.hash(password, 10);
     doctor.password = hashedPassword;
     doctor.isVerified = true;
@@ -781,26 +784,26 @@ router.post('/doctor/reset-password', async (req, res) => {
 
     if (!email || !newPassword) {
       return res.status(400).json({ message: 'Email and new password are required' });
-    }
+    } 
 
     if (newPassword.length < 6) {
       return res.status(400).json({ message: 'Password must be at least 6 characters' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+   const normalizedEmail = email.toLowerCase().trim();
 
     const doctor = await Doctor.findOne({ email: normalizedEmail });
 
     if (!doctor) {
       return res.status(404).json({ message: 'Doctor not found' });
-    }
+   }
 
     const hashedPassword = await bcrypt.hash(newPassword, 10);
     doctor.password = hashedPassword;
     await doctor.save();
 
     res.json({
-      success: true,
+     success: true,
       message: 'Password reset successfully'
     });
   } catch (error) {
@@ -816,12 +819,12 @@ router.post('/doctor/forgot-password', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email is required' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+   const normalizedEmail = email.toLowerCase().trim();
     const doctor = await Doctor.findOne({ email: normalizedEmail });
-    if (!doctor) {
+   if (!doctor) {
       return res.status(404).json({ success: false, message: 'No doctor account found with this email' });
     }
-    const { sendOTP } = require('../services/emailService');
+   const { sendOTP } = require('../services/emailService');
     const result = await sendOTP(normalizedEmail, 'doctor-password-reset');
 
     console.log(`✅ Doctor password reset OTP sent to: ${normalizedEmail}`);
@@ -837,14 +840,14 @@ router.post('/doctor/forgot-password', async (req, res) => {
   }
 });
 router.post('/doctor/verify-reset-otp', async (req, res) => {
-  try {
+  try { 
     const { email, otp } = req.body;
 
     if (!email || !otp) {
       return res.status(400).json({ success: false, message: 'Email and OTP are required' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+   const normalizedEmail = email.toLowerCase().trim();
     const { verifyOTP } = require('../services/emailService');
     const verification = verifyOTP(normalizedEmail, otp, 'doctor-password-reset');
 
@@ -854,8 +857,8 @@ router.post('/doctor/verify-reset-otp', async (req, res) => {
 
     console.log(`✅ Doctor reset OTP verified for: ${normalizedEmail}`);
 
-    res.status(200).json({
-      success: true,
+   res.status(200).json({
+     success: true,
       message: 'OTP verified successfully'
     });
 
@@ -871,7 +874,7 @@ router.post('/google-signin', async (req, res) => {
     const googleClientId = process.env.GOOGLE_SIGNIN_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
 
     if (!idToken) {
-      return res.status(400).json({ message: 'Google ID token is required' });
+      return res.status(400).json({ message: 'Google ID token is required' })
     }
     if (!googleClientId) {
       console.error('Google sign-in is not configured: GOOGLE_SIGNIN_CLIENT_ID is missing.');
@@ -892,21 +895,21 @@ router.post('/google-signin', async (req, res) => {
 
     if (!googleProfile?.email || !googleProfile.email_verified || !googleProfile.sub) {
       return res.status(401).json({ message: 'Google account email must be verified' });
-    }
+   }
 
     const normalizedEmail = googleProfile.email.toLowerCase().trim();
     const googleId = googleProfile.sub;
-    const name = googleProfile.name || normalizedEmail.split('@')[0];
+    const name = googleProfile.name || normalizedEmail.split('@')[0]
     const profilePhoto = googleProfile.picture || null;
     let isNewUser = false;
 
-    let user = await User.findOne({ googleId }) || await User.findOne({ email: normalizedEmail });
+   let user = await User.findOne({ googleId }) || await User.findOne({ email: normalizedEmail });
 
     if (user) {
       if (user.googleId && user.googleId !== googleId) {
         return res.status(409).json({ message: 'This email is already linked to another Google account' });
       }
-      if (!user.googleId) user.googleId = googleId;
+     if (!user.googleId) user.googleId = googleId;
       if (profilePhoto && !user.profilePhoto) {
         user.profilePhoto = profilePhoto;
       }
@@ -929,15 +932,15 @@ router.post('/google-signin', async (req, res) => {
       await user.save();
       try {
         const loyalty = new LoyaltyPoints({ userId: user._id });
-        loyalty.addPoints(100, 'earned', 'Welcome bonus: 100 points for signing up with Google!', user._id);
+       loyalty.addPoints(100, 'earned', 'Welcome bonus: 100 points for signing up with Google!', user._id);
         await loyalty.save();
-        console.log(`🎁 Awarded 100 signup bonus points to new Google user ${user._id}`);
+       console.log(`🎁 Awarded 100 signup bonus points to new Google user ${user._id}`);
       } catch (loyaltyError) {
         console.error('Error creating loyalty account:', loyaltyError);
       }
     }
     const token = jwt.sign(
-      { userId: user._id, role: user.role, clinicId: user.clinicId || null },
+     { userId: user._id, role: user.role, clinicId: user.clinicId || null },
       process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
@@ -947,14 +950,14 @@ router.post('/google-signin', async (req, res) => {
     res.json({
       token,
       isNewUser,
-      user: {
+     user: {
         id: user._id,
         name: user.name,
         email: user.email,
         role: user.role,
         phone: user.phone,
         profilePhoto: user.profilePhoto,
-        clinicId: user.clinicId || null,
+       clinicId: user.clinicId || null,
         locationCaptured: user.locationCaptured || false
       }
     });
@@ -963,43 +966,43 @@ router.post('/google-signin', async (req, res) => {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
-router.post('/doctor/google-signin', async (req, res) => {
+router.post('/doctor/google-signin', async (req, res) => { 
   try {
     const { email, name, googleId, profilePhoto } = req.body;
 
     if (!email || !googleId) {
       return res.status(400).json({ message: 'Email and Google ID are required' });
-    }
-
+   }
+ 
     const normalizedEmail = email.toLowerCase().trim();
     let doctor = await Doctor.findOne({ email: normalizedEmail });
 
     if (doctor) {
       if (doctor.approvalStatus === 'pending') {
         return res.status(403).json({ 
-          message: 'Your account is pending admin approval. Please wait for confirmation.',
-          status: 'pending'
+         message: 'Your account is pending admin approval. Please wait for confirmation.',
+         status: 'pending'
         });
       }
 
-      if (doctor.approvalStatus === 'rejected') {
+     if (doctor.approvalStatus === 'rejected') {
         return res.status(403).json({ 
           message: 'Your account has been rejected. Please contact admin.',
-          status: 'rejected'
-        });
+         status: 'rejected'
+       });
       }
       if (!doctor.googleId) {
         doctor.googleId = googleId;
       }
       if (profilePhoto && !doctor.profilePhoto) {
         doctor.profilePhoto = profilePhoto;
-      }
+     }
       doctor.lastLogin = new Date();
       await doctor.save();
       const token = jwt.sign(
-        { doctorId: doctor._id, role: 'doctor', clinicId: doctor.clinicId || null },
+       { doctorId: doctor._id, role: 'doctor', clinicId: doctor.clinicId || null },
         process.env.JWT_SECRET,
-        { expiresIn: '24h' }
+       { expiresIn: '24h' }
       );
 
       console.log(`✅ Doctor Google sign-in successful for: ${normalizedEmail}`);
@@ -1011,7 +1014,7 @@ router.post('/doctor/google-signin', async (req, res) => {
           id: doctor._id,
           name: doctor.name,
           email: doctor.email,
-          phone: doctor.phone,
+         phone: doctor.phone,
           specialization: doctor.specialization,
           clinicId: doctor.clinicId,
           profilePhoto: doctor.profilePhoto,
@@ -1041,7 +1044,7 @@ router.post('/clinic/google-signin', async (req, res) => {
     const normalizedEmail = email.toLowerCase().trim();
     let user = await User.findOne({ email: normalizedEmail, role: { $in: ['receptionist', 'clinic'] } });
 
-    if (user) {
+   if (user) {
       if (user.approvalStatus === 'pending') {
         return res.status(403).json({ 
           message: 'Your account is pending admin approval. Please wait for confirmation.',
@@ -1051,7 +1054,7 @@ router.post('/clinic/google-signin', async (req, res) => {
 
       if (user.approvalStatus === 'rejected') {
         return res.status(403).json({ 
-          message: 'Your account has been rejected. Please contact admin.',
+         message: 'Your account has been rejected. Please contact admin.',
           status: 'rejected'
         });
       }
@@ -1064,27 +1067,27 @@ router.post('/clinic/google-signin', async (req, res) => {
       }
       if (!user.googleId) {
         user.googleId = googleId;
-      }
+     }
       if (profilePhoto && !user.profilePhoto) {
         user.profilePhoto = profilePhoto;
-      }
+     }
       await user.save();
       const token = jwt.sign(
         { userId: user._id, role: user.role, clinicId: user.clinicId || null },
         process.env.JWT_SECRET,
-        { expiresIn: '24h' }
+       { expiresIn: '24h' }
       );
 
       console.log(`✅ Staff Google sign-in successful for: ${normalizedEmail}`);
 
-      return res.json({
+     return res.json({
         token,
         isNewUser: false,
         user: {
           id: user._id,
-          name: user.name,
+          name: user.name, 
           email: user.email,
-          role: user.role,
+         role: user.role,
           phone: user.phone,
           clinicId: user.clinicId,
           clinicName: user.clinicName,
@@ -1103,14 +1106,14 @@ router.post('/clinic/google-signin', async (req, res) => {
     console.error('Staff Google sign-in error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+}); 
 
 router.post('/facebook-signin', async (req, res) => {
   try {
     const { email, name, facebookId, profilePhoto, accessToken } = req.body;
 
     if (!email || !facebookId) {
-      return res.status(400).json({ message: 'Email and Facebook ID are required' });
+      return res.status(400).json({ message: 'Email and Facebook ID are required' }); 
     }
 
     const normalizedEmail = email.toLowerCase().trim();
@@ -1118,7 +1121,7 @@ router.post('/facebook-signin', async (req, res) => {
     let isNewUser = false;
 
     if (user) {
-      if (!user.facebookId) {
+     if (!user.facebookId) {
         user.facebookId = facebookId;
       }
       if (profilePhoto && !user.profilePhoto) {
@@ -1126,7 +1129,7 @@ router.post('/facebook-signin', async (req, res) => {
       }
       await user.save();
     } else {
-      isNewUser = true;
+     isNewUser = true;
       user = new User({
         name: name || 'Facebook User',
         email: normalizedEmail,
@@ -1159,12 +1162,12 @@ router.post('/facebook-signin', async (req, res) => {
       user: {
         id: user._id,
         name: user.name,
-        email: user.email,
+       email: user.email,
         role: user.role,
         phone: user.phone,
         profilePhoto: user.profilePhoto,
         clinicId: user.clinicId || null
-      }
+     }
     });
   } catch (error) {
     console.error('Facebook sign-in error:', error);
@@ -1180,21 +1183,21 @@ router.post('/apple-signin', async (req, res) => {
       return res.status(400).json({ message: 'Apple ID is required' });
     }
     let user = await User.findOne({ appleId: appleId, role: 'patient' });
-    let isNewUser = false;
+    let isNewUser = false; 
 
     if (user) {
       if (name && !user.name) {
         user.name = name;
       }
       await user.save();
-    } else if (email) {
+    } else if (email) { 
       user = await User.findOne({ email: email.toLowerCase().trim(), role: 'patient' });
       
       if (user) {
         user.appleId = appleId;
         if (name && !user.name) {
-          user.name = name;
-        }
+         user.name = name;
+        } 
         await user.save();
       } else {
         isNewUser = true;
@@ -1222,13 +1225,13 @@ router.post('/apple-signin', async (req, res) => {
     }
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
-      process.env.JWT_SECRET,
+     process.env.JWT_SECRET,
       { expiresIn: '24h' }
     );
 
     console.log(`✅ Apple sign-in successful for: ${user.email} (${isNewUser ? 'new user' : 'existing user'})`);
 
-    res.json({
+   res.json({
       token,
       isNewUser,
       user: {
@@ -1239,8 +1242,8 @@ router.post('/apple-signin', async (req, res) => {
         phone: user.phone,
         profilePhoto: user.profilePhoto,
         clinicId: user.clinicId || null
-      }
-    });
+     }
+   });
   } catch (error) {
     console.error('Apple sign-in error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
@@ -1254,7 +1257,7 @@ router.post('/test-email', async (req, res) => {
       return res.status(400).json({ success: false, message: 'Email is required' });
     }
     
-    console.log('📧 Testing email service...');
+   console.log('📧 Testing email service...');
     console.log(`   Target email: ${email}`);
     console.log(`   EMAIL_USER configured: ${process.env.EMAIL_USER ? 'YES' : 'NO'}`);
     console.log(`   EMAIL_PASS configured: ${process.env.EMAIL_PASS ? 'YES' : 'NO'}`);
@@ -1264,9 +1267,9 @@ router.post('/test-email', async (req, res) => {
     
     res.json({ 
       success: true, 
-      message: `Test email sent to ${email}. Check your inbox!`,
+     message: `Test email sent to ${email}. Check your inbox!`, 
       config: {
-        emailUserConfigured: !!process.env.EMAIL_USER,
+       emailUserConfigured: !!process.env.EMAIL_USER,
         emailPassConfigured: !!process.env.EMAIL_PASS
       }
     });
@@ -1274,7 +1277,7 @@ router.post('/test-email', async (req, res) => {
     console.error('❌ Test email failed:', error);
     res.status(500).json({ 
       success: false, 
-      message: 'Failed to send test email',
+     message: 'Failed to send test email',
       error: error.message,
       config: {
         emailUserConfigured: !!process.env.EMAIL_USER,
@@ -1295,7 +1298,7 @@ router.get('/config-status', async (req, res) => {
       },
       googleMeet: googleStatus,
       frontendUrl: process.env.FRONTEND_URL || 'NOT SET'
-    });
+   });
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
@@ -1312,7 +1315,7 @@ router.post('/create-test-user', async (req, res) => {
       name: 'Razorpay Test User',
       email: 'testuser@healthsync.com',
       password: 'Test@123456',
-      phone: '+91-9999999999',
+     phone: '+91-9999999999',
       role: 'patient',
       isVerified: true,
       address: {
@@ -1364,7 +1367,7 @@ router.post('/create-test-user', async (req, res) => {
     });
     
   } catch (error) {
-    console.error('❌ Error creating test user:', error);
+   console.error('❌ Error creating test user:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });

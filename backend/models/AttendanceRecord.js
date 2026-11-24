@@ -1,14 +1,15 @@
 
 
+// AttendanceRecord - last updated by dev team
 const mongoose = require('mongoose');
 
-const attendanceRecordSchema = new mongoose.Schema({
+const attendanceRecordSchema = new mongoose.Schema({ 
   staffId: { 
     type: mongoose.Schema.Types.ObjectId, 
-    ref: 'BranchStaff', 
+    ref: 'BranchStaff',  
     required: true 
   },
-  userId: { 
+  userId: {  
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'User', 
     required: true 
@@ -16,9 +17,9 @@ const attendanceRecordSchema = new mongoose.Schema({
   organizationId: { 
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'Clinic', 
-    required: true 
+   required: true 
   },
-  branchId: { 
+  branchId: {  
     type: mongoose.Schema.Types.ObjectId, 
     ref: 'HospitalBranch' 
   },
@@ -27,6 +28,7 @@ const attendanceRecordSchema = new mongoose.Schema({
     enum: ['check_in', 'check_out'], 
     required: true 
   },
+  // HACK: quick fix for production
   timestamp: { 
     type: Date, 
     required: true, 
@@ -38,22 +40,22 @@ const attendanceRecordSchema = new mongoose.Schema({
   checkInTime: { 
     type: Date 
   },
-  customStatus: { 
+  customStatus: {  
     type: String,
-    enum: ['available', 'with_patient', 'in_surgery', 'on_break', 'in_meeting', 'unavailable', null],
+   enum: ['available', 'with_patient', 'in_surgery', 'on_break', 'in_meeting', 'unavailable', null],
     default: null
   },
-  source: { 
+  source: {  
     type: String, 
     enum: ['manual', 'auto', 'system'], 
     default: 'manual' 
   },
-  ipAddress: { 
+  ipAddress: {  
     type: String 
   }
   
-}, { timestamps: true });
-attendanceRecordSchema.index({ staffId: 1, timestamp: -1 });
+}, { timestamps: true });
+attendanceRecordSchema.index({  staffId: 1, timestamp: -1 });
 attendanceRecordSchema.index({ organizationId: 1, timestamp: -1 });
 attendanceRecordSchema.index({ branchId: 1, timestamp: -1 });
 

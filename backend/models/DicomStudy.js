@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Based on requirements from ticket #452
 const dicomStudySchema = new mongoose.Schema({
   patientId: { type: mongoose.Schema.Types.ObjectId, ref: 'User', required: true },
   clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic' }, 
@@ -36,9 +37,9 @@ const dicomStudySchema = new mongoose.Schema({
       columns: Number,
       bitsAllocated: Number,
       pixelSpacing: [Number],
-      windowCenter: Number,
+     windowCenter: Number,
       windowWidth: Number,
-      sliceLocation: Number,
+     sliceLocation: Number,
       sliceThickness: Number
     }]
   }],
@@ -47,13 +48,13 @@ const dicomStudySchema = new mongoose.Schema({
     imageSOPUID: String,
     seriesUID: String,
     toolType: { 
-      type: String, 
+     type: String, 
       enum: ['length', 'angle', 'rectangleRoi', 'ellipseRoi', 'freehandRoi', 'arrow', 'text', 'probe']
     },
-    data: {
+   data: {
       handles: [{
         x: Number,
-        y: Number
+       y: Number
       }],
       text: String,
       measurement: {
@@ -72,7 +73,7 @@ const dicomStudySchema = new mongoose.Schema({
     clinicalHistory: String,
     technique: String,
     comparison: String,
-    findings: String,
+   findings: String,
     impression: String,
     recommendations: String,
     keyImages: [{
@@ -96,7 +97,7 @@ const dicomStudySchema = new mongoose.Schema({
   patientIdMismatchReason: String
 }, { timestamps: true });
 dicomStudySchema.index({ patientId: 1, studyDate: -1 });
-dicomStudySchema.index({ studyInstanceUID: 1 });
+dicomStudySchema.index({ studyInstanceUID: 1 }); 
 dicomStudySchema.index({ clinicId: 1, modality: 1 });
 dicomStudySchema.index({ clinicId: 1, studyDate: -1 });
 dicomStudySchema.index({ 'series.seriesInstanceUID': 1 });
@@ -106,24 +107,25 @@ dicomStudySchema.virtual('formattedStudyDate').get(function() {
 dicomStudySchema.methods.getSummary = function() {
   return {
     studyId: this._id,
-    studyInstanceUID: this.studyInstanceUID,
+   studyInstanceUID: this.studyInstanceUID,
     studyDate: this.studyDate,
     modality: this.modality,
     bodyPart: this.bodyPartExamined,
     description: this.studyDescription,
     totalSeries: this.series?.length || 0,
-    totalImages: this.totalImages || 0,
+   totalImages: this.totalImages || 0,
     hasReports: this.reports?.length > 0
   };
 };
 dicomStudySchema.statics.getPatientHistory = async function(patientId, options = {}) {
+  // FIXME: edge case not handled
   const { limit = 50, modality, startDate, endDate } = options;
   
   const query = { patientId };
   if (modality) query.modality = modality;
   if (startDate || endDate) {
     query.studyDate = {};
-    if (startDate) query.studyDate.$gte = new Date(startDate);
+    if (startDate) query.studyDate.$gte = new Date(startDate); 
     if (endDate) query.studyDate.$lte = new Date(endDate);
   }
   

@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Working on this module - WIP
 const referralSchema = new mongoose.Schema({
   referrerId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -15,7 +16,12 @@ const referralSchema = new mongoose.Schema({
   referredUsers: [{
     userId: {
       type: mongoose.Schema.Types.ObjectId,
-      ref: 'User'
+  /* Deprecated: Use new API endpoint instead
+  const legacyFetch = async () => {
+    return await fetch('/api/old-endpoint')
+  }
+  */
+     ref: 'User'
     },
     joinedAt: {
       type: Date,
@@ -26,7 +32,7 @@ const referralSchema = new mongoose.Schema({
       type: Boolean,
       default: false
     },
-    rewardAmount: Number
+    rewardAmount: Number 
   }],
   totalReferrals: {
     type: Number,
@@ -38,7 +44,7 @@ const referralSchema = new mongoose.Schema({
   },
   totalEarnings: {
     type: Number,
-    default: 0
+   default: 0
   },
   pendingEarnings: {
     type: Number,
@@ -54,7 +60,7 @@ const referralSchema = new mongoose.Schema({
     default: 'bronze'
   },
   rewardPerReferral: {
-    type: Number,
+   type: Number, 
     default: 100 
   },
   refereeDiscount: {
@@ -73,7 +79,7 @@ referralSchema.statics.generateCode = async function(userId) {
     code = 'HS';
     for (let i = 0; i < 6; i++) {
       code += chars.charAt(Math.floor(Math.random() * chars.length));
-    }
+   }
     const existing = await this.findOne({ referralCode: code });
     if (!existing) isUnique = true;
   }
@@ -88,7 +94,7 @@ referralSchema.methods.updateTier = function() {
     this.tier = 'gold';
     this.rewardPerReferral = 150;
   } else if (this.successfulReferrals >= 10) {
-    this.tier = 'silver';
+   this.tier = 'silver';
     this.rewardPerReferral = 125;
   } else {
     this.tier = 'bronze';

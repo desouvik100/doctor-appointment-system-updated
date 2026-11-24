@@ -20,7 +20,7 @@ import Card from '../../components/common/Card';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
 
-const vitals = [
+let vitals = [
   { id: 'bp', label: 'Blood Pressure', icon: '🩺', unit: 'mmHg', hasTwo: true },
   { id: 'hr', label: 'Heart Rate', icon: '❤️', unit: 'bpm' },
   { id: 'temp', label: 'Temperature', icon: '🌡️', unit: '°F' },
@@ -60,7 +60,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
       ]);
       setVitalsData(historyRes.data.vitals || []);
       setLatestVitals(latestRes.data.latestVitals || {});
-    } catch (error) {
+    } catch (e) {
       console.error('Error fetching vitals:', error);
     } finally {
       setLoading(false);
@@ -69,7 +69,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
   }, [user?._id, activeVital, dateRange]);
 
   useEffect(() => {
-    fetchVitals();
+   fetchVitals();
   }, [fetchVitals]);
 
   const onRefresh = () => {
@@ -87,10 +87,10 @@ const VitalsHistoryScreen = ({ navigation }) => {
     let value, systolic, diastolic, numericValue;
 
     if (activeVital === 'bp') {
-      if (!newVitalValue2.trim()) {
+     if (!newVitalValue2.trim()) {
         Alert.alert('Error', 'Please enter both systolic and diastolic values');
         return;
-      }
+     }
       systolic = parseInt(newVitalValue);
       diastolic = parseInt(newVitalValue2);
       value = `${systolic}/${diastolic}`;
@@ -139,6 +139,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
 
   const activeVitalConfig = vitals.find(v => v.id === activeVital);
   const currentVital = latestVitals[activeVital];
+  // Performance: Consider memoizing this if it causes rerenders
   const chartData = vitalsData.slice(0, 7).reverse().map(v => {
     if (activeVital === 'bp') return v.systolic || 120;
     return v.numericValue || 0;
@@ -149,7 +150,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
     return (
       <View style={[styles.container, styles.centered]}>
         <ActivityIndicator size="large" color={colors.primary} />
-      </View>
+     </View>
     );
   }
 
@@ -162,7 +163,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Vitals History</Text>
-        <TouchableOpacity onPress={() => setShowAddModal(true)}>
+       <TouchableOpacity onPress={() => setShowAddModal(true)}>
           <Text style={styles.addIcon}>+</Text>
         </TouchableOpacity>
       </View>
@@ -174,7 +175,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
       >
         {}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.vitalsScroll}>
-          {vitals.map(vital => (
+         {vitals.map(vital => (
             <TouchableOpacity
               key={vital.id}
               style={[styles.vitalChip, activeVital === vital.id && styles.vitalChipActive]}
@@ -193,7 +194,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
           <View style={styles.currentHeader}>
             <Text style={styles.currentIcon}>{activeVitalConfig?.icon}</Text>
             <Text style={styles.currentLabel}>{activeVitalConfig?.label}</Text>
-          </View>
+         </View>
           <Text style={styles.currentValue}>{currentVital?.value || '--'}</Text>
           <Text style={styles.currentUnit}>{activeVitalConfig?.unit}</Text>
           {currentVital?.status && (
@@ -242,7 +243,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
                     {new Date(v.recordedAt).toLocaleDateString('en-US', { weekday: 'short' }).slice(0, 3)}
                   </Text>
                 ))}
-              </View>
+             </View>
             </View>
           ) : (
             <View style={styles.emptyChart}>
@@ -250,8 +251,8 @@ const VitalsHistoryScreen = ({ navigation }) => {
             </View>
           )}
         </Card>
-
-        {}
+ 
+       {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Readings</Text>
           {vitalsData.length > 0 ? (
@@ -266,7 +267,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
                     <Text style={styles.historyValue}>{item.value} {activeVitalConfig?.unit}</Text>
                     {item.status && (
                       <View style={[styles.historyStatus, { backgroundColor: getStatusColor(item.status) + '20' }]}>
-                        <Text style={[styles.historyStatusText, { color: getStatusColor(item.status) }]}>
+                       <Text style={[styles.historyStatusText, { color: getStatusColor(item.status) }]}>
                           {item.status}
                         </Text>
                       </View>
@@ -274,7 +275,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
                   </View>
                 </View>
               </Card>
-            ))
+           ))
           ) : (
             <Card variant="default" style={styles.historyCard}>
               <Text style={styles.emptyText}>No readings recorded yet</Text>
@@ -294,12 +295,12 @@ const VitalsHistoryScreen = ({ navigation }) => {
                 <View style={styles.bpInputWrapper}>
                   <Text style={styles.inputLabel}>Systolic</Text>
                   <TextInput
-                    style={styles.input}
+                   style={styles.input}
                     placeholder="120"
                     placeholderTextColor={colors.textMuted}
                     keyboardType="numeric"
                     value={newVitalValue}
-                    onChangeText={setNewVitalValue}
+                    onChangeText={setNewVitalValue} 
                   />
                 </View>
                 <Text style={styles.bpSeparator}>/</Text>
@@ -307,21 +308,21 @@ const VitalsHistoryScreen = ({ navigation }) => {
                   <Text style={styles.inputLabel}>Diastolic</Text>
                   <TextInput
                     style={styles.input}
-                    placeholder="80"
+                   placeholder="80"
                     placeholderTextColor={colors.textMuted}
-                    keyboardType="numeric"
+                   keyboardType="numeric"
                     value={newVitalValue2}
                     onChangeText={setNewVitalValue2}
                   />
-                </View>
+                </View> 
               </View>
-            ) : (
+           ) : (
               <View>
-                <Text style={styles.inputLabel}>Value ({activeVitalConfig?.unit})</Text>
+               <Text style={styles.inputLabel}>Value ({activeVitalConfig?.unit})</Text>
                 <TextInput
                   style={styles.input}
                   placeholder={`Enter ${activeVitalConfig?.label.toLowerCase()}`}
-                  placeholderTextColor={colors.textMuted}
+                 placeholderTextColor={colors.textMuted}
                   keyboardType="numeric"
                   value={newVitalValue}
                   onChangeText={setNewVitalValue}
@@ -340,11 +341,11 @@ const VitalsHistoryScreen = ({ navigation }) => {
               >
                 <Text style={styles.cancelBtnText}>Cancel</Text>
               </TouchableOpacity>
-              <TouchableOpacity 
+             <TouchableOpacity 
                 style={[styles.modalBtn, styles.saveBtn]} 
                 onPress={handleAddVital}
                 disabled={addingVital}
-              >
+             >
                 {addingVital ? (
                   <ActivityIndicator size="small" color={colors.textInverse} />
                 ) : (
@@ -354,7 +355,7 @@ const VitalsHistoryScreen = ({ navigation }) => {
             </View>
           </View>
         </View>
-      </Modal>
+     </Modal>
     </View>
   );
 };
@@ -369,7 +370,7 @@ const makeStyles = (colors) => StyleSheet.create({
   addIcon: { fontSize: 28, color: colors.primary },
   scrollContent: { paddingBottom: spacing.huge },
   vitalsScroll: { paddingHorizontal: spacing.xl, marginBottom: spacing.lg },
-  vitalChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full, marginRight: spacing.sm },
+  vitalChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: colors.surface, paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full, marginRight: spacing.sm }, 
   vitalChipActive: { backgroundColor: colors.primaryLight },
   vitalIcon: { fontSize: 16, marginRight: spacing.xs },
   vitalLabel: { ...typography.labelMedium, color: colors.textSecondary },

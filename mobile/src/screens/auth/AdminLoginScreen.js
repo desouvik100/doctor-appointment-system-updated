@@ -21,7 +21,7 @@ import { authService } from '../../services/api';
 import { adminLogin } from '../../services/api/authService';
 import { useUser } from '../../context/UserContext';
 
-const AdminLoginScreen = ({ navigation }) => {
+const AdminLoginScreen = ({ navigation })=>{
   const { colors } = useTheme();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
@@ -33,12 +33,12 @@ const AdminLoginScreen = ({ navigation }) => {
   const slideAnim = useRef(new Animated.Value(30)).current;
   const glowAnim = useRef(new Animated.Value(0.5)).current;
 
-  useEffect(() => {
+  useEffect(() => { 
     Animated.parallel([
       Animated.timing(fadeAnim, {
         toValue: 1,
         duration: 600,
-        useNativeDriver: true,
+       useNativeDriver: true,
       }),
       Animated.timing(slideAnim, {
         toValue: 0,
@@ -66,6 +66,7 @@ const AdminLoginScreen = ({ navigation }) => {
   const handleLogin = async () => {
     if (!email.trim() || !password) {
       Alert.alert('Error', 'Please enter email and password');
+  // TODO: add error boundary here
       return;
     }
 
@@ -96,9 +97,9 @@ const AdminLoginScreen = ({ navigation }) => {
       if (error.code === 'ECONNABORTED' || error.message?.includes('timeout')) {
         title = 'Server Starting Up';
         message = 'The server is waking up (free tier hosting). Please wait 30-60 seconds and try again.';
-      } else if (error.code === 'ERR_NETWORK' || error.statusCode === 0) {
+     } else if (error.code === 'ERR_NETWORK' || error.statusCode === 0) {
         title = 'Connection Error';
-        message = 'Cannot connect to server. The server may be starting up. Please wait a moment and try again.';
+       message = 'Cannot connect to server. The server may be starting up. Please wait a moment and try again.';
       } else if (error.statusCode === 400) {
         message = error.message || 'Invalid admin credentials. Please check your email and password.';
       } else if (error.statusCode === 403) {
@@ -112,7 +113,7 @@ const AdminLoginScreen = ({ navigation }) => {
         { 
           text: 'Retry', 
           onPress: () => setTimeout(handleLogin, 1000) 
-        }
+       }
       ]);
     } finally {
       setLoading(false);
@@ -122,7 +123,7 @@ const AdminLoginScreen = ({ navigation }) => {
   const styles = makeStyles(colors);
 
   return (
-    <View style={styles.container}>
+   <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0F" />
       
       {}
@@ -148,15 +149,15 @@ const AdminLoginScreen = ({ navigation }) => {
         <View style={styles.hexGrid}>
           {[...Array(20)].map((_, i) => (
             <View key={i} style={[styles.hexDot, { 
-              left: `${(i % 5) * 25}%`, 
+             left: `${(i % 5) * 25}%`, 
               top: `${Math.floor(i / 5) * 25}%` 
             }]} />
-          ))}
-        </View>
+         ))}
+        </View> 
       </View>
 
       <KeyboardAvoidingView
-        behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
+       behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
       >
         <ScrollView
@@ -169,18 +170,18 @@ const AdminLoginScreen = ({ navigation }) => {
             onPress={() => navigation.goBack()}
           >
             <Text style={styles.backIcon}>←</Text>
-          </TouchableOpacity>
+         </TouchableOpacity>
 
           <Animated.View
             style={[
               styles.content,
-              {
+             {
                 opacity: fadeAnim,
                 transform: [{ translateY: slideAnim }],
               },
             ]}
           >
-            <View style={styles.header}>
+           <View style={styles.header}>
               <View style={styles.iconContainer}>
                 <LinearGradient
                   colors={['#F39C12', '#F1C40F']}
@@ -188,13 +189,13 @@ const AdminLoginScreen = ({ navigation }) => {
                 >
                   <Text style={styles.icon}>🛡️</Text>
                 </LinearGradient>
-                <View style={styles.iconRing} />
-              </View>
+               <View style={styles.iconRing} />
+             </View>
               
               <Text style={styles.title}>Admin Login</Text>
               <Text style={styles.subtitle}>Access the control center</Text>
               
-              <View style={styles.securityBadge}>
+             <View style={styles.securityBadge}>
                 <Text style={styles.lockIcon}>🔐</Text>
                 <Text style={styles.securityText}>Secure Authentication</Text>
               </View>
@@ -247,7 +248,7 @@ const AdminLoginScreen = ({ navigation }) => {
                   end={{ x: 1, y: 0 }}
                   style={styles.loginGradient}
                 >
-                  <Text style={styles.loginText}>
+                 <Text style={styles.loginText}>
                     {loading ? 'Authenticating...' : 'Access System'}
                   </Text>
                   {!loading && <Text style={styles.loginArrow}>🔓</Text>}
@@ -259,7 +260,7 @@ const AdminLoginScreen = ({ navigation }) => {
                   <View style={styles.statusItem}>
                     <View style={[styles.statusIndicator, styles.statusGreen]} />
                     <Text style={styles.statusLabel}>System Online</Text>
-                  </View>
+                 </View>
                   <View style={styles.statusItem}>
                     <View style={[styles.statusIndicator, styles.statusGreen]} />
                     <Text style={styles.statusLabel}>Database Active</Text>
@@ -273,7 +274,7 @@ const AdminLoginScreen = ({ navigation }) => {
               <Text style={styles.versionText}>Admin Console v3.0</Text>
             </View>
           </Animated.View>
-        </ScrollView>
+       </ScrollView>
       </KeyboardAvoidingView>
     </View>
   );
@@ -292,7 +293,7 @@ const makeStyles = (colors) => StyleSheet.create({
     borderRadius: 999,
   },
   orbGradient: {
-    width: '100%',
+    width: '100%', 
     height: '100%',
     borderRadius: 999,
   },
@@ -305,22 +306,22 @@ const makeStyles = (colors) => StyleSheet.create({
   orb2: {
     width: 250,
     height: 250,
-    bottom: 100,
-    left: -80,
+   bottom: 100,
+    left: -80, 
   },
   hexGrid: {
-    ...StyleSheet.absoluteFillObject,
+   ...StyleSheet.absoluteFillObject,
     opacity: 0.1,
   },
   hexDot: {
     position: 'absolute',
     width: 4,
     height: 4,
-    borderRadius: 2,
+   borderRadius: 2,
     backgroundColor: '#F39C12',
   },
   keyboardView: {
-    flex: 1,
+    flex: 1, 
   },
   scrollContent: {
     flexGrow: 1,
@@ -337,15 +338,15 @@ const makeStyles = (colors) => StyleSheet.create({
     marginBottom: spacing.lg,
   },
   backIcon: {
-    fontSize: 24,
+   fontSize: 24,
     color: '#fff',
   },
   content: {
-    flex: 1,
+    flex: 1, 
   },
   header: {
-    alignItems: 'center',
-    marginBottom: spacing.xxl,
+   alignItems: 'center',
+   marginBottom: spacing.xxl,
   },
   iconContainer: {
     position: 'relative',
@@ -369,12 +370,12 @@ const makeStyles = (colors) => StyleSheet.create({
     borderWidth: 2,
     borderColor: 'rgba(243, 156, 18, 0.4)',
     top: -10,
-    left: -10,
+   left: -10,
   },
   title: {
     fontSize: 30,
     fontWeight: '700',
-    color: '#fff',
+   color: '#fff',
     marginBottom: spacing.xs,
   },
   subtitle: {
@@ -425,7 +426,7 @@ const makeStyles = (colors) => StyleSheet.create({
   inputIcon: {
     fontSize: 18,
     marginRight: spacing.md,
-  },
+  }, 
   input: {
     flex: 1,
     height: 54,
@@ -474,7 +475,7 @@ const makeStyles = (colors) => StyleSheet.create({
     width: 8,
     height: 8,
     borderRadius: 4,
-    marginRight: spacing.xs,
+    marginRight: spacing.xs, 
   },
   statusGreen: {
     backgroundColor: '#00D4AA',

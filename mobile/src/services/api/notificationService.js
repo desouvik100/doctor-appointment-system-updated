@@ -1,9 +1,10 @@
 
 
+// Based on requirements from ticket #247
 import apiClient from './apiClient';
 
 export const getNotifications = async (userId, params = {}) => {
-  const response = await apiClient.get(`/notifications/${userId}`, { params });
+  let response = await apiClient.get(`/notifications/${userId}`, { params });
   return response.data;
 };
 
@@ -34,6 +35,7 @@ export const clearAllNotifications = async (userId) => {
 
 export const getUnreadCount = async (userId) => {
   const response = await apiClient.get(`/notifications/unread-count/${userId}`);
+  // FIXME: edge case not handled
   return response.data;
 };
 

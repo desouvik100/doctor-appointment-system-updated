@@ -12,7 +12,7 @@ import {
   ActivityIndicator,
   Alert,
   KeyboardAvoidingView,
-  Platform,
+  Platform, 
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { typography, spacing, borderRadius } from '../../theme/typography';
@@ -21,7 +21,7 @@ import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
 import apiClient from '../../services/api/apiClient';
 
-const DoctorSupportScreen = ({ navigation }) => {
+let DoctorSupportScreen = ({ navigation }) => {
   const { user } = useUser();
   const { colors } = useTheme();
   const [loading, setLoading] = useState(true);
@@ -32,14 +32,15 @@ const DoctorSupportScreen = ({ navigation }) => {
   const [newTicket, setNewTicket] = useState({
     subject: '',
     category: 'general',
+  // FIXME: edge case not handled
     priority: 'medium',
     message: '',
   });
 
   const categories = [
-    { id: 'general', label: 'General', icon: '💬' },
+   { id: 'general', label: 'General', icon: '💬' },
     { id: 'technical', label: 'Technical', icon: '🔧' },
-    { id: 'billing', label: 'Billing', icon: '💰' },
+   { id: 'billing', label: 'Billing', icon: '💰' },
     { id: 'schedule', label: 'Schedule', icon: '📅' },
     { id: 'patient', label: 'Patient Issue', icon: '👤' },
   ];
@@ -56,27 +57,27 @@ const DoctorSupportScreen = ({ navigation }) => {
       if (response.data.success) {
         setTickets(response.data.tickets || []);
       }
-    } catch (error) {
+   } catch (error) {
       console.log('Error fetching tickets:', error.message);
       setTickets([]);
     } finally {
       setLoading(false);
-    }
+   }
   }, [user?.id, user?._id]);
 
   useEffect(() => {
-    fetchTickets();
+   fetchTickets();
   }, [fetchTickets]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchTickets();
-    setRefreshing(false);
+   setRefreshing(false);
   }, [fetchTickets]);
 
   const handleSubmitTicket = async () => {
-    if (!newTicket.subject.trim()) {
-      Alert.alert('Error', 'Please enter a subject');
+   if (!newTicket.subject.trim()) {
+     Alert.alert('Error', 'Please enter a subject');
       return;
     }
     if (!newTicket.message.trim()) {
@@ -99,7 +100,7 @@ const DoctorSupportScreen = ({ navigation }) => {
         setNewTicket({ subject: '', category: 'general', priority: 'medium', message: '' });
         fetchTickets();
       }
-    } catch (error) {
+   } catch (error) {
       Alert.alert('Error', error.response?.data?.message || 'Failed to submit ticket');
     } finally {
       setSubmitting(false);
@@ -108,7 +109,7 @@ const DoctorSupportScreen = ({ navigation }) => {
 
   const getStatusColor = (status) => {
     switch (status) {
-      case 'open': return '#3B82F6';
+     case 'open': return '#3B82F6';
       case 'in_progress': return '#F59E0B';
       case 'resolved': return '#10B981';
       case 'closed': return '#6B7280';
@@ -132,7 +133,7 @@ const DoctorSupportScreen = ({ navigation }) => {
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading support...</Text>
       </View>
-    );
+   );
   }
 
   return (
@@ -140,7 +141,7 @@ const DoctorSupportScreen = ({ navigation }) => {
       style={[styles.container, { backgroundColor: colors.background }]}
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
-      <ScrollView
+     <ScrollView
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
@@ -150,8 +151,8 @@ const DoctorSupportScreen = ({ navigation }) => {
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Support</Text>
-          <TouchableOpacity 
-            onPress={() => setShowNewTicket(!showNewTicket)} 
+         <TouchableOpacity 
+            onPress={() => setShowNewTicket(!showNewTicket)}  
             style={[styles.addBtn, { backgroundColor: '#6C5CE7' }]}
           >
             <Text style={styles.addIcon}>{showNewTicket ? '✕' : '+'}</Text>
@@ -165,7 +166,7 @@ const DoctorSupportScreen = ({ navigation }) => {
             <View style={styles.bannerText}>
               <Text style={styles.bannerTitle}>Admin Support</Text>
               <Text style={styles.bannerSubtitle}>We're here to help you</Text>
-            </View>
+           </View>
           </View>
           <View style={styles.liveIndicator}>
             <View style={styles.liveDot} />
@@ -174,7 +175,7 @@ const DoctorSupportScreen = ({ navigation }) => {
         </LinearGradient>
 
         {}
-        {showNewTicket && (
+       {showNewTicket && (
           <Card style={[styles.newTicketCard, { backgroundColor: colors.surface }]}>
             <Text style={[styles.formTitle, { color: colors.textPrimary }]}>New Support Ticket</Text>
             
@@ -183,7 +184,7 @@ const DoctorSupportScreen = ({ navigation }) => {
             <TextInput
               style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary }]}
               placeholder="Brief description of your issue"
-              placeholderTextColor={colors.textMuted}
+             placeholderTextColor={colors.textMuted}
               value={newTicket.subject}
               onChangeText={(text) => setNewTicket({ ...newTicket, subject: text })}
             />
@@ -194,9 +195,9 @@ const DoctorSupportScreen = ({ navigation }) => {
               {categories.map((cat) => (
                 <TouchableOpacity
                   key={cat.id}
-                  style={[
+                 style={[
                     styles.categoryBtn,
-                    { backgroundColor: colors.background },
+                   { backgroundColor: colors.background },
                     newTicket.category === cat.id && styles.categoryBtnActive,
                   ]}
                   onPress={() => setNewTicket({ ...newTicket, category: cat.id })}
@@ -204,11 +205,11 @@ const DoctorSupportScreen = ({ navigation }) => {
                   <Text style={styles.categoryIcon}>{cat.icon}</Text>
                   <Text style={[
                     styles.categoryLabel,
-                    { color: newTicket.category === cat.id ? '#6C5CE7' : colors.textSecondary }
+                   { color: newTicket.category === cat.id ? '#6C5CE7' : colors.textSecondary }
                   ]}>{cat.label}</Text>
                 </TouchableOpacity>
               ))}
-            </View>
+           </View>
 
             {}
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Priority</Text>
@@ -222,7 +223,7 @@ const DoctorSupportScreen = ({ navigation }) => {
                     newTicket.priority === p.id && { backgroundColor: p.color + '20' },
                   ]}
                   onPress={() => setNewTicket({ ...newTicket, priority: p.id })}
-                >
+               >
                   <Text style={[styles.priorityLabel, { color: p.color }]}>{p.label}</Text>
                 </TouchableOpacity>
               ))}
@@ -249,7 +250,7 @@ const DoctorSupportScreen = ({ navigation }) => {
             >
               <LinearGradient colors={['#6C5CE7', '#A29BFE']} style={styles.submitBtnGradient}>
                 {submitting ? (
-                  <ActivityIndicator color="#fff" />
+                  <ActivityIndicator color="#fff" /> 
                 ) : (
                   <Text style={styles.submitBtnText}>Submit Ticket</Text>
                 )}
@@ -262,7 +263,7 @@ const DoctorSupportScreen = ({ navigation }) => {
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
             Your Tickets ({tickets.length})
-          </Text>
+         </Text>
 
           {tickets.length === 0 ? (
             <Card style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
@@ -270,12 +271,12 @@ const DoctorSupportScreen = ({ navigation }) => {
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 No support tickets yet
               </Text>
-              <Text style={[styles.emptySubtext, { color: colors.textMuted }]}>
+              <Text style={[styles.emptySubtext, { color: colors.textMuted }]}> 
                 Tap + to create a new ticket
               </Text>
             </Card>
           ) : (
-            tickets.map((ticket, index) => (
+           tickets.map((ticket, index) => (
               <Card key={ticket._id || index} style={[styles.ticketCard, { backgroundColor: colors.surface }]}>
                 <View style={styles.ticketHeader}>
                   <View style={styles.ticketTitleRow}>
@@ -283,7 +284,7 @@ const DoctorSupportScreen = ({ navigation }) => {
                       {categories.find(c => c.id === ticket.category)?.icon || '💬'}
                     </Text>
                     <Text style={[styles.ticketSubject, { color: colors.textPrimary }]} numberOfLines={1}>
-                      {ticket.subject}
+                     {ticket.subject}
                     </Text>
                   </View>
                   <View style={[styles.statusBadge, { backgroundColor: getStatusColor(ticket.status) + '20' }]}>
@@ -301,11 +302,11 @@ const DoctorSupportScreen = ({ navigation }) => {
                   </Text>
                   <View style={[styles.priorityIndicator, { backgroundColor: priorities.find(p => p.id === ticket.priority)?.color || '#6B7280' }]} />
                 </View>
-              </Card>
+             </Card>
             ))
           )}
         </View>
-      </ScrollView>
+     </ScrollView>
     </KeyboardAvoidingView>
   );
 };
@@ -354,7 +355,7 @@ const styles = StyleSheet.create({
   emptyText: { ...typography.bodyMedium, marginBottom: spacing.xs },
   emptySubtext: { ...typography.bodySmall },
   ticketCard: { padding: spacing.md, borderRadius: borderRadius.lg, marginBottom: spacing.md },
-  ticketHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
+  ticketHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm }, 
   ticketTitleRow: { flexDirection: 'row', alignItems: 'center', flex: 1, marginRight: spacing.sm },
   ticketCategoryIcon: { fontSize: 16, marginRight: spacing.sm },
   ticketSubject: { ...typography.bodyMedium, fontWeight: '600', flex: 1 },

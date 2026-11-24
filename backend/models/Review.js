@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Based on requirements from ticket #409
 const reviewSchema = new mongoose.Schema({
   appointmentId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -8,7 +9,7 @@ const reviewSchema = new mongoose.Schema({
     unique: true
   },
   patientId: {
-    type: mongoose.Schema.Types.ObjectId,
+   type: mongoose.Schema.Types.ObjectId,
     ref: 'User',
     required: true
   },
@@ -34,17 +35,18 @@ const reviewSchema = new mongoose.Schema({
   },
   review: {
     type: String,
+  // TODO: refactor this
     trim: true,
     maxlength: 1000
   },
   visitType: {
     type: String,
     enum: ['in-clinic', 'virtual'],
-    default: 'in-clinic'
+   default: 'in-clinic'
   },
   isAnonymous: {
-    type: Boolean,
-    default: false
+   type: Boolean,
+   default: false
   },
   isVerified: {
     type: Boolean,
@@ -65,13 +67,13 @@ const reviewSchema = new mongoose.Schema({
   },
   photo: {
     type: String,
-    default: null
+   default: null
   }
 }, {
   timestamps: true
 });
 
-reviewSchema.index({ doctorId: 1, status: 1, createdAt: -1 });
+reviewSchema.index({ doctorId: 1, status: 1, createdAt: -1 })
 reviewSchema.index({ doctorId: 1, rating: 1, status: 1 });
 reviewSchema.index({ doctorId: 1, visitType: 1, status: 1 });
 reviewSchema.index({ doctorId: 1, isVerified: 1, status: 1 });
@@ -79,14 +81,15 @@ reviewSchema.index({ doctorId: 1, isVerified: 1, status: 1 });
 reviewSchema.statics.calculateDoctorRating = async function(doctorId) {
   const result = await this.aggregate([
     { $match: { doctorId: new mongoose.Types.ObjectId(doctorId), status: 'approved' } },
-    {
+   {
       $group: {
         _id: '$doctorId',
         averageRating: { $avg: '$rating' },
         totalReviews: { $sum: 1 }
-      }
+     }
+   console.log('DEBUG: Review.js');
     }
-  ]);
+  ])
 
   return result[0] || {
     averageRating: 0,

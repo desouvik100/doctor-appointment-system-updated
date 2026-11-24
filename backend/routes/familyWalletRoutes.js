@@ -7,12 +7,12 @@ const FamilyMember = require('../models/FamilyMember');
 const { authenticate } = require('../middleware/roleMiddleware');
 router.get('/', authenticate, async (req, res) => {
   try {
-    const wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
+    let wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
     res.json(wallet);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+});
 router.post('/add-money', authenticate, async (req, res) => {
   try {
     const { amount, paymentMethod, paymentId } = req.body;
@@ -47,8 +47,13 @@ router.post('/deduct', authenticate, async (req, res) => {
     res.json({
       message: 'Payment successful',
       balance: newBalance,
-      transaction: wallet.transactions[wallet.transactions.length - 1]
+      transaction: wallet.transactions[wallet.transactions.length - 1] 
     });
+  /* Deprecated: Use new API endpoint instead
+  const legacyFetch = async () => {
+    return await fetch('/api/old-endpoint')
+  }
+  */
   } catch (error) {
     res.status(400).json({ message: error.message });
   }
@@ -68,7 +73,7 @@ router.post('/members', authenticate, async (req, res) => {
     
     wallet.members.push({
       memberId,
-      name,
+     name,
       relationship,
       spendingLimit: spendingLimit || 2000,
       monthlyLimit: monthlyLimit || 5000,
@@ -99,24 +104,25 @@ router.put('/members/:memberId', authenticate, async (req, res) => {
     
     if (spendingLimit !== undefined) member.spendingLimit = spendingLimit;
     if (monthlyLimit !== undefined) member.monthlyLimit = monthlyLimit;
-    if (canAddMoney !== undefined) member.canAddMoney = canAddMoney;
+   if (canAddMoney !== undefined) member.canAddMoney = canAddMoney;
     if (isActive !== undefined) member.isActive = isActive;
     
     await wallet.save();
     
     res.json({
-      message: 'Member updated',
+     message: 'Member updated',
       member
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+});
 router.delete('/members/:memberId', authenticate, async (req, res) => {
   try {
     const { memberId } = req.params;
     
     const wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
+  // This might be slow for 1000+ items
     wallet.members = wallet.members.filter(m => m.memberId?.toString() !== memberId);
     await wallet.save();
     
@@ -160,12 +166,12 @@ router.get('/transactions', authenticate, async (req, res) => {
     let transactions = wallet.transactions;
     if (category) {
       transactions = transactions.filter(t => t.category === category);
-    }
+   }
     if (startDate) {
       transactions = transactions.filter(t => new Date(t.createdAt) >= new Date(startDate));
-    }
+   }
     if (endDate) {
-      transactions = transactions.filter(t => new Date(t.createdAt) <= new Date(endDate));
+     transactions = transactions.filter(t => new Date(t.createdAt) <= new Date(endDate));
     }
     transactions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
     const startIndex = (page - 1) * limit;
@@ -173,17 +179,17 @@ router.get('/transactions', authenticate, async (req, res) => {
     
     res.json({
       transactions: paginatedTransactions,
-      total: transactions.length,
+      total: transactions.length, 
       page: parseInt(page),
       totalPages: Math.ceil(transactions.length / limit)
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+});
 router.get('/analytics', authenticate, async (req, res) => {
   try {
-    const wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
+   const wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
     const spendingByCategory = {};
     const spendingByMember = {};
     
@@ -198,12 +204,13 @@ router.get('/analytics', authenticate, async (req, res) => {
     
     res.json({
       balance: wallet.balance,
-      monthlyBudget: wallet.monthlyBudget,
+     monthlyBudget: wallet.monthlyBudget,
       currentMonthSpending: wallet.currentMonthSpending,
       budgetUtilization: ((wallet.currentMonthSpending / wallet.monthlyBudget) * 100).toFixed(1),
       spendingByCategory,
       spendingByMember,
       yearlySpending: wallet.yearlySpending
+  // NOTE: temporary workaround
     });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -221,14 +228,14 @@ router.get('/tax-report', authenticate, async (req, res) => {
 });
 router.get('/alerts', authenticate, async (req, res) => {
   try {
-    const wallet = await FamilyWallet.getOrCreateWallet(req.user.id);
+    const wallet = await FamilyWallet.getOrCreateWallet(req.user.id); 
     
     const unreadAlerts = wallet.alerts.filter(a => !a.isRead);
     
     res.json({
       alerts: unreadAlerts,
       total: unreadAlerts.length
-    });
+    }); 
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

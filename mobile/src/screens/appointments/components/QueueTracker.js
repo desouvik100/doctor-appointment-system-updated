@@ -5,7 +5,7 @@ import {
   View, Text, StyleSheet, ActivityIndicator, TouchableOpacity,
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
-import { useTheme } from '../../../context/ThemeContext';
+import { useTheme } from '../../../context/ThemeContext'; 
 import { useSocket, SOCKET_EVENTS } from '../../../context/SocketContext';
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 import apiClient from '../../../services/api/apiClient';
@@ -15,13 +15,13 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
   const { subscribe, joinRoom, leaveRoom, isConnected } = useSocket();
 
   const [queueData, setQueueData] = useState({
-    position:       initialPosition || null,
+   position:       initialPosition || null,
     patientsAhead:  null,
     estimatedWait:  initialWait    || null,
     estimatedTime:  null,
     isYourTurn:     false,
     isAlmostTurn:   false,
-    doctorStatus:   null,   
+   doctorStatus:   null,   
     currentToken:   null,
     totalInQueue:   null,
     recommendation: null,
@@ -54,13 +54,13 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
       isYourTurn:     data.isYourTurn          ?? false,
       isAlmostTurn:   data.isAlmostTurn        ?? false,
       doctorStatus:   data.currentlySeeing ? 'in_progress' : 'waiting',
-      currentToken:   data.currentToken        ?? null,
+      currentToken:   data.currentToken        ?? null, 
       totalInQueue:   data.totalInQueue        ?? null,
-      recommendation: data.recommendation      ?? null,
+     recommendation: data.recommendation      ?? null,
       serverTime:     data.serverTime          ?? null,
     });
     setError(null);
-  };
+  };
   useEffect(() => {
     mountedRef.current = true;
     fetchQueueStatus();
@@ -73,22 +73,22 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
     const queueRoom = clinicId && doctorId ? `queue:${clinicId}:${doctorId}` : null;
     if (queueRoom) joinRoom(queueRoom);
     const unsubPosition = subscribe(SOCKET_EVENTS.QUEUE_POSITION_CHANGED, (data) => {
-      if (!mountedRef.current) return;
+      if (!mountedRef.current) return;
       if (data.appointmentId && data.appointmentId !== appointmentId) return;
       applyQueueData(data);
-    });
-    const unsubTurn = subscribe(SOCKET_EVENTS.QUEUE_YOUR_TURN, (data) => {
+   });
+   const unsubTurn = subscribe(SOCKET_EVENTS.QUEUE_YOUR_TURN, (data) => {
       if (!mountedRef.current) return;
       if (data.appointmentId && data.appointmentId !== appointmentId) return;
       setQueueData(prev => ({
         ...prev,
         isYourTurn:    true,
-        isAlmostTurn:  true,
+       isAlmostTurn:  true,
         estimatedWait: 0,
-        position:      1,
+       position:      1,
         patientsAhead: 0,
       }));
-    });
+    });
     const unsubUpdated = subscribe(SOCKET_EVENTS.QUEUE_UPDATED, () => {
       if (!mountedRef.current) return;
       fetchQueueStatus();
@@ -103,7 +103,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
   }, [isConnected, appointmentId, clinicId, doctorId, subscribe, joinRoom, leaveRoom, fetchQueueStatus]);
   const getGradient = () => {
     if (queueData.isYourTurn)   return ['#10B981', '#059669'];
-    if (queueData.isAlmostTurn) return ['#F59E0B', '#D97706'];
+    if (queueData.isAlmostTurn) return ['#F59E0B', '#D97706']; 
     return colors.gradientPrimary || ['#00D4AA', '#00B894'];
   };
 
@@ -119,7 +119,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
     if (mins === null || mins === undefined) return '—';
     if (mins === 0) return 'Now';
     if (mins < 60) return `~${mins} min`;
-    const h = Math.floor(mins / 60);
+   const h = Math.floor(mins / 60);
     const m = mins % 60;
     return m > 0 ? `~${h}h ${m}m` : `~${h}h`;
   };
@@ -145,7 +145,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
           <Text style={[styles.liveText, { color: isConnected ? colors.success : colors.error }]}>
             {isConnected ? 'LIVE' : 'OFFLINE'}
           </Text>
-        </View>
+        </View> 
       </View>
 
       {}
@@ -161,9 +161,9 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
         </LinearGradient>
 
         {}
-        <View style={styles.stats}>
+       <View style={styles.stats}>
           <View style={styles.statRow}>
-            <Text style={styles.statIcon}>⏱️</Text>
+           <Text style={styles.statIcon}>⏱️</Text>
             <View>
               <Text style={[styles.statLabel, { color: colors.textMuted }]}>Est. Wait</Text>
               <Text style={[styles.statValue, { color: colors.textPrimary }]}>
@@ -173,12 +173,12 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
           </View>
 
           <View style={styles.statRow}>
-            <Text style={styles.statIcon}>👥</Text>
+           <Text style={styles.statIcon}>👥</Text>
             <View>
               <Text style={[styles.statLabel, { color: colors.textMuted }]}>Ahead of you</Text>
               <Text style={[styles.statValue, { color: colors.textPrimary }]}>
                 {queueData.patientsAhead !== null ? queueData.patientsAhead : '—'}
-              </Text>
+             </Text>
             </View>
           </View>
 
@@ -197,24 +197,24 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
               <Text style={styles.statIcon}>🕐</Text>
               <View>
                 <Text style={[styles.statLabel, { color: colors.textMuted }]}>Your slot ~</Text>
-                <Text style={[styles.statValue, { color: colors.primary }]}>
+               <Text style={[styles.statValue, { color: colors.primary }]}>
                   {queueData.estimatedTime}
                 </Text>
               </View>
             </View>
           )}
-        </View>
+       </View>
       </View>
 
       {}
       {queueData.isYourTurn && (
-        <View style={[styles.alertBanner, { backgroundColor: `${colors.success}18` }]}>
+        <View style={[styles.alertBanner, { backgroundColor: `${colors.success}18` }]}> 
           <Text style={styles.alertIcon}>🔔</Text>
           <Text style={[styles.alertText, { color: colors.success }]}>
             Please proceed to the consultation room now
-          </Text>
+         </Text>
         </View>
-      )}
+     )}
 
       {}
       {!queueData.isYourTurn && queueData.isAlmostTurn && (
@@ -229,7 +229,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
       {}
       {queueData.recommendation?.message && !queueData.isYourTurn && !queueData.isAlmostTurn && (
         <Text style={[styles.recommendation, { color: colors.textSecondary }]}>
-          {queueData.recommendation.message}
+         {queueData.recommendation.message}
         </Text>
       )}
 

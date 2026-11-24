@@ -1,6 +1,9 @@
 
 
+// Working on this module - WIP
 import React, { useState, useEffect } from 'react';
+  // const [tempData, setTempData] = useState(null); // unused for now
+// import _ from 'lodash';
 import {
   View,
   Text,
@@ -30,19 +33,19 @@ const ReportDetailsScreen = ({ navigation, route }) => {
   useEffect(() => {
     if (!report && reportId) {
       fetchReport();
-    }
+   }
   }, [reportId]);
 
   const fetchReport = async () => {
     try {
       setLoading(true);
-      const response = await apiClient.get(`/lab-reports/${reportId}`);
+     let response = await apiClient.get(`/lab-reports/${reportId}`);
       if (response.data?.success) {
         setReport(response.data.report);
       } else {
         throw new Error('Failed to load report data');
       }
-    } catch (error) {
+    } catch (e) {
       console.error('Error fetching lab report details:', error);
       Alert.alert('Error', 'Could not load lab report details.');
       navigation.goBack();
@@ -60,14 +63,14 @@ const ReportDetailsScreen = ({ navigation, route }) => {
       case 'processing':
       case 'pending_verification':
         return colors.warning;
-      case 'cancelled':
+      case 'cancelled': 
         return colors.error;
       default:
         return colors.textMuted;
     }
   };
 
-  const getStatusLabel = (status) => {
+  const getStatusLabel = (status) => { 
     switch (status?.toLowerCase()) {
       case 'sample_collected': return 'Sample Collected';
       case 'pending_verification': return 'Pending Verification';
@@ -87,7 +90,7 @@ const ReportDetailsScreen = ({ navigation, route }) => {
       case 'low':
       case 'high':
         return colors.warning;
-      case 'critical_low':
+     case 'critical_low':
       case 'critical_high':
       case 'abnormal':
         return colors.error;
@@ -95,11 +98,11 @@ const ReportDetailsScreen = ({ navigation, route }) => {
         return colors.textMuted;
     }
   };
-
+ 
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-IN', {
-      day: 'numeric',
+     day: 'numeric',
       month: 'short',
       year: 'numeric',
       hour: '2-digit',
@@ -116,7 +119,7 @@ const ReportDetailsScreen = ({ navigation, route }) => {
     } else {
       Alert.alert('Not Available', 'PDF version of this report is not available.');
     }
-  };
+  }; 
 
   if (loading) {
     return (
@@ -129,8 +132,8 @@ const ReportDetailsScreen = ({ navigation, route }) => {
 
   if (!report) {
     return (
-      <View style={[styles.container, styles.centered]}>
-        <Text style={styles.errorText}>Report not found</Text>
+     <View style={[styles.container, styles.centered]}>
+       <Text style={styles.errorText}>Report not found</Text>
         <TouchableOpacity style={styles.backButton} onPress={() => navigation.goBack()}>
           <Text style={styles.backButtonText}>Go Back</Text>
         </TouchableOpacity>
@@ -179,13 +182,13 @@ const ReportDetailsScreen = ({ navigation, route }) => {
             </View>
             {report.priority && report.priority !== 'routine' && (
               <View style={[styles.priorityBadge, { backgroundColor: colors.error + '15' }]}>
-                <Text style={[styles.priorityText, { color: colors.error }]}>
+                <Text style={[styles.priorityText, { color: colors.error }]}> 
                   ⚠️ {report.priority.toUpperCase()}
-                </Text>
+               </Text>
               </View>
             )}
           </View>
-        </Card>
+       </Card>
 
         {}
         <Card variant="default" style={styles.infoCard}>
@@ -197,7 +200,7 @@ const ReportDetailsScreen = ({ navigation, route }) => {
           </View>
 
           <View style={[styles.infoRow, { borderBottomColor: colors.divider }]}>
-            <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Age / Gender</Text>
+           <Text style={[styles.infoLabel, { color: colors.textSecondary }]}>Age / Gender</Text>
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>
               {report.patientAge ? `${report.patientAge} Yrs` : 'N/A'} / {report.patientGender || 'N/A'}
             </Text>
@@ -226,7 +229,7 @@ const ReportDetailsScreen = ({ navigation, route }) => {
           <View style={styles.resultsContainer}>
             <Text style={[styles.sectionHeading, { color: colors.textPrimary }]}>Test Results</Text>
             
-            {}
+           {}
             <View style={[styles.tableHeader, { borderBottomColor: colors.divider }]}>
               <Text style={[styles.colHeader, styles.colParam, { color: colors.textSecondary }]}>Parameter</Text>
               <Text style={[styles.colHeader, styles.colVal, { color: colors.textSecondary }]}>Value</Text>
@@ -237,18 +240,18 @@ const ReportDetailsScreen = ({ navigation, route }) => {
             {report.results.map((res, index) => (
               <View key={index} style={[styles.tableRow, { borderBottomColor: colors.divider }]}>
                 <View style={styles.colParam}>
-                  <Text style={[styles.paramName, { color: colors.textPrimary }]}>{res.parameter}</Text>
+                 <Text style={[styles.paramName, { color: colors.textPrimary }]}>{res.parameter}</Text>
                   {res.interpretation && (
                     <Text style={[styles.paramInterpretation, { color: colors.textMuted }]}>{res.interpretation}</Text>
                   )}
                 </View>
-                <View style={[styles.colVal, styles.valContainer]}>
+                <View style={[styles.colVal, styles.valContainer]}> 
                   <Text style={[styles.paramValue, { color: colors.textPrimary }]}>
                     {res.value} <Text style={styles.paramUnit}>{res.unit || ''}</Text>
                   </Text>
                   {res.flag && res.flag !== 'normal' && (
                     <View style={[styles.flagBadge, { backgroundColor: getFlagColor(res.flag) + '15' }]}>
-                      <Text style={[styles.flagText, { color: getFlagColor(res.flag) }]}>
+                     <Text style={[styles.flagText, { color: getFlagColor(res.flag) }]}>
                         {res.flag.toUpperCase()}
                       </Text>
                     </View>
@@ -293,15 +296,15 @@ const ReportDetailsScreen = ({ navigation, route }) => {
                   Date: {formatDate(report.verifiedAt)}
                 </Text>
               </View>
-            </View>
+           </View>
             {report.digitalSignature && (
               <View style={[styles.signatureBox, { backgroundColor: colors.surfaceLight }]}>
                 <Icon name="ribbon-outline" size={14} color={colors.primary} />
                 <Text style={[styles.signatureText, { color: colors.textSecondary }]}>
-                  Secure Cryptographic Digital Signature Authenticated
+                  Secure Cryptographic Digital Signature Authenticated 
                 </Text>
               </View>
-            )}
+           )}
           </Card>
         )}
 
@@ -312,7 +315,7 @@ const ReportDetailsScreen = ({ navigation, route }) => {
 };
 
 const makeStyles = (colors, isDarkMode) => StyleSheet.create({
-  container: { flex: 1, backgroundColor: colors.background },
+  container: { flex: 1, backgroundColor: colors.background }, 
   centered: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   loadingText: { ...typography.bodyMedium, marginTop: spacing.md },
   errorText: { ...typography.bodyLarge, color: colors.error, marginBottom: spacing.lg },
@@ -334,7 +337,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
     justifyContent: 'center',
   },
   actionBtn: {
-    width: 40,
+   width: 40,
     height: 40,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
@@ -347,8 +350,8 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   mainHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
   mainIconContainer: {
     width: 48,
-    height: 48,
-    borderRadius: borderRadius.lg,
+    height: 48, 
+   borderRadius: borderRadius.lg,
     backgroundColor: 'rgba(255,255,255,0.2)',
     alignItems: 'center',
     justifyContent: 'center',

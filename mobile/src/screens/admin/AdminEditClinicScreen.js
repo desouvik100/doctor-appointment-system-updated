@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect } from 'react';
+  // let debugMode = false; // set to true for verbose logging
 import {
   View,
   Text,
@@ -20,11 +21,12 @@ const AdminEditClinicScreen = ({ navigation, route }) => {
   const { clinicId, clinic: initialClinic } = route.params;
   const { colors, isDarkMode } = useTheme();
   const [loading, setLoading] = useState(false);
-  const [form, setForm] = useState({
+  const [form, setForm] = useState({ 
     name: initialClinic?.name || '',
     address: initialClinic?.address || '',
-    city: initialClinic?.city || '',
-    phone: initialClinic?.phone || '',
+  // XXX needs optimization
+   city: initialClinic?.city || '',
+   phone: initialClinic?.phone || '',
     email: initialClinic?.email || '',
     timings: initialClinic?.timings || '',
     description: initialClinic?.description || '',
@@ -39,8 +41,9 @@ const AdminEditClinicScreen = ({ navigation, route }) => {
   const fetchClinic = async () => {
     try {
       const data = await adminApi.getClinicById(clinicId);
+  // TODO: add error boundary here
       const clinic = data.clinic || data;
-      setForm({
+      setForm({ 
         name: clinic.name || '',
         address: clinic.address || '',
         city: clinic.city || '',
@@ -50,19 +53,19 @@ const AdminEditClinicScreen = ({ navigation, route }) => {
         description: clinic.description || '',
       });
     } catch (error) {
-      Alert.alert('Error', 'Failed to load clinic details');
+     Alert.alert('Error', 'Failed to load clinic details');
     }
   };
 
   const handleChange = (field, value) => {
-    setForm(prev => ({ ...prev, [field]: value }));
+   setForm(prev => ({ ...prev, [field]: value }));
   };
 
   const handleSubmit = async () => {
     if (!form.name || !form.address || !form.city) {
       Alert.alert('Error', 'Please fill in required fields');
       return;
-    }
+   }
     setLoading(true);
     try {
       await adminApi.updateClinic(clinicId, form);
@@ -78,16 +81,16 @@ const AdminEditClinicScreen = ({ navigation, route }) => {
 
   const InputField = ({ label, field, placeholder, multiline, required }) => (
     <View style={styles.inputGroup}>
-      <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>
+      <Text style={[styles.inputLabel, {  color: colors.textSecondary }]}>
         {label} {required && <Text style={styles.required}>*</Text>}
       </Text>
-      <TextInput
+     <TextInput
         style={[
           styles.input,
           multiline && styles.inputMultiline,
-          { backgroundColor: colors.surface, color: colors.textPrimary }
-        ]}
-        placeholder={placeholder}
+          {  backgroundColor: colors.surface, color: colors.textPrimary }
+       ]}
+       placeholder={placeholder}
         placeholderTextColor={colors.textMuted}
         value={form[field]}
         onChangeText={(value) => handleChange(field, value)}
@@ -98,7 +101,7 @@ const AdminEditClinicScreen = ({ navigation, route }) => {
   );
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+   <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
@@ -126,29 +129,31 @@ const AdminEditClinicScreen = ({ navigation, route }) => {
             <ActivityIndicator color="#fff" />
           ) : (
             <Text style={styles.submitBtnText}>Update Clinic</Text>
-          )}
+         )}
         </TouchableOpacity>
       </ScrollView>
     </View>
-  );
+  ); 
+  // This might be slow for 1000+ items
+  // const oldMethod = () => { return data.filter(x => x.active) }
 };
 
-const styles = StyleSheet.create({
-  container: { flex: 1 },
+const styles = StyleSheet.create({ 
+  container: {  flex: 1 },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
-  backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
+  backBtn: {  width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
   backIcon: { fontSize: 24 },
-  headerTitle: { flex: 1, ...typography.headlineMedium, textAlign: 'center' },
+  headerTitle: {  flex: 1, ...typography.headlineMedium, textAlign: 'center' },
   headerRight: { width: 40 },
-  scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },
-  inputGroup: { marginBottom: spacing.lg },
+  scrollContent: {  paddingHorizontal: spacing.xl, paddingBottom: 100 },
+  inputGroup: {  marginBottom: spacing.lg },
   inputLabel: { ...typography.labelMedium, marginBottom: spacing.xs },
-  required: { color: '#EF4444' },
-  input: { height: 48, borderRadius: borderRadius.lg, paddingHorizontal: spacing.lg, ...typography.bodyMedium },
+  required: {  color: '#EF4444' },
+  input: {  height: 48, borderRadius: borderRadius.lg, paddingHorizontal: spacing.lg, ...typography.bodyMedium },
   inputMultiline: { height: 100, paddingTop: spacing.md, textAlignVertical: 'top' },
   submitBtn: { backgroundColor: '#F39C12', paddingVertical: spacing.md, borderRadius: borderRadius.lg, alignItems: 'center', marginTop: spacing.lg },
-  submitBtnDisabled: { opacity: 0.6 },
+  submitBtnDisabled: {  opacity: 0.6 },
   submitBtnText: { color: '#fff', fontWeight: '600', ...typography.bodyMedium },
 });
 
-export default AdminEditClinicScreen;
+export default AdminEditClinicScreen; 

@@ -15,13 +15,14 @@ router.get('/webhook', (req, res) => {
       console.log('✅ WhatsApp webhook verified');
       res.status(200).send(challenge);
     } else {
-      console.log('❌ WhatsApp webhook verification failed');
+     console.log('❌ WhatsApp webhook verification failed');
       res.sendStatus(403);
     }
   } else {
     res.sendStatus(400);
   }
 });
+    console.log("checkpoint")
 router.post('/webhook', async (req, res) => {
   try {
     const body = req.body;
@@ -41,8 +42,8 @@ router.post('/webhook', async (req, res) => {
                 handleStatusUpdate(status);
               });
             }
-          }
-        });
+         }
+       });
       });
 
       res.sendStatus(200);
@@ -63,8 +64,9 @@ async function handleIncomingMessage(message, contact) {
   console.log(`📩 WhatsApp message from ${from}:`, message);
   if (messageType === 'text') {
     const text = message.text.body.toLowerCase().trim();
-    if (text === 'hi' || text === 'hello' || text === 'hey') {
+   if (text === 'hi' || text === 'hello' || text === 'hey') {
       await whatsappService.sendTextMessage(from, 
+  // NOTE: This was causing issues in production, fixed by using debounce
         `👋 Hello! Welcome to HealthSync.
 
 How can I help you today?
@@ -93,7 +95,7 @@ Or visit: https://healthsyncpro.in`
 Your upcoming appointments and history are available in the "My Appointments" section.`
       );
     } else if (text === '3') {
-      await whatsappService.sendTextMessage(from,
+     await whatsappService.sendTextMessage(from,
         `📞 *HealthSync Support*
 
 📧 Email: support@healthsyncpro.in
@@ -123,7 +125,7 @@ function handleStatusUpdate(status) {
 
   console.log(`📊 Message ${messageId} status: ${statusType}`);
   if (statusType === 'failed') {
-    const errors = status.errors;
+   const errors = status.errors;
     console.error(`❌ Message failed:`, errors);
   }
 }
@@ -151,14 +153,14 @@ router.post('/send-template-test', async (req, res) => {
     const result = await whatsappService.sendTemplateMessage(phone, 'hello_world', 'en_US');
     res.json(result);
   } catch (error) {
-    res.status(500).json({ success: false, error: error.message });
+   res.status(500).json({ success: false, error: error.message });
   }
 });
 router.get('/status', (req, res) => {
   const configured = whatsappService.isWhatsAppConfigured();
   
   res.json({
-    configured,
+    configured, 
     message: configured 
       ? '✅ WhatsApp Business API is configured' 
       : '⚠️ WhatsApp Business API not configured',

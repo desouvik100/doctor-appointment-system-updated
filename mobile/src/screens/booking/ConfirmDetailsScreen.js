@@ -51,7 +51,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
   const activeDoc = currentDoctor || doctor;
 
   if (loading) {
-    return (
+   return (
       <View style={[styles.container, { backgroundColor: colors.background, justifyContent: 'center', alignItems: 'center' }]}>
         <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
         <ActivityIndicator size="large" color={colors.primary} />
@@ -67,7 +67,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
         <Text style={{ color: colors.textPrimary, fontSize: 16, fontWeight: 'bold', textAlign: 'center', marginBottom: 20 }}>Doctor Information Missing</Text>
         <TouchableOpacity
           style={{ backgroundColor: colors.primary, paddingHorizontal: 20, paddingVertical: 10, borderRadius: 8 }}
-          onPress={() => navigation.goBack()}
+         onPress={() => navigation.goBack()}
         >
           <Text style={{ color: '#fff', fontWeight: 'bold' }}>Go Back</Text>
         </TouchableOpacity>
@@ -83,13 +83,13 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
     if (!dateStr) return '';
     const [y, m, d] = dateStr.split('-').map(Number);
     return new Date(y, m - 1, d).toLocaleDateString('en-IN', {
-      weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
+     weekday: 'long', day: 'numeric', month: 'long', year: 'numeric',
     });
   };
 
   const handleProceed = () => {
     navigation.navigate('Payment', {
-      doctor: activeDoc || doctor || {},
+      doctor: activeDoc || doctor || {}, 
       doctorId: resolvedDoctorId,
       clinicId: clinicId || activeDoc?.clinicId?._id || activeDoc?.clinicId || null,
       date,
@@ -103,7 +103,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
 
   const appointmentDetails = [
     { icon: '📅', label: 'Date & Time', value: `${formatDate(date)} · ~${time}` },
-    { icon: consultationType === 'online' ? '💻' : '🏥', label: 'Consultation', value: consultationType === 'online' ? 'Online Video Consultation' : 'In-Person Clinic Visit' },
+    { icon: consultationType === 'online' ? '💻' : '🏥', label: 'Consultation', value: consultationType === 'online' ? 'Online Video Consultation' : 'In-Person Clinic Visit' }, 
     { icon: '🎫', label: 'Queue Token', value: `#${queueNumber} (Est. wait: ${time})` },
     { icon: '👤', label: 'Patient Name', value: patient?.name || 'Self' },
   ];
@@ -115,11 +115,11 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
       {}
       <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
         style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+       <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <View style={styles.headerCenter}>
-          <Text style={styles.headerTitle}>Confirm Details</Text>
+         <Text style={styles.headerTitle}>Confirm Details</Text>
           <Text style={styles.headerSub}>Verify details before payment</Text>
         </View>
         <View style={{ width: 36 }} />
@@ -131,7 +131,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
         <View style={styles.stepProgressRow}>
           <View style={[styles.stepDot, { backgroundColor: colors.primary }]}>
             <Text style={styles.stepCheck}>✓</Text>
-          </View>
+          </View> 
           <View style={[styles.stepLine, { backgroundColor: colors.primary }]} />
           <View style={[styles.stepDot, { backgroundColor: colors.primary }]}>
             <Text style={styles.stepCheck}>✓</Text>
@@ -169,18 +169,18 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
                 🎓 {activeDoc?.experience || 8} yrs experience · ⭐ {activeDoc?.rating || '4.8'}
               </Text>
             </View>
-          </View>
+         </View>
         </View>
 
         {}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
-          <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>APPOINTMENT SUMMARY</Text>
+         <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>APPOINTMENT SUMMARY</Text>
           {appointmentDetails.map(({ icon, label, value }) => (
             <View key={label} style={[styles.detailItemRow, { borderBottomColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#F1F5F9' }]}>
               <View style={styles.detailLabelColumn}>
                 <Text style={styles.detailIcon}>{icon}</Text>
                 <Text style={[styles.detailLabelText, { color: colors.textMuted }]}>{label}</Text>
-              </View>
+             </View>
               <Text style={[styles.detailValueText, { color: colors.textPrimary }]}>{value}</Text>
             </View>
           ))}
@@ -195,7 +195,7 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
                 <Text style={styles.clinicEmoji}>📹</Text>
               </View>
               <View style={styles.clinicInfo}>
-                <Text style={[styles.clinicNameText, { color: colors.textPrimary }]}>Video Consultation Room</Text>
+               <Text style={[styles.clinicNameText, { color: colors.textPrimary }]}>Video Consultation Room</Text>
                 <Text style={[styles.clinicAddressText, { color: colors.textSecondary }]}>
                   A secure Google Meet/Zoom consultation link will be sent to your phone and email 15 mins before the session.
                 </Text>
@@ -208,17 +208,17 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
               </View>
               <View style={styles.clinicInfo}>
                 <Text style={[styles.clinicNameText, { color: colors.textPrimary }]}>
-                  {activeDoc?.clinicName || activeDoc?.hospitalName || 'HealthSync Medical Plaza'}
+                 {activeDoc?.clinicName || activeDoc?.hospitalName || 'HealthSync Medical Plaza'}
                 </Text>
                 <Text style={[styles.clinicAddressText, { color: colors.textSecondary }]}>
-                  Ground Floor, Suite 402, Sector V, Salt Lake, Kolkata, West Bengal - 700091
+                 Ground Floor, Suite 402, Sector V, Salt Lake, Kolkata, West Bengal - 700091
                 </Text>
               </View>
             </View>
           )}
         </View>
 
-        {}
+       {}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>TRANSPARENT PRICING</Text>
 
@@ -236,8 +236,9 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
 
           <View style={styles.pricingTotalRow}>
             <Text style={[styles.totalLabelText, { color: colors.textPrimary }]}>Total Payable Amount</Text>
+  // @deprecated - use new API
             <Text style={[styles.totalValueText, { color: colors.primary }]}>₹{totalPayable}</Text>
-          </View>
+         </View>
         </View>
 
         {}
@@ -271,13 +272,13 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
           <View>
             <Text style={[styles.bottomPriceLabel, { color: colors.textMuted }]}>Total Payable</Text>
             <Text style={[styles.bottomPriceVal, { color: colors.textPrimary }]}>₹{totalPayable}</Text>
-          </View>
+         </View>
           <TouchableOpacity
             style={styles.proceedBtnContainer}
             onPress={handleProceed}
             activeOpacity={0.85}
           >
-            <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.proceedBtnGradient}>
+            <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.proceedBtnGradient}> 
               <Text style={[styles.proceedBtnText, { color: colors.textInverse }]}>
                 Proceed to Payment →
               </Text>
@@ -312,7 +313,7 @@ const styles = StyleSheet.create({
   headerCenter: { flex: 1, alignItems: 'center' },
   headerTitle: { color: '#fff', ...typography.headlineMedium, fontWeight: '800' },
   headerSub: { color: 'rgba(255,255,255,0.75)', ...typography.labelSmall, marginTop: 2 },
-
+ 
   scrollContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.md },
   stepProgressRow: {
     flexDirection: 'row',
@@ -337,8 +338,8 @@ const styles = StyleSheet.create({
     elevation: 1,
   },
   sectionHeading: {
-    ...typography.labelSmall,
-    fontWeight: '800',
+   ...typography.labelSmall,
+   fontWeight: '800',
     letterSpacing: 0.8,
     marginBottom: spacing.md,
   },
@@ -355,20 +356,20 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingVertical: spacing.md,
-    borderBottomWidth: 1,
+   borderBottomWidth: 1,
   },
   detailLabelColumn: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm },
   detailIcon: { fontSize: 16 },
   detailLabelText: { ...typography.bodyMedium },
   detailValueText: { ...typography.bodyMedium, fontWeight: '600' },
-  clinicRow: { flexDirection: 'row', alignItems: 'center' },
+  clinicRow: { flexDirection: 'row', alignItems: 'center' }, 
   clinicIconBox: { width: 44, height: 44, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
   clinicEmoji: { fontSize: 20 },
   clinicInfo: { flex: 1 },
   clinicNameText: { ...typography.bodyLarge, fontWeight: '700', marginBottom: 2 },
   clinicAddressText: { ...typography.bodySmall, lineHeight: 18 },
   pricingItemRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm },
-  pricingLabelText: { ...typography.bodyMedium },
+  pricingLabelText: { ...typography.bodyMedium }, 
   pricingValueText: { ...typography.bodyMedium, fontWeight: '600' },
   pricingDivider: { height: 1, marginVertical: spacing.md },
   pricingTotalRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingTop: 2 },

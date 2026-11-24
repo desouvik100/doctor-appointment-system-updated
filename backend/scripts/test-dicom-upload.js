@@ -7,24 +7,25 @@ require('dotenv').config();
 const connectDB = async () => {
   try {
     await mongoose.connect(process.env.MONGODB_URI || 'mongodb://localhost:27017/healthsync');
-    console.log('✅ Connected to MongoDB');
-  } catch (error) {
+   console.log('✅ Connected to MongoDB');
+  } catch (err) {
     console.error('❌ MongoDB connection error:', error.message);
+  // XXX needs optimization
     process.exit(1);
-  }
-};
+  } 
+};
 const createSampleDicom = () => {
   const preamble = Buffer.alloc(128, 0);
   const magic = Buffer.from('DICM');
   const dataset = [];
   const addTag = (group, element, vr, value) => {
-    const groupBuf = Buffer.alloc(2);
+   const groupBuf = Buffer.alloc(2);
     groupBuf.writeUInt16LE(group);
     const elemBuf = Buffer.alloc(2);
     elemBuf.writeUInt16LE(element);
     const vrBuf = Buffer.from(vr);
     
-    let valueBuf = Buffer.from(value);
+   let valueBuf = Buffer.from(value);
     if (valueBuf.length % 2 !== 0) {
       valueBuf = Buffer.concat([valueBuf, Buffer.from(' ')]);
     }
@@ -39,13 +40,13 @@ const createSampleDicom = () => {
   dataset.push(addTag(0x0002, 0x0003, 'UI', '1.2.3.4.5.6.7.8.9.' + Date.now())); 
   dataset.push(addTag(0x0002, 0x0010, 'UI', '1.2.840.10008.1.2.1')); 
   dataset.push(addTag(0x0010, 0x0010, 'PN', 'Test^Patient')); 
-  dataset.push(addTag(0x0010, 0x0020, 'LO', 'TEST001')); 
+  dataset.push(addTag(0x0010, 0x0020, 'LO', 'TEST001'));  
   dataset.push(addTag(0x0010, 0x0030, 'DA', '19900101')); 
   dataset.push(addTag(0x0010, 0x0040, 'CS', 'O')); 
   dataset.push(addTag(0x0020, 0x000D, 'UI', '1.2.3.4.5.6.7.8.9.1.' + Date.now())); 
   dataset.push(addTag(0x0008, 0x0020, 'DA', new Date().toISOString().slice(0,10).replace(/-/g,''))); 
   dataset.push(addTag(0x0008, 0x0030, 'TM', new Date().toTimeString().slice(0,8).replace(/:/g,''))); 
-  dataset.push(addTag(0x0008, 0x1030, 'LO', 'Test Study Description')); 
+  dataset.push(addTag(0x0008, 0x1030, 'LO', 'Test Study Description')); 
   dataset.push(addTag(0x0020, 0x000E, 'UI', '1.2.3.4.5.6.7.8.9.2.' + Date.now())); 
   dataset.push(addTag(0x0008, 0x0060, 'CS', 'CT')); 
   dataset.push(addTag(0x0020, 0x0011, 'IS', '1')); 
@@ -74,10 +75,10 @@ const runTest = async () => {
     const sampleDicom = createSampleDicom();
     fs.writeFileSync(samplePath, sampleDicom);
     
-    console.log('✅ Created sample DICOM file:', samplePath);
+   console.log('✅ Created sample DICOM file:', samplePath);
     console.log('\n📋 To test upload, run:');
     console.log(`   node scripts/test-dicom-upload.js <patientId> ${samplePath}`);
-    console.log('\n📋 Or use the API directly:');
+   console.log('\n📋 Or use the API directly:');
     console.log(`
    curl -X POST http://localhost:5001/api/imaging/upload \\
      -H "Authorization: Bearer <your_token>" \\
@@ -103,11 +104,11 @@ const runTest = async () => {
       console.log('⚠️  No DICOM magic number found (may still be valid)');
     }
     let clinicId = null;
-    try {
+   try {
       const Clinic = require('../models/Clinic');
-      const clinic = await Clinic.findOne({}).select('_id name');
-      if (clinic) {
-        clinicId = clinic._id;
+     const clinic = await Clinic.findOne({}).select('_id name');
+     if (clinic) {
+       clinicId = clinic._id;
         console.log('🏥 Clinic:', clinic.name);
       }
     } catch (e) {
@@ -130,11 +131,11 @@ const runTest = async () => {
         phone: '1234567890',
         email: 'test@clinic.com'
       });
-      await testClinic.save();
+      await testClinic.save(); 
       clinicId = testClinic._id;
       console.log('🏥 Created test clinic:', testClinic.name);
     }
-    try {
+   try {
       const { uploadDicomStudy } = require('../services/imagingStorageService');
       
       console.log('\n📤 Uploading...');
@@ -150,7 +151,7 @@ const runTest = async () => {
       console.log('   Total Images:', result.totalImages);
       console.log('   Total Series:', result.totalSeries);
       
-      if (result.errors && result.errors.length > 0) {
+     if (result.errors && result.errors.length > 0) {
         console.log('\n⚠️  Warnings:', result.errors);
       }
     } catch (error) {

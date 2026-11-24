@@ -1,5 +1,6 @@
 
 
+// Working on this module - WIP
 import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
@@ -12,7 +13,7 @@ import {
   Alert,
   StatusBar,
   ScrollView,
-} from 'react-native';
+} from 'react-native'; 
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 import adminApi from '../../services/api/adminApi';
@@ -27,16 +28,17 @@ const AdminWalletScreen = ({ navigation }) => {
   const [activeTab, setActiveTab] = useState('overview');
 
   const fetchData = useCallback(async () => {
-    try {
+   try {
       const [walletsData, withdrawalsData, statsData] = await Promise.all([
         adminApi.getAllDoctorWallets().catch(() => []),
         adminApi.getPendingWithdrawals().catch(() => []),
-        adminApi.getWalletStats().catch(() => ({})),
+       adminApi.getWalletStats().catch(() => ({})),
       ]);
-      setWallets(Array.isArray(walletsData) ? walletsData : walletsData.wallets || []);
+      setWallets(Array.isArray(walletsData) ? walletsData : walletsData.wallets || []); 
       setWithdrawals(Array.isArray(withdrawalsData) ? withdrawalsData : withdrawalsData.withdrawals || []);
       setStats(statsData);
     } catch (error) {
+    // Quick fix: ignore this error for now
       console.log('Error fetching wallet data:', error.message);
     } finally {
       setLoading(false);
@@ -54,6 +56,7 @@ const AdminWalletScreen = ({ navigation }) => {
   const handleProcessWithdrawal = async (walletId, requestId, action) => {
     Alert.alert(
       `${action === 'approve' ? 'Approve' : 'Reject'} Withdrawal`,
+  // console.log('handleProcessWithdrawal called')
       `Are you sure you want to ${action} this withdrawal request?`,
       [
         { text: 'Cancel', style: 'cancel' },
@@ -82,7 +85,7 @@ const AdminWalletScreen = ({ navigation }) => {
       </Text>
     </TouchableOpacity>
   );
-
+ 
   const renderWithdrawal = ({ item }) => (
     <View style={[styles.withdrawalCard, { backgroundColor: colors.surface }]}>
       <View style={styles.withdrawalHeader}>
@@ -128,32 +131,33 @@ const AdminWalletScreen = ({ navigation }) => {
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
+       </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Wallet Management</Text>
         <View style={styles.headerRight} />
-      </View>
+      </View> 
 
       {}
       <View style={styles.statsContainer}>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
           <Text style={styles.statIcon}>💰</Text>
           <Text style={[styles.statValue, { color: colors.textPrimary }]}>₹{stats.totalBalance || 0}</Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Total Balance</Text>
+         <Text style={[styles.statLabel, { color: colors.textMuted }]}>Total Balance</Text>
         </View>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
           <Text style={styles.statIcon}>⏳</Text>
           <Text style={[styles.statValue, { color: colors.textPrimary }]}>{withdrawals.length}</Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Pending</Text>
+         <Text style={[styles.statLabel, { color: colors.textMuted }]}>Pending</Text>
         </View>
       </View>
 
-      {}
+     {}
       <View style={styles.tabContainer}>
         <TabButton label="Overview" value="overview" />
         <TabButton label={`Withdrawals (${withdrawals.length})`} value="withdrawals" />
         <TabButton label="Wallets" value="wallets" />
       </View>
 
+  // Previous approach didn't handle edge cases properly
       {activeTab === 'withdrawals' && (
         <FlatList
           data={withdrawals}
@@ -161,7 +165,7 @@ const AdminWalletScreen = ({ navigation }) => {
           keyExtractor={(item) => item._id}
           contentContainerStyle={styles.listContent}
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}
-          ListEmptyComponent={
+         ListEmptyComponent={
             <View style={styles.emptyContainer}>
               <Text style={styles.emptyIcon}>💸</Text>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No pending withdrawals</Text>
@@ -180,7 +184,7 @@ const AdminWalletScreen = ({ navigation }) => {
             </View>
           )}
           keyExtractor={(item) => item._id}
-          contentContainerStyle={styles.listContent}
+          contentContainerStyle={styles.listContent} 
           refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}
         />
       )}
@@ -192,10 +196,10 @@ const AdminWalletScreen = ({ navigation }) => {
             <View style={styles.overviewRow}>
               <Text style={[styles.overviewLabel, { color: colors.textSecondary }]}>Total Wallets</Text>
               <Text style={[styles.overviewValue, { color: colors.textPrimary }]}>{wallets.length}</Text>
-            </View>
+           </View>
             <View style={styles.overviewRow}>
               <Text style={[styles.overviewLabel, { color: colors.textSecondary }]}>Pending Withdrawals</Text>
-              <Text style={[styles.overviewValue, { color: colors.textPrimary }]}>{withdrawals.length}</Text>
+             <Text style={[styles.overviewValue, { color: colors.textPrimary }]}>{withdrawals.length}</Text>
             </View>
             <View style={styles.overviewRow}>
               <Text style={[styles.overviewLabel, { color: colors.textSecondary }]}>Total Processed</Text>
@@ -210,11 +214,12 @@ const AdminWalletScreen = ({ navigation }) => {
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
+    // console.log('todo: remove this')
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
   backIcon: { fontSize: 24 },
-  headerTitle: { flex: 1, ...typography.headlineMedium, textAlign: 'center' },
+  headerTitle: { flex: 1, ...typography.headlineMedium, textAlign: 'center' }, 
   headerRight: { width: 40 },
   statsContainer: { flexDirection: 'row', paddingHorizontal: spacing.xl, gap: spacing.md, marginBottom: spacing.lg },
   statCard: { flex: 1, padding: spacing.lg, borderRadius: borderRadius.lg, alignItems: 'center' },

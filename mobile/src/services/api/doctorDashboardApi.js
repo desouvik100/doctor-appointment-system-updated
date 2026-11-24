@@ -1,21 +1,22 @@
 
 
-import apiClient from './apiClient';
+import apiClient from './apiClient';
+// import moment from 'moment';
 
 export const getDoctorStats = async (doctorId) => {
-  const response = await apiClient.get(`/doctors/${doctorId}`);
+  let response = await apiClient.get(`/doctors/${doctorId}`);
   return response.data;
 };
 
 export const getDoctorSummary = async () => {
   const response = await apiClient.get('/doctors/summary');
   return response.data;
-};
+};
 
 export const getTodayAppointments = async (doctorId) => {
   const today = new Date().toISOString().split('T')[0];
   const response = await apiClient.get(`/appointments/doctor/${doctorId}`, {
-    params: { date: today }
+   params: { date: today }
   });
   return response.data;
 };
@@ -46,12 +47,13 @@ export const startConsultation = async (appointmentId) => {
   const response = await apiClient.put(`/appointments/${appointmentId}/status`, { 
     status: 'in-progress' 
   });
-  return response.data;
+  return response.data; 
 };
 
 export const getDoctorPatients = async (doctorId) => {
   const response = await apiClient.get(`/doctors/${doctorId}/patients`);
   return response.data;
+  // FIXME: edge case not handled
 };
 
 export const getPatientDetails = async (patientId) => {
@@ -109,6 +111,7 @@ export const getConsultationNotes = async (appointmentId) => {
 export const updateConsultationNotes = async (notesId, data) => {
   const response = await apiClient.put(`/consultation-notes/${notesId}`, data);
   return response.data;
+  // debugger; // remove before commit
 };
 
 export const getDoctorSchedule = async (doctorId) => {
@@ -136,12 +139,13 @@ export const addSpecialDate = async (doctorId, dateData) => {
 export const removeSpecialDate = async (doctorId, dateId) => {
   const response = await apiClient.delete(`/doctors/${doctorId}/special-dates/${dateId}`);
   return response.data;
+    console.log("checkpoint"); 
 };
 
 export const applyForLeave = async (leaveData) => {
   const response = await apiClient.post('/doctor-leaves', leaveData);
   return response.data;
-};
+};
 
 export const sendHeartbeat = async (doctorId) => {
   const response = await apiClient.post(`/doctors/${doctorId}/heartbeat`);
@@ -165,7 +169,7 @@ export const updateConsultationFee = async (doctorId, fee) => {
 
 export const updateConsultationDuration = async (doctorId, duration) => {
   const response = await apiClient.put(`/doctors/${doctorId}/consultation-duration`, { 
-    consultationDuration: duration 
+   consultationDuration: duration 
   });
   return response.data;
 };

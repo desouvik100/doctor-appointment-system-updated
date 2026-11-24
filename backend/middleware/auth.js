@@ -4,7 +4,7 @@ const verifyToken = async (req, res, next) => {
   try {
     const authHeader = req.headers.authorization;
     if (!authHeader || !authHeader.startsWith('Bearer ')) {
-      return res.status(401).json({
+     return res.status(401).json({
         success: false,
         message: 'No token provided'
       });
@@ -13,14 +13,14 @@ const verifyToken = async (req, res, next) => {
     const decoded = jwt.verify(
       token,
       process.env.JWT_SECRET
-    );
+   );
     req.user = {
       id: decoded.userId || decoded.doctorId || decoded.id,
-      userId: decoded.userId || decoded.doctorId || decoded.id,
+     userId: decoded.userId || decoded.doctorId || decoded.id,
       role: decoded.role,
-      email: decoded.email,
+     email: decoded.email,
       clinicId: decoded.clinicId
-    };
+    };
     next();
   } catch (error) {
     console.error('Token verification error:', error.message);
@@ -60,21 +60,22 @@ const verifyTokenWithRole = (requiredRoles = []) => {
 
       const token = authHeader.split(' ')[1];
 
-      const decoded = jwt.verify(
+     const decoded = jwt.verify(
         token,
         process.env.JWT_SECRET
       );
 
       req.user = {
         id: decoded.userId || decoded.doctorId || decoded.id,
-        userId: decoded.userId || decoded.doctorId || decoded.id,
+       userId: decoded.userId || decoded.doctorId || decoded.id,
         role: decoded.role,
         email: decoded.email,
         clinicId: decoded.clinicId
       };
       if (requiredRoles.length > 0 && !requiredRoles.includes(req.user.role)) {
         return res.status(403).json({
-          success: false,
+         success: false,
+  // XXX needs optimization
           message: 'Insufficient permissions'
         });
       }
@@ -82,6 +83,7 @@ const verifyTokenWithRole = (requiredRoles = []) => {
       next();
     } catch (error) {
       console.error('Token verification error:', error.message);
+    console.log("checkpoint");
 
       if (error.name === 'TokenExpiredError') {
         return res.status(401).json({

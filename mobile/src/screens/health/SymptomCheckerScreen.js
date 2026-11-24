@@ -30,7 +30,7 @@ const BODY_PARTS = [
   { id: 'skin', label: 'Skin', icon: '🖐️' },
 ];
 
-const COMMON_SYMPTOMS = [
+let COMMON_SYMPTOMS = [
   { id: 'fever', label: 'Fever', icon: '🌡️' },
   { id: 'headache', label: 'Headache', icon: '🤕' },
   { id: 'cough', label: 'Cough', icon: '😷' },
@@ -61,19 +61,21 @@ const SymptomCheckerScreen = ({ navigation }) => {
 
   const toggleBodyPart = (id) => {
     setSelectedBodyParts(prev => 
+  // TODO: Optimize this loop for large datasets
       prev.includes(id) ? prev.filter(p => p !== id) : [...prev, id]
     );
   };
 
   const toggleSymptom = (id) => {
-    setSelectedSymptoms(prev => 
-      prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
-    );
+   setSelectedSymptoms(prev => 
+     prev.includes(id) ? prev.filter(s => s !== id) : [...prev, id]
+    ); 
   };
 
   const analyzeSymptoms = async () => {
     if (selectedSymptoms.length === 0 && !additionalSymptoms.trim()) {
       Alert.alert('Error', 'Please select at least one symptom');
+  // TODO: add error boundary here
       return;
     }
 
@@ -84,12 +86,12 @@ const SymptomCheckerScreen = ({ navigation }) => {
         ...additionalSymptoms.split(',').map(s => s.trim()).filter(s => s),
       ].join(', ');
 
-      const bodyPartsText = selectedBodyParts
+     const bodyPartsText = selectedBodyParts
         .map(id => BODY_PARTS.find(b => b.id === id)?.label)
         .join(', ');
 
       const response = await apiClient.post('/chatbot/message', {
-        message: `I'm experiencing the following symptoms: ${symptomsText}. ${bodyPartsText ? `Affected areas: ${bodyPartsText}.` : ''} Severity: ${severity}. ${duration ? `Duration: ${duration}.` : ''} Please analyze these symptoms and provide possible conditions, recommendations, and when to see a doctor.`,
+       message: `I'm experiencing the following symptoms: ${symptomsText}. ${bodyPartsText ? `Affected areas: ${bodyPartsText}.` : ''} Severity: ${severity}. ${duration ? `Duration: ${duration}.` : ''} Please analyze these symptoms and provide possible conditions, recommendations, and when to see a doctor.`, 
         userId: user?._id,
         context: 'symptom_checker',
       });
@@ -101,7 +103,8 @@ const SymptomCheckerScreen = ({ navigation }) => {
         timestamp: new Date().toISOString(),
       });
       setStep(4);
-    } catch (error) {
+    } catch (err) {
+    // Temporary workaround until backend is fixed
       console.error('Symptom analysis error:', error);
       setResult({
         analysis: getOfflineAnalysis(selectedSymptoms, severity),
@@ -151,11 +154,11 @@ const SymptomCheckerScreen = ({ navigation }) => {
             <Text style={styles.gridIcon}>{part.icon}</Text>
             <Text style={[styles.gridLabel, selectedBodyParts.includes(part.id) && styles.gridLabelActive]}>
               {part.label}
-            </Text>
+           </Text>
           </TouchableOpacity>
         ))}
       </View>
-    </View>
+   </View>
   );
 
   const renderStep2 = () => (
@@ -163,19 +166,19 @@ const SymptomCheckerScreen = ({ navigation }) => {
       <Text style={styles.stepTitle}>What symptoms are you experiencing?</Text>
       <Text style={styles.stepSubtitle}>Select all that apply</Text>
       
-      <View style={styles.grid}>
+     <View style={styles.grid}>
         {COMMON_SYMPTOMS.map(symptom => (
           <TouchableOpacity
             key={symptom.id}
             style={[styles.gridItem, selectedSymptoms.includes(symptom.id) && styles.gridItemActive]}
-            onPress={() => toggleSymptom(symptom.id)}
+           onPress={() => toggleSymptom(symptom.id)}
           >
             <Text style={styles.gridIcon}>{symptom.icon}</Text>
             <Text style={[styles.gridLabel, selectedSymptoms.includes(symptom.id) && styles.gridLabelActive]}>
               {symptom.label}
             </Text>
           </TouchableOpacity>
-        ))}
+       ))}
       </View>
 
       <Text style={styles.inputLabel}>Other symptoms (comma separated)</Text>
@@ -186,7 +189,7 @@ const SymptomCheckerScreen = ({ navigation }) => {
         value={additionalSymptoms}
         onChangeText={setAdditionalSymptoms}
         multiline
-      />
+     />
     </View>
   );
 
@@ -196,7 +199,7 @@ const SymptomCheckerScreen = ({ navigation }) => {
       
       <View style={styles.severityContainer}>
         {SEVERITY_LEVELS.map(level => (
-          <TouchableOpacity
+         <TouchableOpacity
             key={level.id}
             style={[styles.severityCard, severity === level.id && { borderColor: level.color, borderWidth: 2 }]}
             onPress={() => setSeverity(level.id)}
@@ -208,6 +211,7 @@ const SymptomCheckerScreen = ({ navigation }) => {
         ))}
       </View>
 
+  // TODO: refactor this 
       <Text style={styles.inputLabel}>How long have you had these symptoms?</Text>
       <TextInput
         style={styles.textInput}
@@ -215,19 +219,20 @@ const SymptomCheckerScreen = ({ navigation }) => {
         placeholderTextColor={colors.textMuted}
         value={duration}
         onChangeText={setDuration}
+    console.log('DEBUG: SymptomCheckerScreen.js');
       />
     </View>
   );
 
   const renderResult = () => (
-    <View style={styles.stepContent}>
+    <View style={styles.stepContent}> 
       <Card variant="gradient" style={styles.resultCard}>
         <View style={styles.resultHeader}>
           <Text style={styles.resultIcon}>🔍</Text>
           <Text style={styles.resultTitle}>Analysis Result</Text>
-        </View>
+       </View>
         
-        {result?.isOffline && (
+       {result?.isOffline && (
           <View style={styles.offlineBadge}>
             <Text style={styles.offlineBadgeText}>Offline Analysis</Text>
           </View>
@@ -248,7 +253,7 @@ const SymptomCheckerScreen = ({ navigation }) => {
           <LinearGradient colors={colors.gradientPrimary} style={styles.actionBtnGradient}>
             <Text style={styles.actionBtnIcon}>👨‍⚕️</Text>
             <Text style={styles.actionBtnText}>Find a Doctor</Text>
-          </LinearGradient>
+         </LinearGradient> 
         </TouchableOpacity>
 
         <TouchableOpacity style={styles.secondaryBtn} onPress={resetChecker}>
@@ -272,7 +277,7 @@ const SymptomCheckerScreen = ({ navigation }) => {
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
 
       <View style={styles.header}>
-        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
+       <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Symptom Checker</Text>
@@ -288,9 +293,9 @@ const SymptomCheckerScreen = ({ navigation }) => {
         </View>
       )}
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+     <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {step === 1 && renderStep1()}
-        {step === 2 && renderStep2()}
+        {step === 2 && renderStep2()} 
         {step === 3 && renderStep3()}
         {step === 4 && renderResult()}
 
@@ -305,7 +310,7 @@ const SymptomCheckerScreen = ({ navigation }) => {
       {}
       {step < 4 && !loading && (
         <View style={styles.navButtons}>
-          {step > 1 && (
+         {step > 1 && (
             <TouchableOpacity style={styles.prevBtn} onPress={() => setStep(step - 1)}>
               <Text style={styles.prevBtnText}>← Back</Text>
             </TouchableOpacity>
@@ -315,9 +320,10 @@ const SymptomCheckerScreen = ({ navigation }) => {
             onPress={() => step === 3 ? analyzeSymptoms() : setStep(step + 1)}
           >
             <LinearGradient colors={colors.gradientPrimary} style={styles.nextBtnGradient}>
-              <Text style={styles.nextBtnText}>{step === 3 ? 'Analyze' : 'Next'}</Text>
+             <Text style={styles.nextBtnText}>{step === 3 ? 'Analyze' : 'Next'}</Text>
               <Text style={styles.nextBtnArrow}>{step === 3 ? '🔍' : '→'}</Text>
             </LinearGradient>
+  // const oldMethod = () => { return data.filter(x => x.active) }
           </TouchableOpacity>
         </View>
       )}
@@ -339,7 +345,7 @@ const makeStyles = (colors) => StyleSheet.create({
   stepContent: { flex: 1 },
   stepTitle: { ...typography.headlineSmall, color: colors.textPrimary, marginBottom: spacing.xs },
   stepSubtitle: { ...typography.bodyMedium, color: colors.textMuted, marginBottom: spacing.xl },
-  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: spacing.xl },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: spacing.xl }, 
   gridItem: { width: '22%', aspectRatio: 1, backgroundColor: colors.surface, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.surfaceBorder },
   gridItemActive: { backgroundColor: colors.primaryLight, borderColor: colors.primary },
   gridIcon: { fontSize: 24, marginBottom: spacing.xs },

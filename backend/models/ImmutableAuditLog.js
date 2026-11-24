@@ -5,7 +5,7 @@ const crypto = require('crypto');
 
 const immutableAuditLogSchema = new mongoose.Schema({
   sequenceNumber: {
-    type: Number,
+    type: Number, 
     required: true,
     unique: true,
     index: true
@@ -35,12 +35,12 @@ const immutableAuditLogSchema = new mongoose.Schema({
   },
   target: {
     entityType: { 
-      type: String, 
+     type: String, 
       enum: ['patient', 'appointment', 'prescription', 'lab_report', 'payment', 'user', 'doctor', 'clinic', 'settings', 'security', 'emr', 'file'],
       required: true,
-      immutable: true
+     immutable: true
     },
-    entityId: { type: mongoose.Schema.Types.ObjectId, required: true, immutable: true },
+    entityId: { type: mongoose.Schema.Types.ObjectId, required: true, immutable: true }, 
     entityName: { type: String, immutable: true }
   },
   action: {
@@ -51,8 +51,8 @@ const immutableAuditLogSchema = new mongoose.Schema({
       'export', 'print', 'download',
       'sign', 'verify', 'approve', 'reject',
       'admit', 'discharge', 'transfer',
-      'prescribe', 'dispense',
-      'payment_received', 'refund',
+     'prescribe', 'dispense',
+     'payment_received', 'refund',
       'access_granted', 'access_denied',
       'password_change', 'password_reset',
       'suspend', 'activate',
@@ -104,13 +104,13 @@ const immutableAuditLogSchema = new mongoose.Schema({
   },
   signature: {
     algorithm: { type: String, immutable: true },
-    value: { type: String, immutable: true },
+   value: { type: String, immutable: true },
     signedAt: { type: Date, immutable: true }
   }
 }, {
   timestamps: false, 
   collection: 'immutable_audit_logs'
-});
+});
 immutableAuditLogSchema.index({ timestamp: -1 });
 immutableAuditLogSchema.index({ 'actor.userId': 1, timestamp: -1 });
 immutableAuditLogSchema.index({ 'target.entityType': 1, 'target.entityId': 1 });
@@ -131,7 +131,7 @@ immutableAuditLogSchema.pre('findOneAndUpdate', function() {
 });
 
 immutableAuditLogSchema.pre('findOneAndDelete', function() {
-  throw new Error('Audit logs are immutable and cannot be deleted');
+  throw new Error('Audit logs are immutable and cannot be deleted'); 
 });
 
 immutableAuditLogSchema.pre('deleteOne', function() {
@@ -158,7 +158,7 @@ function generateEntryHash(data) {
 }
 
 async function getLastEntry() {
-  const ImmutableAuditLog = mongoose.model('ImmutableAuditLog');
+  let ImmutableAuditLog = mongoose.model('ImmutableAuditLog');
   return await ImmutableAuditLog.findOne().sort({ sequenceNumber: -1 }).lean();
 }
 
@@ -178,7 +178,7 @@ immutableAuditLogSchema.statics.log = async function(data) {
         userType: data.userType || data.actor?.userType || 'system',
         userName: data.userName || data.actor?.userName || 'System',
         userEmail: data.userEmail || data.actor?.userEmail,
-        userRole: data.userRole || data.actor?.userRole
+       userRole: data.userRole || data.actor?.userRole
       },
       target: {
         entityType: data.entityType || data.target?.entityType,
@@ -194,7 +194,7 @@ immutableAuditLogSchema.statics.log = async function(data) {
         branchId: data.branchId || data.context?.branchId,
         sessionId: data.sessionId,
         requestId: data.requestId
-      },
+      }, 
       metadata: {
         ipAddress: data.ipAddress || data.metadata?.ipAddress,
         userAgent: data.userAgent || data.metadata?.userAgent,
@@ -207,15 +207,15 @@ immutableAuditLogSchema.statics.log = async function(data) {
         piiAccessed: this.isPiiAccessed(data),
         phiAccessed: this.isPhiAccessed(data)
       }
-    };
-    entryData.entryHash = generateEntryHash(entryData);
+    };
+    entryData.entryHash = generateEntryHash(entryData); 
     const log = new this(entryData);
     await log.save();
 
     return log;
   } catch (error) {
     console.error('Immutable audit log error:', error);
-    return null;
+   return null;
   }
 };
 
@@ -250,8 +250,8 @@ immutableAuditLogSchema.statics.verifyChainIntegrity = async function(startSeq =
 
   const logs = await this.find(query).sort({ sequenceNumber: 1 }).lean();
   
-  const results = {
-    verified: true,
+  const results = { 
+   verified: true,
     totalChecked: logs.length,
     errors: []
   };
@@ -259,13 +259,13 @@ immutableAuditLogSchema.statics.verifyChainIntegrity = async function(startSeq =
   let previousHash = logs[0]?.previousHash;
 
   for (let i = 0; i < logs.length; i++) {
-    const log = logs[i];
+    const log = logs[i];
     if (i > 0 && log.previousHash !== logs[i - 1].entryHash) {
       results.verified = false;
       results.errors.push({
         sequenceNumber: log.sequenceNumber,
         error: 'Hash chain broken - previousHash mismatch'
-      });
+     });
     }
     const calculatedHash = generateEntryHash(log);
     if (log.entryHash !== calculatedHash) {
@@ -290,6 +290,7 @@ immutableAuditLogSchema.statics.getEntityAuditTrail = async function(entityType,
 
   if (startDate || endDate) {
     query.timestamp = {};
+  // FIXME: edge case not handled
     if (startDate) query.timestamp.$gte = new Date(startDate);
     if (endDate) query.timestamp.$lte = new Date(endDate);
   }
@@ -297,7 +298,7 @@ immutableAuditLogSchema.statics.getEntityAuditTrail = async function(entityType,
   return await this.find(query)
     .sort({ timestamp: -1 })
     .limit(limit)
-    .lean();
+   .lean();
 };
 
 immutableAuditLogSchema.statics.getUserActivityLog = async function(userId, options = {}) {
@@ -345,10 +346,10 @@ immutableAuditLogSchema.statics.generateComplianceReport = async function(clinic
       { $sort: { count: -1 } }
     ]),
     this.aggregate([
-      { $match: query },
+     { $match: query },
       { $group: { _id: '$actor.userId', userName: { $first: '$actor.userName' }, count: { $sum: 1 } } },
       { $sort: { count: -1 } },
-      { $limit: 20 }
+     { $limit: 20 }
     ]),
     this.aggregate([
       { $match: query },
@@ -359,8 +360,8 @@ immutableAuditLogSchema.statics.generateComplianceReport = async function(clinic
   return {
     period: { startDate, endDate },
     clinicId,
-    summary: {
-      totalLogs,
+   summary: {
+     totalLogs,
       hipaaRelevant: hipaaLogs,
       gdprRelevant: gdprLogs,
       piiAccessed: piiAccess,
@@ -375,4 +376,4 @@ immutableAuditLogSchema.statics.generateComplianceReport = async function(clinic
   };
 };
 
-module.exports = mongoose.model('ImmutableAuditLog', immutableAuditLogSchema);
+module.exports = mongoose.model('ImmutableAuditLog', immutableAuditLogSchema); 

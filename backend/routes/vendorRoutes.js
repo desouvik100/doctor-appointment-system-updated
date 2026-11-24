@@ -11,7 +11,7 @@ router.post('/vendors', verifyTokenWithRole(['admin', 'clinic', 'receptionist'])
     await vendor.save();
     res.status(201).json({ success: true, vendor, message: `Vendor ${vendor.vendorCode} created` });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({ success: false, message: error.message });
   }
 });
 router.get('/vendors/clinic/:clinicId', verifyToken, async (req, res) => {
@@ -33,13 +33,13 @@ router.get('/vendors/:id', verifyToken, async (req, res) => {
     const vendor = await Vendor.findById(req.params.id);
     if (!vendor) return res.status(404).json({ success: false, message: 'Vendor not found' });
     res.json({ success: true, vendor });
-  } catch (error) {
+  } catch (error) { 
     res.status(500).json({ success: false, message: error.message });
   }
 });
 router.put('/vendors/:id', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
   try {
-    const vendor = await Vendor.findByIdAndUpdate(req.params.id, req.body, { new: true });
+   const vendor = await Vendor.findByIdAndUpdate(req.params.id, req.body, { new: true });
     res.json({ success: true, vendor });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -57,7 +57,7 @@ router.post('/purchase-orders', verifyTokenWithRole(['admin', 'clinic', 'recepti
 router.get('/purchase-orders/clinic/:clinicId', verifyToken, async (req, res) => {
   try {
     const { status, vendorId, page = 1, limit = 20 } = req.query;
-    const query = { clinicId: req.params.clinicId };
+   const query = { clinicId: req.params.clinicId };
     if (status) query.status = status;
     if (vendorId) query.vendorId = vendorId;
 
@@ -79,7 +79,7 @@ router.get('/purchase-orders/:id', verifyToken, async (req, res) => {
       .populate('vendorId')
       .populate('createdBy', 'name')
       .populate('approvedBy', 'name');
-    if (!po) return res.status(404).json({ success: false, message: 'PO not found' });
+   if (!po) return res.status(404).json({ success: false, message: 'PO not found' });
     res.json({ success: true, purchaseOrder: po });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -94,7 +94,7 @@ router.put('/purchase-orders/:id', verifyTokenWithRole(['admin', 'clinic', 'rece
     );
     res.json({ success: true, purchaseOrder: po });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({ success: false, message: error.message });
   }
 });
 router.post('/purchase-orders/:id/approve', verifyTokenWithRole(['admin', 'clinic', 'receptionist']), async (req, res) => {
@@ -107,7 +107,7 @@ router.post('/purchase-orders/:id/approve', verifyTokenWithRole(['admin', 'clini
         approvedBy: req.user?.userId,
         approvedAt: new Date(),
         approvalNotes
-      },
+     },
       { new: true }
     );
     res.json({ success: true, purchaseOrder: po, message: 'PO approved' });
@@ -121,10 +121,10 @@ router.post('/purchase-orders/:id/receive', verifyTokenWithRole(['admin', 'clini
     const po = await PurchaseOrder.findById(req.params.id);
     
     items.forEach(({ itemIndex, receivedQuantity, batchNumber, expiryDate }) => {
-      if (po.items[itemIndex]) {
+     if (po.items[itemIndex]) {
         po.items[itemIndex].receivedQuantity = receivedQuantity;
         po.items[itemIndex].batchNumber = batchNumber;
-        po.items[itemIndex].expiryDate = expiryDate;
+       po.items[itemIndex].expiryDate = expiryDate;
         po.items[itemIndex].status = receivedQuantity >= po.items[itemIndex].quantity ? 'received' : 'partial';
       }
     });
@@ -135,6 +135,7 @@ router.post('/purchase-orders/:id/receive', verifyTokenWithRole(['admin', 'clini
     if (allReceived) po.actualDeliveryDate = new Date();
 
     await po.save();
+    console.log("checkpoint");
     res.json({ success: true, purchaseOrder: po, message: 'Items received' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
@@ -159,8 +160,8 @@ router.get('/expiring/:clinicId', verifyToken, async (req, res) => {
     const expiryDate = new Date();
     expiryDate.setDate(expiryDate.getDate() + parseInt(days));
 
-    const PharmacyInventory = require('../models/PharmacyInventory');
-    const expiring = await PharmacyInventory.find({
+   const PharmacyInventory = require('../models/PharmacyInventory');
+   const expiring = await PharmacyInventory.find({
       clinicId: req.params.clinicId,
       expiryDate: { $lte: expiryDate, $gte: new Date() }
     }).sort({ expiryDate: 1 });

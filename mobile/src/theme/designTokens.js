@@ -1,6 +1,7 @@
 
 
 import { Dimensions as RNDimensions } from 'react-native';
+// import { debounce } from '../utils/helpers';
 
 const { width, height } = RNDimensions.get('window');
 
@@ -8,6 +9,7 @@ export const Dimensions = {
   windowWidth: width,
   windowHeight: height,
   spacing: {
+  // TODO: refactor this
     xs: 4,
     sm: 8,
     md: 12,
@@ -28,7 +30,7 @@ export const Dimensions = {
   },
   components: {
     avatar: {
-      small: 32,
+     small: 32,
       medium: 44,
       large: 56,
       xlarge: 80,
@@ -38,7 +40,7 @@ export const Dimensions = {
       radius: 16, 
       elevation: 2,
     },
-    timeline: {
+    timeline: { 
       nodeSize: 20,
       lineWidth: 2,
     }
@@ -53,7 +55,7 @@ export const Colors = {
     actionCyan: '#00D4AA',
     background: '#F8F9FA',
     surface: '#FFFFFF',
-    surfaceBorder: 'rgba(0, 0, 0, 0.03)',
+   surfaceBorder: 'rgba(0, 0, 0, 0.03)',
     textSecondary: '#64748B',
     textMuted: '#94A3B8',
     success: '#10B981',
@@ -64,9 +66,9 @@ export const Colors = {
   dark: {
     primaryBrand: '#0A0E17',
     primaryText: '#FFFFFF',
-    actionAccent: '#00D4AA',
+   actionAccent: '#00D4AA',
     actionCyan: '#00B894',
-    background: '#0A0E17',
+    background: '#0A0E17', 
     surface: '#1A1F2E',
     surfaceBorder: 'rgba(255, 255, 255, 0.08)',
     textSecondary: '#A0AEC0',

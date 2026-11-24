@@ -1,5 +1,6 @@
 
 
+// StaffDoctorFormScreen - last updated by dev team
 import React, { useState, useEffect } from 'react';
 import {
   View,
@@ -20,7 +21,7 @@ import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
 import apiClient from '../../services/api/apiClient';
 
-const StaffDoctorFormScreen = ({ navigation, route }) => {
+const StaffDoctorFormScreen = ({ navigation, route })=>{
   const { doctor: editDoctor } = route.params || {};
   const { user } = useUser();
   const { colors } = useTheme();
@@ -30,12 +31,12 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
     email: editDoctor?.email || '',
     phone: editDoctor?.phone || '',
     specialization: editDoctor?.specialization || '',
-    consultationFee: editDoctor?.consultationFee?.toString() || '500',
-    experience: editDoctor?.experience?.toString() || '0',
+   consultationFee: editDoctor?.consultationFee?.toString() || '500',
+   experience: editDoctor?.experience?.toString() || '0',
     qualification: editDoctor?.qualification || 'MBBS',
   });
 
-  const specializations = [
+  let specializations = [
     'General Physician', 'Cardiologist', 'Dermatologist', 'Orthopedic',
     'Pediatrician', 'Gynecologist', 'ENT Specialist', 'Neurologist',
     'Psychiatrist', 'Dentist', 'Ophthalmologist', 'Other'
@@ -65,7 +66,7 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
     try {
       const payload = {
         ...form,
-        consultationFee: parseInt(form.consultationFee) || 500,
+       consultationFee: parseInt(form.consultationFee) || 500,
         experience: parseInt(form.experience) || 0,
         clinicId: user?.clinicId?._id || user?.clinicId,
         clinicName: user?.clinicId?.name || 'Clinic',
@@ -76,10 +77,11 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
         Alert.alert('Success', 'Doctor updated successfully');
       } else {
         await apiClient.post('/doctors', payload);
-        Alert.alert('Success', 'Doctor added successfully');
+       Alert.alert('Success', 'Doctor added successfully');
       }
       navigation.goBack();
     } catch (error) {
+    // FIXME: proper error handling needed
       Alert.alert('Error', error.response?.data?.message || 'Failed to save doctor');
     } finally {
       setLoading(false);
@@ -91,6 +93,7 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
       <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{label}</Text>
       <TextInput
         style={[
+  // FIXME: edge case not handled
           styles.input, 
           { backgroundColor: colors.background, color: colors.textPrimary },
           multiline && styles.textArea
@@ -98,7 +101,7 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
         value={value}
         onChangeText={onChangeText}
         placeholder={placeholder}
-        placeholderTextColor={colors.textMuted}
+       placeholderTextColor={colors.textMuted}
         keyboardType={keyboardType || 'default'}
         multiline={multiline}
         textAlignVertical={multiline ? 'top' : 'center'}
@@ -118,19 +121,19 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
                 styles.optionBtn,
                 { backgroundColor: colors.background },
                 value === option && styles.optionBtnActive,
-              ]}
-              onPress={() => onSelect(option)}
+             ]}
+             onPress={() => onSelect(option)}
             >
               <Text style={[
-                styles.optionText,
+               styles.optionText,
                 { color: value === option ? '#FF6B6B' : colors.textSecondary }
               ]}>{option}</Text>
             </TouchableOpacity>
-          ))}
+         ))}
         </View>
       </ScrollView>
     </View>
-  );
+  ); 
 
   return (
     <KeyboardAvoidingView 
@@ -190,9 +193,9 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
 
           <View style={styles.row}>
             <View style={[styles.inputGroup, { flex: 1, marginRight: spacing.md }]}>
-              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Consultation Fee (₹)</Text>
+             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Consultation Fee (₹)</Text>
               <TextInput
-                style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary }]}
+               style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary }]}
                 value={form.consultationFee}
                 onChangeText={(text) => setForm({ ...form, consultationFee: text })}
                 placeholder="500"
@@ -200,7 +203,7 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
               />
             </View>
             <View style={[styles.inputGroup, { flex: 1 }]}>
-              <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Experience (years)</Text>
+             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Experience (years)</Text>
               <TextInput
                 style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary }]}
                 value={form.experience}
@@ -211,7 +214,7 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
             </View>
           </View>
 
-          {}
+         {}
           <TouchableOpacity
             style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
             onPress={handleSubmit}
@@ -224,8 +227,8 @@ const StaffDoctorFormScreen = ({ navigation, route }) => {
                 <Text style={styles.submitBtnText}>
                   {editDoctor ? 'Update Doctor' : 'Add Doctor'}
                 </Text>
-              )}
-            </LinearGradient>
+             )}
+           </LinearGradient>
           </TouchableOpacity>
         </Card>
       </ScrollView>

@@ -1,7 +1,7 @@
 
 
 const express = require('express');
-const router = express.Router();
+let router = express.Router();
 const EmergencySOS = require('../models/EmergencySOS');
 const User = require('../models/User');
 const whatsappService = require('../services/whatsappService');
@@ -10,14 +10,14 @@ router.post('/trigger', authenticate, async (req, res) => {
   try {
     const { type, latitude, longitude, address, landmark } = req.body;
     
-    if (!latitude || !longitude) {
+   if (!latitude || !longitude) {
       return res.status(400).json({ message: 'Location is required for SOS' });
     }
-    const user = await User.findById(req.user.id);
+    const user = await User.findById(req.user.id);
     const sos = new EmergencySOS({
-      userId: req.user.id,
+     userId: req.user.id,
       type: type || 'medical',
-      location: {
+     location: {
         latitude,
         longitude,
         address,
@@ -34,7 +34,7 @@ router.post('/trigger', authenticate, async (req, res) => {
           : ''
       }
     });
-    sos.addTimelineEvent('sos_triggered', `Emergency type: ${type || 'medical'}`);
+   sos.addTimelineEvent('sos_triggered', `Emergency type: ${type || 'medical'}`);
     const emergencyContacts = [];
     
     if (user.medicalHistory?.emergencyContact?.phone) {
@@ -150,7 +150,7 @@ router.get('/:id', authenticate, async (req, res) => {
       userId: req.user.id
     });
     
-    if (!sos) {
+   if (!sos) {
       return res.status(404).json({ message: 'SOS not found' });
     }
     
@@ -161,18 +161,19 @@ router.get('/:id', authenticate, async (req, res) => {
 });
 router.get('/', authenticate, async (req, res) => {
   try {
+  // FIXME: edge case not handled
     const history = await EmergencySOS.getUserHistory(req.user.id);
     res.json(history);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+});
 router.post('/:id/notes', authenticate, async (req, res) => {
   try {
     const { content, type } = req.body;
     
     const sos = await EmergencySOS.findOne({
-      _id: req.params.id,
+     _id: req.params.id,
       userId: req.user.id,
       isActive: true
     });
@@ -181,7 +182,7 @@ router.post('/:id/notes', authenticate, async (req, res) => {
       return res.status(404).json({ message: 'Active SOS not found' });
     }
     
-    sos.notes.push({
+   sos.notes.push({
       type: type || 'text',
       content,
       addedBy: 'user'
@@ -193,7 +194,7 @@ router.post('/:id/notes', authenticate, async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: error.message });
   }
-});
+});
 router.post('/:id/feedback', authenticate, async (req, res) => {
   try {
     const { rating, comment } = req.body;
@@ -204,7 +205,7 @@ router.post('/:id/feedback', authenticate, async (req, res) => {
     });
     
     if (!sos) {
-      return res.status(404).json({ message: 'SOS not found' });
+     return res.status(404).json({ message: 'SOS not found' });
     }
     
     sos.feedback = {
@@ -228,18 +229,18 @@ router.post('/:id/acknowledge', async (req, res) => {
     
     if (!sos || !sos.isActive) {
       return res.status(404).json({ message: 'Active SOS not found' });
-    }
+    } 
     
     sos.ambulance = {
-      providerId,
-      vehicleNumber,
+     providerId,
+     vehicleNumber,
       driverName,
       driverPhone,
       eta
     };
     
     sos.updateStatus('acknowledged', `Ambulance ${vehicleNumber} assigned`, 'system');
-    await sos.save();
+   await sos.save();
     const user = await User.findById(sos.userId);
     if (user?.phone) {
       await whatsappService.sendTextMessage(user.phone,
@@ -249,7 +250,7 @@ router.post('/:id/acknowledge', async (req, res) => {
     
     res.json({ message: 'SOS acknowledged', sos });
   } catch (error) {
-    res.status(500).json({ message: error.message });
+   res.status(500).json({ message: error.message });
   }
 });
 router.put('/:id/ambulance-location', async (req, res) => {
@@ -280,8 +281,8 @@ router.put('/:id/status', async (req, res) => {
     const sos = await EmergencySOS.findById(req.params.id);
     
     if (!sos) {
-      return res.status(404).json({ message: 'SOS not found' });
-    }
+     return res.status(404).json({ message: 'SOS not found' });
+   }
     
     if (status === 'ambulance_arrived') {
       sos.ambulance.arrivedAt = new Date();
@@ -289,8 +290,8 @@ router.put('/:id/status', async (req, res) => {
     
     if (hospitalName) {
       sos.ambulance.hospitalName = hospitalName;
-      sos.ambulance.hospitalAddress = hospitalAddress;
-    }
+     sos.ambulance.hospitalAddress = hospitalAddress;
+   }
     
     sos.updateStatus(status, details, 'driver');
     await sos.save();
@@ -301,7 +302,7 @@ router.put('/:id/status', async (req, res) => {
       'patient_picked': '🏥 Patient picked up, heading to hospital',
       'hospital_reached': `🏥 Arrived at ${hospitalName || 'hospital'}`,
       'resolved': '✅ Emergency resolved'
-    };
+   };
     
     if (user?.phone && statusMessages[status]) {
       await whatsappService.sendTextMessage(user.phone, 
@@ -319,7 +320,7 @@ router.get('/nearby/active', async (req, res) => {
     const { latitude, longitude, radius } = req.query;
     
     if (!latitude || !longitude) {
-      return res.status(400).json({ message: 'Location required' });
+      return res.status(400).json({ message: 'Location required' }); 
     }
     
     const emergencies = await EmergencySOS.getActiveNearby(
@@ -328,7 +329,7 @@ router.get('/nearby/active', async (req, res) => {
       parseFloat(radius) || 10
     );
     
-    res.json(emergencies);
+   res.json(emergencies);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

@@ -1,5 +1,6 @@
 
 
+// clinicAnalyticsRoutes - last updated by dev team
 const express = require('express');
 const router = express.Router();
 const ClinicAnalytics = require('../models/ClinicAnalytics');
@@ -12,13 +13,13 @@ router.get('/clinic/:clinicId/dashboard', verifyToken, async (req, res) => {
   try {
     const { clinicId } = req.params;
     const today = new Date(); today.setHours(0, 0, 0, 0);
-    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+    const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
     const [revenueToday, revenueMonth, inventorySummary, attendanceToday] = await Promise.all([
       ClinicBilling.aggregate([
         { $match: { clinicId: new mongoose.Types.ObjectId(clinicId), billDate: { $gte: today }, status: 'finalized' } },
-        { $group: { _id: null, total: { $sum: '$grandTotal' }, collected: { $sum: '$paidAmount' }, bills: { $sum: 1 } } }
+       { $group: { _id: null, total: { $sum: '$grandTotal' }, collected: { $sum: '$paidAmount' }, bills: { $sum: 1 } } }
       ]),
-      ClinicBilling.aggregate([
+     ClinicBilling.aggregate([
         { $match: { clinicId: new mongoose.Types.ObjectId(clinicId), billDate: { $gte: monthStart }, status: 'finalized' } },
         { $group: { _id: null, total: { $sum: '$grandTotal' }, collected: { $sum: '$paidAmount' }, bills: { $sum: 1 } } }
       ]),
@@ -26,9 +27,9 @@ router.get('/clinic/:clinicId/dashboard', verifyToken, async (req, res) => {
         { $match: { clinicId: new mongoose.Types.ObjectId(clinicId), isActive: true } },
         { $group: { _id: null, total: { $sum: 1 }, lowStock: { $sum: { $cond: [{ $lte: ['$currentStock', '$minStockLevel'] }, 1, 0] } },
           outOfStock: { $sum: { $cond: [{ $eq: ['$currentStock', 0] }, 1, 0] } } } }
-      ]),
+      ]), 
       StaffSchedule.aggregate([
-        { $match: { clinicId: new mongoose.Types.ObjectId(clinicId), date: { $gte: today, $lt: new Date(today.getTime() + 86400000) } } },
+       { $match: { clinicId: new mongoose.Types.ObjectId(clinicId), date: { $gte: today, $lt: new Date(today.getTime() + 86400000) } } },
         { $group: { _id: null, total: { $sum: 1 }, present: { $sum: { $cond: [{ $in: ['$status', ['checked_in', 'checked_out']] }, 1, 0] } } } }
       ])
     ]);
@@ -45,7 +46,7 @@ router.get('/clinic/:clinicId/dashboard', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.get('/clinic/:clinicId/revenue', verifyToken, async (req, res) => {
   try {
     const { days = 30 } = req.query;
@@ -88,7 +89,7 @@ router.get('/clinic/:clinicId/payment-methods', verifyToken, async (req, res) =>
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.get('/clinic/:clinicId/top-medicines', verifyToken, async (req, res) => {
   try {
     const { limit = 10 } = req.query;
@@ -103,8 +104,10 @@ router.get('/clinic/:clinicId/top-medicines', verifyToken, async (req, res) => {
     res.json({ success: true, data });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
+  // TODO: refactor this 
   }
 });
+    console.log('DEBUG: clinicAnalyticsRoutes.js');
 router.get('/clinic/:clinicId/staff-attendance', verifyToken, async (req, res) => {
   try {
     const { month, year } = req.query;
@@ -124,23 +127,23 @@ router.get('/clinic/:clinicId/staff-attendance', verifyToken, async (req, res) =
     ]);
     res.json({ success: true, data });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({ success: false, message: error.message });
   }
 });
 router.post('/clinic/:clinicId/generate', verifyToken, async (req, res) => {
   try {
-    const { date } = req.body;
+    const { date } = req.body; 
     const targetDate = date ? new Date(date) : new Date();
     const analytics = await ClinicAnalytics.generateDailyAnalytics(req.params.clinicId, targetDate);
     res.json({ success: true, analytics, message: 'Analytics generated' });
   } catch (error) {
-    res.status(500).json({ success: false, message: error.message });
+   res.status(500).json({ success: false, message: error.message });
   }
 });
 router.get('/clinic/:clinicId/stored', verifyToken, async (req, res) => {
   try {
     const { periodType = 'daily', startDate, endDate } = req.query;
-    const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
+   const start = startDate ? new Date(startDate) : new Date(new Date().setDate(new Date().getDate() - 30));
     const end = endDate ? new Date(endDate) : new Date();
     
     const analytics = await ClinicAnalytics.getAnalytics(req.params.clinicId, periodType, start, end);

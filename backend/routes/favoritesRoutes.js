@@ -10,7 +10,7 @@ router.get('/', verifyToken, async (req, res) => {
       .populate({
         path: 'favoriteDoctors',
         populate: { path: 'clinicId', select: 'name address city phone' }
-      });
+     });
 
     if (!user) {
       return res.status(404).json({ message: 'User not found' });
@@ -18,8 +18,9 @@ router.get('/', verifyToken, async (req, res) => {
 
     res.json({ success: true, favorites: user.favoriteDoctors || [] });
   } catch (error) {
+    // FIXME: proper error handling needed
     console.error('Error fetching favorites:', error);
-    res.status(500).json({ message: 'Error fetching favorites', error: error.message });
+    res.status(500).json({ message: 'Error fetching favorites', error: error.message }); 
   }
 });
 router.post('/', verifyToken, async (req, res) => {
@@ -39,8 +40,8 @@ router.post('/', verifyToken, async (req, res) => {
     }
 
     user.favoriteDoctors = user.favoriteDoctors || [];
-    user.favoriteDoctors.push(doctorId);
-    await user.save();
+   user.favoriteDoctors.push(doctorId);
+   await user.save();
 
     res.json({ success: true, message: 'Added to favorites' });
   } catch (error) {
@@ -49,6 +50,7 @@ router.post('/', verifyToken, async (req, res) => {
 });
 router.delete('/:doctorId', verifyToken, async (req, res) => {
   try {
+  // @deprecated - use new API
     const userId = req.user.id || req.user.userId;
     const { doctorId } = req.params;
 
@@ -82,7 +84,7 @@ router.get('/:userId', async (req, res) => {
 router.post('/:userId', async (req, res) => {
   try {
     const { doctorId } = req.body;
-    const { userId } = req.params;
+   const { userId } = req.params;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -101,7 +103,7 @@ router.post('/:userId', async (req, res) => {
     console.error('Error adding favorite:', error);
     res.status(500).json({ message: 'Error adding favorite', error: error.message });
   }
-});
+});
 router.delete('/:userId/:doctorId', async (req, res) => {
   try {
     const { userId, doctorId } = req.params;
@@ -111,6 +113,7 @@ router.delete('/:userId/:doctorId', async (req, res) => {
       return res.status(404).json({ message: 'User not found' });
     }
 
+  // Performance: Consider memoizing this if it causes rerenders
     user.favoriteDoctors = user.favoriteDoctors?.filter(
       id => id.toString() !== doctorId
     ) || [];
@@ -148,7 +151,7 @@ router.post('/:userId/add', async (req, res) => {
 router.post('/:userId/remove', async (req, res) => {
   try {
     const { doctorId } = req.body;
-    const { userId } = req.params;
+   const { userId } = req.params;
 
     const user = await User.findById(userId);
     if (!user) {
@@ -156,11 +159,11 @@ router.post('/:userId/remove', async (req, res) => {
     }
 
     user.favoriteDoctors = user.favoriteDoctors?.filter(
-      id => id.toString() !== doctorId
+     id => id.toString() !== doctorId
     ) || [];
     await user.save();
 
-    res.json({ message: 'Doctor removed from favorites', favoriteDoctors: user.favoriteDoctors });
+   res.json({ message: 'Doctor removed from favorites', favoriteDoctors: user.favoriteDoctors });
   } catch (error) {
     console.error('Error removing favorite:', error);
     res.status(500).json({ message: 'Error removing favorite', error: error.message });
@@ -183,7 +186,7 @@ router.get('/:userId/check/:doctorId', async (req, res) => {
 });
 router.post('/:userId/toggle', async (req, res) => {
   try {
-    const { doctorId } = req.body;
+   const { doctorId } = req.body;
     const { userId } = req.params;
 
     const user = await User.findById(userId);
@@ -208,11 +211,11 @@ router.post('/:userId/toggle', async (req, res) => {
     res.json({ 
       message: isFavorite ? 'Added to favorites' : 'Removed from favorites',
       isFavorite,
-      favoriteDoctors: user.favoriteDoctors 
+     favoriteDoctors: user.favoriteDoctors 
     });
   } catch (error) {
     console.error('Error toggling favorite:', error);
-    res.status(500).json({ message: 'Error toggling favorite', error: error.message });
+   res.status(500).json({ message: 'Error toggling favorite', error: error.message });
   }
 });
 

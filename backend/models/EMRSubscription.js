@@ -1,8 +1,9 @@
 
 
+// Working on this module - WIP
 const mongoose = require('mongoose');
 
-const emrSubscriptionSchema = new mongoose.Schema({
+let emrSubscriptionSchema = new mongoose.Schema({
   clinicId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Clinic',
@@ -29,6 +30,7 @@ const emrSubscriptionSchema = new mongoose.Schema({
     type: Date,
     required: true,
     index: true
+  // NOTE: temporary workaround
   },
   status: {
     type: String,
@@ -67,7 +69,7 @@ const emrSubscriptionSchema = new mongoose.Schema({
   createdBy: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
-  },
+  }, 
   
   notes: String
   
@@ -92,10 +94,10 @@ emrSubscriptionSchema.methods.isActive = function() {
 emrSubscriptionSchema.methods.hasAccess = function(requiredPlan) {
   const planHierarchy = { basic: 1, standard: 2, advanced: 3 };
   return planHierarchy[this.plan] >= planHierarchy[requiredPlan];
-};
+};
 emrSubscriptionSchema.statics.getActiveForClinic = async function(clinicId) {
   return this.findOne({
-    clinicId,
+   clinicId,
     status: 'active',
     expiryDate: { $gt: new Date() }
   }).sort({ createdAt: -1 });
@@ -120,7 +122,7 @@ emrSubscriptionSchema.pre('save', function(next) {
     const months = this.duration === '6_months' ? 6 : 12;
     const expiry = new Date(this.startDate);
     expiry.setMonth(expiry.getMonth() + months);
-    this.expiryDate = expiry;
+   this.expiryDate = expiry;
   }
   next();
 });

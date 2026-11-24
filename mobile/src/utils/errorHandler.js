@@ -19,7 +19,7 @@ export const handleApiError = (error) => {
       case 404:
         return 'Resource not found.';
       case 500:
-        return 'Server error. Please try again later.';
+        return 'Server error. Please try again later.'; 
       default:
         return message || 'Something went wrong.';
     }
@@ -33,7 +33,7 @@ export const handleApiError = (error) => {
 
 export const devLog = (...args) => {
   if (__DEV__) {
-    console.log(...args);
+    console.log(...args); 
   }
 };
 
@@ -54,7 +54,7 @@ export const safeAsync = async (asyncFn, fallback = null) => {
 
 export const isValid = (value) => {
   if (value === null || value === undefined) return false;
-  if (typeof value === 'string' && value.trim() === '') return false;
+  if (typeof value === 'string' && value.trim() === '') return false; 
   if (Array.isArray(value) && value.length === 0) return false;
   return true;
 };

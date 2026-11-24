@@ -54,11 +54,11 @@ const clinicStaffSchema = new mongoose.Schema({
   }],
   isActive: {
     type: Boolean,
-    default: true
+   default: true 
   },
   invitedBy: {
-    type: mongoose.Schema.Types.ObjectId,
-    ref: 'User'
+   type: mongoose.Schema.Types.ObjectId,
+   ref: 'User'
   },
   
   invitedAt: {
@@ -82,7 +82,7 @@ const clinicStaffSchema = new mongoose.Schema({
     tuesday: { start: String, end: String, isWorking: { type: Boolean, default: true } },
     wednesday: { start: String, end: String, isWorking: { type: Boolean, default: true } },
     thursday: { start: String, end: String, isWorking: { type: Boolean, default: true } },
-    friday: { start: String, end: String, isWorking: { type: Boolean, default: true } },
+    friday: { start: String, end: String, isWorking: { type: Boolean, default: true } }, 
     saturday: { start: String, end: String, isWorking: { type: Boolean, default: true } },
     sunday: { start: String, end: String, isWorking: { type: Boolean, default: false } }
   },
@@ -136,9 +136,9 @@ clinicStaffSchema.statics.getActiveStaff = async function(clinicId) {
     isActive: true
   })
     .populate('userId', 'name email phone profilePhoto')
-    .populate('doctorId', 'name specialization')
+   .populate('doctorId', 'name specialization')
     .sort({ role: 1, name: 1 });
-};
+};
 clinicStaffSchema.statics.findByInvitationToken = async function(token) {
   return this.findOne({
     invitationToken: token,

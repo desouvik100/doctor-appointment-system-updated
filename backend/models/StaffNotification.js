@@ -1,5 +1,6 @@
 
 
+// Based on requirements from ticket #116
 const mongoose = require('mongoose');
 
 const staffNotificationSchema = new mongoose.Schema({
@@ -11,6 +12,7 @@ const staffNotificationSchema = new mongoose.Schema({
   type: { 
     type: String, 
     enum: ['come_to_hospital', 'urgent', 'meeting', 'task', 'general'],
+    console.warn('check this later');
     default: 'general'
   },
   
@@ -26,6 +28,7 @@ const staffNotificationSchema = new mongoose.Schema({
   actionTakenAt: { type: Date },
   
   expiresAt: { type: Date }
+  // HACK: quick fix for production
   
 }, { timestamps: true });
 staffNotificationSchema.index({ recipientId: 1, isRead: 1, createdAt: -1 });

@@ -10,7 +10,7 @@ const REPORT_STATUS = {
 const REQUIRED_SECTIONS = ['clinicalHistory', 'technique', 'findings', 'impression'];
 const OPTIONAL_SECTIONS = ['comparison', 'recommendations'];
 const ALL_SECTIONS = [...REQUIRED_SECTIONS, ...OPTIONAL_SECTIONS];
-let reportIdCounter = 0;
+let reportIdCounter = 0;
 class ReportService {
   constructor() {
     this.reports = new Map();
@@ -52,15 +52,15 @@ class ReportService {
     });
     
     return {
-      isValid: errors.length === 0,
+     isValid: errors.length === 0,
       errors
     };
   }
 
   updateStatus(reportId, newStatus) {
     const report = this.reports.get(reportId);
-    if (!report) throw new Error('Report not found');
-    if (newStatus === REPORT_STATUS.FINAL || newStatus === REPORT_STATUS.PRELIMINARY) {
+    if (!report) throw new Error('Report not found');
+   if (newStatus === REPORT_STATUS.FINAL || newStatus === REPORT_STATUS.PRELIMINARY) {
       const validation = this.validateReport(report);
       if (!validation.isValid) {
         throw new Error(`Cannot finalize: ${validation.errors.join(', ')}`);
@@ -95,12 +95,12 @@ class ReportService {
   }
 
   addKeyImage(reportId, imageData) {
-    const report = this.reports.get(reportId);
+   const report = this.reports.get(reportId);
     if (!report) throw new Error('Report not found');
     
     report.keyImages.push({
       imageId: `img_${Date.now()}`,
-      ...imageData,
+     ...imageData,
       addedAt: new Date()
     });
     report.updatedAt = new Date();
@@ -112,12 +112,12 @@ class ReportService {
     const report = this.reports.get(reportId);
     if (!report) throw new Error('Report not found');
     return {
-      reportId,
+     reportId,
       pdfUrl: `https://storage.example.com/reports/${reportId}.pdf`,
       generatedAt: new Date(),
       includesKeyImages: report.keyImages.length > 0,
       keyImageCount: report.keyImages.length
-    };
+    }; 
   }
 }
 
@@ -159,7 +159,7 @@ describe('Imaging Reports - Property Tests', () => {
 
     test('validation passes when all required sections are filled', () => {
       fc.assert(
-        fc.property(
+        fc.property( 
           fc.string({ minLength: 1, maxLength: 500 }),
           fc.string({ minLength: 1, maxLength: 500 }),
           fc.string({ minLength: 1, maxLength: 500 }),
@@ -178,7 +178,7 @@ describe('Imaging Reports - Property Tests', () => {
               }
             });
             
-            const validation = service.validateReport(report);
+           const validation = service.validateReport(report);
             
             expect(validation.isValid).toBe(true);
             expect(validation.errors.length).toBe(0);
@@ -188,7 +188,7 @@ describe('Imaging Reports - Property Tests', () => {
       );
     });
 
-    test('optional sections do not affect validation', () => {
+   test('optional sections do not affect validation', () => {
       const service = new ReportService();
       
       const report = service.createReport({
@@ -201,7 +201,7 @@ describe('Imaging Reports - Property Tests', () => {
           impression: 'Impression text',
           comparison: '', 
           recommendations: '' 
-        }
+       }
       });
       
       const validation = service.validateReport(report);
@@ -218,12 +218,12 @@ describe('Imaging Reports - Property Tests', () => {
         sections: {
           clinicalHistory: 'History',
           technique: 'Technique',
-          findings: '', 
+         findings: '', 
           impression: 'Impression'
         }
       });
       
-      expect(() => service.updateStatus(report.reportId, REPORT_STATUS.FINAL))
+     expect(() => service.updateStatus(report.reportId, REPORT_STATUS.FINAL))
         .toThrow('Cannot finalize');
     });
   });
@@ -266,7 +266,7 @@ describe('Imaging Reports - Property Tests', () => {
       const service = new ReportService();
       
       const report = service.createReport({
-        studyId: 'study_123',
+       studyId: 'study_123',
         patientId: 'patient_1',
         sections: {
           clinicalHistory: 'History',
@@ -278,7 +278,7 @@ describe('Imaging Reports - Property Tests', () => {
       service.updateStatus(report.reportId, REPORT_STATUS.PRELIMINARY);
       
       const retrieved = service.getReport(report.reportId);
-      expect(retrieved.studyId).toBe('study_123');
+     expect(retrieved.studyId).toBe('study_123');
     });
 
     test('report can be re-linked to different study', () => {
@@ -289,7 +289,7 @@ describe('Imaging Reports - Property Tests', () => {
         patientId: 'patient_1'
       });
       
-      service.linkToStudy(report.reportId, 'study_2');
+     service.linkToStudy(report.reportId, 'study_2');
       
       const retrieved = service.getReport(report.reportId);
       expect(retrieved.studyId).toBe('study_2');
@@ -309,7 +309,7 @@ describe('Imaging Reports - Property Tests', () => {
               patientId: 'patient_1'
             });
             
-            for (let i = 0; i < imageCount; i++) {
+           for (let i = 0; i < imageCount; i++) {
               service.addKeyImage(report.reportId, {
                 thumbnailUrl: `https://example.com/img_${i}.jpg`,
                 label: `Image ${i + 1}`
@@ -318,7 +318,7 @@ describe('Imaging Reports - Property Tests', () => {
             
             const pdf = service.exportToPDF(report.reportId);
             
-            expect(pdf.keyImageCount).toBe(imageCount);
+           expect(pdf.keyImageCount).toBe(imageCount);
             expect(pdf.includesKeyImages).toBe(imageCount > 0);
           }
         ),
@@ -334,7 +334,7 @@ describe('Imaging Reports - Property Tests', () => {
         patientId: 'patient_1'
       });
       
-      const pdf = service.exportToPDF(report.reportId);
+     const pdf = service.exportToPDF(report.reportId);
       
       expect(pdf.pdfUrl).toBeDefined();
       expect(pdf.pdfUrl).toContain(report.reportId);
@@ -373,16 +373,16 @@ describe('Imaging Reports - Property Tests', () => {
       expect(new Date(keyImage.addedAt) >= before).toBe(true);
       expect(new Date(keyImage.addedAt) <= after).toBe(true);
     });
-  });
+  });
   describe('Report Status Transitions', () => {
     
     test('new reports start as draft', () => {
-      const service = new ReportService();
+     const service = new ReportService();
       
       const report = service.createReport({
         studyId: 'study_1',
         patientId: 'patient_1'
-      });
+     });
       
       expect(report.status).toBe(REPORT_STATUS.DRAFT);
     });
@@ -397,7 +397,7 @@ describe('Imaging Reports - Property Tests', () => {
           clinicalHistory: 'History',
           technique: 'Technique',
           findings: 'Findings',
-          impression: 'Impression'
+          impression: 'Impression' 
         }
       });
       
@@ -413,7 +413,7 @@ describe('Imaging Reports - Property Tests', () => {
     test('preliminary reports do not have signedAt', () => {
       const service = new ReportService();
       
-      const report = service.createReport({
+     const report = service.createReport({
         studyId: 'study_1',
         patientId: 'patient_1',
         sections: {
@@ -421,7 +421,7 @@ describe('Imaging Reports - Property Tests', () => {
           technique: 'Technique',
           findings: 'Findings',
           impression: 'Impression'
-        }
+       }
       });
       
       service.updateStatus(report.reportId, REPORT_STATUS.PRELIMINARY);
@@ -429,6 +429,6 @@ describe('Imaging Reports - Property Tests', () => {
       const preliminary = service.getReport(report.reportId);
       expect(preliminary.signedAt).toBeNull();
       expect(preliminary.status).toBe(REPORT_STATUS.PRELIMINARY);
-    });
+   });
   });
 });

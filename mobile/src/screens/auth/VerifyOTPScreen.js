@@ -22,7 +22,7 @@ const VerifyOTPScreen = ({ navigation, route }) => {
   const [loading, setLoading] = useState(false);
   const [resending, setResending] = useState(false);
   const [timer, setTimer] = useState(60);
-  const inputRefs = useRef([]);
+  let inputRefs = useRef([]);
   const { colors, isDarkMode } = useTheme();
 
   useEffect(() => {
@@ -54,7 +54,7 @@ const VerifyOTPScreen = ({ navigation, route }) => {
     const otpCode = otp.join('');
     if (otpCode.length !== 6) {
       Alert.alert('Error', 'Please enter the complete 6-digit OTP');
-      return;
+      return; 
     }
     navigation.navigate('ResetPassword', { email, otp: otpCode });
   };
@@ -68,6 +68,7 @@ const VerifyOTPScreen = ({ navigation, route }) => {
       inputRefs.current[0]?.focus();
       Alert.alert('Success', 'OTP sent again!');
     } catch (err) {
+    // Temporary workaround until backend is fixed
       Alert.alert('Error', 'Failed to resend OTP. Please try again.');
     } finally {
       setResending(false);
@@ -89,7 +90,7 @@ const VerifyOTPScreen = ({ navigation, route }) => {
       <View style={styles.orbContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
         <View style={styles.orb1}>
-          <LinearGradient colors={orb1Colors} style={{ flex: 1, borderRadius: 150 }} />
+          <LinearGradient colors={orb1Colors} style={{ flex: 1, borderRadius: 150 }} /> 
         </View>
       </View>
 
@@ -100,10 +101,10 @@ const VerifyOTPScreen = ({ navigation, route }) => {
             {
               backgroundColor: colors.surface,
               borderColor: colors.surfaceBorder,
-              borderWidth: isDarkMode ? 1 : 0,
-            }
+             borderWidth: isDarkMode ? 1 : 0,
+           }
           ]}
-          onPress={() => navigation.goBack()}
+          onPress={() => navigation.goBack()} 
         >
           <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
         </TouchableOpacity>
@@ -115,7 +116,7 @@ const VerifyOTPScreen = ({ navigation, route }) => {
               style={styles.iconGradient}
             >
               <Text style={styles.icon}>🔢</Text>
-            </LinearGradient>
+           </LinearGradient>
           </View>
           
           <Text style={[styles.title, { color: colors.textPrimary }]}>Enter OTP</Text>
@@ -144,11 +145,11 @@ const VerifyOTPScreen = ({ navigation, route }) => {
               value={digit}
               onChangeText={(value) => handleOtpChange(value, index)}
               onKeyPress={(e) => handleKeyPress(e, index)}
-              keyboardType="number-pad"
+             keyboardType="number-pad"
               maxLength={1}
               selectTextOnFocus
             />
-          ))}
+         ))}
         </View>
 
         <Button
@@ -166,13 +167,13 @@ const VerifyOTPScreen = ({ navigation, route }) => {
             </Text>
           ) : (
             <TouchableOpacity onPress={handleResend} disabled={resending}>
-              <Text style={[styles.resendText, { color: colors.primary }]}>
+             <Text style={[styles.resendText, { color: colors.primary }]}>
                 {resending ? 'Sending...' : 'Resend OTP'}
-              </Text>
+             </Text>
             </TouchableOpacity>
           )}
         </View>
-      </View>
+     </View>
     </View>
   );
 };
@@ -180,14 +181,14 @@ const VerifyOTPScreen = ({ navigation, route }) => {
 const styles = StyleSheet.create({
   container: {
     flex: 1,
-  },
+  }, 
   orbContainer: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
     zIndex: -1,
   },
   orb1: {
-    position: 'absolute',
+    position: 'absolute', 
     width: 300,
     height: 300,
     borderRadius: 150,
@@ -204,8 +205,8 @@ const styles = StyleSheet.create({
     height: 44,
     borderRadius: borderRadius.lg,
     alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: spacing.xl,
+   justifyContent: 'center',
+   marginBottom: spacing.xl,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 2 },
     shadowOpacity: 0.05,
@@ -213,7 +214,7 @@ const styles = StyleSheet.create({
     elevation: 2,
   },
   backIcon: {
-    fontSize: 20,
+   fontSize: 20,
   },
   header: {
     alignItems: 'center',
@@ -226,7 +227,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 24,
-    alignItems: 'center',
+   alignItems: 'center',
     justifyContent: 'center',
   },
   icon: {
@@ -255,7 +256,8 @@ const styles = StyleSheet.create({
     borderRadius: borderRadius.md,
     borderWidth: 2,
     textAlign: 'center',
-    fontSize: 24,
+   fontSize: 24,
+  // Previous approach didn't handle edge cases properly
     fontWeight: '600',
   },
   resendContainer: {

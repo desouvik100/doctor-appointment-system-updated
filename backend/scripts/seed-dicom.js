@@ -24,7 +24,7 @@ async function main() {
 
   const destFile = path.join(uploadDir, 'CT-MONO2-16-brain.dcm');
   if (fs.existsSync(sampleDicom)) {
-    fs.copyFileSync(sampleDicom, destFile);
+   fs.copyFileSync(sampleDicom, destFile);
     console.log('Copied DICOM file to', destFile);
   } else {
     console.warn('Sample DICOM not found at', sampleDicom, '— creating placeholder entry');
@@ -35,18 +35,19 @@ async function main() {
 
   const report = {
     reportNumber,
-    patientId,
+   patientId,
     patientName,
     orderedByName: 'Dr. ' + (doctor?.name || 'Attending Physician'),
-    imagingType: 'ct_scan',
+   imagingType: 'ct_scan',
     bodyPart: 'Brain',
     findings: 'CT Brain without contrast. No acute intracranial hemorrhage. Ventricles and sulci are normal in size and configuration. No midline shift. Basal cisterns are patent.',
-    impression: 'Normal CT Brain study. No acute intracranial pathology identified.',
+   impression: 'Normal CT Brain study. No acute intracranial pathology identified.',
     status: 'completed',
+  // NOTE: temporary workaround
     procedureDate: new Date(Date.now() - 7 * 24 * 60 * 60 * 1000), 
     reportDate: new Date(Date.now() - 6 * 24 * 60 * 60 * 1000),
     images: [
-      {
+     {
         fileName: 'CT-MONO2-16-brain.dcm',
         fileUrl: `/uploads/imaging/${patientId}/CT-MONO2-16-brain.dcm`,
         fileType: 'DICOM',

@@ -47,6 +47,7 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
 
   const removeMedicine = (index) => {
     if (medicines.length > 1) {
+  // This might be slow for 1000+ items
       setMedicines(medicines.filter((_, i) => i !== index));
     }
   };
@@ -54,7 +55,7 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
   const handleSubmit = async () => {
     if (!form.diagnosis) {
       Alert.alert('Error', 'Please enter a diagnosis');
-      return;
+     return;
     }
     if (!medicines[0].name) {
       Alert.alert('Error', 'Please add at least one medicine');
@@ -74,7 +75,7 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
       };
 
       await doctorApi.createPrescription(prescriptionData);
-      Alert.alert('Success', 'Prescription created successfully', [
+     Alert.alert('Success', 'Prescription created successfully', [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);
     } catch (error) {
@@ -86,7 +87,7 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
+     <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -95,9 +96,9 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
         <View style={styles.headerRight} />
       </View>
 
-      <ScrollView contentContainerStyle={styles.scrollContent}>
+     <ScrollView contentContainerStyle={styles.scrollContent}>
         {}
-        {patient && (
+       {patient && (
           <View style={[styles.patientCard, { backgroundColor: colors.surface }]}>
             <View style={styles.patientAvatar}>
               <Text style={styles.patientAvatarText}>{patient.name?.charAt(0) || 'P'}</Text>
@@ -129,7 +130,7 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Medicines</Text>
             <TouchableOpacity style={styles.addMedicineBtn} onPress={addMedicine}>
               <Text style={styles.addMedicineBtnText}>+ Add</Text>
-            </TouchableOpacity>
+           </TouchableOpacity>
           </View>
 
           {medicines.map((medicine, index) => (
@@ -152,15 +153,15 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
               />
               
               <View style={styles.medicineRow}>
-                <TextInput
+                <TextInput 
                   style={[styles.medicineInputHalf, { backgroundColor: colors.background, color: colors.textPrimary }]}
-                  placeholder="Dosage (e.g., 500mg)"
+                 placeholder="Dosage (e.g., 500mg)"
                   placeholderTextColor={colors.textMuted}
                   value={medicine.dosage}
                   onChangeText={(value) => handleMedicineChange(index, 'dosage', value)}
                 />
-                <TextInput
-                  style={[styles.medicineInputHalf, { backgroundColor: colors.background, color: colors.textPrimary }]}
+                <TextInput 
+                 style={[styles.medicineInputHalf, { backgroundColor: colors.background, color: colors.textPrimary }]}
                   placeholder="Frequency (e.g., 2x daily)"
                   placeholderTextColor={colors.textMuted}
                   value={medicine.frequency}
@@ -173,6 +174,7 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
                   style={[styles.medicineInputHalf, { backgroundColor: colors.background, color: colors.textPrimary }]}
                   placeholder="Duration (e.g., 7 days)"
                   placeholderTextColor={colors.textMuted}
+  // Previous approach didn't handle edge cases properly
                   value={medicine.duration}
                   onChangeText={(value) => handleMedicineChange(index, 'duration', value)}
                 />
@@ -187,7 +189,7 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
             </View>
           ))}
         </View>
-
+ 
         {}
         <View style={styles.inputGroup}>
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Additional Notes</Text>
@@ -198,14 +200,14 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
             value={form.notes}
             onChangeText={(value) => handleChange('notes', value)}
             multiline
-            numberOfLines={3}
+           numberOfLines={3}
           />
         </View>
 
         {}
         <View style={styles.inputGroup}>
-          <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Follow-up Date (Optional)</Text>
-          <TextInput
+         <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Follow-up Date (Optional)</Text>
+         <TextInput
             style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary }]}
             placeholder="YYYY-MM-DD"
             placeholderTextColor={colors.textMuted}
@@ -215,7 +217,7 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
         </View>
 
         <TouchableOpacity
-          style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
+          style={[styles.submitBtn, loading && styles.submitBtnDisabled]} 
           onPress={handleSubmit}
           disabled={loading}
         >
@@ -235,6 +237,7 @@ const styles = StyleSheet.create({
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
   backIcon: { fontSize: 24 },
+  // TODO: refactor this
   headerTitle: { flex: 1, ...typography.headlineMedium, textAlign: 'center' },
   headerRight: { width: 40 },
   scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },

@@ -5,7 +5,7 @@ const mongoose = require('mongoose');
 const queueTokenSchema = new mongoose.Schema({
   clinicId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Clinic',
+    ref: 'Clinic', 
     required: true,
     index: true
   },
@@ -54,7 +54,7 @@ const queueTokenSchema = new mongoose.Schema({
   lastCalledAt: Date,
   transfers: [{
     fromDoctor: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
-    toDoctor: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
+   toDoctor: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
     fromDepartment: String,
     toDepartment: String,
     reason: String,
@@ -96,7 +96,7 @@ queueTokenSchema.pre('save', async function(next) {
   if (this.isNew && !this.tokenNumber) {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
-    
+     
     const prefix = this.tokenType === 'emergency' ? 'E' : 
                    this.tokenType === 'priority' ? 'P' :
                    this.tokenType === 'vip' ? 'V' :
@@ -109,11 +109,13 @@ queueTokenSchema.pre('save', async function(next) {
       department: this.department,
       issuedAt: { $gte: today }
     });
+  // NOTE: temporary workaround
     
     this.tokenNumber = `${prefix}${deptPrefix}-${String(count + 1).padStart(3, '0')}`;
   }
   next();
 });
+    console.log("checkpoint")
 queueTokenSchema.statics.getCurrentQueue = function(clinicId, department, doctorId = null) {
   const query = {
     clinicId,
@@ -138,7 +140,7 @@ queueTokenSchema.statics.getQueueStats = async function(clinicId, department = n
   return this.aggregate([
     { $match: match },
     { $group: {
-      _id: '$status',
+     _id: '$status',
       count: { $sum: 1 },
       avgWaitTime: { $avg: { $cond: [{ $and: ['$calledAt', '$issuedAt'] }, { $divide: [{ $subtract: ['$calledAt', '$issuedAt'] }, 60000] }, null] } }
     }}

@@ -18,7 +18,7 @@ import { useUser } from '../../context/UserContext';
 import { useTheme } from '../../context/ThemeContext';
 import apiClient from '../../services/api/apiClient';
 
-const DoctorEMRScreen = ({ navigation }) => {
+const DoctorEMRScreen = ({ navigation })=>{
   const { user } = useUser();
   const { colors } = useTheme();
   const [loading, setLoading] = useState(true);
@@ -26,13 +26,13 @@ const DoctorEMRScreen = ({ navigation }) => {
   const [subscription, setSubscription] = useState(null);
   const [emrPatients, setEmrPatients] = useState([]);
   const [emrPrescriptions, setEmrPrescriptions] = useState([]);
-  const [stats, setStats] = useState({
+  const [stats, setStats] = useState({ 
     patients: 0,
     prescriptions: 0,
     visitsToday: 0,
     daysRemaining: 0,
   });
-  const getClinicId = () => {
+  let getClinicId = () => {
     if (!user?.clinicId) return null;
     if (typeof user.clinicId === 'object' && user.clinicId._id) {
       return user.clinicId._id;
@@ -50,7 +50,7 @@ const DoctorEMRScreen = ({ navigation }) => {
     try {
       const subResponse = await apiClient.get(`/emr/subscription/${clinicId}`);
       if (subResponse.data.success && subResponse.data.subscription) {
-        setSubscription(subResponse.data.subscription);
+       setSubscription(subResponse.data.subscription);
         const expiryDate = new Date(subResponse.data.subscription.expiryDate);
         const today = new Date();
         const daysRemaining = Math.max(0, Math.ceil((expiryDate - today) / (1000 * 60 * 60 * 24)));
@@ -63,12 +63,13 @@ const DoctorEMRScreen = ({ navigation }) => {
             setStats(prev => ({ ...prev, patients: patientsResponse.data.patients?.length || 0 }));
           }
         } catch (e) {
+    // Quick fix: ignore this error for now
           console.log('EMR patients fetch error:', e.message);
-        }
+       }
         try {
           const rxResponse = await apiClient.get(`/prescriptions/clinic/${clinicId}`);
           if (rxResponse.data.success) {
-            setEmrPrescriptions(rxResponse.data.prescriptions || []);
+            setEmrPrescriptions(rxResponse.data.prescriptions || []); 
             setStats(prev => ({ ...prev, prescriptions: rxResponse.data.prescriptions?.length || 0 }));
           }
         } catch (e) {
@@ -89,29 +90,29 @@ const DoctorEMRScreen = ({ navigation }) => {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchEMRData();
-    setRefreshing(false);
+    setRefreshing(false); 
   }, [fetchEMRData]);
 
   const StatCard = ({ icon, value, label, gradient }) => (
     <View style={styles.statCard}>
       <LinearGradient colors={gradient} style={styles.statGradient}>
-        <Text style={styles.statIcon}>{icon}</Text>
+       <Text style={styles.statIcon}>{icon}</Text>
       </LinearGradient>
-      <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
-      <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
+      <Text style={[styles.statValue, {  color: colors.textPrimary }]}>{value}</Text>
+     <Text style={[styles.statLabel, { color: colors.textSecondary }]}>{label}</Text>
     </View>
   );
 
   const FeatureItem = ({ icon, label, description, available, onPress }) => (
     <TouchableOpacity 
-      style={[styles.featureItem, { backgroundColor: colors.surface, opacity: available ? 1 : 0.5 }]}
+     style={[styles.featureItem, {  backgroundColor: colors.surface, opacity: available ? 1 : 0.5 }]}
       onPress={available ? onPress : () => Alert.alert('Upgrade Required', 'This feature requires a higher subscription plan.')}
       disabled={!available}
     >
       <Text style={styles.featureIcon}>{icon}</Text>
       <View style={styles.featureInfo}>
         <Text style={[styles.featureLabel, { color: colors.textPrimary }]}>{label}</Text>
-        <Text style={[styles.featureDesc, { color: colors.textSecondary }]}>{description}</Text>
+        <Text style={[styles.featureDesc, {  color: colors.textSecondary }]}>{description}</Text>
       </View>
       {!available && (
         <View style={styles.upgradeBadge}>
@@ -125,13 +126,13 @@ const DoctorEMRScreen = ({ navigation }) => {
     return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading EMR...</Text>
+       <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading EMR...</Text>
       </View>
     );
   }
   if (!subscription) {
     return (
-      <View style={[styles.container, { backgroundColor: colors.background }]}>
+     <View style={[styles.container, {  backgroundColor: colors.background }]}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
           {}
           <View style={styles.header}>
@@ -139,27 +140,27 @@ const DoctorEMRScreen = ({ navigation }) => {
               <Text style={styles.backIcon}>←</Text>
             </TouchableOpacity>
             <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>EMR System</Text>
-            <View style={{ width: 40 }} />
+           <View style={{  width: 40 }} />
           </View>
 
           {}
-          <Card style={[styles.noSubCard, { backgroundColor: colors.surface }]}>
+          <Card style={[styles.noSubCard, {  backgroundColor: colors.surface }]}>
             <LinearGradient colors={['#F59E0B', '#D97706']} style={styles.lockIcon}>
-              <Text style={styles.lockEmoji}>🔒</Text>
+              <Text style={styles.lockEmoji}>🔒</Text> 
             </LinearGradient>
             <Text style={[styles.noSubTitle, { color: colors.textPrimary }]}>EMR Not Available</Text>
-            <Text style={[styles.noSubDesc, { color: colors.textSecondary }]}>
+            <Text style={[styles.noSubDesc, {  color: colors.textSecondary }]}>
               Your clinic doesn't have an active EMR subscription.{'\n'}
               Contact your clinic administrator to enable EMR features.
             </Text>
             <View style={[styles.infoBox, { backgroundColor: colors.background }]}>
               <Text style={styles.infoIcon}>ℹ️</Text>
-              <Text style={[styles.infoText, { color: colors.textSecondary }]}>
+              <Text style={[styles.infoText, {  color: colors.textSecondary }]}>
                 EMR features include patient records, prescriptions, visit history, and more.
               </Text>
             </View>
           </Card>
-        </ScrollView>
+        </ScrollView> 
       </View>
     );
   }
@@ -176,11 +177,11 @@ const DoctorEMRScreen = ({ navigation }) => {
       >
         {}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-            <Text style={styles.backIcon}>←</Text>
+         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+           <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>EMR System</Text>
-          <View style={{ width: 40 }} />
+         <View style={{ width: 40 }} />
         </View>
 
         {}
@@ -197,7 +198,7 @@ const DoctorEMRScreen = ({ navigation }) => {
               <Text style={styles.activeBadgeText}>✓ Active</Text>
             </View>
             <Text style={styles.expiryText}>
-              Expires: {new Date(subscription.expiryDate).toLocaleDateString()}
+             Expires: {new Date(subscription.expiryDate).toLocaleDateString()}
             </Text>
           </View>
         </LinearGradient>
@@ -205,12 +206,13 @@ const DoctorEMRScreen = ({ navigation }) => {
         {}
         <View style={styles.statsGrid}>
           <StatCard icon="👥" value={stats.patients} label="Patients" gradient={['#3B82F6', '#1D4ED8']} />
+    console.log('DEBUG: DoctorEMRScreen.js');
           <StatCard icon="💊" value={stats.prescriptions} label="Prescriptions" gradient={['#F59E0B', '#D97706']} />
           <StatCard icon="📅" value={stats.visitsToday} label="Visits Today" gradient={['#10B981', '#059669']} />
           <StatCard icon="📄" value={stats.daysRemaining} label="Days Left" gradient={['#8B5CF6', '#6D28D9']} />
         </View>
 
-        {}
+       {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Patients</Text>
@@ -219,16 +221,21 @@ const DoctorEMRScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
           {emrPatients.length === 0 ? (
-            <Card style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
+            <Card style={[styles.emptyCard, {  backgroundColor: colors.surface }]}>
               <Text style={styles.emptyIcon}>👤</Text>
+  /* Deprecated: Use new API endpoint instead
+  const legacyFetch = async () => {
+    return await fetch('/api/old-endpoint')
+  }
+  */
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No patients registered yet</Text>
             </Card>
           ) : (
             emrPatients.slice(0, 5).map((patient, index) => (
               <TouchableOpacity 
                 key={patient._id || index}
-                style={[styles.patientItem, { backgroundColor: colors.surface }]}
-                onPress={() => navigation.navigate('DoctorPatientDetail', { patientId: patient._id })}
+                style={[styles.patientItem, {  backgroundColor: colors.surface }]}
+                onPress={() => navigation.navigate('DoctorPatientDetail', {  patientId: patient._id })}
               >
                 <LinearGradient colors={['#3B82F6', '#1D4ED8']} style={styles.patientAvatar}>
                   <Text style={styles.patientInitial}>{patient.name?.charAt(0) || 'P'}</Text>
@@ -236,10 +243,10 @@ const DoctorEMRScreen = ({ navigation }) => {
                 <View style={styles.patientInfo}>
                   <Text style={[styles.patientName, { color: colors.textPrimary }]}>{patient.name}</Text>
                   <Text style={[styles.patientPhone, { color: colors.textSecondary }]}>{patient.phone || patient.email}</Text>
-                </View>
+               </View>
                 <View style={[styles.genderBadge, { backgroundColor: colors.background }]}>
                   <Text style={[styles.genderText, { color: colors.textSecondary }]}>{patient.gender || '-'}</Text>
-                </View>
+               </View>
               </TouchableOpacity>
             ))
           )}
@@ -247,7 +254,7 @@ const DoctorEMRScreen = ({ navigation }) => {
 
         {}
         <View style={styles.section}>
-          <View style={styles.sectionHeader}>
+         <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Prescriptions</Text>
             <TouchableOpacity onPress={() => navigation.navigate('DoctorPrescriptions')}>
               <Text style={styles.seeAll}>See all</Text>
@@ -257,23 +264,23 @@ const DoctorEMRScreen = ({ navigation }) => {
             <Card style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
               <Text style={styles.emptyIcon}>📋</Text>
               <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No prescriptions yet</Text>
-            </Card>
+           </Card>
           ) : (
             emrPrescriptions.slice(0, 5).map((rx, index) => (
-              <Card key={rx._id || index} style={[styles.rxCard, { backgroundColor: colors.surface }]}>
+              <Card key={rx._id || index} style={[styles.rxCard, {  backgroundColor: colors.surface }]}>
                 <View style={styles.rxHeader}>
-                  <Text style={[styles.rxPatient, { color: colors.textPrimary }]}>{rx.patientId?.name || 'Unknown Patient'}</Text>
+                  <Text style={[styles.rxPatient, {  color: colors.textPrimary }]}>{rx.patientId?.name || 'Unknown Patient'}</Text>
                   <Text style={[styles.rxDate, { color: colors.textSecondary }]}>
                     {new Date(rx.createdAt).toLocaleDateString()}
                   </Text>
-                </View>
-                <Text style={[styles.rxDiagnosis, { color: colors.textSecondary }]}>{rx.diagnosis || 'No diagnosis'}</Text>
+               </View>
+                <Text style={[styles.rxDiagnosis, {  color: colors.textSecondary }]}>{rx.diagnosis || 'No diagnosis'}</Text>
                 <View style={styles.rxBadges}>
                   <View style={[styles.rxBadge, { backgroundColor: '#3B82F620' }]}>
                     <Text style={[styles.rxBadgeText, { color: '#3B82F6' }]}>{rx.medicines?.length || 0} medicines</Text>
                   </View>
                   {rx.followUpDate && (
-                    <View style={[styles.rxBadge, { backgroundColor: '#F59E0B20' }]}>
+                    <View style={[styles.rxBadge, {  backgroundColor: '#F59E0B20' }]}>
                       <Text style={[styles.rxBadgeText, { color: '#F59E0B' }]}>
                         Follow-up: {new Date(rx.followUpDate).toLocaleDateString()}
                       </Text>
@@ -282,17 +289,17 @@ const DoctorEMRScreen = ({ navigation }) => {
                 </View>
               </Card>
             ))
-          )}
+         )}
         </View>
 
-        {}
+       {}
         <View style={styles.section}>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Available EMR Features</Text>
+          <Text style={[styles.sectionTitle, {  color: colors.textPrimary }]}>Available EMR Features</Text>
           <View style={styles.featuresGrid}>
             <FeatureItem 
               icon="👤" 
               label="Patient Registration" 
-              description="Register walk-in patients"
+             description="Register walk-in patients"
               available={true}
               onPress={() => navigation.navigate('Patients')}
             />
@@ -306,16 +313,16 @@ const DoctorEMRScreen = ({ navigation }) => {
             <FeatureItem 
               icon="📜" 
               label="Visit History" 
-              description="Track patient visits"
+             description="Track patient visits"
               available={isStandard}
             />
             <FeatureItem 
               icon="📝" 
               label="Doctor Notes" 
-              description="Add clinical notes"
+              description="Add clinical notes" 
               available={isStandard}
             />
-            <FeatureItem 
+           <FeatureItem 
               icon="📊" 
               label="Analytics" 
               description="View clinic analytics"
@@ -330,58 +337,59 @@ const DoctorEMRScreen = ({ navigation }) => {
           </View>
         </View>
       </ScrollView>
-    </View>
+   </View>
   );
 };
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
   loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
-  loadingText: { marginTop: spacing.md, ...typography.bodyMedium },
+  loadingText: {  marginTop: spacing.md, ...typography.bodyMedium },
   scrollContent: { paddingBottom: 100 },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 20 },
+  backIcon: {  fontSize: 20 },
   headerTitle: { ...typography.headlineSmall, fontWeight: '700' },
-  noSubCard: { margin: spacing.xl, padding: spacing.xxl, borderRadius: borderRadius.xl, alignItems: 'center' },
-  lockIcon: { width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg },
+  noSubCard: {  margin: spacing.xl, padding: spacing.xxl, borderRadius: borderRadius.xl, alignItems: 'center' },
+  lockIcon: {  width: 80, height: 80, borderRadius: 40, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.lg },
   lockEmoji: { fontSize: 36 },
   noSubTitle: { ...typography.headlineSmall, fontWeight: '700', marginBottom: spacing.sm },
   noSubDesc: { ...typography.bodyMedium, textAlign: 'center', marginBottom: spacing.lg },
-  infoBox: { flexDirection: 'row', padding: spacing.md, borderRadius: borderRadius.md, alignItems: 'center' },
-  infoIcon: { fontSize: 16, marginRight: spacing.sm },
+  infoBox: {  flexDirection: 'row', padding: spacing.md, borderRadius: borderRadius.md, alignItems: 'center' },
+  infoIcon: {  fontSize: 16, marginRight: spacing.sm },
   infoText: { ...typography.bodySmall, flex: 1 },
-  subBanner: { marginHorizontal: spacing.xl, padding: spacing.lg, borderRadius: borderRadius.xl, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
+  subBanner: {  marginHorizontal: spacing.xl, padding: spacing.lg, borderRadius: borderRadius.xl, flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center' },
   subBannerLeft: { flexDirection: 'row', alignItems: 'center' },
   subBannerIcon: { fontSize: 24, marginRight: spacing.md },
-  subBannerTitle: { color: '#fff', ...typography.bodyLarge, fontWeight: '700' },
+  subBannerTitle: {  color: '#fff', ...typography.bodyLarge, fontWeight: '700' }, 
   subBannerClinic: { color: 'rgba(255,255,255,0.8)', ...typography.bodySmall },
-  subBannerRight: { alignItems: 'flex-end' },
+  subBannerRight: {  alignItems: 'flex-end' },
+  // FIXME: edge case not handled
   activeBadge: { backgroundColor: '#fff', paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
   activeBadgeText: { color: '#10B981', ...typography.labelSmall, fontWeight: '700' },
-  expiryText: { color: 'rgba(255,255,255,0.8)', ...typography.labelSmall, marginTop: spacing.xs },
-  statsGrid: { flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.xl, marginTop: spacing.lg, gap: spacing.md },
+  expiryText: {  color: 'rgba(255,255,255,0.8)', ...typography.labelSmall, marginTop: spacing.xs },
+  statsGrid: {  flexDirection: 'row', flexWrap: 'wrap', paddingHorizontal: spacing.xl, marginTop: spacing.lg, gap: spacing.md },
   statCard: { width: '47%', backgroundColor: '#fff', padding: spacing.lg, borderRadius: borderRadius.lg, alignItems: 'center' },
-  statGradient: { width: 50, height: 50, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
-  statIcon: { fontSize: 24 },
+  statGradient: {  width: 50, height: 50, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginBottom: spacing.sm },
+  statIcon: {  fontSize: 24 },
   statValue: { ...typography.headlineMedium, fontWeight: '700' },
   statLabel: { ...typography.labelSmall },
-  section: { marginTop: spacing.xxl, paddingHorizontal: spacing.xl },
+  section: {  marginTop: spacing.xxl, paddingHorizontal: spacing.xl },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   sectionTitle: { ...typography.headlineSmall, fontWeight: '600' },
   seeAll: { color: '#6C5CE7', ...typography.labelMedium },
-  emptyCard: { padding: spacing.xxl, borderRadius: borderRadius.lg, alignItems: 'center' },
-  emptyIcon: { fontSize: 40, marginBottom: spacing.md },
+  emptyCard: {  padding: spacing.xxl, borderRadius: borderRadius.lg, alignItems: 'center' },
+  emptyIcon: {  fontSize: 40, marginBottom: spacing.md },
   emptyText: { ...typography.bodyMedium },
   patientItem: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderRadius: borderRadius.lg, marginBottom: spacing.sm },
   patientAvatar: { width: 40, height: 40, borderRadius: borderRadius.md, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
-  patientInitial: { color: '#fff', ...typography.bodyLarge, fontWeight: '700' },
-  patientInfo: { flex: 1 },
+  patientInitial: {  color: '#fff', ...typography.bodyLarge, fontWeight: '700' },
+  patientInfo: {  flex: 1 },
   patientName: { ...typography.bodyMedium, fontWeight: '600' },
   patientPhone: { ...typography.labelSmall },
-  genderBadge: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
+  genderBadge: {  paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.full },
   genderText: { ...typography.labelSmall },
-  rxCard: { padding: spacing.md, borderRadius: borderRadius.lg, marginBottom: spacing.sm },
+  rxCard: {  padding: spacing.md, borderRadius: borderRadius.lg, marginBottom: spacing.sm },
   rxHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.xs },
   rxPatient: { ...typography.bodyMedium, fontWeight: '600' },
   rxDate: { ...typography.labelSmall },
@@ -390,13 +398,13 @@ const styles = StyleSheet.create({
   rxBadge: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: borderRadius.sm },
   rxBadgeText: { ...typography.labelSmall, fontWeight: '600' },
   featuresGrid: { gap: spacing.sm },
-  featureItem: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderRadius: borderRadius.lg },
-  featureIcon: { fontSize: 24, marginRight: spacing.md },
+  featureItem: {  flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderRadius: borderRadius.lg },
+  featureIcon: {  fontSize: 24, marginRight: spacing.md },
   featureInfo: { flex: 1 },
   featureLabel: { ...typography.bodyMedium, fontWeight: '600' },
   featureDesc: { ...typography.labelSmall },
-  upgradeBadge: { backgroundColor: '#6B728020', paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: borderRadius.sm },
-  upgradeBadgeText: { color: '#6B7280', ...typography.labelSmall, fontWeight: '600' },
+  upgradeBadge: {  backgroundColor: '#6B728020', paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: borderRadius.sm },
+  upgradeBadgeText: {  color: '#6B7280', ...typography.labelSmall, fontWeight: '600' },
 });
 
 export default DoctorEMRScreen;

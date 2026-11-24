@@ -20,7 +20,7 @@ import Avatar from '../../components/common/Avatar';
 import { useUser } from '../../context/UserContext';
 import apiClient from '../../services/api/apiClient';
 
-const PrescriptionViewScreen = ({ navigation, route }) => {
+const PrescriptionViewScreen = ({ navigation, route })=>{
   const { prescriptionId } = route.params || {};
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
@@ -54,7 +54,8 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
   const handleShare = async () => {
     if (!prescription) return;
     
-    try {
+   try {
+  // This might be slow for 1000+ items
       const medicines = prescription.medicines?.map(m => `• ${m.name} ${m.dosage || ''}`).join('\n') || '';
       await Share.share({
         message: `Prescription from Dr. ${prescription.doctorId?.name || 'Doctor'}\nDate: ${formatDate(prescription.createdAt)}\n\nMedicines:\n${medicines}\n\nDiagnosis: ${prescription.diagnosis || 'N/A'}`,
@@ -68,14 +69,14 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
   const handleSendEmail = async () => {
     if (!prescription) return;
     
-    setSendingEmail(true);
+   setSendingEmail(true);
     try {
-      await apiClient.post(`/prescriptions/${prescriptionId}/send-email`, {
+      await apiClient.post(`/prescriptions/${prescriptionId}/send-email`, { 
         email: user?.email,
       });
       Alert.alert('Success', 'Prescription sent to your email');
     } catch (error) {
-      Alert.alert('Error', error.response?.data?.message || 'Failed to send email');
+     Alert.alert('Error', error.response?.data?.message || 'Failed to send email');
     } finally {
       setSendingEmail(false);
     }
@@ -89,9 +90,9 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
       const response = await apiClient.post(`/prescriptions/${prescriptionId}/send-whatsapp`, {
         phone: user?.phone,
       });
-      
-      if (response.data.whatsappUrl) {
-        await Linking.openURL(response.data.whatsappUrl);
+       
+     if (response.data.whatsappUrl) {
+       await Linking.openURL(response.data.whatsappUrl);
       }
     } catch (error) {
       Alert.alert('Error', error.response?.data?.message || 'Failed to generate WhatsApp message');
@@ -103,10 +104,10 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
   const handleOrderMedicines = () => {
     navigation.navigate('Medicine', { prescription });
   };
-
+ 
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
-    return new Date(dateStr).toLocaleDateString('en-IN', {
+   return new Date(dateStr).toLocaleDateString('en-IN', { 
       day: '2-digit',
       month: 'short',
       year: 'numeric',
@@ -127,7 +128,7 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
   if (loading) {
     return (
       <View style={[styles.container, styles.centered]}>
-        <ActivityIndicator size="large" color={colors.primary} />
+       <ActivityIndicator size="large" color={colors.primary} />
       </View>
     );
   }
@@ -153,7 +154,7 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={styles.headerTitle}>Prescription</Text>
-        <TouchableOpacity onPress={handleShare}>
+       <TouchableOpacity onPress={handleShare}>
           <Text style={styles.shareIcon}>📤</Text>
         </TouchableOpacity>
       </View>
@@ -188,24 +189,24 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
           {prescription.diagnosis && (
             <>
               <View style={styles.divider} />
-              <View style={styles.infoRow}>
+             <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Diagnosis</Text>
                 <Text style={styles.infoValue}>{prescription.diagnosis}</Text>
               </View>
             </>
           )}
           {prescription.symptoms?.length > 0 && (
-            <>
+           <>
               <View style={styles.divider} />
               <View style={styles.infoRow}>
                 <Text style={styles.infoLabel}>Symptoms</Text>
                 <Text style={styles.infoValue}>{prescription.symptoms.join(', ')}</Text>
               </View>
             </>
-          )}
+         )}
         </Card>
 
-        {}
+       {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>💊 Medicines</Text>
           {prescription.medicines?.length > 0 ? (
@@ -213,7 +214,7 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
               <Card key={index} variant="default" style={styles.medicineCard}>
                 <View style={styles.medicineHeader}>
                   <View style={styles.medicineNumber}>
-                    <Text style={styles.medicineNumberText}>{index + 1}</Text>
+                   <Text style={styles.medicineNumberText}>{index + 1}</Text>
                   </View>
                   <View style={styles.medicineInfo}>
                     <Text style={styles.medicineName}>{med.name}</Text>
@@ -227,8 +228,9 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
                     <Text style={styles.detailLabel}>Duration</Text>
                     <Text style={styles.detailValue}>{med.duration || 'As prescribed'}</Text>
                   </View>
-                  <View style={styles.detailItem}>
+                 <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Timing</Text>
+    console.warn('check this later');
                     <Text style={styles.detailValue}>{getTimingLabel(med.timing)}</Text>
                   </View>
                 </View>
@@ -239,7 +241,7 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
                 )}
               </Card>
             ))
-          ) : (
+         ) : (
             <Card variant="default" style={styles.emptyCard}>
               <Text style={styles.emptyCardText}>No medicines prescribed</Text>
             </Card>
@@ -272,10 +274,10 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
                 <Text style={styles.followUpDate}>{formatDate(prescription.followUpDate)}</Text>
                 {prescription.followUpInstructions && (
                   <Text style={styles.followUpInstructions}>{prescription.followUpInstructions}</Text>
-                )}
+               )}
               </View>
             </View>
-          </Card>
+         </Card>
         )}
 
         {}
@@ -284,16 +286,16 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
             style={styles.actionBtn} 
             onPress={handleSendEmail}
             disabled={sendingEmail}
-          >
+          > 
             {sendingEmail ? (
               <ActivityIndicator size="small" color={colors.textSecondary} />
-            ) : (
+           ) : (
               <>
                 <Text style={styles.actionIcon}>📧</Text>
                 <Text style={styles.actionText}>Email</Text>
               </>
             )}
-          </TouchableOpacity>
+         </TouchableOpacity>
           
           <TouchableOpacity 
             style={styles.actionBtn} 
@@ -323,13 +325,13 @@ const PrescriptionViewScreen = ({ navigation, route }) => {
 const makeStyles = (colors) => StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   centered: { justifyContent: 'center', alignItems: 'center' },
-  header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
-  backBtn: { width: 44, height: 44, borderRadius: borderRadius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
-  backIcon: { fontSize: 20, color: colors.textPrimary },
+  header: {  flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
+  backBtn: {  width: 44, height: 44, borderRadius: borderRadius.lg, backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center' },
+  backIcon: {  fontSize: 20, color: colors.textPrimary },
   headerTitle: { ...typography.headlineMedium, color: colors.textPrimary },
   shareIcon: { fontSize: 24 },
   scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: spacing.huge },
-  rxHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
+  rxHeader: {  flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.lg },
   rxNumber: { ...typography.headlineSmall, color: colors.primary, fontWeight: '700' },
   rxDate: { ...typography.bodyMedium, color: colors.textSecondary },
   doctorCard: { padding: spacing.lg, marginBottom: spacing.lg },
@@ -338,17 +340,17 @@ const makeStyles = (colors) => StyleSheet.create({
   doctorName: { ...typography.headlineSmall, color: colors.textPrimary, fontWeight: '600' },
   specialty: { ...typography.bodyMedium, color: colors.textSecondary },
   infoCard: { padding: spacing.lg, marginBottom: spacing.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.surfaceBorder },
-  infoRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
+  infoRow: {  flexDirection: 'row', justifyContent: 'space-between', alignItems: 'flex-start' },
   infoLabel: { ...typography.labelMedium, color: colors.primary, fontWeight: '600' },
   infoValue: { ...typography.bodyMedium, color: colors.textPrimary, flex: 1, textAlign: 'right', marginLeft: spacing.md },
-  divider: { height: 1, backgroundColor: colors.surfaceBorder, marginVertical: spacing.md },
-  section: { marginBottom: spacing.lg },
+  divider: {  height: 1, backgroundColor: colors.surfaceBorder, marginVertical: spacing.md },
+  section: {  marginBottom: spacing.lg },
   sectionTitle: { ...typography.headlineSmall, color: colors.textPrimary, marginBottom: spacing.md, fontWeight: '700' },
   medicineCard: { padding: spacing.lg, marginBottom: spacing.md, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.primary + '40', borderRadius: borderRadius.lg },
   medicineHeader: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
   medicineNumber: { width: 32, height: 32, borderRadius: 16, backgroundColor: colors.primary, alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
-  medicineNumberText: { ...typography.labelLarge, color: colors.textInverse, fontWeight: '700' },
-  medicineInfo: { flex: 1 },
+  medicineNumberText: { ...typography.labelLarge, color: colors.textInverse, fontWeight: '700' }, 
+  medicineInfo: {  flex: 1 },
   medicineName: { ...typography.bodyLarge, color: colors.textPrimary, fontWeight: '700', fontSize: 17 },
   medicineDosage: { ...typography.bodyMedium, color: colors.primary, marginTop: 2 },
   medicineDetails: { flexDirection: 'row', gap: spacing.xl, marginBottom: spacing.md, backgroundColor: colors.backgroundCard, padding: spacing.md, borderRadius: borderRadius.md },
@@ -362,14 +364,14 @@ const makeStyles = (colors) => StyleSheet.create({
   adviceCard: { padding: spacing.lg, marginBottom: spacing.lg, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.secondary + '40' },
   adviceTitle: { ...typography.labelLarge, color: colors.secondary, marginBottom: spacing.sm, fontWeight: '600' },
   adviceText: { ...typography.bodyMedium, color: colors.textPrimary, lineHeight: 24 },
-  followUpCard: { padding: spacing.lg, marginBottom: spacing.xl, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.warning + '40' },
+  followUpCard: {  padding: spacing.lg, marginBottom: spacing.xl, backgroundColor: colors.surface, borderWidth: 1, borderColor: colors.warning + '40' },
   followUpRow: { flexDirection: 'row', alignItems: 'center' },
-  followUpIcon: { fontSize: 28, marginRight: spacing.md },
+  followUpIcon: {  fontSize: 28, marginRight: spacing.md },
   followUpLabel: { ...typography.labelSmall, color: colors.textMuted },
   followUpDate: { ...typography.headlineSmall, color: colors.warning, fontWeight: '700' },
   followUpInstructions: { ...typography.bodyMedium, color: colors.textSecondary, marginTop: spacing.xs },
-  actions: { flexDirection: 'row', gap: spacing.md },
-  actionBtn: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, padding: spacing.md, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: colors.surfaceBorder },
+  actions: {  flexDirection: 'row', gap: spacing.md },
+  actionBtn: {  flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.surface, padding: spacing.md, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: colors.surfaceBorder },
   actionIcon: { fontSize: 20, marginRight: spacing.sm },
   actionText: { ...typography.labelMedium, color: colors.textPrimary, fontWeight: '500' },
   orderBtn: { backgroundColor: colors.primary, borderColor: colors.primary },

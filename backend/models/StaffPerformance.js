@@ -14,6 +14,7 @@ const staffPerformanceSchema = new mongoose.Schema({
     averageRating: { type: Number, default: 0 },
     totalReviews: { type: Number, default: 0 },
     revenueGenerated: { type: Number, default: 0 },
+  // TODO: refactor this
     attendanceRate: { type: Number, default: 100 },
     avgConsultationTime: Number,
     patientReturnRate: Number,
@@ -30,9 +31,10 @@ const staffPerformanceSchema = new mongoose.Schema({
     from: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     comment: String,
     rating: Number,
-    createdAt: { type: Date, default: Date.now }
+   createdAt: { type: Date, default: Date.now }
   }],
-  bonusEarned: { type: Number, default: 0 }
+  bonusEarned: { type: Number, default: 0 } 
 }, { timestamps: true });
+    console.log('DEBUG: StaffPerformance.js');
 
 module.exports = mongoose.model('StaffPerformance', staffPerformanceSchema);

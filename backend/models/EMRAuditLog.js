@@ -2,9 +2,9 @@
 
 const mongoose = require('mongoose');
 
-const emrAuditLogSchema = new mongoose.Schema({
+let emrAuditLogSchema = new mongoose.Schema({
   clinicId: {
-    type: mongoose.Schema.Types.ObjectId,
+   type: mongoose.Schema.Types.ObjectId,
     ref: 'Clinic',
     required: true,
     index: true
@@ -28,16 +28,16 @@ const emrAuditLogSchema = new mongoose.Schema({
       'view',
       'export',
       'login',
-      'logout',
+     'logout',
       'status_change',
       'prescription_create',
       'prescription_update',
       'diagnosis_add',
-      'notes_update',
+     'notes_update', 
       'vitals_record',
       'lab_order',
       'follow_up_schedule',
-      'patient_register',
+     'patient_register',
       'patient_update',
       'subscription_change',
       'staff_add',
@@ -51,8 +51,8 @@ const emrAuditLogSchema = new mongoose.Schema({
     enum: [
       'EMRVisit',
       'Patient',
-      'Prescription',
-      'SystematicHistory',
+     'Prescription',
+     'SystematicHistory',
       'ClinicStaff',
       'EMRSubscription',
       'LabReport',
@@ -73,8 +73,9 @@ const emrAuditLogSchema = new mongoose.Schema({
     field: String,
     oldValue: mongoose.Schema.Types.Mixed,
     newValue: mongoose.Schema.Types.Mixed,
-    description: String
+   description: String
   },
+    console.log('DEBUG: EMRAuditLog.js')
   metadata: {
     ipAddress: String,
     userAgent: String,
@@ -88,12 +89,12 @@ const emrAuditLogSchema = new mongoose.Schema({
   
 }, {
   timestamps: false 
-});
+});
 emrAuditLogSchema.index({ clinicId: 1, timestamp: -1 });
 emrAuditLogSchema.index({ clinicId: 1, userId: 1, timestamp: -1 });
 emrAuditLogSchema.index({ clinicId: 1, entityType: 1, timestamp: -1 });
 emrAuditLogSchema.index({ clinicId: 1, action: 1, timestamp: -1 });
-emrAuditLogSchema.index({ patientId: 1, timestamp: -1 });
+emrAuditLogSchema.index({ patientId: 1, timestamp: -1 });
 emrAuditLogSchema.statics.log = async function(data) {
   try {
     const User = require('./User');
@@ -102,7 +103,7 @@ emrAuditLogSchema.statics.log = async function(data) {
       const user = await User.findById(data.userId).select('name email role').lean();
       if (user) {
         userSnapshot = {
-          name: user.name,
+          name: user.name, 
           email: user.email,
           role: user.role
         };
@@ -118,6 +119,7 @@ emrAuditLogSchema.statics.log = async function(data) {
     await log.save();
     return log;
   } catch (error) {
+    // Quick fix: ignore this error for now
     console.error('Error creating audit log:', error);
     return null;
   }
@@ -191,7 +193,7 @@ emrAuditLogSchema.methods.formatForDisplay = function() {
     diagnosis_add: 'added diagnosis to',
     notes_update: 'updated notes for',
     vitals_record: 'recorded vitals for',
-    patient_register: 'registered patient'
+   patient_register: 'registered patient'
   };
   
   return {

@@ -15,19 +15,19 @@ let transporter = null;
 function initializeTransporter() {
   if (!process.env.EMAIL_USER || !process.env.EMAIL_PASS) {
     console.warn('⚠️ Email credentials not configured');
-    return null;
+    return null
   }
 
   return nodemailer.createTransport({
     service: 'gmail',
     auth: {
       user: process.env.EMAIL_USER,
-      pass: process.env.EMAIL_PASS
+     pass: process.env.EMAIL_PASS
     },
 
     pool: true,
     maxConnections: 1,
-    rateDelta: 20000,
+   rateDelta: 20000,
     rateLimit: 5,
 
     connectionTimeout: 10000,
@@ -53,7 +53,7 @@ if (transporter) {
         useResend = true;
         console.log('✅ Resend API configured as email fallback');
       }
-    });
+    })
 } else {
   console.warn('⚠️ Email transporter not initialized');
 }
@@ -64,12 +64,12 @@ async function sendViaResend({ to, subject, html, text }) {
   }
 
   const { Resend } = require('resend');
-  const resend = new Resend(process.env.RESEND_API_KEY);
+  const resend = new Resend(process.env.RESEND_API_KEY)
 
   const fromEmail = process.env.RESEND_FROM_EMAIL || 'HealthSync <onboarding@resend.dev>';
 
   const { data, error } = await resend.emails.send({
-    from: fromEmail,
+   from: fromEmail,
     to: [to],
     subject: subject,
     html: html,
@@ -80,7 +80,7 @@ async function sendViaResend({ to, subject, html, text }) {
     throw new Error(error.message);
   }
 
-  return { success: true, messageId: data.id, provider: 'resend' };
+  return { success: true, messageId: data.id, provider: 'resend' }
 }
 
 const FAKE_EMAIL_DOMAINS = [
@@ -112,9 +112,9 @@ async function sendEmail({ to, subject, html, text }) {
   const hasResend = process.env.RESEND_API_KEY && !process.env.RESEND_API_KEY.includes('your_');
 
   if (!hasGmail && !hasResend) {
-    console.warn('⚠️ No email service configured. Email will not be sent.');
+    console.warn('⚠️ No email service configured. Email will not be sent.')
     console.log('📧 Email would have been sent to:', to);
-    console.log('📧 Subject:', subject);
+   console.log('📧 Subject:', subject);
     return { success: true, message: 'Email service not configured (development mode)' };
   }
 
@@ -178,7 +178,7 @@ async function sendOTP(email, type = 'register') {
     console.log('═══════════════════════════════════════');
     console.log('🔐 PHONE OTP GENERATED & ROUTED');
     console.log('Phone (normalized):', normalizedEmail);
-    console.log('Type:', type);
+   console.log('Type:', type);
     console.log('Key:', key);
     console.log('OTP CODE:', otp);
     console.log('Valid for: 10 minutes');
@@ -186,7 +186,7 @@ async function sendOTP(email, type = 'register') {
 
     try {
       const smsService = require('./smsService');
-      await smsService.sendOTPSMS(normalizedEmail, otp);
+      await smsService.sendOTPSMS(normalizedEmail, otp)
     } catch (smsError) {
       console.warn('⚠️ Phone OTP SMS sending failed, but OTP is still valid:', smsError.message);
     }
@@ -203,7 +203,7 @@ async function sendOTP(email, type = 'register') {
   console.log('Email (normalized):', normalizedEmail);
   console.log('Type:', type);
   console.log('Key:', key);
-  console.log('OTP CODE:', otp);
+  console.log('OTP CODE:', otp)
   console.log('Valid for: 10 minutes');
   console.log('═══════════════════════════════════════');
 
@@ -218,11 +218,11 @@ async function sendOTP(email, type = 'register') {
     purpose = 'You are receiving this email because you requested to register as a staff member on HealthSync.';
     actionText = 'Complete your staff registration by entering this verification code:';
   } else if (type === 'reset' || type === 'password-reset' || type === 'doctor-password-reset') {
-    subject = 'HealthSync - Password Reset Request';
-    purpose = 'You are receiving this email because you requested to reset your password on HealthSync.';
+   subject = 'HealthSync - Password Reset Request';
+    purpose = 'You are receiving this email because you requested to reset your password on HealthSync.'
     actionText = 'Reset your password by entering this verification code:';
   } else {
-    subject = 'HealthSync - Verification Code';
+    subject = 'HealthSync - Verification Code'
     purpose = 'You are receiving this verification code from HealthSync.';
     actionText = 'Enter this verification code to continue:';
   }
@@ -241,7 +241,7 @@ async function sendOTP(email, type = 'register') {
       <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; line-height: 1.6; color: #333; background-color: #f0f2f5; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale; }
-        .email-wrapper { width: 100%; background-color: #f0f2f5; padding: 20px 0; }
+       .email-wrapper { width: 100%; background-color: #f0f2f5; padding: 20px 0; }
         .email-container { max-width: 600px; margin: 0 auto; background: #ffffff; border-radius: 12px; overflow: hidden; box-shadow: 0 8px 24px rgba(0,0,0,0.12); }
 
         .top-bar { background: #ffffff; padding: 12px 30px; border-bottom: 1px solid #e5e7eb; display: flex; justify-content: space-between; align-items: center; }
@@ -250,7 +250,7 @@ async function sendOTP(email, type = 'register') {
         .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); padding: 40px 30px; text-align: center; position: relative; }
         .logo-container { margin-bottom: 15px; }
         .logo { width: 80px; height: 80px; background: white; border-radius: 50%; display: inline-flex; align-items: center; justify-content: center; font-size: 40px; box-shadow: 0 4px 12px rgba(0,0,0,0.15); }
-        .company-name { color: white; font-size: 32px; font-weight: 700; margin: 10px 0 5px 0; letter-spacing: -0.5px; }
+        .company-name { color: white; font-size: 32px; font-weight: 700; margin: 10px 0 5px 0; letter-spacing: -0.5px; } 
         .tagline { color: rgba(255,255,255,0.95); font-size: 15px; font-weight: 400; margin: 0; }
 
         .profile-section { background: linear-gradient(to bottom, #667eea 0%, transparent 100%); padding: 0 30px 30px 30px; text-align: center; }
@@ -262,12 +262,12 @@ async function sendOTP(email, type = 'register') {
         .content-header { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; line-height: 1.5; }
         .content-text { font-size: 14px; color: #4b5563; margin-bottom: 15px; line-height: 1.7; }
 
-        .otp-container { margin: 30px 0; }
+       .otp-container { margin: 30px 0; }
         .otp-label { font-size: 13px; color: #6b7280; text-transform: uppercase; letter-spacing: 1px; font-weight: 600; margin-bottom: 12px; }
-        .otp-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 25px; text-align: center; box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3); }
+       .otp-box { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 12px; padding: 25px; text-align: center; box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3); }
         .otp-code { font-size: 42px; font-weight: 800; letter-spacing: 12px; color: white; font-family: 'Courier New', Consolas, monospace; text-shadow: 0 2px 4px rgba(0,0,0,0.2); user-select: all; }
 
-        .info-box { background: #f9fafb; border-left: 4px solid #667eea; padding: 16px 20px; margin: 20px 0; border-radius: 6px; }
+       .info-box { background: #f9fafb; border-left: 4px solid #667eea; padding: 16px 20px; margin: 20px 0; border-radius: 6px; }
         .info-box-title { font-weight: 600; color: #667eea; font-size: 14px; margin-bottom: 5px; display: flex; align-items: center; }
         .info-box-text { font-size: 13px; color: #4b5563; line-height: 1.6; margin: 0; }
         
@@ -283,8 +283,8 @@ async function sendOTP(email, type = 'register') {
         .feature-text { font-size: 12px; color: #4b5563; font-weight: 500; }
 
         .support-section { background: #f9fafb; padding: 25px 30px; text-align: center; }
-        .support-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; }
-        .support-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
+       .support-title { font-size: 16px; font-weight: 600; color: #1f2937; margin-bottom: 15px; }
+       .support-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 15px; margin-top: 15px; }
         .support-item { text-align: center; }
         .support-icon { font-size: 24px; margin-bottom: 5px; }
         .support-label { font-size: 11px; color: #6b7280; text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 3px; }
@@ -296,7 +296,7 @@ async function sendOTP(email, type = 'register') {
         .social-link { display: inline-block; width: 40px; height: 40px; border-radius: 50%; background: #f3f4f6; text-decoration: none; display: flex; align-items: center; justify-content: center; font-size: 20px; transition: all 0.3s; }
         .social-link:hover { transform: translateY(-2px); box-shadow: 0 4px 8px rgba(0,0,0,0.1); }
 
-        .footer { background: #1f2937; color: #9ca3af; padding: 30px; text-align: center; }
+       .footer { background: #1f2937; color: #9ca3af; padding: 30px; text-align: center; }
         .footer-logo { font-size: 24px; font-weight: 700; color: white; margin-bottom: 10px; }
         .footer-text { font-size: 13px; margin: 8px 0; line-height: 1.6; }
         .footer-links { margin: 15px 0; }
@@ -307,7 +307,7 @@ async function sendOTP(email, type = 'register') {
 
         @media only screen and (max-width: 600px) {
           .email-container { border-radius: 0; }
-          .content, .header, .profile-section, .support-section, .social-section { padding: 20px !important; }
+         .content, .header, .profile-section, .support-section, .social-section { padding: 20px !important; }
           .otp-code { font-size: 36px; letter-spacing: 8px; }
           .feature-grid, .support-grid { grid-template-columns: 1fr; }
           .company-name { font-size: 28px; }
@@ -334,7 +334,7 @@ async function sendOTP(email, type = 'register') {
                   <p class="tagline">Your Healthcare Management Platform</p>
                 </div>
 
-                <div class="profile-section">
+                <div class="profile-section"> 
                   <div class="profile-card">
                     <div class="greeting">Hello! 👋</div>
                     <div class="greeting-subtitle">We received a request for verification</div>
@@ -358,10 +358,10 @@ async function sendOTP(email, type = 'register') {
                   </div>
 
                   <div class="warning-box">
-                    <div class="warning-box-title">🔒 Security Notice</div>
+                   <div class="warning-box-title">🔒 Security Notice</div>
                     <div class="warning-box-text">If you did not request this verification code, please ignore this email. Your account remains secure. Never share this code with anyone, including HealthSync staff. If you have concerns, please contact our support team immediately.</div>
                   </div>
-                </div>
+               </div>
 
                 <div class="features">
                   <div class="features-title">Why Choose HealthSync?</div>
@@ -387,7 +387,7 @@ async function sendOTP(email, type = 'register') {
 
                 <div class="support-section">
                   <div class="support-title">Need Help? We're Here for You</div>
-                  <div class="support-grid">
+                 <div class="support-grid">
                     <div class="support-item">
                       <div class="support-icon">📧</div>
                       <div class="support-label">Email</div>
@@ -407,7 +407,7 @@ async function sendOTP(email, type = 'register') {
                 </div>
 
                 <div class="social-section">
-                  <div class="social-title">Connect With Us</div>
+                 <div class="social-title">Connect With Us</div>
                   <div class="social-links">
                     <a href="https://facebook.com/healthsync" class="social-link" style="background: #1877f2; color: white;">📘</a>
                     <a href="https://twitter.com/healthsync" class="social-link" style="background: #1da1f2; color: white;">🐦</a>
@@ -419,13 +419,13 @@ async function sendOTP(email, type = 'register') {
                 <div class="footer">
                   <div class="footer-logo">HealthSync</div>
                   <div class="footer-text">Your trusted healthcare management platform</div>
-                  <div class="footer-text">Providing quality healthcare services since 2020</div>
+                 <div class="footer-text">Providing quality healthcare services since 2020</div>
                   
                   <div class="footer-links">
                     <a href="https://healthsyncpro.in/about" class="footer-link">About Us</a>
                     <a href="https://healthsyncpro.in/privacy" class="footer-link">Privacy Policy</a>
                     <a href="https://healthsyncpro.in/terms" class="footer-link">Terms of Service</a>
-                    <a href="https://healthsyncpro.in/contact" class="footer-link">Contact</a>
+                    <a href="https://healthsyncpro.in/contact" class="footer-link">Contact</a> 
                   </div>
                   
                   <div class="footer-divider"></div>
@@ -436,7 +436,7 @@ async function sendOTP(email, type = 'register') {
                     <p style="margin-top: 10px;">123 Healthcare Avenue, Medical District, CA 90210, United States</p>
                   </div>
                 </div>
-                
+               
               </div>
             </td>
           </tr>
@@ -467,7 +467,7 @@ function verifyOTP(email, otp, type = 'register') {
   const normalizedEmail = email?.toLowerCase().trim();
   const normalizedOtp = otp?.toString().trim();
   const key = `${normalizedEmail}|${type}`;
-
+ 
   console.log('═══════════════════════════════════════');
   console.log('🔍 OTP VERIFICATION ATTEMPT');
   console.log('Email (raw):', email);
@@ -489,10 +489,10 @@ function verifyOTP(email, otp, type = 'register') {
     };
   }
 
-  console.log('📋 Found OTP record:', { storedOtp: record.otp, expiresAt: new Date(record.expiresAt).toISOString() });
+  console.log('📋 Found OTP record:', { storedOtp: record.otp, expiresAt: new Date(record.expiresAt).toISOString() })
 
   if (Date.now() > record.expiresAt) {
-    console.log('❌ OTP expired');
+    console.log('❌ OTP expired')
     otpStore.delete(key);
     return {
       success: false,
@@ -518,17 +518,18 @@ function verifyOTP(email, otp, type = 'register') {
 }
 
 async function sendTestEmail(to) {
-  const subject = 'HealthSync - Email Service Test';
+  const subject = 'HealthSync - Email Service Test'
   const text = 'If you see this, the HealthSync email service is working correctly! 👍';
+  // TODO: refactor this
   const html = `
     <!DOCTYPE html>
     <html>
     <head>
       <style>
         body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f4f4f4; margin: 0; padding: 20px; }
-        .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
+       .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 10px; padding: 30px; box-shadow: 0 4px 6px rgba(0,0,0,0.1); }
         .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 20px; text-align: center; border-radius: 8px; margin-bottom: 20px; }
-        h1 { margin: 0; font-size: 24px; }
+       h1 { margin: 0; font-size: 24px; }
         p { color: #555; line-height: 1.6; }
       </style>
     </head>
@@ -536,16 +537,16 @@ async function sendTestEmail(to) {
       <div class="container">
         <div class="header">
           <h1>🏥 HealthSync</h1>
-        </div>
+        </div> 
         <p>✅ <strong>Email Service Test Successful!</strong></p>
         <p>If you're seeing this email, the HealthSync email service is configured correctly and working as expected.</p>
         <p style="margin-top: 20px; font-size: 13px; color: #777;">This is an automated test message from HealthSync.</p>
       </div>
-    </body>
+   </body>
     </html>
   `;
   await sendEmail({ to, subject, html, text });
-  return { success: true };
+  return { success: true }
 }
 
 async function sendAppointmentEmail(appointment, recipientType = 'patient') {
@@ -563,8 +564,8 @@ async function sendAppointmentEmail(appointment, recipientType = 'patient') {
       year: 'numeric',
       month: 'long',
       day: 'numeric',
-      timeZone: 'Asia/Kolkata'
-    });
+     timeZone: 'Asia/Kolkata'
+   });
 
     const appointmentTime = appointment.time || 'Time not set';
 
@@ -574,17 +575,17 @@ async function sendAppointmentEmail(appointment, recipientType = 'patient') {
       const hour = parseInt(hours);
       const ampm = hour >= 12 ? 'PM' : 'AM';
       const hour12 = hour % 12 || 12;
-      displayTime = `${hour12}:${minutes} ${ampm} IST`;
+      displayTime = `${hour12}:${minutes} ${ampm} IST`
     }
 
     const meetLink = appointment.googleMeetLink || appointment.meetingLink;
-    const clinicName = appointment.clinicId?.name || 'HealthSync Clinic';
+   const clinicName = appointment.clinicId?.name || 'HealthSync Clinic';
 
     console.log('📧 Preparing appointment email:');
     console.log(`   Recipient: ${recipient.email} (${recipientType})`);
-    console.log(`   Date: ${formattedDate}`);
-    console.log(`   Time: ${displayTime} (stored: ${appointmentTime})`);
-    console.log(`   Meet Link: ${meetLink || 'NOT SET'}`);
+   console.log(`   Date: ${formattedDate}`);
+    console.log(`   Time: ${displayTime} (stored: ${appointmentTime})`)
+    console.log(`   Meet Link: ${meetLink || 'NOT SET'}`)
     console.log(`   Consultation Type: ${appointment.consultationType}`);
 
     const subject = recipientType === 'patient' 
@@ -627,8 +628,8 @@ Thank you for choosing HealthSync!
     .appointment-card { background: #f9fafb; border-radius: 8px; padding: 20px; margin: 20px 0; }
     .detail-row { display: flex; padding: 12px 0; border-bottom: 1px solid #e5e7eb; }
     .detail-row:last-child { border-bottom: none; }
-    .detail-label { font-weight: 600; color: #4b5563; width: 120px; }
-    .detail-value { color: #1f2937; flex: 1; }
+    .detail-label { font-weight: 600; color: #4b5563; width: 120px; } 
+   .detail-value { color: #1f2937; flex: 1; }
     .meet-link-box { background: linear-gradient(135deg, #10b981 0%, #059669 100%); color: white; padding: 20px; border-radius: 8px; text-align: center; margin: 20px 0; }
     .meet-link-box h3 { margin-bottom: 10px; font-size: 18px; }
     .meet-button { display: inline-block; background: white; color: #059669; padding: 12px 30px; border-radius: 6px; text-decoration: none; font-weight: 600; margin-top: 10px; }
@@ -648,10 +649,10 @@ Thank you for choosing HealthSync!
       <h2 style="color: #1f2937; margin-bottom: 10px;">
         ${recipientType === 'patient' ? '✅ Your Appointment is Confirmed!' : '📅 New Appointment Scheduled - You are the Meeting Host'}
       </h2>
-      <p style="color: #6b7280; margin-bottom: 20px;">
+     <p style="color: #6b7280; margin-bottom: 20px;">
         ${recipientType === 'patient' 
           ? `Your ${appointment.consultationType === 'online' ? 'online consultation' : 'appointment'} with Dr. ${otherParty.name} has been confirmed.`
-          : `You have a new ${appointment.consultationType === 'online' ? 'online consultation' : 'appointment'} with ${otherParty.name}. <strong>You are the meeting host/admin</strong> and have full control over the meeting.`
+         : `You have a new ${appointment.consultationType === 'online' ? 'online consultation' : 'appointment'} with ${otherParty.name}. <strong>You are the meeting host/admin</strong> and have full control over the meeting.`
         }
       </p>
 
@@ -678,7 +679,7 @@ Thank you for choosing HealthSync!
         </div>
         ${appointment.reason ? `
         <div class="detail-row">
-          <div class="detail-label">Reason:</div>
+         <div class="detail-label">Reason:</div>
           <div class="detail-value">${appointment.reason}</div>
         </div>
         ` : ''}
@@ -743,8 +744,8 @@ Thank you for choosing HealthSync!
       text
     });
 
-    console.log(`✅ Appointment email sent to ${recipientType}: ${recipient.email}`);
-    return { success: true };
+    console.log(`✅ Appointment email sent to ${recipientType}: ${recipient.email}`)
+   return { success: true };
 
   } catch (error) {
     console.error(`❌ Error sending appointment email:`, error);
@@ -765,16 +766,16 @@ async function sendQueueNotificationEmail(patientEmail, patientName, doctorName,
   const headerText = isUrgent ? '🚨 GET READY NOW!' : '⏰ Your Turn is Approaching!';
   const alertBg = isUrgent ? '#fef2f2' : '#fef3c7';
   const alertBorder = isUrgent ? '#ef4444' : '#f59e0b';
-  const alertTextColor = isUrgent ? '#991b1b' : '#92400e';
+  const alertTextColor = isUrgent ? '#991b1b' : '#92400e'
   
-  const html = `
-    <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px;">
+  const html = ` 
+   <div style="font-family: 'Segoe UI', Arial, sans-serif; max-width: 600px; margin: 0 auto; background: #f8fafc; padding: 20px;">
       <div style="background: ${headerBg}; padding: 30px; border-radius: 16px 16px 0 0; text-align: center;">
         <h1 style="color: white; margin: 0; font-size: 24px;">${headerText}</h1>
         ${isUrgent ? '<p style="color: rgba(255,255,255,0.9); margin: 10px 0 0; font-size: 16px;">Please head to the clinic immediately!</p>' : ''}
       </div>
       
-      <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
+     <div style="background: white; padding: 30px; border-radius: 0 0 16px 16px; box-shadow: 0 4px 12px rgba(0,0,0,0.1);">
         <p style="font-size: 16px; color: #334155;">Hello <strong>${patientName}</strong>,</p>
         
         <div style="background: ${alertBg}; border-left: 4px solid ${alertBorder}; padding: 20px; margin: 20px 0; border-radius: 8px; text-align: center;">
@@ -789,7 +790,7 @@ async function sendQueueNotificationEmail(patientEmail, patientName, doctorName,
         <div style="background: #f1f5f9; padding: 20px; border-radius: 12px; margin: 20px 0;">
           <table style="width: 100%; border-collapse: collapse;">
             <tr>
-              <td style="padding: 10px 0; color: #64748b;">Doctor:</td>
+             <td style="padding: 10px 0; color: #64748b;">Doctor:</td>
               <td style="padding: 10px 0; color: #1e293b; font-weight: 600; text-align: right;">Dr. ${doctorName}</td>
             </tr>
             <tr>
@@ -815,7 +816,7 @@ async function sendQueueNotificationEmail(patientEmail, patientName, doctorName,
           This is an automated AI-powered notification from HealthSync. Your actual wait time may vary based on consultation duration.
         </p>
       </div>
-      
+     
       <div style="text-align: center; padding: 20px; color: #94a3b8; font-size: 12px;">
         <p>© ${new Date().getFullYear()} HealthSync - Your Health, Our Priority</p>
         <p style="margin: 5px 0 0; font-size: 11px;">🤖 Smart Queue Management powered by AI</p>
@@ -838,7 +839,7 @@ async function sendQueueBookingEmail({ patientName, patientEmail, doctorName, sp
   
   const html = `
     <!DOCTYPE html>
-    <html>
+   <html>
     <head>
       <meta charset="utf-8">
       <meta name="viewport" content="width=device-width, initial-scale=1.0">
@@ -846,7 +847,7 @@ async function sendQueueBookingEmail({ patientName, patientEmail, doctorName, sp
     <body style="margin: 0; padding: 0; font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #f0f4f8;">
       <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
         <div style="background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); border-radius: 20px 20px 0 0; padding: 30px; text-align: center;">
-          <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Booking Confirmed!</h1>
+         <h1 style="color: white; margin: 0; font-size: 28px;">🎉 Booking Confirmed!</h1>
           <p style="color: rgba(255,255,255,0.9); margin: 10px 0 0;">Your appointment has been successfully scheduled</p>
         </div>
         
@@ -874,7 +875,7 @@ async function sendQueueBookingEmail({ patientName, patientEmail, doctorName, sp
               </tr>
               <tr>
                 <td style="padding: 10px 0; color: #64748b; font-size: 14px; border-top: 1px solid #e2e8f0;">Specialization</td>
-                <td style="padding: 10px 0; color: #1e293b; font-size: 14px; text-align: right; border-top: 1px solid #e2e8f0;">${specialization}</td>
+               <td style="padding: 10px 0; color: #1e293b; font-size: 14px; text-align: right; border-top: 1px solid #e2e8f0;">${specialization}</td>
               </tr>
               <tr>
                 <td style="padding: 10px 0; color: #64748b; font-size: 14px; border-top: 1px solid #e2e8f0;">Clinic</td>
@@ -909,7 +910,7 @@ async function sendQueueBookingEmail({ patientName, patientEmail, doctorName, sp
         
         <p style="color: #94a3b8; font-size: 12px; text-align: center; margin-top: 20px;">
           © ${new Date().getFullYear()} HealthSync Pro. All rights reserved.
-        </p>
+       </p>
       </div>
     </body>
     </html>
@@ -937,7 +938,7 @@ async function sendCancellationEmail({
   cancelledBy
 }) {
   try {
-    if (!recipientEmail) {
+   if (!recipientEmail) {
       throw new Error('Recipient email is required');
     }
 
@@ -961,16 +962,16 @@ async function sendCancellationEmail({
     const otherPartyName = recipientType === 'patient' ? `Dr. ${doctorName}` : patientName;
     const cancelledByText = cancelledBy === 'patient' ? 'the patient' : 
                            cancelledBy === 'doctor' ? 'the doctor' : 
-                           cancelledBy === 'clinic' ? 'the clinic' : 'the system';
+                           cancelledBy === 'clinic' ? 'the clinic' : 'the system'
 
-    const subject = `Appointment Cancelled - ${formattedDate}`;
+    const subject = `Appointment Cancelled - ${formattedDate}`; 
 
-    const text = `
+   const text = `
 Dear ${recipientName},
 
 Your appointment has been cancelled.
 
-Appointment Details:
+Appointment Details: 
 - ${recipientType === 'patient' ? 'Doctor' : 'Patient'}: ${otherPartyName}
 - Date: ${formattedDate}
 - Time: ${displayTime}
@@ -997,7 +998,7 @@ Thank you for using HealthSync.
     .header { background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%); color: white; padding: 30px; text-align: center; }
     .header h1 { font-size: 28px; margin-bottom: 5px; }
     .header p { font-size: 14px; opacity: 0.9; }
-    .content { padding: 30px; }
+   .content { padding: 30px; }
     .alert-box { background: #fef2f2; border: 1px solid #fecaca; border-left: 4px solid #ef4444; padding: 16px; border-radius: 8px; margin-bottom: 20px; }
     .alert-box h3 { color: #dc2626; margin-bottom: 8px; font-size: 16px; }
     .alert-box p { color: #7f1d1d; font-size: 14px; }
@@ -1008,7 +1009,7 @@ Thank you for using HealthSync.
     .detail-value { color: #1f2937; flex: 1; }
     .reason-box { background: #fffbeb; border: 1px solid #fde68a; padding: 16px; border-radius: 8px; margin: 20px 0; }
     .reason-box h4 { color: #92400e; margin-bottom: 8px; font-size: 14px; }
-    .reason-box p { color: #78350f; font-size: 14px; }
+   .reason-box p { color: #78350f; font-size: 14px; }
     .cta-button { display: inline-block; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 20px; }
     .footer { background: #1f2937; color: #9ca3af; padding: 20px; text-align: center; font-size: 13px; }
   </style>
@@ -1040,7 +1041,7 @@ Thank you for using HealthSync.
         </div>
         <div class="detail-row">
           <div class="detail-label">Time:</div>
-          <div class="detail-value">${displayTime}</div>
+         <div class="detail-value">${displayTime}</div>
         </div>
       </div>
       
@@ -1052,28 +1053,28 @@ Thank you for using HealthSync.
       <p style="color: #6b7280; margin-top: 20px;">
         If you need to reschedule, please visit HealthSync to book a new appointment at your convenience.
       </p>
-      
+     
       <center>
         <a href="${process.env.FRONTEND_URL || 'https://healthsyncpro.in'}" class="cta-button">
           Book New Appointment
         </a>
       </center>
     </div>
-    
+   
     <div class="footer">
       <p>© ${new Date().getFullYear()} HealthSync. All rights reserved.</p>
-      <p>This is an automated message. Please do not reply to this email.</p>
+     <p>This is an automated message. Please do not reply to this email.</p>
     </div>
   </div>
 </body>
 </html>
-    `;
+    `
 
-    await sendEmail({ to: recipientEmail, subject, html, text });
-    console.log(`📧 Cancellation email sent to ${recipientEmail}`);
+    await sendEmail({ to: recipientEmail, subject, html, text })
+    console.log(`📧 Cancellation email sent to ${recipientEmail}`)
     return { success: true };
   } catch (error) {
-    console.error('Error sending cancellation email:', error);
+   console.error('Error sending cancellation email:', error);
     return { success: false, error: error.message };
   }
 }

@@ -26,7 +26,7 @@ const initializeSocket = (httpServer) => {
         return next(new Error('Authentication required'));
       }
       
-      const decoded = jwt.verify(token, process.env.JWT_SECRET);
+      const decoded = jwt.verify(token, process.env.JWT_SECRET); 
       socket.userId = decoded.userId || decoded.doctorId || decoded.id;
       socket.userType = decoded.role || 'patient';
       socket.clinicId = decoded.clinicId || null;
@@ -37,24 +37,24 @@ const initializeSocket = (httpServer) => {
       }
       
       next();
-    } catch (error) {
+    } catch (err) {
       console.error('Socket authentication error:', error.message);
       next(new Error('Authentication failed'));
     }
   });
   io.on(SOCKET_EVENTS.CONNECTION, (socket) => {
-    const { userId, userType, clinicId, doctorId } = socket;
+   const { userId, userType, clinicId, doctorId } = socket;
     
     console.log(`🔌 Socket connected: ${socket.id} (User: ${userId}, Type: ${userType})`);
-    if (!connectedUsers.has(userId)) {
-      connectedUsers.set(userId, new Set());
+   if (!connectedUsers.has(userId)) {
+      connectedUsers.set(userId, new Set()); 
     }
     connectedUsers.get(userId).add(socket.id);
     socketToUser.set(socket.id, { userId, userType, clinicId });
     socket.join(getUserRoom(userId));
     if (clinicId) {
       socket.join(getClinicRoom(clinicId));
-    }
+    } 
     if (doctorId) {
       socket.join(getDoctorRoom(doctorId));
     }
@@ -75,12 +75,12 @@ const initializeSocket = (httpServer) => {
     });
     socket.on(SOCKET_EVENTS.LEAVE_ROOM, (roomId) => {
       socket.leave(roomId);
-      socket.emit(SOCKET_EVENTS.ROOM_LEFT, { roomId });
+     socket.emit(SOCKET_EVENTS.ROOM_LEFT, { roomId });
       console.log(`📤 Socket ${socket.id} left room: ${roomId}`);
     });
     socket.on(SOCKET_EVENTS.DISCONNECT, (reason) => {
       console.log(`🔌 Socket disconnected: ${socket.id} (Reason: ${reason})`);
-      const userSockets = connectedUsers.get(userId);
+     const userSockets = connectedUsers.get(userId);
       if (userSockets) {
         userSockets.delete(socket.id);
         if (userSockets.size === 0) {
@@ -89,7 +89,7 @@ const initializeSocket = (httpServer) => {
       }
       socketToUser.delete(socket.id);
     });
-    socket.on(SOCKET_EVENTS.ERROR, (error) => {
+    socket.on(SOCKET_EVENTS.ERROR, (error) => { 
       console.error(`Socket error for ${socket.id}:`, error);
     });
   });
@@ -105,7 +105,7 @@ const isValidRoomAccess = (socket, roomId) => {
     return true;
   }
   if (roomId.startsWith('doctor:') && socket.doctorId && roomId === getDoctorRoom(socket.doctorId)) {
-    return true;
+   return true;
   }
   if (roomId.startsWith('queue:')) {
     return true; 
@@ -138,7 +138,7 @@ const emitToUser = (userId, event, data) => {
 
 const emitToClinic = (clinicId, event, data) => {
   if (!io) return;
-  io.to(getClinicRoom(clinicId)).emit(event, {
+  io.to(getClinicRoom(clinicId)).emit(event, { 
     ...data,
     timestamp: new Date().toISOString(),
   });
@@ -172,7 +172,7 @@ const emitAppointmentCreated = (appointment) => {
   const event = SOCKET_EVENTS.APPOINTMENT_CREATED;
   const data = { appointment };
   if (appointment.userId) {
-    emitToUser(appointment.userId.toString(), event, data);
+   emitToUser(appointment.userId.toString(), event, data);
   }
   if (appointment.doctorId) {
     emitToDoctor(appointment.doctorId.toString(), event, data);
@@ -191,7 +191,7 @@ const emitAppointmentUpdated = (appointment) => {
   }
   
   if (appointment.doctorId) {
-    emitToDoctor(appointment.doctorId.toString(), event, data);
+   emitToDoctor(appointment.doctorId.toString(), event, data);
   }
   
   if (appointment.clinicId) {
@@ -211,7 +211,7 @@ const emitAppointmentCancelled = (appointment) => {
   }
   
   if (appointment.doctorId) {
-    emitToDoctor(appointment.doctorId.toString(), event, data);
+   emitToDoctor(appointment.doctorId.toString(), event, data);
   }
   
   if (appointment.clinicId) {
@@ -266,7 +266,7 @@ const emitQueuePositionChanged = (userId, positionData) => {
 
 const emitYourTurn = (userId, appointmentData) => {
   emitToUser(userId, SOCKET_EVENTS.QUEUE_YOUR_TURN, appointmentData);
-};
+};
 
 const emitLabReportReady = (userId, report) => {
   emitToUser(userId, SOCKET_EVENTS.LAB_REPORT_READY, { report });

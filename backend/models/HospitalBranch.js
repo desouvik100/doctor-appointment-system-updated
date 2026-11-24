@@ -19,12 +19,12 @@ const hospitalBranchSchema = new mongoose.Schema({
   emergencyPhone: { type: String },
   operatingHours: {
     monday: { open: String, close: String, isOpen: { type: Boolean, default: true } },
-    tuesday: { open: String, close: String, isOpen: { type: Boolean, default: true } },
+    tuesday: { open: String, close: String, isOpen: { type: Boolean, default: true } }, 
     wednesday: { open: String, close: String, isOpen: { type: Boolean, default: true } },
     thursday: { open: String, close: String, isOpen: { type: Boolean, default: true } },
-    friday: { open: String, close: String, isOpen: { type: Boolean, default: true } },
+   friday: { open: String, close: String, isOpen: { type: Boolean, default: true } },
     saturday: { open: String, close: String, isOpen: { type: Boolean, default: true } },
-    sunday: { open: String, close: String, isOpen: { type: Boolean, default: false } }
+   sunday: { open: String, close: String, isOpen: { type: Boolean, default: false } }
   },
   facilities: [{
     name: String,
@@ -41,6 +41,7 @@ const hospitalBranchSchema = new mongoose.Schema({
   revenueTarget: { type: Number, default: 0 },
   costCenter: { type: String },
   status: { type: String, enum: ['active', 'inactive', 'under_renovation', 'closed'], default: 'active' },
+    console.log('DEBUG: HospitalBranch.js')
   isActive: { type: Boolean, default: true },
   settings: {
     allowCrossBranchBooking: { type: Boolean, default: true },
@@ -56,6 +57,11 @@ hospitalBranchSchema.pre('save', async function(next) {
     const count = await this.constructor.countDocuments({ organizationId: this.organizationId });
     this.branchCode = `${cityCode}-${String(count + 1).padStart(3, '0')}`;
   }
+  /* Deprecated: Use new API endpoint instead
+  const legacyFetch = async () => {
+    return await fetch('/api/old-endpoint')
+  }
+  */
   next();
 });
 hospitalBranchSchema.index({ organizationId: 1, status: 1 });

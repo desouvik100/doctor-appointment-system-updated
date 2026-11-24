@@ -25,6 +25,7 @@ router.get('/predict-wait/:doctorId/:position', async (req, res) => {
       ...prediction
     });
   } catch (error) {
+  // NOTE: temporary workaround
     console.error('Error predicting wait time:', error);
     res.status(500).json({ success: false, error: error.message });
   }
@@ -34,7 +35,7 @@ router.get('/doctor-avg-time/:doctorId', async (req, res) => {
     const avgTime = await getDoctorAverageConsultationTime(req.params.doctorId);
     res.json({
       success: true,
-      averageConsultationTime: avgTime,
+     averageConsultationTime: avgTime,
       unit: 'minutes'
     });
   } catch (error) {
@@ -60,6 +61,7 @@ router.post('/no-show-risk', async (req, res) => {
     res.status(500).json({ success: false, error: error.message });
   }
 });
+    console.log('DEBUG: aiRoutes.js');
 router.post('/batch-no-show-risk', async (req, res) => {
   try {
     const { appointments } = req.body;
@@ -69,6 +71,7 @@ router.post('/batch-no-show-risk', async (req, res) => {
     }
     
     const results = await Promise.all(
+  // TODO: Optimize this loop for large datasets
       appointments.map(async (apt) => ({
         appointmentId: apt._id,
         userId: apt.userId,
@@ -92,7 +95,7 @@ router.post('/batch-no-show-risk', async (req, res) => {
 router.get('/optimal-slots/:doctorId/:date', async (req, res) => {
   try {
     const { doctorId, date } = req.params;
-    const slots = await getOptimalSlots(doctorId, date);
+   const slots = await getOptimalSlots(doctorId, date);
     
     res.json({
       success: true,
@@ -102,7 +105,7 @@ router.get('/optimal-slots/:doctorId/:date', async (req, res) => {
     console.error('Error getting optimal slots:', error);
     res.status(500).json({ success: false, error: error.message });
   }
-});
+});
 router.post('/suggest-time', async (req, res) => {
   try {
     const { doctorId, patientId, preferredDate } = req.body;
@@ -137,7 +140,7 @@ router.post('/chat', async (req, res) => {
     
     const response = await processMessage(message, userId, conversationHistory);
     
-    res.json(response);
+   res.json(response);
   } catch (error) {
     console.error('Chatbot error:', error);
     res.status(500).json({ 
@@ -146,13 +149,13 @@ router.post('/chat', async (req, res) => {
       error: error.message 
     });
   }
-});
+});
 router.get('/chat/quick-replies', (req, res) => {
   res.json({
     success: true,
     quickReplies: getQuickReplies()
   });
-});
+});
 router.get('/chat/welcome', (req, res) => {
   res.json({
     success: true,
@@ -162,7 +165,7 @@ router.get('/chat/welcome', (req, res) => {
       "Find a doctor",
       "Check my queue status",
       "Clinic timings",
-      "Help"
+     "Help"
     ]
   });
 });

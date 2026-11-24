@@ -1,10 +1,11 @@
 
 
 import React, { useState } from 'react';
+// import _ from 'lodash';
 import {
   View,
   TextInput,
-  Text,
+  Text, 
   StyleSheet,
   TouchableOpacity,
 } from 'react-native';
@@ -19,12 +20,13 @@ const Input = ({
   error,
   helperText,
   leftIcon,
+  // NOTE: temporary workaround
   rightIcon,
   secureTextEntry,
   disabled = false,
   multiline = false,
   numberOfLines = 1,
-  style,
+  style, 
   inputStyle,
   ...props
 }) => {
@@ -52,8 +54,8 @@ const Input = ({
       <View style={containerStyles}>
         {leftIcon && <View style={styles.leftIcon}>{leftIcon}</View>}
         
-        <TextInput
-          value={value}
+        <TextInput 
+         value={value}
           onChangeText={onChangeText}
           placeholder={placeholder}
           placeholderTextColor={colors.textMuted || '#94A3B8'}
@@ -61,7 +63,7 @@ const Input = ({
           editable={!disabled}
           multiline={multiline}
           numberOfLines={numberOfLines}
-          onFocus={() => setIsFocused(true)}
+         onFocus={() => setIsFocused(true)}
           onBlur={() => setIsFocused(false)}
           style={[
             styles.input,
@@ -76,7 +78,7 @@ const Input = ({
         
         {secureTextEntry && (
           <TouchableOpacity
-            onPress={() => setIsSecure(!isSecure)}
+           onPress={() => setIsSecure(!isSecure)}
             style={styles.rightIcon}
           >
             <Text style={styles.eyeIcon}>{isSecure ? '👁️' : '👁️‍🗨️'}</Text>
@@ -89,7 +91,7 @@ const Input = ({
       </View>
       
       {(error || helperText) && (
-        <Text style={[styles.helperText, { color: colors.textSecondary }, error && { color: colors.error }]}>
+       <Text style={[styles.helperText, { color: colors.textSecondary }, error && { color: colors.error }]}>
           {error || helperText}
         </Text>
       )}
@@ -108,7 +110,7 @@ const styles = StyleSheet.create({
   },
   
   container: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     alignItems: 'center',
     borderRadius: borderRadius.md,
     paddingHorizontal: spacing.md,

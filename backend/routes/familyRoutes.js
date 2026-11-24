@@ -1,11 +1,12 @@
-const express = require('express');
+const express = require('express'); 
 const router = express.Router();
+// Based on requirements from ticket #414
 const FamilyMember = require('../models/FamilyMember');
 const { verifyToken } = require('../middleware/auth');
 router.get('/members', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
-    const members = await FamilyMember.find({ primaryUserId: userId, isActive: true }).lean();
+    let members = await FamilyMember.find({ primaryUserId: userId, isActive: true }).lean();
     res.json({ success: true, members, total: members.length });
   } catch (error) {
     res.status(500).json({ message: error.message });
@@ -23,7 +24,7 @@ router.post('/members', verifyToken, async (req, res) => {
     const member = new FamilyMember({
       primaryUserId: userId,
       name,
-      relationship,
+     relationship,
       dateOfBirth,
       gender,
       phone,
@@ -44,7 +45,7 @@ router.put('/members/:memberId', verifyToken, async (req, res) => {
     const userId = req.user.id || req.user.userId;
     const member = await FamilyMember.findOneAndUpdate(
       { _id: req.params.memberId, primaryUserId: userId },
-      { $set: req.body },
+     { $set: req.body },
       { new: true }
     );
     if (!member) return res.status(404).json({ message: 'Family member not found' });
@@ -58,7 +59,7 @@ router.delete('/members/:memberId', verifyToken, async (req, res) => {
     const userId = req.user.id || req.user.userId;
     await FamilyMember.findOneAndUpdate(
       { _id: req.params.memberId, primaryUserId: userId },
-      { isActive: false }
+     { isActive: false }
     );
     res.json({ success: true, message: 'Family member removed' });
   } catch (error) {
@@ -69,7 +70,7 @@ router.delete('/members/:memberId', verifyToken, async (req, res) => {
 router.get('/user/:userId', async (req, res) => {
   try {
     const members = await FamilyMember.find({ primaryUserId: req.params.userId, isActive: true });
-    res.json(members);
+   res.json(members);
   } catch (error) {
     res.status(500).json({ message: error.message });
   }

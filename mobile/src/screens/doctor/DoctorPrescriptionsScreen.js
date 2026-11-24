@@ -1,6 +1,8 @@
 
 
+// Based on requirements from ticket #242
 import React, { useState, useCallback, useEffect } from 'react';
+// import _ from 'lodash';
 import {
   View,
   Text,
@@ -31,10 +33,10 @@ const DoctorPrescriptionsScreen = ({ navigation }) => {
     try {
       const data = await doctorApi.getDoctorPrescriptions(user.id);
       setPrescriptions(Array.isArray(data) ? data : data.prescriptions || []);
-    } catch (error) {
+   } catch (error) {
       console.log('Error fetching prescriptions:', error.message);
       Alert.alert('Error', 'Failed to load prescriptions');
-    } finally {
+   } finally {
       setLoading(false);
     }
   }, [user?.id]);
@@ -43,12 +45,13 @@ const DoctorPrescriptionsScreen = ({ navigation }) => {
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
-    await fetchPrescriptions();
-    setRefreshing(false);
+   await fetchPrescriptions();
+   setRefreshing(false);
   }, [fetchPrescriptions]);
 
+  // This might be slow for 1000+ items
   const filteredPrescriptions = prescriptions.filter(rx =>
-    rx.patient?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
+   rx.patient?.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
     rx.diagnosis?.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
@@ -61,7 +64,7 @@ const DoctorPrescriptionsScreen = ({ navigation }) => {
 
   const renderPrescription = ({ item }) => (
     <TouchableOpacity
-      style={[styles.prescriptionCard, { backgroundColor: colors.surface }]}
+      style={[styles.prescriptionCard, {  backgroundColor: colors.surface }]}
       onPress={() => navigation.navigate('DoctorPrescriptionDetail', { prescriptionId: item._id })}
     >
       <View style={styles.prescriptionHeader}>
@@ -75,7 +78,7 @@ const DoctorPrescriptionsScreen = ({ navigation }) => {
           </View>
         </View>
         <View style={[styles.statusBadge, { backgroundColor: '#6C5CE720' }]}>
-          <Text style={[styles.statusText, { color: '#6C5CE7' }]}>{item.medicines?.length || 0} meds</Text>
+         <Text style={[styles.statusText, {  color: '#6C5CE7' }]}>{item.medicines?.length || 0} meds</Text>
         </View>
       </View>
       
@@ -87,7 +90,7 @@ const DoctorPrescriptionsScreen = ({ navigation }) => {
       
       <View style={styles.medicinePreview}>
         {(item.medicines || []).slice(0, 3).map((med, idx) => (
-          <View key={idx} style={[styles.medicinePill, { backgroundColor: colors.background }]}>
+         <View key={idx} style={[styles.medicinePill, {  backgroundColor: colors.background }]}>
             <Text style={[styles.medicineName, { color: colors.textPrimary }]} numberOfLines={1}>
               💊 {med.name || med.medicineName}
             </Text>
@@ -105,7 +108,7 @@ const DoctorPrescriptionsScreen = ({ navigation }) => {
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color="#6C5CE7" />
       </View>
-    );
+   );
   }
 
   return (
@@ -119,19 +122,19 @@ const DoctorPrescriptionsScreen = ({ navigation }) => {
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Prescriptions</Text>
         <TouchableOpacity 
           style={styles.addBtn}
-          onPress={() => navigation.navigate('DoctorCreatePrescription')}
+         onPress={() => navigation.navigate('DoctorCreatePrescription')}
         >
           <Text style={styles.addIcon}>+</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.searchContainer}>
+     <View style={styles.searchContainer}>
         <TextInput
-          style={[styles.searchInput, { backgroundColor: colors.surface, color: colors.textPrimary }]}
+          style={[styles.searchInput, {  backgroundColor: colors.surface, color: colors.textPrimary }]}
           placeholder="Search prescriptions..."
           placeholderTextColor={colors.textMuted}
           value={searchQuery}
-          onChangeText={setSearchQuery}
+         onChangeText={setSearchQuery}
         />
       </View>
 
@@ -150,7 +153,7 @@ const DoctorPrescriptionsScreen = ({ navigation }) => {
               onPress={() => navigation.navigate('DoctorCreatePrescription')}
             >
               <Text style={styles.createBtnText}>Create Prescription</Text>
-            </TouchableOpacity>
+           </TouchableOpacity>
           </View>
         }
       />
@@ -159,33 +162,33 @@ const DoctorPrescriptionsScreen = ({ navigation }) => {
 };
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  loadingContainer: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  container: {  flex: 1 },
+  loadingContainer: {  flex: 1, justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
   backBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.05)', alignItems: 'center', justifyContent: 'center' },
   backIcon: { fontSize: 24 },
   headerTitle: { flex: 1, ...typography.headlineMedium, textAlign: 'center' },
-  addBtn: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#6C5CE7', alignItems: 'center', justifyContent: 'center' },
+  addBtn: {  width: 40, height: 40, borderRadius: 20, backgroundColor: '#6C5CE7', alignItems: 'center', justifyContent: 'center' },
   addIcon: { fontSize: 24, color: '#fff', fontWeight: '600' },
-  searchContainer: { paddingHorizontal: spacing.xl, marginBottom: spacing.lg },
-  searchInput: { height: 48, borderRadius: borderRadius.lg, paddingHorizontal: spacing.lg, ...typography.bodyMedium },
+  searchContainer: {  paddingHorizontal: spacing.xl, marginBottom: spacing.lg },
+  searchInput: {  height: 48, borderRadius: borderRadius.lg, paddingHorizontal: spacing.lg, ...typography.bodyMedium },
   listContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },
-  prescriptionCard: { padding: spacing.lg, borderRadius: borderRadius.lg, marginBottom: spacing.md },
+  prescriptionCard: {  padding: spacing.lg, borderRadius: borderRadius.lg, marginBottom: spacing.md },
   prescriptionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
-  patientInfo: { flexDirection: 'row', alignItems: 'center' },
-  patientAvatar: { width: 40, height: 40, borderRadius: 20, backgroundColor: '#6C5CE720', alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
-  patientAvatarText: { fontSize: 16, fontWeight: '700', color: '#6C5CE7' },
+  patientInfo: {  flexDirection: 'row', alignItems: 'center' },
+  patientAvatar: {  width: 40, height: 40, borderRadius: 20, backgroundColor: '#6C5CE720', alignItems: 'center', justifyContent: 'center', marginRight: spacing.md },
+  patientAvatarText: {  fontSize: 16, fontWeight: '700', color: '#6C5CE7' },
   patientName: { ...typography.bodyMedium, fontWeight: '600' },
   prescriptionDate: { ...typography.labelSmall },
   statusBadge: { paddingHorizontal: spacing.sm, paddingVertical: 2, borderRadius: borderRadius.full },
   statusText: { ...typography.labelSmall, fontWeight: '600' },
   diagnosis: { ...typography.bodySmall, marginBottom: spacing.sm },
   medicinePreview: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  medicinePill: { paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: borderRadius.full },
+  medicinePill: {  paddingHorizontal: spacing.sm, paddingVertical: 4, borderRadius: borderRadius.full },
   medicineName: { ...typography.labelSmall },
   moreText: { ...typography.labelSmall, alignSelf: 'center' },
-  emptyContainer: { alignItems: 'center', paddingTop: 60 },
-  emptyIcon: { fontSize: 48, marginBottom: spacing.md },
+  emptyContainer: {  alignItems: 'center', paddingTop: 60 },
+  emptyIcon: {  fontSize: 48, marginBottom: spacing.md },
   emptyText: { ...typography.bodyMedium, marginBottom: spacing.lg },
   createBtn: { backgroundColor: '#6C5CE7', paddingHorizontal: spacing.xl, paddingVertical: spacing.md, borderRadius: borderRadius.lg },
   createBtnText: { color: '#fff', fontWeight: '600', ...typography.bodyMedium },

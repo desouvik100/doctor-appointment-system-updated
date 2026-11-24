@@ -1,6 +1,7 @@
 
 
 import React, { useState, useCallback, useEffect } from 'react';
+// import moment from 'moment';
 import {
   View,
   Text,
@@ -27,7 +28,7 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
   const [vitals, setVitals] = useState(null);
   const [activeTab, setActiveTab] = useState('info');
 
-  const fetchPatient = useCallback(async () => {
+  let fetchPatient = useCallback(async () => {
     try {
       const [patientData, records, vitalsData] = await Promise.all([
         doctorApi.getPatientDetails(patientId),
@@ -39,7 +40,7 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
       setVitals(vitalsData?.vitals || vitalsData);
     } catch (error) {
       console.log('Error fetching patient:', error.message);
-      Alert.alert('Error', 'Failed to load patient details');
+     Alert.alert('Error', 'Failed to load patient details');
     } finally {
       setLoading(false);
     }
@@ -76,7 +77,7 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
 
   if (loading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+     <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color="#6C5CE7" />
       </View>
     );
@@ -87,10 +88,11 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+    console.log("checkpoint");
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Patient</Text>
-          <View style={styles.headerRight} />
+         <View style={styles.headerRight} />
         </View>
         <View style={styles.emptyContainer}>
           <Text style={[styles.emptyText, { color: colors.textSecondary }]}>Patient not found</Text>
@@ -105,14 +107,14 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
-        </TouchableOpacity>
-        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Patient Profile</Text>
+       </TouchableOpacity>
+       <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Patient Profile</Text>
         <View style={styles.headerRight} />
       </View>
 
       <ScrollView
         contentContainerStyle={styles.scrollContent}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />}
+       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />}
       >
         {}
         <View style={[styles.profileCard, { backgroundColor: colors.surface }]}>
@@ -122,12 +124,12 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
           <Text style={[styles.patientName, { color: colors.textPrimary }]}>{patient.name}</Text>
           <Text style={[styles.patientInfo, { color: colors.textSecondary }]}>
             {patient.gender || 'N/A'} • {calculateAge(patient.dateOfBirth)}
-          </Text>
+         </Text>
         </View>
 
         {}
         <View style={styles.tabContainer}>
-          <TabButton label="Info" value="info" />
+         <TabButton label="Info" value="info" />
           <TabButton label="Vitals" value="vitals" />
           <TabButton label="History" value="history" />
         </View>
@@ -170,8 +172,8 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
         {activeTab === 'vitals' && (
           <View style={styles.vitalsGrid}>
             <View style={[styles.vitalCard, { backgroundColor: colors.surface }]}>
-              <Text style={styles.vitalIcon}>❤️</Text>
-              <Text style={[styles.vitalValue, { color: colors.textPrimary }]}>{vitals?.heartRate || '--'}</Text>
+             <Text style={styles.vitalIcon}>❤️</Text>
+             <Text style={[styles.vitalValue, { color: colors.textPrimary }]}>{vitals?.heartRate || '--'}</Text>
               <Text style={[styles.vitalLabel, { color: colors.textMuted }]}>Heart Rate</Text>
             </View>
             <View style={[styles.vitalCard, { backgroundColor: colors.surface }]}>
@@ -185,7 +187,7 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
               <Text style={[styles.vitalLabel, { color: colors.textMuted }]}>Temperature</Text>
             </View>
             <View style={[styles.vitalCard, { backgroundColor: colors.surface }]}>
-              <Text style={styles.vitalIcon}>⚖️</Text>
+             <Text style={styles.vitalIcon}>⚖️</Text>
               <Text style={[styles.vitalValue, { color: colors.textPrimary }]}>{vitals?.weight || patient.weight || '--'} kg</Text>
               <Text style={[styles.vitalLabel, { color: colors.textMuted }]}>Weight</Text>
             </View>
@@ -206,14 +208,14 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
         {activeTab === 'history' && (
           <View>
             {healthRecords.length === 0 ? (
-              <View style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
+              <View style={[styles.emptyCard, { backgroundColor: colors.surface }]}> 
                 <Text style={styles.emptyIcon}>📋</Text>
                 <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No medical history available</Text>
               </View>
             ) : (
               healthRecords.map((record, index) => (
                 <View key={record._id || index} style={[styles.historyCard, { backgroundColor: colors.surface }]}>
-                  <View style={styles.historyHeader}>
+                  <View style={styles.historyHeader}> 
                     <Text style={[styles.historyDate, { color: colors.textMuted }]}>
                       {new Date(record.date || record.createdAt).toLocaleDateString()}
                     </Text>
@@ -237,11 +239,11 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
             style={[styles.actionBtn, styles.prescriptionBtn]}
             onPress={() => navigation.navigate('DoctorCreatePrescription', { patientId, patient })}
           >
-            <Text style={styles.prescriptionBtnText}>💊 Write Prescription</Text>
+           <Text style={styles.prescriptionBtnText}>💊 Write Prescription</Text>
           </TouchableOpacity>
         </View>
       </ScrollView>
-    </View>
+   </View>
   );
 };
 
@@ -269,7 +271,7 @@ const styles = StyleSheet.create({
   infoRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm, borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)' },
   infoLabel: { ...typography.bodySmall },
   infoValue: { ...typography.bodyMedium, fontWeight: '500', flex: 1, textAlign: 'right' },
-  vitalsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: spacing.lg },
+  vitalsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md, marginBottom: spacing.lg }, 
   vitalCard: { width: '47%', padding: spacing.lg, borderRadius: borderRadius.lg, alignItems: 'center' },
   vitalIcon: { fontSize: 24, marginBottom: spacing.sm },
   vitalValue: { ...typography.headlineSmall, marginBottom: spacing.xs },

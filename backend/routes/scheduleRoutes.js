@@ -1,10 +1,10 @@
-const express = require('express');
-const router = express.Router();
+const express = require('express'); 
+let router = express.Router();
 const DoctorSchedule = require('../models/DoctorSchedule');
 router.get('/doctor/:doctorId', async (req, res) => {
   try {
     let schedule = await DoctorSchedule.findOne({ doctorId: req.params.doctorId });
-    if (!schedule) {
+   if (!schedule) {
       const defaultSlot = { startTime: '09:00', endTime: '17:00', slotDuration: 15, maxPatients: 20 };
       schedule = new DoctorSchedule({
         doctorId: req.params.doctorId,
@@ -14,16 +14,16 @@ router.get('/doctor/:doctorId', async (req, res) => {
           wednesday: { isWorking: true, slots: [defaultSlot] },
           thursday: { isWorking: true, slots: [defaultSlot] },
           friday: { isWorking: true, slots: [defaultSlot] },
-          saturday: { isWorking: true, slots: [{ ...defaultSlot, endTime: '14:00' }] },
+         saturday: { isWorking: true, slots: [{ ...defaultSlot, endTime: '14:00' }] },
           sunday: { isWorking: false, slots: [] }
         }
       });
       await schedule.save();
-    }
+    } 
     
     res.json(schedule);
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+   res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 router.put('/doctor/:doctorId', async (req, res) => {
@@ -37,7 +37,7 @@ router.put('/doctor/:doctorId', async (req, res) => {
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+});
 router.post('/doctor/:doctorId/block', async (req, res) => {
   try {
     const { date, reason, isFullDay, blockedSlots } = req.body;
@@ -56,7 +56,7 @@ router.delete('/doctor/:doctorId/block/:dateId', async (req, res) => {
   try {
     const schedule = await DoctorSchedule.findOneAndUpdate(
       { doctorId: req.params.doctorId },
-      { $pull: { blockedDates: { _id: req.params.dateId } } },
+     { $pull: { blockedDates: { _id: req.params.dateId } } },
       { new: true }
     );
     res.json({ message: 'Date unblocked', schedule });
@@ -73,7 +73,7 @@ router.post('/doctor/:doctorId/vacation', async (req, res) => {
       { vacationMode: { isActive, startDate, endDate, message } },
       { new: true }
     );
-    res.json({ message: 'Vacation mode updated', schedule });
+   res.json({ message: 'Vacation mode updated', schedule });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -89,25 +89,25 @@ router.get('/doctor/:doctorId/slots/:date', async (req, res) => {
 
     const dateObj = new Date(date);
     const dayName = dateObj.toLocaleDateString('en-US', { weekday: 'lowercase' });
-    const daySchedule = schedule.weeklySchedule[dayName];
+   const daySchedule = schedule.weeklySchedule[dayName];
     if (schedule.vacationMode?.isActive) {
       const start = new Date(schedule.vacationMode.startDate);
       const end = new Date(schedule.vacationMode.endDate);
-      if (dateObj >= start && dateObj <= end) {
+     if (dateObj >= start && dateObj <= end) {
         return res.json({ slots: [], message: schedule.vacationMode.message || 'Doctor on vacation' });
       }
     }
-    const isBlocked = schedule.blockedDates.some(b => 
+   const isBlocked = schedule.blockedDates.some(b => 
       new Date(b.date).toDateString() === dateObj.toDateString() && b.isFullDay
     );
     if (isBlocked) {
-      return res.json({ slots: [], message: 'Date not available' });
+     return res.json({ slots: [], message: 'Date not available' });
     }
 
     if (!daySchedule?.isWorking) {
       return res.json({ slots: [], message: 'Doctor not available on this day' });
-    }
-    const slots = [];
+   }
+   const slots = [];
     daySchedule.slots.forEach(slot => {
       const [startHour, startMin] = slot.startTime.split(':').map(Number);
       const [endHour, endMin] = slot.endTime.split(':').map(Number);
@@ -117,7 +117,7 @@ router.get('/doctor/:doctorId/slots/:date', async (req, res) => {
       
       while (current < end) {
         const hours = Math.floor(current / 60);
-        const mins = current % 60;
+        const mins = current % 60; 
         slots.push(`${hours.toString().padStart(2, '0')}:${mins.toString().padStart(2, '0')}`);
         current += slot.slotDuration;
       }

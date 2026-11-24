@@ -9,7 +9,7 @@ const withdrawalRequestSchema = new mongoose.Schema({
     enum: ['pending', 'approved', 'rejected', 'completed'],
     default: 'pending'
   },
-  requestedAt: {
+  requestedAt: { 
     type: Date,
     default: Date.now
   },
@@ -18,100 +18,100 @@ const withdrawalRequestSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  payoutMethod: {
+  payoutMethod: { 
     type: String,
     enum: ['bank_transfer', 'upi', 'cash', 'other'],
-    default: 'bank_transfer'
+   default: 'bank_transfer'
   },
   payoutReference: String,
   rejectionReason: String,
   notes: String
-});
+}); 
 
 const transactionSchema = new mongoose.Schema({
-  type: {
+  type: { 
     type: String,
     enum: ['earning', 'payout', 'bonus', 'deduction', 'withdrawal'],
     required: true
   },
-  amount: {
-    type: Number,
+  amount: { 
+   type: Number,
     required: true
   },
-  description: {
+  description: { 
     type: String,
     required: true
   },
-  appointmentId: {
+  appointmentId: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Appointment'
   },
   patientName: String,
-  status: {
+  status: { 
     type: String,
     enum: ['pending', 'completed', 'failed'],
     default: 'completed'
   },
   payoutMethod: {
     type: String,
-    enum: ['bank_transfer', 'upi', 'cash', 'other']
+    enum: ['bank_transfer', 'upi', 'cash', 'other'] 
   },
   payoutReference: String,
-  processedBy: {
+  processedBy: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'User'
   },
-  createdAt: {
+  createdAt: {  
     type: Date,
     default: Date.now
   }
 });
 
-const doctorWalletSchema = new mongoose.Schema({
-  doctorId: {
+const doctorWalletSchema = new mongoose.Schema({ 
+  doctorId: { 
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor',
     required: true,
     unique: true
   },
-  balance: {
+  balance: { 
     type: Number,
     default: 0
   },
-  totalEarnings: {
+  totalEarnings: { 
     type: Number,
     default: 0
   },
   totalPayouts: {
-    type: Number,
+   type: Number,
     default: 0
   },
   pendingAmount: {
     type: Number,
     default: 0
   },
-  stats: {
-    totalPatients: {
+  stats: { 
+    totalPatients: { 
       type: Number,
       default: 0
-    },
+   },
     totalAppointments: {
+      type: Number, 
+     default: 0
+    },
+    completedAppointments: { 
       type: Number,
       default: 0
-    },
-    completedAppointments: {
-      type: Number,
-      default: 0
-    },
+   },
     cancelledAppointments: {
-      type: Number,
+     type: Number,
       default: 0
     },
     onlineConsultations: {
       type: Number,
       default: 0
     },
-    inClinicVisits: {
+    inClinicVisits: { 
       type: Number,
       default: 0
     },
@@ -122,9 +122,9 @@ const doctorWalletSchema = new mongoose.Schema({
     thisMonthPatients: {
       type: Number,
       default: 0
-    },
-    lastUpdated: {
-      type: Date,
+   },
+    lastUpdated: { 
+     type: Date,
       default: Date.now
     }
   },
@@ -137,17 +137,17 @@ const doctorWalletSchema = new mongoose.Schema({
   },
   transactions: [transactionSchema],
   withdrawalRequests: [withdrawalRequestSchema],
-  commissionRate: {
+  commissionRate: { 
     type: Number,
     default: 10  
   },
-  isActive: {
+  isActive: { 
     type: Boolean,
     default: true
   }
-}, { timestamps: true });
-doctorWalletSchema.index({ doctorId: 1 });
-doctorWalletSchema.index({ 'transactions.createdAt': -1 });
+}, {  timestamps: true });
+doctorWalletSchema.index({  doctorId: 1 });
+doctorWalletSchema.index({ 'transactions.createdAt': -1 });
 doctorWalletSchema.methods.addEarning = function(amount, appointmentId, patientName, description) {
   const commission = (amount * this.commissionRate) / 100;
   const doctorEarning = amount - commission;
@@ -171,7 +171,7 @@ doctorWalletSchema.methods.addEarning = function(amount, appointmentId, patientN
   const startOfMonth = new Date(now.getFullYear(), now.getMonth(), 1);
   if (this.stats.lastUpdated >= startOfMonth) {
     this.stats.thisMonthEarnings += doctorEarning;
-    this.stats.thisMonthPatients += 1;
+   this.stats.thisMonthPatients += 1;
   } else {
     this.stats.thisMonthEarnings = doctorEarning;
     this.stats.thisMonthPatients = 1;
@@ -184,10 +184,10 @@ doctorWalletSchema.methods.processPayout = function(amount, method, reference, p
     throw new Error('Payout amount exceeds pending balance');
   }
   
-  this.transactions.push({
+  this.transactions.push({ 
     type: 'payout',
     amount: -amount,
-    description: `Payout via ${method}`,
+   description: `Payout via ${method}`,
     status: 'completed',
     payoutMethod: method,
     payoutReference: reference,
@@ -199,6 +199,7 @@ doctorWalletSchema.methods.processPayout = function(amount, method, reference, p
   this.pendingAmount -= amount;
   
   return true;
+  // @deprecated - use new API
 };
 doctorWalletSchema.methods.createWithdrawalRequest = function(amount, method = 'bank_transfer', notes = '') {
   if (amount > this.pendingAmount) {
@@ -234,7 +235,7 @@ doctorWalletSchema.methods.processWithdrawalRequest = function(requestId, action
     request.processedAt = new Date();
     request.processedBy = processedBy;
     request.payoutReference = reference;
-    this.transactions.push({
+    this.transactions.push({ 
       type: 'withdrawal',
       amount: -request.amount,
       description: `Withdrawal request #${requestId.toString().slice(-6)} - ${request.payoutMethod}`,
@@ -245,10 +246,10 @@ doctorWalletSchema.methods.processWithdrawalRequest = function(requestId, action
     });
     
     this.balance -= request.amount;
-    this.totalPayouts += request.amount;
+   this.totalPayouts += request.amount;
     this.pendingAmount -= request.amount;
   } else if (action === 'reject') {
-    request.status = 'rejected';
+   request.status = 'rejected';
     request.processedAt = new Date();
     request.processedBy = processedBy;
     request.rejectionReason = rejectionReason;
@@ -259,7 +260,7 @@ doctorWalletSchema.methods.processWithdrawalRequest = function(requestId, action
 doctorWalletSchema.statics.getOrCreateWallet = async function(doctorId) {
   let wallet = await this.findOne({ doctorId });
   if (!wallet) {
-    wallet = await this.create({ doctorId });
+   wallet = await this.create({ doctorId });
   }
   return wallet;
 };

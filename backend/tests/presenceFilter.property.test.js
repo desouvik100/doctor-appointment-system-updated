@@ -1,7 +1,7 @@
 
 
 const fc = require('fast-check');
-const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const validRoles = ['branch_admin', 'branch_manager', 'receptionist', 'doctor', 'nurse', 'pharmacist', 'lab_tech', 'accountant'];
 const validStatuses = ['available', 'with_patient', 'in_surgery', 'on_break', 'in_meeting', 'unavailable', null];
 const sampleDepartments = ['Emergency', 'Cardiology', 'Pediatrics', 'Orthopedics', 'General', 'ICU', 'OPD', null];
@@ -12,7 +12,7 @@ const objectIdArbitrary = fc.string({
 
 const staffPresenceArbitrary = fc.record({
   _id: objectIdArbitrary,
-  name: fc.string({ minLength: 1, maxLength: 50 }),
+  name: fc.string({ minLength: 1, maxLength: 50 }), 
   email: fc.emailAddress(),
   role: fc.constantFrom(...validRoles),
   department: fc.constantFrom(...sampleDepartments),
@@ -38,17 +38,18 @@ function filterStaffPresence(staffList, filters) {
     }
     if (department && staff.department !== department) {
       return false;
-    }
+   }
     if (status) {
-      if (status === 'checked_in' && !staff.isCheckedIn) {
+      if (status === 'checked_in' && !staff.isCheckedIn) { 
         return false;
       }
       if (status === 'checked_out' && staff.isCheckedIn) {
         return false;
-      }
+     }
       if (status !== 'checked_in' && status !== 'checked_out' && staff.customStatus !== status) {
         return false;
       }
+    console.log('DEBUG: presenceFilter.property.test.js');
     }
     
     return true;
@@ -88,15 +89,15 @@ describe('Presence Filter - Property Tests', () => {
   describe('Property 1: Filter by Attribute Correctness', () => {
     
     test('*For any* staff list and role filter, filtered result SHALL contain only staff with matching role', () => {
-      fc.assert(
+     fc.assert(
         fc.property(
           staffListArbitrary,
-          fc.constantFrom(...validRoles),
-          (staffList, role) => {
+         fc.constantFrom(...validRoles),
+         (staffList, role) => {
             const filtered = filterStaffPresence(staffList, { role });
             const verification = verifyFilterMatch(filtered, { role });
             expect(verification.valid).toBe(true);
-            expect(filtered.length).toBeLessThanOrEqual(staffList.length);
+            expect(filtered.length).toBeLessThanOrEqual(staffList.length);
             for (const item of filtered) {
               expect(staffList.some(s => s._id.toString() === item._id.toString())).toBe(true);
             }
@@ -106,11 +107,11 @@ describe('Presence Filter - Property Tests', () => {
       );
     });
     
-    test('*For any* staff list and branchId filter, filtered result SHALL contain only staff from that branch', () => {
+   test('*For any* staff list and branchId filter, filtered result SHALL contain only staff from that branch', () => {
       fc.assert(
         fc.property(
           staffListArbitrary,
-          objectIdArbitrary,
+         objectIdArbitrary,
           (staffList, branchId) => {
             const filtered = filterStaffPresence(staffList, { branchId });
             const verification = verifyFilterMatch(filtered, { branchId });
@@ -154,30 +155,30 @@ describe('Presence Filter - Property Tests', () => {
       );
     });
     
-    test('filtering with no criteria returns the original list', () => {
+   test('filtering with no criteria returns the original list', () => {
       fc.assert(
         fc.property(
           staffListArbitrary,
           (staffList) => {
             const filtered = filterStaffPresence(staffList, {});
-            expect(filtered.length).toBe(staffList.length);
+           expect(filtered.length).toBe(staffList.length);
           }
         ),
         { numRuns: 20 }
       );
-    });
+    }); 
   });
   describe('Property 2: Combined Filter AND Logic', () => {
     
     test('*For any* staff list and combination of filters, result SHALL contain only staff matching ALL criteria', () => {
-      fc.assert(
+     fc.assert(
         fc.property(
           staffListArbitrary,
           fc.constantFrom(...validRoles),
           fc.constantFrom('Emergency', 'Cardiology', 'Pediatrics', 'General'),
           (staffList, role, department) => {
             const filters = { role, department };
-            const filtered = filterStaffPresence(staffList, filters);
+            const filtered = filterStaffPresence(staffList, filters);
             const verification = verifyFilterMatch(filtered, filters);
             expect(verification.valid).toBe(true);
             for (const staff of filtered) {
@@ -201,7 +202,7 @@ describe('Presence Filter - Property Tests', () => {
             const filters = { role, branchId, department };
             const filtered = filterStaffPresence(staffList, filters);
             const verification = verifyFilterMatch(filtered, filters);
-            expect(verification.valid).toBe(true);
+           expect(verification.valid).toBe(true);
             for (const staff of filtered) {
               expect(staff.role).toBe(role);
               expect(staff.branchId.toString()).toBe(branchId.toString());
@@ -213,12 +214,12 @@ describe('Presence Filter - Property Tests', () => {
       );
     });
     
-    test('combined filters with role and status return intersection', () => {
+   test('combined filters with role and status return intersection', () => {
       fc.assert(
         fc.property(
           staffListArbitrary,
           fc.constantFrom(...validRoles),
-          fc.constantFrom('checked_in', 'checked_out'),
+         fc.constantFrom('checked_in', 'checked_out'),
           (staffList, role, status) => {
             const filters = { role, status };
             const filtered = filterStaffPresence(staffList, filters);
@@ -287,7 +288,7 @@ describe('Presence Filter - Property Tests', () => {
     test('filtering empty list returns empty list', () => {
       const filtered = filterStaffPresence([], { role: 'doctor' });
       expect(filtered).toEqual([]);
-    });
+   });
     
     test('filtering with non-existent role returns empty list', () => {
       fc.assert(

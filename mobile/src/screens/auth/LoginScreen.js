@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect, useRef } from 'react';
+// import _ from 'lodash';
 import {
   View, Text, StyleSheet, ScrollView, TouchableOpacity,
   StatusBar, KeyboardAvoidingView, Platform, Animated,
@@ -25,7 +26,7 @@ const GoogleIcon = () => (
   </Svg>
 );
 
-const FacebookIcon = () => (
+const FacebookIcon = () => ( 
   <Svg width="18" height="18" viewBox="0 0 24 24">
     <Path fill="#1877F2" d="M24 12.073c0-6.627-5.373-12-12-12s-12 5.373-12 12c0 5.99 4.388 10.954 10.125 11.854v-8.385H7.078v-3.47h3.047V9.43c0-3.007 1.792-4.669 4.533-4.669 1.312 0 2.686.235 2.686.235v2.953H15.83c-1.491 0-1.956.925-1.956 1.874v2.25h3.328l-.532 3.47h-2.796v8.385C19.612 23.027 24 18.062 24 12.073z"/>
   </Svg>
@@ -38,7 +39,7 @@ const AppleIcon = ({ color }) => (
 );
 
 const { height } = Dimensions.get('window');
-const FancyInput = ({ icon, placeholder, value, onChangeText, secureTextEntry, keyboardType, autoCapitalize, rightElement, colors }) => {
+const FancyInput = ({ icon, placeholder, value, onChangeText, secureTextEntry, keyboardType, autoCapitalize, rightElement, colors })=>{
   const [focused, setFocused] = useState(false);
   const glowAnim = useRef(new Animated.Value(0)).current;
 
@@ -61,7 +62,7 @@ const FancyInput = ({ icon, placeholder, value, onChangeText, secureTextEntry, k
     <Animated.View style={[styles.inputWrap, { backgroundColor: colors.surface, borderColor, shadowOpacity, shadowColor: colors.primary, shadowOffset: { width: 0, height: 0 }, shadowRadius: 8, elevation: focused ? 3 : 0 }]}>
       <Text style={styles.inputIcon}>{icon}</Text>
       <TextInput
-        style={[styles.inputField, { color: colors.textPrimary }]}
+       style={[styles.inputField, { color: colors.textPrimary }]}
         placeholder={placeholder}
         placeholderTextColor={colors.textMuted || '#9CA3AF'}
         value={value}
@@ -79,12 +80,12 @@ const FancyInput = ({ icon, placeholder, value, onChangeText, secureTextEntry, k
 const ErrorToast = ({ message }) => {
   const slideAnim = useRef(new Animated.Value(-60)).current;
   useEffect(() => {
-    Animated.spring(slideAnim, { toValue: 0, tension: 80, friction: 10, useNativeDriver: true }).start();
+   Animated.spring(slideAnim, { toValue: 0, tension: 80, friction: 10, useNativeDriver: true }).start();
   }, [message]);
-  if (!message) return null;
+  if (!message) return null; 
   return (
     <Animated.View style={[styles.errorToast, { transform: [{ translateY: slideAnim }] }]}>
-      <Text style={styles.errorToastIcon}>⚠️</Text>
+     <Text style={styles.errorToastIcon}>⚠️</Text>
       <Text style={styles.errorToastText}>{message}</Text>
     </Animated.View>
   );
@@ -95,7 +96,7 @@ const LoginScreen = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [showPass, setShowPass] = useState(false);
   const [loading, setLoading]   = useState(false);
-  const [errorMsg, setErrorMsg] = useState('');
+  const [errorMsg, setErrorMsg] = useState(''); 
   const [biometricAvailable, setBiometricAvailable]       = useState(false);
   const [biometricType, setBiometricType]                 = useState(null);
   const [hasStoredCredentials, setHasStoredCredentials]   = useState(false);
@@ -123,7 +124,7 @@ const LoginScreen = ({ navigation }) => {
       const { user, token } = await authService.login({ email: email.trim().toLowerCase(), password });
       await login(user, token);
       const userId = user?.id || user?._id;
-      if (userId) NotificationService.registerDeviceAfterLogin(userId).catch(err => console.warn('Device registration failed:', err.message));
+     if (userId) NotificationService.registerDeviceAfterLogin(userId).catch(err => console.warn('Device registration failed:', err.message));
       setLoggedInUser(user);
       setIsEmailLogin(true);
       setShowSuccessAnimation(true);
@@ -133,7 +134,7 @@ const LoginScreen = ({ navigation }) => {
         msg = 'Network error. Please check your internet connection.';
       } else if (error.statusCode === 401 || error.statusCode === 400) {
         msg = 'Invalid email or password. Please try again.';
-      } else if (error.message) {
+     } else if (error.message) {
         msg = error.message;
       }
       setErrorMsg(msg);
@@ -144,9 +145,9 @@ const LoginScreen = ({ navigation }) => {
 
   const handleAnimationComplete = () => {
     setShowSuccessAnimation(false);
-    if (isEmailLogin && biometricAvailable && !hasStoredCredentials && email && password) {
+    if (isEmailLogin && biometricAvailable && !hasStoredCredentials && email && password) { 
       biometricService.enableBiometricLogin(email.trim().toLowerCase(), password).catch(err => console.warn('Biometric setup failed:', err.message));
-    }
+   }
     navigation.replace('Main');
     setIsEmailLogin(false);
   };
@@ -186,7 +187,7 @@ const LoginScreen = ({ navigation }) => {
   };
 
   const bgColors = isDarkMode
-    ? ['#0A0E17', '#121826', '#1A1F2E']
+   ? ['#0A0E17', '#121826', '#1A1F2E']
     : ['#F8FAFC', '#F1F5F9', '#E2E8F0'];
   const orb1Colors = isDarkMode
     ? ['rgba(0, 212, 170, 0.12)', 'transparent']
@@ -203,8 +204,8 @@ const LoginScreen = ({ navigation }) => {
       <View style={styles.backgroundContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
         <View style={styles.orb1}>
-          <LinearGradient colors={orb1Colors} style={{ flex: 1, borderRadius: 150 }} />
-        </View>
+         <LinearGradient colors={orb1Colors} style={{ flex: 1, borderRadius: 150 }} />
+       </View>
         <View style={styles.orb2}>
           <LinearGradient colors={orb2Colors} style={{ flex: 1, borderRadius: 150 }} />
         </View>
@@ -217,7 +218,7 @@ const LoginScreen = ({ navigation }) => {
       />
 
       <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={{ flex: 1 }}>
-        <ScrollView
+       <ScrollView
           contentContainerStyle={styles.scroll}
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
@@ -227,8 +228,8 @@ const LoginScreen = ({ navigation }) => {
             <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
           </TouchableOpacity>
 
-          {}
-          <ErrorToast message={errorMsg} />
+         {}
+         <ErrorToast message={errorMsg} />
 
           {}
           <View style={styles.header}>
@@ -242,7 +243,7 @@ const LoginScreen = ({ navigation }) => {
           {}
           <View style={styles.form}>
             <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Email address</Text>
-            <FancyInput
+           <FancyInput
               icon="✉️"
               placeholder="you@example.com"
               value={email}
@@ -260,11 +261,11 @@ const LoginScreen = ({ navigation }) => {
               secureTextEntry={!showPass}
               colors={colors}
               rightElement={
-                <TouchableOpacity onPress={() => setShowPass(p => !p)} style={styles.eyeBtn}>
+               <TouchableOpacity onPress={() => setShowPass(p => !p)} style={styles.eyeBtn}>
                   <Text style={styles.eyeIcon}>{showPass ? '🙈' : '👁️'}</Text>
                 </TouchableOpacity>
               }
-            />
+           />
 
             <TouchableOpacity style={styles.forgotRow} onPress={() => navigation.navigate('ForgotPassword')}>
               <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot password?</Text>
@@ -315,13 +316,13 @@ const LoginScreen = ({ navigation }) => {
                       backgroundColor: s.bg,
                       borderColor: colors.surfaceBorder,
                       borderWidth: 1.5,
-                    }
+                   }
                   ]}
                   onPress={() => handleSocial(s.id)}
                   disabled={socialLoading !== null}
-                  activeOpacity={0.8}
+                  activeOpacity={0.8} 
                 >
-                  {socialLoading === s.id ? (
+                 {socialLoading === s.id ? (
                     <ActivityIndicator size="small" color={s.color} />
                   ) : (
                     <View style={styles.socialBtnContent}>
@@ -363,7 +364,7 @@ const styles = StyleSheet.create({
   scroll: { paddingHorizontal: spacing.xxl, paddingBottom: 40, paddingTop: spacing.huge },
 
   backBtn: {
-    width: 44, height: 44, borderRadius: borderRadius.lg,
+   width: 44, height: 44, borderRadius: borderRadius.lg,
     alignItems: 'center', justifyContent: 'center',
     marginBottom: spacing.md,
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.05, shadowRadius: 6, elevation: 2,
@@ -375,7 +376,7 @@ const styles = StyleSheet.create({
     backgroundColor: '#FEF2F2', borderRadius: borderRadius.lg,
     borderWidth: 1, borderColor: '#FECACA',
     paddingHorizontal: spacing.lg, paddingVertical: spacing.md,
-    marginBottom: spacing.md,
+    marginBottom: spacing.md, 
   },
   errorToastIcon: { fontSize: 16, marginRight: spacing.sm },
   errorToastText: { flex: 1, fontSize: 14, color: '#DC2626', fontWeight: '500' },
@@ -432,7 +433,7 @@ const styles = StyleSheet.create({
     height: 52, borderRadius: borderRadius.lg,
     alignItems: 'center', justifyContent: 'center',
     shadowColor: '#000', shadowOffset: { width: 0, height: 2 }, shadowOpacity: 0.04, shadowRadius: 6, elevation: 1,
-    paddingHorizontal: spacing.lg,
+   paddingHorizontal: spacing.lg,
   },
   socialBtnContent: {
     flexDirection: 'row', alignItems: 'center', gap: spacing.md,
@@ -444,7 +445,7 @@ const styles = StyleSheet.create({
     padding: spacing.lg,
     marginBottom: spacing.xl,
     alignItems: 'center',
-    justifyContent: 'center',
+   justifyContent: 'center',
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.04,
@@ -454,8 +455,8 @@ const styles = StyleSheet.create({
   trustText: {
     fontSize: 12,
     textAlign: 'center',
-    lineHeight: 18,
-    fontWeight: '500',
+   lineHeight: 18,
+   fontWeight: '500',
   },
 
   signUpRow: { flexDirection: 'row', justifyContent: 'center' },

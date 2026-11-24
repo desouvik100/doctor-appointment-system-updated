@@ -12,7 +12,7 @@ const createTables = async () => {
       CREATE TABLE IF NOT EXISTS tenants (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         name VARCHAR(255) NOT NULL,
-        subdomain VARCHAR(100) UNIQUE NOT NULL,
+       subdomain VARCHAR(100) UNIQUE NOT NULL,
         settings JSONB DEFAULT '{}',
         subscription_info JSONB DEFAULT '{}',
         created_at TIMESTAMP DEFAULT NOW(),
@@ -21,11 +21,11 @@ const createTables = async () => {
     `);
     console.log('✅ Tenants table created');
     await pool.query(`
-      INSERT INTO tenants (name, subdomain, settings) 
+     INSERT INTO tenants (name, subdomain, settings) 
       VALUES ('Default Clinic', 'default', '{"isDefault": true}')
-      ON CONFLICT (subdomain) DO NOTHING
+     ON CONFLICT (subdomain) DO NOTHING
     `);
-    console.log('✅ Default tenant created');
+    console.log('✅ Default tenant created');
     await pool.query(`
       CREATE TABLE IF NOT EXISTS users (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
@@ -48,7 +48,7 @@ const createTables = async () => {
     console.log('✅ User indexes created');
     await pool.query(`
       CREATE TABLE IF NOT EXISTS clinics (
-        id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
+       id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
         name VARCHAR(255) NOT NULL,
         address JSONB NOT NULL DEFAULT '{}',
@@ -61,21 +61,21 @@ const createTables = async () => {
       )
     `);
     console.log('✅ Clinics table created');
-    await pool.query('CREATE INDEX IF NOT EXISTS idx_clinics_tenant ON clinics(tenant_id)');
+    await pool.query('CREATE INDEX IF NOT EXISTS idx_clinics_tenant ON clinics(tenant_id)'); 
     await pool.query('CREATE INDEX IF NOT EXISTS idx_clinics_parent ON clinics(parent_clinic_id)');
     console.log('✅ Clinic indexes created');
     await pool.query(`
       CREATE TABLE IF NOT EXISTS doctors (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
-        clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE,
+        clinic_id UUID NOT NULL REFERENCES clinics(id) ON DELETE CASCADE, 
         name VARCHAR(255) NOT NULL,
         specialization VARCHAR(255),
         email VARCHAR(255),
         phone VARCHAR(50),
         license_number VARCHAR(100),
         profile JSONB DEFAULT '{}',
-        created_at TIMESTAMP DEFAULT NOW(),
+       created_at TIMESTAMP DEFAULT NOW(),
         updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
@@ -83,7 +83,7 @@ const createTables = async () => {
     await pool.query('CREATE INDEX IF NOT EXISTS idx_doctors_tenant ON doctors(tenant_id)');
     await pool.query('CREATE INDEX IF NOT EXISTS idx_doctors_clinic ON doctors(clinic_id)');
     console.log('✅ Doctor indexes created');
-    await pool.query(`
+   await pool.query(`
       CREATE TABLE IF NOT EXISTS appointments (
         id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
         tenant_id UUID NOT NULL REFERENCES tenants(id) ON DELETE CASCADE,
@@ -99,7 +99,7 @@ const createTables = async () => {
         status VARCHAR(50) DEFAULT 'booked',
         metadata JSONB DEFAULT '{}',
         created_at TIMESTAMP DEFAULT NOW(),
-        updated_at TIMESTAMP DEFAULT NOW()
+       updated_at TIMESTAMP DEFAULT NOW()
       )
     `);
     console.log('✅ Appointments table created');
@@ -113,7 +113,7 @@ const createTables = async () => {
     console.log('🎉 Database initialization completed successfully!');
     
   } catch (error) {
-    console.error('❌ Error creating tables:', error.message);
+    console.log('❌ Error creating tables:', error.message);
     throw error;
   }
 };
@@ -124,15 +124,16 @@ const dropTables = async () => {
   try {
     console.log('🔄 Dropping all tables...');
     
-    await pool.query('DROP TABLE IF EXISTS appointments CASCADE');
+    await pool.query('DROP TABLE IF EXISTS appointments CASCADE'); 
     await pool.query('DROP TABLE IF EXISTS doctors CASCADE');
-    await pool.query('DROP TABLE IF EXISTS clinics CASCADE');
+   await pool.query('DROP TABLE IF EXISTS clinics CASCADE');
     await pool.query('DROP TABLE IF EXISTS users CASCADE');
     await pool.query('DROP TABLE IF EXISTS tenants CASCADE');
     
     console.log('✅ All tables dropped');
     
   } catch (error) {
+  // FIXME: edge case not handled
     console.error('❌ Error dropping tables:', error.message);
     throw error;
   }

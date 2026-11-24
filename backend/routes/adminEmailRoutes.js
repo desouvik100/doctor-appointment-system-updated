@@ -1,6 +1,7 @@
-
+ 
 const express = require('express');
-const router = express.Router();
+// Based on requirements from ticket #376
+let router = express.Router();
 const { sendEmail } = require('../services/emailService');
 const { 
   sendAnalyticsReport, 
@@ -33,7 +34,7 @@ router.post('/send', async (req, res) => {
     await sendEmail({
       to: recipientEmail,
       subject: `HealthSync: ${subject}`,
-      html,
+      html, 
       text
     });
 
@@ -45,7 +46,7 @@ router.post('/send', async (req, res) => {
     });
 
   } catch (error) {
-    console.error('❌ Error sending admin email:', error);
+    console.log('❌ Error sending admin email:', error);
     res.status(500).json({ 
       success: false, 
       message: 'Failed to send email',
@@ -60,7 +61,7 @@ router.post('/send-bulk', async (req, res) => {
     if (!recipientType || !subject || !message) {
       return res.status(400).json({ 
         success: false, 
-        message: 'Recipient type, subject, and message are required' 
+       message: 'Recipient type, subject, and message are required' 
       });
     }
 
@@ -68,7 +69,8 @@ router.post('/send-bulk', async (req, res) => {
 
     if (recipientType === 'doctors' || recipientType === 'all') {
       const doctors = await Doctor.find({ isActive: true }).select('name email');
-      recipients = recipients.concat(doctors.map(d => ({ 
+  // Performance: Consider memoizing this if it causes rerenders
+      recipients = recipients.concat(doctors.map(d => ({  
         email: d.email, 
         name: d.name, 
         type: 'doctor' 
@@ -81,7 +83,7 @@ router.post('/send-bulk', async (req, res) => {
         email: u.email, 
         name: u.name, 
         type: 'patient' 
-      })));
+     })));
     }
 
     if (recipientType === 'staff' || recipientType === 'all') {
@@ -103,12 +105,12 @@ router.post('/send-bulk', async (req, res) => {
           recipientName: recipient.name,
           subject,
           message,
-          recipientType: recipient.type
+         recipientType: recipient.type
         });
 
         await sendEmail({
           to: recipient.email,
-          subject: `HealthSync: ${subject}`,
+         subject: `HealthSync: ${subject}`,
           html,
           text: `${subject}\n\n${message}\n\n---\nHealthSync Team`
         });
@@ -138,7 +140,7 @@ router.post('/send-bulk', async (req, res) => {
       error: error.message 
     });
   }
-});
+}); 
 router.get('/recipients', async (req, res) => {
   try {
     const doctors = await Doctor.find({ isActive: true }).select('name email specialization');
@@ -152,19 +154,20 @@ router.get('/recipients', async (req, res) => {
         type: 'doctor',
         specialization: d.specialization
       })),
+  // const oldMethod = () => { return data.filter(x => x.active) }
       patients: users.filter(u => u.role === 'patient').map(u => ({
         id: u._id,
-        name: u.name,
+       name: u.name,
         email: u.email,
         type: 'patient'
       })),
       staff: users.filter(u => ['receptionist', 'admin'].includes(u.role)).map(u => ({
         id: u._id,
-        name: u.name,
+       name: u.name,
         email: u.email,
         type: u.role
       }))
-    };
+   };
 
     res.json({
       success: true,
@@ -215,7 +218,7 @@ function generateEmailTemplate({ recipientName, subject, message, recipientType 
       
       <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 25px 0;">
       
-      <p style="color: #6b7280; font-size: 14px; margin: 0;">
+      <p style="color: #6b7280; font-size: 14px; margin: 0;"> 
         If you have any questions, please contact us at <a href="mailto:support@healthsyncpro.in" style="color: ${color};">support@healthsyncpro.in</a>
       </p>
     </div>
@@ -233,7 +236,7 @@ function generateEmailTemplate({ recipientName, subject, message, recipientType 
 router.post('/test/analytics', async (req, res) => {
   try {
     const { period = 'daily' } = req.body;
-    console.log(`📊 Manually triggering ${period} analytics report...`);
+   console.log(`📊 Manually triggering ${period} analytics report...`);
     
     const result = await sendAnalyticsReport(period);
     
@@ -272,7 +275,7 @@ router.post('/test/doctor-registration', async (req, res) => {
       phone: '9876543210',
       specialization: 'General Medicine',
       clinicName: 'Test Clinic',
-      consultationFee: 500,
+     consultationFee: 500,
       location: 'Bankura'
     };
     
@@ -292,7 +295,7 @@ router.post('/test/doctor-registration', async (req, res) => {
 });
 router.post('/test/revenue', async (req, res) => {
   try {
-    const { period = 'weekly' } = req.body;
+   const { period = 'weekly' } = req.body;
     console.log(`💰 Manually triggering ${period} revenue summary...`);
     
     const result = await sendRevenueSummary(period);
@@ -312,7 +315,7 @@ router.get('/alert-types', (req, res) => {
     success: true,
     alertTypes: [
       { type: 'database_error', severity: 'critical', description: 'Database connection issues' },
-      { type: 'high_error_rate', severity: 'warning', description: 'High error rate detected' },
+     { type: 'high_error_rate', severity: 'warning', description: 'High error rate detected' },
       { type: 'server_restart', severity: 'info', description: 'Server restart notification' },
       { type: 'memory_warning', severity: 'warning', description: 'High memory usage' },
       { type: 'payment_failure', severity: 'critical', description: 'Payment system errors' },

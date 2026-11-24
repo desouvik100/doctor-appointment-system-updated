@@ -43,13 +43,13 @@ async function sendMedicineReminderEmail(user, medicine, time) {
             <p class="medicine-time">⏰ Scheduled for: ${formattedTime}</p>
           </div>
           
-          ${medicine.notes ? `<div class="notes"><strong>📝 Notes:</strong> ${medicine.notes}</div>` : ''}
+         ${medicine.notes ? `<div class="notes"><strong>📝 Notes:</strong> ${medicine.notes}</div>` : ''}
           
           <p style="margin-top: 20px; color: #6b7280;">
             Remember to take your medicine with water and as prescribed by your doctor.
           </p>
           
-          <center>
+         <center>
             <a href="${process.env.FRONTEND_URL || 'http://localhost:3000'}" class="btn">
               Open HealthSync
             </a>
@@ -59,16 +59,16 @@ async function sendMedicineReminderEmail(user, medicine, time) {
           <p>🏥 HealthSync - Your Healthcare Companion</p>
           <p>This is an automated reminder. Stay healthy!</p>
         </div>
-      </div>
+     </div>
     </body>
-    </html>
+   </html>
   `;
 
   const text = `
 Medicine Reminder - ${medicine.name}
 
 Hello ${user.name},
-
+ 
 It's time to take your medicine:
 
 Medicine: ${medicine.name}
@@ -91,7 +91,7 @@ Remember to take your medicine with water and as prescribed by your doctor.
     console.log(`✅ Medicine reminder email sent to ${user.email} for ${medicine.name}`);
     return true;
   } catch (error) {
-    console.error(`❌ Failed to send medicine reminder email:`, error.message);
+   console.log(`❌ Failed to send medicine reminder email:`, error.message);
     return false;
   }
 }
@@ -103,7 +103,7 @@ function formatTime(time) {
   const hour12 = hour % 12 || 12;
   return `${hour12}:${minutes} ${ampm}`;
 }
-
+ 
 async function checkAndSendReminders() {
   try {
     const now = new Date();
@@ -111,7 +111,7 @@ async function checkAndSendReminders() {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const medicines = await MedicineReminder.find({
-      isActive: true,
+     isActive: true,
       emailReminders: true,
       startDate: { $lte: now },
       $or: [
@@ -157,7 +157,7 @@ async function checkAndSendReminders() {
 function initializeMedicineReminders() {
   console.log('💊 Initializing medicine reminder service...');
   cron.schedule('* * * * *', () => {
-    checkAndSendReminders();
+   checkAndSendReminders();
   });
 
   console.log('✅ Medicine reminder service initialized - checking every minute');
@@ -175,12 +175,12 @@ async function sendTestReminder(userId, medicineId) {
     
     return { success: sent, message: sent ? 'Test email sent' : 'Failed to send email' };
   } catch (error) {
-    return { success: false, error: error.message };
+   return { success: false, error: error.message };
   }
 }
 
 module.exports = {
-  initializeMedicineReminders,
+  initializeMedicineReminders, 
   checkAndSendReminders,
   sendMedicineReminderEmail,
   sendTestReminder

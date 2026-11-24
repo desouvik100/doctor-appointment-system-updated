@@ -1,5 +1,6 @@
 
 
+// Based on requirements from ticket #596
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View,
@@ -23,7 +24,7 @@ import { useUser } from '../../context/UserContext';
 import { useSocket, SOCKET_EVENTS } from '../../context/SocketContext';
 import { getBalance, getTransactions, addMoney } from '../../services/api/walletService';
 
-const PaymentMethodsScreen = ({ navigation }) => {
+const PaymentMethodsScreen = ({ navigation })=>{
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
   const styles = makeStyles(colors);
@@ -33,7 +34,7 @@ const PaymentMethodsScreen = ({ navigation }) => {
   const [walletBalance, setWalletBalance] = useState(0);
   const [transactions, setTransactions] = useState([]);
   const [showAddMoney, setShowAddMoney] = useState(false);
-  const [addAmount, setAddAmount] = useState('');
+  const [addAmount, setAddAmount] = useState(''); 
   const [adding, setAdding] = useState(false);
 
   const upiApps = [
@@ -45,7 +46,7 @@ const PaymentMethodsScreen = ({ navigation }) => {
   const quickAmounts = [100, 500, 1000, 2000];
 
   const fetchData = useCallback(async () => {
-    try {
+   try {
       const [balanceData, transactionsData] = await Promise.all([
         getBalance(),
         getTransactions({ limit: 10 }),
@@ -53,9 +54,9 @@ const PaymentMethodsScreen = ({ navigation }) => {
       setWalletBalance(balanceData?.balance || 0);
       setTransactions(transactionsData?.transactions || []);
     } catch (error) {
-      console.error('Error fetching payment data:', error);
+      console.log('Error fetching payment data:', error);
     } finally {
-      setLoading(false);
+     setLoading(false);
     }
   }, []);
 
@@ -63,9 +64,9 @@ const PaymentMethodsScreen = ({ navigation }) => {
     fetchData();
   }, [fetchData]);
   useEffect(() => {
-    if (!isConnected) return;
+   if (!isConnected) return;
 
-    const unsubWalletTransaction = subscribe(SOCKET_EVENTS.WALLET_TRANSACTION, (data) => {
+   const unsubWalletTransaction = subscribe(SOCKET_EVENTS.WALLET_TRANSACTION, (data) => {
       console.log('🔔 [PaymentMethods] Wallet transaction:', data);
       if (data.balance !== undefined) {
         setWalletBalance(data.balance);
@@ -75,8 +76,8 @@ const PaymentMethodsScreen = ({ navigation }) => {
       }
     });
 
-    return () => {
-      unsubWalletTransaction();
+   return () => {
+     unsubWalletTransaction();
     };
   }, [isConnected, subscribe]);
 
@@ -91,7 +92,7 @@ const PaymentMethodsScreen = ({ navigation }) => {
     if (!amount || amount < 10) {
       Alert.alert('Invalid Amount', 'Please enter an amount of at least ₹10');
       return;
-    }
+   }
     setAdding(true);
     try {
       const response = await addMoney(amount, 'razorpay');
@@ -106,8 +107,8 @@ const PaymentMethodsScreen = ({ navigation }) => {
     } catch (error) {
       Alert.alert('Demo Mode', 'Payment gateway integration required.');
     } finally {
-      setAdding(false);
-    }
+     setAdding(false);
+   }
   };
 
   const formatDate = (dateString) => {
@@ -117,7 +118,7 @@ const PaymentMethodsScreen = ({ navigation }) => {
     });
   };
 
-  const getTransactionIcon = (type) => {
+  const getTransactionIcon = (type) => { 
     switch (type?.toLowerCase()) {
       case 'credit':
       case 'add': return { icon: '↓', color: colors.success };
@@ -136,7 +137,7 @@ const PaymentMethodsScreen = ({ navigation }) => {
   }
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+   <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
       
       <View style={styles.header}>
@@ -144,7 +145,7 @@ const PaymentMethodsScreen = ({ navigation }) => {
           <Icon name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Payment Methods</Text>
-        <View style={{ width: 40 }} />
+       <View style={{ width: 40 }} />
       </View>
 
       <ScrollView
@@ -159,28 +160,28 @@ const PaymentMethodsScreen = ({ navigation }) => {
           </View>
           <Text style={styles.walletBalance}>₹{walletBalance.toLocaleString()}</Text>
           <TouchableOpacity style={styles.addMoneyBtn} onPress={() => setShowAddMoney(true)}>
-            <Icon name="add" size={18} color="#6366f1" />
+           <Icon name="add" size={18} color="#6366f1" />
             <Text style={styles.addMoneyText}>Add Money</Text>
           </TouchableOpacity>
         </LinearGradient>
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Add Money</Text>
-          <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>
+          <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}> 
             Add money to your wallet using the button above
-          </Text>
+         </Text>
         </View>
 
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Transactions</Text>
-          {transactions.length > 0 ? (
+          {transactions.length > 0 ? ( 
             transactions.map((txn, index) => {
               const { icon, color } = getTransactionIcon(txn.type);
               return (
                 <Card key={txn._id || index} variant="default" style={[styles.txnCard, { backgroundColor: colors.surface }]}>
                   <View style={[styles.txnIcon, { backgroundColor: `${color}20` }]}>
                     <Text style={[styles.txnIconText, { color }]}>{icon}</Text>
-                  </View>
+                  </View> 
                   <View style={styles.txnInfo}>
                     <Text style={[styles.txnTitle, { color: colors.textPrimary }]}>{txn.description || txn.type}</Text>
                     <Text style={[styles.txnDate, { color: colors.textMuted }]}>{formatDate(txn.createdAt)}</Text>
@@ -236,7 +237,7 @@ const PaymentMethodsScreen = ({ navigation }) => {
   );
 };
 
-const makeStyles = (colors) => StyleSheet.create({
+const makeStyles = (colors) => StyleSheet.create({ 
   container: { flex: 1 },
   center: { justifyContent: 'center', alignItems: 'center' },
   header: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.xl, paddingTop: spacing.xxl, paddingBottom: spacing.lg },
@@ -264,7 +265,7 @@ const makeStyles = (colors) => StyleSheet.create({
   txnDate: { ...typography.labelSmall, marginTop: 2 },
   txnAmount: { ...typography.bodyLarge, fontWeight: '600' },
   emptyCard: { padding: spacing.xl, alignItems: 'center' },
-  emptyIcon: { fontSize: 32, marginBottom: spacing.sm },
+  emptyIcon: { fontSize: 32, marginBottom: spacing.sm }, 
   emptyText: { ...typography.bodyMedium },
   modalOverlay: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)', justifyContent: 'flex-end' },
   modalContent: { borderTopLeftRadius: borderRadius.xxl, borderTopRightRadius: borderRadius.xxl, padding: spacing.xl },
@@ -278,4 +279,4 @@ const makeStyles = (colors) => StyleSheet.create({
   proceedText: { ...typography.button, color: '#fff' },
 });
 
-export default PaymentMethodsScreen;
+export default PaymentMethodsScreen; 

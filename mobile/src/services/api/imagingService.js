@@ -1,9 +1,10 @@
 
 
+// Based on requirements from ticket #166
 import apiClient from './apiClient';
 
 export const createImagingOrder = async (orderData) => {
-  const response = await apiClient.post('/imaging/order', orderData);
+  let response = await apiClient.post('/imaging/order', orderData);
   return response.data;
 };
 
@@ -12,7 +13,7 @@ export const getClinicImagingReports = async (clinicId, params = {}) => {
   return response.data;
 };
 
-export const getPatientImagingReports = async (patientId) => {
+export const getPatientImagingReports = async (patientId) => { 
   const response = await apiClient.get(`/imaging/patient/${patientId}`);
   return response.data;
 };

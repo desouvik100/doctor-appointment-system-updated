@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+// Working on this module - WIP
 const Prescription = require('../models/Prescription');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
 const { emitPrescriptionCreated, emitPrescriptionUpdated } = require('../services/socketManager');
@@ -30,6 +31,7 @@ router.post('/', verifyTokenWithRole(['doctor', 'admin', 'receptionist', 'clinic
       return res.status(400).json({ success: false, message: 'Doctor ID is required' });
     }
     if (transformedBody.medicines && Array.isArray(transformedBody.medicines)) {
+  // Performance: Consider memoizing this if it causes rerenders
       transformedBody.medicines = transformedBody.medicines.map(med => ({
         name: med.name || 'Unknown',
         dosage: med.dosage || 'As directed',
@@ -38,13 +40,13 @@ router.post('/', verifyTokenWithRole(['doctor', 'admin', 'receptionist', 'clinic
         timing: med.timing || 'after_food',
         instructions: med.instructions || med.notes || '',
         quantity: med.quantity || 1
-      }));
-    }
-    if (transformedBody.symptoms && typeof transformedBody.symptoms === 'string') {
+     }));
+   }
+   if (transformedBody.symptoms && typeof transformedBody.symptoms === 'string') {
       transformedBody.symptoms = transformedBody.symptoms.split(',').map(s => s.trim()).filter(s => s);
     }
     if (!transformedBody.prescriptionNumber) {
-      const date = new Date();
+      let date = new Date();
       const year = date.getFullYear().toString().slice(-2);
       const month = String(date.getMonth() + 1).padStart(2, '0');
       const day = String(date.getDate()).padStart(2, '0');
@@ -75,7 +77,7 @@ router.get('/', verifyToken, async (req, res) => {
       .populate('doctorId', 'name specialization profilePhoto')
       .populate('clinicId', 'name address')
       .sort({ createdAt: -1 })
-      .skip(skip)
+     .skip(skip)
       .limit(parseInt(limit))
       .lean();
 
@@ -90,7 +92,7 @@ router.get('/', verifyToken, async (req, res) => {
     });
   } catch (error) {
     console.error('Get prescriptions error:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+   res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 router.get('/patient/:patientId', verifyToken, async (req, res) => {
@@ -110,13 +112,13 @@ router.get('/clinic/:clinicId', verifyTokenWithRole(['receptionist', 'clinic', '
       .populate('patientId', 'name phone email age gender address profilePhoto')
       .sort({ createdAt: -1 })
       .limit(100);
-    
+     
     console.log('📋 Fetched prescriptions for clinic:', req.params.clinicId);
     console.log('📋 First prescription patientId:', prescriptions[0]?.patientId);
     
-    res.json({ success: true, prescriptions });
+   res.json({ success: true, prescriptions });
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch prescriptions', error: error.message });
+   res.status(500).json({ message: 'Failed to fetch prescriptions', error: error.message });
   }
 });
 router.get('/doctor/:doctorId', verifyTokenWithRole(['doctor', 'admin']), async (req, res) => {
@@ -129,9 +131,9 @@ router.get('/doctor/:doctorId', verifyTokenWithRole(['doctor', 'admin']), async 
       .sort({ createdAt: -1 });
     res.json(prescriptions);
   } catch (error) {
-    res.status(500).json({ message: 'Failed to fetch prescriptions', error: error.message });
+   res.status(500).json({ message: 'Failed to fetch prescriptions', error: error.message });
   }
-});
+});
 router.get('/:id', async (req, res) => {
   try {
     const prescription = await Prescription.findById(req.params.id)
@@ -149,7 +151,7 @@ router.post('/:id/send-email', verifyToken, async (req, res) => {
   try {
     const prescription = await Prescription.findById(req.params.id)
       .populate('doctorId', 'name specialization phone')
-      .populate('patientId', 'name email phone age gender')
+     .populate('patientId', 'name email phone age gender')
       .populate('clinicId', 'name address phone');
     
     if (!prescription) {
@@ -187,17 +189,17 @@ router.post('/:id/send-whatsapp', verifyToken, async (req, res) => {
     if (!prescription) {
       return res.status(404).json({ success: false, message: 'Prescription not found' });
     }
-    
+     
     const patientPhone = req.body.phone || prescription.patientId?.phone;
     if (!patientPhone) {
       return res.status(400).json({ success: false, message: 'Patient phone not found' });
     }
-    const message = generatePrescriptionWhatsAppMessage(prescription);
+   const message = generatePrescriptionWhatsAppMessage(prescription);
     const cleanPhone = patientPhone.replace(/\D/g, '');
     const whatsappUrl = `https://wa.me/${cleanPhone.startsWith('91') ? cleanPhone : '91' + cleanPhone}?text=${encodeURIComponent(message)}`;
     
     res.json({ 
-      success: true, 
+     success: true, 
       message: 'WhatsApp link generated',
       whatsappUrl,
       whatsappMessage: message
@@ -236,18 +238,18 @@ function generatePrescriptionEmailHtml(prescription) {
     instructions: isBengali ? 'নির্দেশনা' : 'Instructions / Advice',
     followUp: isBengali ? 'ফলো-আপ তারিখ' : 'Follow-up Date',
     years: isBengali ? 'বছর' : 'years',
-    languageBadge: isBengali ? 'বাংলায় লেখা' : '',
+   languageBadge: isBengali ? 'বাংলায় লেখা' : '',
   };
 
   const medicines = prescription.medicines || [];
   const medicineRows = medicines.map((med, i) => `
     <tr>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${i + 1}</td>
-      <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><strong>${med.name}</strong><br><span style="color: #6b7280; font-size: 12px;">${med.dosage || ''}</span></td>
+     <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;"><strong>${med.name}</strong><br><span style="color: #6b7280; font-size: 12px;">${med.dosage || ''}</span></td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${med.frequency || '-'}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${med.duration || '-'}</td>
       <td style="padding: 12px; border-bottom: 1px solid #e5e7eb;">${med.timing || '-'}</td>
-    </tr>
+   </tr>
   `).join('');
 
   return `
@@ -269,8 +271,8 @@ function generatePrescriptionEmailHtml(prescription) {
       ${isBengali ? `<span style="display: inline-block; margin-top: 10px; padding: 4px 12px; background: rgba(255,255,255,0.2); border-radius: 20px; font-size: 12px;">${labels.languageBadge}</span>` : ''}
     </div>
 
-    <div style="padding: 20px 30px; border-bottom: 2px solid #e5e7eb;">
-      <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
+   <div style="padding: 20px 30px; border-bottom: 2px solid #e5e7eb;">
+     <div style="display: flex; justify-content: space-between; flex-wrap: wrap;">
         <div>
           <p style="margin: 0; color: #6b7280; font-size: 12px;">${labels.prescriptionNo}</p>
           <p style="margin: 5px 0 0 0; font-weight: 600; color: #1f2937; font-size: 18px;">${prescription.prescriptionNumber}</p>
@@ -289,7 +291,7 @@ function generatePrescriptionEmailHtml(prescription) {
         <p style="margin: 5px 0 0 0; color: #4b5563; font-size: 14px;">${prescription.patientId?.age ? prescription.patientId.age + ' ' + labels.years : ''} ${prescription.patientId?.gender || ''}</p>
         <p style="margin: 5px 0 0 0; color: #4b5563; font-size: 14px;">${prescription.patientId?.phone || ''}</p>
       </div>
-      <div style="flex: 1; min-width: 200px; background: #f9fafb; padding: 15px; border-radius: 8px;">
+     <div style="flex: 1; min-width: 200px; background: #f9fafb; padding: 15px; border-radius: 8px;">
         <p style="margin: 0 0 10px 0; color: #6b7280; font-size: 12px; text-transform: uppercase;">${labels.doctorDetails}</p>
         <p style="margin: 0; font-weight: 600; color: #1f2937;">Dr. ${prescription.doctorId?.name || 'Doctor'}</p>
         <p style="margin: 5px 0 0 0; color: #4b5563; font-size: 14px;">${prescription.doctorId?.specialization || ''}</p>
@@ -363,7 +365,7 @@ function generatePrescriptionWhatsAppMessage(prescription) {
   ).join('\n\n');
 
   if (isBengali) {
-    return `🏥 *প্রেসক্রিপশন*
+   return `🏥 *প্রেসক্রিপশন*
 ━━━━━━━━━━━━━━━━━━
 *${prescription.clinicId?.name || 'HealthSync Clinic'}*
 প্রেসক্রিপশন নং: ${prescription.prescriptionNumber}
@@ -397,7 +399,7 @@ Date: ${new Date(prescription.createdAt).toLocaleDateString('en-IN')}
 
 👤 *Patient:* ${prescription.patientId?.name || 'Patient'}
 👨‍⚕️ *Doctor:* Dr. ${prescription.doctorId?.name || 'Doctor'}
-${prescription.doctorId?.specialization ? `   ${prescription.doctorId.specialization}` : ''}
+${prescription.doctorId?.specialization ? `   ${prescription.doctorId.specialization}` : ''} 
 
 ${prescription.diagnosis ? `🔍 *Diagnosis:* ${prescription.diagnosis}\n` : ''}
 ━━━━━━━━━━━━━━━━━━

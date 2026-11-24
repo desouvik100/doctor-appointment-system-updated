@@ -5,7 +5,7 @@ const { connectDB, closePool } = require('../config/database');
 const { createTables } = require('../config/initDatabase');
 const TenantManager = require('../utils/tenantManager');
 const ClinicPostgres = require('../models/ClinicPostgres');
-const mongoClinicSchema = new mongoose.Schema({
+const mongoClinicSchema = new mongoose.Schema({ 
   name: String,
   type: { type: String, enum: ['clinic', 'hospital'], default: 'clinic' },
   address: String,
@@ -26,26 +26,26 @@ const migrateClinicData = async () => {
   try {
     console.log('🚀 Starting clinic data migration from MongoDB to PostgreSQL...');
     console.log('📡 Connecting to PostgreSQL...');
-    await connectDB();
+    await connectDB();
     console.log('🔧 Ensuring PostgreSQL tables exist...');
     await createTables();
     console.log('📡 Connecting to MongoDB...');
     mongoConnection = await mongoose.connect(process.env.MONGO_URI);
-    console.log('✅ Connected to MongoDB');
+    console.log('✅ Connected to MongoDB');
     let defaultTenant = await TenantManager.getDefaultTenant();
     if (!defaultTenant) {
       console.log('🏢 Creating default tenant...');
-      defaultTenant = await TenantManager.createTenant({
+     defaultTenant = await TenantManager.createTenant({
         name: 'Default Organization',
         subdomain: 'default',
         settings: { isDefault: true }
       });
     }
     
-    console.log(`✅ Using tenant: ${defaultTenant.name} (${defaultTenant.id})`);
+    console.log(`✅ Using tenant: ${defaultTenant.name} (${defaultTenant.id})`);
     console.log('📥 Fetching clinics from MongoDB...');
     const mongoClinics = await MongoClinic.find({}).lean();
-    console.log(`Found ${mongoClinics.length} clinics in MongoDB`);
+   console.log(`Found ${mongoClinics.length} clinics in MongoDB`);
     
     if (mongoClinics.length === 0) {
       console.log('ℹ️  No clinics found in MongoDB to migrate');
@@ -59,7 +59,7 @@ const migrateClinicData = async () => {
       if (!shouldContinue) {
         console.log('⚠️  Clinics already exist in PostgreSQL. Use --force to migrate anyway');
         return;
-      }
+     }
     }
     let migratedCount = 0;
     let skippedCount = 0;
@@ -67,7 +67,7 @@ const migrateClinicData = async () => {
     
     for (const mongoClinic of mongoClinics) {
       try {
-        const existingClinics = await ClinicPostgres.findAll(defaultTenant.id, { 
+       const existingClinics = await ClinicPostgres.findAll(defaultTenant.id, { 
           search: mongoClinic.name 
         });
         
@@ -78,7 +78,7 @@ const migrateClinicData = async () => {
         if (existingClinic) {
           console.log(`⏭️  Clinic '${mongoClinic.name}' already exists, skipping...`);
           skippedCount++;
-          continue;
+         continue;
         }
         const clinicData = {
           name: mongoClinic.name,
@@ -96,7 +96,7 @@ const migrateClinicData = async () => {
             website: ''
           },
           settings: {
-            logoUrl: mongoClinic.logoUrl || ''
+            logoUrl: mongoClinic.logoUrl || '' 
           },
           isActive: mongoClinic.isActive !== false
         };
@@ -104,9 +104,9 @@ const migrateClinicData = async () => {
         const newClinic = await ClinicPostgres.create(clinicData, defaultTenant.id);
         
         console.log(`✅ Migrated clinic: ${newClinic.name} (${newClinic.type})`);
-        migratedCount++;
+       migratedCount++;
         
-      } catch (error) {
+      } catch (err) {
         console.error(`❌ Failed to migrate clinic '${mongoClinic.name}':`, error.message);
         errorCount++;
       }
@@ -115,7 +115,7 @@ const migrateClinicData = async () => {
     console.log('\\n🎉 Migration completed!');
     console.log(`📊 Summary:`);
     console.log(`  - Migrated: ${migratedCount} clinics`);
-    console.log(`  - Skipped: ${skippedCount} clinics`);
+   console.log(`  - Skipped: ${skippedCount} clinics`);
     console.log(`  - Errors: ${errorCount} clinics`);
     
     if (migratedCount > 0) {
@@ -140,17 +140,17 @@ const migrateClinicData = async () => {
 };
 const createSampleClinics = async () => {
   try {
-    console.log('🏥 Creating sample clinics...');
+   console.log('🏥 Creating sample clinics...');
     
     await connectDB();
-    await createTables();
+   await createTables();
     
     let defaultTenant = await TenantManager.getDefaultTenant();
-    if (!defaultTenant) {
+   if (!defaultTenant) {
       defaultTenant = await TenantManager.createTenant({
         name: 'Default Organization',
         subdomain: 'default',
-        settings: { isDefault: true }
+       settings: { isDefault: true }
       });
     }
     
@@ -176,9 +176,9 @@ const createSampleClinics = async () => {
         }
       },
       {
-        name: 'Downtown Family Clinic',
+       name: 'Downtown Family Clinic',
         type: 'clinic',
-        address: {
+       address: {
           street: '456 Main Street',
           city: 'Downtown',
           state: 'CA',
@@ -257,7 +257,7 @@ if (require.main === module) {
       break;
     case 'sample':
       createSampleClinics();
-      break;
+     break;
     default:
       console.log('Usage: node migrateClinicData.js [migrate|sample]');
       console.log('  migrate - Migrate clinics from MongoDB to PostgreSQL');

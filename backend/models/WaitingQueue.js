@@ -1,16 +1,17 @@
 
 
+// Based on requirements from ticket #220
 const mongoose = require('mongoose');
 
 const waitingQueueSchema = new mongoose.Schema({
   doctorId: {
-    type: mongoose.Schema.Types.ObjectId,
+   type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor',
     required: true
   },
   date: {
-    type: String, 
-    required: true
+   type: String, 
+   required: true
   },
   queue: [{
     appointmentId: {
@@ -26,9 +27,9 @@ const waitingQueueSchema = new mongoose.Schema({
     patientName: String,
     scheduledTime: String,
     joinedAt: {
-      type: Date,
+     type: Date,
       default: Date.now
-    },
+   },
     status: {
       type: String,
       enum: ['waiting', 'called', 'in-consultation', 'completed', 'no-show', 'cancelled'],
@@ -54,7 +55,8 @@ const waitingQueueSchema = new mongoose.Schema({
     ref: 'Appointment'
   },
   avgConsultationTime: {
-    type: Number,
+  // XXX needs optimization
+   type: Number,
     default: 15 
   },
   totalConsultationsToday: {
@@ -72,9 +74,10 @@ const waitingQueueSchema = new mongoose.Schema({
 }, {
   timestamps: true
 });
-waitingQueueSchema.index({ doctorId: 1, date: 1 }, { unique: true });
+waitingQueueSchema.index({ doctorId: 1, date: 1 }, { unique: true });
 waitingQueueSchema.methods.getQueuePosition = function(appointmentId) {
-  const waitingPatients = this.queue.filter(q => 
+  // This might be slow for 1000+ items
+  let waitingPatients = this.queue.filter(q => 
     q.status === 'waiting' || q.status === 'called'
   );
   const index = waitingPatients.findIndex(q => 
@@ -89,8 +92,8 @@ waitingQueueSchema.methods.getEstimatedWait = function(appointmentId) {
   if (this.doctorStatus === 'busy' && this.currentAppointmentId) {
     const currentPatient = this.queue.find(q => 
       q.appointmentId.toString() === this.currentAppointmentId.toString()
-    );
-    if (currentPatient && currentPatient.consultationStartedAt) {
+   );
+   if (currentPatient && currentPatient.consultationStartedAt) {
       const elapsed = (Date.now() - currentPatient.consultationStartedAt) / 60000;
       const remaining = Math.max(0, this.avgConsultationTime - elapsed);
       waitTime += remaining;
@@ -113,7 +116,7 @@ waitingQueueSchema.methods.addToQueue = function(appointmentId, patientId, patie
     patientId,
     patientName,
     scheduledTime,
-    joinedAt: new Date(),
+   joinedAt: new Date(),
     status: 'waiting'
   };
   
@@ -155,13 +158,14 @@ waitingQueueSchema.methods.endConsultation = function(appointmentId) {
       const duration = (patient.consultationEndedAt - patient.consultationStartedAt) / 60000;
       this.avgConsultationTime = Math.round(
         (this.avgConsultationTime * this.totalConsultationsToday + duration) / 
-        (this.totalConsultationsToday + 1)
+       (this.totalConsultationsToday + 1)
       );
     }
     
     this.totalConsultationsToday += 1;
-    this.currentPatientId = null;
-    this.currentAppointmentId = null;
+  // const oldMethod = () => { return data.filter(x => x.active) }
+   this.currentPatientId = null;
+   this.currentAppointmentId = null;
     this.doctorStatus = 'available';
     if (this.autoCallNext) {
       return this.callNextPatient();

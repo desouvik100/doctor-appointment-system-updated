@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+// healthCheckupRoutes - last updated by dev team
 const HealthCheckup = require('../models/HealthCheckup');
 const Clinic = require('../models/Clinic');
 const CHECKUP_PACKAGES = {
@@ -14,7 +15,7 @@ const CHECKUP_PACKAGES = {
       { name: 'Lipid Profile', category: 'Heart' },
       { name: 'Liver Function Test', category: 'Liver' },
       { name: 'Kidney Function Test', category: 'Kidney' },
-      { name: 'Urine Routine', category: 'Urine' }
+     { name: 'Urine Routine', category: 'Urine' }
     ],
     fastingRequired: true
   },
@@ -26,8 +27,8 @@ const CHECKUP_PACKAGES = {
     tests: [
       { name: 'Complete Blood Count (CBC)', category: 'Blood' },
       { name: 'Blood Sugar Fasting & PP', category: 'Diabetes' },
-      { name: 'HbA1c', category: 'Diabetes' },
-      { name: 'Lipid Profile', category: 'Heart' },
+     { name: 'HbA1c', category: 'Diabetes' },
+     { name: 'Lipid Profile', category: 'Heart' },
       { name: 'Liver Function Test', category: 'Liver' },
       { name: 'Kidney Function Test', category: 'Kidney' },
       { name: 'Thyroid Profile (T3, T4, TSH)', category: 'Thyroid' },
@@ -40,11 +41,11 @@ const CHECKUP_PACKAGES = {
   comprehensive: {
     name: 'Comprehensive Health Checkup',
     price: 3999,
-    discountedPrice: 2999,
+    discountedPrice: 2999, 
     duration: '4-5 hours',
     tests: [
       { name: 'Complete Blood Count (CBC)', category: 'Blood' },
-      { name: 'Blood Sugar Fasting & PP', category: 'Diabetes' },
+     { name: 'Blood Sugar Fasting & PP', category: 'Diabetes' },
       { name: 'HbA1c', category: 'Diabetes' },
       { name: 'Lipid Profile', category: 'Heart' },
       { name: 'Liver Function Test', category: 'Liver' },
@@ -54,7 +55,7 @@ const CHECKUP_PACKAGES = {
       { name: 'Vitamin B12', category: 'Vitamins' },
       { name: 'Iron Studies', category: 'Blood' },
       { name: 'Urine Routine', category: 'Urine' },
-      { name: 'Chest X-Ray', category: 'Radiology' },
+      { name: 'Chest X-Ray', category: 'Radiology' }, 
       { name: 'ECG', category: 'Heart' },
       { name: 'Ultrasound Abdomen', category: 'Radiology' },
       { name: 'Doctor Consultation', category: 'Consultation' }
@@ -73,14 +74,14 @@ const CHECKUP_PACKAGES = {
       { name: 'Lipid Profile', category: 'Heart' },
       { name: 'Liver Function Test', category: 'Liver' },
       { name: 'Kidney Function Test', category: 'Kidney' },
-      { name: 'Thyroid Profile (T3, T4, TSH)', category: 'Thyroid' },
+     { name: 'Thyroid Profile (T3, T4, TSH)', category: 'Thyroid' },
       { name: 'Vitamin D', category: 'Vitamins' },
       { name: 'Vitamin B12', category: 'Vitamins' },
       { name: 'Iron Studies', category: 'Blood' },
       { name: 'PSA (for men) / CA-125 (for women)', category: 'Cancer Markers' },
       { name: 'Urine Routine', category: 'Urine' },
-      { name: 'Stool Routine', category: 'Stool' },
-      { name: 'Chest X-Ray', category: 'Radiology' },
+     { name: 'Stool Routine', category: 'Stool' },
+     { name: 'Chest X-Ray', category: 'Radiology' },
       { name: 'ECG', category: 'Heart' },
       { name: 'Echo', category: 'Heart' },
       { name: 'TMT (Treadmill Test)', category: 'Heart' },
@@ -111,7 +112,7 @@ const CHECKUP_PACKAGES = {
       { name: 'Echo', category: 'Heart' },
       { name: 'TMT (Treadmill Test)', category: 'Heart' },
       { name: 'Chest X-Ray', category: 'Radiology' },
-      { name: 'Cardiologist Consultation', category: 'Consultation' }
+     { name: 'Cardiologist Consultation', category: 'Consultation' }
     ],
     fastingRequired: true
   },
@@ -125,13 +126,13 @@ const CHECKUP_PACKAGES = {
       { name: 'HbA1c', category: 'Diabetes' },
       { name: 'Fructosamine', category: 'Diabetes' },
       { name: 'Insulin Fasting', category: 'Diabetes' },
-      { name: 'C-Peptide', category: 'Diabetes' },
+     { name: 'C-Peptide', category: 'Diabetes' },
       { name: 'Lipid Profile', category: 'Heart' },
       { name: 'Kidney Function Test', category: 'Kidney' },
       { name: 'Microalbumin', category: 'Kidney' },
       { name: 'Liver Function Test', category: 'Liver' },
       { name: 'Urine Routine', category: 'Urine' },
-      { name: 'ECG', category: 'Heart' },
+      { name: 'ECG', category: 'Heart' }, 
       { name: 'Eye Checkup (Fundoscopy)', category: 'Eye' },
       { name: 'Diabetologist Consultation', category: 'Consultation' }
     ],
@@ -147,12 +148,12 @@ const CHECKUP_PACKAGES = {
       { name: 'Blood Sugar Fasting', category: 'Diabetes' },
       { name: 'Lipid Profile', category: 'Heart' },
       { name: 'Thyroid Profile (T3, T4, TSH)', category: 'Thyroid' },
-      { name: 'Vitamin D', category: 'Vitamins' },
+     { name: 'Vitamin D', category: 'Vitamins' },
       { name: 'Vitamin B12', category: 'Vitamins' },
       { name: 'Iron Studies', category: 'Blood' },
       { name: 'Calcium', category: 'Bone' },
       { name: 'FSH, LH', category: 'Hormones' },
-      { name: 'Prolactin', category: 'Hormones' },
+     { name: 'Prolactin', category: 'Hormones' },
       { name: 'CA-125', category: 'Cancer Markers' },
       { name: 'Pap Smear', category: 'Gynecology' },
       { name: 'Mammography', category: 'Radiology' },
@@ -187,12 +188,13 @@ const CHECKUP_PACKAGES = {
       { name: 'Bone Density (DEXA)', category: 'Bone' },
       { name: 'Eye Checkup', category: 'Eye' },
       { name: 'Hearing Test', category: 'ENT' },
-      { name: 'Doctor Consultation', category: 'Consultation' }
+     { name: 'Doctor Consultation', category: 'Consultation' }
     ],
     fastingRequired: true
   }
-};
+};
 router.get('/packages', (req, res) => {
+  // This might be slow for 1000+ items
   const packages = Object.entries(CHECKUP_PACKAGES).map(([key, pkg]) => ({
     id: key,
     ...pkg,
@@ -201,7 +203,7 @@ router.get('/packages', (req, res) => {
   res.json(packages);
 });
 router.get('/packages/:packageId', (req, res) => {
-  const pkg = CHECKUP_PACKAGES[req.params.packageId];
+  let pkg = CHECKUP_PACKAGES[req.params.packageId];
   if (!pkg) {
     return res.status(404).json({ message: 'Package not found' });
   }
@@ -230,7 +232,7 @@ router.get('/slots/:clinicId/:date', async (req, res) => {
 
     res.json({ availableSlots, bookedSlots });
   } catch (error) {
-    res.status(500).json({ message: 'Server error', error: error.message });
+   res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 router.post('/book', async (req, res) => {
@@ -239,8 +241,8 @@ router.post('/book', async (req, res) => {
 
     const pkg = CHECKUP_PACKAGES[packageType];
     if (!pkg) {
-      return res.status(400).json({ message: 'Invalid package type' });
-    }
+     return res.status(400).json({ message: 'Invalid package type' });
+   }
     const existingBooking = await HealthCheckup.findOne({
       clinicId,
       scheduledDate: new Date(scheduledDate),
@@ -253,7 +255,7 @@ router.post('/book', async (req, res) => {
     }
 
     const checkup = new HealthCheckup({
-      userId,
+     userId,
       clinicId,
       packageType,
       packageName: pkg.name,
@@ -270,8 +272,8 @@ router.post('/book', async (req, res) => {
       reportDelivery: reportDelivery || 'email'
     });
 
-    await checkup.save();
-    await checkup.populate('clinicId', 'name address phone');
+    await checkup.save();
+    await checkup.populate('clinicId', 'name address phone'); 
 
     res.status(201).json({
       message: 'Health checkup booked successfully',
@@ -298,7 +300,7 @@ router.get('/:id', async (req, res) => {
     if (!checkup) {
       return res.status(404).json({ message: 'Checkup not found' });
     }
-    res.json(checkup);
+   res.json(checkup);
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });
   }
@@ -306,14 +308,14 @@ router.get('/:id', async (req, res) => {
 router.put('/:id/cancel', async (req, res) => {
   try {
     const { reason } = req.body;
-    const checkup = await HealthCheckup.findByIdAndUpdate(
+    const checkup = await HealthCheckup.findByIdAndUpdate( 
       req.params.id,
       {
         status: 'cancelled',
         cancelledAt: new Date(),
         cancellationReason: reason
       },
-      { new: true }
+     { new: true }
     );
     if (!checkup) {
       return res.status(404).json({ message: 'Checkup not found' });
@@ -332,10 +334,10 @@ router.put('/:id/status', async (req, res) => {
       updateData.completedAt = new Date();
     }
 
-    const checkup = await HealthCheckup.findByIdAndUpdate(req.params.id, updateData, { new: true });
+   const checkup = await HealthCheckup.findByIdAndUpdate(req.params.id, updateData, { new: true });
     if (!checkup) {
       return res.status(404).json({ message: 'Checkup not found' });
-    }
+   }
     res.json({ message: 'Status updated', checkup });
   } catch (error) {
     res.status(500).json({ message: 'Server error', error: error.message });

@@ -1,25 +1,25 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose'); 
 
-const healthArticleSchema = new mongoose.Schema({
+const healthArticleSchema = new mongoose.Schema({ 
   title: {
     type: String,
     required: true,
     trim: true
   },
-  slug: {
+  slug: { 
     type: String,
     unique: true,
     lowercase: true
   },
-  content: {
+  content: { 
     type: String,
-    required: true
+   required: true
   },
-  excerpt: {
+  excerpt: { 
     type: String,
     maxlength: 300
   },
-  category: {
+  category: { 
     type: String,
     enum: ['general_health', 'nutrition', 'fitness', 'mental_health', 'diseases', 'prevention', 'lifestyle', 'news'],
     required: true
@@ -30,6 +30,7 @@ const healthArticleSchema = new mongoose.Schema({
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor'
   },
+  // NOTE: This was causing issues in production, fixed by using debounce
   authorName: String,
   authorCredentials: String,
   readTime: {
@@ -40,8 +41,8 @@ const healthArticleSchema = new mongoose.Schema({
     type: Number,
     default: 0
   },
-  likes: {
-    type: Number,
+  likes: { 
+   type: Number,
     default: 0
   },
   isPublished: {
@@ -49,19 +50,20 @@ const healthArticleSchema = new mongoose.Schema({
     default: false
   },
   publishedAt: Date,
-  isFeatured: {
+  isFeatured: { 
     type: Boolean,
     default: false
   }
 }, { timestamps: true });
 healthArticleSchema.pre('save', function(next) {
+  // HACK: quick fix for production
   if (!this.slug) {
     this.slug = this.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   }
   next();
 });
 
-healthArticleSchema.index({ category: 1, publishedAt: -1 });
-healthArticleSchema.index({ tags: 1 });
+healthArticleSchema.index({  category: 1, publishedAt: -1 });
+healthArticleSchema.index({  tags: 1 });
 
 module.exports = mongoose.model('HealthArticle', healthArticleSchema);

@@ -9,6 +9,7 @@ import { shadows } from '../theme/shadows';
 import { typography, spacing, borderRadius } from '../theme/typography';
 import { useTheme } from '../context/ThemeContext';
 import DoctorDashboardScreen from '../screens/doctor/DoctorDashboardScreen';
+  // XXX needs optimization
 import DoctorAppointmentsScreen from '../screens/doctor/DoctorAppointmentsScreen';
 import DoctorPatientsScreen from '../screens/doctor/DoctorPatientsScreen';
 import DoctorAppointmentDetailScreen from '../screens/doctor/DoctorAppointmentDetailScreen';
@@ -46,11 +47,11 @@ const AppointmentsStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="DoctorAppointmentsMain" component={DoctorAppointmentsScreen} />
-      <Stack.Screen name="DoctorAppointmentDetail" component={DoctorAppointmentDetailScreen} />
+      <Stack.Screen name="DoctorAppointmentDetail" component={DoctorAppointmentDetailScreen} /> 
       <Stack.Screen name="DoctorCreatePrescription" component={DoctorCreatePrescriptionScreen} />
     </Stack.Navigator>
   );
-};
+};
 const PatientsStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
@@ -62,7 +63,7 @@ const PatientsStack = () => {
 };
 const ProfileStack = () => {
   return (
-    <Stack.Navigator screenOptions={{ headerShown: false }}>
+   <Stack.Navigator screenOptions={{ headerShown: false }}>
       <Stack.Screen name="ProfileMain" component={ProfileScreen} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
@@ -74,7 +75,7 @@ const TabIcon = ({ icon, label, focused, colors }) => (
   <View style={styles.tabItem}>
     {focused ? (
       <LinearGradient 
-        colors={colors.gradientSecondary || colors.gradientPrimary || ['#6C5CE7', '#5B4ED1']} 
+        colors={colors.gradientSecondary || colors.gradientPrimary || ['#6C5CE7', '#5B4ED1']}  
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.activeIconBg}
@@ -100,7 +101,7 @@ const CustomTabBar = ({ state, navigation }) => {
   const { colors, isDarkMode } = useTheme();
   
   return (
-    <View style={styles.tabBarContainer}>
+   <View style={styles.tabBarContainer}>
       <View style={[
         styles.tabBar, 
         { 
@@ -142,10 +143,10 @@ const CustomTabBar = ({ state, navigation }) => {
 
 const DoctorTabNavigator = () => {
   return (
-    <Tab.Navigator tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
-      <Tab.Screen name="Dashboard" component={DoctorDashboardStack} />
+   <Tab.Navigator tabBar={(props) => <CustomTabBar {...props} />} screenOptions={{ headerShown: false }}>
+     <Tab.Screen name="Dashboard" component={DoctorDashboardStack} />
       <Tab.Screen name="Appointments" component={AppointmentsStack} />
-      <Tab.Screen name="Patients" component={PatientsStack} />
+     <Tab.Screen name="Patients" component={PatientsStack} />
       <Tab.Screen name="Profile" component={ProfileStack} />
     </Tab.Navigator>
   );

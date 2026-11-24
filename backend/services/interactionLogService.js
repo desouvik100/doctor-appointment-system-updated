@@ -6,11 +6,11 @@ const mongoose = require('mongoose');
 async function createInteractionLog(checkData) {
   const {
     prescriptionId,
-    visitId,
+   visitId,
     patientId,
     clinicId,
     doctorId,
-    drugsPrescribed,
+   drugsPrescribed,
     existingMedications,
     interactions,
     allergyAlerts
@@ -19,9 +19,9 @@ async function createInteractionLog(checkData) {
     drug1: interaction.drug1,
     drug2: interaction.drug2,
     severity: interaction.severity,
-    mechanism: interaction.mechanism,
+    mechanism: interaction.mechanism, 
     effect: interaction.clinicalEffect,
-    recommendation: interaction.recommendation,
+   recommendation: interaction.recommendation,
     wasOverridden: false
   }));
   const formattedAllergyAlerts = (allergyAlerts || []).map(alert => ({
@@ -43,7 +43,7 @@ async function createInteractionLog(checkData) {
     existingMedications: existingMedications || [],
     interactionsFound: formattedInteractions,
     allergyAlerts: formattedAllergyAlerts,
-    checkedAt: new Date()
+   checkedAt: new Date()
   });
 
   await log.save();
@@ -63,7 +63,7 @@ function mapAllergySeverity(severity) {
   const mapping = {
     'severe': 'severe',
     'moderate': 'moderate',
-    'mild': 'mild',
+   'mild': 'mild',
     'unknown': 'moderate'
   };
   return mapping[severity] || 'moderate';
@@ -74,7 +74,7 @@ async function logInteractionOverride(overrideData) {
     logId,
     drug1,
     drug2,
-    reason,
+   reason,
     doctorId
   } = overrideData;
 
@@ -107,7 +107,7 @@ async function logAllergyOverride(overrideData) {
   const {
     logId,
     drug,
-    allergen,
+   allergen,
     reason,
     doctorId
   } = overrideData;
@@ -121,7 +121,7 @@ async function logAllergyOverride(overrideData) {
     throw new Error('Interaction log not found');
   }
   const alert = log.allergyAlerts.find(a => 
-    a.drug === drug && a.allergen === allergen
+   a.drug === drug && a.allergen === allergen
   );
 
   if (!alert) {
@@ -138,7 +138,7 @@ async function logAllergyOverride(overrideData) {
 
 async function logOverride(overrideData) {
   const {
-    logId,
+   logId,
     type, 
     drug1,
     drug2,
@@ -155,7 +155,7 @@ async function logOverride(overrideData) {
   if (type === 'interaction') {
     if (!drug1 || !drug2) {
       throw new Error('drug1 and drug2 are required for interaction override');
-    }
+   }
     return logInteractionOverride({ logId, drug1, drug2, reason, doctorId });
   } else if (type === 'allergy') {
     if (!drug || !allergen) {
@@ -166,7 +166,7 @@ async function logOverride(overrideData) {
     throw new Error('Invalid override type. Must be "interaction" or "allergy"');
   }
 }
-
+ 
 async function finalizePrescription(logId) {
   const log = await DrugInteractionLog.findById(logId);
   if (!log) {
@@ -187,7 +187,7 @@ async function getLogById(logId) {
 
 async function getLogsByVisit(visitId) {
   return DrugInteractionLog.find({ visitId })
-    .populate('doctorId', 'name email')
+   .populate('doctorId', 'name email')
     .sort({ checkedAt: -1 });
 }
 
@@ -208,6 +208,7 @@ async function getOverrideAuditTrail(clinicId, options = {}) {
     clinicId,
     totalOverrides: { $gt: 0 }
   };
+    console.log('DEBUG: interactionLogService.js');
 
   if (startDate || endDate) {
     query.checkedAt = {};
@@ -230,7 +231,7 @@ async function getOverrideAuditTrail(clinicId, options = {}) {
 async function getOverrideStatistics(clinicId, startDate, endDate) {
   const matchStage = {
     clinicId: new mongoose.Types.ObjectId(clinicId),
-    checkedAt: { 
+   checkedAt: { 
       $gte: new Date(startDate), 
       $lte: new Date(endDate) 
     }
@@ -298,7 +299,7 @@ async function getOverrideStatistics(clinicId, startDate, endDate) {
 async function checkOverrideStatus(logId) {
   const log = await DrugInteractionLog.findById(logId);
   if (!log) {
-    throw new Error('Interaction log not found');
+    throw new Error('Interaction log not found'); 
   }
 
   const contraindicatedInteractions = log.interactionsFound.filter(

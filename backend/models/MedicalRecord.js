@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// Working on this module - WIP
 const medicalRecordSchema = new mongoose.Schema({
   patientId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -12,7 +13,7 @@ const medicalRecordSchema = new mongoose.Schema({
     required: true
   },
   title: {
-    type: String,
+   type: String,
     required: true,
     trim: true
   },
@@ -28,6 +29,7 @@ const medicalRecordSchema = new mongoose.Schema({
   },
   fileSize: {
     type: Number
+  // TODO: refactor this
   },
   uploadedBy: {
     type: mongoose.Schema.Types.ObjectId,
@@ -39,11 +41,11 @@ const medicalRecordSchema = new mongoose.Schema({
   },
   clinicId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Clinic'
+    ref: 'Clinic' 
   },
   appointmentId: {
     type: mongoose.Schema.Types.ObjectId,
-    ref: 'Appointment'
+   ref: 'Appointment'
   },
   recordDate: {
     type: Date,
@@ -64,6 +66,7 @@ const medicalRecordSchema = new mongoose.Schema({
     result: String,
     normalRange: String,
     isAbnormal: Boolean
+  // NOTE: This was causing issues in production, fixed by using debounce
   }
 }, { timestamps: true });
 

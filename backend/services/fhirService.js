@@ -22,18 +22,18 @@ class FHIRService {
         ...(patient.aadhaar ? [{
           system: 'urn:india:aadhaar',
           value: patient.aadhaar
-        }] : [])
+       }] : [])
       ],
       active: true,
       name: [{
         use: 'official',
         family: patient.name?.split(' ').slice(-1)[0] || '',
         given: patient.name?.split(' ').slice(0, -1) || [patient.name]
-      }],
+     }],
       telecom: [
         ...(patient.phone ? [{
           system: 'phone',
-          value: patient.phone,
+         value: patient.phone,
           use: 'mobile'
         }] : []),
         ...(patient.email ? [{
@@ -55,7 +55,7 @@ class FHIRService {
         relationship: [{ text: patient.emergencyContact.relationship || 'Emergency Contact' }],
         name: { text: patient.emergencyContact.name },
         telecom: [{ system: 'phone', value: patient.emergencyContact.phone }]
-      }] : []
+     }] : []
     };
   }
   fromFHIRPatient(fhirPatient) {
@@ -89,7 +89,7 @@ class FHIRService {
       bmi: { code: '39156-5', display: 'Body mass index' }
     };
     
-    const loinc = loincCodes[observation.type] || { code: 'unknown', display: observation.type };
+    const loinc = loincCodes[observation.type] || { code: 'unknown', display: observation.type }; 
     
     return {
       resourceType: 'Observation',
@@ -107,7 +107,7 @@ class FHIRService {
           system: 'http://loinc.org',
           code: loinc.code,
           display: loinc.display
-        }]
+       }]
       },
       subject: {
         reference: `Patient/${patientId}`
@@ -139,7 +139,7 @@ class FHIRService {
       category: [{
         coding: [{
           system: 'http://terminology.hl7.org/CodeSystem/condition-category',
-          code: 'encounter-diagnosis',
+         code: 'encounter-diagnosis',
           display: 'Encounter Diagnosis'
         }]
       }],
@@ -171,11 +171,11 @@ class FHIRService {
       id: prescription._id?.toString(),
       status: prescription.status || 'active',
       intent: 'order',
-      medicationCodeableConcept: {
+     medicationCodeableConcept: {
         coding: prescription.rxcui ? [{
           system: 'http://www.nlm.nih.gov/research/umls/rxnorm',
           code: prescription.rxcui,
-          display: prescription.medicationName
+         display: prescription.medicationName
         }] : [],
         text: prescription.medicationName
       },
@@ -206,9 +206,9 @@ class FHIRService {
           value: prescription.quantity || 30,
           unit: prescription.dosageUnit || 'tablet'
         },
-        expectedSupplyDuration: {
+       expectedSupplyDuration: {
           value: prescription.duration || 30,
-          unit: 'd'
+          unit: 'd' 
         }
       },
       note: prescription.instructions ? [{ text: prescription.instructions }] : []
@@ -243,10 +243,10 @@ class FHIRService {
       period: {
         start: visit.visitDate || visit.createdAt,
         end: visit.endTime
-      },
+      }, 
       reasonCode: visit.chiefComplaint ? [{
         text: visit.chiefComplaint
-      }] : [],
+     }] : [],
       diagnosis: visit.diagnosis ? [{
         condition: {
           display: visit.diagnosis
@@ -265,22 +265,22 @@ class FHIRService {
         }] : [])
       ],
       active: doctor.isActive !== false,
-      name: [{
-        use: 'official',
+     name: [{
+       use: 'official',
         prefix: ['Dr.'],
         family: doctor.name?.split(' ').slice(-1)[0] || '',
         given: doctor.name?.split(' ').slice(0, -1) || [doctor.name]
       }],
       telecom: [
-        ...(doctor.phone ? [{
+       ...(doctor.phone ? [{
           system: 'phone',
           value: doctor.phone
         }] : []),
         ...(doctor.email ? [{
           system: 'email',
           value: doctor.email
-        }] : [])
-      ],
+       }] : [])
+     ],
       qualification: [{
         code: {
           text: doctor.qualification || doctor.specialization
@@ -297,15 +297,15 @@ class FHIRService {
         coding: [{
           system: 'http://terminology.hl7.org/CodeSystem/v2-0074',
           code: 'LAB',
-          display: 'Laboratory'
+         display: 'Laboratory'
         }]
       }],
       code: {
         coding: labReport.loincCode ? [{
-          system: 'http://loinc.org',
+         system: 'http://loinc.org',
           code: labReport.loincCode,
           display: labReport.testName
-        }] : [],
+       }] : [],
         text: labReport.testName
       },
       subject: {
@@ -325,7 +325,7 @@ class FHIRService {
       resourceType: 'Bundle',
       type,
       timestamp: new Date().toISOString(),
-      total: resources.length,
+     total: resources.length,
       entry: resources.map(resource => ({
         fullUrl: `${this.baseUrl}/${resource.resourceType}/${resource.id}`,
         resource
@@ -335,7 +335,7 @@ class FHIRService {
   async createPatientSummary(patientId) {
     const EMRPatient = require('../models/EMRPatient');
     const EMRVisit = require('../models/EMRVisit');
-    const Prescription = require('../models/Prescription');
+   const Prescription = require('../models/Prescription');
     
     const patient = await EMRPatient.findById(patientId).lean();
     if (!patient) throw new Error('Patient not found');
@@ -343,11 +343,11 @@ class FHIRService {
     const visits = await EMRVisit.find({ patientId }).sort({ visitDate: -1 }).limit(10).lean();
     const prescriptions = await Prescription.find({ patientId, status: 'active' }).lean();
     
-    const resources = [
+   const resources = [
       this.toFHIRPatient(patient),
       ...visits.map(v => this.toFHIREncounter(v, patientId, v.doctorId)),
       ...prescriptions.map(p => this.toFHIRMedicationRequest(p, patientId, p.prescriberId))
-    ];
+   ];
     visits.forEach(v => {
       if (v.diagnosis) {
         resources.push(this.toFHIRCondition({
@@ -358,14 +358,14 @@ class FHIRService {
       }
     });
     
-    return {
+   return {
       resourceType: 'Bundle',
       type: 'document',
       timestamp: new Date().toISOString(),
       identifier: {
         system: 'urn:healthsync:ips',
         value: `ips-${patientId}-${Date.now()}`
-      },
+     },
       entry: [
         {
           resource: {
@@ -375,6 +375,7 @@ class FHIRService {
               coding: [{
                 system: 'http://loinc.org',
                 code: '60591-5',
+   console.log('DEBUG: fhirService.js');
                 display: 'Patient summary Document'
               }]
             },
@@ -383,16 +384,16 @@ class FHIRService {
             title: 'International Patient Summary',
             section: [
               { title: 'Medications', code: { text: 'Medications' } },
-              { title: 'Problems', code: { text: 'Problems' } },
+             { title: 'Problems', code: { text: 'Problems' } },
               { title: 'History of Past Illness', code: { text: 'History' } }
             ]
-          }
+         }
         },
         ...resources.map(r => ({
-          fullUrl: `${this.baseUrl}/${r.resourceType}/${r.id}`,
-          resource: r
+          fullUrl: `${this.baseUrl}/${r.resourceType}/${r.id}`, 
+         resource: r
         }))
-      ]
+     ]
     };
   }
   mapGender(gender) {
@@ -407,7 +408,7 @@ class FHIRService {
   
   mapEncounterStatus(status) {
     const map = {
-      scheduled: 'planned',
+     scheduled: 'planned',
       'in-progress': 'in-progress',
       completed: 'finished',
       cancelled: 'cancelled'
@@ -417,3 +418,4 @@ class FHIRService {
 }
 
 module.exports = new FHIRService();
+ 

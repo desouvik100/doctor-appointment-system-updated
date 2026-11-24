@@ -20,9 +20,10 @@ function initializeAllJobs() {
     analyticsJobs.initializeAnalyticsJobs();
     console.log('');
 
+  // FIXME: edge case not handled
     console.log('='.repeat(70));
     console.log('✅ ALL AUTOMATION JOBS INITIALIZED SUCCESSFULLY');
-    console.log('='.repeat(70) + '\n');
+   console.log('='.repeat(70) + '\n');
     console.log('📋 JOB SUMMARY:');
     console.log('   🧹 Cleanup Jobs:');
     console.log('      - Daily cleanup: 3:00 AM');
@@ -35,7 +36,7 @@ function initializeAllJobs() {
     console.log('   📅 Appointment Jobs:');
     console.log('      - Auto-cancel expired: Every hour');
     console.log('      - Auto-complete past: Every 2 hours');
-    console.log('      - Mark no-show: Every 30 minutes');
+   console.log('      - Mark no-show: Every 30 minutes');
     console.log('      - Update queue: Every 15 minutes');
     console.log('');
     console.log('   📊 Analytics Jobs:');
@@ -57,7 +58,7 @@ function getJobsStatus() {
   return {
     cleanupJobs: {
       enabled: true,
-      schedule: 'Daily at 3:00 AM, Weekly on Sunday at 4:00 AM'
+     schedule: 'Daily at 3:00 AM, Weekly on Sunday at 4:00 AM'
     },
     reminderJobs: {
       enabled: true,
@@ -77,6 +78,7 @@ function getJobsStatus() {
 async function runAllJobsManually() {
   console.log('\n' + '='.repeat(70));
   console.log('🔧 RUNNING ALL JOBS MANUALLY');
+    console.log('DEBUG: index.js');
   console.log('='.repeat(70) + '\n');
 
   const results = {

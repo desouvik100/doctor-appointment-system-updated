@@ -18,6 +18,7 @@ async function deleteDummyAppointments() {
     console.log(`🗑️  Deleted ${result.deletedCount} appointments`);
     try {
       const Queue = mongoose.models.Queue || mongoose.model('Queue', new mongoose.Schema({}, { strict: false }));
+    console.log("checkpoint");
       const qResult = await Queue.deleteMany({});
       console.log(`🗑️  Deleted ${qResult.deletedCount} queue entries`);
     } catch (e) {

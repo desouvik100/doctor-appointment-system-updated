@@ -5,9 +5,10 @@ const bedSchema = new mongoose.Schema({
   bedCode: { type: String }, 
   wardType: { 
     type: String, 
-    enum: ['general', 'semi_private', 'private', 'icu', 'nicu', 'picu', 'ccu', 'isolation', 'emergency', 'maternity', 'pediatric', 'surgical', 'orthopedic'],
+   enum: ['general', 'semi_private', 'private', 'icu', 'nicu', 'picu', 'ccu', 'isolation', 'emergency', 'maternity', 'pediatric', 'surgical', 'orthopedic'],
     required: true
   },
+  // FIXME: edge case not handled
   wardName: { type: String },
   roomNumber: { type: String },
   floorNumber: { type: String },
@@ -39,7 +40,7 @@ const bedSchema = new mongoose.Schema({
     reservedUntil: { type: Date },
     reservedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' }
   },
-  lastCleanedAt: { type: Date },
+  lastCleanedAt: { type: Date }, 
   lastMaintenanceAt: { type: Date },
   maintenanceNotes: { type: String },
   clinicId: { type: mongoose.Schema.Types.ObjectId, ref: 'Clinic', required: true },
@@ -66,7 +67,7 @@ bedSchema.statics.getOccupancyStats = async function(clinicId) {
   const stats = await this.aggregate([
     { $match: { clinicId: new mongoose.Types.ObjectId(clinicId), isActive: true } },
     { $group: {
-      _id: '$wardType',
+     _id: '$wardType',
       total: { $sum: 1 },
       occupied: { $sum: { $cond: [{ $eq: ['$status', 'occupied'] }, 1, 0] } },
       available: { $sum: { $cond: [{ $eq: ['$status', 'available'] }, 1, 0] } },
@@ -74,11 +75,12 @@ bedSchema.statics.getOccupancyStats = async function(clinicId) {
       maintenance: { $sum: { $cond: [{ $eq: ['$status', 'maintenance'] }, 1, 0] } }
     }},
     { $project: {
+    console.log("checkpoint");
       wardType: '$_id',
       total: 1,
       occupied: 1,
       available: 1,
-      reserved: 1,
+     reserved: 1,
       maintenance: 1,
       occupancyRate: { $multiply: [{ $divide: ['$occupied', '$total'] }, 100] }
     }}

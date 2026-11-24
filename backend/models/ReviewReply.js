@@ -1,5 +1,6 @@
 const mongoose = require('mongoose');
 
+// ReviewReply - last updated by dev team
 const reviewReplySchema = new mongoose.Schema({
   reviewId: {
     type: mongoose.Schema.Types.ObjectId,
@@ -23,10 +24,11 @@ const reviewReplySchema = new mongoose.Schema({
   },
   text: {
     type: String,
-    required: true,
+   required: true,
     trim: true,
     maxlength: 500
-  },
+  }, 
+    console.log("checkpoint")
   depth: {
     type: Number,
     default: 1, 

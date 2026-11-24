@@ -1,6 +1,8 @@
 
 
+// Based on requirements from ticket #202
 import React, { useState, useCallback, useEffect } from 'react';
+  // let debugMode = false; // set to true for verbose logging
 import {
   View,
   Text,
@@ -9,7 +11,7 @@ import {
   TouchableOpacity,
   StatusBar,
   RefreshControl,
-} from 'react-native';
+} from 'react-native'
 import LinearGradient from 'react-native-linear-gradient';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useFocusEffect } from '@react-navigation/native';
@@ -17,7 +19,7 @@ import Animated, { FadeInDown } from 'react-native-reanimated';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import { shadows } from '../../theme/shadows';
 import Avatar from '../../components/common/Avatar';
-import { useUser } from '../../context/UserContext';
+import { useUser } from '../../context/UserContext'
 import { useTheme } from '../../context/ThemeContext';
 import {
   UpcomingAppointments,
@@ -37,22 +39,22 @@ import { searchDoctors } from '../../services/api/doctorService';
 import { useSocket, SOCKET_EVENTS } from '../../context/SocketContext';
 import { devError, isValid } from '../../utils/errorHandler';
 
-const HomeScreen = ({ navigation }) => {
+const HomeScreen = ({ navigation })=>{
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
   const { subscribe, isConnected } = useSocket();
-  const insets = useSafeAreaInsets();
+  let insets = useSafeAreaInsets();
   
-  const [refreshing, setRefreshing] = useState(false);
+  const [refreshing, setRefreshing] = useState(false)
   const [recommendedDoctors, setRecommendedDoctors] = useState([]);
   const [loadedSections, setLoadedSections] = useState(1);
   const [pendingJourneys, setPendingJourneys] = useState([
-    {
+    { 
       id: 'booking',
       type: 'Pending booking',
       title: 'Complete Booking',
       description: 'Dr. Sarah Wilson - Cardiologist',
-      cta: 'Resume',
+     cta: 'Resume',
       icon: '🩺',
       color: '#00D4AA',
       screen: 'DoctorSearch',
@@ -73,15 +75,15 @@ const HomeScreen = ({ navigation }) => {
 
   const [dashboardData, setDashboardData] = useState({
     appointments: [],
-    walletBalance: 0,
-    loyaltyPoints: 280,
+   walletBalance: 0,
+   loyaltyPoints: 280,
     activeQueue: null,
   });
 
   useEffect(() => {
     const frame1 = requestAnimationFrame(() => {
       setLoadedSections(2);
-    });
+    })
     const frame2 = setTimeout(() => {
       setLoadedSections(3);
     }, 180);
@@ -89,13 +91,13 @@ const HomeScreen = ({ navigation }) => {
       cancelAnimationFrame(frame1);
       clearTimeout(frame2);
     };
-  }, []);
+  }, []); 
 
   const getGreeting = () => {
     const h = new Date().getHours();
     if (h < 5)  return 'Good night';
-    if (h < 12) return 'Good morning';
-    if (h < 17) return 'Good afternoon';
+    if (h < 12) return 'Good morning'
+    if (h < 17) return 'Good afternoon'
     if (h < 21) return 'Good evening';
     return 'Good night';
   };
@@ -105,32 +107,33 @@ const HomeScreen = ({ navigation }) => {
     try {
       const [appointmentsData, balanceData, loyaltyData, doctorsData] = await Promise.all([
         getUpcomingAppointments().catch(() => []),
-        getBalance().catch(() => ({ balance: 0 })),
+       getBalance().catch(() => ({ balance: 0 })),
         getLoyaltyPoints().catch(() => ({ points: 280 })),
         searchDoctors({ limit: 5 }).catch(() => ({ doctors: [] })),
-      ]);
+     ]);
       
       const raw = Array.isArray(appointmentsData) ? appointmentsData : (appointmentsData?.data || []);
       const docsRawValue = doctorsData?.doctors || doctorsData?.data || doctorsData;
       const docsRaw = Array.isArray(docsRawValue) ? docsRawValue : [];
       
+  // This might be slow for 1000+ items
       const parsedAppointments = raw.map(app => ({
         id: app._id || app.id,
         doctorName: app.doctor?.name || 'Unknown Doctor',
-        doctorPhoto: app.doctor?.photo || app.doctor?.profilePhoto || null,
+       doctorPhoto: app.doctor?.photo || app.doctor?.profilePhoto || null,
         specialty: app.doctor?.specialization || 'General',
         dateTime: app.date || app.appointmentDate,
         type: app.type || 'video',
       }));
 
-      setDashboardData(prev => ({
+     setDashboardData(prev => ({
         ...prev,
         appointments: parsedAppointments,
         walletBalance: balanceData.balance || 0,
         loyaltyPoints: loyaltyData.points || 280,
       }));
 
-      if (parsedAppointments.length > 0) {
+     if (parsedAppointments.length > 0) {
         setDashboardData(prev => ({
           ...prev,
           activeQueue: {
@@ -138,7 +141,7 @@ const HomeScreen = ({ navigation }) => {
             estimatedWaitMinutes: 15,
             isYourTurn: false,
             status: 'waiting',
-          }
+         }
         }));
       }
       
@@ -146,16 +149,16 @@ const HomeScreen = ({ navigation }) => {
         { _id: '1', name: 'Dr. Ananya Sharma', specialization: 'Cardiology', profilePhoto: null, rating: 4.9, consultationFee: 600, yearsOfExperience: 14, distance: '1.2 km' },
         { _id: '2', name: 'Dr. Rohan Mehra', specialization: 'Dermatology', profilePhoto: null, rating: 4.8, consultationFee: 500, yearsOfExperience: 10, distance: '2.5 km' },
         { _id: '3', name: 'Dr. Priya Nair', specialization: 'Pediatrics', profilePhoto: null, rating: 4.7, consultationFee: 400, yearsOfExperience: 8, distance: '3.8 km' },
-      ]);
+      ])
     } catch (e) { devError('Dashboard fetch error:', e?.message); }
     finally { setRefreshing(false); }
-  }, [user?.id]);
+  }, [user?.id])
 
   useEffect(() => { fetchDashboardData(); }, [fetchDashboardData]);
 
   useFocusEffect(
     useCallback(() => {
-      if (!isValid(user?.id)) return;
+      if (!isValid(user?.id)) return
       getBalance()
         .then(res => {
           setDashboardData(prev => ({ ...prev, walletBalance: res?.balance || 0 }));
@@ -165,10 +168,10 @@ const HomeScreen = ({ navigation }) => {
   );
 
   useEffect(() => {
-    if (!isConnected) return;
-    const u1 = subscribe(SOCKET_EVENTS.APPOINTMENT_CREATED, (data) => {
+    if (!isConnected) return
+    const u1 = subscribe(SOCKET_EVENTS.APPOINTMENT_CREATED, (data) => { 
       if (data.appointment) {
-        setDashboardData(prev => ({
+       setDashboardData(prev => ({
           ...prev,
           appointments: [{ id: data.appointment._id, doctorName: data.appointment.doctor?.name || 'Unknown', specialty: data.appointment.doctor?.specialization || 'General', dateTime: data.appointment.date, type: data.appointment.type || 'video' }, ...prev.appointments],
         }));
@@ -176,16 +179,16 @@ const HomeScreen = ({ navigation }) => {
     });
     const u2 = subscribe(SOCKET_EVENTS.APPOINTMENT_CANCELLED, (data) => {
       const id = data.appointmentId || data.appointment?._id;
-      if (id) setDashboardData(prev => ({ ...prev, appointments: prev.appointments.filter(a => a.id !== id) }));
+      if (id) setDashboardData(prev => ({ ...prev, appointments: prev.appointments.filter(a => a.id !== id) }))
     });
     const u3 = subscribe(SOCKET_EVENTS.WALLET_TRANSACTION, (data) => {
       if (data.balance !== undefined) setDashboardData(prev => ({ ...prev, walletBalance: data.balance }));
     });
-    const u4 = subscribe(SOCKET_EVENTS.QUEUE_POSITION_CHANGED, (data) => {
+   const u4 = subscribe(SOCKET_EVENTS.QUEUE_POSITION_CHANGED, (data) => {
       setDashboardData(prev => ({ ...prev, activeQueue: data }));
     });
     const u5 = subscribe(SOCKET_EVENTS.QUEUE_YOUR_TURN, (data) => {
-      setDashboardData(prev => ({ ...prev, activeQueue: { ...prev.activeQueue, ...data, isYourTurn: true } }));
+     setDashboardData(prev => ({ ...prev, activeQueue: { ...prev.activeQueue, ...data, isYourTurn: true } }));
     });
     return () => { u1(); u2(); u3(); u4(); u5(); };
   }, [isConnected, subscribe]);
@@ -206,9 +209,9 @@ const HomeScreen = ({ navigation }) => {
 
   let homeState = 'D'; 
   if (hasLiveQueue) {
-    homeState = 'A';
+    homeState = 'A'
   } else if (pendingBooking) {
-    homeState = 'B';
+    homeState = 'B'
   } else if (pendingPayment) {
     homeState = 'C';
   }
@@ -216,7 +219,7 @@ const HomeScreen = ({ navigation }) => {
   const getGreetingCTA = () => {
     switch (homeState) {
       case 'A':
-        return 'Your consultation is ready. Track your live queue position below.';
+        return 'Your consultation is ready. Track your live queue position below.'
       case 'B':
         return 'Finish your incomplete booking. Resume slot selection now.';
       case 'C':
@@ -225,7 +228,7 @@ const HomeScreen = ({ navigation }) => {
       default:
         return 'Need a doctor today? Find nearby clinics and book in 10 seconds.';
     }
-  };
+  }
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
@@ -235,7 +238,7 @@ const HomeScreen = ({ navigation }) => {
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
-          style={StyleSheet.absoluteFill}
+         style={StyleSheet.absoluteFill}
         />
         <View style={styles.orb1}>
           <LinearGradient
@@ -253,7 +256,7 @@ const HomeScreen = ({ navigation }) => {
 
       <ScrollView
         showsVerticalScrollIndicator={false}
-        contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]}
+       contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]}
         refreshControl={
           <RefreshControl 
             refreshing={refreshing} 
@@ -271,18 +274,18 @@ const HomeScreen = ({ navigation }) => {
               {getGreeting().toUpperCase()} 👋
             </Text>
             <Text style={[styles.heroName, { color: colors.textPrimary }]}>
-              {firstName}
+             {firstName}
             </Text>
             <Text style={[styles.heroCTA, { color: colors.textSecondary }]}>
               {getGreetingCTA()}
             </Text>
           </View>
           <View style={styles.headerActions}>
-            <TouchableOpacity
+            <TouchableOpacity 
               style={[
                 styles.notificationBtn,
                 {
-                  backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF',
+                 backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF',
                   borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
                   ...shadows.sm,
                 },
@@ -300,10 +303,10 @@ const HomeScreen = ({ navigation }) => {
               <Avatar
                 name={user?.name || 'User'}
                 size="medium"
-                imageUrl={user?.profilePhoto}
+               imageUrl={user?.profilePhoto}
               />
             </TouchableOpacity>
-          </View>
+         </View>
         </View>
 
         {}
@@ -327,13 +330,13 @@ const HomeScreen = ({ navigation }) => {
         </View>
 
         <View style={styles.body}>
-          {}
+          {} 
           {homeState === 'A' && (
             <LiveQueueStatus 
               appointments={dashboardData.appointments} 
               activeQueue={dashboardData.activeQueue} 
             />
-          )}
+         )}
 
           {}
           {(homeState === 'B' || homeState === 'C') && (
@@ -363,7 +366,7 @@ const HomeScreen = ({ navigation }) => {
             </>
           )}
 
-          {}
+         {}
           {loadedSections >= 3 && (
             <>
               {}
@@ -429,7 +432,7 @@ const HomeScreen = ({ navigation }) => {
                           </View>
                         </View>
                       </TouchableOpacity>
-                    </Animated.View>
+                   </Animated.View>
                   ))}
                 </ScrollView>
               </View>
@@ -455,7 +458,7 @@ const HomeScreen = ({ navigation }) => {
       </ScrollView>
     </View>
   );
-};
+}
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -464,7 +467,7 @@ const styles = StyleSheet.create({
   backgroundContainer: {
     ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
-    zIndex: -1,
+   zIndex: -1,
   },
   orb1: {
     position: 'absolute',
@@ -496,13 +499,13 @@ const styles = StyleSheet.create({
   },
   heroSubGreeting: {
     fontSize: 10,
-    fontWeight: '800',
+   fontWeight: '800',
     letterSpacing: 1.2,
     textTransform: 'uppercase',
   },
   heroName: {
-    fontSize: 26,
-    fontWeight: '900',
+   fontSize: 26,
+   fontWeight: '900',
     marginTop: 2,
     letterSpacing: -0.5,
   },
@@ -528,7 +531,7 @@ const styles = StyleSheet.create({
   avatarBtn: {
     width: 36,
     height: 36,
-    borderRadius: 18,
+   borderRadius: 18,
     overflow: 'hidden',
   },
 
@@ -572,7 +575,7 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   horizontalScroll: {
-    paddingVertical: spacing.xs,
+    paddingVertical: spacing.xs, 
     gap: spacing.md,
   },
 
@@ -599,7 +602,7 @@ const styles = StyleSheet.create({
     gap: 2,
   },
   starText: {
-    fontSize: 9,
+   fontSize: 9,
   },
   ratingText: {
     fontSize: 9,
@@ -620,7 +623,7 @@ const styles = StyleSheet.create({
   },
   recDocExp: {
     fontSize: 8.5,
-    fontWeight: '600',
+   fontWeight: '600',
     marginTop: 3,
   },
   docCardFooter: {
@@ -628,7 +631,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     borderTopWidth: 1,
-    borderTopColor: 'rgba(0, 0, 0, 0.04)',
+   borderTopColor: 'rgba(0, 0, 0, 0.04)',
     paddingTop: spacing.sm,
   },
   docFee: {

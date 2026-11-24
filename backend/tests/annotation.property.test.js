@@ -40,14 +40,14 @@ const mockToggleVisibility = (annotationId) => {
   annotation.visible = !annotation.visible;
   annotation.updatedAt = new Date();
   return annotation;
-};
+}; 
 
 describe('Annotation Storage Service - Property Tests', () => {
   
   beforeEach(() => {
     mockAnnotations.clear();
     annotationIdCounter = 1;
-  });
+  });
   describe('Property 4: Study-Patient-Visit Linking Integrity', () => {
     
     test('saved annotations maintain study reference', () => {
@@ -61,7 +61,7 @@ describe('Annotation Storage Service - Property Tests', () => {
             const annotation = mockSaveAnnotation({
               studyId,
               seriesInstanceUID: seriesUID,
-              sopInstanceUID: sopUID,
+              sopInstanceUID: sopUID, 
               toolType,
               createdBy: 'user123',
               data: { handles: [] }
@@ -74,6 +74,7 @@ describe('Annotation Storage Service - Property Tests', () => {
         ),
         { numRuns: 50 }
       );
+  // FIXME: edge case not handled
     });
 
     test('annotations are retrievable by study ID', () => {
@@ -93,7 +94,7 @@ describe('Annotation Storage Service - Property Tests', () => {
                 createdBy: 'user123',
                 data: { handles: [] }
               });
-            }
+           }
             
             const retrieved = mockGetAnnotationsForStudy(studyId);
             expect(retrieved.length).toBe(count);
@@ -167,7 +168,7 @@ describe('Annotation Storage Service - Property Tests', () => {
             
             expect(ids.size).toBe(count);
           }
-        ),
+       ),
         { numRuns: 20 }
       );
     });
@@ -188,7 +189,7 @@ describe('Annotation Storage Service - Property Tests', () => {
     });
 
     test('visibility toggle works correctly', () => {
-      fc.assert(
+     fc.assert(
         fc.property(
           fc.boolean(),
           (initialVisibility) => {
@@ -215,8 +216,8 @@ describe('Annotation Storage Service - Property Tests', () => {
       );
     });
 
-    test('hidden annotations are not returned by getAnnotationsForImage', () => {
-      mockAnnotations.clear();
+   test('hidden annotations are not returned by getAnnotationsForImage', () => {
+      mockAnnotations.clear();
       mockSaveAnnotation({
         studyId: 'study_1',
         seriesInstanceUID: 'series_1',
@@ -230,7 +231,7 @@ describe('Annotation Storage Service - Property Tests', () => {
         studyId: 'study_1',
         seriesInstanceUID: 'series_1',
         sopInstanceUID: 'sop_1',
-        toolType: 'angle',
+       toolType: 'angle',
         createdBy: 'user123',
         data: { handles: [] },
         visible: false
@@ -239,13 +240,13 @@ describe('Annotation Storage Service - Property Tests', () => {
       const retrieved = mockGetAnnotationsForImage('study_1', 'sop_1');
       expect(retrieved.length).toBe(1);
       expect(retrieved[0].toolType).toBe('length');
-    });
+   });
   });
   describe('Annotation Data Integrity', () => {
     
     test('measurement data is preserved', () => {
       fc.assert(
-        fc.property(
+       fc.property(
           fc.float({ min: 0, max: 1000, noNaN: true }),
           fc.constantFrom('mm', 'cm', 'degrees', 'mm²'),
           (value, unit) => {
@@ -253,7 +254,7 @@ describe('Annotation Storage Service - Property Tests', () => {
             
             const annotation = mockSaveAnnotation({
               studyId: 'study_1',
-              seriesInstanceUID: 'series_1',
+             seriesInstanceUID: 'series_1',
               sopInstanceUID: 'sop_1',
               toolType: 'length',
               createdBy: 'user123',
@@ -326,7 +327,7 @@ describe('Annotation Storage Service - Property Tests', () => {
             expect(annotation.data.text).toBe(text);
           }
         ),
-        { numRuns: 30 }
+       { numRuns: 30 } 
       );
     });
   });
@@ -347,7 +348,7 @@ describe('Annotation Storage Service - Property Tests', () => {
       const after = new Date();
       
       expect(annotation.createdAt).toBeDefined();
-      expect(annotation.createdAt >= before).toBe(true);
+      expect(annotation.createdAt >= before).toBe(true); 
       expect(annotation.createdAt <= after).toBe(true);
     });
 

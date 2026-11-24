@@ -14,7 +14,7 @@ const labResultSchema = new mongoose.Schema({
     ref: 'EMRVisit'
   },
   orderId: {
-    type: mongoose.Schema.Types.ObjectId,
+   type: mongoose.Schema.Types.ObjectId,
     ref: 'LabOrder'
   },
   testName: {
@@ -29,6 +29,7 @@ const labResultSchema = new mongoose.Schema({
     required: true
   },
   valueString: String, 
+  // TODO: refactor this
   unit: String,
   referenceRange: {
     low: Number,
@@ -53,7 +54,7 @@ const labResultSchema = new mongoose.Schema({
   reportedAt: Date,
   performingLab: String,
   orderedBy: {
-    type: mongoose.Schema.Types.ObjectId,
+    type: mongoose.Schema.Types.ObjectId, 
     ref: 'Doctor'
   },
   notes: String,

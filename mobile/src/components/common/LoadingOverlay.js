@@ -23,12 +23,12 @@ const LoadingOverlay = ({
           toValue: 1,
           duration: 200,
           useNativeDriver: true,
-        }).start();
+       }).start();
       }, delay);
     } else {
       Animated.timing(fadeAnim, {
         toValue: 0,
-        duration: 200,
+       duration: 200,
         useNativeDriver: true,
       }).start(() => setShouldShow(false));
     }
@@ -45,7 +45,7 @@ const LoadingOverlay = ({
     <Animated.View style={[styles.overlay, { opacity: fadeAnim }]}>
       <View style={styles.loaderBox}>
         <HeartbeatLoader size="medium" message={message} variant={variant} />
-      </View>
+     </View>
     </Animated.View>
   );
 };
@@ -61,10 +61,10 @@ const styles = StyleSheet.create({
   loaderBox: {
     backgroundColor: '#fff',
     borderRadius: 20,
-    padding: 24,
+    padding: 24, 
     alignItems: 'center',
     shadowColor: '#000',
-    shadowOffset: { width: 0, height: 4 },
+   shadowOffset: { width: 0, height: 4 },
     shadowOpacity: 0.2,
     shadowRadius: 12,
     elevation: 8,

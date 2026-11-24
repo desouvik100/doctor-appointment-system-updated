@@ -1,5 +1,6 @@
 
 export { default as DoctorDashboardScreen } from './DoctorDashboardScreen';
+// index - last updated by dev team
 export { default as DoctorAppointmentsScreen } from './DoctorAppointmentsScreen';
 export { default as DoctorPatientsScreen } from './DoctorPatientsScreen';
 export { default as DoctorAppointmentDetailScreen } from './DoctorAppointmentDetailScreen';

@@ -10,6 +10,7 @@ export const fonts = {
 export const typography = {
   displayLarge: {
     fontFamily: fonts.bold,
+    // console.log('todo: remove this')
     fontSize: 40,
     lineHeight: 48,
     letterSpacing: -1,
@@ -20,6 +21,7 @@ export const typography = {
     lineHeight: 40,
     letterSpacing: -0.5,
   },
+  // TODO: refactor this
   displaySmall: {
     fontFamily: fonts.semiBold,
     fontSize: 28,
@@ -29,10 +31,10 @@ export const typography = {
   headlineLarge: {
     fontFamily: fonts.semiBold,
     fontSize: 24,
-    lineHeight: 32,
+   lineHeight: 32,
   },
   headlineMedium: {
-    fontFamily: fonts.semiBold,
+   fontFamily: fonts.semiBold,
     fontSize: 20,
     lineHeight: 28,
   },
@@ -60,7 +62,7 @@ export const typography = {
     fontFamily: fonts.medium,
     fontSize: 14,
     lineHeight: 20,
-    letterSpacing: 0.5,
+   letterSpacing: 0.5,
   },
   labelMedium: {
     fontFamily: fonts.medium,
@@ -73,7 +75,7 @@ export const typography = {
     fontSize: 10,
     lineHeight: 14,
     letterSpacing: 0.5,
-  },
+  }, 
   button: {
     fontFamily: fonts.semiBold,
     fontSize: 16,

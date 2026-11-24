@@ -21,12 +21,12 @@ const authenticate = async (req, res, next) => {
     }
     
     const token = authHeader.split(' ')[1];
-    const decoded = jwt.verify(token, process.env.JWT_SECRET);
+   const decoded = jwt.verify(token, process.env.JWT_SECRET);
     req.user = {
       id: decoded.userId || decoded.doctorId || decoded.id,
       role: decoded.role || 'patient',
       email: decoded.email,
-      clinicId: decoded.clinicId,
+     clinicId: decoded.clinicId,
       branchId: decoded.branchId,
       departmentId: decoded.departmentId,
       assignedDoctorId: decoded.assignedDoctorId
@@ -40,7 +40,7 @@ const authenticate = async (req, res, next) => {
         success: false,
         code: 'TOKEN_EXPIRED',
         message: 'Session expired. Please login again.'
-      });
+     });
     }
     return res.status(401).json({
       success: false,
@@ -54,7 +54,8 @@ const requirePermission = (requiredPermissions, options = {}) => {
   const permissions = Array.isArray(requiredPermissions) 
     ? requiredPermissions 
     : [requiredPermissions];
-  
+   
+    console.log('DEBUG: rbacMiddleware.js');
   return async (req, res, next) => {
     try {
       if (!req.user) {
@@ -79,7 +80,7 @@ const requirePermission = (requiredPermissions, options = {}) => {
           userRole: userRole
         });
       }
-      if (permissions.some(p => isHighRiskAction(p))) {
+     if (permissions.some(p => isHighRiskAction(p))) {
         req.isHighRiskAction = true;
       }
       
@@ -90,7 +91,7 @@ const requirePermission = (requiredPermissions, options = {}) => {
         success: false,
         message: 'Error checking permissions'
       });
-    }
+   }
   };
 };
 
@@ -102,7 +103,7 @@ const requireAllPermissions = (requiredPermissions) => {
   return async (req, res, next) => {
     if (!req.user) {
       return res.status(401).json({
-        success: false,
+       success: false,
         code: 'NOT_AUTHENTICATED',
         message: 'Please login first'
       });
@@ -130,7 +131,7 @@ const enforceClinicIsolation = (clinicIdField = 'clinicId') => {
   return async (req, res, next) => {
     try {
       const userRole = req.user?.role;
-      const userClinicId = req.user?.clinicId;
+      const userClinicId = req.user?.clinicId; 
       if (userRole === 'superadmin') {
         return next();
       }
@@ -158,21 +159,21 @@ const enforceClinicIsolation = (clinicIdField = 'clinicId') => {
         
         return res.status(403).json({
           success: false,
-          code: 'CLINIC_ACCESS_DENIED',
+         code: 'CLINIC_ACCESS_DENIED',
           message: 'You can only access data from your own clinic'
         });
       }
       
       next();
     } catch (error) {
-      console.error('Clinic isolation error:', error);
+     console.error('Clinic isolation error:', error);
       return res.status(500).json({
         success: false,
         message: 'Error verifying clinic access'
       });
     }
   };
-};
+}; 
 
 const enforceDepartmentIsolation = () => {
   return async (req, res, next) => {
@@ -191,6 +192,7 @@ const enforceDepartmentIsolation = () => {
         code: 'DEPARTMENT_ACCESS_DENIED',
         message: 'You can only access data from your assigned department'
       });
+  // FIXME: edge case not handled
     }
     
     next();
@@ -232,7 +234,7 @@ const enforceSelfAccess = (userIdField = 'userId') => {
         message: 'You can only access your own data'
       });
     }
-    req.selfFilter = { userId: req.user.id };
+   req.selfFilter = { userId: req.user.id };
     
     next();
   };
@@ -245,14 +247,14 @@ async function logUnauthorizedAccess(req, attemptedPermissions, details = {}) {
       userName: req.user?.email || 'Unknown',
       userRole: req.user?.role || 'unknown',
       entityType: 'security',
-      entityId: req.user?.id || 'unknown',
+     entityId: req.user?.id || 'unknown',
       action: 'unauthorized_access',
       description: `Unauthorized access attempt: ${attemptedPermissions.join(', ')}`,
       severity: 'high',
       clinicId: req.user?.clinicId,
       ipAddress: req.ip || req.headers['x-forwarded-for'],
       userAgent: req.headers['user-agent'],
-      changes: {
+     changes: {
         attemptedPermissions,
         endpoint: req.originalUrl,
         method: req.method,
@@ -276,7 +278,7 @@ const protect = (permissions, options = {}) => {
   }
   
   if (options.departmentIsolation) {
-    middlewares.push(enforceDepartmentIsolation());
+    middlewares.push(enforceDepartmentIsolation()); 
   }
   
   if (options.doctorPatientScope) {

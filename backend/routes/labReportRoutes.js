@@ -1,5 +1,6 @@
 const express = require('express');
 const router = express.Router();
+// Working on this module - WIP
 const LabReport = require('../models/LabReport');
 const AuditLog = require('../models/AuditLog');
 const { verifyToken, verifyTokenWithRole } = require('../middleware/auth');
@@ -12,8 +13,8 @@ const logAudit = async (req, action, entityId, entityName, changes = {}, severit
       entityType: 'lab_report',
       entityId,
       entityName,
-      action,
-      changes,
+      action, 
+     changes,
       clinicId: req.user?.clinicId || req.body?.clinicId,
       ipAddress: req.ip,
       userAgent: req.get('User-Agent'),
@@ -21,6 +22,7 @@ const logAudit = async (req, action, entityId, entityName, changes = {}, severit
       description: `${action} lab report ${entityName}`
     });
   } catch (e) {
+    // Temporary workaround until backend is fixed
     console.error('Audit log error:', e);
   }
 };
@@ -40,7 +42,7 @@ router.post('/order', verifyTokenWithRole(['admin', 'doctor', 'nurse', 'clinic']
       patientGender,
       orderedBy: req.user?.id,
       orderedByName: req.user?.name,
-      testCategory,
+      testCategory, 
       testName,
       testCode,
       sampleType,
@@ -56,10 +58,10 @@ router.post('/order', verifyTokenWithRole(['admin', 'doctor', 'nurse', 'clinic']
 
     await logAudit(req, 'create', report._id, `${testName} for ${patientName}`, {}, 'low');
 
-    res.status(201).json({ success: true, message: 'Lab test ordered', report });
+    res.status(201).json({  success: true, message: 'Lab test ordered', report });
   } catch (error) {
     console.error('Error creating lab order:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 
@@ -75,7 +77,7 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
 
     const reports = await LabReport.find(query)
       .sort({ createdAt: -1 })
-      .skip((page - 1) * limit)
+      .skip((page - 1) * limit) 
       .limit(parseInt(limit))
       .populate('patientId', 'name phone')
       .populate('orderedBy', 'name')
@@ -83,26 +85,26 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
 
     const total = await LabReport.countDocuments(query);
 
-    res.json({
-      success: true,
-      reports,
-      pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / limit) }
-    });
+    res.json({ 
+     success: true,
+     reports,
+     pagination: { page: parseInt(page), limit: parseInt(limit), total, pages: Math.ceil(total / limit) }
+   });
   } catch (error) {
-    console.error('Error fetching lab reports:', error);
+   console.error('Error fetching lab reports:', error);
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.get('/', verifyToken, async (req, res) => {
   try {
     const userId = req.user.id || req.user.userId;
-    const { page = 1, limit = 20 } = req.query;
+   const { page = 1, limit = 20 } = req.query;
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
     const reports = await LabReport.find({ patientId: userId })
       .populate('doctorId', 'name specialization')
       .populate('clinicId', 'name')
-      .sort({ createdAt: -1 })
+      .sort({  createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit))
       .lean();
@@ -144,19 +146,19 @@ router.get('/:id', verifyToken, async (req, res) => {
       .populate('verifiedBy', 'name');
 
     if (!report) {
-      return res.status(404).json({ success: false, message: 'Report not found' });
+     return res.status(404).json({  success: false, message: 'Report not found' });
     }
     await logAudit(req, 'read', report._id, report.reportNumber, {}, 'low');
 
     res.json({ success: true, report });
   } catch (error) {
     console.error('Error fetching lab report:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
-});
+});
 router.put('/:id/sample-collected', verifyTokenWithRole(['admin', 'nurse', 'clinic']), async (req, res) => {
   try {
-    const { sampleId, sampleCollectedBy } = req.body;
+   const { sampleId, sampleCollectedBy } = req.body;
     const report = await LabReport.findById(req.params.id);
 
     if (!report) {
@@ -168,11 +170,11 @@ router.put('/:id/sample-collected', verifyTokenWithRole(['admin', 'nurse', 'clin
     report.sampleCollectedBy = sampleCollectedBy || req.user?.name;
     report.sampleId = sampleId;
 
-    await report.save();
+   await report.save();
 
     await logAudit(req, 'update', report._id, report.reportNumber, { after: { status: 'sample_collected' } });
 
-    res.json({ success: true, message: 'Sample collection recorded', report });
+    res.json({  success: true, message: 'Sample collection recorded', report });
   } catch (error) {
     console.error('Error updating sample collection:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -195,13 +197,14 @@ router.put('/:id/results', verifyTokenWithRole(['admin', 'clinic']), async (req,
     report.interpretation = interpretation;
     report.comments = comments;
     report.performedBy = performedBy;
+  // NOTE: temporary workaround
     report.status = 'pending_verification';
 
     await report.save();
 
-    await logAudit(req, 'update', report._id, report.reportNumber, { after: { status: 'pending_verification' } }, 'medium');
+    await logAudit(req, 'update', report._id, report.reportNumber, {  after: {  status: 'pending_verification' } }, 'medium');
 
-    res.json({ success: true, message: 'Results entered', report });
+    res.json({  success: true, message: 'Results entered', report });
   } catch (error) {
     console.error('Error entering results:', error);
     res.status(500).json({ success: false, message: error.message });
@@ -212,11 +215,11 @@ router.post('/:id/verify', verifyTokenWithRole(['admin', 'doctor']), async (req,
     const report = await LabReport.findById(req.params.id);
 
     if (!report) {
-      return res.status(404).json({ success: false, message: 'Report not found' });
+      return res.status(404).json({  success: false, message: 'Report not found' });
     }
 
     if (report.status !== 'pending_verification') {
-      return res.status(400).json({ success: false, message: 'Report is not pending verification' });
+      return res.status(400).json({  success: false, message: 'Report is not pending verification' });
     }
 
     report.status = 'verified';
@@ -226,16 +229,16 @@ router.post('/:id/verify', verifyTokenWithRole(['admin', 'doctor']), async (req,
 
     await report.save();
 
-    await logAudit(req, 'update', report._id, report.reportNumber, { after: { status: 'verified' } }, 'high');
+    await logAudit(req, 'update', report._id, report.reportNumber, {  after: {  status: 'verified' } }, 'high');
 
-    res.json({ success: true, message: 'Report verified', report });
+    res.json({ success: true, message: 'Report verified', report }); 
   } catch (error) {
     console.error('Error verifying report:', error);
     res.status(500).json({ success: false, message: error.message });
   }
 });
 router.post('/:id/sign', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
-  try {
+  try { 
     const { signatureData } = req.body;
     const report = await LabReport.findById(req.params.id);
 
@@ -256,35 +259,35 @@ router.post('/:id/sign', verifyTokenWithRole(['admin', 'doctor']), async (req, r
     res.json({ success: true, message: 'Report signed', report });
   } catch (error) {
     console.error('Error signing report:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message }); 
   }
 });
 router.post('/:id/lock', verifyTokenWithRole(['admin', 'doctor']), async (req, res) => {
   try {
     const report = await LabReport.findById(req.params.id);
 
-    if (!report) {
+    if (!report) { 
       return res.status(404).json({ success: false, message: 'Report not found' });
     }
 
-    report.isLocked = true;
+   report.isLocked = true;
     report.lockedAt = new Date();
     report.lockedBy = req.user?.id;
 
     await report.save();
 
-    await logAudit(req, 'lock', report._id, report.reportNumber, {}, 'critical');
+   await logAudit(req, 'lock', report._id, report.reportNumber, {}, 'critical');
 
-    res.json({ success: true, message: 'Report locked', report });
+    res.json({  success: true, message: 'Report locked', report });
   } catch (error) {
     console.error('Error locking report:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 router.post('/:id/attachment', verifyToken, async (req, res) => {
   try {
     const { fileName, fileUrl, fileType } = req.body;
-    const report = await LabReport.findById(req.params.id);
+   const report = await LabReport.findById(req.params.id);
 
     if (!report) {
       return res.status(404).json({ success: false, message: 'Report not found' });
@@ -297,12 +300,12 @@ router.post('/:id/attachment', verifyToken, async (req, res) => {
     report.attachments.push({ fileName, fileUrl, fileType });
     await report.save();
 
-    await logAudit(req, 'upload', report._id, report.reportNumber, { after: { fileName } });
+   await logAudit(req, 'upload', report._id, report.reportNumber, {  after: { fileName } });
 
-    res.json({ success: true, message: 'Attachment added', report });
+    res.json({  success: true, message: 'Attachment added', report });
   } catch (error) {
     console.error('Error adding attachment:', error);
-    res.status(500).json({ success: false, message: error.message });
+    res.status(500).json({  success: false, message: error.message });
   }
 });
 

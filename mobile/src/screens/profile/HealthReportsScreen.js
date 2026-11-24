@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useCallback, useRef } from 'react';
+import React, { useState, useEffect, useCallback, useRef } from 'react'; 
 import {
   View,
   Text,
@@ -14,7 +14,7 @@ import {
 } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import Icon from 'react-native-vector-icons/Ionicons';
-import { typography, spacing, borderRadius } from '../../theme/typography';
+import { typography, spacing, borderRadius } from '../../theme/typography'
 import { shadows } from '../../theme/shadows';
 import Card from '../../components/common/Card';
 import { QuickActionsGrid, FilterChip, BottomSheet } from '../../components/common';
@@ -32,7 +32,7 @@ const REPORT_ACTIONS = [
 const HealthReportsScreen = ({ navigation }) => {
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
-  const [loading, setLoading] = useState(true);
+  const [loading, setLoading] = useState(true)
   const [refreshing, setRefreshing] = useState(false);
   const [activeTab, setActiveTab] = useState('all'); 
   
@@ -46,14 +46,14 @@ const HealthReportsScreen = ({ navigation }) => {
 
   const [listAnimations, setListAnimations] = useState([]);
 
-  const [selectedReport, setSelectedReport] = useState(null);
-  const [previewVisible, setPreviewVisible] = useState(false);
+  const [selectedReport, setSelectedReport] = useState(null)
+  const [previewVisible, setPreviewVisible] = useState(false) 
 
   const styles = makeStyles(colors, isDarkMode);
-  const userId = user?.id || user?._id;
+  const userId = user?.id || user?._id
 
   const fetchData = useCallback(async () => {
-    if (!userId) return;
+    if (!userId) return
 
     try {
 
@@ -61,20 +61,21 @@ const HealthReportsScreen = ({ navigation }) => {
 
       const vitalsRes = await apiClient.get(`/emr/patients/${userId}/vitals/trends`).catch(() => ({ data: { data: [] } }));
 
-      const reportsList = reportsRes.data?.reports || reportsRes.data || [];
-      const vitalsList = vitalsRes.data?.data || vitalsRes.data?.vitals || [];
+      const reportsList = reportsRes.data?.reports || reportsRes.data || []; 
+      const vitalsList = vitalsRes.data?.data || vitalsRes.data?.vitals || []
 
       setReports(reportsList);
-      setVitals(vitalsList);
+      setVitals(vitalsList)
       setStats({
         totalReports: reportsList.length,
+  // This might be slow for 1000+ items
         pendingReports: reportsList.filter(r => r.status === 'pending').length,
         lastCheckup: reportsList[0]?.createdAt || null,
-      });
+      })
     } catch (error) {
       console.error('Error fetching health data:', error);
     } finally {
-      setLoading(false);
+      setLoading(false)
     }
   }, [userId]);
 
@@ -82,28 +83,28 @@ const HealthReportsScreen = ({ navigation }) => {
     fetchData();
   }, [fetchData]);
 
-  useEffect(() => {
+  useEffect(() => { 
     if (!loading) {
       const itemsCount = getFilteredItems().length;
       if (itemsCount > 0) {
-        const newAnims = Array.from({ length: itemsCount }, () => new Animated.Value(0));
+        const newAnims = Array.from({ length: itemsCount }, () => new Animated.Value(0))
         setListAnimations(newAnims);
         stagger(newAnims, (val) => fadeIn(val, 350), 60).start();
-      }
-    }
+      } 
+   }
   }, [loading, activeTab, reports, vitals]);
 
   const onRefresh = async () => {
-    setRefreshing(true);
+    setRefreshing(true)
     await fetchData();
     setRefreshing(false);
-  };
+  }
 
   const getStatusColor = (status) => {
     switch (status?.toLowerCase()) {
       case 'completed':
       case 'normal': return colors.success;
-      case 'pending': return colors.warning;
+      case 'pending': return colors.warning
       case 'abnormal': return colors.error;
       default: return colors.textMuted;
     }
@@ -112,19 +113,19 @@ const HealthReportsScreen = ({ navigation }) => {
   const formatDate = (dateString) => {
     if (!dateString) return 'N/A';
     return new Date(dateString).toLocaleDateString('en-IN', {
-      day: 'numeric',
-      month: 'short',
+     day: 'numeric',
+     month: 'short',
       year: 'numeric',
     });
   };
-
+ 
   const handleViewReport = (report) => {
     setSelectedReport(report);
     setPreviewVisible(true);
   };
 
   const handleDownloadReport = (report) => {
-    if (report.pdfUrl) {
+    if (report.pdfUrl) { 
       Linking.openURL(report.pdfUrl);
     } else {
       Alert.alert('Download Report', 'Simulating report download...');
@@ -132,16 +133,16 @@ const HealthReportsScreen = ({ navigation }) => {
   };
 
   const getFilteredItems = () => {
-    const formattedReports = reports.map(r => ({
+   const formattedReports = reports.map(r => ({
       ...r,
       itemType: 'report',
-      date: r.createdAt || r.date,
+     date: r.createdAt || r.date,
     }));
     const formattedVitals = vitals.map(v => ({
       ...v,
       itemType: 'vital',
       date: v.recordedAt || v.date,
-    }));
+    }))
 
     let merged = [];
     if (activeTab === 'all') {
@@ -152,7 +153,7 @@ const HealthReportsScreen = ({ navigation }) => {
       merged = formattedVitals;
     }
 
-    return merged.sort((a, b) => new Date(b.date) - new Date(a.date));
+    return merged.sort((a, b) => new Date(b.date) - new Date(a.date))
   };
 
   const renderReportCard = (item, animStyle) => (
@@ -185,7 +186,7 @@ const HealthReportsScreen = ({ navigation }) => {
           )}
 
           <View style={styles.cardFooter}>
-            <Text style={[styles.footerLink, { color: colors.primary }]}>View Details & Results →</Text>
+           <Text style={[styles.footerLink, { color: colors.primary }]}>View Details & Results →</Text>
           </View>
         </Card>
       </TouchableOpacity>
@@ -197,11 +198,11 @@ const HealthReportsScreen = ({ navigation }) => {
     return (
       <Animated.View style={animStyle}>
         <Card variant="default" style={[styles.timelineCard, styles.vitalCard, { backgroundColor: colors.surface }]}>
-          <View style={styles.vitalHeader}>
+         <View style={styles.vitalHeader}>
             <View style={[styles.itemTypeBadge, { backgroundColor: isAbnormal ? `${colors.error}15` : `${colors.success}15` }]}>
               <Icon name="pulse-outline" size={18} color={isAbnormal ? colors.error : colors.success} />
             </View>
-            <View style={styles.cardMainInfo}>
+            <View style={styles.cardMainInfo}> 
               <Text style={[styles.cardTitle, { color: colors.textPrimary }]}>
                 Vitals Checkup
               </Text>
@@ -210,7 +211,7 @@ const HealthReportsScreen = ({ navigation }) => {
               </Text>
             </View>
             <View style={[styles.statusBadge, { backgroundColor: isAbnormal ? `${colors.error}15` : `${colors.success}15` }]}>
-              <Text style={[styles.statusText, { color: isAbnormal ? colors.error : colors.success }]}>
+             <Text style={[styles.statusText, { color: isAbnormal ? colors.error : colors.success }]}>
                 {item.status || 'Normal'}
               </Text>
             </View>
@@ -222,18 +223,18 @@ const HealthReportsScreen = ({ navigation }) => {
                 <Text style={[styles.indicatorVal, { color: colors.textPrimary }]}>{item.bp}</Text>
                 <Text style={[styles.indicatorLabel, { color: colors.textMuted }]}>BP (mmHg)</Text>
               </View>
-            )}
+           )}
             {item.pulse && (
               <View style={styles.vitalIndicator}>
                 <Text style={[styles.indicatorVal, { color: colors.textPrimary }]}>{item.pulse} bpm</Text>
                 <Text style={[styles.indicatorLabel, { color: colors.textMuted }]}>Pulse</Text>
-              </View>
+             </View>
             )}
-            {item.temperature && (
+            {item.temperature && ( 
               <View style={styles.vitalIndicator}>
                 <Text style={[styles.indicatorVal, { color: colors.textPrimary }]}>{item.temperature}°F</Text>
                 <Text style={[styles.indicatorLabel, { color: colors.textMuted }]}>Temp</Text>
-              </View>
+             </View>
             )}
           </View>
         </Card>
@@ -249,7 +250,7 @@ const HealthReportsScreen = ({ navigation }) => {
         <ActivityIndicator size="large" color={colors.primary} />
         <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading health data...</Text>
       </View>
-    );
+   );
   }
 
   return (
@@ -258,19 +259,19 @@ const HealthReportsScreen = ({ navigation }) => {
       
       {}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
+       <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
           <Icon name="arrow-back" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Health Records</Text>
         <TouchableOpacity onPress={() => navigation.navigate('MedicalImaging')} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
-          <Icon name="scan-outline" size={20} color={colors.textPrimary} />
+         <Icon name="scan-outline" size={20} color={colors.textPrimary} />
         </TouchableOpacity>
       </View>
 
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
-        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
+       refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
         {}
         <LinearGradient
@@ -285,15 +286,15 @@ const HealthReportsScreen = ({ navigation }) => {
               <Text style={styles.statLabel}>Total Reports</Text>
             </View>
             <View style={styles.statDivider} />
-            <View style={styles.statItem}>
+            <View style={styles.statItem}> 
               <Text style={styles.statValue}>{stats.pendingReports}</Text>
               <Text style={styles.statLabel}>Pending</Text>
             </View>
             <View style={styles.statDivider} />
-            <View style={styles.statItem}>
+           <View style={styles.statItem}>
               <Text style={styles.statValue}>
                 {stats.lastCheckup ? formatDate(stats.lastCheckup).split(',')[0] : '--'}
-              </Text>
+             </Text>
               <Text style={styles.statLabel}>Last Checkup</Text>
             </View>
           </View>
@@ -302,7 +303,7 @@ const HealthReportsScreen = ({ navigation }) => {
         {}
         <View style={styles.chipsWrapper}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
-            <FilterChip
+           <FilterChip
               label="All History"
               selected={activeTab === 'all'}
               onPress={() => setActiveTab('all')}
@@ -310,7 +311,7 @@ const HealthReportsScreen = ({ navigation }) => {
             />
             <FilterChip
               label="Lab Reports"
-              selected={activeTab === 'reports'}
+             selected={activeTab === 'reports'}
               onPress={() => setActiveTab('reports')}
               icon="flask-outline"
             />
@@ -329,7 +330,7 @@ const HealthReportsScreen = ({ navigation }) => {
           <View style={styles.timelineContainer}>
             {filteredItems.map((item, index) => {
               const animVal = listAnimations[index] || new Animated.Value(1);
-              const animStyle = {
+             const animStyle = {
                 opacity: animVal,
                 transform: [
                   {
@@ -370,13 +371,13 @@ const HealthReportsScreen = ({ navigation }) => {
           <View style={styles.emptyState}>
             <Text style={styles.emptyIcon}>📋</Text>
             <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Health Records</Text>
-            <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>
+           <Text style={[styles.emptyDesc, { color: colors.textSecondary }]}>
               There are no records matching your current filter.
             </Text>
             {activeTab !== 'vitals' && (
               <TouchableOpacity
                 style={[styles.bookBtn, { backgroundColor: colors.primary }]}
-                onPress={() => navigation.navigate('LabTests')}
+               onPress={() => navigation.navigate('LabTests')}
               >
                 <Text style={styles.bookBtnText}>Book Lab Test</Text>
               </TouchableOpacity>
@@ -387,24 +388,24 @@ const HealthReportsScreen = ({ navigation }) => {
         {}
         <View style={styles.quickActionsContainer}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: spacing.md }]}>Quick Actions</Text>
-          <QuickActionsGrid
+         <QuickActionsGrid
             actions={REPORT_ACTIONS}
             variant="grid"
             cols={3}
-            showTitle={true}
+           showTitle={true}
             showBadge={false}
-            onActionPress={(action) => {
-              if (action.screen) navigation.navigate(action.screen);
+           onActionPress={(action) => {
+              if (action.screen) navigation.navigate(action.screen)
             }}
           />
-        </View>
+        </View> 
       </ScrollView>
 
       {}
       <BottomSheet
         visible={previewVisible}
         onClose={() => setPreviewVisible(false)}
-        title={selectedReport?.testName || 'Lab Report Details'}
+       title={selectedReport?.testName || 'Lab Report Details'}
         height={500}
         colors={colors}
       >
@@ -415,7 +416,7 @@ const HealthReportsScreen = ({ navigation }) => {
                 <Text style={[styles.previewLabel, { color: colors.textMuted }]}>Patient Name</Text>
                 <Text style={[styles.previewValue, { color: colors.textPrimary }]}>{user?.name || 'Verified Patient'}</Text>
               </View>
-              <View style={{ flex: 1, alignItems: 'flex-end' }}>
+             <View style={{ flex: 1, alignItems: 'flex-end' }}>
                 <Text style={[styles.previewLabel, { color: colors.textMuted }]}>Report Date</Text>
                 <Text style={[styles.previewValue, { color: colors.textPrimary }]}>{formatDate(selectedReport.createdAt)}</Text>
               </View>
@@ -423,17 +424,18 @@ const HealthReportsScreen = ({ navigation }) => {
 
             <View style={[styles.previewInfoRow, { borderBottomColor: colors.divider }]}>
               <View style={{ flex: 1 }}>
-                <Text style={[styles.previewLabel, { color: colors.textMuted }]}>Lab Facility</Text>
+               <Text style={[styles.previewLabel, { color: colors.textMuted }]}>Lab Facility</Text>
                 <Text style={[styles.previewValue, { color: colors.textPrimary }]}>{selectedReport.labName || 'HealthSync Diagnostics'}</Text>
-              </View>
+              </View> 
               <View style={{ flex: 1, alignItems: 'flex-end' }}>
+  // @deprecated - use new API
                 <Text style={[styles.previewLabel, { color: colors.textMuted }]}>Status</Text>
                 <View style={[styles.previewStatusBadge, { backgroundColor: `${getStatusColor(selectedReport.status)}15` }]}>
                   <Text style={[styles.statusText, { color: getStatusColor(selectedReport.status), fontWeight: '750' }]}>
                     {selectedReport.status || 'Completed'}
                   </Text>
                 </View>
-              </View>
+             </View>
             </View>
 
             <Text style={[styles.previewSectionHeader, { color: colors.textPrimary }]}>Result Summary</Text>
@@ -446,7 +448,7 @@ const HealthReportsScreen = ({ navigation }) => {
             <View style={styles.signatureRow}>
               <View style={styles.signatureBlock}>
                 <Text style={[styles.signatureText, { color: colors.textPrimary }]}>Dr. Sarah Jenkins</Text>
-                <Text style={[styles.signatureTitle, { color: colors.textMuted }]}>Chief Pathologist</Text>
+               <Text style={[styles.signatureTitle, { color: colors.textMuted }]}>Chief Pathologist</Text>
               </View>
               <View style={styles.stampCircle}>
                 <Text style={{ fontSize: 20 }}>🛡️</Text>
@@ -457,7 +459,7 @@ const HealthReportsScreen = ({ navigation }) => {
               onPress={() => handleDownloadReport(selectedReport)}
               style={styles.downloadBtn}
             >
-              <LinearGradient
+             <LinearGradient
                 colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
                 start={{ x: 0, y: 0 }}
                 end={{ x: 1, y: 0 }}
@@ -465,7 +467,7 @@ const HealthReportsScreen = ({ navigation }) => {
               >
                 <Icon name="cloud-download-outline" size={20} color="#fff" style={{ marginRight: 8 }} />
                 <Text style={styles.downloadBtnText}>Download Official PDF</Text>
-              </LinearGradient>
+             </LinearGradient>
             </TouchableOpacity>
           </View>
         )}
@@ -487,7 +489,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
     paddingBottom: spacing.lg,
   },
   backBtn: { width: 40, height: 40, borderRadius: borderRadius.lg, alignItems: 'center', justifyContent: 'center' },
-  headerTitle: { ...typography.headlineMedium, fontWeight: '800' },
+  headerTitle: { ...typography.headlineMedium, fontWeight: '800' }, 
   content: { paddingHorizontal: spacing.xl, paddingBottom: 120 },
   statsBanner: { borderRadius: borderRadius.xl, padding: spacing.xl, marginBottom: spacing.lg, ...shadows.md },
   statsRow: { flexDirection: 'row', justifyContent: 'space-around', alignItems: 'center' },
@@ -506,7 +508,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
     width: 50,
     height: 50,
     borderRadius: borderRadius.md,
-    backgroundColor: isDarkMode ? '#1E2433' : '#F1F5F9',
+   backgroundColor: isDarkMode ? '#1E2433' : '#F1F5F9',
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1.5,
@@ -529,7 +531,7 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
   statusBadge: { paddingHorizontal: spacing.md, paddingVertical: spacing.xs - 2, borderRadius: borderRadius.full },
   statusText: { fontSize: 10, fontWeight: '800', textTransform: 'uppercase' },
   reportSummaryText: { ...typography.bodySmall, fontSize: 12, lineHeight: 18, marginBottom: spacing.md },
-  cardFooter: { borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)', paddingTop: spacing.md },
+  cardFooter: { borderTopWidth: 1, borderTopColor: 'rgba(0,0,0,0.05)', paddingTop: spacing.md }, 
   footerLink: { ...typography.labelMedium, fontWeight: '750' },
 
   vitalsRow: { flexDirection: 'row', justifyContent: 'space-between', marginTop: spacing.sm },

@@ -1,6 +1,7 @@
 
 
 import { useState, useEffect, useCallback } from 'react';
+// import { debounce } from '../utils/helpers';
 import { offlineManager } from '../services/offline';
 
 export const useOnlineStatus = () => {
@@ -49,7 +50,7 @@ export const useCachedData = (key, fetchFn, options = {}) => {
         setLoading(false);
         return freshData;
       }
-      const staleData = await offlineManager.getCachedDataForce(key);
+     const staleData = await offlineManager.getCachedDataForce(key);
       if (staleData) {
         setData(staleData);
         setIsStale(true);
@@ -62,7 +63,7 @@ export const useCachedData = (key, fetchFn, options = {}) => {
       setError(err);
       setLoading(false);
       const staleData = await offlineManager.getCachedDataForce(key);
-      if (staleData) {
+     if (staleData) {
         setData(staleData);
         setIsStale(true);
       }
@@ -88,7 +89,7 @@ export const useCachedData = (key, fetchFn, options = {}) => {
 };
 
 export const useOfflineAction = () => {
-  const isOnline = useOnlineStatus();
+  const isOnline = useOnlineStatus(); 
   const [pendingCount, setPendingCount] = useState(offlineManager.getPendingCount());
 
   useEffect(() => {
@@ -102,7 +103,7 @@ export const useOfflineAction = () => {
   }, []);
 
   const syncNow = useCallback(async () => {
-    await offlineManager.syncPendingActions();
+   await offlineManager.syncPendingActions();
     setPendingCount(offlineManager.getPendingCount());
   }, []);
 

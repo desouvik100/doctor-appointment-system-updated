@@ -32,8 +32,8 @@ async function uploadDicomFile(fileBuffer, options = {}) {
       const pngPath = `${folder}_images/${clinicId}/${patientId}/${metadata.study.studyInstanceUID}/${pngFilename}`;
       
       const pngUploadResult = await new Promise((resolve, reject) => {
-        const uploadStream = cloudinary.uploader.upload_stream(
-          {
+       const uploadStream = cloudinary.uploader.upload_stream(
+         {
             resource_type: 'image',
             public_id: pngPath,
             folder: `${folder}_images`,
@@ -47,7 +47,7 @@ async function uploadDicomFile(fileBuffer, options = {}) {
         uploadStream.end(imageConversion.imageBuffer);
       });
       
-      viewableImageUrl = pngUploadResult.secure_url;
+      viewableImageUrl = pngUploadResult.secure_url; 
     } catch (pngError) {
       console.error('Failed to upload PNG version:', pngError.message);
     }
@@ -68,11 +68,11 @@ async function uploadDicomFile(fileBuffer, options = {}) {
             studyDate: metadata.study.studyDate?.toISOString(),
             modality: metadata.series.modality
           }
-        },
+        }, 
         (error, result) => {
           if (error) reject(error);
           else resolve(result);
-        }
+       }
       );
       
       uploadStream.end(fileBuffer);
@@ -96,7 +96,7 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
   
   if (!fileBuffers || fileBuffers.length === 0) {
     throw new Error('No DICOM files provided');
-  }
+  } 
   const parseResult = parseMultipleDicomFiles(fileBuffers);
   if (!parseResult.success) {
     throw new Error(parseResult.error);
@@ -116,7 +116,7 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
           studyDate: study.studyDate,
           modality: study.modality,
           description: study.studyDescription,
-          totalImages: study.totalImages
+         totalImages: study.totalImages
         }
       };
     }
@@ -145,7 +145,7 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
     if (value === undefined || value === null || Number.isNaN(value)) {
       return defaultValue;
     }
-    return value;
+   return value;
   };
   const seriesMap = new Map();
   
@@ -159,7 +159,7 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
         seriesDescription: result.metadata.series.seriesDescription || '',
         modality: result.metadata.series.modality || 'OT',
         numberOfImages: 0,
-        images: []
+        images: [] 
       });
     }
     
@@ -173,11 +173,11 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
       columns: sanitizeNumber(result.metadata.image.columns, 512),
       bitsAllocated: sanitizeNumber(result.metadata.image.bitsAllocated, 16),
       pixelSpacing: result.metadata.image.pixelSpacing,
-      windowCenter: sanitizeNumber(result.metadata.image.windowCenter),
+      windowCenter: sanitizeNumber(result.metadata.image.windowCenter), 
       windowWidth: sanitizeNumber(result.metadata.image.windowWidth),
       sliceLocation: sanitizeNumber(result.metadata.image.sliceLocation),
       sliceThickness: sanitizeNumber(result.metadata.image.sliceThickness)
-    });
+   });
   });
   seriesMap.forEach(series => {
     series.images.sort((a, b) => (a.instanceNumber || 0) - (b.instanceNumber || 0));
@@ -186,7 +186,7 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
   const existingStudy = await DicomStudy.findOne({ studyInstanceUID: study.studyInstanceUID });
   
   if (existingStudy) {
-    existingStudy.series = Array.from(seriesMap.values());
+   existingStudy.series = Array.from(seriesMap.values());
     existingStudy.totalImages = uploadResults.length;
     existingStudy.totalSeries = seriesMap.size;
     existingStudy.storageSize = uploadResults.reduce((sum, r) => sum + (r.size || 0), 0);
@@ -194,7 +194,7 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
     studyRecord = existingStudy;
   } else {
     studyRecord = new DicomStudy({
-      patientId: patientId,
+      patientId: patientId, 
       clinicId: clinicId,
       visitId: visitId,
       
@@ -202,10 +202,10 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
       accessionNumber: study.accessionNumber,
       studyDate: study.studyDate,
       studyTime: study.studyTime,
-      studyDescription: study.studyDescription,
+     studyDescription: study.studyDescription,
       
       dicomPatientId: study.patient.patientId,
-      dicomPatientName: study.patient.patientName,
+     dicomPatientName: study.patient.patientName,
       patientBirthDate: study.patient.birthDate,
       patientSex: study.patient.sex,
       
@@ -234,7 +234,7 @@ async function uploadDicomStudy(fileBuffers, options = {}) {
     studyInstanceUID: study.studyInstanceUID,
     totalImages: uploadResults.length,
     totalSeries: seriesMap.size,
-    errors: errors.length > 0 ? errors : undefined,
+   errors: errors.length > 0 ? errors : undefined,
     patientValidation: patientValidation
   };
 }
@@ -264,7 +264,7 @@ async function getStudyByUID(studyInstanceUID) {
   return study;
 }
 
-async function getPatientImagingHistory(patientId, options = {}) {
+async function getPatientImagingHistory(patientId, options = {}) { 
   const { limit = 50, modality, startDate, endDate, includeReports = false, includeSeries = true } = options;
   
   const query = { patientId };
@@ -285,7 +285,7 @@ async function getPatientImagingHistory(patientId, options = {}) {
   }
   if (includeReports) {
     projection += ' reports';
-  }
+  } 
   
   const studies = await DicomStudy.find(query)
     .sort({ studyDate: -1 })
@@ -327,7 +327,7 @@ async function getImageData(studyId, seriesUID = null, imageIndex = 0) {
     imageUrl: image.imageUrl,
     metadata: {
       rows: image.rows,
-      columns: image.columns,
+      columns: image.columns, 
       pixelSpacing: image.pixelSpacing,
       windowCenter: image.windowCenter,
       windowWidth: image.windowWidth,
@@ -346,11 +346,11 @@ async function deleteStudy(studyId) {
   
   study.series.forEach(series => {
     series.images.forEach(image => {
-      if (image.imageUrl) {
+     if (image.imageUrl) {
         const publicId = extractPublicIdFromUrl(image.imageUrl);
         if (publicId) {
           deletePromises.push(
-            cloudinary.uploader.destroy(publicId, { resource_type: 'raw' })
+           cloudinary.uploader.destroy(publicId, { resource_type: 'raw' })
               .catch(err => console.error(`Failed to delete ${publicId}:`, err))
           );
         }
@@ -374,7 +374,7 @@ function extractPublicIdFromUrl(url) {
     const pathParts = urlParts.slice(uploadIndex + 2);
     const publicId = pathParts.join('/').replace(/\.[^/.]+$/, ''); 
     
-    return publicId;
+   return publicId;
   } catch {
     return null;
   }

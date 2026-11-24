@@ -1,5 +1,6 @@
 
 
+// Based on requirements from ticket #484
 import React, { useState } from 'react';
 import {
   View,
@@ -39,11 +40,11 @@ const FacebookIcon = () => (
 
 const AppleIcon = ({ color }) => (
   <Svg width="18" height="18" viewBox="0 0 24 24">
-    <Path fill={color || "#000"} d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.21.67-2.93 1.49-.62.69-1.16 1.84-1.01 2.96 1.12.09 2.27-.58 2.95-1.39z"/>
+   <Path fill={color || "#000"} d="M18.71 19.5c-.83 1.24-1.71 2.45-3.05 2.47-1.34.03-1.77-.79-3.29-.79-1.53 0-2 .77-3.27.82-1.31.05-2.3-1.32-3.14-2.53C4.25 17 2.94 12.45 4.7 9.39c.87-1.52 2.43-2.48 4.12-2.51 1.28-.02 2.5.87 3.29.87.78 0 2.26-1.07 3.81-.91.65.03 2.47.26 3.64 1.98-.09.06-2.17 1.28-2.15 3.81.03 3.02 2.65 4.03 2.68 4.04-.03.07-.42 1.44-1.38 2.83M15.97 4.17c.66-.81 1.11-1.93.99-3.06-1 .04-2.21.67-2.93 1.49-.62.69-1.16 1.84-1.01 2.96 1.12.09 2.27-.58 2.95-1.39z"/>
   </Svg>
 );
 
-const RegisterScreen = ({ navigation }) => {
+const RegisterScreen = ({ navigation })=>{
   const { colors, isDarkMode } = useTheme();
   const [formData, setFormData] = useState({
     name: '',
@@ -71,7 +72,7 @@ const RegisterScreen = ({ navigation }) => {
     setFormData(prev => ({ ...prev, [field]: value }));
     if (errors[field]) {
       setErrors(prev => ({ ...prev, [field]: null }));
-    }
+   }
   };
 
   const validateForm = () => {
@@ -88,9 +89,9 @@ const RegisterScreen = ({ navigation }) => {
       newErrors.email = 'Please enter a valid email';
     }
     const phoneRegex = /^[6-9]\d{9}$/;
-    if (!formData.phone.trim()) {
+   if (!formData.phone.trim()) {
       newErrors.phone = 'Phone number is required';
-    } else if (!phoneRegex.test(formData.phone.trim())) {
+   } else if (!phoneRegex.test(formData.phone.trim())) {
       newErrors.phone = 'Please enter a valid 10-digit phone number';
     }
     if (!formData.password) {
@@ -121,7 +122,7 @@ const RegisterScreen = ({ navigation }) => {
         email: formData.email.trim().toLowerCase(),
         phone: formData.phone.trim(),
         name: formData.name.trim(),
-        password: formData.password,
+       password: formData.password,
         isRegistration: true,
       });
     } catch (error) {
@@ -135,7 +136,7 @@ const RegisterScreen = ({ navigation }) => {
 
   const handleGoogleSignUp = async () => {
     setSocialLoading('google');
-    try {
+   try {
       const { user, token, isNewUser } = await socialAuthService.signInWithGoogle();
       await login(user, token);
       
@@ -150,7 +151,7 @@ const RegisterScreen = ({ navigation }) => {
       }
     } finally {
       setSocialLoading(null);
-    }
+   }
   };
 
   const handleFacebookSignUp = async () => {
@@ -168,12 +169,12 @@ const RegisterScreen = ({ navigation }) => {
       if (error.message !== 'Sign in cancelled') {
         Alert.alert('Facebook Sign-Up Failed', error.message || 'Unable to sign up with Facebook. Please try again.');
       }
-    } finally {
+   } finally {
       setSocialLoading(null);
     }
   };
 
-  const handleAppleSignUp = async () => {
+  const handleAppleSignUp = async () => { 
     setSocialLoading('apple');
     try {
       const { user, token, isNewUser } = await socialAuthService.signInWithApple();
@@ -187,14 +188,14 @@ const RegisterScreen = ({ navigation }) => {
     } catch (error) {
       if (error.message !== 'Sign in cancelled') {
         Alert.alert('Apple Sign-Up Failed', error.message || 'Unable to sign up with Apple. Please try again.');
-      }
+      } 
     } finally {
       setSocialLoading(null);
     }
   };
 
   return (
-    <View style={[styles.container, { backgroundColor: colors.background }]}>
+   <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
       
       {}
@@ -204,14 +205,14 @@ const RegisterScreen = ({ navigation }) => {
           <LinearGradient colors={orb1Colors} style={{ flex: 1, borderRadius: 150 }} />
         </View>
         <View style={styles.orb2}>
-          <LinearGradient colors={orb2Colors} style={{ flex: 1, borderRadius: 150 }} />
-        </View>
+         <LinearGradient colors={orb2Colors} style={{ flex: 1, borderRadius: 150 }} />
+       </View>
       </View>
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         style={styles.keyboardView}
-      >
+     >
         <ScrollView
           contentContainerStyle={styles.scrollContent}
           showsVerticalScrollIndicator={false}
@@ -228,7 +229,7 @@ const RegisterScreen = ({ navigation }) => {
                   borderWidth: isDarkMode ? 1 : 0,
                 }
               ]}
-              onPress={() => navigation.goBack()}
+             onPress={() => navigation.goBack()}
             >
               <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
             </TouchableOpacity>
@@ -239,8 +240,8 @@ const RegisterScreen = ({ navigation }) => {
           {}
           <View style={styles.formContainer}>
             <View style={styles.form}>
-              <Input
-                label="Full Name"
+             <Input
+               label="Full Name"
                 placeholder="Enter your full name"
                 value={formData.name}
                 onChangeText={(value) => updateField('name', value)}
@@ -250,7 +251,7 @@ const RegisterScreen = ({ navigation }) => {
 
               <Input
                 label="Email"
-                placeholder="Enter your email"
+               placeholder="Enter your email"
                 value={formData.email}
                 onChangeText={(value) => updateField('email', value)}
                 error={errors.email}
@@ -261,9 +262,9 @@ const RegisterScreen = ({ navigation }) => {
               <Input
                 label="Phone Number"
                 placeholder="Enter 10-digit phone number"
-                value={formData.phone}
+               value={formData.phone}
                 onChangeText={(value) => updateField('phone', value)}
-                error={errors.phone}
+               error={errors.phone}
                 keyboardType="phone-pad"
                 maxLength={10}
               />
@@ -271,11 +272,11 @@ const RegisterScreen = ({ navigation }) => {
               <Input
                 label="Password"
                 placeholder="Create a password"
-                value={formData.password}
-                onChangeText={(value) => updateField('password', value)}
+               value={formData.password}
+               onChangeText={(value) => updateField('password', value)}
                 error={errors.password}
                 secureTextEntry
-              />
+             />
 
               <Input
                 label="Confirm Password"
@@ -322,11 +323,11 @@ const RegisterScreen = ({ navigation }) => {
                     style={[
                       styles.socialBtnPremium,
                       {
-                        backgroundColor: s.bg,
+                       backgroundColor: s.bg,
                         borderColor: colors.surfaceBorder,
                         borderWidth: 1.5,
                       }
-                    ]}
+                   ]}
                     onPress={s.onPress}
                     disabled={socialLoading !== null}
                     activeOpacity={0.8}
@@ -369,7 +370,7 @@ const styles = StyleSheet.create({
   },
   orb1: {
     position: 'absolute',
-    width: 300,
+   width: 300,
     height: 300,
     borderRadius: 150,
     top: -50,
@@ -412,25 +413,25 @@ const styles = StyleSheet.create({
     fontSize: 20,
   },
   headerTitle: {
-    ...typography.headlineLarge,
+   ...typography.headlineLarge,
     marginBottom: spacing.xs,
   },
   headerSubtitle: {
     ...typography.bodyLarge,
   },
-  formContainer: {
+  formContainer: { 
     flex: 1,
   },
   form: {
     gap: spacing.xs,
   },
   termsContainer: {
-    marginVertical: spacing.md,
+    marginVertical: spacing.md, 
   },
   termsText: {
     ...typography.bodySmall,
     textAlign: 'center',
-    lineHeight: 20,
+   lineHeight: 20,
   },
   termsLink: {
     fontWeight: '500',

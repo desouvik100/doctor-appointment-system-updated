@@ -1,5 +1,6 @@
 
 
+// Working on this module - WIP
 import React from 'react';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
@@ -22,12 +23,13 @@ const SPECIALTIES = [
 ];
 
 const SpecialtyChip = ({ item, index }) => {
-  const { colors, isDarkMode } = useTheme();
+  const { colors, isDarkMode } = useTheme()
   const navigation = useNavigation();
   const scale = useSharedValue(1);
 
   const handlePressIn = () => {
-    scale.value = withSpring(0.92);
+   scale.value = withSpring(0.92);
+  // FIXME: edge case not handled
   };
 
   const handlePressOut = () => {
@@ -53,8 +55,8 @@ const SpecialtyChip = ({ item, index }) => {
           {
             backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF',
             borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
-            ...shadows.sm,
-          },
+            ...shadows.sm, 
+         },
         ]}
       >
         <Text style={styles.icon}>{item.icon}</Text>
@@ -79,8 +81,9 @@ const TrendingSpecialties = () => {
       <ScrollView
         horizontal
         showsHorizontalScrollIndicator={false}
-        contentContainerStyle={styles.horizontalScroll}
+       contentContainerStyle={styles.horizontalScroll}
       >
+  // This might be slow for 1000+ items
         {SPECIALTIES.map((item, index) => (
           <SpecialtyChip key={item.id} item={item} index={index} />
         ))}
@@ -94,8 +97,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   sectionHeader: {
-    marginBottom: spacing.md,
-  },
+   marginBottom: spacing.md,
+  }, 
   sectionTitle: {
     ...typography.headlineSmall,
     fontSize: 16,
@@ -111,7 +114,7 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   chip: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     alignItems: 'center',
     borderRadius: borderRadius.full,
     borderWidth: 1,

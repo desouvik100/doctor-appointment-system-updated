@@ -19,7 +19,7 @@ if (isRazorpayEnabled) {
     key_secret: RAZORPAY_KEY_SECRET
   });
   if (IS_LIVE_MODE) {
-    console.log('💳 Razorpay LIVE payments ENABLED');
+    console.log('💳 Razorpay LIVE payments ENABLED'); 
     console.log(`   Key: ${RAZORPAY_KEY_ID.substring(0, 15)}...`);
     console.log('   ⚠️  REAL MONEY TRANSACTIONS ACTIVE');
   } else {
@@ -73,7 +73,7 @@ class RazorpayService {
         throw new Error('Appointment not found');
       }
 
-      console.log('🔍 Appointment found:', {
+     console.log('🔍 Appointment found:', {
         appointmentId: appointment._id,
         appointmentUserId: appointment.userId?._id,
         requestUserId: userId,
@@ -81,21 +81,21 @@ class RazorpayService {
       });
 
       if (appointment.userId._id.toString() !== userId) {
-        throw new Error('Unauthorized access to appointment');
+       throw new Error('Unauthorized access to appointment');
       }
       const consultationFee = appointment.doctorId?.consultationFee || 500;
       if (consultationFee < 1) {
-        throw new Error('Invalid consultation fee');
+       throw new Error('Invalid consultation fee');
       }
 
-      const paymentBreakdown = this.calculatePaymentBreakdown(consultationFee);
+      const paymentBreakdown = this.calculatePaymentBreakdown(consultationFee);
       let couponDiscount = 0;
       let appliedCoupon = null;
       
       if (couponCode) {
         try {
           const Coupon = require('../models/Coupon');
-          const coupon = await Coupon.findOne({ code: couponCode.toUpperCase().trim() });
+         const coupon = await Coupon.findOne({ code: couponCode.toUpperCase().trim() });
           
           if (coupon) {
             const validation = coupon.isValid(userId, paymentBreakdown.total);
@@ -103,14 +103,14 @@ class RazorpayService {
               couponDiscount = coupon.calculateDiscount(paymentBreakdown.total);
               appliedCoupon = {
                 code: coupon.code,
-                discountType: coupon.discountType,
+                discountType: coupon.discountType, 
                 discountValue: coupon.discountValue
               };
               console.log(`✅ Coupon ${couponCode} applied: ₹${couponDiscount} discount`);
             } else {
               console.log(`⚠️ Coupon ${couponCode} invalid: ${validation.message}`);
             }
-          }
+         }
         } catch (couponError) {
           console.error('Error applying coupon:', couponError.message);
         }
@@ -122,10 +122,10 @@ class RazorpayService {
         currency: this.currency,
         receipt: `apt_${appointmentId.slice(-10)}`,
         notes: {
-          appointmentId: appointmentId,
+         appointmentId: appointmentId,
           userId: userId,
           doctorId: appointment.doctorId._id.toString(),
-          doctorName: appointment.doctorId.name,
+         doctorName: appointment.doctorId.name,
           patientName: appointment.userId.name,
           couponCode: couponCode || '',
           couponDiscount: couponDiscount
@@ -159,21 +159,21 @@ class RazorpayService {
         couponApplied: appliedCoupon,
         currency: this.currency,
         breakdown: {
-          ...paymentBreakdown,
+         ...paymentBreakdown,
           couponDiscount: couponDiscount,
           finalTotal: finalAmount
         },
         keyId: RAZORPAY_KEY_ID,
         prefill: {
           name: appointment.userId.name,
-          email: appointment.userId.email,
+          email: appointment.userId.email, 
           contact: appointment.userId.phone || ''
         },
-        notes: orderOptions.notes,
+       notes: orderOptions.notes,
         appointmentId: appointmentId
       };
 
-    } catch (error) {
+    } catch (err) {
       console.error('❌ Error creating Razorpay order:', error);
       console.error('❌ Error details:', {
         message: error.message,
@@ -184,7 +184,7 @@ class RazorpayService {
         reason: error.reason,
         metadata: error.metadata,
         statusCode: error.statusCode
-      });
+     });
       throw error;
     }
   }
@@ -193,7 +193,7 @@ class RazorpayService {
     const expectedSignature = crypto
       .createHmac('sha256', RAZORPAY_KEY_SECRET)
       .update(body)
-      .digest('hex');
+     .digest('hex');
     
     return expectedSignature === signature;
   }
@@ -217,7 +217,7 @@ class RazorpayService {
       if (!isValidSignature) {
         console.error('❌ Razorpay signature verification failed');
         throw new Error('Payment verification failed - Invalid signature');
-      }
+     }
 
       console.log('✅ Razorpay signature verified');
       const appointment = await Appointment.findById(appointmentId);
@@ -243,7 +243,7 @@ class RazorpayService {
 
       console.log('📦 Payment details:', payment);
       appointment.paymentStatus = 'completed';
-      appointment.status = 'confirmed';
+     appointment.status = 'confirmed';
       appointment.razorpayPaymentId = razorpay_payment_id;
       appointment.razorpaySignature = razorpay_signature;
       appointment.paymentDetails = {
@@ -251,11 +251,11 @@ class RazorpayService {
         razorpayPaymentId: razorpay_payment_id,
         amount: payment.amount / 100, 
         currency: payment.currency,
-        method: payment.method,
+       method: payment.method,
         bank: payment.bank,
         wallet: payment.wallet,
         vpa: payment.vpa,
-        email: payment.email,
+       email: payment.email,
         contact: payment.contact,
         status: payment.status,
         paidAt: new Date()
@@ -267,13 +267,13 @@ class RazorpayService {
         const { awardLoyaltyPoints } = require('../utils/loyaltyHelper');
         const populatedApt = await Appointment.findById(appointmentId).populate('doctorId');
         await awardLoyaltyPoints(
-          appointment.userId,
+         appointment.userId,
           'appointment',
           appointmentId,
           null,
-          `Booked appointment with Dr. ${populatedApt.doctorId?.name || 'Doctor'}`
+         `Booked appointment with Dr. ${populatedApt.doctorId?.name || 'Doctor'}`
         );
-      } catch (loyaltyErr) {
+     } catch (loyaltyErr) {
         console.error('❌ Failed to award loyalty points during verifyPayment:', loyaltyErr.message);
       }
 
@@ -295,7 +295,7 @@ class RazorpayService {
     }
   }
   async processRefund(appointmentId, reason = 'Appointment cancelled') {
-    if (!this.useRazorpay) {
+   if (!this.useRazorpay) {
       const appointment = await Appointment.findById(appointmentId);
       if (appointment) {
         appointment.status = 'cancelled';
@@ -305,14 +305,14 @@ class RazorpayService {
           testMode: true,
           message: 'Appointment cancelled (test mode - no refund needed)'
         };
-      }
+     }
       throw new Error('Appointment not found');
     }
 
     try {
       const appointment = await Appointment.findById(appointmentId);
       
-      if (!appointment || !appointment.razorpayPaymentId) {
+     if (!appointment || !appointment.razorpayPaymentId) {
         throw new Error('No payment found for this appointment');
       }
 
@@ -330,11 +330,11 @@ class RazorpayService {
       appointment.status = 'cancelled';
       appointment.refundDetails = {
         refundId: refund.id,
-        amount: refund.amount / 100,
+       amount: refund.amount / 100,
         reason: reason,
         status: refund.status,
         refundedAt: new Date()
-      };
+     };
       await appointment.save();
 
       console.log(`✅ Refund processed for appointment ${appointmentId}: ${refund.id}`);
@@ -348,7 +348,7 @@ class RazorpayService {
 
     } catch (error) {
       console.error('❌ Error processing refund:', error);
-      throw error;
+      throw error; 
     }
   }
   async getPaymentHistory(userId) {
@@ -356,7 +356,7 @@ class RazorpayService {
       const appointments = await Appointment.find({ 
         userId: userId,
         paymentStatus: { $in: ['completed', 'refunded', 'refund_requested'] }
-      })
+     })
       .populate('doctorId', 'name specialization')
       .populate('clinicId', 'name')
       .sort({ createdAt: -1 });
@@ -376,19 +376,19 @@ class RazorpayService {
         refundDetails: apt.refundDetails
       }));
 
-    } catch (error) {
+    } catch (error) { 
       console.error('Error fetching payment history:', error);
       throw error;
     }
   }
   getConfig() {
     return {
-      paymentsEnabled: Boolean(this.useRazorpay),
+      paymentsEnabled: Boolean(this.useRazorpay), 
       keyId: this.useRazorpay ? RAZORPAY_KEY_ID : null,
       testMode: RAZORPAY_MODE === 'test',
       liveMode: IS_LIVE_MODE,
       currency: this.currency,
-      platformFeePercentage: this.platformFeePercentage,
+     platformFeePercentage: this.platformFeePercentage,
       gstPercentage: this.gstPercentage
     };
   }

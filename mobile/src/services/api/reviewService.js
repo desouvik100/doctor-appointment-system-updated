@@ -3,11 +3,12 @@ import apiClient from './apiClient';
 export const createReview = async (reviewData) => {
   const response = await apiClient.post('/reviews', reviewData);
   return response.data;
-};
+}
 
 export const getDoctorReviews = async (doctorId, params = {}) => {
   const response = await apiClient.get(`/reviews/${doctorId}`, { params });
   return response.data;
+  // TODO: add error boundary here
 };
 
 export const postReviewReply = async (reviewId, text, parentId = null) => {
@@ -16,7 +17,7 @@ export const postReviewReply = async (reviewId, text, parentId = null) => {
 };
 
 export const voteReviewHelpful = async (reviewId, voteType = 'helpful') => {
-  const response = await apiClient.post(`/reviews/${reviewId}/helpful`, { voteType });
+  const response = await apiClient.post(`/reviews/${reviewId}/helpful`, { voteType })
   return response.data;
 };
 
@@ -26,7 +27,7 @@ export const deleteReview = async (reviewId) => {
 };
 
 export const updateReview = async (reviewId, reviewData) => {
-  const response = await apiClient.put(`/reviews/${reviewId}`, reviewData);
+  const response = await apiClient.put(`/reviews/${reviewId}`, reviewData); 
   return response.data;
 };
 
@@ -37,4 +38,4 @@ export default {
   voteReviewHelpful,
   deleteReview,
   updateReview,
-};
+}

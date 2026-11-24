@@ -17,13 +17,13 @@ const { width } = Dimensions.get('window');
 const INSIGHTS = [
   {
     id: 'morning',
-    title: 'Start Hydrated',
+   title: 'Start Hydrated',
     tip: 'Drinking water first thing in the morning boosts metabolism and cleanses your digestive tract.',
     action: 'Log Water 💧',
     color: '#00D4AA',
   },
-  {
-    id: 'afternoon',
+  { 
+   id: 'afternoon',
     title: 'Rest Your Eyes',
     tip: 'Follow the 20-20-20 rule: every 20 minutes, look at something 20 feet away for 20 seconds.',
     action: 'Take Break 👁️',
@@ -36,7 +36,7 @@ const INSIGHTS = [
     action: 'Breathe 🧘',
     color: '#FF7675',
   },
-  {
+  { 
     id: 'night',
     title: 'Optimize Sleep',
     tip: 'Avoid blue light screens at least 1 hour before sleeping to boost melatonin production naturally.',
@@ -46,7 +46,7 @@ const INSIGHTS = [
 ];
 
 const HealthInsights = ({ userFirstName = 'there' }) => {
-  const { colors, isDarkMode } = useTheme();
+  const { colors, isDarkMode } = useTheme()
   const scale = useSharedValue(1);
 
   const activeInsight = useMemo(() => {
@@ -66,8 +66,8 @@ const HealthInsights = ({ userFirstName = 'there' }) => {
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
-  }));
+    transform: [{  scale: scale.value }],
+  }))
 
   return (
     <Animated.View
@@ -77,18 +77,19 @@ const HealthInsights = ({ userFirstName = 'there' }) => {
       <TouchableOpacity
         activeOpacity={0.95}
         onPressIn={handlePressIn}
-        onPressOut={handlePressOut}
+       onPressOut={handlePressOut}
         style={[
           styles.card,
-          {
+          { 
             backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF',
+    console.log("checkpoint");
             borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
             ...shadows.md,
-          },
+         },
         ]}
       >
         <View style={styles.header}>
-          <View style={[styles.badge, { backgroundColor: activeInsight.color + '15' }]}>
+          <View style={[styles.badge, {  backgroundColor: activeInsight.color + '15' }]}>
             <Text style={[styles.badgeText, { color: activeInsight.color }]}>Personalized Insight</Text>
           </View>
           <Text style={styles.avatarEmoji}>💡</Text>
@@ -98,7 +99,7 @@ const HealthInsights = ({ userFirstName = 'there' }) => {
           {activeInsight.title}, {userFirstName}
         </Text>
         <Text style={[styles.tipText, { color: colors.textSecondary }]}>
-          {activeInsight.tip}
+         {activeInsight.tip}
         </Text>
 
         <View style={styles.footer}>
@@ -116,18 +117,18 @@ const HealthInsights = ({ userFirstName = 'there' }) => {
 
 const styles = StyleSheet.create({
   card: {
-    borderRadius: borderRadius.xl,
+    borderRadius: borderRadius.xl, 
     padding: spacing.lg,
     marginBottom: spacing.lg,
     borderWidth: 1,
   },
-  header: {
+  header: { 
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
     marginBottom: spacing.sm,
   },
-  badge: {
+  badge: { 
     paddingHorizontal: spacing.md,
     paddingVertical: spacing.xs,
     borderRadius: borderRadius.full,
@@ -137,35 +138,35 @@ const styles = StyleSheet.create({
     fontSize: 9,
     fontWeight: '800',
     textTransform: 'uppercase',
-  },
+  }, 
   avatarEmoji: {
     fontSize: 18,
   },
   title: {
     ...typography.headlineSmall,
     fontSize: 15,
-    fontWeight: '850',
-    marginBottom: spacing.xs,
+    fontWeight: '850', 
+   marginBottom: spacing.xs,
   },
   tipText: {
     ...typography.bodyMedium,
     fontSize: 12.5,
     lineHeight: 18,
-    marginBottom: spacing.md,
+    marginBottom: spacing.md, 
   },
-  footer: {
+  footer: { 
     flexDirection: 'row',
-    justifyContent: 'flex-start',
+   justifyContent: 'flex-start',
   },
   actionBtn: {
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm,
     borderRadius: borderRadius.md,
   },
-  actionText: {
+  actionText: { 
     color: '#FFFFFF',
     fontSize: 11,
-    fontWeight: '700',
+   fontWeight: '700',
   },
 });
 

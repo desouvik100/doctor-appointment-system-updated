@@ -2,10 +2,10 @@
 
 const Appointment = require('../models/Appointment');
 const User = require('../models/User');
-const razorpayService = require('./razorpayService');
+const razorpayService = require('./razorpayService');
 const REFUND_POLICY = {
   fullRefundHours: 6,
-  fullRefundPercentage: 100,
+  fullRefundPercentage: 100, 
   partialRefundPercentage: 50,
   noShowRefundPercentage: 0,
   doctorCancelRefundPercentage: 100,
@@ -17,14 +17,14 @@ const REFUND_POLICY = {
 class RefundPolicyService {
 
   calculateHoursUntilAppointment(appointmentDate, appointmentTime) {
-    const now = new Date();
+    const now = new Date();
     const [hours, minutes] = appointmentTime.split(':').map(Number);
     const appointmentDateTime = new Date(appointmentDate);
     appointmentDateTime.setHours(hours, minutes, 0, 0);
     const diffMs = appointmentDateTime - now;
     const diffHours = diffMs / (1000 * 60 * 60);
     
-    return diffHours;
+   return diffHours;
   }
 
   calculateRefund(appointment, cancelledBy = 'patient') {
@@ -33,14 +33,14 @@ class RefundPolicyService {
     const paymentCompleted = appointment.paymentStatus === 'completed' || 
                              appointment.payment?.paymentStatus === 'completed';
     if (paidAmount <= 0 || !paymentCompleted) {
-      return {
+      return { 
         eligible: false,
-        reason: 'No payment was made for this appointment',
+       reason: 'No payment was made for this appointment',
         refundAmount: 0,
         refundPercentage: 0,
-        walletCredit: 0,
+       walletCredit: 0,
         policyApplied: 'no_payment'
-      };
+      }; 
     }
     
     const hoursUntil = this.calculateHoursUntilAppointment(
@@ -68,10 +68,10 @@ class RefundPolicyService {
         refundPercentage: REFUND_POLICY.noShowRefundPercentage,
         walletCredit: 0,
         policyApplied: 'no_show',
-        hoursUntilAppointment: hoursUntil
+       hoursUntilAppointment: hoursUntil
       };
-    }
-    if (hoursUntil >= REFUND_POLICY.fullRefundHours) {
+   }
+   if (hoursUntil >= REFUND_POLICY.fullRefundHours) {
       const gatewayFee = Math.round(paidAmount * REFUND_POLICY.paymentGatewayFeePercentage / 100);
       const refundAmount = Math.max(0, paidAmount - gatewayFee);
       
@@ -84,10 +84,10 @@ class RefundPolicyService {
         policyApplied: 'full_refund',
         hoursUntilAppointment: hoursUntil,
         gatewayFeeDeducted: gatewayFee,
-        originalAmount: paidAmount
-      };
+       originalAmount: paidAmount
+     };
     }
-    const refundAmount = Math.round(paidAmount * REFUND_POLICY.partialRefundPercentage / 100);
+   const refundAmount = Math.round(paidAmount * REFUND_POLICY.partialRefundPercentage / 100);
     const platformRetained = paidAmount - refundAmount;
     
     return {
@@ -96,7 +96,7 @@ class RefundPolicyService {
       refundAmount: refundAmount,
       refundPercentage: REFUND_POLICY.partialRefundPercentage,
       walletCredit: 0,
-      policyApplied: 'partial_refund',
+      policyApplied: 'partial_refund', 
       hoursUntilAppointment: hoursUntil,
       platformRetained: platformRetained,
       originalAmount: paidAmount
@@ -117,13 +117,13 @@ class RefundPolicyService {
       console.log(`💰 Refund calculation for appointment ${appointmentId}:`);
       console.log(`   Policy: ${refundCalc.policyApplied}`);
       console.log(`   Refund amount: ₹${refundCalc.refundAmount}`);
-      console.log(`   Wallet credit: ₹${refundCalc.walletCredit}`);
+      console.log(`   Wallet credit: ₹${refundCalc.walletCredit}`);
       appointment.refundPolicy = {
         policyApplied: refundCalc.policyApplied,
         calculatedAt: new Date(),
         hoursBeforeAppointment: refundCalc.hoursUntilAppointment,
         originalAmount: refundCalc.originalAmount || appointment.paymentDetails?.amount,
-        refundPercentage: refundCalc.refundPercentage,
+       refundPercentage: refundCalc.refundPercentage,
         refundAmount: refundCalc.refundAmount,
         gatewayFeeDeducted: refundCalc.gatewayFeeDeducted || 0,
         platformRetained: refundCalc.platformRetained || 0,
@@ -142,24 +142,24 @@ class RefundPolicyService {
               reason || refundCalc.reason
             );
           } else if (appointment.payuPaymentId || appointment.paymentDetails?.payuPaymentId) {
-            refundResult = await this.processPayURefund(
+           refundResult = await this.processPayURefund(
               appointment,
               refundCalc.refundAmount,
               reason || refundCalc.reason
-            );
+           );
           } else {
             refundResult = {
-              success: true,
+             success: true,
               testMode: true,
               message: 'Refund marked (no payment gateway transaction)'
-            };
+           };
           }
           
           if (refundResult.success) {
             appointment.paymentStatus = refundResult.pending ? 'refund_requested' : 'refunded';
             appointment.refundDetails = {
               ...appointment.refundDetails,
-              refundId: refundResult.refundId,
+             refundId: refundResult.refundId,
               amount: refundCalc.refundAmount,
               status: refundResult.pending ? 'pending' : 'processed',
               processedAt: new Date(),
@@ -173,6 +173,7 @@ class RefundPolicyService {
             error: refundError.message,
             attemptedAt: new Date()
           };
+    // console.log('todo: remove this')
         }
       }
       if (refundCalc.walletCredit > 0 && appointment.userId) {
@@ -181,7 +182,7 @@ class RefundPolicyService {
             appointment.userId._id,
             refundCalc.walletCredit,
             `Compensation for appointment cancellation by ${cancelledBy}`,
-            appointmentId
+           appointmentId
           );
           
           if (walletCreditResult.success) {
@@ -219,12 +220,12 @@ class RefundPolicyService {
         success: true,
         testMode: true,
         message: 'Razorpay disabled - refund simulated'
-      };
+     };
     }
-    
+     
     const razorpay = new Razorpay({
       key_id: RAZORPAY_KEY_ID,
-      key_secret: RAZORPAY_KEY_SECRET
+     key_secret: RAZORPAY_KEY_SECRET
     });
     
     try {
@@ -277,14 +278,14 @@ class RefundPolicyService {
     if (!payuPaymentId && !payuTxnId) {
       console.log('⚠️ No PayU transaction ID found - marking for manual refund');
       return {
-        success: true,
+       success: true,
         pending: true,
         message: 'Refund request submitted for manual processing.'
       };
     }
     
     try {
-      const refundUrl = PAYU_MODE === 'live' 
+     const refundUrl = PAYU_MODE === 'live' 
         ? 'https://info.payu.in/merchant/postservice.php?form=2'
         : 'https://test.payu.in/merchant/postservice.php?form=2';
       const command = 'cancel_refund_transaction';
@@ -311,9 +312,9 @@ class RefundPolicyService {
         }
       });
       
-      console.log('📥 PayU refund response:', response.data);
+      console.log('📥 PayU refund response:', response.data);
       if (response.data && (response.data.status === 1 || response.data.status === 'success')) {
-        console.log(`✅ PayU refund initiated successfully for ₹${refundAmount}`);
+       console.log(`✅ PayU refund initiated successfully for ₹${refundAmount}`);
         return {
           success: true,
           pending: true, 
@@ -361,21 +362,21 @@ class RefundPolicyService {
         amount: amount,
         description: description,
         referenceId: referenceId,
-        createdAt: new Date()
+       createdAt: new Date()
       });
       
       await user.save();
       
       console.log(`💳 Wallet credit added: ₹${amount} to user ${userId}`);
       
-      return {
+     return {
         success: true,
         newBalance: user.walletBalance,
         creditAmount: amount
       };
     } catch (error) {
       console.error('❌ Wallet credit error:', error);
-      throw error;
+     throw error;
     }
   }
 
@@ -405,7 +406,7 @@ class RefundPolicyService {
   }
 
   async previewRefund(appointmentId, cancelledBy = 'patient') {
-    const appointment = await Appointment.findById(appointmentId)
+   const appointment = await Appointment.findById(appointmentId)
       .populate('userId', 'name email')
       .populate('doctorId', 'name');
     

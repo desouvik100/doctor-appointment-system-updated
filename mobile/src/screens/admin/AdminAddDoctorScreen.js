@@ -1,6 +1,7 @@
 
 
 import React, { useState, useEffect } from 'react';
+// import _ from 'lodash';
 import {
   View,
   Text,
@@ -39,7 +40,7 @@ const AdminAddDoctorScreen = ({ navigation }) => {
     fetchClinics();
   }, []);
 
-  const fetchClinics = async () => {
+  const fetchClinics = async () => { 
     try {
       const data = await adminApi.getClinics();
       setClinics(Array.isArray(data) ? data : data.clinics || []);
@@ -60,7 +61,7 @@ const AdminAddDoctorScreen = ({ navigation }) => {
         ...form,
         experience: parseInt(form.experience) || 0,
         consultationFee: parseInt(form.consultationFee) || 500,
-      });
+      }); 
       Alert.alert('Success', 'Doctor created successfully', [
         { text: 'OK', onPress: () => navigation.goBack() }
       ]);
@@ -72,8 +73,8 @@ const AdminAddDoctorScreen = ({ navigation }) => {
   };
 
   const InputField = ({ label, value, onChangeText, placeholder, keyboardType, secureTextEntry }) => (
-    <View style={styles.inputContainer}>
-      <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{label}</Text>
+   <View style={styles.inputContainer}>
+     <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>{label}</Text>
       <TextInput
         style={[styles.input, { backgroundColor: colors.surface, color: colors.textPrimary }]}
         value={value}
@@ -111,14 +112,14 @@ const AdminAddDoctorScreen = ({ navigation }) => {
         <View style={styles.inputContainer}>
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Clinic *</Text>
           <TouchableOpacity style={[styles.pickerBtn, { backgroundColor: colors.surface }]} onPress={() => setShowClinicPicker(!showClinicPicker)}>
-            <Text style={[styles.pickerText, { color: form.clinicName ? colors.textPrimary : colors.textMuted }]}>
+           <Text style={[styles.pickerText, { color: form.clinicName ? colors.textPrimary : colors.textMuted }]}>
               {form.clinicName || 'Select Clinic'}
             </Text>
             <Text style={styles.pickerArrow}>▼</Text>
           </TouchableOpacity>
           {showClinicPicker && (
             <View style={[styles.pickerList, { backgroundColor: colors.surface }]}>
-              {clinics.map((clinic) => (
+             {clinics.map((clinic) => (
                 <TouchableOpacity key={clinic._id} style={styles.pickerItem} onPress={() => {
                   setForm({...form, clinicId: clinic._id, clinicName: clinic.name});
                   setShowClinicPicker(false);
@@ -131,13 +132,14 @@ const AdminAddDoctorScreen = ({ navigation }) => {
         </View>
 
         {}
-        <TouchableOpacity style={[styles.submitBtn, loading && styles.submitBtnDisabled]} onPress={handleSubmit} disabled={loading}>
+       <TouchableOpacity style={[styles.submitBtn, loading && styles.submitBtnDisabled]} onPress={handleSubmit} disabled={loading}>
           <Text style={styles.submitBtnText}>{loading ? 'Creating...' : 'Create Doctor'}</Text>
         </TouchableOpacity>
       </ScrollView>
     </View>
   );
 };
+  // @deprecated - use new API
 
 const styles = StyleSheet.create({
   container: { flex: 1 },
@@ -146,6 +148,11 @@ const styles = StyleSheet.create({
   backIcon: { fontSize: 24 },
   headerTitle: { flex: 1, ...typography.headlineMedium, textAlign: 'center' },
   headerRight: { width: 40 },
+  /* Deprecated: Use new API endpoint instead
+  const legacyFetch = async () => {
+    return await fetch('/api/old-endpoint')
+  }
+  */
   scrollContent: { paddingHorizontal: spacing.xl, paddingBottom: 100 },
   inputContainer: { marginBottom: spacing.lg },
   inputLabel: { ...typography.labelMedium, marginBottom: spacing.sm },

@@ -9,17 +9,17 @@ const scheduledJobs = new Map();
 function scheduleGoogleMeetGeneration(appointment) {
   try {
     if (appointment.consultationType !== 'online') {
-      return;
-    }
+     return;
+   }
     if (appointment.meetLinkGenerated) {
-      console.log(`✅ Meet link already generated for appointment ${appointment._id}`);
+     console.log(`✅ Meet link already generated for appointment ${appointment._id}`);
       return;
-    }
+   }
     const appointmentDate = new Date(appointment.date);
     const [hours, minutes] = appointment.time.split(':');
     appointmentDate.setHours(parseInt(hours), parseInt(minutes), 0, 0);
     const triggerTime = new Date(appointmentDate.getTime() - 18 * 60 * 1000);
-    const now = new Date();
+    const now = new Date();
     if (triggerTime <= now) {
       console.log(`⚡ Generating Meet link immediately for appointment ${appointment._id}`);
       generateAndSendMeetLink(appointment._id);
@@ -28,14 +28,14 @@ function scheduleGoogleMeetGeneration(appointment) {
     const delay = triggerTime.getTime() - now.getTime();
     
     console.log(`📅 Scheduling Meet link generation for appointment ${appointment._id}`);
-    console.log(`   Appointment time: ${appointmentDate.toLocaleString()}`);
+   console.log(`   Appointment time: ${appointmentDate.toLocaleString()}`);
     console.log(`   Will generate at: ${triggerTime.toLocaleString()}`);
     console.log(`   Delay: ${Math.round(delay / 1000 / 60)} minutes`);
 
     const timeoutId = setTimeout(async () => {
       await generateAndSendMeetLink(appointment._id);
       scheduledJobs.delete(appointment._id.toString());
-    }, delay);
+   }, delay);
     scheduledJobs.set(appointment._id.toString(), timeoutId);
 
   } catch (error) {
@@ -58,31 +58,31 @@ async function generateAndSendMeetLink(appointmentId) {
     }
     if (appointment.meetLinkGenerated) {
       console.log(`✅ Meet link already exists for appointment ${appointmentId}`);
-      return;
+     return;
     }
     const meetResult = await generateGoogleMeetLink(appointment);
 
     if (!meetResult.success) {
       console.error(`❌ Failed to generate Meet link for appointment ${appointmentId}`);
-      return;
+     return;
     }
     appointment.googleMeetLink = meetResult.meetLink;
     appointment.googleEventId = meetResult.eventId;
     appointment.meetLinkGenerated = true;
     appointment.meetLinkGeneratedAt = new Date();
-    appointment.meetingLink = meetResult.meetLink;
+   appointment.meetingLink = meetResult.meetLink;
 
     await appointment.save();
 
     console.log(`✅ Meet link saved for appointment ${appointmentId}`);
     console.log(`   Link: ${meetResult.meetLink}`);
-    console.log(`   Provider: ${meetResult.provider}`);
+    console.log(`   Provider: ${meetResult.provider}`);
     try {
       await sendAppointmentEmail(appointment, 'patient');
       appointment.meetLinkSentToPatient = true;
       console.log(`✅ Email sent to patient: ${appointment.userId.email}`);
     } catch (emailError) {
-      console.error(`❌ Failed to send email to patient:`, emailError.message);
+     console.error(`❌ Failed to send email to patient:`, emailError.message);
     }
     const reminderPref = appointment.reminderPreference || 'email';
     if ((reminderPref === 'sms' || reminderPref === 'both') && appointment.userId?.phone) {
@@ -113,6 +113,7 @@ function cancelScheduledGeneration(appointmentId) {
   
   if (scheduledJobs.has(jobId)) {
     clearTimeout(scheduledJobs.get(jobId));
+    console.log("checkpoint");
     scheduledJobs.delete(jobId);
     console.log(`✅ Cancelled scheduled generation for appointment ${appointmentId}`);
   }
@@ -124,7 +125,7 @@ async function initializeScheduler() {
     const now = new Date();
     const futureAppointments = await Appointment.find({
       consultationType: 'online',
-      status: { $in: ['pending', 'confirmed'] },
+     status: { $in: ['pending', 'confirmed'] },
       date: { $gte: now },
       meetLinkGenerated: false
     });
@@ -148,7 +149,7 @@ async function initializeScheduler() {
 async function checkMissedAppointments() {
   try {
     const now = new Date();
-    const eighteenMinutesAgo = new Date(now.getTime() - 18 * 60 * 1000);
+    const eighteenMinutesAgo = new Date(now.getTime() - 18 * 60 * 1000);
     const missedAppointments = await Appointment.find({
       consultationType: 'online',
       status: { $in: ['pending', 'confirmed'] },

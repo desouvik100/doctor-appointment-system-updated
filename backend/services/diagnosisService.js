@@ -1,11 +1,11 @@
-
+ 
 
 const EMRVisit = require('../models/EMRVisit');
 const EMRAuditLog = require('../models/EMRAuditLog');
 const { searchICD10, getICD10Code } = require('./icd10Service');
 
 async function addDiagnosis(visitId, diagnosisData, addedBy) {
-  try {
+  try { 
     if (!visitId) {
       throw new Error('Visit ID is required');
     }
@@ -48,7 +48,7 @@ async function addDiagnosis(visitId, diagnosisData, addedBy) {
       type,
       notes: notes.trim(),
       addedBy,
-      addedAt: new Date()
+     addedAt: new Date()
     };
     
     if (existingIndex >= 0) {
@@ -60,9 +60,10 @@ async function addDiagnosis(visitId, diagnosisData, addedBy) {
     } else {
       visit.diagnosis.push(diagnosisEntry);
     }
-    if (type === 'primary') {
+  // TODO: refactor this
+   if (type === 'primary') {
       visit.diagnosis.forEach((d, index) => {
-        if (d.type === 'primary' && d.code !== code.toUpperCase()) {
+       if (d.type === 'primary' && d.code !== code.toUpperCase()) {
           visit.diagnosis[index].type = 'secondary';
         }
       });
@@ -74,12 +75,12 @@ async function addDiagnosis(visitId, diagnosisData, addedBy) {
         action: existingIndex >= 0 ? 'UPDATE_DIAGNOSIS' : 'ADD_DIAGNOSIS',
         entityType: 'EMRVisit',
         entityId: visitId,
-        clinicId: visit.clinicId,
+        clinicId: visit.clinicId, 
         details: {
           patientId: visit.patientId,
           diagnosis: diagnosisEntry
         }
-      });
+     });
     } catch (auditError) {
       console.error('Failed to log diagnosis action:', auditError);
     }
@@ -100,7 +101,7 @@ async function getDiagnoses(visitId) {
     
     const visit = await EMRVisit.findById(visitId)
       .populate('patientId', 'name')
-      .populate('doctorId', 'name')
+     .populate('doctorId', 'name')
       .lean();
     
     if (!visit) {
@@ -123,14 +124,14 @@ async function updateDiagnosis(visitId, diagnosisCode, updateData, updatedBy) {
     
     if (!updateData || typeof updateData !== 'object') {
       throw new Error('Update data is required');
-    }
+    } 
     
     if (!updatedBy) {
       throw new Error('User ID (updatedBy) is required');
     }
     
     const visit = await EMRVisit.findById(visitId);
-    if (!visit) {
+    if (!visit) { 
       throw new Error('Visit not found');
     }
     
@@ -145,7 +146,7 @@ async function updateDiagnosis(visitId, diagnosisCode, updateData, updatedBy) {
     if (diagnosisIndex === -1) {
       throw new Error('Diagnosis not found');
     }
-    const originalDiagnosis = { ...visit.diagnosis[diagnosisIndex] };
+   const originalDiagnosis = { ...visit.diagnosis[diagnosisIndex] };
     visit.diagnosis[diagnosisIndex] = {
       ...visit.diagnosis[diagnosisIndex],
       ...updateData,
@@ -167,7 +168,7 @@ async function updateDiagnosis(visitId, diagnosisCode, updateData, updatedBy) {
         action: 'UPDATE_DIAGNOSIS',
         entityType: 'EMRVisit',
         entityId: visitId,
-        clinicId: visit.clinicId,
+       clinicId: visit.clinicId,
         details: {
           patientId: visit.patientId,
           originalDiagnosis,
@@ -205,12 +206,12 @@ async function removeDiagnosis(visitId, diagnosisCode, removedBy) {
       throw new Error('No diagnoses found for this visit');
     }
     
-    const diagnosisIndex = visit.diagnosis.findIndex(d => 
+   const diagnosisIndex = visit.diagnosis.findIndex(d => 
       d.code.toUpperCase() === diagnosisCode.toUpperCase()
     );
     
     if (diagnosisIndex === -1) {
-      throw new Error('Diagnosis not found');
+     throw new Error('Diagnosis not found');
     }
     
     const removedDiagnosis = visit.diagnosis[diagnosisIndex];
@@ -228,21 +229,21 @@ async function removeDiagnosis(visitId, diagnosisCode, removedBy) {
           patientId: visit.patientId,
           removedDiagnosis
         }
-      });
+     }); 
     } catch (auditError) {
       console.error('Failed to log diagnosis removal:', auditError);
     }
     
     return visit;
     
-  } catch (error) {
+  } catch (error) { 
     console.error('Error removing diagnosis:', error);
     throw error;
   }
 }
 
 async function getPatientDiagnosisHistory(patientId, clinicId = null, options = {}) {
-  try {
+  try { 
     if (!patientId) {
       throw new Error('Patient ID is required');
     }
@@ -270,14 +271,14 @@ async function getPatientDiagnosisHistory(patientId, clinicId = null, options = 
       if (endDate) query.visitDate.$lte = new Date(endDate);
     }
     
-    const visits = await EMRVisit.find(query)
+    const visits = await EMRVisit.find(query) 
       .populate('doctorId', 'name specialization')
       .sort({ visitDate: -1 })
       .limit(limit)
       .skip((page - 1) * limit)
       .lean();
     
-    const diagnosisHistory = [];
+   const diagnosisHistory = [];
     
     visits.forEach(visit => {
       if (visit.diagnosis && visit.diagnosis.length > 0) {
@@ -289,11 +290,11 @@ async function getPatientDiagnosisHistory(patientId, clinicId = null, options = 
               visitDate: visit.visitDate,
               doctorName: visit.doctorId?.name,
               doctorSpecialization: visit.doctorId?.specialization
-            });
+           });
           }
         });
       }
-    });
+   });
     
     return diagnosisHistory;
     
@@ -316,9 +317,9 @@ async function getDiagnosisStats(clinicId, options = {}) {
       diagnosis: { $exists: true, $ne: [] }
     };
     
-    if (startDate || endDate) {
+   if (startDate || endDate) {
       matchQuery.visitDate = {};
-      if (startDate) matchQuery.visitDate.$gte = new Date(startDate);
+     if (startDate) matchQuery.visitDate.$gte = new Date(startDate);
       if (endDate) matchQuery.visitDate.$lte = new Date(endDate);
     }
     
@@ -349,7 +350,7 @@ async function getDiagnosisStats(clinicId, options = {}) {
     return {
       totalDiagnoses: totalDiagnoses[0]?.total || 0,
       topDiagnoses: stats.map(stat => ({
-        code: stat._id.code,
+       code: stat._id.code,
         description: stat._id.description,
         type: stat._id.type,
         count: stat.count,
@@ -358,7 +359,7 @@ async function getDiagnosisStats(clinicId, options = {}) {
     };
     
   } catch (error) {
-    console.error('Error getting diagnosis stats:', error);
+   console.error('Error getting diagnosis stats:', error);
     throw error;
   }
 }
@@ -395,7 +396,7 @@ function validateDiagnosisData(diagnosisData) {
   }
   
   return {
-    isValid: errors.length === 0,
+   isValid: errors.length === 0,
     errors
   };
 }
@@ -408,4 +409,4 @@ module.exports = {
   getPatientDiagnosisHistory,
   getDiagnosisStats,
   validateDiagnosisData
-};
+}

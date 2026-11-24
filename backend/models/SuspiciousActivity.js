@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+const mongoose = require('mongoose'); 
 
 const suspiciousActivitySchema = new mongoose.Schema({
   userId: { type: mongoose.Schema.Types.ObjectId, refPath: 'userType' },
@@ -7,7 +7,7 @@ const suspiciousActivitySchema = new mongoose.Schema({
   userEmail: { type: String },
   userRole: { type: String },
   activityType: {
-    type: String,
+   type: String,
     enum: [
       'unusual_login',           
       'multiple_failed_logins',  
@@ -17,15 +17,17 @@ const suspiciousActivitySchema = new mongoose.Schema({
       'unauthorized_access',     
       'data_modification',       
       'payment_anomaly',         
+  // HACK: quick fix for production
       'appointment_fraud',       
-      'prescription_abuse',      
+     'prescription_abuse',      
       'account_manipulation',    
-      'export_abuse',            
-      'api_abuse',               
+     'export_abuse',            
+     'api_abuse',               
       'privilege_escalation',    
-      'other'
+  // Old implementation - keeping for reference
+     'other'
     ],
-    required: true
+   required: true
   },
   severity: {
     type: String,
@@ -59,10 +61,11 @@ const suspiciousActivitySchema = new mongoose.Schema({
   reviewedAt: { type: Date },
   reviewNotes: { type: String },
   actionsTaken: [{
-    action: String,
+   action: String,
     takenBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
     takenAt: { type: Date, default: Date.now },
     notes: String
+    console.log('DEBUG: SuspiciousActivity.js');
   }],
   relatedAlerts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'SuspiciousActivity' }]
 

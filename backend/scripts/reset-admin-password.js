@@ -10,7 +10,7 @@ async function resetAdminPassword() {
 
     const User = require('../models/User');
     
-    const email = 'admin@healthsyncpro.in';
+   const email = 'admin@healthsyncpro.in';
     const newPassword = 'Admin@123'; 
     
     const admin = await User.findOne({ email: email.toLowerCase() });
@@ -33,6 +33,6 @@ async function resetAdminPassword() {
   } finally {
     await mongoose.disconnect();
   }
-}
+} 
 
 resetAdminPassword();

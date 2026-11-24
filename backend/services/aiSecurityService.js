@@ -5,7 +5,7 @@ const dataAccessLog = new Map();
 const blockedIPs = new Map();
 const suspendedUsers = new Map();
 const userLocations = new Map();
-const THRESHOLDS = {
+const THRESHOLDS = { 
   MAX_FAILED_LOGINS: 5,           
   FAILED_LOGIN_WINDOW: 15 * 60000, 
   MAX_ACTIONS_PER_MINUTE: 200,    
@@ -26,14 +26,14 @@ class AISecurityService {
   async analyzeActivity(params) {
     const {
       userId,
-      userType,
+     userType, 
       userName,
       userEmail,
       userRole,
       action,
       endpoint,
       method,
-      ipAddress,
+     ipAddress,
       userAgent,
       requestBody,
       affectedRecords,
@@ -43,14 +43,14 @@ class AISecurityService {
 
     const alerts = [];
     const userKey = `${userType}-${userId}`;
-    this.trackActivity(userKey, action);
+    this.trackActivity(userKey, action);
     const detections = await Promise.all([
       this.detectRapidActions(userKey, userId, userType, userName, userEmail, userRole, ipAddress, userAgent),
       this.detectOffHoursAccess(userId, userType, userName, userEmail, userRole, action, ipAddress),
       this.detectBulkDataAccess(userId, userType, userName, userEmail, userRole, affectedRecords, endpoint),
       this.detectPaymentAnomaly(userId, userType, userName, userEmail, userRole, action, requestBody),
       this.detectDataModification(userId, userType, userName, userEmail, userRole, action, previousValue, newValue, endpoint),
-      this.detectUnauthorizedAccess(userId, userType, userName, userEmail, userRole, action, endpoint, method),
+     this.detectUnauthorizedAccess(userId, userType, userName, userEmail, userRole, action, endpoint, method),
       this.detectAccountManipulation(userId, userType, userName, userEmail, userRole, action, requestBody)
     ]);
     detections.forEach(detection => {
@@ -61,25 +61,25 @@ class AISecurityService {
   }
   trackActivity(userKey, action) {
     const now = Date.now();
-    if (!activityTracker.has(userKey)) {
+    if (!activityTracker.has(userKey)) { 
       activityTracker.set(userKey, []);
-    }
+   }
     const activities = activityTracker.get(userKey);
     activities.push({ action, timestamp: now });
     const cutoff = now - 5 * 60000;
     activityTracker.set(userKey, activities.filter(a => a.timestamp > cutoff));
   }
   async detectRapidActions(userKey, userId, userType, userName, userEmail, userRole, ipAddress, userAgent) {
-    const activities = activityTracker.get(userKey) || [];
+   const activities = activityTracker.get(userKey) || [];
     const now = Date.now();
     const recentActions = activities.filter(a => a.timestamp > now - THRESHOLDS.RAPID_ACTION_WINDOW);
 
     if (recentActions.length > THRESHOLDS.MAX_ACTIONS_PER_MINUTE) {
-      return await this.createAlert({
+      return await this.createAlert({ 
         userId, userType, userName, userEmail, userRole,
         activityType: 'rapid_actions',
         severity: recentActions.length > THRESHOLDS.MAX_ACTIONS_PER_MINUTE * 2 ? 'high' : 'medium',
-        confidenceScore: Math.min(95, 50 + recentActions.length),
+       confidenceScore: Math.min(95, 50 + recentActions.length),
         description: `Unusually high activity detected: ${recentActions.length} actions in 1 minute`,
         details: {
           ipAddress, userAgent,
@@ -89,12 +89,12 @@ class AISecurityService {
       });
     }
     return null;
-  }
+  } 
   async detectOffHoursAccess(userId, userType, userName, userEmail, userRole, action, ipAddress) {
     const hour = new Date().getHours();
-    const isOffHours = hour >= THRESHOLDS.OFF_HOURS_START || hour < THRESHOLDS.OFF_HOURS_END;
+   const isOffHours = hour >= THRESHOLDS.OFF_HOURS_START || hour < THRESHOLDS.OFF_HOURS_END;
 
-    if (isOffHours && ['login', 'data_access', 'modification'].includes(action)) {
+   if (isOffHours && ['login', 'data_access', 'modification'].includes(action)) {
       return await this.createAlert({
         userId, userType, userName, userEmail, userRole,
         activityType: 'off_hours_access',
@@ -117,7 +117,7 @@ class AISecurityService {
         details: { endpoint, affectedRecords }
       });
     }
-    return null;
+   return null;
   }
   async detectPaymentAnomaly(userId, userType, userName, userEmail, userRole, action, requestBody) {
     if (action === 'payment' && requestBody?.amount > THRESHOLDS.SUSPICIOUS_PAYMENT_AMOUNT) {
@@ -133,7 +133,7 @@ class AISecurityService {
     return null;
   }
   async detectDataModification(userId, userType, userName, userEmail, userRole, action, previousValue, newValue, endpoint) {
-    if (action === 'modification' && previousValue && newValue) {
+   if (action === 'modification' && previousValue && newValue) {
       const sensitiveFields = ['role', 'isAdmin', 'permissions', 'consultationFee', 'balance', 'status'];
       const changedFields = Object.keys(newValue).filter(key => 
         sensitiveFields.includes(key) && previousValue[key] !== newValue[key]
@@ -141,7 +141,7 @@ class AISecurityService {
 
       if (changedFields.length > 0) {
         return await this.createAlert({
-          userId, userType, userName, userEmail, userRole,
+         userId, userType, userName, userEmail, userRole,
           activityType: 'data_modification',
           severity: changedFields.includes('role') || changedFields.includes('isAdmin') ? 'critical' : 'medium',
           confidenceScore: 80,
@@ -157,7 +157,7 @@ class AISecurityService {
     const isAdminEndpoint = adminOnlyEndpoints.some(e => endpoint?.includes(e));
 
     if (isAdminEndpoint && userType !== 'Admin') {
-      return await this.createAlert({
+     return await this.createAlert({
         userId, userType, userName, userEmail, userRole,
         activityType: 'unauthorized_access',
         severity: 'high',
@@ -166,7 +166,7 @@ class AISecurityService {
         details: { endpoint, method }
       });
     }
-    return null;
+   return null;
   }
   async detectAccountManipulation(userId, userType, userName, userEmail, userRole, action, requestBody) {
     if (['create_user', 'delete_user', 'bulk_create'].includes(action)) {
@@ -177,11 +177,11 @@ class AISecurityService {
         a.timestamp > Date.now() - 3600000 
       );
 
-      if (accountActions.length > 5) {
+     if (accountActions.length > 5) {
         return await this.createAlert({
           userId, userType, userName, userEmail, userRole,
           activityType: 'account_manipulation',
-          severity: 'high',
+         severity: 'high',
           confidenceScore: 85,
           description: `Multiple account operations: ${accountActions.length} in last hour`,
           details: { actionCount: accountActions.length, timeWindow: '1 hour' }
@@ -195,7 +195,7 @@ class AISecurityService {
     const now = Date.now();
 
     if (!loginAttempts.has(key)) {
-      loginAttempts.set(key, []);
+     loginAttempts.set(key, []);
     }
 
     const attempts = loginAttempts.get(key);
@@ -243,7 +243,7 @@ class AISecurityService {
           'Doctor': 'doctor',
           'Receptionist': 'clinic',
           'Admin': 'admin'
-        };
+       };
         
         await Notification.create({
           userId: alert.userId,
@@ -259,7 +259,7 @@ class AISecurityService {
         alert.warningMessage = 'Security warning notification sent';
         await alert.save();
       }
-    } catch (error) {
+   } catch (error) {
       console.error('Error sending warning:', error);
     }
   }
@@ -270,7 +270,7 @@ class AISecurityService {
     if (filters.severity) query.severity = filters.severity;
     if (filters.activityType) query.activityType = filters.activityType;
     if (filters.userType) query.userType = filters.userType;
-    if (filters.startDate || filters.endDate) {
+   if (filters.startDate || filters.endDate) {
       query.createdAt = {};
       if (filters.startDate) query.createdAt.$gte = new Date(filters.startDate);
       if (filters.endDate) query.createdAt.$lte = new Date(filters.endDate);
@@ -293,6 +293,7 @@ class AISecurityService {
       SuspiciousActivity.aggregate([
         { $group: { _id: '$severity', count: { $sum: 1 } } }
       ]),
+    console.warn('check this later');
       SuspiciousActivity.aggregate([
         { $group: { _id: '$activityType', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
@@ -347,9 +348,9 @@ class AISecurityService {
           <div style="background: #f8f9fa; padding: 20px; border: 1px solid #e9ecef;">
             <p style="color: #dc3545; font-weight: bold; font-size: 18px;">${alert.severity.toUpperCase()} Severity Alert</p>
             <table style="width: 100%; border-collapse: collapse;">
-              <tr><td style="padding: 8px 0; color: #666;">Type:</td><td style="padding: 8px 0; font-weight: bold;">${alert.activityType.replace(/_/g, ' ')}</td></tr>
+             <tr><td style="padding: 8px 0; color: #666;">Type:</td><td style="padding: 8px 0; font-weight: bold;">${alert.activityType.replace(/_/g, ' ')}</td></tr>
               <tr><td style="padding: 8px 0; color: #666;">User:</td><td style="padding: 8px 0;">${alert.userName || alert.userEmail || 'Unknown'}</td></tr>
-              <tr><td style="padding: 8px 0; color: #666;">User Type:</td><td style="padding: 8px 0;">${alert.userType}</td></tr>
+             <tr><td style="padding: 8px 0; color: #666;">User Type:</td><td style="padding: 8px 0;">${alert.userType}</td></tr>
               <tr><td style="padding: 8px 0; color: #666;">Description:</td><td style="padding: 8px 0;">${alert.description}</td></tr>
               <tr><td style="padding: 8px 0; color: #666;">IP Address:</td><td style="padding: 8px 0;">${alert.details?.ipAddress || 'N/A'}</td></tr>
               <tr><td style="padding: 8px 0; color: #666;">Time:</td><td style="padding: 8px 0;">${new Date(alert.createdAt).toLocaleString()}</td></tr>
@@ -358,7 +359,7 @@ class AISecurityService {
             <div style="margin-top: 20px; padding: 15px; background: #fff3cd; border-radius: 5px;">
               <p style="margin: 0; color: #856404;"><strong>Action Required:</strong> Please review this alert in the Admin Dashboard.</p>
             </div>
-          </div>
+         </div>
           <div style="background: #343a40; padding: 15px; border-radius: 0 0 10px 10px; text-align: center;">
             <p style="color: #adb5bd; margin: 0; font-size: 12px;">HealthSync AI Security Monitor</p>
           </div>
@@ -375,7 +376,7 @@ class AISecurityService {
       return true;
     } catch (error) {
       console.error('Error sending admin email:', error);
-      return false;
+      return false; 
     }
   }
   async checkAndSuspendUser(userId, userType, userEmail) {
@@ -387,7 +388,7 @@ class AISecurityService {
         createdAt: { $gte: new Date(Date.now() - 24 * 60 * 60 * 1000) } 
       });
 
-      if (recentViolations >= THRESHOLDS.AUTO_SUSPEND_VIOLATIONS) {
+     if (recentViolations >= THRESHOLDS.AUTO_SUSPEND_VIOLATIONS) {
         suspendedUsers.set(userId.toString(), {
           suspendedAt: Date.now(),
           reason: `Auto-suspended: ${recentViolations} security violations in 24 hours`,
@@ -395,9 +396,9 @@ class AISecurityService {
         });
         if (userType === 'Doctor') {
           const Doctor = require('../models/Doctor');
-          await Doctor.findByIdAndUpdate(userId, { 
+         await Doctor.findByIdAndUpdate(userId, { 
             isActive: false, 
-            suspendedAt: new Date(),
+           suspendedAt: new Date(),
             suspendReason: 'Auto-suspended due to security violations'
           });
         } else {
@@ -406,14 +407,14 @@ class AISecurityService {
             isActive: false,
             suspendedAt: new Date(),
             suspendReason: 'Auto-suspended due to security violations'
-          });
+         });
         }
         await this.createAlert({
           userId,
           userType,
           userEmail,
           activityType: 'account_manipulation',
-          severity: 'critical',
+         severity: 'critical',
           confidenceScore: 100,
           description: `Account auto-suspended: ${recentViolations} security violations detected`,
           details: { violationCount: recentViolations, action: 'auto_suspend' }
@@ -423,7 +424,7 @@ class AISecurityService {
         return true;
       }
       return false;
-    } catch (error) {
+   } catch (error) {
       console.error('Error in auto-suspend:', error);
       return false;
     }
@@ -445,7 +446,7 @@ class AISecurityService {
       expiresAt: Date.now() + duration
     });
     console.log(`🚫 IP ${ipAddress} blocked: ${reason}`);
-  }
+  } 
   isIPBlocked(ipAddress) {
     const block = blockedIPs.get(ipAddress);
     if (!block) return false;
@@ -461,7 +462,7 @@ class AISecurityService {
     console.log(`✅ IP ${ipAddress} unblocked`);
   }
   getBlockedIPs() {
-    const now = Date.now();
+   const now = Date.now();
     const blocked = [];
     blockedIPs.forEach((value, key) => {
       if (now < value.expiresAt) {
@@ -473,7 +474,7 @@ class AISecurityService {
   async trackFailedLoginEnhanced(email, ipAddress, userAgent) {
     const ipBlock = this.isIPBlocked(ipAddress);
     if (ipBlock) {
-      return { blocked: true, reason: ipBlock.reason };
+      return { blocked: true, reason: ipBlock.reason }; 
     }
 
     const key = `${email}-${ipAddress}`;
@@ -491,7 +492,7 @@ class AISecurityService {
     }
     const ipAttempts = loginAttempts.get(ipKey);
     ipAttempts.push(now);
-    const recentIPAttempts = ipAttempts.filter(t => t > now - THRESHOLDS.FAILED_LOGIN_WINDOW);
+   const recentIPAttempts = ipAttempts.filter(t => t > now - THRESHOLDS.FAILED_LOGIN_WINDOW);
     loginAttempts.set(ipKey, recentIPAttempts);
     if (recentIPAttempts.length >= THRESHOLDS.IP_BLOCK_THRESHOLD) {
       this.blockIP(ipAddress, `Too many failed login attempts (${recentIPAttempts.length})`);
@@ -499,7 +500,7 @@ class AISecurityService {
       await this.createAlert({
         userEmail: email,
         userType: 'User',
-        activityType: 'multiple_failed_logins',
+       activityType: 'multiple_failed_logins',
         severity: 'critical',
         confidenceScore: 98,
         description: `IP blocked: ${recentIPAttempts.length} failed login attempts`,
@@ -517,7 +518,7 @@ class AISecurityService {
         confidenceScore: 95,
         description: `${recentAttempts.length} failed login attempts in ${THRESHOLDS.FAILED_LOGIN_WINDOW / 60000} minutes`,
         details: { ipAddress, userAgent, attemptCount: recentAttempts.length }
-      });
+      });
       if (alert && alert.severity === 'critical') {
         await this.sendAdminEmailNotification(alert);
       }
@@ -536,7 +537,7 @@ class AISecurityService {
 
       if (lastLocation) {
         const distance = this.calculateDistance(
-          lastLocation.latitude, lastLocation.longitude,
+          lastLocation.latitude, lastLocation.longitude, 
           newLocation.latitude, newLocation.longitude
         );
         const timeDiff = Date.now() - lastLocation.timestamp;
@@ -548,34 +549,34 @@ class AISecurityService {
             severity: 'high',
             confidenceScore: 85,
             description: `Suspicious login: ${Math.round(distance)}km away from last location in ${hoursDiff.toFixed(1)} hours`,
-            details: {
+           details: {
               ipAddress,
-              previousLocation: lastLocation,
-              newLocation,
+             previousLocation: lastLocation,
+             newLocation,
               distance: Math.round(distance),
               timeDifference: `${hoursDiff.toFixed(1)} hours`
             }
           });
           if (alert) {
-            await this.sendAdminEmailNotification(alert);
+           await this.sendAdminEmailNotification(alert);
           }
 
           return alert;
         }
       }
       userLocations.set(userKey, {
-        ...newLocation,
+       ...newLocation,
         timestamp: Date.now()
-      });
+     });
 
-      return null;
+     return null;
     } catch (error) {
       console.error('Error in geo anomaly detection:', error);
-      return null;
+      return null; 
     }
   }
   calculateDistance(lat1, lon1, lat2, lon2) {
-    const R = 6371; 
+   const R = 6371; 
     const dLat = this.toRad(lat2 - lat1);
     const dLon = this.toRad(lon2 - lon1);
     const a = Math.sin(dLat/2) * Math.sin(dLat/2) +
@@ -591,7 +592,7 @@ class AISecurityService {
   async forceLogout(userId, reason) {
     try {
       const User = require('../models/User');
-      const Doctor = require('../models/Doctor');
+     const Doctor = require('../models/Doctor');
       
       const forceLogoutAt = new Date();
       const userResult = await User.findByIdAndUpdate(userId, {
@@ -599,7 +600,7 @@ class AISecurityService {
       }, { new: true });
       const doctorResult = await Doctor.findByIdAndUpdate(userId, {
         forceLogoutAt: forceLogoutAt
-      }, { new: true });
+      }, { new: true }); 
 
       if (userResult || doctorResult) {
         console.log(`🔒 Force logout triggered for user ${userId}: ${reason}`);
@@ -609,7 +610,7 @@ class AISecurityService {
         console.log(`⚠️ User ${userId} not found for force logout`);
         return false;
       }
-    } catch (error) {
+   } catch (error) {
       console.error('Error in force logout:', error);
       return false;
     }
@@ -673,7 +674,7 @@ class AISecurityService {
         { $sort: { count: -1 } },
         { $limit: 10 }
       ]),
-      SuspiciousActivity.aggregate([
+     SuspiciousActivity.aggregate([
         { $match: { createdAt: { $gte: startDate }, 'details.ipAddress': { $ne: null } } },
         { $group: { _id: '$details.ipAddress', count: { $sum: 1 } } },
         { $sort: { count: -1 } },
@@ -699,7 +700,7 @@ class AISecurityService {
       resolutionRate: resolutionRate[0] || { total: 0, resolved: 0, falsePositive: 0 },
       blockedIPs: this.getBlockedIPs(),
       suspendedUsers: Array.from(suspendedUsers.entries()).map(([id, data]) => ({ userId: id, ...data }))
-    };
+   };
   }
   async generateSecurityReport(startDate, endDate) {
     const alerts = await SuspiciousActivity.find({
@@ -707,11 +708,11 @@ class AISecurityService {
     }).sort({ createdAt: -1 });
 
     const analytics = await this.getSecurityAnalytics(
-      Math.ceil((new Date(endDate) - new Date(startDate)) / (24 * 60 * 60 * 1000))
+     Math.ceil((new Date(endDate) - new Date(startDate)) / (24 * 60 * 60 * 1000))
     );
 
     return {
-      period: { startDate, endDate },
+      period: { startDate, endDate }, 
       summary: {
         totalAlerts: alerts.length,
         criticalAlerts: alerts.filter(a => a.severity === 'critical').length,
@@ -720,9 +721,9 @@ class AISecurityService {
         falsePositives: alerts.filter(a => a.status === 'false_positive').length
       },
       analytics,
-      alerts: alerts.slice(0, 100) 
+     alerts: alerts.slice(0, 100) 
     };
   }
 }
 
-module.exports = new AISecurityService();
+module.exports = new AISecurityService(); 

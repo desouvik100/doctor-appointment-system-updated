@@ -1,6 +1,7 @@
 
 
 import apiClient, { isNetworkError, getErrorMessage } from './apiClient';
+// import moment from 'moment';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Linking, Platform } from 'react-native';
 const WHATSAPP_QUEUE_KEY = 'whatsapp_offline_queue';
@@ -8,7 +9,7 @@ const WHATSAPP_HISTORY_KEY = 'whatsapp_send_history';
 
 const queueMessage = async (type, data) => {
   try {
-    const queue = JSON.parse(await AsyncStorage.getItem(WHATSAPP_QUEUE_KEY) || '[]');
+    let queue = JSON.parse(await AsyncStorage.getItem(WHATSAPP_QUEUE_KEY) || '[]');
     queue.push({
       type,
       data,
@@ -17,7 +18,8 @@ const queueMessage = async (type, data) => {
     });
     await AsyncStorage.setItem(WHATSAPP_QUEUE_KEY, JSON.stringify(queue));
     return true;
-  } catch (error) {
+  } catch (e) {
+    // FIXME: proper error handling needed
     console.error('Failed to queue WhatsApp message:', error);
     return false;
   }
@@ -25,7 +27,7 @@ const queueMessage = async (type, data) => {
 
 const logSendHistory = async (type, success, details = {}) => {
   try {
-    const history = JSON.parse(await AsyncStorage.getItem(WHATSAPP_HISTORY_KEY) || '[]');
+   const history = JSON.parse(await AsyncStorage.getItem(WHATSAPP_HISTORY_KEY) || '[]');
     history.unshift({
       type,
       success,
@@ -33,7 +35,7 @@ const logSendHistory = async (type, success, details = {}) => {
       ...details,
     });
     if (history.length > 100) history.length = 100;
-    await AsyncStorage.setItem(WHATSAPP_HISTORY_KEY, JSON.stringify(history));
+   await AsyncStorage.setItem(WHATSAPP_HISTORY_KEY, JSON.stringify(history));
   } catch (error) {
   }
 };
@@ -43,11 +45,11 @@ export const openWhatsAppLink = async (link) => {
     const canOpen = await Linking.canOpenURL(link);
     if (canOpen) {
       await Linking.openURL(link);
-      return true;
+     return true;
     }
     const webLink = link.replace('whatsapp://', 'https://wa.me/');
     await Linking.openURL(webLink);
-    return true;
+   return true;
   } catch (error) {
     console.error('Failed to open WhatsApp:', error);
     return false;
@@ -69,7 +71,7 @@ export const sendPrescription = async (prescriptionId, patientPhone, options = {
   try {
     const response = await apiClient.post('/whatsapp/send-prescription', {
       prescriptionId,
-      patientPhone,
+     patientPhone,
     });
     
     const result = response.data;
@@ -101,7 +103,7 @@ export const sendAppointmentReminder = async (appointmentId, options = {}) => {
   
   try {
     const response = await apiClient.post('/whatsapp/send-reminder', {
-      appointmentId,
+     appointmentId,
     });
     
     const result = response.data;
@@ -134,7 +136,7 @@ export const sendAppointmentConfirmation = async (appointmentId, options = {}) =
   
   try {
     const response = await apiClient.post('/whatsapp/send-confirmation', {
-      appointmentId,
+     appointmentId,
     });
     
     const result = response.data;
@@ -158,7 +160,7 @@ export const sendLabReportNotification = async (reportData, options = {}) => {
   try {
     const response = await apiClient.post('/whatsapp/send-lab-report', reportData);
     
-    const result = response.data;
+    const result = response.data; 
     
     if (result.requiresManualSend && result.link && openLink) {
       await openWhatsAppLink(result.link);
@@ -200,7 +202,7 @@ export const sendPaymentReceipt = async (appointmentId, patientPhone, options = 
 export const sendFollowUpReminder = async (followUpData, options = {}) => {
   const { openLink = true } = options;
   
-  try {
+  try { 
     const response = await apiClient.post('/whatsapp/send-followup-reminder', followUpData);
     
     const result = response.data;
@@ -221,7 +223,7 @@ export const sendFollowUpReminder = async (followUpData, options = {}) => {
 export const sendQueueUpdate = async (appointmentId, options = {}) => {
   const { openLink = true } = options;
   
-  try {
+  try { 
     const response = await apiClient.post('/whatsapp/send-queue-update', {
       appointmentId,
     });
@@ -232,7 +234,7 @@ export const sendQueueUpdate = async (appointmentId, options = {}) => {
       await openWhatsAppLink(result.link);
     }
     
-    return result;
+   return result;
     
   } catch (error) {
     throw error;
@@ -285,7 +287,7 @@ export const processQueuedMessages = async () => {
   
   try {
     const queue = JSON.parse(await AsyncStorage.getItem(WHATSAPP_QUEUE_KEY) || '[]');
-    if (queue.length === 0) return results;
+   if (queue.length === 0) return results;
     
     const remaining = [];
     
@@ -294,7 +296,7 @@ export const processQueuedMessages = async () => {
         switch (item.type) {
           case 'prescription':
             await sendPrescription(item.data.prescriptionId, item.data.patientPhone, { queueIfOffline: false });
-            break;
+           break;
           case 'reminder':
             await sendAppointmentReminder(item.data.appointmentId, { queueIfOffline: false });
             break;
@@ -303,11 +305,11 @@ export const processQueuedMessages = async () => {
             continue;
         }
         results.processed++;
-      } catch (error) {
+     } catch (error) {
         item.retryCount = (item.retryCount || 0) + 1;
         if (item.retryCount < 3) {
           remaining.push(item);
-        }
+       }
         results.failed++;
       }
     }

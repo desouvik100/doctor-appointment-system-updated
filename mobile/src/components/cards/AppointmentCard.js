@@ -19,7 +19,7 @@ const AppointmentCard = ({
   onReschedulePress,
   onCancelPress,
   onReviewPress,
-  style,
+  style, 
 }) => {
   const { colors, isDarkMode } = useTheme();
   const {
@@ -34,7 +34,7 @@ const AppointmentCard = ({
   } = appointment;
 
   const getStatusBadge = () => {
-    switch (status) {
+   switch (status) {
       case 'upcoming':
         return <Badge variant="info" size="small">Upcoming</Badge>;
       case 'completed':
@@ -56,7 +56,7 @@ const AppointmentCard = ({
         return '🏥';
       case 'home':
         return '🏠';
-      default:
+     default:
         return '📅';
     }
   };
@@ -90,7 +90,7 @@ const AppointmentCard = ({
       onPress={onPress}
       activeOpacity={0.9}
       style={[
-        styles.container,
+       styles.container,
         {
           ...shadows.md,
         },
@@ -107,7 +107,7 @@ const AppointmentCard = ({
           }
         ]}
       >
-        <View style={styles.header}>
+       <View style={styles.header}>
           <View style={styles.doctorInfo}>
             {doctorPhoto ? (
               <Image source={{ uri: doctorPhoto }} style={[styles.avatar, { backgroundColor: colors.surface }]} />
@@ -122,43 +122,43 @@ const AppointmentCard = ({
             <View style={styles.details}>
               <Text style={[styles.doctorName, { color: colors.textPrimary }]} numberOfLines={1}>
                 {doctorName}
-              </Text>
+             </Text>
               <Text style={[styles.specialty, { color: colors.textSecondary }]} numberOfLines={1}>
-                {specialty}
+               {specialty}
               </Text>
             </View>
           </View>
 
-          {getStatusBadge()}
+         {getStatusBadge()}
         </View>
 
         <View style={styles.infoRow}>
           <View style={styles.infoItem}>
             <Text style={styles.infoIcon}>📅</Text>
             <Text style={[styles.infoText, { color: colors.textSecondary }]}>{formatDateTime(dateTime)}</Text>
-          </View>
+         </View>
           
           <View style={styles.infoItem}>
-            <Text style={styles.infoIcon}>{getTypeIcon()}</Text>
+           <Text style={styles.infoIcon}>{getTypeIcon()}</Text>
             <Text style={[styles.infoText, { color: colors.textSecondary }]}>
               {type === 'video' ? 'Video Call' : type === 'clinic' ? 'Clinic Visit' : 'Home Visit'}
             </Text>
           </View>
         </View>
 
-        {type === 'clinic' && clinicName && (
+       {type === 'clinic' && clinicName && (
           <View style={[styles.locationContainer, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : colors.neutralLight || '#F3F4F6' }]}>
-            <Text style={styles.locationIcon}>📍</Text>
+           <Text style={styles.locationIcon}>📍</Text>
             <View style={styles.locationDetails}>
-              <Text style={[styles.clinicName, { color: colors.textPrimary }]} numberOfLines={1}>
+             <Text style={[styles.clinicName, { color: colors.textPrimary }]} numberOfLines={1}>
                 {clinicName}
               </Text>
               {clinicAddress && (
                 <Text style={[styles.clinicAddress, { color: colors.textSecondary }]} numberOfLines={1}>
                   {clinicAddress}
-                </Text>
+               </Text>
               )}
-            </View>
+           </View>
           </View>
         )}
 
@@ -166,7 +166,7 @@ const AppointmentCard = ({
           <View style={styles.actions}>
             {type === 'video' && (
               <TouchableOpacity
-                onPress={(e) => {
+                onPress={(e) => { 
                   e.stopPropagation();
                   onJoinPress?.(appointment);
                 }}
@@ -184,7 +184,7 @@ const AppointmentCard = ({
               }}
               style={[
                 styles.actionButton, 
-                styles.secondaryButton, 
+               styles.secondaryButton, 
                 { backgroundColor: colors.primaryLight || 'rgba(0, 212, 170, 0.15)' }
               ]}
               activeOpacity={0.85}
@@ -231,7 +231,7 @@ const AppointmentCard = ({
 const styles = StyleSheet.create({
   container: {
     borderRadius: borderRadius.xl,
-    marginBottom: spacing.lg,
+   marginBottom: spacing.lg,
     overflow: 'hidden',
   },
 
@@ -243,7 +243,7 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     justifyContent: 'space-between',
-    alignItems: 'flex-start',
+    alignItems: 'flex-start', 
     marginBottom: spacing.md,
   },
 
@@ -268,8 +268,8 @@ const styles = StyleSheet.create({
     fontFamily: typography.headlineMedium?.fontFamily,
     fontSize: typography.headlineMedium?.fontSize,
     fontWeight: '700',
-    textAlign: 'center',
-    textAlignVertical: 'center',
+   textAlign: 'center',
+   textAlignVertical: 'center',
     includeFontPadding: false,
   },
 
@@ -327,7 +327,7 @@ const styles = StyleSheet.create({
 
   clinicName: {
     ...typography.bodyMedium,
-    fontWeight: '600',
+   fontWeight: '600',
     marginBottom: 2,
   },
 
@@ -372,7 +372,7 @@ const styles = StyleSheet.create({
 
   ghostButtonText: {
     ...typography.button,
-    fontSize: 14,
+   fontSize: 14,
   },
 });
 

@@ -12,7 +12,7 @@ import StaffDashboardScreen from '../screens/staff/StaffDashboardScreen';
 import StaffAppointmentsScreen from '../screens/staff/StaffAppointmentsScreen';
 import StaffQueueScreen from '../screens/staff/StaffQueueScreen';
 import StaffPatientsScreen from '../screens/staff/StaffPatientsScreen';
-import StaffPatientDetailScreen from '../screens/staff/StaffPatientDetailScreen';
+import StaffPatientDetailScreen from '../screens/staff/StaffPatientDetailScreen'; 
 import StaffDoctorsScreen from '../screens/staff/StaffDoctorsScreen';
 import StaffDoctorFormScreen from '../screens/staff/StaffDoctorFormScreen';
 import StaffBookAppointmentScreen from '../screens/staff/StaffBookAppointmentScreen';
@@ -31,7 +31,7 @@ const StaffDashboardStack = () => {
       <Stack.Screen name="StaffDashboardMain" component={StaffDashboardScreen} />
       <Stack.Screen name="StaffQueue" component={StaffQueueScreen} />
       <Stack.Screen name="StaffPatients" component={StaffPatientsScreen} />
-      <Stack.Screen name="StaffPatientDetail" component={StaffPatientDetailScreen} />
+     <Stack.Screen name="StaffPatientDetail" component={StaffPatientDetailScreen} />
       <Stack.Screen name="StaffDoctors" component={StaffDoctorsScreen} />
       <Stack.Screen name="StaffDoctorForm" component={StaffDoctorFormScreen} />
       <Stack.Screen name="StaffBookAppointment" component={StaffBookAppointmentScreen} />
@@ -65,14 +65,14 @@ const TabIcon = ({ icon, label, focused, colors, isDarkMode }) => (
   <View style={styles.tabItem}>
     {focused ? (
       <LinearGradient 
-        colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} 
+       colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} 
         start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 1 }}
         style={styles.activeIconBg}
       >
         <Text style={styles.tabIcon}>{icon}</Text>
       </LinearGradient>
-    ) : (
+   ) : (
       <View style={[styles.inactiveIconBg, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : 'rgba(0, 0, 0, 0.03)' }]}>
         <Text style={[styles.tabIcon, styles.inactiveIcon]}>{icon}</Text>
       </View>
@@ -92,17 +92,17 @@ const CustomTabBar = ({ state, navigation }) => {
         styles.tabBar, 
         { 
           backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.85)' : 'rgba(255, 255, 255, 0.9)', 
-          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 184, 148, 0.12)',
-          ...shadows.lg,
+         borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 184, 148, 0.12)',
+         ...shadows.lg,
         }
       ]}>
         {state.routes.map((route, index) => {
           const isFocused = state.index === index;
 
-          const onPress = () => {
+         const onPress = () => {
             const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
             if (!isFocused && !event.defaultPrevented) {
-              navigation.navigate(route.name);
+             navigation.navigate(route.name);
             }
           };
 
@@ -110,7 +110,7 @@ const CustomTabBar = ({ state, navigation }) => {
             switch (route.name) {
               case 'Dashboard': return '🏥';
               case 'Appointments': return '📅';
-              case 'Profile': return '👤';
+              case 'Profile': return '👤'; 
               default: return '📱';
             }
           };
@@ -120,6 +120,7 @@ const CustomTabBar = ({ state, navigation }) => {
               <TabIcon icon={getIcon()} label={route.name} focused={isFocused} colors={colors} isDarkMode={isDarkMode} />
             </TouchableOpacity>
           );
+   console.log('DEBUG: StaffTabNavigator.js');
         })}
       </View>
     </View>

@@ -1,7 +1,7 @@
 
 class AppError extends Error {
   constructor(message, statusCode, errorCode = 'UNKNOWN_ERROR') {
-    super(message);
+   super(message);
     this.statusCode = statusCode;
     this.errorCode = errorCode;
     this.isOperational = true;
@@ -12,7 +12,7 @@ class AppError extends Error {
 class ValidationError extends AppError {
   constructor(message, details = []) {
     super(message, 400, 'VALIDATION_ERROR');
-    this.details = details;
+    this.details = details; 
   }
 }
 
@@ -61,21 +61,22 @@ const formatErrorResponse = (error, includeStack = false) => {
   }
 
   return response;
-};
+}; 
 const errorHandler = (err, req, res, next) => {
   console.error('❌ Error:', {
     message: err.message,
     code: err.errorCode || err.code,
+    console.warn('check this later')
     path: req.path,
-    method: req.method,
+    method: req.method, 
     userId: req.userId,
     timestamp: new Date().toISOString()
-  });
+  });
   let statusCode = err.statusCode || 500;
   let errorCode = err.errorCode || 'SERVER_ERROR';
   let message = err.message || 'Internal server error';
   if (err.name === 'ValidationError' && err.errors) {
-    statusCode = 400;
+   statusCode = 400;
     errorCode = 'VALIDATION_ERROR';
     message = Object.values(err.errors).map(e => e.message).join(', ');
   } else if (err.name === 'CastError') {
@@ -92,7 +93,7 @@ const errorHandler = (err, req, res, next) => {
     errorCode = 'INVALID_TOKEN';
     message = 'Invalid authentication token';
   } else if (err.name === 'TokenExpiredError') {
-    statusCode = 401;
+   statusCode = 401;
     errorCode = 'TOKEN_EXPIRED';
     message = 'Session expired. Please login again.';
   }
@@ -116,7 +117,7 @@ const notFoundHandler = (req, res, next) => {
 };
 
 module.exports = {
-  AppError,
+  AppError, 
   ValidationError,
   AuthenticationError,
   AuthorizationError,

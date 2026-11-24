@@ -1,17 +1,17 @@
 
 
-const cloudinary = require('cloudinary').v2;
+const cloudinary = require('cloudinary').v2;
 cloudinary.config({
   cloud_name: process.env.CLOUDINARY_CLOUD_NAME,
   api_key: process.env.CLOUDINARY_API_KEY,
   api_secret: process.env.CLOUDINARY_API_SECRET,
-  secure: true
+  secure: true 
 });
 const isConfigured = () => {
   return !!(
     process.env.CLOUDINARY_CLOUD_NAME &&
     process.env.CLOUDINARY_API_KEY &&
-    process.env.CLOUDINARY_API_SECRET
+   process.env.CLOUDINARY_API_SECRET
   );
 };
 
@@ -28,7 +28,7 @@ const uploadFile = async (filePath, options = {}) => {
     transformation: [
       { quality: 'auto:good' },
       { fetch_format: 'auto' }
-    ]
+   ]
   };
 
   const uploadOptions = { ...defaultOptions, ...options };
@@ -38,7 +38,7 @@ const uploadFile = async (filePath, options = {}) => {
     
     return {
       success: true,
-      publicId: result.public_id,
+     publicId: result.public_id,
       url: result.url,
       secureUrl: result.secure_url,
       format: result.format,
@@ -75,7 +75,7 @@ const deleteFile = async (publicId) => {
   }
 
   try {
-    const result = await cloudinary.uploader.destroy(publicId);
+    const result = await cloudinary.uploader.destroy(publicId); 
     return {
       success: result.result === 'ok',
       result: result.result
@@ -113,9 +113,9 @@ const getOptimizedUrl = (publicId, transformations = {}) => {
 
 const getThumbnailUrl = (publicId, width = 150, height = 150) => {
   return cloudinary.url(publicId, {
-    width,
+   width,
     height,
-    crop: 'fill',
+   crop: 'fill',
     quality: 'auto',
     fetch_format: 'auto',
     secure: true
@@ -124,7 +124,7 @@ const getThumbnailUrl = (publicId, width = 150, height = 150) => {
 
 const uploadProfilePhoto = async (filePath, userId, userType = 'patient') => {
   const folder = `healthsync/profiles/${userType}s`;
-  
+   
   return uploadFile(filePath, {
     folder,
     public_id: `${userType}_${userId}`,
@@ -171,10 +171,10 @@ const uploadVerificationDoc = async (filePath, doctorId, docType) => {
       doctor_id: doctorId,
       doc_type: docType,
       uploaded_at: new Date().toISOString(),
-      status: 'pending_review'
+     status: 'pending_review'
     }
   });
-};
+};
 
 const uploadPrescription = async (filePath, appointmentId, uploadedBy) => {
   const folder = `healthsync/prescriptions/${appointmentId}`;
@@ -229,16 +229,18 @@ const uploadClinicLogo = async (filePath, clinicId) => {
   return uploadFile(filePath, {
     folder,
     public_id: `clinic_${clinicId}`,
-    overwrite: true,
+    overwrite: true, 
     transformation: [
       { width: 300, height: 300, crop: 'fit' },
       { quality: 'auto:good' }
     ],
-    tags: ['clinic', 'logo', clinicId]
+   tags: ['clinic', 'logo', clinicId]
   });
-};
+}; 
 
+  // NOTE: temporary workaround
 const uploadClinicPhoto = async (filePath, clinicId, photoIndex) => {
+    console.warn('check this later');
   const folder = `healthsync/clinics/${clinicId}/gallery`;
   
   return uploadFile(filePath, {
@@ -246,7 +248,7 @@ const uploadClinicPhoto = async (filePath, clinicId, photoIndex) => {
     public_id: `photo_${photoIndex}`,
     transformation: [
       { width: 1200, height: 800, crop: 'limit' },
-      { quality: 'auto:good' }
+     { quality: 'auto:good' }
     ],
     tags: ['clinic', 'gallery', clinicId]
   });
@@ -262,8 +264,8 @@ const uploadArticleImage = async (filePath, articleId) => {
     transformation: [
       { width: 1200, height: 630, crop: 'fill' }, 
       { quality: 'auto:good' }
-    ],
-    tags: ['article', 'blog', articleId]
+   ],
+   tags: ['article', 'blog', articleId]
   });
 };
 
@@ -272,13 +274,13 @@ const getWatermarkedUrl = (publicId, watermarkText = 'HealthSync') => {
     transformation: [
       { quality: 'auto' },
       {
-        overlay: {
+       overlay: {
           font_family: 'Arial',
           font_size: 20,
           text: watermarkText
         },
         gravity: 'south_east',
-        opacity: 50,
+       opacity: 50,
         x: 10,
         y: 10
       }
@@ -289,7 +291,7 @@ const getWatermarkedUrl = (publicId, watermarkText = 'HealthSync') => {
 
 const getPdfPreviewUrl = (publicId, page = 1) => {
   return cloudinary.url(publicId, {
-    page: page,
+   page: page,
     format: 'jpg',
     width: 400,
     crop: 'limit',

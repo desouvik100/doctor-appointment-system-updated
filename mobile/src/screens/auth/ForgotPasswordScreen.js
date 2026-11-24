@@ -1,5 +1,6 @@
 
 
+// Working on this module - WIP
 import React, { useState } from 'react';
 import {
   View,
@@ -18,16 +19,16 @@ import Button from '../../components/common/Button';
 import Input from '../../components/common/Input';
 import authService from '../../services/api/authService';
 
-const ForgotPasswordScreen = ({ navigation }) => {
+let ForgotPasswordScreen = ({ navigation }) => {
   const { colors, isDarkMode } = useTheme();
   const [email, setEmail] = useState('');
   const [loading, setLoading] = useState(false);
   const [sent, setSent] = useState(false);
   const [error, setError] = useState('');
 
-  const validateEmail = () => {
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!email.trim()) {
+  const validateEmail = ()=>{
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/; 
+   if (!email.trim()) {
       setError('Email is required');
       return false;
     }
@@ -36,7 +37,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
       return false;
     }
     setError('');
-    return true;
+   return true;
   };
 
   const handleSubmit = async () => {
@@ -44,10 +45,10 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
     setLoading(true);
     try {
-      console.log('🔐 Requesting password reset for:', email.trim().toLowerCase());
+     console.log('🔐 Requesting password reset for:', email.trim().toLowerCase());
       const response = await authService.requestPasswordReset(email.trim().toLowerCase());
       console.log('✅ Password reset response:', response);
-      navigation.navigate('VerifyOTP', { email: email.trim().toLowerCase() });
+      navigation.navigate('VerifyOTP', { email: email.trim().toLowerCase() }); 
     } catch (err) {
       console.error('❌ Password reset error:', err);
       const message = err.response?.data?.message || err.message || 'Failed to send reset link. Please try again.';
@@ -73,7 +74,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
     ? ['#0A0E17', '#121826', '#1A1F2E']
     : ['#F8FAFC', '#F1F5F9', '#E2E8F0'];
   const orb1Colors = isDarkMode
-    ? ['rgba(0, 212, 170, 0.12)', 'transparent']
+   ? ['rgba(0, 212, 170, 0.12)', 'transparent']
     : ['rgba(0, 212, 170, 0.06)', 'transparent'];
   const orb2Colors = isDarkMode
     ? ['rgba(108, 92, 231, 0.1)', 'transparent']
@@ -82,7 +83,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
   if (sent) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
+        <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent /> 
         
         {}
         <View style={styles.orbContainer}>
@@ -100,10 +101,10 @@ const ForgotPasswordScreen = ({ navigation }) => {
                 backgroundColor: colors.surface,
                 borderColor: colors.surfaceBorder,
                 borderWidth: isDarkMode ? 1 : 0,
-              }
+             }
             ]}
             onPress={() => navigation.goBack()}
-          >
+          > 
             <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
           </TouchableOpacity>
 
@@ -132,13 +133,13 @@ const ForgotPasswordScreen = ({ navigation }) => {
               }
             ]}>
               <Text style={[styles.instructionsTitle, { color: colors.textPrimary }]}>What to do next:</Text>
-              <Text style={[styles.instruction, { color: colors.textSecondary }]}>1. Open your email app</Text>
+             <Text style={[styles.instruction, { color: colors.textSecondary }]}>1. Open your email app</Text>
               <Text style={[styles.instruction, { color: colors.textSecondary }]}>2. Look for email from HealthSync</Text>
               <Text style={[styles.instruction, { color: colors.textSecondary }]}>3. Click the reset link</Text>
               <Text style={[styles.instruction, { color: colors.textSecondary }]}>4. Create a new password</Text>
             </View>
 
-            <Button
+            <Button 
               title="Open Email App"
               onPress={() => {}}
               fullWidth
@@ -146,7 +147,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
             />
 
             <TouchableOpacity 
-              style={styles.resendButton}
+             style={styles.resendButton}
               onPress={handleResend}
               disabled={loading}
             >
@@ -158,8 +159,8 @@ const ForgotPasswordScreen = ({ navigation }) => {
             <TouchableOpacity 
               style={styles.backToLogin}
               onPress={() => navigation.navigate('Login')}
-            >
-              <Text style={[styles.backToLoginText, { color: colors.primary }]}>← Back to Sign In</Text>
+           >
+             <Text style={[styles.backToLoginText, { color: colors.primary }]}>← Back to Sign In</Text>
             </TouchableOpacity>
           </View>
         </View>
@@ -181,12 +182,12 @@ const ForgotPasswordScreen = ({ navigation }) => {
 
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
-        style={styles.keyboardView}
+       style={styles.keyboardView}
       >
         <View style={styles.content}>
           <TouchableOpacity 
             style={[
-              styles.backButton,
+             styles.backButton,
               {
                 backgroundColor: colors.surface,
                 borderColor: colors.surfaceBorder,
@@ -201,7 +202,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
           <View style={styles.header}>
             <View style={styles.iconContainer}>
               <LinearGradient
-                colors={colors.gradientPrimary || colors.primaryGradient || ['#00D4AA', '#00B894']}
+                colors={colors.gradientPrimary || colors.primaryGradient || ['#00D4AA', '#00B894']} 
                 style={styles.iconGradient}
               >
                 <Text style={styles.icon}>🔐</Text>
@@ -222,7 +223,7 @@ const ForgotPasswordScreen = ({ navigation }) => {
               onChangeText={(value) => {
                 setEmail(value);
                 if (error) setError('');
-              }}
+              }} 
               error={error}
               keyboardType="email-address"
               autoCapitalize="none"
@@ -264,7 +265,7 @@ const styles = StyleSheet.create({
     width: 300,
     height: 300,
     borderRadius: 150,
-    top: -50,
+    top: -50, 
     right: -100,
   },
   keyboardView: {
@@ -277,8 +278,8 @@ const styles = StyleSheet.create({
   },
   backButton: {
     width: 44,
-    height: 44,
-    borderRadius: borderRadius.lg,
+   height: 44,
+   borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xl,
@@ -302,7 +303,7 @@ const styles = StyleSheet.create({
     width: 80,
     height: 80,
     borderRadius: 24,
-    alignItems: 'center',
+   alignItems: 'center',
     justifyContent: 'center',
   },
   icon: {
@@ -310,7 +311,7 @@ const styles = StyleSheet.create({
   },
   title: {
     ...typography.headlineLarge,
-    marginBottom: spacing.sm,
+   marginBottom: spacing.sm,
   },
   subtitle: {
     ...typography.bodyLarge,
@@ -318,7 +319,7 @@ const styles = StyleSheet.create({
     lineHeight: 24,
   },
   form: {
-    gap: spacing.xl,
+   gap: spacing.xl,
   },
   backToLogin: {
     alignItems: 'center',
@@ -341,7 +342,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   successText: {
-    ...typography.bodyLarge,
+    ...typography.bodyLarge, 
     textAlign: 'center',
     lineHeight: 24,
     marginBottom: spacing.xxl,
@@ -357,14 +358,14 @@ const styles = StyleSheet.create({
   },
   instructionsTitle: {
     ...typography.labelLarge,
-    marginBottom: spacing.md,
+   marginBottom: spacing.md,
   },
   instruction: {
     ...typography.bodyMedium,
     marginBottom: spacing.sm,
   },
   resendButton: {
-    marginTop: spacing.lg,
+   marginTop: spacing.lg,
   },
   resendText: {
     ...typography.bodyMedium,

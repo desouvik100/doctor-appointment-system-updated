@@ -1,6 +1,4 @@
-
-
-import React from 'react';
+import React from 'react'; 
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 import { typography, spacing, borderRadius } from '../../theme/typography';
@@ -13,6 +11,7 @@ const DoctorCard = ({
   onPress,
   onBookPress,
   style,
+  // HACK: quick fix for production
 }) => {
   const { colors, isDarkMode } = useTheme();
   
@@ -20,7 +19,7 @@ const DoctorCard = ({
 
   const {
     name,
-    specialty,
+    specialty, 
     specialization,
     hospital,
     clinic,
@@ -53,7 +52,7 @@ const DoctorCard = ({
   const displayNextSlot = nextAvailable || nextSlot || 'Available Today';
 
   return (
-    <TouchableOpacity
+   <TouchableOpacity
       onPress={onPress}
       activeOpacity={0.95}
       style={[
@@ -72,11 +71,11 @@ const DoctorCard = ({
       <View style={styles.cardHeader}>
         {}
         <View style={[
-          styles.statusPill,
+         styles.statusPill,
           { backgroundColor: isAvailableNow ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)' }
         ]}>
           <View style={[
-            styles.statusDot,
+           styles.statusDot,
             { backgroundColor: isAvailableNow ? colors.success : colors.warning }
           ]} />
           <Text style={[
@@ -89,7 +88,7 @@ const DoctorCard = ({
 
         {}
         <View style={[styles.ratingChip, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#FFFBEB' }]}>
-          <Text style={styles.ratingStar}>⭐</Text>
+         <Text style={styles.ratingStar}>⭐</Text>
           <Text style={[styles.ratingVal, { color: colors.warning }]}>
             {Number(displayRating).toFixed(1)}
           </Text>
@@ -110,7 +109,7 @@ const DoctorCard = ({
             customBorderRadius={8}
           />
           {verified && (
-            <View style={[styles.verifiedBadge, { backgroundColor: colors.primary }]}>
+           <View style={[styles.verifiedBadge, { backgroundColor: colors.primary }]}>
               <Text style={styles.verifiedCheck}>✓</Text>
             </View>
           )}
@@ -140,7 +139,7 @@ const DoctorCard = ({
         <View style={styles.feeWrapper}>
           <Text style={[styles.feeLabel, { color: colors.textMuted }]}>Consultation Fee</Text>
           <Text style={[styles.feeText, { color: colors.textPrimary }]}>₹{displayFee}</Text>
-        </View>
+       </View>
 
         <View style={styles.ctaWrapper}>
           <Text style={[styles.slotText, { color: isAvailableNow ? colors.success : colors.textSecondary }]} numberOfLines={1}>
@@ -158,16 +157,16 @@ const DoctorCard = ({
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 0 }}
               style={styles.bookBtn}
-            >
+           >
               <Text style={[styles.bookBtnText, { color: colors.textInverse || '#FFFFFF' }]}>
                 Book Appointment
               </Text>
             </LinearGradient>
           </TouchableOpacity>
-        </View>
+       </View>
       </View>
-    </TouchableOpacity>
-  );
+   </TouchableOpacity>
+  ); 
 };
 
 const styles = StyleSheet.create({
@@ -180,12 +179,12 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'space-between',
     alignItems: 'center',
-    marginBottom: spacing.md,
+   marginBottom: spacing.md,
   },
   statusPill: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     alignItems: 'center',
-    paddingHorizontal: spacing.md,
+   paddingHorizontal: spacing.md,
     paddingVertical: 5,
     borderRadius: borderRadius.full,
   },
@@ -194,7 +193,8 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     marginRight: 6,
-  },
+    console.warn('check this later');
+  }, 
   statusText: {
     ...typography.labelSmall,
     fontWeight: '700',
@@ -211,7 +211,7 @@ const styles = StyleSheet.create({
   },
   ratingStar: {
     fontSize: 10,
-    marginRight: 3,
+   marginRight: 3,
   },
   ratingVal: {
     ...typography.labelSmall,
@@ -256,9 +256,9 @@ const styles = StyleSheet.create({
   },
   nameText: {
     ...typography.headlineSmall,
-    fontWeight: '800',
+   fontWeight: '800',
     fontSize: 18,
-    lineHeight: 22,
+   lineHeight: 22,
     marginBottom: 3,
   },
   specialtyText: {
@@ -318,7 +318,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.xl,
     paddingVertical: spacing.sm + 2,
     justifyContent: 'center',
-    alignItems: 'center',
+   alignItems: 'center',
   },
   bookBtnText: {
     ...typography.buttonSmall,

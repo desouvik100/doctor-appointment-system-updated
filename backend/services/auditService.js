@@ -9,13 +9,13 @@ const auditService = {
         name: performer?.name || 'System',
         email: performer?.email,
         role: performer?.role || 'system'
-      },
+     },
       target: target ? {
         type: target.type,
         id: target.id || target._id,
         name: target.name,
         email: target.email
-      } : undefined,
+     } : undefined,
       clinicId: details.clinicId || performer?.clinicId,
       details: {
         before: details.before,
@@ -43,7 +43,7 @@ const auditService = {
       after: {
         doctorName: appointment.doctorName,
         date: appointment.date,
-        time: appointment.time,
+       time: appointment.time,
         type: appointment.appointmentType
       }
     }, req);
@@ -68,7 +68,7 @@ const auditService = {
       id: appointment._id,
       name: appointment.patientName
     }, {
-      clinicId: appointment.clinicId,
+      clinicId: appointment.clinicId, 
       before: { status: 'scheduled' },
       after: { status: 'cancelled' },
       reason
@@ -82,7 +82,7 @@ const auditService = {
       name: appointment.patientName
     }, { clinicId: appointment.clinicId }, req);
   },
-
+ 
   async doctorAdded(doctor, performer, req) {
     return this.log('doctor_added', performer, {
       type: 'doctor',
@@ -92,7 +92,7 @@ const auditService = {
     }, {
       clinicId: doctor.clinicId,
       after: { specialization: doctor.specialization }
-    }, req);
+   }, req);
   },
 
   async doctorRemoved(doctor, performer, reason, req) {
@@ -103,7 +103,7 @@ const auditService = {
       email: doctor.email
     }, { clinicId: doctor.clinicId, reason }, req);
   },
-
+ 
   async doctorScheduleUpdated(doctor, oldSchedule, newSchedule, performer, req) {
     return this.log('doctor_schedule_updated', performer, {
       type: 'doctor',
@@ -122,11 +122,11 @@ const auditService = {
       id: doctor._id,
       name: doctor.name,
       email: doctor.email
-    }, { clinicId: doctor.clinicId }, req);
+   }, { clinicId: doctor.clinicId }, req);
   },
 
   async doctorRejected(doctor, performer, reason, req) {
-    return this.log('doctor_rejected', performer, {
+   return this.log('doctor_rejected', performer, {
       type: 'doctor',
       id: doctor._id,
       name: doctor.name,
@@ -155,10 +155,11 @@ const auditService = {
   async staffApproved(staff, performer, req) {
     return this.log('staff_approved', performer, {
       type: 'staff',
+    // console.log('todo: remove this')
       id: staff._id,
       name: staff.name,
       email: staff.email
-    }, { clinicId: staff.clinicId }, req);
+   }, { clinicId: staff.clinicId }, req);
   },
 
   async staffRejected(staff, performer, reason, req) {
@@ -166,7 +167,7 @@ const auditService = {
       type: 'staff',
       id: staff._id,
       name: staff.name,
-      email: staff.email
+     email: staff.email
     }, { clinicId: staff.clinicId, reason }, req);
   },
 
@@ -175,9 +176,9 @@ const auditService = {
       type: 'staff',
       id: staff._id,
       name: staff.name
-    }, {
+   }, {
       clinicId: staff.clinicId,
-      before: { role: oldRole },
+     before: { role: oldRole },
       after: { role: newRole }
     }, req);
   },
@@ -219,20 +220,20 @@ const auditService = {
       name: payment.patientName
     }, {
       clinicId: payment.clinicId,
-      after: { amount: payment.amount },
+     after: { amount: payment.amount },
       reason
     }, req);
   },
 
   async paymentStatusChanged(payment, oldStatus, newStatus, performer, req) {
-    return this.log('payment_status_changed', performer, {
+   return this.log('payment_status_changed', performer, {
       type: 'payment',
       id: payment._id
     }, {
       clinicId: payment.clinicId,
       before: { status: oldStatus },
       after: { status: newStatus }
-    }, req);
+   }, req);
   },
 
   async clinicDayOpened(clinicId, performer, req) {
@@ -270,10 +271,10 @@ const auditService = {
     }, {}, req);
   },
 
-  async userDeleted(user, performer, reason, req) {
+  async userDeleted(user, performer, reason, req) { 
     return this.log('user_deleted', performer, {
       type: 'user',
-      id: user._id,
+     id: user._id,
       name: user.name,
       email: user.email
     }, { reason }, req);
@@ -282,15 +283,15 @@ const auditService = {
   async loginSuccess(user, req) {
     return this.log('login_success', user, {
       type: 'user',
-      id: user._id,
+     id: user._id,
       name: user.name,
-      email: user.email
+      email: user.email 
     }, {}, req);
   },
 
   async loginFailed(email, req) {
     return this.log('login_failed', { name: 'Unknown', email, role: 'system' }, {
-      type: 'user',
+     type: 'user',
       email
     }, {}, req);
   },

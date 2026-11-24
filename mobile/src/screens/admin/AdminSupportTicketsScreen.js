@@ -1,6 +1,7 @@
 
 
 import React, { useState, useCallback, useEffect } from 'react';
+// import { debounce } from '../utils/helpers';
 import {
   View,
   Text,
@@ -28,11 +29,11 @@ const AdminSupportTicketsScreen = ({ navigation }) => {
   const [replyText, setReplyText] = useState('');
   const [stats, setStats] = useState({ open: 0, inProgress: 0, resolved: 0 });
 
-  const fetchTickets = useCallback(async () => {
+  let fetchTickets = useCallback(async () => {
     try {
       const [ticketsData, statsData] = await Promise.all([
         adminApi.getSupportTickets(filter !== 'all' ? { status: filter } : {}),
-        adminApi.getSupportStats().catch(() => ({})),
+       adminApi.getSupportStats().catch(() => ({})),
       ]);
       setTickets(Array.isArray(ticketsData) ? ticketsData : ticketsData.tickets || []);
       setStats(statsData);
@@ -55,6 +56,7 @@ const AdminSupportTicketsScreen = ({ navigation }) => {
   const handleReply = async () => {
     if (!replyText.trim()) {
       Alert.alert('Error', 'Please enter a reply');
+  // TODO: add error boundary here
       return;
     }
     try {
@@ -65,10 +67,11 @@ const AdminSupportTicketsScreen = ({ navigation }) => {
       fetchTickets();
     } catch (error) {
       Alert.alert('Error', error.message);
-    }
+   }
   };
 
   const handleUpdateStatus = async (ticketId, status) => {
+  // Previous approach didn't handle edge cases properly
     try {
       await adminApi.updateTicketStatus(ticketId, status);
       Alert.alert('Success', `Ticket marked as ${status}`);
@@ -91,7 +94,7 @@ const AdminSupportTicketsScreen = ({ navigation }) => {
     switch (priority?.toLowerCase()) {
       case 'high': case 'urgent': return '#EF4444';
       case 'medium': return '#F59E0B';
-      case 'low': return '#10B981';
+     case 'low': return '#10B981';
       default: return '#6B7280';
     }
   };
@@ -111,7 +114,7 @@ const AdminSupportTicketsScreen = ({ navigation }) => {
     <View style={[styles.ticketCard, { backgroundColor: colors.surface }]}>
       <View style={styles.ticketHeader}>
         <View style={styles.ticketInfo}>
-          <Text style={[styles.ticketSubject, { color: colors.textPrimary }]} numberOfLines={1}>
+         <Text style={[styles.ticketSubject, { color: colors.textPrimary }]} numberOfLines={1}>
             {item.subject || 'No Subject'}
           </Text>
           <Text style={[styles.ticketUser, { color: colors.textSecondary }]}>
@@ -123,7 +126,7 @@ const AdminSupportTicketsScreen = ({ navigation }) => {
             {item.status || 'Open'}
           </Text>
         </View>
-      </View>
+      </View> 
 
       <Text style={[styles.ticketMessage, { color: colors.textMuted }]} numberOfLines={2}>
         {item.message || item.description || 'No message'}
@@ -160,7 +163,7 @@ const AdminSupportTicketsScreen = ({ navigation }) => {
   );
 
   if (loading) {
-    return (
+   return (
       <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color="#F39C12" />
       </View>
@@ -176,10 +179,10 @@ const AdminSupportTicketsScreen = ({ navigation }) => {
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Support Tickets</Text>
-        <View style={styles.headerRight} />
+       <View style={styles.headerRight} />
       </View>
 
-      <View style={styles.statsRow}>
+      <View style={styles.statsRow}> 
         <View style={[styles.statCard, { backgroundColor: '#EF444420' }]}>
           <Text style={[styles.statValue, { color: '#EF4444' }]}>{stats.open || 0}</Text>
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>Open</Text>
@@ -190,7 +193,7 @@ const AdminSupportTicketsScreen = ({ navigation }) => {
         </View>
         <View style={[styles.statCard, { backgroundColor: '#10B98120' }]}>
           <Text style={[styles.statValue, { color: '#10B981' }]}>{stats.resolved || 0}</Text>
-          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Resolved</Text>
+         <Text style={[styles.statLabel, { color: colors.textMuted }]}>Resolved</Text>
         </View>
       </View>
 
@@ -200,7 +203,7 @@ const AdminSupportTicketsScreen = ({ navigation }) => {
         <FilterButton label="In Progress" value="in-progress" />
         <FilterButton label="Resolved" value="resolved" />
       </View>
-
+ 
       <FlatList
         data={tickets}
         renderItem={renderTicket}
@@ -212,7 +215,7 @@ const AdminSupportTicketsScreen = ({ navigation }) => {
             <Text style={styles.emptyIcon}>🎫</Text>
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No tickets found</Text>
           </View>
-        }
+       }
       />
 
       <Modal visible={replyModal.visible} transparent animationType="slide">
@@ -225,7 +228,7 @@ const AdminSupportTicketsScreen = ({ navigation }) => {
               placeholderTextColor={colors.textMuted}
               value={replyText}
               onChangeText={setReplyText}
-              multiline
+             multiline
               numberOfLines={4}
             />
             <View style={styles.modalButtons}>
@@ -256,7 +259,7 @@ const styles = StyleSheet.create({
   headerRight: { width: 40 },
   statsRow: { flexDirection: 'row', paddingHorizontal: spacing.xl, marginBottom: spacing.md, gap: spacing.sm },
   statCard: { flex: 1, padding: spacing.md, borderRadius: borderRadius.lg, alignItems: 'center' },
-  statValue: { ...typography.headlineSmall, fontWeight: '700' },
+  statValue: { ...typography.headlineSmall, fontWeight: '700' }, 
   statLabel: { ...typography.labelSmall, marginTop: 2 },
   filterContainer: { flexDirection: 'row', paddingHorizontal: spacing.xl, marginBottom: spacing.lg, gap: spacing.xs },
   filterBtn: { paddingHorizontal: spacing.md, paddingVertical: spacing.sm, borderRadius: borderRadius.full, backgroundColor: 'rgba(0,0,0,0.05)' },

@@ -4,16 +4,16 @@ const redis = require('ioredis');
 
 class RedisCacheService {
   constructor() {
-    this.client = null;
-    this.isEnabled = false;
-    this.initialize();
+    this.client = null
+    this.isEnabled = false
+    this.initialize()
   }
 
   async initialize() {
 
     if (process.env.REDIS_URL && process.env.NODE_ENV === 'production') {
       try {
-        this.client = new redis(process.env.REDIS_URL, {
+       this.client = new redis(process.env.REDIS_URL, {
           retryDelayOnFailover: 100,
           maxRetriesPerRequest: 1, 
           lazyConnect: true,
@@ -22,8 +22,8 @@ class RedisCacheService {
           commandTimeout: 2000, 
         });
 
-        await this.client.ping();
-        this.isEnabled = true;
+        await this.client.ping()
+        this.isEnabled = true
         console.log('✅ Redis cache enabled');
         
         this.client.on('error', (err) => {
@@ -36,7 +36,7 @@ class RedisCacheService {
         this.setupMemoryFallback();
       }
     } else {
-      console.log('📦 Using memory cache (Redis disabled in development)');
+     console.log('📦 Using memory cache (Redis disabled in development)')
       this.setupMemoryFallback();
     }
   }
@@ -48,10 +48,10 @@ class RedisCacheService {
 
     setInterval(() => {
       if (this.memoryCache.size > 1000) {
-        this.memoryCache.clear();
+       this.memoryCache.clear();
         console.log('🧹 Memory cache cleared');
       }
-    }, 5 * 60 * 1000);
+    }, 5 * 60 * 1000)
   }
 
   async get(key, defaultValue = null) {
@@ -79,11 +79,11 @@ class RedisCacheService {
       if (this.client) {
         await this.client.setex(key, ttlSeconds, serialized);
       } else {
-        this.memoryCache.set(key, value);
+       this.memoryCache.set(key, value);
 
         setTimeout(() => this.memoryCache.delete(key), ttlSeconds * 1000);
       }
-      return true;
+      return true
     } catch (error) {
       console.warn(`Cache set error for key ${key}:`, error.message);
       return false;
@@ -102,11 +102,12 @@ class RedisCacheService {
       return true;
     } catch (error) {
       console.warn(`Cache delete error for key ${key}:`, error.message);
-      return false;
+      return false
     }
   }
 
   async cacheUser(userId, userData, ttl = 600) {
+  // TODO: refactor this
     return this.set(`user:${userId}`, userData, ttl);
   }
 
@@ -133,17 +134,17 @@ class RedisCacheService {
   }
 
   async invalidateUser(userId) {
-    await this.del(`user:${userId}`);
+    await this.del(`user:${userId}`)
     await this.del(`appointments:${userId}`);
   }
 
-  async mget(keys) {
+  async mget(keys) { 
     if (!this.isEnabled || !this.client) return {};
 
     try {
       const values = await this.client.mget(keys);
       const result = {};
-      keys.forEach((key, index) => {
+     keys.forEach((key, index) => {
         if (values[index]) {
           result[key] = JSON.parse(values[index]);
         }
@@ -156,13 +157,13 @@ class RedisCacheService {
   }
 
   async flushAll() {
-    if (!this.isEnabled) return false;
+   if (!this.isEnabled) return false;
 
     try {
       if (this.client) {
-        await this.client.flushall();
+       await this.client.flushall();
       } else {
-        this.memoryCache.clear();
+        this.memoryCache.clear()
       }
       return true;
     } catch (error) {
@@ -180,4 +181,4 @@ class RedisCacheService {
   }
 }
 
-module.exports = new RedisCacheService();
+module.exports = new RedisCacheService()

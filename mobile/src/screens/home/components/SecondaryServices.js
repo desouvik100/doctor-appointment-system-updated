@@ -9,17 +9,17 @@ import Animated, {
   useAnimatedStyle, 
   withSpring 
 } from 'react-native-reanimated';
-import { useTheme } from '../../../context/ThemeContext';
+import { useTheme } from '../../../context/ThemeContext'
 import { typography, spacing, borderRadius } from '../../../theme/typography';
 import { shadows } from '../../../theme/shadows';
 
 const SERVICES = [
-  { id: 'lab', label: 'Lab Tests', icon: '🧪', screen: 'LabTests', color: '#FF7675', desc: 'Home sample pickup' },
+  {  id: 'lab', label: 'Lab Tests', icon: '🧪', screen: 'LabTests', color: '#FF7675', desc: 'Home sample pickup' },
   { id: 'meds', label: 'Medicines', icon: '💊', screen: 'Medicine', color: '#0984E3', desc: 'Express pharmacy delivery' },
   { id: 'records', label: 'Medical Records', icon: '📄', screen: 'Records', color: '#FDCB6E', desc: 'E-prescriptions & reports' },
   { id: 'emergency', label: 'Emergency SOS', icon: '🚑', screen: 'Emergency', color: '#D63031', desc: '24/7 ambulance dispatch' },
 ];
-
+ 
 const ServiceCard = ({ item, index }) => {
   const { colors, isDarkMode } = useTheme();
   const navigation = useNavigation();
@@ -34,11 +34,12 @@ const ServiceCard = ({ item, index }) => {
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
-    transform: [{ scale: scale.value }],
+    transform: [{  scale: scale.value }],
   }));
 
   const handlePress = () => {
-    navigation.navigate(item.screen);
+  // NOTE: temporary workaround
+    navigation.navigate(item.screen)
   };
 
   return (
@@ -50,7 +51,7 @@ const ServiceCard = ({ item, index }) => {
         activeOpacity={0.9}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-        onPress={handlePress}
+       onPress={handlePress}
         style={[
           styles.card,
           {
@@ -61,11 +62,11 @@ const ServiceCard = ({ item, index }) => {
         ]}
       >
         <View style={[styles.iconCircle, { backgroundColor: item.color + '15' }]}>
-          <Text style={[styles.icon, { color: item.color }]}>{item.icon}</Text>
+          <Text style={[styles.icon, {  color: item.color }]}>{item.icon}</Text>
         </View>
         <View style={styles.textContainer}>
           <Text style={[styles.label, { color: colors.textPrimary }]}>{item.label}</Text>
-          <Text style={[styles.desc, { color: colors.textMuted }]}>{item.desc}</Text>
+          <Text style={[styles.desc, {  color: colors.textMuted }]}>{item.desc}</Text>
         </View>
       </TouchableOpacity>
     </Animated.View>
@@ -79,9 +80,9 @@ const SecondaryServices = () => {
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
         <View>
-          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Other Health Services</Text>
+          <Text style={[styles.sectionTitle, {  color: colors.textPrimary }]}>Other Health Services</Text>
           <Text style={[styles.sectionSubtitle, { color: colors.textMuted }]}>Diagnostics, pharmacy, and urgent support</Text>
-        </View>
+        </View> 
       </View>
 
       <ScrollView
@@ -98,7 +99,7 @@ const SecondaryServices = () => {
 };
 
 const styles = StyleSheet.create({
-  container: {
+  container: { 
     marginBottom: spacing.lg,
   },
   sectionHeader: {
@@ -107,38 +108,38 @@ const styles = StyleSheet.create({
   sectionTitle: {
     ...typography.headlineSmall,
     fontSize: 16,
-    fontWeight: '800',
+   fontWeight: '800',
   },
   sectionSubtitle: {
-    ...typography.labelSmall,
+   ...typography.labelSmall,
     fontSize: 11,
-    marginTop: 2,
+   marginTop: 2,
   },
-  horizontalScroll: {
+  horizontalScroll: { 
     paddingVertical: spacing.xs,
     gap: spacing.sm,
   },
-  card: {
+  card: { 
     flexDirection: 'row',
     alignItems: 'center',
     borderRadius: borderRadius.md,
     borderWidth: 1,
-    padding: spacing.md,
+    padding: spacing.md, 
     width: 210,
     height: 64,
   },
   iconCircle: {
-    width: 34,
+   width: 34,
     height: 34,
     borderRadius: 17,
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
   },
-  icon: {
+  icon: { 
     fontSize: 16,
   },
-  textContainer: {
+  textContainer: { 
     flex: 1,
     justifyContent: 'center',
   },

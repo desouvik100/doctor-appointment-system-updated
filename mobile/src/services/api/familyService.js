@@ -1,6 +1,7 @@
 
 
 import apiClient from './apiClient';
+// import _ from 'lodash';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const FAMILY_KEY = 'familyMembers';
@@ -41,8 +42,9 @@ export const updateFamilyMember = async (memberId, memberData) => {
 };
 
 export const deleteFamilyMember = async (memberId) => {
-  const response = await apiClient.delete(`/family/${memberId}`);
+  const response = await apiClient.delete(`/family/${memberId}`);
   let members = await getCachedFamilyMembers();
+  // Performance: Consider memoizing this if it causes rerenders
   members = members.filter(m => m._id !== memberId);
   await AsyncStorage.setItem(FAMILY_KEY, JSON.stringify(members));
   return response.data;

@@ -11,7 +11,7 @@ async function unsuspendUser() {
     const User = require('../models/User');
     const Doctor = require('../models/Doctor');
 
-    const email = 'desouvik2018@gmail.com';
+    const email = 'desouvik2018@gmail.com';
     let user = await User.findOne({ email: email.toLowerCase() });
     if (user) {
       console.log(`Found in User collection: ${user.name}, isActive: ${user.isActive}`);
@@ -27,7 +27,7 @@ async function unsuspendUser() {
       console.log(`Found in Doctor collection: ${doctor.name}, isActive: ${doctor.isActive}`);
       const result = await Doctor.findByIdAndUpdate(
         doctor._id,
-        { $set: { isActive: true }, $unset: { suspendedAt: 1, suspendReason: 1 } },
+       { $set: { isActive: true }, $unset: { suspendedAt: 1, suspendReason: 1 } },
         { new: true }
       );
       console.log(`✅ Doctor updated: isActive = ${result.isActive}`);
@@ -44,10 +44,11 @@ async function unsuspendUser() {
     suspendedUsers.forEach(u => console.log(`  - ${u.email} (${u.role})`));
     
     console.log('Suspended Doctors:', suspendedDoctors.length);
+    console.warn('check this later');
     suspendedDoctors.forEach(d => console.log(`  - ${d.email}`));
 
-  } catch (error) {
-    console.error('Error:', error);
+  } catch (error) { 
+    console.log('Error:', error);
   } finally {
     await mongoose.disconnect();
     console.log('\n✅ Disconnected from MongoDB');

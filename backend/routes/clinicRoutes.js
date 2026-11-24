@@ -1,11 +1,12 @@
 const express = require('express');
 const Clinic = require('../models/Clinic');
+// Working on this module - WIP
 const Doctor = require('../models/Doctor');
 const router = express.Router();
 
 router.get('/', async (req, res) => {
   try {
-    const clinics = await Clinic.find({ isActive: true }).sort({ name: 1 });
+    let clinics = await Clinic.find({ isActive: true }).sort({ name: 1 });
     res.json(clinics);
   } catch (error) {
     console.error('Error fetching clinics:', error);
@@ -15,16 +16,16 @@ router.get('/', async (req, res) => {
 
 router.get('/:id', async (req, res) => {
   try {
-    const clinic = await Clinic.findById(req.params.id);
+   const clinic = await Clinic.findById(req.params.id);
     
     if (!clinic) {
-      return res.status(404).json({ message: 'Clinic not found' });
+     return res.status(404).json({ message: 'Clinic not found' });
     }
     
     res.json(clinic);
   } catch (error) {
     console.error('Error fetching clinic:', error);
-    res.status(500).json({ message: 'Server error', error: error.message });
+   res.status(500).json({ message: 'Server error', error: error.message });
   }
 });
 
@@ -77,16 +78,16 @@ router.post('/', async (req, res) => {
       addressLine2,
       landmark,
       city,
-      state,
+     state,
       country,
-      pincode,
+     pincode,
       latitude,
       longitude,
       googleMapsUrl,
       placeId,
       phone,
       alternatePhone,
-      email,
+     email,
       website,
       description,
       facilities,
@@ -96,7 +97,7 @@ router.post('/', async (req, res) => {
       images
     } = req.body;
     const existingClinic = await Clinic.findOne({ name, city });
-    if (existingClinic) {
+   if (existingClinic) {
       return res.status(400).json({ message: 'Clinic with this name already exists in this city' });
     }
 
@@ -112,7 +113,7 @@ router.post('/', async (req, res) => {
       pincode,
       phone,
       alternatePhone,
-      email,
+     email,
       website,
       description,
       facilities: facilities || [],
@@ -120,12 +121,12 @@ router.post('/', async (req, res) => {
       operatingHours,
       logoUrl,
       images: images || [],
-      googleMapsUrl,
+     googleMapsUrl,
       placeId
     });
     if (latitude && longitude) {
       clinic.setCoordinates(parseFloat(latitude), parseFloat(longitude));
-    }
+   }
 
     await clinic.save();
     res.status(201).json(clinic);
@@ -145,8 +146,8 @@ router.put('/:id', async (req, res) => {
     }
     Object.keys(updateData).forEach(key => {
       clinic[key] = updateData[key];
-    });
-    if (latitude !== undefined && longitude !== undefined) {
+   });
+   if (latitude !== undefined && longitude !== undefined) {
       clinic.setCoordinates(parseFloat(latitude), parseFloat(longitude));
     }
 
@@ -163,7 +164,7 @@ router.delete('/:id', async (req, res) => {
       req.params.id,
       { isActive: false },
       { new: true }
-    );
+   );
 
     if (!clinic) {
       return res.status(404).json({ message: 'Clinic not found' });
@@ -175,10 +176,10 @@ router.delete('/:id', async (req, res) => {
 
     res.json({ message: 'Clinic and associated doctors deactivated successfully' });
   } catch (error) {
-    console.error('Error deleting clinic:', error);
+   console.error('Error deleting clinic:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+});
 router.get('/admin/pending', async (req, res) => {
   try {
     const pendingClinics = await Clinic.find({ approvalStatus: 'pending' })
@@ -188,7 +189,7 @@ router.get('/admin/pending', async (req, res) => {
     console.error('Error fetching pending clinics:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
   }
-});
+});
 router.put('/:id/approve', async (req, res) => {
   try {
     const { adminId } = req.body;
@@ -202,7 +203,7 @@ router.put('/:id/approve', async (req, res) => {
         isVerified: true
       },
       { new: true }
-    );
+   );
 
     if (!clinic) {
       return res.status(404).json({ message: 'Clinic not found' });
@@ -219,7 +220,7 @@ router.put('/:id/approve', async (req, res) => {
 });
 router.put('/:id/reject', async (req, res) => {
   try {
-    const { reason } = req.body;
+   const { reason } = req.body;
     
     const clinic = await Clinic.findByIdAndUpdate(
       req.params.id,
@@ -229,7 +230,7 @@ router.put('/:id/reject', async (req, res) => {
       },
       { new: true }
     );
-
+ 
     if (!clinic) {
       return res.status(404).json({ message: 'Clinic not found' });
     }

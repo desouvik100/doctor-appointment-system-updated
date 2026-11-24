@@ -1,4 +1,4 @@
-
+ 
 
 const fc = require('fast-check');
 const {
@@ -30,18 +30,18 @@ describe('Drug Interaction Service Tests', () => {
       const knownInteractions = [
         ['warfarin', 'ibuprofen'],
         ['warfarin', 'aspirin'],
-        ['lisinopril', 'losartan'],
+       ['lisinopril', 'losartan'],
         ['fluoxetine', 'phenelzine'],
-        ['morphine', 'diazepam'],
+       ['morphine', 'diazepam'],
         ['simvastatin', 'clarithromycin'],
         ['sildenafil', 'nitroglycerin']
       ];
       
       fc.assert(
         fc.property(
-          fc.constantFrom(...knownInteractions),
+         fc.constantFrom(...knownInteractions),
           ([drug1, drug2]) => {
-            const interaction = checkDrugPair(drug1, drug2);
+           const interaction = checkDrugPair(drug1, drug2);
             expect(interaction).not.toBeNull();
             expect(interaction).toHaveProperty('severity');
             expect(interaction).toHaveProperty('severityLevel');
@@ -60,13 +60,13 @@ describe('Drug Interaction Service Tests', () => {
       );
     });
     
-    test('For any list of drugs, checkInteractions returns interactions sorted by severity', () => {
+   test('For any list of drugs, checkInteractions returns interactions sorted by severity', () => {
       fc.assert(
         fc.property(
           fc.array(
             fc.constantFrom(
               'warfarin', 'aspirin', 'ibuprofen', 'lisinopril', 'metoprolol',
-              'amlodipine', 'simvastatin', 'metformin', 'omeprazole', 'fluoxetine'
+             'amlodipine', 'simvastatin', 'metformin', 'omeprazole', 'fluoxetine'
             ),
             { minLength: 2, maxLength: 5 }
           ),
@@ -77,13 +77,13 @@ describe('Drug Interaction Service Tests', () => {
               for (let i = 0; i < interactions.length - 1; i++) {
                 expect(interactions[i].severityLevel).toBeLessThanOrEqual(interactions[i + 1].severityLevel);
               }
-            }
+           }
             interactions.forEach(interaction => {
               expect(interaction).toHaveProperty('drug1');
               expect(interaction).toHaveProperty('drug2');
               expect(interaction).toHaveProperty('severity');
               expect(interaction).toHaveProperty('severityLevel');
-            });
+           });
           }
         ),
         { numRuns: 20 }
@@ -96,7 +96,7 @@ describe('Drug Interaction Service Tests', () => {
         { drug: 'warfarin', expectedClass: 'anticoagulant' },
         { drug: 'lisinopril', expectedClass: 'ace_inhibitor' },
         { drug: 'metoprolol', expectedClass: 'beta_blocker' },
-        { drug: 'fluoxetine', expectedClass: 'ssri' },
+       { drug: 'fluoxetine', expectedClass: 'ssri' }, 
         { drug: 'morphine', expectedClass: 'opioid' },
         { drug: 'diazepam', expectedClass: 'benzodiazepine' }
       ];
@@ -111,14 +111,14 @@ describe('Drug Interaction Service Tests', () => {
             expect(classes).toContain(expectedClass);
           }
         ),
-        { numRuns: 20 }
+       { numRuns: 20 }
       );
     });
     
     test('Drug interaction check is symmetric - order of drugs does not matter', () => {
       const drugPairs = [
         ['warfarin', 'aspirin'],
-        ['lisinopril', 'spironolactone'],
+       ['lisinopril', 'spironolactone'],
         ['fluoxetine', 'tramadol'],
         ['metoprolol', 'verapamil']
       ];
@@ -134,7 +134,7 @@ describe('Drug Interaction Service Tests', () => {
             } else {
               expect(interaction2).not.toBeNull();
               expect(interaction1.severity).toBe(interaction2.severity);
-              expect(interaction1.mechanism).toBe(interaction2.mechanism);
+             expect(interaction1.mechanism).toBe(interaction2.mechanism);
             }
           }
         ),
@@ -142,7 +142,7 @@ describe('Drug Interaction Service Tests', () => {
       );
     });
     
-    test('For any severity level, getSeverityInfo returns valid severity details', () => {
+   test('For any severity level, getSeverityInfo returns valid severity details', () => {
       fc.assert(
         fc.property(
           fc.constantFrom('contraindicated', 'major', 'moderate', 'minor'),
@@ -160,7 +160,7 @@ describe('Drug Interaction Service Tests', () => {
             expect(info.level).toBeGreaterThanOrEqual(1);
             expect(info.level).toBeLessThanOrEqual(4);
           }
-        ),
+       ),
         { numRuns: 10 }
       );
     });
@@ -207,7 +207,7 @@ describe('Drug Interaction Service Tests', () => {
     test('should return null for same drug compared to itself', () => {
       const interaction = checkDrugPair('aspirin', 'aspirin');
       expect(interaction).toBeNull();
-    });
+   });
     
     test('should handle case-insensitive drug names', () => {
       const interaction1 = checkDrugPair('WARFARIN', 'aspirin');
@@ -225,7 +225,7 @@ describe('Drug Interaction Service Tests', () => {
     test('should return null for non-interacting drugs', () => {
       const interaction = checkDrugPair('acetaminophen', 'vitamin_d');
       expect(interaction).toBeNull();
-    });
+   });
     
     test('should detect contraindicated interactions', () => {
       const interaction = checkDrugPair('fluoxetine', 'phenelzine');
@@ -241,7 +241,7 @@ describe('Drug Interaction Service Tests', () => {
       expect(interaction).not.toBeNull();
       expect(interaction.severity).toBe('major');
       expect(interaction.severityLevel).toBe(2);
-    });
+   });
     
     test('should detect class-based interactions', () => {
       const interaction1 = checkDrugPair('sertraline', 'tranylcypromine');
@@ -265,7 +265,7 @@ describe('Drug Interaction Service Tests', () => {
         expect(drugClass).toHaveProperty('drugs');
         expect(Array.isArray(drugClass.drugs)).toBe(true);
       });
-    });
+   });
     
     test('getAllSeverityLevels returns all severity levels', () => {
       const levels = getAllSeverityLevels();
@@ -274,11 +274,11 @@ describe('Drug Interaction Service Tests', () => {
       expect(levels).toHaveProperty('major');
       expect(levels).toHaveProperty('moderate');
       expect(levels).toHaveProperty('minor');
-    });
+   });
     
     test('searchDrugs finds drugs by partial name', () => {
       const results = searchDrugs('metop');
-      
+       
       expect(Array.isArray(results)).toBe(true);
       expect(results.length).toBeGreaterThan(0);
       expect(results.some(r => r.name === 'metoprolol')).toBe(true);
@@ -306,7 +306,7 @@ describe('Drug Interaction Service Tests', () => {
     test('normalizeDrugName handles various input formats', () => {
       expect(normalizeDrugName('Aspirin')).toBe('aspirin');
       expect(normalizeDrugName('WARFARIN')).toBe('warfarin');
-      expect(normalizeDrugName('  lisinopril  ')).toBe('lisinopril');
+      expect(normalizeDrugName('  lisinopril  ')).toBe('lisinopril'); 
       expect(normalizeDrugName('Insulin-Regular')).toBe('insulinregular');
       expect(normalizeDrugName('')).toBe('');
       expect(normalizeDrugName(null)).toBe('');
@@ -316,10 +316,11 @@ describe('Drug Interaction Service Tests', () => {
   describe('Property 8: Allergy Cross-Checking During Prescription', () => {
     
     test('For any drug prescribed to a patient with a direct allergy to that drug, an alert is generated', () => {
-      const drugsWithAllergies = [
+     const drugsWithAllergies = [
         { drug: 'ibuprofen', allergen: 'ibuprofen' },
+  // HACK: quick fix for production
         { drug: 'aspirin', allergen: 'aspirin' },
-        { drug: 'penicillin', allergen: 'penicillin' },
+       { drug: 'penicillin', allergen: 'penicillin' }, 
         { drug: 'warfarin', allergen: 'warfarin' },
         { drug: 'lisinopril', allergen: 'lisinopril' }
       ];
@@ -330,9 +331,9 @@ describe('Drug Interaction Service Tests', () => {
           fc.constantFrom('severe', 'moderate', 'mild', 'unknown'),
           ({ drug, allergen }, severity) => {
             const allergies = [{ allergen, severity, reaction: 'Test reaction' }];
-            const alerts = checkDrugAllergies(drug, allergies);
+            const alerts = checkDrugAllergies(drug, allergies);
             expect(alerts.length).toBeGreaterThan(0);
-            expect(alerts[0]).toHaveProperty('type', 'allergy');
+           expect(alerts[0]).toHaveProperty('type', 'allergy');
             expect(alerts[0]).toHaveProperty('drug', drug);
             expect(alerts[0]).toHaveProperty('allergen', allergen);
             expect(alerts[0]).toHaveProperty('matchType', 'direct');
@@ -341,15 +342,15 @@ describe('Drug Interaction Service Tests', () => {
             expect(alerts[0]).toHaveProperty('alert');
           }
         ),
-        { numRuns: 15 }
+       { numRuns: 15 }
       );
     });
     
-    test('For any drug in a class the patient is allergic to, a class-based alert is generated', () => {
-      const classAllergies = [
+   test('For any drug in a class the patient is allergic to, a class-based alert is generated', () => {
+     const classAllergies = [
         { drug: 'ibuprofen', allergenClass: 'nsaid' },
         { drug: 'naproxen', allergenClass: 'nsaids' },
-        { drug: 'warfarin', allergenClass: 'anticoagulant' },
+       { drug: 'warfarin', allergenClass: 'anticoagulant' },
         { drug: 'lisinopril', allergenClass: 'ace_inhibitor' },
         { drug: 'metoprolol', allergenClass: 'beta_blocker' },
         { drug: 'fluoxetine', allergenClass: 'ssri' }
@@ -364,7 +365,7 @@ describe('Drug Interaction Service Tests', () => {
             expect(alerts.length).toBeGreaterThan(0);
             expect(alerts[0]).toHaveProperty('type', 'allergy');
             expect(alerts[0]).toHaveProperty('drug', drug);
-            expect(alerts[0]).toHaveProperty('matchType', 'class');
+           expect(alerts[0]).toHaveProperty('matchType', 'class');
           }
         ),
         { numRuns: 15 }
@@ -389,7 +390,7 @@ describe('Drug Interaction Service Tests', () => {
             expect(alerts.length).toBeGreaterThan(0);
             expect(alerts[0]).toHaveProperty('type', 'allergy');
             expect(alerts[0]).toHaveProperty('matchType', 'cross-reactivity');
-            expect(alerts[0].matchReason).toContain('Cross-reactivity');
+           expect(alerts[0].matchReason).toContain('Cross-reactivity');
           }
         ),
         { numRuns: 10 }
@@ -412,21 +413,21 @@ describe('Drug Interaction Service Tests', () => {
             expect(alerts[0]).toHaveProperty('severityColor');
             expect(alerts[0]).toHaveProperty('action');
           }
-        ),
+       ),
         { numRuns: 10 }
       );
-    });
+   });
     
-    test('checkPrescriptionSafety combines drug interactions and allergy checks correctly', () => {
+   test('checkPrescriptionSafety combines drug interactions and allergy checks correctly', () => {
       fc.assert(
         fc.property(
           fc.record({
             newDrug: fc.constantFrom('warfarin', 'ibuprofen', 'fluoxetine'),
-            currentMeds: fc.array(
+           currentMeds: fc.array(
               fc.constantFrom('aspirin', 'phenelzine', 'lisinopril'),
               { minLength: 0, maxLength: 2 }
             ),
-            allergies: fc.array(
+           allergies: fc.array(
               fc.record({
                 allergen: fc.constantFrom('nsaid', 'aspirin', 'penicillin'),
                 severity: fc.constantFrom('severe', 'moderate', 'mild'),
@@ -435,9 +436,9 @@ describe('Drug Interaction Service Tests', () => {
               { minLength: 0, maxLength: 2 }
             )
           }),
-          ({ newDrug, currentMeds, allergies }) => {
+         ({ newDrug, currentMeds, allergies }) => {
             const result = checkPrescriptionSafety(newDrug, currentMeds, allergies);
-            expect(result).toHaveProperty('status');
+           expect(result).toHaveProperty('status');
             expect(result).toHaveProperty('interactions');
             expect(result).toHaveProperty('allergyAlerts');
             expect(result).toHaveProperty('totalAlerts');
@@ -458,7 +459,7 @@ describe('Drug Interaction Service Tests', () => {
         { allergen: 'ibuprofen', severity: 'mild', reaction: 'Rash' },
         { allergen: 'nsaid', severity: 'severe', reaction: 'Anaphylaxis' },
         { allergen: 'aspirin', severity: 'moderate', reaction: 'Hives' }
-      ];
+      ];
       const alerts = checkDrugAllergies('naproxen', allergies);
       expect(alerts.length).toBeGreaterThan(0);
       
@@ -478,11 +479,11 @@ describe('Drug Interaction Service Tests', () => {
     
     test('should handle case-insensitive allergen matching', () => {
       const allergies = [{ allergen: 'ASPIRIN', severity: 'severe' }];
-      const alerts = checkDrugAllergies('aspirin', allergies);
+     const alerts = checkDrugAllergies('aspirin', allergies);
       
       expect(alerts.length).toBe(1);
-      expect(alerts[0].matchType).toBe('direct');
-    });
+     expect(alerts[0].matchType).toBe('direct');
+   });
     
     test('should not alert for unrelated drugs', () => {
       const allergies = [{ allergen: 'penicillin', severity: 'severe' }];
@@ -509,7 +510,7 @@ describe('Drug Interaction Service Tests', () => {
       );
       
       expect(result.status).toBe('contraindicated');
-      expect(result.requiresOverride).toBe(true);
+     expect(result.requiresOverride).toBe(true);
       expect(result.allergyAlerts.length).toBe(1);
     });
     
@@ -529,7 +530,7 @@ describe('Drug Interaction Service Tests', () => {
       const result = checkPrescriptionSafety(
         'warfarin',
         ['aspirin'],
-        [{ allergen: 'anticoagulant', severity: 'mild' }]
+       [{ allergen: 'anticoagulant', severity: 'mild' }]
       );
       expect(result.interactions.length).toBeGreaterThan(0);
       expect(result.allergyAlerts.length).toBeGreaterThan(0);
@@ -541,7 +542,7 @@ describe('Drug Interaction Service Tests', () => {
       expect(severe.name).toBe('Severe/Anaphylaxis');
       
       const moderate = getAllergySeverityInfo('moderate');
-      expect(moderate.level).toBe(2);
+     expect(moderate.level).toBe(2);
       
       const mild = getAllergySeverityInfo('mild');
       expect(mild.level).toBe(3);

@@ -67,14 +67,14 @@ router.get('/clinic/:clinicId/stats', verifyToken, async (req, res) => {
       QueueToken.aggregate([
         { $match: { clinicId: require('mongoose').Types.ObjectId(clinicId), issuedAt: { $gte: today } } },
         { $group: {
-          _id: '$department',
+         _id: '$department',
           total: { $sum: 1 },
           waiting: { $sum: { $cond: [{ $in: ['$status', ['waiting', 'checked_in']] }, 1, 0] } },
           completed: { $sum: { $cond: [{ $eq: ['$status', 'completed'] }, 1, 0] } },
           avgWaitTime: { $avg: '$estimatedWaitTime' }
         }}
       ]),
-      QueueToken.aggregate([
+     QueueToken.aggregate([
         { $match: { clinicId: require('mongoose').Types.ObjectId(clinicId), issuedAt: { $gte: today } } },
         { $group: {
           _id: { $hour: '$issuedAt' },
@@ -103,7 +103,7 @@ router.post('/token/:tokenId/call', verifyToken, async (req, res) => {
     if (!token) return res.status(404).json({ success: false, message: 'Token not found' });
     
     token.status = 'called';
-    token.calledAt = new Date();
+   token.calledAt = new Date();
     token.lastCalledAt = new Date();
     token.callCount += 1;
     token.updatedBy = req.user?.id;
@@ -111,7 +111,7 @@ router.post('/token/:tokenId/call', verifyToken, async (req, res) => {
       type: 'display',
       message: `Token ${token.tokenNumber} - Please proceed to consultation`,
       status: 'sent'
-    });
+   });
     
     await token.save();
     res.json({ success: true, token, message: `Token ${token.tokenNumber} called` });
@@ -137,7 +137,7 @@ router.post('/token/:tokenId/start', verifyToken, async (req, res) => {
 router.post('/token/:tokenId/complete', verifyToken, async (req, res) => {
   try {
     const token = await QueueToken.findById(req.params.tokenId);
-    if (!token) return res.status(404).json({ success: false, message: 'Token not found' });
+   if (!token) return res.status(404).json({ success: false, message: 'Token not found' });
     
     token.status = 'completed';
     token.completedAt = new Date();
@@ -173,10 +173,10 @@ router.post('/token/:tokenId/recall', verifyToken, async (req, res) => {
     
     token.status = 'called';
     token.lastCalledAt = new Date();
-    token.callCount += 1;
+   token.callCount += 1; 
     token.notifications.push({ type: 'display', message: `RECALL: Token ${token.tokenNumber}`, status: 'sent' });
     token.updatedBy = req.user?.id;
-    await token.save();
+   await token.save();
     
     res.json({ success: true, token, message: `Token ${token.tokenNumber} recalled` });
   } catch (error) {
@@ -194,14 +194,14 @@ router.post('/token/:tokenId/transfer', verifyToken, async (req, res) => {
       toDoctor: toDoctorId,
       fromDepartment: token.department,
       toDepartment: toDepartment || token.department,
-      reason,
+     reason,
       transferredBy: req.user?.id
     });
     
     token.doctorId = toDoctorId;
     if (toDepartment) token.department = toDepartment;
     token.status = 'waiting';
-    token.updatedBy = req.user?.id;
+    token.updatedBy = req.user?.id; 
     await token.save();
     
     res.json({ success: true, token, message: 'Token transferred' });
@@ -211,7 +211,7 @@ router.post('/token/:tokenId/transfer', verifyToken, async (req, res) => {
 });
 router.post('/token/:tokenId/hold', verifyToken, async (req, res) => {
   try {
-    const token = await QueueToken.findByIdAndUpdate(
+   const token = await QueueToken.findByIdAndUpdate(
       req.params.tokenId,
       { status: 'on_hold', notes: req.body.reason, updatedBy: req.user?.id },
       { new: true }
@@ -226,18 +226,18 @@ router.post('/token/:tokenId/resume', verifyToken, async (req, res) => {
   try {
     const token = await QueueToken.findByIdAndUpdate(
       req.params.tokenId,
-      { status: 'waiting', updatedBy: req.user?.id },
+     { status: 'waiting', updatedBy: req.user?.id },
       { new: true }
     );
     if (!token) return res.status(404).json({ success: false, message: 'Token not found' });
-    res.json({ success: true, token, message: 'Token resumed' });
+   res.json({ success: true, token, message: 'Token resumed' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.get('/patient/:phone/status', async (req, res) => {
   try {
-    const today = new Date(); today.setHours(0, 0, 0, 0);
+   const today = new Date(); today.setHours(0, 0, 0, 0);
     const tokens = await QueueToken.find({
       patientPhone: req.params.phone,
       issuedAt: { $gte: today },
@@ -254,9 +254,10 @@ router.get('/clinic/:clinicId/display', async (req, res) => {
     const { department } = req.query;
     const today = new Date(); today.setHours(0, 0, 0, 0);
     
-    const query = {
+   const query = {
       clinicId: req.params.clinicId,
-      issuedAt: { $gte: today },
+     issuedAt: { $gte: today },
+    console.log('DEBUG: advancedQueueRoutes.js');
       status: { $in: ['called', 'in_consultation'] }
     };
     if (department) query.department = department;
@@ -282,7 +283,7 @@ router.post('/token/:tokenId/feedback', async (req, res) => {
   try {
     const { rating, waitTimeRating, comment } = req.body;
     const token = await QueueToken.findByIdAndUpdate(
-      req.params.tokenId,
+     req.params.tokenId,
       { feedback: { rating, waitTimeRating, comment, submittedAt: new Date() } },
       { new: true }
     );
@@ -302,31 +303,31 @@ router.get('/clinic/:clinicId/analytics', verifyToken, async (req, res) => {
       QueueToken.aggregate([
         { $match: { clinicId: require('mongoose').Types.ObjectId(req.params.clinicId), issuedAt: { $gte: start, $lte: end }, status: 'completed' } },
         { $group: { _id: '$department', avgWaitTime: { $avg: '$estimatedWaitTime' }, avgConsultTime: { $avg: '$consultationDuration' }, count: { $sum: 1 } } }
-      ]),
+     ]),
       QueueToken.aggregate([
         { $match: { clinicId: require('mongoose').Types.ObjectId(req.params.clinicId), issuedAt: { $gte: start, $lte: end } } },
         { $group: { _id: { $hour: '$issuedAt' }, count: { $sum: 1 } } },
         { $sort: { count: -1 } },
         { $limit: 5 }
       ]),
-      QueueToken.aggregate([
+     QueueToken.aggregate([
         { $match: { clinicId: require('mongoose').Types.ObjectId(req.params.clinicId), issuedAt: { $gte: start, $lte: end } } },
         { $group: { _id: null, total: { $sum: 1 }, noShows: { $sum: { $cond: [{ $eq: ['$status', 'no_show'] }, 1, 0] } } } }
       ]),
       QueueToken.aggregate([
-        { $match: { clinicId: require('mongoose').Types.ObjectId(req.params.clinicId), issuedAt: { $gte: start, $lte: end }, 'feedback.rating': { $exists: true } } },
+       { $match: { clinicId: require('mongoose').Types.ObjectId(req.params.clinicId), issuedAt: { $gte: start, $lte: end }, 'feedback.rating': { $exists: true } } },
         { $group: { _id: null, avgRating: { $avg: '$feedback.rating' }, avgWaitRating: { $avg: '$feedback.waitTimeRating' }, count: { $sum: 1 } } }
-      ])
+     ])
     ]);
     
     res.json({ success: true, waitTimeAnalytics, peakHours, noShowRate: noShowRate[0], feedbackStats: feedbackStats[0] });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-});
+});
 router.post('/token/:tokenId/checkin', async (req, res) => {
   try {
-    const token = await QueueToken.findByIdAndUpdate(
+   const token = await QueueToken.findByIdAndUpdate(
       req.params.tokenId,
       { status: 'checked_in', checkedInAt: new Date() },
       { new: true }
@@ -339,7 +340,7 @@ router.post('/token/:tokenId/checkin', async (req, res) => {
 });
 router.post('/virtual-join', async (req, res) => {
   try {
-    const { clinicId, patientName, patientPhone, doctorId, department, expectedArrivalTime } = req.body;
+   const { clinicId, patientName, patientPhone, doctorId, department, expectedArrivalTime } = req.body;
     
     const estimatedWaitTime = await QueueToken.calculateEstimatedWait(clinicId, department, doctorId);
     
@@ -349,12 +350,12 @@ router.post('/virtual-join', async (req, res) => {
       virtualJoinedAt: new Date(),
       expectedArrivalTime: expectedArrivalTime ? new Date(expectedArrivalTime) : null,
       estimatedWaitTime,
-      tokenType: 'regular'
+     tokenType: 'regular'
     });
     
     await token.save();
     res.status(201).json({ success: true, token, message: `Virtual token ${token.tokenNumber} issued. Please arrive 10 minutes before your turn.` });
-  } catch (error) {
+  } catch (error) { 
     res.status(500).json({ success: false, message: error.message });
   }
 });

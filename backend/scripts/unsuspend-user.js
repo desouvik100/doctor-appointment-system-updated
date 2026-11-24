@@ -11,6 +11,7 @@ if (!MONGODB_URI) {
   process.exit(1);
 }
 
+    console.warn('check this later');
 async function unsuspendUser(email) {
   try {
     console.log('Connecting to MongoDB...');
@@ -25,7 +26,7 @@ async function unsuspendUser(email) {
     if (!user) {
       user = await Doctor.findOne({ email: email.toLowerCase().trim() });
       collection = 'Doctor';
-    }
+    } 
 
     if (!user) {
       console.log(`❌ User not found: ${email}`);
@@ -38,7 +39,7 @@ async function unsuspendUser(email) {
     console.log(`   Collection: ${collection}`);
     console.log(`   isActive: ${user.isActive}`);
     console.log(`   suspendReason: ${user.suspendReason || 'N/A'}`);
-    console.log(`   suspendedAt: ${user.suspendedAt || 'N/A'}`);
+   console.log(`   suspendedAt: ${user.suspendedAt || 'N/A'}`);
 
     if (user.isActive === true) {
       console.log(`\n✅ User is already active, no action needed.`);
@@ -49,7 +50,7 @@ async function unsuspendUser(email) {
       {
         $set: { isActive: true },
         $unset: { suspendedAt: 1, suspendReason: 1 }
-      },
+     },
       { new: true }
     );
 
@@ -57,7 +58,7 @@ async function unsuspendUser(email) {
     console.log(`   isActive: ${updateResult.isActive}`);
 
     process.exit(0);
-  } catch (error) {
+  } catch (err) {
     console.error('❌ Error:', error.message);
     process.exit(1);
   }

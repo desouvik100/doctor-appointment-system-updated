@@ -16,14 +16,14 @@ const createRazorpayDemoAccounts = async () => {
       process.exit(1);
     }
     
-    await mongoose.connect(MONGODB_URI);
+   await mongoose.connect(MONGODB_URI);
     console.log('✅ Connected to MongoDB\n');
     
     const password = 'Razorpay@123';
     const hashedPassword = await bcrypt.hash(password, 10);
     const patientResult = await User.findOneAndUpdate(
       { email: 'demo@razorpay.com' },
-      {
+     {
         name: 'Razorpay Demo User',
         email: 'demo@razorpay.com',
         password: hashedPassword,
@@ -31,7 +31,7 @@ const createRazorpayDemoAccounts = async () => {
         role: 'patient',
         approvalStatus: 'approved',
         isActive: true,
-        medicalHistory: {
+       medicalHistory: {
           bloodGroup: 'O+',
           allergies: ['None'],
           chronicConditions: [],
@@ -42,7 +42,7 @@ const createRazorpayDemoAccounts = async () => {
           }
         }
       },
-      { upsert: true, new: true }
+     { upsert: true, new: true }
     );
     console.log('✅ Demo Patient Account Created');
     console.log('   📧 Email: demo@razorpay.com');
@@ -51,14 +51,14 @@ const createRazorpayDemoAccounts = async () => {
     const adminResult = await User.findOneAndUpdate(
       { email: 'admin-demo@razorpay.com' },
       {
-        name: 'Razorpay Admin Demo',
+       name: 'Razorpay Admin Demo',
         email: 'admin-demo@razorpay.com',
         password: hashedPassword,
         phone: '9876543212',
         role: 'admin',
         approvalStatus: 'approved',
         isActive: true
-      },
+     },
       { upsert: true, new: true }
     );
     console.log('\n✅ Demo Admin Account Created');
@@ -67,10 +67,10 @@ const createRazorpayDemoAccounts = async () => {
     console.log('   👤 ID:', adminResult._id);
     let clinic = await Clinic.findOne({});
     if (!clinic) {
-      clinic = await Clinic.create({
+     clinic = await Clinic.create({
         name: 'HealthSync Demo Clinic',
         address: 'Demo Address, Kolkata',
-        phone: '9876543213',
+       phone: '9876543213',
         email: 'clinic@healthsync.com'
       });
     }
@@ -80,7 +80,7 @@ const createRazorpayDemoAccounts = async () => {
         name: 'Dr. Razorpay Demo',
         email: 'doctor-demo@razorpay.com',
         password: hashedPassword,
-        phone: '9876543214',
+       phone: '9876543214',
         specialization: 'General Physician',
         clinicId: clinic._id,
         consultationFee: 500,
@@ -89,10 +89,10 @@ const createRazorpayDemoAccounts = async () => {
         isActive: true,
         isVerified: true,
         approvalStatus: 'approved',
-        rating: 4.5,
+       rating: 4.5,
         reviewCount: 25,
         languages: ['English', 'Hindi', 'Bengali'],
-        bio: 'Experienced general physician with 10+ years of practice.'
+       bio: 'Experienced general physician with 10+ years of practice.'
       },
       { upsert: true, new: true }
     );
@@ -118,7 +118,7 @@ const createRazorpayDemoAccounts = async () => {
     await mongoose.disconnect();
     console.log('\n✅ Done! Accounts ready for Razorpay review.');
     
-  } catch (error) {
+  } catch (e) {
     console.error('❌ Error:', error.message);
     process.exit(1);
   }

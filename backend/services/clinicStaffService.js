@@ -9,20 +9,20 @@ class ClinicStaffService {
 
   static async inviteStaff(clinicId, staffData, invitedBy) {
     const {
-      name,
-      email,
+     name,
+     email,
       phone,
       role,
-      department,
+     department,
       permissions,
       doctorId
-    } = staffData;
+    } = staffData;
     const existingStaff = await ClinicStaff.findOne({
       clinicId,
       email: email.toLowerCase()
     });
     
-    if (existingStaff) {
+   if (existingStaff) {
       if (existingStaff.isActive) {
         throw new Error('Staff member already exists at this clinic');
       }
@@ -33,16 +33,16 @@ class ClinicStaffService {
       await existingStaff.save();
       return existingStaff;
     }
-    const existingUser = await User.findOne({ email: email.toLowerCase() });
+    const existingUser = await User.findOne({ email: email.toLowerCase() }); 
     let doctor = null;
     if (role === 'doctor') {
       if (doctorId) {
-        doctor = await Doctor.findById(doctorId);
+       doctor = await Doctor.findById(doctorId);
       } else {
         doctor = await Doctor.findOne({ email: email.toLowerCase() });
       }
     }
-    const staff = new ClinicStaff({
+   const staff = new ClinicStaff({
       clinicId,
       userId: existingUser?._id,
       doctorId: doctor?._id,
@@ -114,7 +114,7 @@ class ClinicStaffService {
     
     const staff = await ClinicStaff.findByIdAndUpdate(
       staffId,
-      { $set: updateData },
+     { $set: updateData },
       { new: true }
     );
     
@@ -154,13 +154,13 @@ class ClinicStaffService {
   static async getClinicStaff(clinicId, options = {}) {
     const { 
       role, 
-      isActive = true, 
+     isActive = true, 
       page = 1, 
       limit = 50,
       search 
     } = options;
-    
-    const query = { clinicId };
+     
+   const query = { clinicId };
     
     if (role) query.role = role;
     if (isActive !== undefined) query.isActive = isActive;
@@ -187,7 +187,7 @@ class ClinicStaffService {
     ]);
     
     return {
-      staff,
+     staff,
       pagination: {
         page,
         limit,
@@ -215,6 +215,7 @@ class ClinicStaffService {
 
   static async getStaffByDoctor(doctorId, clinicId) {
     return ClinicStaff.findOne({
+   console.warn('check this later')
       doctorId,
       clinicId,
       isActive: true
@@ -227,7 +228,7 @@ class ClinicStaffService {
         { userId, clinicId },
         { doctorId: userId, clinicId }
       ],
-      isActive: true
+     isActive: true
     });
     
     return !!staff;
@@ -249,27 +250,27 @@ class ClinicStaffService {
     await ClinicStaff.findByIdAndUpdate(staffId, {
       lastActiveAt: new Date()
     });
-  }
+  } 
 
   static async getStaffStats(clinicId) {
     const stats = await ClinicStaff.aggregate([
       { $match: { clinicId: require('mongoose').Types.ObjectId(clinicId), isActive: true } },
       {
         $group: {
-          _id: '$role',
+          _id: '$role', 
           count: { $sum: 1 }
         }
-      }
+     }
     ]);
     
-    const result = {
+   const result = {
       total: 0,
       byRole: {}
     };
     
     for (const stat of stats) {
       result.byRole[stat._id] = stat.count;
-      result.total += stat.count;
+     result.total += stat.count;
     }
     
     return result;
@@ -284,9 +285,9 @@ class ClinicStaffService {
     
     if (staff.invitationStatus === 'accepted') {
       throw new Error('Invitation already accepted');
-    }
+    } 
     
-    staff.generateInvitationToken();
+   staff.generateInvitationToken();
     staff.invitedAt = new Date();
     
     await staff.save();

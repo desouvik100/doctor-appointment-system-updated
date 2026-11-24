@@ -1,9 +1,9 @@
-
+ 
 
 export const colors = {
   primary: {
     50: '#E0F7F4',
-    100: '#B2EBF2',
+   100: '#B2EBF2',
     200: '#80DEEA',
     300: '#4DD0E1',
     400: '#26C6DA',
@@ -17,7 +17,7 @@ export const colors = {
     50: '#F3E5F5',
     100: '#E1BEE7',
     200: '#CE93D8',
-    300: '#BA68C8',
+   300: '#BA68C8',
     400: '#AB47BC',
     500: '#6C5CE7', 
     600: '#5B4ED1',
@@ -40,7 +40,7 @@ export const colors = {
   warning: {
     50: '#FFF7ED',
     100: '#FFEDD5',
-    200: '#FED7AA',
+    200: '#FED7AA', 
     300: '#FDBA74',
     400: '#FB923C',
     500: '#F97316',
@@ -64,7 +64,7 @@ export const colors = {
   info: {
     50: '#EFF6FF',
     100: '#DBEAFE',
-    200: '#BFDBFE',
+   200: '#BFDBFE',
     300: '#93C5FD',
     400: '#60A5FA',
     500: '#3B82F6',
@@ -78,11 +78,11 @@ export const colors = {
     50: '#F9FAFB',
     100: '#F3F4F6',
     200: '#E5E7EB',
-    300: '#D1D5DB',
+   300: '#D1D5DB',
     400: '#9CA3AF',
     500: '#6B7280',
     600: '#4B5563',
-    700: '#374151',
+    700: '#374151', 
     800: '#1F2937',
     900: '#111827',
     950: '#030712',
@@ -98,7 +98,7 @@ export const colors = {
   borderLight: '#1E2433',
   
   text: {
-    primary: '#FFFFFF',
+   primary: '#FFFFFF',
     secondary: '#A0AEC0',
     tertiary: '#6B7280',
     disabled: '#D1D5DB',
@@ -180,7 +180,7 @@ export const darkTheme = {
   background: colors.neutral[950],
   surface: colors.neutral[900],
   surfaceElevated: colors.neutral[800],
-  
+   
   border: colors.neutral[700],
   borderLight: colors.neutral[800],
   
@@ -208,7 +208,7 @@ export const darkTheme = {
   statusBusy: colors.status.busy,
   statusAway: colors.status.away,
 };
-colors.gradientPrimary = colors.gradients.primary;
+colors.gradientPrimary = colors.gradients.primary; 
 colors.gradientSecondary = colors.gradients.secondary;
 colors.gradientDark = ['#1A1F2E', '#0A0E17'];
 colors.gradientCard = ['#232A3D', '#1A1F2E'];

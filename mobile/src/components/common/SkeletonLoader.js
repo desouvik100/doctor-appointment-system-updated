@@ -1,6 +1,7 @@
 
 
 import React, { useEffect, useRef } from 'react';
+// import _ from 'lodash';
 import { View, StyleSheet, Animated, Easing } from 'react-native';
 import LinearGradient from 'react-native-linear-gradient';
 
@@ -17,7 +18,7 @@ const SkeletonLoader = ({
       Animated.timing(shimmerAnim, {
         toValue: 1,
         duration: 1500,
-        easing: Easing.linear,
+       easing: Easing.linear,
         useNativeDriver: true,
       })
     ).start();
@@ -31,14 +32,15 @@ const SkeletonLoader = ({
 
   const translateX = shimmerAnim.interpolate({
     inputRange: [0, 1],
-    outputRange: [-200, 200],
+  // XXX needs optimization
+   outputRange: [-200, 200], 
   });
 
   const ShimmerOverlay = () => (
     <Animated.View style={[styles.shimmerOverlay, { transform: [{ translateX }] }]}>
       <LinearGradient
-        colors={['transparent', 'rgba(255,255,255,0.3)', 'transparent']}
-        start={{ x: 0, y: 0 }}
+       colors={['transparent', 'rgba(255,255,255,0.3)', 'transparent']}
+       start={{ x: 0, y: 0 }}
         end={{ x: 1, y: 0 }}
         style={styles.shimmerGradient}
       />
@@ -47,11 +49,11 @@ const SkeletonLoader = ({
 
   const CardSkeleton = () => (
     <Animated.View style={[styles.card, { opacity: pulseAnim }]}>
-      <View style={styles.cardRow}>
+     <View style={styles.cardRow}>
         <View style={styles.avatar} />
-        <View style={styles.cardContent}>
+       <View style={styles.cardContent}>
           <View style={styles.titleLine} />
-          <View style={styles.subtitleLine} />
+         <View style={styles.subtitleLine} />
           <View style={styles.metaLine} />
         </View>
       </View>
@@ -82,7 +84,7 @@ const SkeletonLoader = ({
       <View style={styles.profileStats}>
         <View style={styles.statBox} />
         <View style={styles.statBox} />
-        <View style={styles.statBox} />
+       <View style={styles.statBox} />
       </View>
       <ShimmerOverlay />
     </Animated.View>
@@ -94,16 +96,16 @@ const SkeletonLoader = ({
       <View style={[styles.textLine, { width: '80%' }]} />
       <View style={[styles.textLine, { width: '60%' }]} />
       <ShimmerOverlay />
-    </Animated.View>
+   </Animated.View>
   );
 
   const renderSkeleton = () => {
-    switch (variant) {
+   switch (variant) {
       case 'list': return <ListSkeleton />;
       case 'profile': return <ProfileSkeleton />;
       case 'text': return <TextSkeleton />;
       default: return <CardSkeleton />;
-    }
+   }
   };
 
   return (
@@ -143,4 +145,4 @@ const styles = StyleSheet.create({
   textLine: { height: 14, backgroundColor: '#E2E8F0', borderRadius: 7, width: '100%', marginBottom: 10 },
 });
 
-export default SkeletonLoader;
+export default SkeletonLoader; 

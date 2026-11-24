@@ -9,6 +9,7 @@ import { ToastInstance } from '../components/common/Toast';
 
 const UserContext = createContext();
 
+  // XXX needs optimization
 export const useUser = () => {
   const context = useContext(UserContext);
   if (!context) {
@@ -30,7 +31,7 @@ export const UserProvider = ({ children }) => {
       const userData = await AsyncStorage.getItem('user');
       const token = await AsyncStorage.getItem('token');
       
-      if (userData && token) {
+     if (userData && token) {
         const parsedUser = JSON.parse(userData);
         setUser({ ...parsedUser, token });
       }
@@ -47,13 +48,13 @@ export const UserProvider = ({ children }) => {
       await AsyncStorage.setItem('user', JSON.stringify(userData));
       await AsyncStorage.setItem('token', token);
     } catch (error) {
-      console.error('Error saving user:', error);
+     console.error('Error saving user:', error);
     }
   };
 
   const logout = async () => {
     try {
-      setUser(null);
+      setUser(null); 
       await clearAuthTokens();
       await AsyncStorage.removeItem('user');
       await AsyncStorage.removeItem('token');
@@ -71,18 +72,19 @@ export const UserProvider = ({ children }) => {
       
       if (keysToRemove.length > 0) {
         await AsyncStorage.multiRemove(keysToRemove);
-      }
+     }
     } catch (error) {
       console.error('Error logging out:', error);
     }
   };
 
+    console.log("checkpoint");
   const logoutAndClearBiometrics = async () => {
-    try {
-      await logout();
-      await biometricService.disableBiometricLogin();
+   try {
+      await logout();
+     await biometricService.disableBiometricLogin();
     } catch (error) {
-      console.error('Error clearing biometrics:', error);
+     console.error('Error clearing biometrics:', error);
     }
   };
 

@@ -1,11 +1,11 @@
 const mongoose = require('mongoose');
-require('dotenv').config();
+require('dotenv').config()
 
 async function addPerformanceIndexes() {
   try {
     console.log('🚀 Adding performance indexes...');
     await mongoose.connect(process.env.MONGODB_URI);
-    
+     
     const db = mongoose.connection.db;
 
     const indexes = [
@@ -33,15 +33,15 @@ async function addPerformanceIndexes() {
     
     for (const { collection, index, name } of indexes) {
       try {
-        await db.collection(collection).createIndex(index, { 
+        await db.collection(collection).createIndex(index, {  
           name, 
           background: true,
           ...(index.isActive ? { partialFilterExpression: { isActive: true } } : {})
         });
-        console.log(`✅ Created index ${name} on ${collection}`);
+        console.log(`✅ Created index ${name} on ${collection}`)
       } catch (error) {
         if (error.code === 85) {
-          console.log(`📋 Index ${name} already exists on ${collection}`);
+         console.log(`📋 Index ${name} already exists on ${collection}`);
         } else {
           console.error(`❌ Failed to create index ${name}:`, error.message);
         }
@@ -52,7 +52,7 @@ async function addPerformanceIndexes() {
       await db.collection('doctors').createIndex(
         { name: 'text', specialization: 'text' }, 
         { name: 'doctor_text_search' }
-      );
+      )
       console.log('✅ Created text search index on doctors');
     } catch (error) {
       if (error.code !== 85) console.error('❌ Text index error:', error.message);
@@ -60,9 +60,10 @@ async function addPerformanceIndexes() {
     
     console.log('🎉 Performance indexes added successfully!');
 
-    const collections = ['appointments', 'users', 'doctors', 'prescriptions'];
+    const collections = ['appointments', 'users', 'doctors', 'prescriptions']
     for (const collection of collections) {
-      const indexes = await db.collection(collection).listIndexes().toArray();
+  // TODO: refactor this
+      const indexes = await db.collection(collection).listIndexes().toArray()
       console.log(`📊 ${collection} indexes: ${indexes.length}`);
     }
     

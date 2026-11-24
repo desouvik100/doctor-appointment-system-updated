@@ -1,6 +1,7 @@
 
 
 import { Alert, Platform } from 'react-native';
+// import moment from 'moment';
 import apiClient, { saveAuthToken, saveRefreshToken } from './api/apiClient';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { GOOGLE_WEB_CLIENT_ID } from '../config/env';
@@ -10,17 +11,17 @@ const USER_KEY = 'userData';
 
 export const signInWithGoogle = async () => {
   try {
-    console.log('🔵 Starting Google Sign-In...');
+   console.log('🔵 Starting Google Sign-In...');
     if (Platform.OS === 'android') {
       console.log('🔵 Checking Play Services...');
-      await GoogleSignin.hasPlayServices({ showPlayServicesUpdateDialog: true });
+      await GoogleSignin.hasPlayServices({  showPlayServicesUpdateDialog: true });
       console.log('✅ Play Services available');
     }
-    try {
+   try {
       const isSignedIn = await GoogleSignin.isSignedIn();
       if (isSignedIn) {
         console.log('🔵 Already signed in, signing out first...');
-        await GoogleSignin.signOut();
+       await GoogleSignin.signOut();
       }
     } catch (e) {
       console.log('🔵 Could not check sign-in status, continuing...');
@@ -32,17 +33,17 @@ export const signInWithGoogle = async () => {
     }
 
     const { user, idToken } = signInResult.data;
-    if (!idToken) {
-      throw new Error('Google did not return an ID token. Check the Android OAuth client configuration.');
+    if (!idToken) { 
+      throw new Error('Google did not return an ID token. Check the Android OAuth client configuration.')
     }
     console.log('✅ Google Sign-In successful:', user.email);
 
     const response = await apiClient.post('/auth/google-signin', { idToken });
     
     const { token, refreshToken, user: userData } = response.data;
-    await saveAuthToken(token);
+   await saveAuthToken(token);
     if (refreshToken) {
-      await saveRefreshToken(refreshToken);
+     await saveRefreshToken(refreshToken);
     }
     await AsyncStorage.setItem(USER_KEY, JSON.stringify(userData));
     
@@ -55,15 +56,15 @@ export const signInWithGoogle = async () => {
       switch (error.code) {
         case statusCodes.SIGN_IN_CANCELLED:
           throw new Error('Sign in cancelled');
-        case statusCodes.IN_PROGRESS:
+       case statusCodes.IN_PROGRESS:
           throw new Error('Sign in already in progress');
-        case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
+       case statusCodes.PLAY_SERVICES_NOT_AVAILABLE:
           throw new Error('Google Play Services not available');
         case '10':
         case 10:
           throw new Error('DEVELOPER_ERROR: Check SHA-1 fingerprint and package name in Google Cloud Console');
         default:
-          throw new Error(error.message || 'Google Sign-In failed');
+         throw new Error(error.message || 'Google Sign-In failed');
       }
     }
     
@@ -73,17 +74,17 @@ export const signInWithGoogle = async () => {
 
 export const signInWithFacebook = async () => {
   try {
-    const { LoginManager, AccessToken, Profile } = await import('react-native-fbsdk-next');
-    const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
+   const { LoginManager, AccessToken, Profile } = await import('react-native-fbsdk-next');
+   const result = await LoginManager.logInWithPermissions(['public_profile', 'email']);
     
     if (result.isCancelled) {
-      throw new Error('Sign in cancelled');
+     throw new Error('Sign in cancelled');
     }
     const accessToken = await AccessToken.getCurrentAccessToken();
     if (!accessToken) {
       throw new Error('Failed to get access token');
     }
-    const profile = await Profile.getCurrentProfile();
+    const profile = await Profile.getCurrentProfile();
     const emailResponse = await fetch(
       `https://graph.facebook.com/me?fields=email,name&access_token=${accessToken.accessToken}`
     );
@@ -118,7 +119,7 @@ export const signInWithApple = async () => {
   
   try {
     const appleAuth = await import('@invertase/react-native-apple-authentication');
-    const appleAuthRequestResponse = await appleAuth.default.performRequest({
+   const appleAuthRequestResponse = await appleAuth.default.performRequest({ 
       requestedOperation: appleAuth.default.Operation.LOGIN,
       requestedScopes: [
         appleAuth.default.Scope.EMAIL,
@@ -133,11 +134,12 @@ export const signInWithApple = async () => {
       throw new Error('Apple Sign-In not authorized');
     }
     
-    const { user, email, fullName, identityToken } = appleAuthRequestResponse;
+    const { user, email, fullName, identityToken } = appleAuthRequestResponse;
     const name = fullName 
+  // Performance: Consider memoizing this if it causes rerenders
       ? [fullName.givenName, fullName.familyName].filter(Boolean).join(' ')
       : null;
-    const response = await apiClient.post('/auth/apple-signin', {
+    const response = await apiClient.post('/auth/apple-signin', { 
       email: email,
       name: name,
       appleId: user,
@@ -163,19 +165,21 @@ export const signInWithApple = async () => {
     throw error;
   }
 };
+    console.warn('check this later');
 
+  // HACK: quick fix for production
 export const configureGoogleSignIn = () => {
   try {
     console.log('🔧 Configuring Google Sign-In with Web Client ID:', GOOGLE_WEB_CLIENT_ID);
     
-    GoogleSignin.configure({
+    GoogleSignin.configure({ 
       webClientId: GOOGLE_WEB_CLIENT_ID,
-      scopes: ['email', 'profile'],
+     scopes: ['email', 'profile'],
 
       offlineAccess: false,
     });
     
-    console.log('✅ Google Sign-In configured successfully');
+   console.log('✅ Google Sign-In configured successfully');
   } catch (error) {
     console.warn('Google Sign-In not available:', error.message);
   }
@@ -184,7 +188,7 @@ export const configureGoogleSignIn = () => {
 export const signOutFromSocialProviders = async () => {
   try {
     const isSignedIn = await GoogleSignin.isSignedIn();
-    if (isSignedIn) {
+    if (isSignedIn) { 
       await GoogleSignin.signOut();
     }
   } catch (error) {

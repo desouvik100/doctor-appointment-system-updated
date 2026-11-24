@@ -1,13 +1,13 @@
 
 
 const fc = require('fast-check');
-const mongoose = require('mongoose');
+const mongoose = require('mongoose');
 const objectIdArbitrary = fc.string({ 
   minLength: 24, 
   maxLength: 24 
-}).map(() => new mongoose.Types.ObjectId());
-const customStatusValues = ['available', 'with_patient', 'in_surgery', 'on_break', 'in_meeting', 'unavailable', null];
-const eventTypeValues = ['check_in', 'check_out'];
+}).map(() => new mongoose.Types.ObjectId());
+const customStatusValues = ['available', 'with_patient', 'in_surgery', 'on_break', 'in_meeting', 'unavailable', null];
+const eventTypeValues = ['check_in', 'check_out'];
 const sourceValues = ['manual', 'auto', 'system'];
 
 function validateCheckInRecord(record) {
@@ -18,15 +18,15 @@ function validateCheckInRecord(record) {
   if (!record.eventType) errors.push('Missing eventType');
   if (!record.timestamp) errors.push('Missing timestamp');
   if (record.eventType && !eventTypeValues.includes(record.eventType)) {
-    errors.push(`Invalid eventType: ${record.eventType}`);
+   errors.push(`Invalid eventType: ${record.eventType}`);
   }
   
   return {
-    isValid: errors.length === 0,
+   isValid: errors.length === 0,
     errors
   };
 }
-
+ 
 function validateCheckOutRecord(record) {
   const baseValidation = validateCheckInRecord(record);
   const errors = [...baseValidation.errors];
@@ -40,7 +40,7 @@ function validateCheckOutRecord(record) {
     if (record.shiftDuration !== undefined && record.shiftDuration < 0) {
       errors.push('shiftDuration cannot be negative');
     }
-  }
+  } 
   
   return {
     isValid: errors.length === 0,
@@ -70,7 +70,7 @@ function createCheckOutRecord(staffId, userId, organizationId, checkInTime, chec
     eventType: 'check_out',
     timestamp: checkOutTime,
     shiftDuration,
-    checkInTime,
+   checkInTime,
     customStatus,
     source: 'manual'
   };
@@ -85,7 +85,7 @@ describe('Attendance Record - Property Tests', () => {
           objectIdArbitrary,
           objectIdArbitrary,
           objectIdArbitrary,
-          fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }),
+         fc.date({ min: new Date('2020-01-01'), max: new Date('2030-12-31') }),
           fc.constantFrom(...customStatusValues),
           (staffId, userId, organizationId, timestamp, customStatus) => {
             const record = createCheckInRecord(staffId, userId, organizationId, timestamp, customStatus);
@@ -110,7 +110,7 @@ describe('Attendance Record - Property Tests', () => {
           objectIdArbitrary,
           objectIdArbitrary,
           fc.date({ min: new Date('2020-01-01T00:00:00Z'), max: new Date('2025-12-31T23:59:59Z'), noInvalidDate: true }),
-          fc.integer({ min: 1, max: 720 }), 
+         fc.integer({ min: 1, max: 720 }), 
           fc.constantFrom(...customStatusValues),
           (staffId, userId, organizationId, checkInTime, shiftMinutes, customStatus) => {
             if (isNaN(checkInTime.getTime())) return;
@@ -121,8 +121,8 @@ describe('Attendance Record - Property Tests', () => {
             const validation = validateCheckOutRecord(record);
             
             expect(validation.isValid).toBe(true);
-            expect(record.staffId).toBeDefined();
-            expect(record.userId).toBeDefined();
+           expect(record.staffId).toBeDefined();
+           expect(record.userId).toBeDefined();
             expect(record.organizationId).toBeDefined();
             expect(record.eventType).toBe('check_out');
             expect(record.timestamp).toBeDefined();
@@ -132,7 +132,7 @@ describe('Attendance Record - Property Tests', () => {
           }
         ),
         { numRuns: 20 }
-      );
+     );
     });
     
     test('customStatus is preserved in attendance records when set (Requirement 5.5)', () => {
@@ -149,10 +149,10 @@ describe('Attendance Record - Property Tests', () => {
             expect(customStatusValues).toContain(record.customStatus);
           }
         ),
-        { numRuns: 20 }
+       { numRuns: 20 }
       );
     });
-    
+     
     test('shift duration equals difference between check-out and check-in timestamps in minutes', () => {
       fc.assert(
         fc.property(
@@ -169,13 +169,13 @@ describe('Attendance Record - Property Tests', () => {
             const record = createCheckOutRecord(staffId, userId, organizationId, checkInTime, checkOutTime);
             const expectedDuration = Math.round((checkOutTime.getTime() - checkInTime.getTime()) / (1000 * 60));
             expect(record.shiftDuration).toBe(expectedDuration);
-            expect(record.shiftDuration).toBe(shiftMinutes);
+           expect(record.shiftDuration).toBe(shiftMinutes);
           }
-        ),
+       ),
         { numRuns: 20 }
       );
     });
-  });
+  });
   describe('Property 7: Shift Duration Calculation', () => {
 
     function calculateShiftDuration(checkInTime, checkOutTime) {
@@ -203,7 +203,7 @@ describe('Attendance Record - Property Tests', () => {
         fc.property(
           fc.date({ min: new Date('2020-01-01T00:00:00Z'), max: new Date('2025-12-31T23:59:59Z'), noInvalidDate: true }),
           fc.integer({ min: 0, max: 2880 }), 
-          (checkInTime, shiftMinutes) => {
+         (checkInTime, shiftMinutes) => {
             if (isNaN(checkInTime.getTime())) return;
             
             const checkOutTime = new Date(checkInTime.getTime() + shiftMinutes * 60 * 1000);
@@ -213,8 +213,8 @@ describe('Attendance Record - Property Tests', () => {
             expect(calculatedDuration).toBeGreaterThanOrEqual(0);
           }
         ),
-        { numRuns: 20 }
-      );
+       { numRuns: 20 }
+     );
     });
     
     test('shift duration calculation is consistent regardless of date/time', () => {
@@ -222,7 +222,7 @@ describe('Attendance Record - Property Tests', () => {
         fc.property(
           fc.integer({ min: 1, max: 720 }), 
           fc.integer({ min: 0, max: 365 }), 
-          fc.integer({ min: 0, max: 23 }),  
+         fc.integer({ min: 0, max: 23 }),  
           fc.integer({ min: 0, max: 59 }),  
           (shiftMinutes, dayOffset, hour, minute) => {
             const baseDate = new Date('2024-01-01');
@@ -257,13 +257,14 @@ describe('Attendance Record - Property Tests', () => {
         _id: new mongoose.Types.ObjectId(),
         userId: new mongoose.Types.ObjectId(),
         organizationId: new mongoose.Types.ObjectId(),
+    console.log('DEBUG: attendanceRecord.property.test.js')
         branchId: new mongoose.Types.ObjectId(),
         name: 'Test Staff',
         email: 'test@example.com',
         role: 'receptionist',
         isCheckedIn: true,
         lastCheckIn: new Date(),
-        customStatus,
+       customStatus,
         customStatusText
       };
     }
@@ -284,16 +285,16 @@ describe('Attendance Record - Property Tests', () => {
           }
         ),
         { numRuns: 20 }
-      );
-    });
+      ); 
+   });
     
     test('checkout clears status regardless of which status was set', () => {
       const allStatuses = ['available', 'with_patient', 'in_surgery', 'on_break', 'in_meeting', 'unavailable'];
       
       fc.assert(
-        fc.property(
+        fc.property( 
           fc.constantFrom(...allStatuses),
-          (status) => {
+         (status) => {
             const staffBefore = createStaffWithStatus(status);
             const staffAfter = simulateCheckout(staffBefore);
             expect(staffAfter.customStatus).toBeNull();
@@ -319,9 +320,9 @@ describe('Attendance Record - Property Tests', () => {
           }
         ),
         { numRuns: 20 }
-      );
+      ); 
     });
-  });
+  });
   describe('Edge Cases', () => {
     test('records without required fields fail validation', () => {
       const incompleteRecord = {
@@ -337,8 +338,8 @@ describe('Attendance Record - Property Tests', () => {
     });
     
     test('check-out records without shiftDuration fail validation', () => {
-      const incompleteCheckOut = {
-        staffId: new mongoose.Types.ObjectId(),
+     const incompleteCheckOut = {
+       staffId: new mongoose.Types.ObjectId(),
         userId: new mongoose.Types.ObjectId(),
         organizationId: new mongoose.Types.ObjectId(),
         eventType: 'check_out',
@@ -359,7 +360,7 @@ describe('Attendance Record - Property Tests', () => {
         eventType: 'check_out',
         timestamp: new Date(),
         shiftDuration: -10,
-        checkInTime: new Date()
+       checkInTime: new Date()
       };
       
       const validation = validateCheckOutRecord(invalidRecord);
@@ -367,7 +368,7 @@ describe('Attendance Record - Property Tests', () => {
       expect(validation.errors).toContain('shiftDuration cannot be negative');
     });
   });
-});
+});
 module.exports = {
   validateCheckInRecord,
   validateCheckOutRecord,

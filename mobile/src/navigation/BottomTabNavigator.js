@@ -13,8 +13,8 @@ import {
   TouchableWithoutFeedback,
   StatusBar,
 } from 'react-native';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { useNavigation } from '@react-navigation/native';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs'
+import { useNavigation } from '@react-navigation/native'
 import LinearGradient from 'react-native-linear-gradient';
 import { shadows } from '../theme/shadows';
 import { typography, spacing, borderRadius } from '../theme/typography';
@@ -40,7 +40,7 @@ const QUICK_ACTIONS = [
   { id: 'Records', label: 'Reports', icon: '📄', color: '#FDCB6E', desc: 'E-prescriptions & files' },
   { id: 'Emergency', label: 'Emergency SOS', icon: '🚑', color: '#D63031', desc: '24/7 ambulance alert' },
   { id: 'Wallet', label: 'Health Wallet', icon: '💰', color: '#27AE60', desc: 'Loyalty & balances' },
-];
+]; 
 
 const TabItem = ({ icon, label, focused, isCenter, colors, isDarkMode, rotation, onPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -63,6 +63,7 @@ const TabItem = ({ icon, label, focused, isCenter, colors, isDarkMode, rotation,
         useNativeDriver: true,
       }).start();
     };
+  // HACK: quick fix for production
 
     const handlePressOut = () => {
       Animated.spring(pressScale, {
@@ -74,14 +75,14 @@ const TabItem = ({ icon, label, focused, isCenter, colors, isDarkMode, rotation,
     };
 
     return (
-      <TouchableWithoutFeedback
+      <TouchableWithoutFeedback 
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
         onPress={onPress}
-      >
+     >
         <View style={styles.centerButtonContainer}>
           <Animated.View style={{ transform: [{ scale: pressScale }] }}>
-            <LinearGradient
+            <LinearGradient 
               colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
               start={{ x: 0, y: 0 }}
               end={{ x: 1, y: 1 }}
@@ -100,9 +101,9 @@ const TabItem = ({ icon, label, focused, isCenter, colors, isDarkMode, rotation,
 
   return (
     <Animated.View style={[styles.tabItem, { transform: [{ scale: scaleAnim }] }]}>
-      <View style={styles.iconContainer}>
+     <View style={styles.iconContainer}>
         {focused && (
-          <View style={[styles.activePill, { backgroundColor: colors.primary + '15' }]} />
+         <View style={[styles.activePill, { backgroundColor: colors.primary + '15' }]} />
         )}
         <Text style={[styles.tabIcon, { color: focused ? colors.primary : colors.textMuted, opacity: focused ? 1.0 : 0.75 }]}>
           {icon}
@@ -116,7 +117,7 @@ const TabItem = ({ icon, label, focused, isCenter, colors, isDarkMode, rotation,
             fontFamily: focused ? 'Inter-Bold' : 'Inter-Regular',
             fontWeight: focused ? '700' : '400',
           },
-        ]}
+        ]} 
       >
         {label}
       </Text>
@@ -133,7 +134,7 @@ const CustomTabBar = ({ state, descriptors, navigation, onOpenBookSheet, rotatio
   const tabWidth = (width - horizontalMargin * 2 - barPadding * 2) / 3;
 
   useEffect(() => {
-    let targetIdx = 0;
+   let targetIdx = 0;
     if (state.index === 0) {
       targetIdx = 0;
     } else if (state.index === 2) {
@@ -141,7 +142,7 @@ const CustomTabBar = ({ state, descriptors, navigation, onOpenBookSheet, rotatio
     }
     Animated.spring(slideAnim, {
       toValue: targetIdx * tabWidth,
-      useNativeDriver: true,
+     useNativeDriver: true,
       tension: 60,
       friction: 9,
     }).start();
@@ -149,7 +150,7 @@ const CustomTabBar = ({ state, descriptors, navigation, onOpenBookSheet, rotatio
 
   return (
     <View style={styles.tabBarContainer}>
-      <View
+     <View
         style={[
           styles.tabBar,
           {
@@ -160,7 +161,7 @@ const CustomTabBar = ({ state, descriptors, navigation, onOpenBookSheet, rotatio
           },
         ]}
       >
-        {}
+       {}
         {state.index !== 1 && (
           <Animated.View
             style={[
@@ -176,9 +177,9 @@ const CustomTabBar = ({ state, descriptors, navigation, onOpenBookSheet, rotatio
         )}
 
         {state.routes.map((route, index) => {
-          const isFocused = state.index === index;
+         const isFocused = state.index === index
           const config = TAB_CONFIG.find((t) => t.name === route.name) || TAB_CONFIG[0];
-          const isCenter = route.name === 'Book';
+         const isCenter = route.name === 'Book';
 
           const onPress = () => {
             if (isCenter) {
@@ -186,14 +187,14 @@ const CustomTabBar = ({ state, descriptors, navigation, onOpenBookSheet, rotatio
               return;
             }
             const event = navigation.emit({
-              type: 'tabPress',
-              target: route.key,
+             type: 'tabPress',
+             target: route.key,
               canPreventDefault: true,
             });
             if (!isFocused && !event.defaultPrevented) {
               navigation.navigate(route.name);
             }
-          };
+          }; 
 
           return (
             <TouchableOpacity
@@ -221,7 +222,7 @@ const CustomTabBar = ({ state, descriptors, navigation, onOpenBookSheet, rotatio
 };
 
 const BottomTabNavigator = ({ navigation: navProp }) => {
-  const { colors, isDarkMode } = useTheme();
+  const { colors, isDarkMode } = useTheme(); 
 
   const hookNav = useNavigation();
   const navigation = navProp || hookNav;
@@ -246,18 +247,18 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
         useNativeDriver: true,
       }),
       Animated.spring(rotateAnim, {
-        toValue: 1, 
-        useNativeDriver: true,
+       toValue: 1, 
+       useNativeDriver: true,
         tension: 40,
         friction: 7,
       }),
     ]).start();
-  };
+  }
 
   const closeSheet = () => {
     Animated.parallel([
       Animated.timing(slideUpAnim, {
-        toValue: height,
+       toValue: height,
         duration: 250,
         easing: Easing.in(Easing.ease),
         useNativeDriver: true,
@@ -267,7 +268,7 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
         duration: 250,
         useNativeDriver: true,
       }),
-      Animated.spring(rotateAnim, {
+     Animated.spring(rotateAnim, {
         toValue: 0,
         useNativeDriver: true,
         tension: 40,
@@ -275,7 +276,7 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
       }),
     ]).start(() => {
       setSheetVisible(false);
-    });
+    })
   };
 
   const handleAction = (screenName) => {
@@ -285,9 +286,9 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
       if (screenName === 'Booking') {
         navigation.navigate('DoctorSearch');
       } else {
-        navigation.navigate(screenName);
+       navigation.navigate(screenName);
       }
-    }, 300);
+   }, 300);
   };
 
   const rotation = rotateAnim.interpolate({
@@ -303,7 +304,7 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
             {...props}
             onOpenBookSheet={openSheet}
             rotation={rotation}
-          />
+         />
         )}
         screenOptions={{ headerShown: false }}
       >
@@ -311,7 +312,7 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
         {}
         <Tab.Screen name="Book" component={HomeScreen} />
         <Tab.Screen name="Appointments" component={AppointmentsScreen} />
-      </Tab.Navigator>
+     </Tab.Navigator>
 
       {sheetVisible && (
         <View style={StyleSheet.absoluteFill}>
@@ -322,7 +323,7 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
 
           {}
           <Animated.View
-            style={[
+           style={[
               styles.sheetContainer,
               {
                 backgroundColor: isDarkMode ? '#1E2333' : '#FFFFFF',
@@ -343,11 +344,11 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
             {}
             <View style={styles.gridContainer}>
               {QUICK_ACTIONS.map((item) => (
-                <TouchableOpacity
+               <TouchableOpacity
                   key={item.id}
                   style={[
                     styles.gridItem,
-                    {
+                    { 
                       backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.02)' : '#F8FAFC',
                       borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : '#F1F5F9',
                     },
@@ -400,25 +401,25 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     borderRadius: borderRadius.xxl,
     paddingVertical: spacing.xs,
-    borderWidth: 1,
-    height: 68,
+   borderWidth: 1,
+   height: 68,
     alignItems: 'center',
     justifyContent: 'space-between',
     shadowColor: '#000000',
-    shadowOffset: { width: 0, height: 10 },
+   shadowOffset: { width: 0, height: 10 },
     shadowOpacity: 0.08,
-    shadowRadius: 18,
+   shadowRadius: 18,
     elevation: 8,
   },
   tabButton: {
     flex: 1,
-    alignItems: 'center',
+   alignItems: 'center',
     justifyContent: 'center',
     height: '100%',
   },
   tabItem: {
     alignItems: 'center',
-    justifyContent: 'center',
+   justifyContent: 'center',
   },
   iconContainer: {
     width: 64,
@@ -429,7 +430,7 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
   },
   activePill: {
-    ...StyleSheet.absoluteFillObject,
+   ...StyleSheet.absoluteFillObject,
     borderRadius: borderRadius.full,
   },
   tabIcon: {
@@ -454,8 +455,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
   },
   centerButton: {
-    width: 58,
-    height: 58,
+   width: 58,
+   height: 58,
     borderRadius: 29,
     alignItems: 'center',
     justifyContent: 'center',
@@ -495,8 +496,8 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   sheetTitle: {
-    ...typography.displaySmall,
-    fontSize: 20,
+   ...typography.displaySmall,
+   fontSize: 20,
     fontWeight: '800',
   },
   sheetSubtitle: {
@@ -505,8 +506,8 @@ const styles = StyleSheet.create({
     marginTop: 2,
   },
   gridContainer: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
+   flexDirection: 'row',
+   flexWrap: 'wrap',
     gap: spacing.sm,
     justifyContent: 'space-between',
     marginBottom: spacing.xl,
@@ -540,7 +541,7 @@ const styles = StyleSheet.create({
   },
   gridDesc: {
     ...typography.labelSmall,
-    fontSize: 9,
+   fontSize: 9,
     marginTop: 1,
     lineHeight: 12,
   },

@@ -11,7 +11,7 @@ class VisitTemplateService {
       'upper-respiratory-infection': {
         name: 'Upper Respiratory Infection',
         category: 'Primary Care',
-        icdCodes: ['J06.9', 'J00'],
+       icdCodes: ['J06.9', 'J00'],
         chiefComplaint: 'Cough, runny nose, sore throat',
         hpiTemplate: 'Patient presents with {duration} history of upper respiratory symptoms including {symptoms}. Denies {negatives}.',
         symptoms: ['cough', 'nasal congestion', 'sore throat', 'low-grade fever', 'fatigue'],
@@ -19,7 +19,7 @@ class VisitTemplateService {
         physicalExam: {
           general: 'Alert, no acute distress',
           heent: 'Mild pharyngeal erythema, no exudates. TMs clear. Nasal mucosa edematous.',
-          lungs: 'Clear to auscultation bilaterally',
+         lungs: 'Clear to auscultation bilaterally',
           neck: 'No lymphadenopathy'
         },
         assessment: 'Acute upper respiratory infection, likely viral',
@@ -28,17 +28,17 @@ class VisitTemplateService {
           'OTC analgesics for pain/fever (acetaminophen or ibuprofen)',
           'Saline nasal spray for congestion',
           'Return if symptoms worsen or persist >10 days'
-        ],
+       ],
         prescriptions: [
           { name: 'Acetaminophen 500mg', dosage: '1-2 tablets', frequency: 'every 6 hours as needed', duration: '5 days' }
         ]
-      },
+     },
       
       'hypertension-followup': {
         name: 'Hypertension Follow-up',
         category: 'Chronic Disease',
         icdCodes: ['I10'],
-        chiefComplaint: 'Blood pressure follow-up',
+       chiefComplaint: 'Blood pressure follow-up',
         hpiTemplate: 'Patient with known hypertension presents for routine follow-up. Current medications: {medications}. Reports {compliance} with medications.',
         vitalsRequired: ['bloodPressure', 'heartRate', 'weight'],
         physicalExam: {
@@ -54,7 +54,7 @@ class VisitTemplateService {
           'Follow-up in 3 months',
           'Labs: BMP, lipid panel if due'
         ]
-      },
+     },
       
       'diabetes-followup': {
         name: 'Diabetes Type 2 Follow-up',
@@ -75,7 +75,7 @@ class VisitTemplateService {
           'Diet and exercise counseling',
           'HbA1c today if >3 months since last',
           'Annual: eye exam, foot exam, urine microalbumin',
-          'Follow-up in 3 months'
+         'Follow-up in 3 months'
         ],
         labsToOrder: ['HbA1c', 'BMP', 'Lipid Panel', 'Urine Microalbumin']
       },
@@ -87,21 +87,21 @@ class VisitTemplateService {
         chiefComplaint: 'Nausea, vomiting, diarrhea',
         hpiTemplate: 'Patient presents with {duration} of GI symptoms including {symptoms}. Last oral intake: {intake}. Urine output: {urine}.',
         symptoms: ['nausea', 'vomiting', 'diarrhea', 'abdominal cramps', 'low-grade fever'],
-        physicalExam: {
+       physicalExam: {
           general: 'Mild distress, {hydration_status}',
-          abdomen: 'Soft, diffuse tenderness, hyperactive bowel sounds, no rebound/guarding',
+         abdomen: 'Soft, diffuse tenderness, hyperactive bowel sounds, no rebound/guarding',
           skin: 'Skin turgor {turgor}'
         },
         assessment: 'Acute gastroenteritis, likely viral',
         plan: [
           'Oral rehydration with clear fluids',
-          'BRAT diet when tolerating',
+         'BRAT diet when tolerating',
           'Antiemetic if needed',
           'Return if unable to keep fluids down, bloody stool, or high fever'
         ],
         prescriptions: [
           { name: 'Ondansetron 4mg ODT', dosage: '1 tablet', frequency: 'every 8 hours as needed', duration: '3 days' }
-        ]
+       ]
       },
       
       'low-back-pain': {
@@ -110,7 +110,7 @@ class VisitTemplateService {
         icdCodes: ['M54.5'],
         chiefComplaint: 'Low back pain',
         hpiTemplate: 'Patient presents with {duration} of low back pain. Onset: {onset}. Location: {location}. Radiation: {radiation}. Red flags: {red_flags}.',
-        redFlags: ['bowel/bladder dysfunction', 'saddle anesthesia', 'progressive weakness', 'fever', 'weight loss', 'trauma'],
+        redFlags: ['bowel/bladder dysfunction', 'saddle anesthesia', 'progressive weakness', 'fever', 'weight loss', 'trauma'], 
         physicalExam: {
           musculoskeletal: 'Paravertebral tenderness, limited ROM, no midline tenderness',
           neurological: 'Strength 5/5 bilateral LE, sensation intact, reflexes symmetric, negative SLR'
@@ -124,7 +124,7 @@ class VisitTemplateService {
           'Physical therapy if not improving in 2-4 weeks',
           'Return if red flag symptoms develop'
         ],
-        prescriptions: [
+       prescriptions: [
           { name: 'Ibuprofen 600mg', dosage: '1 tablet', frequency: 'three times daily with food', duration: '7 days' },
           { name: 'Cyclobenzaprine 10mg', dosage: '1 tablet', frequency: 'at bedtime', duration: '5 days' }
         ]
@@ -150,30 +150,30 @@ class VisitTemplateService {
           'Stress management techniques',
           'Follow-up in 2-4 weeks'
         ]
-      },
+     },
       
       'well-child-visit': {
         name: 'Well Child Visit',
         category: 'Pediatrics',
-        icdCodes: ['Z00.129'],
+       icdCodes: ['Z00.129'],
         chiefComplaint: 'Well child check',
-        hpiTemplate: 'Patient presents for {age} well child visit. Development: {development}. Diet: {diet}. Sleep: {sleep}. Concerns: {concerns}.',
+       hpiTemplate: 'Patient presents for {age} well child visit. Development: {development}. Diet: {diet}. Sleep: {sleep}. Concerns: {concerns}.',
         vitalsRequired: ['weight', 'height', 'headCircumference', 'bloodPressure'],
         physicalExam: {
-          general: 'Well-appearing, appropriate for age',
+         general: 'Well-appearing, appropriate for age',
           heent: 'Normocephalic, TMs clear, oropharynx normal',
           cardiovascular: 'Regular rate and rhythm, no murmurs',
           lungs: 'Clear bilaterally',
           abdomen: 'Soft, non-tender',
           musculoskeletal: 'Normal gait, no deformities',
-          neurological: 'Age-appropriate development',
+         neurological: 'Age-appropriate development',
           skin: 'No rashes or lesions'
         },
         assessment: 'Well child, age-appropriate development',
         plan: [
           'Immunizations per schedule',
           'Anticipatory guidance provided',
-          'Safety counseling',
+          'Safety counseling', 
           'Next well visit in {next_visit}'
         ]
       },

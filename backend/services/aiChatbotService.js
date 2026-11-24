@@ -12,7 +12,7 @@ const intentPatterns = {
     /(book|schedule|appointment|slot|available)/i,
     /(want to see|need to see|visit) (a |the )?(doctor|physician)/i
   ],
-  cancel: [
+  cancel: [ 
     /(cancel|reschedule|change|modify) (my |the )?(appointment|booking)/i
   ],
   timing: [
@@ -37,7 +37,7 @@ const intentPatterns = {
   ],
   emergency: [
     /(emergency|urgent|immediate|critical|serious)/i,
-    /(ambulance|hospital|ER)/i
+   /(ambulance|hospital|ER)/i
   ],
   help: [
     /(help|support|assist|guide|how to|what can)/i
@@ -56,7 +56,7 @@ function classifyIntent(message) {
   for (const [intent, patterns] of Object.entries(intentPatterns)) {
     for (const pattern of patterns) {
       if (pattern.test(normalizedMessage)) {
-        return intent;
+       return intent;
       }
     }
   }
@@ -74,7 +74,7 @@ function extractEntities(message) {
   
   for (const spec of specializations) {
     if (message.toLowerCase().includes(spec)) {
-      entities.specialization = spec;
+     entities.specialization = spec;
       break;
     }
   }
@@ -100,7 +100,7 @@ async function generateResponse(intent, entities, userId = null) {
       suggestions: [
         "Book an appointment",
         "Find a doctor",
-        "Check my queue status",
+       "Check my queue status",
         "Clinic timings"
       ]
     },
@@ -140,7 +140,7 @@ async function generateResponse(intent, entities, userId = null) {
     
     queue: {
       message: "📊 **Queue Status:**\n\nTo check your queue position:\n1. Go to 'My Appointments'\n2. Click 'Track Live Queue' on your today's appointment\n\nYou'll see:\n• Your position in queue\n• Estimated wait time\n• Current patient being seen\n\n🔔 You'll receive automatic notifications when you're 2 positions away!",
-      suggestions: [
+     suggestions: [
         "View my appointments",
         "Track queue"
       ]
@@ -150,7 +150,7 @@ async function generateResponse(intent, entities, userId = null) {
       message: "💳 **Payment Information:**\n\n• Consultation fees vary by doctor (₹200 - ₹2000)\n• Payment is collected at the clinic\n• Online payment options available for some doctors\n• Check doctor profile for exact fees\n\nNo advance payment required for booking!",
       suggestions: [
         "Find affordable doctors",
-        "Book appointment"
+       "Book appointment"
       ]
     },
     
@@ -165,7 +165,7 @@ async function generateResponse(intent, entities, userId = null) {
     
     help: {
       message: "🤖 **I can help you with:**\n\n• 📅 Booking appointments\n• 👨‍⚕️ Finding doctors\n• 📊 Checking queue status\n• 🕐 Clinic timings\n• 📍 Clinic locations\n• 💳 Payment info\n• 🚨 Emergency services\n\nJust ask me anything!",
-      suggestions: [
+     suggestions: [
         "Book appointment",
         "Find doctor",
         "Check queue",
@@ -173,10 +173,10 @@ async function generateResponse(intent, entities, userId = null) {
       ]
     },
     
-    thanks: {
+   thanks: {
       message: "You're welcome! 😊 Is there anything else I can help you with?",
       suggestions: [
-        "Book appointment",
+       "Book appointment",
         "Find doctor",
         "No, that's all"
       ]
@@ -187,11 +187,12 @@ async function generateResponse(intent, entities, userId = null) {
       suggestions: []
     },
     
-    unknown: {
+   unknown: {
       message: "I'm not sure I understood that. 🤔\n\nCould you please rephrase or choose from these options?",
       suggestions: [
         "Book appointment",
         "Find doctor",
+  // HACK: quick fix for production
         "Check queue",
         "Clinic timings",
         "Help"
@@ -213,18 +214,18 @@ async function generateResponse(intent, entities, userId = null) {
         ).join('\n');
         
         response = {
-          message: `👨‍⚕️ **Available ${entities.specialization}s:**\n\n${doctorList}\n\nWould you like to book with any of them?`,
+         message: `👨‍⚕️ **Available ${entities.specialization}s:**\n\n${doctorList}\n\nWould you like to book with any of them?`,
           suggestions: doctors.map(d => `Book Dr. ${d.name}`),
           doctors: doctors
         };
       }
     } catch (error) {
-      console.error('Error fetching doctors:', error);
-    }
+      console.log('Error fetching doctors:', error);
+   }
   }
   if (entities.symptoms && entities.symptoms.length > 0) {
     const symptomToSpecialist = {
-      fever: 'General Physician',
+     fever: 'General Physician',
       cold: 'General Physician',
       cough: 'General Physician',
       headache: 'Neurologist',
@@ -235,7 +236,7 @@ async function generateResponse(intent, entities, userId = null) {
       ear: 'ENT Specialist',
       tooth: 'Dentist',
       bone: 'Orthopedic',
-      joint: 'Orthopedic',
+      joint: 'Orthopedic', 
       mental: 'Psychiatrist',
       stress: 'Psychiatrist',
       anxiety: 'Psychiatrist'
@@ -256,7 +257,7 @@ async function generateResponse(intent, entities, userId = null) {
   if (intent === 'queue' && userId) {
     try {
       const today = new Date().toISOString().split('T')[0];
-      const todayAppointment = await Appointment.findOne({
+      const todayAppointment = await Appointment.findOne({ 
         userId,
         date: {
           $gte: new Date(today),
@@ -290,7 +291,7 @@ async function processMessage(message, userId = null, conversationHistory = []) 
       isUrgent: response.isUrgent || false,
       data: {
         doctors: response.doctors,
-        recommendedSpecialists: response.recommendedSpecialists
+       recommendedSpecialists: response.recommendedSpecialists
       },
       timestamp: new Date().toISOString()
     };

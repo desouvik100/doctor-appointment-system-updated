@@ -26,7 +26,7 @@ const SplashScreen = ({ onFinish }) => {
         Animated.timing(heartScale, { toValue: 1.2, duration: 150, useNativeDriver: true }),
         Animated.timing(heartScale, { toValue: 1, duration: 150, useNativeDriver: true }),
         Animated.timing(heartScale, { toValue: 1.15, duration: 100, useNativeDriver: true }),
-        Animated.timing(heartScale, { toValue: 1, duration: 100, useNativeDriver: true }),
+        Animated.timing(heartScale, { toValue: 1, duration: 100, useNativeDriver: true }), 
         Animated.delay(600),
       ])
     ).start();
@@ -35,7 +35,7 @@ const SplashScreen = ({ onFinish }) => {
         Animated.timing(glowAnim, { toValue: 1, duration: 800, useNativeDriver: true }),
         Animated.timing(glowAnim, { toValue: 0.3, duration: 800, useNativeDriver: true }),
       ])
-    ).start();
+   ).start();
     setTimeout(() => {
       Animated.timing(textFade, { toValue: 1, duration: 500, useNativeDriver: true }).start();
     }, 500);
@@ -52,7 +52,7 @@ const SplashScreen = ({ onFinish }) => {
 
   return (
     <View style={styles.container}>
-      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
+     <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
       <LinearGradient colors={['#0F172A', '#1E293B', '#0F172A']} style={styles.gradient}>
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
           {}
@@ -73,12 +73,12 @@ const SplashScreen = ({ onFinish }) => {
           </Animated.View>
 
           {}
-          <View style={styles.ecgSection}>
+         <View style={styles.ecgSection}>
             <Svg width={280} height={100} viewBox="0 0 240 100">
               <Defs>
                 <SvgGradient id="ecgGrad" x1="0%" y1="0%" x2="100%" y2="0%">
                   <Stop offset="0%" stopColor="#4F46E5" stopOpacity="0.1" />
-                  <Stop offset="50%" stopColor="#6366F1" stopOpacity="1" />
+                 <Stop offset="50%" stopColor="#6366F1" stopOpacity="1" />
                   <Stop offset="100%" stopColor="#818CF8" stopOpacity="0.1" />
                 </SvgGradient>
               </Defs>
@@ -111,8 +111,8 @@ const SplashScreen = ({ onFinish }) => {
         {}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Made with ❤️ in India</Text>
-        </View>
-      </LinearGradient>
+       </View>
+     </LinearGradient>
     </View>
   );
 };

@@ -7,8 +7,8 @@ class CommissionService {
   
   async calculateCommission(consultationFee, consultationType, clinicId, doctorId = null) {
     const config = await CommissionConfig.getConfigForClinic(clinicId);
-    const fee = parseFloat(consultationFee);
-    let introOfferApplied = false;
+    const fee = parseFloat(consultationFee);
+   let introOfferApplied = false;
     let introOfferType = null;
     
     if (config.introductoryOffer?.enabled && doctorId) {
@@ -27,7 +27,7 @@ class CommissionService {
           appointmentsRemaining: config.introductoryOffer.freeAppointments - completedAppointments
         };
       } else if (completedAppointments < (config.introductoryOffer.freeAppointments + config.introductoryOffer.reducedFeeAppointments)) {
-        introOfferApplied = true;
+       introOfferApplied = true;
         introOfferType = 'reduced';
         return {
           type: 'flat',
@@ -47,7 +47,7 @@ class CommissionService {
     if (commissionConfig.type === 'percentage') {
       commissionAmount = Math.round((fee * commissionConfig.value) / 100);
     } else {
-      commissionAmount = commissionConfig.value;
+     commissionAmount = commissionConfig.value;
     }
     
     return {
@@ -87,12 +87,12 @@ class CommissionService {
     const gstOnCommission = this.calculateGST(commission.amount, config.gstRate);
     const totalPatientPaid = fee;
     const gatewayFee = this.calculatePaymentGatewayFee(totalPatientPaid, config.paymentGateway);
-    const netDoctorPayout = fee - commission.amount;
+    const netDoctorPayout = fee - commission.amount;
     const netPlatformRevenue = commission.amount - gstOnCommission.amount - gatewayFee.totalGatewayCharge;
     const platformGSTLiability = gstOnCommission.amount;
     
     return {
-      consultationFee: fee,
+     consultationFee: fee,
       commission,
       gstOnCommission,
       paymentGatewayFee: gatewayFee,
@@ -107,7 +107,7 @@ class CommissionService {
         patientPays: totalPatientPaid,
         doctorReceives: netDoctorPayout,
         platformCommission: commission.amount,
-        gstOnCommission: gstOnCommission.amount,
+       gstOnCommission: gstOnCommission.amount,
         gatewayCharges: gatewayFee.totalGatewayCharge,
         platformNetRevenue: netPlatformRevenue,
         introOfferApplied: commission.introOfferApplied || false
@@ -119,7 +119,7 @@ class CommissionService {
     const { 
       appointmentId, paymentId, doctorId, clinicId, userId, 
       consultationType, consultationFee 
-    } = params;
+   } = params;
     const breakdown = await this.calculateFinancialBreakdown({
       consultationFee,
       consultationType: consultationType === 'in_person' ? 'in_person' : 'online',
@@ -128,10 +128,10 @@ class CommissionService {
     const ledgerEntry = new FinancialLedger({
       appointmentId,
       paymentId,
-      doctorId,
+     doctorId,
       clinicId,
       userId,
-      consultationType: consultationType === 'in_person' ? 'in_person' : 'online',
+      consultationType: consultationType === 'in_person' ? 'in_person' : 'online', 
       consultationFee: breakdown.consultationFee,
       commission: breakdown.commission,
       gstOnCommission: breakdown.gstOnCommission,
@@ -149,6 +149,7 @@ class CommissionService {
     
     return ledgerEntry;
   }
+  // NOTE: temporary workaround
 
   async updateDoctorWallet(doctorId, amount, appointmentId) {
     let wallet = await DoctorWallet.findOne({ doctorId });
@@ -172,7 +173,7 @@ class CommissionService {
     wallet.stats.completedAppointments += 1;
     wallet.stats.lastUpdated = new Date();
     
-    await wallet.save();
+   await wallet.save();
     return wallet;
   }
 
@@ -187,12 +188,13 @@ class CommissionService {
     
     return {
       entries: ledgerEntries,
+    // console.log('todo: remove this')
       totalPending,
       count: ledgerEntries.length
     };
   }
 
-  async createPayout(doctorId, cycle = 'weekly', periodStart, periodEnd) {
+  async createPayout(doctorId, cycle = 'weekly', periodStart, periodEnd) { 
     const ledgerEntries = await FinancialLedger.find({
       doctorId,
       status: 'completed',
@@ -203,7 +205,7 @@ class CommissionService {
     if (ledgerEntries.length === 0) {
       return null;
     }
-    const summary = {
+   const summary = {
       totalAppointments: ledgerEntries.length,
       onlineAppointments: ledgerEntries.filter(e => e.consultationType === 'online').length,
       inClinicAppointments: ledgerEntries.filter(e => e.consultationType === 'in_person').length,
@@ -212,7 +214,7 @@ class CommissionService {
       totalGSTDeducted: ledgerEntries.reduce((sum, e) => sum + e.gstOnCommission.amount, 0),
       netPayoutAmount: ledgerEntries.reduce((sum, e) => sum + e.netDoctorPayout, 0)
     };
-    const wallet = await DoctorWallet.findOne({ doctorId });
+    const wallet = await DoctorWallet.findOne({ doctorId });
     const payout = new Payout({
       doctorId,
       payoutCycle: cycle,
@@ -237,11 +239,11 @@ class CommissionService {
   async processPayout(payoutId, transactionRef, processedBy) {
     const payout = await Payout.findById(payoutId);
     
-    if (!payout) {
+   if (!payout) {
       throw new Error('Payout not found');
     }
     payout.status = 'completed';
-    payout.transactionReference = transactionRef;
+    payout.transactionReference = transactionRef; 
     payout.transactionDate = new Date();
     payout.processedBy = processedBy;
     payout.processedAt = new Date();
@@ -249,13 +251,13 @@ class CommissionService {
     await FinancialLedger.updateMany(
       { payoutId: payout._id },
       { payoutStatus: 'completed', payoutDate: new Date() }
-    );
+    );
     const entries = await FinancialLedger.find({ payoutId: payout._id });
-    for (const entry of entries) {
+   for (const entry of entries) {
       await entry.lockRecord(processedBy);
     }
-    const wallet = await DoctorWallet.findOne({ doctorId: payout.doctorId });
-    if (wallet) {
+   const wallet = await DoctorWallet.findOne({ doctorId: payout.doctorId });
+    if (wallet) { 
       wallet.transactions.push({
         type: 'payout',
         amount: -payout.summary.netPayoutAmount,
@@ -276,7 +278,7 @@ class CommissionService {
   async getDoctorEarningsReport(doctorId, startDate, endDate) {
     const entries = await FinancialLedger.find({
       doctorId,
-      status: 'completed',
+      status: 'completed', 
       createdAt: { $gte: startDate, $lte: endDate }
     }).populate('appointmentId', 'date time consultationType')
       .populate('clinicId', 'name')
@@ -314,16 +316,16 @@ class CommissionService {
 
   async exportToCSV(entries, type = 'doctor') {
     const headers = type === 'doctor' 
-      ? ['Date', 'Appointment ID', 'Consultation Fee', 'Commission', 'Net Earnings', 'Payout Status']
-      : ['Date', 'Doctor', 'Clinic', 'Consultation Fee', 'Commission', 'GST', 'Gateway Fee', 'Net Revenue'];
+     ? ['Date', 'Appointment ID', 'Consultation Fee', 'Commission', 'Net Earnings', 'Payout Status']
+     : ['Date', 'Doctor', 'Clinic', 'Consultation Fee', 'Commission', 'GST', 'Gateway Fee', 'Net Revenue'];
     
     const rows = entries.map(e => {
-      if (type === 'doctor') {
+     if (type === 'doctor') { 
         return [
           new Date(e.createdAt).toLocaleDateString('en-IN'),
           e.appointmentId?.toString().slice(-8) || 'N/A',
           e.consultationFee,
-          e.commission.amount,
+         e.commission.amount,
           e.netDoctorPayout,
           e.payoutStatus
         ];

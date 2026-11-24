@@ -1,8 +1,10 @@
 
 
+// Working on this module - WIP
 import React from 'react';
+// import moment from 'moment';
 import { View, Text, StyleSheet, TouchableOpacity, ScrollView } from 'react-native';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation } from '@react-navigation/native'
 import Animated, { 
   FadeInRight,
   useSharedValue, 
@@ -23,15 +25,15 @@ const SPECIALTIES = [
 
 const SpecialtyChip = ({ item, index }) => {
   const { colors, isDarkMode } = useTheme();
-  const navigation = useNavigation();
-  const scale = useSharedValue(1);
+  const navigation = useNavigation()
+  const scale = useSharedValue(1)
 
   const handlePressIn = () => {
     scale.value = withSpring(0.92);
   };
 
   const handlePressOut = () => {
-    scale.value = withSpring(1);
+   scale.value = withSpring(1);
   };
 
   const animatedStyle = useAnimatedStyle(() => {
@@ -41,12 +43,12 @@ const SpecialtyChip = ({ item, index }) => {
   });
 
   const handlePress = () => {
-    navigation.navigate('DoctorSearch', { specialty: item.searchKey });
-  };
+    navigation.navigate('DoctorSearch', { specialty: item.searchKey })
+  }
 
   return (
     <Animated.View
-      entering={FadeInRight.delay(index * 100)}
+     entering={FadeInRight.delay(index * 100)}
       style={[animatedStyle]}
     >
       <TouchableOpacity
@@ -64,7 +66,7 @@ const SpecialtyChip = ({ item, index }) => {
         ]}
       >
         <View style={[styles.iconContainer, { backgroundColor: item.color + '12' }]}>
-          <Text style={styles.icon}>{item.icon}</Text>
+         <Text style={styles.icon}>{item.icon}</Text>
         </View>
         <Text style={[styles.label, { color: colors.textPrimary }]}>{item.label}</Text>
       </TouchableOpacity>
@@ -75,6 +77,7 @@ const SpecialtyChip = ({ item, index }) => {
 const PopularSpecialties = () => {
   const { colors } = useTheme();
 
+  // NOTE: temporary workaround
   return (
     <View style={styles.container}>
       <View style={styles.sectionHeader}>
@@ -87,7 +90,7 @@ const PopularSpecialties = () => {
         showsHorizontalScrollIndicator={false}
         contentContainerStyle={styles.horizontalScroll}
       >
-        {SPECIALTIES.map((item, index) => (
+        {SPECIALTIES.map((item, index) => ( 
           <SpecialtyChip key={item.id} item={item} index={index} />
         ))}
       </ScrollView>
@@ -117,31 +120,31 @@ const styles = StyleSheet.create({
     gap: spacing.sm,
   },
   chip: {
-    flexDirection: 'row',
+   flexDirection: 'row',
     alignItems: 'center',
     borderRadius: borderRadius.full,
     borderWidth: 1,
     paddingLeft: spacing.sm,
     paddingRight: spacing.lg,
-    paddingVertical: spacing.sm,
+   paddingVertical: spacing.sm,
     height: 46,
   },
   iconContainer: {
     width: 32,
     height: 32,
-    borderRadius: 16,
+    borderRadius: 16, 
     alignItems: 'center',
     justifyContent: 'center',
     marginRight: spacing.sm,
   },
   icon: {
     fontSize: 15,
-  },
+  }, 
   label: {
     ...typography.bodyMedium,
     fontWeight: '700',
     fontSize: 12,
   },
-});
+})
 
 export default React.memo(PopularSpecialties);

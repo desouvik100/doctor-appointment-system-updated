@@ -12,7 +12,7 @@ const sampleTenants = [
       branding: {
         primaryColor: '#4facfe',
         logo: null
-      },
+      }, 
       features: {
         multiDoctor: true,
         onlineBooking: true,
@@ -23,14 +23,14 @@ const sampleTenants = [
       plan: 'free',
       maxUsers: 100,
       maxClinics: 1
-    },
+   },
     defaultClinic: {
       name: 'Main Clinic',
       address: {
         street: '123 Healthcare Ave',
-        city: 'Medical City',
+       city: 'Medical City',
         state: 'HC',
-        zipCode: '12345',
+       zipCode: '12345',
         country: 'USA'
       },
       contactInfo: {
@@ -43,7 +43,7 @@ const sampleTenants = [
   {
     name: 'City Medical Center',
     subdomain: 'citymedical',
-    settings: {
+   settings: {
       branding: {
         primaryColor: '#28a745',
         logo: null
@@ -51,19 +51,19 @@ const sampleTenants = [
       features: {
         multiDoctor: true,
         onlineBooking: true,
-        smsNotifications: true,
+       smsNotifications: true,
         telehealth: true
-      }
+     }
     },
     subscriptionInfo: {
       plan: 'professional',
       maxUsers: 500,
       maxClinics: 5
     },
-    defaultClinic: {
+   defaultClinic: {
       name: 'City Medical Center - Main Branch',
       address: {
-        street: '456 Medical Plaza',
+       street: '456 Medical Plaza',
         city: 'Downtown',
         state: 'CA',
         zipCode: '90210',
@@ -71,7 +71,7 @@ const sampleTenants = [
       },
       contactInfo: {
         phone: '+1-555-0456',
-        email: 'contact@citymedical.com',
+       email: 'contact@citymedical.com',
         website: 'https://citymedical.com'
       }
     }
@@ -79,7 +79,7 @@ const sampleTenants = [
   {
     name: 'Rural Health Network',
     subdomain: 'ruralhealth',
-    settings: {
+   settings: {
       branding: {
         primaryColor: '#17a2b8',
         logo: null
@@ -89,7 +89,7 @@ const sampleTenants = [
         onlineBooking: true,
         smsNotifications: true,
         mobileApp: true
-      }
+      } 
     },
     subscriptionInfo: {
       plan: 'enterprise',
@@ -105,10 +105,10 @@ const sampleTenants = [
         zipCode: '75001',
         country: 'USA'
       },
-      contactInfo: {
+     contactInfo: {
         phone: '+1-555-0789',
         email: 'info@ruralhealth.org',
-        website: 'https://ruralhealth.org'
+       website: 'https://ruralhealth.org'
       }
     }
   }
@@ -117,15 +117,15 @@ const sampleTenants = [
 const seedTenants = async () => {
   try {
     console.log('🌱 Starting tenant seeding...');
-    await connectDB();
+    await connectDB(); 
     const existingTenants = await TenantManager.getAllTenants();
     
     if (existingTenants.length > 0) {
       console.log(`ℹ️  Found ${existingTenants.length} existing tenants`);
       const shouldContinue = process.argv.includes('--force');
       if (!shouldContinue) {
-        console.log('Use --force flag to seed anyway');
+        console.log('Use --force flag to seed anyway'); 
         return;
       }
     }
-    for (const tenantData of sampleTenants) {\n      try {\n        
+   for (const tenantData of sampleTenants) {\n      try {\n        

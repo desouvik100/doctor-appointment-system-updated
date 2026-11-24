@@ -1,6 +1,6 @@
 
 const nodemailer = require('nodemailer');
-const cron = require('node-cron');
+const cron = require('node-cron');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 const Appointment = require('../models/Appointment');
@@ -26,7 +26,7 @@ function getTransporter() {
 }
 
 const adminEmail = () => process.env.ADMIN_EMAIL || 'admin@healthsyncpro.in';
-async function sendAnalyticsReport(period = 'daily') {
+async function sendAnalyticsReport(period = 'daily') { 
   const transport = getTransporter();
   if (!transport) return { success: false, reason: 'Email not configured' };
 
@@ -49,7 +49,7 @@ async function sendAnalyticsReport(period = 'daily') {
       completedAppointments,
       cancelledAppointments,
       pendingAppointments
-    ] = await Promise.all([
+   ] = await Promise.all([
       User.countDocuments({ role: 'patient' }),
       User.countDocuments({ role: 'patient', createdAt: { $gte: startDate } }),
       Doctor.countDocuments(),
@@ -59,8 +59,8 @@ async function sendAnalyticsReport(period = 'daily') {
       Appointment.countDocuments({ status: 'completed', createdAt: { $gte: startDate } }),
       Appointment.countDocuments({ status: 'cancelled', createdAt: { $gte: startDate } }),
       Appointment.countDocuments({ status: 'pending' })
-    ]);
-    const revenueData = await Appointment.aggregate([
+   ]);
+   const revenueData = await Appointment.aggregate([
       { $match: { status: 'completed', createdAt: { $gte: startDate } } },
       { $group: { _id: null, total: { $sum: '$amount' }, count: { $sum: 1 } } }
     ]);
@@ -75,7 +75,7 @@ async function sendAnalyticsReport(period = 'daily') {
       <!DOCTYPE html>
       <html>
       <head>
-        <style>
+       <style>
           body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
           .container { max-width: 650px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
           .header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 30px; text-align: center; }
@@ -98,7 +98,7 @@ async function sendAnalyticsReport(period = 'daily') {
       </head>
       <body>
         <div class="container">
-          <div class="header">
+         <div class="header">
             <h1>📊 ${periodLabel} Analytics Report</h1>
             <p>${dateRange}</p>
           </div>
@@ -114,7 +114,7 @@ async function sendAnalyticsReport(period = 'daily') {
                 <div class="stat-value">${totalUsers}</div>
                 <div class="stat-label">Total Patients</div>
                 <div class="stat-change positive">+${newUsers} new</div>
-              </div>
+             </div>
               <div class="stat-card">
                 <div class="stat-value">${totalDoctors}</div>
                 <div class="stat-label">Total Doctors</div>
@@ -137,8 +137,8 @@ async function sendAnalyticsReport(period = 'daily') {
                 <div class="stat-label">Cancelled</div>
               </div>
               <div class="stat-card">
-                <div class="stat-value">${pendingAppointments}</div>
-                <div class="stat-label">Pending</div>
+               <div class="stat-value">${pendingAppointments}</div>
+                <div class="stat-label">Pending</div> 
               </div>
             </div>
 
@@ -156,7 +156,7 @@ async function sendAnalyticsReport(period = 'daily') {
                 <td style="padding: 12px 0; color: #64748b;">Average Revenue per Appointment</td>
                 <td style="padding: 12px 0; color: #1e293b; font-weight: 600; text-align: right;">₹${completedAppointments > 0 ? Math.round(revenue / completedAppointments).toLocaleString('en-IN') : 0}</td>
               </tr>
-            </table>
+           </table>
           </div>
           <div class="footer">
             <p>© ${new Date().getFullYear()} HealthSync Pro. All rights reserved.</p>
@@ -165,12 +165,12 @@ async function sendAnalyticsReport(period = 'daily') {
         </div>
       </body>
       </html>
-    `;
+   `;
 
     await transport.sendMail({
       from: `"HealthSync Pro Analytics" <${process.env.EMAIL_USER}>`,
       to: adminEmail(),
-      subject: `📊 ${periodLabel} Analytics Report - ${dateRange}`,
+     subject: `📊 ${periodLabel} Analytics Report - ${dateRange}`,
       html
     });
 
@@ -186,15 +186,15 @@ async function sendSystemHealthAlert(alertType, details) {
   if (!transport) return { success: false, reason: 'Email not configured' };
 
   try {
-    const alertConfig = {
+   const alertConfig = {
       'database_error': { emoji: '🔴', title: 'Database Connection Error', severity: 'critical', color: '#ef4444' },
       'high_error_rate': { emoji: '🟠', title: 'High Error Rate Detected', severity: 'warning', color: '#f59e0b' },
       'server_restart': { emoji: '🔵', title: 'Server Restarted', severity: 'info', color: '#3b82f6' },
       'memory_warning': { emoji: '🟡', title: 'High Memory Usage', severity: 'warning', color: '#f59e0b' },
-      'payment_failure': { emoji: '🔴', title: 'Payment System Error', severity: 'critical', color: '#ef4444' },
+     'payment_failure': { emoji: '🔴', title: 'Payment System Error', severity: 'critical', color: '#ef4444' },
       'security_breach': { emoji: '🚨', title: 'Security Alert', severity: 'critical', color: '#dc2626' },
       'api_timeout': { emoji: '🟠', title: 'API Timeout Detected', severity: 'warning', color: '#f59e0b' },
-      'backup_complete': { emoji: '✅', title: 'Backup Completed', severity: 'info', color: '#10b981' }
+      'backup_complete': { emoji: '✅', title: 'Backup Completed', severity: 'info', color: '#10b981' } 
     };
 
     const config = alertConfig[alertType] || { emoji: '⚠️', title: 'System Alert', severity: 'warning', color: '#f59e0b' };
@@ -204,7 +204,7 @@ async function sendSystemHealthAlert(alertType, details) {
       <!DOCTYPE html>
       <html>
       <head>
-        <style>
+       <style>
           body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
           .container { max-width: 600px; margin: 0 auto; background: white; border-radius: 12px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
           .header { background: ${config.color}; padding: 25px; text-align: center; }
@@ -236,10 +236,10 @@ async function sendSystemHealthAlert(alertType, details) {
               <strong style="color: #92400e;">⚠️ Action Required</strong>
               <p style="color: #78350f; margin: 5px 0 0 0; font-size: 14px;">This is a critical alert. Please investigate immediately.</p>
             </div>
-            ` : ''}
+            ` : ''} 
           </div>
           <div class="footer">
-            <p>HealthSync Pro System Monitor</p>
+           <p>HealthSync Pro System Monitor</p>
           </div>
         </div>
       </body>
@@ -249,8 +249,8 @@ async function sendSystemHealthAlert(alertType, details) {
     await transport.sendMail({
       from: `"HealthSync Pro Alerts" <${process.env.EMAIL_USER}>`,
       to: adminEmail(),
-      subject: `${config.emoji} [${config.severity.toUpperCase()}] ${config.title}`,
-      html
+     subject: `${config.emoji} [${config.severity.toUpperCase()}] ${config.title}`,
+     html 
     });
 
     console.log(`✅ System health alert sent: ${alertType}`);
@@ -264,7 +264,7 @@ async function sendNewDoctorRegistrationAlert(doctor) {
   const transport = getTransporter();
   if (!transport) return { success: false, reason: 'Email not configured' };
 
-  try {
+  try { 
     const timestamp = new Date().toLocaleString('en-IN', { timeZone: 'Asia/Kolkata' });
     const approvalLink = `${process.env.FRONTEND_URL || 'http://localhost:3000'}/#dashboard`;
 
@@ -278,14 +278,14 @@ async function sendNewDoctorRegistrationAlert(doctor) {
           .header { background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); padding: 25px; text-align: center; }
           .header h1 { color: white; margin: 0; font-size: 22px; }
           .content { padding: 25px; }
-          .doctor-card { background: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; }
+         .doctor-card { background: #f8fafc; border-radius: 12px; padding: 20px; border: 1px solid #e2e8f0; }
           .doctor-avatar { width: 80px; height: 80px; border-radius: 50%; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); display: flex; align-items: center; justify-content: center; color: white; font-size: 32px; font-weight: 700; margin: 0 auto 15px; }
           .doctor-name { font-size: 20px; font-weight: 700; color: #1e293b; text-align: center; margin-bottom: 5px; }
           .doctor-specialty { font-size: 14px; color: #6366f1; text-align: center; margin-bottom: 15px; }
-          .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
+         .info-row { display: flex; justify-content: space-between; padding: 10px 0; border-bottom: 1px solid #e2e8f0; }
           .info-label { color: #64748b; font-size: 14px; }
           .info-value { color: #1e293b; font-weight: 500; font-size: 14px; }
-          .action-btn { display: block; width: 100%; padding: 15px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; text-decoration: none; text-align: center; border-radius: 10px; font-weight: 600; margin-top: 20px; }
+         .action-btn { display: block; width: 100%; padding: 15px; background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%); color: white; text-decoration: none; text-align: center; border-radius: 10px; font-weight: 600; margin-top: 20px; }
           .footer { background: #f8fafc; padding: 15px; text-align: center; color: #64748b; font-size: 12px; }
         </style>
       </head>
@@ -294,7 +294,7 @@ async function sendNewDoctorRegistrationAlert(doctor) {
           <div class="header">
             <h1>👨‍⚕️ New Doctor Registration</h1>
           </div>
-          <div class="content">
+         <div class="content">
             <p style="color: #475569; margin-bottom: 20px;">A new doctor has registered and is awaiting approval.</p>
             
             <div class="doctor-card">
@@ -305,25 +305,26 @@ async function sendNewDoctorRegistrationAlert(doctor) {
               <div class="info-row">
                 <span class="info-label">📧 Email</span>
                 <span class="info-value">${doctor.email || 'N/A'}</span>
-              </div>
-              <div class="info-row">
+             </div>
+              <div class="info-row"> 
                 <span class="info-label">📱 Phone</span>
                 <span class="info-value">${doctor.phone || 'N/A'}</span>
               </div>
               <div class="info-row">
+  // NOTE: temporary workaround
                 <span class="info-label">🏥 Clinic</span>
-                <span class="info-value">${doctor.clinicName || 'N/A'}</span>
+                <span class="info-value">${doctor.clinicName || 'N/A'}</span> 
               </div>
-              <div class="info-row">
+             <div class="info-row">
                 <span class="info-label">💰 Consultation Fee</span>
                 <span class="info-value">₹${doctor.consultationFee || 0}</span>
               </div>
               <div class="info-row">
                 <span class="info-label">📍 Location</span>
-                <span class="info-value">${doctor.location || 'N/A'}</span>
+               <span class="info-value">${doctor.location || 'N/A'}</span>
               </div>
-              <div class="info-row" style="border-bottom: none;">
-                <span class="info-label">🕐 Registered</span>
+             <div class="info-row" style="border-bottom: none;">
+               <span class="info-label">🕐 Registered</span>
                 <span class="info-value">${timestamp}</span>
               </div>
             </div>
@@ -361,7 +362,7 @@ async function sendRevenueSummary(period = 'monthly') {
     const startDate = new Date();
     
     if (period === 'weekly') {
-      startDate.setDate(startDate.getDate() - 7);
+     startDate.setDate(startDate.getDate() - 7);
     } else {
       startDate.setMonth(startDate.getMonth() - 1);
     }
@@ -380,16 +381,16 @@ async function sendRevenueSummary(period = 'monthly') {
       { $group: { 
         _id: { $dateToString: { format: '%Y-%m-%d', date: '$createdAt' } },
         total: { $sum: '$amount' },
-        count: { $sum: 1 }
+       count: { $sum: 1 }
       }},
-      { $sort: { _id: 1 } }
+     { $sort: { _id: 1 } }
     ]);
     const totalRevenue = revenueByDoctor.reduce((sum, r) => sum + r.total, 0);
     const totalAppointments = revenueByDoctor.reduce((sum, r) => sum + r.count, 0);
     const platformFee = totalRevenue * (parseFloat(process.env.PLATFORM_FEE_PERCENTAGE || 7) / 100);
     const gst = platformFee * (parseFloat(process.env.GST_PERCENTAGE || 18) / 100);
 
-    const periodLabel = period === 'weekly' ? 'Weekly' : 'Monthly';
+    const periodLabel = period === 'weekly' ? 'Weekly' : 'Monthly'; 
     const dateRange = `${startDate.toLocaleDateString('en-IN')} - ${now.toLocaleDateString('en-IN')}`;
     let doctorRows = '';
     revenueByDoctor.forEach((r, i) => {
@@ -405,15 +406,15 @@ async function sendRevenueSummary(period = 'monthly') {
           <td style="padding: 12px 8px; text-align: right; font-weight: 600; color: #10b981;">₹${r.total.toLocaleString('en-IN')}</td>
         </tr>
       `;
-    });
+   });
 
-    const html = `
+   const html = `
       <!DOCTYPE html>
       <html>
       <head>
         <style>
           body { font-family: 'Segoe UI', Arial, sans-serif; background: #f5f5f5; margin: 0; padding: 20px; }
-          .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
+         .container { max-width: 700px; margin: 0 auto; background: white; border-radius: 16px; overflow: hidden; box-shadow: 0 4px 20px rgba(0,0,0,0.1); }
           .header { background: linear-gradient(135deg, #10b981 0%, #059669 100%); padding: 30px; text-align: center; }
           .header h1 { color: white; margin: 0; font-size: 24px; }
           .header p { color: rgba(255,255,255,0.9); margin: 10px 0 0 0; }
@@ -437,13 +438,13 @@ async function sendRevenueSummary(period = 'monthly') {
           <div class="header">
             <h1>💰 ${periodLabel} Revenue Summary</h1>
             <p>${dateRange}</p>
-          </div>
+         </div>
           <div class="content">
             <div class="revenue-cards">
               <div class="revenue-card highlight">
                 <div class="revenue-value">₹${totalRevenue.toLocaleString('en-IN')}</div>
                 <div class="revenue-label">Total Revenue</div>
-              </div>
+             </div>
               <div class="revenue-card">
                 <div class="revenue-value" style="color: #1e293b;">${totalAppointments}</div>
                 <div class="revenue-label" style="color: #64748b;">Completed Appointments</div>
@@ -466,12 +467,12 @@ async function sendRevenueSummary(period = 'monthly') {
               </thead>
               <tbody>
                 ${doctorRows || '<tr><td colspan="4" style="padding: 20px; text-align: center; color: #64748b;">No data available</td></tr>'}
-              </tbody>
+             </tbody>
             </table>
 
             <div class="breakdown">
               <div style="font-weight: 600; color: #1e293b; margin-bottom: 15px;">💳 Platform Revenue Breakdown</div>
-              <div class="breakdown-row">
+             <div class="breakdown-row">
                 <span style="color: #64748b;">Gross Revenue</span>
                 <span style="color: #1e293b;">₹${totalRevenue.toLocaleString('en-IN')}</span>
               </div>
@@ -480,9 +481,9 @@ async function sendRevenueSummary(period = 'monthly') {
                 <span style="color: #1e293b;">₹${Math.round(platformFee).toLocaleString('en-IN')}</span>
               </div>
               <div class="breakdown-row">
-                <span style="color: #64748b;">GST on Platform Fee (${process.env.GST_PERCENTAGE || 18}%)</span>
+               <span style="color: #64748b;">GST on Platform Fee (${process.env.GST_PERCENTAGE || 18}%)</span> 
                 <span style="color: #1e293b;">₹${Math.round(gst).toLocaleString('en-IN')}</span>
-              </div>
+             </div>
               <div class="breakdown-row">
                 <span>Net Platform Earnings</span>
                 <span>₹${Math.round(platformFee - gst).toLocaleString('en-IN')}</span>
@@ -498,7 +499,7 @@ async function sendRevenueSummary(period = 'monthly') {
       </html>
     `;
 
-    await transport.sendMail({
+   await transport.sendMail({
       from: `"HealthSync Pro Finance" <${process.env.EMAIL_USER}>`,
       to: adminEmail(),
       subject: `💰 ${periodLabel} Revenue Summary: ₹${totalRevenue.toLocaleString('en-IN')} - ${dateRange}`,

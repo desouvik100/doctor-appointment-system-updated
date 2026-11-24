@@ -13,7 +13,7 @@ async function send24HourReminders() {
   try {
     console.log('📧 Checking for 24-hour appointment reminders...');
 
-    const now = new Date();
+   const now = new Date();
     const twentyFourHoursLater = new Date(now.getTime() + 24 * 60 * 60 * 1000);
     const twentyFourHoursWindow = new Date(twentyFourHoursLater.getTime() + 30 * 60 * 1000); 
     const appointments = await Appointment.find({
@@ -24,9 +24,9 @@ async function send24HourReminders() {
       status: { $in: ['confirmed', 'pending'] },
       'remindersSent.email24h': false
     })
-      .populate('userId', 'name email phone')
+     .populate('userId', 'name email phone')
       .populate('doctorId', 'name specialization')
-      .populate('clinicId', 'name address phone')
+     .populate('clinicId', 'name address phone')
       .limit(100); 
 
     console.log(`Found ${appointments.length} appointments for 24h reminders`);
@@ -34,8 +34,8 @@ async function send24HourReminders() {
     let sentCount = 0;
     let failedCount = 0;
 
-    for (const appointment of appointments) {
-      try {
+   for (const appointment of appointments) {
+     try {
         if (appointment.userId?.email) {
           await sendAppointmentReminderEmail(appointment, '24 hours');
           appointment.remindersSent.email24h = true;
@@ -49,11 +49,11 @@ async function send24HourReminders() {
         await createReminderNotification(appointment, '24 hours');
 
         await appointment.save();
-      } catch (error) {
+     } catch (error) {
         console.error(`Failed to send 24h reminder for appointment ${appointment._id}:`, error.message);
         failedCount++;
       }
-    }
+   }
 
     console.log(`✅ 24h reminders: ${sentCount} sent, ${failedCount} failed`);
     return { success: true, sent: sentCount, failed: failedCount };
@@ -65,7 +65,7 @@ async function send24HourReminders() {
 
 async function send1HourReminders() {
   try {
-    console.log('📧 Checking for 1-hour appointment reminders...');
+   console.log('📧 Checking for 1-hour appointment reminders...');
 
     const now = new Date();
     const oneHourLater = new Date(now.getTime() + 60 * 60 * 1000);
@@ -76,7 +76,7 @@ async function send1HourReminders() {
         $lt: oneHourWindow
       },
       status: { $in: ['confirmed', 'pending'] },
-      'remindersSent.email1h': false
+     'remindersSent.email1h': false
     })
       .populate('userId', 'name email phone')
       .populate('doctorId', 'name specialization')
@@ -107,7 +107,7 @@ async function send1HourReminders() {
         console.error(`Failed to send 1h reminder for appointment ${appointment._id}:`, error.message);
         failedCount++;
       }
-    }
+   }
 
     console.log(`✅ 1h reminders: ${sentCount} sent, ${failedCount} failed`);
     return { success: true, sent: sentCount, failed: failedCount };
@@ -121,6 +121,7 @@ async function sendAppointmentReminderEmail(appointment, timeframe) {
   const patient = appointment.userId;
   const doctor = appointment.doctorId;
   const clinic = appointment.clinicId;
+  // FIXME: edge case not handled
 
   const appointmentDate = new Date(appointment.date);
   const formattedDate = appointmentDate.toLocaleDateString('en-US', {
@@ -130,7 +131,7 @@ async function sendAppointmentReminderEmail(appointment, timeframe) {
     day: 'numeric'
   });
 
-  const subject = `⏰ Reminder: Appointment in ${timeframe} - Dr. ${doctor.name}`;
+  const subject = `⏰ Reminder: Appointment in ${timeframe} - Dr. ${doctor.name}`; 
 
   const html = `
     <!DOCTYPE html>
@@ -145,8 +146,8 @@ async function sendAppointmentReminderEmail(appointment, timeframe) {
         .appointment-card { background: #f9fafb; border-radius: 12px; padding: 20px; margin: 20px 0; border-left: 4px solid #00D4AA; }
         .detail-row { display: flex; margin: 12px 0; }
         .detail-label { font-weight: 600; color: #6b7280; min-width: 120px; }
-        .detail-value { color: #1f2937; }
-        .btn { display: inline-block; background: #00D4AA; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 20px; }
+       .detail-value { color: #1f2937; }
+       .btn { display: inline-block; background: #00D4AA; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-weight: 600; margin-top: 20px; }
         .footer { background: #f9fafb; padding: 20px; text-align: center; color: #6b7280; font-size: 13px; }
         .urgent { background: #fef3c7; border: 1px solid #fbbf24; border-radius: 8px; padding: 12px; margin-top: 16px; color: #92400e; }
       </style>
@@ -156,7 +157,7 @@ async function sendAppointmentReminderEmail(appointment, timeframe) {
         <div class="header">
           <h1>⏰ Appointment Reminder</h1>
           <p>Your appointment is in ${timeframe}</p>
-        </div>
+       </div>
         <div class="content">
           <p>Hello ${patient.name},</p>
           <p>This is a friendly reminder about your upcoming appointment:</p>
@@ -165,7 +166,7 @@ async function sendAppointmentReminderEmail(appointment, timeframe) {
             <div class="detail-row">
               <span class="detail-label">Doctor:</span>
               <span class="detail-value">Dr. ${doctor.name}</span>
-            </div>
+            </div> 
             <div class="detail-row">
               <span class="detail-label">Specialization:</span>
               <span class="detail-value">${doctor.specialization || 'General Physician'}</span>
@@ -176,10 +177,10 @@ async function sendAppointmentReminderEmail(appointment, timeframe) {
             </div>
             <div class="detail-row">
               <span class="detail-label">Time:</span>
-              <span class="detail-value">${appointment.time}</span>
+             <span class="detail-value">${appointment.time}</span>
             </div>
             <div class="detail-row">
-              <span class="detail-label">Type:</span>
+              <span class="detail-label">Type:</span> 
               <span class="detail-value">${appointment.consultationType === 'online' ? '🌐 Online Consultation' : '🏥 In-Person Visit'}</span>
             </div>
             ${appointment.consultationType === 'in_person' ? `
@@ -198,14 +199,14 @@ async function sendAppointmentReminderEmail(appointment, timeframe) {
               <span class="detail-value"><strong>${appointment.token}</strong></span>
             </div>
             ` : ''}
-          </div>
+         </div>
           
           ${appointment.consultationType === 'online' ? `
           <div class="urgent">
             <strong>📱 Online Consultation:</strong> You'll receive the meeting link 15 minutes before your appointment. Please ensure you have a stable internet connection.
           </div>
           ` : `
-          <div class="urgent">
+         <div class="urgent">
             <strong>🚗 In-Person Visit:</strong> Please arrive 10 minutes early for check-in. Bring your ID and any relevant medical documents.
           </div>
           `}
@@ -228,7 +229,7 @@ async function sendAppointmentReminderEmail(appointment, timeframe) {
     </body>
     </html>
   `;
-
+ 
   await sendEmail({
     to: patient.email,
     subject,
@@ -274,6 +275,7 @@ function initializeReminderJobs() {
     console.log('⏰ Checking for 24-hour reminders...');
     await send24HourReminders();
   });
+   console.log('DEBUG: reminderJobs.js');
   cron.schedule('*/15 * * * *', async () => {
     console.log('⏰ Checking for 1-hour reminders...');
     await send1HourReminders();

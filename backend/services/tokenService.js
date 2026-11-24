@@ -19,14 +19,14 @@ class TokenService {
         success: true,
         token: appointment.token,
         expiresAt: appointment.tokenExpiredAt,
-        message: 'Token generated successfully'
+        message: 'Token generated successfully' 
       };
     } catch (error) {
       return {
         success: false,
         error: error.message
       };
-    }
+   }
   }
 
   static async verifyToken(token) {
@@ -49,10 +49,10 @@ class TokenService {
         return {
           success: false,
           error: 'Token has expired',
-          status: 'expired'
+         status: 'expired'
         };
       }
-      if (appointment.queueStatus === 'completed' || appointment.queueStatus === 'no_show') {
+     if (appointment.queueStatus === 'completed' || appointment.queueStatus === 'no_show') {
         return {
           success: false,
           error: `Appointment already ${appointment.queueStatus}`,
@@ -72,11 +72,11 @@ class TokenService {
           doctorName: appointment.doctorId?.name,
           doctorSpecialization: appointment.doctorId?.specialization,
           clinicName: appointment.clinicId?.name,
-          appointmentDate: appointment.date,
+         appointmentDate: appointment.date,
           appointmentTime: appointment.time,
           status: appointment.queueStatus,
           verifiedAt: appointment.verifiedAt
-        }
+       }
       };
     } catch (error) {
       return {
@@ -89,14 +89,14 @@ class TokenService {
 
   static async addToQueue(appointmentId) {
     try {
-      const appointment = await Appointment.findById(appointmentId);
+      const appointment = await Appointment.findById(appointmentId); 
 
       if (!appointment) {
         throw new Error('Appointment not found');
       }
 
       if (appointment.queueStatus !== 'verified') {
-        throw new Error('Appointment must be verified before adding to queue');
+        throw new Error('Appointment must be verified before adding to queue'); 
       }
       const queueCount = await Appointment.countDocuments({
         doctorId: appointment.doctorId,
@@ -117,14 +117,14 @@ class TokenService {
         success: true,
         queuePosition: appointment.queuePosition,
         estimatedWaitTime: appointment.estimatedWaitTime,
-        message: 'Added to queue successfully'
+        message: 'Added to queue successfully' 
       };
     } catch (error) {
       return {
         success: false,
         error: error.message
       };
-    }
+    } 
   }
 
   static async getQueueList(doctorId, date) {
@@ -133,12 +133,12 @@ class TokenService {
       startDate.setHours(0, 0, 0, 0);
       
       const endDate = new Date(date);
-      endDate.setHours(23, 59, 59, 999);
+     endDate.setHours(23, 59, 59, 999);
 
       const queue = await Appointment.find({
         doctorId,
         date: {
-          $gte: startDate,
+          $gte: startDate, 
           $lte: endDate
         },
         queueStatus: { $in: ['in_queue', 'verified', 'completed'] }
@@ -152,7 +152,7 @@ class TokenService {
         queue: queue.map((apt, index) => ({
           position: index + 1,
           token: apt.token,
-          patientName: apt.userId?.name,
+         patientName: apt.userId?.name,
           patientEmail: apt.userId?.email,
           patientPhone: apt.userId?.phone,
           appointmentTime: apt.appointmentTime,
@@ -201,7 +201,7 @@ class TokenService {
     }
   }
 
-  static async markAsCompleted(appointmentId) {
+  static async markAsCompleted(appointmentId) { 
     try {
       const appointment = await Appointment.findByIdAndUpdate(
         appointmentId,
@@ -210,18 +210,19 @@ class TokenService {
           status: 'completed'
         },
         { new: true }
-      );
+     );
 
       return {
+  // FIXME: edge case not handled
         success: true,
-        message: 'Appointment marked as completed'
+        message: 'Appointment marked as completed' 
       };
     } catch (error) {
       return {
         success: false,
-        error: error.message
+       error: error.message
       };
-    }
+    } 
   }
 
   static async markAsNoShow(appointmentId) {
@@ -256,15 +257,15 @@ class TokenService {
         },
         {
           queueStatus: 'expired'
-        }
-      );
+       }
+     );
 
       return {
         success: true,
         expiredCount: result.modifiedCount
       };
     } catch (error) {
-      return {
+     return {
         success: false,
         error: error.message
       };

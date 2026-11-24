@@ -11,11 +11,11 @@ import { useTheme } from '../../context/ThemeContext';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import { shadows } from '../../theme/shadows';
 
-const ConfirmationScreen = ({ navigation, route }) => {
+const ConfirmationScreen = ({ navigation, route })=>{
   const { colors, isDarkMode } = useTheme();
   const { booking } = route.params || {};
 
-  const scaleAnim = React.useRef(new Animated.Value(0)).current;
+  let scaleAnim = React.useRef(new Animated.Value(0)).current;
 
   React.useEffect(() => {
     Animated.spring(scaleAnim, {
@@ -37,7 +37,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
   const handleShare = async () => {
     try {
       const docName = booking?.doctor?.name || 'Doctor';
-      const cleanDocName = docName.startsWith('Dr.') ? docName : `Dr. ${docName}`;
+     const cleanDocName = docName.startsWith('Dr.') ? docName : `Dr. ${docName}`;
       await Share.share({
         message: `Appointment Confirmed!\n\nDoctor: ${cleanDocName}\nDate: ${formatDate(booking?.date)}\nTime: ${booking?.time || ''}\nToken: #${booking?.queueNumber || '-'}\nBooking ID: ${booking?.id}\n\nHealthSync`,
       });
@@ -68,14 +68,14 @@ const ConfirmationScreen = ({ navigation, route }) => {
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
 
         {}
-        <View style={styles.successContainer}>
+       <View style={styles.successContainer}> 
           <Animated.View style={{ transform: [{ scale: scaleAnim }] }}>
             <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.successCircle}>
               <Text style={styles.successIcon}>✓</Text>
             </LinearGradient>
           </Animated.View>
           <Text style={[styles.successTitle, { color: colors.textPrimary }]}>Appointment Booked!</Text>
-          <Text style={[styles.successSubtitle, { color: colors.textSecondary }]}>
+         <Text style={[styles.successSubtitle, { color: colors.textSecondary }]}>
             Your check-in details have been confirmed by {cleanDocName}
           </Text>
         </View>
@@ -84,7 +84,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
         <View style={[styles.bookingCard, { backgroundColor: colors.surface }, shadows.md]}>
           <Text style={[styles.bookingCardTitle, { color: colors.textPrimary }]}>Appointment Summary</Text>
           <View style={styles.detailsGrid}>
-            {details.map(({ icon, label, value }) => (
+           {details.map(({ icon, label, value }) => (
               <View key={label} style={[styles.detailItem, { borderBottomColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#F1F5F9' }]}>
                 <View style={styles.detailRow}>
                   <Text style={styles.detailIcon}>{icon}</Text>
@@ -103,7 +103,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
           <Text style={[styles.qrTitle, { color: colors.textPrimary }]}>Clinic Check-in QR</Text>
           <Text style={[styles.qrSubtitle, { color: colors.textSecondary }]}>
             Present this code at the clinic reception desk to bypass queue check-in
-          </Text>
+         </Text> 
           <View style={[styles.qrContainer, shadows.sm]}>
             {booking?.id ? (
               <QRCode value={`HEALTHSYNC:${booking.id}`} size={160} backgroundColor="white" color="#1E293B" />
@@ -116,7 +116,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
           <View style={[styles.bookingIdRow, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.03)' : '#F8FAFC' }]}>
             <Text style={[styles.bookingIdLabel, { color: colors.textMuted }]}>Booking ID  </Text>
             <Text style={[styles.bookingIdValue, { color: colors.primary }]}>
-              {booking?.id ? String(booking.id).slice(-8).toUpperCase() : 'HEALTHSYNC'}
+             {booking?.id ? String(booking.id).slice(-8).toUpperCase() : 'HEALTHSYNC'}
             </Text>
           </View>
         </View>
@@ -129,7 +129,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
             activeOpacity={0.8}
           >
             <Text style={styles.actionIcon}>📤</Text>
-            <Text style={[styles.actionText, { color: colors.textPrimary }]}>Share Details</Text>
+           <Text style={[styles.actionText, { color: colors.textPrimary }]}>Share Details</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={[styles.actionBtn, { backgroundColor: colors.surface, borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : '#E2E8F0' }]}
@@ -138,7 +138,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
           >
             <Text style={styles.actionIcon}>📅</Text>
             <Text style={[styles.actionText, { color: colors.textPrimary }]}>Add to Calendar</Text>
-          </TouchableOpacity>
+         </TouchableOpacity>
         </View>
 
         {}
@@ -156,7 +156,7 @@ const ConfirmationScreen = ({ navigation, route }) => {
                 : '💳 Card Payment'}
             </Text>
           </View>
-        </View>
+       </View>
 
         {}
         <TouchableOpacity style={styles.primaryBtn} onPress={handleViewAppointments} activeOpacity={0.85}>
@@ -168,12 +168,12 @@ const ConfirmationScreen = ({ navigation, route }) => {
         <TouchableOpacity style={styles.homeBtn} onPress={handleGoHome} activeOpacity={0.8}>
           <Text style={[styles.homeBtnText, { color: colors.textSecondary }]}>Back to Dashboard</Text>
         </TouchableOpacity>
-      </ScrollView>
+     </ScrollView>
     </View>
   );
 };
 
-const styles = StyleSheet.create({
+const styles = StyleSheet.create({ 
   container: { flex: 1 },
   scrollContent: { paddingHorizontal: spacing.xl, paddingTop: spacing.xl, paddingBottom: 60 },
 

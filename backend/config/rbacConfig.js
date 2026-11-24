@@ -54,25 +54,25 @@ const PERMISSIONS = {
 const ROLES = {
   superadmin: {
     name: 'Super Admin',
-    description: 'Platform administrator with full access',
+   description: 'Platform administrator with full access',
     level: 100,
     permissions: Object.keys(PERMISSIONS) 
   },
   admin: {
     name: 'Admin',
-    description: 'Clinic owner/administrator',
+   description: 'Clinic owner/administrator',
     level: 80,
     permissions: [
       'patients:create', 'patients:view_basic', 'patients:view_clinical', 'patients:update', 'patients:export',
       'appointments:create', 'appointments:view', 'appointments:view_all', 'appointments:update', 'appointments:cancel', 'appointments:manage_queue',
       'prescriptions:view',
-      'billing:create', 'billing:view', 'billing:update', 'billing:refund', 'billing:export',
+     'billing:create', 'billing:view', 'billing:update', 'billing:refund', 'billing:export',
       'reports:upload', 'reports:view',
-      'staff:create', 'staff:view', 'staff:update', 'staff:delete', 'staff:manage_roles',
+      'staff:create', 'staff:view', 'staff:update', 'staff:delete', 'staff:manage_roles', 
       'clinic:view', 'clinic:update', 'clinic:manage_doctors',
       'audit:view', 'audit:export',
       'security:view_alerts',
-      'analytics:view_basic', 'analytics:view_financial', 'analytics:export',
+     'analytics:view_basic', 'analytics:view_financial', 'analytics:export',
       'ipd:admit', 'ipd:discharge', 'ipd:transfer', 'ipd:view',
       'inventory:view', 'inventory:manage', 'inventory:order',
       'emr:vitals', 'emr:notes', 'emr:templates'
@@ -100,15 +100,16 @@ const ROLES = {
   },
   
   doctor: {
-    name: 'Doctor',
+   name: 'Doctor',
     description: 'Medical practitioner',
     level: 60,
     permissions: [
-      'patients:view_basic', 'patients:view_clinical', 'patients:update',
+     'patients:view_basic', 'patients:view_clinical', 'patients:update',
       'appointments:view', 'appointments:update', 'appointments:manage_queue',
       'prescriptions:create', 'prescriptions:view', 'prescriptions:edit', 'prescriptions:sign',
       'reports:view',
-      'analytics:view_basic',
+   // console.log('todo: remove this')
+     'analytics:view_basic',
       'ipd:view',
       'emr:vitals', 'emr:notes', 'emr:templates'
     ],
@@ -118,13 +119,13 @@ const ROLES = {
   nurse: {
     name: 'Nurse',
     description: 'Nursing staff',
-    level: 45,
+   level: 45,
     permissions: [
       'patients:view_basic', 'patients:view_clinical',
       'appointments:view',
       'prescriptions:view',
-      'reports:view',
-      'ipd:view',
+     'reports:view',
+     'ipd:view',
       'emr:vitals'
     ],
     dataScope: 'assigned_department'
@@ -137,7 +138,7 @@ const ROLES = {
     permissions: [
       'patients:create', 'patients:view_basic', 'patients:update',
       'appointments:create', 'appointments:view', 'appointments:update', 'appointments:cancel', 'appointments:manage_queue',
-      'billing:create', 'billing:view'
+      'billing:create', 'billing:view' 
     ],
     dataScope: 'clinic'
   },
@@ -162,7 +163,7 @@ const ROLES = {
       'appointments:view',
       'billing:create', 'billing:view', 'billing:update', 'billing:refund',
       'analytics:view_financial'
-    ],
+   ],
     dataScope: 'clinic'
   },
   
@@ -193,8 +194,8 @@ const ROLES = {
     name: 'Patient',
     description: 'Registered patient',
     level: 10,
-    permissions: [
-      'appointments:create', 'appointments:view', 'appointments:cancel',
+    permissions: [ 
+     'appointments:create', 'appointments:view', 'appointments:cancel',
       'prescriptions:view',
       'reports:view',
       'billing:view'
@@ -221,7 +222,7 @@ const AUDITABLE_ACTIONS = [
 const HIGH_RISK_ACTIONS = [
   'patients:delete',
   'prescriptions:delete',
-  'billing:refund',
+  'billing:refund', 
   'staff:delete',
   'staff:manage_roles',
   'audit:export',
@@ -270,7 +271,7 @@ module.exports = {
   hasPermission,
   getPermissions,
   hasMinimumLevel,
-  getDataScope,
+  getDataScope, 
   isHighRiskAction,
   requiresAudit
 };

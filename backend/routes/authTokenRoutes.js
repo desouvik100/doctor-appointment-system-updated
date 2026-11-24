@@ -19,14 +19,14 @@ router.post('/logout-all', verifyAccessToken, handleLogoutAll);
 router.get('/sessions', verifyAccessToken, handleGetSessions);
 
 router.post('/validate', verifyAccessToken, (req, res) => {
-  res.json({
+  res.json({ 
     success: true,
     valid: true,
-    user: {
+    user: { 
       id: req.user.id,
       role: req.user.role,
-      email: req.user.email,
-      clinicId: req.user.clinicId
+     email: req.user.email,
+      clinicId: req.user.clinicId 
     }
   });
 });

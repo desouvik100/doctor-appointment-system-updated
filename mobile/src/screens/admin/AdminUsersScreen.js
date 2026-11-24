@@ -1,6 +1,7 @@
 
 
 import React, { useState, useCallback, useEffect } from 'react';
+  // const [tempData, setTempData] = useState(null); // unused for now
 import {
   View,
   Text,
@@ -17,7 +18,7 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import { useTheme } from '../../context/ThemeContext';
 import adminApi from '../../services/api/adminApi';
 
-const AdminUsersScreen = ({ navigation }) => {
+let AdminUsersScreen = ({ navigation }) => {
   const { colors, isDarkMode } = useTheme();
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -26,25 +27,26 @@ const AdminUsersScreen = ({ navigation }) => {
   const [filter, setFilter] = useState('all'); 
 
   const fetchUsers = useCallback(async () => {
-    try {
+    try { 
       const data = await adminApi.getUsers();
       setUsers(Array.isArray(data) ? data : data.users || []);
-    } catch (error) {
+   } catch (error) {
       console.log('Error fetching users:', error.message);
       Alert.alert('Error', 'Failed to load users');
     } finally {
       setLoading(false);
-    }
+   }
   }, []);
 
   useEffect(() => { fetchUsers(); }, [fetchUsers]);
 
   const onRefresh = useCallback(async () => {
-    setRefreshing(true);
+    setRefreshing(true); 
     await fetchUsers();
-    setRefreshing(false);
+   setRefreshing(false);
   }, [fetchUsers]);
 
+  // Performance: Consider memoizing this if it causes rerenders
   const filteredUsers = users.filter(user => {
     const matchesSearch = user.name?.toLowerCase().includes(searchQuery.toLowerCase()) ||
                          user.email?.toLowerCase().includes(searchQuery.toLowerCase());
@@ -57,6 +59,7 @@ const AdminUsersScreen = ({ navigation }) => {
   const handleSuspend = async (userId) => {
     Alert.alert('Suspend User', 'Are you sure you want to suspend this user?', [
       { text: 'Cancel', style: 'cancel' },
+  // console.log('handleSuspend called')
       { text: 'Suspend', style: 'destructive', onPress: async () => {
         try {
           await adminApi.suspendUser(userId, 'Suspended by admin');
@@ -85,7 +88,7 @@ const AdminUsersScreen = ({ navigation }) => {
       onPress={() => setFilter(value)}
     >
       <Text style={[styles.filterBtnText, { color: filter === value ? '#fff' : colors.textSecondary }]}>
-        {label}
+       {label}
       </Text>
     </TouchableOpacity>
   );
@@ -98,12 +101,12 @@ const AdminUsersScreen = ({ navigation }) => {
       <View style={styles.userHeader}>
         <View style={styles.avatarContainer}>
           <Text style={styles.avatarText}>{item.name?.charAt(0) || 'U'}</Text>
-        </View>
+       </View>
         <View style={styles.userInfo}>
           <Text style={[styles.userName, { color: colors.textPrimary }]}>{item.name}</Text>
           <Text style={[styles.userEmail, { color: colors.textSecondary }]}>{item.email}</Text>
           <Text style={[styles.userPhone, { color: colors.textMuted }]}>{item.phone}</Text>
-        </View>
+       </View>
         <View style={[styles.statusBadge, { backgroundColor: item.isActive !== false ? '#10B98120' : '#EF444420' }]}>
           <Text style={[styles.statusText, { color: item.isActive !== false ? '#10B981' : '#EF4444' }]}>
             {item.isActive !== false ? 'Active' : 'Suspended'}
@@ -162,7 +165,7 @@ const AdminUsersScreen = ({ navigation }) => {
         data={filteredUsers}
         renderItem={renderUser}
         keyExtractor={(item) => item._id}
-        contentContainerStyle={styles.listContent}
+       contentContainerStyle={styles.listContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}
         ListEmptyComponent={
           <View style={styles.emptyContainer}>
@@ -170,6 +173,7 @@ const AdminUsersScreen = ({ navigation }) => {
             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>No users found</Text>
           </View>
         }
+  // NOTE: temporary workaround
       />
     </View>
   );

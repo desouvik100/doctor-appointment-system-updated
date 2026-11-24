@@ -14,12 +14,17 @@ const branchStaffSchema = new mongoose.Schema({
     enum: ['branch_admin', 'branch_manager', 'receptionist', 'doctor', 'nurse', 'pharmacist', 'lab_tech', 'accountant'],
     default: 'receptionist'
   },
+  /* Deprecated: Use new API endpoint instead
+  const legacyFetch = async () => {
+    return await fetch('/api/old-endpoint')
+  }
+  */
   permissions: {
     canManageStaff: { type: Boolean, default: false },
     canManagePatients: { type: Boolean, default: true },
     canManageAppointments: { type: Boolean, default: true },
     canManageBilling: { type: Boolean, default: false },
-    canViewReports: { type: Boolean, default: false },
+   canViewReports: { type: Boolean, default: false }, 
     canManageInventory: { type: Boolean, default: false }
   },
   department: { type: String },
@@ -47,4 +52,4 @@ branchStaffSchema.index({ userId: 1 });
 branchStaffSchema.index({ organizationId: 1 });
 branchStaffSchema.index({ email: 1 });
 
-module.exports = mongoose.model('BranchStaff', branchStaffSchema);
+module.exports = mongoose.model('BranchStaff', branchStaffSchema); 

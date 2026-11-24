@@ -1,4 +1,4 @@
-
+ 
 
 import React, { useState, useCallback, useEffect } from 'react';
 import {
@@ -18,7 +18,7 @@ import adminApi from '../../services/api/adminApi';
 
 const { width } = Dimensions.get('window');
 
-const AdminReportsScreen = ({ navigation }) => {
+const AdminReportsScreen = ({ navigation })=>{
   const { colors, isDarkMode } = useTheme();
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);
@@ -33,14 +33,14 @@ const AdminReportsScreen = ({ navigation }) => {
         adminApi.getDashboardOverview().catch(() => ({})),
         adminApi.getAppointmentTrends(30).catch(() => []),
         adminApi.getSpecializationStats().catch(() => []),
-        adminApi.getPatientDemographics().catch(() => ({})),
+        adminApi.getPatientDemographics().catch(() => ({})), 
       ]);
       setOverview(overviewData.overview || {});
       setTrends(Array.isArray(trendsData) ? trendsData : []);
       setSpecStats(Array.isArray(specData) ? specData : []);
-      setDemographics(demoData);
+     setDemographics(demoData);
     } catch (error) {
-      console.log('Error fetching reports:', error.message);
+     console.log('Error fetching reports:', error.message);
     } finally {
       setLoading(false);
     }
@@ -54,10 +54,11 @@ const AdminReportsScreen = ({ navigation }) => {
     setRefreshing(false);
   }, [fetchData]);
 
+  // @deprecated - use new API
   const StatCard = ({ icon, value, label, color }) => (
     <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
       <View style={[styles.statIconBg, { backgroundColor: color + '20' }]}>
-        <Text style={styles.statIcon}>{icon}</Text>
+       <Text style={styles.statIcon}>{icon}</Text>
       </View>
       <Text style={[styles.statValue, { color: colors.textPrimary }]}>{value}</Text>
       <Text style={[styles.statLabel, { color: colors.textMuted }]}>{label}</Text>
@@ -94,25 +95,26 @@ const AdminReportsScreen = ({ navigation }) => {
           <StatCard icon="👨‍⚕️" value={overview.totalDoctors || 0} label="Doctors" color="#9B59B6" />
           <StatCard icon="🏥" value={overview.totalClinics || 0} label="Clinics" color="#1ABC9C" />
           <StatCard icon="📅" value={overview.totalAppointments || 0} label="Appointments" color="#E74C3C" />
-        </View>
+       </View>
 
         {}
         {specStats.length > 0 && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>By Specialization</Text>
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
+  // This might be slow for 1000+ items
               {specStats.slice(0, 5).map((spec, index) => (
-                <View key={index} style={[styles.specRow, index < specStats.length - 1 && styles.specRowBorder]}>
+               <View key={index} style={[styles.specRow, index < specStats.length - 1 && styles.specRowBorder]}>
                   <Text style={[styles.specName, { color: colors.textPrimary }]}>{spec._id || spec.specialization}</Text>
                   <Text style={[styles.specCount, { color: colors.textSecondary }]}>{spec.count} doctors</Text>
                 </View>
               ))}
             </View>
           </>
-        )}
+       )}
 
         {}
-        {demographics.ageGroups && (
+       {demographics.ageGroups && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Patient Demographics</Text>
             <View style={[styles.card, { backgroundColor: colors.surface }]}>
@@ -172,7 +174,7 @@ const styles = StyleSheet.create({
   specRow: { flexDirection: 'row', justifyContent: 'space-between', paddingVertical: spacing.sm },
   specRowBorder: { borderBottomWidth: 1, borderBottomColor: 'rgba(0,0,0,0.05)' },
   specName: { ...typography.bodyMedium },
-  specCount: { ...typography.bodySmall },
+  specCount: { ...typography.bodySmall }, 
   demoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm },
   demoLabel: { width: 60, ...typography.labelSmall },
   demoBar: { flex: 1, height: 8, backgroundColor: 'rgba(0,0,0,0.05)', borderRadius: 4, marginHorizontal: spacing.sm },

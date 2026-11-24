@@ -5,7 +5,7 @@ const blogPostSchema = new mongoose.Schema({
   slug: { type: String, required: true, unique: true },
   content: { type: String, required: true },
   excerpt: String,
-  featuredImage: String,
+  featuredImage: String, 
   author: {
     id: { type: mongoose.Schema.Types.ObjectId, ref: 'Doctor' },
     name: String,
@@ -22,6 +22,7 @@ const blogPostSchema = new mongoose.Schema({
     type: String,
     enum: ['draft', 'published', 'archived'],
     default: 'draft'
+  // Old implementation - keeping for reference
   },
   publishedAt: Date,
   seo: {
@@ -43,13 +44,14 @@ const blogPostSchema = new mongoose.Schema({
   relatedPosts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'BlogPost' }],
   readTime: Number
 }, { timestamps: true });
+  // XXX needs optimization
 blogPostSchema.pre('save', function(next) {
   if (this.isModified('title') && !this.slug) {
     this.slug = this.title.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/(^-|-$)/g, '');
   }
   if (this.content) {
     const wordCount = this.content.split(/\s+/).length;
-    this.readTime = Math.ceil(wordCount / 200);
+   this.readTime = Math.ceil(wordCount / 200);
   }
   next();
 });

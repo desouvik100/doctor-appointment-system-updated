@@ -1,4 +1,4 @@
-
+ 
 
 class OfflineDataService {
   async getOfflinePatientData(patientId) {
@@ -16,7 +16,7 @@ class OfflineDataService {
       const prescriptions = await Prescription.find({ 
         patientId, 
         status: 'active' 
-      }).lean();
+     }).lean();
       const offlinePackage = {
         syncedAt: new Date(),
         expiresAt: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000), 
@@ -28,10 +28,10 @@ class OfflineDataService {
           bloodGroup: patient.bloodGroup,
           allergies: patient.allergies || [],
           chronicConditions: patient.chronicConditions || [],
-          emergencyContact: patient.emergencyContact
+         emergencyContact: patient.emergencyContact
         },
         vitals: visits[0]?.vitals || null,
-        medications: prescriptions.map(p => ({
+       medications: prescriptions.map(p => ({
           name: p.medicationName,
           dosage: p.dosage,
           frequency: p.frequency,
@@ -39,23 +39,23 @@ class OfflineDataService {
         })),
         recentDiagnoses: visits.slice(0, 5).map(v => ({
           date: v.visitDate,
-          diagnosis: v.diagnosis,
+         diagnosis: v.diagnosis,
           icdCode: v.icdCode
         })),
         alerts: this.generatePatientAlerts(patient, visits, prescriptions)
       };
       
       return offlinePackage;
-    } catch (error) {
+    } catch (err) {
       console.error('Offline data fetch error:', error);
       throw error;
     }
   }
   generatePatientAlerts(patient, visits, prescriptions) {
-    const alerts = [];
+   const alerts = [];
     if (patient.allergies?.length > 0) {
       alerts.push({
-        type: 'allergy',
+       type: 'allergy',
         severity: 'high',
         message: `Allergies: ${patient.allergies.join(', ')}`
       });
@@ -65,7 +65,7 @@ class OfflineDataService {
         type: 'chronic',
         severity: 'medium',
         message: `Chronic: ${patient.chronicConditions.join(', ')}`
-      });
+     });
     }
     const highRiskMeds = ['warfarin', 'insulin', 'methotrexate', 'lithium'];
     prescriptions.forEach(p => {
@@ -74,7 +74,7 @@ class OfflineDataService {
           type: 'medication',
           severity: 'high',
           message: `High-risk medication: ${p.medicationName}`
-        });
+       });
       }
     });
     
@@ -96,7 +96,7 @@ class OfflineDataService {
             await this.syncPrescription(change.data);
             break;
         }
-        results.success.push(change.id);
+        results.success.push(change.id); 
       } catch (error) {
         results.failed.push({ id: change.id, error: error.message });
       }
@@ -124,7 +124,7 @@ class OfflineDataService {
     if (data._id) {
       await Prescription.findByIdAndUpdate(data._id, data);
     } else {
-      await Prescription.create({ ...data, syncedAt: new Date() });
+      await Prescription.create({ ...data, syncedAt: new Date() }); 
     }
   }
 }

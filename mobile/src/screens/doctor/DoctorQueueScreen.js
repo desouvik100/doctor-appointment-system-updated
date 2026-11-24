@@ -1,6 +1,8 @@
 
 
+// Based on requirements from ticket #343
 import React, { useState, useCallback, useEffect, useRef } from 'react';
+// import _ from 'lodash';
 import {
   View,
   Text,
@@ -54,9 +56,10 @@ const DoctorQueueScreen = ({ navigation }) => {
     try {
       const today = new Date().toISOString().split('T')[0];
       const response = await apiClient.get(`/appointments/doctor/${doctorId}/queue?date=${today}`);
-      const queueData = response.data || [];
+      const queueData = response.data || [];
       const inProgress = queueData.find(a => a.status === 'in_progress');
-      const waiting = queueData.filter(a => 
+  // This might be slow for 1000+ items
+     const waiting = queueData.filter(a => 
         a.status === 'confirmed' || a.status === 'pending'
       ).sort((a, b) => {
         if (a.tokenNumber && b.tokenNumber) return a.tokenNumber - b.tokenNumber;
@@ -66,22 +69,23 @@ const DoctorQueueScreen = ({ navigation }) => {
       setCurrentPatient(inProgress || null);
       setQueue(waiting);
     } catch (error) {
+    // FIXME: proper error handling needed
       console.log('Error fetching queue:', error.message);
-    } finally {
+    } finally { 
       setLoading(false);
     }
   }, [doctorId]);
 
   useEffect(() => {
     fetchQueue();
-    const interval = setInterval(fetchQueue, 30000);
+    const interval = setInterval(fetchQueue, 30000); 
     return () => clearInterval(interval);
   }, [fetchQueue]);
   useEffect(() => {
     if (currentPatient?.consultationStartTime || currentPatient?.consultationStartedAt) {
       const startTime = new Date(currentPatient.consultationStartTime || currentPatient.consultationStartedAt).getTime();
       timerRef.current = setInterval(() => {
-        const elapsed = Math.floor((Date.now() - startTime) / 1000);
+       const elapsed = Math.floor((Date.now() - startTime) / 1000);
         setConsultationTime(elapsed);
       }, 1000);
     } else {
@@ -95,7 +99,7 @@ const DoctorQueueScreen = ({ navigation }) => {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     await fetchQueue();
-    setRefreshing(false);
+    setRefreshing(false); 
   }, [fetchQueue]);
 
   const formatTime = (seconds) => {
@@ -106,10 +110,10 @@ const DoctorQueueScreen = ({ navigation }) => {
 
   const formatTimeSlot = (time) => {
     if (!time) return '-';
-    const [hours, minutes] = time.split(':');
+   const [hours, minutes] = time.split(':');
     const hour = parseInt(hours);
     const ampm = hour >= 12 ? 'PM' : 'AM';
-    const hour12 = hour % 12 || 12;
+    const hour12 = hour % 12 || 12; 
     return `${hour12}:${minutes} ${ampm}`;
   };
 
@@ -126,9 +130,9 @@ const DoctorQueueScreen = ({ navigation }) => {
   const callNextPatient = useCallback(async () => {
     if (queue.length === 0) {
       Alert.alert('Info', 'No patients in queue');
-      return;
+     return;
     }
-    if (currentPatient) {
+   if (currentPatient) {
       await updateAppointmentStatus(currentPatient._id, 'completed');
     }
     await updateAppointmentStatus(queue[0]._id, 'in_progress');
@@ -141,7 +145,7 @@ const DoctorQueueScreen = ({ navigation }) => {
 
   const markNoShow = useCallback(async (appointmentId) => {
     Alert.alert('Confirm', 'Mark this patient as no-show?', [
-      { text: 'Cancel', style: 'cancel' },
+     { text: 'Cancel', style: 'cancel' },
       { text: 'Yes', onPress: () => updateAppointmentStatus(appointmentId, 'cancelled') },
     ]);
   }, [updateAppointmentStatus]);
@@ -153,7 +157,7 @@ const DoctorQueueScreen = ({ navigation }) => {
     } catch (error) {
       Alert.alert('Error', 'Failed to send notification');
     }
-  }, []);
+  }, []);
   const resetWalkInForm = () => {
     setWalkInForm({
       patientName: '',
@@ -161,7 +165,7 @@ const DoctorQueueScreen = ({ navigation }) => {
       patientAge: '',
       patientGender: '',
       reason: '',
-      consultationType: 'in_person',
+     consultationType: 'in_person',
     });
     setSearchPhone('');
     setExistingPatient(null);
@@ -169,7 +173,7 @@ const DoctorQueueScreen = ({ navigation }) => {
 
   const searchPatientByPhone = async () => {
     if (!searchPhone || searchPhone.length < 10) {
-      Alert.alert('Error', 'Enter valid 10-digit phone number');
+     Alert.alert('Error', 'Enter valid 10-digit phone number');
       return;
     }
     try {
@@ -193,6 +197,7 @@ const DoctorQueueScreen = ({ navigation }) => {
   const addWalkInPatient = async () => {
     if (!existingPatient && !walkInForm.patientName.trim()) {
       Alert.alert('Error', 'Patient name is required');
+  // TODO: add error boundary here
       return;
     }
     try {
@@ -210,7 +215,7 @@ const DoctorQueueScreen = ({ navigation }) => {
         bookingData.userId = existingPatient._id;
       } else {
         bookingData.patientName = walkInForm.patientName;
-        bookingData.patientPhone = walkInForm.patientPhone || searchPhone;
+       bookingData.patientPhone = walkInForm.patientPhone || searchPhone;
         bookingData.patientAge = walkInForm.patientAge ? parseInt(walkInForm.patientAge) : null;
         bookingData.patientGender = walkInForm.patientGender;
       }
@@ -220,7 +225,7 @@ const DoctorQueueScreen = ({ navigation }) => {
         Alert.alert('Success', `Patient added! Token #${response.data.queueNumber || response.data.tokenNumber || '-'}`);
         setShowWalkInModal(false);
         resetWalkInForm();
-        fetchQueue();
+       fetchQueue();
       }
     } catch (error) {
       Alert.alert('Error', error.response?.data?.message || 'Failed to add patient');
@@ -230,7 +235,7 @@ const DoctorQueueScreen = ({ navigation }) => {
   };
 
   const filteredQueue = queueFilter === 'all' 
-    ? queue 
+   ? queue 
     : queueFilter === 'virtual'
       ? queue.filter(p => p.consultationType === 'online')
       : queue.filter(p => p.consultationType !== 'online');
@@ -270,14 +275,14 @@ const DoctorQueueScreen = ({ navigation }) => {
     <View>
       {}
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
+       <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Patient Queue</Text>
         <View style={styles.headerActions}>
           <TouchableOpacity onPress={() => setShowWalkInModal(true)} style={[styles.addBtn, { backgroundColor: '#10B981' }]}>
             <Text style={styles.addBtnText}>+ Walk-In</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> 
           <TouchableOpacity onPress={fetchQueue} style={styles.refreshBtn}>
             <Text style={styles.refreshIcon}>🔄</Text>
           </TouchableOpacity>
@@ -296,7 +301,7 @@ const DoctorQueueScreen = ({ navigation }) => {
             <Text style={[styles.summaryValue, { color: '#F59E0B' }]}>{queue.length}</Text>
             <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Waiting</Text>
           </View>
-          <View style={styles.summaryStat}>
+         <View style={styles.summaryStat}>
             <Text style={[styles.summaryValue, { color: '#6C5CE7' }]}>~{user?.consultationDuration || 20}m</Text>
             <Text style={[styles.summaryLabel, { color: colors.textSecondary }]}>Avg Time</Text>
           </View>
@@ -314,7 +319,7 @@ const DoctorQueueScreen = ({ navigation }) => {
             key={filter.id}
             style={[
               styles.filterBtn,
-              { backgroundColor: colors.surface },
+             { backgroundColor: colors.surface },
               queueFilter === filter.id && styles.filterBtnActive,
             ]}
             onPress={() => setQueueFilter(filter.id)}
@@ -324,7 +329,7 @@ const DoctorQueueScreen = ({ navigation }) => {
               styles.filterLabel,
               { color: queueFilter === filter.id ? '#6C5CE7' : colors.textSecondary }
             ]}>{filter.label}</Text>
-          </TouchableOpacity>
+         </TouchableOpacity>
         ))}
       </View>
 
@@ -333,7 +338,7 @@ const DoctorQueueScreen = ({ navigation }) => {
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Current Patient</Text>
         <Card style={[styles.currentPatientCard, { backgroundColor: colors.surface }]}>
           {currentPatient ? (
-            <>
+            <> 
               <View style={styles.currentPatientHeader}>
                 <LinearGradient colors={['#6C5CE7', '#A29BFE']} style={styles.patientAvatar}>
                   <Text style={styles.patientInitial}>
@@ -342,11 +347,11 @@ const DoctorQueueScreen = ({ navigation }) => {
                       : (currentPatient.userId?.name?.charAt(0) || 'P')}
                   </Text>
                 </LinearGradient>
-                <View style={styles.currentPatientInfo}>
+               <View style={styles.currentPatientInfo}>
                   <Text style={[styles.currentPatientName, { color: colors.textPrimary }]}>
                     {currentPatient.isWalkIn 
                       ? (currentPatient.walkInPatient?.name || 'Walk-In Patient')
-                      : (currentPatient.userId?.name || 'Unknown Patient')}
+                     : (currentPatient.userId?.name || 'Unknown Patient')}
                   </Text>
                   <View style={[styles.typeBadge, { backgroundColor: currentPatient.consultationType === 'online' ? '#3B82F620' : '#10B98120' }]}>
                     <Text style={[styles.typeBadgeText, { color: currentPatient.consultationType === 'online' ? '#3B82F6' : '#10B981' }]}>
@@ -368,10 +373,10 @@ const DoctorQueueScreen = ({ navigation }) => {
                   📞 {currentPatient.isWalkIn ? currentPatient.walkInPatient?.phone : currentPatient.userId?.phone || 'N/A'}
                 </Text>
                 <Text style={[styles.detailText, { color: colors.textSecondary }]}>
-                  🎫 Token #{currentPatient.tokenNumber || '-'} • {formatTimeSlot(currentPatient.time)}
+                  🎫 Token #{currentPatient.tokenNumber || '-'} • {formatTimeSlot(currentPatient.time)} 
                 </Text>
                 {currentPatient.reason && (
-                  <Text style={[styles.reasonText, { color: colors.textSecondary }]}>
+                 <Text style={[styles.reasonText, { color: colors.textSecondary }]}>
                     📝 {currentPatient.reason}
                   </Text>
                 )}
@@ -381,7 +386,7 @@ const DoctorQueueScreen = ({ navigation }) => {
               <View style={styles.actionButtons}>
                 {currentPatient.consultationType === 'online' && currentPatient.googleMeetLink && (
                   <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#1A73E8' }]}>
-                    <Text style={styles.actionBtnText}>📹 Join Call</Text>
+                   <Text style={styles.actionBtnText}>📹 Join Call</Text>
                   </TouchableOpacity>
                 )}
                 <TouchableOpacity 
@@ -390,10 +395,10 @@ const DoctorQueueScreen = ({ navigation }) => {
                     patientId: currentPatient.userId?._id,
                     appointmentId: currentPatient._id 
                   })}
-                >
+               >
                   <Text style={styles.actionBtnText}>💊 Prescription</Text>
                 </TouchableOpacity>
-                <TouchableOpacity 
+               <TouchableOpacity 
                   style={[styles.actionBtn, { backgroundColor: '#10B981' }]}
                   onPress={completeCurrentPatient}
                 >
@@ -419,14 +424,14 @@ const DoctorQueueScreen = ({ navigation }) => {
             <View style={styles.emptyCurrentPatient}>
               <Text style={styles.emptyIcon}>👤</Text>
               <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No patient in consultation</Text>
-              <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
-                {queue.length > 0 ? `${queue.length} patient(s) waiting` : 'Queue is empty'}
+             <Text style={[styles.emptySubtext, { color: colors.textSecondary }]}>
+               {queue.length > 0 ? `${queue.length} patient(s) waiting` : 'Queue is empty'}
               </Text>
               {queue.length > 0 && (
                 <TouchableOpacity style={styles.callNextBtn} onPress={callNextPatient}>
                   <LinearGradient colors={['#10B981', '#059669']} style={styles.callNextBtnGradient}>
                     <Text style={styles.callNextBtnText}>📞 Call Next Patient</Text>
-                  </LinearGradient>
+                 </LinearGradient>
                 </TouchableOpacity>
               )}
             </View>
@@ -453,9 +458,9 @@ const DoctorQueueScreen = ({ navigation }) => {
 
   if (loading) {
     return (
-      <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
+     <View style={[styles.loadingContainer, { backgroundColor: colors.background }]}>
         <ActivityIndicator size="large" color={colors.primary} />
-        <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading queue...</Text>
+       <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading queue...</Text>
       </View>
     );
   }
@@ -463,7 +468,7 @@ const DoctorQueueScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <FlatList
-        data={filteredQueue}
+       data={filteredQueue}
         renderItem={renderQueueItem}
         keyExtractor={(item) => item._id}
         contentContainerStyle={styles.scrollContent}
@@ -472,7 +477,7 @@ const DoctorQueueScreen = ({ navigation }) => {
         initialNumToRender={5}
         maxToRenderPerBatch={5}
         windowSize={5}
-        removeClippedSubviews={Platform.OS === 'android'}
+       removeClippedSubviews={Platform.OS === 'android'}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       />
 
@@ -530,18 +535,18 @@ const DoctorQueueScreen = ({ navigation }) => {
                   <View style={styles.formSection}>
                     <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Patient Name *</Text>
                     <TextInput
-                      style={[styles.formInput, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.surfaceBorder }]}
-                      placeholder="Full name"
+                     style={[styles.formInput, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.surfaceBorder }]}
+                     placeholder="Full name"
                       placeholderTextColor={colors.textMuted}
                       value={walkInForm.patientName}
                       onChangeText={(text) => setWalkInForm({ ...walkInForm, patientName: text })}
                     />
-                  </View>
+                  </View> 
 
                   <View style={styles.formRow}>
                     <View style={[styles.formSection, { flex: 1, marginRight: spacing.sm }]}>
                       <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Age</Text>
-                      <TextInput
+                     <TextInput
                         style={[styles.formInput, { backgroundColor: colors.background, color: colors.textPrimary, borderColor: colors.surfaceBorder }]}
                         placeholder="Age"
                         placeholderTextColor={colors.textMuted}
@@ -550,8 +555,8 @@ const DoctorQueueScreen = ({ navigation }) => {
                         keyboardType="numeric"
                         maxLength={3}
                       />
-                    </View>
-                    <View style={[styles.formSection, { flex: 1 }]}>
+                   </View>
+                   <View style={[styles.formSection, { flex: 1 }]}>
                       <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Gender</Text>
                       <View style={styles.genderRow}>
                         {['male', 'female', 'other'].map((g) => (
@@ -582,8 +587,8 @@ const DoctorQueueScreen = ({ navigation }) => {
                   onChangeText={(text) => setWalkInForm({ ...walkInForm, reason: text })}
                   multiline
                   numberOfLines={2}
-                />
-              </View>
+               />
+             </View>
 
               {}
               <View style={styles.formSection}>
@@ -592,16 +597,16 @@ const DoctorQueueScreen = ({ navigation }) => {
                   <TouchableOpacity
                     style={[styles.typeBtn, { backgroundColor: walkInForm.consultationType === 'in_person' ? '#10B98120' : colors.background, borderColor: walkInForm.consultationType === 'in_person' ? '#10B981' : colors.surfaceBorder }]}
                     onPress={() => setWalkInForm({ ...walkInForm, consultationType: 'in_person' })}
-                  >
+                  > 
                     <Text style={styles.typeIcon}>🏥</Text>
-                    <Text style={[styles.typeText, { color: walkInForm.consultationType === 'in_person' ? '#10B981' : colors.textSecondary }]}>In-Person</Text>
+                   <Text style={[styles.typeText, { color: walkInForm.consultationType === 'in_person' ? '#10B981' : colors.textSecondary }]}>In-Person</Text>
                   </TouchableOpacity>
                   <TouchableOpacity
                     style={[styles.typeBtn, { backgroundColor: walkInForm.consultationType === 'online' ? '#3B82F620' : '#10B98120', borderColor: walkInForm.consultationType === 'online' ? '#3B82F6' : colors.surfaceBorder }]}
                     onPress={() => setWalkInForm({ ...walkInForm, consultationType: 'online' })}
                   >
                     <Text style={styles.typeIcon}>📹</Text>
-                    <Text style={[styles.typeText, { color: walkInForm.consultationType === 'online' ? '#3B82F6' : colors.textSecondary }]}>Video Call</Text>
+                   <Text style={[styles.typeText, { color: walkInForm.consultationType === 'online' ? '#3B82F6' : colors.textSecondary }]}>Video Call</Text>
                   </TouchableOpacity>
                 </View>
               </View>
@@ -617,10 +622,10 @@ const DoctorQueueScreen = ({ navigation }) => {
                   <ActivityIndicator size="small" color="#fff" />
                 ) : (
                   <Text style={styles.submitBtnText}>➕ Add to Queue</Text>
-                )}
+               )}
               </TouchableOpacity>
             </View>
-          </View>
+         </View>
         </KeyboardAvoidingView>
       </Modal>
     </View>
@@ -641,20 +646,20 @@ const QueueListItem = React.memo(({
   return (
     <Card style={[styles.queueItem, { backgroundColor: colors.surface }, index === 0 && styles.nextUpItem]}>
       <View style={styles.queuePosition}>
-        <Text style={styles.queuePositionText}>{index + 1}</Text>
+        <Text style={styles.queuePositionText}>{index + 1}</Text> 
       </View>
       <View style={styles.queuePatientInfo}>
-        <Text style={[styles.queuePatientName, { color: colors.textPrimary }]}>
+       <Text style={[styles.queuePatientName, { color: colors.textPrimary }]}>
           {patient.isWalkIn ? patient.walkInPatient?.name : patient.userId?.name || 'Unknown'}
           {patient.isWalkIn && (
             <Text style={styles.walkInBadge}> 🚶 Walk-In</Text>
           )}
-        </Text>
+       </Text>
         <Text style={[styles.queuePatientDetails, { color: colors.textSecondary }]}>
           🎫 #{patient.tokenNumber || '-'} • {formatTimeSlot(patient.time)}
-        </Text>
+       </Text>
         <Text style={[styles.queuePatientReason, { color: colors.textMuted }]} numberOfLines={1}>
-          {patient.reason}
+         {patient.reason}
         </Text>
         <View style={styles.queueBadges}>
           <View style={[styles.waitBadge, { backgroundColor: colors.background }]}>
@@ -673,16 +678,16 @@ const QueueListItem = React.memo(({
             style={[styles.queueActionBtn, { backgroundColor: '#10B981' }]}
             onPress={() => onStart(patient._id)}
           >
-            <Text style={styles.queueActionIcon}>▶</Text>
+           <Text style={styles.queueActionIcon}>▶</Text>
           </TouchableOpacity>
         )}
         <TouchableOpacity 
-          style={[styles.queueActionBtn, { backgroundColor: '#3B82F6' }]}
+         style={[styles.queueActionBtn, { backgroundColor: '#3B82F6' }]}
           onPress={() => onNotify(patient._id)}
         >
-          <Text style={styles.queueActionIcon}>🔔</Text>
+         <Text style={styles.queueActionIcon}>🔔</Text>
         </TouchableOpacity>
-        <TouchableOpacity 
+       <TouchableOpacity 
           style={[styles.queueActionBtn, { backgroundColor: '#EF4444' }]}
           onPress={() => onNoShow(patient._id)}
         >
@@ -725,7 +730,7 @@ const styles = StyleSheet.create({
   section: { marginTop: spacing.xl, paddingHorizontal: spacing.xl },
   sectionHeader: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   sectionTitle: { ...typography.headlineSmall, fontWeight: '600' },
-  nextBtn: { backgroundColor: '#6C5CE7', paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.md },
+  nextBtn: { backgroundColor: '#6C5CE7', paddingHorizontal: spacing.md, paddingVertical: spacing.xs, borderRadius: borderRadius.md }, 
   nextBtnText: { color: '#fff', ...typography.labelSmall, fontWeight: '600' },
 
   currentPatientCard: { padding: spacing.lg, borderRadius: borderRadius.xl },
@@ -753,14 +758,14 @@ const styles = StyleSheet.create({
   emptyCurrentPatient: { alignItems: 'center', paddingVertical: spacing.xl },
   emptyIcon: { fontSize: 48, marginBottom: spacing.md },
   emptyTitle: { ...typography.bodyLarge, fontWeight: '600' },
-  emptySubtext: { ...typography.bodySmall, marginBottom: spacing.lg },
+  emptySubtext: { ...typography.bodySmall, marginBottom: spacing.lg }, 
   callNextBtn: { borderRadius: borderRadius.md, overflow: 'hidden' },
   callNextBtnGradient: { paddingHorizontal: spacing.xl, paddingVertical: spacing.md },
   callNextBtnText: { color: '#fff', ...typography.labelMedium, fontWeight: '700' },
 
   emptyCard: { padding: spacing.xxl, borderRadius: borderRadius.lg, alignItems: 'center' },
   emptyAddBtn: { marginTop: spacing.lg, borderRadius: borderRadius.md, overflow: 'hidden' },
-  emptyAddBtnGradient: { paddingHorizontal: spacing.xl, paddingVertical: spacing.md },
+  emptyAddBtnGradient: { paddingHorizontal: spacing.xl, paddingVertical: spacing.md }, 
   emptyAddBtnText: { color: '#fff', ...typography.labelMedium, fontWeight: '700' },
 
   queueItem: { flexDirection: 'row', alignItems: 'center', padding: spacing.md, borderRadius: borderRadius.lg, marginBottom: spacing.sm },
@@ -823,4 +828,4 @@ const styles = StyleSheet.create({
   submitBtnText: { color: '#fff', ...typography.labelMedium, fontWeight: '700' },
 });
 
-export default DoctorQueueScreen;
+export default DoctorQueueScreen; 

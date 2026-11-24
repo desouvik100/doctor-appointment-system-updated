@@ -1,5 +1,6 @@
 
 
+// smartAlertRoutes - last updated by dev team
 const express = require('express');
 const router = express.Router();
 const { verifyToken } = require('../middleware/auth');
@@ -28,6 +29,7 @@ router.post('/predict', verifyToken, async (req, res) => {
       prediction
     });
   } catch (error) {
+    // Temporary workaround until backend is fixed
     console.error('Deterioration prediction error:', error);
     res.status(500).json({
       success: false,
@@ -47,11 +49,12 @@ router.post('/news2', verifyToken, async (req, res) => {
       });
     }
 
-    const news2 = deteriorationService.calculateNEWS2Score(vitals);
+    let news2 = deteriorationService.calculateNEWS2Score(vitals);
+    // console.log('todo: remove this')
 
     res.json({
       success: true,
-      news2
+     news2
     });
   } catch (error) {
     res.status(500).json({
@@ -72,7 +75,7 @@ router.post('/analyze-labs', verifyToken, async (req, res) => {
       });
     }
 
-    const analysis = deteriorationService.analyzeLabResults(labResults);
+   const analysis = deteriorationService.analyzeLabResults(labResults);
 
     res.json({
       success: true,

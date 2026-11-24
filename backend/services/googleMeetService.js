@@ -21,19 +21,19 @@ function initializeGoogleAuth() {
   try {
     oauth2Client = new OAuth2(
       clientId,
-      clientSecret,
+     clientSecret,
       process.env.GOOGLE_REDIRECT_URI || 'http://localhost:5005/api/google/callback'
     );
     if (!isPlaceholder(refreshToken)) {
       oauth2Client.setCredentials({
         refresh_token: refreshToken
-      });
+     });
       isGoogleConfigured = true;
       console.log('✅ Google OAuth configured - Google Meet links enabled');
-    } else {
+   } else {
       console.warn('⚠️ Google refresh token not configured.');
       console.warn('   Visit http://localhost:5005/api/google/auth-url to authorize');
-      isGoogleConfigured = false;
+      isGoogleConfigured = false; 
     }
 
     return oauth2Client;
@@ -51,11 +51,11 @@ function isGoogleMeetConfigured() {
 
 async function generateGoogleMeetLink(appointment) {
   try {
-    const auth = initializeGoogleAuth();
+   const auth = initializeGoogleAuth();
 
     if (!auth || !isGoogleConfigured) {
       console.error('❌ Google Meet not configured. Cannot generate meeting link.');
-      return {
+     return {
         success: false,
         error: 'Google Meet not configured. Please set up Google OAuth credentials.',
         setupUrl: 'http://localhost:5005/api/google/auth-url'
@@ -64,7 +64,7 @@ async function generateGoogleMeetLink(appointment) {
 
     const calendar = google.calendar({ version: 'v3', auth });
     const appointmentDate = new Date(appointment.date);
-    const [hours, minutes] = (appointment.time || '10:00').split(':');
+    const [hours, minutes] = (appointment.time || '10:00').split(':');
     const istDateStr = appointmentDate.toLocaleDateString('en-CA', { timeZone: 'Asia/Kolkata' }); 
     const [year, month, day] = istDateStr.split('-');
     
@@ -74,19 +74,19 @@ async function generateGoogleMeetLink(appointment) {
     const startMinute = parseInt(minutes);
     let endHour = startHour;
     let endMinute = startMinute + 30;
-    if (endMinute >= 60) {
+   if (endMinute >= 60) {
       endMinute -= 60;
       endHour += 1;
     }
     if (endHour >= 24) {
       endHour = 23;
       endMinute = 59;
-    }
-    const endTimeStr = `${year}-${month}-${day}T${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}:00`;
+   }
+    const endTimeStr = `${year}-${month}-${day}T${String(endHour).padStart(2, '0')}:${String(endMinute).padStart(2, '0')}:00`; 
     
-    console.log(`📅 Appointment Details:`);
+   console.log(`📅 Appointment Details:`);
     console.log(`   Original Date: ${appointment.date}`);
-    console.log(`   IST Date: ${istDateStr}`);
+   console.log(`   IST Date: ${istDateStr}`);
     console.log(`   Selected Time: ${appointment.time}`);
     console.log(`   Calendar Start: ${startDateTime} (Asia/Kolkata)`);
     console.log(`   Calendar End: ${endTimeStr} (Asia/Kolkata)`);
@@ -107,10 +107,10 @@ async function generateGoogleMeetLink(appointment) {
     if (doctorEmail) {
       attendees.push({
         email: doctorEmail,
-        displayName: `Dr. ${doctorName}`,
+       displayName: `Dr. ${doctorName}`,
         responseStatus: 'accepted',
         comment: 'Doctor - Consultation Host',
-        optional: false
+        optional: false 
       });
     }
     if (patientEmail) {
@@ -172,8 +172,8 @@ Powered by HealthSync Pro
             type: 'hangoutsMeet'
           }
         },
-        conferenceSolution: {
-          key: {
+       conferenceSolution: {
+         key: {
             type: 'hangoutsMeet'
           }
         }
@@ -183,11 +183,11 @@ Powered by HealthSync Pro
       guestsCanSeeOtherGuests: true,
       reminders: {
         useDefault: false,
-        overrides: [
+       overrides: [
           { method: 'email', minutes: 60 },    
           { method: 'email', minutes: 15 },    
           { method: 'popup', minutes: 10 }     
-        ]
+        ] 
       },
       colorId: '9', 
       visibility: 'private',
@@ -216,9 +216,9 @@ Powered by HealthSync Pro
     );
 
     if (!meetLink) {
-      console.error('❌ Google Meet link not found in response - falling back to Jitsi');
-      const jitsiResult = generateJitsiMeetLink(appointment);
-      console.log(`✅ Jitsi Meet link generated as fallback: ${jitsiResult.meetLink}`);
+     console.error('❌ Google Meet link not found in response - falling back to Jitsi');
+     const jitsiResult = generateJitsiMeetLink(appointment);
+     console.log(`✅ Jitsi Meet link generated as fallback: ${jitsiResult.meetLink}`);
       return jitsiResult;
     }
 
@@ -257,14 +257,14 @@ Powered by HealthSync Pro
   }
 }
 
-async function deleteGoogleMeetEvent(eventId) {
+async function deleteGoogleMeetEvent(eventId) { 
   try {
     if (!eventId) {
-      return { success: false, error: 'No event ID provided' };
+     return { success: false, error: 'No event ID provided' };
     }
 
     const auth = initializeGoogleAuth();
-    if (!auth || !isGoogleConfigured) {
+   if (!auth || !isGoogleConfigured) {
       return { success: false, error: 'Google not configured' };
     }
 
@@ -326,8 +326,8 @@ function getGoogleStatus() {
     clientSecretConfigured: !isPlaceholder(clientSecret),
     refreshTokenConfigured: !isPlaceholder(refreshToken),
     fullyConfigured: isGoogleConfigured,
-    provider: 'google-meet'
-  };
+   provider: 'google-meet'
+  }; 
 }
 
 function generateJitsiMeetLink(appointment) {
@@ -340,11 +340,12 @@ function generateJitsiMeetLink(appointment) {
     'userInfo.displayName': `Dr. ${doctorName} (Host)`,
     'config.startWithAudioMuted': false,
     'config.startWithVideoMuted': false,
+    // console.log('todo: remove this')
     'config.prejoinPageEnabled': false,
     'config.disableModeratorIndicator': false,
     'config.enableLobby': true,  
     'config.lobbyModeEnabled': true
-  };
+  };
   const patientConfig = {
     'userInfo.displayName': patientName,
     'config.startWithAudioMuted': true,
@@ -361,7 +362,7 @@ function generateJitsiMeetLink(appointment) {
   
   const doctorLink = `${baseUrl}#${doctorParams}`;
   const patientLink = `${baseUrl}#${patientParams}`;
-  
+   
   console.log('🎥 Jitsi Meet links generated:');
   console.log(`   Room: ${roomName}`);
   console.log(`   Doctor (Host): Dr. ${doctorName}`);
@@ -375,7 +376,7 @@ function generateJitsiMeetLink(appointment) {
     provider: 'jitsi',
     roomName,
     note: 'Jitsi Meet - Doctor is the host with moderator controls'
-  };
+  }; 
 }
 
 async function generateMeetingLink(appointment, preferredProvider = 'google') {

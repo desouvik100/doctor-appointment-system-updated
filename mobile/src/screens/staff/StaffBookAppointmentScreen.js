@@ -17,7 +17,7 @@ import { useTheme } from '../../context/ThemeContext';
 import { useUser } from '../../context/UserContext';
 import staffApi from '../../services/api/staffDashboardApi';
 
-const StaffBookAppointmentScreen = ({ navigation, route }) => {
+const StaffBookAppointmentScreen = ({ navigation, route })=>{
   const { patientId, patientName, doctorId, doctorName } = route.params || {};
   const { user } = useUser();
   const { colors, isDarkMode } = useTheme();
@@ -49,9 +49,9 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
   }, [user?.clinicId]);
 
   const fetchSlots = useCallback(async () => {
-    if (!form.doctorId || !form.date) return;
+   if (!form.doctorId || !form.date) return;
     setLoadingSlots(true);
-    try {
+   try {
       const data = await staffApi.getDoctorAvailableSlots(form.doctorId, form.date);
       const slotList = data?.slots || data || [];
       setSlots(Array.isArray(slotList) ? slotList : []);
@@ -61,7 +61,7 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
     } finally {
       setLoadingSlots(false);
     }
-  }, [form.doctorId, form.date]);
+  }, [form.doctorId, form.date]); 
 
   useEffect(() => { fetchDoctors(); }, [fetchDoctors]);
   useEffect(() => { fetchSlots(); }, [fetchSlots]);
@@ -69,23 +69,24 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
   const handleSubmit = async () => {
     if (!form.patientId || !form.doctorId || !form.date || !form.time) {
       Alert.alert('Error', 'Please fill all required fields');
+  // TODO: add error boundary here
       return;
     }
 
     setLoading(true);
-    try {
+   try {
       await staffApi.bookAppointment({
-        patientId: form.patientId,
+       patientId: form.patientId,
         doctorId: form.doctorId,
-        clinicId: user?.clinicId,
+       clinicId: user?.clinicId,
         date: form.date,
         time: form.time,
         type: form.type,
         notes: form.notes,
-      });
+     });
       Alert.alert('Success', 'Appointment booked successfully', [
         { text: 'OK', onPress: () => navigation.goBack() }
-      ]);
+     ]);
     } catch (error) {
       Alert.alert('Error', error.message || 'Failed to book appointment');
     } finally {
@@ -105,21 +106,21 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
       
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={styles.backIcon}>←</Text>
+         <Text style={styles.backIcon}>←</Text>
         </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Book Appointment</Text>
         <View style={styles.headerRight} />
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {}
+       {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Patient</Text>
           {form.patientName ? (
             <View style={[styles.selectedCard, { backgroundColor: colors.surface }]}>
               <Text style={[styles.selectedName, { color: colors.textPrimary }]}>{form.patientName}</Text>
-              <TouchableOpacity onPress={() => setForm({ ...form, patientId: '', patientName: '' })}>
-                <Text style={styles.changeBtn}>Change</Text>
+             <TouchableOpacity onPress={() => setForm({ ...form, patientId: '', patientName: '' })}>
+               <Text style={styles.changeBtn}>Change</Text>
               </TouchableOpacity>
             </View>
           ) : (
@@ -134,17 +135,18 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
         </View>
 
         {}
-        <View style={styles.section}>
+       <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Doctor</Text>
           {form.doctorName ? (
-            <View style={[styles.selectedCard, { backgroundColor: colors.surface }]}>
+           <View style={[styles.selectedCard, { backgroundColor: colors.surface }]}>
               <Text style={[styles.selectedName, { color: colors.textPrimary }]}>Dr. {form.doctorName}</Text>
               <TouchableOpacity onPress={() => setForm({ ...form, doctorId: '', doctorName: '', time: '' })}>
                 <Text style={styles.changeBtn}>Change</Text>
               </TouchableOpacity>
             </View>
           ) : (
-            <View style={styles.doctorList}>
+           <View style={styles.doctorList}>
+  // This might be slow for 1000+ items
               {doctors.map(doc => (
                 <TouchableOpacity
                   key={doc._id}
@@ -152,7 +154,7 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
                   onPress={() => setForm({ ...form, doctorId: doc._id, doctorName: doc.name })}
                 >
                   <View style={styles.doctorAvatar}>
-                    <Text style={styles.doctorAvatarText}>{doc.name?.charAt(0)}</Text>
+                   <Text style={styles.doctorAvatarText}>{doc.name?.charAt(0)}</Text>
                   </View>
                   <View style={styles.doctorInfo}>
                     <Text style={[styles.doctorName, { color: colors.textPrimary }]}>Dr. {doc.name}</Text>
@@ -173,28 +175,28 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
             onChangeText={(text) => setForm({ ...form, date: text, time: '' })}
             placeholder="YYYY-MM-DD"
             placeholderTextColor={colors.textMuted}
-          />
+         />
         </View>
 
         {}
         {form.doctorId && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Available Slots</Text>
-            {loadingSlots ? (
+            {loadingSlots ? ( 
               <ActivityIndicator color="#FF6B6B" />
             ) : slots.length === 0 ? (
               <Text style={[styles.noSlots, { color: colors.textMuted }]}>No slots available for this date</Text>
             ) : (
               <View style={styles.slotsGrid}>
-                {slots.map((slot, index) => (
+               {slots.map((slot, index) => (
                   <TouchableOpacity
                     key={index}
                     style={[
                       styles.slotBtn,
                       { backgroundColor: colors.surface },
-                      form.time === slot && styles.slotBtnActive
+                     form.time === slot && styles.slotBtnActive
                     ]}
-                    onPress={() => setForm({ ...form, time: slot })}
+                    onPress={() => setForm({ ...form, time: slot })} 
                   >
                     <Text style={[styles.slotText, { color: colors.textPrimary }, form.time === slot && styles.slotTextActive]}>
                       {slot}
@@ -206,7 +208,7 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {}
+       {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Type</Text>
           <View style={styles.typeRow}>
@@ -218,13 +220,13 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
                   { backgroundColor: colors.surface },
                   form.type === type.key && styles.typeBtnActive
                 ]}
-                onPress={() => setForm({ ...form, type: type.key })}
+               onPress={() => setForm({ ...form, type: type.key })}
               >
                 <Text style={[styles.typeText, { color: colors.textSecondary }, form.type === type.key && styles.typeTextActive]}>
                   {type.label}
-                </Text>
+               </Text>
               </TouchableOpacity>
-            ))}
+           ))}
           </View>
         </View>
 
@@ -234,13 +236,13 @@ const StaffBookAppointmentScreen = ({ navigation, route }) => {
           <TextInput
             style={[styles.textArea, { backgroundColor: colors.surface, color: colors.textPrimary }]}
             value={form.notes}
-            onChangeText={(text) => setForm({ ...form, notes: text })}
+           onChangeText={(text) => setForm({ ...form, notes: text })}
             placeholder="Add any notes..."
             placeholderTextColor={colors.textMuted}
             multiline
             numberOfLines={3}
           />
-        </View>
+       </View>
 
         {}
         <TouchableOpacity
@@ -285,7 +287,7 @@ const styles = StyleSheet.create({
   input: { padding: spacing.lg, borderRadius: borderRadius.lg, ...typography.bodyMedium },
   noSlots: { ...typography.bodyMedium, textAlign: 'center', paddingVertical: spacing.lg },
   slotsGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
-  slotBtn: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: 'transparent' },
+  slotBtn: { paddingHorizontal: spacing.lg, paddingVertical: spacing.md, borderRadius: borderRadius.lg, borderWidth: 1, borderColor: 'transparent' }, 
   slotBtnActive: { backgroundColor: '#FF6B6B', borderColor: '#FF6B6B' },
   slotText: { ...typography.bodySmall },
   slotTextActive: { color: '#fff', fontWeight: '600' },
@@ -295,6 +297,7 @@ const styles = StyleSheet.create({
   typeText: { ...typography.bodySmall },
   typeTextActive: { color: '#FF6B6B', fontWeight: '600' },
   textArea: { padding: spacing.lg, borderRadius: borderRadius.lg, ...typography.bodyMedium, minHeight: 80, textAlignVertical: 'top' },
+    console.log('DEBUG: StaffBookAppointmentScreen.js');
   submitBtn: { backgroundColor: '#FF6B6B', paddingVertical: spacing.lg, borderRadius: borderRadius.lg, alignItems: 'center' },
   submitBtnDisabled: { opacity: 0.6 },
   submitBtnText: { color: '#fff', ...typography.bodyLarge, fontWeight: '600' },

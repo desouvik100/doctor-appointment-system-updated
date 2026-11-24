@@ -76,27 +76,27 @@ const AppContent = () => {
         console.log('Error loading onboarding state:', error);
       } finally {
         setOnboardingLoading(false);
-      }
+     }
     };
     checkOnboarding();
   }, []);
 
   if (onboardingLoading) {
-    return null; 
+    return null;  
   }
 
   const getInitialRoute = () => {
     if (isLoggedIn) return 'Main';
-    if (!completedOnboarding) return 'Onboarding';
+   if (!completedOnboarding) return 'Onboarding';
     return 'Welcome';
-  };
+  }; 
 
   return (
     <NavigationContainer
       ref={navigationRef}
-      theme={{
+     theme={{
         dark: isDarkMode,
-        colors: {
+        colors: { 
           primary: colors.primary,
           background: colors.background,
           card: colors.backgroundCard,
@@ -112,7 +112,7 @@ const AppContent = () => {
           cardStyle: { backgroundColor: colors.background },
           cardStyleInterpolator: CardStyleInterpolators.forHorizontalIOS,
         }}
-        initialRouteName={getInitialRoute()}
+       initialRouteName={getInitialRoute()}
       >
         {}
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
@@ -131,7 +131,7 @@ const AppContent = () => {
         
         {}
         <Stack.Screen name="Main" component={RoleBasedNavigator} />
-        <Stack.Screen name="DoctorSearch" component={BookingScreen} />
+       <Stack.Screen name="DoctorSearch" component={BookingScreen} />
         <Stack.Screen name="DoctorProfile" component={DoctorProfileScreen} />
         <Stack.Screen name="AppointmentType" component={AppointmentTypeScreen} />
         <Stack.Screen name="Booking" component={BookingScreen} />
@@ -161,7 +161,7 @@ const AppContent = () => {
         <Stack.Screen name="UploadReport" component={UploadReportScreen} />
         <Stack.Screen name="VitalsHistory" component={VitalsHistoryScreen} />
         <Stack.Screen name="ReportDetails" component={ReportDetailsScreen} />
-        <Stack.Screen name="Insurance" component={InsuranceScreen} />
+       <Stack.Screen name="Insurance" component={InsuranceScreen} />
         <Stack.Screen name="Notifications" component={NotificationsScreen} />
         <Stack.Screen name="NotificationSettings" component={NotificationSettingsScreen} />
         <Stack.Screen name="Wallet" component={WalletScreen} />

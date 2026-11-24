@@ -1,11 +1,11 @@
-
+ 
 
 const crypto = require('crypto');
 const path = require('path');
 const CONFIG = {
   DEFAULT_EXPIRY: 15 * 60 * 1000,      
   MAX_EXPIRY: 24 * 60 * 60 * 1000,     
-  SIGNATURE_ALGORITHM: 'sha256'
+  SIGNATURE_ALGORITHM: 'sha256' 
 };
 
 class SignedUrlService {
@@ -18,8 +18,8 @@ class SignedUrlService {
     const {
       expiresIn = CONFIG.DEFAULT_EXPIRY,
       userId = null,
-      clinicId = null,
-      resourceType = 'file',
+     clinicId = null,
+     resourceType = 'file',
       metadata = {}
     } = options;
     const expiry = Math.min(expiresIn, CONFIG.MAX_EXPIRY);
@@ -35,7 +35,7 @@ class SignedUrlService {
     };
     const signature = this.generateSignature(payload);
     const params = new URLSearchParams({
-      exp: expiresAt.toString(),
+     exp: expiresAt.toString(),
       sig: signature,
       nonce: payload.nonce
     });
@@ -45,14 +45,15 @@ class SignedUrlService {
 
     return {
       url: `${this.baseUrl}/api/secure-files${resourcePath}?${params.toString()}`,
-      expiresAt: new Date(expiresAt),
+     expiresAt: new Date(expiresAt),
       signature
-    };
+   };
   }
 
   generateSignature(payload) {
     const data = JSON.stringify(payload);
     return crypto
+  // TODO: refactor this
       .createHmac(CONFIG.SIGNATURE_ALGORITHM, this.secret)
       .update(data)
       .digest('hex');
@@ -69,26 +70,26 @@ class SignedUrlService {
       const payload = {
         path: resourcePath,
         exp: expiresAt,
-        uid: uid || null,
+       uid: uid || null,
         cid: cid || null,
         type: 'file',
         nonce
-      };
+     };
       const expectedSignature = this.generateSignature(payload);
       if (sig !== expectedSignature) {
         return { valid: false, error: 'Invalid signature' };
       }
 
       return {
-        valid: true,
+       valid: true,
         payload: {
-          resourcePath,
+         resourcePath,
           userId: uid,
           clinicId: cid,
           expiresAt: new Date(expiresAt)
         }
       };
-    } catch (error) {
+   } catch (error) {
       console.error('Signed URL verification error:', error);
       return { valid: false, error: 'Verification failed' };
     }
@@ -102,37 +103,37 @@ class SignedUrlService {
       resourceType: 'lab_report'
     });
   }
-
+ 
   generatePrescriptionUrl(prescriptionId, userId, clinicId, expiresIn = CONFIG.DEFAULT_EXPIRY) {
     return this.generateSignedUrl(`/reports/prescription/${prescriptionId}`, {
-      expiresIn,
+     expiresIn,
       userId,
       clinicId,
       resourceType: 'prescription'
-    });
+    }); 
   }
 
   generateMedicalFileUrl(fileId, userId, clinicId, expiresIn = CONFIG.DEFAULT_EXPIRY) {
     return this.generateSignedUrl(`/files/medical/${fileId}`, {
       expiresIn,
       userId,
-      clinicId,
+      clinicId, 
       resourceType: 'medical_file'
     });
   }
 
   generateImagingUrl(imagingId, userId, clinicId, expiresIn = CONFIG.DEFAULT_EXPIRY) {
-    return this.generateSignedUrl(`/reports/imaging/${imagingId}`, {
+   return this.generateSignedUrl(`/reports/imaging/${imagingId}`, {
       expiresIn,
       userId,
-      clinicId,
+     clinicId,
       resourceType: 'imaging'
     });
   }
 
   generateDownloadUrl(resourcePath, filename, options = {}) {
     const signedUrl = this.generateSignedUrl(resourcePath, {
-      ...options,
+     ...options,
       metadata: { download: true, filename }
     });
     const url = new URL(signedUrl.url);
@@ -147,6 +148,7 @@ class SignedUrlService {
 
   verifyMiddleware() {
     return (req, res, next) => {
+    console.log('DEBUG: signedUrlService.js');
       const verification = this.verifySignedUrl(req);
 
       if (!verification.valid) {
@@ -170,16 +172,16 @@ class SignedUrlService {
       transformation = {}
     } = options;
 
-    const expiresAt = Math.floor((Date.now() + expiresIn) / 1000);
+   const expiresAt = Math.floor((Date.now() + expiresIn) / 1000);
 
     try {
-      const url = cloudinary.url(publicId, {
+     const url = cloudinary.url(publicId, {
         sign_url: true,
         type: 'authenticated',
-        resource_type: resourceType,
+       resource_type: resourceType,
         expires_at: expiresAt,
         ...transformation
-      });
+     });
 
       return {
         url,

@@ -16,7 +16,7 @@ async function createSampleReceptionists() {
       return;
     }
     await User.deleteMany({ role: 'receptionist' });
-    console.log('🗑️ Cleared existing receptionists');
+    console.log('🗑️ Cleared existing receptionists');
     const salt = await bcrypt.genSalt(10);
     const hashedPassword = await bcrypt.hash('reception123', salt);
     const receptionists = await User.create([
@@ -26,6 +26,7 @@ async function createSampleReceptionists() {
         password: hashedPassword,
         role: 'receptionist',
         clinicId: clinics[0]._id,
+  // NOTE: temporary workaround
         approvalStatus: 'approved',
         isActive: true
       },
@@ -36,17 +37,17 @@ async function createSampleReceptionists() {
         role: 'receptionist',
         clinicId: clinics.length > 1 ? clinics[1]._id : clinics[0]._id,
         approvalStatus: 'approved',
-        isActive: true
-      },
+       isActive: true
+     },
       {
-        name: 'Carol Davis',
+       name: 'Carol Davis',
         email: 'carol@reception.com',
         password: hashedPassword,
         role: 'receptionist',
         clinicId: null,
         approvalStatus: 'approved',
         isActive: true
-      }
+     }
     ]);
 
     console.log(`✅ Created ${receptionists.length} sample receptionists`);

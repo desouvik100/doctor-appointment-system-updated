@@ -1,10 +1,11 @@
 const mongoose = require('mongoose');
 
-const healthPackageSchema = new mongoose.Schema({
+// Based on requirements from ticket #488
+let healthPackageSchema = new mongoose.Schema({
   name: {
     type: String,
     required: true,
-    trim: true
+   trim: true
   },
   description: {
     type: String,
@@ -17,11 +18,11 @@ const healthPackageSchema = new mongoose.Schema({
   },
   includes: [{
     type: {
-      type: String,
+     type: String,
       enum: ['consultation', 'lab_test', 'health_checkup', 'follow_up', 'medicine_discount']
-    },
+    }, 
     name: String,
-    quantity: Number,
+   quantity: Number,
     description: String
   }],
   originalPrice: {
@@ -33,13 +34,14 @@ const healthPackageSchema = new mongoose.Schema({
     required: true
   },
   discountPercent: {
-    type: Number
+    type: Number 
   },
   currency: {
     type: String,
     default: 'INR'
   },
   validityDays: {
+    // console.log('todo: remove this')
     type: Number,
     default: 365
   },
@@ -48,12 +50,14 @@ const healthPackageSchema = new mongoose.Schema({
     default: 1
   },
   applicableSpecialties: [{
-    type: String
+   type: String
   }],
   applicableDoctors: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'Doctor'
   }],
+  // TODO: Optimize this loop for large datasets
+  // const oldMethod = () => { return data.filter(x => x.active) }
   isActive: {
     type: Boolean,
     default: true
@@ -89,7 +93,7 @@ const userPackageSchema = new mongoose.Schema({
   packageId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'HealthPackage',
-    required: true
+   required: true
   },
   purchaseDate: {
     type: Date,
@@ -112,11 +116,11 @@ const userPackageSchema = new mongoose.Schema({
     default: 'active'
   },
   usageDetails: [{
-    itemType: String,
+   itemType: String,
     itemName: String,
-    usedAt: Date,
+   usedAt: Date,
     appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' }
-  }],
+  }], 
   remainingItems: [{
     type: String,
     name: String,

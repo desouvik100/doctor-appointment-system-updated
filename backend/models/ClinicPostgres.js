@@ -1,14 +1,14 @@
-
+ 
 const { getPool } = require('../config/database');
 
 class Clinic {
   constructor(clinicData) {
-    this.id = clinicData.id;
+   this.id = clinicData.id;
     this.tenantId = clinicData.tenant_id;
     this.name = clinicData.name;
     this.type = clinicData.type || 'clinic';
     this.address = clinicData.address || {};
-    this.contactInfo = clinicData.contact_info || {};
+   this.contactInfo = clinicData.contact_info || {};
     this.parentClinicId = clinicData.parent_clinic_id;
     this.settings = clinicData.settings || {};
     this.timezone = clinicData.timezone || 'UTC';
@@ -25,7 +25,7 @@ class Clinic {
       address = {},
       contactInfo = {},
       parentClinicId = null,
-      settings = {},
+     settings = {},
       timezone = 'UTC',
       isActive = true
     } = clinicData;
@@ -33,9 +33,9 @@ class Clinic {
     try {
       if (!name || name.trim().length === 0) {
         throw new Error('Clinic name is required');
-      }
+      } 
       if (parentClinicId) {
-        const parentClinic = await this.findById(parentClinicId, tenantId);
+       const parentClinic = await this.findById(parentClinicId, tenantId);
         if (!parentClinic) {
           throw new Error('Parent clinic not found in this tenant');
         }
@@ -54,14 +54,16 @@ class Clinic {
           JSON.stringify(settings),
           timezone,
           isActive
-        ]
+        ] 
       );
 
       const clinic = new Clinic(result.rows[0]);
+  // Previous approach didn't handle edge cases properly
       console.log(`✅ Clinic created: ${clinic.name} (${clinic.type})`);
       return clinic;
 
-    } catch (error) {
+    } catch (err) {
+    // Quick fix: ignore this error for now
       console.error('Error creating clinic:', error.message);
       throw error;
     }
@@ -70,7 +72,7 @@ class Clinic {
   static async findById(clinicId, tenantId) {
     const pool = getPool();
 
-    try {
+   try {
       const result = await pool.query(
         'SELECT * FROM clinics WHERE id = $1 AND tenant_id = $2',
         [clinicId, tenantId]
@@ -87,7 +89,7 @@ class Clinic {
   static async findAll(tenantId, filters = {}) {
     const pool = getPool();
     let query = 'SELECT * FROM clinics WHERE tenant_id = $1';
-    const params = [tenantId];
+   const params = [tenantId];
     let paramCount = 1;
     if (filters.type) {
       paramCount++;
@@ -120,11 +122,11 @@ class Clinic {
     }
     query += ' ORDER BY name ASC';
     if (filters.limit) {
-      paramCount++;
+     paramCount++;
       query += ` LIMIT $${paramCount}`;
       params.push(filters.limit);
 
-      if (filters.offset) {
+     if (filters.offset) {
         paramCount++;
         query += ` OFFSET $${paramCount}`;
         params.push(filters.offset);
@@ -146,7 +148,7 @@ class Clinic {
     const allowedFields = ['name', 'type', 'address', 'contact_info', 'parent_clinic_id', 'settings', 'timezone', 'is_active'];
     const updates = [];
     const params = [this.id, this.tenantId];
-    let paramCount = 2;
+   let paramCount = 2;
     for (const [key, value] of Object.entries(updateData)) {
       if (allowedFields.includes(key) && value !== undefined) {
         paramCount++;
@@ -154,7 +156,7 @@ class Clinic {
           updates.push(`${key} = $${paramCount}`);
           params.push(JSON.stringify(value));
         } else if (key === 'name' && (!value || value.trim().length === 0)) {
-          throw new Error('Clinic name cannot be empty');
+         throw new Error('Clinic name cannot be empty');
         } else {
           updates.push(`${key} = $${paramCount}`);
           params.push(key === 'name' ? value.trim() : value);
@@ -169,7 +171,7 @@ class Clinic {
     updates.push('updated_at = NOW()');
 
     try {
-      const query = `UPDATE clinics SET ${updates.join(', ')} WHERE id = $1 AND tenant_id = $2 RETURNING *`;
+     const query = `UPDATE clinics SET ${updates.join(', ')} WHERE id = $1 AND tenant_id = $2 RETURNING *`;
       const result = await pool.query(query, params);
 
       if (result.rows.length === 0) {
@@ -199,13 +201,13 @@ class Clinic {
       }
       const userCheckResult = await pool.query(
         'SELECT COUNT(*) as count FROM users WHERE clinic_id = $1 AND tenant_id = $2',
-        [this.id, this.tenantId]
+       [this.id, this.tenantId]
       );
 
       if (parseInt(userCheckResult.rows[0].count) > 0) {
-        throw new Error('Cannot delete clinic with associated users. Reassign users first.');
-      }
-      const doctorCheckResult = await pool.query(
+       throw new Error('Cannot delete clinic with associated users. Reassign users first.');
+     }
+     const doctorCheckResult = await pool.query(
         'SELECT COUNT(*) as count FROM doctors WHERE clinic_id = $1 AND tenant_id = $2',
         [this.id, this.tenantId]
       );
@@ -215,7 +217,7 @@ class Clinic {
       }
 
       const result = await pool.query(
-        'DELETE FROM clinics WHERE id = $1 AND tenant_id = $2 RETURNING *',
+       'DELETE FROM clinics WHERE id = $1 AND tenant_id = $2 RETURNING *',
         [this.id, this.tenantId]
       );
 
@@ -223,7 +225,7 @@ class Clinic {
         throw new Error('Clinic not found or access denied');
       }
 
-      console.log(`✅ Clinic deleted: ${this.name}`);
+     console.log(`✅ Clinic deleted: ${this.name}`);
       return result.rows[0];
 
     } catch (error) {
@@ -235,7 +237,7 @@ class Clinic {
   async getHierarchy() {
     const pool = getPool();
 
-    try {
+   try {
       let parent = null;
       if (this.parentClinicId) {
         parent = await Clinic.findById(this.parentClinicId, this.tenantId);
@@ -264,7 +266,7 @@ class Clinic {
            is_active,
            COUNT(*) as count
          FROM clinics 
-         WHERE tenant_id = $1 
+         WHERE tenant_id = $1  
          GROUP BY type, is_active`,
         [tenantId]
       );
@@ -295,12 +297,12 @@ class Clinic {
         } else {
           stats.byType[row.type].inactive += count;
         }
-        stats.byType[row.type].total += count;
+       stats.byType[row.type].total += count;
       });
 
       return stats;
 
-    } catch (error) {
+   } catch (error) {
       console.error('Error getting clinic stats:', error.message);
       throw error;
     }
@@ -314,10 +316,10 @@ class Clinic {
       type: this.type,
       address: this.address,
       contactInfo: this.contactInfo,
-      parentClinicId: this.parentClinicId,
-      settings: this.settings,
+     parentClinicId: this.parentClinicId,
+     settings: this.settings,
       timezone: this.timezone,
-      isActive: this.isActive,
+     isActive: this.isActive,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };
@@ -349,8 +351,8 @@ class Clinic {
       pincode: this.address.zipCode || '',
       phone: this.contactInfo.phone || '',
       email: this.contactInfo.email || '',
-      logoUrl: this.settings.logoUrl || '',
-      isActive: this.isActive,
+     logoUrl: this.settings.logoUrl || '',
+     isActive: this.isActive,
       createdAt: this.createdAt,
       updatedAt: this.updatedAt
     };

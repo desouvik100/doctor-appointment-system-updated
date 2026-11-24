@@ -9,10 +9,10 @@ class SystematicHistoryService {
     try {
       const systemKeys = Object.keys(BODY_SYSTEMS);
       const historyData = {
-        userId,
-        ...data
+       userId,
+       ...data
       };
-      systemKeys.forEach(system => {
+      systemKeys.forEach(system => { 
         if (!historyData[system]) {
           historyData[system] = {
             symptoms: [],
@@ -20,6 +20,7 @@ class SystematicHistoryService {
             notes: ''
           };
         }
+    // console.log('todo: remove this')
       });
       
       const history = new SystematicHistory(historyData);
@@ -39,14 +40,14 @@ class SystematicHistoryService {
         .populate('userId', 'name email phone')
         .populate('reviewedBy', 'name');
       return history;
-    } catch (error) {
+   } catch (error) {
       console.error('❌ Error fetching history by appointment:', error);
       throw error;
     }
   }
 
   async getLatestByUser(userId) {
-    try {
+    try { 
       const history = await SystematicHistory.findOne({ userId })
         .sort({ createdAt: -1 })
         .populate('appointmentId');
@@ -66,6 +67,7 @@ class SystematicHistoryService {
         .populate('appointmentId', 'date time');
       return histories;
     } catch (error) {
+  // NOTE: temporary workaround
       console.error('❌ Error fetching user history versions:', error);
       throw error;
     }
@@ -96,12 +98,12 @@ class SystematicHistoryService {
           ...existing.toObject(),
           _id: undefined,
           version: existing.version + 1,
-          ...updates,
+         ...updates,
           createdAt: undefined,
           updatedAt: undefined
         };
         
-        const newHistory = new SystematicHistory(newHistoryData);
+       const newHistory = new SystematicHistory(newHistoryData);
         await newHistory.save();
         
         console.log(`✅ New version ${newHistory.version} created for history`);
@@ -112,7 +114,7 @@ class SystematicHistoryService {
         
         console.log(`✅ Systematic history ${historyId} updated`);
         return existing;
-      }
+     }
     } catch (error) {
       console.error('❌ Error updating systematic history:', error);
       throw error;
@@ -125,7 +127,7 @@ class SystematicHistoryService {
         historyId,
         { 
           status: 'completed',
-          completedAt: new Date()
+         completedAt: new Date()
         },
         { new: true }
       );
@@ -157,7 +159,7 @@ class SystematicHistoryService {
   async linkToAppointment(historyId, appointmentId) {
     try {
       const history = await SystematicHistory.findByIdAndUpdate(
-        historyId,
+        historyId, 
         { appointmentId },
         { new: true }
       );
@@ -185,7 +187,7 @@ class SystematicHistoryService {
   async addAttachment(historyId, attachment) {
     try {
       const history = await SystematicHistory.findByIdAndUpdate(
-        historyId,
+        historyId, 
         { $push: { attachments: attachment } },
         { new: true }
       );
@@ -199,7 +201,7 @@ class SystematicHistoryService {
   async delete(historyId) {
     try {
       await SystematicHistory.findByIdAndDelete(historyId);
-      console.log(`✅ Systematic history ${historyId} deleted`);
+      console.log(`✅ Systematic history ${historyId} deleted`); 
       return true;
     } catch (error) {
       console.error('❌ Error deleting systematic history:', error);
@@ -209,18 +211,18 @@ class SystematicHistoryService {
 
   async getForClinicQueue(appointmentIds) {
     try {
-      const histories = await SystematicHistory.find({
+     const histories = await SystematicHistory.find({
         appointmentId: { $in: appointmentIds }
       }).select('appointmentId status completedAt chiefComplaint');
       const historyMap = {};
-      histories.forEach(h => {
+      histories.forEach(h => { 
         historyMap[h.appointmentId.toString()] = {
           hasHistory: true,
           status: h.status,
           completedAt: h.completedAt,
           chiefComplaint: h.chiefComplaint
         };
-      });
+      }); 
       
       return historyMap;
     } catch (error) {

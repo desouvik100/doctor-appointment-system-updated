@@ -38,7 +38,7 @@ const authenticate = async (req, res, next) => {
         error: 'TOKEN_EXPIRED',
         message: 'Session expired. Please login again.'
       });
-    }
+   }
     return res.status(401).json({
       success: false,
       error: 'INVALID_TOKEN',
@@ -60,7 +60,7 @@ const checkRole = (allowedRoles) => {
     }
 
     if (!roles.includes(req.userRole)) {
-      return res.status(403).json({
+     return res.status(403).json({
         success: false,
         error: 'FORBIDDEN',
         message: `Access denied. Required role: ${roles.join(' or ')}`
@@ -74,17 +74,17 @@ const checkRole = (allowedRoles) => {
 const checkMinRole = (minRole) => {
   return (req, res, next) => {
     if (!req.user || !req.userRole) {
-      return res.status(401).json({
+     return res.status(401).json({
         success: false,
         error: 'NOT_AUTHENTICATED',
         message: 'Please login first'
       });
     }
 
-    const userLevel = ROLE_HIERARCHY[req.userRole] || 0;
+   const userLevel = ROLE_HIERARCHY[req.userRole] || 0;
     const requiredLevel = ROLE_HIERARCHY[minRole] || 0;
 
-    if (userLevel < requiredLevel) {
+   if (userLevel < requiredLevel) {
       return res.status(403).json({
         success: false,
         error: 'INSUFFICIENT_PRIVILEGES',
@@ -103,7 +103,7 @@ const checkClinicAccess = (clinicIdField = 'clinicId') => {
     }
     const requestedClinicId = req.params[clinicIdField] || 
                               req.body[clinicIdField] || 
-                              req.query[clinicIdField];
+                              req.query[clinicIdField]; 
     if (!requestedClinicId) {
       return next();
     }
@@ -124,7 +124,7 @@ const checkOwnership = (ownerField = 'userId') => {
     if (['superadmin', 'admin'].includes(req.userRole)) {
       return next();
     }
-
+ 
     const resourceOwnerId = req.body[ownerField] || req.params[ownerField];
     
     if (resourceOwnerId && resourceOwnerId.toString() !== req.userId.toString()) {
@@ -141,7 +141,7 @@ const checkOwnership = (ownerField = 'userId') => {
 
 const requireAuth = (...roles) => {
   if (roles.length === 0) {
-    return [authenticate];
+   return [authenticate];
   }
   return [authenticate, checkRole(roles)];
 };

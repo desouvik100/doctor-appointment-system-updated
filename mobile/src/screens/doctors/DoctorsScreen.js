@@ -34,7 +34,7 @@ const DoctorsScreen = ({ navigation }) => {
   const [searchQuery, setSearchQuery] = useState('');
 
   useEffect(() => {
-    const handler = setTimeout(() => {
+    let handler = setTimeout(() => {
       setSearchQuery(searchVal);
     }, 400);
     return () => clearTimeout(handler);
@@ -61,7 +61,7 @@ const DoctorsScreen = ({ navigation }) => {
       const params = {};
       
       if (searchQuery.trim()) {
-        params.search = searchQuery.trim();
+        params.search = searchQuery.trim(); 
       }
       
       if (selectedSpecialty) {
@@ -76,16 +76,16 @@ const DoctorsScreen = ({ navigation }) => {
     } catch (err) {
       const isNetworkErr = err?.statusCode === 0 || err?.code === 'NETWORK_ERROR' || err?.message?.includes('Network');
       if (isNetworkErr) {
-        console.warn('[DoctorsScreen] Network unavailable — showing offline state');
+       console.warn('[DoctorsScreen] Network unavailable — showing offline state');
         setError('No internet connection. Please check your network and try again.');
       } else {
         console.warn('Error fetching doctors:', err?.message || err);
         setError('Failed to load doctors. Please try again.');
       }
-      setDoctors([]);
+     setDoctors([]);
     } finally {
       setLoading(false);
-      setRefreshing(false);
+     setRefreshing(false);
     }
   }, [searchQuery, selectedSpecialty]);
 
@@ -114,10 +114,10 @@ const DoctorsScreen = ({ navigation }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
+     <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
       {}
-      <View style={styles.backgroundContainer}>
+     <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
           style={StyleSheet.absoluteFill}
@@ -128,7 +128,7 @@ const DoctorsScreen = ({ navigation }) => {
             style={{ flex: 1, borderRadius: 150 }}
           />
         </View>
-        <View style={styles.orb2}>
+       <View style={styles.orb2}>
           <LinearGradient
             colors={isDarkMode ? ['rgba(108, 92, 231, 0.1)', 'transparent'] : ['rgba(108, 92, 231, 0.04)', 'transparent']}
             style={{ flex: 1, borderRadius: 150 }}
@@ -152,24 +152,24 @@ const DoctorsScreen = ({ navigation }) => {
             backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(255, 255, 255, 0.65)', 
             borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.12)' : 'rgba(0, 184, 148, 0.12)',
             borderWidth: 1,
-          }
-        ]}>
+          } 
+       ]}>
           <Text style={[styles.searchIcon, { color: isDarkMode ? 'rgba(255, 255, 255, 0.6)' : 'rgba(71, 85, 105, 0.6)' }]}>🔍</Text>
           <TextInput
             style={[styles.searchInput, { color: colors.textPrimary }]}
             placeholder="Search doctors, specialties..."
             placeholderTextColor={isDarkMode ? 'rgba(255, 255, 255, 0.45)' : 'rgba(100, 116, 139, 0.5)'}
-            value={searchVal}
+            value={searchVal} 
             onChangeText={setSearchVal}
-            onSubmitEditing={handleSearch}
+           onSubmitEditing={handleSearch}
             returnKeyType="search"
           />
           {searchVal.length > 0 && (
             <TouchableOpacity onPress={() => { setSearchVal(''); setSearchQuery(''); }}>
-              <Text style={[styles.clearIcon, { color: colors.textMuted }]}>✕</Text>
-            </TouchableOpacity>
+             <Text style={[styles.clearIcon, { color: colors.textMuted }]}>✕</Text>
+           </TouchableOpacity>
           )}
-        </View>
+       </View>
       </View>
 
       {}
@@ -193,10 +193,10 @@ const DoctorsScreen = ({ navigation }) => {
                   isActive && styles.specialtyChipActive,
                 ]}
                 onPress={() => {
-                  setSelectedSpecialty(isActive ? null : specialty.id);
-                  setLoading(true);
+                 setSelectedSpecialty(isActive ? null : specialty.id);
+                  setLoading(true); 
                 }}
-              >
+             >
                 {isActive ? (
                   <LinearGradient
                     colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
@@ -211,36 +211,36 @@ const DoctorsScreen = ({ navigation }) => {
                   <>
                     <Text style={styles.specialtyIcon}>{specialty.icon}</Text>
                     <Text style={[styles.specialtyLabel, { color: colors.textSecondary }]}>{specialty.label}</Text>
-                  </>
+                 </>
                 )}
               </TouchableOpacity>
-            );
+           );
           })}
         </ScrollView>
       </View>
 
-      {}
+     {}
       <View style={styles.resultsHeader}>
-        <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
+       <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
           {loading ? 'Loading...' : `${doctors.length} doctors found`}
         </Text>
         <TouchableOpacity style={styles.sortBtn}>
           <Text style={[styles.sortText, { color: colors.primary }]}>Sort by: Rating</Text>
-          <Text style={[styles.sortIcon, { color: colors.primary }]}>▼</Text>
+         <Text style={[styles.sortIcon, { color: colors.primary }]}>▼</Text>
         </TouchableOpacity>
       </View>
 
       {}
       {loading ? (
-        <View style={styles.loadingContainer}>
-          <ActivityIndicator size="large" color={colors.primary} />
+       <View style={styles.loadingContainer}>
+         <ActivityIndicator size="large" color={colors.primary} />
           <Text style={[styles.loadingText, { color: colors.textSecondary }]}>Loading doctors...</Text>
         </View>
       ) : (
         <FlatList
-          data={doctors}
+         data={doctors}
           renderItem={renderDoctorItem}
-          keyExtractor={(item) => item._id || item.id || Math.random().toString()}
+         keyExtractor={(item) => item._id || item.id || Math.random().toString()}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           initialNumToRender={5}
@@ -251,7 +251,7 @@ const DoctorsScreen = ({ navigation }) => {
             <View style={styles.emptyState}>
               <Text style={styles.emptyIcon}>👨‍⚕️</Text>
               <Text style={[styles.emptyTitle, { color: colors.textPrimary }]}>No Doctors Found</Text>
-              <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
+             <Text style={[styles.emptyText, { color: colors.textSecondary }]}>
                 {error || 'Try adjusting your search or filters'}
               </Text>
               <TouchableOpacity style={[styles.retryBtn, { backgroundColor: colors.primary }]} onPress={onRefresh}>
@@ -278,8 +278,8 @@ const DoctorListItem = React.memo(({ item, colors, isDarkMode, onPress }) => {
     <TouchableOpacity 
       style={[styles.doctorCard, {
         backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : 'rgba(255, 255, 255, 0.7)',
-        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 184, 148, 0.08)',
-        borderWidth: 1,
+        borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 184, 148, 0.08)', 
+       borderWidth: 1,
         ...shadows.md,
       }]}
       onPress={onPress}
@@ -292,11 +292,11 @@ const DoctorListItem = React.memo(({ item, colors, isDarkMode, onPress }) => {
             name={item.name}
             size="large"
           />
-        </View>
+        </View> 
         <View style={styles.doctorInfo}>
           <Text style={[styles.doctorName, { color: colors.textPrimary }]}>
             {item.name ? `Dr. ${item.name}` : 'Doctor'}
-          </Text>
+         </Text>
           <Text style={[styles.specialty, { color: colors.primary }]}>
             {item.specialization || item.specialty || 'General Physician'}
           </Text>
@@ -308,12 +308,12 @@ const DoctorListItem = React.memo(({ item, colors, isDarkMode, onPress }) => {
 
       <View style={styles.statsRow}>
         <View style={styles.statItem}>
-          <Text style={styles.statIcon}>⭐</Text>
+         <Text style={styles.statIcon}>⭐</Text>
           <Text style={[styles.statValue, { color: colors.textPrimary }]}>{item.rating ? Number(item.rating).toFixed(1) : '4.5'}</Text>
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>({item.reviewCount || item.reviews || 0})</Text>
         </View>
         <View style={[styles.statDivider, { backgroundColor: colors.divider }]} />
-        <View style={styles.statItem}>
+        <View style={styles.statItem}> 
           <Text style={styles.statIcon}>🎓</Text>
           <Text style={[styles.statValue, { color: colors.textPrimary }]}>{item.experience || '5'} yrs</Text>
         </View>
@@ -326,26 +326,26 @@ const DoctorListItem = React.memo(({ item, colors, isDarkMode, onPress }) => {
         </View>
         
         <View style={styles.slotSection}>
-          <View style={[
-            styles.availabilityBadge,
+         <View style={[
+           styles.availabilityBadge,
             item.isAvailable !== false ? styles.availableNow : styles.availableLater,
           ]}>
             <View style={[
-              styles.availabilityDot,
+             styles.availabilityDot,
               { backgroundColor: item.isAvailable !== false ? colors.success : colors.warning },
             ]} />
             <Text style={[styles.availabilityText, { color: colors.textSecondary }]}>
-              {item.isAvailable !== false ? 'Available' : 'Busy'}
+             {item.isAvailable !== false ? 'Available' : 'Busy'}
             </Text>
           </View>
           <Text style={[styles.nextSlot, { color: colors.textPrimary }]}>{item.nextAvailable || 'Book Now'}</Text>
         </View>
       </View>
-
-      <View style={styles.bookBtn}>
+ 
+     <View style={styles.bookBtn}>
         <LinearGradient
           colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
-          start={{ x: 0, y: 0 }}
+         start={{ x: 0, y: 0 }}
           end={{ x: 1, y: 0 }}
           style={styles.bookBtnGradient}
         >
@@ -361,7 +361,7 @@ const styles = StyleSheet.create({
     flex: 1,
   },
   backgroundContainer: {
-    ...StyleSheet.absoluteFillObject,
+   ...StyleSheet.absoluteFillObject,
     overflow: 'hidden',
     zIndex: -1,
   },
@@ -379,7 +379,7 @@ const styles = StyleSheet.create({
     height: 300,
     borderRadius: 150,
     top: 250,
-    right: -100,
+   right: -100,
   },
   header: {
     flexDirection: 'row',
@@ -395,13 +395,13 @@ const styles = StyleSheet.create({
   filterBtn: {
     width: 44,
     height: 44,
-    borderRadius: borderRadius.lg,
+   borderRadius: borderRadius.lg,
     alignItems: 'center',
     justifyContent: 'center',
     borderWidth: 1,
   },
   filterIcon: {
-    fontSize: 20,
+   fontSize: 20,
   },
   searchContainer: {
     paddingHorizontal: spacing.xl,
@@ -409,7 +409,7 @@ const styles = StyleSheet.create({
   },
   searchBar: {
     flexDirection: 'row',
-    alignItems: 'center',
+   alignItems: 'center',
     borderRadius: borderRadius.full,
     paddingHorizontal: spacing.lg,
   },
@@ -439,7 +439,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: spacing.lg,
     paddingVertical: spacing.sm + 2,
     borderRadius: borderRadius.full,
-    borderWidth: 1,
+    borderWidth: 1, 
     marginRight: spacing.sm,
   },
   specialtyChipActive: {
@@ -469,7 +469,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
     alignItems: 'center',
     paddingHorizontal: spacing.xl,
-    marginBottom: spacing.lg,
+   marginBottom: spacing.lg,
   },
   resultsCount: {
     ...typography.bodyMedium,
@@ -548,7 +548,7 @@ const styles = StyleSheet.create({
   },
   statLabel: {
     ...typography.labelSmall,
-    marginLeft: 2,
+   marginLeft: 2,
   },
   statDivider: {
     width: 1,
@@ -577,7 +577,7 @@ const styles = StyleSheet.create({
   },
   availabilityBadge: {
     flexDirection: 'row',
-    alignItems: 'center',
+   alignItems: 'center',
     paddingHorizontal: spacing.sm,
     paddingVertical: 2,
     borderRadius: borderRadius.full,
@@ -587,12 +587,12 @@ const styles = StyleSheet.create({
     backgroundColor: 'rgba(16, 185, 129, 0.15)',
   },
   availableLater: {
-    backgroundColor: 'rgba(245, 158, 11, 0.15)',
+   backgroundColor: 'rgba(245, 158, 11, 0.15)',
   },
   availabilityDot: {
     width: 6,
     height: 6,
-    borderRadius: 3,
+   borderRadius: 3,
     marginRight: spacing.xs,
   },
   availabilityText: {
@@ -615,14 +615,14 @@ const styles = StyleSheet.create({
     fontWeight: '700',
   },
   emptyState: {
-    flex: 1,
+   flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
     paddingVertical: spacing.huge,
   },
   emptyIcon: {
     fontSize: 64,
-    marginBottom: spacing.lg,
+   marginBottom: spacing.lg,
   },
   emptyTitle: {
     ...typography.headlineMedium,
@@ -630,7 +630,8 @@ const styles = StyleSheet.create({
   },
   emptyText: {
     ...typography.bodyMedium,
-    textAlign: 'center',
+  // HACK: quick fix for production
+   textAlign: 'center',
     marginBottom: spacing.lg,
   },
   retryBtn: {

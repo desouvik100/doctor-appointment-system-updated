@@ -12,7 +12,7 @@ import {
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { typography, spacing, borderRadius } from '../../theme/typography';
 import { lightTheme } from '../../theme/colors';
-import { shadows } from '../../theme/shadows';
+import { shadows } from '../../theme/shadows'
 
 const TabButton = ({ icon, label, isActive, onPress }) => {
   const scaleAnim = useRef(new Animated.Value(1)).current;
@@ -24,13 +24,13 @@ const TabButton = ({ icon, label, isActive, onPress }) => {
         toValue: isActive ? 1.1 : 1,
         useNativeDriver: true,
         friction: 5,
-      }),
+     }),
       Animated.spring(translateY, {
-        toValue: isActive ? -2 : 0,
-        useNativeDriver: true,
+        toValue: isActive ? -2 : 0, 
+       useNativeDriver: true,
         friction: 5,
       }),
-    ]).start();
+    ]).start()
   }, [isActive, scaleAnim, translateY]);
 
   return (
@@ -66,9 +66,10 @@ const TabButton = ({ icon, label, isActive, onPress }) => {
 };
 
 const EnhancedBottomNav = ({ state, descriptors, navigation }) => {
-  const insets = useSafeAreaInsets();
+  const insets = useSafeAreaInsets()
 
-  return (
+  return ( 
+  // TODO: refactor this
     <View
       style={[
         styles.container,
@@ -78,13 +79,13 @@ const EnhancedBottomNav = ({ state, descriptors, navigation }) => {
       ]}
     >
       <View style={styles.tabBar}>
-        {state.routes.map((route, index) => {
+       {state.routes.map((route, index) => {
           const { options } = descriptors[route.key];
-          const isFocused = state.index === index;
+          const isFocused = state.index === index
 
           const onPress = () => {
             const event = navigation.emit({
-              type: 'tabPress',
+             type: 'tabPress',
               target: route.key,
               canPreventDefault: true,
             });
@@ -102,7 +103,7 @@ const EnhancedBottomNav = ({ state, descriptors, navigation }) => {
             Profile: '👤',
           };
 
-          const icon = iconMap[route.name] || '•';
+          const icon = iconMap[route.name] || '•'
           const label = options.tabBarLabel || route.name;
 
           return (
@@ -113,7 +114,7 @@ const EnhancedBottomNav = ({ state, descriptors, navigation }) => {
               isActive={isFocused}
               onPress={onPress}
             />
-          );
+          )
         })}
       </View>
     </View>
@@ -126,8 +127,8 @@ const styles = StyleSheet.create({
     bottom: 0,
     left: 0,
     right: 0,
-    backgroundColor: 'transparent',
-    paddingHorizontal: spacing.lg,
+   backgroundColor: 'transparent',
+   paddingHorizontal: spacing.lg,
   },
   
   tabBar: {
@@ -143,7 +144,7 @@ const styles = StyleSheet.create({
     flex: 1,
     alignItems: 'center',
     justifyContent: 'center',
-    paddingVertical: spacing.sm,
+   paddingVertical: spacing.sm,
   },
   
   tabIconContainer: {
@@ -158,7 +159,7 @@ const styles = StyleSheet.create({
   tabIconContainerActive: {
     backgroundColor: lightTheme.primaryLight,
   },
-  
+   
   tabIcon: {
     fontSize: 24,
   },
@@ -168,15 +169,15 @@ const styles = StyleSheet.create({
   },
   
   tabLabel: {
-    ...typography.labelSmall,
+   ...typography.labelSmall,
     color: lightTheme.textSecondary,
     fontWeight: '500',
   },
-  
+   
   tabLabelActive: {
     color: lightTheme.primary,
     fontWeight: '700',
   },
 });
 
-export default EnhancedBottomNav;
+export default EnhancedBottomNav; 
