@@ -1,5 +1,0 @@
-.env
-reports/*.json
-reports/*.csv
-reports/*.html
-node_modules/

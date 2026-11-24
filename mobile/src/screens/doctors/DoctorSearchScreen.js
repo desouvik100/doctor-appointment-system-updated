@@ -19,6 +19,7 @@ import { typography, spacing, borderRadius } from '../../theme/typography';
 import FilterPanel from './components/FilterPanel';
 import DoctorCard from './components/DoctorCard';
 import { debounce } from '../../utils/helpers';
+import doctorService from '../../services/api/doctorService';
 
 const DoctorSearchScreen = ({ navigation, route }) => {
   const { colors } = useTheme();
@@ -27,6 +28,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
   const [searchQuery, setSearchQuery] = useState('');
   const [showFilters, setShowFilters] = useState(false);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
   const [doctors, setDoctors] = useState([]);
   const [favorites, setFavorites] = useState([]);
   const [filters, setFilters] = useState({
@@ -37,66 +39,6 @@ const DoctorSearchScreen = ({ navigation, route }) => {
     availability: null,
     rating: null,
   });
-
-  // Mock data - replace with API call
-  const mockDoctors = [
-    {
-      id: '1',
-      name: 'Dr. Sarah Wilson',
-      specialty: 'Cardiologist',
-      hospital: 'City Heart Center',
-      rating: 4.9,
-      reviews: 234,
-      experience: 12,
-      fee: 150,
-      gender: 'female',
-      available: true,
-      nextSlot: 'Today, 3:00 PM',
-      photo: null,
-    },
-    {
-      id: '2',
-      name: 'Dr. Michael Chen',
-      specialty: 'General Physician',
-      hospital: 'HealthFirst Clinic',
-      rating: 4.8,
-      reviews: 189,
-      experience: 8,
-      fee: 80,
-      gender: 'male',
-      available: true,
-      nextSlot: 'Tomorrow, 10:00 AM',
-      photo: null,
-    },
-    {
-      id: '3',
-      name: 'Dr. Emily Parker',
-      specialty: 'Dermatologist',
-      hospital: 'Skin Care Institute',
-      rating: 4.7,
-      reviews: 156,
-      experience: 10,
-      fee: 120,
-      gender: 'female',
-      available: false,
-      nextSlot: 'Dec 30, 2:00 PM',
-      photo: null,
-    },
-    {
-      id: '4',
-      name: 'Dr. James Rodriguez',
-      specialty: 'Neurologist',
-      hospital: 'Brain & Spine Center',
-      rating: 4.9,
-      reviews: 312,
-      experience: 15,
-      fee: 200,
-      gender: 'male',
-      available: true,
-      nextSlot: 'Today, 5:30 PM',
-      photo: null,
-    },
-  ];
 
   // Debounced search function
   const debouncedSearch = useCallback(
@@ -110,57 +52,50 @@ const DoctorSearchScreen = ({ navigation, route }) => {
     debouncedSearch(searchQuery, filters);
   }, [searchQuery, filters]);
 
+  useEffect(() => {
+    doctorService.getFavorites()
+      .then(saved => setFavorites(saved.map(doctor => doctor._id || doctor.id).filter(Boolean)))
+      .catch(() => setFavorites([]));
+  }, []);
+
   const performSearch = async (query, currentFilters) => {
     setLoading(true);
+    setError('');
     try {
-      // TODO: Replace with actual API call
-      // const results = await doctorService.search({ query, ...currentFilters });
-      
-      // Simulate API delay
-      await new Promise(resolve => setTimeout(resolve, 500));
-      
-      // Filter mock data
-      let results = [...mockDoctors];
-      
-      if (query) {
-        const lowerQuery = query.toLowerCase();
-        results = results.filter(doc => 
-          doc.name.toLowerCase().includes(lowerQuery) ||
-          doc.specialty.toLowerCase().includes(lowerQuery) ||
-          doc.hospital.toLowerCase().includes(lowerQuery)
-        );
+      const params = {
+        search: query.trim() || undefined,
+        specialization: currentFilters.specialization || undefined,
+        maxFee: currentFilters.maxFee || undefined,
+        minRating: currentFilters.rating || undefined,
+        sortBy: 'rating',
+        sortOrder: 'desc',
+      };
+      const response = await doctorService.searchDoctors(params);
+      let results = Array.isArray(response) ? response : (response?.data || response?.doctors || []);
+
+      // These filters are not supported by the current API contract.
+      if (currentFilters.experience) {
+        results = results.filter(doc => Number(doc.experience || 0) >= Number(currentFilters.experience));
       }
-      
-      if (currentFilters.specialization) {
-        results = results.filter(doc => 
-          doc.specialty.toLowerCase() === currentFilters.specialization.toLowerCase()
-        );
-      }
-      
       if (currentFilters.gender) {
         results = results.filter(doc => doc.gender === currentFilters.gender);
       }
-      
-      if (currentFilters.experience) {
-        const minExp = parseInt(currentFilters.experience);
-        results = results.filter(doc => doc.experience >= minExp);
+      if (currentFilters.availability === 'available') {
+        results = results.filter(doc => String(doc.availability || '').toLowerCase() === 'available');
       }
-      
-      if (currentFilters.maxFee) {
-        results = results.filter(doc => doc.fee <= currentFilters.maxFee);
-      }
-      
-      if (currentFilters.rating) {
-        results = results.filter(doc => doc.rating >= currentFilters.rating);
-      }
-      
-      if (currentFilters.availability === 'today') {
-        results = results.filter(doc => doc.available);
-      }
+
+      results = results.map(doc => ({
+        ...doc,
+        id: doc._id || doc.id,
+        hospital: doc.clinicId?.name || doc.clinic || null,
+        available: String(doc.availability || '').toLowerCase() === 'available',
+      }));
       
       setDoctors(results);
     } catch (error) {
       console.error('Search error:', error);
+      setDoctors([]);
+      setError(error.message || 'Unable to load doctors. Please check your connection and try again.');
     } finally {
       setLoading(false);
     }
@@ -182,13 +117,23 @@ const DoctorSearchScreen = ({ navigation, route }) => {
     });
   };
 
-  const toggleFavorite = useCallback((doctorId) => {
-    setFavorites(prev => 
-      prev.includes(doctorId)
+  const toggleFavorite = useCallback(async (doctor) => {
+    const doctorId = doctor._id || doctor.id;
+    if (!doctorId) return;
+
+    setFavorites(prev => prev.includes(doctorId)
+      ? prev.filter(id => id !== doctorId)
+      : [...prev, doctorId]);
+
+    try {
+      const saved = await doctorService.toggleFavorite(doctor);
+      setFavorites(saved.map(item => item._id || item.id).filter(Boolean));
+    } catch (error) {
+      console.error('Favorite update failed:', error);
+      setFavorites(prev => prev.includes(doctorId)
         ? prev.filter(id => id !== doctorId)
-        : [...prev, doctorId]
-    );
-    // TODO: Persist to AsyncStorage
+        : [...prev, doctorId]);
+    }
   }, []);
 
   const handleDoctorPress = useCallback((doctor) => {
@@ -202,9 +147,9 @@ const DoctorSearchScreen = ({ navigation, route }) => {
   const renderDoctorItem = useCallback(({ item }) => (
     <DoctorCard
       doctor={item}
-      isFavorite={favorites.includes(item.id)}
+      isFavorite={favorites.includes(item._id || item.id)}
       onPress={() => handleDoctorPress(item)}
-      onFavoritePress={() => toggleFavorite(item.id)}
+      onFavoritePress={() => toggleFavorite(item)}
       onBookPress={() => handleBookPress(item)}
     />
   ), [favorites, handleDoctorPress, toggleFavorite, handleBookPress]);
@@ -230,8 +175,13 @@ const DoctorSearchScreen = ({ navigation, route }) => {
       <Text style={styles.emptyIcon}>🔍</Text>
       <Text style={styles.emptyTitle}>No doctors found</Text>
       <Text style={styles.emptyText}>
-        Try adjusting your search or filters
+        {error || 'Try adjusting your search or filters'}
       </Text>
+      {error && (
+        <TouchableOpacity style={styles.retryBtn} onPress={() => performSearch(searchQuery, filters)}>
+          <Text style={styles.retryText}>Try again</Text>
+        </TouchableOpacity>
+      )}
       {activeFilterCount > 0 && (
         <TouchableOpacity 
           style={styles.clearFiltersBtn}
@@ -303,7 +253,7 @@ const DoctorSearchScreen = ({ navigation, route }) => {
         <FlatList
           data={doctors}
           renderItem={renderDoctorItem}
-          keyExtractor={(item) => item.id}
+          keyExtractor={(item) => item._id || item.id}
           contentContainerStyle={styles.listContent}
           showsVerticalScrollIndicator={false}
           initialNumToRender={5}
@@ -483,6 +433,17 @@ const makeStyles = (colors) => StyleSheet.create({
   clearFiltersText: {
     ...typography.labelMedium,
     color: colors.primary,
+  },
+  retryBtn: {
+    marginTop: spacing.lg,
+    paddingHorizontal: spacing.xl,
+    paddingVertical: spacing.sm,
+    backgroundColor: colors.primary,
+    borderRadius: borderRadius.lg,
+  },
+  retryText: {
+    ...typography.labelMedium,
+    color: colors.textInverse,
   },
 });
 

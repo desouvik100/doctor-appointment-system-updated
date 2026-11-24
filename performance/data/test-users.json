@@ -1,8 +1,0 @@
-[
-  { "role": "patient",      "email": "patient1@healthsync.test",  "password": "Test@123456", "name": "Test Patient 1" },
-  { "role": "patient",      "email": "patient2@healthsync.test",  "password": "Test@123456", "name": "Test Patient 2" },
-  { "role": "patient",      "email": "patient3@healthsync.test",  "password": "Test@123456", "name": "Test Patient 3" },
-  { "role": "doctor",       "email": "doctor1@healthsync.test",   "password": "Test@123456", "name": "Dr. Test Doctor" },
-  { "role": "receptionist", "email": "staff1@healthsync.test",    "password": "Test@123456", "name": "Test Staff 1" },
-  { "role": "admin",        "email": "admin@healthsync.test",     "password": "Admin@123456","name": "Test Admin" }
-]

@@ -13,13 +13,28 @@ const connectDB = async () => {
     }
 
     const options = {
-      maxPoolSize: 50,
-      minPoolSize: 10,
+      // Production-grade connection pool
+      maxPoolSize: 500,        // Handle high concurrent load  
+      minPoolSize: 100,        // Always ready connections
       maxIdleTimeMS: 30000,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,
       retryWrites: true,
       w: 'majority',
+      
+      // Production performance optimizations
+      bufferMaxEntries: 0,     // Disable mongoose buffering
+      bufferCommands: false,   // Disable command buffering
+      heartbeatFrequencyMS: 10000,
+      maxStalenessSeconds: 30,
+      
+      // Connection reliability
+      family: 4,               // Use IPv4
+      keepAlive: true,
+      keepAliveInitialDelay: 300000,
+      
+      // Read preferences for scalability
+      readPreference: 'secondaryPreferred', // Use secondary for reads when possible
     };
 
     await mongoose.connect(mongoUri, options);

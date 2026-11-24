@@ -1,6 +1,7 @@
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
+const { OAuth2Client } = require('google-auth-library');
 const User = require('../models/User');
 const Doctor = require('../models/Doctor');
 const LoyaltyPoints = require('../models/LoyaltyPoints');
@@ -1622,23 +1623,48 @@ router.post('/doctor/verify-reset-otp', async (req, res) => {
  */
 router.post('/google-signin', async (req, res) => {
   try {
-    const { email, name, googleId, profilePhoto } = req.body;
+    const { idToken } = req.body;
+    const googleClientId = process.env.GOOGLE_SIGNIN_CLIENT_ID || process.env.GOOGLE_CLIENT_ID;
 
-    if (!email || !googleId) {
-      return res.status(400).json({ message: 'Email and Google ID are required' });
+    if (!idToken) {
+      return res.status(400).json({ message: 'Google ID token is required' });
+    }
+    if (!googleClientId) {
+      console.error('Google sign-in is not configured: GOOGLE_SIGNIN_CLIENT_ID is missing.');
+      return res.status(503).json({ message: 'Google sign-in is temporarily unavailable' });
     }
 
-    const normalizedEmail = email.toLowerCase().trim();
+    let googleProfile;
+    try {
+      const ticket = await new OAuth2Client(googleClientId).verifyIdToken({
+        idToken,
+        audience: googleClientId,
+      });
+      googleProfile = ticket.getPayload();
+    } catch (error) {
+      console.warn('Google ID token verification failed:', error.message);
+      return res.status(401).json({ message: 'Invalid or expired Google sign-in token' });
+    }
+
+    if (!googleProfile?.email || !googleProfile.email_verified || !googleProfile.sub) {
+      return res.status(401).json({ message: 'Google account email must be verified' });
+    }
+
+    const normalizedEmail = googleProfile.email.toLowerCase().trim();
+    const googleId = googleProfile.sub;
+    const name = googleProfile.name || normalizedEmail.split('@')[0];
+    const profilePhoto = googleProfile.picture || null;
     let isNewUser = false;
 
-    // Check if user exists
-    let user = await User.findOne({ email: normalizedEmail });
+    // The immutable Google subject is the primary identity; email is only a
+    // migration path for an existing password account without Google linked.
+    let user = await User.findOne({ googleId }) || await User.findOne({ email: normalizedEmail });
 
     if (user) {
-      // User exists - update Google ID and profile photo if not set
-      if (!user.googleId) {
-        user.googleId = googleId;
+      if (user.googleId && user.googleId !== googleId) {
+        return res.status(409).json({ message: 'This email is already linked to another Google account' });
       }
+      if (!user.googleId) user.googleId = googleId;
       if (profilePhoto && !user.profilePhoto) {
         user.profilePhoto = profilePhoto;
       }

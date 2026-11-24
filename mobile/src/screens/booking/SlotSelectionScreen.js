@@ -54,7 +54,6 @@ const DateCell = React.memo(({ day, isSelected, onSelect }) => {
     <Animated.View style={{ transform: [{ scale }] }}>
       <TouchableOpacity
         onPress={onSelect}
-        disabled={day.isSunday}
         activeOpacity={0.8}
       >
         <Animated.View
@@ -185,6 +184,19 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     return `${displayHours.toString().padStart(2, '0')}:${minutesStr} ${ampm}`;
   };
 
+  const formatToTwentyFourHour = (timeStr) => {
+    if (!timeStr || typeof timeStr !== 'string') return null;
+    const match = timeStr.trim().match(/^(\d{1,2}):(\d{2})\s*(AM|PM)$/i);
+    if (!match) return timeStr;
+
+    let hours = Number(match[1]);
+    const minutes = match[2];
+    const period = match[3].toUpperCase();
+    if (period === 'AM') hours = hours === 12 ? 0 : hours;
+    else hours = hours === 12 ? 12 : hours + 12;
+    return `${String(hours).padStart(2, '0')}:${minutes}`;
+  };
+
   const [consultationType, setConsultationType] = useState(route.params?.consultationType || null);
   const [step, setStep] = useState(route.params?.consultationType ? 2 : 1); // 1=Type, 2=Smart Details, 3=Date & Slots
   const [selectedDate, setSelectedDate] = useState(route.params?.preselectedDate || null);
@@ -194,6 +206,9 @@ const SlotSelectionScreen = ({ navigation, route }) => {
   const [urgencyLevel, setUrgencyLevel] = useState('normal');
   const [queueInfo, setQueueInfo] = useState(null);
   const [queueLoading, setQueueLoading] = useState(false);
+  const [availableSlots, setAvailableSlots] = useState([]);
+  const [slotsLoading, setSlotsLoading] = useState(false);
+  const [slotsMessage, setSlotsMessage] = useState('');
 
   useEffect(() => {
     const fetchDoctor = async () => {
@@ -237,14 +252,6 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     'Fever', 'Cold & Cough', 'Headache', 'Body Pain',
     'Stomach Issues', 'Skin Problem', 'Follow-up', 'General Checkup',
   ];
-
-  // Defined morning, afternoon, and evening time slots
-  const MORNING_SLOTS = ['09:00 AM', '09:30 AM', '10:00 AM', '10:30 AM', '11:00 AM', '11:30 AM'];
-  const AFTERNOON_SLOTS = ['12:30 PM', '01:00 PM', '01:30 PM', '02:00 PM', '03:00 PM', '03:30 PM'];
-  const EVENING_SLOTS = ['05:00 PM', '05:30 PM', '06:00 PM', '06:30 PM', '07:00 PM', '07:30 PM'];
-
-  // Booked/Disabled Slots for simulation
-  const BOOKED_SLOTS = ['10:00 AM', '01:30 PM', '06:00 PM', '07:00 PM'];
 
   const generateDates = () => {
     const today = new Date();
@@ -293,6 +300,38 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     }
   }, [selectedDate, consultationType, step, fetchQueueInfo]);
 
+  useEffect(() => {
+    const fetchAvailableSlots = async () => {
+      if (!doctorId || !selectedDate || step !== 3) return;
+
+      try {
+        setSlotsLoading(true);
+        setSlotsMessage('');
+        const response = await doctorService.getAvailableSlots(doctorId, selectedDate);
+        const slots = Array.isArray(response?.slots) ? response.slots : [];
+        const permittedTypes = consultationType === 'online'
+          ? ['virtual', 'online', 'both']
+          : ['in-clinic', 'clinic', 'both'];
+
+        const matchingSlots = slots.filter(slot => permittedTypes.includes(slot.type || 'both'));
+        setAvailableSlots(matchingSlots);
+        if (!response?.available) {
+          setSlotsMessage(response?.reason || 'This doctor is not available on the selected date.');
+        } else if (matchingSlots.length === 0) {
+          setSlotsMessage('No slots are available for this consultation type on the selected date.');
+        }
+      } catch (error) {
+        console.error('Failed to load available slots:', error);
+        setAvailableSlots([]);
+        setSlotsMessage('Unable to load live availability. Please try another date.');
+      } finally {
+        setSlotsLoading(false);
+      }
+    };
+
+    fetchAvailableSlots();
+  }, [doctorId, selectedDate, consultationType, step]);
+
   const handleBookingNavigation = () => {
     let fullReason = selectedSymptoms.length > 0
       ? `Symptoms: ${selectedSymptoms.join(', ')}.` : '';
@@ -332,8 +371,8 @@ const SlotSelectionScreen = ({ navigation, route }) => {
       : null;
 
     const selectedTime = selectedSlot && typeof selectedSlot === 'object'
-      ? (selectedSlot.time || queueInfo?.estimatedTime || '09:00 AM')
-      : (selectedSlot || queueInfo?.estimatedTime || '09:00 AM');
+      ? (selectedSlot.time || queueInfo?.estimatedTime || '09:00')
+      : (formatToTwentyFourHour(selectedSlot) || queueInfo?.estimatedTime || '09:00');
 
     const cleanSlotId = selectedSlot && typeof selectedSlot === 'object'
       ? (selectedSlot._id || selectedSlot.id || null)
@@ -622,19 +661,33 @@ const SlotSelectionScreen = ({ navigation, route }) => {
     const maxSlots = queueInfo?.maxSlots || 25;
     const queueProgress = Math.min(queueCount / maxSlots, 1);
 
-    const renderSlotItem = (timeStr) => {
-      const isBooked = BOOKED_SLOTS.includes(timeStr);
-      const isSelected = selectedSlot === timeStr;
+    const renderSlotItem = (slot) => {
+      const isBooked = !slot.available;
+      const isSelected = (selectedSlot?.time || selectedSlot) === slot.time;
       return (
         <SlotCell
-          key={timeStr}
-          timeStr={timeStr}
+          key={slot.time}
+          timeStr={formatToTwelveHour(slot.time)}
           isBooked={isBooked}
           isSelected={isSelected}
-          onSelect={() => setSelectedSlot(timeStr)}
+          onSelect={() => setSelectedSlot(slot)}
         />
       );
     };
+
+    const slotsByPeriod = availableSlots.reduce((groups, slot) => {
+      const hour = Number(slot.time?.split(':')[0]);
+      const period = hour < 12 ? 'morning' : hour < 17 ? 'afternoon' : 'evening';
+      groups[period].push(slot);
+      return groups;
+    }, { morning: [], afternoon: [], evening: [] });
+
+    const renderSlotPeriod = (title, slots) => slots.length > 0 && (
+      <View key={title}>
+        <Text style={[styles.slotSectionTitle, { color: colors.textPrimary }]}>{title}</Text>
+        <View style={styles.slotGrid}>{slots.map(renderSlotItem)}</View>
+      </View>
+    );
 
     return (
       <View style={styles.stepContent}>
@@ -653,29 +706,28 @@ const SlotSelectionScreen = ({ navigation, route }) => {
               onSelect={() => {
                 setSelectedDate(day.full);
                 setSelectedSlot(null); // Reset slot choice when date changes
+                setAvailableSlots([]);
+                setSlotsMessage('');
                 fetchQueueInfo(day.full);
               }}
             />
           ))}
         </ScrollView>
 
-        {/* Dynamic slots matrix - Morning, Afternoon, Evening grids */}
+        {/* Live slots generated from the doctor's configured schedule. */}
         {selectedDate && (
           <View style={styles.slotSection}>
-            <Text style={[styles.slotSectionTitle, { color: colors.textPrimary }]}>🌅 Morning Slots</Text>
-            <View style={styles.slotGrid}>
-              {MORNING_SLOTS.map(renderSlotItem)}
-            </View>
-
-            <Text style={[styles.slotSectionTitle, { color: colors.textPrimary }]}>☀️ Afternoon Slots</Text>
-            <View style={styles.slotGrid}>
-              {AFTERNOON_SLOTS.map(renderSlotItem)}
-            </View>
-
-            <Text style={[styles.slotSectionTitle, { color: colors.textPrimary }]}>🌙 Evening Slots</Text>
-            <View style={styles.slotGrid}>
-              {EVENING_SLOTS.map(renderSlotItem)}
-            </View>
+            {slotsLoading ? (
+              <View style={styles.slotsLoading}><ActivityIndicator color={colors.primary} /></View>
+            ) : slotsMessage ? (
+              <Text style={[styles.noSlotsText, { color: colors.textSecondary }]}>{slotsMessage}</Text>
+            ) : (
+              <>
+                {renderSlotPeriod('🌅 Morning Slots', slotsByPeriod.morning)}
+                {renderSlotPeriod('☀️ Afternoon Slots', slotsByPeriod.afternoon)}
+                {renderSlotPeriod('🌙 Evening Slots', slotsByPeriod.evening)}
+              </>
+            )}
           </View>
         )}
 
@@ -1078,6 +1130,8 @@ const styles = StyleSheet.create({
 
   // Slot Matrix Styling (Responsive Multi-column Grid)
   slotSection: { marginTop: spacing.md, marginBottom: spacing.lg },
+  slotsLoading: { minHeight: 96, alignItems: 'center', justifyContent: 'center' },
+  noSlotsText: { ...typography.bodyMedium, textAlign: 'center', paddingVertical: spacing.xl },
   slotSectionTitle: { ...typography.labelMedium, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5, marginBottom: spacing.md, marginTop: spacing.lg },
   slotGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.sm },
   slotChip: { width: '31%', paddingVertical: 10, borderRadius: 8, alignItems: 'center', justifyContent: 'center', borderWidth: 1 },

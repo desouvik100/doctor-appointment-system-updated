@@ -158,3 +158,5 @@ backend/uploads/temp/
 # Crash logs
 hs_err_pid*.log
 replay_pid*.log
+.kiro/
+.github/ 

@@ -39,17 +39,19 @@ export const signInWithGoogle = async () => {
     
     // Sign in and get user info
     console.log('🔵 Calling GoogleSignin.signIn()...');
-    const userInfo = await GoogleSignin.signIn();
-    console.log('✅ Google Sign-In successful:', userInfo?.user?.email);
-    const { user } = userInfo;
+    const signInResult = await GoogleSignin.signIn();
+    if (signInResult.type !== 'success') {
+      throw new Error('Sign in cancelled');
+    }
+
+    const { user, idToken } = signInResult.data;
+    if (!idToken) {
+      throw new Error('Google did not return an ID token. Check the Android OAuth client configuration.');
+    }
+    console.log('✅ Google Sign-In successful:', user.email);
     
     // Send to backend for authentication/registration
-    const response = await apiClient.post('/auth/google-signin', {
-      email: user.email,
-      name: user.name || user.givenName + ' ' + user.familyName,
-      googleId: user.id,
-      profilePhoto: user.photo,
-    });
+    const response = await apiClient.post('/auth/google-signin', { idToken });
     
     const { token, refreshToken, user: userData } = response.data;
 
@@ -217,8 +219,10 @@ export const configureGoogleSignIn = () => {
     
     GoogleSignin.configure({
       webClientId: GOOGLE_WEB_CLIENT_ID,
-      offlineAccess: true,
-      forceCodeForRefreshToken: true,
+      scopes: ['email', 'profile'],
+      // The backend only needs a signed identity token; it does not need to
+      // access a patient's Google account or retain a Google refresh token.
+      offlineAccess: false,
     });
     
     console.log('✅ Google Sign-In configured successfully');

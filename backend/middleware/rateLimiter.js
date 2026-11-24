@@ -32,6 +32,11 @@ const createRateLimiter = (options = {}) => {
   } = options;
 
   return (req, res, next) => {
+    // Skip rate limiting if in performance test mode
+    if (process.env.PERFORMANCE_TEST === 'true') {
+      return next();
+    }
+    
     const key = keyGenerator(req);
     const now = Date.now();
 

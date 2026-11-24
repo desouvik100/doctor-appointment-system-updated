@@ -53,8 +53,7 @@ const RATING_OPTIONS = [
 
 const AVAILABILITY_OPTIONS = [
   { label: 'Any time', value: null },
-  { label: 'Available today', value: 'today' },
-  { label: 'Available this week', value: 'week' },
+  { label: 'Marked available', value: 'available' },
 ];
 
 const FilterPanel = ({ 

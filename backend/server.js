@@ -2,6 +2,9 @@ const express = require('express');
 const http = require('http');
 const mongoose = require('mongoose');
 const cors = require('cors');
+const compression = require('compression'); // Production compression
+const helmet = require('helmet'); // Production security
+const rateLimit = require('express-rate-limit'); // Production rate limiting
 const swaggerUi = require('swagger-ui-express');
 const { swaggerSpec } = require('./config/swagger');
 require('dotenv').config();
@@ -31,7 +34,45 @@ if (process.env.JWT_SECRET === 'fallback_secret') {
 const app = express();
 const server = http.createServer(app);
 
-// ===== PERFORMANCE OPTIMIZATIONS =====
+// ===== PRODUCTION SECURITY =====
+
+// Security headers for production
+app.use(helmet({
+  contentSecurityPolicy: process.env.NODE_ENV === 'production' ? undefined : false,
+  crossOriginEmbedderPolicy: process.env.NODE_ENV === 'production'
+}));
+
+// Production compression with optimized settings
+app.use(compression({
+  level: 6,
+  threshold: 1024,
+  filter: (req, res) => {
+    if (req.headers['x-no-compression']) return false;
+    return compression.filter(req, res);
+  }
+}));
+
+// Production rate limiting (only in production)
+if (process.env.NODE_ENV === 'production') {
+  const productionLimiter = rateLimit({
+    windowMs: 15 * 60 * 1000, // 15 minutes
+    max: 1000, // Limit each IP to 1000 requests per windowMs
+    message: {
+      success: false,
+      message: 'Too many requests from this IP, please try again later.',
+      retryAfter: 15 * 60
+    },
+    standardHeaders: true,
+    legacyHeaders: false,
+    skip: (req) => {
+      // Skip rate limiting for health checks and admin
+      return req.path === '/api/health' || req.path.startsWith('/api/admin');
+    }
+  });
+  
+  app.use(productionLimiter);
+  console.log('🛡️ Production rate limiting enabled');
+}
 
 // Initialize Redis cache (falls back to in-memory if Redis not available)
 cacheService.initializeRedis().then(connected => {
@@ -50,12 +91,22 @@ app.use((req, res, next) => {
   next();
 });
 
-// Simple rate limiting (in-memory)
+// Simple rate limiting (in-memory) - DISABLED FOR DEVELOPMENT/TESTING
 const rateLimitMap = new Map();
 const RATE_LIMIT_WINDOW = 60000; // 1 minute
-const RATE_LIMIT_MAX = 300; // 300 requests per minute per IP (increased for development)
+const RATE_LIMIT_MAX = 300;
 
 app.use((req, res, next) => {
+  // Skip rate limiting in development OR if performance testing is enabled
+  const isDev = process.env.NODE_ENV !== 'production';
+  const isLocalhost = ['127.0.0.1', 'localhost', '::1'].includes(req.ip);
+  
+  if (isDev || isLocalhost || process.env.PERFORMANCE_TEST === 'true') {
+    console.log(`[RATE-LIMIT-BYPASS] ${req.method} ${req.path} from ${req.ip} (isDev=${isDev}, localhost=${isLocalhost})`);
+    return next(); // Skip rate limiting
+  }
+  
+  // Production + non-local IP: Apply rate limiting
   const ip = req.ip || req.connection.remoteAddress;
   const now = Date.now();
   

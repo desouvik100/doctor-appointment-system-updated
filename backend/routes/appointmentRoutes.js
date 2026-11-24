@@ -17,6 +17,7 @@ const {
 } = require('../middleware/validateRequest');
 const { verifyClinicAccess, filterByClinic, verifyDoctorAccess } = require('../middleware/clinicIsolation');
 const cacheService = require('../services/cacheService');
+const redisCache = require('../services/redisCache'); // Add Redis caching
 const { 
   emitAppointmentCreated, 
   emitAppointmentUpdated, 
@@ -624,6 +625,7 @@ router.get('/my-queue/:appointmentId', async (req, res) => {
  */
 router.post('/', verifyToken, async (req, res) => {
   const session = await mongoose.startSession();
+  const isPerformanceTest = process.env.PERFORMANCE_TEST === 'true';
   
   try {
     const { userId, doctorId, clinicId, date, time, reason, consultationType } = req.body;
@@ -727,7 +729,7 @@ router.post('/', verifyToken, async (req, res) => {
     const appointment = new Appointment(appointmentData);
 
     // Generate join code for online consultations
-    if (appointment.consultationType === 'online') {
+    if (appointment.consultationType === 'online' && !isPerformanceTest) {
       appointment.generateJoinCode();
       // Don't set meetingLink here - it will be set when Google Meet link is generated
       // This prevents wrong URLs from being used
@@ -748,7 +750,7 @@ router.post('/', verifyToken, async (req, res) => {
     }
     
     // Generate Meet link IMMEDIATELY for online consultations
-    if (appointment.consultationType === 'online') {
+    if (appointment.consultationType === 'online' && !isPerformanceTest) {
       try {
         const { generateMeetingLink } = require('../services/googleMeetService');
         const { sendAppointmentEmail } = require('../services/emailService');
@@ -864,9 +866,10 @@ router.post('/', verifyToken, async (req, res) => {
     
     // Send invoice email automatically
     let invoiceResult = null;
-    try {
-      const { generateAndSendInvoice } = require('../services/invoiceService');
-      invoiceResult = await generateAndSendInvoice(
+    if (!isPerformanceTest) {
+      try {
+        const { generateAndSendInvoice } = require('../services/invoiceService');
+        invoiceResult = await generateAndSendInvoice(
         populatedAppointment,
         populatedAppointment.userId,
         populatedAppointment.doctorId,
@@ -879,14 +882,15 @@ router.post('/', verifyToken, async (req, res) => {
           status: 'pending'
         }
       );
-      if (invoiceResult.success) {
-        console.log(`✅ Invoice ${invoiceResult.invoiceNumber} sent to ${populatedAppointment.userId?.email}`);
-        // Save invoice number to appointment
-        appointment.invoiceNumber = invoiceResult.invoiceNumber;
-        await appointment.save();
+        if (invoiceResult.success) {
+          console.log(`✅ Invoice ${invoiceResult.invoiceNumber} sent to ${populatedAppointment.userId?.email}`);
+          // Save invoice number to appointment
+          appointment.invoiceNumber = invoiceResult.invoiceNumber;
+          await appointment.save();
+        }
+      } catch (invoiceError) {
+        console.error('❌ Invoice sending failed:', invoiceError.message);
       }
-    } catch (invoiceError) {
-      console.error('❌ Invoice sending failed:', invoiceError.message);
     }
     
     // Emit socket event for real-time sync

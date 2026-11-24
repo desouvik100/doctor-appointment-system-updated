@@ -1,0 +1,32 @@
+# HealthSync Production Dockerfile
+# Optimized for multiple concurrent users
+
+FROM node:18-alpine AS base
+
+# Production optimization
+ENV NODE_ENV=production
+ENV NODE_OPTIONS="--max-old-space-size=4096"
+
+WORKDIR /app
+
+# Install production dependencies
+COPY package*.json ./
+RUN npm ci --only=production && npm cache clean --force
+
+# Copy application code
+COPY . .
+
+# Create non-root user for security
+RUN addgroup -g 1001 -S nodejs
+RUN adduser -S healthsync -u 1001
+RUN chown -R healthsync:nodejs /app
+USER healthsync
+
+EXPOSE 5005
+
+# Health check for production
+HEALTHCHECK --interval=30s --timeout=3s --start-period=5s --retries=3 \
+  CMD node -e "require('http').get('http://localhost:5005/api/health', (res) => { process.exit(res.statusCode === 200 ? 0 : 1) })"
+
+# Start with clustering for multiple users
+CMD ["npm", "run", "start:production"]
