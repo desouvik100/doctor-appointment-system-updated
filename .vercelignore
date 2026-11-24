@@ -1,0 +1,11 @@
+backend/
+mobile/
+performance/
+healthsync-pro/
+node_modules/
+.git/
+.idea/
+.vscode/
+.kiro/
+*.md
+!frontend/
