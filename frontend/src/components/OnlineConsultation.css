@@ -1,0 +1,157 @@
+/* Online Consultation Styles */
+.online-consultation {
+  background: #fff;
+  border-radius: 12px;
+  box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.07);
+  overflow: hidden;
+}
+
+.consultation-header {
+  padding: 1.5rem;
+  background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 100%);
+  color: #fff;
+}
+
+.consultation-header h3 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  margin-bottom: 0.25rem;
+}
+
+.consultation-header p {
+  opacity: 0.9;
+  font-size: 0.875rem;
+}
+
+.consultation-body {
+  padding: 1.5rem;
+}
+
+.consultation-options {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 1rem;
+  margin-bottom: 1.5rem;
+}
+
+.consultation-option {
+  padding: 1.25rem;
+  background: #f8fafc;
+  border: 2px solid transparent;
+  border-radius: 12px;
+  text-align: center;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.consultation-option:hover {
+  border-color: #0ea5e9;
+  background: #eef2ff;
+}
+
+.consultation-option.selected {
+  border-color: #0ea5e9;
+  background: #eef2ff;
+}
+
+.consultation-option i {
+  font-size: 1.5rem;
+  color: #0ea5e9;
+  margin-bottom: 0.5rem;
+}
+
+.consultation-option span {
+  display: block;
+  font-weight: 500;
+  color: #1e293b;
+}
+
+.start-consultation-btn {
+  width: 100%;
+  padding: 1rem;
+  background: #2563eb;
+  color: #fff;
+  border: none;
+  border-radius: 8px;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.start-consultation-btn:hover {
+  background: #1d4ed8;
+}
+
+.start-consultation-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+  .consultation-header {
+    padding: 1.25rem;
+  }
+  
+  .consultation-header h3 {
+    font-size: 1.1rem;
+  }
+  
+  .consultation-body {
+    padding: 1.25rem;
+  }
+  
+  .consultation-options {
+    grid-template-columns: 1fr;
+    gap: 0.75rem;
+  }
+  
+  .consultation-option {
+    padding: 1rem;
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    text-align: left;
+  }
+  
+  .consultation-option i {
+    margin-bottom: 0;
+    font-size: 1.25rem;
+  }
+}
+
+@media (max-width: 479px) {
+  .online-consultation {
+    border-radius: 8px;
+  }
+  
+  .consultation-header {
+    padding: 1rem;
+  }
+  
+  .consultation-header h3 {
+    font-size: 1rem;
+  }
+  
+  .consultation-header p {
+    font-size: 0.8rem;
+  }
+  
+  .consultation-body {
+    padding: 1rem;
+  }
+  
+  .consultation-option {
+    padding: 0.875rem;
+  }
+  
+  .consultation-option span {
+    font-size: 0.9rem;
+  }
+  
+  .start-consultation-btn {
+    padding: 0.875rem;
+    font-size: 0.95rem;
+  }
+}

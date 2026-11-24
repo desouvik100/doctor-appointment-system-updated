@@ -1,0 +1,117 @@
+/**
+ * EMR Footer Styles
+ * Subtle branding for clinical interface
+ */
+
+.emr-footer {
+  padding: 12px 20px;
+  background: #f8fafc;
+  border-top: 1px solid #e8ecef;
+}
+
+.emr-footer__content {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  flex-wrap: wrap;
+}
+
+.emr-footer__brand {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.emr-footer__logo {
+  font-size: 1rem;
+  opacity: 0.7;
+}
+
+.emr-footer__text {
+  font-size: 0.8rem;
+  color: #94a3b8;
+  letter-spacing: 0.3px;
+}
+
+.emr-footer__text strong {
+  color: #64748b;
+  font-weight: 600;
+}
+
+.emr-footer__version {
+  font-size: 0.7rem;
+  color: #cbd5e1;
+  padding: 2px 8px;
+  background: #f1f5f9;
+  border-radius: 10px;
+}
+
+.emr-footer__copyright {
+  font-size: 0.75rem;
+  color: #cbd5e1;
+}
+
+/* Variants */
+.emr-footer--minimal {
+  padding: 8px 16px;
+  background: transparent;
+  border-top: none;
+}
+
+.emr-footer--minimal .emr-footer__content {
+  justify-content: flex-end;
+}
+
+.emr-footer--minimal .emr-footer__text {
+  font-size: 0.7rem;
+}
+
+.emr-footer--dark {
+  background: #1a1a2e;
+  border-top-color: #2d2d44;
+}
+
+.emr-footer--dark .emr-footer__text {
+  color: #64748b;
+}
+
+.emr-footer--dark .emr-footer__text strong {
+  color: #94a3b8;
+}
+
+.emr-footer--sidebar {
+  padding: 12px 16px;
+  background: transparent;
+  border-top: 1px solid #e2e8f0;
+  margin-top: auto;
+}
+
+.emr-footer--sidebar .emr-footer__content {
+  flex-direction: column;
+  gap: 4px;
+}
+
+.emr-footer--sidebar .emr-footer__text {
+  font-size: 0.7rem;
+}
+
+/* Print - hide footer */
+@media print {
+  .emr-footer {
+    display: none;
+  }
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .emr-footer__content {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .emr-footer__version,
+  .emr-footer__copyright {
+    display: none;
+  }
+}

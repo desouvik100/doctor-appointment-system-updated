@@ -1,0 +1,400 @@
+/**
+ * LabRequisitionPrint Styles
+ * Print-optimized styles for lab requisition form
+ * Requirements: 2.4
+ */
+
+.lab-requisition-print {
+  font-family: 'Times New Roman', Times, serif;
+  max-width: 8.5in;
+  margin: 0 auto;
+  padding: 0.5in;
+  background: white;
+  color: #000;
+  font-size: 11pt;
+  line-height: 1.4;
+}
+
+/* Header */
+.requisition-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 0.25in;
+  border-bottom: 2px solid #000;
+  margin-bottom: 0.2in;
+}
+
+.clinic-info {
+  flex: 1;
+}
+
+.clinic-name {
+  margin: 0 0 0.1in 0;
+  font-size: 16pt;
+  font-weight: bold;
+}
+
+.clinic-address,
+.clinic-contact {
+  margin: 0;
+  font-size: 10pt;
+  color: #333;
+}
+
+.document-info {
+  text-align: right;
+}
+
+.document-title {
+  margin: 0 0 0.1in 0;
+  font-size: 14pt;
+  font-weight: bold;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+}
+
+.order-number-box {
+  display: inline-block;
+  padding: 0.05in 0.15in;
+  border: 2px solid #000;
+  font-size: 12pt;
+}
+
+.order-number-box .label {
+  font-weight: bold;
+}
+
+.order-number-box .value {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+  margin-left: 0.1in;
+}
+
+/* Urgency Banner */
+.urgency-banner {
+  padding: 0.1in 0.2in;
+  text-align: center;
+  font-weight: bold;
+  font-size: 12pt;
+  margin-bottom: 0.15in;
+  border: 2px solid;
+}
+
+.urgency-banner.urgency-urgent {
+  background: #fff3cd;
+  border-color: #ffc107;
+  color: #856404;
+}
+
+.urgency-banner.urgency-stat {
+  background: #f8d7da;
+  border-color: #dc3545;
+  color: #721c24;
+}
+
+/* Sections */
+section {
+  margin-bottom: 0.2in;
+}
+
+.section-title {
+  margin: 0 0 0.1in 0;
+  padding: 0.05in 0.1in;
+  background: #f0f0f0;
+  border-left: 4px solid #000;
+  font-size: 11pt;
+  font-weight: bold;
+  text-transform: uppercase;
+}
+
+/* Info Grid */
+.info-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.08in 0.25in;
+}
+
+.info-item {
+  display: flex;
+  gap: 0.1in;
+}
+
+.info-item .label {
+  font-weight: bold;
+  min-width: 1.2in;
+}
+
+.info-item .value {
+  flex: 1;
+  border-bottom: 1px dotted #999;
+}
+
+.priority-urgent {
+  font-weight: bold;
+  color: #856404;
+}
+
+.priority-stat {
+  font-weight: bold;
+  color: #721c24;
+  text-transform: uppercase;
+}
+
+/* Tests Table */
+.tests-table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-bottom: 0.1in;
+  font-size: 10pt;
+}
+
+.tests-table th,
+.tests-table td {
+  padding: 0.06in 0.1in;
+  border: 1px solid #000;
+  text-align: left;
+}
+
+.tests-table th {
+  background: #e0e0e0;
+  font-weight: bold;
+  text-transform: uppercase;
+  font-size: 9pt;
+}
+
+.tests-table .test-code {
+  font-family: 'Courier New', monospace;
+  font-weight: bold;
+}
+
+.tests-table .test-name {
+  font-weight: 500;
+}
+
+.fasting-badge {
+  display: inline-block;
+  padding: 0.02in 0.08in;
+  background: #fff3cd;
+  border: 1px solid #ffc107;
+  font-size: 8pt;
+  font-weight: bold;
+}
+
+.panel-badge {
+  display: inline-block;
+  padding: 0.02in 0.08in;
+  background: #cce5ff;
+  border: 1px solid #007bff;
+  font-size: 8pt;
+  margin-left: 0.05in;
+}
+
+.tests-summary {
+  text-align: right;
+  font-weight: bold;
+  font-size: 10pt;
+}
+
+/* Fasting Section */
+.fasting-section {
+  border: 2px solid #ffc107;
+  padding: 0.1in;
+  background: #fffbeb;
+}
+
+.fasting-section .section-title {
+  background: #ffc107;
+  color: #000;
+  border-left-color: #856404;
+}
+
+.fasting-content {
+  font-size: 10pt;
+}
+
+.fasting-content ul {
+  margin: 0.05in 0 0 0.2in;
+  padding: 0;
+}
+
+.fasting-content li {
+  margin-bottom: 0.03in;
+}
+
+/* Notes & Instructions */
+.notes-content,
+.instructions-content {
+  padding: 0.1in;
+  border: 1px solid #ccc;
+  background: #fafafa;
+  min-height: 0.4in;
+  font-size: 10pt;
+}
+
+/* Collection Section */
+.collection-section {
+  border: 1px solid #000;
+  padding: 0.1in;
+}
+
+.collection-section .section-title {
+  margin: -0.1in -0.1in 0.1in -0.1in;
+  padding: 0.05in 0.1in;
+}
+
+.collection-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 0.1in 0.25in;
+  margin-bottom: 0.15in;
+}
+
+.collection-item {
+  display: flex;
+  align-items: flex-end;
+  gap: 0.1in;
+}
+
+.collection-item .label {
+  font-weight: bold;
+  font-size: 10pt;
+  white-space: nowrap;
+}
+
+.collection-item .value-line {
+  flex: 1;
+  border-bottom: 1px solid #000;
+  min-width: 1in;
+  height: 0.2in;
+}
+
+.specimen-checklist h4 {
+  margin: 0 0 0.08in 0;
+  font-size: 10pt;
+}
+
+.checklist-items {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 0.05in;
+  font-size: 9pt;
+}
+
+.checklist-items label {
+  display: flex;
+  align-items: center;
+  gap: 0.05in;
+}
+
+.checklist-items input[type="checkbox"] {
+  width: 0.12in;
+  height: 0.12in;
+}
+
+/* Signatures */
+.signatures-section {
+  display: flex;
+  justify-content: space-between;
+  gap: 1in;
+  margin-top: 0.3in;
+  padding-top: 0.2in;
+}
+
+.signature-box {
+  flex: 1;
+  text-align: center;
+}
+
+.signature-line {
+  border-bottom: 1px solid #000;
+  height: 0.4in;
+  margin-bottom: 0.05in;
+}
+
+.signature-label {
+  font-size: 9pt;
+  color: #666;
+}
+
+/* Footer */
+.requisition-footer {
+  margin-top: 0.25in;
+  padding-top: 0.15in;
+  border-top: 1px solid #ccc;
+  text-align: center;
+}
+
+.footer-note {
+  font-size: 9pt;
+  color: #666;
+  margin: 0 0 0.1in 0;
+}
+
+.barcode-placeholder {
+  display: inline-block;
+  padding: 0.1in 0.3in;
+  border: 1px solid #000;
+  margin-bottom: 0.1in;
+}
+
+.barcode-text {
+  font-family: 'Courier New', monospace;
+  font-size: 14pt;
+  font-weight: bold;
+  letter-spacing: 2px;
+}
+
+.print-date {
+  font-size: 8pt;
+  color: #999;
+  margin: 0;
+}
+
+/* Print Styles */
+@media print {
+  .lab-requisition-print {
+    padding: 0;
+    max-width: none;
+  }
+  
+  @page {
+    size: letter;
+    margin: 0.5in;
+  }
+  
+  section {
+    page-break-inside: avoid;
+  }
+  
+  .tests-table {
+    page-break-inside: auto;
+  }
+  
+  .tests-table tr {
+    page-break-inside: avoid;
+  }
+  
+  .collection-section,
+  .signatures-section {
+    page-break-inside: avoid;
+  }
+}
+
+/* Screen Preview Styles */
+@media screen {
+  .lab-requisition-print {
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.1);
+    margin: 20px auto;
+  }
+
+
+
+
+
+
+
+
+
+  
+}

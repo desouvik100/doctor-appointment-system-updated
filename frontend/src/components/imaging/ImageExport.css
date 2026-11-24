@@ -1,0 +1,237 @@
+/**
+ * Image Export Styles
+ */
+
+.export-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 14px;
+  background: #16213e;
+  border: 2px solid transparent;
+  border-radius: 6px;
+  color: #e2e8f0;
+  cursor: pointer;
+  font-size: 13px;
+  transition: all 0.2s ease;
+}
+
+.export-btn:hover:not(:disabled) {
+  background: #1f2937;
+  border-color: #3b82f6;
+}
+
+.export-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.export-btn i {
+  font-size: 14px;
+}
+
+/* Dialog overlay */
+.export-dialog-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.export-dialog {
+  background: #1a1a2e;
+  border-radius: 12px;
+  width: 400px;
+  max-width: 90vw;
+  box-shadow: 0 20px 50px rgba(0, 0, 0, 0.5);
+  overflow: hidden;
+}
+
+/* Dialog header */
+.dialog-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  background: #16213e;
+  border-bottom: 1px solid #0f3460;
+}
+
+.dialog-header h3 {
+  margin: 0;
+  font-size: 16px;
+  color: #e2e8f0;
+}
+
+.close-btn {
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  color: #64748b;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.close-btn:hover {
+  background: #0f3460;
+  color: #e2e8f0;
+}
+
+/* Dialog content */
+.dialog-content {
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.form-group > label {
+  font-size: 13px;
+  font-weight: 500;
+  color: #94a3b8;
+}
+
+/* Radio group */
+.radio-group {
+  display: flex;
+  gap: 16px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  cursor: pointer;
+}
+
+.radio-option input[type="radio"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+}
+
+.radio-option span {
+  font-size: 14px;
+  color: #e2e8f0;
+}
+
+/* Select */
+.form-group select {
+  padding: 10px 12px;
+  background: #16213e;
+  border: 2px solid #0f3460;
+  border-radius: 6px;
+  color: #e2e8f0;
+  font-size: 14px;
+  outline: none;
+  cursor: pointer;
+  transition: border-color 0.2s ease;
+}
+
+.form-group select:focus {
+  border-color: #3b82f6;
+}
+
+/* Checkbox group */
+.checkbox-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.checkbox-option {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+}
+
+.checkbox-option input[type="checkbox"] {
+  width: 16px;
+  height: 16px;
+  accent-color: #3b82f6;
+}
+
+.checkbox-option span {
+  font-size: 14px;
+  color: #e2e8f0;
+}
+
+/* Filename preview */
+.filename-preview {
+  padding: 10px 12px;
+  background: #0f0f1a;
+  border-radius: 6px;
+  font-size: 13px;
+  color: #94a3b8;
+  font-family: monospace;
+  word-break: break-all;
+}
+
+/* Dialog footer */
+.dialog-footer {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  padding: 16px 20px;
+  background: #16213e;
+  border-top: 1px solid #0f3460;
+}
+
+.btn-cancel,
+.btn-export {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 10px 18px;
+  border: none;
+  border-radius: 6px;
+  font-size: 14px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.btn-cancel {
+  background: #374151;
+  color: #e2e8f0;
+}
+
+.btn-cancel:hover {
+  background: #4b5563;
+}
+
+.btn-export {
+  background: #3b82f6;
+  color: #fff;
+}
+
+.btn-export:hover:not(:disabled) {
+  background: #2563eb;
+}
+
+.btn-export:disabled {
+  opacity: 0.7;
+  cursor: not-allowed;
+}
+
+.btn-export i {
+  font-size: 14px;
+}

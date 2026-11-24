@@ -1,0 +1,175 @@
+/* Video Consultation Styles */
+.video-consultation {
+  position: fixed;
+  inset: 0;
+  background: #0f172a;
+  z-index: 500;
+  display: flex;
+  flex-direction: column;
+}
+
+.video-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1rem 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.video-header h3 {
+  color: #fff;
+  font-size: 1rem;
+  font-weight: 600;
+}
+
+.video-timer {
+  color: #ef4444;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.video-container {
+  flex: 1;
+  display: grid;
+  grid-template-columns: 1fr 300px;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.main-video {
+  background: #1e293b;
+  border-radius: 12px;
+  position: relative;
+  overflow: hidden;
+}
+
+.main-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.self-video {
+  position: absolute;
+  bottom: 1rem;
+  right: 1rem;
+  width: 200px;
+  height: 150px;
+  background: #334155;
+  border-radius: 8px;
+  overflow: hidden;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+}
+
+.self-video video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.video-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.chat-panel {
+  flex: 1;
+  background: #1e293b;
+  border-radius: 12px;
+  display: flex;
+  flex-direction: column;
+}
+
+.chat-messages {
+  flex: 1;
+  padding: 1rem;
+  overflow-y: auto;
+}
+
+.chat-input {
+  display: flex;
+  gap: 0.5rem;
+  padding: 1rem;
+  border-top: 1px solid #334155;
+}
+
+.chat-input input {
+  flex: 1;
+  padding: 0.75rem;
+  background: #334155;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+}
+
+.chat-input button {
+  padding: 0.75rem 1rem;
+  background: #2563eb;
+  border: none;
+  border-radius: 8px;
+  color: #fff;
+  cursor: pointer;
+}
+
+.video-controls {
+  display: flex;
+  justify-content: center;
+  gap: 1rem;
+  padding: 1.5rem;
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.control-btn {
+  width: 56px;
+  height: 56px;
+  border-radius: 50%;
+  border: none;
+  font-size: 1.25rem;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.control-btn.mute {
+  background: #334155;
+  color: #fff;
+}
+
+.control-btn.mute.active {
+  background: #ef4444;
+}
+
+.control-btn.video {
+  background: #334155;
+  color: #fff;
+}
+
+.control-btn.video.active {
+  background: #ef4444;
+}
+
+.control-btn.end-call {
+  background: #ef4444;
+  color: #fff;
+}
+
+.control-btn.end-call:hover {
+  background: #dc2626;
+}
+
+@media (max-width: 768px) {
+  .video-container {
+    grid-template-columns: 1fr;
+  }
+  
+  .video-sidebar {
+    display: none;
+  }
+  
+  .self-video {
+    width: 120px;
+    height: 90px;
+  }
+}

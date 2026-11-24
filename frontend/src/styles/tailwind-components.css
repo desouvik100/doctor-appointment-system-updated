@@ -1,0 +1,206 @@
+/* Premium SaaS Component Styles using Tailwind */
+/* This file provides base styling for all child components */
+
+@layer components {
+  /* Premium Card */
+  .premium-card {
+    @apply bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-lg transition-all duration-300;
+  }
+
+  /* Premium Button */
+  .btn-primary {
+    @apply px-6 py-3 bg-gradient-to-r from-indigo-500 to-purple-600 text-white font-medium rounded-xl hover:shadow-lg hover:shadow-indigo-500/25 transition-all duration-200;
+  }
+
+  .btn-secondary {
+    @apply px-6 py-3 bg-slate-100 text-slate-700 font-medium rounded-xl hover:bg-slate-200 transition-all duration-200;
+  }
+
+  .btn-outline {
+    @apply px-6 py-3 border-2 border-indigo-500 text-indigo-600 font-medium rounded-xl hover:bg-indigo-50 transition-all duration-200;
+  }
+
+  /* Premium Input */
+  .input-premium {
+    @apply w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all;
+  }
+
+  /* Premium Select */
+  .select-premium {
+    @apply px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 transition-all appearance-none cursor-pointer;
+  }
+
+  /* Section Header */
+  .section-header {
+    @apply text-lg font-bold text-slate-800 mb-4;
+  }
+
+  /* Empty State */
+  .empty-state {
+    @apply flex flex-col items-center justify-center py-16 text-center;
+  }
+
+  /* Badge */
+  .badge-success {
+    @apply px-3 py-1 bg-emerald-100 text-emerald-700 text-xs font-semibold rounded-full;
+  }
+
+  .badge-warning {
+    @apply px-3 py-1 bg-amber-100 text-amber-700 text-xs font-semibold rounded-full;
+  }
+
+  .badge-danger {
+    @apply px-3 py-1 bg-red-100 text-red-700 text-xs font-semibold rounded-full;
+  }
+
+  .badge-info {
+    @apply px-3 py-1 bg-blue-100 text-blue-700 text-xs font-semibold rounded-full;
+  }
+
+  /* Icon Box */
+  .icon-box {
+    @apply w-12 h-12 rounded-xl flex items-center justify-center shadow-lg;
+  }
+
+  .icon-box-primary {
+    @apply icon-box bg-gradient-to-br from-indigo-500 to-purple-600;
+  }
+
+  .icon-box-success {
+    @apply icon-box bg-gradient-to-br from-emerald-500 to-teal-600;
+  }
+
+  .icon-box-warning {
+    @apply icon-box bg-gradient-to-br from-amber-500 to-orange-600;
+  }
+
+  .icon-box-danger {
+    @apply icon-box bg-gradient-to-br from-rose-500 to-pink-600;
+  }
+}
+
+/* Global Component Overrides for Child Components */
+/* These styles ensure all child components inherit the premium look */
+
+/* Override default component containers */
+.health-checkup,
+.emergency-contacts,
+.loyalty-points,
+.health-insurance,
+.second-opinion,
+.ai-assistant,
+.health-profile,
+.lab-reports,
+.medicine-delivery,
+.ambulance-booking,
+.health-tips,
+.health-analytics,
+.medicine-reminder,
+.health-wallet {
+  @apply space-y-6;
+}
+
+/* Override all child component cards */
+.health-checkup .card,
+.emergency-contacts .card,
+.loyalty-points .card,
+.health-insurance .card,
+.second-opinion .card,
+.ai-assistant .card,
+.health-profile .card,
+.lab-reports .card,
+.medicine-delivery .card,
+.ambulance-booking .card,
+.health-tips .card,
+.health-analytics .card,
+.medicine-reminder .card,
+.health-wallet .card,
+[class*="-card"],
+[class*="_card"] {
+  @apply bg-white rounded-2xl border border-slate-100 shadow-sm p-5;
+}
+
+/* Override all child component buttons */
+.health-checkup button,
+.emergency-contacts button,
+.loyalty-points button,
+.health-insurance button,
+.second-opinion button,
+.ai-assistant button,
+.health-profile button,
+.lab-reports button,
+.medicine-delivery button,
+.ambulance-booking button,
+.health-tips button,
+.health-analytics button,
+.medicine-reminder button,
+.health-wallet button {
+  @apply rounded-xl font-medium transition-all duration-200;
+}
+
+/* Override all child component inputs */
+.health-checkup input,
+.emergency-contacts input,
+.loyalty-points input,
+.health-insurance input,
+.second-opinion input,
+.ai-assistant input,
+.health-profile input,
+.lab-reports input,
+.medicine-delivery input,
+.ambulance-booking input,
+.health-tips input,
+.health-analytics input,
+.medicine-reminder input,
+.health-wallet input,
+.health-checkup select,
+.emergency-contacts select,
+.loyalty-points select,
+.health-insurance select,
+.second-opinion select,
+.ai-assistant select,
+.health-profile select,
+.lab-reports select,
+.medicine-delivery select,
+.ambulance-booking select,
+.health-tips select,
+.health-analytics select,
+.medicine-reminder select,
+.health-wallet select {
+  @apply w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:border-transparent transition-all;
+}
+
+/* Override all child component headings */
+.health-checkup h2,
+.emergency-contacts h2,
+.loyalty-points h2,
+.health-insurance h2,
+.second-opinion h2,
+.ai-assistant h2,
+.health-profile h2,
+.lab-reports h2,
+.medicine-delivery h2,
+.ambulance-booking h2,
+.health-tips h2,
+.health-analytics h2,
+.medicine-reminder h2,
+.health-wallet h2 {
+  @apply text-xl font-bold text-slate-800 mb-4;
+}
+
+.health-checkup h3,
+.emergency-contacts h3,
+.loyalty-points h3,
+.health-insurance h3,
+.second-opinion h3,
+.ai-assistant h3,
+.health-profile h3,
+.lab-reports h3,
+.medicine-delivery h3,
+.ambulance-booking h3,
+.health-tips h3,
+.health-analytics h3,
+.medicine-reminder h3,
+.health-wallet h3 {
+  @apply text-lg font-semibold text-slate-800 mb-3;
+}
