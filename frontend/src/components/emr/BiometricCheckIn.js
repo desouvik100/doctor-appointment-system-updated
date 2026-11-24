@@ -1,10 +1,6 @@
 import { useState, useEffect } from 'react';
 import toast from 'react-hot-toast';
 
-/**
- * Biometric Check-In Component
- * Uses WebAuthn API for web and native biometric for Android/iOS
- */
 const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isCheckedIn }) => {
   const [biometricSupported, setBiometricSupported] = useState(false);
   const [biometricRegistered, setBiometricRegistered] = useState(false);
@@ -13,7 +9,7 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
   const [isNative, setIsNative] = useState(false);
 
   useEffect(() => {
-    const native = false; // Web-only app
+    const native = false;
     setIsNative(native);
     checkBiometricSupport(native);
     checkBiometricRegistration();
@@ -21,17 +17,13 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
 
   const checkBiometricSupport = async (native) => {
     if (native) {
-      // Native Android/iOS - use native biometric (not available in web build)
       try {
-        // Dynamic import only if actually running in native context
-        // This will never execute in web build since native is always false
         setBiometricSupported(false);
       } catch (err) {
         console.log('Native biometric not available:', err);
         setBiometricSupported(false);
       }
     } else {
-      // Web - use WebAuthn
       if (window.PublicKeyCredential) {
         try {
           const available = await window.PublicKeyCredential.isUserVerifyingPlatformAuthenticatorAvailable();
@@ -55,12 +47,18 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
     return array;
   };
 
-  // Native biometric authentication (Android/iOS)
   const authenticateNativeBiometric = async (action) => {
     setLoading(true);
     console.log('Starting native biometric authentication for:', action);
     
     try {
+      // Note: This code path is never reached in web build (native is always false)
+      // Keeping structure for reference but not importing capacitor package
+      toast.error('Native biometric not available in web version');
+      setLoading(false);
+      return;
+      
+      /* Native-only code - not used in web build
       const { NativeBiometric } = await import('capacitor-native-biometric');
       console.log('NativeBiometric imported successfully');
       
@@ -122,15 +120,10 @@ const BiometricCheckIn = ({ staffId, staffName, onCheckIn, onCheckOut, isChecked
           toast.error('Check-out handler not configured');
         }
       }
+      */
     } catch (err) {
-      console.error('Native biometric error:', err);
-      if (err.message?.includes('cancel') || err.code === 'BIOMETRIC_DISMISSED') {
-        toast.error('Biometric verification cancelled');
-      } else if (err.code === 'BIOMETRIC_NOT_ENROLLED') {
-        toast.error('No biometric enrolled on device. Please set up fingerprint in device settings.');
-      } else {
-        toast.error('Biometric verification failed');
-      }
+      console.error('Native biometric error (should not reach here in web):', err);
+      toast.error('Biometric not available');
     } finally {
       setLoading(false);
     }
