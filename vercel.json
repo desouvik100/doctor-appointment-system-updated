@@ -3,6 +3,11 @@
   "outputDirectory": "frontend/build",
   "installCommand": "cd frontend && npm install --legacy-peer-deps",
   "framework": null,
+  "git": {
+    "deploymentEnabled": {
+      "main": true
+    }
+  },
   "rewrites": [
     {
       "source": "/((?!static|sitemap\\.xml|robots\\.txt|llms\\.txt|manifest\\.json|favicon\\.ico|logo|asset-manifest|precache|icons|splash|service-worker\\.js|sw\\.js).*)",
