@@ -155,8 +155,6 @@ const RecordsScreen = ({ navigation })=>{
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-
-      {}
       <View style={styles.header}>
         <TouchableOpacity
           style={[styles.backBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}
@@ -167,8 +165,6 @@ const RecordsScreen = ({ navigation })=>{
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Medical Records</Text>
         <View style={{ width: 44 }} />
       </View>
-
-      {}
       <View style={styles.statsRow}>
         <Card variant="gradient" style={styles.statCard}>
           <Text style={styles.statIcon}>💊</Text>
@@ -186,8 +182,6 @@ const RecordsScreen = ({ navigation })=>{
           <Text style={[styles.statLabel, { color: colors.textMuted }]}>Bills</Text>
         </Card>
      </View>
-
-     {}
       <View style={styles.tabsContainer}>
         <ScrollView horizontal showsHorizontalScrollIndicator={false}>
           {tabs.map((tab) => (
@@ -207,8 +201,6 @@ const RecordsScreen = ({ navigation })=>{
           ))}
         </ScrollView>
       </View>
-
-      {}
       <ScrollView
         showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.scrollContent}
@@ -266,8 +258,6 @@ const RecordsScreen = ({ navigation })=>{
             </TouchableOpacity>
           ))
         )}
-
-        {}
         <View style={[styles.uploadSection, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
           <Text style={[styles.uploadTitle, { color: colors.textPrimary }]}>Add New Record</Text>
           <View style={styles.uploadOptions}>

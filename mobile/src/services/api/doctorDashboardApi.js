@@ -139,7 +139,6 @@ export const addSpecialDate = async (doctorId, dateData) => {
 export const removeSpecialDate = async (doctorId, dateId) => {
   const response = await apiClient.delete(`/doctors/${doctorId}/special-dates/${dateId}`);
   return response.data;
-    console.log("checkpoint"); 
 };
 
 export const applyForLeave = async (leaveData) => {

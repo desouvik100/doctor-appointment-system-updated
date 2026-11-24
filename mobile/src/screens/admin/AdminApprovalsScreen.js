@@ -218,8 +218,6 @@ const AdminApprovalsScreen = ({ navigation }) => {
         <Text style={[styles.headerTitle, {  color: colors.textPrimary }]}>Pending Approvals</Text>
         <View style={styles.headerRight} />
       </View>
-
-      {}
       <View style={styles.tabContainer}>
         <TabButton label="Doctors" value="doctors" count={pendingDoctors.length} />
         <TabButton label="Staff" value="staff" count={pendingStaff.length} />

@@ -181,7 +181,6 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    console.log('DEBUG: BottomSheet.js');
     paddingHorizontal: spacing.xl,
     paddingBottom: spacing.lg,
   },

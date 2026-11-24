@@ -522,7 +522,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
             })}
           </View>
         </View>
-        {}
+
         <TouchableOpacity 
           onPress={checkReviewEligibility}
           style={[styles.writeReviewSecondaryBtn, { borderColor: colors.primary }]}
@@ -536,7 +536,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
   const renderSortAndFilters = () => {
     return (
       <View style={styles.filtersWrapper}>
-        {}
+
        <Text style={[styles.filterTitleLabel, {  color: colors.textPrimary }]}>Sort By</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterPillsRow}>
           {[
@@ -568,7 +568,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           })}
         </ScrollView>
 
-        {}
         <Text style={[styles.filterTitleLabel, {  color: colors.textPrimary, marginTop: 8 }]}>Filter By Visit Type</Text>
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterPillsRow}>
           {[
@@ -598,7 +597,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           })}
         </ScrollView>
 
-        {}
         <Text style={[styles.filterTitleLabel, { color: colors.textPrimary, marginTop: 8 }]}>Filter By Rating</Text>
        <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.filterPillsRow}>
          {[
@@ -631,7 +629,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
          })}
         </ScrollView>
 
-        {}
         <View style={styles.verifiedFilterToggleRow}>
           <Text style={[styles.verifiedFilterLabel, {  color: colors.textPrimary }]}>Show verified reviews only</Text>
           <TouchableOpacity 
@@ -699,7 +696,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
             {reply.text}
           </Text>
 
-          {}
           {depth < 3 && (
             <TouchableOpacity 
              onPress={() => {
@@ -713,7 +709,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           )}
         </View>
 
-        {}
         {reply.replies && reply.replies.map(child => renderReplyNode(child, depth + 1))}
       </View>
     );
@@ -723,15 +718,13 @@ const DoctorProfileScreen = ({ navigation, route }) => {
     <View style={[styles.container, {  backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
-      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
           style={StyleSheet.absoluteFill}
        />
       </View>
- 
-      {}
+
      <View style={[styles.header, { paddingTop: insets.top + spacing.sm }]}>
         <TouchableOpacity 
           style={[styles.backButton, {  backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.7)', borderColor: colors.surfaceBorder, borderWidth: 1 }]}
@@ -752,7 +745,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
         showsVerticalScrollIndicator={false}
        contentContainerStyle={styles.scrollContent}
       >
-       {}
+
         <Animated.View entering={FadeInDown.delay(50)} style={styles.profileCardContainer}>
           <View style={[
             styles.profileCard, 
@@ -775,8 +768,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 <Text style={[styles.specialty, { color: colors.primary }]}>
                   {doctorDetails.specializations[0] || 'General Physician'}
                </Text>
-                
-                {}
+
                 {doctorDetails.isVerified ? (
                   <View style={styles.verificationRow}>
                     <View style={[styles.badgeItem, {  backgroundColor: isDarkMode ? 'rgba(16,185,129,0.12)' : 'rgba(16,185,129,0.08)' }]}>
@@ -819,7 +811,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           </View>
         </Animated.View>
 
-        {}
         <Animated.View entering={FadeInDown.delay(100)} style={styles.modesContainer}>
           <View style={[styles.modeChip, {  backgroundColor: isDarkMode ? '#171E2D' : '#F1F5F9' }]}>
             <Text style={styles.modeEmoji}>🏥</Text>
@@ -841,7 +832,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           </View>
         </Animated.View>
 
-        {}
         <Animated.View entering={FadeInDown.delay(150)} style={styles.availabilitySection}>
           <Text style={[styles.sectionTitleLabel, {  color: colors.textPrimary }]}>Next Available Slots</Text>
          {slotsLoading ? (
@@ -850,7 +840,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
             </View>
           ) : (
            <View style={styles.timelineContainer}>
-              {}
+
               <View style={styles.timelineDay}>
                 <Text style={[styles.timelineDayLabel, {  color: colors.textPrimary }]}>Today</Text>
                 {availableSlotsToday.filter(s => s.available).length > 0 ? (
@@ -871,8 +861,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
               </View>
               
               <View style={styles.timelineDivider} />
-              
-              {}
+
               <View style={styles.timelineDay}>
                 <Text style={[styles.timelineDayLabel, {  color: colors.textPrimary }]}>Tomorrow</Text>
                 {availableSlotsTomorrow.filter(s => s.available).length > 0 ? (
@@ -898,7 +887,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           </Text>
         </Animated.View>
 
-        {}
         {highlightItems.length > 0 && (
           <Animated.View entering={FadeInDown.delay(200)} style={styles.highlightsWrapper}>
             <Text style={[styles.sectionTitleLabel, {  color: colors.textPrimary }]}>Doctor Highlights</Text>
@@ -922,11 +910,10 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           </Animated.View>
        )}
 
-        {}
         <Animated.View entering={FadeInDown.delay(220)} style={styles.mediaSection}>
           <Text style={[styles.sectionTitleLabel, { color: colors.textPrimary }]}>Media & Trust Assets</Text>
          <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.mediaScroll}>
-            {} 
+
             <TouchableOpacity 
               activeOpacity={0.9} 
               style={[
@@ -953,7 +940,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
               </View>
             </TouchableOpacity>
 
-            {}
             <View style={[styles.clinicPhotoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
               <Image 
                 source={{  uri: 'https://images.unsplash.com/photo-1519494026892-80bbd2d6fd0d?auto=format&fit=crop&q=80&w=300' }} 
@@ -965,7 +951,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
               </View>
             </View>
 
-            {}
             <View style={[styles.clinicPhotoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
               <Image 
                 source={{  uri: 'https://images.unsplash.com/photo-1583364481905-d41f4b551289?auto=format&fit=crop&q=80&w=300' }} 
@@ -979,7 +964,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           </ScrollView>
         </Animated.View>
 
-        {}
        <View style={[
           styles.tabsContainer, 
           {  
@@ -1020,11 +1004,10 @@ const DoctorProfileScreen = ({ navigation, route }) => {
           })}
         </View>
 
-        {}
         <Animated.View style={animatedTabStyle}>
           {activeTab === 'about' ? (
             <View style={styles.tabContentContainer}>
-             {}
+
               <View style={[styles.infoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
                <View style={styles.cardHeaderRow}>
                   <Text style={styles.cardHeaderIcon}>📝</Text>
@@ -1033,7 +1016,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 <Text style={[styles.cardText, {  color: colors.textSecondary }]}>{doctorDetails.bio}</Text>
              </View>
 
-              {}
               <View style={[styles.infoCard, {  backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
                 <View style={styles.cardHeaderRow}>
                   <Text style={styles.cardHeaderIcon}>🩺</Text>
@@ -1057,7 +1039,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 </View>
               </View>
 
-              {}
               {(doctorDetails.education.length > 0 || doctorDetails.certifications.length > 0) && (
                 <View style={[styles.infoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
                   <View style={styles.cardHeaderRow}>
@@ -1085,7 +1066,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 </View>
               )}
 
-              {}
               {doctorDetails.languages && doctorDetails.languages.length > 0 && (
                 <View style={[styles.infoCard, {  backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
                   <View style={styles.cardHeaderRow}>
@@ -1102,7 +1082,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 </View>
               )}
 
-              {}
               {doctorDetails.clinicName && doctorDetails.clinicAddress && (
                 <View style={[styles.infoCard, { backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
                   <View style={styles.cardHeaderRow}>
@@ -1114,7 +1093,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                   {doctorDetails.clinicDistance && (
                     <Text style={[styles.clinicDistText, {  color: colors.primary }]}>🚀 Proximity: {doctorDetails.clinicDistance}</Text>
                   )}
-                  {}
+
                   <LinearGradient
                     colors={isDarkMode ? ['#171B26', '#222A3F'] : ['#E2E8F0', '#CFD8DC']}
                    style={styles.mapPreview}
@@ -1133,13 +1112,11 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 <ActivityIndicator size="small" color={colors.primary} style={{ marginVertical: 20 }} />
              )}
 
-              {}
               {reviewsTotal > 0 ? (
                 <>
                   {renderReviewAnalytics()}
                   {renderSortAndFilters()}
 
-                  {}
                   {reviewsList.map((rev) => (
                     <View key={rev._id} style={[styles.reviewCard, {  backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF', borderColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(0,0,0,0.03)' }]}>
                       <View style={styles.reviewHeader}>
@@ -1168,12 +1145,10 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                       )}
                       <Text style={[styles.reviewCommentText, {  color: colors.textSecondary }]}>{rev.review}</Text>
 
-                      {}
                       {rev.photo && (
                         <Image source={{ uri: rev.photo }} style={styles.reviewImageAttached} />
                       )} 
-                      
-                      {}
+
                       <View style={styles.voteActionsRow}>
                         <TouchableOpacity 
                           onPress={() => handleVoteHelpful(rev._id, 'helpful')} 
@@ -1207,7 +1182,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                         </TouchableOpacity>
                       </View>
 
-                      {}
                       <View style={styles.commentActionsRow}>
                         <TouchableOpacity 
                           onPress={() => {
@@ -1220,7 +1194,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                         </TouchableOpacity>
                       </View>
 
-                      {}
                       {activeReplyBox && activeReplyBox.reviewId === rev._id && (
                         <View style={[styles.replyInputWrapper, {  borderColor: colors.primary, borderWidth: 1, backgroundColor: isDarkMode ? '#171E2D' : '#F8FAFC' }]}>
                           <Text style={[styles.replyToLabel, { color: colors.textMuted }]}>
@@ -1259,7 +1232,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                         </View>
                       )}
 
-                      {}
                      {rev.discussionThread && rev.discussionThread.length > 0 && (
                         <View style={styles.repliesThreadContainer}>
                           {rev.discussionThread.map(reply => renderReplyNode(reply, 1))}
@@ -1269,7 +1241,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                     </View>
                   ))}
 
-                  {}
                   {reviewsPage < reviewsTotalPages && (
                    <TouchableOpacity 
                       onPress={handleLoadMoreReviews} 
@@ -1310,7 +1281,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
         </Animated.View>
       </ScrollView>
 
-      {}
       <Modal
         visible={isReviewModalVisible}
         animationType="slide"
@@ -1333,7 +1303,7 @@ const DoctorProfileScreen = ({ navigation, route }) => {
               showsVerticalScrollIndicator={false}
               contentContainerStyle={styles.modalScrollContent}
             >
-              {}
+
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, {  color: colors.textMuted }]}>Rating</Text>
                 <View style={styles.ratingSelectorRow}>
@@ -1355,7 +1325,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                </View>
               </View>
 
-              {}
               <View style={styles.inputGroup}>
                <Text style={[styles.inputLabel, {  color: colors.textMuted }]}>Review Title</Text>
                 <TextInput
@@ -1367,7 +1336,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 />
               </View>
 
-             {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Review Comment</Text>
                 <TextInput
@@ -1381,7 +1349,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 />
               </View>
 
-             {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Visit Type</Text>
                 <View style={[styles.segmentedControl, { borderColor: colors.surfaceBorder }]}>
@@ -1424,7 +1391,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 </View>
               </View>
 
-              {}
               <View style={styles.verifiedFilterToggleRow}>
                 <Text style={[styles.verifiedFilterLabel, {  color: colors.textPrimary }]}>Submit Review Anonymously</Text>
                 <TouchableOpacity 
@@ -1438,7 +1404,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 </TouchableOpacity>
               </View>
 
-              {}
               <View style={styles.inputGroup}>
                 <Text style={[styles.inputLabel, { color: colors.textMuted }]}>Photo Attachment (Optional)</Text>
                 <View style={styles.photoUploadArea}>
@@ -1462,7 +1427,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
                 </View>
               </View>
 
-              {}
               <TouchableOpacity 
                 onPress={handleReviewFormSubmit}
                 disabled={submittingReview}
@@ -1481,7 +1445,6 @@ const DoctorProfileScreen = ({ navigation, route }) => {
         </View>
      </Modal>
 
-      {}
       <View style={[
         styles.bottomBar,
         {

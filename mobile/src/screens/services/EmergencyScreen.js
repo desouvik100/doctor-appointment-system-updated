@@ -304,7 +304,6 @@ const EmergencyScreen = ({ navigation }) => {
       </View> 
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {}
         <View style={styles.sosSection}>
           <TouchableOpacity
             style={styles.sosButton}
@@ -326,8 +325,6 @@ const EmergencyScreen = ({ navigation }) => {
               <Text style={styles.sosSubtext}>Press for emergency</Text>
             </LinearGradient>
           </TouchableOpacity>
-
-         {}
           <View style={styles.locationStatus}>
             {loadingLocation ? (
               <Text style={styles.locationText}>📍 Getting location...</Text>
@@ -344,8 +341,6 @@ const EmergencyScreen = ({ navigation }) => {
             This will alert emergency contacts and share your location
           </Text>
         </View>
-
-        {}
         {emergencyInfo && (
           <Card variant="gradient" style={styles.medicalCard}>
             <Text style={styles.medicalTitle}>Your Medical Info</Text>
@@ -361,8 +356,6 @@ const EmergencyScreen = ({ navigation }) => {
             </View>
           </Card>
         )}
-
-       {}
         <View style={styles.section}>
          <Text style={styles.sectionTitle}>Emergency Numbers</Text>
           <View style={styles.emergencyGrid}>
@@ -381,8 +374,6 @@ const EmergencyScreen = ({ navigation }) => {
             ))}
           </View>
         </View>
-
-        {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Nearby Hospitals</Text>
@@ -411,8 +402,6 @@ const EmergencyScreen = ({ navigation }) => {
             </Card>
           </TouchableOpacity>
        </View>
-
-        {}
         <View style={styles.section}>
          <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>SOS Contacts</Text>
@@ -465,8 +454,6 @@ const EmergencyScreen = ({ navigation }) => {
             </Card>
          )}
         </View>
-
-        {}
         {personalContacts.length > 0 && (
           <View style={styles.section}>
             <Text style={styles.sectionTitle}>Profile Emergency Contact</Text>
@@ -490,8 +477,6 @@ const EmergencyScreen = ({ navigation }) => {
             ))}
           </View>
         )}
-
-        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Quick First Aid</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -511,8 +496,6 @@ const EmergencyScreen = ({ navigation }) => {
           </ScrollView>
        </View>
       </ScrollView>
-
-      {}
       <Modal visible={addContactModal} transparent animationType="slide" onRequestClose={() => setAddContactModal(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalSheet, { backgroundColor: colors.backgroundCard }]}>

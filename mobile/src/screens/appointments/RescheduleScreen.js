@@ -80,7 +80,6 @@ let RescheduleScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {}
         <Card variant="gradient" style={styles.currentCard}>
           <Text style={styles.currentLabel}>Current Appointment</Text>
           <View style={styles.currentRow}>
@@ -93,8 +92,6 @@ let RescheduleScreen = ({ navigation, route }) => {
             </View>
           </View>
         </Card>
-
-        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Select New Date</Text> 
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.datesContainer}>
@@ -121,8 +118,6 @@ let RescheduleScreen = ({ navigation, route }) => {
             ))}
           </ScrollView>
         </View>
-
-        {}
         {selectedDate && (
           <View style={styles.section}>
            <Text style={styles.sectionTitle}>Select New Time</Text>

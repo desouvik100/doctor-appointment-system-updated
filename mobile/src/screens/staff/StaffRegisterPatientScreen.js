@@ -162,7 +162,6 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing.lg }]}
         showsVerticalScrollIndicator={false}
      >
-        {}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
             <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
@@ -170,8 +169,6 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Register Patient</Text>
           <View style={{ width: 40 }} />
         </View>
-
-        {}
         <View style={[styles.formCard, { backgroundColor: colors.backgroundCard, borderColor: colors.surfaceBorder }]}>
           <View style={styles.formHeader}>
             <LinearGradient colors={['#FF6B6B', '#FF8E8E']} style={styles.formIcon}>
@@ -248,8 +245,6 @@ const StaffRegisterPatientScreen = ({ navigation }) => {
             multiline
           />
         </View>
-
-        {}
         <TouchableOpacity
           style={[styles.registerBtn, loading && styles.registerBtnDisabled]}
           onPress={handleRegister}

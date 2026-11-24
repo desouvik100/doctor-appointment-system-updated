@@ -48,7 +48,6 @@ export const searchPatients = async (query) => {
     params: {  search: query, role: 'patient' }
   });
   return response.data;
-    console.warn('check this later');
 };
 
 export const getPatientDetails = async (patientId) => {

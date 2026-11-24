@@ -80,7 +80,7 @@ let LiveQueueStatus = ({ appointments = [], activeQueue }) => {
         },
       ]}
     >
-      {}
+
       <View style={styles.topRow}>
         <View style={styles.liveBadgeContainer}>
           <Animated.View style={[styles.liveDot, { backgroundColor: colors.error }]} />
@@ -91,12 +91,11 @@ let LiveQueueStatus = ({ appointments = [], activeQueue }) => {
         </Text>
       </View>
 
-      {}
       <View style={styles.doctorInfoRow}>
         <View>
           <Text style={[styles.docName, { color: colors.textPrimary }]}>{todayAppointment.doctorName}</Text>
           <Text style={[styles.docSpec, { color: colors.textMuted }]}>{todayAppointment.specialty}</Text>
-    console.log("checkpoint")
+
         </View>
         <TouchableOpacity
           style={[styles.trackBtn, { backgroundColor: colors.primary }]}
@@ -108,34 +107,29 @@ let LiveQueueStatus = ({ appointments = [], activeQueue }) => {
         </TouchableOpacity>
       </View>
 
-      {}
       <View style={styles.stepperContainer}>
-       {}
+
         <View style={[styles.progressLineBg, { backgroundColor: isDarkMode ? '#2A344A' : '#E2E8F0' }]}>
           <Animated.View style={[styles.progressLineFill, { backgroundColor: colors.success }, animatedProgressStyle]} />
         </View>
 
-        {}
         <View style={styles.stepsRow}>
-         {}
+
           <View style={styles.stepNodeContainer}>
             <View style={[styles.nodeCircle, activeStep >= 0 ? { backgroundColor: colors.success } : { backgroundColor: '#A0AEC0' }]} />
             <Text style={[styles.stepLabel, { color: colors.textPrimary, fontWeight: activeStep === 0 ? '800' : '500' }]}>Arrived</Text>
           </View>
 
-          {}
           <View style={styles.stepNodeContainer}>
             <Animated.View style={[styles.nodeCircle, activeStep >= 1 ? { backgroundColor: colors.success } : { backgroundColor: '#A0AEC0' }, activeStep === 1 && animatedActiveStepStyle]} />
             <Text style={[styles.stepLabel, { color: colors.textPrimary, fontWeight: activeStep === 1 ? '800' : '500' }]}>Consulting</Text>
           </View>
 
-          {}
           <View style={styles.stepNodeContainer}>
             <Animated.View style={[styles.nodeCircle, activeStep >= 2 ? { backgroundColor: colors.primary } : { backgroundColor: '#A0AEC0' }, activeStep === 2 && animatedActiveStepStyle]} />
             <Text style={[styles.stepLabel, { color: colors.textPrimary, fontWeight: activeStep === 2 ? '800' : '500' }]}>Your Turn</Text>
           </View>
 
-          {}
           <View style={styles.stepNodeContainer}>
             <View style={[styles.nodeCircle, activeStep >= 3 ? { backgroundColor: colors.success } : { backgroundColor: '#A0AEC0' }]} />
             <Text style={[styles.stepLabel, { color: colors.textPrimary, fontWeight: activeStep === 3 ? '800' : '500' }]}>Finished</Text>
@@ -143,7 +137,6 @@ let LiveQueueStatus = ({ appointments = [], activeQueue }) => {
         </View>
       </View>
 
-      {}
       <View style={[styles.metricsRow, { backgroundColor: isDarkMode ? '#1E283C' : '#FFFFFF' }]}>
        <View style={styles.metricItem}>
           <Text style={[styles.metricLabel, { color: colors.textMuted }]}>Estimated Wait</Text>
@@ -162,7 +155,6 @@ let LiveQueueStatus = ({ appointments = [], activeQueue }) => {
         </View>
       </View>
 
-      {}
       <Text style={[styles.statusText, { color: colors.textMuted }]}>
         📢 {isYourTurn ? 'Please enter the consultation room now.' : `Doctor is currently consulting client #${position + 2}`}
       </Text>

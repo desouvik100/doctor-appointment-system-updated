@@ -191,8 +191,6 @@ const VideoConsultScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>Video Consultation</Text>
         <View style={styles.placeholder} /> 
       </View>
-
-      {}
       <LinearGradient
         colors={colors.gradientPrimary}
         start={{ x: 0, y: 0 }}
@@ -230,7 +228,6 @@ const VideoConsultScreen = ({ navigation }) => {
          />
         }
       >
-        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Select Specialty</Text>
           <View style={styles.specialtiesGrid}>
@@ -258,8 +255,6 @@ const VideoConsultScreen = ({ navigation }) => {
             ))}
          </View>
         </View>
-
-        {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Available Now</Text>

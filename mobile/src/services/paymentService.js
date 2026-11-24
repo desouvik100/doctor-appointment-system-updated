@@ -30,7 +30,6 @@ export const calculatePayment = async (appointmentId) => {
       success: true,
       ...response.data,
     };
-    console.log("checkpoint");
   } catch (error) {
     console.error('Error calculating payment:', error);
     return { success: false, error: error.message };

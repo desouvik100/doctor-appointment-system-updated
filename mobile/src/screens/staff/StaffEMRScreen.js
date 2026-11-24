@@ -127,7 +127,6 @@ const StaffEMRScreen = ({ navigation }) => {
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing.lg }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
             <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
@@ -135,7 +134,6 @@ const StaffEMRScreen = ({ navigation }) => {
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>EMR System</Text>
           <View style={{ width: 40 }} />
         </View>
-        {}
         {subscription ? (
           <LinearGradient colors={['#10B981', '#059669']} style={styles.subBanner}>
             <View style={styles.subBannerLeft}>
@@ -160,7 +158,6 @@ const StaffEMRScreen = ({ navigation }) => {
            </View>
           </LinearGradient>
         )}
-        {}
         <View style={styles.statsGrid}>
           <StatCard 
             icon="👥" 
@@ -190,7 +187,6 @@ const StaffEMRScreen = ({ navigation }) => {
             gradient={['#8B5CF6', '#6D28D9']}
           />
         </View>
-        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Quick Actions</Text>
           <View style={styles.actionsGrid}>
@@ -233,7 +229,6 @@ const StaffEMRScreen = ({ navigation }) => {
             </TouchableOpacity>
           </View>
         </View>
-        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Patient Search</Text>
           <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
@@ -251,8 +246,6 @@ const StaffEMRScreen = ({ navigation }) => {
               </TouchableOpacity>
             )}
           </View>
-
-          {}
           {filteredPatients.length === 0 ? (
             <Card style={[styles.emptyCard, { backgroundColor: colors.surface }]}>
               <Text style={styles.emptyIcon}>👤</Text>

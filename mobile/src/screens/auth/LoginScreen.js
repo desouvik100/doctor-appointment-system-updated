@@ -199,8 +199,6 @@ const LoginScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
-
-      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
         <View style={styles.orb1}>
@@ -223,15 +221,10 @@ const LoginScreen = ({ navigation }) => {
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {}
           <TouchableOpacity style={[styles.backBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]} onPress={() => navigation.goBack()}>
             <Text style={[styles.backIcon, { color: colors.textPrimary }]}>←</Text>
           </TouchableOpacity>
-
-         {}
          <ErrorToast message={errorMsg} />
-
-          {}
           <View style={styles.header}>
             <LinearGradient colors={colors.primaryGradient || colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.logoGradient}>
               <Text style={styles.logoPlus}>+</Text>
@@ -239,8 +232,6 @@ const LoginScreen = ({ navigation }) => {
             <Text style={[styles.welcomeTitle, { color: colors.textPrimary }]}>Welcome back 👋</Text>
             <Text style={[styles.welcomeSub, { color: colors.textSecondary }]}>Sign in to your HealthSync account</Text>
           </View>
-
-          {}
           <View style={styles.form}>
             <Text style={[styles.fieldLabel, { color: colors.textPrimary }]}>Email address</Text>
            <FancyInput
@@ -270,8 +261,6 @@ const LoginScreen = ({ navigation }) => {
             <TouchableOpacity style={styles.forgotRow} onPress={() => navigation.navigate('ForgotPassword')}>
               <Text style={[styles.forgotText, { color: colors.primary }]}>Forgot password?</Text>
             </TouchableOpacity>
-
-            {}
             <TouchableOpacity
               style={[styles.signInBtn, loading && styles.signInBtnDisabled]}
               onPress={handleLogin}
@@ -285,23 +274,17 @@ const LoginScreen = ({ navigation }) => {
                 }
               </LinearGradient>
             </TouchableOpacity>
-
-            {}
             {biometricAvailable && hasStoredCredentials ? (
               <TouchableOpacity style={[styles.biometricBtn, { borderColor: colors.primaryLight, backgroundColor: colors.surface }]} onPress={handleBiometricLogin}>
                 <Text style={styles.biometricIcon}>{biometricType === 'Face ID' ? '👤' : '👆'}</Text>
                 <Text style={[styles.biometricText, { color: colors.primary }]}>Sign in with {biometricType}</Text>
               </TouchableOpacity>
             ) : null}
-
-            {}
             <View style={styles.divider}>
               <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
               <Text style={[styles.dividerText, { color: colors.textMuted }]}>or continue with</Text>
               <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
             </View>
-
-            {}
             <View style={styles.socialStack}>
               {[
                 { id: 'google',   label: 'Continue with Google',   icon: <GoogleIcon />,       color: colors.textPrimary, bg: colors.surface },
@@ -334,15 +317,11 @@ const LoginScreen = ({ navigation }) => {
               ))}
             </View>
           </View>
-
-          {}
           <View style={[styles.trustCard, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder, borderWidth: isDarkMode ? 1 : 0 }]}>
             <Text style={[styles.trustText, { color: colors.textSecondary }]}>
               🔐 Your health records and personal data are fully protected under HIPAA compliance standards and 256-bit bank-grade encryption.
             </Text>
           </View>
-
-          {}
           <View style={styles.signUpRow}>
             <Text style={[styles.signUpText, { color: colors.textSecondary }]}>Don't have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Register')}>

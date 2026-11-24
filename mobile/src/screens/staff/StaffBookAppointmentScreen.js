@@ -113,7 +113,6 @@ const StaffBookAppointmentScreen = ({ navigation, route })=>{
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent}>
-       {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Patient</Text>
           {form.patientName ? (
@@ -133,8 +132,6 @@ const StaffBookAppointmentScreen = ({ navigation, route })=>{
             </TouchableOpacity>
           )}
         </View>
-
-        {}
        <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Doctor</Text>
           {form.doctorName ? (
@@ -165,8 +162,6 @@ const StaffBookAppointmentScreen = ({ navigation, route })=>{
             </View>
           )}
         </View>
-
-        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Date</Text>
           <TextInput
@@ -177,8 +172,6 @@ const StaffBookAppointmentScreen = ({ navigation, route })=>{
             placeholderTextColor={colors.textMuted}
          />
         </View>
-
-        {}
         {form.doctorId && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Available Slots</Text>
@@ -207,8 +200,6 @@ const StaffBookAppointmentScreen = ({ navigation, route })=>{
             )}
           </View>
         )}
-
-       {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Type</Text>
           <View style={styles.typeRow}>
@@ -229,8 +220,6 @@ const StaffBookAppointmentScreen = ({ navigation, route })=>{
            ))}
           </View>
         </View>
-
-        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Notes (Optional)</Text>
           <TextInput
@@ -243,8 +232,6 @@ const StaffBookAppointmentScreen = ({ navigation, route })=>{
             numberOfLines={3}
           />
        </View>
-
-        {}
         <TouchableOpacity
           style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
           onPress={handleSubmit}
@@ -297,7 +284,6 @@ const styles = StyleSheet.create({
   typeText: { ...typography.bodySmall },
   typeTextActive: { color: '#FF6B6B', fontWeight: '600' },
   textArea: { padding: spacing.lg, borderRadius: borderRadius.lg, ...typography.bodyMedium, minHeight: 80, textAlignVertical: 'top' },
-    console.log('DEBUG: StaffBookAppointmentScreen.js');
   submitBtn: { backgroundColor: '#FF6B6B', paddingVertical: spacing.lg, borderRadius: borderRadius.lg, alignItems: 'center' },
   submitBtnDisabled: { opacity: 0.6 },
   submitBtnText: { color: '#fff', ...typography.bodyLarge, fontWeight: '600' },

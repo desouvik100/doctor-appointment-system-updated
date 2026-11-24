@@ -145,8 +145,6 @@ const ReportDetailsScreen = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
-
-      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
           <Icon name="arrow-back" size={20} color={colors.textPrimary} />
@@ -162,8 +160,6 @@ const ReportDetailsScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        
-        {}
         <Card variant="gradient" style={styles.mainCard}>
           <View style={styles.mainHeader}>
             <View style={styles.mainIconContainer}>
@@ -189,8 +185,6 @@ const ReportDetailsScreen = ({ navigation, route }) => {
             )}
           </View>
        </Card>
-
-        {}
         <Card variant="default" style={styles.infoCard}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>General Information</Text>
           
@@ -223,20 +217,14 @@ const ReportDetailsScreen = ({ navigation, route }) => {
             <Text style={[styles.infoValue, { color: colors.textPrimary }]}>{formatDate(report.orderDate)}</Text>
           </View>
         </Card>
-
-        {}
         {report.results && report.results.length > 0 && (
           <View style={styles.resultsContainer}>
             <Text style={[styles.sectionHeading, { color: colors.textPrimary }]}>Test Results</Text>
-            
-           {}
             <View style={[styles.tableHeader, { borderBottomColor: colors.divider }]}>
               <Text style={[styles.colHeader, styles.colParam, { color: colors.textSecondary }]}>Parameter</Text>
               <Text style={[styles.colHeader, styles.colVal, { color: colors.textSecondary }]}>Value</Text>
               <Text style={[styles.colHeader, styles.colRef, { color: colors.textSecondary }]}>Reference Range</Text>
             </View>
-
-            {}
             {report.results.map((res, index) => (
               <View key={index} style={[styles.tableRow, { borderBottomColor: colors.divider }]}>
                 <View style={styles.colParam}>
@@ -264,8 +252,6 @@ const ReportDetailsScreen = ({ navigation, route }) => {
             ))}
           </View>
         )}
-
-        {}
         {report.interpretation && (
           <Card variant="default" style={styles.commentCard}>
             <Text style={[styles.commentTitle, { color: colors.primary }]}>Clinical Interpretation</Text>
@@ -279,8 +265,6 @@ const ReportDetailsScreen = ({ navigation, route }) => {
             <Text style={[styles.commentText, { color: colors.textPrimary }]}>{report.comments}</Text>
           </Card>
         )}
-
-        {}
         {report.status === 'verified' && (
           <Card variant="default" style={styles.verificationCard}>
             <View style={styles.verificationRow}>

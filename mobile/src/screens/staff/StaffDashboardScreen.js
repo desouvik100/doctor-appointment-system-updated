@@ -96,7 +96,6 @@ const StaffDashboardScreen = ({ navigation })=>{
         contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top + spacing.lg }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {}
         <View style={styles.header}>
           <View>
             <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()} 👩‍💼</Text>
@@ -109,16 +108,12 @@ const StaffDashboardScreen = ({ navigation })=>{
             <Avatar name={user?.name || 'Staff'} size="large" showBorder source={user?.profilePhoto ? { uri: user.profilePhoto } : null} />
           </TouchableOpacity>
         </View>
-
-        {}
         <View style={styles.statsGrid}>
           <StatCard icon="📅" value={stats.todayAppointments} label="Today" color="#FF6B6B" onPress={() => navigation.navigate('Appointments')} />
           <StatCard icon="✅" value={stats.checkedIn} label="Checked In" color="#10B981" onPress={() => navigation.navigate('StaffQueue')} />
           <StatCard icon="⏳" value={stats.waiting} label="Waiting" color="#F39C12" onPress={() => navigation.navigate('StaffQueue')} />
           <StatCard icon="🏁" value={stats.completed} label="Completed" color="#6C5CE7" onPress={() => navigation.navigate('Appointments')} />
         </View>
-
-        {}
         <QuickActionsGrid
           actions={STAFF_ACTIONS}
           variant="grid"
@@ -126,8 +121,6 @@ const StaffDashboardScreen = ({ navigation })=>{
           showTitle={true}
           showBadge={false}
        />
-
-        {}
         <View style={styles.section}>
          <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Current Queue</Text>
           <TouchableOpacity style={[styles.queueCard, { backgroundColor: colors.surface }]} onPress={() => navigation.navigate('StaffQueue')} activeOpacity={0.7}>
@@ -143,8 +136,6 @@ const StaffDashboardScreen = ({ navigation })=>{
             </View>
           </TouchableOpacity>
         </View>
-
-        {}
        <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Appointments</Text>

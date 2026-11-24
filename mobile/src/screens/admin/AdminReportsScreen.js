@@ -88,7 +88,6 @@ const AdminReportsScreen = ({ navigation })=>{
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}
       >
-        {}
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Overview</Text>
         <View style={styles.statsGrid}>
           <StatCard icon="👥" value={overview.totalPatients || 0} label="Patients" color="#3498DB" />
@@ -96,8 +95,6 @@ const AdminReportsScreen = ({ navigation })=>{
           <StatCard icon="🏥" value={overview.totalClinics || 0} label="Clinics" color="#1ABC9C" />
           <StatCard icon="📅" value={overview.totalAppointments || 0} label="Appointments" color="#E74C3C" />
        </View>
-
-        {}
         {specStats.length > 0 && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>By Specialization</Text>
@@ -112,8 +109,6 @@ const AdminReportsScreen = ({ navigation })=>{
             </View>
           </>
        )}
-
-        {}
        {demographics.ageGroups && (
           <>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Patient Demographics</Text>
@@ -131,8 +126,6 @@ const AdminReportsScreen = ({ navigation })=>{
             </View>
           </>
         )}
-
-        {}
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Export Data</Text>
         <View style={styles.exportButtons}>
           <TouchableOpacity style={[styles.exportBtn, { backgroundColor: colors.surface }]}>

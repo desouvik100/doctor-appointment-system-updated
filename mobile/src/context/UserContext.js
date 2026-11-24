@@ -78,7 +78,6 @@ export const UserProvider = ({ children }) => {
     }
   };
 
-    console.log("checkpoint");
   const logoutAndClearBiometrics = async () => {
    try {
       await logout();

@@ -135,21 +135,15 @@ const DoctorAppointmentsScreen = ({ navigation })=>{
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      
-      {}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Appointments</Text>
       </View>
-
-     {}
       <View style={styles.filters}>
         <FilterButton label="All" value="all" />
        <FilterButton label="Today" value="today" />
        <FilterButton label="Upcoming" value="upcoming" />
         <FilterButton label="Completed" value="completed" />
       </View>
-
-      {}
       <FlatList
         data={appointments}
         renderItem={renderAppointment}

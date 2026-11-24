@@ -219,7 +219,6 @@ const SymptomCheckerScreen = ({ navigation }) => {
         placeholderTextColor={colors.textMuted}
         value={duration}
         onChangeText={setDuration}
-    console.log('DEBUG: SymptomCheckerScreen.js');
       />
     </View>
   );
@@ -283,8 +282,6 @@ const SymptomCheckerScreen = ({ navigation }) => {
         <Text style={styles.headerTitle}>Symptom Checker</Text>
         <View style={styles.placeholder} />
       </View>
-
-      {}
       {step < 4 && (
         <View style={styles.progressContainer}>
           {[1, 2, 3].map(s => (
@@ -306,8 +303,6 @@ const SymptomCheckerScreen = ({ navigation }) => {
           </View>
         )}
       </ScrollView>
-
-      {}
       {step < 4 && !loading && (
         <View style={styles.navButtons}>
          {step > 1 && (

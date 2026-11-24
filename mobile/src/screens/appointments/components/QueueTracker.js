@@ -137,7 +137,6 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
 
   return (
     <View style={styles.container}>
-      {}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>Live Queue Status</Text>
         <View style={styles.liveBadge}>
@@ -147,10 +146,7 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
           </Text>
         </View> 
       </View>
-
-      {}
       <View style={styles.content}>
-        {}
         <LinearGradient colors={getGradient()} style={styles.positionCircle}>
           <Text style={styles.positionNumber}>
             {queueData.isYourTurn ? '🎉' : (queueData.position ?? '—')}
@@ -159,8 +155,6 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
             {queueData.isYourTurn ? 'Your turn' : 'in queue'}
           </Text>
         </LinearGradient>
-
-        {}
        <View style={styles.stats}>
           <View style={styles.statRow}>
            <Text style={styles.statIcon}>⏱️</Text>
@@ -205,8 +199,6 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
           )}
        </View>
       </View>
-
-      {}
       {queueData.isYourTurn && (
         <View style={[styles.alertBanner, { backgroundColor: `${colors.success}18` }]}> 
           <Text style={styles.alertIcon}>🔔</Text>
@@ -215,8 +207,6 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
          </Text>
         </View>
      )}
-
-      {}
       {!queueData.isYourTurn && queueData.isAlmostTurn && (
         <View style={[styles.alertBanner, { backgroundColor: `${colors.warning}18` }]}>
           <Text style={styles.alertIcon}>⚡</Text>
@@ -225,15 +215,11 @@ const QueueTracker = ({ appointmentId, clinicId, doctorId, initialPosition, init
           </Text>
         </View>
       )}
-
-      {}
       {queueData.recommendation?.message && !queueData.isYourTurn && !queueData.isAlmostTurn && (
         <Text style={[styles.recommendation, { color: colors.textSecondary }]}>
          {queueData.recommendation.message}
         </Text>
       )}
-
-      {}
       {error && (
         <TouchableOpacity onPress={fetchQueueStatus} style={styles.retryRow}>
           <Text style={[styles.errorText, { color: colors.error }]}>{error}</Text>

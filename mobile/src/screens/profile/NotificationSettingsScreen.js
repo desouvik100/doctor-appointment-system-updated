@@ -98,7 +98,6 @@ const NotificationSettingsScreen = ({ navigation })=>{
     // console.log('todo: remove this')
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Notification Types</Text>
           <Card variant="default" style={styles.settingsCard}>
@@ -111,8 +110,6 @@ const NotificationSettingsScreen = ({ navigation })=>{
             ))}
           </Card>
         </View>
-
-        {}
         <View style={styles.section}> 
           <Text style={styles.sectionTitle}>Sound & Vibration</Text>
          <Card variant="default" style={styles.settingsCard}>
@@ -124,8 +121,6 @@ const NotificationSettingsScreen = ({ navigation })=>{
             ))}
           </Card>
         </View>
-
-        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Test Notifications</Text>
           <TouchableOpacity 
@@ -142,8 +137,6 @@ const NotificationSettingsScreen = ({ navigation })=>{
             <Text style={styles.testButtonText}>Send Test Notification</Text>
           </TouchableOpacity>
         </View>
-
-        {}
         <View style={styles.infoBox}>
           <Text style={styles.infoIcon}>ℹ️</Text>
           <Text style={styles.infoText}>

@@ -238,7 +238,6 @@ class NotificationService {
           return data;
         }
       }
-    console.log('DEBUG: NotificationService.js');
       return null;
     } catch (error) {
       return null;

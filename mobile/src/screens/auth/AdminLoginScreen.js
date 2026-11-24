@@ -125,8 +125,6 @@ const AdminLoginScreen = ({ navigation })=>{
   return (
    <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0F" />
-      
-      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={['#0A0A0F', '#0F0F1A', '#0A0A0F']}

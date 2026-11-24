@@ -67,7 +67,7 @@ const HealthScoreCard = ({
       </View>
 
       <View style={styles.contentRow}>
-        {}
+
         <View style={styles.scoreContainer}>
          <View style={[styles.circlePlaceholder, { borderColor: isDarkMode ? '#2A3142' : '#F1F5F9' }]}>
             <View style={styles.scoreTextWrapper}>
@@ -77,9 +77,8 @@ const HealthScoreCard = ({
           </View>
         </View>
 
-        {}
        <View style={styles.statsColumn}>
-          {}
+
           <View style={styles.statItem}>
             <View style={[styles.iconWrapper, { backgroundColor: '#E0F7FA' }]}>
              <Text style={styles.emoji}>💧</Text>
@@ -92,7 +91,6 @@ const HealthScoreCard = ({
             </View>
           </View>
 
-          {}
           <View style={styles.statItem}>
             <View style={[styles.iconWrapper, { backgroundColor: '#ECEFF1' }]}>
               <Text style={styles.emoji}>😴</Text>
@@ -105,7 +103,6 @@ const HealthScoreCard = ({
             </View>
          </View>
 
-          {}
           <View style={styles.statItem}>
             <View style={[styles.iconWrapper, { backgroundColor: '#E8F5E9' }]}>
               <Text style={styles.emoji}>🚶</Text>

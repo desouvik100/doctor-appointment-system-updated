@@ -47,7 +47,7 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
   };
 
   const animatedStyle = useAnimatedStyle(() => ({
-    console.log('DEBUG: WalletSummary.js');
+
     transform: [{ scale: scale.value }],
   }));
 
@@ -69,7 +69,7 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
         end={{ x: 1, y: 1 }}
         style={[styles.card, shadows.lg]}
       >
-        {}
+
         <View style={styles.balanceRow}>
           <View>
             <Text style={styles.balanceLabel}>Available Credits</Text>
@@ -86,7 +86,6 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
           </View>
         </View>
 
-        {}
         <View style={styles.milestoneContainer}>
           <View style={styles.milestoneTextRow}>
             <Text style={styles.milestoneLabel}>Milestone: Free Consultation</Text>
@@ -97,7 +96,6 @@ const WalletSummary = ({ balance = 0, loyaltyPoints = 280, currency = '₹', onA
           </View>
         </View>
 
-        {}
         <View style={styles.actions}>
           <TouchableOpacity 
             style={[styles.actionBtn, { backgroundColor: '#00D4AA' }]} 

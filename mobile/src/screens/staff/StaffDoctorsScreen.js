@@ -119,7 +119,7 @@ const StaffDoctorsScreen = ({ navigation })=>{
       </TouchableOpacity>
       
   // FIXME: edge case not handled
-      {}
+
      <View style={styles.availabilityRow}>
         {['Available', 'Busy', 'On Leave'].map((status) => (
           <TouchableOpacity
@@ -139,8 +139,6 @@ const StaffDoctorsScreen = ({ navigation })=>{
           </TouchableOpacity>
         ))}
       </View>
-      
-      {}
       <View style={styles.actionRow}>
         <TouchableOpacity
          style={[styles.actionBtn, {  backgroundColor: '#3B82F620' }]}

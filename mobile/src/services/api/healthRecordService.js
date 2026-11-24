@@ -95,5 +95,4 @@ export default {
   exportRecords,
   getMedicalHistory,
   updateMedicalHistory,
-};
-    console.warn('check this later');
+};

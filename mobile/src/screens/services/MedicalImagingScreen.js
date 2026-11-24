@@ -483,8 +483,6 @@ const MedicalImagingScreen = ({ navigation })=>{
       >
         <View style={[styles.modalContainer, { backgroundColor: colors.background }]}>
           <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-          
-          {}
          <View style={styles.modalHeader}>
             <TouchableOpacity onPress={() => setSelectedReport(null)} style={[styles.backButton, { backgroundColor: colors.surface }]}>
               <Text style={[styles.backEmoji, { color: colors.textPrimary }]}>←</Text>
@@ -494,7 +492,6 @@ const MedicalImagingScreen = ({ navigation })=>{
           </View>
 
           <ScrollView style={styles.modalContent} showsVerticalScrollIndicator={false}>
-            {}
             <Card variant="gradient" style={styles.detailCard}>
               <View style={styles.detailHeader}>
                <Text style={styles.detailEmoji}>{getImagingEmoji(selectedReport.imagingType)}</Text>
@@ -512,8 +509,6 @@ const MedicalImagingScreen = ({ navigation })=>{
                 </Text>
               </View>
             </Card>
-
-            {}
            <Card variant="default" style={styles.infoCard}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Study Information</Text>
               
@@ -534,32 +529,24 @@ const MedicalImagingScreen = ({ navigation })=>{
                 </View>
               )}
             </Card>
-
-            {}
             {selectedReport.findings && (
               <Card variant="default" style={styles.infoCard}>
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Findings</Text>
                 <Text style={[styles.findingsText, { color: colors.textPrimary }]}>{selectedReport.findings}</Text>
               </Card>
             )}
-
-            {}
             {selectedReport.impression && (
               <Card variant="default" style={styles.infoCard}>
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Impression</Text>
                 <Text style={[styles.impressionDetailText, { color: colors.textPrimary }]}>{selectedReport.impression}</Text>
               </Card>
             )}
-
-            {}
             {selectedReport.recommendations && (
               <Card variant="default" style={styles.infoCard}>
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recommendations</Text>
                 <Text style={[styles.findingsText, { color: colors.textPrimary }]}>{selectedReport.recommendations}</Text>
               </Card>
             )}
-
-            {}
             {selectedReport.images && selectedReport.images.length > 0 && (
               <Card variant="default" style={styles.infoCard}>
                 <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Images ({selectedReport.images.length})</Text>
@@ -596,8 +583,6 @@ const MedicalImagingScreen = ({ navigation })=>{
                </View>
               </Card>
             )}
-
-           {}
             {!selectedReport.findings && !selectedReport.impression && (
               <Card variant="default" style={styles.infoCard}>
                 <View style={styles.pendingContainer}>
@@ -664,8 +649,6 @@ const MedicalImagingScreen = ({ navigation })=>{
             showToolbar={true}
             showMetadata={true}
           />
-           
-          {}
           <View style={styles.imageViewerFooter}>
             <TouchableOpacity 
               style={[styles.imageViewerButton, { backgroundColor: colors.primary }, downloading && styles.imageViewerButtonDisabled]} 
@@ -699,8 +682,6 @@ const MedicalImagingScreen = ({ navigation })=>{
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-      
-      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backButton, { backgroundColor: colors.surface }]}>
           <Text style={[styles.backEmoji, { color: colors.textPrimary }]}>←</Text>
@@ -714,8 +695,6 @@ const MedicalImagingScreen = ({ navigation })=>{
          <Text style={styles.uploadEmoji}>{uploading ? '⏳' : '📤'}</Text>
         </TouchableOpacity>
       </View>
-
-      {}
       <LinearGradient
         colors={['#6366f1', '#8b5cf6']}
         start={{ x: 0, y: 0 }}
@@ -732,8 +711,6 @@ const MedicalImagingScreen = ({ navigation })=>{
           </View>
         </View>
       </LinearGradient>
-
-      {}
       <ScrollView 
         horizontal 
         showsHorizontalScrollIndicator={false}
@@ -761,8 +738,6 @@ const MedicalImagingScreen = ({ navigation })=>{
          </TouchableOpacity>
         ))}
       </ScrollView>
-
-      {}
       {filteredReports.length === 0 ? (
         <View style={styles.emptyContainer}>
           <Text style={styles.emptyEmoji}>🩻</Text>
@@ -799,11 +774,7 @@ const MedicalImagingScreen = ({ navigation })=>{
           }
         />
       )}
-
-      {}
       {renderReportDetail()}
-      
-      {}
       {renderImageViewer()}
     </View>
   );

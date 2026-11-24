@@ -173,7 +173,6 @@ const VitalsHistoryScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />}
       >
-        {}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.vitalsScroll}>
          {vitals.map(vital => (
             <TouchableOpacity
@@ -188,8 +187,6 @@ const VitalsHistoryScreen = ({ navigation }) => {
             </TouchableOpacity>
           ))}
         </ScrollView>
-
-        {}
         <Card variant="gradient" style={styles.currentCard}>
           <View style={styles.currentHeader}>
             <Text style={styles.currentIcon}>{activeVitalConfig?.icon}</Text>
@@ -208,8 +205,6 @@ const VitalsHistoryScreen = ({ navigation }) => {
             <Text style={styles.recordedAt}>Last: {formatDate(currentVital.recordedAt)}</Text>
           )}
         </Card>
-
-        {}
         <View style={styles.dateRangeContainer}>
           {dateRanges.map(range => (
             <TouchableOpacity
@@ -223,8 +218,6 @@ const VitalsHistoryScreen = ({ navigation }) => {
             </TouchableOpacity>
           ))}
         </View>
-
-        {}
         <Card variant="default" style={styles.chartCard}>
           <Text style={styles.chartTitle}>Trend</Text>
           {chartData.length > 0 ? (
@@ -251,8 +244,6 @@ const VitalsHistoryScreen = ({ navigation }) => {
             </View>
           )}
         </Card>
- 
-       {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Recent Readings</Text>
           {vitalsData.length > 0 ? (
@@ -283,8 +274,6 @@ const VitalsHistoryScreen = ({ navigation }) => {
           )}
         </View>
       </ScrollView>
-
-      {}
       <Modal visible={showAddModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={styles.modalContent}>

@@ -129,8 +129,6 @@ const WalletScreen = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle={colors.statusBar} backgroundColor={colors.background} />
-
-      {}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>←</Text>
@@ -150,7 +148,6 @@ const WalletScreen = ({ navigation, route }) => {
           />
        }
       >
-        {}
   // Previous approach didn't handle edge cases properly
         <Animated.View style={{ opacity: balanceOpacity, transform: [{ scale: balanceScale }] }}>
           <LinearGradient colors={colors.gradientPrimary} style={styles.balanceCard}>
@@ -162,8 +159,6 @@ const WalletScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           </LinearGradient>
         </Animated.View>
-
-        {}
         <View style={styles.statsRow}>
           {[
   // TODO: Optimize this loop for large datasets
@@ -197,8 +192,6 @@ const WalletScreen = ({ navigation, route }) => {
             </Animated.View>
           ))}
         </View>
-
-        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Transaction History</Text>
           {transactions.length === 0 ? (
@@ -228,8 +221,6 @@ const WalletScreen = ({ navigation, route }) => {
           )}
         </View>
       </ScrollView>
-
-      {}
       <Modal visible={addMoneyVisible} transparent animationType="slide" onRequestClose={() => setAddMoneyVisible(false)}>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalSheet, { backgroundColor: colors.backgroundCard }]}>

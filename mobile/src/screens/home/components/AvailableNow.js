@@ -131,7 +131,7 @@ const AvailableDoctorCard = ({ doc, index }) => {
           },
         ]}
       >
-        {}
+
         <View style={styles.topInfoRow}>
           <View style={styles.avatarWrapper}>
             <Avatar name={doc.name} size="large" imageUrl={doc.photo || doc.profilePhoto} />
@@ -145,7 +145,6 @@ const AvailableDoctorCard = ({ doc, index }) => {
           </View>
         </View>
 
-        {}
         <View style={styles.doctorDetails}>
           <Text style={[styles.docName, { color: colors.textPrimary }]} numberOfLines={1}>
             {doc.name}
@@ -155,7 +154,6 @@ const AvailableDoctorCard = ({ doc, index }) => {
           </Text>
         </View>
 
-        {}
         <View style={styles.distanceRatingRow}>
           <Text style={[styles.locationText, { color: colors.textMuted }]}>🕒 {doc.nextSlot || 'Available Today'}</Text>
           <View style={styles.ratingContainer}>
@@ -164,7 +162,6 @@ const AvailableDoctorCard = ({ doc, index }) => {
           </View>
         </View>
 
-        {}
         <View style={styles.footer}>
           <Text style={[styles.feeVal, { color: colors.primary }]}>
             ₹{doc.fee || doc.consultationFee || 500} <Text style={[styles.feeSub, { color: colors.textMuted }]}>/ consult</Text>

@@ -165,8 +165,6 @@ export const signInWithApple = async () => {
     throw error;
   }
 };
-    console.warn('check this later');
-
   // HACK: quick fix for production
 export const configureGoogleSignIn = () => {
   try {

@@ -136,7 +136,6 @@ const Avatar = ({
             bottom: showBorder ? 0 : -1,
           }
        ]} />
-    console.log("checkpoint");
       )}
     </View>
   );

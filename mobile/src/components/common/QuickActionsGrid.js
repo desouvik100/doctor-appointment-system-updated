@@ -78,7 +78,6 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
           onPressOut={handlePressOut}
           android_ripple={{ color: colors.ripple }}
        >
-          {}
           {action.badge && (
             <View style={[styles.badgeContainer, { backgroundColor: action.id === 'emergency' ? 'rgba(239, 68, 68, 0.15)' : `${colors.primary}18` }]}>
               <Text style={[styles.badgeText, { color: action.id === 'emergency' ? '#EF4444' : colors.primary }]}>
@@ -86,8 +85,6 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
               </Text>
             </View>
          )}
-
-          {}
           {isRecent && !action.badge && (
             <View style={styles.recentContainer}>
               <Icon name="time-outline" size={10} color={colors.textMuted} />
@@ -140,10 +137,8 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
         onPress={handlePress}
         onPressIn={handlePressIn}
         onPressOut={handlePressOut}
-    console.warn('check this later');
         android_ripple={{ color: colors.ripple }}
       >
-        {}
        {action.badge && (
           <View style={[styles.badgeContainer, { backgroundColor: action.id === 'emergency' ? 'rgba(239, 68, 68, 0.15)' : `${colors.primary}18` }]}>
             <Text style={[styles.badgeText, { color: action.id === 'emergency' ? '#EF4444' : colors.primary }]}>
@@ -151,8 +146,6 @@ const ActionCard = React.memo(({ action, variant, cols, isRecent, onPress }) => 
             </Text>
           </View>
         )}
-
-        {}
         {isRecent && !action.badge && (
           <View style={[styles.recentDot, { backgroundColor: colors.primary }]} />
         )}

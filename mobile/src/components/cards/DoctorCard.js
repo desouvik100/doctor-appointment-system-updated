@@ -69,7 +69,6 @@ const DoctorCard = ({
       ]}
     >
       <View style={styles.cardHeader}>
-        {}
         <View style={[
          styles.statusPill,
           { backgroundColor: isAvailableNow ? 'rgba(16, 185, 129, 0.08)' : 'rgba(245, 158, 11, 0.08)' }
@@ -85,8 +84,6 @@ const DoctorCard = ({
             {isAvailableNow ? 'Available' : 'Next Available'}
           </Text>
         </View>
-
-        {}
         <View style={[styles.ratingChip, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#FFFBEB' }]}>
          <Text style={styles.ratingStar}>⭐</Text>
           <Text style={[styles.ratingVal, { color: colors.warning }]}>
@@ -99,7 +96,6 @@ const DoctorCard = ({
       </View>
 
       <View style={styles.mainContent}>
-        {}
         <View style={styles.avatarContainer}>
           <Avatar
             imageUrl={displayPhoto}
@@ -114,8 +110,6 @@ const DoctorCard = ({
             </View>
           )}
         </View>
-
-        {}
         <View style={styles.detailsContainer}>
           <Text style={[styles.nameText, { color: colors.textPrimary }]} numberOfLines={1}>
             Dr. {displayName}
@@ -133,8 +127,6 @@ const DoctorCard = ({
           </Text>
         </View>
       </View>
-
-      {}
       <View style={[styles.footer, { borderTopColor: isDarkMode ? 'rgba(255, 255, 255, 0.05)' : colors.divider || '#F1F5F9' }]}>
         <View style={styles.feeWrapper}>
           <Text style={[styles.feeLabel, { color: colors.textMuted }]}>Consultation Fee</Text>
@@ -193,7 +185,6 @@ const styles = StyleSheet.create({
     height: 6,
     borderRadius: 3,
     marginRight: 6,
-    console.warn('check this later');
   }, 
   statusText: {
     ...typography.labelSmall,

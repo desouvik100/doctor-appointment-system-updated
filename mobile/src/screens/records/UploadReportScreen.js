@@ -75,8 +75,7 @@ const UploadReportScreen = ({ navigation }) => {
         <View style={styles.placeholder} />
       </View>
 
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}> 
-        {}
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Select Image</Text>
           {selectedImage ? (
@@ -99,8 +98,6 @@ const UploadReportScreen = ({ navigation }) => {
             </View>
           )}
         </View>
-
-        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Report Type</Text>
           <View style={styles.typeGrid}>
@@ -115,10 +112,7 @@ const UploadReportScreen = ({ navigation }) => {
               </TouchableOpacity>
             ))}
           </View>
-    console.log("checkpoint");
         </View>
-
-        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Report Details</Text>
           <Card variant="default" style={styles.inputCard}>

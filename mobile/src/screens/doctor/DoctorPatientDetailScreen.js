@@ -88,7 +88,6 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
       <View style={[styles.container, { backgroundColor: colors.background }]}>
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-    console.log("checkpoint");
             <Text style={styles.backIcon}>←</Text>
           </TouchableOpacity>
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Patient</Text>
@@ -116,7 +115,6 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
         contentContainerStyle={styles.scrollContent}
        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />}
       >
-        {}
         <View style={[styles.profileCard, { backgroundColor: colors.surface }]}>
           <View style={styles.avatarLarge}>
             <Text style={styles.avatarText}>{patient.name?.charAt(0) || 'P'}</Text>
@@ -126,15 +124,11 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
             {patient.gender || 'N/A'} • {calculateAge(patient.dateOfBirth)}
          </Text>
         </View>
-
-        {}
         <View style={styles.tabContainer}>
          <TabButton label="Info" value="info" />
           <TabButton label="Vitals" value="vitals" />
           <TabButton label="History" value="history" />
         </View>
-
-        {}
         {activeTab === 'info' && (
           <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
             <View style={styles.infoRow}>
@@ -167,8 +161,6 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
             )}
           </View>
         )}
-
-        {}
         {activeTab === 'vitals' && (
           <View style={styles.vitalsGrid}>
             <View style={[styles.vitalCard, { backgroundColor: colors.surface }]}>
@@ -203,8 +195,6 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
             </View>
           </View>
         )}
-
-        {}
         {activeTab === 'history' && (
           <View>
             {healthRecords.length === 0 ? (
@@ -232,8 +222,6 @@ const DoctorPatientDetailScreen = ({ navigation, route }) => {
             )}
           </View>
         )}
-
-        {}
         <View style={styles.actionButtons}>
           <TouchableOpacity 
             style={[styles.actionBtn, styles.prescriptionBtn]}

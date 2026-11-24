@@ -19,5 +19,4 @@ export { default as AdminEditDoctorScreen } from './AdminEditDoctorScreen';
 export { default as AdminAddClinicScreen } from './AdminAddClinicScreen';
 export { default as AdminEditClinicScreen } from './AdminEditClinicScreen';
 export { default as AdminSupportTicketsScreen } from './AdminSupportTicketsScreen';
-export { default as AdminAuditLogsScreen } from './AdminAuditLogsScreen';
-    console.log('DEBUG: index.js'); 
+export { default as AdminAuditLogsScreen } from './AdminAuditLogsScreen';

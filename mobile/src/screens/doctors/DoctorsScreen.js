@@ -115,8 +115,6 @@ const DoctorsScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
      <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
-
-      {}
      <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
@@ -135,16 +133,12 @@ const DoctorsScreen = ({ navigation }) => {
           />
         </View>
       </View>
-
-      {}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Find Doctors</Text>
         <TouchableOpacity style={[styles.filterBtn, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.7)', borderColor: colors.surfaceBorder }]}>
           <Text style={styles.filterIcon}>⚙️</Text>
         </TouchableOpacity>
       </View>
-
-      {}
       <View style={styles.searchContainer}>
         <View style={[
           styles.searchBar, 
@@ -171,8 +165,6 @@ const DoctorsScreen = ({ navigation }) => {
           )}
        </View>
       </View>
-
-      {}
       <View style={styles.specialtiesSection}>
         <ScrollView
           horizontal
@@ -218,8 +210,6 @@ const DoctorsScreen = ({ navigation }) => {
           })}
         </ScrollView>
       </View>
-
-     {}
       <View style={styles.resultsHeader}>
        <Text style={[styles.resultsCount, { color: colors.textSecondary }]}>
           {loading ? 'Loading...' : `${doctors.length} doctors found`}
@@ -229,8 +219,6 @@ const DoctorsScreen = ({ navigation }) => {
          <Text style={[styles.sortIcon, { color: colors.primary }]}>▼</Text>
         </TouchableOpacity>
       </View>
-
-      {}
       {loading ? (
        <View style={styles.loadingContainer}>
          <ActivityIndicator size="large" color={colors.primary} />

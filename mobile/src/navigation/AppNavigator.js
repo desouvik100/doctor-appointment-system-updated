@@ -114,7 +114,6 @@ const AppContent = () => {
         }}
        initialRouteName={getInitialRoute()}
       >
-        {}
         <Stack.Screen name="Onboarding" component={OnboardingScreen} />
         <Stack.Screen name="Welcome" component={RoleSelectionScreen} />
         <Stack.Screen name="Login" component={LoginScreen} />
@@ -123,13 +122,10 @@ const AppContent = () => {
         <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
         <Stack.Screen name="VerifyOTP" component={VerifyOTPScreen} />
         <Stack.Screen name="ResetPassword" component={ResetPasswordScreen} />
-        {}
         <Stack.Screen name="RoleSelection" component={RoleSelectionScreen} />
         <Stack.Screen name="DoctorLogin" component={DoctorLoginScreen} />
         <Stack.Screen name="StaffLogin" component={StaffLoginScreen} />
         <Stack.Screen name="AdminLogin" component={AdminLoginScreen} />
-        
-        {}
         <Stack.Screen name="Main" component={RoleBasedNavigator} />
        <Stack.Screen name="DoctorSearch" component={BookingScreen} />
         <Stack.Screen name="DoctorProfile" component={DoctorProfileScreen} />

@@ -20,7 +20,6 @@ import adminApi from '../../services/api/adminApi';
 
 const AdminAuditLogsScreen = ({ navigation }) => {
   const { colors, isDarkMode } = useTheme();
-    console.log("checkpoint");
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [refreshing, setRefreshing] = useState(false);

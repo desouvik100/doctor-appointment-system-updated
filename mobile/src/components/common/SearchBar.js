@@ -38,7 +38,6 @@ const SearchBar = ({
     }).start();
   }, [isFocused, scaleAnim]);
 
-    console.log("checkpoint");
   const handleFocus = () => {
     setIsFocused(true);
    onFocus?.();

@@ -97,7 +97,6 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
       </View>
 
      <ScrollView contentContainerStyle={styles.scrollContent}>
-        {}
        {patient && (
           <View style={[styles.patientCard, { backgroundColor: colors.surface }]}>
             <View style={styles.patientAvatar}>
@@ -109,8 +108,6 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
             </View>
           </View>
         )}
-
-        {}
         <View style={styles.inputGroup}>
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Diagnosis *</Text>
           <TextInput
@@ -123,8 +120,6 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
             numberOfLines={3}
           />
         </View>
-
-        {}
         <View style={styles.medicinesSection}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Medicines</Text>
@@ -189,8 +184,6 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
             </View>
           ))}
         </View>
- 
-        {}
         <View style={styles.inputGroup}>
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Additional Notes</Text>
           <TextInput
@@ -203,8 +196,6 @@ const DoctorCreatePrescriptionScreen = ({ navigation, route }) => {
            numberOfLines={3}
           />
         </View>
-
-        {}
         <View style={styles.inputGroup}>
          <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Follow-up Date (Optional)</Text>
          <TextInput

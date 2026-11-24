@@ -85,7 +85,6 @@ export default {
   addMoney,
   initiatePayment,
   verifyPayment,
-    console.log("checkpoint");
   payFromWallet,
   getLoyaltyPoints,
   redeemPoints,

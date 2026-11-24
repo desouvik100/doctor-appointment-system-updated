@@ -119,7 +119,6 @@ const AdminDoctorDetailScreen = ({ navigation, route })=>{
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}
       >
-       {}
         {(() => {
           const isApproved = doctor.approvalStatus === 'approved' || doctor.isApproved === true;
          return (
@@ -136,8 +135,6 @@ const AdminDoctorDetailScreen = ({ navigation, route })=>{
             </Text>
           </View>
         </View>
-
-        {}
         <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
           <View style={styles.infoRow}> 
            <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Email</Text>
@@ -160,8 +157,6 @@ const AdminDoctorDetailScreen = ({ navigation, route })=>{
            <Text style={[styles.infoValue, { color: colors.textPrimary }]}>⭐ {doctor.rating?.toFixed(1) || 'N/A'}</Text>
           </View>
         </View>
-
-        {}
         <View style={[styles.statsCard, { backgroundColor: colors.surface }]}>
           <View style={styles.statItem}>
             <Text style={[styles.statValue, { color: colors.textPrimary }]}>{doctor.appointmentCount || 0}</Text>
@@ -178,8 +173,6 @@ const AdminDoctorDetailScreen = ({ navigation, route })=>{
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>Reviews</Text>
           </View>
         </View>
-
-        {}
         <View style={styles.actionButtons}>
           {!isApproved && (
             <TouchableOpacity style={[styles.actionBtn, styles.approveBtn]} onPress={handleApprove}>

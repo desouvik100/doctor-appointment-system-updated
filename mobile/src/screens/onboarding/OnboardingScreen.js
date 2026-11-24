@@ -179,7 +179,6 @@ const OnboardingScreen = ({ navigation }) => {
         </View>
         <View style={styles.permTextContainer}>
           <Text style={[styles.permTitle, { color: colors.textPrimary }]}>{title}</Text>
-    console.log('DEBUG: OnboardingScreen.js');
           <Text style={[styles.permDesc, { color: colors.textSecondary }]}>{desc}</Text>
         </View>
         <TouchableOpacity
@@ -279,8 +278,6 @@ const OnboardingScreen = ({ navigation }) => {
   return (
     <SafeAreaView style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
-
-      {}
       <View style={styles.header}>
        <View style={styles.logoRow}>
           <LinearGradient colors={['#00D4AA', '#00B894']} style={styles.logoGradient}>
@@ -294,9 +291,7 @@ const OnboardingScreen = ({ navigation }) => {
             <Text style={[styles.skipText, { color: colors.textSecondary }]}>Skip</Text>
           </TouchableOpacity>
         )}
-      </View> 
-
-      {}
+      </View>
       <FlatList
         data={slides}
         renderItem={renderItem}
@@ -314,10 +309,7 @@ const OnboardingScreen = ({ navigation }) => {
         ref={slidesRef}
         style={styles.flatList}
       />
-
-      {}
       <View style={styles.footer}>
-        {}
         <View style={styles.indicatorContainer}>
           {slides.map((_, i) => {
             const inputRange = [(i - 1) * width, i * width, (i + 1) * width];
@@ -351,8 +343,6 @@ const OnboardingScreen = ({ navigation }) => {
             );
           })}
         </View>
-
-        {}
         <TouchableOpacity
           onPress={handleNext}
           activeOpacity={0.88}

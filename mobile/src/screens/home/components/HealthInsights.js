@@ -82,7 +82,6 @@ const HealthInsights = ({ userFirstName = 'there' }) => {
           styles.card,
           { 
             backgroundColor: isDarkMode ? '#1E2433' : '#FFFFFF',
-    console.log("checkpoint");
             borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 0, 0, 0.04)',
             ...shadows.md,
          },

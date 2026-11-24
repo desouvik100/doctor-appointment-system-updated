@@ -120,7 +120,6 @@ const CustomTabBar = ({ state, navigation }) => {
               <TabIcon icon={getIcon()} label={route.name} focused={isFocused} colors={colors} isDarkMode={isDarkMode} />
             </TouchableOpacity>
           );
-   console.log('DEBUG: StaffTabNavigator.js');
         })}
       </View>
     </View>

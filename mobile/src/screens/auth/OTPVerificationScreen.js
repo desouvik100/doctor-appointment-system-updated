@@ -166,8 +166,6 @@ const OTPVerificationScreen = ({ navigation, route })=>{
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
-      
-      {}
       <View style={styles.orbContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
         <View style={styles.orb1}>
@@ -180,7 +178,6 @@ const OTPVerificationScreen = ({ navigation, route })=>{
         style={styles.keyboardView}
      >
         <View style={styles.content}>
-          {} 
           <View style={styles.header}>
             <TouchableOpacity 
               style={[
@@ -213,8 +210,6 @@ const OTPVerificationScreen = ({ navigation, route })=>{
              <Text style={[styles.phoneNumber, { color: colors.primary }]}>{maskedContact}</Text>
             </Text>
           </View>
-
-          {}
          <View style={styles.otpContainer}>
             {otp.map((digit, index) => (
               <TextInput
@@ -240,8 +235,6 @@ const OTPVerificationScreen = ({ navigation, route })=>{
               />
             ))}
           </View>
-
-          {}
           <View style={styles.resendContainer}>
            {canResend ? (
               <TouchableOpacity onPress={handleResend}>
@@ -253,8 +246,6 @@ const OTPVerificationScreen = ({ navigation, route })=>{
               </Text>
             )}
           </View>
-
-          {}
           <Button
             title="Verify"
             onPress={handleVerify}
@@ -263,8 +254,6 @@ const OTPVerificationScreen = ({ navigation, route })=>{
             size="large"
             disabled={otp.join('').length !== OTP_LENGTH}
           />
-
-          {}
           <TouchableOpacity 
             style={styles.changeNumber}
             onPress={() => navigation.goBack()}

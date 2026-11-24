@@ -140,7 +140,6 @@ const FamilyMembersScreen = ({ navigation })=>{
 
       <Modal visible={showAddModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
-    console.warn('check this later')
           <View style={[styles.modalContent, {  backgroundColor: colors.background }]}>
             <View style={styles.modalHeader}>
               <Text style={[styles.modalTitle, { color: colors.textPrimary }]}>Add Family Member</Text>

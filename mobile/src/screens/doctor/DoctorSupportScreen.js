@@ -145,7 +145,6 @@ let DoctorSupportScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backIcon}>←</Text>
@@ -158,8 +157,6 @@ let DoctorSupportScreen = ({ navigation }) => {
             <Text style={styles.addIcon}>{showNewTicket ? '✕' : '+'}</Text>
           </TouchableOpacity>
         </View>
-
-        {}
         <LinearGradient colors={['#6C5CE7', '#A29BFE']} style={styles.banner}>
           <View style={styles.bannerContent}>
             <Text style={styles.bannerIcon}>🎧</Text>
@@ -173,13 +170,9 @@ let DoctorSupportScreen = ({ navigation }) => {
             <Text style={styles.liveText}>Live</Text>
           </View>
         </LinearGradient>
-
-        {}
        {showNewTicket && (
           <Card style={[styles.newTicketCard, { backgroundColor: colors.surface }]}>
             <Text style={[styles.formTitle, { color: colors.textPrimary }]}>New Support Ticket</Text>
-            
-            {}
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Subject</Text>
             <TextInput
               style={[styles.input, { backgroundColor: colors.background, color: colors.textPrimary }]}
@@ -188,8 +181,6 @@ let DoctorSupportScreen = ({ navigation }) => {
               value={newTicket.subject}
               onChangeText={(text) => setNewTicket({ ...newTicket, subject: text })}
             />
-
-            {}
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Category</Text>
             <View style={styles.categoryGrid}>
               {categories.map((cat) => (
@@ -210,8 +201,6 @@ let DoctorSupportScreen = ({ navigation }) => {
                 </TouchableOpacity>
               ))}
            </View>
-
-            {}
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Priority</Text>
             <View style={styles.priorityRow}>
               {priorities.map((p) => (
@@ -228,8 +217,6 @@ let DoctorSupportScreen = ({ navigation }) => {
                 </TouchableOpacity>
               ))}
             </View>
-
-            {}
             <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Message</Text>
             <TextInput
               style={[styles.textArea, { backgroundColor: colors.background, color: colors.textPrimary }]}
@@ -241,8 +228,6 @@ let DoctorSupportScreen = ({ navigation }) => {
               numberOfLines={4}
               textAlignVertical="top"
             />
-
-            {}
             <TouchableOpacity
               style={[styles.submitBtn, submitting && styles.submitBtnDisabled]}
               onPress={handleSubmitTicket}
@@ -258,8 +243,6 @@ let DoctorSupportScreen = ({ navigation }) => {
             </TouchableOpacity>
           </Card>
         )}
-
-        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
             Your Tickets ({tickets.length})

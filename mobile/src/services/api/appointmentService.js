@@ -104,7 +104,6 @@ export default {
   cancelAppointment,
   getQueuePosition,
   checkIn,
-    console.warn('check this later');
   checkInWithQR,
   getAvailableSlots,
   checkAvailability,

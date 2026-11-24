@@ -141,7 +141,6 @@ const StaffDoctorFormScreen = ({ navigation, route })=>{
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <ScrollView contentContainerStyle={styles.scrollContent}>
-        {}
         <View style={styles.header}>
           <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
             <Text style={styles.backIcon}>←</Text>
@@ -151,8 +150,6 @@ const StaffDoctorFormScreen = ({ navigation, route })=>{
           </Text>
           <View style={{ width: 40 }} />
         </View>
-
-        {}
         <Card style={[styles.formCard, { backgroundColor: colors.surface }]}>
           <InputField
             label="Full Name *"
@@ -213,8 +210,6 @@ const StaffDoctorFormScreen = ({ navigation, route })=>{
               />
             </View>
           </View>
-
-         {}
           <TouchableOpacity
             style={[styles.submitBtn, loading && styles.submitBtnDisabled]}
             onPress={handleSubmit}

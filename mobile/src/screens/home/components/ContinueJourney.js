@@ -88,7 +88,6 @@ const ContinueJourney = ({ items = [] })=>{
           </View>
         </View>
 
-        {}
         <View style={[styles.slotDetailsCard, { backgroundColor: isDarkMode ? '#171E2D' : '#F8FAFC' }]}>
           <View style={styles.detailItem}>
             <Text style={[styles.detailLabel, { color: colors.textMuted }]}>Selected Date</Text>
@@ -101,7 +100,6 @@ const ContinueJourney = ({ items = [] })=>{
           </View>
        </View>
 
-        {}
         <View style={styles.footerRow}> 
           <Text style={[styles.pendingStepText, { color: colors.textPrimary }]}>
             {pendingStepAction}

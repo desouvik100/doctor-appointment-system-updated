@@ -201,7 +201,6 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
       <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
       
      <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.gradient}>
-        {}
         <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
           <TouchableOpacity 
             style={styles.closeButton} 
@@ -219,7 +218,6 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
         </View> 
 
        <ScrollView showsVerticalScrollIndicator={false}>
-          {}
           <View style={styles.participantCard}>
             <Avatar 
               name={patient?.name || appointment?.userId?.name || 'Patient'} 
@@ -232,8 +230,6 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
             <Text style={styles.participantInfo}>
               {patient?.phone || patient?.email || 'Patient'}
             </Text>
-            
-            {}
             <View style={[styles.patientStatusBadge, { backgroundColor: patientJoined ? '#10B98120' : '#F39C1220' }]}>
              <Text style={[styles.patientStatusText, { color: patientJoined ? '#10B981' : '#F39C12' }]}>
                 {patientJoined ? '✓ Patient has joined' : '⏳ Waiting for patient'}
@@ -258,8 +254,6 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
               </View>
            )}
           </View>
-
-          {}
           <View style={styles.controlsCard}>
             <Text style={styles.controlsTitle}>🎥 Consultation Controls</Text>
             
@@ -300,9 +294,7 @@ const DoctorVideoConsultationScreen = ({ navigation, route }) => {
               <Text style={styles.endButtonText}>End Consultation</Text>
             </TouchableOpacity>
           </View>
-        </ScrollView> 
-
-        {}
+        </ScrollView>
         <Text style={styles.helpText}>
           The video call will open in your browser or Jitsi Meet app
         </Text>

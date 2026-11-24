@@ -83,9 +83,7 @@ let ForgotPasswordScreen = ({ navigation }) => {
   if (sent) {
     return (
       <View style={[styles.container, { backgroundColor: colors.background }]}>
-        <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent /> 
-        
-        {}
+        <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
         <View style={styles.orbContainer}>
           <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
           <View style={styles.orb1}>
@@ -171,8 +169,6 @@ let ForgotPasswordScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
-      
-      {}
       <View style={styles.orbContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
         <View style={styles.orb1}>

@@ -151,8 +151,6 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor={colors.background} />
-
-      {}
       <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
          <Text style={styles.backIcon}>←</Text>
@@ -162,7 +160,6 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {}
         <LinearGradient
           colors={appointmentData.status === 'confirmed' ? (colors.gradientPrimary || ['#00D4AA', '#00B894']) : (colors.gradientSecondary || ['#6C5CE7', '#5B4ED1'])}
           style={styles.statusBanner}
@@ -174,8 +171,6 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
             {appointmentData.status === 'confirmed' ? 'Appointment Confirmed' : 'Pending Confirmation'}
           </Text>
         </LinearGradient>
-
-        {}
         <Card variant="gradient" style={styles.doctorCard}>
           <View style={styles.doctorRow}>
             <Avatar name={appointmentData.doctor?.name || 'Doctor'} size="large" />
@@ -185,8 +180,6 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
             </View>
           </View>
         </Card>
-
-        {}
         <Card variant="default" style={styles.detailsCard}>
           <View style={styles.detailRow}>
            <View style={styles.detailItem}>
@@ -236,8 +229,6 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
             </View>
           </View>
         </Card>
-
-        {}
         {appointmentData.type === 'clinic' && appointmentData.status === 'confirmed' && (
           <QueueTracker
             appointmentId={appointmentData.id}
@@ -247,8 +238,6 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
             initialWait={appointmentData.estimatedWait}
           />
         )}
-
-        {}
         {appointmentData.type === 'clinic' && (
           <Card variant="default" style={styles.qrSection}>
             <TouchableOpacity style={styles.qrHeader} onPress={() => setShowQR(!showQR)}>
@@ -268,8 +257,6 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
             )}
           </Card>
         )}
-
-        {}
         {appointmentData.type === 'clinic' && (
           <Card variant="default" style={styles.addressCard}>
             <View style={styles.addressHeader}>
@@ -282,8 +269,6 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           </Card>
         )}
-
-        {}
         <Card variant="default" style={styles.paymentCard}>
           <View style={styles.paymentRow}>
             <Text style={styles.paymentLabel}>Consultation Fee</Text>
@@ -294,8 +279,6 @@ const AppointmentDetailsScreen = ({ navigation, route }) => {
             <Text style={styles.paymentPaid}>✓ Paid</Text>
           </View>
         </Card>
-
-        {}
        <View style={styles.actionButtons}>
          {appointmentData.type === 'video' && appointmentData.status === 'confirmed' && (
             <Button title="Join Video Call" onPress={handleJoinCall} fullWidth size="large" />

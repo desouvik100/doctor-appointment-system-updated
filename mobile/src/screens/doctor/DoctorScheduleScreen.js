@@ -189,8 +189,6 @@ const DoctorScheduleScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      
-      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -200,8 +198,6 @@ const DoctorScheduleScreen = ({ navigation }) => {
           {saving ? <ActivityIndicator size="small" color="#fff" /> : <Text style={styles.saveBtnText}>Save</Text>}
         </TouchableOpacity>
       </View>
-
-      {}
       <View style={styles.tabsContainer}>
         {[
           { id: 'weekly', label: '📅 Weekly', icon: '📅' },
@@ -222,7 +218,6 @@ const DoctorScheduleScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />}
       >
-        {}
         <Card style={[styles.statusCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>🟢 Current Status</Text>
          <View style={styles.statusButtons}>
@@ -238,11 +233,8 @@ const DoctorScheduleScreen = ({ navigation }) => {
             ))}
           </View>
         </Card>
-
-        {}
         {activeTab === 'weekly' && (
           <>
-            {}
             <Card style={[styles.vacationCard, { backgroundColor: vacationMode.isActive ? '#EF444420' : colors.surface }]}>
               <View style={styles.vacationHeader}>
                 <View style={styles.vacationInfo}>
@@ -279,9 +271,7 @@ const DoctorScheduleScreen = ({ navigation }) => {
                   />
                 </View>
               )}
-            </Card> 
-
-            {}
+            </Card>
             <View style={styles.section}>
               <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>📆 Weekly Schedule</Text>
               
@@ -339,8 +329,6 @@ const DoctorScheduleScreen = ({ navigation }) => {
             </View>
           </>
         )}
-
-        {}
         {activeTab === 'blocked' && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -375,13 +363,9 @@ const DoctorScheduleScreen = ({ navigation }) => {
             )}
          </View>
        )}
-
-        {}
         {activeTab === 'settings' && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>⚙️ Booking Settings</Text>
-            
-           {}
             <Card style={[styles.settingCard, { backgroundColor: colors.surface }]}>
               <View style={styles.settingHeader}>
                 <Text style={styles.settingIcon}>📹</Text> 
@@ -397,8 +381,6 @@ const DoctorScheduleScreen = ({ navigation }) => {
                 />
               </View>
            </Card>
-
-            {}
             <Card style={[styles.settingCard, { backgroundColor: colors.surface }]}>
               <View style={styles.settingHeader}>
                 <Text style={styles.settingIcon}>⏳</Text>
@@ -419,8 +401,6 @@ const DoctorScheduleScreen = ({ navigation }) => {
                 ))}
               </View>
             </Card>
-
-            {}
             <Card style={[styles.settingCard, { backgroundColor: colors.surface }]}>
               <View style={styles.settingHeader}>
                 <Text style={styles.settingIcon}>📆</Text>
@@ -441,8 +421,6 @@ const DoctorScheduleScreen = ({ navigation }) => {
                 ))}
              </View>
             </Card>
-
-            {}
             <Card style={[styles.infoCard, { backgroundColor: '#6C5CE710' }]}>
               <Text style={styles.infoIcon}>💡</Text>
               <Text style={[styles.infoText, { color: colors.textSecondary }]}>
@@ -452,8 +430,6 @@ const DoctorScheduleScreen = ({ navigation }) => {
           </View>
        )}
       </ScrollView>
-
-     {}
       <Modal visible={showSlotModal} animationType="slide" transparent> 
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
@@ -530,8 +506,6 @@ const DoctorScheduleScreen = ({ navigation }) => {
           </View>
         </View>
       </Modal>
-
-      {}
       <Modal visible={showBlockModal} animationType="slide" transparent>
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>

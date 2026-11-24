@@ -161,7 +161,7 @@ const CustomTabBar = ({ state, descriptors, navigation, onOpenBookSheet, rotatio
           },
         ]}
       >
-       {}
+
         {state.index !== 1 && (
           <Animated.View
             style={[
@@ -309,19 +309,18 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
         screenOptions={{ headerShown: false }}
       >
         <Tab.Screen name="Home" component={HomeScreen} />
-        {}
+
         <Tab.Screen name="Book" component={HomeScreen} />
         <Tab.Screen name="Appointments" component={AppointmentsScreen} />
      </Tab.Navigator>
 
       {sheetVisible && (
         <View style={StyleSheet.absoluteFill}>
-          {}
+
           <TouchableWithoutFeedback onPress={closeSheet}>
             <Animated.View style={[styles.backdrop, { opacity: backdropOpacity }]} />
           </TouchableWithoutFeedback>
 
-          {}
           <Animated.View
            style={[
               styles.sheetContainer,
@@ -333,7 +332,7 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
               },
             ]}
           >
-            {}
+
             <View style={[styles.grabHandle, { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.15)' : 'rgba(0, 0, 0, 0.1)' }]} />
 
             <View style={styles.sheetHeader}>
@@ -341,7 +340,6 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
               <Text style={[styles.sheetSubtitle, { color: colors.textMuted }]}>Select a premium health service below</Text>
             </View>
 
-            {}
             <View style={styles.gridContainer}>
               {QUICK_ACTIONS.map((item) => (
                <TouchableOpacity
@@ -367,7 +365,6 @@ const BottomTabNavigator = ({ navigation: navProp }) => {
               ))}
             </View>
 
-            {}
             <TouchableOpacity
               style={[
                 styles.closeButton,

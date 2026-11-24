@@ -230,10 +230,8 @@ const LocationDisplay = ({ compact = false }) => {
       {detecting ? (
         <View style={styles.detectingContainer}>
           <View style={styles.animatedIconWrapper}>
-            {}
             <Animated.View style={[
               styles.ripple,
-    console.log("checkpoint");
               { 
                 backgroundColor: colors.primary,
                 transform: [{ scale: rippleScale(ripple1) }],
@@ -256,8 +254,6 @@ const LocationDisplay = ({ compact = false }) => {
                 opacity: rippleOpacity(ripple3),
               }
             ]} />
-            
-            {}
             <Animated.View style={[
               styles.iconContainer,
               { 

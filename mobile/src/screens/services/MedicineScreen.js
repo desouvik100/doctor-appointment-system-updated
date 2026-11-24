@@ -82,8 +82,6 @@ let MedicineScreen = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
-
-      {}
      <View style={styles.header}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backIcon}>←</Text>
@@ -98,8 +96,6 @@ let MedicineScreen = ({ navigation, route }) => {
           )}
         </TouchableOpacity>
       </View>
-
-     {}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>
@@ -114,7 +110,6 @@ let MedicineScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {}
         <TouchableOpacity>
           <LinearGradient
            colors={colors.gradientPrimary}
@@ -132,8 +127,6 @@ let MedicineScreen = ({ navigation, route }) => {
             <Text style={styles.uploadEmoji}>📋</Text>
           </LinearGradient>
         </TouchableOpacity>
-
-        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Categories</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false}>
@@ -147,8 +140,6 @@ let MedicineScreen = ({ navigation, route }) => {
            ))}
           </ScrollView>
         </View>
-
-        {}
         <View style={styles.section}>
          <View style={styles.sectionHeader}>
             <Text style={styles.sectionTitle}>Quick Reorder</Text>
@@ -168,8 +159,6 @@ let MedicineScreen = ({ navigation, route }) => {
             </View>
           </Card>
         </View>
-
-        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Popular Medicines</Text>
           <View style={styles.medicinesGrid}>
@@ -221,8 +210,6 @@ let MedicineScreen = ({ navigation, route }) => {
             ))}
           </View>
         </View>
-
-        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Health Tips</Text>
           <Card variant="gradient" style={styles.tipCard}>
@@ -234,8 +221,6 @@ let MedicineScreen = ({ navigation, route }) => {
           </Card>
         </View>
       </ScrollView>
-
-      {}
       {cartCount > 0 && (
         <View style={styles.cartFooter}>
           <View style={styles.cartInfo}>

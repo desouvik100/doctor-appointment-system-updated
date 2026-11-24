@@ -164,8 +164,6 @@ const AdminStaffScreen = ({ navigation })=>{
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      
-      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
          <Text style={styles.backIcon}>←</Text>
@@ -173,8 +171,6 @@ const AdminStaffScreen = ({ navigation })=>{
         <Text style={[styles.headerTitle, {  color: colors.textPrimary }]}>Staff Management</Text>
         <View style={styles.headerRight} />
       </View>
-
-      {}
       <View style={styles.searchContainer}>
         <TextInput
           style={[styles.searchInput, {  backgroundColor: colors.surface, color: colors.textPrimary }]}
@@ -184,14 +180,10 @@ const AdminStaffScreen = ({ navigation })=>{
           onChangeText={setSearchQuery}
         />
       </View>
-
-      {}
       <View style={styles.filterContainer}>
        <FilterButton label="Pending" value="pending" count={pendingStaff.length} />
         <FilterButton label="All Staff" value="all" count={staff.length} />
       </View>
-
-      {}
       <FlatList
         data={filteredStaff}
         renderItem={renderStaff}

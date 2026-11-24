@@ -95,16 +95,12 @@ const DoctorPatientsScreen = ({ navigation })=>{
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      
-      {}
       <View style={styles.header}>
         <Text style={[styles.title, { color: colors.textPrimary }]}>My Patients</Text>
         <Text style={[styles.subtitle, { color: colors.textSecondary }]}>
           {patients.length} patients
        </Text>
      </View>
-
-      {}
       <View style={styles.searchContainer}>
         <View style={[styles.searchBar, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
          <Text style={styles.searchIcon}>🔍</Text>
@@ -117,8 +113,6 @@ const DoctorPatientsScreen = ({ navigation })=>{
           />
        </View>
       </View>
-
-      {}
       <FlatList
        data={filteredPatients}
         renderItem={renderPatient}

@@ -195,8 +195,6 @@ const DoctorSearchScreen = ({ navigation, route }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
-
-      {}
       <View style={styles.header}>
         <TouchableOpacity 
          style={styles.backButton}
@@ -207,8 +205,6 @@ const DoctorSearchScreen = ({ navigation, route }) => {
         <Text style={styles.headerTitle}>Find Doctors</Text>
         <View style={styles.headerRight} />
       </View>
-
-      {}
       <View style={styles.searchContainer}>
         <View style={styles.searchBar}>
           <Text style={styles.searchIcon}>🔍</Text>
@@ -242,8 +238,6 @@ const DoctorSearchScreen = ({ navigation, route }) => {
           )}
         </TouchableOpacity>
       </View>
-
-      {}
       {loading ? (
         <View style={styles.loadingContainer}>
           <ActivityIndicator size="large" color={colors.primary} />
@@ -263,8 +257,6 @@ const DoctorSearchScreen = ({ navigation, route }) => {
           ListEmptyComponent={renderEmpty}
         />
       )}
-
-      {}
       <FilterPanel
         visible={showFilters}
         filters={filters}

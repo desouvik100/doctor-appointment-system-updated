@@ -122,7 +122,6 @@ class BiometricService {
   }
 
   async authenticate(promptMessage = 'Verify your identity') {
-    console.log("checkpoint");
     try {
       const { success } = await this.rnBiometrics.simplePrompt({
         promptMessage,

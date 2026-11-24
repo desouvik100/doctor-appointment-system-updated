@@ -159,7 +159,6 @@ const AdminDashboardScreen = ({ navigation })=>{
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />
         }
       >
-        {}
         <View style={styles.header}>
          <View style={styles.headerLeft}>
             <Text style={[styles.greeting, {  color: colors.textSecondary }]}>
@@ -178,8 +177,6 @@ const AdminDashboardScreen = ({ navigation })=>{
             <Avatar name={user?.name || 'Admin'} size="large" showBorder />
           </TouchableOpacity>
         </View>
-
-        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, {  color: colors.textPrimary }]}>Overview</Text>
           <View style={styles.statsGrid}>
@@ -213,8 +210,6 @@ const AdminDashboardScreen = ({ navigation })=>{
             />
           </View>
        </View>
-
-        {}
        <View style={styles.section}>
           <Text style={[styles.sectionTitle, {  color: colors.textPrimary }]}>This Month</Text> 
           <Card style={[styles.monthCard, {  backgroundColor: colors.surface }]}>
@@ -261,8 +256,6 @@ const AdminDashboardScreen = ({ navigation })=>{
            </View>
           </Card>
         </View>
-
-        {}
         {pendingApprovals.total > 0 && (
           <View style={styles.section}>
             <TouchableOpacity 
@@ -289,8 +282,6 @@ const AdminDashboardScreen = ({ navigation })=>{
             </TouchableOpacity>
           </View>
         )}
-
-        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, {  color: colors.textPrimary }]}>Quick Actions</Text>
           <View style={styles.quickActionsGrid}>
@@ -349,8 +340,6 @@ const AdminDashboardScreen = ({ navigation })=>{
             />
           </View>
        </View>
-
-        {}
         {topDoctors.length > 0 && (
           <View style={styles.section}>
             <View style={styles.sectionHeader}>
@@ -394,8 +383,6 @@ const AdminDashboardScreen = ({ navigation })=>{
             </Card>
          </View> 
         )}
-
-        {}
        <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>System Status</Text>
           <Card style={[styles.statusCard, {  backgroundColor: colors.surface }]}>

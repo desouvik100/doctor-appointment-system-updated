@@ -234,7 +234,6 @@ const HomeScreen = ({ navigation })=>{
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
-      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
@@ -267,7 +266,7 @@ const HomeScreen = ({ navigation })=>{
           />
         }
       >
-        {}
+
         <View style={styles.headerRow}>
           <View style={styles.greetingContainer}>
             <Text style={[styles.heroSubGreeting, { color: colors.textSecondary }]}>
@@ -309,7 +308,6 @@ const HomeScreen = ({ navigation })=>{
          </View>
         </View>
 
-        {}
         <View style={styles.searchSection}>
           <TouchableOpacity
             style={[
@@ -330,7 +328,7 @@ const HomeScreen = ({ navigation })=>{
         </View>
 
         <View style={styles.body}>
-          {} 
+
           {homeState === 'A' && (
             <LiveQueueStatus 
               appointments={dashboardData.appointments} 
@@ -338,18 +336,15 @@ const HomeScreen = ({ navigation })=>{
             />
          )}
 
-          {}
           {(homeState === 'B' || homeState === 'C') && (
             <ContinueJourney items={pendingJourneys} />
           )}
 
-          {}
           <QuickBookActions />
 
-          {}
           {loadedSections >= 2 && (
             <>
-              {}
+
               {homeState !== 'A' && (
                 <LiveQueueStatus 
                   appointments={dashboardData.appointments} 
@@ -361,15 +356,13 @@ const HomeScreen = ({ navigation })=>{
                 <ContinueJourney items={pendingJourneys} />
               )}
 
-              {}
               <AvailableNow />
             </>
           )}
 
-         {}
           {loadedSections >= 3 && (
             <>
-              {}
+
               <View style={styles.recommendedSection}>
                 <View style={styles.sectionHeader}>
                   <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recommended Doctors</Text>
@@ -437,16 +430,12 @@ const HomeScreen = ({ navigation })=>{
                 </ScrollView>
               </View>
 
-              {}
               <NearbyDoctors />
 
-              {}
               <TrendingSpecialties />
 
-              {}
               <SecondaryServices />
 
-              {}
               <WalletSummary
                 balance={dashboardData.walletBalance}
                 loyaltyPoints={dashboardData.loyaltyPoints}

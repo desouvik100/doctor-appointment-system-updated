@@ -90,8 +90,6 @@ const NotificationItem = React.memo(({ item, index, colors, onPress, onDelete, g
             </View>
           </Card>
         </TouchableOpacity>
-        
-        {}
         <View style={styles.deleteAction}>
           <Text style={styles.deleteText}>🗑️</Text>
         </View>
@@ -257,8 +255,6 @@ const NotificationsScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      
-     {}
       <Animated.View style={[styles.header, { opacity: headerOpacity }]}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -268,8 +264,6 @@ const NotificationsScreen = ({ navigation }) => {
           <Text style={styles.settingsIcon}>⚙️</Text>
         </TouchableOpacity>
       </Animated.View>
-
-      {}
       <View style={styles.actionsRow}>
         <View style={styles.filterTabs}>
           <FilterChip
@@ -291,8 +285,6 @@ const NotificationsScreen = ({ navigation }) => {
           </TouchableOpacity>
         )}
      </View>
-
-      {}
       <FlatList
         data={notifications}
         renderItem={renderNotification}

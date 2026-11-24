@@ -256,8 +256,7 @@ const HealthReportsScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      
-      {}
+
       <View style={styles.header}>
        <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
           <Icon name="arrow-back" size={20} color={colors.textPrimary} />
@@ -273,7 +272,7 @@ const HealthReportsScreen = ({ navigation }) => {
         contentContainerStyle={styles.content}
        refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {}
+
         <LinearGradient
           colors={isDarkMode ? ['#059669', '#064E3B'] : ['#10B981', '#059669']}
           start={{ x: 0, y: 0 }}
@@ -300,7 +299,6 @@ const HealthReportsScreen = ({ navigation }) => {
           </View>
         </LinearGradient>
 
-        {}
         <View style={styles.chipsWrapper}>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.chipsRow}>
            <FilterChip
@@ -324,7 +322,6 @@ const HealthReportsScreen = ({ navigation }) => {
           </ScrollView>
         </View>
 
-        {}
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Medical History Timeline</Text>
         {filteredItems.length > 0 ? (
           <View style={styles.timelineContainer}>
@@ -344,7 +341,7 @@ const HealthReportsScreen = ({ navigation }) => {
 
               return (
                 <View key={item._id || index} style={styles.timelineItem}>
-                  {}
+
                   <View style={styles.timelineLeftNode}>
                     <View style={styles.timelineBadge}>
                       <Text style={[styles.timelineDateDay, { color: colors.textPrimary }]}>
@@ -359,7 +356,6 @@ const HealthReportsScreen = ({ navigation }) => {
                     )}
                   </View>
 
-                  {}
                   <View style={styles.timelineContentRight}>
                     {item.itemType === 'report' ? renderReportCard(item, animStyle) : renderVitalCard(item, animStyle)}
                   </View>
@@ -385,7 +381,6 @@ const HealthReportsScreen = ({ navigation }) => {
           </View>
         )}
 
-        {}
         <View style={styles.quickActionsContainer}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary, marginBottom: spacing.md }]}>Quick Actions</Text>
          <QuickActionsGrid
@@ -401,7 +396,6 @@ const HealthReportsScreen = ({ navigation }) => {
         </View> 
       </ScrollView>
 
-      {}
       <BottomSheet
         visible={previewVisible}
         onClose={() => setPreviewVisible(false)}

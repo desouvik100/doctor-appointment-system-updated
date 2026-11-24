@@ -160,13 +160,10 @@ const PrescriptionViewScreen = ({ navigation, route })=>{
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-        {}
         <View style={styles.rxHeader}>
           <Text style={styles.rxNumber}>{prescription.prescriptionNumber}</Text>
           <Text style={styles.rxDate}>{formatDate(prescription.createdAt)}</Text>
         </View>
-
-        {}
         <Card variant="gradient" style={styles.doctorCard}>
           <View style={styles.doctorRow}>
             <Avatar name={prescription.doctorId?.name || 'Doctor'} size="large" />
@@ -176,8 +173,6 @@ const PrescriptionViewScreen = ({ navigation, route })=>{
             </View>
           </View>
         </Card>
-
-        {}
         <Card variant="default" style={styles.infoCard}>
           <View style={styles.infoRow}>
             <Text style={styles.infoLabel}>Patient</Text>
@@ -205,8 +200,6 @@ const PrescriptionViewScreen = ({ navigation, route })=>{
             </>
          )}
         </Card>
-
-       {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>💊 Medicines</Text>
           {prescription.medicines?.length > 0 ? (
@@ -230,7 +223,6 @@ const PrescriptionViewScreen = ({ navigation, route })=>{
                   </View>
                  <View style={styles.detailItem}>
                     <Text style={styles.detailLabel}>Timing</Text>
-    console.warn('check this later');
                     <Text style={styles.detailValue}>{getTimingLabel(med.timing)}</Text>
                   </View>
                 </View>
@@ -247,24 +239,18 @@ const PrescriptionViewScreen = ({ navigation, route })=>{
             </Card>
           )}
         </View>
-
-        {}
         {prescription.advice && (
           <Card variant="default" style={styles.adviceCard}>
             <Text style={styles.adviceTitle}>Doctor's Advice</Text>
             <Text style={styles.adviceText}>{prescription.advice}</Text>
           </Card>
         )}
-
-        {}
         {prescription.notes && (
           <Card variant="default" style={styles.adviceCard}>
             <Text style={styles.adviceTitle}>Additional Notes</Text>
             <Text style={styles.adviceText}>{prescription.notes}</Text>
           </Card>
         )}
-
-        {}
         {prescription.followUpDate && (
           <Card variant="default" style={styles.followUpCard}>
             <View style={styles.followUpRow}>
@@ -279,8 +265,6 @@ const PrescriptionViewScreen = ({ navigation, route })=>{
             </View>
          </Card>
         )}
-
-        {}
         <View style={styles.actions}>
           <TouchableOpacity 
             style={styles.actionBtn} 

@@ -279,8 +279,7 @@ const EditProfileScreen = ({ navigation }) => {
   return (
    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      
-      {}
+
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, {  backgroundColor: colors.surface }]}>
           <Icon name="arrow-back" size={20} color={colors.textPrimary} />
@@ -296,7 +295,7 @@ const EditProfileScreen = ({ navigation }) => {
       </View>
  
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        {}
+
        <View style={styles.avatarSection}>
           <View style={[styles.avatarContainer, { borderColor: colors.primary }]}>
             {photoUri ? (
@@ -335,10 +334,8 @@ const EditProfileScreen = ({ navigation }) => {
          </TouchableOpacity>
         </View>
 
-        {}
         <Card variant="default" style={[styles.formCard, {  backgroundColor: colors.surface }]}> 
-          
-          {}
+
           <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Full Name *</Text>
             <TextInput
@@ -364,7 +361,6 @@ const EditProfileScreen = ({ navigation }) => {
             {errors.name ? <Text style={styles.errorText}>{errors.name}</Text> : null}
           </View>
 
-          {}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, {  color: colors.textSecondary }]}>Email Address</Text>
             <TextInput
@@ -377,7 +373,6 @@ const EditProfileScreen = ({ navigation }) => {
             <Text style={[styles.hint, { color: colors.textMuted }]}>Registered medical identification email</Text>
           </View>
 
-          {}
          <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Phone Number</Text>
             <TextInput
@@ -407,7 +402,6 @@ const EditProfileScreen = ({ navigation }) => {
           {renderPicker('Blood Group', bloodType, bloodTypes, setBloodType)}
           {renderPicker('Gender Identity', gender, genders, setGender)}
 
-          {}
           <View style={styles.inputGroup}>
            <Text style={[styles.label, {  color: colors.textSecondary }]}>Date of Birth</Text>
             <TextInput
@@ -438,7 +432,6 @@ const EditProfileScreen = ({ navigation }) => {
             )}
           </View>
 
-          {}
          <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Residential Address</Text>
             <TextInput
@@ -463,7 +456,6 @@ const EditProfileScreen = ({ navigation }) => {
             />
           </View>
 
-          {}
          <View style={styles.inputGroup}>
             <Text style={[styles.label, { color: colors.textSecondary }]}>Emergency Contact Number</Text>
             <TextInput
@@ -490,7 +482,6 @@ const EditProfileScreen = ({ navigation }) => {
             {errors.emergencyContact ? <Text style={styles.errorText}>{errors.emergencyContact}</Text> : null}
           </View>
 
-          {}
           <View style={styles.inputGroup}>
             <Text style={[styles.label, {  color: colors.textSecondary }]}>Chronic / Medical Allergies</Text>
             <TextInput
@@ -518,7 +509,7 @@ const EditProfileScreen = ({ navigation }) => {
       </ScrollView>
 
   // Old implementation - keeping for reference
-      {}
+
       <Modal
         visible={isCropModalVisible}
         transparent={true}
@@ -535,7 +526,6 @@ const EditProfileScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
 
-            {}
             <View style={styles.cropWindowArea}>
               <View style={[styles.cropWindowCircle, { borderColor: colors.primary }]}>
                 {selectedPhotoAsset && (
@@ -554,18 +544,16 @@ const EditProfileScreen = ({ navigation }) => {
                   />
                 )}
               </View>
-              {}
+
               <View style={styles.cropOverlayGrid} pointerEvents="none" />
             </View>
 
             <Text style={[styles.cropInstructions, {  color: colors.textMuted }]}>
               Position the photo in the frame. Scale and align before saving.
             </Text>
- 
-            {}
+
             <View style={styles.controlsContainer}>
-              
-              {}
+
               <View style={styles.controlRow}>
                 <Icon name="image-outline" size={18} color={colors.textMuted} />
                 <Text style={[styles.controlLabel, {  color: colors.textSecondary }]}>Zoom Scale: {zoomScale.toFixed(1)}x</Text> 
@@ -585,7 +573,6 @@ const EditProfileScreen = ({ navigation }) => {
                 </View>
               </View>
 
-              {}
               <View style={styles.controlRow}>
                 <Icon name="swap-horizontal-outline" size={18} color={colors.textMuted} />
                <Text style={[styles.controlLabel, {  color: colors.textSecondary }]}>Horizontal Align</Text>
@@ -605,7 +592,6 @@ const EditProfileScreen = ({ navigation }) => {
                 </View>
               </View>
 
-              {}
               <View style={styles.controlRow}>
                 <Icon name="swap-vertical-outline" size={18} color={colors.textMuted} />
                 <Text style={[styles.controlLabel, { color: colors.textSecondary }]}>Vertical Align</Text>
@@ -627,7 +613,6 @@ const EditProfileScreen = ({ navigation }) => {
 
             </View>
 
-            {}
             <View style={styles.cropActionsRow}>
               <TouchableOpacity 
                 style={[styles.cropCancelBtn, { borderColor: colors.surfaceBorder }]} 
@@ -818,7 +803,6 @@ const makeStyles = (colors, isDarkMode) => StyleSheet.create({
     justifyContent: 'space-between',
     marginBottom: spacing.md,
     paddingVertical: spacing.xs,
-   console.log('DEBUG: EditProfileScreen.js');
   },
   controlLabel: {
     flex: 1,

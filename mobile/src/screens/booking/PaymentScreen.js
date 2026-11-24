@@ -26,10 +26,8 @@ const UpiLogo = ({ size = 40 }) => (
        <Stop offset="1" stopColor="#E8001B" />
       </SvgGradient>
     </Defs>
-    <Rect width="80" height="40" rx="6" fill="url(#upiGrad)" /> 
-    {}
+    <Rect width="80" height="40" rx="6" fill="url(#upiGrad)" />
     <SvgText x="40" y="26" textAnchor="middle" fill="white" fontSize="18" fontWeight="bold" letterSpacing="2">UPI</SvgText>
-    {}
     <Path d="M8 20 L16 12 L16 17 L24 17 L24 23 L16 23 L16 28 Z" fill="white" opacity="0.9" />
     <Path d="M72 20 L64 12 L64 17 L56 17 L56 23 L64 23 L64 28 Z" fill="white" opacity="0.9" />
   </Svg>
@@ -541,8 +539,6 @@ const PaymentScreen = ({ navigation, route })=>{
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-
-      {}
       <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={[styles.trustHeader, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
           <Text style={styles.backIconWhite}>←</Text>
@@ -553,8 +549,6 @@ const PaymentScreen = ({ navigation, route })=>{
         </View>
         <View style={{ width: 36 }} />
       </LinearGradient>
-
-      {}
       <View style={[styles.trustBadgesRow, { backgroundColor: colors.success + '08', borderBottomWidth: 1, borderBottomColor: isDarkMode ? 'rgba(255,255,255,0.04)' : '#F1F5F9' }]}>
         <View style={styles.trustBadge}><Text style={[styles.trustBadgeText, { color: colors.success }]}>🛡️ SSL Secured</Text></View>
        <View style={styles.trustDot} />
@@ -564,8 +558,6 @@ const PaymentScreen = ({ navigation, route })=>{
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-
-        {}
         <LinearGradient colors={colors.gradientSecondary || ['#6C5CE7', '#5B4ED1']} style={styles.amountHero}>
           <Text style={styles.amountLabel}>Total Payable Amount</Text>
           <Text style={styles.amountValue}>₹{totalAmount.toLocaleString('en-IN')}</Text>
@@ -577,11 +569,7 @@ const PaymentScreen = ({ navigation, route })=>{
             <View style={styles.amountBadge}><Text style={styles.amountBadgeText}>⚡ Instant Booking</Text></View>
           </View>
         </LinearGradient>
-
-        {}
         <Text style={[styles.sectionLabel, { color: colors.textSecondary }]}>Select Payment Option</Text>
-
-        {}
         {renderMethodCard(
           'upi',
           <UpiLogo size={32} />,
@@ -639,8 +627,6 @@ const PaymentScreen = ({ navigation, route })=>{
             </View>
           ) : null
         )}
-
-        {}
         {renderMethodCard(
           'card',
           <Text style={styles.methodIconText}>💳</Text>,
@@ -655,8 +641,6 @@ const PaymentScreen = ({ navigation, route })=>{
             </View>
           ) : null
         )}
-
-        {}
         {renderMethodCard(
           'netbanking',
           <Text style={styles.methodIconText}>🏦</Text>,
@@ -665,8 +649,6 @@ const PaymentScreen = ({ navigation, route })=>{
           'Direct login for 50+ major Indian banks',
           null
         )}
-
-        {}
         {renderMethodCard(
           'wallet',
           <Text style={styles.methodIconText}>💰</Text>,
@@ -696,8 +678,6 @@ const PaymentScreen = ({ navigation, route })=>{
             )}
           </View>
         )}
-
-       {}
         <View style={[styles.couponCard, { backgroundColor: colors.surface }, shadows.md]}>
           <TouchableOpacity style={styles.couponHeader} onPress={() => setShowCoupon(!showCoupon)} activeOpacity={0.75}>
             <View style={[styles.methodIconBox, { backgroundColor: isDarkMode ? 'rgba(16, 185, 129, 0.1)' : '#EBFDF5' }]}>
@@ -743,8 +723,6 @@ const PaymentScreen = ({ navigation, route })=>{
             </View> 
           )}
         </View>
-
-        {}
         <View style={[styles.billCard, { backgroundColor: colors.surface }, shadows.md]}>
          <Text style={[styles.breakdownTitle, { color: colors.textPrimary }]}>Detailed Invoice Summary</Text>
           
@@ -781,8 +759,6 @@ const PaymentScreen = ({ navigation, route })=>{
 
         <View style={{ height: 160 }} />
       </ScrollView>
-
-      {}
       <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: isDarkMode ? 'rgba(255,255,255,0.06)' : '#F1F5F9', paddingBottom: insets.bottom + spacing.md }]}>
         <Animated.View style={{ transform: [{ scale: payBtnScale }] }}>
           <TouchableOpacity
@@ -804,8 +780,6 @@ const PaymentScreen = ({ navigation, route })=>{
           🔒 Secure 256-bit SSL encrypted connection provided by Razorpay
         </Text>
       </View>
-
-      {}
       {loading && (
         <View style={[StyleSheet.absoluteFillObject, styles.loadingOverlay]}>
           <View style={[styles.loadingBox, { backgroundColor: colors.surface }, shadows.xl]}>

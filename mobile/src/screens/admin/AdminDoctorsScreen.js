@@ -179,8 +179,6 @@ const AdminDoctorsScreen = ({ navigation }) => {
   return (
    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      
-      {}
       <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -193,8 +191,6 @@ const AdminDoctorsScreen = ({ navigation }) => {
           <Text style={styles.addIcon}>+</Text>
         </TouchableOpacity>
       </View>
-
-      {}
       <View style={styles.searchContainer}>
         <TextInput
           style={[styles.searchInput, { backgroundColor: colors.surface, color: colors.textPrimary }]}
@@ -204,15 +200,11 @@ const AdminDoctorsScreen = ({ navigation }) => {
           onChangeText={setSearchQuery}
         />
      </View>
-
-      {}
       <View style={styles.filterContainer}>
         <FilterButton label="All" value="all" />
        <FilterButton label="Approved" value="approved" />
         <FilterButton label="Pending" value="pending" />
       </View>
-
-     {}
       <FlatList
         data={filteredDoctors}
         renderItem={renderDoctor}

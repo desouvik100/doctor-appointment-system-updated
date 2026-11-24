@@ -55,7 +55,6 @@ const SplashScreen = ({ onFinish }) => {
      <StatusBar barStyle="light-content" backgroundColor="#0F172A" />
       <LinearGradient colors={['#0F172A', '#1E293B', '#0F172A']} style={styles.gradient}>
         <Animated.View style={[styles.content, { opacity: fadeAnim, transform: [{ scale: scaleAnim }] }]}>
-          {}
           <View style={styles.logoSection}>
             <Animated.View style={[styles.logoGlow, { opacity: glowAnim }]} />
             <Animated.View style={[styles.logoContainer, { transform: [{ scale: heartScale }] }]}>
@@ -65,14 +64,10 @@ const SplashScreen = ({ onFinish }) => {
               />
             </Animated.View>
           </View>
-
-          {}
           <Animated.View style={{ opacity: textFade }}>
             <Text style={styles.brandName}>HealthSync</Text>
             <Text style={styles.tagline}>Your Health, Our Priority</Text>
           </Animated.View>
-
-          {}
          <View style={styles.ecgSection}>
             <Svg width={280} height={100} viewBox="0 0 240 100">
               <Defs>
@@ -84,31 +79,23 @@ const SplashScreen = ({ onFinish }) => {
               </Defs>
               <Path d={ecgPath} stroke="url(#ecgGrad)" strokeWidth="3" fill="none" strokeLinecap="round" strokeLinejoin="round" />
             </Svg>
-            
-            {}
             <Animated.View style={[styles.scanLine, {
               transform: [{ translateX: ecgAnim.interpolate({ inputRange: [0, 1], outputRange: [-280, 280] }) }]
             }]}>
               <LinearGradient colors={['transparent', '#6366F1', 'transparent']} start={{ x: 0, y: 0 }} end={{ x: 1, y: 0 }} style={styles.scanGradient} />
             </Animated.View>
           </View>
-
-          {}
           <Animated.View style={[styles.bpmBox, { opacity: textFade }]}>
             <Animated.Text style={[styles.bpmHeart, { transform: [{ scale: heartScale }] }]}>❤️</Animated.Text>
             <Text style={styles.bpmValue}>72</Text>
             <Text style={styles.bpmLabel}>BPM</Text>
           </Animated.View>
-
-          {}
           <Animated.View style={[styles.loadingDots, { opacity: glowAnim }]}>
             <View style={styles.dot} />
             <View style={[styles.dot, styles.dotActive]} />
             <View style={styles.dot} />
           </Animated.View>
         </Animated.View>
-
-        {}
         <View style={styles.footer}>
           <Text style={styles.footerText}>Made with ❤️ in India</Text>
        </View>

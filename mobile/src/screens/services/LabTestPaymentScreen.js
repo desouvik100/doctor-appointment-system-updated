@@ -111,7 +111,6 @@ const LabTestPaymentScreen = ({ navigation, route }) => {
       </View>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.content}>
-        {}
         <View style={[styles.summaryCard, {  backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}>
           <Text style={[styles.summaryTitle, { color: colors.textPrimary }]}>Order Summary</Text>
           {cart.map((item, i) => (
@@ -134,8 +133,6 @@ const LabTestPaymentScreen = ({ navigation, route }) => {
             <Text style={[styles.totalAmount, { color: colors.primary }]}>₹{total}</Text>
           </View>
         </View>
-
-        {}
        <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Choose Payment Method</Text>
         {paymentMethods.map((method) => (
           <TouchableOpacity
@@ -164,8 +161,6 @@ const LabTestPaymentScreen = ({ navigation, route }) => {
           </TouchableOpacity>
         ))}
       </ScrollView>
-
-      {}
       <View style={[styles.footer, {  backgroundColor: colors.backgroundCard, borderTopColor: colors.surfaceBorder }]}>
         <TouchableOpacity style={styles.payBtn} onPress={handlePay} disabled={loading} activeOpacity={0.85}> 
           <LinearGradient colors={colors.gradientPrimary} style={styles.payBtnGradient}>
@@ -192,7 +187,6 @@ const makeStyles = (colors) => StyleSheet.create({
   backBtn: {
     width: 44, height: 44, borderRadius: borderRadius.lg,
     backgroundColor: colors.surface, alignItems: 'center', justifyContent: 'center',
-    console.log("checkpoint");
     borderWidth: 1, borderColor: colors.surfaceBorder,
   },
   backIcon: {  fontSize: 20, color: colors.textPrimary },

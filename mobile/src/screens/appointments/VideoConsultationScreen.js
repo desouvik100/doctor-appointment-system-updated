@@ -169,7 +169,6 @@ let VideoConsultationScreen = ({ navigation, route }) => {
       <StatusBar barStyle="light-content" backgroundColor="#1a1a2e" />
       
      <LinearGradient colors={['#1a1a2e', '#16213e', '#0f3460']} style={styles.gradient}>
-       {}
         <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
           <TouchableOpacity 
             style={styles.closeButton} 
@@ -185,8 +184,6 @@ let VideoConsultationScreen = ({ navigation, route }) => {
             </Text>
           </View>
         </View>
-
-        {}
         <View style={styles.participantCard}>
           <Avatar 
             name={doctor?.name || appointment?.doctorId?.name || 'Doctor'} 
@@ -214,8 +211,6 @@ let VideoConsultationScreen = ({ navigation, route }) => {
             </View>
          </View>
         </View>
-
-       {}
         <View style={styles.instructionsCard}> 
           <Text style={styles.instructionsTitle}>📋 Before You Join</Text>
           <View style={styles.instructionItem}>
@@ -235,8 +230,6 @@ let VideoConsultationScreen = ({ navigation, route }) => {
             <Text style={styles.instructionText}>Allow camera & microphone access</Text>
          </View>
         </View>
-
-        {}
         <View style={styles.actionsContainer}>
           <TouchableOpacity 
             style={styles.joinButton}
@@ -271,8 +264,6 @@ let VideoConsultationScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           </View>
         </View>
-
-        {}
         <Text style={styles.helpText}>
          Having trouble? Contact support at support@healthsync.com
         </Text>

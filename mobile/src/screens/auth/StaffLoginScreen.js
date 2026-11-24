@@ -129,8 +129,6 @@ const StaffLoginScreen = ({ navigation }) => {
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0F" />
-      
-      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={['#0A0A0F', '#1A1A2E', '#0A0A0F']}
@@ -148,8 +146,6 @@ const StaffLoginScreen = ({ navigation }) => {
            style={styles.orbGradient}
           />
         </View>
-        
-        {}
         <Animated.View style={[styles.gridOverlay, { transform: [{ rotate: spin }] }]}>
           <View style={styles.gridCircle} />
           <View style={[styles.gridCircle, styles.gridCircle2]} />
@@ -165,7 +161,6 @@ const StaffLoginScreen = ({ navigation }) => {
          showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-         {}
           <TouchableOpacity 
             style={styles.backButton}
            onPress={() => navigation.goBack()}
@@ -182,7 +177,6 @@ const StaffLoginScreen = ({ navigation }) => {
               },
             ]}
           >
-            {}
             <View style={styles.header}>
               <View style={styles.iconContainer}>
                 <LinearGradient
@@ -198,8 +192,6 @@ const StaffLoginScreen = ({ navigation }) => {
               
               <Text style={styles.title}>Staff Portal</Text>
               <Text style={styles.subtitle}>Hospital Operations Access</Text>
-              
-              {}
               <View style={styles.clockContainer}>
                 <Text style={styles.clockIcon}>🕐</Text>
                 <Text style={styles.clockText}>
@@ -214,8 +206,6 @@ const StaffLoginScreen = ({ navigation }) => {
                </View>
               </View>
             </View>
-
-            {}
             <View style={styles.departmentSection}>
               <Text style={styles.sectionLabel}>Select Department</Text>
               <View style={styles.departmentGrid}>
@@ -239,8 +229,6 @@ const StaffLoginScreen = ({ navigation }) => {
                 ))} 
              </View>
             </View>
-
-            {}
             <View style={styles.formContainer}>
               <View style={styles.inputContainer}>
                <Text style={styles.inputLabel}>Employee ID</Text> 
@@ -274,8 +262,6 @@ const StaffLoginScreen = ({ navigation }) => {
                   </TouchableOpacity> 
                 </View>
               </View>
-
-             {}
               <TouchableOpacity
                 style={styles.loginButton}
                 onPress={handleLogin}
@@ -298,8 +284,6 @@ const StaffLoginScreen = ({ navigation }) => {
                   )}
                </LinearGradient>
               </TouchableOpacity>
-
-              {}
               <View style={styles.statsContainer}>
                 <View style={styles.statItem}>
                   <Text style={styles.statValue}>24</Text>
@@ -317,8 +301,6 @@ const StaffLoginScreen = ({ navigation }) => {
                 </View>
               </View>
             </View>
-
-            {}
             <View style={styles.footer}>
               <TouchableOpacity 
                 style={styles.helpButton}

@@ -124,8 +124,6 @@ const DoctorLoginScreen = ({ navigation })=>{
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor="#0A0A0F" />
-      
-     {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={['#0A0A0F', '#1A1A2E', '#0A0A0F']}
@@ -154,7 +152,6 @@ const DoctorLoginScreen = ({ navigation })=>{
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {}
           <TouchableOpacity 
             style={styles.backButton}
             onPress={() => navigation.goBack()}
@@ -171,7 +168,6 @@ const DoctorLoginScreen = ({ navigation })=>{
               },
             ]}
           >
-            {}
             <View style={styles.header}>
               <Animated.View 
                 style={[
@@ -191,15 +187,11 @@ const DoctorLoginScreen = ({ navigation })=>{
               
               <Text style={styles.title}>Doctor Portal</Text>
               <Text style={styles.subtitle}>Access your medical dashboard</Text>
-              
-              {}
               <View style={styles.statusBadge}>
                 <View style={styles.statusDot} />
                 <Text style={styles.statusText}>Secure Connection</Text>
               </View>
             </View>
-
-            {}
             <View style={styles.formContainer}>
               <View style={styles.inputContainer}>
                 <Text style={styles.inputLabel}>Medical ID / Email</Text>
@@ -238,8 +230,6 @@ const DoctorLoginScreen = ({ navigation })=>{
               <TouchableOpacity style={styles.forgotPassword}>
                 <Text style={styles.forgotText}>Forgot credentials?</Text>
               </TouchableOpacity>
-
-              {}
               <TouchableOpacity
                 style={styles.loginButton}
                 onPress={handleLogin}
@@ -262,8 +252,6 @@ const DoctorLoginScreen = ({ navigation })=>{
                   )}
                 </LinearGradient>
               </TouchableOpacity>
-
-              {}
               <View style={styles.quickActions}>
                 <TouchableOpacity style={styles.quickAction}>
                   <View style={[styles.quickIcon, {  backgroundColor: 'rgba(108, 92, 231, 0.2)' }]}>
@@ -285,8 +273,6 @@ const DoctorLoginScreen = ({ navigation })=>{
                 </TouchableOpacity>
               </View>
             </View>
-
-            {}
             <View style={styles.footer}>
               <TouchableOpacity onPress={() => whatsappService.contactSupport('Hi! I need IT support for Doctor Portal.')}>
                 <Text style={styles.footerText}>

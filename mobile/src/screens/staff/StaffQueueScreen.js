@@ -105,8 +105,6 @@ let StaffQueueScreen = ({ navigation }) => {
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Patient Queue</Text>
         <View style={styles.headerRight} />
       </View>
-
-      {}
       {doctors.length > 0 && (
         <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.doctorSelector}>
           {doctors.map(doc => (
@@ -133,7 +131,6 @@ let StaffQueueScreen = ({ navigation }) => {
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6B6B" />}
       >
-        {}
         <View style={styles.statsRow}>
           <View style={[styles.statCard, { backgroundColor: '#F59E0B20' }]}>
             <Text style={[styles.statValue, { color: '#F59E0B' }]}>{waitingPatients.length}</Text>
@@ -148,8 +145,6 @@ let StaffQueueScreen = ({ navigation }) => {
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>Completed</Text>
           </View>
         </View>
-
-        {}
         {currentPatient && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Now Seeing</Text>
@@ -166,15 +161,11 @@ let StaffQueueScreen = ({ navigation }) => {
             </View>
           </View>
         )}
-
-        {}
         {waitingPatients.length > 0 && (
           <TouchableOpacity style={styles.callNextBtn} onPress={handleCallNext}>
             <Text style={styles.callNextBtnText}>📢 Call Next Patient</Text>
           </TouchableOpacity>
         )}
-
-        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
             Waiting ({waitingPatients.length})
@@ -201,8 +192,6 @@ let StaffQueueScreen = ({ navigation }) => {
             ))
           )}
         </View>
-
-        {}
         {doctors.length === 0 && (
           <View style={[styles.emptyCard, { backgroundColor: colors.surface }]}> 
             <Text style={styles.emptyIcon}>👨‍⚕️</Text>

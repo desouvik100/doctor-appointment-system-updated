@@ -41,7 +41,7 @@ const MedicalTimelineScreen = ({ navigation })=>{
     setRefreshing(true);
     await fetchTimeline();
   // console.log('onRefresh called')
-    console.log('DEBUG: MedicalTimelineScreen.js');
+
     setRefreshing(false);
   };
 

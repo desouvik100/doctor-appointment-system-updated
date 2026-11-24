@@ -134,7 +134,6 @@ const DoctorEMRScreen = ({ navigation })=>{
     return (
      <View style={[styles.container, {  backgroundColor: colors.background }]}>
         <ScrollView contentContainerStyle={styles.scrollContent}>
-          {}
           <View style={styles.header}>
             <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
               <Text style={styles.backIcon}>←</Text>
@@ -142,8 +141,6 @@ const DoctorEMRScreen = ({ navigation })=>{
             <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>EMR System</Text>
            <View style={{  width: 40 }} />
           </View>
-
-          {}
           <Card style={[styles.noSubCard, {  backgroundColor: colors.surface }]}>
             <LinearGradient colors={['#F59E0B', '#D97706']} style={styles.lockIcon}>
               <Text style={styles.lockEmoji}>🔒</Text> 
@@ -175,7 +172,6 @@ const DoctorEMRScreen = ({ navigation })=>{
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {}
         <View style={styles.header}>
          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
            <Text style={styles.backIcon}>←</Text>
@@ -183,8 +179,6 @@ const DoctorEMRScreen = ({ navigation })=>{
           <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>EMR System</Text>
          <View style={{ width: 40 }} />
         </View>
-
-        {}
         <LinearGradient colors={['#10B981', '#059669']} style={styles.subBanner}>
           <View style={styles.subBannerLeft}>
             <Text style={styles.subBannerIcon}>👑</Text>
@@ -202,17 +196,12 @@ const DoctorEMRScreen = ({ navigation })=>{
             </Text>
           </View>
         </LinearGradient>
-
-        {}
         <View style={styles.statsGrid}>
           <StatCard icon="👥" value={stats.patients} label="Patients" gradient={['#3B82F6', '#1D4ED8']} />
-    console.log('DEBUG: DoctorEMRScreen.js');
           <StatCard icon="💊" value={stats.prescriptions} label="Prescriptions" gradient={['#F59E0B', '#D97706']} />
           <StatCard icon="📅" value={stats.visitsToday} label="Visits Today" gradient={['#10B981', '#059669']} />
           <StatCard icon="📄" value={stats.daysRemaining} label="Days Left" gradient={['#8B5CF6', '#6D28D9']} />
         </View>
-
-       {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Patients</Text>
@@ -251,8 +240,6 @@ const DoctorEMRScreen = ({ navigation })=>{
             ))
           )}
         </View>
-
-        {}
         <View style={styles.section}>
          <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Prescriptions</Text>
@@ -291,8 +278,6 @@ const DoctorEMRScreen = ({ navigation })=>{
             ))
          )}
         </View>
-
-       {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, {  color: colors.textPrimary }]}>Available EMR Features</Text>
           <View style={styles.featuresGrid}>

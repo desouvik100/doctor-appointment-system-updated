@@ -169,8 +169,6 @@ const ProfileScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
-
-     {}
       <View style={styles.backgroundContainer}>
        <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
@@ -191,8 +189,6 @@ const ProfileScreen = ({ navigation }) => {
       </View> 
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[styles.scrollContent, { paddingTop: insets.top }]}>
-
-        {}
         <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']} style={styles.heroGradient}>
           <View style={styles.heroTopBar}>
             <Text style={styles.heroScreenTitle}>My Health Space</Text>
@@ -205,8 +201,6 @@ const ProfileScreen = ({ navigation }) => {
              </TouchableOpacity> 
            </View>
           </View>
-
-          {}
           <View style={styles.profileRow}>
             <View style={styles.avatarWrapper}>
               <Avatar
@@ -228,8 +222,6 @@ const ProfileScreen = ({ navigation }) => {
               </TouchableOpacity>
             </View>
           </View>
-
-          {}
          <View style={[styles.statsRow, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0, 0, 0, 0.05)' }]}> 
             <TouchableOpacity style={styles.statBox} onPress={() => navigation.navigate('EditProfile')} activeOpacity={0.8}>
               <Text style={styles.statIcon}>🩸</Text>
@@ -250,8 +242,6 @@ const ProfileScreen = ({ navigation }) => {
            </View>
           </View>
         </LinearGradient>
-
-        {}
         {nextAppointment ? (
           <TouchableOpacity style={styles.nextApptCard} onPress={() => navigation.navigate('Appointments')} activeOpacity={0.85}>
             <View style={[
@@ -277,8 +267,6 @@ const ProfileScreen = ({ navigation }) => {
             </View>
           </TouchableOpacity>
         ) : null}
-
-        {}
         <View style={{ paddingHorizontal: spacing.xl, marginTop: spacing.lg }}> 
           <QuickActionsGrid
             actions={PROFILE_ACTIONS}
@@ -287,8 +275,6 @@ const ProfileScreen = ({ navigation }) => {
             showTitle={false}
           />
         </View>
-
-        {}
         <TouchableOpacity style={[
           styles.emergencyCard,
           {
@@ -308,8 +294,6 @@ const ProfileScreen = ({ navigation }) => {
           </View>
           <Text style={[styles.emergencyArrow, { color: colors.error }]}>{'›'}</Text>
         </TouchableOpacity>
-
-        {}
         {menuSections.map((section, idx) => (
           <View key={idx} style={styles.menuSection}>
             <Text style={[styles.sectionTitle, { color: colors.textMuted }]}>{section.title}</Text>
@@ -333,8 +317,6 @@ const ProfileScreen = ({ navigation }) => {
             </View>
           </View>
         ))}
-
-        {}
         <TouchableOpacity style={styles.logoutBtn} onPress={handleLogout} activeOpacity={0.8}>
           <Text style={styles.logoutIcon}>🚪</Text>
           <Text style={styles.logoutText}>Log Out</Text>

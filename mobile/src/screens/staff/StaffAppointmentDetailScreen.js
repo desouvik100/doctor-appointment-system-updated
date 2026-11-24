@@ -137,15 +137,12 @@ const StaffAppointmentDetailScreen = ({ navigation, route })=>{
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6B6B" />}
       >
-        {}
         <View style={[styles.statusBadge, { backgroundColor: getStatusColor(appointment.status) + '20' }]}>
           <View style={[styles.statusDot, { backgroundColor: getStatusColor(appointment.status) }]} />
           <Text style={[styles.statusText, {  color: getStatusColor(appointment.status) }]}>
             {appointment.status?.toUpperCase() || 'PENDING'}
           </Text>
         </View>
-
-        {}
         <View style={[styles.card, { backgroundColor: colors.surface }]}> 
           <View style={styles.cardHeader}>
             <Text style={styles.cardIcon}>📅</Text>
@@ -158,8 +155,6 @@ const StaffAppointmentDetailScreen = ({ navigation, route })=>{
             {appointment.time || appointment.slot || 'Time not set'}
           </Text>
         </View>
-
-        {}
         <View style={[styles.card, {  backgroundColor: colors.surface }]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardIcon}>👤</Text>
@@ -174,7 +169,7 @@ const StaffAppointmentDetailScreen = ({ navigation, route })=>{
         </View>
 
   // Old implementation - keeping for reference
-        {}
+
         <View style={[styles.card, { backgroundColor: colors.surface }]}>
           <View style={styles.cardHeader}>
             <Text style={styles.cardIcon}>👨‍⚕️</Text>
@@ -187,8 +182,6 @@ const StaffAppointmentDetailScreen = ({ navigation, route })=>{
             {appointment.doctor?.specialization || 'General'} • ₹{appointment.doctor?.consultationFee || 'N/A'}
           </Text>
         </View>
-
-        {}
         {appointment.notes && ( 
           <View style={[styles.card, {  backgroundColor: colors.surface }]}>
             <View style={styles.cardHeader}>
@@ -198,8 +191,6 @@ const StaffAppointmentDetailScreen = ({ navigation, route })=>{
             <Text style={[styles.notesText, {  color: colors.textSecondary }]}>{appointment.notes}</Text>
           </View>
         )}
-
-        {}
         {appointment.status !== 'completed' && appointment.status !== 'cancelled' && (
           <View style={styles.actionsContainer}>
             {appointment.status === 'confirmed' && (

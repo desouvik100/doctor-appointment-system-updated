@@ -273,7 +273,6 @@ const DoctorQueueScreen = ({ navigation }) => {
 
   const renderListHeader = useCallback(() => (
     <View>
-      {}
       <View style={styles.header}>
        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
           <Text style={styles.backIcon}>←</Text>
@@ -288,8 +287,6 @@ const DoctorQueueScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       </View>
-
-      {}
       <Card style={[styles.summaryCard, { backgroundColor: colors.surface }]}>
         <Text style={[styles.summaryTitle, { color: colors.textPrimary }]}>📊 Today at a Glance</Text>
         <View style={styles.summaryStats}>
@@ -307,8 +304,6 @@ const DoctorQueueScreen = ({ navigation }) => {
           </View>
         </View>
       </Card>
-
-      {}
       <View style={styles.filterRow}>
         {[
           { id: 'all', label: `All (${queue.length})`, icon: '📋' },
@@ -332,8 +327,6 @@ const DoctorQueueScreen = ({ navigation }) => {
          </TouchableOpacity>
         ))}
       </View>
-
-      {}
       <View style={styles.section}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Current Patient</Text>
         <Card style={[styles.currentPatientCard, { backgroundColor: colors.surface }]}>
@@ -360,8 +353,6 @@ const DoctorQueueScreen = ({ navigation }) => {
                   </View>
                 </View>
               </View>
-
-              {}
               <View style={styles.timerContainer}>
                 <Text style={styles.timerIcon}>⏱️</Text>
                 <Text style={[styles.timerText, { color: colors.textPrimary }]}>{formatTime(consultationTime)}</Text>
@@ -381,8 +372,6 @@ const DoctorQueueScreen = ({ navigation }) => {
                   </Text>
                 )}
               </View>
-
-              {}
               <View style={styles.actionButtons}>
                 {currentPatient.consultationType === 'online' && currentPatient.googleMeetLink && (
                   <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#1A73E8' }]}>
@@ -438,8 +427,6 @@ const DoctorQueueScreen = ({ navigation }) => {
           )}
         </Card>
       </View>
-
-      {}
       <View style={styles.sectionHeader}>
         <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>
           Waiting Queue ({filteredQueue.length})
@@ -480,8 +467,6 @@ const DoctorQueueScreen = ({ navigation }) => {
        removeClippedSubviews={Platform.OS === 'android'}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       />
-
-      {}
       <Modal visible={showWalkInModal} animationType="slide" transparent>
         <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'height'} style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>
@@ -493,7 +478,6 @@ const DoctorQueueScreen = ({ navigation }) => {
             </View>
 
             <ScrollView style={styles.modalBody} showsVerticalScrollIndicator={false}>
-              {}
               <View style={styles.formSection}>
                 <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Search by Phone</Text>
                 <View style={styles.searchRow}>
@@ -511,8 +495,6 @@ const DoctorQueueScreen = ({ navigation }) => {
                   </TouchableOpacity>
                 </View>
               </View>
-
-              {}
               {existingPatient && (
                 <View style={[styles.existingPatientCard, { backgroundColor: '#10B98120', borderColor: '#10B981' }]}>
                   <Text style={styles.existingPatientIcon}>✅</Text>
@@ -522,8 +504,6 @@ const DoctorQueueScreen = ({ navigation }) => {
                   </View>
                 </View>
               )}
-
-              {}
               {!existingPatient && (
                 <>
                   <View style={styles.formDivider}>
@@ -575,8 +555,6 @@ const DoctorQueueScreen = ({ navigation }) => {
                   </View>
                 </>
               )}
-
-              {}
               <View style={styles.formSection}>
                 <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Reason for Visit</Text>
                 <TextInput
@@ -589,8 +567,6 @@ const DoctorQueueScreen = ({ navigation }) => {
                   numberOfLines={2}
                />
              </View>
-
-              {}
               <View style={styles.formSection}>
                 <Text style={[styles.formLabel, { color: colors.textSecondary }]}>Consultation Type</Text>
                 <View style={styles.typeRow}>
@@ -611,8 +587,6 @@ const DoctorQueueScreen = ({ navigation }) => {
                 </View>
               </View>
             </ScrollView>
-
-            {}
             <View style={styles.modalFooter}>
               <TouchableOpacity style={[styles.cancelBtn, { borderColor: colors.surfaceBorder }]} onPress={() => { setShowWalkInModal(false); resetWalkInForm(); }}>
                 <Text style={[styles.cancelBtnText, { color: colors.textSecondary }]}>Cancel</Text>

@@ -120,7 +120,6 @@ const AppointmentTypeScreen = ({ navigation, route })=>{
     <View style={[styles.container, {  backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
 
-      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
@@ -140,7 +139,6 @@ const AppointmentTypeScreen = ({ navigation, route })=>{
         </View>
       </View>
 
-      {}
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity
           style={[styles.backButton, { backgroundColor: isDarkMode ? 'rgba(255,255,255,0.06)' : 'rgba(255,255,255,0.7)', borderColor: colors.surfaceBorder, borderWidth: 1 }]}
@@ -153,7 +151,7 @@ const AppointmentTypeScreen = ({ navigation, route })=>{
       </View>
 
       <View style={styles.content}>
-        {} 
+
         <View style={[styles.doctorCard, { 
           backgroundColor: isDarkMode ? 'rgba(26, 31, 46, 0.45)' : 'rgba(255, 255, 255, 0.7)',
          borderColor: isDarkMode ? 'rgba(255, 255, 255, 0.08)' : 'rgba(0, 184, 148, 0.08)',
@@ -178,7 +176,6 @@ const AppointmentTypeScreen = ({ navigation, route })=>{
           Choose how you would like to consult with the doctor:
         </Text>
 
-        {}
         <View style={styles.optionsContainer}>
           {CONSULT_TYPES.map((type) => {
             const active = selectedType === type.id;

@@ -102,7 +102,6 @@ const InsuranceScreen = ({ navigation })=>{
                 <LinearGradient
                   colors={expired ? ['#ef4444', '#dc2626'] : expiringSoon ? ['#f59e0b', '#d97706'] : ['#10b981', '#059669']}
                  style={styles.policyHeader}>
-    console.log("checkpoint");
                   <Text style={styles.policyProvider}>{policy.provider || 'Insurance Provider'}</Text>
                   <Text style={styles.policyType}>{policy.type || 'Health Insurance'}</Text>
                 </LinearGradient>

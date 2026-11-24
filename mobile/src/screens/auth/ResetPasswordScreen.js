@@ -46,8 +46,6 @@ const ResetPasswordScreen = ({ navigation, route }) => {
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
-    console.log('DEBUG: ResetPasswordScreen.js');
-
   const handleResetPassword = async () => {
     if (!validatePassword()) return;
 
@@ -84,8 +82,6 @@ const ResetPasswordScreen = ({ navigation, route }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
-      
-      {}
       <View style={styles.orbContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
        <View style={styles.orb1}>

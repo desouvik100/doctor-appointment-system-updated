@@ -216,7 +216,6 @@ const LabTestsScreen = ({ navigation }) => {
           <RefreshControl refreshing={refreshing} onRefresh={onRefresh} colors={[colors.primary]} />
         }
       >
-        {}
         <LinearGradient
           colors={['#10B981', '#059669']}
           start={{ x: 0, y: 0 }}
@@ -231,9 +230,7 @@ const LabTestsScreen = ({ navigation }) => {
             </View>
           </View>
           <Text style={styles.bannerEmoji}>🧪</Text>
-        </LinearGradient> 
-
-        {}
+        </LinearGradient>
         {!searchQuery && (
           <View style={styles.section}>
            <View style={styles.sectionHeader}>
@@ -287,8 +284,6 @@ const LabTestsScreen = ({ navigation }) => {
             </ScrollView>
          </View>
         )}
-
-        {}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>{searchQuery ? 'Search Results' : 'Popular Tests'}</Text>
           
@@ -327,8 +322,6 @@ const LabTestsScreen = ({ navigation }) => {
           )}
         </View>
       </ScrollView>
-
-      {}
       {cart.length > 0 && (
         <View style={styles.cartFooter}>
           <View style={styles.cartInfo}>
@@ -348,8 +341,6 @@ const LabTestsScreen = ({ navigation }) => {
           </TouchableOpacity>
         </View>
       )}
-
-      {}
       <Modal visible={cartModalVisible} transparent animationType="slide" onRequestClose={() => setCartModalVisible(false)}>
        <View style={styles.modalOverlay}>
           <View style={styles.modalSheet}>

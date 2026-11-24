@@ -230,8 +230,7 @@ const RewardsScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} />
-      
-     {}
+
      <View style={styles.header}>
         <TouchableOpacity onPress={() => navigation.goBack()} style={[styles.backBtn, { backgroundColor: colors.surface }]}>
           <Icon name="arrow-back" size={20} color={colors.textPrimary} />
@@ -242,13 +241,12 @@ const RewardsScreen = ({ navigation }) => {
         </TouchableOpacity>
       </View>
 
-    console.log('DEBUG: RewardsScreen.js');
      <ScrollView
        showsVerticalScrollIndicator={false}
         contentContainerStyle={styles.content}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
      >
-        {}
+
         <Animated.View style={{ transform: [{ scale: pointsPulseScale }] }}>
           <LinearGradient
             colors={isDarkMode ? ['#4F46E5', '#6366F1'] : ['#6366F1', '#8B5CF6']}
@@ -267,7 +265,6 @@ const RewardsScreen = ({ navigation }) => {
             <Text style={styles.pointsValue}>{displayedPoints.toLocaleString()}</Text>
             <Text style={styles.pointsWorth}>Cash Equivalent: ₹{loyaltyData.pointsValue}</Text>
 
-            {}
             {nextTier && (
               <View style={styles.progressSection}>
                <View style={styles.progressBar}>
@@ -281,7 +278,6 @@ const RewardsScreen = ({ navigation }) => {
           </LinearGradient>
         </Animated.View>
 
-        {}
         <View style={styles.statsRow}>
           <Card variant="default" style={[styles.statCard, { backgroundColor: colors.surface }]}>
             <Text style={styles.statIcon}>📈</Text>
@@ -294,8 +290,7 @@ const RewardsScreen = ({ navigation }) => {
             <Text style={[styles.statLabel, { color: colors.textSecondary }]}>Total Redeemed</Text>
           </Card>
         </View>
- 
-        {}
+
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Redeem Coupons</Text>
@@ -333,7 +328,6 @@ const RewardsScreen = ({ navigation }) => {
                     </Text>
                   </View>
 
-                  {}
                   <View style={styles.couponDivider}>
                     <View style={[styles.stubNotchTop, { backgroundColor: colors.background }]} />
                     <View style={[styles.stubDottedLine, { borderColor: isDarkMode ? 'rgba(255,255,255,0.15)' : 'rgba(0,0,0,0.1)' }]} />
@@ -373,7 +367,6 @@ const RewardsScreen = ({ navigation }) => {
           </ScrollView>
         </View>
 
-        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>How to Earn Points</Text>
           <Card variant="default" style={[styles.earnListCard, { backgroundColor: colors.surface }]}>
@@ -395,7 +388,6 @@ const RewardsScreen = ({ navigation }) => {
           </Card>
         </View>
 
-        {}
         {loyaltyData.history?.length > 0 && (
           <View style={styles.section}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Points History</Text>
@@ -404,8 +396,7 @@ const RewardsScreen = ({ navigation }) => {
                 const isPositive = (item.points || 0) >= 0;
                 return (
                   <View key={index} style={styles.timelineItem}>
-                    
-                    {}
+
                    <View style={styles.timelineLeftNode}>
                       <View style={[
                        styles.timelineCircle,
@@ -425,7 +416,6 @@ const RewardsScreen = ({ navigation }) => {
                       )}
                     </View>
 
-                    {}
                     <View style={styles.timelineContentRight}>
                       <Card variant="default" style={[styles.historyCard, { backgroundColor: colors.surface }]}>
                         <View style={styles.historyHeader}>

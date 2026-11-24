@@ -541,8 +541,6 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
           Provide context to help the clinic prepare for your consultation
        </Text>
-
-        {}
         <View style={styles.section}>
           <View style={styles.sectionHeaderRow}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Select Symptoms</Text>
@@ -579,8 +577,6 @@ const SlotSelectionScreen = ({ navigation, route }) => {
             })}
           </View>
         </View>
-
-        {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Urgency Level</Text>
           <View style={styles.urgencyRow}>
@@ -613,8 +609,6 @@ const SlotSelectionScreen = ({ navigation, route }) => {
             })}
           </View>
         </View>
-
-        {}
     // console.log('todo: remove this')
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Brief Description</Text>
@@ -681,8 +675,6 @@ const SlotSelectionScreen = ({ navigation, route }) => {
        <Text style={[styles.stepSubtitle, { color: colors.textSecondary }]}>
           Select an available date and scheduled time slot
         </Text>
-
-        {}
         <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.datesContainer}>
           {dates.map((day, index) => (
             <DateCell
@@ -699,8 +691,6 @@ const SlotSelectionScreen = ({ navigation, route }) => {
             />
           ))}
         </ScrollView>
-
-        {}
         {selectedDate && (
           <View style={styles.slotSection}>
             {slotsLoading ? (
@@ -717,7 +707,6 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           </View>
         )}
 
-        {}
         {selectedDate && (
           <View style={styles.queueContainer}>
             <Text style={[styles.queueHeaderTitle, { color: colors.textPrimary }]}>Live Queue Status</Text>
@@ -796,8 +785,6 @@ const SlotSelectionScreen = ({ navigation, route }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-
-      {}
       <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
         style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <TouchableOpacity
@@ -822,8 +809,6 @@ const SlotSelectionScreen = ({ navigation, route }) => {
         </View>
         <View style={{ width: 36 }} />
       </LinearGradient>
-
-     {}
       <View style={[styles.progressWrap, { backgroundColor: colors.surface, borderBottomWidth: 1, borderBottomColor: isDarkMode ? 'rgba(255,255,255,0.05)' : '#F1F5F9' }]}>
         {['Type', 'Details', 'Date'].map((label, i) => {
           const s = i + 1;
@@ -881,8 +866,6 @@ const SlotSelectionScreen = ({ navigation, route }) => {
           );
         })}
       </View>
-
-      {}
       <View style={[styles.doctorSummaryCard, { backgroundColor: colors.surface }]}>
         <View style={styles.doctorSummaryRow}>
           {activeDoc?.profilePhoto ? (
@@ -914,15 +897,11 @@ const SlotSelectionScreen = ({ navigation, route }) => {
          </View>
         </View>
       </View>
-
-      {}
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         {step === 1 && renderTypeSelection()}
        {step === 2 && renderDetailsStep()}
         {step === 3 && renderDateSelection()}
       </ScrollView>
-
-      {}
      <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider || '#F1F5F9' }]}>
         {step === 1 && (
           <TouchableOpacity

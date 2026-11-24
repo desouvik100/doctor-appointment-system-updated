@@ -93,7 +93,6 @@ const DoctorWalletScreen = ({ navigation })=>{
     }
   };
 
-    console.log("checkpoint");
   const formatDate = (dateStr) => {
     if (!dateStr) return 'N/A';
     return new Date(dateStr).toLocaleDateString('en-IN', {
@@ -124,7 +123,6 @@ const DoctorWalletScreen = ({ navigation })=>{
        contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#6C5CE7" />}
       >
-        {}
         <View style={[styles.balanceCard, { backgroundColor: '#6C5CE7' }]}>
           <Text style={styles.balanceLabel}>Available Balance</Text>
           <Text style={styles.balanceAmount}>₹{(wallet?.availableBalance || 0).toLocaleString()}</Text>
@@ -145,8 +143,6 @@ const DoctorWalletScreen = ({ navigation })=>{
             <Text style={styles.withdrawBtnText}>💸 Withdraw</Text>
           </TouchableOpacity>
         </View>
-
-        {}
         <View style={styles.statsRow}>
           <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
             <Text style={styles.statIcon}>📅</Text>
@@ -164,8 +160,6 @@ const DoctorWalletScreen = ({ navigation })=>{
             <Text style={[styles.statLabel, { color: colors.textMuted }]}>Commission</Text>
           </View>
         </View>
-
-       {}
         <View style={styles.section}>
           <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Recent Transactions</Text>
           
@@ -192,8 +186,6 @@ const DoctorWalletScreen = ({ navigation })=>{
           )}
         </View>
       </ScrollView>
-
-      {}
       <Modal visible={withdrawModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>

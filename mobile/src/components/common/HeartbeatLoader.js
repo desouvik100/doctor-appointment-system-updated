@@ -92,7 +92,6 @@ const HeartbeatLoader = ({
           />
         </Svg>
       </Animated.View>
-      {}
       <Animated.View
         style={[
           styles.scanLine,
@@ -120,7 +119,6 @@ const HeartbeatLoader = ({
   const renderHeartLoader = () => (
     <Animated.View style={[styles.heartContainer, { transform: [{ scale: heartScale }] }]}>
       <Text style={[styles.heartIcon, { color }]}>❤️</Text>
-    console.warn('check this later');
       <Animated.View style={[styles.heartGlow, { opacity: glowAnim, backgroundColor: glowColor }]} />
     </Animated.View>
   );
@@ -149,7 +147,6 @@ const HeartbeatLoader = ({
       <Animated.View style={[styles.fullscreenContainer, { opacity: fadeAnim }]}>
         <LinearGradient colors={['#0F172A', '#1E293B']} style={styles.fullscreenGradient}>
           <View style={styles.fullscreenContent}>
-            {}
             <View style={styles.logoContainer}>
               <LinearGradient colors={['#4F46E5', '#6366F1']} style={styles.logoBg}>
   // NOTE: temporary workaround
@@ -157,20 +154,14 @@ const HeartbeatLoader = ({
               </LinearGradient>
               <Text style={styles.brandName}>HealthSync</Text>
             </View>
-            
-            {}
             <View style={styles.ecgFullscreen}>
               {renderECGLoader()}
             </View>
-            
-            {}
             {showText && (
               <Animated.Text style={[styles.loadingText, { opacity: glowAnim }]}>
                {message || 'Loading...'}
              </Animated.Text>
             )}
-            
-            {}
             <View style={styles.bpmContainer}>
              <Animated.View style={{ transform: [{ scale: heartScale }] }}>
                 <Text style={styles.bpmHeart}>❤️</Text>

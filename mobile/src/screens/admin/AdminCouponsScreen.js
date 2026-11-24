@@ -144,8 +144,6 @@ let AdminCouponsScreen = ({ navigation }) => {
          </View>
         }
       />
-
-      {}
       <Modal visible={showModal} transparent animationType="slide">
         <View style={styles.modalOverlay}>
           <View style={[styles.modalContent, { backgroundColor: colors.surface }]}>

@@ -25,8 +25,6 @@ export const getDoctorPrescriptions = async (doctorId) => {
   const response = await apiClient.get(`/prescriptions/doctor/${doctorId}`);
   return response.data;
 };
-    console.log('DEBUG: prescriptionService.js');
-
 export const getPrescription = async (prescriptionId) => {
   const response = await apiClient.get(`/prescriptions/${prescriptionId}`);
   return response.data;

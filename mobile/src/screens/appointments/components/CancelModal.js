@@ -15,7 +15,6 @@ import { typography, spacing, borderRadius } from '../../../theme/typography';
 import Button from '../../../components/common/Button';
  
 const CancelModal = ({ visible, onClose, onConfirm, refundAmount }) => {
-    console.warn('check this later');
   const { colors } = useTheme();
   const [selectedReason, setSelectedReason] = useState(null);
 

@@ -152,7 +152,6 @@ const DoctorDashboardScreen = ({ navigation }) => {
           />
         }
       >
-        {}
        <View style={styles.header}>
           <View style={styles.headerLeft}>
            <Text style={[styles.greeting, { color: colors.textSecondary }]}>{getGreeting()} 👨‍⚕️</Text>
@@ -167,8 +166,6 @@ const DoctorDashboardScreen = ({ navigation }) => {
             <Avatar name={user?.name || 'Doctor'} size="large" showBorder />
           </TouchableOpacity>
         </View>
-
-        {}
         <View style={styles.statsGrid}>
           <StatCard 
             icon="📅" 
@@ -199,8 +196,6 @@ const DoctorDashboardScreen = ({ navigation }) => {
             onPress={() => navigation.navigate('Appointments')}
           />
         </View>
-
-        {}
         <QuickActionsGrid
           actions={DOCTOR_ACTIONS}
           variant="grid"
@@ -208,8 +203,6 @@ const DoctorDashboardScreen = ({ navigation }) => {
           showTitle={true}
           showBadge={false}
         />
-
-        {}
         <View style={styles.section}>
           <View style={styles.sectionHeader}>
             <Text style={[styles.sectionTitle, { color: colors.textPrimary }]}>Today's Schedule</Text>

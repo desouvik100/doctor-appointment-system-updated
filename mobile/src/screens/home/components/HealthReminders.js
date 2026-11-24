@@ -36,7 +36,7 @@ let HealthReminders = () => {
         showsHorizontalScrollIndicator={false}
        contentContainerStyle={styles.horizontalScroll}
       >
-        {}
+
         <Animated.View
           entering={FadeInRight.delay(100)}
           style={[
@@ -78,7 +78,6 @@ let HealthReminders = () => {
           </TouchableOpacity>
         </Animated.View>
 
-       {}
         <Animated.View
           entering={FadeInRight.delay(200)}
           style={[
@@ -114,7 +113,6 @@ let HealthReminders = () => {
           </TouchableOpacity>
         </Animated.View>
 
-        {}
         <Animated.View
           entering={FadeInRight.delay(300)}
           style={[

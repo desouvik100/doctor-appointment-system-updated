@@ -107,8 +107,6 @@ const AdminAddDoctorScreen = ({ navigation }) => {
         <InputField label="Qualification" value={form.qualification} onChangeText={(v) => setForm({...form, qualification: v})} placeholder="MBBS, MD" />
         <InputField label="Experience (years)" value={form.experience} onChangeText={(v) => setForm({...form, experience: v})} placeholder="10" keyboardType="numeric" />
         <InputField label="Consultation Fee (₹)" value={form.consultationFee} onChangeText={(v) => setForm({...form, consultationFee: v})} placeholder="500" keyboardType="numeric" />
-
-        {}
         <View style={styles.inputContainer}>
           <Text style={[styles.inputLabel, { color: colors.textSecondary }]}>Clinic *</Text>
           <TouchableOpacity style={[styles.pickerBtn, { backgroundColor: colors.surface }]} onPress={() => setShowClinicPicker(!showClinicPicker)}>
@@ -130,8 +128,6 @@ const AdminAddDoctorScreen = ({ navigation }) => {
             </View>
           )}
         </View>
-
-        {}
        <TouchableOpacity style={[styles.submitBtn, loading && styles.submitBtnDisabled]} onPress={handleSubmit} disabled={loading}>
           <Text style={styles.submitBtnText}>{loading ? 'Creating...' : 'Create Doctor'}</Text>
         </TouchableOpacity>

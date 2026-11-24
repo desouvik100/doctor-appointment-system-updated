@@ -110,7 +110,6 @@ const AdminUserDetailScreen = ({ navigation, route })=>{
       </View>
 
       <ScrollView contentContainerStyle={styles.scrollContent} refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#F39C12" />}>
-        {}
         <View style={[styles.profileCard, { backgroundColor: colors.surface }]}>
           <View style={styles.avatarLarge}>
             <Text style={styles.avatarText}>{user.name?.charAt(0) || 'U'}</Text>
@@ -123,8 +122,6 @@ const AdminUserDetailScreen = ({ navigation, route })=>{
             </Text>
           </View>
         </View>
-
-        {}
         <View style={[styles.infoCard, { backgroundColor: colors.surface }]}>
           <View style={styles.infoRow}>
             <Text style={[styles.infoLabel, { color: colors.textMuted }]}>Email</Text>
@@ -145,8 +142,6 @@ const AdminUserDetailScreen = ({ navigation, route })=>{
             </View>
           )}
        </View>
-
-        {}
         <View style={styles.actionButtons}>
           {isActive ? (
             <TouchableOpacity style={[styles.actionBtn, styles.suspendBtn]} onPress={handleSuspend}>

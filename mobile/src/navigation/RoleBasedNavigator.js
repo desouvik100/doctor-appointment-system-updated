@@ -19,7 +19,6 @@ const RoleBasedNavigator = () => {
   switch (role.toLowerCase()) {
     case 'doctor':
       console.log('🔐 [RoleBasedNavigator] Routing to Doctor Dashboard');
-    console.log('DEBUG: RoleBasedNavigator.js')
      return <DoctorTabNavigator />;
     
     case 'staff':

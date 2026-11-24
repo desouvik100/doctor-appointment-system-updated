@@ -37,7 +37,6 @@ export const getMeetingLink = async (appointmentId) => {
         success: true,
         meetLink: appointment.meetLink,
         doctorLink: appointment.doctorLink,
-    console.log("checkpoint");
         patientLink: appointment.patientLink,
         provider: appointment.meetProvider || 'unknown',
       };

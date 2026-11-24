@@ -134,9 +134,7 @@ const AdminWalletScreen = ({ navigation }) => {
        </TouchableOpacity>
         <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Wallet Management</Text>
         <View style={styles.headerRight} />
-      </View> 
-
-      {}
+      </View>
       <View style={styles.statsContainer}>
         <View style={[styles.statCard, { backgroundColor: colors.surface }]}>
           <Text style={styles.statIcon}>💰</Text>
@@ -149,8 +147,6 @@ const AdminWalletScreen = ({ navigation }) => {
          <Text style={[styles.statLabel, { color: colors.textMuted }]}>Pending</Text>
         </View>
       </View>
-
-     {}
       <View style={styles.tabContainer}>
         <TabButton label="Overview" value="overview" />
         <TabButton label={`Withdrawals (${withdrawals.length})`} value="withdrawals" />

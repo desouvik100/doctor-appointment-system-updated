@@ -197,8 +197,6 @@ const RegisterScreen = ({ navigation })=>{
   return (
    <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={colors.statusBar} backgroundColor="transparent" translucent />
-      
-      {}
       <View style={styles.orbContainer}>
         <LinearGradient colors={bgColors} style={StyleSheet.absoluteFill} />
         <View style={styles.orb1}>
@@ -218,7 +216,6 @@ const RegisterScreen = ({ navigation })=>{
           showsVerticalScrollIndicator={false}
           keyboardShouldPersistTaps="handled"
         >
-          {}
           <View style={styles.header}>
             <TouchableOpacity 
               style={[
@@ -236,8 +233,6 @@ const RegisterScreen = ({ navigation })=>{
             <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Create Account</Text>
             <Text style={[styles.headerSubtitle, { color: colors.textSecondary }]}>Join HealthSync today</Text>
           </View>
-
-          {}
           <View style={styles.formContainer}>
             <View style={styles.form}>
              <Input
@@ -303,15 +298,11 @@ const RegisterScreen = ({ navigation })=>{
                 fullWidth
                 size="large"
               />
-
-              {}
               <View style={styles.divider}>
                 <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
                 <Text style={[styles.dividerText, { color: colors.textMuted }]}>or sign up with</Text>
                 <View style={[styles.dividerLine, { backgroundColor: colors.divider }]} />
               </View>
-
-              {}
               <View style={styles.socialStack}>
                 {[
                   { id: 'google',   label: 'Sign up with Google',   icon: <GoogleIcon />,       color: colors.textPrimary, bg: colors.surface, onPress: handleGoogleSignUp },
@@ -345,8 +336,6 @@ const RegisterScreen = ({ navigation })=>{
               </View>
             </View>
           </View>
-
-          {}
           <View style={styles.footer}>
             <Text style={[styles.footerText, { color: colors.textSecondary }]}>Already have an account? </Text>
             <TouchableOpacity onPress={() => navigation.navigate('Login')}>

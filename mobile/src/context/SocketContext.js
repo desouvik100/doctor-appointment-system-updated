@@ -103,7 +103,6 @@ export const SocketProvider = ({ children }) => {
     const trackEvent = (eventName) => {
       return socketManager.subscribe(eventName, (data) => {
         setLastEvent({ event: eventName, data, timestamp: new Date().toISOString() });
-    console.log("checkpoint");
       });
     };
 

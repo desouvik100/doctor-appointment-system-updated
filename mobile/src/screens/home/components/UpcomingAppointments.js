@@ -78,8 +78,6 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
          <Text style={[styles.seeAll, { color: colors.primary }]}>See all</Text>
         </TouchableOpacity>
       </View>
-
-      {}
       <View style={[
         styles.featuredCard,
         {
@@ -88,7 +86,6 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
           borderWidth: 1,
         }
       ]}>
-        {}
         <View style={styles.badgesRow}>
          <View style={[styles.countdownBadge, { backgroundColor: isDarkMode ? 'rgba(0, 212, 170, 0.12)' : 'rgba(0, 212, 170, 0.08)' }]}>
             <Text style={[styles.countdownText, { color: colors.primary }]}>{countdown}</Text>
@@ -102,10 +99,7 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
             </Text>
           </View>
         </View>
-
-        {}
         <View style={styles.twoColumnGrid}>
-          {}
           <View style={[
             styles.dateTimeCol,
             { backgroundColor: isDarkMode ? 'rgba(255, 255, 255, 0.04)' : 'rgba(0, 212, 170, 0.05)' }
@@ -121,8 +115,6 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
               {dayjs(nextAppointment.dateTime).format('h:mm A')}
             </Text>
           </View>
-
-          {}
           <View style={styles.doctorInfoCol}>
             <View style={styles.doctorHeaderRow}>
               <Avatar
@@ -139,8 +131,6 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
                </Text>
               </View>
             </View>
-
-            {}
             <View style={styles.actionButtonContainer}>
               <TouchableOpacity
                 style={[
@@ -182,8 +172,6 @@ const UpcomingAppointments = ({ appointments = [], onJoinCall, onReschedule, max
          </View>
        </View>
       </View>
-
-      {}
       {displayAppointments.slice(1).map((apt, i) => (
         <TouchableOpacity key={apt.id || i}
           style={[

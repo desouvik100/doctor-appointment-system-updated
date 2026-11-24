@@ -156,8 +156,6 @@ const BookingScreen = ({ navigation, route }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-
-     {}
       <LinearGradient colors={['rgba(26, 31, 46, 0.55)', 'rgba(10, 14, 23, 0.15)']}
         style={[styles.hero, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.heroRow}>
@@ -171,8 +169,6 @@ const BookingScreen = ({ navigation, route }) => {
           </View>
           <View style={{  width: 36 }} />
         </View>
-
-        {}
         <View style={[styles.searchBar, { backgroundColor: 'rgba(255, 255, 255, 0.08)', borderColor: 'rgba(255, 255, 255, 0.12)', borderWidth: 1 }]}>
           <Text style={[styles.searchIcon, { color: 'rgba(255, 255, 255, 0.6)' }]}>🔍</Text>
           <TextInput
@@ -200,7 +196,6 @@ const BookingScreen = ({ navigation, route }) => {
         contentContainerStyle={[styles.scroll, {  paddingBottom: 100 }]}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor={colors.primary} />}
       >
-        {}
         <View style={styles.section}>
           <Text style={[styles.sectionLabel, {  color: colors.textPrimary }]}>Department</Text>
           <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.pillRow}> 
@@ -230,8 +225,6 @@ const BookingScreen = ({ navigation, route }) => {
             })}
           </ScrollView>
         </View>
-
-        {}
         <View style={styles.filterRow}>
           {QUICK_FILTERS.map(f => (
             <TouchableOpacity key={f.id} onPress={() => setActiveFilter(activeFilter === f.id ? null : f.id)}
@@ -252,8 +245,6 @@ const BookingScreen = ({ navigation, route }) => {
             </TouchableOpacity>
           ))}
         </View>
-
-        {}
         {loading ? (
           <View style={styles.listPad}>
             {[1, 2, 3, 4].map(i => <SkeletonCard key={i} colors={colors} />)}

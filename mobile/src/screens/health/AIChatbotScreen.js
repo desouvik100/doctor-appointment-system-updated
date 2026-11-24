@@ -141,8 +141,6 @@ const AIChatbotScreen = ({ navigation })=>{
   return (
     <View style={styles.container}>
       <StatusBar barStyle="light-content" backgroundColor={colors.background} />
-      
-      {}
      <LinearGradient
         colors={[colors.background, colors.backgroundCard]}
         style={styles.header}
@@ -164,8 +162,6 @@ const AIChatbotScreen = ({ navigation })=>{
         </View>
         <View style={styles.onlineIndicator} />
      </LinearGradient>
-
-      {}
       <ScrollView
         ref={scrollViewRef}
         style={styles.messagesContainer}
@@ -186,8 +182,6 @@ const AIChatbotScreen = ({ navigation })=>{
           </View>
         )}
       </ScrollView>
-
-      {}
       {messages.length <= 2 && (
         <ScrollView
           horizontal
@@ -207,8 +201,6 @@ const AIChatbotScreen = ({ navigation })=>{
           ))} 
         </ScrollView>
       )}
-
-      {}
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : 'height'}
         keyboardVerticalOffset={Platform.OS === 'ios' ? 90 : 0}

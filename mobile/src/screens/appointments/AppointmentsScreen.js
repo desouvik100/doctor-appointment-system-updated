@@ -159,8 +159,6 @@ const AppointmentsScreen = ({ navigation }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle={isDarkMode ? 'light-content' : 'dark-content'} backgroundColor="transparent" translucent />
-
-      {}
       <View style={styles.backgroundContainer}>
         <LinearGradient
           colors={isDarkMode ? ['#0A0E17', '#121826', '#1A1F2E'] : ['#F8FAFC', '#F1F5F9', '#E2E8F0']}
@@ -179,8 +177,6 @@ const AppointmentsScreen = ({ navigation }) => {
           />
         </View>
      </View>
-
-      {}
       <View style={[styles.header, { paddingTop: spacing.xxl + 10 }]}>
        <Text style={[styles.headerTitle, { color: colors.textPrimary }]}>Appointments</Text>
         <TouchableOpacity 
@@ -198,8 +194,6 @@ const AppointmentsScreen = ({ navigation }) => {
           </LinearGradient>
         </TouchableOpacity>
       </View>
-
-     {}
       <View style={[
         styles.tabsContainer,
         {
@@ -238,8 +232,6 @@ const AppointmentsScreen = ({ navigation }) => {
           );
         })}
       </View>
-
-      {}
      {loading ? (
         <View style={styles.listContent}>
           <SkeletonCard style={{ marginBottom: spacing.lg }} />

@@ -35,7 +35,6 @@ const Stack = createStackNavigator();
 const AdminDashboardStack = () => {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false }}>
-      {}
       <Stack.Screen name="AdminDashboardMain" component={AdminDashboardScreen} />
       <Stack.Screen name="AdminDoctors" component={AdminDoctorsScreen} />
       <Stack.Screen name="AdminStaff" component={AdminStaffScreen} />
@@ -48,14 +47,10 @@ const AdminDashboardStack = () => {
      <Stack.Screen name="AdminApprovals" component={AdminApprovalsScreen} />
       <Stack.Screen name="AdminSupportTickets" component={AdminSupportTicketsScreen} />
       <Stack.Screen name="AdminAuditLogs" component={AdminAuditLogsScreen} />
-      
-      {}
       <Stack.Screen name="AdminDoctorDetail" component={AdminDoctorDetailScreen} />
      <Stack.Screen name="AdminUserDetail" component={AdminUserDetailScreen} />
       <Stack.Screen name="AdminClinicDetail" component={AdminClinicDetailScreen} />
       <Stack.Screen name="AdminAppointmentDetail" component={AdminAppointmentDetailScreen} />
-       
-      {}
       <Stack.Screen name="AdminAddDoctor" component={AdminAddDoctorScreen} />
       <Stack.Screen name="AdminEditDoctor" component={AdminEditDoctorScreen} />
       <Stack.Screen name="AdminAddClinic" component={AdminAddClinicScreen} />

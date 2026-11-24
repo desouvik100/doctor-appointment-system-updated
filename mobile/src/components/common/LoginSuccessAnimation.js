@@ -293,7 +293,6 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
           colors={[colors.background, colors.background]}
           style={styles.gradient}
         >
-          {}
           {confettiAnims.map((anim, index) => {
             const confettiRotate = anim.rotate.interpolate({
               inputRange: [0, 10],
@@ -322,8 +321,6 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
               />
             );
           })}
-
-          {}
           {sparkles.map((sparkle, index) => (
             <Animated.Text
              key={`sparkle-${index}`}
@@ -339,10 +336,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
               ✨
             </Animated.Text>
           ))}
-
-          {}
           <View style={styles.content}>
-            {}
             <Animated.View
               style={[
                 styles.logoContainer,
@@ -361,10 +355,7 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
                 <Text style={styles.logoText}>+</Text>
               </LinearGradient>
             </Animated.View>
-
-            {}
             <View style={styles.checkContainer}>
-             {}
               <Animated.View
                 style={[
                   styles.ring,
@@ -375,8 +366,6 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
                   },
                 ]}
               />
-              
-              {}
               <Animated.View
                 style={[
                   styles.ring,
@@ -387,8 +376,6 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
                   },
                 ]}
               />
-
-              {}
               <Animated.View
                 style={[
                   styles.checkCircle,
@@ -402,8 +389,6 @@ const LoginSuccessAnimation = ({ visible, userName, onAnimationComplete }) => {
                 <Text style={styles.checkIcon}>✓</Text>
               </Animated.View>
             </View>
-
-            {}
             <Animated.Text
              style={[
                 styles.welcomeText,

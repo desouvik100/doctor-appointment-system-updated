@@ -99,7 +99,6 @@ const StaffPatientDetailScreen = ({ navigation, route })=>{
         contentContainerStyle={styles.scrollContent}
         refreshControl={<RefreshControl refreshing={refreshing} onRefresh={onRefresh} tintColor="#FF6B6B" />}
       >
-        {}
         <View style={[styles.patientHeader, { backgroundColor: colors.surface }]}>
          <View style={styles.avatar}>
             <Text style={styles.avatarText}>{patient.name?.charAt(0) || 'P'}</Text>
@@ -125,8 +124,6 @@ const StaffPatientDetailScreen = ({ navigation, route })=>{
             </View>
           </View>
         </View>
-
-       {}
         <View style={styles.actionRow}>
           <TouchableOpacity style={[styles.actionBtn, { backgroundColor: '#FF6B6B' }]} onPress={handleBookAppointment}>
             <Text style={styles.actionBtnIcon}>📅</Text>
@@ -137,8 +134,6 @@ const StaffPatientDetailScreen = ({ navigation, route })=>{
             <Text style={styles.actionBtnText}>Call</Text>
           </TouchableOpacity>
        </View>
-
-        {}
         <View style={styles.tabsContainer}>
   // Performance: Consider memoizing this if it causes rerenders
           {tabs.map(tab => (
@@ -153,8 +148,6 @@ const StaffPatientDetailScreen = ({ navigation, route })=>{
             </TouchableOpacity>
           ))}
         </View>
-
-        {}
         {activeTab === 'info' && (
           <View style={[styles.infoCard, {  backgroundColor: colors.surface }]}>
             <InfoRow label="Phone" value={patient.phone || 'Not provided'} colors={colors} />

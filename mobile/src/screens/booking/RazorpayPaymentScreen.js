@@ -117,7 +117,6 @@ const RazorpayPaymentScreen = ({ navigation, route }) => {
 
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
-      {}
       <View style={[styles.header, { borderBottomColor: colors.divider }]}>
         <TouchableOpacity
           style={[styles.closeBtn, { backgroundColor: colors.surface, borderColor: colors.surfaceBorder }]}

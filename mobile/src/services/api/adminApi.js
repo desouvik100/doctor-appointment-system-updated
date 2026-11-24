@@ -128,7 +128,6 @@ export const deactivateDoctor = async (doctorId) => {
 };
 
 export const updateDoctorEmail = async (doctorId, email) => {
-    console.warn('check this later')
   const response = await apiClient.put(`/doctors/${doctorId}/email`, { email });
   return response.data;
 };

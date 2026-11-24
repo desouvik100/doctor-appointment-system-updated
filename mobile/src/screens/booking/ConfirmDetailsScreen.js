@@ -111,8 +111,6 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
   return (
     <View style={[styles.container, { backgroundColor: colors.background }]}>
       <StatusBar barStyle="light-content" backgroundColor="transparent" translucent />
-
-      {}
       <LinearGradient colors={colors.gradientPrimary || ['#00D4AA', '#00B894']}
         style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
        <TouchableOpacity style={styles.backBtn} onPress={() => navigation.goBack()}>
@@ -126,8 +124,6 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
       </LinearGradient>
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
-
-        {}
         <View style={styles.stepProgressRow}>
           <View style={[styles.stepDot, { backgroundColor: colors.primary }]}>
             <Text style={styles.stepCheck}>✓</Text>
@@ -147,8 +143,6 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
           <Text style={[styles.stepLabelText, { color: colors.primary, fontWeight: '700' }]}>Verify</Text>
           <Text style={[styles.stepLabelText, { color: colors.textMuted }]}>Pay</Text>
         </View>
-
-        {}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>YOUR DOCTOR</Text>
           <View style={styles.doctorRow}>
@@ -171,8 +165,6 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
             </View>
          </View>
         </View>
-
-        {}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
          <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>APPOINTMENT SUMMARY</Text>
           {appointmentDetails.map(({ icon, label, value }) => (
@@ -185,8 +177,6 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
             </View>
           ))}
         </View>
-
-        {}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>CLINIC & VENUE DETAILS</Text>
           {consultationType === 'online' ? (
@@ -217,8 +207,6 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
             </View>
           )}
         </View>
-
-       {}
         <View style={[styles.sectionCard, { backgroundColor: colors.surface }]}>
           <Text style={[styles.sectionHeading, { color: colors.textSecondary }]}>TRANSPARENT PRICING</Text>
 
@@ -240,8 +228,6 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
             <Text style={[styles.totalValueText, { color: colors.primary }]}>₹{totalPayable}</Text>
          </View>
         </View>
-
-        {}
         <View style={[styles.trustPillBox, { backgroundColor: colors.success + '08', borderColor: colors.success + '30' }]}>
           <Text style={styles.trustLockIcon}>🔒</Text>
           <View style={styles.trustMessageInfo}>
@@ -251,8 +237,6 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
             </Text>
           </View>
         </View>
-
-        {}
         <View style={[styles.cancellationBox, { backgroundColor: colors.surface }]}>
           <Text style={[styles.cancellationTitleText, { color: colors.textPrimary }]}>Cancellation & Refund Policy</Text>
           <Text style={[styles.cancellationDescText, { color: colors.textSecondary }]}>
@@ -265,8 +249,6 @@ const ConfirmDetailsScreen = ({ navigation, route }) => {
 
         <View style={{ height: 100 }} />
       </ScrollView>
-
-      {}
       <View style={[styles.bottomBar, { backgroundColor: colors.surface, borderTopColor: isDarkMode ? 'rgba(255,255,255,0.06)' : colors.divider || '#F1F5F9' }]}>
         <View style={styles.bottomPriceRow}>
           <View>
