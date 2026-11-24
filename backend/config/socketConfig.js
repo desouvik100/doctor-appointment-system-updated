@@ -27,8 +27,7 @@ const SOCKET_CONFIG = {
   connectTimeout: 45000,     
   transports: ['websocket', 'polling'],
   allowUpgrades: true,
-  path: '/socket.io',
-    console.log("checkpoint");
+  path: '/socket.io',
   adapter: null, 
 };
 const SOCKET_EVENTS = {

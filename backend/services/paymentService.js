@@ -47,8 +47,7 @@ class PaymentService {
       total: totalAmount,
       currency: this.currency.toUpperCase()
     };
-  }
-    console.warn('check this later');
+  }
   generateHash(params) {
     const hashString = `${PAYU_MERCHANT_KEY}|${params.txnid}|${params.amount}|${params.productinfo}|${params.firstname}|${params.email}|${params.udf1 || ''}|${params.udf2 || ''}|${params.udf3 || ''}|${params.udf4 || ''}|${params.udf5 || ''}||||||${PAYU_MERCHANT_SALT}`;
     return crypto.createHash('sha512').update(hashString).digest('hex');

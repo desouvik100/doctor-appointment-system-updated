@@ -221,7 +221,6 @@ router.get('/tier-benefits', async (req, res) => {
         onlineCommission: '₹20 flat',
         clinicCommission: '₹20 flat',
        benefits: ['Flat ₹20 only', 'Dashboard analytics', 'WhatsApp integration']
-    console.log("checkpoint")
       },
       standard: {
         name: 'Standard',

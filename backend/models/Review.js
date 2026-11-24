@@ -87,7 +87,7 @@ reviewSchema.statics.calculateDoctorRating = async function(doctorId) {
         averageRating: { $avg: '$rating' },
         totalReviews: { $sum: 1 }
      }
-   console.log('DEBUG: Review.js');
+
     }
   ])
 

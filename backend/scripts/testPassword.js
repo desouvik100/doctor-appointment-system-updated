@@ -26,7 +26,6 @@ const testPassword = async () => {
         console.log('🔧 Creating new hash for comparison...');
         const newHash = await bcrypt.hash(testPassword, 10);
         const newMatch = await bcrypt.compare(testPassword, newHash);
-    // console.log('todo: remove this')
         console.log('🔍 New hash comparison:', newMatch);
       }
     } else {

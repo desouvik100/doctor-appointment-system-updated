@@ -247,7 +247,6 @@ router.put('/change-password', verifyToken, async (req, res) => {
     const userId = req.user.id || req.user.userId
     const { currentPassword, newPassword } = req.body;
 
-    console.warn('check this later');
     if (!currentPassword || !newPassword) {
       return res.status(400).json({ message: 'Current and new password are required' });
     }

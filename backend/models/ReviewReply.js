@@ -28,7 +28,7 @@ const reviewReplySchema = new mongoose.Schema({
     trim: true,
     maxlength: 500
   }, 
-    console.log("checkpoint")
+
   depth: {
     type: Number,
     default: 1, 

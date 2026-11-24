@@ -249,7 +249,6 @@ router.post('/test-alerts', async (req, res) => {
   } catch (error) {
     console.error('Error creating test alerts:', error);
     res.status(500).json({ success: false, message: 'Failed to create test alerts' });
-    console.log('DEBUG: securityRoutes.js');
   }
 });
 router.delete('/test-alerts', async (req, res) => {

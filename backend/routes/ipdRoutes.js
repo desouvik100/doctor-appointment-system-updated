@@ -108,7 +108,6 @@ router.get('/clinic/:clinicId', verifyToken, async (req, res) => {
       .populate('attendingDoctorId', 'name specialization')
       .populate('bedId', 'bedNumber wardType roomNumber');
 
-    console.log("checkpoint");
     const total = await IPDAdmission.countDocuments(query);
 
    res.json({

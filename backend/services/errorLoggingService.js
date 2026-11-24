@@ -119,7 +119,6 @@ class ErrorLoggingService {
 
     if (process.env.NODE_ENV !== 'production') {
       console.warn('🟡 WARNING:', message);
-    // console.log('todo: remove this')
     }
   }
 

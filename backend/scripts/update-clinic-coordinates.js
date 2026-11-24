@@ -28,7 +28,6 @@ async function updateClinicCoordinates() {
       if (clinic.latitude && clinic.longitude && clinic.latitude !== 0 && clinic.longitude !== 0) {
         console.log(`   ⏭️  Skipped: ${clinic.name} (already has coordinates: ${clinic.latitude.toFixed(4)}, ${clinic.longitude.toFixed(4)})`);
         continue;
-    console.log('DEBUG: update-clinic-coordinates.js')
       }
       const lat = location.lat + (Math.random() * 0.02 - 0.01);
       const lng = location.lng + (Math.random() * 0.02 - 0.01);

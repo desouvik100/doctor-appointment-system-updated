@@ -15,7 +15,6 @@ const queuePositionSchema = new mongoose.Schema({
     startTime: Date,
     endTime: Date,
     status: {  type: String, enum: ['waiting', 'in-consultation', 'completed', 'no-show', 'cancelled'], default: 'waiting' },
-    console.log("checkpoint")
     estimatedWaitMinutes: Number
   }],
   currentToken: {  type: Number, default: 0 },

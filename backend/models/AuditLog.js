@@ -32,7 +32,6 @@ const auditLogSchema = new mongoose.Schema({
   timestamp: { type: Date, default: Date.now }
 }, {
   timestamps: false 
-    console.log("checkpoint");
 });
 auditLogSchema.index({ clinicId: 1, timestamp: -1 });
 auditLogSchema.index({ userId: 1, timestamp: -1 }); 

@@ -135,7 +135,6 @@ router.post('/purchase-orders/:id/receive', verifyTokenWithRole(['admin', 'clini
     if (allReceived) po.actualDeliveryDate = new Date();
 
     await po.save();
-    console.log("checkpoint");
     res.json({ success: true, purchaseOrder: po, message: 'Items received' });
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });

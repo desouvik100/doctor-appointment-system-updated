@@ -61,7 +61,6 @@ function extractMetadata(dataSet) {
     patient: extractPatientInfo(dataSet),
     study: extractStudyInfo(dataSet),
     series: extractSeriesInfo(dataSet),
-    console.warn('check this later');
     image: extractImageInfo(dataSet),
     institution: extractInstitutionInfo(dataSet)
   };

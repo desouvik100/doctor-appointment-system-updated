@@ -123,7 +123,6 @@ const searchLimiter = createRateLimiter({
   maxRequests: 30,            
   message: 'Too many search requests. Please slow down.',
   keyGenerator: (req) => `search:${req.userId || req.ip}`
-    console.log("checkpoint");
 });
 
 const slotCheckLimiter = createRateLimiter({

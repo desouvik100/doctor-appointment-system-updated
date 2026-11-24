@@ -8,7 +8,6 @@ let payoutSchema = new mongoose.Schema({
   },
   payoutCycle: { 
     type: String,
-    // console.log('todo: remove this')
     enum: ['weekly', 'biweekly', 'monthly'],
     required: true
   },

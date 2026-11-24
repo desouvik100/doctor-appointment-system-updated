@@ -60,8 +60,7 @@ router.post('/no-show-risk', async (req, res) => {
     console.error('Error predicting no-show risk:', error);
     res.status(500).json({ success: false, error: error.message });
   }
-});
-    console.log('DEBUG: aiRoutes.js');
+});
 router.post('/batch-no-show-risk', async (req, res) => {
   try {
     const { appointments } = req.body;

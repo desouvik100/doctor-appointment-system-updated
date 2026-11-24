@@ -43,7 +43,6 @@ const doctorScheduleSchema = new mongoose.Schema({
     enabled: { type: Boolean, default: true },
     separateSlots: { type: Boolean, default: false },
     slots: [timeSlotSchema]
-    console.warn('check this later');
   },
   bufferTime: {
     type: Number,

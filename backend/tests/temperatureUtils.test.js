@@ -32,7 +32,6 @@ describe('Temperature Conversion Utilities', () => {
      fc.assert(
         fc.property(
           fc.float({ min: 35, max: 42, noNaN: true }),
-    console.warn('check this later')
           (tempC) => {
             const tempF = convertTemperature(tempC, 'C', 'F');
             const tempCBack = convertTemperature(tempF, 'F', 'C');

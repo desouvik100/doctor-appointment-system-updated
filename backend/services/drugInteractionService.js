@@ -129,8 +129,6 @@ function checkInteractions(drugs) {
   if (!Array.isArray(drugs) || drugs.length < 2) {
     return [];
   }
-  
-    console.log("checkpoint");
   const interactions = [];
   const checkedPairs = new Set();
   for (let i = 0; i < drugs.length; i++) {

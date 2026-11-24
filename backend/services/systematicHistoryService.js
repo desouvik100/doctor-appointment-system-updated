@@ -20,7 +20,6 @@ class SystematicHistoryService {
             notes: ''
           };
         }
-    // console.log('todo: remove this')
       });
       
       const history = new SystematicHistory(historyData);

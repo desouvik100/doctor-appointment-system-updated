@@ -11,7 +11,6 @@ const consultationNoteSchema = new mongoose.Schema({
   flags: [{
     type: { type: String, enum: ['allergy', 'chronic', 'important', 'followup', 'warning'] },
     note: String,
-    // console.log('todo: remove this')
     createdAt: { type: Date, default: Date.now }
   }],
   attachments: [{

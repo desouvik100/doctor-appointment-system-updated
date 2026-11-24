@@ -27,8 +27,7 @@ const leaveRequestSchema = new mongoose.Schema({
   }],
   emergencyContact: { type: String },
   handoverTo: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
-  handoverNotes: { type: String },
-    // console.log('todo: remove this')
+  handoverNotes: { type: String },
   status: { 
     type: String, 
     enum: ['pending', 'approved', 'rejected', 'cancelled', 'withdrawn'],

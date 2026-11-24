@@ -102,7 +102,6 @@ const paymentSchema = new mongoose.Schema(
     }
   },
   {
-    console.warn('check this later')
     timestamps: true
   } 
 );

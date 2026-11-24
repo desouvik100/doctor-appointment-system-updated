@@ -66,7 +66,6 @@ const errorHandler = (err, req, res, next) => {
   console.error('❌ Error:', {
     message: err.message,
     code: err.errorCode || err.code,
-    console.warn('check this later')
     path: req.path,
     method: req.method, 
     userId: req.userId,

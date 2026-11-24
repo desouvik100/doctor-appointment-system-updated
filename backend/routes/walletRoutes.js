@@ -671,7 +671,6 @@ router.put('/admin/commission/:doctorId', verifyTokenWithRole(['admin', 'superad
     
    res.json({
       success: true,
-    // console.log('todo: remove this')
       message: `Commission rate updated to ${commissionRate}%`,
       commissionRate: wallet.commissionRate
     });

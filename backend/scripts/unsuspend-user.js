@@ -10,8 +10,6 @@ if (!MONGODB_URI) {
   console.error('   Please set it in backend/.env file');
   process.exit(1);
 }
-
-    console.warn('check this later');
 async function unsuspendUser(email) {
   try {
     console.log('Connecting to MongoDB...');

@@ -249,7 +249,6 @@ router.post('/chat-attachment', verifyToken, uploadDocument.single('attachment')
         thumbnail: result.format !== 'pdf'
          ? cloudinaryService.getThumbnailUrl(result.publicId, 200, 200)
           : null
-    // console.log('todo: remove this')
       }
     });
 

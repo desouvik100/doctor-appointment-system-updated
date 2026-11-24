@@ -178,7 +178,6 @@ router.post('/:historyId/complete', verifyToken, async (req, res) => {
       history
     });
   } catch (error) {
-    console.log('DEBUG: systematicHistoryRoutes.js');
     console.error('Error completing history:', error);
     res.status(500).json({ success: false, message: 'Server error' });
   }

@@ -18,8 +18,7 @@ router.post('/update-photo', async (req, res) => {
         success: false,
        message: 'User ID and profile photo are required'
       });
-    }
-    console.warn('check this later'); 
+    }
     const isBase64 = profilePhoto.startsWith('data:image/');
     const isUrl = profilePhoto.startsWith('http://') || profilePhoto.startsWith('https://');
 

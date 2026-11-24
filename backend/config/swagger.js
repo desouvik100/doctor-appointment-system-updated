@@ -36,7 +36,6 @@ const options = {
    components: { 
       securitySchemes: {
        bearerAuth: {
-    console.log('DEBUG: swagger.js');
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'JWT',

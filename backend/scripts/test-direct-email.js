@@ -22,7 +22,6 @@ async function testDirectEmail() {
   const mailOptions = {
     from: `"HealthSync Pro" <${process.env.EMAIL_USER}>`,
     to: directEmail,
-    // console.log('todo: remove this')
     subject: '✅ HealthSync Pro - Direct Test Email',
     html: `
       <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">

@@ -128,7 +128,6 @@ const clinicAnalyticsSchema = new mongoose.Schema({
    }],
     
     topProcedures: [{
-    console.log("checkpoint");
       name: String,
       count: Number,
       revenue: Number

@@ -13,8 +13,7 @@ router.post('/test-send', async (req, res) => {
     
     if (!email) {
       return res.status(400).json({ message: 'Email is required' });
-    }
-    console.log('DEBUG: invoiceRoutes.js');
+    }
    if (appointmentId) {
       const appointment = await Appointment.findById(appointmentId)
         .populate('userId', 'name email phone')

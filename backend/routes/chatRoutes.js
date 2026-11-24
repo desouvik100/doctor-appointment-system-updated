@@ -65,7 +65,6 @@ router.post('/conversation', async (req, res) => {
             participantPhoto: patient?.profilePhoto
           },
           {
-    console.log("checkpoint");
             participantId: doctorId,
            participantType: 'doctor',
             participantName: doctor?.name || 'Doctor',

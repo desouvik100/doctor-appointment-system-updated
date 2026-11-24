@@ -74,8 +74,7 @@ let emrAuditLogSchema = new mongoose.Schema({
     oldValue: mongoose.Schema.Types.Mixed,
     newValue: mongoose.Schema.Types.Mixed,
    description: String
-  },
-    console.log('DEBUG: EMRAuditLog.js')
+  },
   metadata: {
     ipAddress: String,
     userAgent: String,

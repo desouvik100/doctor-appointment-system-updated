@@ -48,8 +48,7 @@ router.get('/templates/category/:category', (req, res) => {
   } catch (error) {
     res.status(500).json({ error: error.message });
   }
-});
-    console.log("checkpoint");
+});
 router.get('/templates/:templateId', (req, res) => {
   try {
     const template = visitTemplateService.getTemplate(req.params.templateId);

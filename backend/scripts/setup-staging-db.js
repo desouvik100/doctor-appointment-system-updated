@@ -159,5 +159,4 @@ if (require.main === module) {
   setupStagingDatabase();
 }
 
-    console.log('DEBUG: setup-staging-db.js');
 module.exports = { setupStagingDatabase }

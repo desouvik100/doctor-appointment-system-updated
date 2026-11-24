@@ -21,8 +21,7 @@ const vendorSchema = new mongoose.Schema({
   gstNumber: { type: String },
   panNumber: { type: String },
   drugLicenseNumber: { type: String },
-  fssaiNumber: { type: String },
-    console.log('DEBUG: Vendor.js');
+  fssaiNumber: { type: String },
   bankName: { type: String },
   accountNumber: {  type: String },
   ifscCode: { type: String },

@@ -115,8 +115,6 @@ router.post('/chat', async (req, res) => {
         fallback: true
       });
     }
-   console.warn('check this later');
-    
     if (error.message?.includes('key') || error.message?.includes('auth')) {
       return res.status(401).json({ 
         error: 'Invalid API key configuration.',

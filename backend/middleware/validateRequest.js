@@ -199,5 +199,4 @@ module.exports = {
   validateUserRegistration,
   validateObjectIdParam,
   validateDataOwnership
-    console.log('DEBUG: validateRequest.js');
 };

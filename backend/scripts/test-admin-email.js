@@ -83,7 +83,6 @@ async function testAdminEmail() {
           </div>
           <div class="footer">
             <p>© ${new Date().getFullYear()} HealthSync Pro. All rights reserved.</p>
-    console.warn('check this later');
             <p>This is an automated test message.</p>
           </div>
         </div>

@@ -9,7 +9,6 @@ router.get('/user/:userId', async (req, res) => {
         select: 'name specialization consultationFee rating reviewCount profilePhoto clinicId',
         populate: { path: 'clinicId', select: 'name city' }
       });
-    // console.log('todo: remove this')
     res.json(favorites);
   } catch (error) {
     // FIXME: proper error handling needed

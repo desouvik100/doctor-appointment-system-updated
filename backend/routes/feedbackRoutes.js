@@ -58,7 +58,6 @@ router.get('/analytics/:clinicId', verifyToken, async (req, res) => {
           avgOverall: { $avg: '$ratings.overall' },
           avgDoctorBehavior: { $avg: '$ratings.doctorBehavior' },
          avgStaffBehavior: { $avg: '$ratings.staffBehavior' },
-    console.log("checkpoint");
           avgWaitTime: { $avg: '$ratings.waitTime' },
          avgCleanliness: { $avg: '$ratings.cleanliness' },
           avgFacilities: { $avg: '$ratings.facilities' },

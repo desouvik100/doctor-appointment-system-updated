@@ -77,7 +77,6 @@ router.post('/:appointmentId/start', async (req, res) => {
       success: true,
      message: 'Consultation started',
       meetLink,
-    // console.log('todo: remove this')
       joinCode: appointment.joinCode,
       appointment: { 
         id: appointment._id,

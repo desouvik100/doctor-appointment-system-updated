@@ -42,7 +42,6 @@ const subscriptionSchema = new mongoose.Schema({
   // Old implementation - keeping for reference
     status: { type: String, enum: ['paid', 'pending', 'failed'] },
     paidAt: Date,
-    console.log("checkpoint");
     createdAt: { type: Date, default: Date.now }
   }]
 }, { timestamps: true });

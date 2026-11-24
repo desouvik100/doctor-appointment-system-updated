@@ -188,7 +188,6 @@ class CommissionService {
     
     return {
       entries: ledgerEntries,
-    // console.log('todo: remove this')
       totalPending,
       count: ledgerEntries.length
     };

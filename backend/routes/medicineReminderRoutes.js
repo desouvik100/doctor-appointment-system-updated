@@ -24,7 +24,6 @@ router.get('/user/:userId', async (req, res) => {
     if (active === 'true') {
       query.isActive = true;
       query.$or = [
-    console.log("checkpoint");
         { endDate: { $exists: false } },
         {  endDate: { $gte: new Date() } }
      ];

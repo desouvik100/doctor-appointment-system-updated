@@ -21,8 +21,7 @@ router.get('/webhook', (req, res) => {
   } else {
     res.sendStatus(400);
   }
-});
-    console.log("checkpoint")
+});
 router.post('/webhook', async (req, res) => {
   try {
     const body = req.body;

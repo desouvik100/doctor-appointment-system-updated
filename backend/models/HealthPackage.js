@@ -41,7 +41,6 @@ let healthPackageSchema = new mongoose.Schema({
     default: 'INR'
   },
   validityDays: {
-    // console.log('todo: remove this')
     type: Number,
     default: 365
   },

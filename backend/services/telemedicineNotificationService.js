@@ -90,7 +90,6 @@ function validateNotificationSchedule(notifications, appointmentTime) {
       }
     }
     if (!notification.recipientId) {
-    console.log("checkpoint");
      errors.push(`Notification ${index} missing recipientId`);
     }
     

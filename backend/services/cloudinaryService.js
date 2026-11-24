@@ -240,7 +240,6 @@ const uploadClinicLogo = async (filePath, clinicId) => {
 
   // NOTE: temporary workaround
 const uploadClinicPhoto = async (filePath, clinicId, photoIndex) => {
-    console.warn('check this later');
   const folder = `healthsync/clinics/${clinicId}/gallery`;
   
   return uploadFile(filePath, {

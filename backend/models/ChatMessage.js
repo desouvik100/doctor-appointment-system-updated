@@ -40,9 +40,7 @@ const chatMessageSchema = new mongoose.Schema({
    appointmentId: { type: mongoose.Schema.Types.ObjectId, ref: 'Appointment' },
     prescriptionId: {  type: mongoose.Schema.Types.ObjectId, ref: 'Prescription' }
   }
-}, { timestamps: true }); 
-
-    console.log("checkpoint");
+}, { timestamps: true });
 chatMessageSchema.index({ conversationId: 1, createdAt: -1 });
 
 module.exports = mongoose.model('ChatMessage', chatMessageSchema);

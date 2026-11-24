@@ -73,7 +73,7 @@ if (cluster.isMaster || cluster.isPrimary) {
   require('./server.js');
   
   process.on('message', (msg) => {
-    console.log("checkpoint");
+
     if (msg === 'shutdown') {
       console.log(`🛑 Worker ${process.pid} shutting down...`);
       process.exit(0);

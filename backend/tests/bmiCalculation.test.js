@@ -39,7 +39,6 @@ describe('BMI Calculation Property Tests', () => {
            expect(Math.abs(bmiFromLbsInches - bmiFromKgCm)).toBeLessThanOrEqual(0.3);
           }
        ),
-    // console.log('todo: remove this')
        { numRuns: 100 }
       );
     });

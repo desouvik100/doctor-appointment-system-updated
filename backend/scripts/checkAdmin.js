@@ -36,6 +36,4 @@ const checkAdmin = async () => {
     process.exit(1); 
   }
 };
-
-    console.log('DEBUG: checkAdmin.js');
 checkAdmin()

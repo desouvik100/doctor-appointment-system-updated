@@ -179,7 +179,6 @@ emergencySOSSchema.methods.updateStatus = function(newStatus, details = '', upda
     'hospital_reached': 'hospital_reached',
     'resolved': 'resolved',
     'cancelled': 'cancelled'
-    console.warn('check this later');
   };
   
   if (eventMap[newStatus]) {

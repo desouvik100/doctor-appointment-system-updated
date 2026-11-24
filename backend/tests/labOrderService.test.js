@@ -192,7 +192,6 @@ describe('Lab Order Service Tests', () => {
     });
     
     test('Panel expansion includes all constituent tests', async () => {
-    // console.log('todo: remove this')
       const patientId = new mongoose.Types.ObjectId().toString();
       const clinicId = new mongoose.Types.ObjectId().toString();
       const visitId = new mongoose.Types.ObjectId().toString();

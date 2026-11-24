@@ -173,7 +173,6 @@ class RefundPolicyService {
             error: refundError.message,
             attemptedAt: new Date()
           };
-    // console.log('todo: remove this')
         }
       }
       if (refundCalc.walletCredit > 0 && appointment.userId) {

@@ -102,8 +102,6 @@ async function getICD10Code(code) {
     return null;
   }
 }
-    console.log("checkpoint")
-
 function getFallbackResults(searchTerm, maxResults = 20) {
   if (!searchTerm) return [];
   

@@ -26,7 +26,6 @@ const MedicationSchema = new Schema({
   dosage: { type: String, default: '' },
   frequency: { type: String, default: '' }
 }, { _id: false });
-    console.log("checkpoint");
 const AttachmentSchema = new Schema({
   type: { type: String, default: 'document' },
   url: { type: String, required: true },

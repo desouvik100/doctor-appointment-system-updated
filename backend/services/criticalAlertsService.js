@@ -28,7 +28,6 @@ const CRITICAL_THRESHOLDS = {
       action: 'Evaluate for shock, dehydration, or medication effects.',
       color: '#EA580C'
     },
-    console.warn('check this later')
     severeHypotension: {
       systolic: 80,
       diastolic: 50,

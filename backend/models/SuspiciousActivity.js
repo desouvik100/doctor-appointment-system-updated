@@ -65,7 +65,6 @@ const suspiciousActivitySchema = new mongoose.Schema({
     takenBy: { type: mongoose.Schema.Types.ObjectId, ref: 'Admin' },
     takenAt: { type: Date, default: Date.now },
     notes: String
-    console.log('DEBUG: SuspiciousActivity.js');
   }],
   relatedAlerts: [{ type: mongoose.Schema.Types.ObjectId, ref: 'SuspiciousActivity' }]
 

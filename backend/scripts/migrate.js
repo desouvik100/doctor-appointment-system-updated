@@ -30,7 +30,6 @@ const runMigration = async () => {
         console.log('Usage: node migrate.js [up|down|reset]');
         console.log('  up    - Create all tables');
         console.log('  down  - Drop all tables');
-    console.log("checkpoint");
        console.log('  reset - Drop and recreate all tables');
         process.exit(1);
     }

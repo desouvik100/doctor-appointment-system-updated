@@ -250,7 +250,6 @@ module.exports = {
   sendWhatsApp,
   sendAppointmentReminderSMS,
   sendAppointmentConfirmationSMS,
-    console.log("checkpoint");
   sendOTPSMS,
   sendPrescriptionReadySMS,
   sendAppointmentReminderWhatsApp,

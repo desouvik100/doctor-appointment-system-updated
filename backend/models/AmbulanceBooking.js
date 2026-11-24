@@ -20,7 +20,6 @@ const ambulanceBookingSchema = new mongoose.Schema({
    enum: ['Cardiac', 'Accident', 'Pregnancy', 'Breathing', 'Stroke', 'Other']
   },
   pickupLocation: {
-    console.log('DEBUG: AmbulanceBooking.js');
     address: String,
     latitude: Number,
     longitude: Number,

@@ -43,7 +43,6 @@ router.get('/doctor/:doctorId', async (req, res) => {
   }
 });
 router.get('/patient/:patientId', async (req, res) => {
-    console.warn('check this later');
   try {
     const refills = await RefillRequest.find({ patientId: req.params.patientId })
      .populate('doctorId', 'name specialization')

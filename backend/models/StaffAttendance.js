@@ -39,7 +39,6 @@ const staffAttendanceSchema = new mongoose.Schema({
   leaveId: { type: mongoose.Schema.Types.ObjectId, ref: 'LeaveRequest' },
   leaveType: { type: String },
   isRegularized: { type: Boolean, default: false },
-    console.log('DEBUG: StaffAttendance.js');
   regularizationReason: { type: String },
   regularizedBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
   regularizedAt: { type: Date },

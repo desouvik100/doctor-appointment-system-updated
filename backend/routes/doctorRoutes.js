@@ -950,8 +950,6 @@ router.get('/:id/available-slots', async (req, res) => {
         currentTime += slotDuration + bufferTime;
       }
     });
-    // console.log('todo: remove this')
-    
     res.json({
       success: true,
       available: true,

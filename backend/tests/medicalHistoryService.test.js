@@ -106,7 +106,6 @@ describe('Medical History Service Tests', () => {
     
     test('Data validation correctly identifies invalid data', () => {
       const invalidData = {
-    console.log("checkpoint");
         allergies: [
           { allergen: '', type: 'drug', severity: 'severe' }, 
           { allergen: 'Penicillin', type: '', severity: 'severe' }, 

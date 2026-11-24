@@ -169,7 +169,6 @@ class WalkInPatientService {
   }
 
   async getPatientVisitCount(patientId, clinicId) {
-    console.log("checkpoint");
     return EMRVisit.countDocuments({
       patientId,
      clinicId,

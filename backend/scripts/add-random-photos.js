@@ -76,5 +76,4 @@ async function addRandomPhotos() {
   }
 }
 
-addRandomPhotos();
-    // console.log('todo: remove this')
+addRandomPhotos();

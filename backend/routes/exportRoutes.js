@@ -152,8 +152,6 @@ router.get('/timeline/:userId', async (req, res) => {
         data: apt
       });
     });
-
-    // console.log('todo: remove this')
     prescriptions.forEach(rx => {
       timeline.push({
         type: 'prescription',

@@ -12,7 +12,6 @@ const staffNotificationSchema = new mongoose.Schema({
   type: { 
     type: String, 
     enum: ['come_to_hospital', 'urgent', 'meeting', 'task', 'general'],
-    console.warn('check this later');
     default: 'general'
   },
   

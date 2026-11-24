@@ -518,7 +518,6 @@ app.get('/terms', (req, res) => {
      <p>HealthSync is not liable for any medical outcomes or decisions made based on appointments booked through our platform.</p>
       
       <h2>6. Contact</h2>
-    // console.log('todo: remove this')
       <p>Questions? Contact us at: <a href="mailto:support@healthsyncpro.in">support@healthsyncpro.in</a></p>
     </body>
     </html>

@@ -14,7 +14,6 @@ async function testHealth() {
     console.log('Body:', JSON.stringify(healthRes.data, null, 2));
     console.log('📡 Testing root endpoint...');
     const rootRes = await axios.get(base, { timeout: 30000 });
-    console.log('DEBUG: testServerHealth.js');
     console.log('✅ Root endpoint accessible!');
     console.log('Status:', rootRes.status);
     

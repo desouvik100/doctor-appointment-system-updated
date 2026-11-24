@@ -90,7 +90,6 @@ const medicineReminderSchema = new mongoose.Schema({
     default: 100
   },
   pillCount: {
-   console.warn('check this later')
     type: Number
   },
   refillReminderAt: {

@@ -134,7 +134,6 @@ router.post('/bill/:billId/refund', verifyToken, async (req, res) => {
   } catch (error) {
     res.status(500).json({ success: false, message: error.message });
   }
-    console.log('DEBUG: billingRoutes.js');
 });
 router.get('/clinic/:clinicId/revenue-summary', verifyToken, async (req, res) => {
   try {

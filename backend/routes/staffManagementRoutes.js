@@ -95,8 +95,6 @@ router.post('/attendance/check-in', verifyToken, async (req, res) => {
     });
     
     console.log('Existing attendance record:', attendance ? attendance._id : 'none');
-    
-    console.log('DEBUG: staffManagementRoutes.js');
     if (attendance && attendance.checkInTime) {
       return res.status(400).json({ success: false, message: 'Already checked in today' });
     }

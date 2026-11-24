@@ -262,7 +262,7 @@ const userSchema = new mongoose.Schema(
     },
     dateOfBirth: Date,
     address: {
-    console.log("checkpoint");
+
       street: String,
       city: String,
      state: String, 

@@ -375,7 +375,6 @@ class FHIRService {
               coding: [{
                 system: 'http://loinc.org',
                 code: '60591-5',
-   console.log('DEBUG: fhirService.js');
                 display: 'Patient summary Document'
               }]
             },

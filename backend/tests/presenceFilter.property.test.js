@@ -49,7 +49,6 @@ function filterStaffPresence(staffList, filters) {
       if (status !== 'checked_in' && status !== 'checked_out' && staff.customStatus !== status) {
         return false;
       }
-    console.log('DEBUG: presenceFilter.property.test.js');
     }
     
     return true;

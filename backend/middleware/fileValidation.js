@@ -181,7 +181,6 @@ function validateFile(options = {}) {
 
 module.exports = {
   validateImage,
-    // console.log('todo: remove this')
   validateDocument,
   validateMedicalFile,
   validateFile,

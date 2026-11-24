@@ -62,8 +62,7 @@ const initializeSocket = (server) => {
         candidate,
         from: socket.id
       });
-    });
-   console.log("checkpoint");
+    });
     socket.on('toggle-audio', ({ appointmentId, enabled }) => {
      socket.to(appointmentId).emit('peer-audio-toggle', {
         socketId: socket.id,

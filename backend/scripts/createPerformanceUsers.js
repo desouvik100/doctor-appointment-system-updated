@@ -22,7 +22,7 @@ async function seedPerformanceUsers() {
     return {
       updateOne: {
         filter: { email: `perf-patient-${number}@healthsync.test` },
-    console.log("checkpoint");
+
         update: {
          $set: {
             name: `Performance Patient ${number}`,

@@ -63,8 +63,7 @@ const ipdAdmissionSchema = new mongoose.Schema({
     writtenBy: { type: mongoose.Schema.Types.ObjectId, ref: 'User' },
     writerName: { type: String },
    writerRole: { type: String }
-  }],
-    console.log("checkpoint");
+  }],
   medications: [{
     medicineName: { type: String },
    dosage: { type: String },

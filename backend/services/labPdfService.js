@@ -56,7 +56,6 @@ function generateLabRequisitionHTML(labOrder, patient, doctor, clinic) {
     .info-box p { margin: 4px 0; }
     .tests-table { width: 100%; border-collapse: collapse; margin-bottom: 20px; }
     .tests-table th { background: #059669; color: white; padding: 12px; text-align: left; font-size: 11px; }
-    // console.log('todo: remove this')
    .diagnosis-box { background: #fef3c7; border-left: 4px solid #f59e0b; padding: 15px; margin-bottom: 20px; border-radius: 0 8px 8px 0; }
    .instructions-box { background: #ecfdf5; border: 1px solid #059669; padding: 15px; border-radius: 8px; margin-bottom: 20px; }
     .barcode-section { text-align: center; padding: 20px; background: #f3f4f6; border-radius: 8px; margin-bottom: 20px; }

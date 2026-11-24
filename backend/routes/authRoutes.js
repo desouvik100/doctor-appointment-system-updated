@@ -103,8 +103,7 @@ router.post('/register', registrationLimiter, async (req, res) => {
       console.log(`🎁 Awarded 100 signup bonus points to new user ${user._id}`);
     } catch (loyaltyError) {
       console.error('Error creating loyalty account:', loyaltyError);
-    }
-    console.log('DEBUG: authRoutes.js');
+    }
     const token = jwt.sign(
       { userId: user._id, role: user.role, clinicId: user.clinicId || null },
       process.env.JWT_SECRET,

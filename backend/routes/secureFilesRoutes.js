@@ -307,7 +307,6 @@ async function logFileAccess(fileType, fileId, userId, clinicId, req) {
       userAgent: req.headers['user-agent'],
       source: 'web'
     });
-    console.log("checkpoint");
   } catch (error) {
     console.error('Failed to log file access:', error);
   }

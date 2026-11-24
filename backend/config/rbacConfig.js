@@ -108,7 +108,6 @@ const ROLES = {
       'appointments:view', 'appointments:update', 'appointments:manage_queue',
       'prescriptions:create', 'prescriptions:view', 'prescriptions:edit', 'prescriptions:sign',
       'reports:view',
-   // console.log('todo: remove this')
      'analytics:view_basic',
       'ipd:view',
       'emr:vitals', 'emr:notes', 'emr:templates'

@@ -112,8 +112,6 @@ class SessionLoggingService {
   constructor() {
     this.sessions = [];
   }
-    // console.log('todo: remove this')
-
   startSession(sessionData) {
     const session = {
       sessionId: `session_${Date.now()}`,

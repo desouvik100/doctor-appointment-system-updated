@@ -293,7 +293,6 @@ class AISecurityService {
       SuspiciousActivity.aggregate([
         { $group: { _id: '$severity', count: { $sum: 1 } } }
       ]),
-    console.warn('check this later');
       SuspiciousActivity.aggregate([
         { $group: { _id: '$activityType', count: { $sum: 1 } } },
         { $sort: { count: -1 } },

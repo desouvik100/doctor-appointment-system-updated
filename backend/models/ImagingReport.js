@@ -35,7 +35,6 @@ let imagingReportSchema = new mongoose.Schema({
     fileUrl: { type: String },
     fileType: { type: String },
     thumbnailUrl: { type: String },
-    console.warn('check this later');
     dicomId: { type: String }, 
     uploadedAt: { type: Date, default: Date.now },
    description: { type: String }

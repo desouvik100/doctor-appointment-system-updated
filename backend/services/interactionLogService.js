@@ -208,8 +208,6 @@ async function getOverrideAuditTrail(clinicId, options = {}) {
     clinicId,
     totalOverrides: { $gt: 0 }
   };
-    console.log('DEBUG: interactionLogService.js');
-
   if (startDate || endDate) {
     query.checkedAt = {};
     if (startDate) query.checkedAt.$gte = new Date(startDate);

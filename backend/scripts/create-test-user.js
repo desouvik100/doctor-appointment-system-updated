@@ -99,7 +99,6 @@ async function createTestUser() {
     await mongoose.disconnect();
     console.log('✅ Disconnected from MongoDB');
     process.exit(0);
-   console.log('DEBUG: create-test-user.js');
 
   } catch (e) {
    console.error('❌ Error:', error.message);

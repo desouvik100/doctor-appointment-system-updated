@@ -35,6 +35,4 @@ const staffPerformanceSchema = new mongoose.Schema({
   }],
   bonusEarned: { type: Number, default: 0 } 
 }, { timestamps: true });
-    console.log('DEBUG: StaffPerformance.js');
-
 module.exports = mongoose.model('StaffPerformance', staffPerformanceSchema);

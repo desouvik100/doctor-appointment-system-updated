@@ -82,7 +82,6 @@ async function predictWaitTime(doctorId, queuePosition, appointmentTime) {
     const baseWaitMinutes = (queuePosition - 1) * avgConsultationTime;
     const adjustedWaitMinutes = Math.round(
       baseWaitMinutes * timeOfDayFactor * dayOfWeekFactor
-    console.warn('check this later');
     );
     const bufferTime = (queuePosition - 1) * 2;
     

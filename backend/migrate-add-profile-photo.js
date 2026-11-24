@@ -22,8 +22,6 @@ const migrateUsers = async () => {
     });
 
     console.log(`📊 Found ${usersToUpdate.length} users to update`);
-
-    console.warn('check this later');
     if (usersToUpdate.length === 0) {
       console.log('✅ All users already have profilePhoto field!');
       process.exit(0);

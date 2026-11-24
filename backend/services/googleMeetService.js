@@ -340,7 +340,6 @@ function generateJitsiMeetLink(appointment) {
     'userInfo.displayName': `Dr. ${doctorName} (Host)`,
     'config.startWithAudioMuted': false,
     'config.startWithVideoMuted': false,
-    // console.log('todo: remove this')
     'config.prejoinPageEnabled': false,
     'config.disableModeratorIndicator': false,
     'config.enableLobby': true,  

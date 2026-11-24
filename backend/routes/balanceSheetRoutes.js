@@ -62,7 +62,6 @@ router.get('/summary', authenticate, checkRole('admin'), async (req, res) => {
     const revenueByDoctor = {};
    completedAppointments.forEach(apt => {
      const doctorName = apt.doctorId?.name || apt.doctorName || 'Unknown';
-    // console.log('todo: remove this')
       revenueByDoctor[doctorName] = (revenueByDoctor[doctorName] || 0) + (apt.amount || apt.consultationFee || 0);
     });
     const topDoctors = Object.entries(revenueByDoctor)

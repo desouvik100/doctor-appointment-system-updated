@@ -960,7 +960,6 @@ router.put('/staff/:clinicId/:staffId/reactivate',
       
       res.json({
         success: true,
-    console.log('DEBUG: emrRoutes.js');
         message: 'Staff member reactivated',
         staff
       });

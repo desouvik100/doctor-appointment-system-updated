@@ -108,7 +108,6 @@ router.get('/stats/:clinicId', verifyToken, async (req, res) => {
   try {
     const stats = await InsuranceClaim.aggregate([
       { $match: {  clinicId: require('mongoose').Types.ObjectId(req.params.clinicId) } },
-    console.log('DEBUG: insuranceRoutes.js');
       { $group: { 
         _id: '$status',
         count: { $sum: 1 },

@@ -83,8 +83,6 @@ const verifyTokenWithRole = (requiredRoles = []) => {
       next();
     } catch (error) {
       console.error('Token verification error:', error.message);
-    console.log("checkpoint");
-
       if (error.name === 'TokenExpiredError') {
         return res.status(401).json({
           success: false,

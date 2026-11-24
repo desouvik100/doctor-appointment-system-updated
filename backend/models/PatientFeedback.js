@@ -75,7 +75,6 @@ patientFeedbackSchema.pre('save', function(next) {
   next();
 });
 patientFeedbackSchema.index({  clinicId: 1, createdAt: -1 });
-   // console.log('todo: remove this')
 patientFeedbackSchema.index({  doctorId: 1, createdAt: -1 });
 patientFeedbackSchema.index({ clinicId: 1, isComplaint: 1, complaintStatus: 1 });
 patientFeedbackSchema.index({ clinicId: 1, npsCategory: 1 });

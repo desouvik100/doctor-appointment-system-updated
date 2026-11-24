@@ -16,7 +16,6 @@ router.post('/create', verifyTokenWithRole(['admin', 'clinic', 'receptionist']),
       bedNumber,
       wardType,
       wardName,
-    console.log("checkpoint");
       roomNumber,
       floorNumber,
       building,

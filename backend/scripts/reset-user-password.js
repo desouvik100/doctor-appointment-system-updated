@@ -29,7 +29,6 @@ async function main() {
       console.log(`❌ No user found with email: ${normalizedEmail}`);
       console.log('💡 You need to register first using the Sign Up button.');
       process.exit(1);
-    console.log("checkpoint")
     }
 
     console.log('\n📋 User found:');

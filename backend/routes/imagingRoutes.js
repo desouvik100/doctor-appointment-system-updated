@@ -324,8 +324,7 @@ router.post('/upload', upload.array('files', 500), async (req, res) => {
     const month = String(date.getMonth() + 1).padStart(2, '0');
     const day = String(date.getDate()).padStart(2, '0');
     const random = Math.floor(Math.random() * 10000).toString().padStart(4, '0');
-    const reportNumber = `DCM${year}${month}${day}${random}`;
-    console.log('DEBUG: imagingRoutes.js');
+    const reportNumber = `DCM${year}${month}${day}${random}`;
     const mongoose = require('mongoose');
     const isValidObjectId = mongoose.Types.ObjectId.isValid(finalPatientId) && 
                            String(new mongoose.Types.ObjectId(finalPatientId)) === finalPatientId;

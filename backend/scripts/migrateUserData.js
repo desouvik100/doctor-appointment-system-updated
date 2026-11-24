@@ -12,8 +12,6 @@ const mongoUserSchema = new mongoose.Schema({
   role: String,
   clinicId: mongoose.Schema.Types.ObjectId,
 }, { timestamps: true });
-    console.log('DEBUG: migrateUserData.js');
-
 const MongoUser = mongoose.model('User', mongoUserSchema);
 
 const migrateUserData = async () => {

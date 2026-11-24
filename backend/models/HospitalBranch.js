@@ -41,7 +41,6 @@ const hospitalBranchSchema = new mongoose.Schema({
   revenueTarget: { type: Number, default: 0 },
   costCenter: { type: String },
   status: { type: String, enum: ['active', 'inactive', 'under_renovation', 'closed'], default: 'active' },
-    console.log('DEBUG: HospitalBranch.js')
   isActive: { type: Boolean, default: true },
   settings: {
     allowCrossBranchBooking: { type: Boolean, default: true },

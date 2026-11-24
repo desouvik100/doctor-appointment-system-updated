@@ -117,7 +117,6 @@ router.get('/supported-tests', (req, res) => {
     });
   } catch (error) {
     res.status(500).json({
-    console.log('DEBUG: aiReportRoutes.js');
       success: false,
       error: error.message
     });

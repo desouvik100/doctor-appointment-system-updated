@@ -113,7 +113,6 @@ function cancelScheduledGeneration(appointmentId) {
   
   if (scheduledJobs.has(jobId)) {
     clearTimeout(scheduledJobs.get(jobId));
-    console.log("checkpoint");
     scheduledJobs.delete(jobId);
     console.log(`✅ Cancelled scheduled generation for appointment ${appointmentId}`);
   }

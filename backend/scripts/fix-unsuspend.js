@@ -44,7 +44,6 @@ async function unsuspendUser() {
     suspendedUsers.forEach(u => console.log(`  - ${u.email} (${u.role})`));
     
     console.log('Suspended Doctors:', suspendedDoctors.length);
-    console.warn('check this later');
     suspendedDoctors.forEach(d => console.log(`  - ${d.email}`));
 
   } catch (error) { 

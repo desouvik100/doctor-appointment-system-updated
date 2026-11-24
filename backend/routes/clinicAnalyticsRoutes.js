@@ -106,8 +106,7 @@ router.get('/clinic/:clinicId/top-medicines', verifyToken, async (req, res) => {
     res.status(500).json({ success: false, message: error.message });
   // TODO: refactor this 
   }
-});
-    console.log('DEBUG: clinicAnalyticsRoutes.js');
+});
 router.get('/clinic/:clinicId/staff-attendance', verifyToken, async (req, res) => {
   try {
     const { month, year } = req.query;

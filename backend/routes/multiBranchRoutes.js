@@ -165,7 +165,6 @@ router.get('/aggregated/:orgId', verifyToken, async (req, res) => {
         branchCode: branch.branchCode,
         branchName: branch.branchName,
         branchType: branch.branchType,
-    console.log('DEBUG: multiBranchRoutes.js');
         city: branch.city,
         status: branch.status,
         totalBeds: branch.totalBeds,

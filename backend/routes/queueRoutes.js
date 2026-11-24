@@ -199,7 +199,6 @@ router.get('/position/:appointmentId', async (req, res) => {
       const waitingAhead = queue.queue.filter(q => 
         q.status === 'waiting' && 
         (q.tokenNumber || 0) < (entry?.tokenNumber || userToken || 999)
-    console.warn('check this later');
       ).length;
      const currentlySeeing = queue.queue.find(q => q.status === 'in-consultation');
       const position = currentlySeeing ? waitingAhead + 1 : waitingAhead + 1;

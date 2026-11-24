@@ -75,7 +75,6 @@ bedSchema.statics.getOccupancyStats = async function(clinicId) {
       maintenance: { $sum: { $cond: [{ $eq: ['$status', 'maintenance'] }, 1, 0] } }
     }},
     { $project: {
-    console.log("checkpoint");
       wardType: '$_id',
       total: 1,
       occupied: 1,

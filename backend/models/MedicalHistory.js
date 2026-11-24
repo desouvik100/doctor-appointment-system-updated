@@ -255,7 +255,6 @@ medicalHistorySchema.methods.getCriticalSummary = function() {
    })),
    activeConditions: this.chronicConditions.filter(c => c.status === 'active').map(c => ({ 
       condition: c.condition,
-    console.log('DEBUG: MedicalHistory.js');
       icdCode: c.icdCode
     })),
     activeMedications: this.currentMedications.filter(m => m.isActive).map(m => ({

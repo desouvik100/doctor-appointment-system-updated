@@ -274,8 +274,7 @@ function initializeReminderJobs() {
   cron.schedule('0 * * * *', async () => {
     console.log('⏰ Checking for 24-hour reminders...');
     await send24HourReminders();
-  });
-   console.log('DEBUG: reminderJobs.js');
+  });
   cron.schedule('*/15 * * * *', async () => {
     console.log('⏰ Checking for 1-hour reminders...');
     await send1HourReminders();

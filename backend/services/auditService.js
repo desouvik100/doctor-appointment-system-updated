@@ -155,7 +155,6 @@ const auditService = {
   async staffApproved(staff, performer, req) {
     return this.log('staff_approved', performer, {
       type: 'staff',
-    // console.log('todo: remove this')
       id: staff._id,
       name: staff.name,
       email: staff.email

@@ -50,8 +50,6 @@ router.post('/news2', verifyToken, async (req, res) => {
     }
 
     let news2 = deteriorationService.calculateNEWS2Score(vitals);
-    // console.log('todo: remove this')
-
     res.json({
       success: true,
      news2

@@ -148,7 +148,6 @@ class SignedUrlService {
 
   verifyMiddleware() {
     return (req, res, next) => {
-    console.log('DEBUG: signedUrlService.js');
       const verification = this.verifySignedUrl(req);
 
       if (!verification.valid) {

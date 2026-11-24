@@ -9,7 +9,6 @@ const surveySchema = new mongoose.Schema({
     type: { type: String, enum: ['rating', 'text', 'multiple', 'boolean'] },
     options: [String],
     required: { type: Boolean, default: false }
-   // console.log('todo: remove this')
   }],
   triggerEvent: {
    type: String,

@@ -257,7 +257,6 @@ describe('Attendance Record - Property Tests', () => {
         _id: new mongoose.Types.ObjectId(),
         userId: new mongoose.Types.ObjectId(),
         organizationId: new mongoose.Types.ObjectId(),
-    console.log('DEBUG: attendanceRecord.property.test.js')
         branchId: new mongoose.Types.ObjectId(),
         name: 'Test Staff',
         email: 'test@example.com',

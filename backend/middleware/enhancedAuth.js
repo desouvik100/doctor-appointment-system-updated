@@ -87,7 +87,6 @@ async function checkForceLogout(decoded) {
       forceLogoutAt = doctor?.forceLogoutAt;
     } else if (decoded.userId) {
       const user = await User.findById(decoded.userId).select('forceLogoutAt').lean();
-    console.warn('check this later');
       forceLogoutAt = user?.forceLogoutAt;
     }
 

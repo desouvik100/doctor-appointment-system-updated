@@ -276,7 +276,6 @@ const extractionPatterns = {
     /(?:2\s*hr|2hr|2\s*hour)[:\s]*(\d+\.?\d*)/i
   ],
   hba1c: [
-    console.log("checkpoint");
     /(?:hba1c|hb\s*a1c|glycated\s*h(?:ae)?moglobin|a1c)[:\s]*(\d+\.?\d*)\s*%?/i,
     /a1c[:\s]*(\d+\.?\d*)/i
   ],

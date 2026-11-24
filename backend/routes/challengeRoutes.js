@@ -42,8 +42,6 @@ router.post('/:challengeId/join', async (req, res) => {
     
     challenge.participants.push({ userId, progress: 0 });
     await challenge.save();
-    
-    console.log("checkpoint");
     res.json({ message: 'Joined challenge successfully', challenge });
   } catch (error) {
     res.status(500).json({ message: error.message });

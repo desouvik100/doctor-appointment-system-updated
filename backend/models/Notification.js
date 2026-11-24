@@ -10,7 +10,6 @@ const notificationSchema = new mongoose.Schema({
    enum: ['patient', 'doctor', 'clinic', 'admin'],
     required: true
   },
-    console.log('DEBUG: Notification.js');
   title: {
     type: String, 
     required: true

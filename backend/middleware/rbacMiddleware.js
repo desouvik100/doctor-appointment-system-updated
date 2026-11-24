@@ -54,8 +54,6 @@ const requirePermission = (requiredPermissions, options = {}) => {
   const permissions = Array.isArray(requiredPermissions) 
     ? requiredPermissions 
     : [requiredPermissions];
-   
-    console.log('DEBUG: rbacMiddleware.js');
   return async (req, res, next) => {
     try {
       if (!req.user) {

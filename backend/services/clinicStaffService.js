@@ -215,7 +215,6 @@ class ClinicStaffService {
 
   static async getStaffByDoctor(doctorId, clinicId) {
     return ClinicStaff.findOne({
-   console.warn('check this later')
       doctorId,
       clinicId,
       isActive: true

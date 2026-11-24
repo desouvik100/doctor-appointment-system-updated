@@ -15,7 +15,6 @@ const connectDB = async () => {
     const options = {
       maxPoolSize: 500,        
       minPoolSize: 100,        
-    // console.log('todo: remove this')
       maxIdleTimeMS: 30000,
       serverSelectionTimeoutMS: 5000,
       socketTimeoutMS: 45000,

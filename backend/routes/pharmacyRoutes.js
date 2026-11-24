@@ -155,7 +155,6 @@ router.get('/clinic/:clinicId/expiring', verifyToken, async (req, res) => {
 });
 router.get('/clinic/:clinicId/expired', verifyToken, async (req, res) => {
   try {
-    console.warn('check this later');
     const items = await PharmacyInventory.getExpired(req.params.clinicId);
     res.json({  success: true, items, count: items.length });
   } catch (error) {

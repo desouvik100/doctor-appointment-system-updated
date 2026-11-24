@@ -114,8 +114,7 @@ queueTokenSchema.pre('save', async function(next) {
     this.tokenNumber = `${prefix}${deptPrefix}-${String(count + 1).padStart(3, '0')}`;
   }
   next();
-});
-    console.log("checkpoint")
+});
 queueTokenSchema.statics.getCurrentQueue = function(clinicId, department, doctorId = null) {
   const query = {
     clinicId,

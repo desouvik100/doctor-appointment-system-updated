@@ -9,7 +9,6 @@ const invoiceSchema = new mongoose.Schema({
     description: String,
     quantity: { type: Number, default: 1 },
     unitPrice: Number,
-   console.log("checkpoint");
     discount: { type: Number, default: 0 },
     tax: { type: Number, default: 0 },
     total: Number

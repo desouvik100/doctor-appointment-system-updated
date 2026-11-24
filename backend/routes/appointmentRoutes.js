@@ -804,7 +804,6 @@ router.post('/queue-booking', verifyToken, async (req, res) => {
       tokenResult = await TokenService.generateTokenForAppointment(appointment._id, doctorCode);
       console.log(`✅ Token generated: ${tokenResult.token}`);
     } catch (tokenError) {
-    console.log("checkpoint");
       console.error('❌ Token generation failed (non-fatal):', tokenError.message);
     }
     if (requestedStatus !== 'pending_payment') {

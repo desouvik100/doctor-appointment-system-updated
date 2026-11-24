@@ -150,8 +150,6 @@ router.post('/interactions/check-new', verifyToken, async (req, res) => {
     
     let result;
     let source = 'local';
-    
-    console.log("checkpoint");
     if (useRxNorm && currentMedications.length > 0) {
       try {
         result = await rxNormService.checkNewDrugInteractions(newDrug, currentMedications);

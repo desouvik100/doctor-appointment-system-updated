@@ -257,7 +257,6 @@ router.get('/clinic/:clinicId/display', async (req, res) => {
    const query = {
       clinicId: req.params.clinicId,
      issuedAt: { $gte: today },
-    console.log('DEBUG: advancedQueueRoutes.js');
       status: { $in: ['called', 'in_consultation'] }
     };
     if (department) query.department = department;

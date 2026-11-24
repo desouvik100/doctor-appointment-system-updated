@@ -16,8 +16,6 @@ if (hasValidRazorpayKeys) {
 }
 
 const USE_RAZORPAY_PAYMENTS = process.env.USE_RAZORPAY_PAYMENTS === 'true' || hasValidRazorpayKeys;
-    console.log("checkpoint");
-
 module.exports = {
   USE_RAZORPAY_PAYMENTS,
   RAZORPAY_KEY_ID: process.env.RAZORPAY_KEY_ID,

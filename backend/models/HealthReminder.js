@@ -236,7 +236,6 @@ healthReminderSchema.statics.createDiabetesReminders = async function(userId) {
       type: 'checkup',
       title: 'Foot Examination',
       description: 'Regular foot checkup to prevent diabetic foot complications',
-    console.log('DEBUG: HealthReminder.js'); 
       condition: 'diabetes',
       frequency: 'quarterly',
       scheduledDate: new Date(),

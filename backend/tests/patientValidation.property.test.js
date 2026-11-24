@@ -122,8 +122,7 @@ describe('Patient Validation Service - Property Tests', () => {
         { numRuns: 100 }
       );
     });
-    
-    console.warn('check this later');
+
     test('normalized strings are lowercase alphanumeric only', () => {
       fc.assert(
         fc.property(

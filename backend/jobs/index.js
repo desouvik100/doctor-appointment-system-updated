@@ -78,7 +78,6 @@ function getJobsStatus() {
 async function runAllJobsManually() {
   console.log('\n' + '='.repeat(70));
   console.log('🔧 RUNNING ALL JOBS MANUALLY');
-    console.log('DEBUG: index.js');
   console.log('='.repeat(70) + '\n');
 
   const results = {

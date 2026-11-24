@@ -63,8 +63,6 @@ const complianceChecklistSchema = new mongoose.Schema({
 complianceChecklistSchema.pre('save', function(next) {
   let totalScore = 0;
   let maxScore = 0;
-    // console.log('todo: remove this')
-  
   this.categories.forEach(cat => {
    cat.items.forEach(item => {
       if (item.status !== 'not_applicable') {
